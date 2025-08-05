@@ -1,26 +1,96 @@
 'use client';
 
-import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
 import Message from './Message';
-import ChatInput from './ChatInput';
 import Sidebar from './Sidebar';
 
-interface UploadedFile {
+interface ChatMessage {
   id: string;
-  name: string;
-  size: number;
-  type: string;
-  url: string;
+  role: 'user' | 'assistant';
+  content: string;
+  createdAt: Date;
 }
 
 export default function Chat() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
-    api: '/api/chat',
-  });
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleFilesChange = (files: UploadedFile[]) => {
-    // TODO: Integrar arquivos com mensagens
-    console.log('Arquivos:', files);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: input.trim(),
+      createdAt: new Date(),
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    const currentInput = input;
+    setInput('');
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [...messages, userMessage].map(msg => ({
+            role: msg.role,
+            content: msg.content,
+          })),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const assistantMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: '',
+        createdAt: new Date(),
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+
+      // Handle streaming response
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('No response body');
+
+      const decoder = new TextDecoder();
+      let done = false;
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        
+        if (value) {
+          const chunk = decoder.decode(value);
+          // For text stream, just append the chunk
+          setMessages(prev => {
+            const newMessages = [...prev];
+            const lastMessage = newMessages[newMessages.length - 1];
+            if (lastMessage && lastMessage.role === 'assistant') {
+              lastMessage.content += chunk;
+            }
+            return newMessages;
+          });
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      setInput(currentInput); // Restore input on error
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -72,7 +142,8 @@ export default function Chat() {
                   key={message.id}
                   content={message.content}
                   role={message.role}
-                  timestamp={new Date(message.createdAt || Date.now())}
+                  timestamp={message.createdAt}
+                  isLoading={message.role === 'assistant' && message.content === '' && isLoading}
                 />
               ))
             )}
@@ -84,7 +155,7 @@ export default function Chat() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <p className="text-red-700 dark:text-red-300 text-sm font-medium">
-                    Erro: {error.message}
+                    {error}
                   </p>
                 </div>
               </div>
@@ -100,7 +171,7 @@ export default function Chat() {
                 <div className="flex-1 relative">
                   <textarea
                     value={input}
-                    onChange={handleInputChange}
+                    onChange={(e) => setInput(e.target.value)}
                     placeholder="Digite sua mensagem..."
                     disabled={isLoading}
                     rows={1}
@@ -108,6 +179,12 @@ export default function Chat() {
                              text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400
                              focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed
                              min-h-[56px] max-h-32 overflow-y-auto"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSubmit(e);
+                      }
+                    }}
                   />
                 </div>
                 

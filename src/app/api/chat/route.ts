@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     });
 
     console.log('API call successful, returning stream...');
-    return result.toAIStreamResponse();
+    return result.toTextStreamResponse();
   } catch (error) {
     console.error('Error in chat API:', error);
     return new Response(JSON.stringify({ 
