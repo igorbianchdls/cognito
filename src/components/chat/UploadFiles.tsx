@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { processFile, getFileTypeFromExtension } from '@/lib/fileProcessors';
 
 interface UploadedFile {
   id: string;
@@ -8,6 +9,11 @@ interface UploadedFile {
   size: number;
   type: string;
   url: string;
+  content?: string;
+  summary?: string;
+  fileType?: 'csv' | 'text' | 'unknown';
+  rowCount?: number;
+  columnCount?: number;
 }
 
 interface UploadFilesProps {
@@ -22,12 +28,13 @@ export default function UploadFiles({
   onFilesUploaded,
   maxFiles = 5,
   maxSizePerFile = 10 * 1024 * 1024, // 10MB
-  acceptedTypes = ['image/*', 'application/pdf', '.txt', '.doc', '.docx'],
+  acceptedTypes = ['image/*', 'application/pdf', '.txt', '.doc', '.docx', '.csv', '.md'],
   disabled = false
 }: UploadFilesProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [processingFiles, setProcessingFiles] = useState<Set<string>>(new Set());
 
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
@@ -62,13 +69,57 @@ export default function UploadFiles({
 
     try {
       // Create file objects with URLs for preview
-      const newFiles: UploadedFile[] = validFiles.map(file => ({
-        id: `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        url: URL.createObjectURL(file)
-      }));
+      const newFiles: UploadedFile[] = [];
+      
+      for (const file of validFiles) {
+        const fileId = `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const baseFile: UploadedFile = {
+          id: fileId,
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          url: URL.createObjectURL(file),
+          fileType: 'unknown'
+        };
+        
+        newFiles.push(baseFile);
+        setProcessingFiles(prev => new Set([...prev, fileId]));
+        
+        // Process file content asynchronously
+        processFile(file).then(processedContent => {
+          if (processedContent) {
+            setUploadedFiles(currentFiles => {
+              const updatedFiles = currentFiles.map(f => 
+                f.id === fileId 
+                  ? {
+                      ...f,
+                      content: processedContent.content,
+                      summary: processedContent.summary,
+                      fileType: processedContent.type,
+                      rowCount: processedContent.rowCount,
+                      columnCount: processedContent.columnCount
+                    }
+                  : f
+              );
+              onFilesUploaded(updatedFiles);
+              return updatedFiles;
+            });
+          }
+          
+          setProcessingFiles(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(fileId);
+            return newSet;
+          });
+        }).catch(error => {
+          console.error('Erro ao processar arquivo:', error);
+          setProcessingFiles(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(fileId);
+            return newSet;
+          });
+        });
+      }
 
       const updatedFiles = [...uploadedFiles, ...newFiles];
       setUploadedFiles(updatedFiles);
@@ -164,9 +215,17 @@ export default function UploadFiles({
                 <div className="flex-1 min-w-0">
                   <div className="text-xs font-medium text-gray-900 dark:text-white truncate">
                     {file.name}
+                    {processingFiles.has(file.id) && (
+                      <span className="ml-1 text-blue-500">processando...</span>
+                    )}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {formatFileSize(file.size)}
+                    {formatFileSize(file.size)} • {getFileTypeFromExtension(file.name)}
+                    {file.summary && !processingFiles.has(file.id) && (
+                      <div className="text-xs text-green-600 dark:text-green-400 mt-1">
+                        ✓ {file.summary}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <button

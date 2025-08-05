@@ -14,7 +14,8 @@
       "Bash(/c/Users/Administrador/AppData/Roaming/npm/claude mcp list)",
       "Bash(/c/Users/Administrador/AppData/Roaming/npm/claude mcp add google-sheets -e GOOGLE_APPLICATION_CREDENTIALS=\"C:\\Users\\Administrador\\.config\\claude\\google-sheets-credentials.json\" -- npx @xing5/mcp-google-sheets)",
       "Bash(claude mcp:*)",
-      "Bash(npx:*)"
+      "Bash(npx:*)",
+      "WebFetch(domain:www.daytona.io)"
     ],
     "deny": []
   }

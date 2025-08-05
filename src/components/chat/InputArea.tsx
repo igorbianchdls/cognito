@@ -1,11 +1,8 @@
 'use client';
 
 import { KeyboardEvent } from 'react';
-import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import UploadFiles from './UploadFiles';
 
 interface UploadedFile {
   id: string;
@@ -13,6 +10,11 @@ interface UploadedFile {
   size: number;
   type: string;
   url: string;
+  content?: string;
+  summary?: string;
+  fileType?: 'csv' | 'text' | 'unknown';
+  rowCount?: number;
+  columnCount?: number;
 }
 
 interface InputAreaProps {
@@ -24,9 +26,6 @@ interface InputAreaProps {
 }
 
 export default function InputArea({ value, onChange, onSubmit, onFilesChange, disabled }: InputAreaProps) {
-  const handleFilesUploaded = (files: UploadedFile[]) => {
-    onFilesChange(files);
-  };
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();

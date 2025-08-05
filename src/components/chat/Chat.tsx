@@ -11,6 +11,11 @@ interface UploadedFile {
   size: number;
   type: string;
   url: string;
+  content?: string;
+  summary?: string;
+  fileType?: 'csv' | 'text' | 'unknown';
+  rowCount?: number;
+  columnCount?: number;
 }
 
 interface ChatMessage {
@@ -58,6 +63,7 @@ export default function Chat() {
             role: msg.role,
             content: msg.content,
           })),
+          files: userMessage.files?.filter(f => f.content) || [],
         }),
       });
 

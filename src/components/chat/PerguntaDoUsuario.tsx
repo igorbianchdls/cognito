@@ -6,6 +6,11 @@ interface UploadedFile {
   size: number;
   type: string;
   url: string;
+  content?: string;
+  summary?: string;
+  fileType?: 'csv' | 'text' | 'unknown';
+  rowCount?: number;
+  columnCount?: number;
 }
 
 interface PerguntaDoUsuarioProps {
@@ -14,7 +19,7 @@ interface PerguntaDoUsuarioProps {
   files?: UploadedFile[];
 }
 
-export default function PerguntaDoUsuario({ content, timestamp, files }: PerguntaDoUsuarioProps) {
+export default function PerguntaDoUsuario({ content, files }: PerguntaDoUsuarioProps) {
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;

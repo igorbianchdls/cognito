@@ -8,8 +8,9 @@ export async function POST(req: Request) {
   console.log('API Key starts with:', process.env.ANTHROPIC_API_KEY?.substring(0, 15) || 'N/A');
   
   try {
-    const { messages } = await req.json();
+    const { messages, files } = await req.json();
     console.log('Messages received:', messages?.length || 0);
+    console.log('Files received:', files?.length || 0);
 
     if (!process.env.ANTHROPIC_API_KEY) {
       console.error('Missing ANTHROPIC_API_KEY environment variable');
@@ -22,11 +23,40 @@ export async function POST(req: Request) {
       });
     }
 
+    // Prepare system message with file context
+    let systemMessage = 'Você é um assistente AI útil e amigável. Responda de forma clara e concisa em português brasileiro.';
+    
+    if (files && files.length > 0) {
+      systemMessage += '\n\nVocê tem acesso aos seguintes arquivos enviados pelo usuário:\n\n';
+      
+      files.forEach((file: { name: string; fileType?: string; size: number; rowCount?: number; columnCount?: number; summary?: string; content?: string }, index: number) => {
+        systemMessage += `=== ARQUIVO ${index + 1}: ${file.name} ===\n`;
+        systemMessage += `Tipo: ${file.fileType || 'unknown'}\n`;
+        systemMessage += `Tamanho: ${file.size} bytes\n`;
+        
+        if (file.fileType === 'csv' && file.rowCount && file.columnCount) {
+          systemMessage += `Dados: ${file.rowCount} linhas, ${file.columnCount} colunas\n`;
+        }
+        
+        if (file.summary) {
+          systemMessage += `Resumo: ${file.summary}\n`;
+        }
+        
+        if (file.content) {
+          systemMessage += `\nConteúdo:\n${file.content}\n`;
+        }
+        
+        systemMessage += '\n' + '='.repeat(50) + '\n\n';
+      });
+      
+      systemMessage += 'Analise estes arquivos e responda às perguntas do usuário baseado no conteúdo dos documentos. Você pode fazer análises, extrair insights, responder perguntas específicas sobre os dados, ou qualquer outra operação solicitada.';
+    }
+
     console.log('Calling Anthropic API...');
     const result = streamText({
       model: anthropic('claude-3-5-sonnet-20241022'),
       messages: messages,
-      system: 'Você é um assistente AI útil e amigável. Responda de forma clara e concisa em português brasileiro.',
+      system: systemMessage,
       temperature: 0.7,
     });
 

@@ -7,6 +7,11 @@ interface UploadedFile {
   size: number;
   type: string;
   url: string;
+  content?: string;
+  summary?: string;
+  fileType?: 'csv' | 'text' | 'unknown';
+  rowCount?: number;
+  columnCount?: number;
 }
 
 interface ChatMessage {

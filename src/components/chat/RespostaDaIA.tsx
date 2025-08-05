@@ -7,7 +7,7 @@ interface RespostaDaIAProps {
   isLoading?: boolean;
 }
 
-export default function RespostaDaIA({ content, timestamp, isLoading }: RespostaDaIAProps) {
+export default function RespostaDaIA({ content, isLoading }: RespostaDaIAProps) {
   const [copied, setCopied] = useState(false);
 
   const copyToClipboard = async () => {
