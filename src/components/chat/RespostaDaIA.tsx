@@ -21,21 +21,21 @@ export default function RespostaDaIA({ content, timestamp, isLoading }: Resposta
   };
 
   return (
-    <div className="group relative flex justify-start mb-6">
+    <div className="group relative flex justify-start mb-8">
       <div className="flex items-start gap-4 max-w-[85%]">
         {/* Avatar */}
-        <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold shadow-lg bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-[#1a73e8] text-white">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
           </svg>
         </div>
         
-        {/* Message Content - No bubble/caixa */}
+        {/* Message Content */}
         <div className="flex-1 min-w-0">
-          <div className="prose prose-sm max-w-none dark:prose-invert prose-gray">
+          <div className="text-[14px] leading-relaxed">
             {isLoading ? (
-              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                <span>Digitando</span>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <span className="text-sm">Digitando</span>
                 <div className="flex gap-1">
                   <div className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
                   <div className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
@@ -45,27 +45,27 @@ export default function RespostaDaIA({ content, timestamp, isLoading }: Resposta
             ) : (
               <ReactMarkdown
                 components={{
-                  p: ({ children }) => <p className="mb-2 last:mb-0 text-gray-900 dark:text-gray-100">{children}</p>,
+                  p: ({ children }) => <p className="mb-3 last:mb-0 text-foreground leading-relaxed">{children}</p>,
                   code: ({ children }) => (
-                    <code className="bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded text-sm font-mono text-gray-900 dark:text-gray-100">
+                    <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono text-foreground border">
                       {children}
                     </code>
                   ),
                   pre: ({ children }) => (
-                    <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg overflow-x-auto border border-gray-200 dark:border-gray-700">
+                    <pre className="bg-muted p-4 rounded-lg overflow-x-auto border my-3">
                       {children}
                     </pre>
                   ),
-                  ul: ({ children }) => <ul className="list-disc list-inside text-gray-900 dark:text-gray-100 mb-2">{children}</ul>,
-                  ol: ({ children }) => <ol className="list-decimal list-inside text-gray-900 dark:text-gray-100 mb-2">{children}</ol>,
-                  li: ({ children }) => <li className="mb-1 text-gray-900 dark:text-gray-100">{children}</li>,
-                  strong: ({ children }) => <strong className="font-semibold text-gray-900 dark:text-gray-100">{children}</strong>,
-                  em: ({ children }) => <em className="italic text-gray-900 dark:text-gray-100">{children}</em>,
-                  h1: ({ children }) => <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">{children}</h1>,
-                  h2: ({ children }) => <h2 className="text-base font-bold text-gray-900 dark:text-gray-100 mb-2">{children}</h2>,
-                  h3: ({ children }) => <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">{children}</h3>,
+                  ul: ({ children }) => <ul className="list-disc list-inside text-foreground mb-3 space-y-1">{children}</ul>,
+                  ol: ({ children }) => <ol className="list-decimal list-inside text-foreground mb-3 space-y-1">{children}</ol>,
+                  li: ({ children }) => <li className="text-foreground">{children}</li>,
+                  strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
+                  em: ({ children }) => <em className="italic text-foreground">{children}</em>,
+                  h1: ({ children }) => <h1 className="text-lg font-semibold text-foreground mb-3 leading-tight">{children}</h1>,
+                  h2: ({ children }) => <h2 className="text-base font-semibold text-foreground mb-3 leading-tight">{children}</h2>,
+                  h3: ({ children }) => <h3 className="text-sm font-semibold text-foreground mb-2 leading-tight">{children}</h3>,
                   blockquote: ({ children }) => (
-                    <blockquote className="border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic text-gray-700 dark:text-gray-300 mb-2">
+                    <blockquote className="border-l-4 border-border pl-4 italic text-muted-foreground mb-3">
                       {children}
                     </blockquote>
                   ),
@@ -81,14 +81,14 @@ export default function RespostaDaIA({ content, timestamp, isLoading }: Resposta
           {!isLoading && content && (
             <button 
               onClick={copyToClipboard}
-              className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-xs flex items-center gap-1"
+              className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-muted-foreground hover:text-foreground text-xs flex items-center gap-1.5 px-2 py-1 rounded-md hover:bg-muted"
             >
               {copied ? (
                 <>
-                  <svg className="w-3 h-3 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="text-green-500">Copiado!</span>
+                  <span className="text-green-600">Copiado!</span>
                 </>
               ) : (
                 <>
