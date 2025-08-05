@@ -30,11 +30,6 @@ export default function OrgChart() {
 
     return (
       <div key={employee.id} className="flex flex-col items-center relative">
-        {/* Incoming connector line from parent (except for root) */}
-        {level > 0 && (
-          <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-px h-12 bg-border z-0"></div>
-        )}
-
         {/* Employee Card */}
         <div className="relative z-10">
           <EmployeeCard
