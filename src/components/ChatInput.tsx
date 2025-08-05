@@ -1,6 +1,6 @@
 'use client';
 
-import { KeyboardEvent, useState } from 'react';
+import { KeyboardEvent } from 'react';
 import UploadFiles from './UploadFiles';
 
 interface UploadedFile {
@@ -15,16 +15,13 @@ interface ChatInputProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  onFilesChange: (files: UploadedFile[]) => void;
   disabled?: boolean;
 }
 
-export default function ChatInput({ value, onChange, onSubmit, disabled }: ChatInputProps) {
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-
+export default function ChatInput({ value, onChange, onSubmit, onFilesChange, disabled }: ChatInputProps) {
   const handleFilesUploaded = (files: UploadedFile[]) => {
-    setUploadedFiles(files);
-    // TODO: Integrar arquivos com mensagens do chat
-    console.log('Arquivos carregados:', files);
+    onFilesChange(files);
   };
   const handleKeyPress = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {

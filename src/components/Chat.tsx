@@ -3,22 +3,37 @@
 import { useState } from 'react';
 import Message from './Message';
 import ChatInput from './ChatInput';
+import Sidebar from './Sidebar';
+
+interface UploadedFile {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  url: string;
+}
 
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   createdAt: Date;
+  files?: UploadedFile[];
 }
 
 export default function Chat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
+  const [currentFiles, setCurrentFiles] = useState<UploadedFile[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
+  };
+
+  const handleFilesChange = (files: UploadedFile[]) => {
+    setCurrentFiles(files);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,10 +45,12 @@ export default function Chat() {
       role: 'user',
       content: input.trim(),
       createdAt: new Date(),
+      files: currentFiles.length > 0 ? [...currentFiles] : undefined,
     };
 
     setMessages(prev => [...prev, userMessage]);
     setInput('');
+    setCurrentFiles([]);
     setIsLoading(true);
     setError(null);
 
@@ -107,7 +124,12 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-white dark:bg-gray-900">
+    <div className="flex h-screen bg-white dark:bg-gray-900">
+      {/* Sidebar */}
+      <Sidebar />
+      
+      {/* Main Chat Area */}
+      <div className="flex flex-col flex-1">
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200/50 dark:border-gray-700/50">
         <div className="max-w-4xl mx-auto px-4 py-4">
@@ -151,6 +173,7 @@ export default function Chat() {
               content={message.content}
               role={message.role}
               timestamp={message.createdAt}
+              files={message.files}
             />
           ))
         )}
@@ -186,9 +209,11 @@ export default function Chat() {
             value={input}
             onChange={handleInputChange}
             onSubmit={handleSubmit}
+            onFilesChange={handleFilesChange}
             disabled={isLoading} 
           />
         </div>
+      </div>
       </div>
     </div>
   );
