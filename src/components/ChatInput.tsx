@@ -1,6 +1,15 @@
 'use client';
 
-import { KeyboardEvent } from 'react';
+import { KeyboardEvent, useState } from 'react';
+import UploadFiles from './UploadFiles';
+
+interface UploadedFile {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  url: string;
+}
 
 interface ChatInputProps {
   value: string;
@@ -10,6 +19,13 @@ interface ChatInputProps {
 }
 
 export default function ChatInput({ value, onChange, onSubmit, disabled }: ChatInputProps) {
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+
+  const handleFilesUploaded = (files: UploadedFile[]) => {
+    setUploadedFiles(files);
+    // TODO: Integrar arquivos com mensagens do chat
+    console.log('Arquivos carregados:', files);
+  };
   const handleKeyPress = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -48,7 +64,15 @@ export default function ChatInput({ value, onChange, onSubmit, disabled }: ChatI
             />
           </div>
           
-          <div className="flex items-end p-2">
+          <div className="flex items-end p-2 gap-2">
+            {/* Upload Files Button */}
+            <UploadFiles 
+              onFilesUploaded={handleFilesUploaded}
+              disabled={disabled}
+              maxFiles={3}
+              acceptedTypes={['image/*', 'application/pdf', '.txt', '.doc', '.docx']}
+            />
+            
             <button
               type="submit"
               disabled={!value.trim() || disabled}
