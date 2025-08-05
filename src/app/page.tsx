@@ -58,6 +58,20 @@ export default function Home() {
           <span className="text-xl font-bold">+ Daytona AI</span>
         </div>
 
+        {/* Claude Code Chat Link */}
+        <div className="w-full bg-blue-50 dark:bg-blue-900 rounded-lg p-4 border border-blue-200 dark:border-blue-700">
+          <h3 className="font-bold text-blue-800 dark:text-blue-200 mb-2">🤖 Claude Code Chat</h3>
+          <p className="text-blue-700 dark:text-blue-300 text-sm mb-3">
+            Chat directly with Claude Code CLI running in this sandbox environment.
+          </p>
+          <a
+            href="/claude-chat"
+            className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          >
+            Open Claude Code Chat
+          </a>
+        </div>
+
         {/* Sandbox Creation */}
         <div className="w-full bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg border">
           <h2 className="text-xl font-bold mb-4">Create Sandbox</h2>
