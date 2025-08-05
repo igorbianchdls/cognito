@@ -3,7 +3,13 @@
     "allow": [
       "Bash(rm:*)",
       "Bash(npm uninstall:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(npx shadcn@latest init:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run lint)"
     ],
     "deny": []
   }

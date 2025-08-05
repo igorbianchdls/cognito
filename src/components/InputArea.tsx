@@ -1,6 +1,10 @@
 'use client';
 
 import { KeyboardEvent } from 'react';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Card } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import UploadFiles from './UploadFiles';
 
 interface UploadedFile {
@@ -23,7 +27,7 @@ export default function InputArea({ value, onChange, onSubmit, onFilesChange, di
   const handleFilesUploaded = (files: UploadedFile[]) => {
     onFilesChange(files);
   };
-  const handleKeyPress = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       const form = e.currentTarget.form;
@@ -36,23 +40,24 @@ export default function InputArea({ value, onChange, onSubmit, onFilesChange, di
   return (
     <div className="relative">
       <form onSubmit={onSubmit} className="relative">
-        <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all duration-200">
+        <Card className="p-0 shadow-lg border-border/50 focus-within:ring-2 focus-within:ring-ring/20 focus-within:border-ring transition-all duration-200">
           {/* Textarea */}
-          <div className="relative">
-            <textarea
+          <div className="relative p-4 pb-0">
+            <Textarea
               value={value}
               onChange={onChange}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyDown}
               placeholder="Pergunte alguma coisa"
               disabled={disabled}
-              rows={3}
-              className="w-full resize-none bg-transparent px-4 py-3 pr-12
-                       text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400
-                       focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed
-                       min-h-[84px] max-h-32 overflow-y-auto border-0"
+              rows={2}
+              className={cn(
+                "resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:border-0 p-0",
+                "min-h-[56px] max-h-32 overflow-y-auto",
+                "disabled:opacity-50 disabled:cursor-not-allowed"
+              )}
               style={{
                 height: 'auto',
-                minHeight: '84px',
+                minHeight: '56px',
               }}
               onInput={(e) => {
                 const target = e.target as HTMLTextAreaElement;
@@ -60,38 +65,10 @@ export default function InputArea({ value, onChange, onSubmit, onFilesChange, di
                 target.style.height = Math.min(target.scrollHeight, 128) + 'px';
               }}
             />
-            
-            {/* Send button in top right */}
-            <button
-              type="submit"
-              disabled={!value.trim() || disabled}
-              className={`absolute bottom-3 right-3 w-8 h-8 rounded-lg flex items-center justify-center
-                       transition-all duration-200 ${
-                         !value.trim() || disabled
-                           ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed' 
-                           : 'bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-800 hover:bg-gray-700 dark:hover:bg-gray-300'
-                       }`}
-              title="Enviar mensagem (Enter)"
-            >
-              <svg 
-                width="16" 
-                height="16" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round"
-                className={disabled ? 'animate-pulse' : ''}
-              >
-                <line x1="22" y1="2" x2="11" y2="13"></line>
-                <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
-              </svg>
-            </button>
           </div>
           
           {/* Toolbar */}
-          <div className="flex items-center justify-between px-4 py-2 border-t border-gray-100 dark:border-gray-700">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border/50">
             {/* Left side tools */}
             <div className="flex items-center gap-2">
               {/* Upload Files Button */}
@@ -102,27 +79,42 @@ export default function InputArea({ value, onChange, onSubmit, onFilesChange, di
                 acceptedTypes={['image/*', 'application/pdf', '.txt', '.doc', '.docx']}
               />
               
-              {/* Tools button */}
-              <button
-                type="button"
-                disabled={disabled}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
-                title="Ferramentas"
+              {/* Send button */}
+              <Button
+                type="submit"
+                size="icon"
+                disabled={!value.trim() || disabled}
+                className={cn(
+                  "size-8",
+                  disabled && "animate-pulse"
+                )}
+                title="Enviar mensagem (Enter)"
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                <svg 
+                  width="16" 
+                  height="16" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                >
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22,2 15,22 11,13 2,9 22,2"></polygon>
                 </svg>
-                <span className="text-sm">Ferramentas</span>
-              </button>
+              </Button>
             </div>
             
             {/* Right side tools */}
             <div className="flex items-center gap-2">
               {/* Microphone button */}
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon"
                 disabled={disabled}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
+                className="size-8 text-muted-foreground hover:text-foreground"
                 title="Gravar áudio"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -131,20 +123,20 @@ export default function InputArea({ value, onChange, onSubmit, onFilesChange, di
                   <line x1="12" y1="19" x2="12" y2="23"/>
                   <line x1="8" y1="23" x2="16" y2="23"/>
                 </svg>
-              </button>
+              </Button>
             </div>
           </div>
-        </div>
+        </Card>
         
         {/* Hint text */}
         <div className="flex items-center justify-between mt-2 px-2">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            <kbd className="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded">Enter</kbd> para enviar, 
-            <kbd className="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded">Shift</kbd> + 
-            <kbd className="px-1.5 py-0.5 text-xs bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded">Enter</kbd> para nova linha
+          <p className="text-xs text-muted-foreground">
+            <kbd className="px-1.5 py-0.5 text-xs bg-muted border border-border rounded">Enter</kbd> para enviar, 
+            <kbd className="px-1.5 py-0.5 text-xs bg-muted border border-border rounded">Shift</kbd> + 
+            <kbd className="px-1.5 py-0.5 text-xs bg-muted border border-border rounded">Enter</kbd> para nova linha
           </p>
           {value.length > 0 && (
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-muted-foreground/60">
               {value.length} caracteres
             </p>
           )}
