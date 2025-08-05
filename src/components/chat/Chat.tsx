@@ -194,7 +194,7 @@ export default function Chat() {
 
         {/* Input Area for chat mode */}
         {messages.length > 0 && (
-          <div className="sticky bottom-0 bg-[#ffffff]/95 dark:bg-[#0f0f0f]/95 backdrop-blur-sm border-t border-[#e8eaed] dark:border-[#2d2d2d]">
+          <div className="sticky bottom-0 bg-[#ffffff]/95 dark:bg-[#0f0f0f]/95 backdrop-blur-sm">
             <div className="max-w-4xl mx-auto px-4 py-4">
               <InputArea
                 value={input}
