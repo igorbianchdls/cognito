@@ -74,12 +74,17 @@ export default function Chat() {
         
         if (value) {
           const chunk = decoder.decode(value);
+          console.log('Chunk recebido:', JSON.stringify(chunk));
+          console.log('Chunk length:', chunk.length);
+          
           // For text stream, just append the chunk
           setMessages(prev => {
             const newMessages = [...prev];
             const lastMessage = newMessages[newMessages.length - 1];
             if (lastMessage && lastMessage.role === 'assistant') {
+              console.log('Conteúdo antes:', JSON.stringify(lastMessage.content));
               lastMessage.content += chunk;
+              console.log('Conteúdo depois:', JSON.stringify(lastMessage.content));
             }
             return newMessages;
           });

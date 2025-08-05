@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 
 interface RespostaDaIAProps {
   content: string;
@@ -20,8 +21,8 @@ export default function RespostaDaIA({ content, timestamp, isLoading }: Resposta
   };
 
   return (
-    <div className="group relative mr-12 flex justify-start">
-      <div className="flex items-start gap-4 max-w-full flex-row">
+    <div className="group relative flex justify-start mb-6">
+      <div className="flex items-start gap-4 max-w-[85%]">
         {/* Avatar */}
         <div className="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold shadow-lg bg-gradient-to-br from-purple-500 to-purple-600 text-white">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -29,38 +30,52 @@ export default function RespostaDaIA({ content, timestamp, isLoading }: Resposta
           </svg>
         </div>
         
-        {/* Message Content */}
+        {/* Message Content - No bubble/caixa */}
         <div className="flex-1 min-w-0">
-          <div className="relative px-4 py-3 rounded-2xl shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 max-w-[85%]">
-            
-            {/* Message bubble pointer */}
-            <div className="absolute top-3 w-3 h-3 rotate-45 bg-white dark:bg-gray-800 border-r border-b border-gray-200 dark:border-gray-700 -left-1.5"></div>
-            
-            <div className="relative z-10">
-              <div className="leading-relaxed whitespace-pre-wrap text-gray-900 dark:text-white">
-                {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <span>Digitando</span>
-                    <div className="flex gap-1">
-                      <div className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                      <div className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                      <div className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                    </div>
-                  </div>
-                ) : (
-                  content
-                )}
+          <div className="prose prose-sm max-w-none dark:prose-invert prose-gray">
+            {isLoading ? (
+              <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
+                <span>Digitando</span>
+                <div className="flex gap-1">
+                  <div className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                  <div className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                  <div className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                </div>
               </div>
-              
-              {/* Timestamp */}
-              <div className="text-xs mt-2 text-gray-500 dark:text-gray-400">
-                {timestamp.toLocaleTimeString('pt-BR', { 
-                  hour: '2-digit', 
-                  minute: '2-digit' 
-                })}
-              </div>
-            </div>
+            ) : (
+              <ReactMarkdown
+                components={{
+                  p: ({ children }) => <p className="mb-2 last:mb-0 text-gray-900 dark:text-gray-100">{children}</p>,
+                  code: ({ children }) => (
+                    <code className="bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded text-sm font-mono text-gray-900 dark:text-gray-100">
+                      {children}
+                    </code>
+                  ),
+                  pre: ({ children }) => (
+                    <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg overflow-x-auto border border-gray-200 dark:border-gray-700">
+                      {children}
+                    </pre>
+                  ),
+                  ul: ({ children }) => <ul className="list-disc list-inside text-gray-900 dark:text-gray-100 mb-2">{children}</ul>,
+                  ol: ({ children }) => <ol className="list-decimal list-inside text-gray-900 dark:text-gray-100 mb-2">{children}</ol>,
+                  li: ({ children }) => <li className="mb-1 text-gray-900 dark:text-gray-100">{children}</li>,
+                  strong: ({ children }) => <strong className="font-semibold text-gray-900 dark:text-gray-100">{children}</strong>,
+                  em: ({ children }) => <em className="italic text-gray-900 dark:text-gray-100">{children}</em>,
+                  h1: ({ children }) => <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">{children}</h1>,
+                  h2: ({ children }) => <h2 className="text-base font-bold text-gray-900 dark:text-gray-100 mb-2">{children}</h2>,
+                  h3: ({ children }) => <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-2">{children}</h3>,
+                  blockquote: ({ children }) => (
+                    <blockquote className="border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic text-gray-700 dark:text-gray-300 mb-2">
+                      {children}
+                    </blockquote>
+                  ),
+                }}
+              >
+                {content}
+              </ReactMarkdown>
+            )}
           </div>
+          
           
           {/* Copy button */}
           {!isLoading && content && (
