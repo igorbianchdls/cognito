@@ -1,9 +1,15 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { streamText, convertToModelMessages } from 'ai';
+import { streamText } from 'ai';
 
 export async function POST(req: Request) {
+  console.log('=== CHAT API DEBUG ===');
+  console.log('API Key exists:', !!process.env.ANTHROPIC_API_KEY);
+  console.log('API Key length:', process.env.ANTHROPIC_API_KEY?.length || 0);
+  console.log('API Key starts with:', process.env.ANTHROPIC_API_KEY?.substring(0, 15) || 'N/A');
+  
   try {
     const { messages } = await req.json();
+    console.log('Messages received:', messages?.length || 0);
 
     if (!process.env.ANTHROPIC_API_KEY) {
       console.error('Missing ANTHROPIC_API_KEY environment variable');
@@ -16,14 +22,16 @@ export async function POST(req: Request) {
       });
     }
 
+    console.log('Calling Anthropic API...');
     const result = streamText({
       model: anthropic('claude-3-5-sonnet-20241022'),
-      messages: convertToModelMessages(messages),
+      messages: messages,
       system: 'Você é um assistente AI útil e amigável. Responda de forma clara e concisa em português brasileiro.',
       temperature: 0.7,
     });
 
-    return result.toUIMessageStreamResponse();
+    console.log('API call successful, returning stream...');
+    return result.toAIStreamResponse();
   } catch (error) {
     console.error('Error in chat API:', error);
     return new Response(JSON.stringify({ 
