@@ -9,7 +9,12 @@
       "Bash(mkdir:*)",
       "Bash(npm install:*)",
       "Bash(npm run build:*)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "Bash(claude mcp add:*)",
+      "Bash(/c/Users/Administrador/AppData/Roaming/npm/claude mcp list)",
+      "Bash(/c/Users/Administrador/AppData/Roaming/npm/claude mcp add google-sheets -e GOOGLE_APPLICATION_CREDENTIALS=\"C:\\Users\\Administrador\\.config\\claude\\google-sheets-credentials.json\" -- npx @xing5/mcp-google-sheets)",
+      "Bash(claude mcp:*)",
+      "Bash(npx:*)"
     ],
     "deny": []
   }

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Message from './Message';
-import Sidebar from './Sidebar';
+import Sidebar from '../navigation/Sidebar';
 import InputArea from './InputArea';
 
 interface UploadedFile {
