@@ -6,7 +6,14 @@ export async function POST(req: Request) {
     const { messages } = await req.json();
 
     if (!process.env.ANTHROPIC_API_KEY) {
-      return new Response('Anthropic API key not configured', { status: 500 });
+      console.error('Missing ANTHROPIC_API_KEY environment variable');
+      return new Response(JSON.stringify({ 
+        error: 'Anthropic API key not configured',
+        details: 'Please set ANTHROPIC_API_KEY in your environment variables'
+      }), { 
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      });
     }
 
     const result = streamText({
@@ -19,6 +26,12 @@ export async function POST(req: Request) {
     return result.toUIMessageStreamResponse();
   } catch (error) {
     console.error('Error in chat API:', error);
-    return new Response('Internal server error', { status: 500 });
+    return new Response(JSON.stringify({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }), { 
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
