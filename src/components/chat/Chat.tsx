@@ -145,7 +145,7 @@ export default function Chat() {
               </div>
               
               {/* Main Input */}
-              <div className="w-full max-w-2xl px-4">
+              <div className="w-full max-w-4xl mx-auto px-4">
                 <InputArea
                   value={input}
                   onChange={handleInputChange}
