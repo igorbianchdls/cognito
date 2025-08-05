@@ -26,14 +26,13 @@ export default function OrgChart() {
   const renderEmployee = (employee: Employee, level: number = 0): React.ReactNode => {
     const hasSubordinates = employee.subordinates && employee.subordinates.length > 0;
     const isExpanded = expandedNodes.has(employee.id);
+    const subordinatesCount = employee.subordinates?.length || 0;
 
     return (
       <div key={employee.id} className="flex flex-col items-center relative">
-        {/* Connector Line */}
+        {/* Incoming connector line from parent (except for root) */}
         {level > 0 && (
-          <div className="absolute -top-8 left-1/2 -translate-x-1/2">
-            <div className="w-px h-8 bg-border"></div>
-          </div>
+          <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-px h-12 bg-border z-0"></div>
         )}
 
         {/* Employee Card */}
@@ -50,7 +49,7 @@ export default function OrgChart() {
             <Button
               variant="outline"
               size="sm"
-              className="absolute -bottom-3 left-1/2 -translate-x-1/2 h-6 w-6 p-0 rounded-full bg-background border-2"
+              className="absolute -bottom-3 left-1/2 -translate-x-1/2 h-6 w-6 p-0 rounded-full bg-background border-2 z-20"
               onClick={() => toggleExpanded(employee.id)}
             >
               <svg 
@@ -65,25 +64,37 @@ export default function OrgChart() {
           )}
         </div>
 
-        {/* Subordinates */}
+        {/* Connection lines and subordinates */}
         {hasSubordinates && isExpanded && (
-          <div className="mt-12 relative">
-            {/* Horizontal connector line */}
-            {employee.subordinates!.length > 1 && (
-              <div className="absolute -top-6 left-0 right-0 h-px bg-border"></div>
-            )}
+          <div className="relative mt-6">
+            {/* Vertical line from expand button to horizontal line */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-6 bg-border z-0"></div>
             
-            <div className="flex gap-8 justify-center flex-wrap">
-              {employee.subordinates!.map((subordinate) => (
-                <div key={subordinate.id} className="relative">
-                  {/* Vertical connector to horizontal line */}
-                  {employee.subordinates!.length > 1 && (
-                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-px h-6 bg-border"></div>
-                  )}
-                  {renderEmployee(subordinate, level + 1)}
+            {subordinatesCount === 1 ? (
+              /* Single subordinate - direct vertical line */
+              <div className="pt-6">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-12 bg-border z-0"></div>
+                <div className="pt-6">
+                  {renderEmployee(employee.subordinates![0], level + 1)}
                 </div>
-              ))}
-            </div>
+              </div>
+            ) : (
+              /* Multiple subordinates - horizontal distribution */
+              <div className="pt-6 relative">
+                {/* Horizontal connector line */}
+                <div className="absolute top-6 left-0 right-0 h-px bg-border z-0"></div>
+                
+                <div className="flex gap-12 justify-center items-start pt-6">
+                  {employee.subordinates!.map((subordinate) => (
+                    <div key={subordinate.id} className="relative">
+                      {/* Vertical line from horizontal line to subordinate */}
+                      <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-px h-6 bg-border z-0"></div>
+                      {renderEmployee(subordinate, level + 1)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
