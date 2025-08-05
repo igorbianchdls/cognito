@@ -113,9 +113,9 @@ export default function OrgChart() {
           <div className="min-w-max">
             {/* Header */}
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-foreground mb-2">Organograma</h1>
+              <h1 className="text-3xl font-bold text-foreground mb-2">AI Agents Network</h1>
               <p className="text-muted-foreground">
-                Estrutura organizacional da empresa • Clique nos cards para ver detalhes
+                Estrutura dos agentes de IA • Clique nos cards para ver detalhes
               </p>
             </div>
 
@@ -156,7 +156,7 @@ export default function OrgChart() {
             {/* Additional Employees Section */}
             <div className="mt-16 pt-8 border-t border-border">
               <h2 className="text-xl font-semibold text-foreground mb-4">
-                Outros Funcionários
+                Agentes Especializados
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 {additionalEmployees.map((employee) => (
@@ -192,46 +192,49 @@ export default function OrgChart() {
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg">
-                    {selectedEmployee.name.split(' ').map(n => n[0]).join('')}
+                  <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${selectedEmployee.iconColor} flex items-center justify-center text-white font-semibold text-lg`}>
+                    {selectedEmployee.icon}
                   </div>
                   <div>
                     <CardTitle className="text-base">{selectedEmployee.name}</CardTitle>
-                    <p className="text-sm text-muted-foreground">{selectedEmployee.position}</p>
+                    <p className="text-sm text-muted-foreground">{selectedEmployee.description}</p>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
                   <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Departamento
+                    Categoria
                   </label>
-                  <p className="text-sm">{selectedEmployee.department}</p>
+                  <p className="text-sm">{selectedEmployee.category}</p>
                 </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Localização
-                  </label>
-                  <p className="text-sm">{selectedEmployee.location}</p>
-                </div>
-                {selectedEmployee.connectionScore && (
+                {selectedEmployee.capabilities && selectedEmployee.capabilities.length > 0 && (
                   <div>
                     <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Pontuação de Conexão
+                      Capacidades
                     </label>
-                    <p className="text-sm">{selectedEmployee.connectionScore}</p>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {selectedEmployee.capabilities.map((capability, index) => (
+                        <Badge key={index} variant="outline" className="text-xs px-2 py-0.5">
+                          {capability}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
                 )}
                 {selectedEmployee.subordinates && selectedEmployee.subordinates.length > 0 && (
                   <div>
                     <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Subordinados Diretos
+                      Agentes Gerenciados
                     </label>
                     <p className="text-sm">{selectedEmployee.subordinates.length}</p>
                     <div className="mt-2 space-y-1">
                       {selectedEmployee.subordinates.map(sub => (
-                        <div key={sub.id} className="text-xs text-muted-foreground">
-                          • {sub.name} - {sub.position}
+                        <div key={sub.id} className="text-xs text-muted-foreground flex items-center gap-2">
+                          <span className={`w-4 h-4 rounded bg-gradient-to-br ${sub.iconColor} flex items-center justify-center text-white text-xs`}>
+                            {sub.icon}
+                          </span>
+                          {sub.name}
                         </div>
                       ))}
                     </div>
