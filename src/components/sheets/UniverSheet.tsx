@@ -48,7 +48,7 @@ export default function UniverSheet() {
 
   return (
     <div className="w-full h-screen relative">
-      <div className="absolute top-1 right-4 z-10">
+      <div className="absolute top-1 right-4 z-[9999] pointer-events-auto">
         <CSVImportButton 
           csvPlugin={csvPlugin}
           disabled={!csvPlugin}
