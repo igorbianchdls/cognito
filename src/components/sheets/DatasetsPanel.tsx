@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from '@nanostores/react';
 import { 
   availableDatasetsStore, 
@@ -8,19 +8,30 @@ import {
   sheetDataStore, 
   isSheetLoadingStore,
   switchToDataset,
-  initializeDefaultDataset
+  initializeDefaultDataset,
+  addDataset,
+  removeDataset
 } from '@/stores/sheetsStore';
 import { DatasetInfo } from '@/data/mockDatasets';
+import { CSVImportPlugin } from './CSVImportPlugin';
+import CSVImportButton from './CSVImportButton';
 
 export default function DatasetsPanel() {
   const datasets = useStore(availableDatasetsStore);
   const activeDatasetId = useStore(activeDatasetIdStore);
   const sheetData = useStore(sheetDataStore);
   const isLoading = useStore(isSheetLoadingStore);
+  
+  // Initialize CSV import plugin
+  const [csvPlugin, setCsvPlugin] = useState<CSVImportPlugin | null>(null);
 
   // Initialize default dataset on component mount
   useEffect(() => {
     initializeDefaultDataset();
+    
+    // Initialize CSV plugin (we don't need a real Univer API for our case)
+    const plugin = new CSVImportPlugin(null);
+    setCsvPlugin(plugin);
   }, []);
 
   // Handle dataset selection
@@ -30,18 +41,34 @@ export default function DatasetsPanel() {
     }
   };
 
-  const handleImportCSV = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.csv,.xlsx,.json';
-    input.onchange = (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        console.log('Importing file:', file.name);
-        // TODO: Implementar importação
+  // Handle dataset removal
+  const handleRemoveDataset = (datasetId: string) => {
+    const dataset = datasets.find(ds => ds.id === datasetId);
+    if (dataset && confirm(`Tem certeza que deseja remover o dataset "${dataset.name}"?`)) {
+      removeDataset(datasetId);
+    }
+  };
+
+  // Handle successful import from CSV plugin
+  const handleImportSuccess = async () => {
+    if (!csvPlugin) return;
+
+    try {
+      const csvData = await csvPlugin.triggerFileSelect();
+      if (csvData) {
+        addDataset({
+          headers: csvData.headers,
+          rows: csvData.rows,
+          fileName: csvData.fileName,
+          fileSize: csvData.fileSize,
+          rowCount: csvData.rowCount,
+          columnCount: csvData.columnCount
+        });
       }
-    };
-    input.click();
+    } catch (error) {
+      console.error('Erro na importação:', error);
+      alert(`Erro ao importar arquivo: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+    }
   };
 
   const handleExportCSV = () => {
@@ -201,10 +228,20 @@ export default function DatasetsPanel() {
                       >
                         📥
                       </button>
-                      {!isActive && (
+                      {!isActive && !dataset.id.startsWith('imported-') && (
                         <button 
+                          onClick={() => handleRemoveDataset(dataset.id)}
                           className="p-1 hover:bg-red-200 rounded text-xs"
                           title="Remover dataset"
+                        >
+                          🗑️
+                        </button>
+                      )}
+                      {dataset.id.startsWith('imported-') && (
+                        <button 
+                          onClick={() => handleRemoveDataset(dataset.id)}
+                          className="p-1 hover:bg-red-200 rounded text-xs"
+                          title="Remover dataset importado"
                         >
                           🗑️
                         </button>
@@ -229,22 +266,46 @@ export default function DatasetsPanel() {
       {/* Actions */}
       <div className="border-t border-gray-200 p-3">
         <div className="space-y-2">
+          {/* Custom Import Button with better integration */}
           <button
-            onClick={handleImportCSV}
-            disabled={isLoading}
+            onClick={handleImportSuccess}
+            disabled={isLoading || !csvPlugin}
             className="w-full px-3 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
-            {isLoading ? 'Importando...' : 'Importar Dados'}
+            {isLoading ? (
+              <>
+                <div className="w-4 h-4 border border-white border-t-transparent rounded-full animate-spin"></div>
+                Processando...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                Importar Dados
+              </>
+            )}
           </button>
           
+          <div className="text-xs text-gray-500 text-center">
+            Suporta: CSV, TSV, JSON
+          </div>
+          
           <div className="grid grid-cols-2 gap-2">
-            <button className="px-3 py-2 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50 transition-colors">
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-3 py-2 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50 transition-colors"
+            >
               🔄 Atualizar
             </button>
-            <button className="px-3 py-2 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50 transition-colors">
+            <button 
+              onClick={() => {
+                if (confirm('Limpar todos os dados importados?')) {
+                  datasets.filter(ds => ds.id.startsWith('imported-')).forEach(ds => removeDataset(ds.id));
+                }
+              }}
+              className="px-3 py-2 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50 transition-colors"
+            >
               🗑️ Limpar
             </button>
           </div>

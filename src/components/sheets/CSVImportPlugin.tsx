@@ -1,7 +1,14 @@
 export interface CSVData {
   headers: string[];
-  rows: string[][];
+  rows: Array<Record<string, unknown>>;
+  rawRows: string[][];
+  fileName: string;
+  fileSize: number;
+  rowCount: number;
+  columnCount: number;
 }
+
+import Papa from 'papaparse';
 
 export class CSVImportPlugin {
   private univerAPI: unknown;
@@ -14,17 +21,17 @@ export class CSVImportPlugin {
     return new Promise((resolve) => {
       const input = document.createElement('input');
       input.type = 'file';
-      input.accept = '.csv,.txt';
+      input.accept = '.csv,.tsv,.txt,.json';
       input.style.display = 'none';
       
       input.onchange = async (event) => {
         const file = (event.target as HTMLInputElement).files?.[0];
         if (file) {
           try {
-            const csvData = await this.processCSVFile(file);
-            resolve(csvData);
+            const fileData = await this.processFile(file);
+            resolve(fileData);
           } catch (error) {
-            console.error('Erro ao processar arquivo CSV:', error);
+            console.error('Erro ao processar arquivo:', error);
             resolve(null);
           }
         } else {
@@ -40,72 +47,128 @@ export class CSVImportPlugin {
     });
   }
 
+  private processFile(file: File): Promise<CSVData> {
+    return new Promise((resolve, reject) => {
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+      
+      if (fileExtension === 'json') {
+        this.processJSONFile(file).then(resolve).catch(reject);
+      } else {
+        this.processCSVFile(file).then(resolve).catch(reject);
+      }
+    });
+  }
+
   private processCSVFile(file: File): Promise<CSVData> {
+    return new Promise((resolve, reject) => {
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+      const delimiter = this.detectDelimiter(fileExtension);
+      
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        delimiter: delimiter,
+        dynamicTyping: true,
+        encoding: 'UTF-8',
+        transformHeader: (header: string) => header.trim(),
+        complete: (result) => {
+          try {
+            if (result.errors.length > 0) {
+              console.warn('Papa parse warnings:', result.errors);
+            }
+
+            const headers = result.meta.fields || [];
+            const rows = result.data as Array<Record<string, unknown>>;
+            
+            // Also get raw string data for legacy compatibility
+            Papa.parse(file, {
+              header: false,
+              skipEmptyLines: true,
+              delimiter: delimiter,
+              encoding: 'UTF-8',
+              complete: (rawResult) => {
+                const rawRows = rawResult.data as string[][];
+                
+                const csvData: CSVData = {
+                  headers,
+                  rows,
+                  rawRows: rawRows.slice(1), // Remove header row
+                  fileName: file.name,
+                  fileSize: file.size,
+                  rowCount: rows.length,
+                  columnCount: headers.length
+                };
+                
+                resolve(csvData);
+              },
+              error: (error) => reject(new Error(`Erro ao processar CSV: ${error.message}`))
+            });
+          } catch (error) {
+            reject(new Error(`Erro ao processar dados CSV: ${(error as Error).message}`));
+          }
+        },
+        error: (error) => {
+          reject(new Error(`Erro ao fazer parse do CSV: ${error.message}`));
+        }
+      });
+    });
+  }
+
+  private processJSONFile(file: File): Promise<CSVData> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       
       reader.onload = (e) => {
         try {
-          const csvText = e.target?.result as string;
-          const parsedData = this.parseCSV(csvText);
-          resolve(parsedData);
+          const jsonText = e.target?.result as string;
+          const jsonData = JSON.parse(jsonText);
+          
+          if (!Array.isArray(jsonData)) {
+            throw new Error('JSON deve ser um array de objetos');
+          }
+          
+          if (jsonData.length === 0) {
+            throw new Error('Array JSON está vazio');
+          }
+          
+          // Extract headers from first object
+          const headers = Object.keys(jsonData[0]);
+          const rows = jsonData as Array<Record<string, unknown>>;
+          
+          // Convert to raw rows for compatibility
+          const rawRows = rows.map(row => 
+            headers.map(header => String(row[header] || ''))
+          );
+          
+          const csvData: CSVData = {
+            headers,
+            rows,
+            rawRows,
+            fileName: file.name,
+            fileSize: file.size,
+            rowCount: rows.length,
+            columnCount: headers.length
+          };
+          
+          resolve(csvData);
         } catch (error) {
-          reject(error);
+          reject(new Error(`Erro ao processar JSON: ${(error as Error).message}`));
         }
       };
       
-      reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+      reader.onerror = () => reject(new Error('Erro ao ler arquivo JSON'));
       reader.readAsText(file, 'UTF-8');
     });
   }
 
-  private parseCSV(csvText: string): CSVData {
-    const lines = csvText.trim().split('\n');
-    if (lines.length === 0) {
-      throw new Error('Arquivo CSV vazio');
+  private detectDelimiter(fileExtension?: string): string {
+    switch (fileExtension) {
+      case 'tsv': return '\t';
+      case 'csv': return ',';
+      default: return ''; // Auto-detect
     }
-
-    const allRows = lines.map(line => this.parseCSVLine(line));
-    
-    const headers = allRows[0] || [];
-    const rows = allRows.slice(1);
-
-    return {
-      headers,
-      rows
-    };
   }
 
-  private parseCSVLine(line: string): string[] {
-    const result: string[] = [];
-    let current = '';
-    let inQuotes = false;
-    let i = 0;
-
-    while (i < line.length) {
-      const char = line[i];
-      
-      if (char === '"') {
-        if (inQuotes && line[i + 1] === '"') {
-          current += '"';
-          i += 2;
-        } else {
-          inQuotes = !inQuotes;
-          i++;
-        }
-      } else if (char === ',' && !inQuotes) {
-        result.push(current.trim());
-        current = '';
-        i++;
-      } else {
-        current += char;
-        i++;
-      }
-    }
-    
-    result.push(current.trim());
-    return result.map(field => field.replace(/^"|"$/g, ''));
-  }
 
   importToNewWorkbook(csvData: CSVData): void {
     try {
@@ -163,12 +226,12 @@ export class CSVImportPlugin {
     const allRows = [csvData.headers, ...csvData.rows];
     
     allRows.forEach((row, rowIndex) => {
-      row.forEach((cell, colIndex) => {
+      (row as unknown[]).forEach((cell: unknown, colIndex: number) => {
         if (!cellData[rowIndex]) {
           cellData[rowIndex] = {};
         }
         
-        const value = this.parseValue(cell);
+        const value = this.parseValue(String(cell || ''));
         
         cellData[rowIndex][colIndex] = {
           v: value,
@@ -213,11 +276,12 @@ export class CSVImportPlugin {
     return cleaned;
   }
 
-  previewCSV(csvData: CSVData, maxRows: number = 5): { headers: string[]; preview: string[][]; totalRows: number } {
+  previewCSV(csvData: CSVData, maxRows: number = 5): { headers: string[]; preview: Array<Record<string, unknown>>; rawPreview: string[][]; totalRows: number } {
     return {
       headers: csvData.headers,
       preview: csvData.rows.slice(0, maxRows),
-      totalRows: csvData.rows.length
+      rawPreview: csvData.rawRows.slice(0, maxRows),
+      totalRows: csvData.rowCount
     };
   }
 }

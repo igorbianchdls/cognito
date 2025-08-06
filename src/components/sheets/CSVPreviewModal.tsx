@@ -72,15 +72,18 @@ export default function CSVPreviewModal({
             <tbody className="bg-white divide-y divide-gray-200">
               {preview.preview.map((row, rowIndex) => (
                 <tr key={rowIndex} className="hover:bg-gray-50">
-                  {row.map((cell, cellIndex) => (
-                    <td 
-                      key={cellIndex} 
-                      className="px-6 py-3 text-sm text-gray-900 border-r border-gray-200 last:border-r-0 max-w-xs truncate"
-                      title={cell}
-                    >
-                      {cell || '—'}
-                    </td>
-                  ))}
+                  {preview.headers.map((header, cellIndex) => {
+                    const cell = (row as Record<string, unknown>)[header];
+                    return (
+                      <td 
+                        key={cellIndex} 
+                        className="px-6 py-3 text-sm text-gray-900 border-r border-gray-200 last:border-r-0 max-w-xs truncate"
+                        title={String(cell || '')}
+                      >
+                        {String(cell || '—')}
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
             </tbody>

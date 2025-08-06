@@ -149,3 +149,232 @@ export const getActiveDatasetInfo = (): DatasetInfo | null => {
   const datasets = availableDatasetsStore.get()
   return datasets.find(ds => ds.id === activeId) || null
 }
+
+// Add new dataset from imported file
+export const addDataset = (
+  csvData: {
+    headers: string[]
+    rows: Array<Record<string, unknown>>
+    fileName: string
+    fileSize: number
+    rowCount: number
+    columnCount: number
+  }
+) => {
+  setSheetLoading(true)
+  setSheetError(null)
+
+  try {
+    // Generate unique ID
+    const timestamp = Date.now()
+    const cleanFileName = csvData.fileName.replace(/\.[^/.]+$/, '') // Remove extension
+    const datasetId = `imported-${cleanFileName.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${timestamp}`
+
+    // Generate column definitions
+    const columnDefs = generateColumnDefs(csvData.headers, csvData.rows)
+
+    // Create dataset info
+    const newDataset: DatasetInfo = {
+      id: datasetId,
+      name: cleanFileName,
+      description: `Importado de ${csvData.fileName} • ${csvData.rowCount} registros`,
+      rows: csvData.rowCount,
+      columns: csvData.columnCount,
+      size: formatFileSize(csvData.fileSize),
+      type: getFileType(csvData.fileName),
+      lastModified: new Date(),
+      data: csvData.rows,
+      columnDefs
+    }
+
+    // Add to available datasets
+    const currentDatasets = availableDatasetsStore.get()
+    availableDatasetsStore.set([...currentDatasets, newDataset])
+
+    // Auto-activate the new dataset
+    switchToDataset(datasetId)
+
+    console.log(`Dataset imported: ${newDataset.name} (${newDataset.rows} rows, ${newDataset.columns} columns)`)
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao importar dataset'
+    setSheetError(errorMessage)
+    console.error('Error importing dataset:', error)
+  } finally {
+    setSheetLoading(false)
+  }
+}
+
+// Remove dataset from available datasets
+export const removeDataset = (datasetId: string) => {
+  const currentDatasets = availableDatasetsStore.get()
+  const updatedDatasets = currentDatasets.filter(ds => ds.id !== datasetId)
+  
+  // If removing active dataset, switch to first available
+  const activeId = activeDatasetIdStore.get()
+  if (activeId === datasetId && updatedDatasets.length > 0) {
+    switchToDataset(updatedDatasets[0].id)
+  }
+  
+  availableDatasetsStore.set(updatedDatasets)
+  
+  console.log(`Dataset removed: ${datasetId}`)
+}
+
+// Utility function to generate column definitions based on data
+const generateColumnDefs = (headers: string[], rows: Array<Record<string, unknown>>): ColDef[] => {
+  return headers.map((header, index) => {
+    const field = header
+    const sampleValues = rows.slice(0, 10).map(row => row[field])
+    const dataType = detectColumnType(sampleValues)
+
+    const baseConfig: ColDef = {
+      field,
+      headerName: header,
+      width: Math.min(Math.max(header.length * 10, 100), 200),
+      editable: true,
+      sortable: true,
+      filter: getFilterType(dataType),
+    }
+
+    // Add type-specific configurations
+    switch (dataType) {
+      case 'number':
+        return {
+          ...baseConfig,
+          enableValue: true,
+          aggFunc: 'avg',
+          valueFormatter: (params) => {
+            if (params.value == null) return ''
+            return typeof params.value === 'number' 
+              ? params.value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 })
+              : String(params.value)
+          }
+        }
+
+      case 'currency':
+        return {
+          ...baseConfig,
+          enableValue: true,
+          aggFunc: 'sum',
+          valueFormatter: (params) => {
+            if (params.value == null) return ''
+            return typeof params.value === 'number'
+              ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value)
+              : String(params.value)
+          }
+        }
+
+      case 'date':
+        return {
+          ...baseConfig,
+          filter: 'agDateColumnFilter',
+          valueFormatter: (params) => {
+            if (!params.value) return ''
+            const date = new Date(params.value as string)
+            return isNaN(date.getTime()) ? String(params.value) : date.toLocaleDateString('pt-BR')
+          }
+        }
+
+      case 'boolean':
+        return {
+          ...baseConfig,
+          enableRowGroup: true,
+          enablePivot: true,
+          cellRenderer: (params: { value: unknown }) => {
+            if (params.value === true || params.value === 'true' || params.value === 'sim') return '✓'
+            if (params.value === false || params.value === 'false' || params.value === 'não') return '✗'
+            return String(params.value || '')
+          },
+          cellStyle: (params) => {
+            const isTrue = params.value === true || params.value === 'true' || params.value === 'sim'
+            const isFalse = params.value === false || params.value === 'false' || params.value === 'não'
+            if (isTrue) return { color: '#2e7d32', fontWeight: 'bold' }
+            if (isFalse) return { color: '#c62828', fontWeight: 'bold' }
+            return undefined
+          }
+        }
+
+      case 'string':
+      default:
+        return {
+          ...baseConfig,
+          enableRowGroup: true,
+          enablePivot: index < 3 // Only enable pivot for first few string columns
+        }
+    }
+  })
+}
+
+// Detect column data type based on sample values
+const detectColumnType = (sampleValues: unknown[]): 'number' | 'currency' | 'date' | 'boolean' | 'string' => {
+  const nonNullValues = sampleValues.filter(v => v != null && v !== '')
+
+  if (nonNullValues.length === 0) return 'string'
+
+  // Check for booleans
+  const booleanCount = nonNullValues.filter(v => 
+    v === true || v === false || 
+    v === 'true' || v === 'false' ||
+    v === 'sim' || v === 'não'
+  ).length
+  if (booleanCount / nonNullValues.length >= 0.8) return 'boolean'
+
+  // Check for numbers
+  const numberCount = nonNullValues.filter(v => typeof v === 'number' || !isNaN(Number(v))).length
+  if (numberCount / nonNullValues.length >= 0.8) {
+    // Check if it looks like currency
+    const currencyCount = nonNullValues.filter(v => {
+      const str = String(v)
+      return /^[R$€£¥₹]\s*[\d,.]/.test(str) || /[\d,.]+\s*[R$€£¥₹]/.test(str)
+    }).length
+    if (currencyCount / nonNullValues.length >= 0.6) return 'currency'
+    
+    return 'number'
+  }
+
+  // Check for dates
+  const dateCount = nonNullValues.filter(v => {
+    const dateValue = new Date(String(v))
+    return !isNaN(dateValue.getTime()) && String(v).match(/\d{1,4}[/-]\d{1,2}[/-]\d{1,4}/)
+  }).length
+  if (dateCount / nonNullValues.length >= 0.6) return 'date'
+
+  return 'string'
+}
+
+// Get appropriate filter type for data type
+const getFilterType = (dataType: string): string => {
+  switch (dataType) {
+    case 'number':
+    case 'currency':
+      return 'agNumberColumnFilter'
+    case 'date':
+      return 'agDateColumnFilter'
+    case 'boolean':
+    case 'string':
+    default:
+      return 'agSetColumnFilter'
+  }
+}
+
+// Get file type based on extension
+const getFileType = (fileName: string): DatasetInfo['type'] => {
+  const extension = fileName.split('.').pop()?.toLowerCase()
+  switch (extension) {
+    case 'csv': return 'csv'
+    case 'json': return 'json'
+    case 'xlsx':
+    case 'xls': return 'excel'
+    default: return 'csv'
+  }
+}
+
+// Format file size for display
+const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`
+}
