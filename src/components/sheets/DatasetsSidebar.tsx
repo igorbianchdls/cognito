@@ -276,31 +276,26 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
       </div>
 
       {/* Footer Actions */}
-      <div className="border-t border-[#dfe1e6] p-3 bg-white">
+      <div className="border-t border-[#dfe1e6] p-2 bg-[#fafbfc]">
         <button
           onClick={handleImport}
           disabled={isLoading || !csvPlugin}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-[#0052cc] text-white text-sm font-medium rounded hover:bg-[#0065ff] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full flex items-center gap-2 px-2 py-2 text-[#8993a4] text-sm font-medium rounded hover:bg-[#f4f5f7] hover:text-[#172b4d] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isLoading ? (
             <>
-              <div className="w-4 h-4 border border-white border-t-transparent rounded-full animate-spin"></div>
-              Processing...
+              <div className="w-3 h-3 border border-[#8993a4] border-t-transparent rounded-full animate-spin"></div>
+              <span>Processing...</span>
             </>
           ) : (
             <>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
-              Add new...
+              <span>Add new...</span>
             </>
           )}
         </button>
-        
-        {/* Stats */}
-        <div className="mt-2 text-xs text-[#8993a4] text-center">
-          Total: {datasets.length} datasets • {datasets.reduce((acc, ds) => acc + ds.rows, 0).toLocaleString()} rows
-        </div>
       </div>
     </div>
   );

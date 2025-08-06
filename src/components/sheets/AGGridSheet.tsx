@@ -93,22 +93,10 @@ export default function AGGridSheet() {
   }, []);
 
   return (
-    <div className="w-full h-full p-3">
-      {/* Header - Dinâmico baseado no dataset ativo */}
-      <div className="mb-4">
-        <div className="flex items-center gap-2">
-          <h2 className="text-xl font-bold text-[#172b4d]">
-            {datasetInfo?.name || 'Planilha'} 
-          </h2>
-          {isLoading && (
-            <div className="w-4 h-4 border border-[#0052cc] border-t-transparent rounded-full animate-spin"></div>
-          )}
-        </div>
-      </div>
-
-      {/* AG Grid - Altura ajustada para layout de 3 colunas */}
+    <div className="w-full h-full">
+      {/* AG Grid - Ocupando 100vh da tela */}
       {isClient ? (
-        <div className="w-full" style={{ height: 'calc(100vh - 120px)', minHeight: '500px' }}>
+        <div className="w-full h-screen">
           <AgGridReact
             theme={themeQuartz}
             loadThemeGoogleFonts={true}
@@ -131,7 +119,7 @@ export default function AGGridSheet() {
           />
         </div>
       ) : (
-        <div className="w-full flex items-center justify-center" style={{ height: 'calc(100vh - 180px)', minHeight: '500px' }}>
+        <div className="w-full h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
             <p className="text-sm text-gray-600">Carregando planilha...</p>
