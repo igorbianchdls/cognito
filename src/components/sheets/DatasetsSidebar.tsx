@@ -157,7 +157,7 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
                       className={`
                         group flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer transition-all
                         ${isActive 
-                          ? 'bg-[#e3f2fd] border-l-2 border-[#0052cc] text-[#0052cc]' 
+                          ? 'bg-[#f4f5f7]' 
                           : 'text-[#172b4d] hover:bg-[#f4f5f7]'
                         }
                         ${isLoadingThis ? 'opacity-50' : ''}
@@ -165,11 +165,8 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
                     >
                       <span className="text-[#8993a4]">{getDatasetIcon(dataset)}</span>
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">
+                        <div className="text-sm font-medium truncate text-[#172b4d]">
                           {dataset.name}
-                        </div>
-                        <div className="text-xs text-[#8993a4]">
-                          {formatNumber(dataset.rows)} rows • {dataset.columns} cols
                         </div>
                       </div>
                       
@@ -233,7 +230,7 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
                         className={`
                           flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer transition-all
                           ${isActive 
-                            ? 'bg-[#e3f2fd] border-l-2 border-[#0052cc] text-[#0052cc]' 
+                            ? 'bg-[#f4f5f7]' 
                             : 'text-[#172b4d] hover:bg-[#f4f5f7]'
                           }
                           ${isLoadingThis ? 'opacity-50' : ''}
@@ -241,11 +238,8 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
                       >
                         <span className="text-[#8993a4]">{getDatasetIcon(dataset)}</span>
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium truncate">
+                          <div className="text-sm font-medium truncate text-[#172b4d]">
                             {dataset.name}
-                          </div>
-                          <div className="text-xs text-[#8993a4]">
-                            {formatNumber(dataset.rows)} rows • {dataset.columns} cols • {dataset.size}
                           </div>
                         </div>
                         

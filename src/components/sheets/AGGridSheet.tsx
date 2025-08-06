@@ -108,7 +108,7 @@ export default function AGGridSheet() {
 
       {/* AG Grid - Altura ajustada para layout de 3 colunas */}
       {isClient ? (
-        <div className="w-full" style={{ height: 'calc(100vh - 180px)', minHeight: '500px' }}>
+        <div className="w-full" style={{ height: 'calc(100vh - 120px)', minHeight: '500px' }}>
           <AgGridReact
             theme={themeQuartz}
             loadThemeGoogleFonts={true}
@@ -123,7 +123,7 @@ export default function AGGridSheet() {
             enableRangeSelection={true}
             enableCharts={true}
             allowContextMenuWithControlKey={true}
-            sideBar={true}
+            sideBar={false}
             pivotMode={false}
             rowGroupPanelShow={'always'}
             onCellValueChanged={onCellValueChanged}
@@ -139,13 +139,6 @@ export default function AGGridSheet() {
         </div>
       )}
       
-      {/* Debug info - Compacto e dinâmico */}
-      <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600">
-        <span><strong>Debug:</strong> {rowData.length} linhas • {colDefs.length} colunas</span>
-        {datasetInfo && (
-          <span className="ml-2">• Dataset: {datasetInfo.id}</span>
-        )}
-      </div>
     </div>
   );
 }

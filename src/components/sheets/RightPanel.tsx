@@ -34,10 +34,10 @@ export default function RightPanel() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`
-                flex-1 px-2 lg:px-4 py-3 text-xs lg:text-sm font-medium transition-colors
+                flex-1 px-2 lg:px-4 py-3 text-xs lg:text-sm font-medium transition-colors text-gray-600
                 ${activeTab === tab.id
-                  ? 'bg-white text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  ? 'bg-gray-100'
+                  : 'hover:bg-gray-100'
                 }
               `}
             >
