@@ -109,41 +109,52 @@ export class CSVImportPlugin {
 
   importToNewWorkbook(csvData: CSVData): void {
     try {
-      const workbookData = this.convertToUniverFormat(csvData);
+      console.log('Iniciando importação CSV:', csvData);
       
-      (this.univerAPI as { createWorkbook: (data: unknown) => void }).createWorkbook({
-        name: 'Imported CSV',
+      const cellData = this.convertToUniverFormat(csvData);
+      const sheetId = 'sheet1';
+      const workbookId = 'csv-import-' + Date.now();
+      
+      const workbookData = {
+        id: workbookId,
+        name: 'Dados CSV Importados',
+        sheetOrder: [sheetId],
         sheets: {
-          'Sheet1': {
+          [sheetId]: {
+            id: sheetId,
             name: 'Dados CSV',
-            cellData: workbookData,
-            rowCount: Math.max(csvData.rows.length + 1, 50),
-            columnCount: Math.max(csvData.headers.length, 26)
+            cellData: cellData,
+            rowCount: Math.max(csvData.rows.length + 10, 100),
+            columnCount: Math.max(csvData.headers.length + 5, 26)
           }
         }
-      });
+      };
+      
+      console.log('Estrutura workbook criada:', workbookData);
+      
+      const result = (this.univerAPI as { createWorkbook: (data: unknown) => unknown }).createWorkbook(workbookData);
+      
+      console.log('Workbook criado com sucesso:', result);
+      
     } catch (error) {
-      console.error('Erro ao criar workbook:', error);
-      throw new Error('Erro ao importar dados para planilha');
+      console.error('Erro detalhado na importação:', error);
+      console.error('Stack trace:', (error as Error).stack);
+      throw new Error('Erro ao importar dados para planilha: ' + (error as Error).message);
     }
   }
 
   insertAtCurrentPosition(csvData: CSVData): void {
     try {
-      const allRows = [csvData.headers, ...csvData.rows];
+      console.log('Inserindo na posição atual:', csvData);
       
-      allRows.forEach((row, rowIndex) => {
-        row.forEach((cell, colIndex) => {
-          const value = this.parseValue(cell);
-          
-          (this.univerAPI as { getActiveWorkbook: () => { getActiveSheet: () => { getRange: (row: number, col: number) => { setValue: (value: unknown) => void } } } }).getActiveWorkbook()?.getActiveSheet()?.getRange(rowIndex, colIndex)?.setValue(value);
-        });
-      });
-
-      (this.univerAPI as { refresh?: () => void }).refresh?.();
+      // Por enquanto, usar o mesmo método de criar novo workbook
+      // A API do Univer para inserção direta é mais complexa
+      console.warn('Função insertAtCurrentPosition ainda não implementada - usando importToNewWorkbook');
+      this.importToNewWorkbook(csvData);
+      
     } catch (error) {
       console.error('Erro ao inserir na posição atual:', error);
-      throw new Error('Erro ao inserir dados na planilha');
+      throw new Error('Erro ao inserir dados na planilha: ' + (error as Error).message);
     }
   }
 

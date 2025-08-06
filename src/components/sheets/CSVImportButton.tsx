@@ -19,35 +19,49 @@ export default function CSVImportButton({ csvPlugin, disabled = false }: CSVImpo
 
     setIsUploading(true);
     try {
+      console.log('Iniciando seleção de arquivo CSV...');
       const csvData = await csvPlugin.triggerFileSelect();
       
       if (csvData) {
+        console.log('Arquivo CSV processado:', { 
+          headers: csvData.headers.length, 
+          rows: csvData.rows.length 
+        });
         setPreviewData(csvData);
         setShowPreview(true);
+      } else {
+        console.log('Nenhum arquivo selecionado ou processamento cancelado');
       }
     } catch (error) {
       console.error('Erro na importação:', error);
-      alert('Erro ao importar arquivo CSV');
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      alert(`Erro ao processar arquivo CSV: ${errorMessage}`);
     } finally {
       setIsUploading(false);
     }
   };
 
-  const handleConfirmImport = (asNewWorkbook: boolean = true) => {
+  const handleConfirmImport = async (asNewWorkbook: boolean = true) => {
     if (!csvPlugin || !previewData) return;
 
     try {
+      console.log('Confirmando importação:', { asNewWorkbook, dataRows: previewData.rows.length });
+      
       if (asNewWorkbook) {
-        csvPlugin.importToNewWorkbook(previewData);
+        await csvPlugin.importToNewWorkbook(previewData);
+        console.log('Importação como nova planilha concluída');
       } else {
-        csvPlugin.insertAtCurrentPosition(previewData);
+        await csvPlugin.insertAtCurrentPosition(previewData);
+        console.log('Inserção na posição atual concluída');
       }
       
       setShowPreview(false);
       setPreviewData(null);
+      
     } catch (error) {
-      console.error('Erro ao confirmar importação:', error);
-      alert('Erro ao inserir dados na planilha');
+      console.error('Erro detalhado na importação:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
+      alert(`Erro ao importar dados: ${errorMessage}\n\nVerifique o console para mais detalhes.`);
     }
   };
 
