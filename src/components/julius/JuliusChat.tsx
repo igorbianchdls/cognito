@@ -145,7 +145,7 @@ export default function JuliusChat() {
               </div>
               
               {/* Main Input */}
-              <div className="w-full max-w-4xl mx-auto px-4">
+              <div className="w-full max-w-[800px] mx-auto px-4">
                 <InputArea
                   value={input}
                   onChange={handleInputChange}
@@ -195,7 +195,7 @@ export default function JuliusChat() {
         {/* Input Area for chat mode */}
         {messages.length > 0 && (
           <div className="sticky bottom-0 bg-[#ffffff]/95 dark:bg-[#0f0f0f]/95 backdrop-blur-sm">
-            <div className="max-w-4xl mx-auto px-4 py-4">
+            <div className="max-w-[800px] mx-auto px-4 py-4">
               <InputArea
                 value={input}
                 onChange={handleInputChange}
