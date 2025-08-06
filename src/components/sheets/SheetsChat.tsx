@@ -169,7 +169,6 @@ export default function SheetsChat() {
           onSubmit={handleSubmit}
           onFilesChange={handleFilesChange}
           disabled={isLoading}
-          placeholder="Pergunte algo sobre sua planilha..."
         />
       </div>
     </div>
