@@ -292,23 +292,23 @@ export default function AGGridSheet() {
   }, []);
 
   return (
-    <div className="w-full h-full p-4">
-      {/* Header */}
-      <div className="mb-4">
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">
+    <div className="w-full h-full p-3">
+      {/* Header - Compacto para novo layout */}
+      <div className="mb-3">
+        <h2 className="text-lg font-semibold text-gray-900 mb-1">
           Planilha de Produtos
         </h2>
-        <div className="flex gap-4 text-sm text-gray-600">
+        <div className="flex flex-wrap gap-2 text-xs text-gray-600">
           <span>📊 {rowData.length} produtos</span>
-          <span>✏️ Edição inline habilitada</span>
-          <span>🔍 Filtros disponíveis</span>
-          <span>📋 Seleção múltipla</span>
+          <span>✏️ Edição inline</span>
+          <span>🔍 Filtros</span>
+          <span>📋 Seleção</span>
         </div>
       </div>
 
-      {/* AG Grid */}
+      {/* AG Grid - Altura ajustada para layout de 3 colunas */}
       {isClient ? (
-        <div className="w-full" style={{ height: '600px', minHeight: '600px' }}>
+        <div className="w-full" style={{ height: 'calc(100vh - 180px)', minHeight: '500px' }}>
           <AgGridReact
             theme={themeQuartz}
             loadThemeGoogleFonts={true}
@@ -331,7 +331,7 @@ export default function AGGridSheet() {
           />
         </div>
       ) : (
-        <div className="w-full flex items-center justify-center" style={{ height: '600px' }}>
+        <div className="w-full flex items-center justify-center" style={{ height: 'calc(100vh - 180px)', minHeight: '500px' }}>
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
             <p className="text-sm text-gray-600">Carregando planilha...</p>
@@ -339,10 +339,9 @@ export default function AGGridSheet() {
         </div>
       )}
       
-      {/* Debug info */}
-      <div className="mt-4 p-3 bg-gray-50 rounded text-sm">
-        <p><strong>Debug:</strong> {rowData.length} linhas carregadas</p>
-        <p><strong>Colunas:</strong> {colDefs.length} definidas</p>
+      {/* Debug info - Compacto */}
+      <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600">
+        <span><strong>Debug:</strong> {rowData.length} linhas • {colDefs.length} colunas</span>
       </div>
     </div>
   );
