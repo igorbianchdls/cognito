@@ -11,11 +11,6 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.0",
     "@ai-sdk/react": "^2.0.2",
-    "@mescius/spread-sheets": "^18.1.4",
-    "@mescius/spread-sheets-charts": "^18.1.4",
-    "@mescius/spread-sheets-io": "^18.1.4",
-    "@mescius/spread-sheets-react": "^18.1.4",
-    "@mescius/spread-sheets-shapes": "^18.1.4",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-slot": "^1.2.3",
     "@types/papaparse": "^5.3.16",

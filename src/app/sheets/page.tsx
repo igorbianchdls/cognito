@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
 
-const SpreadSheet = dynamic(() => import('@/components/sheets/SpreadSheet'), {
+const UniverSheet = dynamic(() => import('@/components/sheets/UniverSheet'), {
   ssr: false,
   loading: () => (
     <div className="flex h-screen bg-background">
@@ -32,7 +32,7 @@ export default function SheetsPage() {
           </div>
         </div>
       }>
-        <SpreadSheet />
+        <UniverSheet />
       </Suspense>
     </div>
   );
