@@ -2,7 +2,10 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { ColDef, CellValueChangedEvent, RowSelectedEvent } from 'ag-grid-community';
+import { ColDef, CellValueChangedEvent, RowSelectedEvent, AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
+
+// Register AG Grid modules
+ModuleRegistry.registerModules([AllCommunityModule]);
 
 // Dynamic import for AG Grid to avoid SSR issues
 const AgGridReact = dynamic(

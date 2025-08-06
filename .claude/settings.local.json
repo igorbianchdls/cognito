@@ -17,7 +17,8 @@
       "Bash(npx:*)",
       "WebFetch(domain:www.daytona.io)",
       "Bash(cp:*)",
-      "WebFetch(domain:docs.univer.ai)"
+      "WebFetch(domain:docs.univer.ai)",
+      "WebFetch(domain:www.ag-grid.com)"
     ],
     "deny": []
   }
