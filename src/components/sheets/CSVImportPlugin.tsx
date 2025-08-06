@@ -196,8 +196,8 @@ export class CSVImportPlugin {
       }
     }
     
-    if (cleaned.toLowerCase() === 'true') return true;
-    if (cleaned.toLowerCase() === 'false') return false;
+    if (cleaned.toLowerCase() === 'true') return 'true';
+    if (cleaned.toLowerCase() === 'false') return 'false';
     
     return cleaned;
   }
