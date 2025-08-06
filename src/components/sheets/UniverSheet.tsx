@@ -41,10 +41,10 @@ export default function UniverSheet() {
   }, [])
 
   return (
-    <div className="w-full h-full">
+    <div className="w-full h-screen">
       <div 
         ref={containerRef} 
-        className="w-full h-[600px] border border-gray-200 rounded-lg"
+        className="w-full h-full"
       />
     </div>
   )

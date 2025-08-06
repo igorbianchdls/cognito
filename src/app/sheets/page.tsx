@@ -1,14 +1,19 @@
 import UniverSheet from '@/components/sheets/UniverSheet'
+import SheetsChat from '@/components/sheets/SheetsChat'
+import Sidebar from '@/components/navigation/Sidebar'
 
 export default function SheetsPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto py-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">
-          Planilhas
-        </h1>
-        <div className="bg-white rounded-lg shadow-sm p-6">
+    <div className="flex h-screen bg-white">
+      <Sidebar />
+      
+      <div className="flex flex-1">
+        <div className="flex-1 min-w-0">
           <UniverSheet />
+        </div>
+        
+        <div className="w-80 border-l border-gray-200 flex flex-col">
+          <SheetsChat />
         </div>
       </div>
     </div>
