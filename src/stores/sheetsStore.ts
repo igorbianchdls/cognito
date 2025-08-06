@@ -32,7 +32,7 @@ export interface SheetTools {
 export interface ActiveDataset {
   id: string
   name: string
-  data: unknown[]
+  data: Array<Record<string, unknown>>
   columnDefs: ColDef[]
   totalRows: number
   totalCols: number
@@ -109,7 +109,10 @@ export const switchToDataset = (datasetId: string) => {
     
     // Convert data to rows format (legacy compatibility)
     const rows = dataset.data.map(item => 
-      dataset.columnDefs.map(col => (item as any)[col.field || ''])
+      dataset.columnDefs.map(col => {
+        const dataItem = item as Record<string, unknown>;
+        return dataItem[col.field || ''] || '';
+      })
     )
 
     // Update legacy sheet data store for compatibility

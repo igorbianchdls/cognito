@@ -64,7 +64,7 @@ export interface DatasetInfo {
   size: string;
   type: 'grid' | 'csv' | 'excel' | 'json';
   lastModified: Date;
-  data: any[];
+  data: Array<Record<string, unknown>>;
   columnDefs: ColDef[];
 }
 
@@ -814,7 +814,7 @@ const clientesColumnDefs: ColDef[] = [
         case 'Ativo': return { color: '#2e7d32', fontWeight: 'bold' };
         case 'Inativo': return { color: '#c62828', fontWeight: 'bold' };
         case 'Prospecto': return { color: '#f57c00', fontWeight: 'bold' };
-        default: return {};
+        default: return undefined;
       }
     }
   },
@@ -939,7 +939,7 @@ export const MOCK_DATASETS: DatasetInfo[] = [
     size: '2.4 KB',
     type: 'grid',
     lastModified: new Date('2024-01-15'),
-    data: produtosData,
+    data: produtosData as unknown as Array<Record<string, unknown>>,
     columnDefs: produtosColumnDefs
   },
   {
@@ -951,7 +951,7 @@ export const MOCK_DATASETS: DatasetInfo[] = [
     size: '1.8 KB',
     type: 'csv',
     lastModified: new Date('2024-01-10'),
-    data: funcionariosData,
+    data: funcionariosData as unknown as Array<Record<string, unknown>>,
     columnDefs: funcionariosColumnDefs
   },
   {
@@ -963,7 +963,7 @@ export const MOCK_DATASETS: DatasetInfo[] = [
     size: '1.5 KB',
     type: 'excel',
     lastModified: new Date('2024-01-20'),
-    data: vendasData,
+    data: vendasData as unknown as Array<Record<string, unknown>>,
     columnDefs: vendasColumnDefs
   },
   {
@@ -975,7 +975,7 @@ export const MOCK_DATASETS: DatasetInfo[] = [
     size: '1.2 KB',
     type: 'json',
     lastModified: new Date('2024-01-08'),
-    data: clientesData,
+    data: clientesData as unknown as Array<Record<string, unknown>>,
     columnDefs: clientesColumnDefs
   },
   {
@@ -987,7 +987,7 @@ export const MOCK_DATASETS: DatasetInfo[] = [
     size: '2.1 KB',
     type: 'csv',
     lastModified: new Date('2024-01-12'),
-    data: estoqueData,
+    data: estoqueData as unknown as Array<Record<string, unknown>>,
     columnDefs: estoqueColumnDefs
   }
 ];
