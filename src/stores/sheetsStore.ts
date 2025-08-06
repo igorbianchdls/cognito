@@ -4,12 +4,12 @@ import { atom } from 'nanostores'
 export interface CellData {
   row: number
   col: number
-  value: any
+  value: unknown
   formula?: string
 }
 
 export interface SheetData {
-  rows: any[][]
+  rows: unknown[][]
   headers: string[]
   selectedCells: CellData[]
   totalRows: number
@@ -19,7 +19,7 @@ export interface SheetData {
 export interface SheetTools {
   addColumn: (name: string, position?: number) => Promise<void>
   applyFormula: (range: string, formula: string) => Promise<void>
-  updateCell: (row: number, col: number, value: any) => Promise<void>
+  updateCell: (row: number, col: number, value: unknown) => Promise<void>
   createChart: (range: string, type: string) => Promise<void>
   exportData: (format: 'csv' | 'excel') => Promise<void>
   insertRow: (position?: number) => Promise<void>
@@ -28,8 +28,8 @@ export interface SheetTools {
 }
 
 // Atoms
-export const univerAPIStore = atom<any>(null)
-export const univerInstanceStore = atom<any>(null)
+export const univerAPIStore = atom<unknown>(null)
+export const univerInstanceStore = atom<unknown>(null)
 export const sheetDataStore = atom<SheetData>({
   rows: [],
   headers: [],

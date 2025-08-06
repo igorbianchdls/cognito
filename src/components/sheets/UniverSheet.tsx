@@ -9,7 +9,6 @@ import CSVImportButton from './CSVImportButton'
 import { 
   univerAPIStore, 
   univerInstanceStore, 
-  sheetDataStore, 
   sheetToolsStore,
   updateSheetData,
   setSheetError,
@@ -54,7 +53,7 @@ export default function UniverSheet() {
       setCsvPlugin(plugin)
 
       // Create initial workbook
-      const workbook = univerAPI.createWorkbook({})
+      univerAPI.createWorkbook({})
 
       // Create sheet manipulation tools
       const tools: SheetTools = {
@@ -85,7 +84,7 @@ export default function UniverSheet() {
           }
         },
 
-        updateCell: async (row: number, col: number, value: any) => {
+        updateCell: async (row: number, col: number, value: unknown) => {
           try {
             const activeSheet = univerAPI.getActiveWorkbook()?.getActiveSheet()
             if (!activeSheet) throw new Error('No active sheet')
@@ -171,7 +170,7 @@ export default function UniverSheet() {
           const maxCols = activeSheet.getMaxColumns()
           
           // Get data (simplified - could be optimized)
-          const rows: any[][] = []
+          const rows: unknown[][] = []
           const headers: string[] = []
           
           // Get headers (first row)
@@ -182,7 +181,7 @@ export default function UniverSheet() {
           
           // Get data rows (limit to first 100 for performance)
           for (let row = 0; row < Math.min(maxRows, 100); row++) {
-            const rowData: any[] = []
+            const rowData: unknown[] = []
             for (let col = 0; col < Math.min(maxCols, 10); col++) {
               const cellValue = activeSheet.getCellValue(row, col)
               rowData.push(cellValue)

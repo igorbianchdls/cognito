@@ -92,7 +92,7 @@ Dimensões: ${sheetData.totalRows} linhas x ${sheetData.totalCols} colunas
 Colunas: ${sheetData.headers.join(', ')}
 
 ${sheetData.sampleRows && sheetData.sampleRows.length > 0 ? 
-  `Primeiras linhas de dados:\n${sheetData.sampleRows.map((row: any[], i: number) => 
+  `Primeiras linhas de dados:\n${sheetData.sampleRows.map((row: unknown[], i: number) => 
     `Linha ${i + 1}: ${row.join(' | ')}`
   ).join('\n')}` : 'Planilha vazia'}`;
       
