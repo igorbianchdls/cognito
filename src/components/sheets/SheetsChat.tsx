@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { useStore } from '@nanostores/react';
 import MessageList from '../chat/MessageList';
 import InputArea from '../chat/InputArea';
+import { sheetDataStore, sheetToolsStore } from '@/stores/sheetsStore';
 
 interface UploadedFile {
   id: string;
@@ -31,6 +33,10 @@ export default function SheetsChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  
+  // Access sheet data from nano-stores
+  const sheetData = useStore(sheetDataStore);
+  const sheetTools = useStore(sheetToolsStore);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,6 +69,13 @@ export default function SheetsChat() {
             content: msg.content,
           })),
           files: userMessage.files?.filter(f => f.content) || [],
+          sheetData: {
+            headers: sheetData.headers,
+            totalRows: sheetData.totalRows,
+            totalCols: sheetData.totalCols,
+            sampleRows: sheetData.rows.slice(0, 5) // Send first 5 rows as context
+          },
+          hasSheetTools: !!sheetTools
         }),
       });
 
