@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
+import { useStore } from '@nanostores/react';
 import { ColDef, CellValueChangedEvent, RowSelectedEvent, ModuleRegistry, themeQuartz } from 'ag-grid-community';
 import { 
   LicenseManager, 
@@ -11,6 +12,12 @@ import {
   IntegratedChartsModule 
 } from 'ag-grid-enterprise';
 import { AgChartsEnterpriseModule } from 'ag-charts-enterprise';
+import { 
+  activeDatasetStore, 
+  isSheetLoadingStore, 
+  initializeDefaultDataset,
+  getActiveDatasetInfo
+} from '@/stores/sheetsStore';
 
 // Configure AG Grid Enterprise License
 LicenseManager.setLicenseKey('[TRIAL]_this_{AG_Charts_and_AG_Grid}_Enterprise_key_{AG-090576}_is_granted_for_evaluation_only___Use_in_production_is_not_permitted___Please_report_misuse_to_legal@ag-grid.com___For_help_with_purchasing_a_production_key_please_contact_info@ag-grid.com___You_are_granted_a_{Single_Application}_Developer_License_for_one_application_only___All_Front-End_JavaScript_developers_working_on_the_application_would_need_to_be_licensed___This_key_will_deactivate_on_{31 August 2025}____[v3]_[0102]_MTc1NjU5NDgwMDAwMA==055771d37eabf862ce4b35dbb0d2a1df');
@@ -39,233 +46,27 @@ const AgGridReact = dynamic(
 
 // AG Grid CSS now imported in globals.css
 
-interface RowData {
-  id: number;
-  produto: string;
-  categoria: string;
-  preco: number;
-  estoque: number;
-  vendas: number;
-  ativo: boolean;
-  dataLancamento: string;
-}
-
 export default function AGGridSheet() {
   const [isClient, setIsClient] = useState(false);
   
+  // Store subscriptions
+  const activeDataset = useStore(activeDatasetStore);
+  const isLoading = useStore(isSheetLoadingStore);
+  
   useEffect(() => {
     setIsClient(true);
+    // Initialize default dataset if not already loaded
+    initializeDefaultDataset();
   }, []);
 
-  // Dados de exemplo
-  const [rowData] = useState<RowData[]>([
-    {
-      id: 1,
-      produto: "iPhone 15 Pro",
-      categoria: "Smartphones",
-      preco: 7999.99,
-      estoque: 45,
-      vendas: 1250,
-      ativo: true,
-      dataLancamento: "2023-09-15"
-    },
-    {
-      id: 2,
-      produto: "Samsung Galaxy S24",
-      categoria: "Smartphones",
-      preco: 6999.99,
-      estoque: 32,
-      vendas: 890,
-      ativo: true,
-      dataLancamento: "2024-01-20"
-    },
-    {
-      id: 3,
-      produto: "MacBook Air M3",
-      categoria: "Laptops",
-      preco: 12999.99,
-      estoque: 18,
-      vendas: 456,
-      ativo: true,
-      dataLancamento: "2024-03-10"
-    },
-    {
-      id: 4,
-      produto: "Dell XPS 13",
-      categoria: "Laptops",
-      preco: 8999.99,
-      estoque: 25,
-      vendas: 332,
-      ativo: true,
-      dataLancamento: "2023-11-05"
-    },
-    {
-      id: 5,
-      produto: "iPad Air",
-      categoria: "Tablets",
-      preco: 4999.99,
-      estoque: 67,
-      vendas: 778,
-      ativo: true,
-      dataLancamento: "2024-02-28"
-    },
-    {
-      id: 6,
-      produto: "AirPods Pro 2",
-      categoria: "Acessórios",
-      preco: 2299.99,
-      estoque: 120,
-      vendas: 2150,
-      ativo: true,
-      dataLancamento: "2023-09-20"
-    },
-    {
-      id: 7,
-      produto: "Sony WH-1000XM5",
-      categoria: "Acessórios",
-      preco: 1899.99,
-      estoque: 58,
-      vendas: 445,
-      ativo: true,
-      dataLancamento: "2023-07-12"
-    },
-    {
-      id: 8,
-      produto: "Nintendo Switch OLED",
-      categoria: "Games",
-      preco: 2499.99,
-      estoque: 91,
-      vendas: 1680,
-      ativo: true,
-      dataLancamento: "2023-10-08"
-    },
-    {
-      id: 9,
-      produto: "PlayStation 5",
-      categoria: "Games",
-      preco: 4999.99,
-      estoque: 12,
-      vendas: 567,
-      ativo: false,
-      dataLancamento: "2023-05-15"
-    },
-    {
-      id: 10,
-      produto: "Apple Watch Series 9",
-      categoria: "Wearables",
-      preco: 3299.99,
-      estoque: 74,
-      vendas: 892,
-      ativo: true,
-      dataLancamento: "2023-09-22"
-    }
-  ]);
+  // Get current dataset info for display
+  const datasetInfo = getActiveDatasetInfo();
+  
+  // Dynamic row data from store
+  const rowData = activeDataset?.data || [];
 
-  // Definição das colunas com suporte para Pivot Tables
-  const [colDefs] = useState<ColDef[]>([
-    {
-      field: 'id',
-      headerName: 'ID',
-      width: 80,
-      pinned: 'left',
-      editable: false,
-      sortable: true
-    },
-    {
-      field: 'produto',
-      headerName: 'Produto',
-      width: 200,
-      editable: true,
-      sortable: true,
-      filter: 'agTextColumnFilter',
-      enableRowGroup: true
-    },
-    {
-      field: 'categoria',
-      headerName: 'Categoria',
-      width: 150,
-      editable: true,
-      sortable: true,
-      filter: 'agSetColumnFilter',
-      enableRowGroup: true,
-      enablePivot: true
-    },
-    {
-      field: 'preco',
-      headerName: 'Preço (R$)',
-      width: 120,
-      editable: true,
-      sortable: true,
-      filter: 'agNumberColumnFilter',
-      enableValue: true,
-      aggFunc: 'avg',
-      valueFormatter: (params) => {
-        if (params.value == null) return '';
-        return new Intl.NumberFormat('pt-BR', {
-          style: 'currency',
-          currency: 'BRL'
-        }).format(params.value);
-      }
-    },
-    {
-      field: 'estoque',
-      headerName: 'Estoque',
-      width: 100,
-      editable: true,
-      sortable: true,
-      filter: 'agNumberColumnFilter',
-      enableValue: true,
-      aggFunc: 'sum',
-      cellStyle: (params) => {
-        if (params.value < 20) {
-          return { backgroundColor: '#ffebee', color: '#c62828' };
-        } else if (params.value < 50) {
-          return { backgroundColor: '#fff3e0', color: '#f57c00' };
-        }
-        return { backgroundColor: '#e8f5e8', color: '#2e7d32' };
-      }
-    },
-    {
-      field: 'vendas',
-      headerName: 'Vendas',
-      width: 100,
-      editable: true,
-      sortable: true,
-      filter: 'agNumberColumnFilter',
-      enableValue: true,
-      aggFunc: 'sum'
-    },
-    {
-      field: 'ativo',
-      headerName: 'Ativo',
-      width: 80,
-      editable: true,
-      sortable: true,
-      filter: 'agSetColumnFilter',
-      enableRowGroup: true,
-      enablePivot: true,
-      cellRenderer: (params: { value: boolean }) => {
-        return params.value ? '✓' : '✗';
-      },
-      cellStyle: (params) => {
-        return params.value 
-          ? { color: '#2e7d32', fontWeight: 'bold' }
-          : { color: '#c62828', fontWeight: 'bold' };
-      }
-    },
-    {
-      field: 'dataLancamento',
-      headerName: 'Data Lançamento',
-      width: 150,
-      editable: true,
-      sortable: true,
-      filter: 'agDateColumnFilter',
-      valueFormatter: (params) => {
-        if (!params.value) return '';
-        return new Date(params.value).toLocaleDateString('pt-BR');
-      }
-    }
-  ]);
+  // Dynamic column definitions from store
+  const colDefs = activeDataset?.columnDefs || [];
 
   // Grid options
   const defaultColDef: ColDef = {
@@ -293,17 +94,26 @@ export default function AGGridSheet() {
 
   return (
     <div className="w-full h-full p-3">
-      {/* Header - Compacto para novo layout */}
+      {/* Header - Dinâmico baseado no dataset ativo */}
       <div className="mb-3">
-        <h2 className="text-lg font-semibold text-gray-900 mb-1">
-          Planilha de Produtos
-        </h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-gray-900 mb-1">
+            {datasetInfo?.name || 'Planilha'} 
+          </h2>
+          {isLoading && (
+            <div className="w-4 h-4 border border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          )}
+        </div>
         <div className="flex flex-wrap gap-2 text-xs text-gray-600">
-          <span>📊 {rowData.length} produtos</span>
+          <span>📊 {rowData.length} registros</span>
           <span>✏️ Edição inline</span>
           <span>🔍 Filtros</span>
           <span>📋 Seleção</span>
+          {datasetInfo && <span>📂 {datasetInfo.type.toUpperCase()}</span>}
         </div>
+        {datasetInfo?.description && (
+          <p className="text-xs text-gray-500 mt-1">{datasetInfo.description}</p>
+        )}
       </div>
 
       {/* AG Grid - Altura ajustada para layout de 3 colunas */}
@@ -339,9 +149,12 @@ export default function AGGridSheet() {
         </div>
       )}
       
-      {/* Debug info - Compacto */}
+      {/* Debug info - Compacto e dinâmico */}
       <div className="mt-2 p-2 bg-gray-50 rounded text-xs text-gray-600">
         <span><strong>Debug:</strong> {rowData.length} linhas • {colDefs.length} colunas</span>
+        {datasetInfo && (
+          <span className="ml-2">• Dataset: {datasetInfo.id}</span>
+        )}
       </div>
     </div>
   );

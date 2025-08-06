@@ -1,34 +1,34 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useStore } from '@nanostores/react';
-import { sheetDataStore, isSheetLoadingStore } from '@/stores/sheetsStore';
-
-interface Dataset {
-  id: string;
-  name: string;
-  rows: number;
-  columns: number;
-  size: string;
-  lastModified: Date;
-  type: 'csv' | 'json' | 'excel' | 'grid';
-}
+import { 
+  availableDatasetsStore, 
+  activeDatasetIdStore, 
+  sheetDataStore, 
+  isSheetLoadingStore,
+  switchToDataset,
+  initializeDefaultDataset
+} from '@/stores/sheetsStore';
+import { DatasetInfo } from '@/data/mockDatasets';
 
 export default function DatasetsPanel() {
-  const [datasets] = useState<Dataset[]>([
-    {
-      id: '1',
-      name: 'Produtos AGGrid',
-      rows: 10,
-      columns: 8,
-      size: '2.4 KB',
-      lastModified: new Date(),
-      type: 'grid'
-    }
-  ]);
-
+  const datasets = useStore(availableDatasetsStore);
+  const activeDatasetId = useStore(activeDatasetIdStore);
   const sheetData = useStore(sheetDataStore);
   const isLoading = useStore(isSheetLoadingStore);
+
+  // Initialize default dataset on component mount
+  useEffect(() => {
+    initializeDefaultDataset();
+  }, []);
+
+  // Handle dataset selection
+  const handleSelectDataset = (datasetId: string) => {
+    if (datasetId !== activeDatasetId && !isLoading) {
+      switchToDataset(datasetId);
+    }
+  };
 
   const handleImportCSV = () => {
     const input = document.createElement('input');
@@ -72,7 +72,7 @@ export default function DatasetsPanel() {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
   };
 
-  const getTypeIcon = (type: Dataset['type']) => {
+  const getTypeIcon = (type: DatasetInfo['type']) => {
     switch (type) {
       case 'csv': return '📄';
       case 'json': return '🔗';
@@ -82,7 +82,7 @@ export default function DatasetsPanel() {
     }
   };
 
-  const getTypeColor = (type: Dataset['type']) => {
+  const getTypeColor = (type: DatasetInfo['type']) => {
     switch (type) {
       case 'csv': return 'bg-green-100 text-green-800';
       case 'json': return 'bg-blue-100 text-blue-800';
@@ -90,6 +90,12 @@ export default function DatasetsPanel() {
       case 'grid': return 'bg-orange-100 text-orange-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  // Get current active dataset name
+  const getActiveDatasetName = () => {
+    const activeDataset = datasets.find(ds => ds.id === activeDatasetId);
+    return activeDataset?.name || 'Dataset Atual';
   };
 
   return (
@@ -108,7 +114,9 @@ export default function DatasetsPanel() {
       {/* Current Dataset Info */}
       {sheetData.totalRows > 0 && (
         <div className="px-4 py-3 bg-blue-50 border-b border-blue-100">
-          <div className="text-xs font-medium text-blue-900 mb-1">Dataset Atual</div>
+          <div className="text-xs font-medium text-blue-900 mb-1">
+            Dataset Ativo: {getActiveDatasetName()}
+          </div>
           <div className="flex items-center justify-between text-xs text-blue-700">
             <span>{sheetData.totalRows} linhas</span>
             <span>{sheetData.totalCols} colunas</span>
@@ -117,6 +125,7 @@ export default function DatasetsPanel() {
             <button
               onClick={handleExportCSV}
               className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+              disabled={isLoading}
             >
               📥 Exportar CSV
             </button>
@@ -142,48 +151,84 @@ export default function DatasetsPanel() {
           </div>
         ) : (
           <div className="p-3 space-y-3">
-            {datasets.map((dataset) => (
-              <div
-                key={dataset.id}
-                className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">{getTypeIcon(dataset.type)}</span>
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-900">
-                        {dataset.name}
-                      </h4>
-                      <p className="text-xs text-gray-500">
-                        {dataset.rows.toLocaleString()} linhas • {dataset.columns} colunas
-                      </p>
+            {datasets.map((dataset) => {
+              const isActive = dataset.id === activeDatasetId;
+              const isLoadingThis = isLoading && dataset.id !== activeDatasetId;
+              
+              return (
+                <div
+                  key={dataset.id}
+                  onClick={() => handleSelectDataset(dataset.id)}
+                  className={`
+                    p-3 border rounded-lg transition-all cursor-pointer
+                    ${isActive 
+                      ? 'border-blue-500 bg-blue-50 shadow-md' 
+                      : 'border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                    }
+                    ${isLoadingThis ? 'opacity-50 cursor-not-allowed' : ''}
+                  `}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{getTypeIcon(dataset.type)}</span>
+                      <div>
+                        <h4 className={`text-sm font-medium ${isActive ? 'text-blue-900' : 'text-gray-900'}`}>
+                          {dataset.name}
+                          {isActive && <span className="ml-2 text-blue-600">✓</span>}
+                        </h4>
+                        <p className={`text-xs ${isActive ? 'text-blue-600' : 'text-gray-500'}`}>
+                          {dataset.rows.toLocaleString()} linhas • {dataset.columns} colunas
+                        </p>
+                        <p className={`text-xs ${isActive ? 'text-blue-500' : 'text-gray-400'}`}>
+                          {dataset.description}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`px-2 py-1 text-xs rounded-full ${getTypeColor(dataset.type)}`}>
+                      {dataset.type.toUpperCase()}
+                    </span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+                    <div className={`text-xs ${isActive ? 'text-blue-600' : 'text-gray-500'}`}>
+                      <span>{dataset.size}</span>
+                      <span className="mx-1">•</span>
+                      <span>{dataset.lastModified.toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                      <button 
+                        className="p-1 hover:bg-gray-200 rounded text-xs"
+                        title="Visualizar dados"
+                      >
+                        👁️
+                      </button>
+                      <button 
+                        className="p-1 hover:bg-gray-200 rounded text-xs"
+                        title="Exportar dataset"
+                      >
+                        📥
+                      </button>
+                      {!isActive && (
+                        <button 
+                          className="p-1 hover:bg-red-200 rounded text-xs"
+                          title="Remover dataset"
+                        >
+                          🗑️
+                        </button>
+                      )}
                     </div>
                   </div>
-                  <span className={`px-2 py-1 text-xs rounded-full ${getTypeColor(dataset.type)}`}>
-                    {dataset.type.toUpperCase()}
-                  </span>
+                  
+                  {/* Loading indicator for this dataset */}
+                  {isLoading && dataset.id === activeDatasetId && (
+                    <div className="mt-2 flex items-center gap-2 text-xs text-blue-600">
+                      <div className="w-3 h-3 border border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                      <span>Carregando...</span>
+                    </div>
+                  )}
                 </div>
-                
-                <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
-                  <div className="text-xs text-gray-500">
-                    <span>{dataset.size}</span>
-                    <span className="mx-1">•</span>
-                    <span>{dataset.lastModified.toLocaleDateString()}</span>
-                  </div>
-                  <div className="flex gap-1">
-                    <button className="p-1 hover:bg-gray-200 rounded text-xs">
-                      👁️
-                    </button>
-                    <button className="p-1 hover:bg-gray-200 rounded text-xs">
-                      📥
-                    </button>
-                    <button className="p-1 hover:bg-red-200 rounded text-xs">
-                      🗑️
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
