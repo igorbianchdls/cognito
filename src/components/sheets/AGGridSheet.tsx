@@ -1,12 +1,24 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { AgGridReact } from 'ag-grid-react';
+import { useState, useCallback, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { ColDef, CellValueChangedEvent, RowSelectedEvent } from 'ag-grid-community';
 
-// AG Grid CSS
-import 'ag-grid-community/styles/ag-grid.css';
-import 'ag-grid-community/styles/ag-theme-alpine.css';
+// Dynamic import for AG Grid to avoid SSR issues
+const AgGridReact = dynamic(
+  () => import('ag-grid-react').then((mod) => mod.AgGridReact),
+  { 
+    ssr: false,
+    loading: () => <div className="flex items-center justify-center h-96">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+        <p className="text-sm text-gray-600">Carregando planilha...</p>
+      </div>
+    </div>
+  }
+);
+
+// AG Grid CSS now imported in globals.css
 
 interface RowData {
   id: number;
@@ -20,6 +32,12 @@ interface RowData {
 }
 
 export default function AGGridSheet() {
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   // Dados de exemplo
   const [rowData] = useState<RowData[]>([
     {
@@ -125,7 +143,7 @@ export default function AGGridSheet() {
   ]);
 
   // Definição das colunas
-  const [colDefs] = useState<ColDef<RowData>[]>([
+  const [colDefs] = useState<ColDef[]>([
     {
       field: 'id',
       headerName: 'ID',
@@ -259,19 +277,34 @@ export default function AGGridSheet() {
       </div>
 
       {/* AG Grid */}
-      <div className="ag-theme-alpine w-full" style={{ height: 'calc(100vh - 180px)' }}>
-        <AgGridReact
-          rowData={rowData}
-          columnDefs={colDefs}
-          defaultColDef={defaultColDef}
-          rowSelection="multiple"
-          suppressRowClickSelection={false}
-          animateRows={true}
-          pagination={true}
-          paginationPageSize={20}
-          onCellValueChanged={onCellValueChanged}
-          onRowSelected={onRowSelected}
-        />
+      {isClient ? (
+        <div className="ag-theme-alpine w-full border border-gray-200 rounded-lg" style={{ height: '600px', minHeight: '600px' }}>
+          <AgGridReact
+            rowData={rowData}
+            columnDefs={colDefs}
+            defaultColDef={defaultColDef}
+            rowSelection={'multiple'}
+            suppressRowClickSelection={false}
+            animateRows={true}
+            pagination={true}
+            paginationPageSize={20}
+            onCellValueChanged={onCellValueChanged}
+            onRowSelected={onRowSelected}
+          />
+        </div>
+      ) : (
+        <div className="w-full border border-gray-200 rounded-lg flex items-center justify-center" style={{ height: '600px' }}>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+            <p className="text-sm text-gray-600">Carregando planilha...</p>
+          </div>
+        </div>
+      )}
+      
+      {/* Debug info */}
+      <div className="mt-4 p-3 bg-gray-50 rounded text-sm">
+        <p><strong>Debug:</strong> {rowData.length} linhas carregadas</p>
+        <p><strong>Colunas:</strong> {colDefs.length} definidas</p>
       </div>
     </div>
   );
