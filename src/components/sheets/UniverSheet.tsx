@@ -34,7 +34,7 @@ export default function UniverSheet() {
 
     return () => {
       if (univerRef.current) {
-        univerRef.current.univer.dispose()
+        (univerRef.current.univer as { dispose: () => void }).dispose()
         univerRef.current = null
       }
     }
