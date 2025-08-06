@@ -2,10 +2,14 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { ColDef, CellValueChangedEvent, RowSelectedEvent, AllCommunityModule, ModuleRegistry, themeQuartz } from 'ag-grid-community';
+import { ColDef, CellValueChangedEvent, RowSelectedEvent, ModuleRegistry, themeQuartz } from 'ag-grid-community';
+import { LicenseManager, AllEnterpriseModule } from 'ag-grid-enterprise';
 
-// Register AG Grid modules
-ModuleRegistry.registerModules([AllCommunityModule]);
+// Configure AG Grid Enterprise License
+LicenseManager.setLicenseKey('[TRIAL]_this_{AG_Charts_and_AG_Grid}_Enterprise_key_{AG-090576}_is_granted_for_evaluation_only___Use_in_production_is_not_permitted___Please_report_misuse_to_legal@ag-grid.com___For_help_with_purchasing_a_production_key_please_contact_info@ag-grid.com___You_are_granted_a_{Single_Application}_Developer_License_for_one_application_only___All_Front-End_JavaScript_developers_working_on_the_application_would_need_to_be_licensed___This_key_will_deactivate_on_{31 August 2025}____[v3]_[0102]_MTc1NjU5NDgwMDAwMA==055771d37eabf862ce4b35dbb0d2a1df');
+
+// Register AG Grid Enterprise modules
+ModuleRegistry.registerModules([AllEnterpriseModule]);
 
 // Dynamic import for AG Grid to avoid SSR issues
 const AgGridReact = dynamic(
@@ -169,7 +173,7 @@ export default function AGGridSheet() {
       width: 150,
       editable: true,
       sortable: true,
-      filter: 'agTextColumnFilter'
+      filter: 'agSetColumnFilter'
     },
     {
       field: 'preco',
@@ -216,7 +220,7 @@ export default function AGGridSheet() {
       width: 80,
       editable: true,
       sortable: true,
-      filter: 'agTextColumnFilter',
+      filter: 'agSetColumnFilter',
       cellRenderer: (params: { value: boolean }) => {
         return params.value ? '✓' : '✗';
       },
@@ -244,7 +248,8 @@ export default function AGGridSheet() {
   const defaultColDef: ColDef = {
     resizable: true,
     sortable: true,
-    filter: true
+    filter: true,
+    floatingFilter: true
   };
 
   // Callbacks
