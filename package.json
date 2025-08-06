@@ -18,6 +18,7 @@
     "@univerjs/preset-docs-core": "^0.10.2",
     "@univerjs/preset-sheets-core": "^0.10.2",
     "@univerjs/presets": "^0.10.2",
+    "ag-charts-enterprise": "^12.1.1",
     "ag-charts-react": "^12.1.1",
     "ag-grid-community": "^34.1.1",
     "ag-grid-enterprise": "^34.1.1",
