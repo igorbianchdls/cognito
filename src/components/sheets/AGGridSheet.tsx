@@ -169,7 +169,7 @@ export default function AGGridSheet() {
       width: 150,
       editable: true,
       sortable: true,
-      filter: 'agSetColumnFilter'
+      filter: 'agTextColumnFilter'
     },
     {
       field: 'preco',
@@ -216,7 +216,7 @@ export default function AGGridSheet() {
       width: 80,
       editable: true,
       sortable: true,
-      filter: 'agSetColumnFilter',
+      filter: 'agTextColumnFilter',
       cellRenderer: (params: { value: boolean }) => {
         return params.value ? '✓' : '✗';
       },
@@ -244,8 +244,7 @@ export default function AGGridSheet() {
   const defaultColDef: ColDef = {
     resizable: true,
     sortable: true,
-    filter: true,
-    floatingFilter: true
+    filter: true
   };
 
   // Callbacks
