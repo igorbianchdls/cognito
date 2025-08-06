@@ -105,6 +105,5 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
   outline-offset: 2px;
 }
 
-/* AG Grid Base Styles */
-@import 'ag-grid-community/styles/ag-grid.css';
+/* AG Grid: Using Theming API (themeQuartz) - no CSS imports needed */
 
