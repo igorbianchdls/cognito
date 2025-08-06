@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { AgGridReact } from 'ag-grid-react';
-import { ColDef } from 'ag-grid-community';
+import { ColDef, CellValueChangedEvent, RowSelectedEvent } from 'ag-grid-community';
 
 // AG Grid CSS
 import 'ag-grid-community/styles/ag-grid.css';
@@ -228,7 +228,7 @@ export default function AGGridSheet() {
   };
 
   // Callbacks
-  const onCellValueChanged = useCallback((event: { colDef: { field: string }, oldValue: unknown, newValue: unknown, data: RowData }) => {
+  const onCellValueChanged = useCallback((event: CellValueChangedEvent) => {
     console.log('Célula alterada:', {
       field: event.colDef.field,
       oldValue: event.oldValue,
@@ -237,7 +237,7 @@ export default function AGGridSheet() {
     });
   }, []);
 
-  const onRowSelected = useCallback((event: { node: { isSelected: () => boolean }, data: RowData }) => {
+  const onRowSelected = useCallback((event: RowSelectedEvent) => {
     if (event.node.isSelected()) {
       console.log('Linha selecionada:', event.data);
     }
@@ -260,7 +260,7 @@ export default function AGGridSheet() {
 
       {/* AG Grid */}
       <div className="ag-theme-alpine w-full" style={{ height: 'calc(100vh - 180px)' }}>
-        <AgGridReact<RowData>
+        <AgGridReact
           rowData={rowData}
           columnDefs={colDefs}
           defaultColDef={defaultColDef}
