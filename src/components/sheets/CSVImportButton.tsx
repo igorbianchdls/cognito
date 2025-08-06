@@ -80,7 +80,7 @@ export default function CSVImportButton({ csvPlugin, disabled = false }: CSVImpo
           disabled={disabled || isUploading || !csvPlugin}
           variant="outline"
           size="sm"
-          className="bg-white hover:bg-gray-50 border-gray-300 text-gray-700"
+          className="bg-white hover:bg-blue-50 border-gray-300 hover:border-blue-400 text-gray-700 hover:text-blue-700 transition-all duration-150 hover:shadow-sm cursor-pointer"
         >
           {isUploading ? (
             <>
