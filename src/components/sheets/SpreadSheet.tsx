@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { SpreadSheets, Worksheet } from '@mescius/spread-sheets-react';
+import { SpreadSheets } from '@mescius/spread-sheets-react';
 import * as GC from '@mescius/spread-sheets';
 import '@mescius/spread-sheets/styles/gc.spread.sheets.excel2013white.css';
 import '@mescius/spread-sheets-io';
@@ -22,40 +22,53 @@ export default function SpreadSheet() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const initSpread = (spread: GC.Spread.Sheets.Workbook) => {
-    spreadRef.current = spread;
-    
-    // Configurações iniciais
-    const sheet = spread.getActiveSheet();
-    
-    // Adicionar alguns dados de exemplo
-    sheet.getCell(0, 0).value('Planilha de Exemplo').font('14px Arial').foreColor('#1a73e8');
-    sheet.getCell(1, 0).value('Nome');
-    sheet.getCell(1, 1).value('Idade');
-    sheet.getCell(1, 2).value('Cidade');
-    sheet.getCell(1, 3).value('Salário');
-    
-    // Dados de exemplo
-    const data = [
-      ['João Silva', 30, 'São Paulo', 5000],
-      ['Maria Santos', 25, 'Rio de Janeiro', 4500],
-      ['Pedro Oliveira', 35, 'Belo Horizonte', 5500],
-      ['Ana Costa', 28, 'Salvador', 4800]
-    ];
-    
-    data.forEach((row, rowIndex) => {
-      row.forEach((value, colIndex) => {
-        sheet.getCell(rowIndex + 2, colIndex).value(value);
-      });
-    });
-    
-    // Formatação do cabeçalho
-    sheet.getRange(1, 0, 1, 4).font('bold 12px Arial').backColor('#f0f8ff');
-    
-    // Ajustar largura das colunas
-    sheet.setColumnWidth(0, 150);
-    sheet.setColumnWidth(1, 80);
-    sheet.setColumnWidth(2, 150);
-    sheet.setColumnWidth(3, 100);
+    try {
+      spreadRef.current = spread;
+      
+      // Aguardar a inicialização completa
+      setTimeout(() => {
+        if (spreadRef.current) {
+          const sheet = spreadRef.current.getActiveSheet();
+          if (sheet) {
+            // Adicionar alguns dados de exemplo
+            sheet.getCell(0, 0).value('Planilha de Exemplo').font('14px Arial').foreColor('#1a73e8');
+            sheet.getCell(1, 0).value('Nome');
+            sheet.getCell(1, 1).value('Idade');
+            sheet.getCell(1, 2).value('Cidade');
+            sheet.getCell(1, 3).value('Salário');
+            
+            // Dados de exemplo
+            const data = [
+              ['João Silva', 30, 'São Paulo', 5000],
+              ['Maria Santos', 25, 'Rio de Janeiro', 4500],
+              ['Pedro Oliveira', 35, 'Belo Horizonte', 5500],
+              ['Ana Costa', 28, 'Salvador', 4800]
+            ];
+            
+            data.forEach((row, rowIndex) => {
+              row.forEach((value, colIndex) => {
+                sheet.getCell(rowIndex + 2, colIndex).value(value);
+              });
+            });
+            
+            // Formatação do cabeçalho
+            try {
+              sheet.getRange(1, 0, 1, 4).font('bold 12px Arial').backColor('#f0f8ff');
+            } catch (formatError) {
+              console.warn('Erro na formatação:', formatError);
+            }
+            
+            // Ajustar largura das colunas
+            sheet.setColumnWidth(0, 150);
+            sheet.setColumnWidth(1, 80);
+            sheet.setColumnWidth(2, 150);
+            sheet.setColumnWidth(3, 100);
+          }
+        }
+      }, 100);
+    } catch (error) {
+      console.error('Erro na inicialização do SpreadJS:', error);
+    }
   };
 
   const handleImportExcel = () => {
@@ -107,9 +120,17 @@ export default function SpreadSheet() {
 
   const handleNewSheet = () => {
     if (spreadRef.current) {
-      const newSheet = new GC.Spread.Sheets.Worksheet(`Planilha ${spreadRef.current.getSheetCount() + 1}`);
-      spreadRef.current.addSheet(spreadRef.current.getSheetCount(), newSheet);
-      spreadRef.current.setActiveSheet(newSheet.name());
+      try {
+        const sheetName = `Planilha ${spreadRef.current.getSheetCount() + 1}`;
+        const newSheet = new GC.Spread.Sheets.Worksheet(sheetName);
+        spreadRef.current.addSheet(spreadRef.current.getSheetCount(), newSheet);
+        const sheetCount = spreadRef.current.getSheetCount();
+        if (sheetCount > 0) {
+          spreadRef.current.setActiveSheetIndex(sheetCount - 1);
+        }
+      } catch (error) {
+        console.error('Erro ao criar nova planilha:', error);
+      }
     }
   };
 
@@ -170,9 +191,7 @@ export default function SpreadSheet() {
                 <SpreadSheets 
                   hostStyle={hostStyle} 
                   workbookInitialized={initSpread}
-                >
-                  <Worksheet name="Planilha1"></Worksheet>
-                </SpreadSheets>
+                />
               </div>
             </CardContent>
           </Card>
