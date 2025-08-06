@@ -32,7 +32,7 @@ export default function CSVPreviewModal({
 
   return (
     <div 
-      className="fixed inset-0 bg-gray-900 bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-[9999]"
+      className="fixed inset-0 flex items-center justify-center z-[9999]"
       onClick={handleBackdropClick}
     >
       <div className="bg-white rounded-xl shadow-2xl p-6 max-w-5xl max-h-[85vh] overflow-auto m-4 border border-gray-200">
