@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import SheetsChat from './SheetsChat';
-import DatasetsPanel from './DatasetsPanel';
+import DatasetsSidebar from './DatasetsSidebar';
 
 type TabType = 'chat' | 'datasets';
 
@@ -60,7 +60,7 @@ export default function RightPanel() {
         
         {activeTab === 'datasets' && (
           <div className="h-full">
-            <DatasetsPanel />
+            <DatasetsSidebar />
           </div>
         )}
       </div>
