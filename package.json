@@ -18,6 +18,8 @@
     "@univerjs/preset-docs-core": "^0.10.2",
     "@univerjs/preset-sheets-core": "^0.10.2",
     "@univerjs/presets": "^0.10.2",
+    "ag-grid-community": "^34.1.1",
+    "ag-grid-react": "^34.1.1",
     "ai": "^5.0.2",
     "autoprefixer": "^10.4.21",
     "class-variance-authority": "^0.7.1",
