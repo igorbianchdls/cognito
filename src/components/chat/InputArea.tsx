@@ -43,7 +43,7 @@ export default function InputArea({ value, onChange, onSubmit, onFilesChange, di
       <form onSubmit={onSubmit} className="relative">
         <div className="relative">
           {/* Main Input */}
-          <div className="relative bg-background rounded-2xl border border-border focus-within:border-ring transition-all duration-200 shadow-sm hover:shadow-md">
+          <div className="relative bg-white rounded-lg border border-[#dfe1e6] focus-within:border-[#0052cc] transition-all duration-200">
             <Textarea
               value={value}
               onChange={onChange}
@@ -52,15 +52,15 @@ export default function InputArea({ value, onChange, onSubmit, onFilesChange, di
               disabled={disabled}
               rows={3}
               className={cn(
-                "resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:border-0 p-4 pr-12",
-                "min-h-[84px] max-h-32 overflow-y-auto bg-transparent",
-                "placeholder:text-muted-foreground",
-                "text-foreground",
+                "resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:border-0 p-3 pr-12",
+                "min-h-[72px] max-h-32 overflow-y-auto bg-transparent text-sm",
+                "placeholder:text-[#8993a4]",
+                "text-[#172b4d]",
                 "disabled:opacity-50 disabled:cursor-not-allowed"
               )}
               style={{
                 height: 'auto',
-                minHeight: '84px',
+                minHeight: '72px',
               }}
               onInput={(e) => {
                 const target = e.target as HTMLTextAreaElement;
@@ -83,7 +83,7 @@ export default function InputArea({ value, onChange, onSubmit, onFilesChange, di
                 variant="ghost"
                 size="icon"
                 disabled={disabled}
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                className="h-8 w-8 text-[#8993a4] hover:text-[#172b4d]"
                 title="Gravar áudio"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,6 +102,7 @@ export default function InputArea({ value, onChange, onSubmit, onFilesChange, di
                 disabled={!value.trim() || disabled}
                 className={cn(
                   "h-8 w-8 transition-all duration-200",
+                  !value.trim() || disabled ? "text-[#8993a4] hover:text-[#172b4d]" : "bg-[#0052cc] hover:bg-[#0065ff] text-white",
                   disabled && "animate-pulse"
                 )}
                 title="Enviar mensagem (Enter)"

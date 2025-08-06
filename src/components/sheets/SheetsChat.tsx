@@ -132,36 +132,37 @@ export default function SheetsChat() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
-      <div className="px-4 py-3 border-b border-gray-200">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-          <h3 className="text-sm font-medium text-gray-900">Chat</h3>
-        </div>
-        <p className="text-xs text-gray-500 mt-1">
-          Faça perguntas sobre sua planilha
-        </p>
-      </div>
+    <div className="flex flex-col h-full bg-[#fafbfc]">
+      {/* Removed header section to match DatasetsSidebar pattern */}
 
       {messages.length === 0 ? (
         <div className="flex-1 flex flex-col items-center justify-center p-4 text-center">
-          <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mb-4">
-            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-12 h-12 bg-[#f4f5f7] rounded-full flex items-center justify-center mb-4">
+            <svg className="w-6 h-6 text-[#8993a4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
           </div>
-          <h4 className="text-sm font-medium text-gray-900 mb-2">
+          <h4 className="text-sm font-medium text-[#172b4d] mb-3">
             Como posso ajudar?
           </h4>
-          <div className="space-y-2 text-xs text-gray-600">
-            <button className="block w-full p-2 text-left hover:bg-gray-50 rounded text-xs">
-              📊 Criar uma tabela
+          <div className="space-y-1 w-full max-w-xs">
+            <button className="flex items-center gap-2 w-full p-2 text-left hover:bg-[#f4f5f7] rounded text-xs text-[#172b4d] transition-colors">
+              <svg className="w-4 h-4 text-[#8993a4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Criar uma tabela
             </button>
-            <button className="block w-full p-2 text-left hover:bg-gray-50 rounded text-xs">
-              💻 Gerar código
+            <button className="flex items-center gap-2 w-full p-2 text-left hover:bg-[#f4f5f7] rounded text-xs text-[#172b4d] transition-colors">
+              <svg className="w-4 h-4 text-[#8993a4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
+              Gerar código
             </button>
-            <button className="block w-full p-2 text-left hover:bg-gray-50 rounded text-xs">
-              📈 Construir um gráfico
+            <button className="flex items-center gap-2 w-full p-2 text-left hover:bg-[#f4f5f7] rounded text-xs text-[#172b4d] transition-colors">
+              <svg className="w-4 h-4 text-[#8993a4]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Construir um gráfico
             </button>
           </div>
         </div>
@@ -175,7 +176,7 @@ export default function SheetsChat() {
         </div>
       )}
 
-      <div className="border-t border-gray-200 p-3">
+      <div className="border-t border-[#dfe1e6] p-3 bg-white">
         <InputArea
           value={input}
           onChange={handleInputChange}

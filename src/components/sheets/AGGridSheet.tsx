@@ -95,25 +95,15 @@ export default function AGGridSheet() {
   return (
     <div className="w-full h-full p-3">
       {/* Header - Dinâmico baseado no dataset ativo */}
-      <div className="mb-3">
+      <div className="mb-4">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold text-gray-900 mb-1">
+          <h2 className="text-xl font-bold text-[#172b4d]">
             {datasetInfo?.name || 'Planilha'} 
           </h2>
           {isLoading && (
-            <div className="w-4 h-4 border border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-4 h-4 border border-[#0052cc] border-t-transparent rounded-full animate-spin"></div>
           )}
         </div>
-        <div className="flex flex-wrap gap-2 text-xs text-gray-600">
-          <span>📊 {rowData.length} registros</span>
-          <span>✏️ Edição inline</span>
-          <span>🔍 Filtros</span>
-          <span>📋 Seleção</span>
-          {datasetInfo && <span>📂 {datasetInfo.type.toUpperCase()}</span>}
-        </div>
-        {datasetInfo?.description && (
-          <p className="text-xs text-gray-500 mt-1">{datasetInfo.description}</p>
-        )}
       </div>
 
       {/* AG Grid - Altura ajustada para layout de 3 colunas */}

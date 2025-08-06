@@ -101,13 +101,11 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
 
   // Get dataset icon
   const getDatasetIcon = (dataset: DatasetInfo) => {
-    switch (dataset.type) {
-      case 'csv': return '📄';
-      case 'json': return '🔗';
-      case 'excel': return '📊';
-      case 'grid': return '🔢';
-      default: return '📁';
-    }
+    return (
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+      </svg>
+    );
   };
 
   // Format numbers
@@ -120,45 +118,6 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
 
   return (
     <div className={`flex flex-col h-full bg-[#fafbfc] border-r border-[#dfe1e6] ${className}`}>
-      {/* Header */}
-      <div className="px-4 py-3 border-b border-[#dfe1e6] bg-white">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">📊</span>
-            <h3 className="text-sm font-medium text-[#172b4d]">Datasets</h3>
-            <span className="text-xs text-[#8993a4] bg-[#f4f5f7] px-2 py-0.5 rounded-full">
-              {datasets.length}
-            </span>
-          </div>
-          <button className="text-[#8993a4] hover:text-[#172b4d] transition-colors">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </button>
-        </div>
-        
-        {/* Current Dataset Info */}
-        {sheetData.totalRows > 0 && (
-          <div className="mt-2 p-2 bg-[#e3f2fd] rounded-md">
-            <div className="text-xs font-medium text-[#0052cc] mb-1">
-              Active: {datasets.find(ds => ds.id === activeDatasetId)?.name}
-            </div>
-            <div className="flex items-center gap-3 text-xs text-[#172b4d]">
-              <span>{formatNumber(sheetData.totalRows)} rows</span>
-              <span>•</span>
-              <span>{sheetData.totalCols} cols</span>
-              <button
-                onClick={handleExport}
-                className="ml-auto text-[#0052cc] hover:text-[#172b4d] transition-colors"
-                title="Export CSV"
-              >
-                📥
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
@@ -204,7 +163,7 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
                         ${isLoadingThis ? 'opacity-50' : ''}
                       `}
                     >
-                      <span className="text-sm">{getDatasetIcon(dataset)}</span>
+                      <span className="text-[#8993a4]">{getDatasetIcon(dataset)}</span>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium truncate">
                           {dataset.name}
@@ -280,7 +239,7 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
                           ${isLoadingThis ? 'opacity-50' : ''}
                         `}
                       >
-                        <span className="text-sm">{getDatasetIcon(dataset)}</span>
+                        <span className="text-[#8993a4]">{getDatasetIcon(dataset)}</span>
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium truncate">
                             {dataset.name}
