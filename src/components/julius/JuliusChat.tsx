@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import MessageList from './MessageList';
+import MessageList from '../chat/MessageList';
 import Sidebar from '../navigation/Sidebar';
-import InputArea from './InputArea';
+import InputArea from '../chat/InputArea';
 
 interface UploadedFile {
   id: string;
@@ -26,7 +26,7 @@ interface ChatMessage {
   files?: UploadedFile[];
 }
 
-export default function Chat() {
+export default function JuliusChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -140,7 +140,7 @@ export default function Chat() {
               {/* Logo */}
               <div className="mb-12">
                 <h1 className="text-4xl font-normal text-[#202124] dark:text-[#e8eaed] tracking-tight">
-                  perplexity
+                  julius
                 </h1>
               </div>
               

@@ -52,7 +52,7 @@ export default function SheetsChat() {
     setError(null);
 
     try {
-      const response = await fetch('/api/chat', {
+      const response = await fetch('/api/sheets-chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
