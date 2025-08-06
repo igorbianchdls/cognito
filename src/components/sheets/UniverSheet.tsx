@@ -65,7 +65,7 @@ export default function UniverSheet() {
             const currentCols = activeSheet.getMaxColumns()
             const insertPos = position ?? currentCols
             
-            activeSheet.insertColumn(insertPos)
+            activeSheet.insertColumns(insertPos, 1)
             updateSheetToolsData()
           } catch (error) {
             setSheetError(`Erro ao adicionar coluna: ${error}`)
@@ -125,7 +125,7 @@ export default function UniverSheet() {
             const currentRows = activeSheet.getMaxRows()
             const insertPos = position ?? currentRows
             
-            activeSheet.insertRow(insertPos)
+            activeSheet.insertRows(insertPos, 1)
             updateSheetToolsData()
           } catch (error) {
             setSheetError(`Erro ao inserir linha: ${error}`)
@@ -137,7 +137,7 @@ export default function UniverSheet() {
             const activeSheet = univerAPI.getActiveWorkbook()?.getActiveSheet()
             if (!activeSheet) throw new Error('No active sheet')
             
-            activeSheet.deleteRow(position)
+            activeSheet.deleteRows(position, 1)
             updateSheetToolsData()
           } catch (error) {
             setSheetError(`Erro ao deletar linha: ${error}`)
@@ -149,7 +149,7 @@ export default function UniverSheet() {
             const activeSheet = univerAPI.getActiveWorkbook()?.getActiveSheet()
             if (!activeSheet) throw new Error('No active sheet')
             
-            activeSheet.deleteColumn(position)
+            activeSheet.deleteColumns(position, 1)
             updateSheetToolsData()
           } catch (error) {
             setSheetError(`Erro ao deletar coluna: ${error}`)
