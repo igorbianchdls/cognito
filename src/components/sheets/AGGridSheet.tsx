@@ -161,7 +161,7 @@ export default function AGGridSheet() {
     }
   ]);
 
-  // Definição das colunas
+  // Definição das colunas com suporte para Pivot Tables
   const [colDefs] = useState<ColDef[]>([
     {
       field: 'id',
@@ -177,7 +177,8 @@ export default function AGGridSheet() {
       width: 200,
       editable: true,
       sortable: true,
-      filter: 'agTextColumnFilter'
+      filter: 'agTextColumnFilter',
+      enableRowGroup: true
     },
     {
       field: 'categoria',
@@ -185,7 +186,9 @@ export default function AGGridSheet() {
       width: 150,
       editable: true,
       sortable: true,
-      filter: 'agSetColumnFilter'
+      filter: 'agSetColumnFilter',
+      enableRowGroup: true,
+      enablePivot: true
     },
     {
       field: 'preco',
@@ -194,6 +197,8 @@ export default function AGGridSheet() {
       editable: true,
       sortable: true,
       filter: 'agNumberColumnFilter',
+      enableValue: true,
+      aggFunc: 'avg',
       valueFormatter: (params) => {
         if (params.value == null) return '';
         return new Intl.NumberFormat('pt-BR', {
@@ -209,6 +214,8 @@ export default function AGGridSheet() {
       editable: true,
       sortable: true,
       filter: 'agNumberColumnFilter',
+      enableValue: true,
+      aggFunc: 'sum',
       cellStyle: (params) => {
         if (params.value < 20) {
           return { backgroundColor: '#ffebee', color: '#c62828' };
@@ -224,7 +231,9 @@ export default function AGGridSheet() {
       width: 100,
       editable: true,
       sortable: true,
-      filter: 'agNumberColumnFilter'
+      filter: 'agNumberColumnFilter',
+      enableValue: true,
+      aggFunc: 'sum'
     },
     {
       field: 'ativo',
@@ -233,6 +242,8 @@ export default function AGGridSheet() {
       editable: true,
       sortable: true,
       filter: 'agSetColumnFilter',
+      enableRowGroup: true,
+      enablePivot: true,
       cellRenderer: (params: { value: boolean }) => {
         return params.value ? '✓' : '✗';
       },
@@ -312,6 +323,9 @@ export default function AGGridSheet() {
             enableRangeSelection={true}
             enableCharts={true}
             allowContextMenuWithControlKey={true}
+            sideBar={true}
+            pivotMode={false}
+            rowGroupPanelShow={'always'}
             onCellValueChanged={onCellValueChanged}
             onRowSelected={onRowSelected}
           />
