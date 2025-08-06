@@ -9,7 +9,7 @@ import '@mescius/spread-sheets-charts';
 import '@mescius/spread-sheets-shapes';
 
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import Sidebar from '../navigation/Sidebar';
 
 export default function SpreadSheet() {
@@ -75,7 +75,7 @@ export default function SpreadSheet() {
             () => {
               console.log('Arquivo importado com sucesso');
             },
-            (error: any) => {
+            (error: Error | string) => {
               console.error('Erro ao importar arquivo:', error);
             },
             { fileType: GC.Spread.Sheets.FileType.excel }
@@ -97,7 +97,7 @@ export default function SpreadSheet() {
           a.click();
           URL.revokeObjectURL(url);
         },
-        (error: any) => {
+        (error: Error | string) => {
           console.error('Erro ao exportar arquivo:', error);
         },
         { fileType: GC.Spread.Sheets.FileType.excel }
