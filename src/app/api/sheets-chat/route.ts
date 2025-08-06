@@ -66,11 +66,11 @@ Seja conciso, prático e focado em soluções aplicáveis diretamente na planilh
       system: systemPrompt,
       messages,
       temperature: 0.7,
-      maxTokens: 4096,
+      maxRetries: 3,
     });
 
     console.log('Stream result created successfully');
-    return result.toDataStreamResponse();
+    return result.toTextStreamResponse();
 
   } catch (error) {
     console.error('Detailed error in sheets-chat API:', error);

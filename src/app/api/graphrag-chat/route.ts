@@ -89,11 +89,11 @@ Forneça respostas técnicas, práticas e com exemplos de código quando apropri
       system: systemPrompt,
       messages,
       temperature: 0.7,
-      maxTokens: 4096,
+      maxRetries: 3,
     });
 
     console.log('GraphRAG stream result created successfully');
-    return result.toDataStreamResponse();
+    return result.toTextStreamResponse();
 
   } catch (error) {
     console.error('Detailed error in graphrag-chat API:', error);
