@@ -281,9 +281,10 @@ export default function AGGridSheet() {
 
       {/* AG Grid */}
       {isClient ? (
-        <div className="w-full border border-gray-200 rounded-lg" style={{ height: '600px', minHeight: '600px' }}>
+        <div className="w-full" style={{ height: '600px', minHeight: '600px' }}>
           <AgGridReact
             theme={themeQuartz}
+            loadThemeGoogleFonts={true}
             rowData={rowData}
             columnDefs={colDefs}
             defaultColDef={defaultColDef}
@@ -297,7 +298,7 @@ export default function AGGridSheet() {
           />
         </div>
       ) : (
-        <div className="w-full border border-gray-200 rounded-lg flex items-center justify-center" style={{ height: '600px' }}>
+        <div className="w-full flex items-center justify-center" style={{ height: '600px' }}>
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
             <p className="text-sm text-gray-600">Carregando planilha...</p>
