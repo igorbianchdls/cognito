@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { ColDef, CellValueChangedEvent, RowSelectedEvent, AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
+import { ColDef, CellValueChangedEvent, RowSelectedEvent, AllCommunityModule, ModuleRegistry, themeQuartz } from 'ag-grid-community';
 
 // Register AG Grid modules
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -281,8 +281,9 @@ export default function AGGridSheet() {
 
       {/* AG Grid */}
       {isClient ? (
-        <div className="ag-theme-alpine w-full border border-gray-200 rounded-lg" style={{ height: '600px', minHeight: '600px' }}>
+        <div className="w-full border border-gray-200 rounded-lg" style={{ height: '600px', minHeight: '600px' }}>
           <AgGridReact
+            theme={themeQuartz}
             rowData={rowData}
             columnDefs={colDefs}
             defaultColDef={defaultColDef}
