@@ -113,7 +113,7 @@ export default function AGGridSheet() {
       
       {/* AG Grid - Altura automática */}
       {isClient ? (
-        <div className="w-full">
+        <div>
           <AgGridReact
             theme={myTheme}
             loadThemeGoogleFonts={true}
