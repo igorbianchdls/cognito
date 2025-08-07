@@ -81,14 +81,27 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
             id: `bigquery-${tableId}`,
             name: `${tableId} (BigQuery)`,
             description: `Dados da tabela ${tableId} do BigQuery`,
-            source: 'bigquery',
-            rowCount: tableData.length,
-            columnCount: Object.keys(tableData[0] || {}).length,
-            data: tableData
+            rows: tableData.length,
+            columns: Object.keys(tableData[0] || {}).length,
+            size: `${(JSON.stringify(tableData).length / 1024).toFixed(1)} KB`,
+            type: 'json' as const,
+            lastModified: new Date(),
+            data: tableData,
+            columnDefs: Object.keys(tableData[0] || {}).map(key => ({
+              field: key,
+              headerName: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
+              editable: true,
+              sortable: true,
+              filter: 'agTextColumnFilter'
+            }))
           };
 
-          // Add to available datasets and switch to it
-          addDataset(newDataset);
+          // Add to available datasets directly (bypass CSV import function)
+          const currentDatasets = datasets;
+          const updatedDatasets = [...currentDatasets, newDataset];
+          
+          // Update the store directly
+          availableDatasetsStore.set(updatedDatasets);
           switchToDataset(newDataset.id);
         }
       }, 1000);
