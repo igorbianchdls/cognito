@@ -123,3 +123,16 @@
   border-left: 0px !important;
   border-right: 0px !important;
 }
+
+/* Force auto width - table should fit content */
+.ag-theme-quartz {
+  width: auto !important;
+  display: inline-block !important;
+}
+
+.ag-theme-quartz .ag-root-wrapper,
+.ag-theme-quartz .ag-root {
+  width: auto !important;
+  min-width: auto !important;
+  max-width: none !important;
+}

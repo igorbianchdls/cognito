@@ -14,7 +14,7 @@ export default function SheetsPage() {
       </div>
       
       {/* Painel Direito com Tabs - Oculto em telas pequenas */}
-      <div className="hidden md:block w-80 lg:w-96 border-l border-gray-200 bg-white">
+      <div className="hidden md:block w-80 border-l border-gray-200 bg-white">
         <RightPanel />
       </div>
     </div>
