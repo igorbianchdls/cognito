@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import Sidebar from '@/components/navigation/Sidebar';
@@ -32,6 +32,13 @@ export default function BigQueryTestPage() {
     execute: () => Promise<void>;
     refetch: () => Promise<void>;
   };
+
+  // Execute table data hook when selectedTable changes (and is valid)
+  useEffect(() => {
+    if (selectedTable && selectedTable.trim() !== '') {
+      tableDataHook.execute();
+    }
+  }, [selectedTable, tableDataHook]);
 
   const setLoadingState = (key: string, isLoading: boolean) => {
     setLoading(prev => ({ ...prev, [key]: isLoading }));
@@ -357,7 +364,7 @@ export default function BigQueryTestPage() {
                       }`}
                       onClick={() => {
                         setSelectedTable(tableId);
-                        tableDataHook.execute();
+                        // Execute will be called automatically when selectedTable changes
                       }}
                     >
                       <div className="font-medium text-blue-600">{tableId}</div>

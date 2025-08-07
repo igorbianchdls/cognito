@@ -157,9 +157,31 @@ export function useBigQueryTables(datasetId: string) {
  * Hook for getting data from a specific table
  */
 export function useBigQueryTableData(dataset: string, table: string, limit: number = 100) {
-  const query = `SELECT * FROM \`creatto-463117.${dataset}.${table}\` LIMIT ${limit}`;
+  // Don't execute if table is empty or invalid
+  const isValidTable = table && table.trim() !== '';
+  const query = isValidTable ? `SELECT * FROM \`creatto-463117.${dataset}.${table}\` LIMIT ${limit}` : '';
   
-  return useBigQueryQuery(query);
+  const result = useBigQuery('/api/bigquery', {
+    method: 'POST',
+    body: isValidTable ? {
+      action: 'execute',
+      query,
+    } : null,
+  });
+
+  // Override execute to only work when table is valid
+  const originalExecute = result.execute;
+  const execute = async () => {
+    if (!isValidTable) {
+      return;
+    }
+    return originalExecute();
+  };
+
+  return {
+    ...result,
+    execute,
+  };
 }
 
 /**

@@ -124,6 +124,24 @@ export async function POST(request: NextRequest) {
           )
         }
 
+        // Validate query is not empty or malformed
+        if (query.trim() === '') {
+          console.error('❌ Empty query provided')
+          return NextResponse.json(
+            { error: 'Query cannot be empty' },
+            { status: 400 }
+          )
+        }
+
+        // Check for basic table reference format (prevent malformed table references)
+        if (query.includes('``') || query.includes('..')) {
+          console.error('❌ Malformed query detected:', query.substring(0, 100))
+          return NextResponse.json(
+            { error: 'Invalid query format detected' },
+            { status: 400 }
+          )
+        }
+
         console.log('🔍 Query to execute:', query)
         console.log('🎯 Query parameters:', parameters)
         console.log('📍 BigQuery location:', process.env.BIGQUERY_LOCATION)
