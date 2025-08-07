@@ -29,6 +29,17 @@ ModuleRegistry.registerModules([
   IntegratedChartsModule.with(AgChartsEnterpriseModule)
 ]);
 
+// Custom theme
+const myTheme = themeQuartz.withParams({
+  borderRadius: 0,
+  browserColorScheme: "light",
+  columnBorder: true,
+  headerFontSize: 14,
+  rowBorder: true,
+  wrapperBorder: false,
+  wrapperBorderRadius: 0
+});
+
 // Dynamic import for AG Grid to avoid SSR issues
 const AgGridReact = dynamic(
   () => import('ag-grid-react').then((mod) => mod.AgGridReact),
@@ -100,13 +111,12 @@ export default function AGGridSheet() {
       {/* Table Header */}
       <TableHeader />
       
-      {/* AG Grid - Altura automática */}
+      {/* AG Grid - Ocupando o resto da tela */}
       {isClient ? (
-        <div className="w-full">
+        <div className="w-full flex-1">
           <AgGridReact
-            theme={themeQuartz}
+            theme={myTheme}
             loadThemeGoogleFonts={true}
-            domLayout="autoHeight"
             rowData={rowData}
             columnDefs={colDefs}
             defaultColDef={defaultColDef}

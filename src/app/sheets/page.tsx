@@ -4,7 +4,7 @@ import RightPanel from '@/components/sheets/RightPanel'
 
 export default function SheetsPage() {
   return (
-    <div className="flex min-h-screen bg-white">
+    <div className="flex h-screen bg-white">
       {/* Sidebar Esquerda */}
       <div className="hidden lg:block">
         <Sidebar />
