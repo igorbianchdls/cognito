@@ -110,7 +110,7 @@ class BigQueryService {
         try {
           finalConfig.credentials = JSON.parse(credentialsJson)
           console.log('Using JSON credentials from environment variable')
-        } catch (error) {
+        } catch {
           throw new Error('Invalid GOOGLE_APPLICATION_CREDENTIALS_JSON format')
         }
       } else {
@@ -134,8 +134,8 @@ class BigQueryService {
   /**
    * Get BigQuery client options based on configuration
    */
-  private getBigQueryOptions(config: BigQueryConfig): object {
-    const options: any = {
+  private getBigQueryOptions(config: BigQueryConfig): Record<string, unknown> {
+    const options: Record<string, unknown> = {
       projectId: config.projectId,
     }
 
@@ -430,7 +430,7 @@ export const bigQueryConfig = {
   /**
    * Test if BigQuery is properly configured
    */
-  async testConfiguration(): Promise<{ success: boolean; message: string; details?: any }> {
+  async testConfiguration(): Promise<{ success: boolean; message: string; details?: unknown }> {
     try {
       const validation = bigQueryService.validateConfiguration()
       if (!validation.isValid) {

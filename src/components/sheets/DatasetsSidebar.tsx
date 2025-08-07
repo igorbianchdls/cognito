@@ -80,8 +80,8 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
     }
   };
 
-  // Handle export
-  const handleExport = () => {
+  // Handle export (future implementation)
+  const _handleExport = () => {
     if (sheetData.rows.length === 0) {
       alert('No data to export');
       return;
@@ -100,7 +100,7 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
   };
 
   // Get dataset icon
-  const getDatasetIcon = (dataset: DatasetInfo) => {
+  const getDatasetIcon = (_dataset: DatasetInfo) => {
     return (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
@@ -108,8 +108,8 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
     );
   };
 
-  // Format numbers
-  const formatNumber = (num: number) => {
+  // Format numbers (future use)
+  const _formatNumber = (num: number) => {
     if (num >= 1000) {
       return (num / 1000).toFixed(1).replace('.0', '') + 'k';
     }

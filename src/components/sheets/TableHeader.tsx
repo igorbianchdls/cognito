@@ -8,8 +8,8 @@ interface TableHeaderProps {
 }
 
 export default function TableHeader({ className = '' }: TableHeaderProps) {
-  const [activeView, setActiveView] = useState<'data' | 'details'>('data');
-  const datasetInfo = getActiveDatasetInfo();
+  const [_activeView, _setActiveView] = useState<'data' | 'details'>('data');
+  const _datasetInfo = getActiveDatasetInfo();
   
   return (
     <div className={`bg-white border-b border-gray-200 ${className}`}>
