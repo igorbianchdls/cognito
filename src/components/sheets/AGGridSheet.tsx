@@ -74,7 +74,10 @@ export default function AGGridSheet() {
     resizable: true,
     sortable: true,
     filter: true,
-    floatingFilter: true
+    floatingFilter: false,
+    menuTabs: ['filterMenuTab', 'generalMenuTab'],
+    suppressHeaderMenuButton: false,
+    suppressHeaderFilterButton: false
   };
 
   // Callbacks

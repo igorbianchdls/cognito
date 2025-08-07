@@ -22,7 +22,7 @@
   --ag-border-color: #e5e7eb;
   --ag-header-column-separator-color: #e5e7eb;
   --ag-row-border-color: #f3f4f6;
-  --ag-border-radius: 6px;
+  --ag-border-radius: 0px;
 
   /* Layout & Spacing */
   --ag-header-height: 44px;
