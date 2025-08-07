@@ -30,7 +30,7 @@ interface MessageListProps {
 
 export default function MessageList({ messages, isLoading, error }: MessageListProps) {
   return (
-    <div className="px-3 py-4 space-y-4 w-full max-w-full overflow-hidden">
+    <div className="max-w-[800px] mx-auto px-4 py-4 space-y-4">
       {messages.map((message) => {
         if (message.role === 'user') {
           return (
