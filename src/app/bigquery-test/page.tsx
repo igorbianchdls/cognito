@@ -25,6 +25,7 @@ interface BigQueryTestResult {
 
 export default function BigQueryTestPage() {
   const [connectionStatus, setConnectionStatus] = useState<BigQueryTestResult | null>(null);
+  const [simpleTest, setSimpleTest] = useState<BigQueryTestResult | null>(null);
   const [datasets, setDatasets] = useState<BigQueryTestResult | null>(null);
   const [tables, setTables] = useState<BigQueryTestResult | null>(null);
   const [queryResult, setQueryResult] = useState<BigQueryTestResult | null>(null);
@@ -49,6 +50,22 @@ export default function BigQueryTestPage() {
       });
     } finally {
       setLoadingState('connection', false);
+    }
+  };
+
+  const testSimpleConnection = async () => {
+    setLoadingState('simple', true);
+    try {
+      const response = await fetch('/api/bigquery-simple');
+      const result = await response.json();
+      setSimpleTest(result);
+    } catch (error) {
+      setSimpleTest({
+        success: false,
+        error: error instanceof Error ? error.message : 'Simple test failed'
+      });
+    } finally {
+      setLoadingState('simple', false);
     }
   };
 
@@ -243,6 +260,22 @@ export default function BigQueryTestPage() {
               {loading.connection ? 'Testing...' : 'Test Connection'}
             </Button>
             {renderResult(connectionStatus, 'Connection Status')}
+          </Card>
+
+          {/* Simple Test Section */}
+          <Card className="p-6 mb-6 border-2 border-green-200 bg-green-50">
+            <h2 className="text-xl font-semibold mb-4">🚀 Teste Simples (creatto.json)</h2>
+            <p className="text-gray-600 mb-4">
+              Teste direto usando arquivo creatto.json - implementação super simples seguindo docs do Google.
+            </p>
+            <Button 
+              onClick={testSimpleConnection} 
+              disabled={loading.simple}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {loading.simple ? 'Testando...' : 'Teste Simples'}
+            </Button>
+            {renderResult(simpleTest, 'Teste Simples - creatto.json')}
           </Card>
 
           {/* Datasets Section */}
