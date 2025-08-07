@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useStore } from '@nanostores/react';
-import { ColDef, CellValueChangedEvent, RowSelectedEvent, ModuleRegistry, themeQuartz } from 'ag-grid-community';
+import { ColDef, CellValueChangedEvent, RowSelectedEvent, ModuleRegistry, themeQuartz, GridReadyEvent } from 'ag-grid-community';
 import { 
   LicenseManager, 
   AllEnterpriseModule,
@@ -14,9 +14,7 @@ import {
 import { AgChartsEnterpriseModule } from 'ag-charts-enterprise';
 import { 
   activeDatasetStore, 
-  isSheetLoadingStore, 
-  initializeDefaultDataset,
-  getActiveDatasetInfo
+  initializeDefaultDataset
 } from '@/stores/sheetsStore';
 import TableHeader from './TableHeader';
 
@@ -52,16 +50,12 @@ export default function AGGridSheet() {
   
   // Store subscriptions
   const activeDataset = useStore(activeDatasetStore);
-  const isLoading = useStore(isSheetLoadingStore);
   
   useEffect(() => {
     setIsClient(true);
     // Initialize default dataset if not already loaded
     initializeDefaultDataset();
   }, []);
-
-  // Get current dataset info for display
-  const datasetInfo = getActiveDatasetInfo();
   
   // Dynamic row data from store
   const rowData = activeDataset?.data || [];
@@ -97,7 +91,7 @@ export default function AGGridSheet() {
   }, []);
 
   // Auto-size columns based on content when data loads
-  const onFirstDataRendered = useCallback((params: any) => {
+  const onFirstDataRendered = useCallback((params: GridReadyEvent) => {
     params.api.autoSizeAllColumns();
   }, []);
 
