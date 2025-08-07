@@ -22,6 +22,7 @@ export default function BigQueryTestPage() {
   const [customQuery, setCustomQuery] = useState<string>('');
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [selectedTable, setSelectedTable] = useState<string>('');
+  const [carPricesResult, setCarPricesResult] = useState<BigQueryTestResult | null>(null);
   
   // Use the new hooks
   const tablesHook = useBigQueryTables('biquery_data');
@@ -119,6 +120,42 @@ export default function BigQueryTestPage() {
       });
     } finally {
       setLoadingState('query', false);
+    }
+  };
+
+  const testCarPrices = async () => {
+    const query = 'SELECT * FROM `creatto-463117.biquery_data.car_prices` LIMIT 10';
+    console.log('🚗 Testing car_prices with query:', query);
+    
+    setLoadingState('carPrices', true);
+    setCarPricesResult(null);
+    
+    try {
+      console.log('📤 Sending POST request to /api/bigquery');
+      const response = await fetch('/api/bigquery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'execute',
+          query: query
+        })
+      });
+      
+      console.log('📥 Response status:', response.status);
+      console.log('📥 Response ok:', response.ok);
+      
+      const result = await response.json();
+      console.log('📊 Result:', result);
+      
+      setCarPricesResult(result);
+    } catch (error) {
+      console.error('❌ Error testing car_prices:', error);
+      setCarPricesResult({
+        success: false,
+        error: error instanceof Error ? error.message : 'Test failed'
+      });
+    } finally {
+      setLoadingState('carPrices', false);
     }
   };
 
@@ -438,6 +475,90 @@ export default function BigQueryTestPage() {
               {loading.query ? 'Executing...' : 'Execute Query'}
             </Button>
             {renderResult(queryResult, 'Query Results')}
+          </Card>
+
+          {/* Car Prices Direct Test */}
+          <Card className="p-6 mb-6 border-2 border-green-200 bg-green-50">
+            <h2 className="text-xl font-semibold mb-4">🚗 Teste Direto: car_prices</h2>
+            <p className="text-gray-600 mb-4">
+              Teste específico para carregar dados da tabela <code className="bg-gray-200 px-2 py-1 rounded">car_prices</code> 
+              com query hardcoded.
+            </p>
+            
+            <div className="mb-4">
+              <code className="bg-gray-100 p-2 rounded text-sm block">
+                SELECT * FROM `creatto-463117.biquery_data.car_prices` LIMIT 10
+              </code>
+            </div>
+
+            <Button 
+              onClick={testCarPrices} 
+              disabled={loading.carPrices}
+              className="bg-green-600 hover:bg-green-700 mb-4"
+            >
+              {loading.carPrices ? '🔄 Testando...' : '🚗 Testar car_prices'}
+            </Button>
+
+            {/* Show error if any */}
+            {carPricesResult?.error && (
+              <div className="text-red-600 mb-4 p-3 bg-red-50 border border-red-200 rounded">
+                <strong>❌ Erro:</strong> {carPricesResult.error}
+              </div>
+            )}
+
+            {/* Show success result */}
+            {carPricesResult?.success && carPricesResult.data && (
+              <div className="mb-4">
+                <div className="text-green-600 mb-2">
+                  <strong>✅ Sucesso!</strong> Dados carregados da tabela car_prices
+                </div>
+                
+                {/* Render table data if it's an array */}
+                {(() => {
+                  const data = carPricesResult.data;
+                  
+                  // Check if data has a 'data' property with array
+                  if (data && typeof data === 'object' && 'data' in data && Array.isArray(data.data) && data.data.length > 0) {
+                    return (
+                      <div className="bg-white p-4 rounded border">
+                        {renderTableData(data.data, 'Dados da tabela car_prices')}
+                      </div>
+                    );
+                  }
+                  
+                  // Check if data itself is an array
+                  if (Array.isArray(data) && data.length > 0) {
+                    return (
+                      <div className="bg-white p-4 rounded border">
+                        {renderTableData(data, 'Dados da tabela car_prices')}
+                      </div>
+                    );
+                  }
+                  
+                  // Show raw data
+                  return (
+                    <div className="bg-gray-100 p-4 rounded">
+                      <strong>Dados retornados:</strong>
+                      <pre className="mt-2 text-sm overflow-x-auto">
+                        {JSON.stringify(data, null, 2)}
+                      </pre>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* Show raw result for debugging */}
+            {carPricesResult && (
+              <details className="mt-4">
+                <summary className="cursor-pointer text-sm text-gray-600 hover:text-gray-800">
+                  🔍 Ver resultado completo (debug)
+                </summary>
+                <pre className="mt-2 text-xs bg-gray-100 p-3 rounded overflow-x-auto">
+                  {JSON.stringify(carPricesResult, null, 2)}
+                </pre>
+              </details>
+            )}
           </Card>
 
           {/* Instructions */}
