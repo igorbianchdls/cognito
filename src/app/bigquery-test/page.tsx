@@ -320,7 +320,16 @@ export default function BigQueryTestPage() {
               <div className="mb-6">
                 <h3 className="font-semibold mb-3">📊 Tabelas encontradas ({tablesHook.data.length}):</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {tablesHook.data.map((table: any) => (
+                  {tablesHook.data.map((table: {
+                    datasetId: string;
+                    tableId: string;
+                    projectId?: string;
+                    description?: string;
+                    numRows?: number;
+                    numBytes?: number;
+                    creationTime?: Date;
+                    lastModifiedTime?: Date;
+                  }) => (
                     <div
                       key={table.tableId}
                       className={`p-3 border rounded-lg cursor-pointer transition-colors ${
