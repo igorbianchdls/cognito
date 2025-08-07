@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useStore } from '@nanostores/react';
-import { ColDef } from 'ag-grid-community';
+import { ColDef, ICellRendererParams, ValueFormatterParams, CellClassParams } from 'ag-grid-community';
 import { 
   availableDatasetsStore, 
   activeDatasetIdStore, 
@@ -120,7 +120,7 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
             filter: 'agNumberColumnFilter',
             enableValue: true,
             aggFunc: key.toLowerCase().includes('id') ? 'count' : 'sum',
-            valueFormatter: (params) => {
+            valueFormatter: (params: ValueFormatterParams) => {
               if (params.value == null) return '';
               const num = Number(params.value);
               return key.toLowerCase().includes('price') || key.toLowerCase().includes('valor') 
@@ -135,13 +135,13 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
             ...baseConfig,
             filter: 'agSetColumnFilter',
             enablePivot: true,
-            cellRenderer: (params) => {
+            cellRenderer: (params: ICellRendererParams) => {
               const val = params.value;
               if (val === true || val === 'true' || val === 1) return '✓';
               if (val === false || val === 'false' || val === 0) return '✗';
               return String(val || '');
             },
-            cellStyle: (params) => {
+            cellStyle: (params: CellClassParams) => {
               const val = params.value;
               const baseStyle = { textAlign: 'center' as const };
               if (val === true || val === 'true' || val === 1) {
@@ -158,7 +158,7 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
           return {
             ...baseConfig,
             filter: 'agDateColumnFilter',
-            valueFormatter: (params) => {
+            valueFormatter: (params: ValueFormatterParams) => {
               if (!params.value) return '';
               const date = new Date(String(params.value));
               return isNaN(date.getTime()) ? String(params.value) : date.toLocaleDateString('pt-BR');
