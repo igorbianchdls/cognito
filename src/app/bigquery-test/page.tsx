@@ -25,7 +25,13 @@ export default function BigQueryTestPage() {
   
   // Use the new hooks
   const tablesHook = useBigQueryTables('biquery_data');
-  const tableDataHook = useBigQueryTableData('biquery_data', selectedTable, 100);
+  const tableDataHook = useBigQueryTableData('biquery_data', selectedTable, 100) as {
+    data: { data: Record<string, unknown>[] } | null;
+    loading: boolean;
+    error: string | null;
+    execute: () => Promise<void>;
+    refetch: () => Promise<void>;
+  };
 
   const setLoadingState = (key: string, isLoading: boolean) => {
     setLoading(prev => ({ ...prev, [key]: isLoading }));
