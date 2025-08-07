@@ -117,7 +117,7 @@ export default function AGGridSheet() {
             allowContextMenuWithControlKey={true}
             sideBar={false}
             pivotMode={false}
-            rowGroupPanelShow={'always'}
+            rowGroupPanelShow={'never'}
             onCellValueChanged={onCellValueChanged}
             onRowSelected={onRowSelected}
           />
