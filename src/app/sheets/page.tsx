@@ -6,9 +6,7 @@ export default function SheetsPage() {
   return (
     <div className="flex h-screen bg-white">
       {/* Sidebar Esquerda */}
-      <div className="hidden lg:block">
-        <Sidebar />
-      </div>
+      <Sidebar />
       
       {/* Planilha Central */}
       <div className="flex-1 min-w-0">
