@@ -4,6 +4,7 @@ import { useState } from 'react';
 import MessageList from '../chat/MessageList';
 import Sidebar from '../navigation/Sidebar';
 import InputArea from '../chat/InputArea';
+import DaytonaSandbox from './DaytonaSandbox';
 
 interface UploadedFile {
   id: string;
@@ -170,6 +171,11 @@ export default function GraphRAGChat() {
                     </svg>
                     Relacionamentos
                   </button>
+                </div>
+
+                {/* Daytona Sandbox Component */}
+                <div className="mt-8 w-full max-w-[800px] mx-auto">
+                  <DaytonaSandbox />
                 </div>
               </div>
             </div>
