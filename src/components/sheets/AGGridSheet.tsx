@@ -96,6 +96,11 @@ export default function AGGridSheet() {
     }
   }, []);
 
+  // Auto-size columns based on content when data loads
+  const onFirstDataRendered = useCallback((params: any) => {
+    params.api.autoSizeAllColumns();
+  }, []);
+
   return (
     <div className="w-full h-full flex flex-col">
       {/* Table Header */}
@@ -123,6 +128,7 @@ export default function AGGridSheet() {
             rowGroupPanelShow={'never'}
             onCellValueChanged={onCellValueChanged}
             onRowSelected={onRowSelected}
+            onFirstDataRendered={onFirstDataRendered}
           />
         </div>
       ) : (
