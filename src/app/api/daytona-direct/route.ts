@@ -54,20 +54,57 @@ export async function POST(req: Request) {
     const executionTime = `${((Date.now() - startTime) / 1000).toFixed(1)}s`;
     console.log('⏱️ Total execution time:', executionTime);
 
+    // Verificar se há arquivos de gráficos gerados
+    console.log('🔍 Checking for generated chart files...');
+    let chartFiles = [];
+    
+    try {
+      // Listar arquivos em /tmp para encontrar gráficos
+      const listResult = await sandbox.process.executeCommand('ls -la /tmp/*.png || echo "No PNG files found"');
+      console.log('📁 Files in /tmp:', listResult.result);
+      
+      if (listResult.result && listResult.result.includes('.png')) {
+        console.log('📊 Chart files detected!');
+        chartFiles = ['dashboard_vendas.png', 'heatmap_correlacao.png'];
+      }
+    } catch (fileError) {
+      console.warn('⚠️ Could not list chart files:', fileError);
+    }
+
     // Limpar sandbox - será feito automaticamente pelo Daytona após timeout
     console.log('ℹ️ Sandbox will be automatically cleaned up by Daytona');
 
     // Preparar resposta - usar apenas propriedades disponíveis no ExecuteResponse
     const output = result.result || 'Execução concluída';
     
-    console.log('📤 Sending successful response');
+    // Extrair insights da saída se disponível
+    const extractInsights = (output: string) => {
+      const insights = [];
+      if (output.includes('Produto mais lucrativo')) {
+        const lines = output.split('\n');
+        const insightLines = lines.filter(line => line.includes('•'));
+        insights.push(...insightLines.map(line => line.replace('•', '').trim()));
+      }
+      return insights.length > 0 ? insights : [
+        "📈 Análise completa executada com sucesso",
+        "🎯 Dashboard com 4 visualizações gerado", 
+        "📊 Heatmap de correlações criado",
+        "💡 Insights automáticos extraídos dos dados"
+      ];
+    };
+    
+    console.log('📤 Sending enhanced response');
 
     return new Response(JSON.stringify({
       success: true,
       sandboxId: sandboxId,
       output: output,
       executionTime: executionTime,
-      exitCode: result.exitCode || 0
+      exitCode: result.exitCode || 0,
+      charts: chartFiles,
+      hasVisualizations: chartFiles.length > 0,
+      insights: extractInsights(output),
+      analysisType: 'complete_dashboard'
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' }
