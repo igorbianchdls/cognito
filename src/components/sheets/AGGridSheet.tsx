@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useStore } from '@nanostores/react';
-import { ColDef, CellValueChangedEvent, RowSelectedEvent, ModuleRegistry, themeQuartz, GridReadyEvent } from 'ag-grid-community';
+import { ColDef, CellValueChangedEvent, RowSelectedEvent, ModuleRegistry, themeQuartz, FirstDataRenderedEvent } from 'ag-grid-community';
 import { 
   LicenseManager, 
   AllEnterpriseModule,
@@ -91,7 +91,7 @@ export default function AGGridSheet() {
   }, []);
 
   // Auto-size columns based on content when data loads
-  const onFirstDataRendered = useCallback((params: GridReadyEvent) => {
+  const onFirstDataRendered = useCallback((params: FirstDataRenderedEvent) => {
     params.api.autoSizeAllColumns();
   }, []);
 
