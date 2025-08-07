@@ -1,20 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import Sidebar from '@/components/navigation/Sidebar';
-import { ColDef } from 'ag-grid-community';
-
-// Dynamic import for AG Grid to avoid SSR issues
-const AgGridReact = dynamic(
-  () => import('ag-grid-react').then((mod) => mod.AgGridReact),
-  { 
-    ssr: false,
-    loading: () => <div className="flex justify-center p-4">Loading grid...</div>
-  }
-);
 
 interface BigQueryTestResult {
   success: boolean;
@@ -114,41 +103,46 @@ export default function BigQueryTestPage() {
     }
   };
 
-  const generateColumnDefs = (data: Record<string, unknown>[]): ColDef[] => {
-    if (!data || data.length === 0) return [];
-    
-    const firstRow = data[0];
-    return Object.keys(firstRow).map(key => ({
-      field: key,
-      headerName: key.charAt(0).toUpperCase() + key.slice(1),
-      sortable: true,
-      filter: true,
-      resizable: true,
-      width: 150,
-    }));
-  };
-
   const renderTableData = (data: Record<string, unknown>[], title: string) => {
     if (!data || data.length === 0) return null;
 
-    const columnDefs = generateColumnDefs(data);
+    const columns = Object.keys(data[0]);
     
     return (
       <div className="mt-4">
         <h4 className="font-medium mb-2">{title} ({data.length} rows)</h4>
-        <div className="h-96 w-full border rounded">
-          <AgGridReact
-            rowData={data}
-            columnDefs={columnDefs}
-            defaultColDef={{
-              sortable: true,
-              filter: true,
-              resizable: true,
-            }}
-            pagination={true}
-            paginationPageSize={20}
-          />
+        <div className="overflow-auto max-h-96 border rounded">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50 sticky top-0">
+              <tr>
+                {columns.map(column => (
+                  <th 
+                    key={column}
+                    className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  >
+                    {column.charAt(0).toUpperCase() + column.slice(1).replace(/_/g, ' ')}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {data.map((row, index) => (
+                <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  {columns.map(column => (
+                    <td key={column} className="px-4 py-3 text-sm text-gray-900 whitespace-nowrap">
+                      {String(row[column] || '')}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
+        {data.length > 20 && (
+          <p className="text-xs text-gray-500 mt-2">
+            Showing first 20 results. Total: {data.length} rows
+          </p>
+        )}
       </div>
     );
   };
