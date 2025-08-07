@@ -13,12 +13,8 @@ export async function GET(request: NextRequest) {
 
     switch (action) {
       case 'datasets':
-        // For now, return a simple message since we need to add listDatasets method
-        return NextResponse.json({ 
-          success: true, 
-          message: 'Datasets endpoint - implementation pending',
-          data: [] 
-        })
+        const datasets = await bigQueryService.listDatasets()
+        return NextResponse.json({ success: true, data: datasets })
 
       case 'tables':
         const datasetId = searchParams.get('dataset')

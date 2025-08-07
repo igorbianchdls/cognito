@@ -309,6 +309,45 @@ class BigQueryService {
   }
 
   /**
+   * List datasets in the project
+   */
+  async listDatasets(): Promise<{ id: string; friendlyName?: string; description?: string; location?: string; creationTime?: Date }[]> {
+    if (!this.client) {
+      throw new Error('BigQuery client not initialized. Call initialize() first.')
+    }
+
+    try {
+      const [datasets] = await this.client.getDatasets()
+
+      const datasetInfos = await Promise.all(
+        datasets.map(async (dataset) => {
+          try {
+            const [metadata] = await dataset.getMetadata()
+            
+            return {
+              id: dataset.id!,
+              friendlyName: metadata.friendlyName,
+              description: metadata.description,
+              location: metadata.location,
+              creationTime: metadata.creationTime ? new Date(parseInt(metadata.creationTime)) : undefined,
+            }
+          } catch (error) {
+            console.warn(`Failed to get metadata for dataset ${dataset.id}:`, error)
+            return {
+              id: dataset.id!,
+            }
+          }
+        })
+      )
+
+      return datasetInfos
+    } catch (error) {
+      console.error('Failed to list datasets:', error)
+      throw new Error(`Failed to list datasets: ${error}`)
+    }
+  }
+
+  /**
    * Get table schema
    */
   async getTableSchema(datasetId: string, tableId: string) {

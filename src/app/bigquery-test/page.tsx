@@ -188,6 +188,39 @@ export default function BigQueryTestPage() {
     );
   };
 
+  const renderDatasetsCards = (datasetsResult: BigQueryTestResult | null) => {
+    if (!datasetsResult?.success || !Array.isArray(datasetsResult.data)) return null;
+
+    return (
+      <div className="mt-4">
+        <h4 className="font-medium mb-3">Available Datasets ({datasetsResult.data.length})</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {(datasetsResult.data as { id: string; friendlyName?: string; description?: string; location?: string }[]).map((dataset) => (
+            <div
+              key={dataset.id}
+              className="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+              onClick={() => {
+                setSelectedDataset(dataset.id);
+                listTables(dataset.id);
+              }}
+            >
+              <div className="font-medium text-sm text-blue-600">{dataset.id}</div>
+              {dataset.friendlyName && (
+                <div className="text-xs text-gray-600 mt-1">{dataset.friendlyName}</div>
+              )}
+              {dataset.description && (
+                <div className="text-xs text-gray-500 mt-1 truncate">{dataset.description}</div>
+              )}
+              <div className="text-xs text-gray-400 mt-2">
+                {dataset.location && `📍 ${dataset.location}`}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
@@ -225,7 +258,11 @@ export default function BigQueryTestPage() {
             >
               {loading.datasets ? 'Loading...' : 'List Datasets'}
             </Button>
-            {renderResult(datasets, 'Available Datasets')}
+            {datasets?.success ? (
+              renderDatasetsCards(datasets)
+            ) : datasets ? (
+              renderResult(datasets, 'Available Datasets')
+            ) : null}
           </Card>
 
           {/* Tables Section */}
