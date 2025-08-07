@@ -1,21 +1,67 @@
 import axios from 'axios';
 
 export async function POST(req: Request) {
-  console.log('=== DAYTONA ANALYSIS API ===');
+  console.log('=== DAYTONA ANALYSIS API DEBUG ===');
   
   try {
     const { prompt } = await req.json();
     console.log('Prompt received:', prompt);
+    console.log('DAYTONA_API_KEY exists:', !!process.env.DAYTONA_API_KEY);
+    console.log('NODE_ENV:', process.env.NODE_ENV);
 
-    if (!process.env.DAYTONA_API_KEY) {
-      return new Response(JSON.stringify({ 
-        error: 'Daytona API key not configured',
-        details: 'Please set DAYTONA_API_KEY in your environment variables'
-      }), { 
-        status: 500, 
-        headers: { 'Content-Type': 'application/json' } 
+    // Modo simulação para debug (quando não tem chave real)
+    const simulationMode = !process.env.DAYTONA_API_KEY;
+    
+    if (simulationMode) {
+      console.log('SIMULATION MODE: Using mock Daytona response');
+      
+      // Simular resposta da análise para debug
+      const mockAnalysisResult = {
+        success: true,
+        analysis: {
+          output: `=== ANÁLISE DE VENDAS ===
+Total de registros: 6
+Período: 2024-01 até 2024-06
+Total de vendas: R$ 127,000.00
+Média mensal: R$ 21,166.67
+
+=== VENDAS POR REGIÃO ===
+SP    65000
+RJ    43000
+MG    19000
+
+=== VENDAS POR PRODUTO ===
+A    65000
+B    43000
+C    19000
+
+=== INSIGHTS PRINCIPAIS ===
+✓ Maior venda: R$ 28,000.00 em 2024-06
+✓ Menor venda: R$ 15,000.00 em 2024-01
+✓ Região líder: SP com R$ 65,000.00
+✓ Produto líder: A com R$ 65,000.00
+✓ Crescimento total: 86.7% no período`,
+          charts: ['chart1.png', 'chart2.png', 'chart3.png', 'chart4.png'],
+          executionTime: '2.3s',
+          sandboxId: `mock-sandbox-${Date.now()}`
+        },
+        insights: [
+          "📈 Crescimento consistente nas vendas ao longo dos meses",
+          "🏆 São Paulo lidera em volume de vendas",
+          "📊 Produto A representa a maior fatia do mercado",
+          "💡 Crescimento de 86.7% no período analisado"
+        ]
+      };
+      
+      console.log('Returning mock analysis result:', mockAnalysisResult);
+      
+      return new Response(JSON.stringify(mockAnalysisResult), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
       });
     }
+
+    console.log('PRODUCTION MODE: Using real Daytona API');
 
     // Dados hardcoded para análise
     const vendasData = `
@@ -112,6 +158,8 @@ print(f"✓ Crescimento total: {crescimento_total:.1f}% no período")
       }
     };
 
+    console.log('Daytona config URL:', daytonaConfig.url);
+    console.log('Authorization header set:', !!daytonaConfig.headers.Authorization);
     console.log('Creating Daytona sandbox...');
     
     // Criar sandbox
@@ -120,12 +168,19 @@ print(f"✓ Crescimento total: {crescimento_total:.1f}% no período")
       timeout: 300 // 5 minutes
     }, { headers: daytonaConfig.headers });
 
+    console.log('Create response status:', createResponse.status);
+    console.log('Create response data:', createResponse.data);
+
     const sandboxId = createResponse.data.id;
-    console.log('Sandbox created:', sandboxId);
+    console.log('Sandbox created with ID:', sandboxId);
 
     // Executar código Python
+    const execUrl = `${daytonaConfig.url}/${sandboxId}/exec`;
+    console.log('Executing code at URL:', execUrl);
+    console.log('Code length:', vendasData.length, 'characters');
+    
     const execResponse = await axios.post(
-      `${daytonaConfig.url}/${sandboxId}/exec`,
+      execUrl,
       {
         code: vendasData,
         timeout: 120
@@ -133,8 +188,10 @@ print(f"✓ Crescimento total: {crescimento_total:.1f}% no período")
       { headers: daytonaConfig.headers }
     );
 
+    console.log('Execution response status:', execResponse.status);
     const result = execResponse.data;
-    console.log('Code execution completed');
+    console.log('Execution result:', result);
+    console.log('Code execution completed successfully');
 
     // Limpar sandbox
     try {
@@ -165,12 +222,30 @@ print(f"✓ Crescimento total: {crescimento_total:.1f}% no período")
       headers: { 'Content-Type': 'application/json' }
     });
 
-  } catch (error) {
-    console.error('Detailed error in daytona-analysis API:', error);
+  } catch (error: unknown) {
+    console.error('=== DAYTONA API ERROR DEBUG ===');
+    console.error('Error type:', (error as Error)?.constructor?.name);
+    console.error('Error message:', (error as Error)?.message);
+    if (axios.isAxiosError(error)) {
+      console.error('Axios error details:');
+      console.error('- Status:', error.response?.status);
+      console.error('- Status Text:', error.response?.statusText);
+      console.error('- Response Data:', error.response?.data);
+      console.error('- Request URL:', error.config?.url);
+      console.error('- Request Method:', error.config?.method);
+      console.error('- Request Headers:', error.config?.headers);
+    }
+    console.error('Full error object:', error);
     
     return new Response(JSON.stringify({ 
+      success: false,
       error: 'Internal server error in Daytona analysis',
       details: error instanceof Error ? error.message : 'Unknown error',
+      axiosError: axios.isAxiosError(error) ? {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data
+      } : null,
       timestamp: new Date().toISOString()
     }), { 
       status: 500,

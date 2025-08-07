@@ -108,20 +108,41 @@ Forneça respostas técnicas, práticas e com exemplos de código quando apropri
        userMessage.includes('análise') || userMessage.includes('estatística'));
 
     if (shouldAnalyzeData) {
-      console.log('Data analysis requested, calling Daytona API...');
+      console.log('=== DAYTONA INTEGRATION DEBUG ===');
+      console.log('User message:', userMessage);
+      console.log('Should analyze data:', shouldAnalyzeData);
+      console.log('Request URL:', req.url);
       
       try {
+        // Construir URL correta para API Daytona
+        const baseUrl = process.env.NODE_ENV === 'production' 
+          ? 'https://your-domain.com' 
+          : 'http://localhost:3000';
+        
+        const daytonaApiUrl = `${baseUrl}/api/daytona-analysis`;
+        console.log('Calling Daytona API at:', daytonaApiUrl);
+        
         // Chamar nossa API Daytona
         const daytonaResponse = await axios.post(
-          `${req.url.replace('/api/graphrag-chat', '')}/api/daytona-analysis`,
+          daytonaApiUrl,
           { prompt: userMessage },
           { 
             headers: { 'Content-Type': 'application/json' },
             timeout: 60000 // 1 minuto timeout
           }
         );
+        
+        console.log('Daytona API response status:', daytonaResponse.status);
+        console.log('Daytona API response data:', daytonaResponse.data);
 
         const analysisResult = daytonaResponse.data;
+        console.log('Analysis result parsed:', analysisResult);
+        
+        // Verificar se a análise foi bem-sucedida
+        if (!analysisResult || !analysisResult.success) {
+          console.error('Daytona analysis failed:', analysisResult);
+          throw new Error(`Daytona analysis failed: ${analysisResult?.error || 'Unknown error'}`);
+        }
         
         // Resposta customizada com resultados da análise
         const analysisResponse = `# 🐍 Análise Python Executada no Daytona
@@ -147,6 +168,8 @@ A análise foi executada de forma segura no ambiente isolado Daytona, utilizando
 
 *Esta análise demonstra a integração entre GraphRAG e processamento Python seguro via Daytona para análises de dados avançadas.*`;
 
+        console.log('Sending analysis response:', analysisResponse.substring(0, 200) + '...');
+
         // Retornar resposta direta ao invés de stream
         return new Response(analysisResponse, {
           status: 200,
@@ -155,9 +178,19 @@ A análise foi executada de forma segura no ambiente isolado Daytona, utilizando
           }
         });
 
-      } catch (daytonaError) {
-        console.error('Daytona analysis error:', daytonaError);
+      } catch (daytonaError: unknown) {
+        console.error('=== DAYTONA ERROR DEBUG ===');
+        console.error('Error type:', (daytonaError as Error)?.constructor?.name);
+        console.error('Error message:', (daytonaError as Error)?.message);
+        if (axios.isAxiosError(daytonaError)) {
+          console.error('Response status:', daytonaError.response?.status);
+          console.error('Response data:', daytonaError.response?.data);
+          console.error('Request config:', daytonaError.config);
+        }
+        console.error('Full error:', daytonaError);
+        
         // Continuar com resposta normal do GraphRAG em caso de erro
+        console.log('Falling back to normal GraphRAG response');
       }
     }
 
