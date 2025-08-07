@@ -380,6 +380,45 @@ class BigQueryService {
   }
 
   /**
+   * Get dataset information including location
+   */
+  async getDatasetInfo(datasetId: string) {
+    if (!this.client) {
+      throw new Error('BigQuery client not initialized. Call initialize() first.')
+    }
+
+    try {
+      console.log(`🔍 Getting dataset info for: ${datasetId}`)
+      const dataset = this.client.dataset(datasetId)
+      const [metadata] = await dataset.getMetadata()
+      
+      console.log('📊 Dataset metadata received:', {
+        id: metadata.id,
+        location: metadata.location,
+        creationTime: metadata.creationTime,
+        lastModifiedTime: metadata.lastModifiedTime
+      })
+
+      return {
+        id: metadata.id,
+        friendlyName: metadata.friendlyName,
+        description: metadata.description,
+        location: metadata.location,
+        creationTime: metadata.creationTime ? new Date(parseInt(metadata.creationTime)) : undefined,
+        lastModifiedTime: metadata.lastModifiedTime ? new Date(parseInt(metadata.lastModifiedTime)) : undefined,
+        etag: metadata.etag,
+        selfLink: metadata.selfLink,
+        access: metadata.access,
+        labels: metadata.labels,
+        raw: metadata // Full metadata for debugging
+      }
+    } catch (error) {
+      console.error('Failed to get dataset info:', error)
+      throw new Error(`Failed to get dataset info: ${error}`)
+    }
+  }
+
+  /**
    * Query a specific table with optional filters
    */
   async queryTable(

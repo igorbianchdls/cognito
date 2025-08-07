@@ -23,6 +23,7 @@ export default function BigQueryTestPage() {
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [selectedTable, setSelectedTable] = useState<string>('');
   const [carPricesResult, setCarPricesResult] = useState<BigQueryTestResult | null>(null);
+  const [datasetInfoResult, setDatasetInfoResult] = useState<BigQueryTestResult | null>(null);
   
   // Use the new hooks
   const tablesHook = useBigQueryTables('biquery_data');
@@ -156,6 +157,39 @@ export default function BigQueryTestPage() {
       });
     } finally {
       setLoadingState('carPrices', false);
+    }
+  };
+
+  const detectDatasetLocation = async () => {
+    const datasetId = 'biquery_data';
+    console.log('🔍 Detecting location for dataset:', datasetId);
+    
+    setLoadingState('datasetInfo', true);
+    setDatasetInfoResult(null);
+    
+    try {
+      console.log('📤 Sending GET request to detect dataset location');
+      const response = await fetch(`/api/bigquery?action=dataset-info&dataset=${datasetId}`);
+      
+      console.log('📥 Response status:', response.status);
+      console.log('📥 Response ok:', response.ok);
+      
+      const result = await response.json();
+      console.log('📊 Dataset info result:', result);
+      
+      if (result.success && result.data?.location) {
+        console.log('🎯 Dataset location detected:', result.data.location);
+      }
+      
+      setDatasetInfoResult(result);
+    } catch (error) {
+      console.error('❌ Error detecting dataset location:', error);
+      setDatasetInfoResult({
+        success: false,
+        error: error instanceof Error ? error.message : 'Location detection failed'
+      });
+    } finally {
+      setLoadingState('datasetInfo', false);
     }
   };
 
@@ -556,6 +590,98 @@ export default function BigQueryTestPage() {
                 </summary>
                 <pre className="mt-2 text-xs bg-gray-100 p-3 rounded overflow-x-auto">
                   {JSON.stringify(carPricesResult, null, 2)}
+                </pre>
+              </details>
+            )}
+          </Card>
+
+          {/* Dataset Location Detection */}
+          <Card className="p-6 mb-6 border-2 border-yellow-200 bg-yellow-50">
+            <h2 className="text-xl font-semibold mb-4">🔍 Detectar Location do Dataset</h2>
+            <p className="text-gray-600 mb-4">
+              Descubra a location (região) real do dataset <code className="bg-gray-200 px-2 py-1 rounded">biquery_data</code>. 
+              Isso vai resolver o erro de &quot;Not found in location US&quot;.
+            </p>
+
+            <Button 
+              onClick={detectDatasetLocation} 
+              disabled={loading.datasetInfo}
+              className="bg-yellow-600 hover:bg-yellow-700 mb-4"
+            >
+              {loading.datasetInfo ? '🔄 Detectando...' : '🔍 Detectar Location'}
+            </Button>
+
+            {/* Show error if any */}
+            {datasetInfoResult?.error && (
+              <div className="text-red-600 mb-4 p-3 bg-red-50 border border-red-200 rounded">
+                <strong>❌ Erro:</strong> {datasetInfoResult.error}
+              </div>
+            )}
+
+            {/* Show success result */}
+            {datasetInfoResult?.success && datasetInfoResult.data && (
+              <div className="mb-4">
+                <div className="text-green-600 mb-2">
+                  <strong>✅ Dataset encontrado!</strong>
+                </div>
+                
+                <div className="bg-white p-4 rounded border">
+                  {(() => {
+                    const data = datasetInfoResult.data as Record<string, unknown>; // Type assertion for dataset info
+                    
+                    return (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Key information */}
+                          <div>
+                            <h4 className="font-semibold text-lg mb-2">📍 Informações Principais</h4>
+                            <div className="space-y-1 text-sm">
+                              <div><strong>Location:</strong> <code className="bg-green-100 px-2 py-1 rounded text-green-800">{String(data.location || 'N/A')}</code></div>
+                              <div><strong>ID:</strong> <code>{String(data.id || 'N/A')}</code></div>
+                              <div><strong>Nome Amigável:</strong> {String(data.friendlyName || 'N/A')}</div>
+                              <div><strong>Descrição:</strong> {String(data.description || 'N/A')}</div>
+                            </div>
+                          </div>
+
+                          {/* Timing information */}
+                          <div>
+                            <h4 className="font-semibold text-lg mb-2">⏰ Datas</h4>
+                            <div className="space-y-1 text-sm">
+                              <div><strong>Criado:</strong> {data.creationTime ? new Date(String(data.creationTime)).toLocaleString('pt-BR') : 'N/A'}</div>
+                              <div><strong>Modificado:</strong> {data.lastModifiedTime ? new Date(String(data.lastModifiedTime)).toLocaleString('pt-BR') : 'N/A'}</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Location highlight */}
+                        {data.location && (
+                          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
+                            <div className="flex items-center gap-2">
+                              <span className="text-2xl">🎯</span>
+                              <div>
+                                <div className="font-semibold text-green-800">Location Detectada:</div>
+                                <div className="text-green-700">
+                                  Configure <code className="bg-green-100 px-2 py-1 rounded">BIGQUERY_LOCATION={String(data.location)}</code> no Vercel
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
+
+            {/* Show raw result for debugging */}
+            {datasetInfoResult && (
+              <details className="mt-4">
+                <summary className="cursor-pointer text-sm text-gray-600 hover:text-gray-800">
+                  🔍 Ver resultado completo (debug)
+                </summary>
+                <pre className="mt-2 text-xs bg-gray-100 p-3 rounded overflow-x-auto">
+                  {JSON.stringify(datasetInfoResult, null, 2)}
                 </pre>
               </details>
             )}

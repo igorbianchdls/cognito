@@ -63,9 +63,24 @@ export async function GET(request: NextRequest) {
         const schema = await bigQueryService.getTableSchema(schemaDataset, schemaTable)
         return NextResponse.json({ success: true, data: schema })
 
+      case 'dataset-info':
+        const infoDataset = searchParams.get('dataset')
+        
+        if (!infoDataset) {
+          return NextResponse.json(
+            { error: 'Dataset parameter is required for dataset-info action' },
+            { status: 400 }
+          )
+        }
+
+        console.log(`🔍 Getting dataset info for: ${infoDataset}`)
+        const datasetInfo = await bigQueryService.getDatasetInfo(infoDataset)
+        console.log(`📊 Dataset location detected: ${datasetInfo.location}`)
+        return NextResponse.json({ success: true, data: datasetInfo })
+
       default:
         return NextResponse.json(
-          { error: 'Invalid action. Supported actions: datasets, tables, schema' },
+          { error: 'Invalid action. Supported actions: datasets, tables, schema, dataset-info' },
           { status: 400 }
         )
     }
