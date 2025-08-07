@@ -63,6 +63,117 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
     }
   };
 
+  // Detect column type from data samples
+  const detectColumnType = (key: string, data: Record<string, unknown>[]) => {
+    const samples = data.slice(0, 10).map(row => row[key]).filter(val => val != null);
+    
+    if (samples.length === 0) return 'string';
+    
+    // Check for boolean
+    if (samples.every(val => typeof val === 'boolean' || val === 'true' || val === 'false' || val === 1 || val === 0)) {
+      return 'boolean';
+    }
+    
+    // Check for number
+    if (samples.every(val => !isNaN(Number(val)) && isFinite(Number(val)))) {
+      return 'number';
+    }
+    
+    // Check for date
+    if (samples.every(val => {
+      const dateStr = String(val);
+      return !isNaN(Date.parse(dateStr)) && 
+             (dateStr.includes('-') || dateStr.includes('/')) &&
+             dateStr.length >= 8;
+    })) {
+      return 'date';
+    }
+    
+    return 'string';
+  };
+
+  // Create intelligent column definitions
+  const createBigQueryColumnDefs = (data: Record<string, unknown>[]) => {
+    if (!data || data.length === 0) return [];
+    
+    const keys = Object.keys(data[0] || {});
+    
+    return keys.map(key => {
+      const type = detectColumnType(key, data);
+      const headerName = key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
+      
+      const baseConfig = {
+        field: key,
+        headerName,
+        editable: true,
+        sortable: true,
+        resizable: true,
+        enableRowGroup: type !== 'date',
+        width: type === 'boolean' ? 100 : type === 'number' ? 120 : 150
+      };
+      
+      switch (type) {
+        case 'number':
+          return {
+            ...baseConfig,
+            filter: 'agNumberColumnFilter',
+            enableValue: true,
+            aggFunc: key.toLowerCase().includes('id') ? 'count' : 'sum',
+            valueFormatter: (params: { value: unknown }) => {
+              if (params.value == null) return '';
+              const num = Number(params.value);
+              return key.toLowerCase().includes('price') || key.toLowerCase().includes('valor') 
+                ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(num)
+                : new Intl.NumberFormat('pt-BR').format(num);
+            },
+            cellStyle: { textAlign: 'right' }
+          };
+          
+        case 'boolean':
+          return {
+            ...baseConfig,
+            filter: 'agSetColumnFilter',
+            enablePivot: true,
+            cellRenderer: (params: { value: unknown }) => {
+              const val = params.value;
+              if (val === true || val === 'true' || val === 1) return '✓';
+              if (val === false || val === 'false' || val === 0) return '✗';
+              return String(val || '');
+            },
+            cellStyle: (params: { value: unknown }) => {
+              const val = params.value;
+              if (val === true || val === 'true' || val === 1) {
+                return { color: '#2e7d32', fontWeight: 'bold', textAlign: 'center' };
+              }
+              if (val === false || val === 'false' || val === 0) {
+                return { color: '#c62828', fontWeight: 'bold', textAlign: 'center' };
+              }
+              return { textAlign: 'center' };
+            }
+          };
+          
+        case 'date':
+          return {
+            ...baseConfig,
+            filter: 'agDateColumnFilter',
+            valueFormatter: (params: { value: unknown }) => {
+              if (!params.value) return '';
+              const date = new Date(String(params.value));
+              return isNaN(date.getTime()) ? String(params.value) : date.toLocaleDateString('pt-BR');
+            }
+          };
+          
+        default: // string
+          return {
+            ...baseConfig,
+            filter: 'agTextColumnFilter',
+            enableRowGroup: true,
+            enablePivot: true
+          };
+      }
+    });
+  };
+
   // Handle BigQuery table selection
   const handleBigQueryTableSelect = async (tableId: string) => {
     setSelectedBigQueryTable(tableId);
@@ -71,40 +182,34 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
       // Execute the hook to get table data
       await tableDataHook.execute();
       
-      // Wait a bit for data to load, then add to sheet
-      setTimeout(() => {
-        if (tableDataHook.data && tableDataHook.data.data && Array.isArray(tableDataHook.data.data)) {
-          const tableData = tableDataHook.data.data;
-          
-          // Create dataset from BigQuery table data
-          const newDataset: DatasetInfo = {
-            id: `bigquery-${tableId}`,
-            name: `${tableId} (BigQuery)`,
-            description: `Dados da tabela ${tableId} do BigQuery`,
-            rows: tableData.length,
-            columns: Object.keys(tableData[0] || {}).length,
-            size: `${(JSON.stringify(tableData).length / 1024).toFixed(1)} KB`,
-            type: 'json' as const,
-            lastModified: new Date(),
-            data: tableData,
-            columnDefs: Object.keys(tableData[0] || {}).map(key => ({
-              field: key,
-              headerName: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
-              editable: true,
-              sortable: true,
-              filter: 'agTextColumnFilter'
-            }))
-          };
+      // Process data immediately when available
+      if (tableDataHook.data && tableDataHook.data.data && Array.isArray(tableDataHook.data.data)) {
+        const tableData = tableDataHook.data.data;
+        
+        // Create dataset from BigQuery table data with intelligent column definitions
+        const newDataset: DatasetInfo = {
+          id: `bigquery-${tableId}`,
+          name: `${tableId} (BigQuery)`,
+          description: `Dados da tabela ${tableId} do BigQuery`,
+          rows: tableData.length,
+          columns: Object.keys(tableData[0] || {}).length,
+          size: `${(JSON.stringify(tableData).length / 1024).toFixed(1)} KB`,
+          type: 'json' as const,
+          lastModified: new Date(),
+          data: tableData,
+          columnDefs: createBigQueryColumnDefs(tableData)
+        };
 
-          // Add to available datasets directly (bypass CSV import function)
-          const currentDatasets = datasets;
-          const updatedDatasets = [...currentDatasets, newDataset];
-          
-          // Update the store directly
-          availableDatasetsStore.set(updatedDatasets);
-          switchToDataset(newDataset.id);
-        }
-      }, 1000);
+        // Add to available datasets directly (bypass CSV import function)
+        const currentDatasets = datasets;
+        const updatedDatasets = [...currentDatasets, newDataset];
+        
+        // Update the store directly
+        availableDatasetsStore.set(updatedDatasets);
+        switchToDataset(newDataset.id);
+        
+        console.log(`BigQuery table loaded: ${newDataset.name} (${newDataset.rows} rows, ${newDataset.columns} columns)`);
+      }
     } catch (error) {
       console.error('Error loading BigQuery table:', error);
     }
