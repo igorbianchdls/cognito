@@ -1,7 +1,11 @@
 import axios from 'axios';
 
 export async function POST(req: Request) {
+  console.log('⚡⚡⚡ DAYTONA ANALYSIS API CALLED ⚡⚡⚡');
   console.log('=== DAYTONA ANALYSIS API DEBUG ===');
+  console.log('Timestamp:', new Date().toISOString());
+  console.log('Request method:', req.method);
+  console.log('Request URL:', req.url);
   
   try {
     const { prompt } = await req.json();

@@ -3,10 +3,14 @@ import { streamText } from 'ai';
 import axios from 'axios';
 
 export async function POST(req: Request) {
+  console.log('🌟🌟🌟 GRAPHRAG CHAT API CALLED 🌟🌟🌟');
   console.log('=== GRAPHRAG CHAT API DEBUG ===');
   console.log('API Key exists:', !!process.env.ANTHROPIC_API_KEY);
   console.log('API Key length:', process.env.ANTHROPIC_API_KEY?.length || 0);
   console.log('API Key starts with:', process.env.ANTHROPIC_API_KEY?.substring(0, 15) || 'N/A');
+  console.log('Timestamp:', new Date().toISOString());
+  console.log('Request URL:', req.url);
+  console.log('Request method:', req.method);
   
   try {
     const { messages, files } = await req.json();
@@ -102,16 +106,37 @@ Forneça respostas técnicas, práticas e com exemplos de código quando apropri
     const lastMessage = messages[messages.length - 1];
     const userMessage = lastMessage?.content?.toLowerCase() || '';
     
-    const shouldAnalyzeData = userMessage.includes('analisar') && 
-      (userMessage.includes('vendas') || userMessage.includes('dados') || 
-       userMessage.includes('gráfico') || userMessage.includes('python') ||
-       userMessage.includes('análise') || userMessage.includes('estatística'));
+    console.log('=== DAYTONA DETECTION DEBUG ===');
+    console.log('Original message:', lastMessage?.content);
+    console.log('Normalized message:', userMessage);
+    console.log('Message length:', userMessage.length);
+    
+    // Palavras-chave para detecção mais flexível
+    const analysisKeywords = [
+      'analis', 'python', 'dados', 'estatistic', 'vendas', 'grafico', 
+      'visualiz', 'pandas', 'matplotlib', 'csv', 'tabela', 'relatorio'
+    ];
+    
+    // Comando de teste forçado
+    const isTestCommand = userMessage.includes('daytona_test') || userMessage.includes('teste_python');
+    
+    // Verificar cada palavra-chave
+    const detectedKeywords = analysisKeywords.filter(keyword => userMessage.includes(keyword));
+    console.log('Detected keywords:', detectedKeywords);
+    console.log('Is test command:', isTestCommand);
+    
+    const shouldAnalyzeData = isTestCommand || detectedKeywords.length > 0;
+    
+    console.log('Should analyze data:', shouldAnalyzeData);
+    console.log('Reason:', isTestCommand ? 'Test command detected' : `Keywords: ${detectedKeywords.join(', ')}`);
 
     if (shouldAnalyzeData) {
+      console.log('🚀🚀🚀 DAYTONA ANALYSIS TRIGGERED 🚀🚀🚀');
       console.log('=== DAYTONA INTEGRATION DEBUG ===');
       console.log('User message:', userMessage);
       console.log('Should analyze data:', shouldAnalyzeData);
       console.log('Request URL:', req.url);
+      console.log('🔥 ABOUT TO CALL DAYTONA API 🔥');
       
       try {
         // Construir URL correta para API Daytona
