@@ -22,7 +22,7 @@ export default function BigQueryDemoPage() {
     data?: Record<string, unknown>[];
     query_executed?: string;
     results?: Record<string, unknown>[];
-  }>('/api/bigquery-simple', {
+  }>('/api/bigquery', {
     method: 'POST',
     body: customQuery ? {
       action: 'execute',

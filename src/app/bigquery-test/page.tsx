@@ -25,7 +25,6 @@ interface BigQueryTestResult {
 
 export default function BigQueryTestPage() {
   const [connectionStatus, setConnectionStatus] = useState<BigQueryTestResult | null>(null);
-  const [simpleTest, setSimpleTest] = useState<BigQueryTestResult | null>(null);
   const [datasets, setDatasets] = useState<BigQueryTestResult | null>(null);
   const [tables, setTables] = useState<BigQueryTestResult | null>(null);
   const [queryResult, setQueryResult] = useState<BigQueryTestResult | null>(null);
@@ -53,37 +52,7 @@ export default function BigQueryTestPage() {
     }
   };
 
-  const testSimpleConnection = async () => {
-    setLoadingState('simple', true);
-    try {
-      const response = await fetch('/api/bigquery-simple');
-      const result = await response.json();
-      setSimpleTest(result);
-    } catch (error) {
-      setSimpleTest({
-        success: false,
-        error: error instanceof Error ? error.message : 'Simple test failed'
-      });
-    } finally {
-      setLoadingState('simple', false);
-    }
-  };
 
-  const testSimpleDatasets = async () => {
-    setLoadingState('simpleDatasets', true);
-    try {
-      const response = await fetch('/api/bigquery-simple?action=datasets');
-      const result = await response.json();
-      setDatasets(result);
-    } catch (error) {
-      setDatasets({
-        success: false,
-        error: error instanceof Error ? error.message : 'Simple datasets test failed'
-      });
-    } finally {
-      setLoadingState('simpleDatasets', false);
-    }
-  };
 
   const listDatasets = async () => {
     setLoadingState('datasets', true);
@@ -278,30 +247,6 @@ export default function BigQueryTestPage() {
             {renderResult(connectionStatus, 'Connection Status')}
           </Card>
 
-          {/* Simple Test Section */}
-          <Card className="p-6 mb-6 border-2 border-green-200 bg-green-50">
-            <h2 className="text-xl font-semibold mb-4">🚀 Teste Simples (creatto.json)</h2>
-            <p className="text-gray-600 mb-4">
-              Teste direto usando arquivo creatto.json - implementação super simples seguindo docs do Google.
-            </p>
-            <div className="flex gap-3 mb-4">
-              <Button 
-                onClick={testSimpleConnection} 
-                disabled={loading.simple}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                {loading.simple ? 'Testando...' : 'Teste Conexão'}
-              </Button>
-              <Button 
-                onClick={testSimpleDatasets} 
-                disabled={loading.simpleDatasets}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {loading.simpleDatasets ? 'Carregando...' : 'Teste Datasets'}
-              </Button>
-            </div>
-            {renderResult(simpleTest, 'Teste Simples - creatto.json')}
-          </Card>
 
           {/* Datasets Section */}
           <Card className="p-6 mb-6">

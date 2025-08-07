@@ -2,14 +2,30 @@ import { NextRequest, NextResponse } from 'next/server'
 import { bigQueryService } from '@/services/bigquery'
 
 export async function GET(request: NextRequest) {
+  console.log('🚀 BigQuery GET endpoint called')
+  console.log('🔍 Environment debug:')
+  console.log('- VERCEL:', process.env.VERCEL)
+  console.log('- NODE_ENV:', process.env.NODE_ENV)
+  console.log('- GOOGLE_PROJECT_ID:', process.env.GOOGLE_PROJECT_ID)
+  console.log('- Has GOOGLE_APPLICATION_CREDENTIALS_JSON:', !!process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON)
+  console.log('- GOOGLE_APPLICATION_CREDENTIALS:', process.env.GOOGLE_APPLICATION_CREDENTIALS)
+  
   try {
     // Initialize BigQuery service if not already done
+    console.log('🔧 Checking if BigQuery service needs initialization...')
+    console.log('- Service client exists:', !!bigQueryService['client'])
+    
     if (!bigQueryService['client']) {
+      console.log('⚡ Initializing BigQuery service...')
       await bigQueryService.initialize()
+      console.log('✅ BigQuery service initialized successfully')
+    } else {
+      console.log('✅ BigQuery service already initialized')
     }
 
     const { searchParams } = new URL(request.url)
     const action = searchParams.get('action') || 'tables'
+    console.log('🎯 Action requested:', action)
 
     switch (action) {
       case 'datasets':
@@ -66,10 +82,24 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  console.log('🚀 BigQuery POST endpoint called')
+  console.log('🔍 Environment debug:')
+  console.log('- VERCEL:', process.env.VERCEL)
+  console.log('- NODE_ENV:', process.env.NODE_ENV)
+  console.log('- GOOGLE_PROJECT_ID:', process.env.GOOGLE_PROJECT_ID)
+  console.log('- Has GOOGLE_APPLICATION_CREDENTIALS_JSON:', !!process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON)
+  
   try {
     // Initialize BigQuery service if not already done
+    console.log('🔧 Checking if BigQuery service needs initialization...')
+    console.log('- Service client exists:', !!bigQueryService['client'])
+    
     if (!bigQueryService['client']) {
+      console.log('⚡ Initializing BigQuery service...')
       await bigQueryService.initialize()
+      console.log('✅ BigQuery service initialized successfully')
+    } else {
+      console.log('✅ BigQuery service already initialized')
     }
 
     const body = await request.json()

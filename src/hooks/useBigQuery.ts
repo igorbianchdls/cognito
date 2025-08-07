@@ -110,7 +110,7 @@ export function useBigQueryDatasets() {
     description?: string;
     location?: string;
     creationTime?: string;
-  }>>('/api/bigquery-simple?action=datasets');
+  }>>('/api/bigquery?action=datasets');
 }
 
 /**
@@ -120,14 +120,14 @@ export function useBigQueryConnection() {
   return useBigQuery<{
     query_executed?: string;
     results?: Record<string, unknown>[];
-  }>('/api/bigquery-simple');
+  }>('/api/bigquery/test');
 }
 
 /**
  * Hook for custom BigQuery queries
  */
 export function useBigQueryQuery(query: string, parameters?: Record<string, unknown>) {
-  return useBigQuery('/api/bigquery-simple', {
+  return useBigQuery('/api/bigquery', {
     method: 'POST',
     body: {
       action: 'execute',
