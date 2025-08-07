@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useStore } from '@nanostores/react';
+import { ColDef } from 'ag-grid-community';
 import { 
   availableDatasetsStore, 
   activeDatasetIdStore, 
@@ -93,7 +94,7 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
   };
 
   // Create intelligent column definitions
-  const createBigQueryColumnDefs = (data: Record<string, unknown>[]) => {
+  const createBigQueryColumnDefs = (data: Record<string, unknown>[]): ColDef[] => {
     if (!data || data.length === 0) return [];
     
     const keys = Object.keys(data[0] || {});
@@ -102,7 +103,7 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
       const type = detectColumnType(key, data);
       const headerName = key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
       
-      const baseConfig = {
+      const baseConfig: ColDef = {
         field: key,
         headerName,
         editable: true,
@@ -119,7 +120,7 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
             filter: 'agNumberColumnFilter',
             enableValue: true,
             aggFunc: key.toLowerCase().includes('id') ? 'count' : 'sum',
-            valueFormatter: (params: { value: unknown }) => {
+            valueFormatter: (params) => {
               if (params.value == null) return '';
               const num = Number(params.value);
               return key.toLowerCase().includes('price') || key.toLowerCase().includes('valor') 
@@ -127,41 +128,42 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
                 : new Intl.NumberFormat('pt-BR').format(num);
             },
             cellStyle: { textAlign: 'right' }
-          };
+          } as ColDef;
           
         case 'boolean':
           return {
             ...baseConfig,
             filter: 'agSetColumnFilter',
             enablePivot: true,
-            cellRenderer: (params: { value: unknown }) => {
+            cellRenderer: (params) => {
               const val = params.value;
               if (val === true || val === 'true' || val === 1) return '✓';
               if (val === false || val === 'false' || val === 0) return '✗';
               return String(val || '');
             },
-            cellStyle: (params: { value: unknown }) => {
+            cellStyle: (params) => {
               const val = params.value;
+              const baseStyle = { textAlign: 'center' as const };
               if (val === true || val === 'true' || val === 1) {
-                return { color: '#2e7d32', fontWeight: 'bold', textAlign: 'center' };
+                return { ...baseStyle, color: '#2e7d32', fontWeight: 'bold' };
               }
               if (val === false || val === 'false' || val === 0) {
-                return { color: '#c62828', fontWeight: 'bold', textAlign: 'center' };
+                return { ...baseStyle, color: '#c62828', fontWeight: 'bold' };
               }
-              return { textAlign: 'center' };
+              return baseStyle;
             }
-          };
+          } as ColDef;
           
         case 'date':
           return {
             ...baseConfig,
             filter: 'agDateColumnFilter',
-            valueFormatter: (params: { value: unknown }) => {
+            valueFormatter: (params) => {
               if (!params.value) return '';
               const date = new Date(String(params.value));
               return isNaN(date.getTime()) ? String(params.value) : date.toLocaleDateString('pt-BR');
             }
-          };
+          } as ColDef;
           
         default: // string
           return {
@@ -169,9 +171,36 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
             filter: 'agTextColumnFilter',
             enableRowGroup: true,
             enablePivot: true
-          };
+          } as ColDef;
       }
     });
+  };
+
+  // Create BigQuery dataset from table data
+  const createBigQueryDataset = (tableId: string, tableData: Record<string, unknown>[]): DatasetInfo => {
+    return {
+      id: `bigquery-${tableId}`,
+      name: `${tableId} (BigQuery)`,
+      description: `Dados da tabela ${tableId} do BigQuery`,
+      rows: tableData.length,
+      columns: Object.keys(tableData[0] || {}).length,
+      size: `${(JSON.stringify(tableData).length / 1024).toFixed(1)} KB`,
+      type: 'json' as const,
+      lastModified: new Date(),
+      data: tableData,
+      columnDefs: createBigQueryColumnDefs(tableData)
+    };
+  };
+
+  // Add dataset to store and activate it
+  const addAndActivateBigQueryDataset = (dataset: DatasetInfo) => {
+    const currentDatasets = datasets;
+    const updatedDatasets = [...currentDatasets, dataset];
+    
+    availableDatasetsStore.set(updatedDatasets);
+    switchToDataset(dataset.id);
+    
+    console.log(`BigQuery table loaded: ${dataset.name} (${dataset.rows} rows, ${dataset.columns} columns)`);
   };
 
   // Handle BigQuery table selection
@@ -183,32 +212,12 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
       await tableDataHook.execute();
       
       // Process data immediately when available
-      if (tableDataHook.data && tableDataHook.data.data && Array.isArray(tableDataHook.data.data)) {
+      if (tableDataHook.data?.data && Array.isArray(tableDataHook.data.data)) {
         const tableData = tableDataHook.data.data;
         
-        // Create dataset from BigQuery table data with intelligent column definitions
-        const newDataset: DatasetInfo = {
-          id: `bigquery-${tableId}`,
-          name: `${tableId} (BigQuery)`,
-          description: `Dados da tabela ${tableId} do BigQuery`,
-          rows: tableData.length,
-          columns: Object.keys(tableData[0] || {}).length,
-          size: `${(JSON.stringify(tableData).length / 1024).toFixed(1)} KB`,
-          type: 'json' as const,
-          lastModified: new Date(),
-          data: tableData,
-          columnDefs: createBigQueryColumnDefs(tableData)
-        };
-
-        // Add to available datasets directly (bypass CSV import function)
-        const currentDatasets = datasets;
-        const updatedDatasets = [...currentDatasets, newDataset];
-        
-        // Update the store directly
-        availableDatasetsStore.set(updatedDatasets);
-        switchToDataset(newDataset.id);
-        
-        console.log(`BigQuery table loaded: ${newDataset.name} (${newDataset.rows} rows, ${newDataset.columns} columns)`);
+        // Create and activate the new dataset
+        const newDataset = createBigQueryDataset(tableId, tableData);
+        addAndActivateBigQueryDataset(newDataset);
       }
     } catch (error) {
       console.error('Error loading BigQuery table:', error);
