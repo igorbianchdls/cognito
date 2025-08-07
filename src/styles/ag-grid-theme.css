@@ -1,0 +1,98 @@
+/* AG Grid Custom Theme - Baserow inspired */
+
+.ag-theme-quartz {
+  /* Typography - Match system fonts */
+  --ag-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --ag-font-size: 14px;
+  --ag-font-weight: 400;
+
+  /* Background Colors */
+  --ag-background-color: #ffffff;
+  --ag-header-background-color: #ffffff;
+  --ag-subheader-background-color: #f9fafb;
+  --ag-control-panel-background-color: #ffffff;
+  
+  /* Text Colors */
+  --ag-foreground-color: #1f2937;
+  --ag-header-foreground-color: #374151;
+  --ag-disabled-foreground-color: #9ca3af;
+  --ag-secondary-foreground-color: #6b7280;
+
+  /* Borders */
+  --ag-border-color: #e5e7eb;
+  --ag-header-column-separator-color: #e5e7eb;
+  --ag-row-border-color: #f3f4f6;
+  --ag-border-radius: 6px;
+
+  /* Layout & Spacing */
+  --ag-header-height: 44px;
+  --ag-row-height: 40px;
+  --ag-cell-horizontal-padding: 16px;
+  --ag-cell-vertical-padding: 8px;
+  --ag-grid-size: 4px;
+
+  /* Row States */
+  --ag-row-hover-color: #f9fafb;
+  --ag-selected-row-background-color: #eff6ff;
+  --ag-odd-row-background-color: transparent;
+  --ag-even-row-background-color: #fafbfc;
+
+  /* Header Styles */
+  --ag-header-cell-hover-background-color: #f3f4f6;
+  --ag-header-cell-moving-background-color: #e5e7eb;
+
+  /* Input & Controls */
+  --ag-input-focus-border-color: #3b82f6;
+  --ag-input-border-color: #d1d5db;
+  --ag-checkbox-checked-color: #3b82f6;
+  
+  /* Scrollbars */
+  --ag-scrollbar-size: 8px;
+  
+  /* Focus & Selection */
+  --ag-range-selection-border-color: #3b82f6;
+  --ag-cell-focus-border-color: #3b82f6;
+
+  /* Shadows */
+  --ag-popup-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Additional customizations for better Baserow-like appearance */
+.ag-theme-quartz .ag-header {
+  border-bottom: 1px solid var(--ag-border-color);
+  font-weight: 500;
+}
+
+.ag-theme-quartz .ag-header-cell {
+  border-right: 1px solid var(--ag-header-column-separator-color);
+}
+
+.ag-theme-quartz .ag-header-cell:last-child {
+  border-right: none;
+}
+
+.ag-theme-quartz .ag-row {
+  border-bottom: 1px solid var(--ag-row-border-color);
+}
+
+.ag-theme-quartz .ag-cell {
+  border-right: 1px solid var(--ag-border-color);
+  display: flex;
+  align-items: center;
+}
+
+.ag-theme-quartz .ag-cell:last-child {
+  border-right: none;
+}
+
+/* Pagination styling */
+.ag-theme-quartz .ag-paging-panel {
+  border-top: 1px solid var(--ag-border-color);
+  padding: 12px 16px;
+  background-color: var(--ag-background-color);
+}
+
+/* Filter styling */
+.ag-theme-quartz .ag-floating-filter-wrapper {
+  border-bottom: 1px solid var(--ag-border-color);
+}
