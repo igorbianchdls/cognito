@@ -35,7 +35,13 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
   
   // BigQuery hooks
   const tablesHook = useBigQueryTables('biquery_data');
-  const tableDataHook = useBigQueryTableData('biquery_data', selectedBigQueryTable, 1000);
+  const tableDataHook = useBigQueryTableData('biquery_data', selectedBigQueryTable, 1000) as {
+    data: { data?: Record<string, unknown>[] } | null;
+    loading: boolean;
+    error: string | null;
+    execute: () => Promise<void>;
+    refetch: () => Promise<void>;
+  };
 
   // Initialize default dataset on component mount
   useEffect(() => {
@@ -67,7 +73,7 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
       
       // Wait a bit for data to load, then add to sheet
       setTimeout(() => {
-        if (tableDataHook.data && Array.isArray(tableDataHook.data.data)) {
+        if (tableDataHook.data && tableDataHook.data.data && Array.isArray(tableDataHook.data.data)) {
           const tableData = tableDataHook.data.data;
           
           // Create dataset from BigQuery table data
