@@ -18,7 +18,7 @@ const AgGridReact = dynamic(
 
 interface BigQueryTestResult {
   success: boolean;
-  data?: any;
+  data?: Record<string, unknown>[] | Record<string, unknown> | string | null;
   message?: string;
   error?: string;
 }
@@ -112,7 +112,7 @@ export default function BigQueryTestPage() {
     }
   };
 
-  const generateColumnDefs = (data: any[]): ColDef[] => {
+  const generateColumnDefs = (data: Record<string, unknown>[]): ColDef[] => {
     if (!data || data.length === 0) return [];
     
     const firstRow = data[0];
@@ -126,7 +126,7 @@ export default function BigQueryTestPage() {
     }));
   };
 
-  const renderTableData = (data: any[], title: string) => {
+  const renderTableData = (data: Record<string, unknown>[], title: string) => {
     if (!data || data.length === 0) return null;
 
     const columnDefs = generateColumnDefs(data);
@@ -165,8 +165,8 @@ export default function BigQueryTestPage() {
             {result.data && (
               <>
                 {/* Check if data is array of objects (tabular data) */}
-                {Array.isArray(result.data) && result.data.length > 0 && typeof result.data[0] === 'object' ? (
-                  renderTableData(result.data, 'Query Results')
+                {Array.isArray(result.data) && result.data.length > 0 && typeof result.data[0] === 'object' && result.data[0] !== null ? (
+                  renderTableData(result.data as Record<string, unknown>[], 'Query Results')
                 ) : (
                   <details className="mt-2">
                     <summary className="cursor-pointer text-sm font-medium">View Raw Data</summary>
