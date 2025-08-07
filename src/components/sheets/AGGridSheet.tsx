@@ -100,12 +100,13 @@ export default function AGGridSheet() {
       {/* Table Header */}
       <TableHeader />
       
-      {/* AG Grid - Ocupando o resto da tela */}
+      {/* AG Grid - Altura automática */}
       {isClient ? (
-        <div className="w-full flex-1">
+        <div className="w-full">
           <AgGridReact
             theme={themeQuartz}
             loadThemeGoogleFonts={true}
+            domLayout="autoHeight"
             rowData={rowData}
             columnDefs={colDefs}
             defaultColDef={defaultColDef}
