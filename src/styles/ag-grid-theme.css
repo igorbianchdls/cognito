@@ -116,3 +116,10 @@
 .ag-theme-quartz *[class*="ag-"] {
   border-radius: 0px !important;
 }
+
+/* Remove lateral borders */
+.ag-theme-quartz,
+.ag-theme-quartz .ag-root-wrapper {
+  border-left: 0px !important;
+  border-right: 0px !important;
+}
