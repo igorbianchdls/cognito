@@ -16,7 +16,13 @@ export default function BigQueryDemoPage() {
   const datasets = useBigQueryDatasets();
 
   // Example 3: Custom query hook
-  const customQueryHook = useBigQuery('/api/bigquery-simple', {
+  const customQueryHook = useBigQuery<{
+    success?: boolean;
+    message?: string;
+    data?: Record<string, unknown>[];
+    query_executed?: string;
+    results?: Record<string, unknown>[];
+  }>('/api/bigquery-simple', {
     method: 'POST',
     body: customQuery ? {
       action: 'execute',

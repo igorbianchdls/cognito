@@ -76,14 +76,14 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error('❌ Error in simple BigQuery test:', error);
     console.error('Error type:', typeof error);
-    console.error('Error name:', (error as any)?.constructor?.name);
-    console.error('Error message:', (error as any)?.message);
-    console.error('Error stack:', (error as any)?.stack);
+    console.error('Error name:', error instanceof Error ? error.constructor?.name : 'Unknown');
+    console.error('Error message:', error instanceof Error ? error.message : String(error));
+    console.error('Error stack:', error instanceof Error ? error.stack : undefined);
     
     return NextResponse.json({ 
       success: false, 
       error: error instanceof Error ? error.message : 'Unknown error',
-      error_type: error?.constructor?.name || 'Unknown',
+      error_type: error instanceof Error ? error.constructor?.name : 'Unknown',
       timestamp: new Date().toISOString()
     }, { status: 500 });
   }

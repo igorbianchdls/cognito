@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 
-interface BigQueryResponse<T = any> {
+interface BigQueryResponse<T = unknown> {
   success: boolean;
   message?: string;
   data?: T;
@@ -10,23 +10,12 @@ interface BigQueryResponse<T = any> {
   timestamp?: string;
 }
 
-interface QueryOptions {
-  query: string;
-  parameters?: Record<string, any>;
-}
-
-interface UseBigQueryResult<T = any> {
+interface UseBigQueryResult<T = unknown> {
   data: T | null;
   loading: boolean;
   error: string | null;
   execute: () => Promise<void>;
   refetch: () => Promise<void>;
-}
-
-interface UseBigQueryOptions {
-  onSuccess?: (data: any) => void;
-  onError?: (error: string) => void;
-  immediate?: boolean; // Execute immediately when hook is called
 }
 
 /**
@@ -45,11 +34,11 @@ interface UseBigQueryOptions {
  *   body: { action: 'execute', query: 'SELECT * FROM `project.dataset.table` LIMIT 10' }
  * });
  */
-export function useBigQuery<T = any>(
+export function useBigQuery<T = unknown>(
   endpoint: string,
   options: {
     method?: 'GET' | 'POST';
-    body?: any;
+    body?: Record<string, unknown> | null;
     immediate?: boolean;
     onSuccess?: (data: T) => void;
     onError?: (error: string) => void;
@@ -130,14 +119,14 @@ export function useBigQueryDatasets() {
 export function useBigQueryConnection() {
   return useBigQuery<{
     query_executed?: string;
-    results?: any[];
+    results?: Record<string, unknown>[];
   }>('/api/bigquery-simple');
 }
 
 /**
  * Hook for custom BigQuery queries
  */
-export function useBigQueryQuery(query: string, parameters?: Record<string, any>) {
+export function useBigQueryQuery(query: string, parameters?: Record<string, unknown>) {
   return useBigQuery('/api/bigquery-simple', {
     method: 'POST',
     body: {
