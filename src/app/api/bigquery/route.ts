@@ -70,11 +70,17 @@ export async function GET(request: NextRequest) {
         )
     }
   } catch (error) {
-    console.error('BigQuery API error:', error)
+    console.error('❌ BigQuery GET API error:', error)
+    console.error('❌ GET Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined
+    })
     return NextResponse.json(
       { 
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error',
+        details: error instanceof Error ? error.stack : undefined
       },
       { status: 500 }
     )
@@ -104,23 +110,42 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const { query, parameters, action, dataset, table, options } = body
+    
+    console.log('📥 POST Request body:', { action, query: query?.substring(0, 100) + '...', dataset, table })
 
     switch (action) {
       case 'execute':
+        console.log('🔄 Executing query action')
         if (!query) {
+          console.error('❌ No query provided')
           return NextResponse.json(
             { error: 'Query is required for execute action' },
             { status: 400 }
           )
         }
 
-        const result = await bigQueryService.executeQuery({
-          query,
-          parameters,
-          location: process.env.BIGQUERY_LOCATION
-        })
-
-        return NextResponse.json({ success: true, data: result })
+        console.log('🔍 Query to execute:', query)
+        console.log('🎯 Query parameters:', parameters)
+        console.log('📍 BigQuery location:', process.env.BIGQUERY_LOCATION)
+        
+        try {
+          console.log('⚡ Starting query execution...')
+          const result = await bigQueryService.executeQuery({
+            query,
+            parameters,
+            location: process.env.BIGQUERY_LOCATION
+          })
+          console.log('✅ Query executed successfully, rows:', result?.data?.length || 0)
+          return NextResponse.json({ success: true, data: result })
+        } catch (queryError) {
+          console.error('❌ Query execution failed:', queryError)
+          console.error('❌ Query error details:', {
+            message: queryError instanceof Error ? queryError.message : 'Unknown query error',
+            stack: queryError instanceof Error ? queryError.stack : undefined,
+            name: queryError instanceof Error ? queryError.name : undefined
+          })
+          throw queryError
+        }
 
       case 'query-table':
         if (!dataset || !table) {
@@ -140,11 +165,17 @@ export async function POST(request: NextRequest) {
         )
     }
   } catch (error) {
-    console.error('BigQuery API error:', error)
+    console.error('❌ BigQuery POST API error:', error)
+    console.error('❌ POST Error details:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined
+    })
     return NextResponse.json(
       { 
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error'
+        message: error instanceof Error ? error.message : 'Unknown error',
+        details: error instanceof Error ? error.stack : undefined
       },
       { status: 500 }
     )
