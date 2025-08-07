@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
-import DaytonaAnalysisResult from './DaytonaAnalysisResult';
 
 interface RespostaDaIAProps {
   content: string;
@@ -22,29 +21,6 @@ export default function RespostaDaIA({ content, isLoading }: RespostaDaIAProps) 
     }
   };
 
-  // Detectar se é uma resposta de análise Daytona
-  const isDaytonaAnalysis = content.includes('🐍 Análise Python Executada no Daytona');
-  
-  // Extrair dados da análise se for uma resposta Daytona
-  let daytonaData = null;
-  if (isDaytonaAnalysis) {
-    const sandboxMatch = content.match(/\*\*Sandbox ID\*\*: ([^\n]+)/);
-    const executionMatch = content.match(/\*\*Tempo de Execução\*\*: ([^\n]+)/);
-    const chartsMatch = content.match(/\*\*Gráficos Gerados\*\*: (\d+)/);
-    
-    daytonaData = {
-      sandboxId: sandboxMatch?.[1] || 'N/A',
-      output: 'Análise executada com sucesso no Daytona Sandbox',
-      charts: chartsMatch ? Array(parseInt(chartsMatch[1])).fill('chart') : [],
-      executionTime: executionMatch?.[1] || 'N/A',
-      insights: [
-        "📈 Crescimento consistente nas vendas ao longo dos meses",
-        "🏆 São Paulo lidera em volume de vendas", 
-        "📊 Produto A representa a maior fatia do mercado",
-        "💡 Crescimento de 86.7% no período analisado"
-      ]
-    };
-  }
 
   return (
     <div className="group relative flex justify-start mb-8">
@@ -60,35 +36,6 @@ export default function RespostaDaIA({ content, isLoading }: RespostaDaIAProps) 
                   <div className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
                   <div className="w-1.5 h-1.5 bg-current rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
                 </div>
-              </div>
-            ) : isDaytonaAnalysis && daytonaData ? (
-              <div>
-                <ReactMarkdown
-                  components={{
-                    p: ({ children }) => <p className="mb-3 last:mb-0 text-foreground leading-relaxed">{children}</p>,
-                    h1: ({ children }) => <h1 className="text-lg font-semibold text-foreground mb-3 leading-tight">{children}</h1>,
-                    h2: ({ children }) => <h2 className="text-base font-semibold text-foreground mb-3 leading-tight">{children}</h2>,
-                    strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
-                  }}
-                >
-                  {content.split('## 📊 Resultados da Análise:')[0]}
-                </ReactMarkdown>
-                
-                <DaytonaAnalysisResult
-                  sandboxId={daytonaData.sandboxId}
-                  output={daytonaData.output}
-                  charts={daytonaData.charts}
-                  executionTime={daytonaData.executionTime}
-                  insights={daytonaData.insights}
-                />
-                
-                {content.includes('---') && (
-                  <div className="mt-4 pt-3 border-t border-border">
-                    <p className="text-sm text-muted-foreground italic">
-                      Esta análise demonstra a integração entre GraphRAG e processamento Python seguro via Daytona para análises de dados avançadas.
-                    </p>
-                  </div>
-                )}
               </div>
             ) : (
               <ReactMarkdown

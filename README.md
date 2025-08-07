@@ -1,31 +1,4 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app), enhanced with [Daytona AI SDK](https://www.daytona.io/) integration.
-
-## Daytona AI Integration
-
-This project integrates the Daytona AI SDK to provide cloud sandbox capabilities directly in the browser. Users can:
-
-- Create sandboxes for different programming languages (TypeScript, Python, Node.js)
-- Execute commands in real-time within the sandboxes
-- View command outputs and errors
-- Manage sandbox lifecycle
-
-### Configuration
-
-1. Copy your Daytona API key to the `.env.local` file:
-```bash
-DAYTONA_API_KEY=your-api-key-here
-DAYTONA_API_URL=https://app.daytona.io/api
-DAYTONA_TARGET=us
-```
-
-2. The implementation uses Next.js API routes to bridge between the browser and the Daytona SDK, avoiding Node.js compatibility issues in the browser.
-
-### Architecture
-
-- **Frontend**: React components with TypeScript
-- **API Routes**: `/api/sandbox/create` and `/api/sandbox/execute`
-- **Services**: Client-side service layer for API communication
-- **SDK Integration**: Server-side Daytona SDK usage
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
 
