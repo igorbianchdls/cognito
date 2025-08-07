@@ -101,3 +101,18 @@
 .ag-theme-quartz .ag-floating-filter-wrapper {
   border-bottom: 1px solid var(--ag-border-color);
 }
+
+/* Force remove all border radius */
+.ag-theme-quartz,
+.ag-theme-quartz .ag-root-wrapper,
+.ag-theme-quartz .ag-root,
+.ag-theme-quartz .ag-header,
+.ag-theme-quartz .ag-body-viewport,
+.ag-theme-quartz .ag-body-horizontal-scroll,
+.ag-theme-quartz .ag-body-vertical-scroll {
+  border-radius: 0px !important;
+}
+
+.ag-theme-quartz *[class*="ag-"] {
+  border-radius: 0px !important;
+}
