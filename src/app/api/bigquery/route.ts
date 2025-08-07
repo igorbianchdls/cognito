@@ -12,6 +12,14 @@ export async function GET(request: NextRequest) {
     const action = searchParams.get('action') || 'tables'
 
     switch (action) {
+      case 'datasets':
+        // For now, return a simple message since we need to add listDatasets method
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Datasets endpoint - implementation pending',
+          data: [] 
+        })
+
       case 'tables':
         const datasetId = searchParams.get('dataset')
         const tables = await bigQueryService.listTables(datasetId || undefined)
@@ -33,7 +41,7 @@ export async function GET(request: NextRequest) {
 
       default:
         return NextResponse.json(
-          { error: 'Invalid action. Supported actions: tables, schema' },
+          { error: 'Invalid action. Supported actions: datasets, tables, schema' },
           { status: 400 }
         )
     }
