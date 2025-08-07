@@ -327,36 +327,49 @@ export default function BigQueryTestPage() {
                 <h3 className="font-semibold mb-3">📊 Tabelas encontradas ({tablesHook.data.length}):</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {tablesHook.data.map((table: {
-                    datasetId: string;
-                    tableId: string;
+                    DATASETID?: string;
+                    TABLEID?: string;
+                    PROJECTID?: string;
+                    NUMROWS?: number;
+                    NUMBYTES?: number;
+                    CREATIONTIME?: string;
+                    // Legacy format support
+                    datasetId?: string;
+                    tableId?: string;
                     projectId?: string;
                     description?: string;
                     numRows?: number;
                     numBytes?: number;
                     creationTime?: Date;
                     lastModifiedTime?: Date;
-                  }) => (
+                  }) => {
+                    // Support both API response formats
+                    const tableId = table.TABLEID || table.tableId || '';
+                    const numRows = table.NUMROWS || table.numRows;
+                    
+                    return (
                     <div
-                      key={table.tableId}
+                      key={tableId}
                       className={`p-3 border rounded-lg cursor-pointer transition-colors ${
-                        selectedTable === table.tableId 
+                        selectedTable === tableId 
                           ? 'bg-blue-100 border-blue-300' 
                           : 'bg-white hover:bg-gray-50 border-gray-200'
                       }`}
                       onClick={() => {
-                        setSelectedTable(table.tableId);
+                        setSelectedTable(tableId);
                         tableDataHook.execute();
                       }}
                     >
-                      <div className="font-medium text-blue-600">{table.tableId}</div>
+                      <div className="font-medium text-blue-600">{tableId}</div>
                       {table.description && (
                         <div className="text-xs text-gray-600 mt-1">{table.description}</div>
                       )}
                       <div className="text-xs text-gray-400 mt-2">
-                        {table.numRows && `📄 ${table.numRows} linhas`}
+                        {numRows && `📄 ${numRows.toLocaleString()} linhas`}
                       </div>
                     </div>
-                  ))}
+                  );
+                  })}
                 </div>
               </div>
             )}
