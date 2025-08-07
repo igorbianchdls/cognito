@@ -312,27 +312,37 @@ class BigQueryService {
    * List datasets in the project
    */
   async listDatasets(): Promise<{ id: string; friendlyName?: string; description?: string; location?: string; creationTime?: Date }[]> {
+    console.log('🔄 BigQuery service - listDatasets() called')
+    
     if (!this.client) {
+      console.error('❌ BigQuery client not initialized')
       throw new Error('BigQuery client not initialized. Call initialize() first.')
     }
 
+    console.log('📡 Calling BigQuery getDatasets() API...')
     try {
       const [datasets] = await this.client.getDatasets()
+      console.log(`✅ Raw datasets received: ${datasets.length} datasets`)
+      console.log('📋 Dataset IDs:', datasets.map(d => d.id))
 
+      console.log('📋 Processing dataset metadata...')
       const datasetInfos = await Promise.all(
-        datasets.map(async (dataset) => {
+        datasets.map(async (dataset, index) => {
           try {
+            console.log(`📄 Getting metadata for dataset ${index + 1}/${datasets.length}: ${dataset.id}`)
             const [metadata] = await dataset.getMetadata()
             
-            return {
+            const info = {
               id: dataset.id!,
               friendlyName: metadata.friendlyName,
               description: metadata.description,
               location: metadata.location,
               creationTime: metadata.creationTime ? new Date(parseInt(metadata.creationTime)) : undefined,
             }
+            console.log(`✅ Metadata processed for ${dataset.id}:`, info)
+            return info
           } catch (error) {
-            console.warn(`Failed to get metadata for dataset ${dataset.id}:`, error)
+            console.warn(`⚠️ Failed to get metadata for dataset ${dataset.id}:`, error)
             return {
               id: dataset.id!,
             }
@@ -340,9 +350,12 @@ class BigQueryService {
         })
       )
 
+      console.log(`🎉 Successfully processed ${datasetInfos.length} datasets`)
       return datasetInfos
     } catch (error) {
-      console.error('Failed to list datasets:', error)
+      console.error('❌ Critical error in listDatasets:', error)
+      console.error('Error type:', typeof error)
+      console.error('Error constructor:', error?.constructor?.name)
       throw new Error(`Failed to list datasets: ${error}`)
     }
   }

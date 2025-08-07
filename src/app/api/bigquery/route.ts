@@ -13,8 +13,20 @@ export async function GET(request: NextRequest) {
 
     switch (action) {
       case 'datasets':
-        const datasets = await bigQueryService.listDatasets()
-        return NextResponse.json({ success: true, data: datasets })
+        console.log('🔍 Attempting to list datasets...')
+        try {
+          const datasets = await bigQueryService.listDatasets()
+          console.log('✅ Datasets retrieved successfully:', datasets.length, 'datasets found')
+          console.log('📊 Dataset details:', datasets)
+          return NextResponse.json({ success: true, data: datasets })
+        } catch (datasetError) {
+          console.error('❌ Error listing datasets:', datasetError)
+          console.error('Error details:', {
+            message: datasetError instanceof Error ? datasetError.message : 'Unknown error',
+            stack: datasetError instanceof Error ? datasetError.stack : undefined
+          })
+          throw datasetError
+        }
 
       case 'tables':
         const datasetId = searchParams.get('dataset')
