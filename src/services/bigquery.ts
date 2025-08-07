@@ -1,0 +1,585 @@
+import { BigQuery } from '@google-cloud/bigquery'
+
+// Types for BigQuery operations
+export interface BigQueryConfig {
+  projectId: string
+  keyFilename?: string
+  credentials?: object
+  location?: string
+}
+
+export interface BigQueryCredentials {
+  type: string
+  project_id: string
+  private_key_id: string
+  private_key: string
+  client_email: string
+  client_id: string
+  auth_uri: string
+  token_uri: string
+  auth_provider_x509_cert_url: string
+  client_x509_cert_url: string
+}
+
+export interface QueryOptions {
+  query: string
+  parameters?: Record<string, unknown>
+  location?: string
+  jobTimeoutMs?: number
+}
+
+export interface QueryResult {
+  data: Record<string, unknown>[]
+  totalRows: number
+  schema: {
+    name: string
+    type: string
+    mode: string
+  }[]
+  executionTime: number
+  bytesProcessed?: number
+}
+
+export interface TableInfo {
+  datasetId: string
+  tableId: string
+  projectId?: string
+  description?: string
+  numRows?: number
+  numBytes?: number
+  creationTime?: Date
+  lastModifiedTime?: Date
+}
+
+// Cache for query results
+interface QueryCache {
+  [key: string]: {
+    result: QueryResult
+    timestamp: number
+    ttl: number
+  }
+}
+
+class BigQueryService {
+  private client: BigQuery | null = null
+  private config: BigQueryConfig | null = null
+  private cache: QueryCache = {}
+  private defaultCacheTTL = 5 * 60 * 1000 // 5 minutes
+
+  /**
+   * Initialize BigQuery client with configuration
+   */
+  async initialize(config?: Partial<BigQueryConfig>): Promise<void> {
+    try {
+      const finalConfig = await this.buildConfig(config)
+      
+      this.config = finalConfig
+      this.client = new BigQuery(this.getBigQueryOptions(finalConfig))
+
+      // Test connection
+      await this.testConnection()
+      
+      console.log('BigQuery client initialized successfully')
+    } catch (error) {
+      console.error('Failed to initialize BigQuery client:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Build configuration from environment and parameters
+   */
+  private async buildConfig(config?: Partial<BigQueryConfig>): Promise<BigQueryConfig> {
+    const projectId = config?.projectId || process.env.GOOGLE_PROJECT_ID
+    
+    if (!projectId) {
+      throw new Error('GOOGLE_PROJECT_ID is required in environment variables or config')
+    }
+
+    const finalConfig: BigQueryConfig = {
+      projectId,
+      location: config?.location || process.env.BIGQUERY_LOCATION || 'US'
+    }
+
+    // Handle credentials based on environment
+    if (this.isProductionEnvironment()) {
+      // Production: Use credentials from environment variable
+      const credentialsJson = process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON
+      
+      if (credentialsJson) {
+        try {
+          finalConfig.credentials = JSON.parse(credentialsJson)
+          console.log('Using JSON credentials from environment variable')
+        } catch (error) {
+          throw new Error('Invalid GOOGLE_APPLICATION_CREDENTIALS_JSON format')
+        }
+      } else {
+        // Fallback to service account auto-discovery (useful for Google Cloud environments)
+        console.log('Using default credentials (service account auto-discovery)')
+      }
+    } else {
+      // Development: Use key file
+      const keyFilename = config?.keyFilename || process.env.GOOGLE_APPLICATION_CREDENTIALS
+      if (keyFilename) {
+        finalConfig.keyFilename = keyFilename
+        console.log(`Using key file: ${keyFilename}`)
+      } else {
+        console.log('No credentials specified, using default authentication')
+      }
+    }
+
+    return finalConfig
+  }
+
+  /**
+   * Get BigQuery client options based on configuration
+   */
+  private getBigQueryOptions(config: BigQueryConfig): object {
+    const options: any = {
+      projectId: config.projectId,
+    }
+
+    if (config.credentials) {
+      options.credentials = config.credentials
+    } else if (config.keyFilename) {
+      options.keyFilename = config.keyFilename
+    }
+    // If neither is provided, BigQuery will use default authentication
+
+    return options
+  }
+
+  /**
+   * Detect if running in production environment
+   */
+  private isProductionEnvironment(): boolean {
+    return (
+      process.env.VERCEL === '1' || 
+      process.env.NODE_ENV === 'production' ||
+      process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON !== undefined
+    )
+  }
+
+  /**
+   * Validate configuration
+   */
+  validateConfiguration(): { isValid: boolean; errors: string[] } {
+    const errors: string[] = []
+    
+    if (!process.env.GOOGLE_PROJECT_ID) {
+      errors.push('GOOGLE_PROJECT_ID environment variable is required')
+    }
+
+    if (this.isProductionEnvironment()) {
+      if (!process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+        console.warn('GOOGLE_APPLICATION_CREDENTIALS_JSON not found, using default authentication')
+      }
+    } else {
+      if (!process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+        console.warn('GOOGLE_APPLICATION_CREDENTIALS not found, using default authentication')
+      }
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors
+    }
+  }
+
+  /**
+   * Test BigQuery connection
+   */
+  private async testConnection(): Promise<void> {
+    if (!this.client) {
+      throw new Error('BigQuery client not initialized')
+    }
+
+    try {
+      // Simple query to test connection
+      const query = 'SELECT 1 as test'
+      await this.client.query({ query, location: this.config?.location })
+    } catch (error) {
+      throw new Error(`BigQuery connection test failed: ${error}`)
+    }
+  }
+
+  /**
+   * Execute a BigQuery query
+   */
+  async executeQuery(options: QueryOptions): Promise<QueryResult> {
+    if (!this.client) {
+      throw new Error('BigQuery client not initialized. Call initialize() first.')
+    }
+
+    const startTime = Date.now()
+    
+    try {
+      // Check cache first
+      const cacheKey = this.getCacheKey(options)
+      const cached = this.getFromCache(cacheKey)
+      if (cached) {
+        console.log('Returning cached query result')
+        return cached
+      }
+
+      const queryOptions = {
+        query: options.query,
+        location: options.location || this.config?.location || 'US',
+        params: options.parameters || {},
+        jobTimeoutMs: options.jobTimeoutMs || 30000,
+      }
+
+      const [job] = await this.client.createQueryJob(queryOptions)
+      const [rows] = await job.getQueryResults()
+      
+      // Get job metadata for additional info
+      const [jobMetadata] = await job.getMetadata()
+      
+      const executionTime = Date.now() - startTime
+      
+      const result: QueryResult = {
+        data: rows as Record<string, unknown>[],
+        totalRows: rows.length,
+        schema: jobMetadata.configuration?.query?.destinationTable?.schema?.fields || [],
+        executionTime,
+        bytesProcessed: jobMetadata.statistics?.totalBytesProcessed 
+          ? parseInt(jobMetadata.statistics.totalBytesProcessed) 
+          : undefined
+      }
+
+      // Cache the result
+      this.setCache(cacheKey, result)
+
+      return result
+    } catch (error) {
+      const executionTime = Date.now() - startTime
+      console.error(`Query execution failed after ${executionTime}ms:`, error)
+      throw new Error(`Query execution failed: ${error}`)
+    }
+  }
+
+  /**
+   * List tables in a dataset
+   */
+  async listTables(datasetId?: string): Promise<TableInfo[]> {
+    if (!this.client) {
+      throw new Error('BigQuery client not initialized. Call initialize() first.')
+    }
+
+    try {
+      const targetDatasetId = datasetId || process.env.BIGQUERY_DATASET_ID
+      if (!targetDatasetId) {
+        throw new Error('Dataset ID is required')
+      }
+
+      const dataset = this.client.dataset(targetDatasetId)
+      const [tables] = await dataset.getTables()
+
+      const tableInfos: TableInfo[] = await Promise.all(
+        tables.map(async (table) => {
+          try {
+            const [metadata] = await table.getMetadata()
+            
+            return {
+              datasetId: targetDatasetId,
+              tableId: table.id!,
+              projectId: this.config?.projectId,
+              description: metadata.description,
+              numRows: metadata.numRows ? parseInt(metadata.numRows) : undefined,
+              numBytes: metadata.numBytes ? parseInt(metadata.numBytes) : undefined,
+              creationTime: metadata.creationTime ? new Date(parseInt(metadata.creationTime)) : undefined,
+              lastModifiedTime: metadata.lastModifiedTime ? new Date(parseInt(metadata.lastModifiedTime)) : undefined,
+            }
+          } catch (error) {
+            console.warn(`Failed to get metadata for table ${table.id}:`, error)
+            return {
+              datasetId: targetDatasetId,
+              tableId: table.id!,
+              projectId: this.config?.projectId,
+            }
+          }
+        })
+      )
+
+      return tableInfos
+    } catch (error) {
+      console.error('Failed to list tables:', error)
+      throw new Error(`Failed to list tables: ${error}`)
+    }
+  }
+
+  /**
+   * Get table schema
+   */
+  async getTableSchema(datasetId: string, tableId: string) {
+    if (!this.client) {
+      throw new Error('BigQuery client not initialized. Call initialize() first.')
+    }
+
+    try {
+      const table = this.client.dataset(datasetId).table(tableId)
+      const [metadata] = await table.getMetadata()
+      
+      return metadata.schema?.fields || []
+    } catch (error) {
+      console.error('Failed to get table schema:', error)
+      throw new Error(`Failed to get table schema: ${error}`)
+    }
+  }
+
+  /**
+   * Query a specific table with optional filters
+   */
+  async queryTable(
+    datasetId: string, 
+    tableId: string, 
+    options: {
+      columns?: string[]
+      where?: string
+      orderBy?: string
+      limit?: number
+      offset?: number
+    } = {}
+  ): Promise<QueryResult> {
+    const {
+      columns = ['*'],
+      where,
+      orderBy,
+      limit = 1000,
+      offset = 0
+    } = options
+
+    const projectId = this.config?.projectId
+    const tableName = `\`${projectId}.${datasetId}.${tableId}\``
+    
+    let query = `SELECT ${columns.join(', ')} FROM ${tableName}`
+    
+    if (where) {
+      query += ` WHERE ${where}`
+    }
+    
+    if (orderBy) {
+      query += ` ORDER BY ${orderBy}`
+    }
+    
+    query += ` LIMIT ${limit} OFFSET ${offset}`
+
+    return this.executeQuery({ query })
+  }
+
+  /**
+   * Clear query cache
+   */
+  clearCache(): void {
+    this.cache = {}
+  }
+
+  /**
+   * Get cache statistics
+   */
+  getCacheStats(): { totalEntries: number; totalSize: number } {
+    const entries = Object.keys(this.cache).length
+    const size = JSON.stringify(this.cache).length
+    return { totalEntries: entries, totalSize: size }
+  }
+
+  /**
+   * Generate cache key for query options
+   */
+  private getCacheKey(options: QueryOptions): string {
+    return Buffer.from(JSON.stringify({
+      query: options.query,
+      parameters: options.parameters,
+      location: options.location
+    })).toString('base64')
+  }
+
+  /**
+   * Get result from cache if valid
+   */
+  private getFromCache(key: string): QueryResult | null {
+    const cached = this.cache[key]
+    if (!cached) return null
+
+    const now = Date.now()
+    if (now - cached.timestamp > cached.ttl) {
+      delete this.cache[key]
+      return null
+    }
+
+    return cached.result
+  }
+
+  /**
+   * Set result in cache
+   */
+  private setCache(key: string, result: QueryResult, ttl?: number): void {
+    this.cache[key] = {
+      result,
+      timestamp: Date.now(),
+      ttl: ttl || this.defaultCacheTTL
+    }
+  }
+}
+
+// Export singleton instance
+export const bigQueryService = new BigQueryService()
+
+// Configuration utilities
+export const bigQueryConfig = {
+  /**
+   * Test if BigQuery is properly configured
+   */
+  async testConfiguration(): Promise<{ success: boolean; message: string; details?: any }> {
+    try {
+      const validation = bigQueryService.validateConfiguration()
+      if (!validation.isValid) {
+        return {
+          success: false,
+          message: 'Configuration validation failed',
+          details: { errors: validation.errors }
+        }
+      }
+
+      await bigQueryService.initialize()
+      return {
+        success: true,
+        message: 'BigQuery configuration is valid and connection successful'
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: 'Configuration test failed',
+        details: { error: error instanceof Error ? error.message : 'Unknown error' }
+      }
+    }
+  },
+
+  /**
+   * Get environment info
+   */
+  getEnvironmentInfo(): {
+    environment: 'development' | 'production'
+    hasProjectId: boolean
+    hasCredentials: boolean
+    credentialsType: 'file' | 'json' | 'default' | 'none'
+  } {
+    const isProduction = (
+      process.env.VERCEL === '1' || 
+      process.env.NODE_ENV === 'production' ||
+      process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON !== undefined
+    )
+
+    let credentialsType: 'file' | 'json' | 'default' | 'none' = 'none'
+    let hasCredentials = false
+
+    if (process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON) {
+      credentialsType = 'json'
+      hasCredentials = true
+    } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+      credentialsType = 'file'
+      hasCredentials = true
+    } else {
+      credentialsType = 'default'
+      hasCredentials = false // We don't know for sure, but assume default auth might work
+    }
+
+    return {
+      environment: isProduction ? 'production' : 'development',
+      hasProjectId: !!process.env.GOOGLE_PROJECT_ID,
+      hasCredentials,
+      credentialsType
+    }
+  }
+}
+
+// Helper functions for common queries
+export const bigQueryHelpers = {
+  /**
+   * Build a simple SELECT query
+   */
+  buildSelectQuery(
+    table: string,
+    options: {
+      columns?: string[]
+      where?: string
+      orderBy?: string
+      limit?: number
+      offset?: number
+    } = {}
+  ): string {
+    const {
+      columns = ['*'],
+      where,
+      orderBy,
+      limit,
+      offset
+    } = options
+
+    let query = `SELECT ${columns.join(', ')} FROM ${table}`
+    
+    if (where) {
+      query += ` WHERE ${where}`
+    }
+    
+    if (orderBy) {
+      query += ` ORDER BY ${orderBy}`
+    }
+    
+    if (limit) {
+      query += ` LIMIT ${limit}`
+    }
+
+    if (offset) {
+      query += ` OFFSET ${offset}`
+    }
+
+    return query
+  },
+
+  /**
+   * Build aggregation query
+   */
+  buildAggregationQuery(
+    table: string,
+    options: {
+      groupBy: string[]
+      aggregations: { column: string; func: 'SUM' | 'COUNT' | 'AVG' | 'MIN' | 'MAX'; alias?: string }[]
+      where?: string
+      having?: string
+      orderBy?: string
+      limit?: number
+    }
+  ): string {
+    const { groupBy, aggregations, where, having, orderBy, limit } = options
+
+    const selectColumns = [
+      ...groupBy,
+      ...aggregations.map(agg => 
+        `${agg.func}(${agg.column})${agg.alias ? ` AS ${agg.alias}` : ''}`
+      )
+    ]
+
+    let query = `SELECT ${selectColumns.join(', ')} FROM ${table}`
+    
+    if (where) {
+      query += ` WHERE ${where}`
+    }
+    
+    query += ` GROUP BY ${groupBy.join(', ')}`
+    
+    if (having) {
+      query += ` HAVING ${having}`
+    }
+    
+    if (orderBy) {
+      query += ` ORDER BY ${orderBy}`
+    }
+    
+    if (limit) {
+      query += ` LIMIT ${limit}`
+    }
+
+    return query
+  }
+}
