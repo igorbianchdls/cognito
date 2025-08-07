@@ -18,6 +18,7 @@ import {
   initializeDefaultDataset,
   getActiveDatasetInfo
 } from '@/stores/sheetsStore';
+import TableHeader from './TableHeader';
 
 // Configure AG Grid Enterprise License
 LicenseManager.setLicenseKey('[TRIAL]_this_{AG_Charts_and_AG_Grid}_Enterprise_key_{AG-090576}_is_granted_for_evaluation_only___Use_in_production_is_not_permitted___Please_report_misuse_to_legal@ag-grid.com___For_help_with_purchasing_a_production_key_please_contact_info@ag-grid.com___You_are_granted_a_{Single_Application}_Developer_License_for_one_application_only___All_Front-End_JavaScript_developers_working_on_the_application_would_need_to_be_licensed___This_key_will_deactivate_on_{31 August 2025}____[v3]_[0102]_MTc1NjU5NDgwMDAwMA==055771d37eabf862ce4b35dbb0d2a1df');
@@ -93,10 +94,13 @@ export default function AGGridSheet() {
   }, []);
 
   return (
-    <div className="w-full h-full">
-      {/* AG Grid - Ocupando 100vh da tela */}
+    <div className="w-full h-full flex flex-col">
+      {/* Table Header */}
+      <TableHeader />
+      
+      {/* AG Grid - Ocupando o resto da tela */}
       {isClient ? (
-        <div className="w-full h-screen">
+        <div className="w-full flex-1">
           <AgGridReact
             theme={themeQuartz}
             loadThemeGoogleFonts={true}
@@ -119,7 +123,7 @@ export default function AGGridSheet() {
           />
         </div>
       ) : (
-        <div className="w-full h-screen flex items-center justify-center">
+        <div className="w-full flex-1 flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
             <p className="text-sm text-gray-600">Carregando planilha...</p>
