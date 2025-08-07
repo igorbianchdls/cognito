@@ -1,5 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { streamText } from 'ai';
+import axios from 'axios';
 
 export async function POST(req: Request) {
   console.log('=== GRAPHRAG CHAT API DEBUG ===');
@@ -55,6 +56,19 @@ export async function POST(req: Request) {
 - Otimização de queries em grafos para RAG
 - Métricas de avaliação específicas para GraphRAG
 
+## 🐍 **ANÁLISE DE DADOS PYTHON COM DAYTONA:**
+Você também tem acesso a um sandbox Python seguro via Daytona para análise de dados avançada:
+
+**Comandos especiais que você pode detectar:**
+- "analisar vendas" ou "análise python" → Chame a API Daytona
+- "gráficos" ou "visualização" → Execute análise com matplotlib  
+- "dados" ou "estatísticas" → Análise pandas completa
+
+**Quando detectar solicitação de análise de dados:**
+1. Responda que vai executar análise Python no Daytona
+2. Chame a API interna para análise
+3. Apresente os resultados com insights
+
 Forneça respostas técnicas, práticas e com exemplos de código quando apropriado. Foque em soluções reais e implementáveis.`;
 
     // Add file context if files are provided
@@ -83,6 +97,69 @@ Forneça respostas técnicas, práticas e com exemplos de código quando apropri
 
     console.log('System prompt length:', systemPrompt.length);
     console.log('System prompt preview:', systemPrompt.substring(0, 200) + '...');
+
+    // Detectar se o usuário está pedindo análise de dados
+    const lastMessage = messages[messages.length - 1];
+    const userMessage = lastMessage?.content?.toLowerCase() || '';
+    
+    const shouldAnalyzeData = userMessage.includes('analisar') && 
+      (userMessage.includes('vendas') || userMessage.includes('dados') || 
+       userMessage.includes('gráfico') || userMessage.includes('python') ||
+       userMessage.includes('análise') || userMessage.includes('estatística'));
+
+    if (shouldAnalyzeData) {
+      console.log('Data analysis requested, calling Daytona API...');
+      
+      try {
+        // Chamar nossa API Daytona
+        const daytonaResponse = await axios.post(
+          `${req.url.replace('/api/graphrag-chat', '')}/api/daytona-analysis`,
+          { prompt: userMessage },
+          { 
+            headers: { 'Content-Type': 'application/json' },
+            timeout: 60000 // 1 minuto timeout
+          }
+        );
+
+        const analysisResult = daytonaResponse.data;
+        
+        // Resposta customizada com resultados da análise
+        const analysisResponse = `# 🐍 Análise Python Executada no Daytona
+
+Executei uma análise completa dos dados de vendas usando Python com pandas e matplotlib no sandbox Daytona:
+
+## 📊 Resultados da Análise:
+
+${analysisResult.analysis.output}
+
+## 💡 Insights Principais:
+
+${analysisResult.insights.map((insight: string) => `- ${insight}`).join('\n')}
+
+## ⚡ Detalhes Técnicos:
+- **Sandbox ID**: ${analysisResult.analysis.sandboxId}
+- **Tempo de Execução**: ${analysisResult.analysis.executionTime || 'N/A'}
+- **Gráficos Gerados**: ${analysisResult.analysis.charts?.length || 0} visualizações
+
+A análise foi executada de forma segura no ambiente isolado Daytona, utilizando dados de vendas representativos com informações sobre diferentes regiões e produtos ao longo de 6 meses.
+
+---
+
+*Esta análise demonstra a integração entre GraphRAG e processamento Python seguro via Daytona para análises de dados avançadas.*`;
+
+        // Retornar resposta direta ao invés de stream
+        return new Response(analysisResponse, {
+          status: 200,
+          headers: { 
+            'Content-Type': 'text/plain; charset=utf-8',
+          }
+        });
+
+      } catch (daytonaError) {
+        console.error('Daytona analysis error:', daytonaError);
+        // Continuar com resposta normal do GraphRAG em caso de erro
+      }
+    }
 
     const result = await streamText({
       model: anthropic('claude-3-5-sonnet-20241022'),
