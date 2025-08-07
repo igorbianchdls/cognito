@@ -124,7 +124,7 @@ export default function BigQueryTestPage() {
       <div className="mt-4">
         <h4 className="font-medium mb-2">{title} ({data.length} rows)</h4>
         <div className="overflow-auto max-h-96 border rounded">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="min-w-full a divide-y divide-gray-200">
             <thead className="bg-gray-50 sticky top-0">
               <tr>
                 {columns.map(column => (
