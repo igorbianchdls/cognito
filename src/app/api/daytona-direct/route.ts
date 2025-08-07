@@ -56,7 +56,7 @@ export async function POST(req: Request) {
 
     // Verificar se há arquivos de gráficos gerados
     console.log('🔍 Checking for generated chart files...');
-    let chartFiles = [];
+    let chartFiles: string[] = [];
     
     try {
       // Listar arquivos em /tmp para encontrar gráficos
