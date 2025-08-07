@@ -138,6 +138,31 @@ export function useBigQueryQuery(query: string, parameters?: Record<string, unkn
 }
 
 /**
+ * Hook for listing tables in a specific dataset
+ */
+export function useBigQueryTables(datasetId: string) {
+  return useBigQuery<Array<{
+    datasetId: string;
+    tableId: string;
+    projectId?: string;
+    description?: string;
+    numRows?: number;
+    numBytes?: number;
+    creationTime?: Date;
+    lastModifiedTime?: Date;
+  }>>(`/api/bigquery?action=tables&dataset=${datasetId}`);
+}
+
+/**
+ * Hook for getting data from a specific table
+ */
+export function useBigQueryTableData(dataset: string, table: string, limit: number = 100) {
+  const query = `SELECT * FROM \`creatto-463117.${dataset}.${table}\` LIMIT ${limit}`;
+  
+  return useBigQueryQuery(query);
+}
+
+/**
  * Utility functions for common BigQuery operations
  */
 export const bigQueryUtils = {

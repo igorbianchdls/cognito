@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import Sidebar from '@/components/navigation/Sidebar';
+import { useBigQueryTables, useBigQueryTableData } from '@/hooks/useBigQuery';
 
 interface BigQueryTestResult {
   success: boolean;
@@ -20,6 +21,11 @@ export default function BigQueryTestPage() {
   const [selectedDataset, setSelectedDataset] = useState<string>('');
   const [customQuery, setCustomQuery] = useState<string>('');
   const [loading, setLoading] = useState<Record<string, boolean>>({});
+  const [selectedTable, setSelectedTable] = useState<string>('');
+  
+  // Use the new hooks
+  const tablesHook = useBigQueryTables('biquery_data');
+  const tableDataHook = useBigQueryTableData('biquery_data', selectedTable, 100);
 
   const setLoadingState = (key: string, isLoading: boolean) => {
     setLoading(prev => ({ ...prev, [key]: isLoading }));
@@ -285,6 +291,93 @@ export default function BigQueryTestPage() {
               </Button>
             </div>
             {renderResult(tables, `Tables in Dataset: ${selectedDataset}`)}
+          </Card>
+
+          {/* BigQuery Data Tables Section */}
+          <Card className="p-6 mb-6 border-2 border-blue-200 bg-blue-50">
+            <h2 className="text-xl font-semibold mb-4">🗂️ Tabelas do biquery_data</h2>
+            <p className="text-gray-600 mb-4">
+              Listar e visualizar dados das tabelas dentro do dataset <code className="bg-gray-200 px-2 py-1 rounded">biquery_data</code>.
+            </p>
+            
+            <div className="flex gap-3 mb-4">
+              <Button 
+                onClick={() => tablesHook.execute()} 
+                disabled={tablesHook.loading}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {tablesHook.loading ? 'Carregando...' : 'Listar Tabelas'}
+              </Button>
+            </div>
+
+            {/* Show error if any */}
+            {tablesHook.error && (
+              <div className="text-red-600 mb-4">❌ Erro: {tablesHook.error}</div>
+            )}
+
+            {/* Show tables list */}
+            {tablesHook.data && Array.isArray(tablesHook.data) && tablesHook.data.length > 0 && (
+              <div className="mb-6">
+                <h3 className="font-semibold mb-3">📊 Tabelas encontradas ({tablesHook.data.length}):</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {tablesHook.data.map((table: any) => (
+                    <div
+                      key={table.tableId}
+                      className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                        selectedTable === table.tableId 
+                          ? 'bg-blue-100 border-blue-300' 
+                          : 'bg-white hover:bg-gray-50 border-gray-200'
+                      }`}
+                      onClick={() => {
+                        setSelectedTable(table.tableId);
+                        tableDataHook.execute();
+                      }}
+                    >
+                      <div className="font-medium text-blue-600">{table.tableId}</div>
+                      {table.description && (
+                        <div className="text-xs text-gray-600 mt-1">{table.description}</div>
+                      )}
+                      <div className="text-xs text-gray-400 mt-2">
+                        {table.numRows && `📄 ${table.numRows} linhas`}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Show table data */}
+            {selectedTable && (
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <h3 className="font-semibold">📋 Dados da tabela: {selectedTable}</h3>
+                  <Button 
+                    onClick={() => tableDataHook.execute()} 
+                    disabled={tableDataHook.loading}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    {tableDataHook.loading ? 'Carregando...' : 'Atualizar Dados'}
+                  </Button>
+                </div>
+
+                {tableDataHook.error && (
+                  <div className="text-red-600 mb-4">❌ Erro ao carregar dados: {tableDataHook.error}</div>
+                )}
+
+                {tableDataHook.data && (
+                  <div className="bg-white p-4 rounded border">
+                    {Array.isArray(tableDataHook.data.data) && tableDataHook.data.data.length > 0 ? (
+                      renderTableData(tableDataHook.data.data, `Dados da tabela ${selectedTable}`)
+                    ) : (
+                      <div className="text-gray-500 text-center py-8">
+                        Nenhum dado encontrado na tabela {selectedTable}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </Card>
 
           {/* Custom Query Section */}
