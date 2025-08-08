@@ -53,56 +53,29 @@ export async function POST(req: Request) {
       systemMessage += 'Analise estes arquivos e responda às perguntas do usuário baseado no conteúdo dos documentos. Você pode fazer análises, extrair insights, responder perguntas específicas sobre os dados, ou qualquer outra operação solicitada.';
     }
 
-    // Create simple test tool following documentation exactly
-    const testTool = tool({
-      description: 'Tool de teste que retorna texto simples',
-      inputSchema: z.object({}),
-      execute: async () => {
-        console.log('🔧 [TOOL] test_tool executada!');
-        return {
-          message: "Esta é a resposta da ferramenta de teste! Funcionou!",
-          success: true
-        };
-      }
-    });
-
-    console.log('🚀 Processing chat with simple test tool...');
-    
-    // Get last user message to create a simple prompt
-    const lastMessage = messages[messages.length - 1];
-    const userPrompt = lastMessage?.content || '';
-    
-    console.log('🔍 ANTES generateText:');
-    console.log('- userPrompt:', userPrompt);
-    console.log('- tools definidas:', Object.keys({ test: testTool }));
-    console.log('- testTool:', testTool);
+    // EXACT implementation from AI SDK documentation
+    console.log('🚀 Using EXACT documentation example...');
     
     const result = await generateText({
       model: anthropic('claude-3-5-sonnet-20241022'),
       tools: {
-        test: testTool
+        weather: tool({
+          description: 'Get the weather in a location',
+          inputSchema: z.object({
+            location: z.string().describe('The location to get the weather for'),
+          }),
+          execute: async ({ location }) => ({
+            location,
+            temperature: 72 + Math.floor(Math.random() * 21) - 10,
+          }),
+        }),
       },
-      prompt: `${userPrompt}. Se o usuário mencionar "teste tool", use a ferramenta test.`,
-      toolChoice: 'required',
+      prompt: 'What is the weather in San Francisco?',
     });
 
-    console.log('🔍 DEPOIS generateText - RESULTADO COMPLETO:');
-    console.log('=====================================');
-    console.log('result:', result);
-    console.log('=====================================');
-    console.log('- text:', result.text);
-    console.log('- toolCalls:', result.toolCalls);
-    console.log('- toolResults:', result.toolResults);
-    console.log('- toolCalls length:', result.toolCalls?.length || 0);
-    console.log('- toolResults length:', result.toolResults?.length || 0);
+    console.log('✅ Result:', result.text);
     
-    const { text, toolCalls, toolResults } = result;
-    
-    console.log('✅ Final - Tool calls:', toolCalls?.length || 0);
-    console.log('✅ Final - Tool results:', toolResults?.length || 0);
-    console.log('✅ Final - Returning response:', text);
-    
-    return new Response(text, {
+    return new Response(result.text, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
       },
