@@ -6,6 +6,7 @@ import Calculator from '@/components/julius/Calculator';
 import ChartGenerator from '@/components/julius/ChartGenerator';
 import BigQueryDatasetsList from '@/components/julius/BigQueryDatasetsList';
 import BigQueryTablesList from '@/components/julius/BigQueryTablesList';
+import BigQueryTableData from '@/components/julius/BigQueryTableData';
 
 interface ToolCall {
   id: string;
@@ -147,6 +148,25 @@ export default function RespostaDaIA({ content, isLoading, toolCalls }: Resposta
                                 lastModifiedTime?: Date;
                               }>}
                               datasetId={(result.datasetId as string) || ''}
+                              success={result.success as boolean}
+                              error={result.error as string}
+                            />
+                          </div>
+                        );
+                      case 'getBigQueryTableData':
+                        return (
+                          <div key={id} className="my-4">
+                            <BigQueryTableData 
+                              data={result.data as Array<Record<string, unknown>>}
+                              totalRows={result.totalRows as number}
+                              schema={result.schema as Array<{
+                                name: string;
+                                type: string;
+                                mode: string;
+                              }>}
+                              executionTime={result.executionTime as number}
+                              bytesProcessed={result.bytesProcessed as number}
+                              query={result.query as string}
                               success={result.success as boolean}
                               error={result.error as string}
                             />

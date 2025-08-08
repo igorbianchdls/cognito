@@ -171,6 +171,61 @@ export async function POST(req: Request) {
               };
             }
           },
+        }),
+        getBigQueryTableData: tool({
+          description: 'Execute SQL queries on BigQuery tables and display data in a formatted table',
+          inputSchema: z.object({
+            query: z.string().describe('SQL query to execute (e.g., "SELECT * FROM `creatto-463117.biquery_data.car_prices` LIMIT 20")'),
+            limit: z.number().optional().default(20).describe('Maximum number of rows to return')
+          }),
+          execute: async ({ query, limit = 20 }) => {
+            console.log('🔍 BigQuery table data tool executed with query:', query);
+            try {
+              // Initialize BigQuery service if not already done
+              if (!bigQueryService['client']) {
+                console.log('⚡ Initializing BigQuery service...');
+                await bigQueryService.initialize();
+              }
+              
+              // Add LIMIT to query if not already present and limit is specified
+              let finalQuery = query.trim();
+              if (limit && !finalQuery.toLowerCase().includes('limit')) {
+                finalQuery += ` LIMIT ${limit}`;
+              }
+              
+              console.log('🚀 Executing query:', finalQuery);
+              const startTime = Date.now();
+              
+              const result = await bigQueryService.executeQuery({
+                query: finalQuery,
+                location: process.env.BIGQUERY_LOCATION
+              });
+              
+              const executionTime = Date.now() - startTime;
+              console.log('✅ Query executed successfully:', {
+                rows: result.data.length,
+                executionTime: `${executionTime}ms`,
+                bytesProcessed: result.bytesProcessed
+              });
+              
+              return {
+                success: true,
+                data: result.data,
+                totalRows: result.totalRows,
+                schema: result.schema,
+                executionTime,
+                bytesProcessed: result.bytesProcessed,
+                query: finalQuery
+              };
+            } catch (error) {
+              console.error('❌ Error executing BigQuery:', error);
+              return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to execute query',
+                query
+              };
+            }
+          },
         })
       },
     });
