@@ -84,6 +84,20 @@ export async function POST(req: Request) {
     console.log('✅ Result toolCalls:', result.toolCalls);
     console.log('✅ Result toolResults:', result.toolResults);
     
+    // Process tool results manually
+    if (result.toolResults && result.toolResults.length > 0) {
+      console.log('🔥 Processing tool results manually');
+      const weatherData = result.toolResults[0].output as { location: string; temperature: number };
+      const finalResponse = `The weather in ${weatherData.location} is ${weatherData.temperature}°F. It's a beautiful day!`;
+      console.log('🔥 Final response with tool data:', finalResponse);
+      
+      return new Response(finalResponse, {
+        headers: {
+          'Content-Type': 'text/plain; charset=utf-8',
+        },
+      });
+    }
+    
     return new Response(result.text, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
