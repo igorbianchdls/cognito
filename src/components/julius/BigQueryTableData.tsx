@@ -133,7 +133,9 @@ export default function BigQueryTableData({
   });
 
   // Get column names from first row or schema
-  const columns = schema?.map(s => s.name) || Object.keys(actualData[0] || {});
+  const columns = (schema?.length > 0) 
+    ? schema.map(s => s.name) 
+    : Object.keys(actualData[0] || {});
   
   console.log('🎨 Columns extraction:', {
     hasSchema: !!schema,
