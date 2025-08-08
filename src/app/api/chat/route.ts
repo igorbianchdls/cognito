@@ -1,6 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { generateText, tool } from 'ai';
 import { z } from 'zod';
+import { bigQueryService } from '@/services/bigquery';
 
 export async function POST(req: Request) {
   console.log('=== CHAT API DEBUG ===');
@@ -59,18 +60,51 @@ export async function POST(req: Request) {
         description: 'Lista todos os datasets disponíveis no BigQuery',
         inputSchema: z.object({}),
         execute: async () => {
+          console.log('🔧 [TOOL] list_datasets - Starting execution');
+          
           try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/bigquery?action=datasets`);
-            const result = await response.json();
+            // Initialize BigQuery if needed
+            console.log('🔧 Checking if BigQuery service needs initialization...');
+            console.log('- Service client exists:', !!bigQueryService['client']);
             
-            if (result.success) {
-              return { datasets: result.data };
+            if (!bigQueryService['client']) {
+              console.log('⚡ Initializing BigQuery service...');
+              await bigQueryService.initialize();
+              console.log('✅ BigQuery service initialized successfully');
             } else {
-              throw new Error(result.error || 'Failed to fetch datasets');
+              console.log('✅ BigQuery service already initialized');
             }
+            
+            console.log('🔍 Attempting to list datasets...');
+            const datasets = await bigQueryService.listDatasets();
+            console.log('✅ Datasets retrieved successfully:', datasets.length, 'datasets found');
+            console.log('📊 Dataset details:', datasets);
+            
+            const result = { 
+              datasets: datasets.map(d => ({
+                id: d.id,
+                friendlyName: d.friendlyName,
+                description: d.description,
+                location: d.location
+              }))
+            };
+            
+            console.log('📤 [TOOL] Returning datasets result:', result);
+            return result;
+            
           } catch (error) {
-            console.error('Error fetching datasets:', error);
-            throw new Error(`Erro ao listar datasets: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            console.error('❌ [TOOL] Error in list_datasets:', error);
+            console.error('Error details:', {
+              message: error instanceof Error ? error.message : 'Unknown error',
+              stack: error instanceof Error ? error.stack : undefined,
+              name: error instanceof Error ? error.name : undefined
+            });
+            
+            // Return error info instead of throwing to help debug
+            return {
+              error: `Erro ao listar datasets: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              datasets: []
+            };
           }
         }
       }),
@@ -79,25 +113,63 @@ export async function POST(req: Request) {
         description: 'Lista tabelas do dataset biquery_data',
         inputSchema: z.object({}),
         execute: async () => {
+          console.log('🔧 [TOOL] list_tables - Starting execution for dataset: biquery_data');
+          
           try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/bigquery?action=tables&dataset=biquery_data`);
-            const result = await response.json();
+            // Initialize BigQuery if needed
+            console.log('🔧 Checking if BigQuery service needs initialization...');
+            console.log('- Service client exists:', !!bigQueryService['client']);
             
-            if (result.success) {
-              return { tables: result.data };
+            if (!bigQueryService['client']) {
+              console.log('⚡ Initializing BigQuery service...');
+              await bigQueryService.initialize();
+              console.log('✅ BigQuery service initialized successfully');
             } else {
-              throw new Error(result.error || 'Failed to fetch tables');
+              console.log('✅ BigQuery service already initialized');
             }
+            
+            console.log('🔍 Attempting to list tables for dataset: biquery_data');
+            const tables = await bigQueryService.listTables('biquery_data');
+            console.log('✅ Tables retrieved successfully:', tables.length, 'tables found');
+            console.log('📊 Table details:', tables);
+            
+            const result = { 
+              tables: tables.map(t => ({
+                tableId: t.tableId,
+                datasetId: t.datasetId,
+                projectId: t.projectId,
+                description: t.description,
+                numRows: t.numRows,
+                numBytes: t.numBytes
+              }))
+            };
+            
+            console.log('📤 [TOOL] Returning tables result:', result);
+            return result;
+            
           } catch (error) {
-            console.error('Error fetching tables:', error);
-            throw new Error(`Erro ao listar tabelas: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            console.error('❌ [TOOL] Error in list_tables:', error);
+            console.error('Error details:', {
+              message: error instanceof Error ? error.message : 'Unknown error',
+              stack: error instanceof Error ? error.stack : undefined,
+              name: error instanceof Error ? error.name : undefined
+            });
+            
+            // Return error info instead of throwing to help debug
+            return {
+              error: `Erro ao listar tabelas: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              tables: []
+            };
           }
         }
       })
     };
 
     // Always use generateText with tools available
-    console.log('Processing chat with BigQuery tools...');
+    console.log('🚀 Processing chat with BigQuery tools...');
+    console.log('🎯 Available tools:', Object.keys(tools));
+    console.log('💬 User messages count:', messages.length);
+    
     const result = await generateText({
       model: anthropic('claude-3-5-sonnet-20241022'),
       messages: messages,
@@ -107,7 +179,18 @@ export async function POST(req: Request) {
       temperature: 0.7,
     });
 
-    console.log('API call successful, returning response...');
+    console.log('✅ AI call successful');
+    console.log('📝 Result text length:', result.text.length);
+    console.log('🛠️ Tool calls made:', result.toolCalls?.length || 0);
+    
+    if (result.toolCalls && result.toolCalls.length > 0) {
+      console.log('🔧 Tool calls details:', result.toolCalls.map(tc => ({
+        toolName: tc.toolName,
+        toolCallId: tc.toolCallId
+      })));
+    }
+    
+    console.log('📤 Returning response...');
     return new Response(result.text, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
