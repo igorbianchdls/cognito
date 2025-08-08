@@ -29,6 +29,30 @@ export default function BigQueryTableData({
   success,
   error
 }: BigQueryTableDataProps) {
+  // 🔍 DEBUG: Log do que o componente recebeu
+  console.log('🎨 BigQueryTableData component received:', {
+    hasData: !!data,
+    dataKeys: data ? Object.keys(data) : [],
+    success,
+    error,
+    query,
+    toolExecutionTime,
+    dataStructure: data ? {
+      hasDataProperty: 'data' in data,
+      dataType: typeof data.data,
+      dataLength: Array.isArray(data.data) ? data.data.length : 'not array',
+      hasTotalRows: 'totalRows' in data,
+      totalRows: data.totalRows,
+      hasSchema: 'schema' in data,
+      schemaLength: Array.isArray(data.schema) ? data.schema.length : 'not array'
+    } : null
+  });
+  
+  // Log sample dos dados se existirem
+  if (data && data.data && Array.isArray(data.data) && data.data.length > 0) {
+    console.log('🎨 Sample data (first row):', data.data[0]);
+    console.log('🎨 Schema info:', data.schema?.slice(0, 3));
+  }
   if (error || !success) {
     return (
       <div className="my-4 p-4 border-2 border-red-200 bg-red-50 rounded-lg">

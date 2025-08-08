@@ -207,13 +207,34 @@ export async function POST(req: Request) {
                 executionTime: `${executionTime}ms`,
                 bytesProcessed: result.bytesProcessed
               });
+
+              // 🔍 DEBUG: Log da estrutura completa do resultado
+              console.log('🔍 BigQuery result structure:', {
+                hasData: !!result.data,
+                dataLength: result.data?.length,
+                totalRows: result.totalRows,
+                hasSchema: !!result.schema,
+                schemaLength: result.schema?.length,
+                sampleData: result.data?.slice(0, 2),
+                resultKeys: Object.keys(result)
+              });
+              console.log('🔍 Full result (first 500 chars):', JSON.stringify(result, null, 2).substring(0, 500));
               
-              return {
+              const toolResult = {
                 success: true,
                 data: result,
                 query: finalQuery,
                 executionTime
               };
+              
+              console.log('🔍 Tool result structure:', {
+                success: toolResult.success,
+                hasData: !!toolResult.data,
+                query: toolResult.query,
+                executionTime: toolResult.executionTime
+              });
+              
+              return toolResult;
             } catch (error) {
               console.error('❌ Error executing BigQuery:', error);
               return {
