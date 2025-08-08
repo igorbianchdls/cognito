@@ -49,6 +49,7 @@ export default function MessageList({ messages, isLoading, error }: MessageListP
             content={message.content}
             timestamp={message.createdAt}
             isLoading={message.role === 'assistant' && message.content === '' && isLoading}
+            toolInvocations={(message as any).toolInvocations}
           />
         );
       })}

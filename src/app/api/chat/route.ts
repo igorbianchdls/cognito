@@ -1,5 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { generateText, tool } from 'ai';
+import { streamText, tool } from 'ai';
 import { z } from 'zod';
 
 export async function POST(req: Request) {
@@ -53,52 +53,68 @@ export async function POST(req: Request) {
       systemMessage += 'Analise estes arquivos e responda às perguntas do usuário baseado no conteúdo dos documentos. Você pode fazer análises, extrair insights, responder perguntas específicas sobre os dados, ou qualquer outra operação solicitada.';
     }
 
-    // EXACT implementation from AI SDK documentation
-    console.log('🚀 Using EXACT documentation example...');
-    console.log('🚀 ANTES generateText');
+    console.log('🚀 Starting streamText with generative UI...');
     
-    const result = await generateText({
+    const result = streamText({
       model: anthropic('claude-3-5-sonnet-20241022'),
+      messages: [
+        { role: 'system', content: systemMessage },
+        ...messages
+      ],
       tools: {
-        weather: tool({
-          description: 'Get the weather in a location',
+        getWeather: tool({
+          description: 'Get weather information for a specific location and display it in a beautiful weather card',
           inputSchema: z.object({
             location: z.string().describe('The location to get the weather for'),
           }),
           execute: async ({ location }) => {
-            console.log('🔥 WEATHER TOOL EXECUTADA! Location:', location);
-            const result = {
+            console.log('🌤️ Weather tool executed for:', location);
+            const temperature = 72 + Math.floor(Math.random() * 21) - 10;
+            return {
               location,
-              temperature: 72 + Math.floor(Math.random() * 21) - 10,
+              temperature
             };
-            console.log('🔥 WEATHER RESULT:', result);
-            return result;
           },
         }),
+        calculator: tool({
+          description: 'Create an interactive calculator for mathematical operations',
+          inputSchema: z.object({
+            expression: z.string().optional().describe('Optional initial expression to show'),
+            result: z.number().optional().describe('Optional initial result to display'),
+          }),
+          execute: async ({ expression, result }) => {
+            console.log('🧮 Calculator tool executed');
+            return {
+              expression,
+              result
+            };
+          },
+        }),
+        createChart: tool({
+          description: 'Generate interactive charts and graphs from data',
+          inputSchema: z.object({
+            title: z.string().describe('Title for the chart'),
+            data: z.array(z.object({
+              label: z.string(),
+              value: z.number()
+            })).describe('Array of data points with labels and values'),
+            type: z.enum(['bar', 'pie', 'line']).default('bar').describe('Type of chart to create')
+          }),
+          execute: async ({ title, data, type }) => {
+            console.log('📊 Chart tool executed:', { title, data, type });
+            return {
+              title,
+              data,
+              type
+            };
+          },
+        })
       },
-      prompt: 'What is the weather in San Francisco?',
     });
 
-    console.log('🚀 DEPOIS generateText');
-    console.log('✅ Result text:', result.text);
-    console.log('✅ Result toolCalls:', result.toolCalls);
-    console.log('✅ Result toolResults:', result.toolResults);
+    console.log('🚀 Streaming response with generative UI...');
     
-    // Process tool results manually
-    if (result.toolResults && result.toolResults.length > 0) {
-      console.log('🔥 Processing tool results manually');
-      const weatherData = result.toolResults[0].output as { location: string; temperature: number };
-      const finalResponse = `The weather in ${weatherData.location} is ${weatherData.temperature}°F. It's a beautiful day!`;
-      console.log('🔥 Final response with tool data:', finalResponse);
-      
-      return new Response(finalResponse, {
-        headers: {
-          'Content-Type': 'text/plain; charset=utf-8',
-        },
-      });
-    }
-    
-    return new Response(result.text, {
+    return result.toDataStreamResponse({
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
       },

@@ -1,14 +1,19 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
+import { type ToolInvocation } from 'ai';
+import WeatherCard from '@/components/julius/WeatherCard';
+import Calculator from '@/components/julius/Calculator';
+import ChartGenerator from '@/components/julius/ChartGenerator';
 
 interface RespostaDaIAProps {
   content: string;
   timestamp: Date;
   isLoading?: boolean;
+  toolInvocations?: ToolInvocation[];
 }
 
-export default function RespostaDaIA({ content, isLoading }: RespostaDaIAProps) {
+export default function RespostaDaIA({ content, isLoading, toolInvocations }: RespostaDaIAProps) {
   const [copied, setCopied] = useState(false);
 
   const copyToClipboard = async () => {
@@ -38,45 +43,107 @@ export default function RespostaDaIA({ content, isLoading }: RespostaDaIAProps) 
                 </div>
               </div>
             ) : (
-              <ReactMarkdown
-                components={{
-                  p: ({ children }) => <p className="mb-3 last:mb-0 text-foreground leading-relaxed">{children}</p>,
-                  code: ({ children }) => (
-                    <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono text-foreground border">
-                      {children}
-                    </code>
-                  ),
-                  pre: ({ children }) => (
-                    <pre className="bg-muted p-4 rounded-lg overflow-x-auto border my-3">
-                      {children}
-                    </pre>
-                  ),
-                  ul: ({ children }) => <ul className="list-disc list-inside text-foreground mb-3 space-y-1">{children}</ul>,
-                  ol: ({ children }) => <ol className="list-decimal list-inside text-foreground mb-3 space-y-1">{children}</ol>,
-                  li: ({ children }) => <li className="text-foreground">{children}</li>,
-                  strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
-                  em: ({ children }) => <em className="italic text-foreground">{children}</em>,
-                  h1: ({ children }) => <h1 className="text-lg font-semibold text-foreground mb-3 leading-tight">{children}</h1>,
-                  h2: ({ children }) => <h2 className="text-base font-semibold text-foreground mb-3 leading-tight">{children}</h2>,
-                  h3: ({ children }) => <h3 className="text-sm font-semibold text-foreground mb-2 leading-tight">{children}</h3>,
-                  blockquote: ({ children }) => (
-                    <blockquote className="border-l-4 border-border pl-4 italic text-muted-foreground mb-3">
-                      {children}
-                    </blockquote>
-                  ),
-                }}
-              >
-                {content}
-              </ReactMarkdown>
+              <div className="space-y-4">
+                <ReactMarkdown
+                  components={{
+                    p: ({ children }) => <p className="mb-3 last:mb-0 text-foreground leading-relaxed">{children}</p>,
+                    code: ({ children }) => (
+                      <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono text-foreground border">
+                        {children}
+                      </code>
+                    ),
+                    pre: ({ children }) => (
+                      <pre className="bg-muted p-4 rounded-lg overflow-x-auto border my-3">
+                        {children}
+                      </pre>
+                    ),
+                    ul: ({ children }) => <ul className="list-disc list-inside text-foreground mb-3 space-y-1">{children}</ul>,
+                    ol: ({ children }) => <ol className="list-decimal list-inside text-foreground mb-3 space-y-1">{children}</ol>,
+                    li: ({ children }) => <li className="text-foreground">{children}</li>,
+                    strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
+                    em: ({ children }) => <em className="italic text-foreground">{children}</em>,
+                    h1: ({ children }) => <h1 className="text-lg font-semibold text-foreground mb-3 leading-tight">{children}</h1>,
+                    h2: ({ children }) => <h2 className="text-base font-semibold text-foreground mb-3 leading-tight">{children}</h2>,
+                    h3: ({ children }) => <h3 className="text-sm font-semibold text-foreground mb-2 leading-tight">{children}</h3>,
+                    blockquote: ({ children }) => (
+                      <blockquote className="border-l-4 border-border pl-4 italic text-muted-foreground mb-3">
+                        {children}
+                      </blockquote>
+                    ),
+                  }}
+                >
+                  {content}
+                </ReactMarkdown>
+                
+                {/* Render Tool UI Components */}
+                {toolInvocations?.map((toolInvocation) => {
+                  const { toolName, toolCallId, state, args } = toolInvocation;
+                  
+                  if (state === 'result') {
+                    const result = toolInvocation.result;
+                    
+                    switch (toolName) {
+                      case 'getWeather':
+                        return (
+                          <div key={toolCallId} className="my-4">
+                            <WeatherCard 
+                              location={result.location} 
+                              temperature={result.temperature} 
+                            />
+                          </div>
+                        );
+                      case 'calculator':
+                        return (
+                          <div key={toolCallId} className="my-4">
+                            <Calculator 
+                              expression={args.expression}
+                              result={args.result}
+                            />
+                          </div>
+                        );
+                      case 'createChart':
+                        return (
+                          <div key={toolCallId} className="my-4">
+                            <ChartGenerator 
+                              title={result.title}
+                              data={result.data}
+                              type={result.type}
+                            />
+                          </div>
+                        );
+                      default:
+                        return null;
+                    }
+                  } else if (state === 'loading') {
+                    return (
+                      <div key={toolCallId} className="my-4 p-4 border rounded-lg bg-muted/50">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                          Executando {toolName}...
+                        </div>
+                      </div>
+                    );
+                  }
+                  
+                  return null;
+                })}
+              </div>
             )}
           </div>
           
           {/* Copy button */}
-          {!isLoading && content && (
+          {!isLoading && (content || toolInvocations?.length) && (
             <Button 
               variant="ghost" 
               size="sm"
-              onClick={copyToClipboard}
+              onClick={() => {
+                const textToCopy = content + (toolInvocations?.map(t => 
+                  t.state === 'result' ? `\n[${t.toolName}: ${JSON.stringify(t.result)}]` : ''
+                ).join('') || '');
+                navigator.clipboard.writeText(textToCopy);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+              }}
               className="mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 text-xs h-8"
             >
               {copied ? (
