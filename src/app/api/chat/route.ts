@@ -1,5 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { streamText, tool } from 'ai';
+import { streamText, tool, stepCountIs } from 'ai';
 import { z } from 'zod';
 import { bigQueryService } from '@/services/bigquery';
 
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
       systemMessage += 'Analise estes arquivos e responda às perguntas do usuário baseado no conteúdo dos documentos. Você pode fazer análises, extrair insights, responder perguntas específicas sobre os dados, ou qualquer outra operação solicitada.';
     }
 
-    console.log('🚀 Starting streamText with generative UI...');
+    console.log('🚀 Starting streamText with multi-step support...');
     
     const result = streamText({
       model: anthropic('claude-3-5-sonnet-20241022'),
@@ -62,6 +62,7 @@ export async function POST(req: Request) {
         { role: 'system', content: systemMessage },
         ...messages
       ],
+      stopWhen: stepCountIs(3), // Máximo 3 steps para multi-step
       tools: {
         getWeather: tool({
           description: 'Get weather information for a specific location and display it in a beautiful weather card',
@@ -248,9 +249,10 @@ export async function POST(req: Request) {
       },
     });
 
-    console.log('🚀 Streaming response with generative UI...');
+    console.log('🚀 Multi-step stream initialized...');
     
-    return result.toUIMessageStreamResponse();
+    // Return streaming response like before
+    return result.toTextStreamResponse();
   } catch (error) {
     console.error('Error in chat API:', error);
     return new Response(JSON.stringify({ 
