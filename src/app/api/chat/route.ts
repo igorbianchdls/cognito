@@ -170,10 +170,17 @@ export async function POST(req: Request) {
     console.log('🎯 Available tools:', Object.keys(tools));
     console.log('💬 User messages count:', messages.length);
     
+    const finalSystemMessage = systemMessage + '\n\nVocê tem acesso a ferramentas do BigQuery. SEMPRE execute as ferramentas diretamente:\n- Para perguntas sobre datasets: EXECUTE list_datasets imediatamente\n- Para perguntas sobre tabelas: EXECUTE list_tables imediatamente\n- NÃO explique que vai executar, apenas execute e apresente os resultados reais\n- NÃO diga "vou usar a função", apenas use a função';
+    
+    console.log('📝 System message sent to AI:');
+    console.log('=====================================');
+    console.log(finalSystemMessage);
+    console.log('=====================================');
+    
     const { text, steps } = await generateText({
       model: anthropic('claude-3-5-sonnet-20241022'),
       messages: messages,
-      system: systemMessage + '\n\nVocê tem acesso a ferramentas para consultar dados do BigQuery:\n- list_datasets: Lista todos os datasets disponíveis\n- list_tables: Lista tabelas do dataset biquery_data\n\nUse essas ferramentas quando o usuário perguntar sobre datasets ou tabelas.',
+      system: finalSystemMessage,
       tools: tools,
       toolChoice: 'auto',
       temperature: 0.7,
@@ -182,26 +189,38 @@ export async function POST(req: Request) {
     console.log('✅ AI call successful');
     console.log('📝 Final text length:', text.length);
     console.log('📋 Steps executed:', steps.length);
+    console.log('📄 Final text content:');
+    console.log('=====================================');
+    console.log(text);
+    console.log('=====================================');
     
-    // Log all tool calls across steps
+    // Log each step individually with detailed info
+    console.log('🔍 Analyzing each step:');
+    steps.forEach((step, index) => {
+      console.log(`📋 STEP ${index + 1}:`, {
+        text: step.text?.substring(0, 100) + '...',
+        textLength: step.text?.length || 0,
+        toolCalls: step.toolCalls?.length || 0,
+        toolResults: step.toolResults?.length || 0
+      });
+      
+      if (step.toolCalls && step.toolCalls.length > 0) {
+        console.log(`🛠️ STEP ${index + 1} - Tool calls:`, step.toolCalls.map(tc => ({
+          toolName: tc.toolName,
+          toolCallId: tc.toolCallId
+        })));
+      }
+      
+      if (step.toolResults && step.toolResults.length > 0) {
+        console.log(`📊 STEP ${index + 1} - Tool results:`, step.toolResults.map(tr => tr.toolCallId));
+      }
+    });
+    
+    // Log summary
     const allToolCalls = steps.flatMap(step => step.toolCalls || []);
-    console.log('🛠️ Total tool calls made:', allToolCalls.length);
-    
-    if (allToolCalls.length > 0) {
-      console.log('🔧 Tool calls details:', allToolCalls.map(tc => ({
-        toolName: tc.toolName,
-        toolCallId: tc.toolCallId
-      })));
-    }
-    
-    // Log all tool results across steps
     const allToolResults = steps.flatMap(step => step.toolResults || []);
-    console.log('🎯 Total tool results:', allToolResults.length);
-    
-    if (allToolResults.length > 0) {
-      console.log('📊 Tool results found:', allToolResults.map(tr => tr.toolCallId));
-      console.log('📊 Tool results details:', allToolResults);
-    }
+    console.log('📊 SUMMARY - Total tool calls:', allToolCalls.length);
+    console.log('📊 SUMMARY - Total tool results:', allToolResults.length);
     
     console.log('📤 Returning final response with tool execution results...');
     return new Response(text, {
