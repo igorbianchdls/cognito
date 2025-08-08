@@ -107,6 +107,9 @@ export default function JuliusChat() {
               try {
                 const data = JSON.parse(line.slice(6));
                 
+                // Debug: Log all stream data
+                console.log('🔥 Stream data:', data);
+                
                 setMessages(prev => {
                   const newMessages = [...prev];
                   const lastMessage = newMessages[newMessages.length - 1];
@@ -119,6 +122,7 @@ export default function JuliusChat() {
                     
                     // Handle tool input start
                     else if (data.type === 'tool-input-start') {
+                      console.log('🛠️ Tool input start:', data);
                       const toolCall: ToolCall = {
                         id: data.toolCallId,
                         name: data.toolName,
@@ -134,11 +138,17 @@ export default function JuliusChat() {
                     
                     // Handle tool result
                     else if (data.type === 'tool-result') {
+                      console.log('✅ Tool result:', data);
                       const toolCall = lastMessage.toolCalls?.find(tc => tc.id === data.toolCallId);
                       if (toolCall) {
                         toolCall.state = 'result';
                         toolCall.result = data.result;
                       }
+                    }
+                    
+                    // Handle other tool-related events
+                    else if (data.type?.includes('tool')) {
+                      console.log('🔧 Other tool event:', data);
                     }
                   }
                   
