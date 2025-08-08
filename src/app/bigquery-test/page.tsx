@@ -23,7 +23,8 @@ export default function BigQueryTestPage() {
   const [queryResult, setQueryResult] = useState<BigQueryTestResult | null>(null);
   const [selectedDataset, setSelectedDataset] = useState<string>('');
   const [customQuery, setCustomQuery] = useState<string>('');
-  const [pythonCode, setPythonCode] = useState<string>(`# BigQuery Python Code Editor
+  const [pythonCode, setPythonCode] = useState<string>(
+`# BigQuery Python Code Editor
 # Use este editor para escrever código Python que trabalhe com BigQuery
 
 from google.cloud import bigquery
@@ -49,13 +50,14 @@ def main():
     
     # Análise simples
     if 'price' in df.columns:
-        print(f"Preço médio: ${df['price'].mean():.2f}")
-        print(f"Preço mínimo: ${df['price'].min():.2f}")
-        print(f"Preço máximo: ${df['price'].max():.2f}")
+        print(f"Preço médio: {df['price'].mean():.2f}")
+        print(f"Preço mínimo: {df['price'].min():.2f}")
+        print(f"Preço máximo: {df['price'].max():.2f}")
 
 if __name__ == "__main__":
     main()
-`);
+`
+  );
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [selectedTable, setSelectedTable] = useState<string>('');
   const [carPricesResult, setCarPricesResult] = useState<BigQueryTestResult | null>(null);
@@ -782,9 +784,9 @@ if __name__ == "__main__":
               <h4 className="font-medium text-blue-900 mb-2">💡 Dicas para usar BigQuery com Python:</h4>
               <div className="text-sm text-blue-800 space-y-1">
                 <p>• Use <code>client = bigquery.Client()</code> para conectar</p>
-                <p>• Queries: <code>df = client.query("SELECT ...").to_dataframe()</code></p>
+                <p>• Queries: <code>df = client.query(&quot;SELECT ...&quot;).to_dataframe()</code></p>
                 <p>• Análise com pandas: <code>df.describe()</code>, <code>df.groupby()</code></p>
-                <p>• Salvar resultados: <code>df.to_csv("dados.csv")</code></p>
+                <p>• Salvar resultados: <code>df.to_csv(&quot;dados.csv&quot;)</code></p>
               </div>
             </div>
           </Card>
