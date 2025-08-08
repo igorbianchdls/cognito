@@ -5,9 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import Sidebar from '@/components/navigation/Sidebar';
 import { useBigQueryTables, useBigQueryTableData } from '@/hooks/useBigQuery';
-import dynamic from 'next/dynamic';
-
-const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
 interface BigQueryTestResult {
   success: boolean;
@@ -23,51 +20,16 @@ export default function BigQueryTestPage() {
   const [queryResult, setQueryResult] = useState<BigQueryTestResult | null>(null);
   const [selectedDataset, setSelectedDataset] = useState<string>('');
   const [customQuery, setCustomQuery] = useState<string>('');
-  const [pythonCode, setPythonCode] = useState<string>(
-`# BigQuery Python Code Editor
-# Use este editor para escrever código Python que trabalhe com BigQuery
-
-from google.cloud import bigquery
-import pandas as pd
-
-def main():
-    # Configurar cliente BigQuery
-    client = bigquery.Client()
-    
-    # Exemplo: Query simples
-    query = """
-        SELECT *
-        FROM \`creatto-463117.biquery_data.car_prices\`
-        LIMIT 10
-    """
-    
-    # Executar query
-    df = client.query(query).to_dataframe()
-    
-    # Mostrar resultados
-    print(f"Dados carregados: {len(df)} linhas")
-    print(df.head())
-    
-    # Análise simples
-    if 'price' in df.columns:
-        print(f"Preço médio: {df['price'].mean():.2f}")
-        print(f"Preço mínimo: {df['price'].min():.2f}")
-        print(f"Preço máximo: {df['price'].max():.2f}")
-
-if __name__ == "__main__":
-    main()
-`
-  );
-  const [pythonExecutionResult, setPythonExecutionResult] = useState<{
-    success: boolean;
-    output?: string;
-    error?: string;
-    executionTime?: number;
-  } | null>(null);
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [selectedTable, setSelectedTable] = useState<string>('');
   const [carPricesResult, setCarPricesResult] = useState<BigQueryTestResult | null>(null);
   const [datasetInfoResult, setDatasetInfoResult] = useState<BigQueryTestResult | null>(null);
+  
+  // Daytona Sandbox states
+  const [sandbox, setSandbox] = useState<{ id: string; status: string } | null>(null);
+  const [sandboxStatus, setSandboxStatus] = useState<'idle' | 'creating' | 'ready' | 'error'>('idle');
+  const [command, setCommand] = useState<string>('echo "Hello from Daytona!"');
+  const [commandOutput, setCommandOutput] = useState<string>('');
   
   // Use the new hooks
   const tablesHook = useBigQueryTables('biquery_data');
@@ -237,99 +199,101 @@ if __name__ == "__main__":
     }
   };
 
-  const executePythonCode = async () => {
-    console.log('🐍 [FRONTEND] Starting Python code execution...');
-    console.log('📝 [FRONTEND] Code to execute length:', pythonCode.length);
-    console.log('📄 [FRONTEND] Code preview:', pythonCode.substring(0, 100) + '...');
-    
-    if (!pythonCode.trim()) {
-      console.warn('⚠️ [FRONTEND] No code to execute');
-      return;
-    }
-
-    setLoadingState('pythonExecution', true);
-    setPythonExecutionResult(null);
+  // Daytona Sandbox functions
+  const createSandbox = async () => {
+    console.log('🏗️ Creating Daytona sandbox...');
+    setSandboxStatus('creating');
+    setCommandOutput('');
     
     try {
-      console.log('📤 [FRONTEND] Sending POST request to /api/python-daytona');
-      
-      // Create AbortController for timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => {
-        console.warn('⏰ [FRONTEND] Request timeout - aborting after 30s');
-        controller.abort();
-      }, 30000); // 30 second timeout
-      
-      const response = await fetch('/api/python-daytona', {
+      const response = await fetch('/api/daytona', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          code: pythonCode
-        }),
-        signal: controller.signal
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'create' })
       });
       
-      // Clear timeout if request completes
-      clearTimeout(timeoutId);
-      console.log('✅ [FRONTEND] Request completed within timeout');
-
-      console.log('📥 [FRONTEND] Response received:');
-      console.log('   Status:', response.status);
-      console.log('   Status Text:', response.statusText);
-      console.log('   OK:', response.ok);
-      console.log('   Headers:', Object.fromEntries(response.headers.entries()));
-
       const result = await response.json();
-      console.log('📊 [FRONTEND] Execution result received:', {
-        success: result.success,
-        hasOutput: !!result.output,
-        outputLength: result.output?.length || 0,
-        hasError: !!result.error,
-        errorLength: result.error?.length || 0,
-        executionTime: result.executionTime
-      });
-
-      if (result.output) {
-        console.log('✅ [FRONTEND] Output preview:', result.output.substring(0, 200) + (result.output.length > 200 ? '...' : ''));
-      }
+      console.log('📊 Sandbox creation result:', result);
       
-      if (result.error) {
-        console.log('❌ [FRONTEND] Error preview:', result.error.substring(0, 200) + (result.error.length > 200 ? '...' : ''));
+      if (result.success) {
+        setSandbox({ id: result.sandboxId, status: 'ready' });
+        setSandboxStatus('ready');
+        setCommandOutput('✅ Sandbox created successfully!\nSandbox ID: ' + result.sandboxId);
+      } else {
+        setSandboxStatus('error');
+        setCommandOutput('❌ Error creating sandbox: ' + (result.error || 'Unknown error'));
       }
-
-      setPythonExecutionResult(result);
-      
     } catch (error) {
-      console.error('💥 [FRONTEND] Failed to execute Python code:', error);
-      console.error('🔍 [FRONTEND] Error details:', {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : 'No stack trace',
-        name: error instanceof Error ? error.name : 'Unknown'
+      console.error('❌ Error creating sandbox:', error);
+      setSandboxStatus('error');
+      setCommandOutput('❌ Network error: ' + (error instanceof Error ? error.message : 'Failed to create sandbox'));
+    }
+  };
+
+  const executeCommand = async () => {
+    if (!sandbox?.id || !command.trim()) return;
+    
+    console.log('⚡ Executing command:', command);
+    setLoadingState('commandExecution', true);
+    
+    try {
+      const response = await fetch('/api/daytona', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'execute',
+          command: command.trim(),
+          sandboxId: sandbox.id
+        })
       });
       
-      // Handle specific error types
-      let errorMessage = 'Request failed';
-      if (error instanceof Error) {
-        if (error.name === 'AbortError') {
-          errorMessage = 'Request timeout (30s) - Daytona may be slow or unavailable';
-          console.warn('🕐 [FRONTEND] Request was aborted due to timeout');
-        } else if (error.message.includes('Failed to fetch')) {
-          errorMessage = 'Network error - Cannot reach Daytona API';
-          console.warn('🌐 [FRONTEND] Network connectivity issue');
-        } else {
-          errorMessage = error.message;
-        }
+      const result = await response.json();
+      console.log('📊 Command execution result:', result);
+      
+      if (result.success) {
+        setCommandOutput(prev => prev + '\n\n$ ' + command + '\n' + (result.output || 'Command executed successfully'));
+      } else {
+        setCommandOutput(prev => prev + '\n\n$ ' + command + '\n❌ Error: ' + (result.error || 'Command failed'));
       }
-      
-      setPythonExecutionResult({
-        success: false,
-        error: errorMessage
-      });
+    } catch (error) {
+      console.error('❌ Error executing command:', error);
+      setCommandOutput(prev => prev + '\n\n$ ' + command + '\n❌ Network error: ' + (error instanceof Error ? error.message : 'Failed to execute'));
     } finally {
-      console.log('🏁 [FRONTEND] Python execution completed');
-      setLoadingState('pythonExecution', false);
+      setLoadingState('commandExecution', false);
+    }
+  };
+
+  const destroySandbox = async () => {
+    if (!sandbox?.id) return;
+    
+    console.log('🗑️ Destroying sandbox:', sandbox.id);
+    setLoadingState('destroySandbox', true);
+    
+    try {
+      const response = await fetch('/api/daytona', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'destroy',
+          sandboxId: sandbox.id
+        })
+      });
+      
+      const result = await response.json();
+      console.log('📊 Sandbox destroy result:', result);
+      
+      if (result.success) {
+        setSandbox(null);
+        setSandboxStatus('idle');
+        setCommandOutput(prev => prev + '\n\n🗑️ Sandbox destroyed successfully!');
+      } else {
+        setCommandOutput(prev => prev + '\n\n❌ Error destroying sandbox: ' + (result.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('❌ Error destroying sandbox:', error);
+      setCommandOutput(prev => prev + '\n\n❌ Network error: ' + (error instanceof Error ? error.message : 'Failed to destroy'));
+    } finally {
+      setLoadingState('destroySandbox', false);
     }
   };
 
@@ -827,126 +791,146 @@ if __name__ == "__main__":
             )}
           </Card>
 
-          {/* Python Code Editor */}
-          <Card className="p-6 mb-6 border-2 border-purple-200 bg-purple-50">
-            <h2 className="text-xl font-semibold mb-4">🐍 Python Code Editor</h2>
+          {/* Daytona Sandbox */}
+          <Card className="p-6 mb-6 border-2 border-indigo-200 bg-indigo-50">
+            <h2 className="text-xl font-semibold mb-4">🏗️ Daytona Sandbox (Beta)</h2>
             <p className="text-gray-600 mb-4">
-              Escreva e edite código Python para trabalhar com BigQuery. Use as bibliotecas 
-              <code className="bg-gray-200 px-2 py-1 rounded mx-1">google-cloud-bigquery</code> e 
-              <code className="bg-gray-200 px-2 py-1 rounded mx-1">pandas</code>.
+              Create and manage a cloud sandbox environment for testing commands and code execution.
             </p>
-            
-            <div className="mb-4">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="font-medium">Editor Python</h3>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => setPythonCode('')}
-                    variant="outline"
-                    size="sm"
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    🗑️ Limpar
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      navigator.clipboard.writeText(pythonCode);
-                      // You could add a toast notification here
-                    }}
-                    variant="outline" 
-                    size="sm"
-                    className="text-blue-600 hover:text-blue-700"
-                  >
-                    📋 Copiar
-                  </Button>
-                  <Button
-                    onClick={executePythonCode}
-                    disabled={loading.pythonExecution || !pythonCode.trim()}
-                    size="sm"
-                    className="bg-green-600 hover:bg-green-700 text-white"
-                  >
-                    {loading.pythonExecution ? '⏳ Executando...' : '▶️ Executar'}
-                  </Button>
+
+            {/* Status Display */}
+            <div className="mb-4 p-3 bg-white border border-indigo-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-sm font-medium text-gray-700">Status: </span>
+                  <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    sandboxStatus === 'idle' ? 'bg-gray-100 text-gray-800' :
+                    sandboxStatus === 'creating' ? 'bg-yellow-100 text-yellow-800' :
+                    sandboxStatus === 'ready' ? 'bg-green-100 text-green-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {sandboxStatus === 'idle' && '⭕ Idle'}
+                    {sandboxStatus === 'creating' && '🔄 Creating...'}
+                    {sandboxStatus === 'ready' && '✅ Ready'}
+                    {sandboxStatus === 'error' && '❌ Error'}
+                  </span>
                 </div>
-              </div>
-              
-              <div className="border border-gray-300 rounded-lg overflow-hidden">
-                <MonacoEditor
-                  height="400px"
-                  defaultLanguage="python"
-                  value={pythonCode}
-                  onChange={(value) => setPythonCode(value || '')}
-                  theme="vs-light"
-                  options={{
-                    minimap: { enabled: false },
-                    fontSize: 14,
-                    lineNumbers: 'on',
-                    automaticLayout: true,
-                    scrollBeyondLastLine: false,
-                    wordWrap: 'on',
-                    tabSize: 4,
-                  }}
-                />
+                {sandbox?.id && (
+                  <div className="text-xs text-gray-500">
+                    ID: {sandbox.id.substring(0, 8)}...
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Python Execution Results */}
-            {pythonExecutionResult && (
-              <div className="mt-4">
-                <h4 className="font-medium mb-3">📊 Resultados da Execução</h4>
-                <div className="bg-gray-900 rounded-lg p-4 font-mono text-sm">
-                  {/* Execution Status */}
-                  <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-700">
-                    {pythonExecutionResult.success ? (
-                      <span className="text-green-400">✅ Sucesso</span>
-                    ) : (
-                      <span className="text-red-400">❌ Erro</span>
-                    )}
-                    {pythonExecutionResult.executionTime && (
-                      <span className="text-gray-400 text-xs">
-                        ⏱️ {pythonExecutionResult.executionTime}ms
-                      </span>
-                    )}
-                  </div>
+            {/* Control Buttons */}
+            <div className="flex gap-3 mb-6">
+              <Button
+                onClick={createSandbox}
+                disabled={sandboxStatus === 'creating' || sandboxStatus === 'ready'}
+                className="bg-indigo-600 hover:bg-indigo-700"
+              >
+                {sandboxStatus === 'creating' ? '🔄 Creating...' : '🏗️ Create Sandbox'}
+              </Button>
+              
+              <Button
+                onClick={destroySandbox}
+                disabled={sandboxStatus !== 'ready' || loading.destroySandbox}
+                variant="outline"
+                className="text-red-600 border-red-300 hover:bg-red-50"
+              >
+                {loading.destroySandbox ? '🔄 Destroying...' : '🗑️ Destroy Sandbox'}
+              </Button>
+            </div>
 
-                  {/* Output */}
-                  {pythonExecutionResult.output && (
-                    <div className="mb-3">
-                      <div className="text-green-400 text-xs mb-1">📤 OUTPUT:</div>
-                      <pre className="text-gray-100 whitespace-pre-wrap bg-gray-800 p-3 rounded max-h-60 overflow-y-auto">
-                        {pythonExecutionResult.output}
-                      </pre>
-                    </div>
-                  )}
+            {/* Command Execution */}
+            {sandboxStatus === 'ready' && (
+              <div className="mb-6">
+                <h3 className="font-medium mb-3">💻 Execute Command</h3>
+                <div className="flex gap-3 mb-3">
+                  <input
+                    type="text"
+                    placeholder="Enter command to execute..."
+                    value={command}
+                    onChange={(e) => setCommand(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && !loading.commandExecution && executeCommand()}
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    disabled={loading.commandExecution}
+                  />
+                  <Button
+                    onClick={executeCommand}
+                    disabled={!command.trim() || loading.commandExecution}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    {loading.commandExecution ? '⏳ Running...' : '▶️ Execute'}
+                  </Button>
+                </div>
 
-                  {/* Error */}
-                  {pythonExecutionResult.error && (
-                    <div className="mb-3">
-                      <div className="text-red-400 text-xs mb-1">❌ ERROR:</div>
-                      <pre className="text-red-300 whitespace-pre-wrap bg-red-900/20 p-3 rounded max-h-60 overflow-y-auto">
-                        {pythonExecutionResult.error}
-                      </pre>
-                    </div>
-                  )}
-
-                  {/* No output message */}
-                  {!pythonExecutionResult.output && !pythonExecutionResult.error && pythonExecutionResult.success && (
-                    <div className="text-gray-400 text-center py-4">
-                      Código executado com sucesso, mas sem output.
-                    </div>
-                  )}
+                {/* Quick Command Buttons */}
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <Button
+                    onClick={() => setCommand('echo "Hello from Daytona!"')}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    Echo Test
+                  </Button>
+                  <Button
+                    onClick={() => setCommand('node --version')}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    Node Version
+                  </Button>
+                  <Button
+                    onClick={() => setCommand('ls -la')}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    List Files
+                  </Button>
+                  <Button
+                    onClick={() => setCommand('pwd')}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    Current Dir
+                  </Button>
+                  <Button
+                    onClick={() => setCommand('whoami')}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    Who Am I
+                  </Button>
                 </div>
               </div>
             )}
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-medium text-blue-900 mb-2">💡 Dicas para usar BigQuery com Python:</h4>
-              <div className="text-sm text-blue-800 space-y-1">
-                <p>• Use <code>client = bigquery.Client()</code> para conectar</p>
-                <p>• Queries: <code>df = client.query(&quot;SELECT ...&quot;).to_dataframe()</code></p>
-                <p>• Análise com pandas: <code>df.describe()</code>, <code>df.groupby()</code></p>
-                <p>• Salvar resultados: <code>df.to_csv(&quot;dados.csv&quot;)</code></p>
-                <p>• <strong>Execução via Daytona:</strong> Código roda em sandbox isolado na nuvem</p>
+            {/* Output Display */}
+            {commandOutput && (
+              <div className="mb-4">
+                <h4 className="font-medium mb-3">📤 Output</h4>
+                <div className="bg-gray-900 rounded-lg p-4 font-mono text-sm max-h-64 overflow-y-auto">
+                  <pre className="text-green-400 whitespace-pre-wrap">{commandOutput}</pre>
+                </div>
+              </div>
+            )}
+
+            {/* Instructions */}
+            <div className="bg-indigo-100 border border-indigo-200 rounded-lg p-4">
+              <h4 className="font-medium text-indigo-900 mb-2">💡 How to use:</h4>
+              <div className="text-sm text-indigo-800 space-y-1">
+                <p>1. Click <strong>"Create Sandbox"</strong> to create a new TypeScript environment</p>
+                <p>2. Use the command input to execute terminal commands</p>
+                <p>3. Try quick commands like <code>node --version</code> or <code>ls -la</code></p>
+                <p>4. Click <strong>"Destroy Sandbox"</strong> when done to clean up resources</p>
+                <p><strong>⚠️ Beta:</strong> Requires DAYTONA_API_KEY environment variable</p>
               </div>
             </div>
           </Card>
@@ -959,7 +943,8 @@ if __name__ == "__main__":
               <p><strong>2. List Datasets:</strong> See all datasets in your project</p>
               <p><strong>3. List Tables:</strong> Enter a dataset name to see its tables</p>
               <p><strong>4. Custom Query:</strong> Run SQL queries (be careful with LIMIT to avoid costs)</p>
-              <p><strong>5. Python Editor:</strong> Write Python code to analyze BigQuery data locally</p>
+              <p><strong>5. Direct Tests:</strong> Test specific tables and detect dataset locations</p>
+              <p><strong>6. Daytona Sandbox:</strong> Create cloud sandbox environments for testing (Beta)</p>
             </div>
           </Card>
         </div>
