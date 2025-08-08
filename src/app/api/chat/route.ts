@@ -1,7 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { generateText, tool } from 'ai';
 import { z } from 'zod';
-import { bigQueryService } from '@/services/bigquery';
 
 export async function POST(req: Request) {
   console.log('=== CHAT API DEBUG ===');
@@ -54,175 +53,30 @@ export async function POST(req: Request) {
       systemMessage += 'Analise estes arquivos e responda às perguntas do usuário baseado no conteúdo dos documentos. Você pode fazer análises, extrair insights, responder perguntas específicas sobre os dados, ou qualquer outra operação solicitada.';
     }
 
-    // Create BigQuery tools using AI SDK v5 structure
+    // Create simple test tool
     const tools = {
-      list_datasets: tool({
-        description: 'Lista todos os datasets disponíveis no BigQuery',
+      test_tool: tool({
+        description: 'Tool de teste que retorna texto simples',
         inputSchema: z.object({}),
         execute: async () => {
-          console.log('🔧 [TOOL] list_datasets - Starting execution');
-          
-          try {
-            // Initialize BigQuery if needed
-            console.log('🔧 Checking if BigQuery service needs initialization...');
-            console.log('- Service client exists:', !!bigQueryService['client']);
-            
-            if (!bigQueryService['client']) {
-              console.log('⚡ Initializing BigQuery service...');
-              await bigQueryService.initialize();
-              console.log('✅ BigQuery service initialized successfully');
-            } else {
-              console.log('✅ BigQuery service already initialized');
-            }
-            
-            console.log('🔍 Attempting to list datasets...');
-            const datasets = await bigQueryService.listDatasets();
-            console.log('✅ Datasets retrieved successfully:', datasets.length, 'datasets found');
-            console.log('📊 Dataset details:', datasets);
-            
-            const result = { 
-              datasets: datasets.map(d => ({
-                id: d.id,
-                friendlyName: d.friendlyName,
-                description: d.description,
-                location: d.location
-              }))
-            };
-            
-            console.log('📤 [TOOL] Returning datasets result:', result);
-            return result;
-            
-          } catch (error) {
-            console.error('❌ [TOOL] Error in list_datasets:', error);
-            console.error('Error details:', {
-              message: error instanceof Error ? error.message : 'Unknown error',
-              stack: error instanceof Error ? error.stack : undefined,
-              name: error instanceof Error ? error.name : undefined
-            });
-            
-            // Return error info instead of throwing to help debug
-            return {
-              error: `Erro ao listar datasets: ${error instanceof Error ? error.message : 'Unknown error'}`,
-              datasets: []
-            };
-          }
-        }
-      }),
-
-      list_tables: tool({
-        description: 'Lista tabelas do dataset biquery_data',
-        inputSchema: z.object({}),
-        execute: async () => {
-          console.log('🔧 [TOOL] list_tables - Starting execution for dataset: biquery_data');
-          
-          try {
-            // Initialize BigQuery if needed
-            console.log('🔧 Checking if BigQuery service needs initialization...');
-            console.log('- Service client exists:', !!bigQueryService['client']);
-            
-            if (!bigQueryService['client']) {
-              console.log('⚡ Initializing BigQuery service...');
-              await bigQueryService.initialize();
-              console.log('✅ BigQuery service initialized successfully');
-            } else {
-              console.log('✅ BigQuery service already initialized');
-            }
-            
-            console.log('🔍 Attempting to list tables for dataset: biquery_data');
-            const tables = await bigQueryService.listTables('biquery_data');
-            console.log('✅ Tables retrieved successfully:', tables.length, 'tables found');
-            console.log('📊 Table details:', tables);
-            
-            const result = { 
-              tables: tables.map(t => ({
-                tableId: t.tableId,
-                datasetId: t.datasetId,
-                projectId: t.projectId,
-                description: t.description,
-                numRows: t.numRows,
-                numBytes: t.numBytes
-              }))
-            };
-            
-            console.log('📤 [TOOL] Returning tables result:', result);
-            return result;
-            
-          } catch (error) {
-            console.error('❌ [TOOL] Error in list_tables:', error);
-            console.error('Error details:', {
-              message: error instanceof Error ? error.message : 'Unknown error',
-              stack: error instanceof Error ? error.stack : undefined,
-              name: error instanceof Error ? error.name : undefined
-            });
-            
-            // Return error info instead of throwing to help debug
-            return {
-              error: `Erro ao listar tabelas: ${error instanceof Error ? error.message : 'Unknown error'}`,
-              tables: []
-            };
-          }
+          console.log('🔧 [TOOL] test_tool executada!');
+          return "Esta é a resposta da ferramenta de teste! Funcionou!";
         }
       })
     };
 
-    // Always use generateText with tools available
-    console.log('🚀 Processing chat with BigQuery tools...');
-    console.log('🎯 Available tools:', Object.keys(tools));
-    console.log('💬 User messages count:', messages.length);
+    console.log('🚀 Processing chat with simple test tool...');
     
-    const finalSystemMessage = systemMessage + '\n\nVocê tem acesso a ferramentas do BigQuery. SEMPRE execute as ferramentas diretamente:\n- Para perguntas sobre datasets: EXECUTE list_datasets imediatamente\n- Para perguntas sobre tabelas: EXECUTE list_tables imediatamente\n- NÃO explique que vai executar, apenas execute e apresente os resultados reais\n- NÃO diga "vou usar a função", apenas use a função';
-    
-    console.log('📝 System message sent to AI:');
-    console.log('=====================================');
-    console.log(finalSystemMessage);
-    console.log('=====================================');
-    
-    const { text, steps } = await generateText({
+    const { text } = await generateText({
       model: anthropic('claude-3-5-sonnet-20241022'),
       messages: messages,
-      system: finalSystemMessage,
+      system: systemMessage + '\n\nSe o usuário disser "teste tool", execute a ferramenta test_tool.',
       tools: tools,
       toolChoice: 'auto',
       temperature: 0.7,
     });
 
-    console.log('✅ AI call successful');
-    console.log('📝 Final text length:', text.length);
-    console.log('📋 Steps executed:', steps.length);
-    console.log('📄 Final text content:');
-    console.log('=====================================');
-    console.log(text);
-    console.log('=====================================');
-    
-    // Log each step individually with detailed info
-    console.log('🔍 Analyzing each step:');
-    steps.forEach((step, index) => {
-      console.log(`📋 STEP ${index + 1}:`, {
-        text: step.text ? step.text.substring(0, 100) + '...' : 'no text',
-        textLength: step.text?.length || 0,
-        toolCalls: step.toolCalls?.length || 0,
-        toolResults: step.toolResults?.length || 0
-      });
-      
-      if (step.toolCalls && step.toolCalls.length > 0) {
-        console.log(`🛠️ STEP ${index + 1} - Tool calls:`, step.toolCalls.map(tc => ({
-          toolName: tc.toolName,
-          toolCallId: tc.toolCallId
-        })));
-      }
-      
-      if (step.toolResults && step.toolResults.length > 0) {
-        console.log(`📊 STEP ${index + 1} - Tool results:`, step.toolResults.map(tr => tr.toolCallId));
-      }
-    });
-    
-    // Log summary
-    const allToolCalls = steps.flatMap(step => step.toolCalls || []);
-    const allToolResults = steps.flatMap(step => step.toolResults || []);
-    console.log('📊 SUMMARY - Total tool calls:', allToolCalls.length);
-    console.log('📊 SUMMARY - Total tool results:', allToolResults.length);
-    
-    console.log('📤 Returning final response with tool execution results...');
+    console.log('✅ Returning response:', text);
     return new Response(text, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
