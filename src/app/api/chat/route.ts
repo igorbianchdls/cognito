@@ -1,6 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { streamText, tool } from 'ai';
 import { z } from 'zod';
+import { bigQueryService } from '@/services/bigquery';
 
 export async function POST(req: Request) {
   console.log('=== CHAT API DEBUG ===');
@@ -115,30 +116,25 @@ export async function POST(req: Request) {
           execute: async () => {
             console.log('📊 BigQuery datasets tool executed');
             try {
-              const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/bigquery?action=datasets`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
-              });
-              const result = await response.json();
-              
-              if (result.success && result.data) {
-                console.log('✅ Datasets retrieved:', result.data.length);
-                return {
-                  success: true,
-                  datasets: result.data
-                };
-              } else {
-                console.error('❌ Failed to get datasets:', result.error);
-                return {
-                  success: false,
-                  error: result.error || 'Failed to retrieve datasets'
-                };
+              // Initialize BigQuery service if not already done
+              if (!bigQueryService['client']) {
+                console.log('⚡ Initializing BigQuery service...');
+                await bigQueryService.initialize();
               }
+              
+              console.log('🔍 Attempting to list datasets...');
+              const datasets = await bigQueryService.listDatasets();
+              console.log('✅ Datasets retrieved:', datasets.length);
+              
+              return {
+                success: true,
+                datasets
+              };
             } catch (error) {
               console.error('❌ Error fetching datasets:', error);
               return {
                 success: false,
-                error: error instanceof Error ? error.message : 'Network error'
+                error: error instanceof Error ? error.message : 'Failed to retrieve datasets'
               };
             }
           },
@@ -151,32 +147,26 @@ export async function POST(req: Request) {
           execute: async ({ datasetId }) => {
             console.log('📋 BigQuery tables tool executed for dataset:', datasetId);
             try {
-              const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/bigquery?action=tables&dataset=${encodeURIComponent(datasetId)}`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' }
-              });
-              const result = await response.json();
-              
-              if (result.success && result.data) {
-                console.log('✅ Tables retrieved:', result.data.length, 'for dataset:', datasetId);
-                return {
-                  success: true,
-                  tables: result.data,
-                  datasetId
-                };
-              } else {
-                console.error('❌ Failed to get tables:', result.error);
-                return {
-                  success: false,
-                  error: result.error || 'Failed to retrieve tables',
-                  datasetId
-                };
+              // Initialize BigQuery service if not already done
+              if (!bigQueryService['client']) {
+                console.log('⚡ Initializing BigQuery service...');
+                await bigQueryService.initialize();
               }
+              
+              console.log('🔍 Attempting to list tables for dataset:', datasetId);
+              const tables = await bigQueryService.listTables(datasetId);
+              console.log('✅ Tables retrieved:', tables.length, 'for dataset:', datasetId);
+              
+              return {
+                success: true,
+                tables,
+                datasetId
+              };
             } catch (error) {
               console.error('❌ Error fetching tables:', error);
               return {
                 success: false,
-                error: error instanceof Error ? error.message : 'Network error',
+                error: error instanceof Error ? error.message : 'Failed to retrieve tables',
                 datasetId
               };
             }
