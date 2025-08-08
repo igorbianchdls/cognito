@@ -170,7 +170,7 @@ export async function POST(req: Request) {
     console.log('🎯 Available tools:', Object.keys(tools));
     console.log('💬 User messages count:', messages.length);
     
-    const result = await generateText({
+    const { text, steps } = await generateText({
       model: anthropic('claude-3-5-sonnet-20241022'),
       messages: messages,
       system: systemMessage + '\n\nVocê tem acesso a ferramentas para consultar dados do BigQuery:\n- list_datasets: Lista todos os datasets disponíveis\n- list_tables: Lista tabelas do dataset biquery_data\n\nUse essas ferramentas quando o usuário perguntar sobre datasets ou tabelas.',
@@ -180,18 +180,31 @@ export async function POST(req: Request) {
     });
 
     console.log('✅ AI call successful');
-    console.log('📝 Result text length:', result.text.length);
-    console.log('🛠️ Tool calls made:', result.toolCalls?.length || 0);
+    console.log('📝 Final text length:', text.length);
+    console.log('📋 Steps executed:', steps.length);
     
-    if (result.toolCalls && result.toolCalls.length > 0) {
-      console.log('🔧 Tool calls details:', result.toolCalls.map(tc => ({
+    // Log all tool calls across steps
+    const allToolCalls = steps.flatMap(step => step.toolCalls || []);
+    console.log('🛠️ Total tool calls made:', allToolCalls.length);
+    
+    if (allToolCalls.length > 0) {
+      console.log('🔧 Tool calls details:', allToolCalls.map(tc => ({
         toolName: tc.toolName,
         toolCallId: tc.toolCallId
       })));
     }
     
-    console.log('📤 Returning response...');
-    return new Response(result.text, {
+    // Log all tool results across steps
+    const allToolResults = steps.flatMap(step => step.toolResults || []);
+    console.log('🎯 Total tool results:', allToolResults.length);
+    
+    if (allToolResults.length > 0) {
+      console.log('📊 Tool results found:', allToolResults.map(tr => tr.toolCallId));
+      console.log('📊 Tool results details:', allToolResults);
+    }
+    
+    console.log('📤 Returning final response with tool execution results...');
+    return new Response(text, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
       },
