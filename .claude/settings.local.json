@@ -18,7 +18,8 @@
       "Bash(cp:*)",
       "WebFetch(domain:docs.univer.ai)",
       "WebFetch(domain:www.ag-grid.com)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(npm run dev:*)"
     ],
     "deny": []
   }

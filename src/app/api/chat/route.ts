@@ -101,7 +101,8 @@ export async function POST(req: Request) {
               console.log('Executing SQL tool call:', toolCall.args);
               
               try {
-                const { sql_query, explanation } = toolCall.args;
+                const args = toolCall.args as { sql_query: string; explanation: string };
+                const { sql_query, explanation } = args;
                 
                 // Execute query via BigQuery API
                 const response = await fetch('http://localhost:3000/api/bigquery', {
@@ -140,7 +141,8 @@ export async function POST(req: Request) {
 
               } catch (error) {
                 console.error('SQL execution error:', error);
-                finalResponse = `Erro ao executar a query: ${error instanceof Error ? error.message : 'Unknown error'}\n\nQuery tentada:\n\`\`\`sql\n${toolCall.args.sql_query}\n\`\`\``;
+                const args = toolCall.args as { sql_query: string; explanation: string };
+                finalResponse = `Erro ao executar a query: ${error instanceof Error ? error.message : 'Unknown error'}\n\nQuery tentada:\n\`\`\`sql\n${args.sql_query}\n\`\`\``;
               }
             }
           }
