@@ -20,7 +20,8 @@
       "WebFetch(domain:www.ag-grid.com)",
       "Bash(find:*)",
       "Bash(npm run dev:*)",
-      "WebFetch(domain:ai-sdk.dev)"
+      "WebFetch(domain:ai-sdk.dev)",
+      "Bash(timeout 30 npm run build)"
     ],
     "deny": []
   }

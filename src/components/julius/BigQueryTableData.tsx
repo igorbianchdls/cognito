@@ -49,8 +49,16 @@ export default function BigQueryTableData({
   });
   
   // Log sample dos dados se existirem
-  if (data && data.data && Array.isArray(data.data) && data.data.length > 0) {
-    console.log('🎨 Sample data (first row):', data.data[0]);
+  if (data && data.data) {
+    console.log('🎨 data.data type:', typeof data.data);
+    console.log('🎨 data.data isArray:', Array.isArray(data.data));
+    console.log('🎨 data.data keys:', Object.keys(data.data).slice(0, 5));
+    
+    if (Array.isArray(data.data) && data.data.length > 0) {
+      console.log('🎨 Sample data (first row):', data.data[0]);
+    } else if (typeof data.data === 'object') {
+      console.log('🎨 Sample data (first entry):', Object.entries(data.data)[0]);
+    }
     console.log('🎨 Schema info:', data.schema?.slice(0, 3));
   }
   if (error || !success) {
@@ -73,7 +81,13 @@ export default function BigQueryTableData({
     );
   }
 
-  if (!data || !data.data || data.data.length === 0) {
+  // Verificar se temos dados (pode ser array ou objeto)
+  const hasValidData = data && data.data && (
+    (Array.isArray(data.data) && data.data.length > 0) ||
+    (typeof data.data === 'object' && Object.keys(data.data).length > 0)
+  );
+
+  if (!hasValidData) {
     return (
       <div className="my-4 p-4 border-2 border-gray-200 bg-gray-50 rounded-lg">
         <div className="flex items-center gap-2 mb-2">
@@ -93,12 +107,28 @@ export default function BigQueryTableData({
     );
   }
 
-  // Extract values from data structure
-  const actualData = data.data;
+  // Extract values from data structure and normalize to array
+  let actualData: Record<string, unknown>[] = [];
+  
+  if (Array.isArray(data.data)) {
+    actualData = data.data;
+    console.log('🎨 Using data.data as array:', actualData.length, 'rows');
+  } else if (typeof data.data === 'object' && data.data !== null) {
+    // Convert object to array (assuming it's keyed by index or similar)
+    actualData = Object.values(data.data) as Record<string, unknown>[];
+    console.log('🎨 Converted object to array:', actualData.length, 'rows');
+  }
+  
   const totalRows = data.totalRows;
   const schema = data.schema;
   const executionTime = toolExecutionTime || data.executionTime;
   const bytesProcessed = data.bytesProcessed;
+  
+  console.log('🎨 Final actualData:', {
+    isArray: Array.isArray(actualData),
+    length: actualData.length,
+    firstRowKeys: actualData[0] ? Object.keys(actualData[0]).slice(0, 5) : []
+  });
 
   // Get column names from first row or schema
   const columns = schema?.map(s => s.name) || Object.keys(actualData[0] || {});
