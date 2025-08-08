@@ -1,9 +1,10 @@
 import { Daytona } from '@daytonaio/sdk';
 
 interface DaytonaRequest {
-  action: 'create' | 'create-python' | 'execute' | 'destroy';
+  action: 'create' | 'create-python' | 'execute' | 'destroy' | 'read-file';
   command?: string;
   sandboxId?: string;
+  filePath?: string;
 }
 
 interface SandboxData {
@@ -45,7 +46,7 @@ export async function POST(req: Request): Promise<Response> {
   console.log('🏗️ [DAYTONA API] Route called');
   
   try {
-    const { action, command, sandboxId }: DaytonaRequest = await req.json();
+    const { action, command, sandboxId, filePath }: DaytonaRequest = await req.json();
     console.log('📝 [DAYTONA API] Action:', action, 'Command:', command, 'SandboxId:', sandboxId);
 
     // Check for required environment variables
@@ -224,6 +225,62 @@ export async function POST(req: Request): Promise<Response> {
           response = {
             success: false,
             error: error instanceof Error ? error.message : 'Failed to destroy sandbox'
+          };
+        }
+        break;
+
+      case 'read-file':
+        if (!filePath) {
+          response = {
+            success: false,
+            error: 'File path is required for read-file action'
+          };
+          break;
+        }
+
+        if (!sandboxId) {
+          response = {
+            success: false,
+            error: 'Sandbox ID is required for read-file action'
+          };
+          break;
+        }
+
+        console.log('📖 [DAYTONA API] Reading file:', filePath);
+        try {
+          // Get existing sandbox from our store
+          const sandbox = activeSandboxes.get(sandboxId);
+          
+          if (!sandbox) {
+            response = {
+              success: false,
+              error: 'Sandbox not found. Please create a new sandbox first.'
+            };
+            break;
+          }
+          
+          // Read file using cat command and encode to base64
+          if (!sandbox.process?.executeCommand) {
+            response = {
+              success: false,
+              error: 'Sandbox does not support command execution'
+            };
+            break;
+          }
+          
+          const result = await sandbox.process.executeCommand(`base64 ${filePath}`);
+          
+          console.log('✅ [DAYTONA API] File read successfully');
+          response = {
+            success: true,
+            output: result.output || result.result || '',
+            sandboxId
+          };
+        } catch (error) {
+          console.error('❌ [DAYTONA API] Failed to read file:', error);
+          response = {
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to read file'
           };
         }
         break;

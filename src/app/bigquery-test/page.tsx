@@ -397,7 +397,7 @@ export default function BigQueryTestPage() {
     },
     'visualization': {
       name: '📈 Quick Visualization',
-      code: `# Create basic plots with base64 output for web display\nimport io\nimport base64\n\nplt.figure(figsize=(12, 4))\n\n# Histogram\nplt.subplot(1, 2, 1)\ndf.select_dtypes(include=[np.number]).hist(bins=20)\nplt.title('Numeric Columns Distribution')\n\n# Correlation heatmap\nplt.subplot(1, 2, 2)\nsns.heatmap(df.corr(), annot=True, cmap='coolwarm')\nplt.title('Correlation Matrix')\n\nplt.tight_layout()\n\n# Save plot as base64 for web display\nbuffer = io.BytesIO()\nplt.savefig(buffer, format='png', dpi=100, bbox_inches='tight')\nbuffer.seek(0)\nimage_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')\nplt.close()\n\nprint(f"📊 Chart generated successfully!")\nprint(f"IMAGE_BASE64:{image_base64}")`
+      code: `# Create basic plots with file output (much simpler!)\nimport matplotlib\nmatplotlib.use('Agg')  # Non-interactive backend for sandbox\nimport matplotlib.pyplot as plt\nimport seaborn as sns\n\nplt.figure(figsize=(12, 4))\n\n# Histogram\nplt.subplot(1, 2, 1)\ndf.select_dtypes(include=[np.number]).hist(bins=20)\nplt.title('Numeric Columns Distribution')\n\n# Correlation heatmap\nplt.subplot(1, 2, 2)\nsns.heatmap(df.corr(), annot=True, cmap='coolwarm')\nplt.title('Correlation Matrix')\n\nplt.tight_layout()\n\n# Save chart to file (no base64 needed!)\nchart_file = f'/tmp/visualization_{int(time.time())}.png'\nplt.savefig(chart_file, dpi=100, bbox_inches='tight')\nplt.close()\n\nprint("📊 Chart generated successfully!")\nprint(f"CHART_SAVED:{chart_file}")`
     },
     'filtering': {
       name: '🔍 Filter & Group',
@@ -405,7 +405,7 @@ export default function BigQueryTestPage() {
     },
     'simple-chart': {
       name: '📊 Simple Chart',
-      code: `# Create a simple chart with base64 output\nimport io\nimport base64\n\n# Example data (replace with your own)\ndata = {'A': [1, 2, 3, 4], 'B': [2, 3, 4, 5]}\ndf_temp = pd.DataFrame(data)\n\nplt.figure(figsize=(8, 5))\nplt.plot(df_temp['A'], label='Series A', marker='o')\nplt.plot(df_temp['B'], label='Series B', marker='s')\nplt.title('Simple Line Chart')\nplt.xlabel('Index')\nplt.ylabel('Values')\nplt.legend()\nplt.grid(True, alpha=0.3)\n\n# Save as base64 for web display\nbuffer = io.BytesIO()\nplt.savefig(buffer, format='png', dpi=100, bbox_inches='tight')\nbuffer.seek(0)\nimage_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')\nplt.close()\n\nprint("📊 Simple chart created!")\nprint(f"IMAGE_BASE64:{image_base64}")`
+      code: `# Create a simple chart with file output\nimport matplotlib\nmatplotlib.use('Agg')  # Non-interactive backend\nimport matplotlib.pyplot as plt\nimport time\n\n# Example data (replace with your own)\ndata = {'A': [1, 2, 3, 4], 'B': [2, 3, 4, 5]}\ndf_temp = pd.DataFrame(data)\n\nplt.figure(figsize=(8, 5))\nplt.plot(df_temp['A'], label='Series A', marker='o')\nplt.plot(df_temp['B'], label='Series B', marker='s')\nplt.title('Simple Line Chart')\nplt.xlabel('Index')\nplt.ylabel('Values')\nplt.legend()\nplt.grid(True, alpha=0.3)\n\n# Save to file (much simpler than base64!)\nchart_file = f'/tmp/simple_chart_{int(time.time())}.png'\nplt.savefig(chart_file, dpi=100, bbox_inches='tight')\nplt.close()\n\nprint("📊 Simple chart created!")\nprint(f"CHART_SAVED:{chart_file}")`
     },
     'plotly-interactive': {
       name: '🎯 Interactive Plotly',
@@ -417,7 +417,7 @@ export default function BigQueryTestPage() {
     },
     'vendas-custos-test': {
       name: '🧪 Test: Vendas vs Custos',
-      code: `# Test case: Your exact sales vs costs example with base64 output\nimport pandas as pd\nimport numpy as np\nimport matplotlib.pyplot as plt\nimport seaborn as sns\nimport io\nimport base64\n\n# Criar um DataFrame com dados fictícios (seu exemplo)\nnp.random.seed(42)  # para reproduzibilidade\ndados = pd.DataFrame({\n    \"Mês\": [\"Jan\", \"Fev\", \"Mar\", \"Abr\", \"Mai\", \"Jun\"],\n    \"Vendas\": np.random.randint(100, 500, size=6),\n    \"Custos\": np.random.randint(50, 300, size=6)\n})\n\nprint(\"📊 Dados:\")\nprint(dados)\nprint()  # linha em branco\n\n# Criar gráfico\nplt.figure(figsize=(10, 6))\nwidth = 0.35\nx = np.arange(len(dados[\"Mês\"]))\n\nplt.bar(x - width/2, dados[\"Vendas\"], width, label=\"Vendas\", color=\"skyblue\")\nplt.bar(x + width/2, dados[\"Custos\"], width, label=\"Custos\", color=\"salmon\")\n\nplt.title(\"Vendas vs Custos por Mês\", fontsize=14)\nplt.ylabel(\"Valor (R$)\")\nplt.xlabel(\"Mês\")\nplt.xticks(x, dados[\"Mês\"])\nplt.legend()\nplt.tight_layout()\n\n# Save plot as base64 instead of plt.show()\nbuffer = io.BytesIO()\nplt.savefig(buffer, format=\"png\", dpi=150, bbox_inches=\"tight\")\nbuffer.seek(0)\nimage_base64 = base64.b64encode(buffer.getvalue()).decode(\"utf-8\")\nplt.close()\n\nprint(\"🎯 Gráfico criado! Agora você pode ver a visualização:\")\nprint(f\"IMAGE_BASE64:{image_base64}\")`
+      code: `# Test case: Your exact sales vs costs example with file output (SUPER SIMPLE!)\nimport matplotlib\nmatplotlib.use('Agg')  # Non-interactive backend for sandbox\nimport matplotlib.pyplot as plt\nimport pandas as pd\nimport numpy as np\nimport time\n\n# Criar um DataFrame com dados fictícios (seu exemplo)\nnp.random.seed(42)  # para reproduzibilidade\ndados = pd.DataFrame({\n    \"Mês\": [\"Jan\", \"Fev\", \"Mar\", \"Abr\", \"Mai\", \"Jun\"],\n    \"Vendas\": np.random.randint(100, 500, size=6),\n    \"Custos\": np.random.randint(50, 300, size=6)\n})\n\nprint(\"📊 Dados:\")\nprint(dados)\nprint()  # linha em branco\n\n# Criar gráfico\nplt.figure(figsize=(10, 6))\nwidth = 0.35\nx = np.arange(len(dados[\"Mês\"]))\n\nplt.bar(x - width/2, dados[\"Vendas\"], width, label=\"Vendas\", color=\"skyblue\")\nplt.bar(x + width/2, dados[\"Custos\"], width, label=\"Custos\", color=\"salmon\")\n\nplt.title(\"Vendas vs Custos por Mês\", fontsize=14)\nplt.ylabel(\"Valor (R$)\")\nplt.xlabel(\"Mês\")\nplt.xticks(x, dados[\"Mês\"])\nplt.legend()\nplt.tight_layout()\n\n# Save to file instead of plt.show() - NO BASE64 NEEDED!\nchart_file = f'/tmp/vendas_custos_{int(time.time())}.png'\nplt.savefig(chart_file, format=\"png\", dpi=150, bbox_inches=\"tight\")\nplt.close()\n\nprint(\"🎯 Gráfico criado! Agora você pode ver a visualização:\")\nprint(f\"CHART_SAVED:{chart_file}\")`
     }
   };
 
@@ -433,8 +433,92 @@ export default function BigQueryTestPage() {
     setCells(prev => [...prev, newCell]);
   };
 
-  // Render cell output with image and HTML support
-  const renderCellOutput = (output: string) => {
+  // Chart File Renderer Component
+  const ChartFileRenderer = ({ filePath, textOutput }: { filePath: string; textOutput: string }) => {
+    const [imageBase64, setImageBase64] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    
+    useEffect(() => {
+      const loadChart = async () => {
+        if (!sandbox?.id) {
+          setError('No sandbox available');
+          setLoading(false);
+          return;
+        }
+        
+        try {
+          const response = await fetch('/api/daytona', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'read-file',
+              filePath,
+              sandboxId: sandbox.id
+            })
+          });
+          
+          const result = await response.json();
+          if (result.success && result.output) {
+            setImageBase64(result.output.trim());
+          } else {
+            setError(result.error || 'Failed to load chart file');
+          }
+        } catch (err) {
+          console.error('Failed to load chart file:', err);
+          setError('Network error loading chart');
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      loadChart();
+    }, [filePath]); // sandbox?.id intentionally omitted as it's checked inside the function
+    
+    return (
+      <div>
+        {textOutput && (
+          <div className="mb-3">
+            <pre className="whitespace-pre-wrap">{textOutput}</pre>
+          </div>
+        )}
+        <div className="bg-white p-2 rounded border">
+          {loading && (
+            <div className="flex items-center justify-center h-32">
+              <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <span className="ml-2 text-sm text-gray-600">Loading chart...</span>
+            </div>
+          )}
+          {error && (
+            <div className="text-red-600 text-sm p-4 text-center">
+              ❌ Error: {error}
+            </div>
+          )}
+          {imageBase64 && (
+            <img 
+              src={`data:image/png;base64,${imageBase64}`}
+              alt="Generated chart"
+              className="max-w-full h-auto rounded"
+              style={{ maxHeight: '400px' }}
+            />
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Render cell output with image, HTML and file support
+  const renderCellOutput = (output: string, cellId?: string) => {
+    // Check if output contains chart file path
+    const chartMatch = output.match(/CHART_SAVED:([^\s]+)/);
+    
+    if (chartMatch) {
+      const filePath = chartMatch[1];
+      const textOutput = output.replace(/CHART_SAVED:[^\s]+/, '').trim();
+      
+      return <ChartFileRenderer filePath={filePath} textOutput={textOutput} />;
+    }
+    
     // Check if output contains base64 image
     const imageMatch = output.match(/IMAGE_BASE64:([A-Za-z0-9+/=]+)/);
     
@@ -1212,7 +1296,7 @@ export default function BigQueryTestPage() {
                       {cell.output && (
                         <div className="bg-gray-900 text-green-400 p-3 font-mono text-sm">
                           <div className="text-xs text-gray-500 mb-1">Output:</div>
-                          {renderCellOutput(cell.output)}
+                          {renderCellOutput(cell.output, cell.id)}
                         </div>
                       )}
                     </div>
