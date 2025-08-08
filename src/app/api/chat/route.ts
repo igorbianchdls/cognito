@@ -72,17 +72,35 @@ export async function POST(req: Request) {
     const lastMessage = messages[messages.length - 1];
     const userPrompt = lastMessage?.content || '';
     
-    const { text, toolCalls, toolResults } = await generateText({
+    console.log('🔍 ANTES generateText:');
+    console.log('- userPrompt:', userPrompt);
+    console.log('- tools definidas:', Object.keys({ test: testTool }));
+    console.log('- testTool:', testTool);
+    
+    const result = await generateText({
       model: anthropic('claude-3-5-sonnet-20241022'),
       tools: {
         test: testTool
       },
       prompt: `${userPrompt}. Se o usuário mencionar "teste tool", use a ferramenta test.`,
+      toolChoice: 'required',
     });
 
-    console.log('✅ Tool calls:', toolCalls?.length || 0);
-    console.log('✅ Tool results:', toolResults?.length || 0);
-    console.log('✅ Returning response:', text);
+    console.log('🔍 DEPOIS generateText - RESULTADO COMPLETO:');
+    console.log('=====================================');
+    console.log('result:', result);
+    console.log('=====================================');
+    console.log('- text:', result.text);
+    console.log('- toolCalls:', result.toolCalls);
+    console.log('- toolResults:', result.toolResults);
+    console.log('- toolCalls length:', result.toolCalls?.length || 0);
+    console.log('- toolResults length:', result.toolResults?.length || 0);
+    
+    const { text, toolCalls, toolResults } = result;
+    
+    console.log('✅ Final - Tool calls:', toolCalls?.length || 0);
+    console.log('✅ Final - Tool results:', toolResults?.length || 0);
+    console.log('✅ Final - Returning response:', text);
     
     return new Response(text, {
       headers: {
