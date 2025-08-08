@@ -252,6 +252,14 @@ if __name__ == "__main__":
     
     try {
       console.log('📤 [FRONTEND] Sending POST request to /api/python-daytona');
+      
+      // Create AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        console.warn('⏰ [FRONTEND] Request timeout - aborting after 30s');
+        controller.abort();
+      }, 30000); // 30 second timeout
+      
       const response = await fetch('/api/python-daytona', {
         method: 'POST',
         headers: {
@@ -259,8 +267,13 @@ if __name__ == "__main__":
         },
         body: JSON.stringify({
           code: pythonCode
-        })
+        }),
+        signal: controller.signal
       });
+      
+      // Clear timeout if request completes
+      clearTimeout(timeoutId);
+      console.log('✅ [FRONTEND] Request completed within timeout');
 
       console.log('📥 [FRONTEND] Response received:');
       console.log('   Status:', response.status);
@@ -292,12 +305,27 @@ if __name__ == "__main__":
       console.error('💥 [FRONTEND] Failed to execute Python code:', error);
       console.error('🔍 [FRONTEND] Error details:', {
         message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : 'No stack trace'
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        name: error instanceof Error ? error.name : 'Unknown'
       });
+      
+      // Handle specific error types
+      let errorMessage = 'Request failed';
+      if (error instanceof Error) {
+        if (error.name === 'AbortError') {
+          errorMessage = 'Request timeout (30s) - Daytona may be slow or unavailable';
+          console.warn('🕐 [FRONTEND] Request was aborted due to timeout');
+        } else if (error.message.includes('Failed to fetch')) {
+          errorMessage = 'Network error - Cannot reach Daytona API';
+          console.warn('🌐 [FRONTEND] Network connectivity issue');
+        } else {
+          errorMessage = error.message;
+        }
+      }
       
       setPythonExecutionResult({
         success: false,
-        error: `Request failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        error: errorMessage
       });
     } finally {
       console.log('🏁 [FRONTEND] Python execution completed');

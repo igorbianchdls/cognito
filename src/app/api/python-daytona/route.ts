@@ -8,7 +8,9 @@ interface PythonExecutionResult {
 }
 
 export async function POST(req: Request): Promise<Response> {
+  console.log('🚀 [DAYTONA] ===== API ROUTE CALLED =====');
   console.log('🚀 [DAYTONA] Starting Python execution request');
+  console.log('🚀 [DAYTONA] Current time:', new Date().toISOString());
   const startTime = Date.now();
 
   try {
@@ -29,6 +31,11 @@ export async function POST(req: Request): Promise<Response> {
 
     // Check for Daytona API key
     console.log('🔑 [DAYTONA] Checking for API key...');
+    console.log('🌍 [DAYTONA] Environment variables check:', {
+      NODE_ENV: process.env.NODE_ENV,
+      hasApiKey: !!process.env.DAYTONA_API_KEY,
+      envKeysCount: Object.keys(process.env).length
+    });
     const apiKey = process.env.DAYTONA_API_KEY;
     
     if (!apiKey) {
@@ -44,15 +51,19 @@ export async function POST(req: Request): Promise<Response> {
 
     // Initialize Daytona client
     console.log('🔧 [DAYTONA] Initializing Daytona client...');
+    console.log('🔧 [DAYTONA] Client config:', { hasApiKey: !!apiKey, sdkVersion: '@daytonaio/sdk' });
     let daytona: Daytona;
     
     try {
+      console.log('🔧 [DAYTONA] Creating new Daytona instance...');
       daytona = new Daytona({
         apiKey: apiKey
       });
       console.log('✅ [DAYTONA] Client initialized successfully');
+      console.log('✅ [DAYTONA] Client type:', typeof daytona);
     } catch (initError) {
       console.error('❌ [DAYTONA] Failed to initialize client:', initError);
+      console.error('❌ [DAYTONA] Init error stack:', initError instanceof Error ? initError.stack : 'No stack');
       return Response.json({
         success: false,
         error: `Failed to initialize Daytona client: ${initError instanceof Error ? initError.message : 'Unknown error'}`
@@ -61,16 +72,28 @@ export async function POST(req: Request): Promise<Response> {
 
     // Create sandbox
     console.log('🏗️ [DAYTONA] Creating Python sandbox...');
+    console.log('🏗️ [DAYTONA] Sandbox config:', { image: 'python:3.11-slim' });
     let sandbox;
     
     try {
-      sandbox = await daytona.create({
+      console.log('🏗️ [DAYTONA] Calling daytona.create()...');
+      const createPromise = daytona.create({
         image: 'python:3.11-slim'
       });
+      
+      console.log('⏳ [DAYTONA] Waiting for sandbox creation...');
+      sandbox = await createPromise;
+      
       console.log('✅ [DAYTONA] Sandbox created successfully');
-      console.log('📦 [DAYTONA] Sandbox ID:', sandbox.id);
+      console.log('📦 [DAYTONA] Sandbox details:', {
+        id: sandbox?.id,
+        type: typeof sandbox,
+        hasProcess: !!sandbox?.process
+      });
     } catch (createError) {
       console.error('❌ [DAYTONA] Failed to create sandbox:', createError);
+      console.error('❌ [DAYTONA] Create error type:', typeof createError);
+      console.error('❌ [DAYTONA] Create error stack:', createError instanceof Error ? createError.stack : 'No stack');
       return Response.json({
         success: false,
         error: `Failed to create sandbox: ${createError instanceof Error ? createError.message : 'Unknown error'}`
