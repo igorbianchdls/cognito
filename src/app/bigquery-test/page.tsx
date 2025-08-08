@@ -926,10 +926,10 @@ export default function BigQueryTestPage() {
             <div className="bg-indigo-100 border border-indigo-200 rounded-lg p-4">
               <h4 className="font-medium text-indigo-900 mb-2">💡 How to use:</h4>
               <div className="text-sm text-indigo-800 space-y-1">
-                <p>1. Click <strong>"Create Sandbox"</strong> to create a new TypeScript environment</p>
+                <p>1. Click <strong>&quot;Create Sandbox&quot;</strong> to create a new TypeScript environment</p>
                 <p>2. Use the command input to execute terminal commands</p>
                 <p>3. Try quick commands like <code>node --version</code> or <code>ls -la</code></p>
-                <p>4. Click <strong>"Destroy Sandbox"</strong> when done to clean up resources</p>
+                <p>4. Click <strong>&quot;Destroy Sandbox&quot;</strong> when done to clean up resources</p>
                 <p><strong>⚠️ Beta:</strong> Requires DAYTONA_API_KEY environment variable</p>
               </div>
             </div>
