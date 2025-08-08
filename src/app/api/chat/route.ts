@@ -198,7 +198,7 @@ export async function POST(req: Request) {
     console.log('🔍 Analyzing each step:');
     steps.forEach((step, index) => {
       console.log(`📋 STEP ${index + 1}:`, {
-        text: step.text?.substring(0, 100) + '...',
+        text: step.text ? step.text.substring(0, 100) + '...' : 'no text',
         textLength: step.text?.length || 0,
         toolCalls: step.toolCalls?.length || 0,
         toolResults: step.toolResults?.length || 0
