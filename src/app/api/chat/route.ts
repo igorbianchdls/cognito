@@ -52,12 +52,84 @@ export async function POST(req: Request) {
       systemMessage += 'Analise estes arquivos e responda às perguntas do usuário baseado no conteúdo dos documentos. Você pode fazer análises, extrair insights, responder perguntas específicas sobre os dados, ou qualquer outra operação solicitada.';
     }
 
+    // Define tools for SQL queries
+    const tools = {
+      execute_simple_sql: {
+        description: 'Executa uma query SQL simples no BigQuery para responder perguntas sobre dados',
+        parameters: {
+          type: 'object' as const,
+          properties: {
+            sql_query: {
+              type: 'string' as const,
+              description: 'A query SQL a ser executada'
+            },
+            explanation: {
+              type: 'string' as const,
+              description: 'Explicação simples do que a query faz'
+            }
+          },
+          required: ['sql_query', 'explanation']
+        }
+      }
+    };
+
     console.log('Calling Anthropic API...');
     const result = streamText({
       model: anthropic('claude-3-5-sonnet-20241022'),
       messages: messages,
-      system: systemMessage,
+      system: systemMessage + '\n\nVocê tem acesso a uma ferramenta para executar queries SQL no BigQuery. Use a ferramenta execute_simple_sql quando o usuário fizer perguntas sobre dados que requeiram consultas SQL. As tabelas disponíveis estão no dataset "biquery_data", incluindo "car_prices" e outras.',
       temperature: 0.7,
+      tools: tools,
+      toolChoice: 'auto',
+      async onToolCall({ toolCall }) {
+        if (toolCall.toolName === 'execute_simple_sql') {
+          console.log('Executing SQL tool call:', toolCall.args);
+          
+          try {
+            const { sql_query, explanation } = toolCall.args;
+            
+            // Execute query via BigQuery API
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/bigquery`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                action: 'execute',
+                query: sql_query,
+                location: 'us-central1'
+              })
+            });
+
+            if (!response.ok) {
+              throw new Error(`BigQuery API error: ${response.status}`);
+            }
+
+            const queryResult = await response.json();
+            
+            if (!queryResult.success) {
+              throw new Error(queryResult.error || 'Query execution failed');
+            }
+
+            return {
+              success: true,
+              data: queryResult.data.data,
+              rowCount: queryResult.data.totalRows,
+              executionTime: queryResult.data.executionTime,
+              query: sql_query,
+              explanation: explanation
+            };
+
+          } catch (error) {
+            console.error('SQL execution error:', error);
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown error',
+              query: toolCall.args.sql_query
+            };
+          }
+        }
+      }
     });
 
     console.log('API call successful, returning stream...');
