@@ -245,6 +245,168 @@ export async function POST(req: Request) {
               };
             }
           },
+        }),
+        analyzeBigQueryData: tool({
+          description: 'Execute SQL queries on BigQuery and return statistical analysis and insights for AI processing',
+          inputSchema: z.object({
+            query: z.string().describe('SQL query to execute and analyze (e.g., "SELECT * FROM `creatto-463117.biquery_data.car_prices` LIMIT 20")'),
+            analysisType: z.enum(['summary', 'statistical', 'trends']).default('summary').describe('Type of analysis to perform')
+          }),
+          execute: async ({ query, analysisType = 'summary' }) => {
+            console.log('🔍 BigQuery analysis tool executed with query:', query, 'type:', analysisType);
+            try {
+              // Initialize BigQuery service if not already done
+              if (!bigQueryService['client']) {
+                console.log('⚡ Initializing BigQuery service...');
+                await bigQueryService.initialize();
+              }
+              
+              // Execute query (reuse logic from getBigQueryTableData)
+              let finalQuery = query.trim();
+              if (!finalQuery.toLowerCase().includes('limit')) {
+                finalQuery += ' LIMIT 100'; // Higher limit for analysis
+              }
+              
+              console.log('🚀 Executing query for analysis:', finalQuery);
+              const startTime = Date.now();
+              
+              const result = await bigQueryService.executeQuery({
+                query: finalQuery,
+                location: process.env.BIGQUERY_LOCATION
+              });
+              
+              const executionTime = Date.now() - startTime;
+              console.log('✅ Analysis query executed successfully:', {
+                rows: result.data.length,
+                executionTime: `${executionTime}ms`
+              });
+
+              // Process data for analysis
+              const data = result.data;
+              if (!data || data.length === 0) {
+                return {
+                  success: true,
+                  analysis: 'No data returned from query - unable to perform analysis.',
+                  query: finalQuery,
+                  rowCount: 0
+                };
+              }
+
+              // Get column information
+              const columns = Object.keys(data[0]);
+              const rowCount = data.length;
+
+              // Basic statistics
+              let analysis = '';
+              
+              if (analysisType === 'summary' || analysisType === 'statistical') {
+                analysis += `📊 DATASET SUMMARY:\n`;
+                analysis += `• Total rows analyzed: ${rowCount.toLocaleString('pt-BR')}\n`;
+                analysis += `• Columns (${columns.length}): ${columns.join(', ')}\n\n`;
+                
+                // Sample data
+                analysis += `📋 SAMPLE DATA (first 3 rows):\n`;
+                data.slice(0, 3).forEach((row, i) => {
+                  analysis += `Row ${i + 1}: ${JSON.stringify(row)}\n`;
+                });
+                analysis += '\n';
+                
+                // Column analysis
+                analysis += `🔍 COLUMN ANALYSIS:\n`;
+                columns.forEach(col => {
+                  const values = data.map(row => row[col]).filter(v => v != null);
+                  const uniqueValues = [...new Set(values)];
+                  const nullCount = data.length - values.length;
+                  
+                  analysis += `• ${col}:\n`;
+                  analysis += `  - Non-null values: ${values.length}\n`;
+                  if (nullCount > 0) analysis += `  - Null values: ${nullCount}\n`;
+                  analysis += `  - Unique values: ${uniqueValues.length}\n`;
+                  
+                  // Type-specific analysis
+                  if (values.length > 0) {
+                    const firstValue = values[0];
+                    if (typeof firstValue === 'number') {
+                      const min = Math.min(...values);
+                      const max = Math.max(...values);
+                      const avg = values.reduce((a, b) => a + b, 0) / values.length;
+                      analysis += `  - Range: ${min.toLocaleString('pt-BR')} to ${max.toLocaleString('pt-BR')}\n`;
+                      analysis += `  - Average: ${avg.toFixed(2)}\n`;
+                    } else if (typeof firstValue === 'string') {
+                      const topValues = [...new Set(values)]
+                        .map(val => ({ value: val, count: values.filter(v => v === val).length }))
+                        .sort((a, b) => b.count - a.count)
+                        .slice(0, 3);
+                      analysis += `  - Top values: ${topValues.map(v => `${v.value}(${v.count})`).join(', ')}\n`;
+                    }
+                  }
+                  analysis += '\n';
+                });
+              }
+              
+              if (analysisType === 'trends' || analysisType === 'statistical') {
+                analysis += `📈 INSIGHTS & PATTERNS:\n`;
+                
+                // Look for numeric columns for trend analysis
+                const numericCols = columns.filter(col => {
+                  const values = data.map(row => row[col]).filter(v => v != null && typeof v === 'number');
+                  return values.length > 0;
+                });
+                
+                if (numericCols.length > 0) {
+                  numericCols.forEach(col => {
+                    const values = data.map(row => row[col]).filter(v => v != null && typeof v === 'number');
+                    if (values.length > 1) {
+                      const sorted = [...values].sort((a, b) => a - b);
+                      const median = sorted[Math.floor(sorted.length / 2)];
+                      const q1 = sorted[Math.floor(sorted.length * 0.25)];
+                      const q3 = sorted[Math.floor(sorted.length * 0.75)];
+                      
+                      analysis += `• ${col}: Median=${median}, Q1=${q1}, Q3=${q3}\n`;
+                    }
+                  });
+                } else {
+                  analysis += `• No numeric columns found for trend analysis\n`;
+                }
+                
+                // Data quality insights
+                const totalCells = rowCount * columns.length;
+                const nullCells = columns.reduce((sum, col) => {
+                  const nullCount = data.filter(row => row[col] == null).length;
+                  return sum + nullCount;
+                }, 0);
+                const completeness = ((totalCells - nullCells) / totalCells * 100).toFixed(1);
+                
+                analysis += `• Data completeness: ${completeness}% (${nullCells} null values out of ${totalCells} total cells)\n`;
+              }
+
+              const analysisResult = {
+                success: true,
+                analysis,
+                query: finalQuery,
+                rowCount,
+                columnCount: columns.length,
+                executionTime,
+                analysisType
+              };
+
+              console.log('🔍 Analysis completed:', {
+                rowCount,
+                columnCount: columns.length,
+                analysisLength: analysis.length
+              });
+
+              return analysisResult;
+            } catch (error) {
+              console.error('❌ Error in BigQuery analysis:', error);
+              return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to analyze data',
+                query,
+                analysis: 'Analysis failed due to error.'
+              };
+            }
+          },
         })
       },
     });
