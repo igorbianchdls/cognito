@@ -58,6 +58,12 @@ if __name__ == "__main__":
     main()
 `
   );
+  const [pythonExecutionResult, setPythonExecutionResult] = useState<{
+    success: boolean;
+    output?: string;
+    error?: string;
+    executionTime?: number;
+  } | null>(null);
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [selectedTable, setSelectedTable] = useState<string>('');
   const [carPricesResult, setCarPricesResult] = useState<BigQueryTestResult | null>(null);
@@ -228,6 +234,74 @@ if __name__ == "__main__":
       });
     } finally {
       setLoadingState('datasetInfo', false);
+    }
+  };
+
+  const executePythonCode = async () => {
+    console.log('🐍 [FRONTEND] Starting Python code execution...');
+    console.log('📝 [FRONTEND] Code to execute length:', pythonCode.length);
+    console.log('📄 [FRONTEND] Code preview:', pythonCode.substring(0, 100) + '...');
+    
+    if (!pythonCode.trim()) {
+      console.warn('⚠️ [FRONTEND] No code to execute');
+      return;
+    }
+
+    setLoadingState('pythonExecution', true);
+    setPythonExecutionResult(null);
+    
+    try {
+      console.log('📤 [FRONTEND] Sending POST request to /api/python-daytona');
+      const response = await fetch('/api/python-daytona', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          code: pythonCode
+        })
+      });
+
+      console.log('📥 [FRONTEND] Response received:');
+      console.log('   Status:', response.status);
+      console.log('   Status Text:', response.statusText);
+      console.log('   OK:', response.ok);
+      console.log('   Headers:', Object.fromEntries(response.headers.entries()));
+
+      const result = await response.json();
+      console.log('📊 [FRONTEND] Execution result received:', {
+        success: result.success,
+        hasOutput: !!result.output,
+        outputLength: result.output?.length || 0,
+        hasError: !!result.error,
+        errorLength: result.error?.length || 0,
+        executionTime: result.executionTime
+      });
+
+      if (result.output) {
+        console.log('✅ [FRONTEND] Output preview:', result.output.substring(0, 200) + (result.output.length > 200 ? '...' : ''));
+      }
+      
+      if (result.error) {
+        console.log('❌ [FRONTEND] Error preview:', result.error.substring(0, 200) + (result.error.length > 200 ? '...' : ''));
+      }
+
+      setPythonExecutionResult(result);
+      
+    } catch (error) {
+      console.error('💥 [FRONTEND] Failed to execute Python code:', error);
+      console.error('🔍 [FRONTEND] Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace'
+      });
+      
+      setPythonExecutionResult({
+        success: false,
+        error: `Request failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      });
+    } finally {
+      console.log('🏁 [FRONTEND] Python execution completed');
+      setLoadingState('pythonExecution', false);
     }
   };
 
@@ -757,6 +831,14 @@ if __name__ == "__main__":
                   >
                     📋 Copiar
                   </Button>
+                  <Button
+                    onClick={executePythonCode}
+                    disabled={loading.pythonExecution || !pythonCode.trim()}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    {loading.pythonExecution ? '⏳ Executando...' : '▶️ Executar'}
+                  </Button>
                 </div>
               </div>
               
@@ -780,6 +862,55 @@ if __name__ == "__main__":
               </div>
             </div>
 
+            {/* Python Execution Results */}
+            {pythonExecutionResult && (
+              <div className="mt-4">
+                <h4 className="font-medium mb-3">📊 Resultados da Execução</h4>
+                <div className="bg-gray-900 rounded-lg p-4 font-mono text-sm">
+                  {/* Execution Status */}
+                  <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-700">
+                    {pythonExecutionResult.success ? (
+                      <span className="text-green-400">✅ Sucesso</span>
+                    ) : (
+                      <span className="text-red-400">❌ Erro</span>
+                    )}
+                    {pythonExecutionResult.executionTime && (
+                      <span className="text-gray-400 text-xs">
+                        ⏱️ {pythonExecutionResult.executionTime}ms
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Output */}
+                  {pythonExecutionResult.output && (
+                    <div className="mb-3">
+                      <div className="text-green-400 text-xs mb-1">📤 OUTPUT:</div>
+                      <pre className="text-gray-100 whitespace-pre-wrap bg-gray-800 p-3 rounded max-h-60 overflow-y-auto">
+                        {pythonExecutionResult.output}
+                      </pre>
+                    </div>
+                  )}
+
+                  {/* Error */}
+                  {pythonExecutionResult.error && (
+                    <div className="mb-3">
+                      <div className="text-red-400 text-xs mb-1">❌ ERROR:</div>
+                      <pre className="text-red-300 whitespace-pre-wrap bg-red-900/20 p-3 rounded max-h-60 overflow-y-auto">
+                        {pythonExecutionResult.error}
+                      </pre>
+                    </div>
+                  )}
+
+                  {/* No output message */}
+                  {!pythonExecutionResult.output && !pythonExecutionResult.error && pythonExecutionResult.success && (
+                    <div className="text-gray-400 text-center py-4">
+                      Código executado com sucesso, mas sem output.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h4 className="font-medium text-blue-900 mb-2">💡 Dicas para usar BigQuery com Python:</h4>
               <div className="text-sm text-blue-800 space-y-1">
@@ -787,6 +918,7 @@ if __name__ == "__main__":
                 <p>• Queries: <code>df = client.query(&quot;SELECT ...&quot;).to_dataframe()</code></p>
                 <p>• Análise com pandas: <code>df.describe()</code>, <code>df.groupby()</code></p>
                 <p>• Salvar resultados: <code>df.to_csv(&quot;dados.csv&quot;)</code></p>
+                <p>• <strong>Execução via Daytona:</strong> Código roda em sandbox isolado na nuvem</p>
               </div>
             </div>
           </Card>
