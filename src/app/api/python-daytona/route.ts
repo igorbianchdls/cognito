@@ -82,23 +82,15 @@ export async function POST(req: Request): Promise<Response> {
     let executionResult;
     
     try {
-      // Create a temporary Python file with the code
-      const pythonFileName = 'user_code.py';
-      console.log('📝 [DAYTONA] Creating Python file:', pythonFileName);
-      
-      // Write code to file in sandbox
-      await sandbox.filesystem.writeFile(pythonFileName, code);
-      console.log('✅ [DAYTONA] Python file created successfully');
-      
-      // Execute the Python file
-      console.log('🐍 [DAYTONA] Running Python code...');
-      executionResult = await sandbox.process.codeRun('python', [pythonFileName]);
+      // Execute Python code directly
+      console.log('🐍 [DAYTONA] Running Python code directly...');
+      executionResult = await sandbox.process.codeRun(code);
       console.log('✅ [DAYTONA] Python execution completed');
       
       console.log('📊 [DAYTONA] Execution result:', {
         exitCode: executionResult.exitCode,
-        stdoutLength: executionResult.stdout?.length || 0,
-        stderrLength: executionResult.stderr?.length || 0
+        result: executionResult.result ? 'present' : 'none',
+        hasArtifacts: !!executionResult.artifacts
       });
       
     } catch (execError) {
@@ -121,16 +113,14 @@ export async function POST(req: Request): Promise<Response> {
 
     // Process results
     console.log('🔄 [DAYTONA] Processing execution results...');
-    const stdout = executionResult.stdout || '';
-    const stderr = executionResult.stderr || '';
+    const result = executionResult.result || '';
     const exitCode = executionResult.exitCode;
 
     console.log('📤 [DAYTONA] Results processed:', {
       exitCode,
-      hasStdout: stdout.length > 0,
-      hasStderr: stderr.length > 0,
-      stdoutPreview: stdout.substring(0, 100),
-      stderrPreview: stderr.substring(0, 100)
+      hasResult: result.length > 0,
+      resultPreview: result.substring(0, 100),
+      hasArtifacts: !!executionResult.artifacts
     });
 
     // Cleanup sandbox
@@ -149,8 +139,8 @@ export async function POST(req: Request): Promise<Response> {
     // Prepare response
     const response: PythonExecutionResult = {
       success: exitCode === 0,
-      output: stdout,
-      error: exitCode !== 0 ? stderr : undefined,
+      output: result,
+      error: exitCode !== 0 ? 'Code execution failed' : undefined,
       executionTime
     };
 
