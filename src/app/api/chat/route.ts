@@ -114,7 +114,7 @@ export async function POST(req: Request) {
 
     console.log('🚀 Streaming response with generative UI...');
     
-    return result.toDataStreamResponse({
+    return result.toTextStreamResponse({
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
       },

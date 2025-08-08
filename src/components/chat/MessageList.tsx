@@ -1,6 +1,5 @@
 import PerguntaDoUsuario from './PerguntaDoUsuario';
 import RespostaDaIA from './RespostaDaIA';
-import { type ToolInvocation } from 'ai';
 
 interface UploadedFile {
   id: string;
@@ -13,6 +12,14 @@ interface UploadedFile {
   fileType?: 'csv' | 'text' | 'unknown';
   rowCount?: number;
   columnCount?: number;
+}
+
+interface ToolInvocation {
+  toolCallId: string;
+  toolName: string;
+  state: 'loading' | 'result' | 'error';
+  args: Record<string, unknown>;
+  result?: Record<string, unknown>;
 }
 
 interface ChatMessage {

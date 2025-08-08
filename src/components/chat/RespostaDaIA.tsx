@@ -1,10 +1,17 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
-import { type ToolInvocation } from 'ai';
 import WeatherCard from '@/components/julius/WeatherCard';
 import Calculator from '@/components/julius/Calculator';
 import ChartGenerator from '@/components/julius/ChartGenerator';
+
+interface ToolInvocation {
+  toolCallId: string;
+  toolName: string;
+  state: 'loading' | 'result' | 'error';
+  args: Record<string, unknown>;
+  result?: Record<string, unknown>;
+}
 
 interface RespostaDaIAProps {
   content: string;
@@ -16,15 +23,6 @@ interface RespostaDaIAProps {
 export default function RespostaDaIA({ content, isLoading, toolInvocations }: RespostaDaIAProps) {
   const [copied, setCopied] = useState(false);
 
-  const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(content);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Erro ao copiar:', err);
-    }
-  };
 
 
   return (
@@ -87,8 +85,8 @@ export default function RespostaDaIA({ content, isLoading, toolInvocations }: Re
                         return (
                           <div key={toolCallId} className="my-4">
                             <WeatherCard 
-                              location={result.location} 
-                              temperature={result.temperature} 
+                              location={result.location as string} 
+                              temperature={result.temperature as number} 
                             />
                           </div>
                         );
@@ -96,8 +94,8 @@ export default function RespostaDaIA({ content, isLoading, toolInvocations }: Re
                         return (
                           <div key={toolCallId} className="my-4">
                             <Calculator 
-                              expression={args.expression}
-                              result={args.result}
+                              expression={args.expression as string}
+                              result={args.result as number}
                             />
                           </div>
                         );
@@ -105,9 +103,9 @@ export default function RespostaDaIA({ content, isLoading, toolInvocations }: Re
                         return (
                           <div key={toolCallId} className="my-4">
                             <ChartGenerator 
-                              title={result.title}
-                              data={result.data}
-                              type={result.type}
+                              title={result.title as string}
+                              data={result.data as Array<{label: string; value: number}>}
+                              type={result.type as 'bar' | 'pie' | 'line'}
                             />
                           </div>
                         );
