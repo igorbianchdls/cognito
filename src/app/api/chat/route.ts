@@ -108,6 +108,79 @@ export async function POST(req: Request) {
               type
             };
           },
+        }),
+        getBigQueryDatasets: tool({
+          description: 'List all available BigQuery datasets in the project with their information',
+          inputSchema: z.object({}),
+          execute: async () => {
+            console.log('📊 BigQuery datasets tool executed');
+            try {
+              const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/bigquery?action=datasets`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+              });
+              const result = await response.json();
+              
+              if (result.success && result.data) {
+                console.log('✅ Datasets retrieved:', result.data.length);
+                return {
+                  success: true,
+                  datasets: result.data
+                };
+              } else {
+                console.error('❌ Failed to get datasets:', result.error);
+                return {
+                  success: false,
+                  error: result.error || 'Failed to retrieve datasets'
+                };
+              }
+            } catch (error) {
+              console.error('❌ Error fetching datasets:', error);
+              return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Network error'
+              };
+            }
+          },
+        }),
+        getBigQueryTables: tool({
+          description: 'List all tables in a specific BigQuery dataset with their metadata',
+          inputSchema: z.object({
+            datasetId: z.string().describe('The dataset ID to list tables from (e.g., "biquery_data")')
+          }),
+          execute: async ({ datasetId }) => {
+            console.log('📋 BigQuery tables tool executed for dataset:', datasetId);
+            try {
+              const response = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/bigquery?action=tables&dataset=${encodeURIComponent(datasetId)}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+              });
+              const result = await response.json();
+              
+              if (result.success && result.data) {
+                console.log('✅ Tables retrieved:', result.data.length, 'for dataset:', datasetId);
+                return {
+                  success: true,
+                  tables: result.data,
+                  datasetId
+                };
+              } else {
+                console.error('❌ Failed to get tables:', result.error);
+                return {
+                  success: false,
+                  error: result.error || 'Failed to retrieve tables',
+                  datasetId
+                };
+              }
+            } catch (error) {
+              console.error('❌ Error fetching tables:', error);
+              return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Network error',
+                datasetId
+              };
+            }
+          },
         })
       },
     });

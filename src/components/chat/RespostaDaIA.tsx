@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import WeatherCard from '@/components/julius/WeatherCard';
 import Calculator from '@/components/julius/Calculator';
 import ChartGenerator from '@/components/julius/ChartGenerator';
+import BigQueryDatasetsList from '@/components/julius/BigQueryDatasetsList';
+import BigQueryTablesList from '@/components/julius/BigQueryTablesList';
 
 interface ToolCall {
   id: string;
@@ -104,6 +106,49 @@ export default function RespostaDaIA({ content, isLoading, toolCalls }: Resposta
                               title={(result.title as string) || ''}
                               data={(result.data as Array<{label: string; value: number}>) || []}
                               type={(result.type as 'bar' | 'pie' | 'line') || 'bar'}
+                            />
+                          </div>
+                        );
+                      case 'getBigQueryDatasets':
+                        return (
+                          <div key={id} className="my-4">
+                            <BigQueryDatasetsList 
+                              datasets={result.datasets as Array<{
+                                id: string;
+                                friendlyName?: string;
+                                description?: string;
+                                location?: string;
+                                creationTime?: string;
+                                lastModifiedTime?: string;
+                              }>}
+                              success={result.success as boolean}
+                              error={result.error as string}
+                            />
+                          </div>
+                        );
+                      case 'getBigQueryTables':
+                        return (
+                          <div key={id} className="my-4">
+                            <BigQueryTablesList 
+                              tables={result.tables as Array<{
+                                DATASETID?: string;
+                                TABLEID?: string;
+                                PROJECTID?: string;
+                                NUMROWS?: number;
+                                NUMBYTES?: number;
+                                CREATIONTIME?: string;
+                                datasetId?: string;
+                                tableId?: string;
+                                projectId?: string;
+                                description?: string;
+                                numRows?: number;
+                                numBytes?: number;
+                                creationTime?: Date;
+                                lastModifiedTime?: Date;
+                              }>}
+                              datasetId={(result.datasetId as string) || ''}
+                              success={result.success as boolean}
+                              error={result.error as string}
                             />
                           </div>
                         );
