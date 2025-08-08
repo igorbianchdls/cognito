@@ -360,7 +360,7 @@ export default function BigQueryTestPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'execute',
-          command: 'pip install pandas numpy matplotlib seaborn',
+          command: 'pip install pandas numpy matplotlib seaborn plotly',
           sandboxId: sandbox.id
         })
       });
@@ -369,7 +369,7 @@ export default function BigQueryTestPage() {
       setCommandOutput(prev => prev + '\n\n📦 Installing analysis packages...');
       
       if (installResult.success) {
-        setCommandOutput(prev => prev + '\n✅ Pandas, NumPy, Matplotlib & Seaborn installed!');
+        setCommandOutput(prev => prev + '\n✅ Pandas, NumPy, Matplotlib, Seaborn & Plotly installed!');
       }
     } catch (error) {
       setCommandOutput(prev => prev + `\n⚠️ Warning: Failed to auto-install packages (${error instanceof Error ? error.message : 'unknown error'}). You may need to install them manually.`);
@@ -378,7 +378,7 @@ export default function BigQueryTestPage() {
     // Add initial cell with imports
     const initialCell = {
       id: 'initial-' + Date.now().toString(),
-      code: 'import pandas as pd\nimport numpy as np\nimport matplotlib.pyplot as plt\nimport seaborn as sns\nprint("📊 Analysis environment ready!")\nprint(f"Pandas version: {pd.__version__}")',
+      code: 'import pandas as pd\nimport numpy as np\nimport matplotlib.pyplot as plt\nimport seaborn as sns\nprint("📊 Analysis environment ready!")\nprint(f"Pandas version: {pd.__version__}")\nprint("💡 Tip: Use matplotlib templates for static charts, Plotly for interactive ones!")',
       output: '',
       isRunning: false
     };
@@ -397,11 +397,27 @@ export default function BigQueryTestPage() {
     },
     'visualization': {
       name: '📈 Quick Visualization',
-      code: `# Create basic plots\nplt.figure(figsize=(12, 4))\n\n# Histogram\nplt.subplot(1, 2, 1)\ndf.select_dtypes(include=[np.number]).hist(bins=20)\nplt.title('Numeric Columns Distribution')\n\n# Correlation heatmap\nplt.subplot(1, 2, 2)\nsns.heatmap(df.corr(), annot=True, cmap='coolwarm')\nplt.title('Correlation Matrix')\n\nplt.tight_layout()\nplt.show()`
+      code: `# Create basic plots with base64 output for web display\nimport io\nimport base64\n\nplt.figure(figsize=(12, 4))\n\n# Histogram\nplt.subplot(1, 2, 1)\ndf.select_dtypes(include=[np.number]).hist(bins=20)\nplt.title('Numeric Columns Distribution')\n\n# Correlation heatmap\nplt.subplot(1, 2, 2)\nsns.heatmap(df.corr(), annot=True, cmap='coolwarm')\nplt.title('Correlation Matrix')\n\nplt.tight_layout()\n\n# Save plot as base64 for web display\nbuffer = io.BytesIO()\nplt.savefig(buffer, format='png', dpi=100, bbox_inches='tight')\nbuffer.seek(0)\nimage_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')\nplt.close()\n\nprint(f"📊 Chart generated successfully!")\nprint(f"IMAGE_BASE64:{image_base64}")`
     },
     'filtering': {
       name: '🔍 Filter & Group',
       code: `# Data filtering and grouping examples\n# Filter data\nfiltered_df = df[df['column_name'] > value]\nprint(f"Filtered rows: {len(filtered_df)}")\n\n# Group by analysis\ngrouped = df.groupby('category_column').agg({'numeric_column': ['mean', 'sum', 'count']})\nprint(grouped)`
+    },
+    'simple-chart': {
+      name: '📊 Simple Chart',
+      code: `# Create a simple chart with base64 output\nimport io\nimport base64\n\n# Example data (replace with your own)\ndata = {'A': [1, 2, 3, 4], 'B': [2, 3, 4, 5]}\ndf_temp = pd.DataFrame(data)\n\nplt.figure(figsize=(8, 5))\nplt.plot(df_temp['A'], label='Series A', marker='o')\nplt.plot(df_temp['B'], label='Series B', marker='s')\nplt.title('Simple Line Chart')\nplt.xlabel('Index')\nplt.ylabel('Values')\nplt.legend()\nplt.grid(True, alpha=0.3)\n\n# Save as base64 for web display\nbuffer = io.BytesIO()\nplt.savefig(buffer, format='png', dpi=100, bbox_inches='tight')\nbuffer.seek(0)\nimage_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')\nplt.close()\n\nprint("📊 Simple chart created!")\nprint(f"IMAGE_BASE64:{image_base64}")`
+    },
+    'plotly-interactive': {
+      name: '🎯 Interactive Plotly',
+      code: `# Interactive Plotly chart (install first: pip install plotly)\ntry:\n    import plotly.graph_objects as go\n    import plotly.offline as pyo\n    \n    # Example data\n    x = [1, 2, 3, 4, 5]\n    y = [2, 4, 3, 5, 6]\n    \n    fig = go.Figure()\n    fig.add_trace(go.Scatter(x=x, y=y, mode='lines+markers', name='Data'))\n    fig.update_layout(\n        title='Interactive Plotly Chart',\n        xaxis_title='X Axis',\n        yaxis_title='Y Axis',\n        template='plotly_white'\n    )\n    \n    # Generate HTML for web display\n    html_str = pyo.plot(fig, output_type='div', include_plotlyjs=True)\n    print("🎯 Interactive chart created!")\n    print(f"HTML_CONTENT:{html_str}")\n    \nexcept ImportError:\n    print("❌ Plotly not installed. Run: pip install plotly")`
+    },
+    'plotly-bar': {
+      name: '📊 Plotly Bar Chart',
+      code: `# Interactive bar chart with Plotly\ntry:\n    import plotly.graph_objects as go\n    import plotly.offline as pyo\n    \n    # Example data - replace with your own\n    categories = ['A', 'B', 'C', 'D']\n    values = [20, 35, 30, 25]\n    \n    fig = go.Figure([\n        go.Bar(x=categories, y=values, \n               marker_color=['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4'])\n    ])\n    \n    fig.update_layout(\n        title='Interactive Bar Chart',\n        xaxis_title='Categories',\n        yaxis_title='Values',\n        template='plotly_white',\n        showlegend=False\n    )\n    \n    html_str = pyo.plot(fig, output_type='div', include_plotlyjs=True)\n    print("📊 Interactive bar chart created!")\n    print(f"HTML_CONTENT:{html_str}")\n    \nexcept ImportError:\n    print("❌ Plotly not installed. Run: pip install plotly")`
+    },
+    'vendas-custos-test': {
+      name: '🧪 Test: Vendas vs Custos',
+      code: `# Test case: Your exact sales vs costs example with base64 output\nimport pandas as pd\nimport numpy as np\nimport matplotlib.pyplot as plt\nimport seaborn as sns\nimport io\nimport base64\n\n# Criar um DataFrame com dados fictícios (seu exemplo)\nnp.random.seed(42)  # para reproduzibilidade\ndados = pd.DataFrame({\n    \"Mês\": [\"Jan\", \"Fev\", \"Mar\", \"Abr\", \"Mai\", \"Jun\"],\n    \"Vendas\": np.random.randint(100, 500, size=6),\n    \"Custos\": np.random.randint(50, 300, size=6)\n})\n\nprint(\"📊 Dados:\")\nprint(dados)\nprint()  # linha em branco\n\n# Criar gráfico\nplt.figure(figsize=(10, 6))\nwidth = 0.35\nx = np.arange(len(dados[\"Mês\"]))\n\nplt.bar(x - width/2, dados[\"Vendas\"], width, label=\"Vendas\", color=\"skyblue\")\nplt.bar(x + width/2, dados[\"Custos\"], width, label=\"Custos\", color=\"salmon\")\n\nplt.title(\"Vendas vs Custos por Mês\", fontsize=14)\nplt.ylabel(\"Valor (R$)\")\nplt.xlabel(\"Mês\")\nplt.xticks(x, dados[\"Mês\"])\nplt.legend()\nplt.tight_layout()\n\n# Save plot as base64 instead of plt.show()\nbuffer = io.BytesIO()\nplt.savefig(buffer, format=\"png\", dpi=150, bbox_inches=\"tight\")\nbuffer.seek(0)\nimage_base64 = base64.b64encode(buffer.getvalue()).decode(\"utf-8\")\nplt.close()\n\nprint(\"🎯 Gráfico criado! Agora você pode ver a visualização:\")\nprint(f\"IMAGE_BASE64:{image_base64}\")`
     }
   };
 
@@ -415,6 +431,62 @@ export default function BigQueryTestPage() {
       isRunning: false
     };
     setCells(prev => [...prev, newCell]);
+  };
+
+  // Render cell output with image and HTML support
+  const renderCellOutput = (output: string) => {
+    // Check if output contains base64 image
+    const imageMatch = output.match(/IMAGE_BASE64:([A-Za-z0-9+/=]+)/);
+    
+    if (imageMatch) {
+      const base64Image = imageMatch[1];
+      const textOutput = output.replace(/IMAGE_BASE64:[A-Za-z0-9+/=]+/, '').trim();
+      
+      return (
+        <div>
+          {textOutput && (
+            <div className="mb-3">
+              <pre className="whitespace-pre-wrap">{textOutput}</pre>
+            </div>
+          )}
+          <div className="bg-white p-2 rounded border">
+            <img 
+              src={`data:image/png;base64,${base64Image}`}
+              alt="Generated chart"
+              className="max-w-full h-auto rounded"
+              style={{ maxHeight: '400px' }}
+            />
+          </div>
+        </div>
+      );
+    }
+    
+    // Check if output contains HTML content (for Plotly)
+    const htmlMatch = output.match(/HTML_CONTENT:([\s\S]*)/);
+    
+    if (htmlMatch) {
+      const htmlContent = htmlMatch[1];
+      const textOutput = output.replace(/HTML_CONTENT:[\s\S]*$/, '').trim();
+      
+      return (
+        <div>
+          {textOutput && (
+            <div className="mb-3">
+              <pre className="whitespace-pre-wrap">{textOutput}</pre>
+            </div>
+          )}
+          <div className="bg-white p-2 rounded border">
+            <div 
+              dangerouslySetInnerHTML={{ __html: htmlContent }}
+              className="plotly-container"
+            />
+          </div>
+        </div>
+      );
+    }
+    
+    // Regular text output
+    return <pre className="whitespace-pre-wrap">{output}</pre>;
   };
 
   const destroySandbox = async () => {
@@ -1047,9 +1119,9 @@ export default function BigQueryTestPage() {
                   </Button>
                 </div>
                 <div className="text-sm text-gray-600 bg-white p-3 rounded border">
-                  💡 <strong>Analysis Mode:</strong> Cell-based Python execution with auto-installed pandas, numpy, matplotlib & seaborn.
+                  💡 <strong>Analysis Mode:</strong> Cell-based Python execution with auto-installed pandas, numpy, matplotlib, seaborn & plotly.
                   <br/>
-                  🚀 <strong>Templates:</strong> Use quick templates to get started with data analysis tasks.
+                  🚀 <strong>Templates:</strong> Use quick templates for data analysis tasks - matplotlib for static charts, Plotly for interactive ones.
                   <br/>
                   ⚡ <strong>Tip:</strong> Press Ctrl+Enter in cells to run them quickly.
                 </div>
@@ -1140,7 +1212,7 @@ export default function BigQueryTestPage() {
                       {cell.output && (
                         <div className="bg-gray-900 text-green-400 p-3 font-mono text-sm">
                           <div className="text-xs text-gray-500 mb-1">Output:</div>
-                          <pre className="whitespace-pre-wrap">{cell.output}</pre>
+                          {renderCellOutput(cell.output)}
                         </div>
                       )}
                     </div>
