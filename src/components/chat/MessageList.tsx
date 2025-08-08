@@ -1,5 +1,6 @@
 import PerguntaDoUsuario from './PerguntaDoUsuario';
 import RespostaDaIA from './RespostaDaIA';
+import { type ToolInvocation } from 'ai';
 
 interface UploadedFile {
   id: string;
@@ -20,6 +21,7 @@ interface ChatMessage {
   content: string;
   createdAt: Date;
   files?: UploadedFile[];
+  toolInvocations?: ToolInvocation[];
 }
 
 interface MessageListProps {
@@ -49,7 +51,7 @@ export default function MessageList({ messages, isLoading, error }: MessageListP
             content={message.content}
             timestamp={message.createdAt}
             isLoading={message.role === 'assistant' && message.content === '' && isLoading}
-            toolInvocations={(message as any).toolInvocations}
+            toolInvocations={message.toolInvocations}
           />
         );
       })}
