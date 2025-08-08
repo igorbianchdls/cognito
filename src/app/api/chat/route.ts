@@ -53,30 +53,37 @@ export async function POST(req: Request) {
       systemMessage += 'Analise estes arquivos e responda às perguntas do usuário baseado no conteúdo dos documentos. Você pode fazer análises, extrair insights, responder perguntas específicas sobre os dados, ou qualquer outra operação solicitada.';
     }
 
-    // Create simple test tool
-    const tools = {
-      test_tool: tool({
-        description: 'Tool de teste que retorna texto simples',
-        inputSchema: z.object({}),
-        execute: async () => {
-          console.log('🔧 [TOOL] test_tool executada!');
-          return "Esta é a resposta da ferramenta de teste! Funcionou!";
-        }
-      })
-    };
+    // Create simple test tool following documentation exactly
+    const testTool = tool({
+      description: 'Tool de teste que retorna texto simples',
+      inputSchema: z.object({}),
+      execute: async () => {
+        console.log('🔧 [TOOL] test_tool executada!');
+        return {
+          message: "Esta é a resposta da ferramenta de teste! Funcionou!",
+          success: true
+        };
+      }
+    });
 
     console.log('🚀 Processing chat with simple test tool...');
     
-    const { text } = await generateText({
+    // Get last user message to create a simple prompt
+    const lastMessage = messages[messages.length - 1];
+    const userPrompt = lastMessage?.content || '';
+    
+    const { text, toolCalls, toolResults } = await generateText({
       model: anthropic('claude-3-5-sonnet-20241022'),
-      messages: messages,
-      system: systemMessage + '\n\nSe o usuário disser "teste tool", execute a ferramenta test_tool.',
-      tools: tools,
-      toolChoice: 'auto',
-      temperature: 0.7,
+      tools: {
+        test: testTool
+      },
+      prompt: `${userPrompt}. Se o usuário mencionar "teste tool", use a ferramenta test.`,
     });
 
+    console.log('✅ Tool calls:', toolCalls?.length || 0);
+    console.log('✅ Tool results:', toolResults?.length || 0);
     console.log('✅ Returning response:', text);
+    
     return new Response(text, {
       headers: {
         'Content-Type': 'text/plain; charset=utf-8',
