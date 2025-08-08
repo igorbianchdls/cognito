@@ -14,12 +14,10 @@ interface UploadedFile {
   columnCount?: number;
 }
 
-interface ToolInvocation {
-  toolCallId: string;
-  toolName: string;
-  state: 'loading' | 'result' | 'error';
-  args: Record<string, unknown>;
-  result?: Record<string, unknown>;
+interface MessagePart {
+  type: string;
+  state?: 'loading' | 'output-available' | 'error';
+  output?: Record<string, unknown>;
 }
 
 interface ChatMessage {
@@ -28,7 +26,7 @@ interface ChatMessage {
   content: string;
   createdAt: Date;
   files?: UploadedFile[];
-  toolInvocations?: ToolInvocation[];
+  parts?: MessagePart[];
 }
 
 interface MessageListProps {
@@ -58,7 +56,7 @@ export default function MessageList({ messages, isLoading, error }: MessageListP
             content={message.content}
             timestamp={message.createdAt}
             isLoading={message.role === 'assistant' && message.content === '' && isLoading}
-            toolInvocations={message.toolInvocations}
+            parts={message.parts}
           />
         );
       })}

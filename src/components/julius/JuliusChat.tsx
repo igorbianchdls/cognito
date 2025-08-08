@@ -1,5 +1,6 @@
 'use client';
 
+import { useChat } from '@ai-sdk/react';
 import { useState } from 'react';
 import MessageList from '../chat/MessageList';
 import Sidebar from '../navigation/Sidebar';
@@ -27,94 +28,25 @@ interface ChatMessage {
 }
 
 export default function JuliusChat() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
-
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: input.trim(),
-      createdAt: new Date(),
-      files: uploadedFiles.length > 0 ? [...uploadedFiles] : undefined,
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    const currentInput = input;
-    setInput('');
-    setUploadedFiles([]);  // Clear uploaded files after sending
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messages: [...messages, userMessage].map(msg => ({
-            role: msg.role,
-            content: msg.content,
-          })),
-          files: userMessage.files?.filter(f => f.content) || [],
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: '',
-        createdAt: new Date(),
-      };
-
-      setMessages(prev => [...prev, assistantMessage]);
-
-      // Handle streaming response
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error('No response body');
-
-      const decoder = new TextDecoder();
-      let done = false;
-
-      while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
-        
-        if (value) {
-          const chunk = decoder.decode(value);
-          
-          // For text stream, just append the chunk
-          setMessages(prev => {
-            const newMessages = [...prev];
-            const lastMessage = newMessages[newMessages.length - 1];
-            if (lastMessage && lastMessage.role === 'assistant') {
-              lastMessage.content += chunk;
-            }
-            return newMessages;
-          });
-        }
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro desconhecido');
-      setInput(currentInput); // Restore input on error
-    } finally {
-      setIsLoading(false);
+  
+  const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
+    api: '/api/chat',
+    body: {
+      files: uploadedFiles.filter(f => f.content) || []
+    },
+    onFinish: () => {
+      setUploadedFiles([]); // Clear files after sending
     }
+  });
+
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleSubmit(e);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
+  const onInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    handleInputChange(e);
   };
 
   const handleFilesChange = (files: UploadedFile[]) => {
@@ -144,8 +76,8 @@ export default function JuliusChat() {
               <div className="w-full max-w-[800px] mx-auto px-4">
                 <InputArea
                   value={input}
-                  onChange={handleInputChange}
-                  onSubmit={handleSubmit}
+                  onChange={onInputChange}
+                  onSubmit={onSubmit}
                   onFilesChange={handleFilesChange}
                   disabled={isLoading}
                 />
@@ -181,9 +113,15 @@ export default function JuliusChat() {
             </div>
           ) : (
             <MessageList 
-              messages={messages}
+              messages={messages.map(msg => ({
+                id: msg.id,
+                role: msg.role as 'user' | 'assistant',
+                content: msg.content,
+                createdAt: new Date(),
+                parts: (msg as { parts?: Array<{ type: string; state?: string; output?: Record<string, unknown> }> }).parts || [],
+              }))}
               isLoading={isLoading}
-              error={error}
+              error={error ? error.toString() : null}
             />
           )}
         </div>
@@ -194,8 +132,8 @@ export default function JuliusChat() {
             <div className="max-w-[800px] mx-auto px-4 py-4">
               <InputArea
                 value={input}
-                onChange={handleInputChange}
-                onSubmit={handleSubmit}
+                onChange={onInputChange}
+                onSubmit={onSubmit}
                 onFilesChange={handleFilesChange}
                 disabled={isLoading}
               />

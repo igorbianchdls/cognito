@@ -114,11 +114,7 @@ export async function POST(req: Request) {
 
     console.log('🚀 Streaming response with generative UI...');
     
-    return result.toTextStreamResponse({
-      headers: {
-        'Content-Type': 'text/plain; charset=utf-8',
-      },
-    });
+    return result.toTextStreamResponse();
   } catch (error) {
     console.error('Error in chat API:', error);
     return new Response(JSON.stringify({ 
