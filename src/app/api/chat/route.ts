@@ -327,9 +327,10 @@ export async function POST(req: Request) {
                   if (values.length > 0) {
                     const firstValue = values[0];
                     if (typeof firstValue === 'number') {
-                      const min = Math.min(...values);
-                      const max = Math.max(...values);
-                      const avg = values.reduce((a, b) => a + b, 0) / values.length;
+                      const numericValues = values.filter(v => typeof v === 'number') as number[];
+                      const min = Math.min(...numericValues);
+                      const max = Math.max(...numericValues);
+                      const avg = numericValues.reduce((a, b) => a + b, 0) / numericValues.length;
                       analysis += `  - Range: ${min.toLocaleString('pt-BR')} to ${max.toLocaleString('pt-BR')}\n`;
                       analysis += `  - Average: ${avg.toFixed(2)}\n`;
                     } else if (typeof firstValue === 'string') {
@@ -355,9 +356,9 @@ export async function POST(req: Request) {
                 
                 if (numericCols.length > 0) {
                   numericCols.forEach(col => {
-                    const values = data.map(row => row[col]).filter(v => v != null && typeof v === 'number');
-                    if (values.length > 1) {
-                      const sorted = [...values].sort((a, b) => a - b);
+                    const numericValues = data.map(row => row[col]).filter(v => v != null && typeof v === 'number') as number[];
+                    if (numericValues.length > 1) {
+                      const sorted = [...numericValues].sort((a, b) => a - b);
                       const median = sorted[Math.floor(sorted.length / 2)];
                       const q1 = sorted[Math.floor(sorted.length * 0.25)];
                       const q3 = sorted[Math.floor(sorted.length * 0.75)];
