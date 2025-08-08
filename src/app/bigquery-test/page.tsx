@@ -26,10 +26,12 @@ export default function BigQueryTestPage() {
   const [datasetInfoResult, setDatasetInfoResult] = useState<BigQueryTestResult | null>(null);
   
   // Daytona Sandbox states
-  const [sandbox, setSandbox] = useState<{ id: string; status: string } | null>(null);
+  const [sandbox, setSandbox] = useState<{ id: string; status: string; language?: string } | null>(null);
   const [sandboxStatus, setSandboxStatus] = useState<'idle' | 'creating' | 'ready' | 'error'>('idle');
+  const [selectedLanguage, setSelectedLanguage] = useState<'typescript' | 'python'>('typescript');
   const [command, setCommand] = useState<string>('echo "Hello from Daytona!"');
   const [commandOutput, setCommandOutput] = useState<string>('');
+  const [jupyterUrl, setJupyterUrl] = useState<string>('');
   
   // Use the new hooks
   const tablesHook = useBigQueryTables('biquery_data');
@@ -201,24 +203,30 @@ export default function BigQueryTestPage() {
 
   // Daytona Sandbox functions
   const createSandbox = async () => {
-    console.log('🏗️ Creating Daytona sandbox...');
+    console.log('🏗️ Creating Daytona sandbox with language:', selectedLanguage);
     setSandboxStatus('creating');
     setCommandOutput('');
+    setJupyterUrl('');
     
     try {
+      const action = selectedLanguage === 'python' ? 'create-python' : 'create';
       const response = await fetch('/api/daytona', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'create' })
+        body: JSON.stringify({ action })
       });
       
       const result = await response.json();
       console.log('📊 Sandbox creation result:', result);
       
       if (result.success) {
-        setSandbox({ id: result.sandboxId, status: 'ready' });
+        setSandbox({ 
+          id: result.sandboxId, 
+          status: 'ready',
+          language: selectedLanguage 
+        });
         setSandboxStatus('ready');
-        setCommandOutput('✅ Sandbox created successfully!\nSandbox ID: ' + result.sandboxId);
+        setCommandOutput(`✅ ${selectedLanguage.toUpperCase()} Sandbox created successfully!\nSandbox ID: ${result.sandboxId}`);
       } else {
         setSandboxStatus('error');
         setCommandOutput('❌ Error creating sandbox: ' + (result.error || 'Unknown error'));
@@ -263,6 +271,57 @@ export default function BigQueryTestPage() {
     }
   };
 
+  // Parse Jupyter URL from command output
+  const parseJupyterUrl = (output: string): string => {
+    // Look for Jupyter URLs in format: http://127.0.0.1:8888/?token=...
+    const urlMatch = output.match(/http:\/\/[0-9.]+:[0-9]+\/\?token=[a-zA-Z0-9]+/);
+    return urlMatch ? urlMatch[0] : '';
+  };
+
+  // Execute command with Jupyter URL detection
+  const executeCommandWithJupyterDetection = async () => {
+    if (!sandbox?.id || !command.trim()) return;
+    
+    console.log('⚡ Executing command with Jupyter detection:', command);
+    setLoadingState('commandExecution', true);
+    
+    try {
+      const response = await fetch('/api/daytona', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'execute',
+          command: command.trim(),
+          sandboxId: sandbox.id
+        })
+      });
+      
+      const result = await response.json();
+      console.log('📊 Command execution result:', result);
+      
+      if (result.success) {
+        const output = result.output || 'Command executed successfully';
+        setCommandOutput(prev => prev + '\n\n$ ' + command + '\n' + output);
+        
+        // Check if this was a jupyter command and extract URL
+        if (command.includes('jupyter notebook') && output.includes('http://')) {
+          const url = parseJupyterUrl(output);
+          if (url) {
+            setJupyterUrl(url);
+            setCommandOutput(prev => prev + '\n\n🔗 Jupyter URL detected: ' + url);
+          }
+        }
+      } else {
+        setCommandOutput(prev => prev + '\n\n$ ' + command + '\n❌ Error: ' + (result.error || 'Command failed'));
+      }
+    } catch (error) {
+      console.error('❌ Error executing command:', error);
+      setCommandOutput(prev => prev + '\n\n$ ' + command + '\n❌ Network error: ' + (error instanceof Error ? error.message : 'Failed to execute'));
+    } finally {
+      setLoadingState('commandExecution', false);
+    }
+  };
+
   const destroySandbox = async () => {
     if (!sandbox?.id) return;
     
@@ -285,6 +344,7 @@ export default function BigQueryTestPage() {
       if (result.success) {
         setSandbox(null);
         setSandboxStatus('idle');
+        setJupyterUrl(''); // Clear Jupyter URL
         setCommandOutput(prev => prev + '\n\n🗑️ Sandbox destroyed successfully!');
       } else {
         setCommandOutput(prev => prev + '\n\n❌ Error destroying sandbox: ' + (result.error || 'Unknown error'));
@@ -798,6 +858,39 @@ export default function BigQueryTestPage() {
               Create and manage a cloud sandbox environment for testing commands and code execution.
             </p>
 
+            {/* Language Selection */}
+            <div className="mb-4 p-3 bg-white border border-indigo-200 rounded-lg">
+              <div className="flex items-center gap-4">
+                <span className="text-sm font-medium text-gray-700">Language:</span>
+                <div className="flex gap-3">
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="language"
+                      value="typescript"
+                      checked={selectedLanguage === 'typescript'}
+                      onChange={(e) => setSelectedLanguage(e.target.value as 'typescript' | 'python')}
+                      disabled={sandboxStatus !== 'idle'}
+                      className="mr-2"
+                    />
+                    <span className="text-sm">🟦 TypeScript</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="radio"
+                      name="language"
+                      value="python"
+                      checked={selectedLanguage === 'python'}
+                      onChange={(e) => setSelectedLanguage(e.target.value as 'typescript' | 'python')}
+                      disabled={sandboxStatus !== 'idle'}
+                      className="mr-2"
+                    />
+                    <span className="text-sm">🐍 Python</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
             {/* Status Display */}
             <div className="mb-4 p-3 bg-white border border-indigo-200 rounded-lg">
               <div className="flex items-center justify-between">
@@ -830,7 +923,8 @@ export default function BigQueryTestPage() {
                 disabled={sandboxStatus === 'creating' || sandboxStatus === 'ready'}
                 className="bg-indigo-600 hover:bg-indigo-700"
               >
-                {sandboxStatus === 'creating' ? '🔄 Creating...' : '🏗️ Create Sandbox'}
+                {sandboxStatus === 'creating' ? '🔄 Creating...' : 
+                 selectedLanguage === 'python' ? '🐍 Create Python Sandbox' : '🟦 Create TypeScript Sandbox'}
               </Button>
               
               <Button
@@ -843,6 +937,69 @@ export default function BigQueryTestPage() {
               </Button>
             </div>
 
+            {/* Python-specific Jupyter buttons */}
+            {sandboxStatus === 'ready' && sandbox?.language === 'python' && (
+              <div className="mb-6">
+                <h3 className="font-medium mb-3">🐍 Python & Jupyter</h3>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <Button
+                    onClick={() => setCommand('pip install jupyter notebook')}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    📦 Install Jupyter
+                  </Button>
+                  <Button
+                    onClick={() => setCommand('jupyter notebook --no-browser --port=8888 --ip=0.0.0.0 --allow-root')}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    🚀 Start Jupyter
+                  </Button>
+                  <Button
+                    onClick={() => setCommand('python --version')}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    🐍 Python Version
+                  </Button>
+                  <Button
+                    onClick={() => setCommand('pip list')}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs"
+                  >
+                    📋 List Packages
+                  </Button>
+                </div>
+                
+                {/* Jupyter URL Display */}
+                {jupyterUrl && (
+                  <div className="mb-4 p-3 bg-green-50 border border-green-300 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-green-800">
+                        🎉 Jupyter Notebook is running!
+                      </span>
+                      <a
+                        href={jupyterUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
+                      >
+                        🔗 Open Notebook
+                      </a>
+                    </div>
+                    <div className="text-xs text-green-600 mt-1 font-mono">
+                      {jupyterUrl}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Command Execution */}
             {sandboxStatus === 'ready' && (
               <div className="mb-6">
@@ -853,12 +1010,12 @@ export default function BigQueryTestPage() {
                     placeholder="Enter command to execute..."
                     value={command}
                     onChange={(e) => setCommand(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && !loading.commandExecution && executeCommand()}
+                    onKeyPress={(e) => e.key === 'Enter' && !loading.commandExecution && executeCommandWithJupyterDetection()}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     disabled={loading.commandExecution}
                   />
                   <Button
-                    onClick={executeCommand}
+                    onClick={executeCommandWithJupyterDetection}
                     disabled={!command.trim() || loading.commandExecution}
                     className="bg-green-600 hover:bg-green-700"
                   >
@@ -926,10 +1083,11 @@ export default function BigQueryTestPage() {
             <div className="bg-indigo-100 border border-indigo-200 rounded-lg p-4">
               <h4 className="font-medium text-indigo-900 mb-2">💡 How to use:</h4>
               <div className="text-sm text-indigo-800 space-y-1">
-                <p>1. Click <strong>&quot;Create Sandbox&quot;</strong> to create a new TypeScript environment</p>
-                <p>2. Use the command input to execute terminal commands</p>
-                <p>3. Try quick commands like <code>node --version</code> or <code>ls -la</code></p>
-                <p>4. Click <strong>&quot;Destroy Sandbox&quot;</strong> when done to clean up resources</p>
+                <p>1. Select <strong>TypeScript</strong> or <strong>Python</strong> language</p>
+                <p>2. Click <strong>&quot;Create Sandbox&quot;</strong> to create environment</p>
+                <p>3. For Python: Click <strong>&quot;Install Jupyter&quot;</strong> → <strong>&quot;Start Jupyter&quot;</strong> → <strong>&quot;Open Notebook&quot;</strong></p>
+                <p>4. Use command input for custom terminal commands</p>
+                <p>5. Click <strong>&quot;Destroy Sandbox&quot;</strong> when done to clean up</p>
                 <p><strong>⚠️ Beta:</strong> Requires DAYTONA_API_KEY environment variable</p>
               </div>
             </div>

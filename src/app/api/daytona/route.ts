@@ -1,7 +1,7 @@
 import { Daytona } from '@daytonaio/sdk';
 
 interface DaytonaRequest {
-  action: 'create' | 'execute' | 'destroy';
+  action: 'create' | 'create-python' | 'execute' | 'destroy';
   command?: string;
   sandboxId?: string;
 }
@@ -93,6 +93,37 @@ export async function POST(req: Request): Promise<Response> {
           response = {
             success: false,
             error: error instanceof Error ? error.message : 'Failed to create sandbox'
+          };
+        }
+        break;
+
+      case 'create-python':
+        console.log('🐍 [DAYTONA API] Creating new Python sandbox...');
+        try {
+          const pythonSandbox = await daytona.create({
+            language: 'python'
+          });
+          
+          console.log('✅ [DAYTONA API] Python sandbox created successfully:', pythonSandbox.id);
+          
+          // Store sandbox reference for later use
+          activeSandboxes.set(pythonSandbox.id, pythonSandbox as unknown as DaytonaSandbox);
+          
+          response = {
+            success: true,
+            data: {
+              id: pythonSandbox.id,
+              status: 'ready',
+              language: 'python',
+              createdAt: new Date()
+            } as SandboxData,
+            sandboxId: pythonSandbox.id
+          };
+        } catch (error) {
+          console.error('❌ [DAYTONA API] Failed to create Python sandbox:', error);
+          response = {
+            success: false,
+            error: error instanceof Error ? error.message : 'Failed to create Python sandbox'
           };
         }
         break;
