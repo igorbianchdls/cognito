@@ -5,6 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import Sidebar from '@/components/navigation/Sidebar';
 import { useBigQueryTables, useBigQueryTableData } from '@/hooks/useBigQuery';
+import dynamic from 'next/dynamic';
+
+const MonacoEditor = dynamic(() => import('@monaco-editor/react'), { ssr: false });
 
 interface BigQueryTestResult {
   success: boolean;
@@ -20,6 +23,39 @@ export default function BigQueryTestPage() {
   const [queryResult, setQueryResult] = useState<BigQueryTestResult | null>(null);
   const [selectedDataset, setSelectedDataset] = useState<string>('');
   const [customQuery, setCustomQuery] = useState<string>('');
+  const [pythonCode, setPythonCode] = useState<string>(`# BigQuery Python Code Editor
+# Use este editor para escrever código Python que trabalhe com BigQuery
+
+from google.cloud import bigquery
+import pandas as pd
+
+def main():
+    # Configurar cliente BigQuery
+    client = bigquery.Client()
+    
+    # Exemplo: Query simples
+    query = """
+        SELECT *
+        FROM \`creatto-463117.biquery_data.car_prices\`
+        LIMIT 10
+    """
+    
+    # Executar query
+    df = client.query(query).to_dataframe()
+    
+    # Mostrar resultados
+    print(f"Dados carregados: {len(df)} linhas")
+    print(df.head())
+    
+    # Análise simples
+    if 'price' in df.columns:
+        print(f"Preço médio: ${df['price'].mean():.2f}")
+        print(f"Preço mínimo: ${df['price'].min():.2f}")
+        print(f"Preço máximo: ${df['price'].max():.2f}")
+
+if __name__ == "__main__":
+    main()
+`);
   const [loading, setLoading] = useState<Record<string, boolean>>({});
   const [selectedTable, setSelectedTable] = useState<string>('');
   const [carPricesResult, setCarPricesResult] = useState<BigQueryTestResult | null>(null);
@@ -687,6 +723,72 @@ export default function BigQueryTestPage() {
             )}
           </Card>
 
+          {/* Python Code Editor */}
+          <Card className="p-6 mb-6 border-2 border-purple-200 bg-purple-50">
+            <h2 className="text-xl font-semibold mb-4">🐍 Python Code Editor</h2>
+            <p className="text-gray-600 mb-4">
+              Escreva e edite código Python para trabalhar com BigQuery. Use as bibliotecas 
+              <code className="bg-gray-200 px-2 py-1 rounded mx-1">google-cloud-bigquery</code> e 
+              <code className="bg-gray-200 px-2 py-1 rounded mx-1">pandas</code>.
+            </p>
+            
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-medium">Editor Python</h3>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => setPythonCode('')}
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    🗑️ Limpar
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      navigator.clipboard.writeText(pythonCode);
+                      // You could add a toast notification here
+                    }}
+                    variant="outline" 
+                    size="sm"
+                    className="text-blue-600 hover:text-blue-700"
+                  >
+                    📋 Copiar
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="border border-gray-300 rounded-lg overflow-hidden">
+                <MonacoEditor
+                  height="400px"
+                  defaultLanguage="python"
+                  value={pythonCode}
+                  onChange={(value) => setPythonCode(value || '')}
+                  theme="vs-light"
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: 14,
+                    lineNumbers: 'on',
+                    automaticLayout: true,
+                    scrollBeyondLastLine: false,
+                    wordWrap: 'on',
+                    tabSize: 4,
+                  }}
+                />
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-medium text-blue-900 mb-2">💡 Dicas para usar BigQuery com Python:</h4>
+              <div className="text-sm text-blue-800 space-y-1">
+                <p>• Use <code>client = bigquery.Client()</code> para conectar</p>
+                <p>• Queries: <code>df = client.query("SELECT ...").to_dataframe()</code></p>
+                <p>• Análise com pandas: <code>df.describe()</code>, <code>df.groupby()</code></p>
+                <p>• Salvar resultados: <code>df.to_csv("dados.csv")</code></p>
+              </div>
+            </div>
+          </Card>
+
           {/* Instructions */}
           <Card className="p-6 bg-blue-50 border-blue-200">
             <h3 className="text-lg font-semibold text-blue-900 mb-3">📝 Instructions</h3>
@@ -695,6 +797,7 @@ export default function BigQueryTestPage() {
               <p><strong>2. List Datasets:</strong> See all datasets in your project</p>
               <p><strong>3. List Tables:</strong> Enter a dataset name to see its tables</p>
               <p><strong>4. Custom Query:</strong> Run SQL queries (be careful with LIMIT to avoid costs)</p>
+              <p><strong>5. Python Editor:</strong> Write Python code to analyze BigQuery data locally</p>
             </div>
           </Card>
         </div>
