@@ -14,25 +14,12 @@ interface UploadedFile {
   columnCount?: number;
 }
 
-interface ToolOutput {
-  toolName: string;
-  result?: {
-    location?: string;
-    temperature?: number;
-    title?: string;
-    data?: Array<{label: string; value: number}>;
-    type?: 'bar' | 'pie' | 'line';
-  };
-  args?: {
-    expression?: string;
-    result?: number;
-  };
-}
-
-interface MessagePart {
-  type: string;
-  state?: 'loading' | 'output-available' | 'error';
-  output?: ToolOutput;
+interface ToolCall {
+  id: string;
+  name: string;
+  state: 'loading' | 'result';
+  args?: Record<string, unknown>;
+  result?: Record<string, unknown>;
 }
 
 interface ChatMessage {
@@ -41,7 +28,7 @@ interface ChatMessage {
   content: string;
   createdAt: Date;
   files?: UploadedFile[];
-  parts?: MessagePart[];
+  toolCalls?: ToolCall[];
 }
 
 interface MessageListProps {
@@ -71,7 +58,7 @@ export default function MessageList({ messages, isLoading, error }: MessageListP
             content={message.content}
             timestamp={message.createdAt}
             isLoading={message.role === 'assistant' && message.content === '' && isLoading}
-            parts={message.parts}
+            toolCalls={message.toolCalls}
           />
         );
       })}

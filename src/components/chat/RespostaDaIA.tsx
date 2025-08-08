@@ -5,35 +5,22 @@ import WeatherCard from '@/components/julius/WeatherCard';
 import Calculator from '@/components/julius/Calculator';
 import ChartGenerator from '@/components/julius/ChartGenerator';
 
-interface ToolOutput {
-  toolName: string;
-  result?: {
-    location?: string;
-    temperature?: number;
-    title?: string;
-    data?: Array<{label: string; value: number}>;
-    type?: 'bar' | 'pie' | 'line';
-  };
-  args?: {
-    expression?: string;
-    result?: number;
-  };
-}
-
-interface MessagePart {
-  type: string;
-  state?: 'loading' | 'output-available' | 'error';
-  output?: ToolOutput;
+interface ToolCall {
+  id: string;
+  name: string;
+  state: 'loading' | 'result';
+  args?: Record<string, unknown>;
+  result?: Record<string, unknown>;
 }
 
 interface RespostaDaIAProps {
   content: string;
   timestamp: Date;
   isLoading?: boolean;
-  parts?: MessagePart[];
+  toolCalls?: ToolCall[];
 }
 
-export default function RespostaDaIA({ content, isLoading, parts }: RespostaDaIAProps) {
+export default function RespostaDaIA({ content, isLoading, toolCalls }: RespostaDaIAProps) {
   const [copied, setCopied] = useState(false);
 
 
@@ -87,54 +74,48 @@ export default function RespostaDaIA({ content, isLoading, parts }: RespostaDaIA
                 </ReactMarkdown>
                 
                 {/* Render Tool UI Components */}
-                {parts?.map((part, index) => {
-                  const { type, state, output } = part;
+                {toolCalls?.map((toolCall) => {
+                  const { id, name, state, result } = toolCall;
                   
-                  if (state === 'output-available' && output) {
-                    switch (type) {
-                      case 'tool-call':
-                        // Handle different tool types
-                        if (output.toolName === 'getWeather' && output.result) {
-                          return (
-                            <div key={index} className="my-4">
-                              <WeatherCard 
-                                location={output.result.location || ''} 
-                                temperature={output.result.temperature || 0} 
-                              />
-                            </div>
-                          );
-                        }
-                        if (output.toolName === 'calculator' && output.args) {
-                          return (
-                            <div key={index} className="my-4">
-                              <Calculator 
-                                expression={output.args.expression}
-                                result={output.args.result}
-                              />
-                            </div>
-                          );
-                        }
-                        if (output.toolName === 'createChart' && output.result) {
-                          return (
-                            <div key={index} className="my-4">
-                              <ChartGenerator 
-                                title={output.result.title || ''}
-                                data={output.result.data || []}
-                                type={output.result.type || 'bar'}
-                              />
-                            </div>
-                          );
-                        }
-                        return null;
+                  if (state === 'result' && result) {
+                    switch (name) {
+                      case 'getWeather':
+                        return (
+                          <div key={id} className="my-4">
+                            <WeatherCard 
+                              location={(result.location as string) || ''} 
+                              temperature={(result.temperature as number) || 0} 
+                            />
+                          </div>
+                        );
+                      case 'calculator':
+                        return (
+                          <div key={id} className="my-4">
+                            <Calculator 
+                              expression={result.expression as string}
+                              result={result.result as number}
+                            />
+                          </div>
+                        );
+                      case 'createChart':
+                        return (
+                          <div key={id} className="my-4">
+                            <ChartGenerator 
+                              title={(result.title as string) || ''}
+                              data={(result.data as Array<{label: string; value: number}>) || []}
+                              type={(result.type as 'bar' | 'pie' | 'line') || 'bar'}
+                            />
+                          </div>
+                        );
                       default:
                         return null;
                     }
                   } else if (state === 'loading') {
                     return (
-                      <div key={index} className="my-4 p-4 border rounded-lg bg-muted/50">
+                      <div key={id} className="my-4 p-4 border rounded-lg bg-muted/50">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                          Executando ferramenta...
+                          Executando {name}...
                         </div>
                       </div>
                     );
@@ -147,13 +128,13 @@ export default function RespostaDaIA({ content, isLoading, parts }: RespostaDaIA
           </div>
           
           {/* Copy button */}
-          {!isLoading && (content || parts?.length) && (
+          {!isLoading && (content || toolCalls?.length) && (
             <Button 
               variant="ghost" 
               size="sm"
               onClick={() => {
-                const textToCopy = content + (parts?.map(p => 
-                  p.state === 'output-available' ? `\n[Tool: ${JSON.stringify(p.output)}]` : ''
+                const textToCopy = content + (toolCalls?.map(tc => 
+                  tc.state === 'result' ? `\n[${tc.name}: ${JSON.stringify(tc.result)}]` : ''
                 ).join('') || '');
                 navigator.clipboard.writeText(textToCopy);
                 setCopied(true);

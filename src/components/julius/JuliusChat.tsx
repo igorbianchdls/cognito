@@ -18,12 +18,21 @@ interface UploadedFile {
   columnCount?: number;
 }
 
+interface ToolCall {
+  id: string;
+  name: string;
+  state: 'loading' | 'result';
+  args?: Record<string, unknown>;
+  result?: Record<string, unknown>;
+}
+
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   createdAt: Date;
   files?: UploadedFile[];
+  toolCalls?: ToolCall[];
 }
 
 export default function JuliusChat() {
@@ -72,6 +81,7 @@ export default function JuliusChat() {
         role: 'assistant', 
         content: '',
         createdAt: new Date(),
+        toolCalls: [],
       };
 
       setMessages(prev => [...prev, assistantMessage]);
@@ -88,14 +98,65 @@ export default function JuliusChat() {
         
         if (value) {
           const chunk = decoder.decode(value);
-          setMessages(prev => {
-            const newMessages = [...prev];
-            const lastMessage = newMessages[newMessages.length - 1];
-            if (lastMessage && lastMessage.role === 'assistant') {
-              lastMessage.content += chunk;
+          
+          // Process each line as potential JSON
+          const lines = chunk.split('\n');
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                
+                setMessages(prev => {
+                  const newMessages = [...prev];
+                  const lastMessage = newMessages[newMessages.length - 1];
+                  
+                  if (lastMessage && lastMessage.role === 'assistant') {
+                    // Handle text deltas
+                    if (data.type === 'text-delta') {
+                      lastMessage.content += data.delta;
+                    }
+                    
+                    // Handle tool input start
+                    else if (data.type === 'tool-input-start') {
+                      const toolCall: ToolCall = {
+                        id: data.toolCallId,
+                        name: data.toolName,
+                        state: 'loading'
+                      };
+                      
+                      if (!lastMessage.toolCalls) {
+                        lastMessage.toolCalls = [];
+                      }
+                      
+                      lastMessage.toolCalls.push(toolCall);
+                    }
+                    
+                    // Handle tool result
+                    else if (data.type === 'tool-result') {
+                      const toolCall = lastMessage.toolCalls?.find(tc => tc.id === data.toolCallId);
+                      if (toolCall) {
+                        toolCall.state = 'result';
+                        toolCall.result = data.result;
+                      }
+                    }
+                  }
+                  
+                  return newMessages;
+                });
+              } catch {
+                // If not JSON, treat as regular text
+                setMessages(prev => {
+                  const newMessages = [...prev];
+                  const lastMessage = newMessages[newMessages.length - 1];
+                  if (lastMessage && lastMessage.role === 'assistant') {
+                    lastMessage.content += line;
+                  }
+                  return newMessages;
+                });
+              }
             }
-            return newMessages;
-          });
+          }
         }
       }
     } catch (err) {
