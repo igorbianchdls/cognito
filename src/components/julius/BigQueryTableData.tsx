@@ -29,6 +29,8 @@ export default function BigQueryTableData({
   success,
   error
 }: BigQueryTableDataProps) {
+  console.log('🎨 ===== BigQueryTableData COMPONENT CALLED =====');
+  
   // 🔍 DEBUG: Log do que o componente recebeu
   console.log('🎨 BigQueryTableData component received:', {
     hasData: !!data,
@@ -132,6 +134,15 @@ export default function BigQueryTableData({
 
   // Get column names from first row or schema
   const columns = schema?.map(s => s.name) || Object.keys(actualData[0] || {});
+  
+  console.log('🎨 Columns extraction:', {
+    hasSchema: !!schema,
+    schemaLength: schema?.length,
+    schemaColumns: schema?.map(s => s.name),
+    firstRowKeys: Object.keys(actualData[0] || {}),
+    finalColumns: columns,
+    columnsCount: columns.length
+  });
 
   // Format values for display
   const formatValue = (value: unknown, columnName?: string, columnType?: string): string => {
@@ -167,6 +178,15 @@ export default function BigQueryTableData({
     return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
   };
 
+  console.log('🎨 About to render table:', {
+    hasActualData: actualData.length > 0,
+    columnsCount: columns.length,
+    willRender: actualData.length > 0 && columns.length > 0,
+    componentWillReturn: 'BigQueryTableData main component'
+  });
+
+  console.log('🎨 RENDERING TABLE NOW!');
+  
   return (
     <div className="my-4 p-4 border-2 border-green-200 bg-green-50 rounded-lg">
       {/* Header */}
