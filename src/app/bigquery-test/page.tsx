@@ -31,7 +31,13 @@ export default function BigQueryTestPage() {
   const [selectedLanguage, setSelectedLanguage] = useState<'typescript' | 'python'>('typescript');
   const [command, setCommand] = useState<string>('echo "Hello from Daytona!"');
   const [commandOutput, setCommandOutput] = useState<string>('');
-  const [jupyterUrl, setJupyterUrl] = useState<string>('');
+  const [analysisMode, setAnalysisMode] = useState<boolean>(false);
+  const [cells, setCells] = useState<Array<{
+    id: string;
+    code: string;
+    output: string;
+    isRunning: boolean;
+  }>>([]);
   
   // Use the new hooks
   const tablesHook = useBigQueryTables('biquery_data');
@@ -206,7 +212,8 @@ export default function BigQueryTestPage() {
     console.log('🏗️ Creating Daytona sandbox with language:', selectedLanguage);
     setSandboxStatus('creating');
     setCommandOutput('');
-    setJupyterUrl('');
+    setAnalysisMode(false);
+    setCells([]);
     
     try {
       const action = selectedLanguage === 'python' ? 'create-python' : 'create';
@@ -271,19 +278,40 @@ export default function BigQueryTestPage() {
     }
   };
 
-  // Parse Jupyter URL from command output
-  const parseJupyterUrl = (output: string): string => {
-    // Look for Jupyter URLs in format: http://127.0.0.1:8888/?token=...
-    const urlMatch = output.match(/http:\/\/[0-9.]+:[0-9]+\/\?token=[a-zA-Z0-9]+/);
-    return urlMatch ? urlMatch[0] : '';
+  // Add a new cell
+  const addCell = () => {
+    const newCell = {
+      id: Date.now().toString(),
+      code: '',
+      output: '',
+      isRunning: false
+    };
+    setCells(prev => [...prev, newCell]);
   };
 
-  // Execute command with Jupyter URL detection
-  const executeCommandWithJupyterDetection = async () => {
-    if (!sandbox?.id || !command.trim()) return;
+  // Remove a cell
+  const removeCell = (cellId: string) => {
+    setCells(prev => prev.filter(cell => cell.id !== cellId));
+  };
+
+  // Update cell code
+  const updateCellCode = (cellId: string, code: string) => {
+    setCells(prev => prev.map(cell => 
+      cell.id === cellId ? { ...cell, code } : cell
+    ));
+  };
+
+  // Execute a Python cell
+  const executePythonCell = async (cellId: string) => {
+    if (!sandbox?.id) return;
     
-    console.log('⚡ Executing command with Jupyter detection:', command);
-    setLoadingState('commandExecution', true);
+    const cell = cells.find(c => c.id === cellId);
+    if (!cell || !cell.code.trim()) return;
+    
+    // Set cell as running
+    setCells(prev => prev.map(c => 
+      c.id === cellId ? { ...c, isRunning: true, output: '' } : c
+    ));
     
     try {
       const response = await fetch('/api/daytona', {
@@ -291,35 +319,102 @@ export default function BigQueryTestPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'execute',
-          command: command.trim(),
+          command: `python3 -c "${cell.code.replace(/"/g, '\\"')}"`,
           sandboxId: sandbox.id
         })
       });
       
       const result = await response.json();
-      console.log('📊 Command execution result:', result);
       
-      if (result.success) {
-        const output = result.output || 'Command executed successfully';
-        setCommandOutput(prev => prev + '\n\n$ ' + command + '\n' + output);
-        
-        // Check if this was a jupyter command and extract URL
-        if (command.includes('jupyter notebook') && output.includes('http://')) {
-          const url = parseJupyterUrl(output);
-          if (url) {
-            setJupyterUrl(url);
-            setCommandOutput(prev => prev + '\n\n🔗 Jupyter URL detected: ' + url);
-          }
-        }
-      } else {
-        setCommandOutput(prev => prev + '\n\n$ ' + command + '\n❌ Error: ' + (result.error || 'Command failed'));
+      // Update cell with result
+      setCells(prev => prev.map(c => 
+        c.id === cellId ? {
+          ...c,
+          isRunning: false,
+          output: result.success ? (result.output || 'Executed successfully') : 
+                  `Error: ${result.error || 'Execution failed'}`
+        } : c
+      ));
+    } catch (error) {
+      setCells(prev => prev.map(c => 
+        c.id === cellId ? {
+          ...c,
+          isRunning: false,
+          output: `Network Error: ${error instanceof Error ? error.message : 'Failed to execute'}`
+        } : c
+      ));
+    }
+  };
+
+  // Auto-install pandas and start analysis mode
+  const startAnalysisMode = async () => {
+    if (!sandbox?.id) return;
+    
+    setAnalysisMode(true);
+    setCommandOutput(prev => prev + '\n\n🔬 Starting Analysis Mode...');
+    
+    // First install pandas and dependencies
+    try {
+      const installResponse = await fetch('/api/daytona', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'execute',
+          command: 'pip install pandas numpy matplotlib seaborn',
+          sandboxId: sandbox.id
+        })
+      });
+      
+      const installResult = await installResponse.json();
+      setCommandOutput(prev => prev + '\n\n📦 Installing analysis packages...');
+      
+      if (installResult.success) {
+        setCommandOutput(prev => prev + '\n✅ Pandas, NumPy, Matplotlib & Seaborn installed!');
       }
     } catch (error) {
-      console.error('❌ Error executing command:', error);
-      setCommandOutput(prev => prev + '\n\n$ ' + command + '\n❌ Network error: ' + (error instanceof Error ? error.message : 'Failed to execute'));
-    } finally {
-      setLoadingState('commandExecution', false);
+      setCommandOutput(prev => prev + `\n⚠️ Warning: Failed to auto-install packages (${error instanceof Error ? error.message : 'unknown error'}). You may need to install them manually.`);
     }
+    
+    // Add initial cell with imports
+    const initialCell = {
+      id: 'initial-' + Date.now().toString(),
+      code: 'import pandas as pd\nimport numpy as np\nimport matplotlib.pyplot as plt\nimport seaborn as sns\nprint("📊 Analysis environment ready!")\nprint(f"Pandas version: {pd.__version__}")',
+      output: '',
+      isRunning: false
+    };
+    setCells([initialCell]);
+  };
+
+  // Analysis templates
+  const analysisTemplates = {
+    'data-load': {
+      name: '📁 Load CSV Data',
+      code: `# Load CSV data\ndf = pd.read_csv('your_file.csv')\nprint(f"Shape: {df.shape}")\nprint(df.head())`
+    },
+    'data-summary': {
+      name: '📊 Data Summary', 
+      code: `# Data summary\nprint("Dataset Info:")\nprint(df.info())\nprint("\nBasic Statistics:")\nprint(df.describe())\nprint("\nMissing Values:")\nprint(df.isnull().sum())`
+    },
+    'visualization': {
+      name: '📈 Quick Visualization',
+      code: `# Create basic plots\nplt.figure(figsize=(12, 4))\n\n# Histogram\nplt.subplot(1, 2, 1)\ndf.select_dtypes(include=[np.number]).hist(bins=20)\nplt.title('Numeric Columns Distribution')\n\n# Correlation heatmap\nplt.subplot(1, 2, 2)\nsns.heatmap(df.corr(), annot=True, cmap='coolwarm')\nplt.title('Correlation Matrix')\n\nplt.tight_layout()\nplt.show()`
+    },
+    'filtering': {
+      name: '🔍 Filter & Group',
+      code: `# Data filtering and grouping examples\n# Filter data\nfiltered_df = df[df['column_name'] > value]\nprint(f"Filtered rows: {len(filtered_df)}")\n\n# Group by analysis\ngrouped = df.groupby('category_column').agg({'numeric_column': ['mean', 'sum', 'count']})\nprint(grouped)`
+    }
+  };
+
+  // Add template cell
+  const addTemplateCell = (templateKey: string) => {
+    const template = analysisTemplates[templateKey as keyof typeof analysisTemplates];
+    const newCell = {
+      id: Date.now().toString(),
+      code: template.code,
+      output: '',
+      isRunning: false
+    };
+    setCells(prev => [...prev, newCell]);
   };
 
   const destroySandbox = async () => {
@@ -344,7 +439,8 @@ export default function BigQueryTestPage() {
       if (result.success) {
         setSandbox(null);
         setSandboxStatus('idle');
-        setJupyterUrl(''); // Clear Jupyter URL
+        setAnalysisMode(false);
+        setCells([]);
         setCommandOutput(prev => prev + '\n\n🗑️ Sandbox destroyed successfully!');
       } else {
         setCommandOutput(prev => prev + '\n\n❌ Error destroying sandbox: ' + (result.error || 'Unknown error'));
@@ -937,66 +1033,126 @@ export default function BigQueryTestPage() {
               </Button>
             </div>
 
-            {/* Python-specific Jupyter buttons */}
-            {sandboxStatus === 'ready' && sandbox?.language === 'python' && (
+            {/* Python-specific Analysis Mode */}
+            {sandboxStatus === 'ready' && sandbox?.language === 'python' && !analysisMode && (
               <div className="mb-6">
-                <h3 className="font-medium mb-3">🐍 Python & Jupyter</h3>
-                <div className="flex flex-wrap gap-2 mb-4">
+                <h3 className="font-medium mb-3">🔬 Python Analysis</h3>
+                <div className="flex gap-3 mb-4">
                   <Button
-                    onClick={() => setCommand('pip install jupyter notebook')}
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
+                    onClick={startAnalysisMode}
+                    disabled={loading.commandExecution}
+                    className="bg-purple-600 hover:bg-purple-700"
                   >
-                    📦 Install Jupyter
-                  </Button>
-                  <Button
-                    onClick={() => setCommand('jupyter notebook --no-browser --port=8888 --ip=0.0.0.0 --allow-root')}
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                  >
-                    🚀 Start Jupyter
-                  </Button>
-                  <Button
-                    onClick={() => setCommand('python --version')}
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                  >
-                    🐍 Python Version
-                  </Button>
-                  <Button
-                    onClick={() => setCommand('pip list')}
-                    variant="outline"
-                    size="sm"
-                    className="text-xs"
-                  >
-                    📋 List Packages
+                    {loading.commandExecution ? '📦 Setting up...' : '🔬 Start Analysis Mode'}
                   </Button>
                 </div>
-                
-                {/* Jupyter URL Display */}
-                {jupyterUrl && (
-                  <div className="mb-4 p-3 bg-green-50 border border-green-300 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-green-800">
-                        🎉 Jupyter Notebook is running!
-                      </span>
-                      <a
-                        href={jupyterUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center px-3 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700"
-                      >
-                        🔗 Open Notebook
-                      </a>
-                    </div>
-                    <div className="text-xs text-green-600 mt-1 font-mono">
-                      {jupyterUrl}
-                    </div>
+                <div className="text-sm text-gray-600 bg-white p-3 rounded border">
+                  💡 <strong>Analysis Mode:</strong> Cell-based Python execution with auto-installed pandas, numpy, matplotlib & seaborn.
+                  <br/>
+                  🚀 <strong>Templates:</strong> Use quick templates to get started with data analysis tasks.
+                  <br/>
+                  ⚡ <strong>Tip:</strong> Press Ctrl+Enter in cells to run them quickly.
+                </div>
+              </div>
+            )}
+
+            {/* Cell-based Analysis Interface */}
+            {sandboxStatus === 'ready' && sandbox?.language === 'python' && analysisMode && (
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-medium">🔬 Python Analysis Cells</h3>
+                  <div className="flex gap-2">
+                    <Button onClick={addCell} size="sm" variant="outline">
+                      ➕ Add Cell
+                    </Button>
+                    <Button 
+                      onClick={() => { setAnalysisMode(false); setCells([]); }}
+                      size="sm" 
+                      variant="outline"
+                      className="text-red-600"
+                    >
+                      🔄 Exit Analysis
+                    </Button>
                   </div>
-                )}
+                </div>
+
+                {/* Quick Templates */}
+                <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+                  <div className="text-sm font-medium text-purple-800 mb-2">🚀 Quick Templates:</div>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(analysisTemplates).map(([key, template]) => (
+                      <Button
+                        key={key}
+                        onClick={() => addTemplateCell(key)}
+                        size="sm"
+                        variant="outline"
+                        className="text-xs text-purple-700 border-purple-300 hover:bg-purple-100"
+                      >
+                        {template.name}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Render Cells */}
+                <div className="space-y-4">
+                  {cells.map((cell, index) => (
+                    <div key={cell.id} className="border border-gray-300 rounded-lg overflow-hidden">
+                      <div className="bg-gray-100 px-3 py-2 flex items-center justify-between text-sm">
+                        <span className="text-gray-600">Cell {index + 1}</span>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => executePythonCell(cell.id)}
+                            disabled={cell.isRunning}
+                            size="sm"
+                            className="text-xs bg-green-600 hover:bg-green-700"
+                          >
+                            {cell.isRunning ? '⏳ Running...' : '▶️ Run'}
+                          </Button>
+                          <Button
+                            onClick={() => removeCell(cell.id)}
+                            size="sm"
+                            variant="outline"
+                            className="text-xs text-red-600"
+                          >
+                            🗑️
+                          </Button>
+                        </div>
+                      </div>
+                      
+                      {/* Code Input */}
+                      <textarea
+                        value={cell.code}
+                        onChange={(e) => updateCellCode(cell.id, e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.ctrlKey && e.key === 'Enter' && !cell.isRunning) {
+                            e.preventDefault();
+                            executePythonCell(cell.id);
+                          }
+                        }}
+                        placeholder="# Enter Python code here\nimport pandas as pd\nprint('Hello, analysis!')\n\n# Press Ctrl+Enter to run" 
+                        rows={4}
+                        className="w-full p-3 font-mono text-sm border-0 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        disabled={cell.isRunning}
+                      />
+                      
+                      {/* Output Display */}
+                      {cell.output && (
+                        <div className="bg-gray-900 text-green-400 p-3 font-mono text-sm">
+                          <div className="text-xs text-gray-500 mb-1">Output:</div>
+                          <pre className="whitespace-pre-wrap">{cell.output}</pre>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  
+                  {/* No cells message */}
+                  {cells.length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      No analysis cells yet. Click &quot;Add Cell&quot; to start coding!
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -1010,12 +1166,12 @@ export default function BigQueryTestPage() {
                     placeholder="Enter command to execute..."
                     value={command}
                     onChange={(e) => setCommand(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && !loading.commandExecution && executeCommandWithJupyterDetection()}
+                    onKeyPress={(e) => e.key === 'Enter' && !loading.commandExecution && executeCommand()}
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     disabled={loading.commandExecution}
                   />
                   <Button
-                    onClick={executeCommandWithJupyterDetection}
+                    onClick={executeCommand}
                     disabled={!command.trim() || loading.commandExecution}
                     className="bg-green-600 hover:bg-green-700"
                   >
@@ -1103,6 +1259,7 @@ export default function BigQueryTestPage() {
               <p><strong>4. Custom Query:</strong> Run SQL queries (be careful with LIMIT to avoid costs)</p>
               <p><strong>5. Direct Tests:</strong> Test specific tables and detect dataset locations</p>
               <p><strong>6. Daytona Sandbox:</strong> Create cloud sandbox environments for testing (Beta)</p>
+              <p><strong>7. Python Analysis:</strong> Use cell-based Python execution with pandas for data analysis (like Google Colab)</p>
             </div>
           </Card>
         </div>
