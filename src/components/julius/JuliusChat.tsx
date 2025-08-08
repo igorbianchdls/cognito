@@ -30,7 +30,7 @@ interface ChatMessage {
 export default function JuliusChat() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   
-  const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
+  const { messages, input, setInput, handleSubmit, isLoading, error } = useChat({
     api: '/api/chat',
     body: {
       files: uploadedFiles.filter(f => f.content) || []
@@ -46,7 +46,7 @@ export default function JuliusChat() {
   };
 
   const onInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    handleInputChange(e.target.value);
+    setInput(e.target.value);
   };
 
   const handleFilesChange = (files: UploadedFile[]) => {
