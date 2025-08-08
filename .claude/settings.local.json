@@ -19,7 +19,8 @@
       "WebFetch(domain:docs.univer.ai)",
       "WebFetch(domain:www.ag-grid.com)",
       "Bash(find:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "WebFetch(domain:ai-sdk.dev)"
     ],
     "deny": []
   }
