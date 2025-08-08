@@ -137,12 +137,12 @@ export default function JuliusChat() {
                     }
                     
                     // Handle tool result
-                    else if (data.type === 'tool-result') {
-                      console.log('✅ Tool result:', data);
+                    else if (data.type === 'tool-output-available') {
+                      console.log('✅ Tool output available:', data);
                       const toolCall = lastMessage.toolCalls?.find(tc => tc.id === data.toolCallId);
                       if (toolCall) {
                         toolCall.state = 'result';
-                        toolCall.result = data.result;
+                        toolCall.result = data.output;
                       }
                     }
                     
