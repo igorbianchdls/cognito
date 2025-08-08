@@ -6,17 +6,40 @@ interface DaytonaRequest {
   sandboxId?: string;
 }
 
+interface SandboxData {
+  id: string;
+  status: string;
+  language?: string;
+  createdAt?: Date;
+}
+
+interface CommandResult {
+  output?: string;
+  result?: string;
+  exitCode?: number;
+}
+
 interface DaytonaResponse {
   success: boolean;
-  data?: any;
+  data?: SandboxData | { message: string };
   error?: string;
   sandboxId?: string;
   output?: string;
 }
 
+// Use the actual Sandbox type from SDK, but with minimum interface we need
+interface DaytonaSandbox {
+  id: string;
+  destroy?: () => Promise<void>;
+  process?: {
+    executeCommand: (command: string) => Promise<CommandResult>;
+  };
+  [key: string]: unknown; // Allow additional properties from SDK
+}
+
 // Simple in-memory store for sandboxes (for demo purposes)
 // In production, you'd want to use a database
-const activeSandboxes = new Map<string, any>();
+const activeSandboxes = new Map<string, DaytonaSandbox>();
 
 export async function POST(req: Request): Promise<Response> {
   console.log('🏗️ [DAYTONA API] Route called');
@@ -53,11 +76,16 @@ export async function POST(req: Request): Promise<Response> {
           console.log('✅ [DAYTONA API] Sandbox created successfully:', sandbox.id);
           
           // Store sandbox reference for later use
-          activeSandboxes.set(sandbox.id, sandbox);
+          activeSandboxes.set(sandbox.id, sandbox as unknown as DaytonaSandbox);
           
           response = {
             success: true,
-            data: sandbox,
+            data: {
+              id: sandbox.id,
+              status: 'ready',
+              language: 'typescript',
+              createdAt: new Date()
+            } as SandboxData,
             sandboxId: sandbox.id
           };
         } catch (error) {
@@ -100,6 +128,14 @@ export async function POST(req: Request): Promise<Response> {
           }
           
           // Execute command
+          if (!sandbox.process?.executeCommand) {
+            response = {
+              success: false,
+              error: 'Sandbox does not support command execution'
+            };
+            break;
+          }
+          
           const result = await sandbox.process.executeCommand(command);
           
           console.log('✅ [DAYTONA API] Command executed successfully');
@@ -140,7 +176,9 @@ export async function POST(req: Request): Promise<Response> {
           }
           
           // Destroy sandbox
-          await sandbox.destroy();
+          if (sandbox.destroy) {
+            await sandbox.destroy();
+          }
           
           // Remove from our store
           activeSandboxes.delete(sandboxId);
