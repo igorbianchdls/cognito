@@ -62,7 +62,7 @@ export async function POST(req: Request) {
         { role: 'system', content: systemMessage },
         ...messages
       ],
-      stopWhen: stepCountIs(3), // Máximo 3 steps para multi-step
+      stopWhen: stepCountIs(3), // Enable multi-step tool calling (max 3 steps)
       tools: {
         getWeather: tool({
           description: 'Get weather information for a specific location and display it in a beautiful weather card',
@@ -249,10 +249,9 @@ export async function POST(req: Request) {
       },
     });
 
-    console.log('🚀 Multi-step stream initialized...');
+    console.log('🚀 Multi-step streaming response with generative UI...');
     
-    // Return streaming response like before
-    return result.toTextStreamResponse();
+    return result.toUIMessageStreamResponse();
   } catch (error) {
     console.error('Error in chat API:', error);
     return new Response(JSON.stringify({ 
