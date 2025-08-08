@@ -55,6 +55,7 @@ export async function POST(req: Request) {
 
     // EXACT implementation from AI SDK documentation
     console.log('🚀 Using EXACT documentation example...');
+    console.log('🚀 ANTES generateText');
     
     const result = await generateText({
       model: anthropic('claude-3-5-sonnet-20241022'),
@@ -64,16 +65,24 @@ export async function POST(req: Request) {
           inputSchema: z.object({
             location: z.string().describe('The location to get the weather for'),
           }),
-          execute: async ({ location }) => ({
-            location,
-            temperature: 72 + Math.floor(Math.random() * 21) - 10,
-          }),
+          execute: async ({ location }) => {
+            console.log('🔥 WEATHER TOOL EXECUTADA! Location:', location);
+            const result = {
+              location,
+              temperature: 72 + Math.floor(Math.random() * 21) - 10,
+            };
+            console.log('🔥 WEATHER RESULT:', result);
+            return result;
+          },
         }),
       },
       prompt: 'What is the weather in San Francisco?',
     });
 
-    console.log('✅ Result:', result.text);
+    console.log('🚀 DEPOIS generateText');
+    console.log('✅ Result text:', result.text);
+    console.log('✅ Result toolCalls:', result.toolCalls);
+    console.log('✅ Result toolResults:', result.toolResults);
     
     return new Response(result.text, {
       headers: {
