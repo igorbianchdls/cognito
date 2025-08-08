@@ -77,7 +77,7 @@ export default function RespostaDaIA({ content, isLoading, toolInvocations }: Re
                 {toolInvocations?.map((toolInvocation) => {
                   const { toolName, toolCallId, state, args } = toolInvocation;
                   
-                  if (state === 'result') {
+                  if (state === 'result' && toolInvocation.result) {
                     const result = toolInvocation.result;
                     
                     switch (toolName) {
