@@ -118,7 +118,7 @@ export default function JuliusChat() {
                 role: msg.role as 'user' | 'assistant',
                 content: msg.content,
                 createdAt: new Date(),
-                parts: (msg as { parts?: Array<{ type: string; state?: string; output?: Record<string, unknown> }> }).parts || [],
+                parts: (msg as { parts?: Array<{ type: string; state?: string; output?: { toolName: string; result?: Record<string, unknown>; args?: Record<string, unknown> } }> }).parts || [],
               }))}
               isLoading={isLoading}
               error={error ? error.toString() : null}

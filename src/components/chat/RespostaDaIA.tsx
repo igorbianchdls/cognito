@@ -5,10 +5,25 @@ import WeatherCard from '@/components/julius/WeatherCard';
 import Calculator from '@/components/julius/Calculator';
 import ChartGenerator from '@/components/julius/ChartGenerator';
 
+interface ToolOutput {
+  toolName: string;
+  result?: {
+    location?: string;
+    temperature?: number;
+    title?: string;
+    data?: Array<{label: string; value: number}>;
+    type?: 'bar' | 'pie' | 'line';
+  };
+  args?: {
+    expression?: string;
+    result?: number;
+  };
+}
+
 interface MessagePart {
   type: string;
   state?: 'loading' | 'output-available' | 'error';
-  output?: Record<string, unknown>;
+  output?: ToolOutput;
 }
 
 interface RespostaDaIAProps {
@@ -79,17 +94,17 @@ export default function RespostaDaIA({ content, isLoading, parts }: RespostaDaIA
                     switch (type) {
                       case 'tool-call':
                         // Handle different tool types
-                        if (output.toolName === 'getWeather') {
+                        if (output.toolName === 'getWeather' && output.result) {
                           return (
                             <div key={index} className="my-4">
                               <WeatherCard 
-                                location={output.result.location} 
-                                temperature={output.result.temperature} 
+                                location={output.result.location || ''} 
+                                temperature={output.result.temperature || 0} 
                               />
                             </div>
                           );
                         }
-                        if (output.toolName === 'calculator') {
+                        if (output.toolName === 'calculator' && output.args) {
                           return (
                             <div key={index} className="my-4">
                               <Calculator 
@@ -99,13 +114,13 @@ export default function RespostaDaIA({ content, isLoading, parts }: RespostaDaIA
                             </div>
                           );
                         }
-                        if (output.toolName === 'createChart') {
+                        if (output.toolName === 'createChart' && output.result) {
                           return (
                             <div key={index} className="my-4">
                               <ChartGenerator 
-                                title={output.result.title}
-                                data={output.result.data}
-                                type={output.result.type}
+                                title={output.result.title || ''}
+                                data={output.result.data || []}
+                                type={output.result.type || 'bar'}
                               />
                             </div>
                           );

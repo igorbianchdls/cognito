@@ -14,10 +14,25 @@ interface UploadedFile {
   columnCount?: number;
 }
 
+interface ToolOutput {
+  toolName: string;
+  result?: {
+    location?: string;
+    temperature?: number;
+    title?: string;
+    data?: Array<{label: string; value: number}>;
+    type?: 'bar' | 'pie' | 'line';
+  };
+  args?: {
+    expression?: string;
+    result?: number;
+  };
+}
+
 interface MessagePart {
   type: string;
   state?: 'loading' | 'output-available' | 'error';
-  output?: Record<string, unknown>;
+  output?: ToolOutput;
 }
 
 interface ChatMessage {
