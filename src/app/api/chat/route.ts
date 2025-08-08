@@ -210,12 +210,9 @@ export async function POST(req: Request) {
               
               return {
                 success: true,
-                data: result.data,
-                totalRows: result.totalRows,
-                schema: result.schema,
-                executionTime,
-                bytesProcessed: result.bytesProcessed,
-                query: finalQuery
+                data: result,
+                query: finalQuery,
+                executionTime
               };
             } catch (error) {
               console.error('❌ Error executing BigQuery:', error);

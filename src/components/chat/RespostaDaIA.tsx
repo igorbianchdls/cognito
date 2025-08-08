@@ -157,15 +157,18 @@ export default function RespostaDaIA({ content, isLoading, toolCalls }: Resposta
                         return (
                           <div key={id} className="my-4">
                             <BigQueryTableData 
-                              data={result.data as Array<Record<string, unknown>>}
-                              totalRows={result.totalRows as number}
-                              schema={result.schema as Array<{
-                                name: string;
-                                type: string;
-                                mode: string;
-                              }>}
+                              data={result.data as {
+                                data: Array<Record<string, unknown>>;
+                                totalRows: number;
+                                schema: Array<{
+                                  name: string;
+                                  type: string;
+                                  mode: string;
+                                }>;
+                                executionTime: number;
+                                bytesProcessed?: number;
+                              }}
                               executionTime={result.executionTime as number}
-                              bytesProcessed={result.bytesProcessed as number}
                               query={result.query as string}
                               success={result.success as boolean}
                               error={result.error as string}

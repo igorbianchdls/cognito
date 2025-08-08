@@ -6,12 +6,17 @@ interface Schema {
   mode: string;
 }
 
-interface BigQueryTableDataProps {
-  data?: Record<string, unknown>[];
-  totalRows?: number;
-  schema?: Schema[];
-  executionTime?: number;
+interface QueryResult {
+  data: Record<string, unknown>[];
+  totalRows: number;
+  schema: Schema[];
+  executionTime: number;
   bytesProcessed?: number;
+}
+
+interface BigQueryTableDataProps {
+  data?: QueryResult;
+  executionTime?: number;
   query?: string;
   success?: boolean;
   error?: string;
@@ -19,10 +24,7 @@ interface BigQueryTableDataProps {
 
 export default function BigQueryTableData({
   data,
-  totalRows,
-  schema,
-  executionTime,
-  bytesProcessed,
+  executionTime: toolExecutionTime,
   query,
   success,
   error
@@ -47,7 +49,7 @@ export default function BigQueryTableData({
     );
   }
 
-  if (!data || data.length === 0) {
+  if (!data || !data.data || data.data.length === 0) {
     return (
       <div className="my-4 p-4 border-2 border-gray-200 bg-gray-50 rounded-lg">
         <div className="flex items-center gap-2 mb-2">
@@ -67,8 +69,15 @@ export default function BigQueryTableData({
     );
   }
 
+  // Extract values from data structure
+  const actualData = data.data;
+  const totalRows = data.totalRows;
+  const schema = data.schema;
+  const executionTime = toolExecutionTime || data.executionTime;
+  const bytesProcessed = data.bytesProcessed;
+
   // Get column names from first row or schema
-  const columns = schema?.map(s => s.name) || Object.keys(data[0] || {});
+  const columns = schema?.map(s => s.name) || Object.keys(actualData[0] || {});
 
   // Format values for display
   const formatValue = (value: unknown, columnName?: string, columnType?: string): string => {
@@ -114,8 +123,8 @@ export default function BigQueryTableData({
         <div>
           <h3 className="text-lg font-semibold text-green-800">Resultados da Query</h3>
           <div className="flex flex-wrap gap-4 text-sm text-green-600 mt-1">
-            <span>📊 {data.length} linha{data.length !== 1 ? 's' : ''} retornada{data.length !== 1 ? 's' : ''}</span>
-            {totalRows && totalRows !== data.length && (
+            <span>📊 {actualData.length} linha{actualData.length !== 1 ? 's' : ''} retornada{actualData.length !== 1 ? 's' : ''}</span>
+            {totalRows && totalRows !== actualData.length && (
               <span>📈 {totalRows.toLocaleString('pt-BR')} linha{totalRows !== 1 ? 's' : ''} total</span>
             )}
             {executionTime && (
@@ -168,7 +177,7 @@ export default function BigQueryTableData({
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {data.map((row, rowIndex) => (
+              {actualData.map((row, rowIndex) => (
                 <tr key={rowIndex} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                   <td className="px-3 py-3 text-xs text-gray-400 border-r border-gray-200 font-mono">
                     {rowIndex + 1}
@@ -205,8 +214,8 @@ export default function BigQueryTableData({
             <div className="space-y-1">
               <div>• <strong>Colunas:</strong> {columns.length}</div>
               <div>• <strong>Tipos:</strong> {schema?.map(s => `${s.name}(${s.type})`).join(', ') || 'Variados'}</div>
-              {data.length >= 20 && (
-                <div>• <strong>Limitado:</strong> Mostrando primeiros {data.length} resultados</div>
+              {actualData.length >= 20 && (
+                <div>• <strong>Limitado:</strong> Mostrando primeiros {actualData.length} resultados</div>
               )}
             </div>
           </div>
