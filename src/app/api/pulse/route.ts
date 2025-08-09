@@ -28,7 +28,7 @@ Responda sempre como se fosse o Pulse, um assistente projetado para ser rápido 
       messages: convertToCoreMessages(messages),
     });
     
-    return result.toDataStreamResponse();
+    return result.toTextStreamResponse();
   } catch (error) {
     return new Response(JSON.stringify({ 
       error: 'Internal server error',
