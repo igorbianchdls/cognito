@@ -1,5 +1,14 @@
 import { Agentset } from 'agentset';
 
+// Type for search result items
+interface SearchResult {
+  content?: string;
+  text?: string;
+  metadata?: Record<string, unknown>;
+  score?: number;
+  [key: string]: unknown;
+}
+
 // Type for namespace operations based on Agentset documentation
 interface AgentsetNamespace {
   search: (
@@ -9,7 +18,7 @@ interface AgentsetNamespace {
       rerank?: boolean;
       includeMetadata?: boolean;
     }
-  ) => Promise<unknown[]>;
+  ) => Promise<SearchResult[]>;
   ingestion: {
     create: (params: {
       payload: {
@@ -107,7 +116,7 @@ class AgentsetService {
     metadata?: Record<string, unknown>;
   }): Promise<{
     success: boolean;
-    results?: unknown[];
+    results?: SearchResult[];
     error?: string;
   }> {
     try {
@@ -158,7 +167,7 @@ class AgentsetService {
   }): Promise<{
     success: boolean;
     answer?: string;
-    sources?: unknown[];
+    sources?: SearchResult[];
     error?: string;
   }> {
     try {
@@ -268,7 +277,7 @@ class AgentsetService {
    */
   async listNamespaces(): Promise<{
     success: boolean;
-    namespaces?: unknown[];
+    namespaces?: Array<{ id: string; name: string; slug: string }>;
     error?: string;
   }> {
     try {
