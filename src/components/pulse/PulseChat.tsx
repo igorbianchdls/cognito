@@ -1,6 +1,7 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 import { useState } from 'react';
 import Sidebar from '../navigation/Sidebar';
 import MessageList from './MessageList';
@@ -13,9 +14,9 @@ export default function PulseChat() {
     status,
     error 
   } = useChat({
-    fetch: async (url, init) => {
-      return fetch('/api/pulse', init);
-    }
+    transport: new DefaultChatTransport({
+      api: '/api/pulse',
+    }),
   });
 
   const [input, setInput] = useState('');
@@ -30,10 +31,7 @@ export default function PulseChat() {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
     
-    sendMessage({
-      role: 'user',
-      parts: [{ type: 'text', text: input.trim() }]
-    });
+    sendMessage({ text: input.trim() });
     
     setInput('');
   };
