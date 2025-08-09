@@ -1,5 +1,6 @@
 'use client';
 
+import type { ChatStatus } from 'ai';
 import {
   PromptInput,
   PromptInputTextarea,
@@ -15,7 +16,7 @@ interface MessageInputProps {
 }
 
 export default function MessageInput({ value, onChange, onSubmit, disabled }: MessageInputProps) {
-  const status = disabled ? 'loading' : !value.trim() ? 'disabled' : 'ready';
+  const status: ChatStatus = disabled ? 'submitted' : 'ready';
 
   return (
     <PromptInput 
@@ -33,7 +34,7 @@ export default function MessageInput({ value, onChange, onSubmit, disabled }: Me
       />
       <PromptInputToolbar className="absolute right-2 bottom-2">
         <PromptInputSubmit
-          status={status as any}
+          status={status}
           disabled={!value.trim() || disabled}
           className="h-8 w-8 transition-all duration-200"
         />
