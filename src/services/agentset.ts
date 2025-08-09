@@ -102,7 +102,7 @@ class AgentsetService {
     }
 
     const nsId = namespaceId || await this.getDefaultNamespace();
-    return this.client!.namespace(nsId) as AgentsetNamespace;
+    return this.client!.namespace(nsId) as unknown as AgentsetNamespace;
   }
 
   /**
