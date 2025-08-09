@@ -53,6 +53,7 @@ export default function MessageInput({
         value={value}
         onChange={onChange}
         disabled={disabled}
+        className="!border-0 !focus-visible:border-transparent !focus-visible:ring-0 !ring-0 focus:border-transparent focus:ring-0"
       />
       <PromptInputToolbar>
         <PromptInputTools>
