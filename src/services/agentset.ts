@@ -1,13 +1,15 @@
 import { Agentset } from 'agentset';
 
-// Type for namespace operations
+// Type for namespace operations based on Agentset documentation
 interface AgentsetNamespace {
-  search: (params: {
-    query: string;
-    topK?: number;
-    rerank?: boolean;
-    metadata?: Record<string, unknown>;
-  }) => Promise<unknown[]>;
+  search: (
+    query: string,
+    params?: {
+      topK?: number;
+      rerank?: boolean;
+      includeMetadata?: boolean;
+    }
+  ) => Promise<unknown[]>;
   ingestion: {
     create: (params: {
       payload: {
@@ -121,11 +123,10 @@ class AgentsetService {
         rerank: params.rerank || true
       });
 
-      const searchResults = await namespace.search({
-        query: params.query,
+      const searchResults = await namespace.search(params.query, {
         topK: params.topK || 10,
         rerank: params.rerank !== false,
-        ...(params.metadata && { metadata: params.metadata })
+        includeMetadata: true
       });
 
       console.log('✅ RAG search completed:', {
