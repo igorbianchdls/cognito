@@ -8,6 +8,8 @@ import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 
 export default function PulseChat() {
+  console.log('🚀 PulseChat component loading...');
+  
   const { 
     messages, 
     sendMessage,
@@ -17,6 +19,12 @@ export default function PulseChat() {
     transport: new DefaultChatTransport({
       api: '/api/pulse',
     }),
+  });
+
+  console.log('🚀 useChat initialized:', { 
+    messagesCount: messages.length, 
+    status, 
+    hasError: !!error 
   });
 
   const [input, setInput] = useState('');
@@ -31,6 +39,7 @@ export default function PulseChat() {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
     
+    console.log('📤 Sending message:', input.trim());
     sendMessage({ text: input.trim() });
     
     setInput('');
@@ -51,6 +60,8 @@ export default function PulseChat() {
   const handleModelChange = (model: string) => {
     console.log('🤖 Model changed to:', model);
   };
+
+  console.log('🎨 Rendering PulseChat with messages:', messages.length);
 
   return (
     <div className="flex h-screen bg-[#ffffff] dark:bg-[#0f0f0f]">
