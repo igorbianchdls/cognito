@@ -408,6 +408,120 @@ export async function POST(req: Request) {
               };
             }
           },
+        }),
+        createBigQueryChart: tool({
+          description: 'Create interactive charts from BigQuery data with specified X and Y columns',
+          inputSchema: z.object({
+            query: z.string().describe('SQL query to get data for chart (e.g., "SELECT * FROM `creatto-463117.biquery_data.car_prices`")'),
+            chartType: z.enum(['bar', 'line', 'pie', 'scatter']).describe('Type of chart to create'),
+            xColumn: z.string().describe('Column name for X axis'),
+            yColumn: z.string().describe('Column name for Y axis (should be numeric for most charts)'),
+            title: z.string().optional().describe('Chart title'),
+            groupBy: z.string().optional().describe('Optional column to group/aggregate by')
+          }),
+          execute: async ({ query, chartType, xColumn, yColumn, title, groupBy }) => {
+            console.log('📊 BigQuery chart tool executed:', { query, chartType, xColumn, yColumn, title, groupBy });
+            try {
+              // Initialize BigQuery service if not already done
+              if (!bigQueryService['client']) {
+                console.log('⚡ Initializing BigQuery service...');
+                await bigQueryService.initialize();
+              }
+
+              // Modify query based on chart requirements
+              let chartQuery = query.trim();
+              
+              // For pie charts or when groupBy is specified, we need aggregation
+              if (chartType === 'pie' || groupBy) {
+                const aggregateColumn = groupBy || xColumn;
+                const valueColumn = yColumn;
+                
+                // Create aggregation query
+                chartQuery = `
+                  WITH chart_data AS (${chartQuery})
+                  SELECT 
+                    ${aggregateColumn} as x_value,
+                    ${chartType === 'pie' ? 'COUNT(*)' : `SUM(CAST(${valueColumn} AS FLOAT64))`} as y_value
+                  FROM chart_data 
+                  WHERE ${aggregateColumn} IS NOT NULL
+                  ${chartType === 'pie' ? '' : `AND ${valueColumn} IS NOT NULL`}
+                  GROUP BY ${aggregateColumn}
+                  ORDER BY y_value DESC
+                  LIMIT 50
+                `;
+              } else {
+                // For scatter/line charts, select specific columns
+                chartQuery = `
+                  WITH chart_data AS (${chartQuery})
+                  SELECT 
+                    ${xColumn} as x_value,
+                    CAST(${yColumn} AS FLOAT64) as y_value
+                  FROM chart_data 
+                  WHERE ${xColumn} IS NOT NULL AND ${yColumn} IS NOT NULL
+                  LIMIT 100
+                `;
+              }
+              
+              console.log('🚀 Executing chart query:', chartQuery);
+              const startTime = Date.now();
+              
+              const result = await bigQueryService.executeQuery({
+                query: chartQuery,
+                location: process.env.BIGQUERY_LOCATION
+              });
+              
+              const executionTime = Date.now() - startTime;
+              console.log('✅ Chart query executed successfully:', {
+                rows: result.data.length,
+                executionTime: `${executionTime}ms`
+              });
+
+              // Process data for chart format
+              const rawData = result.data;
+              if (!rawData || rawData.length === 0) {
+                return {
+                  success: false,
+                  error: 'No data returned from query for chart',
+                  query: chartQuery
+                };
+              }
+
+              // Format data for different chart types
+              const chartData = rawData.map(row => ({
+                x: String(row.x_value || ''),
+                y: Number(row.y_value || 0),
+                label: String(row.x_value || ''),
+                value: Number(row.y_value || 0)
+              }));
+
+              console.log('📊 Chart data processed:', {
+                dataPoints: chartData.length,
+                sampleData: chartData.slice(0, 3)
+              });
+
+              return {
+                success: true,
+                chartData,
+                chartType,
+                xColumn,
+                yColumn,
+                title: title || `${yColumn} by ${xColumn}`,
+                query: chartQuery,
+                executionTime,
+                dataCount: chartData.length
+              };
+            } catch (error) {
+              console.error('❌ Error creating BigQuery chart:', error);
+              return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to create chart',
+                query,
+                chartType,
+                xColumn,
+                yColumn
+              };
+            }
+          },
         })
       },
     });

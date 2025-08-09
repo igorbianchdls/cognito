@@ -7,6 +7,7 @@ import ChartGenerator from '@/components/julius/ChartGenerator';
 import BigQueryDatasetsList from '@/components/julius/BigQueryDatasetsList';
 import BigQueryTablesList from '@/components/julius/BigQueryTablesList';
 import BigQueryTableData from '@/components/julius/BigQueryTableData';
+import BigQueryChartGenerator from '@/components/julius/BigQueryChartGenerator';
 
 interface ToolCall {
   id: string;
@@ -170,6 +171,28 @@ export default function RespostaDaIA({ content, isLoading, toolCalls }: Resposta
                               }}
                               executionTime={result.executionTime as number}
                               query={result.query as string}
+                              success={result.success as boolean}
+                              error={result.error as string}
+                            />
+                          </div>
+                        );
+                      case 'createBigQueryChart':
+                        return (
+                          <div key={id} className="my-4">
+                            <BigQueryChartGenerator 
+                              chartData={result.chartData as Array<{
+                                x: string;
+                                y: number;
+                                label: string;
+                                value: number;
+                              }>}
+                              chartType={result.chartType as 'bar' | 'line' | 'pie' | 'scatter'}
+                              xColumn={result.xColumn as string}
+                              yColumn={result.yColumn as string}
+                              title={result.title as string}
+                              query={result.query as string}
+                              executionTime={result.executionTime as number}
+                              dataCount={result.dataCount as number}
                               success={result.success as boolean}
                               error={result.error as string}
                             />
