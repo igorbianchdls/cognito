@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 interface Schema {
   name: string;
   type: string;
@@ -29,6 +31,7 @@ export default function BigQueryTableData({
   success,
   error
 }: BigQueryTableDataProps) {
+  const [activeTab, setActiveTab] = useState<'table' | 'sql'>('table');
   console.log('🎨 ===== BigQueryTableData COMPONENT CALLED =====');
   
   // 🔍 DEBUG: Log do que o componente recebeu
@@ -147,7 +150,7 @@ export default function BigQueryTableData({
   });
 
   // Format values for display
-  const formatValue = (value: unknown, columnName?: string, columnType?: string): string => {
+  const formatValue = (value: unknown): string => {
     if (value === null || value === undefined) return 'NULL';
     
     // Handle different data types
@@ -213,71 +216,132 @@ export default function BigQueryTableData({
         </div>
       </div>
 
-      {/* Query Display */}
-      {query && (
-        <div className="mb-4 p-3 bg-green-100 border border-green-300 rounded-lg">
-          <div className="text-sm font-medium text-green-700 mb-1">🔍 Query executada:</div>
-          <code className="text-sm text-green-800 font-mono block overflow-x-auto whitespace-pre">
-            {query}
-          </code>
-        </div>
-      )}
+      {/* Tabs Navigation */}
+      <div className="flex border-b border-green-300 mb-4">
+        <button
+          onClick={() => setActiveTab('table')}
+          className={`px-4 py-2 font-medium text-sm transition-colors ${
+            activeTab === 'table'
+              ? 'text-green-700 border-b-2 border-green-500 bg-green-50'
+              : 'text-gray-600 hover:text-green-600 hover:bg-green-50'
+          }`}
+        >
+          📊 Tabela
+        </button>
+        <button
+          onClick={() => setActiveTab('sql')}
+          className={`px-4 py-2 font-medium text-sm transition-colors ${
+            activeTab === 'sql'
+              ? 'text-green-700 border-b-2 border-green-500 bg-green-50'
+              : 'text-gray-600 hover:text-green-600 hover:bg-green-50'
+          }`}
+        >
+          💾 SQL
+        </button>
+      </div>
 
-      {/* Data Table */}
-      <div className="bg-white border border-green-300 rounded-lg overflow-hidden">
-        <div className="overflow-x-auto max-h-96">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50 sticky top-0">
-              <tr>
-                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 border-r border-gray-200">
-                  #
-                </th>
-                {columns.map((column, index) => {
-                  const schemaInfo = schema?.find(s => s.name === column);
-                  return (
-                    <th
-                      key={column}
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 border-r border-gray-200 last:border-r-0"
-                    >
-                      <div>
-                        <div>{column.replace(/_/g, ' ')}</div>
-                        {schemaInfo && (
-                          <div className="text-xs text-gray-400 normal-case font-normal mt-1">
-                            {schemaInfo.type}{schemaInfo.mode === 'REPEATED' ? '[]' : ''}
-                          </div>
-                        )}
-                      </div>
-                    </th>
-                  );
-                })}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {actualData.map((row, rowIndex) => (
-                <tr key={rowIndex} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                  <td className="px-3 py-3 text-xs text-gray-400 border-r border-gray-200 font-mono">
-                    {rowIndex + 1}
-                  </td>
+      {/* Tab Content */}
+      {activeTab === 'table' && (
+        <div className="bg-white border border-green-300 rounded-lg overflow-hidden">
+          <div className="overflow-x-auto max-h-96">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50 sticky top-0">
+                <tr>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 border-r border-gray-200">
+                    #
+                  </th>
                   {columns.map((column) => {
-                    const value = row[column];
                     const schemaInfo = schema?.find(s => s.name === column);
                     return (
-                      <td
+                      <th
                         key={column}
-                        className="px-4 py-3 text-sm text-gray-900 border-r border-gray-200 last:border-r-0 max-w-xs"
+                        className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50 border-r border-gray-200 last:border-r-0"
                       >
-                        <div className="truncate" title={String(value || '')}>
-                          {formatValue(value, column, schemaInfo?.type)}
+                        <div>
+                          <div>{column.replace(/_/g, ' ')}</div>
+                          {schemaInfo && (
+                            <div className="text-xs text-gray-400 normal-case font-normal mt-1">
+                              {schemaInfo.type}{schemaInfo.mode === 'REPEATED' ? '[]' : ''}
+                            </div>
+                          )}
                         </div>
-                      </td>
+                      </th>
                     );
                   })}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {actualData.map((row, rowIndex) => (
+                  <tr key={rowIndex} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                    <td className="px-3 py-3 text-xs text-gray-400 border-r border-gray-200 font-mono">
+                      {rowIndex + 1}
+                    </td>
+                    {columns.map((column) => {
+                      const value = row[column];
+                      return (
+                        <td
+                          key={column}
+                          className="px-4 py-3 text-sm text-gray-900 border-r border-gray-200 last:border-r-0 max-w-xs"
+                        >
+                          <div className="truncate" title={String(value || '')}>
+                            {formatValue(value)}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
+
+      {activeTab === 'sql' && query && (
+        <div className="bg-white border border-green-300 rounded-lg overflow-hidden">
+          <div className="p-4">
+            <div className="flex justify-between items-start mb-3">
+              <h4 className="text-sm font-medium text-green-700">🔍 Query SQL Executada</h4>
+              <button
+                onClick={() => navigator.clipboard.writeText(query)}
+                className="text-xs px-2 py-1 bg-green-100 hover:bg-green-200 text-green-700 rounded transition-colors"
+                title="Copiar SQL"
+              >
+                📋 Copiar
+              </button>
+            </div>
+            
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 overflow-x-auto">
+              <pre className="text-sm text-gray-800 font-mono whitespace-pre-wrap leading-relaxed">
+                {query}
+              </pre>
+            </div>
+            
+            <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              {executionTime && (
+                <div className="flex items-center gap-1">
+                  <span className="text-gray-500">⏱️ Tempo:</span>
+                  <span className="font-medium text-green-700">{executionTime}ms</span>
+                </div>
+              )}
+              <div className="flex items-center gap-1">
+                <span className="text-gray-500">📊 Linhas:</span>
+                <span className="font-medium text-green-700">{actualData.length}</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="text-gray-500">📋 Colunas:</span>
+                <span className="font-medium text-green-700">{columns.length}</span>
+              </div>
+              {bytesProcessed && (
+                <div className="flex items-center gap-1">
+                  <span className="text-gray-500">💾 Dados:</span>
+                  <span className="font-medium text-green-700">{formatBytes(bytesProcessed)}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer Info */}
       <div className="mt-4 p-3 bg-green-100 border border-green-300 rounded-lg">
