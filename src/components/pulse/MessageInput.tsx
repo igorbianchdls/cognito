@@ -45,7 +45,7 @@ export default function MessageInput({
     { id: 'gpt-4-turbo', name: 'GPT-4 Turbo' },
   ]
 }: MessageInputProps) {
-  const status: ChatStatus = disabled ? 'loading' : 'awaiting_message';
+  const status: ChatStatus = disabled ? 'submitted' : 'ready';
 
   return (
     <PromptInput onSubmit={onSubmit} className="mt-4 divide-transparent [&>*]:border-transparent border-gray-200">
