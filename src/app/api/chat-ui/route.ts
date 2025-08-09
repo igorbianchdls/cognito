@@ -1,5 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { convertToModelMessages, streamText, UIMessage } from 'ai';
+import { convertToModelMessages, streamText, tool, UIMessage } from 'ai';
+import { z } from 'zod';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -29,6 +30,20 @@ export async function POST(req: Request) {
 
 Responda sempre como um assistente projetado para ser rápido e eficiente.`,
       messages: convertToModelMessages(messages),
+      tools: {
+        weather: tool({
+          description: 'Get weather information for a location',
+          inputSchema: z.object({
+            location: z.string().describe('The location to get weather for'),
+          }),
+          execute: async ({ location }) => ({
+            location,
+            temperature: Math.floor(Math.random() * 30) + 10,
+            condition: ['sunny', 'cloudy', 'rainy', 'snowy'][Math.floor(Math.random() * 4)],
+            humidity: Math.floor(Math.random() * 40) + 30,
+          }),
+        }),
+      },
     });
 
     return result.toUIMessageStreamResponse({
