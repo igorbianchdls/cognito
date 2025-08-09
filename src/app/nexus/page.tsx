@@ -39,7 +39,7 @@ export default function Page() {
             
             {/* Render tool calls */}
             {message.toolCalls && message.toolCalls.length > 0 && (
-              <div style={{ marginTop: '10px', space: '10px' }}>
+              <div style={{ marginTop: '10px' }}>
                 {message.toolCalls.map((toolCall, index) => (
                   <div key={toolCall.id} style={{ marginBottom: '10px' }}>
                     <ToolResult toolCall={toolCall} />
