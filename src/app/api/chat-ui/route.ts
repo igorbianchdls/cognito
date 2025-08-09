@@ -43,6 +43,32 @@ Responda sempre como um assistente projetado para ser rápido e eficiente.`,
             humidity: Math.floor(Math.random() * 40) + 30,
           }),
         }),
+        calculator: tool({
+          description: 'Perform mathematical calculations',
+          inputSchema: z.object({
+            expression: z.string().describe('The mathematical expression to calculate'),
+          }),
+          execute: async ({ expression }) => {
+            try {
+              // Simple evaluation for basic operations (+ - * / parentheses)
+              // Note: In production, use a proper math parser like mathjs
+              const sanitized = expression.replace(/[^0-9+\-*/().\s]/g, '');
+              const result = new Function('return ' + sanitized)();
+              
+              return {
+                expression,
+                result: typeof result === 'number' ? result : 0,
+                steps: [`Evaluated: ${sanitized}`, `Result: ${result}`]
+              };
+            } catch (error) {
+              return {
+                expression,
+                result: 0,
+                steps: [`Error: Invalid expression`]
+              };
+            }
+          }
+        }),
       },
     });
 
