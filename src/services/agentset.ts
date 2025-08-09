@@ -46,8 +46,7 @@ class AgentsetService {
       console.log('🔍 Creating/getting default namespace:', namespaceName);
       
       const namespace = await this.client!.namespaces.create({
-        name: namespaceName,
-        description: 'Knowledge base for Cognito application'
+        name: namespaceName
       });
 
       this.defaultNamespaceId = namespace.id;
