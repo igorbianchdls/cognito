@@ -46,7 +46,8 @@ class AgentsetService {
       console.log('🔍 Creating/getting default namespace:', namespaceName);
       
       const namespace = await this.client!.namespaces.create({
-        name: namespaceName
+        name: namespaceName,
+        slug: namespaceName.toLowerCase().replace(/\s+/g, '-')
       });
 
       this.defaultNamespaceId = namespace.id;
