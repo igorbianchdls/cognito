@@ -17,6 +17,7 @@ export const Sources = ({ className, ...props }: SourcesProps) => (
     {...props}
   />
 );
+Sources.displayName = 'Sources';
 
 export type SourcesTriggerProps = ComponentProps<typeof CollapsibleTrigger> & {
   count: number;
@@ -37,6 +38,7 @@ export const SourcesTrigger = ({
     )}
   </CollapsibleTrigger>
 );
+SourcesTrigger.displayName = 'SourcesTrigger';
 
 export type SourcesContentProps = ComponentProps<typeof CollapsibleContent>;
 
@@ -53,6 +55,7 @@ export const SourcesContent = ({
     {...props}
   />
 );
+SourcesContent.displayName = 'SourcesContent';
 
 export type SourceProps = ComponentProps<'a'>;
 
@@ -72,3 +75,4 @@ export const Source = ({ href, title, children, ...props }: SourceProps) => (
     )}
   </a>
 );
+Source.displayName = 'Source';
