@@ -12,7 +12,7 @@ import type { UIMessage } from 'ai';
 interface MessageListProps {
   messages: UIMessage[];
   isLoading: boolean;
-  error: Error | null;
+  error: Error | undefined;
 }
 
 export default function MessageList({ messages, isLoading, error }: MessageListProps) {

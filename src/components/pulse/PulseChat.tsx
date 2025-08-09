@@ -9,18 +9,36 @@ import MessageInput from './MessageInput';
 export default function PulseChat() {
   const { 
     messages, 
-    input,
-    setInput,
-    handleInputChange,
-    handleSubmit, 
-    isLoading, 
+    sendMessage,
+    status, 
     error 
-  } = useChat({
-    api: '/api/pulse'
-  });
+  } = useChat();
 
+  // Manual input state management (AI SDK 5.0 no longer manages input internally)
+  const [input, setInput] = useState('');
+  
   // State for model selection (useChat doesn't handle this)
   const [selectedModel, setSelectedModel] = useState('claude-3-5-sonnet');
+  
+  // Loading state based on status
+  const isLoading = status === 'submitted' || status === 'streaming';
+  
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+  };
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+    
+    // Send message using AI SDK's sendMessage
+    sendMessage({
+      role: 'user',
+      parts: [{ type: 'text', text: input.trim() }]
+    });
+    // Clear input after submission
+    setInput('');
+  };
 
   const handleAttach = () => {
     console.log('📎 Attach file clicked');
