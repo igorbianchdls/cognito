@@ -1,9 +1,12 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { streamText, convertToCoreMessages } from 'ai';
+import { convertToModelMessages, streamText, UIMessage } from 'ai';
+
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30;
 
 export async function POST(req: Request) {
   try {
-    const { messages } = await req.json();
+    const { messages }: { messages: UIMessage[] } = await req.json();
 
     if (!process.env.ANTHROPIC_API_KEY) {
       return new Response(JSON.stringify({ 
@@ -16,7 +19,7 @@ export async function POST(req: Request) {
 
     const result = streamText({
       model: anthropic('claude-3-5-sonnet-20241022'),
-      system: `Você é Pulse, um assistente AI moderno, útil e conciso. Características:
+      system: `Você é um assistente AI moderno, útil e conciso. Características:
 
 - Responda de forma clara e direta em português brasileiro
 - Seja amigável mas profissional  
@@ -24,11 +27,18 @@ export async function POST(req: Request) {
 - Use formatação markdown quando apropriado
 - Seja conversacional mas informativo
 
-Responda sempre como se fosse o Pulse, um assistente projetado para ser rápido e eficiente.`,
-      messages: convertToCoreMessages(messages),
+Responda sempre como um assistente projetado para ser rápido e eficiente.`,
+      messages: convertToModelMessages(messages),
     });
-    
-    return result.toUIMessageStreamResponse();
+
+    return result.toUIMessageStreamResponse({
+      onError: error => {
+        if (error == null) return 'unknown error';
+        if (typeof error === 'string') return error;
+        if (error instanceof Error) return error.message;
+        return JSON.stringify(error);
+      },
+    });
   } catch (error) {
     return new Response(JSON.stringify({ 
       error: 'Internal server error',
