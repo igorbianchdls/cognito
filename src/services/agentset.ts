@@ -73,22 +73,67 @@ class AgentsetService {
     }
 
     try {
-      // Try to create or get existing namespace
       const namespaceName = 'cognito-knowledge-base';
+      const namespaceSlug = namespaceName.toLowerCase().replace(/\s+/g, '-');
       
-      console.log('🔍 Creating/getting default namespace:', namespaceName);
+      console.log('🔍 Looking for existing namespace:', namespaceName);
       
+      // First, try to list existing namespaces
+      const existingNamespaces = await this.client!.namespaces.list();
+      console.log('📋 Found', existingNamespaces.length, 'existing namespaces');
+      
+      // Look for our namespace by slug
+      const existingNamespace = existingNamespaces.find(
+        (ns: { id: string; name: string; slug: string }) => ns.slug === namespaceSlug || ns.name === namespaceName
+      );
+      
+      if (existingNamespace) {
+        console.log('✅ Using existing namespace:', {
+          id: existingNamespace.id,
+          name: existingNamespace.name,
+          slug: existingNamespace.slug
+        });
+        this.defaultNamespaceId = existingNamespace.id;
+        return this.defaultNamespaceId;
+      }
+      
+      // If namespace doesn't exist, create it
+      console.log('🆕 Creating new namespace:', namespaceName);
       const namespace = await this.client!.namespaces.create({
         name: namespaceName,
-        slug: namespaceName.toLowerCase().replace(/\s+/g, '-')
+        slug: namespaceSlug
       });
 
       this.defaultNamespaceId = namespace.id;
-      console.log('✅ Default namespace ready:', this.defaultNamespaceId);
+      console.log('✅ New namespace created:', {
+        id: namespace.id,
+        name: namespaceName,
+        slug: namespaceSlug
+      });
       
       return this.defaultNamespaceId;
     } catch (error) {
-      console.error('❌ Error creating/getting default namespace:', error);
+      console.error('❌ Error with default namespace:', error);
+      
+      // If error contains "already in use", try to find the existing namespace
+      if (error instanceof Error && error.message.includes('already in use')) {
+        console.log('⚠️ Namespace already exists, attempting to find it...');
+        try {
+          const existingNamespaces = await this.client!.namespaces.list();
+          const existingNamespace = existingNamespaces.find(
+            (ns: { id: string; name: string; slug: string }) => ns.slug === 'cognito-knowledge-base' || ns.name === 'cognito-knowledge-base'
+          );
+          
+          if (existingNamespace) {
+            console.log('✅ Found existing namespace after error:', existingNamespace.id);
+            this.defaultNamespaceId = existingNamespace.id;
+            return this.defaultNamespaceId;
+          }
+        } catch (listError) {
+          console.error('❌ Failed to list namespaces after slug error:', listError);
+        }
+      }
+      
       throw error;
     }
   }
