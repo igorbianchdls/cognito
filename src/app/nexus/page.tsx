@@ -5,7 +5,7 @@ import { useState } from 'react';
 interface Message {
   id: string;
   role: 'user' | 'assistant';
-  content: string;
+  parts: { type: 'text'; text: string }[];
 }
 
 export default function Page() {
@@ -21,7 +21,9 @@ export default function Page() {
         {messages.map(message => (
           <div key={message.id} style={{ marginBottom: '10px' }}>
             <strong>{message.role === 'user' ? 'User: ' : 'AI: '}</strong>
-            {message.content}
+            {message.parts.map((part, index) => (
+              part.type === 'text' ? <span key={index}>{part.text}</span> : null
+            ))}
           </div>
         ))}
         {isLoading && <div>AI is thinking...</div>}
@@ -34,7 +36,7 @@ export default function Page() {
             const userMessage: Message = {
               id: Date.now().toString(),
               role: 'user',
-              content: input.trim()
+              parts: [{ type: 'text', text: input.trim() }]
             };
             
             setMessages(prev => [...prev, userMessage]);
@@ -55,7 +57,7 @@ export default function Page() {
               const assistantMessage: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
-                content: ''
+                parts: [{ type: 'text', text: '' }]
               };
               
               setMessages(prev => [...prev, assistantMessage]);
@@ -83,7 +85,7 @@ export default function Page() {
                             const newMessages = [...prev];
                             const lastMessage = newMessages[newMessages.length - 1];
                             if (lastMessage && lastMessage.role === 'assistant') {
-                              lastMessage.content += data.delta;
+                              lastMessage.parts[0].text += data.delta;
                             }
                             return newMessages;
                           });
