@@ -1,5 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { streamText } from 'ai';
+import { streamText, convertToCoreMessages } from 'ai';
 
 export async function POST(req: Request) {
   console.log('=== PULSE API DEBUG ===');
@@ -37,7 +37,7 @@ Responda sempre como se fosse o Pulse, um assistente projetado para ser rápido 
       model: anthropic('claude-3-5-sonnet-20241022'),
       messages: [
         { role: 'system', content: systemMessage },
-        ...messages
+        ...convertToCoreMessages(messages)
       ],
     });
 
