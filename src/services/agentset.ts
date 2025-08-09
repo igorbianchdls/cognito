@@ -1,5 +1,27 @@
 import { Agentset } from 'agentset';
 
+// Type for namespace operations
+interface AgentsetNamespace {
+  search: (params: {
+    query: string;
+    topK?: number;
+    rerank?: boolean;
+    metadata?: Record<string, unknown>;
+  }) => Promise<unknown[]>;
+  ingestion: {
+    create: (params: {
+      payload: {
+        type: string;
+        fileUrl: string;
+        name: string;
+      };
+      config?: {
+        metadata?: Record<string, unknown>;
+      };
+    }) => Promise<{ id: string }>;
+  };
+}
+
 class AgentsetService {
   private client: Agentset | null = null;
   private defaultNamespaceId: string | null = null;
@@ -63,13 +85,13 @@ class AgentsetService {
   /**
    * Get a namespace instance for operations
    */
-  async getNamespace(namespaceId?: string): Promise<unknown> {
+  async getNamespace(namespaceId?: string): Promise<AgentsetNamespace> {
     if (!this.client) {
       await this.initialize();
     }
 
     const nsId = namespaceId || await this.getDefaultNamespace();
-    return this.client!.namespace(nsId);
+    return this.client!.namespace(nsId) as AgentsetNamespace;
   }
 
   /**
