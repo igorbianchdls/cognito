@@ -230,8 +230,9 @@ export default function BigQueryChartGenerator({
                 r="4"
                 fill="#3b82f6"
                 className="transition-all duration-1000"
-                title={`${item.label}: ${item.y}`}
-              />
+              >
+                <title>{`${item.label}: ${item.y}`}</title>
+              </circle>
             );
           })}
         </svg>
@@ -274,8 +275,9 @@ export default function BigQueryChartGenerator({
                 fill="#3b82f6"
                 fillOpacity="0.7"
                 className="transition-all duration-1000 hover:fill-opacity-100"
-                title={`${item.label}: ${item.y}`}
-              />
+              >
+                <title>{`${item.label}: ${item.y}`}</title>
+              </circle>
             );
           })}
         </svg>
