@@ -109,3 +109,26 @@ button:focus-visible, input:focus-visible, textarea:focus-visible {
 
 /* AG Grid: Using Theming API (themeQuartz) - no CSS imports needed */
 
+/* Force remove all focus styles for AI SDK Elements */
+[data-slot="textarea"]:focus,
+[data-slot="textarea"]:focus-visible,
+.ai-prompt-input textarea:focus,
+.ai-prompt-input textarea:focus-visible,
+form[class*="divide"] textarea:focus,
+form[class*="divide"] textarea:focus-visible {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  ring: 0 !important;
+  border-color: transparent !important;
+}
+
+/* Remove focus styles from select components in AI Elements */
+form[class*="divide"] button:focus,
+form[class*="divide"] button:focus-visible {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+  ring: 0 !important;
+}
+
