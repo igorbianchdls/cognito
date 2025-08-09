@@ -57,19 +57,20 @@ export default function MessageInput({
         onChange={onChange}
         placeholder="What would you like to know?"
         disabled={disabled}
-        minHeight={50}
+        minHeight={56}
         maxHeight={128}
-        className="resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:border-0 p-3 pb-12 bg-transparent text-sm placeholder:text-[#8993a4] dark:placeholder:text-[#6c757d] text-[#172b4d] dark:text-[#e8eaed] disabled:opacity-50 disabled:cursor-not-allowed"
+        className="resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:border-0 p-3 pb-14 bg-transparent text-sm placeholder:text-[#8993a4] dark:placeholder:text-[#6c757d] text-[#172b4d] dark:text-[#e8eaed] disabled:opacity-50 disabled:cursor-not-allowed"
       />
-      <PromptInputToolbar className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+      <PromptInputToolbar className="absolute bottom-2 left-3 right-3 flex items-center justify-between h-8">
         {/* Left side - Tools */}
-        <PromptInputTools className="flex items-center gap-1">
+        <div className="flex items-center gap-1">
           <PromptInputButton
             type="button"
+            variant="ghost"
             size="sm"
             onClick={onAttach}
             disabled={disabled}
-            className="h-8 w-8 p-0 text-[#8993a4] hover:text-[#172b4d] dark:text-[#6c757d] dark:hover:text-[#e8eaed]"
+            className="h-7 w-7 p-0 text-[#8993a4] hover:text-[#172b4d] hover:bg-[#f1f3f4] dark:text-[#6c757d] dark:hover:text-[#e8eaed] dark:hover:bg-[#2d2d2d]"
             title="Attach file"
           >
             <PlusIcon className="h-4 w-4" />
@@ -77,10 +78,11 @@ export default function MessageInput({
           
           <PromptInputButton
             type="button"
+            variant="ghost"
             size="sm"
             onClick={onMicrophone}
             disabled={disabled}
-            className="h-8 w-8 p-0 text-[#8993a4] hover:text-[#172b4d] dark:text-[#6c757d] dark:hover:text-[#e8eaed]"
+            className="h-7 w-7 p-0 text-[#8993a4] hover:text-[#172b4d] hover:bg-[#f1f3f4] dark:text-[#6c757d] dark:hover:text-[#e8eaed] dark:hover:bg-[#2d2d2d]"
             title="Voice input"
           >
             <MicIcon className="h-4 w-4" />
@@ -88,36 +90,39 @@ export default function MessageInput({
           
           <PromptInputButton
             type="button"
+            variant="ghost"
             size="sm"
             onClick={onSearch}
             disabled={disabled}
-            className="h-8 px-3 text-[#8993a4] hover:text-[#172b4d] dark:text-[#6c757d] dark:hover:text-[#e8eaed] flex items-center gap-2"
+            className="h-7 px-2 text-[#8993a4] hover:text-[#172b4d] hover:bg-[#f1f3f4] dark:text-[#6c757d] dark:hover:text-[#e8eaed] dark:hover:bg-[#2d2d2d] flex items-center gap-1.5"
             title="Search"
           >
-            <SearchIcon className="h-4 w-4" />
-            <span className="text-sm">Search</span>
+            <SearchIcon className="h-3.5 w-3.5" />
+            <span className="text-xs">Search</span>
           </PromptInputButton>
-        </PromptInputTools>
+        </div>
 
         {/* Center - Model Select */}
-        <PromptInputModelSelect value={selectedModel} onValueChange={onModelChange}>
-          <PromptInputModelSelectTrigger className="h-8 px-3 text-sm bg-transparent border-0 shadow-none focus:ring-0 text-[#8993a4] hover:text-[#172b4d] dark:text-[#6c757d] dark:hover:text-[#e8eaed]">
-            <PromptInputModelSelectValue />
-          </PromptInputModelSelectTrigger>
-          <PromptInputModelSelectContent>
-            {availableModels.map((model) => (
-              <PromptInputModelSelectItem key={model.id} value={model.id}>
-                {model.name}
-              </PromptInputModelSelectItem>
-            ))}
-          </PromptInputModelSelectContent>
-        </PromptInputModelSelect>
+        <div className="flex-1 flex justify-center">
+          <PromptInputModelSelect value={selectedModel} onValueChange={onModelChange}>
+            <PromptInputModelSelectTrigger className="h-7 px-3 text-xs bg-transparent border-0 shadow-none focus:ring-0 text-[#8993a4] hover:text-[#172b4d] hover:bg-[#f1f3f4] dark:text-[#6c757d] dark:hover:text-[#e8eaed] dark:hover:bg-[#2d2d2d] rounded-md">
+              <PromptInputModelSelectValue />
+            </PromptInputModelSelectTrigger>
+            <PromptInputModelSelectContent>
+              {availableModels.map((model) => (
+                <PromptInputModelSelectItem key={model.id} value={model.id}>
+                  {model.name}
+                </PromptInputModelSelectItem>
+              ))}
+            </PromptInputModelSelectContent>
+          </PromptInputModelSelect>
+        </div>
 
         {/* Right side - Submit */}
         <PromptInputSubmit
           status={status}
           disabled={!value.trim() || disabled}
-          className="h-8 w-8 transition-all duration-200"
+          className="h-7 w-7 transition-all duration-200 flex-shrink-0"
         />
       </PromptInputToolbar>
     </PromptInput>
