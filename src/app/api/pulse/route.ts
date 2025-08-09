@@ -40,7 +40,7 @@ Responda sempre como se fosse o Pulse, um assistente projetado para ser rápido 
         ...messages
       ],
       temperature: 0.7,
-      maxTokens: 2000,
+      maxCompletionTokens: 2000,
     });
 
     console.log('🚀 Pulse streaming response...');
