@@ -39,8 +39,6 @@ Responda sempre como se fosse o Pulse, um assistente projetado para ser rápido 
         { role: 'system', content: systemMessage },
         ...messages
       ],
-      temperature: 0.7,
-      maxCompletionTokens: 2000,
     });
 
     console.log('🚀 Pulse streaming response...');
