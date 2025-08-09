@@ -50,16 +50,17 @@ export default function MessageInput({
   return (
     <PromptInput 
       onSubmit={onSubmit}
-      className="relative bg-white dark:bg-[#1a1a1a] rounded-lg border border-[#dfe1e6] dark:border-[#2d2d2d] focus-within:border-[#0052cc] transition-all duration-200"
+      className="relative bg-white dark:bg-[#1a1a1a] rounded-lg border border-[#dfe1e6] dark:border-[#2d2d2d] focus-within:border-[#0052cc] transition-all duration-200 min-h-[64px]"
     >
       <PromptInputTextarea
         value={value}
         onChange={onChange}
         placeholder="What would you like to know?"
         disabled={disabled}
-        minHeight={56}
+        minHeight={64}
         maxHeight={128}
-        className="resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:border-0 p-3 pb-14 bg-transparent text-sm placeholder:text-[#8993a4] dark:placeholder:text-[#6c757d] text-[#172b4d] dark:text-[#e8eaed] disabled:opacity-50 disabled:cursor-not-allowed"
+        className="resize-none border-0 shadow-none focus-visible:ring-0 focus-visible:border-0 p-3 pb-14 bg-transparent text-sm placeholder:text-[#8993a4] dark:placeholder:text-[#6c757d] text-[#172b4d] dark:text-[#e8eaed] disabled:opacity-50 disabled:cursor-not-allowed min-h-[64px]"
+        style={{ minHeight: '64px' }}
       />
       <PromptInputToolbar className="absolute bottom-2 left-3 right-3 flex items-center justify-between h-8">
         {/* Left side - Tools */}
