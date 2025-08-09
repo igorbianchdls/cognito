@@ -198,6 +198,26 @@ export default function RespostaDaIA({ content, isLoading, toolCalls }: Resposta
                             />
                           </div>
                         );
+                      case 'createChartFromTable':
+                        return (
+                          <div key={id} className="my-4">
+                            <BigQueryChartGenerator 
+                              chartData={result.chartData as Array<{
+                                x: string;
+                                y: number;
+                                label: string;
+                                value: number;
+                              }>}
+                              chartType={result.chartType as 'bar' | 'line' | 'pie' | 'scatter'}
+                              xColumn={result.xColumn as string}
+                              yColumn={result.yColumn as string}
+                              title={result.title as string}
+                              dataCount={result.dataCount as number}
+                              success={result.success as boolean}
+                              error={result.error as string}
+                            />
+                          </div>
+                        );
                       default:
                         return null;
                     }

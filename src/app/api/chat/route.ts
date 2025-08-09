@@ -522,6 +522,142 @@ export async function POST(req: Request) {
               };
             }
           },
+        }),
+        createChartFromTable: tool({
+          description: 'Create charts from previously loaded table data without executing new queries - use this when user wants a chart of data that was just shown in a table',
+          inputSchema: z.object({
+            tableData: z.array(z.record(z.unknown())).describe('Raw table data from the previous BigQuery result (array of row objects)'),
+            chartType: z.enum(['bar', 'line', 'pie', 'scatter']).describe('Type of chart to create'),
+            xColumn: z.string().describe('Column name for X axis'),
+            yColumn: z.string().describe('Column name for Y axis (should be numeric for most charts)'),
+            title: z.string().optional().describe('Chart title'),
+            groupBy: z.string().optional().describe('Optional column to group/aggregate by - useful for pie charts')
+          }),
+          execute: async ({ tableData, chartType, xColumn, yColumn, title, groupBy }) => {
+            console.log('📊 Chart from table tool executed:', { 
+              dataRows: tableData.length, 
+              chartType, 
+              xColumn, 
+              yColumn, 
+              title, 
+              groupBy 
+            });
+            
+            try {
+              if (!tableData || tableData.length === 0) {
+                return {
+                  success: false,
+                  error: 'No table data provided for chart',
+                  chartType,
+                  xColumn,
+                  yColumn
+                };
+              }
+
+              // Validate columns exist in data
+              const firstRow = tableData[0];
+              if (!firstRow.hasOwnProperty(xColumn)) {
+                return {
+                  success: false,
+                  error: `Column '${xColumn}' not found in table data. Available columns: ${Object.keys(firstRow).join(', ')}`,
+                  chartType,
+                  xColumn,
+                  yColumn
+                };
+              }
+
+              if (!firstRow.hasOwnProperty(yColumn)) {
+                return {
+                  success: false,
+                  error: `Column '${yColumn}' not found in table data. Available columns: ${Object.keys(firstRow).join(', ')}`,
+                  chartType,
+                  xColumn,
+                  yColumn
+                };
+              }
+
+              let processedData: Array<{ x: string; y: number; label: string; value: number }> = [];
+
+              // Process data based on chart type and groupBy
+              if (chartType === 'pie' || groupBy) {
+                const aggregateColumn = groupBy || xColumn;
+                const valueColumn = yColumn;
+
+                // Group and aggregate data
+                const grouped: Record<string, number> = {};
+                
+                tableData.forEach(row => {
+                  const key = String(row[aggregateColumn] || 'Unknown');
+                  const value = chartType === 'pie' ? 1 : Number(row[valueColumn]) || 0;
+                  grouped[key] = (grouped[key] || 0) + value;
+                });
+
+                // Convert to chart data format and sort by value
+                processedData = Object.entries(grouped)
+                  .map(([key, value]) => ({
+                    x: key,
+                    y: value,
+                    label: key,
+                    value: value
+                  }))
+                  .sort((a, b) => b.y - a.y)
+                  .slice(0, 50); // Limit to top 50
+
+              } else {
+                // For scatter/line charts, use raw data
+                processedData = tableData
+                  .filter(row => 
+                    row[xColumn] != null && 
+                    row[yColumn] != null &&
+                    !isNaN(Number(row[yColumn]))
+                  )
+                  .map((row) => ({
+                    x: String(row[xColumn]),
+                    y: Number(row[yColumn]) || 0,
+                    label: String(row[xColumn]),
+                    value: Number(row[yColumn]) || 0
+                  }))
+                  .slice(0, 100); // Limit to 100 points for performance
+              }
+
+              if (processedData.length === 0) {
+                return {
+                  success: false,
+                  error: `No valid data points found for chart. Check if column '${yColumn}' contains numeric values.`,
+                  chartType,
+                  xColumn,
+                  yColumn
+                };
+              }
+
+              console.log('📊 Chart data processed from table:', {
+                originalRows: tableData.length,
+                processedPoints: processedData.length,
+                sampleData: processedData.slice(0, 3)
+              });
+
+              return {
+                success: true,
+                chartData: processedData,
+                chartType,
+                xColumn,
+                yColumn,
+                title: title || `${yColumn} by ${xColumn}`,
+                dataCount: processedData.length,
+                source: 'table-data'
+              };
+
+            } catch (error) {
+              console.error('❌ Error creating chart from table data:', error);
+              return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to create chart from table data',
+                chartType,
+                xColumn,
+                yColumn
+              };
+            }
+          },
         })
       },
     });
