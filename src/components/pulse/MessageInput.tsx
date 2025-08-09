@@ -48,7 +48,7 @@ export default function MessageInput({
   const status: ChatStatus = disabled ? 'submitted' : 'ready';
 
   return (
-    <PromptInput onSubmit={onSubmit}>
+    <PromptInput onSubmit={onSubmit} className="[&>*]:border-t-0">
       <PromptInputTextarea
         value={value}
         onChange={onChange}
