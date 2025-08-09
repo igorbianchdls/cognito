@@ -7,12 +7,12 @@ import {
 } from '@/components/ai-elements/conversation';
 import { Message, MessageContent } from '@/components/ai-elements/message';
 import { Response } from '@/components/ai-elements/response';
-import type { UIMessage } from 'ai';
+import type { Message as AIMessage } from 'ai';
 
 interface MessageListProps {
-  messages: UIMessage[];
+  messages: AIMessage[];
   isLoading: boolean;
-  error: Error | undefined;
+  error: string | undefined;
 }
 
 export default function MessageList({ messages, isLoading, error }: MessageListProps) {
@@ -23,19 +23,10 @@ export default function MessageList({ messages, isLoading, error }: MessageListP
             {messages.map((message) => (
               <Message from={message.role} key={message.id}>
                 <MessageContent>
-                  {message.parts?.map((part, i) => {
-                    switch (part.type) {
-                      case 'text':
-                        return (
-                          <Response key={`${message.id}-${i}`}>
-                            {part.text}
-                          </Response>
-                        );
-                      default:
-                        return null;
-                    }
-                  })}
-                  {message.role === 'assistant' && (!message.parts || message.parts.length === 0) && isLoading && (
+                  <Response>
+                    {message.content}
+                  </Response>
+                  {message.role === 'assistant' && !message.content && isLoading && (
                     <div className="flex items-center gap-1">
                       <div className="w-2 h-2 bg-[#5f6368] rounded-full animate-pulse"></div>
                       <div className="w-2 h-2 bg-[#5f6368] rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
@@ -56,7 +47,7 @@ export default function MessageList({ messages, isLoading, error }: MessageListP
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             <p className="text-red-700 text-xs font-medium">
-              {error.message || 'Erro desconhecido'}
+              {error || 'Erro desconhecido'}
             </p>
           </div>
         </div>
