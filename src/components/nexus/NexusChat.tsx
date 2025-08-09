@@ -1,23 +1,127 @@
 'use client';
 
-import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
 import Sidebar from '../navigation/Sidebar';
 import MessageList from '../chat/MessageList';
 import InputArea from '../chat/InputArea';
 
+interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  createdAt: Date;
+}
+
 export default function NexusChat() {
   console.log('🚀 NexusChat component loading...');
   
-  const { 
-    messages, 
-    input,
-    handleInputChange,
-    handleSubmit,
-    isLoading,
-    error 
-  } = useChat({
-    api: '/api/chat-ui',
-  });
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: input.trim(),
+      createdAt: new Date(),
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    const currentInput = input;
+    setInput('');
+    setIsLoading(true);
+    setError(null);
+
+    console.log('📤 Sending message:', userMessage.content);
+
+    try {
+      const response = await fetch('/api/chat-ui', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [...messages, userMessage].map(msg => ({
+            role: msg.role,
+            content: msg.content,
+          })),
+        }),
+      });
+
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+      const assistantMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant', 
+        content: '',
+        createdAt: new Date(),
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('No response body');
+
+      const decoder = new TextDecoder();
+      let done = false;
+
+      while (!done) {
+        const { value, done: doneReading } = await reader.read();
+        done = doneReading;
+        
+        if (value) {
+          const chunk = decoder.decode(value);
+          
+          // Process each line as potential JSON
+          const lines = chunk.split('\n');
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                
+                setMessages(prev => {
+                  const newMessages = [...prev];
+                  const lastMessage = newMessages[newMessages.length - 1];
+                  
+                  if (lastMessage && lastMessage.role === 'assistant') {
+                    // Handle text deltas
+                    if (data.type === 'text-delta') {
+                      lastMessage.content += data.delta;
+                    }
+                  }
+                  
+                  return newMessages;
+                });
+              } catch {
+                // If not JSON, treat as regular text
+                setMessages(prev => {
+                  const newMessages = [...prev];
+                  const lastMessage = newMessages[newMessages.length - 1];
+                  if (lastMessage && lastMessage.role === 'assistant') {
+                    lastMessage.content += line;
+                  }
+                  return newMessages;
+                });
+              }
+            }
+          }
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      setInput(currentInput);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   console.log('🚀 useChat initialized:', { 
     messagesCount: messages.length, 
@@ -76,7 +180,7 @@ export default function NexusChat() {
             <MessageList 
               messages={messages}
               isLoading={isLoading}
-              error={error?.message}
+              error={error}
             />
           )}
         </div>
