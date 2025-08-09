@@ -46,8 +46,8 @@ export default function MessageList({ messages, isLoading, error }: MessageListP
               </Message>
             ))}
           </ConversationContent>
+          <ConversationScrollButton />
         </Conversation>
-        <ConversationScrollButton />
       
       {error && (
         <div className="p-3 bg-red-50 border border-red-200 rounded-lg mt-4">
