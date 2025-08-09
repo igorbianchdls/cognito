@@ -9,9 +9,9 @@ import MessageInput from './MessageInput';
 export default function PulseChat() {
   const { 
     messages, 
-    input, 
+    input,
     setInput,
-    handleInputChange, 
+    handleInputChange,
     handleSubmit, 
     isLoading, 
     error 
