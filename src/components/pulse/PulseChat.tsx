@@ -11,20 +11,35 @@ export default function PulseChat() {
   
   const { 
     messages, 
-    input,
-    handleInputChange,
-    handleSubmit,
-    isLoading,
+    sendMessage,
+    status,
     error 
   } = useChat({
     api: '/api/pulse',
   });
 
+  const [input, setInput] = useState('');
+  const isLoading = status === 'submitted' || status === 'streaming';
+
   console.log('🚀 useChat initialized:', { 
     messagesCount: messages.length, 
+    status,
     isLoading, 
     hasError: !!error 
   });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+    
+    console.log('📤 Sending message:', input.trim());
+    sendMessage({ text: input.trim() });
+    setInput('');
+  };
 
   const handleAttach = () => {
     console.log('📎 Attach file clicked');
