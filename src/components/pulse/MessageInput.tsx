@@ -48,7 +48,7 @@ export default function MessageInput({
   const status: ChatStatus = disabled ? 'submitted' : 'ready';
 
   return (
-    <PromptInput onSubmit={onSubmit} className="[&>*]:border-t-0">
+    <PromptInput onSubmit={onSubmit} className="mt-4">
       <PromptInputTextarea
         value={value}
         onChange={onChange}
@@ -68,20 +68,20 @@ export default function MessageInput({
             <SearchIcon size={16} />
             <span>Search</span>
           </PromptInputButton>
+          
+          <PromptInputModelSelect value={selectedModel} onValueChange={onModelChange}>
+            <PromptInputModelSelectTrigger>
+              <PromptInputModelSelectValue />
+            </PromptInputModelSelectTrigger>
+            <PromptInputModelSelectContent>
+              {availableModels.map((model) => (
+                <PromptInputModelSelectItem key={model.id} value={model.id}>
+                  {model.name}
+                </PromptInputModelSelectItem>
+              ))}
+            </PromptInputModelSelectContent>
+          </PromptInputModelSelect>
         </PromptInputTools>
-        
-        <PromptInputModelSelect value={selectedModel} onValueChange={onModelChange}>
-          <PromptInputModelSelectTrigger>
-            <PromptInputModelSelectValue />
-          </PromptInputModelSelectTrigger>
-          <PromptInputModelSelectContent>
-            {availableModels.map((model) => (
-              <PromptInputModelSelectItem key={model.id} value={model.id}>
-                {model.name}
-              </PromptInputModelSelectItem>
-            ))}
-          </PromptInputModelSelectContent>
-        </PromptInputModelSelect>
         
         <PromptInputSubmit
           status={status}
