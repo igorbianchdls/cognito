@@ -1,6 +1,7 @@
 'use client';
 
-import { useChat } from 'ai/react';
+import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
 import Sidebar from '../navigation/Sidebar';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
@@ -8,14 +9,32 @@ import MessageInput from './MessageInput';
 export default function PulseChat() {
   const { 
     messages, 
-    input,
-    handleInputChange,
-    handleSubmit,
-    isLoading,
+    sendMessage,
+    status,
     error 
   } = useChat({
     api: '/api/pulse'
   });
+
+  const [input, setInput] = useState('');
+  
+  const isLoading = status === 'submitted' || status === 'streaming';
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+    
+    sendMessage({
+      role: 'user',
+      parts: [{ type: 'text', text: input.trim() }]
+    });
+    
+    setInput('');
+  };
 
   const handleAttach = () => {
     console.log('📎 Attach file clicked');

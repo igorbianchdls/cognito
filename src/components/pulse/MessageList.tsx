@@ -7,10 +7,10 @@ import {
 } from '@/components/ai-elements/conversation';
 import { Message, MessageContent } from '@/components/ai-elements/message';
 import { Response } from '@/components/ai-elements/response';
-import type { Message as AIMessage } from 'ai';
+import type { UIMessage } from '@ai-sdk/react';
 
 interface MessageListProps {
-  messages: AIMessage[];
+  messages: UIMessage[];
   isLoading: boolean;
   error: string | undefined;
 }
@@ -23,10 +23,19 @@ export default function MessageList({ messages, isLoading, error }: MessageListP
             {messages.map((message) => (
               <Message from={message.role} key={message.id}>
                 <MessageContent>
-                  <Response>
-                    {message.content}
-                  </Response>
-                  {message.role === 'assistant' && !message.content && isLoading && (
+                  {message.parts?.map((part, i) => {
+                    switch (part.type) {
+                      case 'text':
+                        return (
+                          <Response key={`${message.id}-${i}`}>
+                            {part.text}
+                          </Response>
+                        );
+                      default:
+                        return null;
+                    }
+                  })}
+                  {message.role === 'assistant' && (!message.parts || message.parts.length === 0) && isLoading && (
                     <div className="flex items-center gap-1">
                       <div className="w-2 h-2 bg-[#5f6368] rounded-full animate-pulse"></div>
                       <div className="w-2 h-2 bg-[#5f6368] rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>

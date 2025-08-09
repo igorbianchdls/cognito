@@ -1,5 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { streamText } from 'ai';
+import { streamText, convertToCoreMessages } from 'ai';
 
 export async function POST(req: Request) {
   try {
@@ -25,10 +25,10 @@ export async function POST(req: Request) {
 - Seja conversacional mas informativo
 
 Responda sempre como se fosse o Pulse, um assistente projetado para ser rápido e eficiente.`,
-      messages,
+      messages: convertToCoreMessages(messages),
     });
     
-    return result.toTextStreamResponse();
+    return result.toUIMessageStreamResponse();
   } catch (error) {
     return new Response(JSON.stringify({ 
       error: 'Internal server error',
