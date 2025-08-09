@@ -13,7 +13,9 @@ export default function PulseChat() {
     status,
     error 
   } = useChat({
-    api: '/api/pulse'
+    fetch: async (url, init) => {
+      return fetch('/api/pulse', init);
+    }
   });
 
   const [input, setInput] = useState('');
