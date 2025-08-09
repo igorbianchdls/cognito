@@ -17,6 +17,7 @@ export default function PulseChat() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedModel, setSelectedModel] = useState('claude-3-5-sonnet');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,6 +117,26 @@ export default function PulseChat() {
     setInput(e.target.value);
   };
 
+  const handleAttach = () => {
+    console.log('📎 Attach file clicked');
+    // TODO: Implementar upload de arquivos
+  };
+
+  const handleMicrophone = () => {
+    console.log('🎤 Microphone clicked');
+    // TODO: Implementar gravação de áudio
+  };
+
+  const handleSearch = () => {
+    console.log('🔍 Search clicked');
+    // TODO: Implementar funcionalidade de busca
+  };
+
+  const handleModelChange = (model: string) => {
+    setSelectedModel(model);
+    console.log('🤖 Model changed to:', model);
+  };
+
   return (
     <div className="flex h-screen bg-[#ffffff] dark:bg-[#0f0f0f]">
       {/* Sidebar */}
@@ -141,6 +162,11 @@ export default function PulseChat() {
                   onChange={handleInputChange}
                   onSubmit={handleSubmit}
                   disabled={isLoading}
+                  onAttach={handleAttach}
+                  onMicrophone={handleMicrophone}
+                  onSearch={handleSearch}
+                  selectedModel={selectedModel}
+                  onModelChange={handleModelChange}
                 />
               </div>
             </div>
@@ -162,6 +188,11 @@ export default function PulseChat() {
                 onChange={handleInputChange}
                 onSubmit={handleSubmit}
                 disabled={isLoading}
+                onAttach={handleAttach}
+                onMicrophone={handleMicrophone}
+                onSearch={handleSearch}
+                selectedModel={selectedModel}
+                onModelChange={handleModelChange}
               />
             </div>
           </div>
