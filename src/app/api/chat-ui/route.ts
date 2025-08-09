@@ -1,5 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { convertToModelMessages, streamText, tool, UIMessage } from 'ai';
+import { convertToModelMessages, streamText, tool, stepCountIs, UIMessage } from 'ai';
 import { z } from 'zod';
 
 // Allow streaming responses up to 30 seconds
@@ -30,44 +30,35 @@ export async function POST(req: Request) {
 
 Responda sempre como um assistente projetado para ser rápido e eficiente.`,
       messages: convertToModelMessages(messages),
+      stopWhen: stepCountIs(3),
       tools: {
-        weather: tool({
-          description: 'Get weather information for a location',
+        getWeather: tool({
+          description: 'Get weather information for a specific location and display it in a beautiful weather card',
           inputSchema: z.object({
-            location: z.string().describe('The location to get weather for'),
+            location: z.string().describe('The location to get the weather for'),
           }),
-          execute: async ({ location }) => ({
-            location,
-            temperature: Math.floor(Math.random() * 30) + 10,
-            condition: ['sunny', 'cloudy', 'rainy', 'snowy'][Math.floor(Math.random() * 4)],
-            humidity: Math.floor(Math.random() * 40) + 30,
-          }),
+          execute: async ({ location }) => {
+            console.log('🌤️ Weather tool executed for:', location);
+            const temperature = 72 + Math.floor(Math.random() * 21) - 10;
+            return {
+              location,
+              temperature
+            };
+          },
         }),
         calculator: tool({
-          description: 'Perform mathematical calculations',
+          description: 'Create an interactive calculator for mathematical operations',
           inputSchema: z.object({
-            expression: z.string().describe('The mathematical expression to calculate'),
+            expression: z.string().optional().describe('Optional initial expression to show'),
+            result: z.number().optional().describe('Optional initial result to display'),
           }),
-          execute: async ({ expression }) => {
-            try {
-              // Simple evaluation for basic operations (+ - * / parentheses)
-              // Note: In production, use a proper math parser like mathjs
-              const sanitized = expression.replace(/[^0-9+\-*/().\s]/g, '');
-              const result = new Function('return ' + sanitized)();
-              
-              return {
-                expression,
-                result: typeof result === 'number' ? result : 0,
-                steps: [`Evaluated: ${sanitized}`, `Result: ${result}`]
-              };
-            } catch (error) {
-              return {
-                expression,
-                result: 0,
-                steps: [`Error: Invalid expression`]
-              };
-            }
-          }
+          execute: async ({ expression, result }) => {
+            console.log('🧮 Calculator tool executed');
+            return {
+              expression,
+              result
+            };
+          },
         }),
       },
     });

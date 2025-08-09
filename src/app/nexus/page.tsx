@@ -1,7 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { ToolResult } from '../../components/tools';
+import MessageList from '../../components/chat/MessageList';
+
+interface UploadedFile {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  url: string;
+  content?: string;
+  summary?: string;
+  fileType?: 'csv' | 'text' | 'unknown';
+  rowCount?: number;
+  columnCount?: number;
+}
 
 interface ToolCall {
   id: string;
@@ -14,7 +27,9 @@ interface ToolCall {
 interface Message {
   id: string;
   role: 'user' | 'assistant';
-  parts: { type: 'text'; text: string }[];
+  content: string;
+  createdAt: Date;
+  files?: UploadedFile[];
   toolCalls?: ToolCall[];
 }
 
@@ -22,33 +37,18 @@ export default function Page() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   return (
     <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
       <h1>Nexus Chat</h1>
       
       <div style={{ marginBottom: '20px', minHeight: '400px', border: '1px solid #ccc', padding: '10px', borderRadius: '5px' }}>
-        {messages.map(message => (
-          <div key={message.id} style={{ marginBottom: '15px' }}>
-            <div style={{ marginBottom: '5px' }}>
-              <strong>{message.role === 'user' ? 'User: ' : 'AI: '}</strong>
-              {message.parts.map((part, index) => (
-                part.type === 'text' ? <span key={index}>{part.text}</span> : null
-              ))}
-            </div>
-            
-            {/* Render tool calls */}
-            {message.toolCalls && message.toolCalls.length > 0 && (
-              <div style={{ marginTop: '10px' }}>
-                {message.toolCalls.map((toolCall, index) => (
-                  <div key={toolCall.id} style={{ marginBottom: '10px' }}>
-                    <ToolResult toolCall={toolCall} />
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        ))}
+        <MessageList 
+          messages={messages}
+          isLoading={isLoading}
+          error={error}
+        />
         {isLoading && <div>AI is thinking...</div>}
       </div>
 
@@ -59,7 +59,8 @@ export default function Page() {
             const userMessage: Message = {
               id: Date.now().toString(),
               role: 'user',
-              parts: [{ type: 'text', text: input.trim() }]
+              content: input.trim(),
+              createdAt: new Date()
             };
             
             setMessages(prev => [...prev, userMessage]);
@@ -80,7 +81,8 @@ export default function Page() {
               const assistantMessage: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
-                parts: [{ type: 'text', text: '' }],
+                content: '',
+                createdAt: new Date(),
                 toolCalls: []
               };
               
@@ -109,7 +111,7 @@ export default function Page() {
                             const newMessages = [...prev];
                             const lastMessage = newMessages[newMessages.length - 1];
                             if (lastMessage && lastMessage.role === 'assistant') {
-                              lastMessage.parts[0].text += data.delta;
+                              lastMessage.content += data.delta;
                             }
                             return newMessages;
                           });
@@ -152,8 +154,9 @@ export default function Page() {
                   }
                 }
               }
-            } catch (error) {
-              console.error('Error:', error);
+            } catch (err) {
+              setError(err instanceof Error ? err.message : 'Erro desconhecido');
+              console.error('Error:', err);
             } finally {
               setIsLoading(false);
             }
