@@ -6,21 +6,32 @@ import { z } from 'zod';
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
+  console.log('=== CHAT-UI API DEBUG ===');
+  console.log('API Key exists:', !!process.env.ANTHROPIC_API_KEY);
+  console.log('API Key length:', process.env.ANTHROPIC_API_KEY?.length || 0);
+  
   try {
-    const { messages }: { messages: UIMessage[] } = await req.json();
+    const { messages, files } = await req.json();
+    console.log('Messages received:', messages?.length || 0);
+    console.log('Files received:', files?.length || 0);
 
     if (!process.env.ANTHROPIC_API_KEY) {
+      console.error('Missing ANTHROPIC_API_KEY environment variable');
       return new Response(JSON.stringify({ 
-        error: 'Anthropic API key not configured'
+        error: 'Anthropic API key not configured',
+        details: 'Please set ANTHROPIC_API_KEY in your environment variables'
       }), { 
         status: 500,
         headers: { 'Content-Type': 'application/json' }
       });
     }
 
+    console.log('🚀 Starting streamText with multi-step support...');
+
     const result = streamText({
       model: anthropic('claude-3-5-sonnet-20241022'),
-      system: `Você é um assistente AI moderno, útil e conciso. Características:
+      messages: [
+        { role: 'system', content: `Você é um assistente AI moderno, útil e conciso. Características:
 
 - Responda de forma clara e direta em português brasileiro
 - Seja amigável mas profissional  
@@ -28,8 +39,9 @@ export async function POST(req: Request) {
 - Use formatação markdown quando apropriado
 - Seja conversacional mas informativo
 
-Responda sempre como um assistente projetado para ser rápido e eficiente.`,
-      messages: convertToModelMessages(messages),
+Responda sempre como um assistente projetado para ser rápido e eficiente.` },
+        ...messages
+      ],
       stopWhen: stepCountIs(3),
       tools: {
         getWeather: tool({
@@ -63,15 +75,11 @@ Responda sempre como um assistente projetado para ser rápido e eficiente.`,
       },
     });
 
-    return result.toUIMessageStreamResponse({
-      onError: error => {
-        if (error == null) return 'unknown error';
-        if (typeof error === 'string') return error;
-        if (error instanceof Error) return error.message;
-        return JSON.stringify(error);
-      },
-    });
+    console.log('🚀 Multi-step streaming response with generative UI...');
+    
+    return result.toUIMessageStreamResponse();
   } catch (error) {
+    console.error('Error in chat-ui API:', error);
     return new Response(JSON.stringify({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'

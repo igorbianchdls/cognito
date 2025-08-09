@@ -72,7 +72,11 @@ export default function Page() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                  messages: [...messages, userMessage]
+                  messages: [...messages, userMessage].map(msg => ({
+                    role: msg.role,
+                    content: msg.content,
+                  })),
+                  files: [],
                 })
               });
               
