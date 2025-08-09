@@ -8,6 +8,7 @@ import BigQueryDatasetsList from '@/components/julius/BigQueryDatasetsList';
 import BigQueryTablesList from '@/components/julius/BigQueryTablesList';
 import BigQueryTableData from '@/components/julius/BigQueryTableData';
 import BigQueryChartGenerator from '@/components/julius/BigQueryChartGenerator';
+import RAGSearchResults from '@/components/julius/RAGSearchResults';
 
 interface ToolCall {
   id: string;
@@ -213,6 +214,25 @@ export default function RespostaDaIA({ content, isLoading, toolCalls }: Resposta
                               yColumn={result.yColumn as string}
                               title={result.title as string}
                               dataCount={result.dataCount as number}
+                              success={result.success as boolean}
+                              error={result.error as string}
+                            />
+                          </div>
+                        );
+                      case 'ragSearch':
+                        return (
+                          <div key={id} className="my-4">
+                            <RAGSearchResults 
+                              answer={result.answer as string}
+                              sources={result.sources as Array<{
+                                content?: string;
+                                text?: string;
+                                metadata?: Record<string, unknown>;
+                                score?: number;
+                              }>}
+                              query={result.query as string}
+                              topK={result.topK as number}
+                              sourcesCount={result.sourcesCount as number}
                               success={result.success as boolean}
                               error={result.error as string}
                             />

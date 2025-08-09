@@ -2,6 +2,7 @@ import { anthropic } from '@ai-sdk/anthropic';
 import { streamText, tool, stepCountIs } from 'ai';
 import { z } from 'zod';
 import { bigQueryService } from '@/services/bigquery';
+import { agentsetService } from '@/services/agentset';
 
 export async function POST(req: Request) {
   console.log('=== CHAT API DEBUG ===');
@@ -655,6 +656,66 @@ export async function POST(req: Request) {
                 chartType,
                 xColumn,
                 yColumn
+              };
+            }
+          },
+        }),
+        ragSearch: tool({
+          description: 'Search the knowledge base using RAG (Retrieval-Augmented Generation) to find and answer questions based on uploaded documents',
+          inputSchema: z.object({
+            query: z.string().describe('The user question or search query to find relevant information from documents'),
+            topK: z.number().optional().default(10).describe('Number of most relevant documents to retrieve (1-20)'),
+            namespaceId: z.string().optional().describe('Optional specific namespace ID to search in (uses default if not provided)')
+          }),
+          execute: async ({ query, topK = 10, namespaceId }) => {
+            console.log('🔍 RAG search tool executed:', { query, topK, namespaceId });
+            
+            try {
+              // Initialize agentset service if not already done
+              if (!agentsetService['client']) {
+                console.log('⚡ Initializing Agentset service...');
+                await agentsetService.initialize();
+              }
+
+              // Perform RAG search and answer generation
+              console.log('🤖 Generating RAG answer for query:', query);
+              
+              const result = await agentsetService.generateAnswer({
+                query,
+                topK,
+                namespaceId
+              });
+
+              if (!result.success) {
+                console.log('❌ RAG search failed:', result.error);
+                return {
+                  success: false,
+                  error: result.error || 'Failed to search knowledge base',
+                  query
+                };
+              }
+
+              console.log('✅ RAG search completed successfully:', {
+                query,
+                sourcesCount: result.sources?.length || 0,
+                hasAnswer: !!result.answer
+              });
+
+              return {
+                success: true,
+                answer: result.answer,
+                sources: result.sources || [],
+                query,
+                topK,
+                sourcesCount: result.sources?.length || 0
+              };
+
+            } catch (error) {
+              console.error('❌ Error in RAG search tool:', error);
+              return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown RAG search error',
+                query
               };
             }
           },

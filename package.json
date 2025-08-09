@@ -26,6 +26,7 @@
     "ag-grid-community": "^34.1.1",
     "ag-grid-enterprise": "^34.1.1",
     "ag-grid-react": "^34.1.1",
+    "agentset": "^1.4.0",
     "ai": "^5.0.2",
     "autoprefixer": "^10.4.21",
     "axios": "^1.11.0",
