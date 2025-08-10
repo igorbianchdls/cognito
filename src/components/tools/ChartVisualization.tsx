@@ -1,5 +1,9 @@
 'use client';
 
+import { useState } from 'react';
+import { WebPreviewNavigationButton } from '@/components/ai-elements/web-preview';
+import { Download, Settings, Maximize, ZoomIn, ZoomOut, RotateCcw, FileImage } from 'lucide-react';
+
 interface ChartVisualizationProps {
   chartData?: Array<{
     x?: string;
@@ -35,6 +39,37 @@ export default function ChartVisualization({
   success,
   error
 }: ChartVisualizationProps) {
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
+
+  const handleDownload = () => {
+    // Implementar download do gráfico
+    console.log('Download chart');
+  };
+
+  const handleExportPNG = () => {
+    console.log('Export as PNG');
+  };
+
+  const handleSettings = () => {
+    console.log('Open chart settings');
+  };
+
+  const handleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 0.2, 3));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 0.2, 0.5));
+  };
+
+  const handleZoomReset = () => {
+    setZoomLevel(1);
+  };
   if (error || !success) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -67,71 +102,205 @@ export default function ChartVisualization({
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-4 py-3 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-            <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <div className={`bg-white border border-gray-200 rounded-lg overflow-hidden ${isFullscreen ? 'fixed inset-4 z-50' : ''}`}>
+      {/* Navigation Header - Similar to WebPreview */}
+      <div className="flex items-center gap-1 border-b border-gray-200 px-3 py-2">
+        {/* Chart Controls */}
+        <div className="flex items-center gap-1">
+          <WebPreviewNavigationButton
+            onClick={handleZoomOut}
+            tooltip="Zoom Out"
+            disabled={zoomLevel <= 0.5}
+          >
+            <ZoomOut className="h-4 w-4" />
+          </WebPreviewNavigationButton>
+          
+          <WebPreviewNavigationButton
+            onClick={handleZoomReset}
+            tooltip="Reset Zoom"
+          >
+            <RotateCcw className="h-4 w-4" />
+          </WebPreviewNavigationButton>
+          
+          <WebPreviewNavigationButton
+            onClick={handleZoomIn}
+            tooltip="Zoom In"
+            disabled={zoomLevel >= 3}
+          >
+            <ZoomIn className="h-4 w-4" />
+          </WebPreviewNavigationButton>
+        </div>
+
+        {/* Separator */}
+        <div className="w-px h-4 bg-gray-300 mx-1"></div>
+
+        {/* Chart Title and Info */}
+        <div className="flex-1 px-3">
+          <div className="flex items-center gap-2">
+            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               {getChartIcon()}
             </svg>
-            {title || `Gráfico ${chartType}`}
-          </h3>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <span className="capitalize">{chartType}</span>
-            {metadata?.executionTime && <span>• {metadata.executionTime}ms</span>}
+            <span className="font-medium text-gray-900">
+              {title || `Gráfico ${chartType}`}
+            </span>
+            <span className="text-sm text-gray-500 capitalize">
+              • {chartType}
+            </span>
+            {metadata?.executionTime && (
+              <span className="text-sm text-gray-400">
+                • {metadata.executionTime}ms
+              </span>
+            )}
+          </div>
+          <div className="text-xs text-gray-500 mt-1">
+            {datasetId}.{tableId} • {xColumn} × {yColumn} • Zoom: {Math.round(zoomLevel * 100)}%
           </div>
         </div>
-        <div className="mt-1 text-sm text-gray-600">
-          {datasetId}.{tableId} • {xColumn} × {yColumn}
+
+        {/* Separator */}
+        <div className="w-px h-4 bg-gray-300 mx-1"></div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-1">
+          <WebPreviewNavigationButton
+            onClick={handleExportPNG}
+            tooltip="Export as PNG"
+          >
+            <FileImage className="h-4 w-4" />
+          </WebPreviewNavigationButton>
+          
+          <WebPreviewNavigationButton
+            onClick={handleDownload}
+            tooltip="Download Data"
+          >
+            <Download className="h-4 w-4" />
+          </WebPreviewNavigationButton>
+          
+          <WebPreviewNavigationButton
+            onClick={handleSettings}
+            tooltip="Chart Settings"
+          >
+            <Settings className="h-4 w-4" />
+          </WebPreviewNavigationButton>
+          
+          <WebPreviewNavigationButton
+            onClick={handleFullscreen}
+            tooltip={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+          >
+            <Maximize className="h-4 w-4" />
+          </WebPreviewNavigationButton>
         </div>
       </div>
 
       {/* Chart Area */}
-      <div className="p-6">
+      <div className={`p-6 ${isFullscreen ? 'h-full' : ''}`}>
+        <div 
+          className="transition-transform duration-200"
+          style={{ 
+            transform: `scale(${zoomLevel})`,
+            transformOrigin: 'center center'
+          }}
+        >
         {chartType === 'bar' && (
-          <div className="space-y-3">
-            <div className="flex items-end justify-between h-48 bg-gray-50 rounded-lg p-4">
-              {chartData?.map((item, index) => (
-                <div key={index} className="flex flex-col items-center">
-                  <div
-                    className="bg-blue-500 rounded-t-sm transition-all duration-300 hover:bg-blue-600"
-                    style={{
-                      width: '24px',
-                      height: `${Math.max((item.y || 0) / Math.max(...(chartData?.map(d => d.y || 0) || [1])) * 160, 4)}px`
-                    }}
-                  />
-                  <div className="text-xs text-gray-600 mt-2">{item.x || item.label}</div>
-                  <div className="text-xs font-medium text-gray-800">{item.y?.toLocaleString() || item.value}</div>
-                </div>
-              ))}
+          <div className="space-y-4">
+            <div className={`bg-white border border-gray-100 rounded-lg p-6 ${isFullscreen ? 'h-96' : 'h-64'}`}>
+              <div className="flex items-end justify-between h-full">
+                {chartData?.map((item, index) => (
+                  <div key={index} className="flex flex-col items-center h-full justify-end">
+                    <div
+                      className="bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-sm transition-all duration-300 hover:from-blue-700 hover:to-blue-500 shadow-sm"
+                      style={{
+                        width: '32px',
+                        height: `${Math.max((item.y || 0) / Math.max(...(chartData?.map(d => d.y || 0) || [1])) * 80, 2)}%`
+                      }}
+                    />
+                    <div className="text-xs text-gray-600 mt-3 font-medium">{item.x || item.label}</div>
+                    <div className="text-xs text-gray-800 font-semibold">{item.y?.toLocaleString() || item.value}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
 
         {chartType === 'line' && (
-          <div className="h-48 bg-gray-50 rounded-lg p-4 flex items-center justify-center">
-            <svg className="w-full h-full" viewBox="0 0 400 160">
-              <polyline
-                points={chartData?.map((item, index) => 
-                  `${(index * 380) / (chartData.length - 1)},${160 - ((item.y || 0) / Math.max(...(chartData?.map(d => d.y || 0) || [1])) * 140)}`
-                ).join(' ')}
-                fill="none"
-                stroke="#3b82f6"
-                strokeWidth="3"
-                className="drop-shadow-sm"
-              />
-              {chartData?.map((item, index) => (
-                <circle
-                  key={index}
-                  cx={(index * 380) / (chartData.length - 1)}
-                  cy={160 - ((item.y || 0) / Math.max(...(chartData?.map(d => d.y || 0) || [1])) * 140)}
-                  r="4"
-                  fill="#3b82f6"
-                  className="hover:r-6 transition-all"
+          <div className="space-y-4">
+            {/* Chart Legend */}
+            <div className="flex items-center gap-6 px-2">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-0.5 bg-blue-500"></div>
+                <span className="text-sm text-gray-700">Série Principal</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-0.5 bg-green-500"></div>
+                <span className="text-sm text-gray-700">Tendência</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-0.5 bg-orange-500"></div>
+                <span className="text-sm text-gray-700">Meta</span>
+              </div>
+            </div>
+            
+            {/* Chart Container */}
+            <div className={`bg-white border border-gray-100 rounded-lg p-6 ${isFullscreen ? 'h-96' : 'h-64'}`}>
+              <svg className="w-full h-full" viewBox="0 0 500 200" style={{ overflow: 'visible' }}>
+                {/* Grid Lines */}
+                <defs>
+                  <pattern id="grid" width="50" height="40" patternUnits="userSpaceOnUse">
+                    <path d="M 50 0 L 0 0 0 40" fill="none" stroke="#f3f4f6" strokeWidth="1"/>
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#grid)" />
+                
+                {/* Main Line */}
+                <polyline
+                  points={chartData?.map((item, index) => 
+                    `${(index * 480) / (chartData.length - 1)},${180 - ((item.y || 0) / Math.max(...(chartData?.map(d => d.y || 0) || [1])) * 160)}`
+                  ).join(' ')}
+                  fill="none"
+                  stroke="#3b82f6"
+                  strokeWidth="3"
+                  className="drop-shadow-sm"
                 />
-              ))}
-            </svg>
+                
+                {/* Data Points */}
+                {chartData?.map((item, index) => (
+                  <g key={index}>
+                    <circle
+                      cx={(index * 480) / (chartData.length - 1)}
+                      cy={180 - ((item.y || 0) / Math.max(...(chartData?.map(d => d.y || 0) || [1])) * 160)}
+                      r="4"
+                      fill="#3b82f6"
+                      stroke="#fff"
+                      strokeWidth="2"
+                      className="hover:r-6 transition-all cursor-pointer"
+                    />
+                    {/* Value Labels */}
+                    <text
+                      x={(index * 480) / (chartData.length - 1)}
+                      y={190}
+                      textAnchor="middle"
+                      className="fill-gray-600 text-xs font-medium"
+                    >
+                      {item.x || item.label}
+                    </text>
+                  </g>
+                ))}
+                
+                {/* Y-axis Labels */}
+                {[0, 25, 50, 75, 100].map((percent) => (
+                  <text
+                    key={percent}
+                    x="-10"
+                    y={180 - (percent / 100) * 160}
+                    textAnchor="end"
+                    className="fill-gray-500 text-xs"
+                  >
+                    {Math.round((percent / 100) * Math.max(...(chartData?.map(d => d.y || 0) || [1])))}
+                  </text>
+                ))}
+              </svg>
+            </div>
           </div>
         )}
 
@@ -210,13 +379,17 @@ export default function ChartVisualization({
             </svg>
           </div>
         )}
+        </div>
       </div>
 
       {/* Footer */}
       {metadata && (
-        <div className="bg-gray-50 px-4 py-2 border-t border-gray-200">
+        <div className="border-t border-gray-200 px-3 py-2 bg-gray-50">
           <div className="flex items-center justify-between text-xs text-gray-500">
-            <span>{metadata.totalDataPoints} pontos de dados</span>
+            <div className="flex items-center gap-4">
+              <span><strong>{metadata.totalDataPoints || chartData?.length || 0}</strong> pontos de dados</span>
+              <span>Zoom: <strong>{Math.round(zoomLevel * 100)}%</strong></span>
+            </div>
             {metadata.generatedAt && (
               <span>Gerado em {new Date(metadata.generatedAt).toLocaleString('pt-BR')}</span>
             )}
