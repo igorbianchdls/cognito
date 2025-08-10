@@ -24,10 +24,11 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
         }
 
         if (part.type === 'reasoning') {
+          const reasoningText = (part as ReasoningPart).content || (part as ReasoningPart).text || '';
           return (
             <Reasoning key={index} isStreaming={part.state === 'streaming'}>
               <ReasoningTrigger />
-              <ReasoningContent>{(part as ReasoningPart).content || (part as ReasoningPart).text}</ReasoningContent>
+              <ReasoningContent>{reasoningText}</ReasoningContent>
             </Reasoning>
           );
         }
