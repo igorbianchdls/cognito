@@ -384,6 +384,20 @@ Always call the appropriate tool rather than asking for more parameters. Use mul
               { label: 'Belo Horizonte', value: 15, color: '#22c55e' },
               { label: 'Salvador', value: 12, color: '#f59e0b' },
               { label: 'Outros', value: 13, color: '#8b5cf6' }
+            ],
+            scatter: [
+              { x: '10', y: 45, label: 'Ponto 1' },
+              { x: '20', y: 65, label: 'Ponto 2' },
+              { x: '30', y: 40, label: 'Ponto 3' },
+              { x: '40', y: 80, label: 'Ponto 4' },
+              { x: '50', y: 75, label: 'Ponto 5' }
+            ],
+            area: [
+              { x: 'Q1', y: 3200 },
+              { x: 'Q2', y: 4100 },
+              { x: 'Q3', y: 3800 },
+              { x: 'Q4', y: 4500 },
+              { x: 'Q5', y: 4200 }
             ]
           };
 
@@ -413,7 +427,10 @@ Always call the appropriate tool rather than asking for more parameters. Use mul
         }),
         execute: async ({ resultId, queryId, resultType = 'analysis' }) => {
           // Mock cached results
-          const cachedResults = {
+          const cachedResults: Record<string, {
+            type: string;
+            data: Record<string, unknown>;
+          }> = {
             'result_001': {
               type: 'analysis',
               data: {

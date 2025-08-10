@@ -57,6 +57,10 @@ export default function ChartVisualization({
         return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4" />;
       case 'pie':
         return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />;
+      case 'scatter':
+        return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0M12 8m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0M16 16m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />;
+      case 'area':
+        return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3v18h18M7 10l4-4 4 4 4-4v8a1 1 0 01-1 1H8a1 1 0 01-1-1V10z" />;
       default:
         return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />;
     }
@@ -153,6 +157,57 @@ export default function ChartVisualization({
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {chartType === 'scatter' && (
+          <div className="h-48 bg-gray-50 rounded-lg p-4 flex items-center justify-center">
+            <svg className="w-full h-full" viewBox="0 0 400 160">
+              {chartData?.map((item, index) => {
+                const maxX = Math.max(...(chartData?.map(d => parseFloat(d.x || '0')) || [1]));
+                const maxY = Math.max(...(chartData?.map(d => d.y || 0) || [1]));
+                const x = (parseFloat(item.x || '0') / maxX) * 380;
+                const y = 160 - ((item.y || 0) / maxY) * 140;
+                return (
+                  <circle
+                    key={index}
+                    cx={x}
+                    cy={y}
+                    r="6"
+                    fill="#3b82f6"
+                    className="hover:fill-blue-700 transition-colors"
+                    opacity="0.8"
+                  />
+                );
+              })}
+            </svg>
+          </div>
+        )}
+
+        {chartType === 'area' && (
+          <div className="h-48 bg-gray-50 rounded-lg p-4 flex items-center justify-center">
+            <svg className="w-full h-full" viewBox="0 0 400 160">
+              <defs>
+                <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.1" />
+                </linearGradient>
+              </defs>
+              <polygon
+                points={chartData?.map((item, index) => 
+                  `${(index * 380) / (chartData.length - 1)},${160 - ((item.y || 0) / Math.max(...(chartData?.map(d => d.y || 0) || [1])) * 140)}`
+                ).concat(['380,160', '0,160']).join(' ')}
+                fill="url(#areaGradient)"
+              />
+              <polyline
+                points={chartData?.map((item, index) => 
+                  `${(index * 380) / (chartData.length - 1)},${160 - ((item.y || 0) / Math.max(...(chartData?.map(d => d.y || 0) || [1])) * 140)}`
+                ).join(' ')}
+                fill="none"
+                stroke="#3b82f6"
+                strokeWidth="2"
+              />
+            </svg>
           </div>
         )}
       </div>
