@@ -5,6 +5,7 @@ import { Actions, Action } from '@/components/ai-elements/actions';
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool';
 import { CopyIcon, ThumbsUpIcon, ThumbsDownIcon } from 'lucide-react';
 import WeatherCard from '../tools/WeatherCard';
+import DatasetsList from '../tools/DatasetsList';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -22,10 +23,31 @@ type WeatherToolOutput = {
   temperature: number;
 };
 
-type WeatherToolUIPart = ToolUIPart<{
+type DatasetToolInput = {
+  projectId?: string;
+};
+
+type DatasetToolOutput = {
+  datasets: Array<{
+    id: string;
+    friendlyName?: string;
+    description?: string;
+    location?: string;
+    creationTime?: string;
+    lastModifiedTime?: string;
+  }>;
+  success: boolean;
+  error?: string;
+};
+
+type NexusToolUIPart = ToolUIPart<{
   displayWeather: {
     input: WeatherToolInput;
     output: WeatherToolOutput;
+  };
+  getDatasets: {
+    input: DatasetToolInput;
+    output: DatasetToolOutput;
   };
 }>;
 
@@ -65,7 +87,7 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
         }
 
         if (part.type === 'tool-displayWeather') {
-          const weatherTool = part as WeatherToolUIPart;
+          const weatherTool = part as NexusToolUIPart;
           const callId = weatherTool.toolCallId;
           const shouldBeOpen = weatherTool.state === 'output-available' || weatherTool.state === 'output-error';
           
@@ -86,7 +108,39 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
                 </ToolContent>
               </Tool>
               {weatherTool.state === 'output-available' && (
-                <WeatherCard data={weatherTool.output} />
+                <WeatherCard data={weatherTool.output as WeatherToolOutput} />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getDatasets') {
+          const datasetTool = part as NexusToolUIPart;
+          const callId = datasetTool.toolCallId;
+          const shouldBeOpen = datasetTool.state === 'output-available' || datasetTool.state === 'output-error';
+          
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getDatasets" state={datasetTool.state} />
+                <ToolContent>
+                  {datasetTool.input && (
+                    <ToolInput input={datasetTool.input} />
+                  )}
+                  {datasetTool.state === 'output-error' && (
+                    <ToolOutput 
+                      output={null}
+                      errorText={datasetTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {datasetTool.state === 'output-available' && (
+                <DatasetsList 
+                  datasets={(datasetTool.output as DatasetToolOutput).datasets}
+                  success={(datasetTool.output as DatasetToolOutput).success}
+                  error={(datasetTool.output as DatasetToolOutput).error}
+                />
               )}
             </div>
           );
