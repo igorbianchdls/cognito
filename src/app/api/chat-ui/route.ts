@@ -91,7 +91,13 @@ export async function POST(req: Request) {
         }),
         execute: async ({ datasetId }) => {
           // Mock tables data based on dataset
-          const tablesByDataset: Record<string, any[]> = {
+          const tablesByDataset: Record<string, Array<{
+            tableId: string;
+            description: string;
+            numRows: number;
+            numBytes: number;
+            creationTime: string;
+          }>> = {
             'ecommerce_data': [
               {
                 tableId: 'customers',
@@ -188,7 +194,10 @@ export async function POST(req: Request) {
         }),
         execute: async ({ datasetId, tableId, limit = 100 }) => {
           // Mock data based on table
-          const mockDataByTable: Record<string, any> = {
+          const mockDataByTable: Record<string, {
+            schema: Array<{ name: string; type: string; mode: string }>;
+            data: Array<Record<string, unknown>>;
+          }> = {
             'customers': {
               schema: [
                 { name: 'customer_id', type: 'INTEGER', mode: 'REQUIRED' },

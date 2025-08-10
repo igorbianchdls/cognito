@@ -7,7 +7,7 @@ interface Schema {
 }
 
 interface TableDataProps {
-  data?: Record<string, any>[];
+  data?: Record<string, unknown>[];
   schema?: Schema[];
   totalRows?: number;
   executionTime?: number;
@@ -17,19 +17,19 @@ interface TableDataProps {
   error?: string;
 }
 
-function formatValue(value: any, type: string): string {
+function formatValue(value: unknown, type: string): string {
   if (value === null || value === undefined) return '-';
   
   switch (type) {
     case 'FLOAT':
     case 'NUMERIC':
-      return typeof value === 'number' ? value.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : value;
+      return typeof value === 'number' ? value.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : String(value);
     case 'INTEGER':
-      return typeof value === 'number' ? value.toLocaleString('pt-BR') : value;
+      return typeof value === 'number' ? value.toLocaleString('pt-BR') : String(value);
     case 'DATE':
-      return new Date(value).toLocaleDateString('pt-BR');
+      return new Date(String(value)).toLocaleDateString('pt-BR');
     case 'TIMESTAMP':
-      return new Date(value).toLocaleString('pt-BR');
+      return new Date(String(value)).toLocaleString('pt-BR');
     default:
       return String(value);
   }

@@ -66,7 +66,7 @@ type DataToolInput = {
 };
 
 type DataToolOutput = {
-  data: Array<Record<string, any>>;
+  data: Array<Record<string, unknown>>;
   schema: Array<{
     name: string;
     type: string;
