@@ -197,34 +197,18 @@ export default function ResultDisplay({
 
         {/* Sources */}
         {sources && sources.length > 0 && (
-          <div className="mt-6">
-            <Sources>
-              <SourcesTrigger count={sources.length} />
-              <SourcesContent>
-                <div className="space-y-3">
-                  {sources.map((doc) => (
-                    <div key={doc.id} className="border border-gray-200 rounded-lg p-4 bg-white">
-                      <Source 
-                        href={doc.url} 
-                        title={doc.title}
-                      />
-                      <p className="text-sm text-gray-600 mt-2 leading-relaxed">
-                        {doc.snippet}
-                      </p>
-                      <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-100">
-                        <span className="text-xs text-gray-500">
-                          ID: {doc.id}
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          Relevância: {(doc.relevanceScore * 100).toFixed(1)}%
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </SourcesContent>
-            </Sources>
-          </div>
+          <Sources>
+            <SourcesTrigger count={sources.length} />
+            <SourcesContent>
+              {sources.map((doc) => (
+                <Source 
+                  key={doc.id}
+                  href={doc.url} 
+                  title={doc.title}
+                />
+              ))}
+            </SourcesContent>
+          </Sources>
         )}
       </div>
     </div>
