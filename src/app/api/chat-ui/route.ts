@@ -9,11 +9,16 @@ export async function POST(req: Request) {
   const { messages }: { messages: UIMessage[] } = await req.json();
 
   const result = streamText({
-    model: anthropic('claude-3-5-sonnet-20241022'),
+    model: anthropic('claude-sonnet-4-20250514'),
     system: 'You are a helpful assistant.',
     messages: convertToModelMessages(messages),
-    experimental: {
-      reasoning: true,
+    providerOptions: {
+      anthropic: {
+        thinking: { type: 'enabled', budgetTokens: 15000 }
+      }
+    },
+    headers: {
+      'anthropic-beta': 'interleaved-thinking-2025-05-14'
     },
     tools: {
       displayWeather: tool({
