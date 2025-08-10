@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { WebPreviewNavigationButton } from '@/components/ai-elements/web-preview';
-import { Download, Settings, Maximize, ZoomIn, ZoomOut, RotateCcw, FileImage } from 'lucide-react';
+import { Download, Settings, Maximize, FileImage } from 'lucide-react';
 
 interface ChartVisualizationProps {
   chartData?: Array<{
@@ -40,7 +40,6 @@ export default function ChartVisualization({
   error
 }: ChartVisualizationProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(1);
 
   const handleDownload = () => {
     // Implementar download do gráfico
@@ -57,18 +56,6 @@ export default function ChartVisualization({
 
   const handleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
-  };
-
-  const handleZoomIn = () => {
-    setZoomLevel(prev => Math.min(prev + 0.2, 3));
-  };
-
-  const handleZoomOut = () => {
-    setZoomLevel(prev => Math.max(prev - 0.2, 0.5));
-  };
-
-  const handleZoomReset = () => {
-    setZoomLevel(1);
   };
   if (error || !success) {
     return (
@@ -103,64 +90,25 @@ export default function ChartVisualization({
 
   return (
     <div className={`bg-white border border-gray-200 rounded-lg overflow-hidden ${isFullscreen ? 'fixed inset-4 z-50' : ''}`}>
-      {/* Navigation Header - Similar to WebPreview */}
-      <div className="flex items-center gap-1 border-b border-gray-200 px-3 py-2">
-        {/* Chart Controls */}
-        <div className="flex items-center gap-1">
-          <WebPreviewNavigationButton
-            onClick={handleZoomOut}
-            tooltip="Zoom Out"
-            disabled={zoomLevel <= 0.5}
-          >
-            <ZoomOut className="h-4 w-4" />
-          </WebPreviewNavigationButton>
-          
-          <WebPreviewNavigationButton
-            onClick={handleZoomReset}
-            tooltip="Reset Zoom"
-          >
-            <RotateCcw className="h-4 w-4" />
-          </WebPreviewNavigationButton>
-          
-          <WebPreviewNavigationButton
-            onClick={handleZoomIn}
-            tooltip="Zoom In"
-            disabled={zoomLevel >= 3}
-          >
-            <ZoomIn className="h-4 w-4" />
-          </WebPreviewNavigationButton>
-        </div>
-
-        {/* Separator */}
-        <div className="w-px h-4 bg-gray-300 mx-1"></div>
-
-        {/* Chart Title and Info */}
-        <div className="flex-1 px-3">
-          <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              {getChartIcon()}
-            </svg>
-            <span className="font-medium text-gray-900">
+      {/* Chart Header */}
+      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+        {/* Chart Title - Left Side */}
+        <div className="flex items-center gap-3">
+          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {getChartIcon()}
+          </svg>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">
               {title || `Gráfico ${chartType}`}
-            </span>
-            <span className="text-sm text-gray-500 capitalize">
-              • {chartType}
-            </span>
-            {metadata?.executionTime && (
-              <span className="text-sm text-gray-400">
-                • {metadata.executionTime}ms
-              </span>
-            )}
-          </div>
-          <div className="text-xs text-gray-500 mt-1">
-            {datasetId}.{tableId} • {xColumn} × {yColumn} • Zoom: {Math.round(zoomLevel * 100)}%
+            </h2>
+            <div className="text-sm text-gray-500 mt-0.5">
+              {datasetId}.{tableId} • {xColumn} × {yColumn}
+              {metadata?.executionTime && ` • ${metadata.executionTime}ms`}
+            </div>
           </div>
         </div>
 
-        {/* Separator */}
-        <div className="w-px h-4 bg-gray-300 mx-1"></div>
-
-        {/* Action Buttons */}
+        {/* Action Buttons - Right Side */}
         <div className="flex items-center gap-1">
           <WebPreviewNavigationButton
             onClick={handleExportPNG}
@@ -194,13 +142,6 @@ export default function ChartVisualization({
 
       {/* Chart Area */}
       <div className={`p-6 ${isFullscreen ? 'h-full' : ''}`}>
-        <div 
-          className="transition-transform duration-200"
-          style={{ 
-            transform: `scale(${zoomLevel})`,
-            transformOrigin: 'center center'
-          }}
-        >
         {chartType === 'bar' && (
           <div className="space-y-4">
             <div className={`bg-white border border-gray-100 rounded-lg p-6 ${isFullscreen ? 'h-96' : 'h-64'}`}>
@@ -379,17 +320,13 @@ export default function ChartVisualization({
             </svg>
           </div>
         )}
-        </div>
       </div>
 
       {/* Footer */}
       {metadata && (
-        <div className="border-t border-gray-200 px-3 py-2 bg-gray-50">
+        <div className="border-t border-gray-200 px-4 py-2 bg-gray-50">
           <div className="flex items-center justify-between text-xs text-gray-500">
-            <div className="flex items-center gap-4">
-              <span><strong>{metadata.totalDataPoints || chartData?.length || 0}</strong> pontos de dados</span>
-              <span>Zoom: <strong>{Math.round(zoomLevel * 100)}%</strong></span>
-            </div>
+            <span><strong>{metadata.totalDataPoints || chartData?.length || 0}</strong> pontos de dados</span>
             {metadata.generatedAt && (
               <span>Gerado em {new Date(metadata.generatedAt).toLocaleString('pt-BR')}</span>
             )}
