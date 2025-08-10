@@ -15,6 +15,7 @@ import Dashboard from '../tools/Dashboard';
 import SQLExecution from '../tools/SQLExecution';
 import TableCreation from '../tools/TableCreation';
 import KPIDisplay from '../tools/KPIDisplay';
+import WebPreviewCard from '../tools/WebPreviewCard';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -313,6 +314,23 @@ type CriarKPIToolOutput = {
   error?: string;
 };
 
+type WebPreviewToolInput = {
+  url: string;
+};
+
+type WebPreviewToolOutput = {
+  url: string;
+  title: string;
+  description: string;
+  favicon?: string;
+  screenshot?: string;
+  isValidUrl: boolean;
+  previewAvailable: boolean;
+  generatedAt: string;
+  success: boolean;
+  error?: string;
+};
+
 type NexusToolUIPart = ToolUIPart<{
   displayWeather: {
     input: WeatherToolInput;
@@ -357,6 +375,10 @@ type NexusToolUIPart = ToolUIPart<{
   criarKPI: {
     input: CriarKPIToolInput;
     output: CriarKPIToolOutput;
+  };
+  webPreview: {
+    input: WebPreviewToolInput;
+    output: WebPreviewToolOutput;
   };
 }>;
 
@@ -803,6 +825,45 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
                   metadata={(kpiTool.output as CriarKPIToolOutput).metadata}
                   success={(kpiTool.output as CriarKPIToolOutput).success}
                   error={(kpiTool.output as CriarKPIToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-webPreview') {
+          const webPreviewTool = part as NexusToolUIPart;
+          const callId = webPreviewTool.toolCallId;
+          const shouldBeOpen = webPreviewTool.state === 'output-available' || webPreviewTool.state === 'output-error';
+          
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-webPreview" state={webPreviewTool.state} />
+                <ToolContent>
+                  {webPreviewTool.input && (
+                    <ToolInput input={webPreviewTool.input} />
+                  )}
+                  {webPreviewTool.state === 'output-error' && (
+                    <ToolOutput 
+                      output={null}
+                      errorText={webPreviewTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {webPreviewTool.state === 'output-available' && (
+                <WebPreviewCard 
+                  url={(webPreviewTool.output as WebPreviewToolOutput).url}
+                  title={(webPreviewTool.output as WebPreviewToolOutput).title}
+                  description={(webPreviewTool.output as WebPreviewToolOutput).description}
+                  favicon={(webPreviewTool.output as WebPreviewToolOutput).favicon}
+                  screenshot={(webPreviewTool.output as WebPreviewToolOutput).screenshot}
+                  isValidUrl={(webPreviewTool.output as WebPreviewToolOutput).isValidUrl}
+                  previewAvailable={(webPreviewTool.output as WebPreviewToolOutput).previewAvailable}
+                  generatedAt={(webPreviewTool.output as WebPreviewToolOutput).generatedAt}
+                  success={(webPreviewTool.output as WebPreviewToolOutput).success}
+                  error={(webPreviewTool.output as WebPreviewToolOutput).error}
                 />
               )}
             </div>

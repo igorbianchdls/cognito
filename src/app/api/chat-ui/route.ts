@@ -23,6 +23,7 @@ Available tools:
 - executarSQL: Execute custom SQL queries with validation (requires sqlQuery, optional datasetId, dryRun)
 - criarTabela: Create new BigQuery tables with custom schema (requires datasetId, tableName, schema)
 - criarKPI: Create Key Performance Indicator metrics (requires name, datasetId, tableId, metric, calculation)
+- webPreview: Generate web preview of a URL with iframe and navigation (requires url)
 - displayWeather: Get weather for a location
 
 Use these tools proactively when users ask about:
@@ -36,6 +37,7 @@ Use these tools proactively when users ask about:
 - "run SQL" or "execute query" → use executarSQL
 - "create table" or "new table" → use criarTabela
 - "create KPI" or "add metric" → use criarKPI
+- "preview website", "show website", or "web preview" → use webPreview
 - weather queries → use displayWeather
 
 Always call the appropriate tool rather than asking for more parameters. Use multiple tools in sequence when helpful (e.g., getData then interpretarDados, executarSQL then criarGrafico, or criarTabela then getData).`,
@@ -49,6 +51,59 @@ Always call the appropriate tool rather than asking for more parameters. Use mul
       'anthropic-beta': 'interleaved-thinking-2025-05-14'
     },
     tools: {
+      webPreview: tool({
+        description: 'Generate web preview of a URL with iframe and navigation controls',
+        inputSchema: z.object({
+          url: z.string().describe('The URL to preview'),
+        }),
+        execute: async ({ url }) => {
+          // Mock web preview data
+          const mockPreviewData = {
+            'ai-sdk.dev': {
+              title: 'AI SDK by Vercel',
+              description: 'The AI SDK is a TypeScript toolkit designed to help developers build AI-powered applications with React.',
+              favicon: 'https://ai-sdk.dev/favicon.ico',
+              screenshot: null,
+            },
+            'github.com': {
+              title: 'GitHub',
+              description: 'GitHub is where over 100 million developers shape the future of software, together.',
+              favicon: 'https://github.githubassets.com/favicons/favicon.svg',
+              screenshot: null,
+            },
+            'google.com': {
+              title: 'Google',
+              description: 'Search the world\'s information, including webpages, images, videos and more.',
+              favicon: 'https://www.google.com/favicon.ico',
+              screenshot: null,
+            }
+          };
+
+          // Extract domain from URL for mock lookup
+          const domain = url.replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0];
+          const previewData = mockPreviewData[domain as keyof typeof mockPreviewData] || {
+            title: 'Web Preview',
+            description: `Preview of ${url}`,
+            favicon: null,
+            screenshot: null,
+          };
+
+          // Validate URL format
+          const isValidUrl = /^https?:\/\/.+/.test(url);
+          
+          return {
+            url,
+            title: previewData.title,
+            description: previewData.description,
+            favicon: previewData.favicon,
+            screenshot: previewData.screenshot,
+            isValidUrl,
+            previewAvailable: isValidUrl,
+            generatedAt: new Date().toISOString(),
+            success: true
+          };
+        },
+      }),
       displayWeather: tool({
         description: 'Get weather information for a specific location and display it in a beautiful weather card',
         inputSchema: z.object({
