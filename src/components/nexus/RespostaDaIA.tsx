@@ -1,5 +1,6 @@
 import { UIMessage } from 'ai';
 import { Response } from '@/components/ai-elements/response';
+import { Reasoning, ReasoningTrigger, ReasoningContent } from '@/components/ai-elements/reasoning';
 import WeatherCard from '../tools/WeatherCard';
 
 interface RespostaDaIAProps {
@@ -13,6 +14,15 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
       {message.parts.map((part, index) => {
         if (part.type === 'text') {
           return <Response key={index}>{part.text}</Response>;
+        }
+
+        if (part.type === 'reasoning') {
+          return (
+            <Reasoning key={index} isStreaming={part.state === 'streaming'}>
+              <ReasoningTrigger />
+              <ReasoningContent>{(part as any).content || (part as any).text}</ReasoningContent>
+            </Reasoning>
+          );
         }
 
         if (part.type === 'tool-displayWeather') {

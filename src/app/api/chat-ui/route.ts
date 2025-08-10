@@ -12,6 +12,9 @@ export async function POST(req: Request) {
     model: anthropic('claude-3-5-sonnet-20241022'),
     system: 'You are a helpful assistant.',
     messages: convertToModelMessages(messages),
+    experimental: {
+      reasoning: true,
+    },
     tools: {
       displayWeather: tool({
         description: 'Get weather information for a specific location and display it in a beautiful weather card',
