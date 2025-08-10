@@ -13,6 +13,7 @@ import {
 } from '@/components/ai-elements/prompt-input';
 import { GlobeIcon, MicIcon } from 'lucide-react';
 import { useState, FormEvent } from 'react';
+import type { ChatStatus } from 'ai';
 
 interface InputAreaProps {
   input: string;
@@ -62,7 +63,7 @@ export default function InputArea({ input, setInput, onSubmit, status }: InputAr
             </PromptInputModelSelectContent>
           </PromptInputModelSelect>
         </PromptInputTools>
-        <PromptInputSubmit disabled={!input} status={status} />
+        <PromptInputSubmit disabled={!input} status={status as ChatStatus} />
       </PromptInputToolbar>
     </PromptInput>
   );
