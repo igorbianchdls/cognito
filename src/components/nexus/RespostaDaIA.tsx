@@ -1,6 +1,8 @@
 import { UIMessage } from 'ai';
 import { Response } from '@/components/ai-elements/response';
 import { Reasoning, ReasoningTrigger, ReasoningContent } from '@/components/ai-elements/reasoning';
+import { Actions, Action } from '@/components/ai-elements/actions';
+import { CopyIcon, ThumbsUpIcon, ThumbsDownIcon } from 'lucide-react';
 import WeatherCard from '../tools/WeatherCard';
 
 interface ReasoningPart {
@@ -15,6 +17,19 @@ interface RespostaDaIAProps {
 }
 
 export default function RespostaDaIA({ message }: RespostaDaIAProps) {
+  const handleCopy = async () => {
+    const textParts = message.parts
+      .filter(part => part.type === 'text')
+      .map(part => part.text)
+      .join(' ');
+    
+    try {
+      await navigator.clipboard.writeText(textParts);
+    } catch (error) {
+      console.error('Failed to copy:', error);
+    }
+  };
+
   return (
     <div key={message.id}>
       {message.role === 'assistant' ? 'AI: ' : ''}
@@ -56,6 +71,18 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
 
         return null;
       })}
+      
+      <Actions className="mt-2">
+        <Action tooltip="Copy message" onClick={handleCopy}>
+          <CopyIcon className="size-4" />
+        </Action>
+        <Action tooltip="Like">
+          <ThumbsUpIcon className="size-4" />
+        </Action>
+        <Action tooltip="Dislike">
+          <ThumbsDownIcon className="size-4" />
+        </Action>
+      </Actions>
     </div>
   );
 }
