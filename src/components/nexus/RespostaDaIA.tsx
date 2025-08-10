@@ -12,6 +12,9 @@ import DataInterpretation from '../tools/DataInterpretation';
 import ChartVisualization from '../tools/ChartVisualization';
 import ResultDisplay from '../tools/ResultDisplay';
 import Dashboard from '../tools/Dashboard';
+import SQLExecution from '../tools/SQLExecution';
+import TableCreation from '../tools/TableCreation';
+import KPIDisplay from '../tools/KPIDisplay';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -194,6 +197,111 @@ type CriarDashboardToolOutput = {
   error?: string;
 };
 
+type ExecutarSQLToolInput = {
+  sqlQuery: string;
+  datasetId?: string;
+  dryRun?: boolean;
+};
+
+type ExecutarSQLToolOutput = {
+  sqlQuery: string;
+  datasetId: string;
+  queryType: string;
+  dryRun: boolean;
+  data: Array<Record<string, unknown>>;
+  schema: Array<{
+    name: string;
+    type: string;
+    mode: string;
+  }>;
+  rowsReturned: number;
+  rowsAffected: number;
+  totalRows: number;
+  executionTime: number;
+  bytesProcessed: number;
+  success: boolean;
+  validationErrors: string[];
+  error?: string;
+};
+
+type CriarTabelaToolInput = {
+  datasetId: string;
+  tableName: string;
+  schema: Array<{
+    name: string;
+    type: 'STRING' | 'INTEGER' | 'FLOAT' | 'BOOLEAN' | 'DATE' | 'TIMESTAMP';
+    mode?: 'REQUIRED' | 'NULLABLE' | 'REPEATED';
+  }>;
+  description?: string;
+};
+
+type CriarTabelaToolOutput = {
+  datasetId: string;
+  tableName: string;
+  tableId: string;
+  schema: Array<{
+    name: string;
+    type: string;
+    mode: string;
+  }>;
+  description: string;
+  location: string;
+  creationTime: string;
+  lastModifiedTime: string;
+  numRows: number;
+  numBytes: number;
+  expirationTime: string | null;
+  labels: Record<string, string>;
+  metadata: {
+    tableType: string;
+    createdBy: string;
+    version: string;
+  };
+  success: boolean;
+  error?: string;
+};
+
+type CriarKPIToolInput = {
+  name: string;
+  datasetId: string;
+  tableId: string;
+  metric: 'sum' | 'count' | 'avg' | 'min' | 'max' | 'ratio';
+  calculation: string;
+  target?: number;
+  unit?: string;
+};
+
+type CriarKPIToolOutput = {
+  kpiId: string;
+  name: string;
+  datasetId: string;
+  tableId: string;
+  metric: string;
+  calculation: string;
+  currentValue: number;
+  previousValue: number;
+  target: number;
+  unit: string;
+  change: number;
+  trend: string;
+  status: string;
+  timeRange: string;
+  visualization: {
+    chartType: string;
+    color: string;
+    showTrend: boolean;
+    showTarget: boolean;
+  };
+  metadata: {
+    createdAt: string;
+    lastUpdated: string;
+    refreshRate: string;
+    dataSource: string;
+  };
+  success: boolean;
+  error?: string;
+};
+
 type NexusToolUIPart = ToolUIPart<{
   displayWeather: {
     input: WeatherToolInput;
@@ -226,6 +334,18 @@ type NexusToolUIPart = ToolUIPart<{
   criarDashboard: {
     input: CriarDashboardToolInput;
     output: CriarDashboardToolOutput;
+  };
+  executarSQL: {
+    input: ExecutarSQLToolInput;
+    output: ExecutarSQLToolOutput;
+  };
+  criarTabela: {
+    input: CriarTabelaToolInput;
+    output: CriarTabelaToolOutput;
+  };
+  criarKPI: {
+    input: CriarKPIToolInput;
+    output: CriarKPIToolOutput;
   };
 }>;
 
@@ -537,6 +657,140 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
                   metadata={(dashboardTool.output as CriarDashboardToolOutput).metadata}
                   success={(dashboardTool.output as CriarDashboardToolOutput).success}
                   error={(dashboardTool.output as CriarDashboardToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-executarSQL') {
+          const sqlTool = part as NexusToolUIPart;
+          const callId = sqlTool.toolCallId;
+          const shouldBeOpen = sqlTool.state === 'output-available' || sqlTool.state === 'output-error';
+          
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-executarSQL" state={sqlTool.state} />
+                <ToolContent>
+                  {sqlTool.input && (
+                    <ToolInput input={sqlTool.input} />
+                  )}
+                  {sqlTool.state === 'output-error' && (
+                    <ToolOutput 
+                      output={null}
+                      errorText={sqlTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {sqlTool.state === 'output-available' && (
+                <SQLExecution 
+                  sqlQuery={(sqlTool.output as ExecutarSQLToolOutput).sqlQuery}
+                  datasetId={(sqlTool.output as ExecutarSQLToolOutput).datasetId}
+                  queryType={(sqlTool.output as ExecutarSQLToolOutput).queryType}
+                  dryRun={(sqlTool.output as ExecutarSQLToolOutput).dryRun}
+                  data={(sqlTool.output as ExecutarSQLToolOutput).data}
+                  schema={(sqlTool.output as ExecutarSQLToolOutput).schema}
+                  rowsReturned={(sqlTool.output as ExecutarSQLToolOutput).rowsReturned}
+                  rowsAffected={(sqlTool.output as ExecutarSQLToolOutput).rowsAffected}
+                  totalRows={(sqlTool.output as ExecutarSQLToolOutput).totalRows}
+                  executionTime={(sqlTool.output as ExecutarSQLToolOutput).executionTime}
+                  bytesProcessed={(sqlTool.output as ExecutarSQLToolOutput).bytesProcessed}
+                  success={(sqlTool.output as ExecutarSQLToolOutput).success}
+                  validationErrors={(sqlTool.output as ExecutarSQLToolOutput).validationErrors}
+                  error={(sqlTool.output as ExecutarSQLToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-criarTabela') {
+          const tableTool = part as NexusToolUIPart;
+          const callId = tableTool.toolCallId;
+          const shouldBeOpen = tableTool.state === 'output-available' || tableTool.state === 'output-error';
+          
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-criarTabela" state={tableTool.state} />
+                <ToolContent>
+                  {tableTool.input && (
+                    <ToolInput input={tableTool.input} />
+                  )}
+                  {tableTool.state === 'output-error' && (
+                    <ToolOutput 
+                      output={null}
+                      errorText={tableTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tableTool.state === 'output-available' && (
+                <TableCreation 
+                  datasetId={(tableTool.output as CriarTabelaToolOutput).datasetId}
+                  tableName={(tableTool.output as CriarTabelaToolOutput).tableName}
+                  tableId={(tableTool.output as CriarTabelaToolOutput).tableId}
+                  schema={(tableTool.output as CriarTabelaToolOutput).schema}
+                  description={(tableTool.output as CriarTabelaToolOutput).description}
+                  location={(tableTool.output as CriarTabelaToolOutput).location}
+                  creationTime={(tableTool.output as CriarTabelaToolOutput).creationTime}
+                  lastModifiedTime={(tableTool.output as CriarTabelaToolOutput).lastModifiedTime}
+                  numRows={(tableTool.output as CriarTabelaToolOutput).numRows}
+                  numBytes={(tableTool.output as CriarTabelaToolOutput).numBytes}
+                  expirationTime={(tableTool.output as CriarTabelaToolOutput).expirationTime}
+                  labels={(tableTool.output as CriarTabelaToolOutput).labels}
+                  metadata={(tableTool.output as CriarTabelaToolOutput).metadata}
+                  success={(tableTool.output as CriarTabelaToolOutput).success}
+                  error={(tableTool.output as CriarTabelaToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-criarKPI') {
+          const kpiTool = part as NexusToolUIPart;
+          const callId = kpiTool.toolCallId;
+          const shouldBeOpen = kpiTool.state === 'output-available' || kpiTool.state === 'output-error';
+          
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-criarKPI" state={kpiTool.state} />
+                <ToolContent>
+                  {kpiTool.input && (
+                    <ToolInput input={kpiTool.input} />
+                  )}
+                  {kpiTool.state === 'output-error' && (
+                    <ToolOutput 
+                      output={null}
+                      errorText={kpiTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {kpiTool.state === 'output-available' && (
+                <KPIDisplay 
+                  kpiId={(kpiTool.output as CriarKPIToolOutput).kpiId}
+                  name={(kpiTool.output as CriarKPIToolOutput).name}
+                  datasetId={(kpiTool.output as CriarKPIToolOutput).datasetId}
+                  tableId={(kpiTool.output as CriarKPIToolOutput).tableId}
+                  metric={(kpiTool.output as CriarKPIToolOutput).metric}
+                  calculation={(kpiTool.output as CriarKPIToolOutput).calculation}
+                  currentValue={(kpiTool.output as CriarKPIToolOutput).currentValue}
+                  previousValue={(kpiTool.output as CriarKPIToolOutput).previousValue}
+                  target={(kpiTool.output as CriarKPIToolOutput).target}
+                  unit={(kpiTool.output as CriarKPIToolOutput).unit}
+                  change={(kpiTool.output as CriarKPIToolOutput).change}
+                  trend={(kpiTool.output as CriarKPIToolOutput).trend}
+                  status={(kpiTool.output as CriarKPIToolOutput).status}
+                  timeRange={(kpiTool.output as CriarKPIToolOutput).timeRange}
+                  visualization={(kpiTool.output as CriarKPIToolOutput).visualization}
+                  metadata={(kpiTool.output as CriarKPIToolOutput).metadata}
+                  success={(kpiTool.output as CriarKPIToolOutput).success}
+                  error={(kpiTool.output as CriarKPIToolOutput).error}
                 />
               )}
             </div>

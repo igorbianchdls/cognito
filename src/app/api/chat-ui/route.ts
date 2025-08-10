@@ -10,7 +10,7 @@ export async function POST(req: Request) {
 
   const result = streamText({
     model: anthropic('claude-sonnet-4-20250514'),
-    system: `You are a helpful assistant with access to BigQuery data exploration, analysis, and visualization tools, plus weather information.
+    system: `You are a helpful assistant with access to BigQuery data exploration, analysis, visualization, and management tools, plus weather information.
 
 Available tools:
 - getDatasets: List available BigQuery datasets (no parameters needed)
@@ -20,6 +20,9 @@ Available tools:
 - criarGrafico: Create visualizations and charts (requires datasetId, tableId, chartType, xColumn, yColumn)
 - retrieveResult: Retrieve previous analysis results (requires resultId or queryId)
 - criarDashboard: Create interactive dashboards with KPIs (requires datasetIds, title, dashboardType)
+- executarSQL: Execute custom SQL queries with validation (requires sqlQuery, optional datasetId, dryRun)
+- criarTabela: Create new BigQuery tables with custom schema (requires datasetId, tableName, schema)
+- criarKPI: Create Key Performance Indicator metrics (requires name, datasetId, tableId, metric, calculation)
 - displayWeather: Get weather for a location
 
 Use these tools proactively when users ask about:
@@ -30,9 +33,12 @@ Use these tools proactively when users ask about:
 - "create chart" or "make graph" → use criarGrafico
 - "retrieve result" or "get previous analysis" → use retrieveResult
 - "create dashboard" or "make dashboard" → use criarDashboard
+- "run SQL" or "execute query" → use executarSQL
+- "create table" or "new table" → use criarTabela
+- "create KPI" or "add metric" → use criarKPI
 - weather queries → use displayWeather
 
-Always call the appropriate tool rather than asking for more parameters. Use multiple tools in sequence when helpful (e.g., getData then interpretarDados, or getData then criarGrafico).`,
+Always call the appropriate tool rather than asking for more parameters. Use multiple tools in sequence when helpful (e.g., getData then interpretarDados, executarSQL then criarGrafico, or criarTabela then getData).`,
     messages: convertToModelMessages(messages),
     providerOptions: {
       anthropic: {
@@ -566,6 +572,180 @@ Always call the appropriate tool rather than asking for more parameters. Use mul
               createdAt: new Date().toISOString(),
               lastUpdated: new Date().toISOString(),
               version: '1.0'
+            },
+            success: true
+          };
+        },
+      }),
+      executarSQL: tool({
+        description: 'Execute custom SQL queries on BigQuery datasets with syntax validation',
+        inputSchema: z.object({
+          sqlQuery: z.string().describe('The SQL query to execute'),
+          datasetId: z.string().optional().describe('Dataset ID to execute query against'),
+          dryRun: z.boolean().optional().describe('Run query validation without executing')
+        }),
+        execute: async ({ sqlQuery, datasetId, dryRun = false }) => {
+          // Mock SQL execution with realistic results
+          const queryType = sqlQuery.trim().toLowerCase().split(' ')[0];
+          const executionTime = Math.floor(Math.random() * 2000) + 300;
+          
+          const mockResults = {
+            select: {
+              data: [
+                { id: 1, name: 'Ana Silva', city: 'São Paulo', sales: 15000 },
+                { id: 2, name: 'João Santos', city: 'Rio de Janeiro', sales: 12500 },
+                { id: 3, name: 'Maria Costa', city: 'Belo Horizonte', sales: 18000 },
+                { id: 4, name: 'Pedro Lima', city: 'Salvador', sales: 14200 },
+                { id: 5, name: 'Carla Oliveira', city: 'Brasília', sales: 16800 }
+              ],
+              schema: [
+                { name: 'id', type: 'INTEGER', mode: 'REQUIRED' },
+                { name: 'name', type: 'STRING', mode: 'REQUIRED' },
+                { name: 'city', type: 'STRING', mode: 'NULLABLE' },
+                { name: 'sales', type: 'FLOAT', mode: 'NULLABLE' }
+              ],
+              rowsReturned: 5,
+              rowsAffected: 0,
+              totalRows: 150000
+            },
+            insert: {
+              data: [],
+              schema: [],
+              rowsReturned: 0,
+              rowsAffected: Math.floor(Math.random() * 100) + 1,
+              totalRows: 0
+            },
+            update: {
+              data: [],
+              schema: [],
+              rowsReturned: 0,
+              rowsAffected: Math.floor(Math.random() * 50) + 1,
+              totalRows: 0
+            },
+            delete: {
+              data: [],
+              schema: [],
+              rowsReturned: 0,
+              rowsAffected: Math.floor(Math.random() * 25) + 1,
+              totalRows: 0
+            }
+          };
+
+          const resultType = ['select'].includes(queryType) ? queryType : 'select';
+          const result = mockResults[resultType as keyof typeof mockResults];
+
+          return {
+            sqlQuery,
+            datasetId: datasetId || 'default-dataset',
+            queryType: queryType.toUpperCase(),
+            dryRun,
+            data: result.data,
+            schema: result.schema,
+            rowsReturned: result.rowsReturned || 0,
+            rowsAffected: result.rowsAffected || 0,
+            totalRows: result.totalRows,
+            executionTime,
+            bytesProcessed: Math.floor(Math.random() * 1000000) + 50000,
+            success: true,
+            validationErrors: dryRun && Math.random() > 0.8 ? ['Syntax warning: Missing semicolon'] : []
+          };
+        },
+      }),
+      criarTabela: tool({
+        description: 'Create new BigQuery tables with custom schema definition',
+        inputSchema: z.object({
+          datasetId: z.string().describe('Dataset ID where table will be created'),
+          tableName: z.string().describe('Name of the table to create'),
+          schema: z.array(z.object({
+            name: z.string(),
+            type: z.enum(['STRING', 'INTEGER', 'FLOAT', 'BOOLEAN', 'DATE', 'TIMESTAMP']),
+            mode: z.enum(['REQUIRED', 'NULLABLE', 'REPEATED']).optional()
+          })).describe('Table schema definition'),
+          description: z.string().optional().describe('Table description')
+        }),
+        execute: async ({ datasetId, tableName, schema, description }) => {
+          // Mock table creation
+          const tableId = `${tableName}_${Date.now()}`;
+          const creationTime = new Date().toISOString();
+          
+          return {
+            datasetId,
+            tableName,
+            tableId,
+            schema: schema.map(col => ({
+              ...col,
+              mode: col.mode || 'NULLABLE'
+            })),
+            description: description || `Table created: ${tableName}`,
+            location: 'US',
+            creationTime,
+            lastModifiedTime: creationTime,
+            numRows: 0,
+            numBytes: 0,
+            expirationTime: null,
+            labels: {},
+            metadata: {
+              tableType: 'TABLE',
+              createdBy: 'BigQuery Tool',
+              version: '1.0'
+            },
+            success: true
+          };
+        },
+      }),
+      criarKPI: tool({
+        description: 'Create Key Performance Indicator metrics with calculations and targets',
+        inputSchema: z.object({
+          name: z.string().describe('KPI name'),
+          datasetId: z.string().describe('Source dataset ID'),
+          tableId: z.string().describe('Source table ID'),
+          metric: z.enum(['sum', 'count', 'avg', 'min', 'max', 'ratio']).describe('Type of calculation'),
+          calculation: z.string().describe('Calculation formula or column name'),
+          target: z.number().optional().describe('Target value for the KPI'),
+          unit: z.string().optional().describe('Unit of measurement (%, $, count, etc)')
+        }),
+        execute: async ({ name, datasetId, tableId, metric, calculation, target, unit = 'count' }) => {
+          // Mock KPI calculation
+          const baseValue = Math.floor(Math.random() * 10000) + 1000;
+          const currentValue = target ? (baseValue % target) + (target * 0.7) : baseValue;
+          const previousValue = currentValue * (0.85 + Math.random() * 0.3);
+          
+          const kpiData = {
+            revenue: { current: 245000, target: 250000, unit: '$' },
+            conversion: { current: 3.2, target: 4.0, unit: '%' },
+            customers: { current: 15240, target: 18000, unit: 'count' },
+            satisfaction: { current: 4.7, target: 5.0, unit: 'rating' }
+          };
+
+          const mockKey = Object.keys(kpiData)[Math.floor(Math.random() * Object.keys(kpiData).length)] as keyof typeof kpiData;
+          const mockData = kpiData[mockKey];
+
+          return {
+            kpiId: `kpi_${Date.now()}`,
+            name,
+            datasetId,
+            tableId,
+            metric,
+            calculation,
+            currentValue: mockData.current,
+            previousValue: mockData.current * 0.92,
+            target: target || mockData.target,
+            unit: unit || mockData.unit,
+            change: ((mockData.current - (mockData.current * 0.92)) / (mockData.current * 0.92)) * 100,
+            trend: 'increasing',
+            status: mockData.current >= (target || mockData.target) ? 'on-target' : 'below-target',
+            timeRange: 'last-30-days',
+            visualization: {
+              chartType: 'gauge',
+              color: mockData.current >= (target || mockData.target) ? 'green' : 'orange',
+              showTrend: true,
+              showTarget: true
+            },
+            metadata: {
+              createdAt: new Date().toISOString(),
+              lastUpdated: new Date().toISOString(),
+              refreshRate: 'daily',
+              dataSource: `${datasetId}.${tableId}`
             },
             success: true
           };
