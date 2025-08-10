@@ -30,7 +30,7 @@ export default function Page() {
                 case 'input-streaming':
                   return <div key={callId}>Preparing weather request...</div>;
                 case 'input-available':
-                  return <div key={callId}>Getting weather for {part.input.location}...</div>;
+                  return <div key={callId}>Getting weather for {(part.input as { location: string }).location}...</div>;
                 case 'output-available':
                   return (
                     <div key={callId}>
