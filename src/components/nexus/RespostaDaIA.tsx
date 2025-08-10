@@ -72,7 +72,7 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
           return (
             <div key={callId}>
               <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="displayWeather" state={weatherTool.state} />
+                <ToolHeader type="tool-displayWeather" state={weatherTool.state} />
                 <ToolContent>
                   {weatherTool.input && (
                     <ToolInput input={weatherTool.input} />
