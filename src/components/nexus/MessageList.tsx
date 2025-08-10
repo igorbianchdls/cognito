@@ -1,22 +1,9 @@
+import { UIMessage } from 'ai';
 import PerguntaDoUsuario from './PerguntaDoUsuario';
 import RespostaDaIA from './RespostaDaIA';
 
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  parts: Array<{
-    type: string;
-    text?: string;
-    toolCallId?: string;
-    state?: string;
-    input?: unknown;
-    output?: unknown;
-    errorText?: string;
-  }>;
-}
-
 interface MessageListProps {
-  messages: Message[];
+  messages: UIMessage[];
 }
 
 export default function MessageList({ messages }: MessageListProps) {

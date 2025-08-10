@@ -1,14 +1,7 @@
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  parts: Array<{
-    type: string;
-    text?: string;
-  }>;
-}
+import { UIMessage } from 'ai';
 
 interface PerguntaDoUsuarioProps {
-  message: Message;
+  message: UIMessage;
 }
 
 export default function PerguntaDoUsuario({ message }: PerguntaDoUsuarioProps) {

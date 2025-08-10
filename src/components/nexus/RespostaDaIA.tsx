@@ -1,21 +1,8 @@
+import { UIMessage } from 'ai';
 import WeatherCard from '../tools/WeatherCard';
 
-interface Message {
-  id: string;
-  role: 'user' | 'assistant';
-  parts: Array<{
-    type: string;
-    text?: string;
-    toolCallId?: string;
-    state?: string;
-    input?: unknown;
-    output?: unknown;
-    errorText?: string;
-  }>;
-}
-
 interface RespostaDaIAProps {
-  message: Message;
+  message: UIMessage;
 }
 
 export default function RespostaDaIA({ message }: RespostaDaIAProps) {
