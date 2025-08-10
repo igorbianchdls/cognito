@@ -6,6 +6,8 @@ import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/componen
 import { CopyIcon, ThumbsUpIcon, ThumbsDownIcon } from 'lucide-react';
 import WeatherCard from '../tools/WeatherCard';
 import DatasetsList from '../tools/DatasetsList';
+import TablesList from '../tools/TablesList';
+import TableData from '../tools/TableData';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -40,6 +42,44 @@ type DatasetToolOutput = {
   error?: string;
 };
 
+type TablesToolInput = {
+  datasetId: string;
+};
+
+type TablesToolOutput = {
+  tables: Array<{
+    tableId: string;
+    description?: string;
+    numRows?: number;
+    numBytes?: number;
+    creationTime?: string;
+  }>;
+  datasetId: string;
+  success: boolean;
+  error?: string;
+};
+
+type DataToolInput = {
+  datasetId: string;
+  tableId: string;
+  limit?: number;
+};
+
+type DataToolOutput = {
+  data: Array<Record<string, any>>;
+  schema: Array<{
+    name: string;
+    type: string;
+    mode: string;
+  }>;
+  totalRows: number;
+  executionTime: number;
+  datasetId: string;
+  tableId: string;
+  success: boolean;
+  error?: string;
+};
+
 type NexusToolUIPart = ToolUIPart<{
   displayWeather: {
     input: WeatherToolInput;
@@ -48,6 +88,14 @@ type NexusToolUIPart = ToolUIPart<{
   getDatasets: {
     input: DatasetToolInput;
     output: DatasetToolOutput;
+  };
+  getTables: {
+    input: TablesToolInput;
+    output: TablesToolOutput;
+  };
+  getData: {
+    input: DataToolInput;
+    output: DataToolOutput;
   };
 }>;
 
@@ -140,6 +188,76 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
                   datasets={(datasetTool.output as DatasetToolOutput).datasets}
                   success={(datasetTool.output as DatasetToolOutput).success}
                   error={(datasetTool.output as DatasetToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getTables') {
+          const tablesTool = part as NexusToolUIPart;
+          const callId = tablesTool.toolCallId;
+          const shouldBeOpen = tablesTool.state === 'output-available' || tablesTool.state === 'output-error';
+          
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getTables" state={tablesTool.state} />
+                <ToolContent>
+                  {tablesTool.input && (
+                    <ToolInput input={tablesTool.input} />
+                  )}
+                  {tablesTool.state === 'output-error' && (
+                    <ToolOutput 
+                      output={null}
+                      errorText={tablesTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tablesTool.state === 'output-available' && (
+                <TablesList 
+                  tables={(tablesTool.output as TablesToolOutput).tables}
+                  datasetId={(tablesTool.output as TablesToolOutput).datasetId}
+                  success={(tablesTool.output as TablesToolOutput).success}
+                  error={(tablesTool.output as TablesToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getData') {
+          const dataTool = part as NexusToolUIPart;
+          const callId = dataTool.toolCallId;
+          const shouldBeOpen = dataTool.state === 'output-available' || dataTool.state === 'output-error';
+          
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getData" state={dataTool.state} />
+                <ToolContent>
+                  {dataTool.input && (
+                    <ToolInput input={dataTool.input} />
+                  )}
+                  {dataTool.state === 'output-error' && (
+                    <ToolOutput 
+                      output={null}
+                      errorText={dataTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {dataTool.state === 'output-available' && (
+                <TableData 
+                  data={(dataTool.output as DataToolOutput).data}
+                  schema={(dataTool.output as DataToolOutput).schema}
+                  totalRows={(dataTool.output as DataToolOutput).totalRows}
+                  executionTime={(dataTool.output as DataToolOutput).executionTime}
+                  datasetId={(dataTool.output as DataToolOutput).datasetId}
+                  tableId={(dataTool.output as DataToolOutput).tableId}
+                  success={(dataTool.output as DataToolOutput).success}
+                  error={(dataTool.output as DataToolOutput).error}
                 />
               )}
             </div>
