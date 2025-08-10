@@ -145,6 +145,14 @@ type RetrieveResultToolInput = {
   resultType?: 'analysis' | 'chart' | 'dashboard' | 'query';
 };
 
+type SourceDocument = {
+  id: string;
+  title: string;
+  url?: string;
+  snippet: string;
+  relevanceScore: number;
+};
+
 type RetrieveResultToolOutput = {
   resultId: string;
   resultType: string;
@@ -152,7 +160,10 @@ type RetrieveResultToolOutput = {
     type?: string;
     data?: Record<string, unknown>;
     message?: string;
+    query?: string;
+    response?: string;
   };
+  sources?: SourceDocument[];
   retrievedAt: string;
   success: boolean;
   error?: string;
@@ -615,6 +626,7 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
                   resultId={(resultTool.output as RetrieveResultToolOutput).resultId}
                   resultType={(resultTool.output as RetrieveResultToolOutput).resultType}
                   result={(resultTool.output as RetrieveResultToolOutput).result}
+                  sources={(resultTool.output as RetrieveResultToolOutput).sources}
                   retrievedAt={(resultTool.output as RetrieveResultToolOutput).retrievedAt}
                   success={(resultTool.output as RetrieveResultToolOutput).success}
                   error={(resultTool.output as RetrieveResultToolOutput).error}

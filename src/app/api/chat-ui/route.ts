@@ -18,7 +18,7 @@ Available tools:
 - getData: Get data from a specific table (requires datasetId and tableId)
 - interpretarDados: Analyze and interpret data with insights and recommendations (requires datasetId, tableId)
 - criarGrafico: Create visualizations and charts (requires datasetId, tableId, chartType, xColumn, yColumn)
-- retrieveResult: Retrieve previous analysis results (requires resultId or queryId)
+- retrieveResult: Search documents using RAG (requires query parameter) - retrieves relevant documents from vector database
 - criarDashboard: Create interactive dashboards with KPIs (requires datasetIds, title, dashboardType)
 - executarSQL: Execute custom SQL queries with validation (requires sqlQuery, optional datasetId, dryRun)
 - criarTabela: Create new BigQuery tables with custom schema (requires datasetId, tableName, schema)
@@ -31,7 +31,7 @@ Use these tools proactively when users ask about:
 - "show data" or "data from [table]" → use getData
 - "analyze data" or "interpret data" → use interpretarDados
 - "create chart" or "make graph" → use criarGrafico
-- "retrieve result" or "get previous analysis" → use retrieveResult
+- "search documents", "find information", or "RAG search" → use retrieveResult
 - "create dashboard" or "make dashboard" → use criarDashboard
 - "run SQL" or "execute query" → use executarSQL
 - "create table" or "new table" → use criarTabela
@@ -425,55 +425,121 @@ Always call the appropriate tool rather than asking for more parameters. Use mul
         },
       }),
       retrieveResult: tool({
-        description: 'Retrieve results from previous analysis or queries',
+        description: 'Retrieve results from RAG search - searches documents in vector database',
         inputSchema: z.object({
+          query: z.string().describe('Search query to find relevant documents'),
           resultId: z.string().optional().describe('The result ID to retrieve'),
           queryId: z.string().optional().describe('The query ID to retrieve'),
-          resultType: z.enum(['analysis', 'chart', 'dashboard', 'query']).optional().describe('Type of result to retrieve')
+          resultType: z.enum(['analysis', 'chart', 'dashboard', 'query', 'rag']).optional().describe('Type of result to retrieve')
         }),
-        execute: async ({ resultId, queryId, resultType = 'analysis' }) => {
-          // Mock cached results
-          const cachedResults: Record<string, {
-            type: string;
-            data: Record<string, unknown>;
-          }> = {
-            'result_001': {
-              type: 'analysis',
-              data: {
-                dataset: 'ecommerce_data',
-                table: 'customers',
-                insights: ['Customer growth rate: +15%', 'Top segment: Young professionals'],
-                generatedAt: '2024-08-10T10:30:00Z'
-              }
+        execute: async ({ query, resultId, queryId, resultType = 'rag' }) => {
+          // Mock RAG search - simulate vector database search
+          const mockDocuments = [
+            {
+              id: 'doc_001',
+              title: 'BigQuery Performance Best Practices',
+              url: 'https://cloud.google.com/bigquery/docs/best-practices-performance-overview',
+              content: 'Best practices for optimizing BigQuery query performance including partitioning, clustering, and query optimization techniques.',
+              snippet: 'Use partitioning and clustering to improve query performance. Avoid SELECT * queries.',
+              relevanceScore: 0.95
             },
-            'result_002': {
-              type: 'chart',
-              data: {
-                chartType: 'bar',
-                title: 'Monthly Sales',
-                dataPoints: 12,
-                generatedAt: '2024-08-10T11:15:00Z'
-              }
+            {
+              id: 'doc_002', 
+              title: 'Data Analytics with SQL',
+              url: 'https://example.com/sql-analytics',
+              content: 'Complete guide to performing data analytics using SQL queries with practical examples.',
+              snippet: 'SQL analytics enables data-driven insights through aggregations, window functions, and CTEs.',
+              relevanceScore: 0.87
             },
-            'query_001': {
-              type: 'query',
-              data: {
-                sql: 'SELECT city, COUNT(*) FROM customers GROUP BY city',
-                rows: 25,
-                executionTime: 450,
-                generatedAt: '2024-08-10T09:45:00Z'
-              }
+            {
+              id: 'doc_003',
+              title: 'Machine Learning on BigQuery',
+              url: 'https://cloud.google.com/bigquery-ml/docs/introduction',
+              content: 'Introduction to BigQuery ML for creating and executing machine learning models.',
+              snippet: 'BigQuery ML enables data scientists to build ML models using SQL queries.',
+              relevanceScore: 0.79
+            },
+            {
+              id: 'doc_004',
+              title: 'Data Visualization Techniques',
+              url: 'https://example.com/data-viz',
+              content: 'Best practices for creating effective data visualizations and dashboards.',
+              snippet: 'Choose the right chart type based on your data and audience needs.',
+              relevanceScore: 0.72
             }
-          };
+          ];
 
-          const result = cachedResults[resultId || queryId || 'result_001'];
+          // Simulate vector search by filtering documents based on query relevance
+          const searchQuery = query?.toLowerCase() || '';
+          const relevantDocs = mockDocuments
+            .filter(doc => 
+              doc.title.toLowerCase().includes(searchQuery) ||
+              doc.content.toLowerCase().includes(searchQuery) ||
+              searchQuery.split(' ').some(term => 
+                doc.title.toLowerCase().includes(term) || 
+                doc.content.toLowerCase().includes(term)
+              )
+            )
+            .sort((a, b) => b.relevanceScore - a.relevanceScore)
+            .slice(0, 3); // Top 3 most relevant
+
+          // If no query provided, fall back to cached results
+          if (!query) {
+            const cachedResults: Record<string, {
+              type: string;
+              data: Record<string, unknown>;
+            }> = {
+              'result_001': {
+                type: 'analysis',
+                data: {
+                  dataset: 'ecommerce_data',
+                  table: 'customers',
+                  insights: ['Customer growth rate: +15%', 'Top segment: Young professionals'],
+                  generatedAt: '2024-08-10T10:30:00Z'
+                }
+              }
+            };
+
+            const result = cachedResults[resultId || queryId || 'result_001'];
+            return {
+              resultId: resultId || queryId,
+              resultType,
+              result: result || { message: 'Result not found' },
+              retrievedAt: new Date().toISOString(),
+              success: !!result,
+              sources: []
+            };
+          }
+
+          // Generate AI response based on found documents
+          const response = relevantDocs.length > 0 
+            ? `Based on the search for "${query}", I found ${relevantDocs.length} relevant documents. ${relevantDocs[0]?.snippet || 'Here are the key insights from the retrieved documents.'}`
+            : `No relevant documents found for "${query}". Please try a different search query.`;
           
           return {
-            resultId: resultId || queryId,
-            resultType,
-            result: result || { message: 'Result not found' },
+            resultId: `rag_${Date.now()}`,
+            resultType: 'rag',
+            result: {
+              type: 'rag',
+              query,
+              response,
+              documentsFound: relevantDocs.length,
+              data: { 
+                message: response,
+                searchQuery: query,
+                totalDocuments: mockDocuments.length,
+                relevantDocuments: relevantDocs.length
+              }
+            },
+            sources: relevantDocs.map(doc => ({
+              id: doc.id,
+              title: doc.title,
+              url: doc.url,
+              snippet: doc.snippet,
+              relevanceScore: doc.relevanceScore
+            })),
             retrievedAt: new Date().toISOString(),
-            success: !!result
+            success: true
           };
         },
       }),
