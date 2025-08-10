@@ -1,4 +1,4 @@
-import { UIMessage } from 'ai';
+import { UIMessage, type ToolUIPart } from 'ai';
 import { Response } from '@/components/ai-elements/response';
 import { Reasoning, ReasoningTrigger, ReasoningContent } from '@/components/ai-elements/reasoning';
 import { Actions, Action } from '@/components/ai-elements/actions';
@@ -12,6 +12,22 @@ interface ReasoningPart {
   content?: string;
   text?: string;
 }
+
+type WeatherToolInput = {
+  location: string;
+};
+
+type WeatherToolOutput = {
+  location: string;
+  temperature: number;
+};
+
+type WeatherToolUIPart = ToolUIPart<{
+  displayWeather: {
+    input: WeatherToolInput;
+    output: WeatherToolOutput;
+  };
+}>;
 
 interface RespostaDaIAProps {
   message: UIMessage;
@@ -50,23 +66,24 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
         }
 
         if (part.type === 'tool-displayWeather') {
-          const callId = part.toolCallId;
-          const shouldBeOpen = part.state === 'output-available' || part.state === 'output-error';
+          const weatherTool = part as WeatherToolUIPart;
+          const callId = weatherTool.toolCallId;
+          const shouldBeOpen = weatherTool.state === 'output-available' || weatherTool.state === 'output-error';
           
           return (
             <Tool key={callId} defaultOpen={shouldBeOpen}>
-              <ToolHeader type="tool-displayWeather" state={part.state} />
+              <ToolHeader type="tool-displayWeather" state={weatherTool.state} />
               <ToolContent>
-                {part.input && (
-                  <ToolInput input={part.input} />
+                {weatherTool.input && (
+                  <ToolInput input={weatherTool.input} />
                 )}
-                {(part.state === 'output-available' || part.state === 'output-error') && (
+                {(weatherTool.state === 'output-available' || weatherTool.state === 'output-error') && (
                   <ToolOutput 
-                    output={part.state === 'output-available' ? 
-                      <WeatherCard data={part.output as { location: string; temperature: number }} /> : 
+                    output={weatherTool.state === 'output-available' ? 
+                      <WeatherCard data={weatherTool.output} /> : 
                       null
                     }
-                    errorText={part.state === 'output-error' ? part.errorText : undefined}
+                    errorText={weatherTool.state === 'output-error' ? weatherTool.errorText : undefined}
                   />
                 )}
               </ToolContent>
