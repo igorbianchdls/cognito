@@ -44,7 +44,7 @@ Responda sempre como um assistente projetado para ser rápido e eficiente.` },
       ],
       stopWhen: stepCountIs(3),
       tools: {
-        getWeather: tool({
+        displayWeather: tool({
           description: 'Get weather information for a specific location and display it in a beautiful weather card',
           inputSchema: z.object({
             location: z.string().describe('The location to get the weather for'),

@@ -1,8 +1,6 @@
 interface WeatherData {
   location: string;
   temperature: number;
-  condition: string;
-  humidity: number;
 }
 
 interface WeatherCardProps {
@@ -10,20 +8,17 @@ interface WeatherCardProps {
 }
 
 export default function WeatherCard({ data }: WeatherCardProps) {
-  const getWeatherIcon = (condition: string) => {
-    switch (condition) {
-      case 'sunny': return '☀️';
-      case 'cloudy': return '☁️';
-      case 'rainy': return '🌧️';
-      case 'snowy': return '❄️';
-      default: return '🌤️';
-    }
-  };
-
   const getTemperatureColor = (temp: number) => {
     if (temp >= 25) return 'text-red-500';
     if (temp >= 15) return 'text-yellow-500';
     return 'text-blue-500';
+  };
+
+  const getWeatherIcon = (temp: number) => {
+    if (temp >= 25) return '☀️';
+    if (temp >= 15) return '🌤️';
+    if (temp >= 0) return '☁️';
+    return '❄️';
   };
 
   return (
@@ -32,8 +27,8 @@ export default function WeatherCard({ data }: WeatherCardProps) {
         <h3 className="font-semibold text-gray-800 dark:text-gray-200">
           {data.location}
         </h3>
-        <span className="text-2xl" role="img" aria-label={data.condition}>
-          {getWeatherIcon(data.condition)}
+        <span className="text-2xl" role="img" aria-label="weather">
+          {getWeatherIcon(data.temperature)}
         </span>
       </div>
       
@@ -42,20 +37,6 @@ export default function WeatherCard({ data }: WeatherCardProps) {
           <span className="text-sm text-gray-600 dark:text-gray-400">Temperature</span>
           <span className={`font-bold text-lg ${getTemperatureColor(data.temperature)}`}>
             {data.temperature}°C
-          </span>
-        </div>
-        
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600 dark:text-gray-400">Condition</span>
-          <span className="font-medium text-gray-800 dark:text-gray-200 capitalize">
-            {data.condition}
-          </span>
-        </div>
-        
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600 dark:text-gray-400">Humidity</span>
-          <span className="font-medium text-gray-800 dark:text-gray-200">
-            {data.humidity}%
           </span>
         </div>
       </div>
