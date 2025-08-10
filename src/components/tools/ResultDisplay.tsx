@@ -187,7 +187,7 @@ export default function ResultDisplay({
               {result.query && (
                 <div className="mt-3 pt-3 border-t border-teal-200">
                   <span className="text-sm text-teal-700">
-                    <strong>Consulta:</strong> "{result.query}"
+                    <strong>Consulta:</strong> &quot;{result.query}&quot;
                   </span>
                 </div>
               )}
