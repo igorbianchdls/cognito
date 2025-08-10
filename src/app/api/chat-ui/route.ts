@@ -10,21 +10,29 @@ export async function POST(req: Request) {
 
   const result = streamText({
     model: anthropic('claude-sonnet-4-20250514'),
-    system: `You are a helpful assistant with access to BigQuery data exploration tools and weather information.
+    system: `You are a helpful assistant with access to BigQuery data exploration, analysis, and visualization tools, plus weather information.
 
 Available tools:
-- getDatasets: List available BigQuery datasets (no parameters needed - use this when users ask about datasets)
-- getTables: Get tables from a specific dataset (requires datasetId - use this when users ask for tables)
-- getData: Get data from a specific table (requires datasetId and tableId - use this to show actual data)
+- getDatasets: List available BigQuery datasets (no parameters needed)
+- getTables: Get tables from a specific dataset (requires datasetId)
+- getData: Get data from a specific table (requires datasetId and tableId)
+- interpretarDados: Analyze and interpret data with insights and recommendations (requires datasetId, tableId)
+- criarGrafico: Create visualizations and charts (requires datasetId, tableId, chartType, xColumn, yColumn)
+- retrieveResult: Retrieve previous analysis results (requires resultId or queryId)
+- criarDashboard: Create interactive dashboards with KPIs (requires datasetIds, title, dashboardType)
 - displayWeather: Get weather for a location
 
 Use these tools proactively when users ask about:
 - "list datasets" or "show datasets" → use getDatasets
 - "list tables" or "tables in [dataset]" → use getTables
-- "show data" or "data from [table]" → use getData  
+- "show data" or "data from [table]" → use getData
+- "analyze data" or "interpret data" → use interpretarDados
+- "create chart" or "make graph" → use criarGrafico
+- "retrieve result" or "get previous analysis" → use retrieveResult
+- "create dashboard" or "make dashboard" → use criarDashboard
 - weather queries → use displayWeather
 
-Always call the appropriate tool rather than asking for more parameters.`,
+Always call the appropriate tool rather than asking for more parameters. Use multiple tools in sequence when helpful (e.g., getData then interpretarDados, or getData then criarGrafico).`,
     messages: convertToModelMessages(messages),
     providerOptions: {
       anthropic: {
@@ -274,6 +282,275 @@ Always call the appropriate tool rather than asking for more parameters.`,
             success: true,
             datasetId,
             tableId
+          };
+        },
+      }),
+      interpretarDados: tool({
+        description: 'Analyze and interpret data from a BigQuery table with insights and recommendations',
+        inputSchema: z.object({
+          datasetId: z.string().describe('The dataset ID'),
+          tableId: z.string().describe('The table ID to analyze'),
+          analysisType: z.enum(['trends', 'summary', 'insights', 'anomalies']).optional().describe('Type of analysis to perform')
+        }),
+        execute: async ({ datasetId, tableId, analysisType = 'insights' }) => {
+          // Mock analysis based on table
+          const analysisResults: Record<string, Record<string, unknown>> = {
+            'customers': {
+              summary: {
+                totalRecords: 150000,
+                avgAge: 34.2,
+                topCities: ['São Paulo', 'Rio de Janeiro', 'Belo Horizonte'],
+                signupTrend: 'Growing 15% monthly'
+              },
+              insights: [
+                'Customer base is primarily young adults (25-35 years)',
+                'Strong concentration in major Brazilian cities',
+                'Consistent growth in customer acquisition',
+                'Higher engagement in metropolitan areas'
+              ],
+              recommendations: [
+                'Focus marketing on 25-35 demographic',
+                'Expand services in secondary cities',
+                'Implement referral programs for metropolitan users'
+              ]
+            },
+            'orders': {
+              summary: {
+                totalOrders: 500000,
+                avgOrderValue: 245.50,
+                conversionRate: 3.2,
+                topProducts: ['Electronics', 'Fashion', 'Home & Garden']
+              },
+              insights: [
+                'Average order value increased 20% in last quarter',
+                'Electronics category shows highest profit margins',
+                'Weekend orders have 40% higher values',
+                'Mobile purchases account for 65% of orders'
+              ],
+              recommendations: [
+                'Promote electronics during peak hours',
+                'Optimize mobile checkout experience',
+                'Create weekend promotional campaigns'
+              ]
+            }
+          };
+
+          const result = analysisResults[tableId] || {
+            summary: { message: 'Analysis completed for unknown table' },
+            insights: ['Data patterns identified', 'Statistical analysis performed'],
+            recommendations: ['Further analysis recommended']
+          };
+
+          return {
+            datasetId,
+            tableId,
+            analysisType,
+            analysis: result,
+            executionTime: Math.floor(Math.random() * 2000) + 500,
+            success: true
+          };
+        },
+      }),
+      criarGrafico: tool({
+        description: 'Create data visualizations and charts from BigQuery data',
+        inputSchema: z.object({
+          datasetId: z.string().describe('The dataset ID'),
+          tableId: z.string().describe('The table ID'),
+          chartType: z.enum(['bar', 'line', 'pie', 'scatter', 'area']).describe('Type of chart to create'),
+          xColumn: z.string().describe('Column for X-axis'),
+          yColumn: z.string().describe('Column for Y-axis'),
+          title: z.string().optional().describe('Chart title')
+        }),
+        execute: async ({ datasetId, tableId, chartType, xColumn, yColumn, title }) => {
+          // Mock chart data
+          const chartData = {
+            bar: [
+              { x: 'Jan', y: 4500, label: 'Janeiro' },
+              { x: 'Feb', y: 5200, label: 'Fevereiro' },
+              { x: 'Mar', y: 4800, label: 'Março' },
+              { x: 'Apr', y: 6100, label: 'Abril' },
+              { x: 'May', y: 5900, label: 'Maio' }
+            ],
+            line: [
+              { x: '2024-01', y: 150000 },
+              { x: '2024-02', y: 162000 },
+              { x: '2024-03', y: 158000 },
+              { x: '2024-04', y: 175000 },
+              { x: '2024-05', y: 182000 }
+            ],
+            pie: [
+              { label: 'São Paulo', value: 35, color: '#3b82f6' },
+              { label: 'Rio de Janeiro', value: 25, color: '#ef4444' },
+              { label: 'Belo Horizonte', value: 15, color: '#22c55e' },
+              { label: 'Salvador', value: 12, color: '#f59e0b' },
+              { label: 'Outros', value: 13, color: '#8b5cf6' }
+            ]
+          };
+
+          return {
+            chartData: chartData[chartType] || chartData.bar,
+            chartType,
+            title: title || `${yColumn} por ${xColumn}`,
+            xColumn,
+            yColumn,
+            datasetId,
+            tableId,
+            metadata: {
+              totalDataPoints: chartData[chartType]?.length || 0,
+              generatedAt: new Date().toISOString(),
+              executionTime: Math.floor(Math.random() * 800) + 200
+            },
+            success: true
+          };
+        },
+      }),
+      retrieveResult: tool({
+        description: 'Retrieve results from previous analysis or queries',
+        inputSchema: z.object({
+          resultId: z.string().optional().describe('The result ID to retrieve'),
+          queryId: z.string().optional().describe('The query ID to retrieve'),
+          resultType: z.enum(['analysis', 'chart', 'dashboard', 'query']).optional().describe('Type of result to retrieve')
+        }),
+        execute: async ({ resultId, queryId, resultType = 'analysis' }) => {
+          // Mock cached results
+          const cachedResults = {
+            'result_001': {
+              type: 'analysis',
+              data: {
+                dataset: 'ecommerce_data',
+                table: 'customers',
+                insights: ['Customer growth rate: +15%', 'Top segment: Young professionals'],
+                generatedAt: '2024-08-10T10:30:00Z'
+              }
+            },
+            'result_002': {
+              type: 'chart',
+              data: {
+                chartType: 'bar',
+                title: 'Monthly Sales',
+                dataPoints: 12,
+                generatedAt: '2024-08-10T11:15:00Z'
+              }
+            },
+            'query_001': {
+              type: 'query',
+              data: {
+                sql: 'SELECT city, COUNT(*) FROM customers GROUP BY city',
+                rows: 25,
+                executionTime: 450,
+                generatedAt: '2024-08-10T09:45:00Z'
+              }
+            }
+          };
+
+          const result = cachedResults[resultId || queryId || 'result_001'];
+          
+          return {
+            resultId: resultId || queryId,
+            resultType,
+            result: result || { message: 'Result not found' },
+            retrievedAt: new Date().toISOString(),
+            success: !!result
+          };
+        },
+      }),
+      criarDashboard: tool({
+        description: 'Create interactive dashboards with multiple visualizations and KPIs',
+        inputSchema: z.object({
+          datasetIds: z.array(z.string()).describe('Array of dataset IDs to include'),
+          title: z.string().describe('Dashboard title'),
+          dashboardType: z.enum(['executive', 'operational', 'analytical']).describe('Type of dashboard'),
+          kpis: z.array(z.string()).optional().describe('Key performance indicators to include')
+        }),
+        execute: async ({ datasetIds, title, dashboardType, kpis = [] }) => {
+          // Mock dashboard components
+          const dashboardTypes = {
+            executive: {
+              widgets: [
+                {
+                  type: 'kpi',
+                  title: 'Total Revenue',
+                  value: 'R$ 2.4M',
+                  trend: '+12%',
+                  color: 'green'
+                },
+                {
+                  type: 'kpi',
+                  title: 'Active Customers',
+                  value: '15.2K',
+                  trend: '+8%',
+                  color: 'blue'
+                },
+                {
+                  type: 'chart',
+                  title: 'Revenue Trend',
+                  chartType: 'line',
+                  size: 'large'
+                }
+              ]
+            },
+            operational: {
+              widgets: [
+                {
+                  type: 'metric',
+                  title: 'Orders Today',
+                  value: '1,247',
+                  target: '1,200'
+                },
+                {
+                  type: 'chart',
+                  title: 'Hourly Orders',
+                  chartType: 'bar',
+                  size: 'medium'
+                },
+                {
+                  type: 'table',
+                  title: 'Top Products',
+                  rows: 10
+                }
+              ]
+            },
+            analytical: {
+              widgets: [
+                {
+                  type: 'chart',
+                  title: 'Customer Segmentation',
+                  chartType: 'pie',
+                  size: 'medium'
+                },
+                {
+                  type: 'chart',
+                  title: 'Correlation Analysis',
+                  chartType: 'scatter',
+                  size: 'large'
+                },
+                {
+                  type: 'insights',
+                  title: 'Key Insights',
+                  items: ['Pattern A identified', 'Anomaly in dataset B']
+                }
+              ]
+            }
+          };
+
+          return {
+            dashboardId: `dashboard_${Date.now()}`,
+            title,
+            dashboardType,
+            datasetIds,
+            widgets: dashboardTypes[dashboardType].widgets,
+            kpis: kpis.length > 0 ? kpis : ['Revenue', 'Growth', 'Conversion'],
+            layout: {
+              columns: dashboardType === 'executive' ? 2 : 3,
+              theme: 'modern',
+              autoRefresh: true
+            },
+            metadata: {
+              createdAt: new Date().toISOString(),
+              lastUpdated: new Date().toISOString(),
+              version: '1.0'
+            },
+            success: true
           };
         },
       }),

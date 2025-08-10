@@ -8,6 +8,10 @@ import WeatherCard from '../tools/WeatherCard';
 import DatasetsList from '../tools/DatasetsList';
 import TablesList from '../tools/TablesList';
 import TableData from '../tools/TableData';
+import DataInterpretation from '../tools/DataInterpretation';
+import ChartVisualization from '../tools/ChartVisualization';
+import ResultDisplay from '../tools/ResultDisplay';
+import Dashboard from '../tools/Dashboard';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -80,6 +84,116 @@ type DataToolOutput = {
   error?: string;
 };
 
+type InterpretarDadosToolInput = {
+  datasetId: string;
+  tableId: string;
+  analysisType?: 'trends' | 'summary' | 'insights' | 'anomalies';
+};
+
+type InterpretarDadosToolOutput = {
+  datasetId: string;
+  tableId: string;
+  analysisType: string;
+  analysis: {
+    summary?: Record<string, unknown>;
+    insights?: string[];
+    recommendations?: string[];
+  };
+  executionTime: number;
+  success: boolean;
+  error?: string;
+};
+
+type CriarGraficoToolInput = {
+  datasetId: string;
+  tableId: string;
+  chartType: 'bar' | 'line' | 'pie' | 'scatter' | 'area';
+  xColumn: string;
+  yColumn: string;
+  title?: string;
+};
+
+type CriarGraficoToolOutput = {
+  chartData: Array<{
+    x?: string;
+    y?: number;
+    label?: string;
+    value?: number;
+    color?: string;
+  }>;
+  chartType: string;
+  title: string;
+  xColumn: string;
+  yColumn: string;
+  datasetId: string;
+  tableId: string;
+  metadata: {
+    totalDataPoints: number;
+    generatedAt: string;
+    executionTime: number;
+  };
+  success: boolean;
+  error?: string;
+};
+
+type RetrieveResultToolInput = {
+  resultId?: string;
+  queryId?: string;
+  resultType?: 'analysis' | 'chart' | 'dashboard' | 'query';
+};
+
+type RetrieveResultToolOutput = {
+  resultId: string;
+  resultType: string;
+  result: {
+    type?: string;
+    data?: Record<string, unknown>;
+    message?: string;
+  };
+  retrievedAt: string;
+  success: boolean;
+  error?: string;
+};
+
+type CriarDashboardToolInput = {
+  datasetIds: string[];
+  title: string;
+  dashboardType: 'executive' | 'operational' | 'analytical';
+  kpis?: string[];
+};
+
+type CriarDashboardToolOutput = {
+  dashboardId: string;
+  title: string;
+  dashboardType: string;
+  datasetIds: string[];
+  widgets: Array<{
+    type: string;
+    title: string;
+    value?: string;
+    trend?: string;
+    color?: string;
+    target?: string;
+    chartType?: string;
+    size?: string;
+    rows?: number;
+    items?: string[];
+  }>;
+  kpis: string[];
+  layout: {
+    columns: number;
+    theme: string;
+    autoRefresh: boolean;
+  };
+  metadata: {
+    createdAt: string;
+    lastUpdated: string;
+    version: string;
+  };
+  success: boolean;
+  error?: string;
+};
+
 type NexusToolUIPart = ToolUIPart<{
   displayWeather: {
     input: WeatherToolInput;
@@ -96,6 +210,22 @@ type NexusToolUIPart = ToolUIPart<{
   getData: {
     input: DataToolInput;
     output: DataToolOutput;
+  };
+  interpretarDados: {
+    input: InterpretarDadosToolInput;
+    output: InterpretarDadosToolOutput;
+  };
+  criarGrafico: {
+    input: CriarGraficoToolInput;
+    output: CriarGraficoToolOutput;
+  };
+  retrieveResult: {
+    input: RetrieveResultToolInput;
+    output: RetrieveResultToolOutput;
+  };
+  criarDashboard: {
+    input: CriarDashboardToolInput;
+    output: CriarDashboardToolOutput;
   };
 }>;
 
@@ -258,6 +388,155 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
                   tableId={(dataTool.output as DataToolOutput).tableId}
                   success={(dataTool.output as DataToolOutput).success}
                   error={(dataTool.output as DataToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-interpretarDados') {
+          const interpretTool = part as NexusToolUIPart;
+          const callId = interpretTool.toolCallId;
+          const shouldBeOpen = interpretTool.state === 'output-available' || interpretTool.state === 'output-error';
+          
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-interpretarDados" state={interpretTool.state} />
+                <ToolContent>
+                  {interpretTool.input && (
+                    <ToolInput input={interpretTool.input} />
+                  )}
+                  {interpretTool.state === 'output-error' && (
+                    <ToolOutput 
+                      output={null}
+                      errorText={interpretTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {interpretTool.state === 'output-available' && (
+                <DataInterpretation 
+                  datasetId={(interpretTool.output as InterpretarDadosToolOutput).datasetId}
+                  tableId={(interpretTool.output as InterpretarDadosToolOutput).tableId}
+                  analysisType={(interpretTool.output as InterpretarDadosToolOutput).analysisType}
+                  analysis={(interpretTool.output as InterpretarDadosToolOutput).analysis}
+                  executionTime={(interpretTool.output as InterpretarDadosToolOutput).executionTime}
+                  success={(interpretTool.output as InterpretarDadosToolOutput).success}
+                  error={(interpretTool.output as InterpretarDadosToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-criarGrafico') {
+          const chartTool = part as NexusToolUIPart;
+          const callId = chartTool.toolCallId;
+          const shouldBeOpen = chartTool.state === 'output-available' || chartTool.state === 'output-error';
+          
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-criarGrafico" state={chartTool.state} />
+                <ToolContent>
+                  {chartTool.input && (
+                    <ToolInput input={chartTool.input} />
+                  )}
+                  {chartTool.state === 'output-error' && (
+                    <ToolOutput 
+                      output={null}
+                      errorText={chartTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {chartTool.state === 'output-available' && (
+                <ChartVisualization 
+                  chartData={(chartTool.output as CriarGraficoToolOutput).chartData}
+                  chartType={(chartTool.output as CriarGraficoToolOutput).chartType}
+                  title={(chartTool.output as CriarGraficoToolOutput).title}
+                  xColumn={(chartTool.output as CriarGraficoToolOutput).xColumn}
+                  yColumn={(chartTool.output as CriarGraficoToolOutput).yColumn}
+                  datasetId={(chartTool.output as CriarGraficoToolOutput).datasetId}
+                  tableId={(chartTool.output as CriarGraficoToolOutput).tableId}
+                  metadata={(chartTool.output as CriarGraficoToolOutput).metadata}
+                  success={(chartTool.output as CriarGraficoToolOutput).success}
+                  error={(chartTool.output as CriarGraficoToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-retrieveResult') {
+          const resultTool = part as NexusToolUIPart;
+          const callId = resultTool.toolCallId;
+          const shouldBeOpen = resultTool.state === 'output-available' || resultTool.state === 'output-error';
+          
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-retrieveResult" state={resultTool.state} />
+                <ToolContent>
+                  {resultTool.input && (
+                    <ToolInput input={resultTool.input} />
+                  )}
+                  {resultTool.state === 'output-error' && (
+                    <ToolOutput 
+                      output={null}
+                      errorText={resultTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {resultTool.state === 'output-available' && (
+                <ResultDisplay 
+                  resultId={(resultTool.output as RetrieveResultToolOutput).resultId}
+                  resultType={(resultTool.output as RetrieveResultToolOutput).resultType}
+                  result={(resultTool.output as RetrieveResultToolOutput).result}
+                  retrievedAt={(resultTool.output as RetrieveResultToolOutput).retrievedAt}
+                  success={(resultTool.output as RetrieveResultToolOutput).success}
+                  error={(resultTool.output as RetrieveResultToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-criarDashboard') {
+          const dashboardTool = part as NexusToolUIPart;
+          const callId = dashboardTool.toolCallId;
+          const shouldBeOpen = dashboardTool.state === 'output-available' || dashboardTool.state === 'output-error';
+          
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-criarDashboard" state={dashboardTool.state} />
+                <ToolContent>
+                  {dashboardTool.input && (
+                    <ToolInput input={dashboardTool.input} />
+                  )}
+                  {dashboardTool.state === 'output-error' && (
+                    <ToolOutput 
+                      output={null}
+                      errorText={dashboardTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {dashboardTool.state === 'output-available' && (
+                <Dashboard 
+                  dashboardId={(dashboardTool.output as CriarDashboardToolOutput).dashboardId}
+                  title={(dashboardTool.output as CriarDashboardToolOutput).title}
+                  dashboardType={(dashboardTool.output as CriarDashboardToolOutput).dashboardType}
+                  datasetIds={(dashboardTool.output as CriarDashboardToolOutput).datasetIds}
+                  widgets={(dashboardTool.output as CriarDashboardToolOutput).widgets}
+                  kpis={(dashboardTool.output as CriarDashboardToolOutput).kpis}
+                  layout={(dashboardTool.output as CriarDashboardToolOutput).layout}
+                  metadata={(dashboardTool.output as CriarDashboardToolOutput).metadata}
+                  success={(dashboardTool.output as CriarDashboardToolOutput).success}
+                  error={(dashboardTool.output as CriarDashboardToolOutput).error}
                 />
               )}
             </div>
