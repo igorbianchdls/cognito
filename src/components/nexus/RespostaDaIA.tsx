@@ -3,6 +3,13 @@ import { Response } from '@/components/ai-elements/response';
 import { Reasoning, ReasoningTrigger, ReasoningContent } from '@/components/ai-elements/reasoning';
 import WeatherCard from '../tools/WeatherCard';
 
+interface ReasoningPart {
+  type: 'reasoning';
+  state: 'streaming' | 'complete';
+  content?: string;
+  text?: string;
+}
+
 interface RespostaDaIAProps {
   message: UIMessage;
 }
@@ -20,7 +27,7 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
           return (
             <Reasoning key={index} isStreaming={part.state === 'streaming'}>
               <ReasoningTrigger />
-              <ReasoningContent>{(part as any).content || (part as any).text}</ReasoningContent>
+              <ReasoningContent>{(part as ReasoningPart).content || (part as ReasoningPart).text}</ReasoningContent>
             </Reasoning>
           );
         }
