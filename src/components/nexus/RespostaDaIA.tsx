@@ -2,6 +2,7 @@ import { UIMessage } from 'ai';
 import { Response } from '@/components/ai-elements/response';
 import { Reasoning, ReasoningTrigger, ReasoningContent } from '@/components/ai-elements/reasoning';
 import { Actions, Action } from '@/components/ai-elements/actions';
+import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool';
 import { CopyIcon, ThumbsUpIcon, ThumbsDownIcon } from 'lucide-react';
 import WeatherCard from '../tools/WeatherCard';
 
@@ -50,23 +51,27 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
 
         if (part.type === 'tool-displayWeather') {
           const callId = part.toolCallId;
+          const shouldBeOpen = part.state === 'output-available' || part.state === 'output-error';
           
-          switch (part.state) {
-            case 'input-streaming':
-              return <div key={callId}>Preparing weather request...</div>;
-            case 'input-available':
-              return <div key={callId}>Getting weather for {(part.input as { location: string }).location}...</div>;
-            case 'output-available':
-              return (
-                <div key={callId}>
-                  <WeatherCard data={part.output as { location: string; temperature: number }} />
-                </div>
-              );
-            case 'output-error':
-              return <div key={callId}>Error: {part.errorText}</div>;
-            default:
-              return null;
-          }
+          return (
+            <Tool key={callId} defaultOpen={shouldBeOpen}>
+              <ToolHeader type="tool-displayWeather" state={part.state} />
+              <ToolContent>
+                {part.input && (
+                  <ToolInput input={part.input} />
+                )}
+                {(part.state === 'output-available' || part.state === 'output-error') && (
+                  <ToolOutput 
+                    output={part.state === 'output-available' ? 
+                      <WeatherCard data={part.output as { location: string; temperature: number }} /> : 
+                      null
+                    }
+                    errorText={part.state === 'output-error' ? part.errorText : undefined}
+                  />
+                )}
+              </ToolContent>
+            </Tool>
+          );
         }
 
         return null;
