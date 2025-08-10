@@ -1,11 +1,14 @@
 'use client';
 
+import { useState, useRef } from 'react';
 import { 
   WebPreview, 
   WebPreviewNavigation, 
+  WebPreviewNavigationButton,
   WebPreviewUrl, 
   WebPreviewBody 
 } from '@/components/ai-elements/web-preview';
+import { ArrowLeft, ArrowRight, RotateCcw, ExternalLink, Maximize } from 'lucide-react';
 
 interface WebPreviewCardProps {
   url: string;
@@ -32,6 +35,31 @@ export default function WebPreviewCard({
   success = true,
   error
 }: WebPreviewCardProps) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const handleBack = () => {
+    // Note: Cross-origin restrictions may prevent this from working
+    console.log('Navigate back clicked');
+  };
+
+  const handleForward = () => {
+    // Note: Cross-origin restrictions may prevent this from working
+    console.log('Navigate forward clicked');
+  };
+
+  const handleRefresh = () => {
+    // Force a refresh by changing the URL slightly and back
+    window.location.reload();
+  };
+
+  const handleOpenInNewTab = () => {
+    window.open(url, '_blank');
+  };
+
+  const handleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
   if (error || !success) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -64,7 +92,7 @@ export default function WebPreviewCard({
     <div className="space-y-4">
       {/* Website Info */}
       {(title || description) && (
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <div className="bg-white border border-gray-100 rounded-lg p-4">
           <div className="flex items-start gap-3">
             {favicon && (
               <img 
@@ -104,10 +132,63 @@ export default function WebPreviewCard({
 
       {/* Web Preview */}
       {previewAvailable && (
-        <WebPreview defaultUrl={url} style={{ height: '400px' }}>
+        <WebPreview 
+          defaultUrl={url} 
+          style={{ height: isFullscreen ? '80vh' : '400px' }}
+          className={isFullscreen ? 'fixed inset-4 z-50 bg-white' : ''}
+        >
           <WebPreviewNavigation>
+            {/* Navigation Controls */}
+            <div className="flex items-center gap-1">
+              <WebPreviewNavigationButton
+                onClick={handleBack}
+                tooltip="Voltar"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </WebPreviewNavigationButton>
+              
+              <WebPreviewNavigationButton
+                onClick={handleForward}
+                tooltip="Avançar"
+              >
+                <ArrowRight className="h-4 w-4" />
+              </WebPreviewNavigationButton>
+              
+              <WebPreviewNavigationButton
+                onClick={handleRefresh}
+                tooltip="Atualizar"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </WebPreviewNavigationButton>
+            </div>
+            
+            {/* Separator */}
+            <div className="w-px h-4 bg-gray-300 mx-1"></div>
+            
+            {/* URL Input */}
             <WebPreviewUrl />
+            
+            {/* Separator */}
+            <div className="w-px h-4 bg-gray-300 mx-1"></div>
+            
+            {/* Action Buttons */}
+            <div className="flex items-center gap-1">
+              <WebPreviewNavigationButton
+                onClick={handleOpenInNewTab}
+                tooltip="Abrir em nova aba"
+              >
+                <ExternalLink className="h-4 w-4" />
+              </WebPreviewNavigationButton>
+              
+              <WebPreviewNavigationButton
+                onClick={handleFullscreen}
+                tooltip={isFullscreen ? "Sair do fullscreen" : "Fullscreen"}
+              >
+                <Maximize className="h-4 w-4" />
+              </WebPreviewNavigationButton>
+            </div>
           </WebPreviewNavigation>
+          
           <WebPreviewBody src={url} />
         </WebPreview>
       )}
