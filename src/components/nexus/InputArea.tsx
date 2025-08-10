@@ -31,7 +31,7 @@ export default function InputArea({ input, setInput, onSubmit, status }: InputAr
   const [model, setModel] = useState<string>(models[0].id);
 
   return (
-    <PromptInput onSubmit={onSubmit} className="mt-4">
+    <PromptInput onSubmit={onSubmit} className="mt-4 border-gray-100">
       <PromptInputTextarea
         onChange={(e) => setInput(e.target.value)}
         value={input}

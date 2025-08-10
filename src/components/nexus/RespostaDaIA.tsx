@@ -1,4 +1,5 @@
 import { UIMessage } from 'ai';
+import { Response } from '@/components/ai-elements/response';
 import WeatherCard from '../tools/WeatherCard';
 
 interface RespostaDaIAProps {
@@ -11,7 +12,7 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
       {message.role === 'assistant' ? 'AI: ' : ''}
       {message.parts.map((part, index) => {
         if (part.type === 'text') {
-          return <span key={index}>{part.text}</span>;
+          return <Response key={index}>{part.text}</Response>;
         }
 
         if (part.type === 'tool-displayWeather') {
