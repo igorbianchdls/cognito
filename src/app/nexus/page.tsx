@@ -3,8 +3,7 @@
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useState, FormEvent } from 'react';
-import MessageList from '../../components/nexus/MessageList';
-import InputArea from '../../components/nexus/InputArea';
+import ChatContainer from '../../components/nexus/ChatContainer';
 
 export default function Page() {
   const { messages, sendMessage, status } = useChat({
@@ -23,14 +22,14 @@ export default function Page() {
   };
 
   return (
-    <>
-      <MessageList messages={messages} />
-      <InputArea 
+    <div style={{ marginLeft: '20%', marginRight: '20%' }}>
+      <ChatContainer
+        messages={messages}
         input={input}
         setInput={setInput}
         onSubmit={handleSubmit}
         status={status}
       />
-    </>
+    </div>
   );
 }
