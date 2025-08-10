@@ -58,7 +58,7 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
               <ToolHeader type="tool-displayWeather" state={part.state} />
               <ToolContent>
                 {part.input && (
-                  <ToolInput input={part.input as any} />
+                  <ToolInput input={part.input} />
                 )}
                 {(part.state === 'output-available' || part.state === 'output-error') && (
                   <ToolOutput 
