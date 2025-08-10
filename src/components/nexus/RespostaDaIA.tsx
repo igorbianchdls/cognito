@@ -49,7 +49,6 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
 
   return (
     <div key={message.id}>
-      {message.role === 'assistant' ? 'AI: ' : ''}
       {message.parts.map((part, index) => {
         if (part.type === 'text') {
           return <Response key={index}>{part.text}</Response>;
@@ -71,23 +70,25 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
           const shouldBeOpen = weatherTool.state === 'output-available' || weatherTool.state === 'output-error';
           
           return (
-            <Tool key={callId} defaultOpen={shouldBeOpen}>
-              <ToolHeader type="tool-displayWeather" state={weatherTool.state} />
-              <ToolContent>
-                {weatherTool.input && (
-                  <ToolInput input={weatherTool.input} />
-                )}
-                {(weatherTool.state === 'output-available' || weatherTool.state === 'output-error') && (
-                  <ToolOutput 
-                    output={weatherTool.state === 'output-available' ? 
-                      <WeatherCard data={weatherTool.output} /> : 
-                      null
-                    }
-                    errorText={weatherTool.state === 'output-error' ? weatherTool.errorText : undefined}
-                  />
-                )}
-              </ToolContent>
-            </Tool>
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="displayWeather" state={weatherTool.state} />
+                <ToolContent>
+                  {weatherTool.input && (
+                    <ToolInput input={weatherTool.input} />
+                  )}
+                  {weatherTool.state === 'output-error' && (
+                    <ToolOutput 
+                      output={null}
+                      errorText={weatherTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {weatherTool.state === 'output-available' && (
+                <WeatherCard data={weatherTool.output} />
+              )}
+            </div>
           );
         }
 
