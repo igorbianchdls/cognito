@@ -30,7 +30,7 @@ export function PieChart({ data, xColumn, yColumn, isFullscreen }: BaseChartProp
   const elegantColors = ['#2563eb', '#dc2626', '#16a34a', '#ca8a04', '#9333ea', '#c2410c'];
 
   return (
-    <div style={{ width: '100%', height: '400px', minWidth: 0 }}>
+    <div style={{ width: '100%', minHeight: '300px', height: 'auto', minWidth: 0 }}>
       <ResponsivePie
         data={chartData}
         

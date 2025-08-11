@@ -81,14 +81,17 @@ export function BarChart(props: BarChartProps) {
     }
   };
 
-  // Calcular altura baseada no grid layout
-  const calculatedHeight = gridHeight && rowHeight ? rowHeight * gridHeight : height;
+  // Calcular altura baseada no grid layout ou dados
+  const baseHeight = gridHeight && rowHeight ? rowHeight * gridHeight : height;
+  // Altura dinâmica baseada no número de dados (mínimo 300px)
+  const dynamicHeight = Math.max(300, chartData.length * 35 + 120);
 
   return (
     <div
       style={{
         width: '100%',
-        height: gridHeight && rowHeight ? `${calculatedHeight}px` : '100%',
+        height: gridHeight && rowHeight ? `${baseHeight}px` : 'auto',
+        minHeight: `${dynamicHeight}px`,
         background: backgroundColor,
         padding: 12,
         margin: '0 auto',
@@ -123,7 +126,7 @@ export function BarChart(props: BarChartProps) {
         style={{ 
           flex: 1,
           minHeight: `${minHeight}px`,
-          height: gridHeight && rowHeight ? calculatedHeight : '100%'
+          height: gridHeight && rowHeight ? baseHeight : '100%'
         }}
       >
         <ResponsiveBar
