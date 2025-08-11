@@ -136,8 +136,9 @@ export function ChartContainer({
       <div className={`p-6 ${isFullscreen ? 'h-full' : ''}`}>
         <div className={`bg-white border border-gray-100 rounded-lg p-6 min-h-[300px] ${
           isFullscreen ? 'h-[600px]' : 
-          height === 400 ? 'h-96' :
+          height === 600 ? 'h-[600px]' :
           height === 500 ? 'h-[500px]' :
+          height === 400 ? 'h-96' :
           'h-80'
         }`}>
           {children}

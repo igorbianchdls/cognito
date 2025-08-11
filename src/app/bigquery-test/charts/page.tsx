@@ -239,7 +239,7 @@ export default function NivoChartsShowcase() {
                 <CardContent>
                   <ChartContainer 
                     className="w-full"
-                    height={selectedChart === chart.id ? 400 : 300}
+                    height={selectedChart === chart.id ? 600 : 300}
                   >
                     {chart.component}
                   </ChartContainer>
