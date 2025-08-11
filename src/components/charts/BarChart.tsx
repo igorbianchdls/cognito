@@ -91,7 +91,7 @@ export function BarChart(props: BarChartProps) {
         height: gridHeight && rowHeight ? `${baseHeight}px` : '100%',
         minHeight: '300px',
         background: backgroundColor,
-        padding: 12,
+        padding: 0,
         margin: '0 auto',
         display: 'flex',
         flexDirection: 'column',
@@ -132,8 +132,8 @@ export function BarChart(props: BarChartProps) {
           keys={['value']}
           indexBy="id"
           
-          // Margins mínimas elegantes
-          margin={{ top: 12, right: 12, bottom: 40, left: 50 }}
+          // Margins zeradas verticalmente
+          margin={{ top: 0, right: 12, bottom: 0, left: 50 }}
           padding={0.2}
           
           // Cor elegante
