@@ -46,12 +46,6 @@ export function LineChart({ data, xColumn, yColumn, isFullscreen }: BaseChartPro
             tickMargin={8}
             tickFormatter={(value) => value.toString().slice(0, 3)}
           />
-          <YAxis
-            tickLine={false}
-            axisLine={false}
-            tickMargin={8}
-            tickFormatter={(value) => formatValue(value)}
-          />
           <ChartTooltip
             cursor={false}
             content={<ChartTooltipContent hideLabel />}
@@ -59,10 +53,10 @@ export function LineChart({ data, xColumn, yColumn, isFullscreen }: BaseChartPro
           <Line
             dataKey="value"
             type="natural"
-            stroke="hsl(var(--chart-1))"
+            stroke="var(--color-value)"
             strokeWidth={2}
             dot={{
-              fill: "hsl(var(--chart-1))",
+              fill: "var(--color-value)",
             }}
             activeDot={{
               r: 6,

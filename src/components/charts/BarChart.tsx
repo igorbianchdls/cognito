@@ -129,13 +129,9 @@ export function BarChart(props: BarChartProps) {
           accessibilityLayer
           data={chartData}
           margin={{
-            top: margin?.top || 20,
-            right: margin?.right || 12,
-            bottom: margin?.bottom || 12,
-            left: margin?.left || 12,
+            left: 12,
+            right: 12,
           }}
-          barCategoryGap="20%"
-          maxBarSize={60}
         >
           <CartesianGrid vertical={false} />
           
