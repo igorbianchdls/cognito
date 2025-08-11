@@ -11,61 +11,59 @@ export function LineChart({ data, xColumn, yColumn, isFullscreen }: BaseChartPro
     return <EmptyState />;
   }
 
+  // Transformar dados para formato Recharts elegante
+  const chartData = data.map((item, index) => ({
+    category: item.x || item.label || `Item ${index + 1}`,
+    value: item.y || item.value || 0,
+  }));
+
+  // ChartConfig elegante com cores hardcoded
+  const chartConfig: ChartConfig = {
+    value: {
+      label: yColumn || 'Value',
+      color: "#2563eb",
+    }
+  };
+
   return (
-    <div style={{ width: '100%', height: '100%', minHeight: '300px' }}>
-      <ResponsiveLine
-        data={[
-          {
-            id: 'series',
-            data: data.map(item => ({
-              x: item.x || item.label || 'Unknown',
-              y: item.y || item.value || 0
-            }))
-          }
-        ]}
-        margin={{ top: 20, right: 20, bottom: 60, left: 80 }}
-        xScale={{ type: 'point' }}
-        yScale={{
-          type: 'linear',
-          min: 'auto',
-          max: 'auto',
-          stacked: false,
-          reverse: false
-        }}
-        yFormat={(value) => formatValue(Number(value))}
-        axisTop={null}
-        axisRight={null}
-        axisBottom={{
-          tickSize: 5,
-          tickPadding: 5,
-          tickRotation: -45,
-          legend: xColumn || 'X Axis',
-          legendOffset: 50,
-          legendPosition: 'middle'
-        }}
-        axisLeft={{
-          tickSize: 5,
-          tickPadding: 5,
-          tickRotation: 0,
-          legend: yColumn || 'Y Axis',
-          legendOffset: -60,
-          legendPosition: 'middle',
-          format: (value) => formatValue(Number(value))
-        }}
-        pointSize={8}
-        pointColor={{ from: 'color' }}
-        pointBorderWidth={2}
-        pointBorderColor={{ from: 'serieColor' }}
-        pointLabel={(point) => `${point.data.y}`}
-        pointLabelYOffset={-12}
-        useMesh={true}
-        theme={nivoTheme}
-        lineWidth={3}
-        enableArea={false}
-        colors={{ scheme: 'category10' }}
-        animate={true}
-        motionConfig="gentle"
-      />
+    <div style={{ width: '100%', height: '400px', minWidth: 0 }}>
+      <ChartContainer config={chartConfig} className="h-full w-full">
+        <RechartsLineChart
+          accessibilityLayer
+          data={chartData}
+          margin={{
+            left: 12,
+            right: 12,
+            top: 12,
+            bottom: 12,
+          }}
+        >
+          <CartesianGrid vertical={false} />
+          <XAxis
+            dataKey="category"
+            tickLine={false}
+            axisLine={false}
+            tickMargin={8}
+            tickFormatter={(value) => value.toString().slice(0, 3)}
+          />
+          <ChartTooltip
+            cursor={false}
+            content={<ChartTooltipContent hideLabel />}
+          />
+          <Line
+            dataKey="value"
+            type="natural"
+            stroke="var(--color-value)"
+            strokeWidth={2}
+            dot={{
+              fill: "var(--color-value)",
+            }}
+            activeDot={{
+              r: 6,
+            }}
+          />
+        </RechartsLineChart>
+      </ChartContainer>
     </div>
   );
 }

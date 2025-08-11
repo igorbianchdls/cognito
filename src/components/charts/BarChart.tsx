@@ -1,10 +1,10 @@
 'use client';
 
-import { ResponsiveBar } from '@nivo/bar';
+import { Bar, BarChart as RechartsBarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { BarChartProps, ChartData } from './types';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
-import { nivoTheme, colorSchemes } from './theme';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 
 // Valores padrão robustos e flexíveis
 const DEFAULT_WIDTH = 600;
@@ -59,12 +59,19 @@ export function BarChart(props: BarChartProps) {
     return <EmptyState />;
   }
 
-  // Transformar dados para formato Nivo
-  const chartData = data.map(item => ({
-    id: item.x || item.label || 'Unknown',
+  // Transformar dados para formato Recharts elegante
+  const chartData = data.map((item, index) => ({
+    category: item.x || item.label || `Item ${index + 1}`,
     value: item.y || item.value || 0,
-    label: item.x || item.label || 'Unknown'
   }));
+
+  // ChartConfig elegante com cores hardcoded
+  const chartConfig: ChartConfig = {
+    value: {
+      label: yColumn || 'Value',
+      color: "#2563eb",
+    }
+  };
 
   // Calcular altura baseada no grid layout
   const calculatedHeight = gridHeight && rowHeight ? rowHeight * gridHeight : height;
@@ -104,56 +111,51 @@ export function BarChart(props: BarChartProps) {
         </div>
       )}
       
-      <div
+      <ChartContainer
+        config={chartConfig}
+        className="flex-1 w-full"
         style={{ 
-          flex: 1,
           minHeight: `${minHeight}px`,
           height: gridHeight && rowHeight ? calculatedHeight : '100%'
         }}
       >
-        <ResponsiveBar
+        <RechartsBarChart
+          accessibilityLayer
           data={chartData}
-          keys={['value']}
-          indexBy="id"
-          margin={{ top: 20, right: 20, bottom: 60, left: 80 }}
-          padding={0.2}
-          colors={{ scheme: 'category10' }}
-          borderColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
-          axisTop={null}
-          axisRight={null}
-          axisBottom={{
-            tickSize: 5,
-            tickPadding: 5,
-            tickRotation: -45,
-            legend: xColumn || 'X Axis',
-            legendPosition: 'middle',
-            legendOffset: 50
+          margin={{
+            left: 12,
+            right: 12,
           }}
-          axisLeft={{
-            tickSize: 5,
-            tickPadding: 5,
-            tickRotation: 0,
-            legend: yColumn || 'Y Axis',
-            legendPosition: 'middle',
-            legendOffset: -60,
-            format: (value) => formatValue(Number(value))
-          }}
-          enableLabel={true}
-          label={(d) => formatValue(Number(d.value))}
-          labelSkipWidth={12}
-          labelSkipHeight={12}
-          labelTextColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
-          animate={true}
-          motionConfig="gentle"
-          theme={nivoTheme}
-          tooltip={({ id, value }) => (
-            <div className="bg-white px-3 py-2 shadow-lg rounded border text-sm">
-              <div className="font-semibold">{id}</div>
-              <div className="text-blue-600">{formatValue(Number(value))}</div>
-            </div>
-          )}
-        />
-      </div>
+        >
+          <CartesianGrid vertical={false} />
+          
+          <XAxis
+            dataKey="category"
+            tickLine={false}
+            tickMargin={10}
+            axisLine={false}
+            tickFormatter={(value) => value.toString().slice(0, 10)}
+          />
+          
+          <YAxis
+            tickLine={false}
+            axisLine={false}
+            tickMargin={8}
+            tickFormatter={(value) => formatValue(value)}
+          />
+          
+          <ChartTooltip
+            cursor={false}
+            content={<ChartTooltipContent hideLabel />}
+          />
+          
+          <Bar
+            dataKey="value"
+            fill="var(--color-value)"
+            radius={8}
+          />
+        </RechartsBarChart>
+      </ChartContainer>
     </div>
   );
 }
