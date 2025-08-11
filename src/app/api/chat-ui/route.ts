@@ -41,7 +41,27 @@ Use these tools proactively when users ask about:
 - "preview website", "show website", or "web preview" → use webPreview
 - weather queries → use displayWeather
 
-Always call the appropriate tool rather than asking for more parameters. Use multiple tools in sequence when helpful (e.g., getData then interpretarDados, executarSQL then criarGrafico, or criarTabela then getData).`,
+Always call the appropriate tool rather than asking for more parameters. Use multiple tools in sequence when helpful (e.g., getData then interpretarDados, executarSQL then criarGrafico, or criarTabela then getData).
+
+CRITICAL: EFFICIENT DATA HANDLING FOR CHARTS
+When using criarGrafico after getData, you MUST optimize data transfer to save tokens:
+
+1. FILTER DATA: Do NOT copy all data from getData result. Only include:
+   - The xColumn and yColumn fields needed for the chart
+   - Remove technical fields: _airbyte_*, _extracted_at, _meta, _generation_id
+   - Remove unnecessary columns not used in visualization
+
+2. LIMIT RECORDS: Use maximum 50-100 records for charts (sufficient for visualization)
+
+3. EXAMPLE - WRONG WAY:
+   tableData: [{"_airbyte_raw_id": "123", "_airbyte_meta": "{...}", "color": "red", "price": 1000, "vin": "abc123", "seller": "dealer"}]
+
+4. EXAMPLE - CORRECT WAY:
+   tableData: [{"color": "red", "price": 1000}, {"color": "blue", "price": 1500}]
+
+5. ALWAYS: Filter to only xColumn + yColumn + any groupBy column needed.
+
+This optimization reduces token usage significantly while maintaining full chart functionality.`,
     messages: convertToModelMessages(messages),
     providerOptions: {
       anthropic: {
