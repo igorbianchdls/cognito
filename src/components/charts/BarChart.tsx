@@ -1,10 +1,10 @@
 'use client';
 
-import { Bar, BarChart as RechartsBarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { ResponsiveBar } from '@nivo/bar';
 import { BarChartProps, ChartData } from './types';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
-import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, ChartConfig } from '@/components/ui/chart';
+import { nivoTheme, colorSchemes } from './theme';
 
 // Valores padrão robustos e flexíveis
 const DEFAULT_WIDTH = 600;
@@ -59,25 +59,12 @@ export function BarChart(props: BarChartProps) {
     return <EmptyState />;
   }
 
-  // Transformar dados para formato Recharts
-  const chartData = data.map((item, index) => ({
-    category: item.x || item.label || `Item ${index + 1}`,
+  // Transformar dados para formato Nivo
+  const chartData = data.map(item => ({
+    id: item.x || item.label || 'Unknown',
     value: item.y || item.value || 0,
-    ...item // Para múltiplas séries
+    label: item.x || item.label || 'Unknown'
   }));
-
-  // Inferir keys dinamicamente se não for passado
-  const usedKeys = keys && keys.length > 0
-    ? keys
-    : ['value']; // Recharts usa keys simples
-
-  // Configuração de cores para shadcn/ui chart
-  const chartConfig: ChartConfig = {
-    value: {
-      label: yColumn || 'Value',
-      color: "var(--chart-1)",
-    }
-  };
 
   // Calcular altura baseada no grid layout
   const calculatedHeight = gridHeight && rowHeight ? rowHeight * gridHeight : height;
@@ -98,7 +85,7 @@ export function BarChart(props: BarChartProps) {
     >
       {title && (
         <h3 style={{ 
-          margin: '0 0 x 4px 0', 
+          margin: '0 0 4px 0', 
           fontSize: `${titleFontSize}px`, 
           fontWeight: titleFontWeight, 
           color: titleColor
@@ -117,54 +104,56 @@ export function BarChart(props: BarChartProps) {
         </div>
       )}
       
-      <ChartContainer
-        config={chartConfig}
-        className="flex-1 w-full"
+      <div
         style={{ 
+          flex: 1,
           minHeight: `${minHeight}px`,
           height: gridHeight && rowHeight ? calculatedHeight : '100%'
         }}
       >
-        <RechartsBarChart
-          accessibilityLayer
+        <ResponsiveBar
           data={chartData}
-          margin={{
-            left: 12,
-            right: 12,
+          keys={['value']}
+          indexBy="id"
+          margin={{ top: 20, right: 20, bottom: 60, left: 80 }}
+          padding={0.2}
+          colors={{ scheme: colorSchemes.primary }}
+          borderColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+          axisTop={null}
+          axisRight={null}
+          axisBottom={{
+            tickSize: 5,
+            tickPadding: 5,
+            tickRotation: -45,
+            legend: xColumn || 'X Axis',
+            legendPosition: 'middle',
+            legendOffset: 50
           }}
-        >
-          <CartesianGrid vertical={false} />
-          
-          <XAxis
-            dataKey="category"
-            tickLine={false}
-            tickMargin={10}
-            axisLine={false}
-            tickFormatter={(value) => value}
-          />
-          
-          <YAxis
-            tickLine={false}
-            axisLine={false}
-            tickMargin={8}
-            tickFormatter={(value) => formatValue(value)}
-          />
-          
-          <ChartTooltip
-            cursor={false}
-            content={<ChartTooltipContent hideLabel />}
-          />
-          
-          {usedKeys.map((key, index) => (
-            <Bar
-              key={key}
-              dataKey={key}
-              fill={`var(--color-${key})`}
-              radius={8}
-            />
-          ))}
-        </RechartsBarChart>
-      </ChartContainer>
+          axisLeft={{
+            tickSize: 5,
+            tickPadding: 5,
+            tickRotation: 0,
+            legend: yColumn || 'Y Axis',
+            legendPosition: 'middle',
+            legendOffset: -60,
+            format: (value) => formatValue(Number(value))
+          }}
+          enableLabel={true}
+          label={(d) => formatValue(Number(d.value))}
+          labelSkipWidth={12}
+          labelSkipHeight={12}
+          labelTextColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+          animate={true}
+          motionConfig="gentle"
+          theme={nivoTheme}
+          tooltip={({ id, value }) => (
+            <div className="bg-white px-3 py-2 shadow-lg rounded border text-sm">
+              <div className="font-semibold">{id}</div>
+              <div className="text-blue-600">{formatValue(Number(value))}</div>
+            </div>
+          )}
+        />
+      </div>
     </div>
   );
 }

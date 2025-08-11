@@ -10,17 +10,22 @@ export function AreaChart({ data, xColumn, yColumn, isFullscreen }: BaseChartPro
     return <EmptyState />;
   }
 
-  // Transformar dados para formato Recharts
+  // Transformar dados para formato Recharts (multiple series como exemplo shadcn)
   const chartData = data.map((item, index) => ({
     category: item.x || item.label || `Item ${index + 1}`,
-    value: item.y || item.value || 0,
+    desktop: item.y || item.value || 0,
+    mobile: Math.round((item.y || item.value || 0) * 0.6), // Criar segunda série baseada nos dados
   }));
 
-  // Configuração de cores para shadcn/ui chart
+  // Configuração de cores para shadcn/ui chart (igual ao exemplo)
   const chartConfig: ChartConfig = {
-    value: {
-      label: yColumn || 'Value',
-      color: "#2563eb",
+    desktop: {
+      label: "Desktop",
+      color: "var(--chart-1)",
+    },
+    mobile: {
+      label: "Mobile",
+      color: "var(--chart-2)",
     }
   };
 
@@ -48,12 +53,22 @@ export function AreaChart({ data, xColumn, yColumn, isFullscreen }: BaseChartPro
             content={<ChartTooltipContent indicator="line" />}
           />
           <Area
-            dataKey="value"
+            dataKey="mobile"
             type="natural"
-            fill="var(--color-value)"
+            fill="var(--color-mobile)"
             fillOpacity={0.4}
-            stroke="var(--color-value)"
+            stroke="var(--color-mobile)"
+            stackId="a"
           />
+          <Area
+            dataKey="desktop"
+            type="natural"
+            fill="var(--color-desktop)"
+            fillOpacity={0.4}
+            stroke="var(--color-desktop)"
+            stackId="a"
+          />
+          <ChartLegend content={<ChartLegendContent />} />
         </RechartsAreaChart>
       </ChartContainer>
     </div>
