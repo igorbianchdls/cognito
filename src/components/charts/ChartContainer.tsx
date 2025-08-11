@@ -11,6 +11,8 @@ interface ChartContainerProps {
   chartType?: ChartType;
   title?: string;
   metadata?: ChartMetadata;
+  height?: number;
+  className?: string;
   onDownload?: () => void;
   onExportPNG?: () => void;
   onSettings?: () => void;
@@ -48,6 +50,8 @@ export function ChartContainer({
   chartType, 
   title, 
   metadata,
+  height,
+  className,
   onDownload,
   onExportPNG,
   onSettings
@@ -83,7 +87,7 @@ export function ChartContainer({
   };
 
   return (
-    <div className={`bg-white border border-gray-200 rounded-lg overflow-hidden ${isFullscreen ? 'fixed inset-4 z-50' : ''}`}>
+    <div className={`bg-white border border-gray-200 rounded-lg overflow-hidden ${isFullscreen ? 'fixed inset-4 z-50' : ''} ${className || ''}`}>
       {/* Chart Header */}
       <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
         {/* Chart Title - Left Side */}
@@ -130,7 +134,7 @@ export function ChartContainer({
 
       {/* Chart Area */}
       <div className={`p-6 ${isFullscreen ? 'h-full' : ''}`}>
-        <div className={`bg-white border border-gray-100 rounded-lg p-6 ${isFullscreen ? 'h-[600px]' : 'h-80'}`}>
+        <div className={`bg-white border border-gray-100 rounded-lg p-6 ${isFullscreen ? 'h-[600px]' : height ? `h-[${height}px]` : 'h-80'}`}>
           {children}
         </div>
       </div>

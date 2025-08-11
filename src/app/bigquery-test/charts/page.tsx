@@ -235,61 +235,61 @@ export default function NivoChartsShowcase() {
       id: 'bar',
       title: 'Bar Chart',
       description: 'Gráfico de barras com dados categóricos',
-      component: <BarChart data={mockData.bar} height={300} />
+      component: <BarChart data={mockData.bar} />
     },
     {
       id: 'line',
       title: 'Line Chart', 
       description: 'Gráfico de linhas para tendências temporais',
-      component: <LineChart data={mockData.line} height={300} />
+      component: <LineChart data={mockData.line} />
     },
     {
       id: 'pie',
       title: 'Pie Chart',
       description: 'Gráfico de pizza para distribuições',
-      component: <PieChart data={mockData.pie} height={300} />
+      component: <PieChart data={mockData.pie} />
     },
     {
       id: 'scatter',
       title: 'Scatter Chart',
       description: 'Gráfico de dispersão para correlações',
-      component: <ScatterChart data={mockData.scatter} height={300} />
+      component: <ScatterChart data={mockData.scatter} />
     },
     {
       id: 'area',
       title: 'Area Chart',
       description: 'Gráfico de área para volumes cumulativos',
-      component: <AreaChart data={mockData.area} height={300} />
+      component: <AreaChart data={mockData.area} />
     },
     {
       id: 'funnel',
       title: 'Funnel Chart',
       description: 'Gráfico de funil para conversões',
-      component: <FunnelChart data={mockData.funnel} height={300} />
+      component: <FunnelChart data={mockData.funnel} />
     },
     {
       id: 'treemap',
       title: 'TreeMap Chart',
       description: 'Mapa de árvore para hierarquias',
-      component: <TreeMapChart data={mockData.treemap} height={300} />
+      component: <TreeMapChart data={mockData.treemap} />
     },
     {
       id: 'heatmap',
       title: 'Heatmap Chart',
       description: 'Mapa de calor para intensidades',
-      component: <HeatmapChart data={mockData.heatmap} height={300} />
+      component: <HeatmapChart data={mockData.heatmap} />
     },
     {
       id: 'radar',
       title: 'Radar Chart',
       description: 'Gráfico radar para múltiplas dimensões',
-      component: <RadarChart data={mockData.radar} height={300} keys={['user1', 'user2', 'user3']} indexBy="skill" />
+      component: <RadarChart data={mockData.radar} />
     },
     {
       id: 'stream',
       title: 'Stream Chart',
       description: 'Gráfico de fluxo para dados temporais empilhados',
-      component: <StreamChart data={mockData.stream} height={300} keys={['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun']} />
+      component: <StreamChart data={mockData.stream} />
     }
   ];
 
@@ -358,8 +358,8 @@ export default function NivoChartsShowcase() {
                 </CardHeader>
                 <CardContent>
                   <ChartContainer 
-                    height={selectedChart === chart.id ? 400 : 300}
                     className="w-full"
+                    height={selectedChart === chart.id ? 400 : 300}
                   >
                     {chart.component}
                   </ChartContainer>
