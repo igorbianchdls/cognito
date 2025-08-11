@@ -132,8 +132,8 @@ export function BarChart(props: BarChartProps) {
           keys={['value']}
           indexBy="id"
           
-          // Margin mínima para evitar cortes
-          margin={{ top: 20, right: 12, bottom: 0, left: 50 }}
+          // Margins idênticas ao LineChart funcionando
+          margin={{ top: 12, right: 12, bottom: 40, left: 50 }}
           padding={0.2}
           
           // Cor elegante
