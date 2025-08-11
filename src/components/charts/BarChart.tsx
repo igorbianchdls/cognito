@@ -88,8 +88,9 @@ export function BarChart(props: BarChartProps) {
     <div
       style={{
         width: '100%',
-        height: gridHeight && rowHeight ? `${baseHeight}px` : '100%',
+        height: gridHeight && rowHeight ? `${baseHeight}px` : 'auto',
         minHeight: '300px',
+        maxHeight: '400px',
         background: backgroundColor,
         padding: 0,
         margin: '0 auto',
