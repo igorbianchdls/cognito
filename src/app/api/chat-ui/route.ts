@@ -337,9 +337,9 @@ Always call the appropriate tool rather than asking for more parameters. Use mul
         },
       }),
       criarGrafico: tool({
-        description: 'Create data visualizations and charts from previously loaded table data - use after getData',
+        description: 'Create data visualizations and charts from getData results. CRITICAL INSTRUCTIONS: 1) You MUST first use getData tool to get table data, 2) Copy the EXACT "data" array from getData output, 3) Paste it as tableData parameter - DO NOT make new queries or type data manually',
         inputSchema: z.object({
-          tableData: z.array(z.record(z.unknown())).describe('Raw table data from previous getData result (array of row objects)'),
+          tableData: z.array(z.record(z.unknown())).describe('PASTE the exact "data" array from previous getData tool output here. This should be an array of objects like [{col1: value1, col2: value2}, ...]. NEVER type this manually - always copy from getData results.'),
           chartType: z.enum(['bar', 'line', 'pie', 'scatter', 'area']).describe('Type of chart to create'),
           xColumn: z.string().describe('Column name for X-axis'),
           yColumn: z.string().describe('Column name for Y-axis (should be numeric for most charts)'),
@@ -347,8 +347,12 @@ Always call the appropriate tool rather than asking for more parameters. Use mul
           groupBy: z.string().optional().describe('Optional column to group/aggregate by - useful for pie charts')
         }),
         execute: async ({ tableData, chartType, xColumn, yColumn, title, groupBy }) => {
-          console.log('📊 Chart from table tool executed:', { 
-            dataRows: tableData.length, 
+          console.log('📊 ===== CRIAR GRAFICO DEBUG START =====');
+          console.log('📊 Raw parameters received:', { 
+            hasTableData: !!tableData,
+            tableDataType: typeof tableData,
+            isArray: Array.isArray(tableData),
+            dataLength: tableData ? tableData.length : 0, 
             chartType, 
             xColumn, 
             yColumn, 
@@ -356,14 +360,63 @@ Always call the appropriate tool rather than asking for more parameters. Use mul
             groupBy 
           });
           
+          // EXTENSIVE DEBUG: Log complete data structure
+          if (tableData) {
+            console.log('📊 TableData full structure (first 200 chars):', JSON.stringify(tableData, null, 2).substring(0, 200));
+            
+            if (Array.isArray(tableData) && tableData.length > 0) {
+              console.log('📊 First row complete:', JSON.stringify(tableData[0], null, 2));
+              console.log('📊 Available columns:', Object.keys(tableData[0]));
+              console.log('📊 Total rows in tableData:', tableData.length);
+              console.log('📊 Sample values from first row:');
+              Object.entries(tableData[0]).forEach(([key, value]) => {
+                console.log(`   - ${key}: ${value} (${typeof value})`);
+              });
+            } else if (!Array.isArray(tableData)) {
+              console.log('❌ CRITICAL ERROR: tableData is not an array!', typeof tableData);
+              console.log('📊 Actual tableData value:', tableData);
+            } else {
+              console.log('❌ CRITICAL ERROR: tableData is empty array');
+            }
+          } else {
+            console.log('❌ CRITICAL ERROR: tableData is null/undefined');
+          }
+          
           try {
-            if (!tableData || tableData.length === 0) {
+            // ENHANCED VALIDATION with detailed error messages
+            if (!tableData) {
+              console.error('❌ VALIDATION FAILED: tableData is null/undefined');
               return {
                 success: false,
-                error: 'No table data provided for chart',
+                error: 'ERROR: No tableData provided. You must copy the "data" array from a previous getData tool result and paste it as the tableData parameter. Do not type it manually.',
                 chartType,
                 xColumn,
-                yColumn
+                yColumn,
+                debugInfo: 'tableData was null/undefined'
+              };
+            }
+            
+            if (!Array.isArray(tableData)) {
+              console.error('❌ VALIDATION FAILED: tableData is not an array, received:', typeof tableData);
+              return {
+                success: false,
+                error: `ERROR: tableData must be an array, but received ${typeof tableData}. Copy the exact "data" array from getData results.`,
+                chartType,
+                xColumn,
+                yColumn,
+                debugInfo: `tableData type: ${typeof tableData}, value: ${JSON.stringify(tableData).substring(0, 100)}`
+              };
+            }
+            
+            if (tableData.length === 0) {
+              console.error('❌ VALIDATION FAILED: tableData array is empty');
+              return {
+                success: false,
+                error: 'ERROR: tableData array is empty. Make sure to copy the "data" array from a getData result that contains actual data.',
+                chartType,
+                xColumn,
+                yColumn,
+                debugInfo: 'tableData was empty array []'
               };
             }
 
@@ -443,11 +496,14 @@ Always call the appropriate tool rather than asking for more parameters. Use mul
               };
             }
 
-            console.log('📊 Chart data processed:', {
+            console.log('📊 Chart data processed successfully:', {
               originalRows: tableData.length,
               processedPoints: processedData.length,
-              sampleData: processedData.slice(0, 3)
+              sampleProcessedData: processedData.slice(0, 3),
+              chartType,
+              columnsUsed: { xColumn, yColumn, groupBy }
             });
+            console.log('📊 ===== CRIAR GRAFICO DEBUG SUCCESS =====');
 
             return {
               success: true,
@@ -465,13 +521,22 @@ Always call the appropriate tool rather than asking for more parameters. Use mul
             };
 
           } catch (error) {
-            console.error('❌ Error creating chart from table data:', error);
+            console.error('❌ EXCEPTION in criarGrafico:', error);
+            console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+            console.log('📊 ===== CRIAR GRAFICO DEBUG FAILED =====');
             return {
               success: false,
               error: error instanceof Error ? error.message : 'Failed to create chart from table data',
               chartType,
               xColumn,
-              yColumn
+              yColumn,
+              debugInfo: {
+                errorType: error instanceof Error ? error.constructor.name : typeof error,
+                errorMessage: error instanceof Error ? error.message : String(error),
+                tableDataReceived: !!tableData,
+                tableDataType: typeof tableData,
+                tableDataLength: tableData ? tableData.length : 'N/A'
+              }
             };
           }
         },
