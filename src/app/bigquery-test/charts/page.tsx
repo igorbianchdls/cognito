@@ -19,6 +19,43 @@ import {
 } from '@/components/charts';
 import type { ChartData } from '@/components/charts';
 
+// Type definitions for complex chart data structures
+interface LineSeriesData {
+  id: string;
+  data: Array<{ x: string; y: number }>;
+}
+
+interface ScatterSeriesData {
+  id: string;
+  data: Array<{ x: number; y: number }>;
+}
+
+interface AreaSeriesData {
+  id: string;
+  data: Array<{ x: string; y: number }>;
+}
+
+interface TreeMapData {
+  id: string;
+  children: Array<{ id: string; value: number; color: string }>;
+}
+
+interface HeatMapData {
+  id: string;
+  data: Array<{ x: string; y: number }>;
+}
+
+interface RadarData {
+  skill: string;
+  user1: number;
+  user2: number;
+  user3: number;
+}
+
+interface StreamData {
+  [key: string]: number;
+}
+
 // Mock data for different chart types
 const mockData = {
   bar: [
@@ -53,7 +90,7 @@ const mockData = {
         { x: 'Jun', y: 110 }
       ]
     }
-  ] as any,
+  ] as LineSeriesData[],
 
   pie: [
     { label: 'Desktop', value: 45, color: '#8B5CF6' },
@@ -82,7 +119,7 @@ const mockData = {
         { x: 32, y: 38 }
       ]
     }
-  ] as any,
+  ] as ScatterSeriesData[],
 
   area: [
     {
@@ -103,7 +140,7 @@ const mockData = {
         { x: 'Q4', y: 980 }
       ]
     }
-  ] as any,
+  ] as AreaSeriesData[],
 
   funnel: [
     { label: 'Visitantes', value: 10000, color: '#8B5CF6' },
@@ -119,7 +156,7 @@ const mockData = {
       { id: 'Produto B', value: 30, color: '#06B6D4' },
       { id: 'Produto C', value: 25, color: '#10B981' }
     ]
-  } as any,
+  } as TreeMapData,
 
   heatmap: [
     { id: 'Segunda', data: [{ x: '9h', y: 8 }, { x: '12h', y: 12 }, { x: '15h', y: 15 }, { x: '18h', y: 10 }] },
@@ -127,7 +164,7 @@ const mockData = {
     { id: 'Quarta', data: [{ x: '9h', y: 6 }, { x: '12h', y: 16 }, { x: '15h', y: 20 }, { x: '18h', y: 14 }] },
     { id: 'Quinta', data: [{ x: '9h', y: 12 }, { x: '12h', y: 18 }, { x: '15h', y: 22 }, { x: '18h', y: 16 }] },
     { id: 'Sexta', data: [{ x: '9h', y: 14 }, { x: '12h', y: 20 }, { x: '15h', y: 25 }, { x: '18h', y: 18 }] }
-  ] as any,
+  ] as HeatMapData[],
 
   radar: [
     {
@@ -160,7 +197,7 @@ const mockData = {
       user2: 50,
       user3: 80
     }
-  ] as any,
+  ] as RadarData[],
 
   stream: [
     {
@@ -187,7 +224,7 @@ const mockData = {
       'Mai': 16,
       'Jun': 20
     }
-  ] as any
+  ] as StreamData[]
 };
 
 export default function NivoChartsShowcase() {
