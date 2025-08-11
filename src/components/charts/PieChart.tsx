@@ -34,8 +34,8 @@ export function PieChart({ data, xColumn, yColumn, isFullscreen }: BaseChartProp
       <ResponsivePie
         data={chartData}
         
-        // Margins m\u00ednimas elegantes
-        margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+        // Margins com espaço para legenda na parte inferior
+        margin={{ top: 20, right: 20, bottom: 80, left: 20 }}
         
         // Estilo elegante
         innerRadius={0.5}
@@ -67,6 +67,32 @@ export function PieChart({ data, xColumn, yColumn, isFullscreen }: BaseChartProp
             </div>
           </div>
         )}
+        
+        // Legenda horizontal na parte inferior
+        legends={[
+          {
+            anchor: 'bottom',
+            direction: 'row',
+            justify: false,
+            translateX: 0,
+            translateY: 70,
+            itemsSpacing: 20,
+            itemWidth: 80,
+            itemHeight: 18,
+            itemDirection: 'left-to-right',
+            itemOpacity: 0.8,
+            symbolSize: 12,
+            symbolShape: 'square',
+            effects: [
+              {
+                on: 'hover',
+                style: {
+                  itemOpacity: 1
+                }
+              }
+            ]
+          }
+        ]}
       />
     </div>
   );

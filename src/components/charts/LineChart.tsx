@@ -38,8 +38,8 @@ export function LineChart({ data, xColumn, yColumn, isFullscreen }: BaseChartPro
             }))
           }
         ]}
-        // Margins mínimas elegantes
-        margin={{ top: 12, right: 12, bottom: 40, left: 50 }}
+        // Margins com espaço para legenda na parte inferior
+        margin={{ top: 12, right: 12, bottom: 80, left: 50 }}
         xScale={{ type: 'point' }}
         yScale={{ type: 'linear', min: 'auto', max: 'auto' }}
         
@@ -88,6 +88,32 @@ export function LineChart({ data, xColumn, yColumn, isFullscreen }: BaseChartPro
             </div>
           </div>
         )}
+        
+        // Legenda horizontal na parte inferior
+        legends={[
+          {
+            anchor: 'bottom',
+            direction: 'row',
+            justify: false,
+            translateX: 0,
+            translateY: 70,
+            itemsSpacing: 20,
+            itemWidth: 80,
+            itemHeight: 18,
+            itemDirection: 'left-to-right',
+            itemOpacity: 0.8,
+            symbolSize: 12,
+            symbolShape: 'circle',
+            effects: [
+              {
+                on: 'hover',
+                style: {
+                  itemOpacity: 1
+                }
+              }
+            ]
+          }
+        ]}
       />
     </div>
   );

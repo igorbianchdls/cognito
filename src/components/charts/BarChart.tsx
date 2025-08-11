@@ -133,8 +133,8 @@ export function BarChart(props: BarChartProps) {
           keys={['value']}
           indexBy="id"
           
-          // Margins reduzidas para evitar overflow
-          margin={{ top: 12, right: 12, bottom: 20, left: 50 }}
+          // Margins com espaço para legenda na parte inferior
+          margin={{ top: 12, right: 12, bottom: 60, left: 50 }}
           padding={0.2}
           
           // Cor elegante
@@ -181,6 +181,33 @@ export function BarChart(props: BarChartProps) {
               </div>
             </div>
           )}
+          
+          // Legenda horizontal na parte inferior
+          legends={[
+            {
+              dataFrom: 'keys',
+              anchor: 'bottom',
+              direction: 'row',
+              justify: false,
+              translateX: 0,
+              translateY: 50,
+              itemsSpacing: 20,
+              itemWidth: 80,
+              itemHeight: 18,
+              itemDirection: 'left-to-right',
+              itemOpacity: 0.8,
+              symbolSize: 12,
+              symbolShape: 'circle',
+              effects: [
+                {
+                  on: 'hover',
+                  style: {
+                    itemOpacity: 1
+                  }
+                }
+              ]
+            }
+          ]}
           />
         </div>
       </div>
