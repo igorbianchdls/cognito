@@ -19,42 +19,7 @@ import {
 } from '@/components/charts';
 import type { ChartData } from '@/components/charts';
 
-// Type definitions for complex chart data structures
-interface LineSeriesData {
-  id: string;
-  data: Array<{ x: string; y: number }>;
-}
-
-interface ScatterSeriesData {
-  id: string;
-  data: Array<{ x: number; y: number }>;
-}
-
-interface AreaSeriesData {
-  id: string;
-  data: Array<{ x: string; y: number }>;
-}
-
-interface TreeMapData {
-  id: string;
-  children: Array<{ id: string; value: number; color: string }>;
-}
-
-interface HeatMapData {
-  id: string;
-  data: Array<{ x: string; y: number }>;
-}
-
-interface RadarData {
-  skill: string;
-  user1: number;
-  user2: number;
-  user3: number;
-}
-
-interface StreamData {
-  [key: string]: number;
-}
+// All chart components use ChartData[] interface consistently
 
 // Mock data for different chart types
 const mockData = {
@@ -68,29 +33,13 @@ const mockData = {
   ] as ChartData[],
 
   line: [
-    {
-      id: 'Vendas',
-      data: [
-        { x: 'Jan', y: 245 },
-        { x: 'Fev', y: 182 },
-        { x: 'Mar', y: 398 },
-        { x: 'Abr', y: 312 },
-        { x: 'Mai', y: 428 },
-        { x: 'Jun', y: 256 }
-      ]
-    },
-    {
-      id: 'Lucro',
-      data: [
-        { x: 'Jan', y: 120 },
-        { x: 'Fev', y: 95 },
-        { x: 'Mar', y: 180 },
-        { x: 'Abr', y: 140 },
-        { x: 'Mai', y: 200 },
-        { x: 'Jun', y: 110 }
-      ]
-    }
-  ] as LineSeriesData[],
+    { x: 'Jan', y: 245 },
+    { x: 'Fev', y: 182 },
+    { x: 'Mar', y: 398 },
+    { x: 'Abr', y: 312 },
+    { x: 'Mai', y: 428 },
+    { x: 'Jun', y: 256 }
+  ] as ChartData[],
 
   pie: [
     { label: 'Desktop', value: 45, color: '#8B5CF6' },
@@ -99,48 +48,24 @@ const mockData = {
   ] as ChartData[],
 
   scatter: [
-    {
-      id: 'Grupo A',
-      data: [
-        { x: 10, y: 20 },
-        { x: 15, y: 25 },
-        { x: 20, y: 18 },
-        { x: 25, y: 30 },
-        { x: 30, y: 22 }
-      ]
-    },
-    {
-      id: 'Grupo B',
-      data: [
-        { x: 12, y: 35 },
-        { x: 18, y: 40 },
-        { x: 22, y: 32 },
-        { x: 28, y: 45 },
-        { x: 32, y: 38 }
-      ]
-    }
-  ] as ScatterSeriesData[],
+    { x: '10', y: 20 },
+    { x: '15', y: 25 },
+    { x: '20', y: 18 },
+    { x: '25', y: 30 },
+    { x: '30', y: 22 },
+    { x: '12', y: 35 },
+    { x: '18', y: 40 },
+    { x: '22', y: 32 },
+    { x: '28', y: 45 },
+    { x: '32', y: 38 }
+  ] as ChartData[],
 
   area: [
-    {
-      id: 'Receita',
-      data: [
-        { x: 'Q1', y: 1000 },
-        { x: 'Q2', y: 1200 },
-        { x: 'Q3', y: 1500 },
-        { x: 'Q4', y: 1800 }
-      ]
-    },
-    {
-      id: 'Custo',
-      data: [
-        { x: 'Q1', y: 600 },
-        { x: 'Q2', y: 720 },
-        { x: 'Q3', y: 850 },
-        { x: 'Q4', y: 980 }
-      ]
-    }
-  ] as AreaSeriesData[],
+    { x: 'Q1', y: 1000 },
+    { x: 'Q2', y: 1200 },
+    { x: 'Q3', y: 1500 },
+    { x: 'Q4', y: 1800 }
+  ] as ChartData[],
 
   funnel: [
     { label: 'Visitantes', value: 10000, color: '#8B5CF6' },
@@ -149,82 +74,37 @@ const mockData = {
     { label: 'Clientes', value: 500, color: '#F59E0B' }
   ] as ChartData[],
 
-  treemap: {
-    id: 'root',
-    children: [
-      { id: 'Produto A', value: 45, color: '#8B5CF6' },
-      { id: 'Produto B', value: 30, color: '#06B6D4' },
-      { id: 'Produto C', value: 25, color: '#10B981' }
-    ]
-  } as TreeMapData,
+  treemap: [
+    { label: 'Produto A', value: 45, color: '#8B5CF6' },
+    { label: 'Produto B', value: 30, color: '#06B6D4' },
+    { label: 'Produto C', value: 25, color: '#10B981' }
+  ] as ChartData[],
 
   heatmap: [
-    { id: 'Segunda', data: [{ x: '9h', y: 8 }, { x: '12h', y: 12 }, { x: '15h', y: 15 }, { x: '18h', y: 10 }] },
-    { id: 'Terça', data: [{ x: '9h', y: 10 }, { x: '12h', y: 14 }, { x: '15h', y: 18 }, { x: '18h', y: 12 }] },
-    { id: 'Quarta', data: [{ x: '9h', y: 6 }, { x: '12h', y: 16 }, { x: '15h', y: 20 }, { x: '18h', y: 14 }] },
-    { id: 'Quinta', data: [{ x: '9h', y: 12 }, { x: '12h', y: 18 }, { x: '15h', y: 22 }, { x: '18h', y: 16 }] },
-    { id: 'Sexta', data: [{ x: '9h', y: 14 }, { x: '12h', y: 20 }, { x: '15h', y: 25 }, { x: '18h', y: 18 }] }
-  ] as HeatMapData[],
+    { x: 'Segunda-9h', y: 8 },
+    { x: 'Segunda-12h', y: 12 },
+    { x: 'Terça-9h', y: 10 },
+    { x: 'Terça-12h', y: 14 },
+    { x: 'Quarta-9h', y: 6 },
+    { x: 'Quarta-12h', y: 16 }
+  ] as ChartData[],
 
   radar: [
-    {
-      skill: 'React',
-      user1: 85,
-      user2: 70,
-      user3: 90
-    },
-    {
-      skill: 'TypeScript',
-      user1: 75,
-      user2: 80,
-      user3: 85
-    },
-    {
-      skill: 'Node.js',
-      user1: 60,
-      user2: 90,
-      user3: 70
-    },
-    {
-      skill: 'Design',
-      user1: 40,
-      user2: 60,
-      user3: 95
-    },
-    {
-      skill: 'Analytics',
-      user1: 70,
-      user2: 50,
-      user3: 80
-    }
-  ] as RadarData[],
+    { x: 'React', y: 85 },
+    { x: 'TypeScript', y: 75 },
+    { x: 'Node.js', y: 60 },
+    { x: 'Design', y: 40 },
+    { x: 'Analytics', y: 70 }
+  ] as ChartData[],
 
   stream: [
-    {
-      'Jan': 10,
-      'Fev': 12,
-      'Mar': 15,
-      'Abr': 18,
-      'Mai': 20,
-      'Jun': 16
-    },
-    {
-      'Jan': 8,
-      'Fev': 14,
-      'Mar': 12,
-      'Abr': 16,
-      'Mai': 18,
-      'Jun': 14
-    },
-    {
-      'Jan': 12,
-      'Fev': 10,
-      'Mar': 18,
-      'Abr': 14,
-      'Mai': 16,
-      'Jun': 20
-    }
-  ] as StreamData[]
+    { x: 'Jan', y: 10 },
+    { x: 'Fev', y: 12 },
+    { x: 'Mar', y: 15 },
+    { x: 'Abr', y: 18 },
+    { x: 'Mai', y: 20 },
+    { x: 'Jun', y: 16 }
+  ] as ChartData[]
 };
 
 export default function NivoChartsShowcase() {
