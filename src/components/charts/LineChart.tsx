@@ -23,6 +23,9 @@ export function LineChart({ data, xColumn, yColumn, isFullscreen }: BaseChartPro
     },
     grid: {
       line: { stroke: '#f1f5f9', strokeWidth: 1 } // Grid sutil
+    },
+    legends: {
+      text: { fontSize: 12, fill: '#6b7280', fontFamily: 'Geist, sans-serif' }
     }
   };
 

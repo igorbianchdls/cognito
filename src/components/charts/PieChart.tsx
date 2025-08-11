@@ -23,6 +23,9 @@ export function PieChart({ data, xColumn, yColumn, isFullscreen }: BaseChartProp
     ...nivoTheme,
     labels: {
       text: { fontSize: 12, fill: '#374151', fontFamily: 'Geist, sans-serif', fontWeight: 500 }
+    },
+    legends: {
+      text: { fontSize: 12, fill: '#374151', fontFamily: 'Geist, sans-serif', fontWeight: 500 }
     }
   };
 
