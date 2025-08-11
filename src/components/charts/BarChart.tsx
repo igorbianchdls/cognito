@@ -132,8 +132,8 @@ export function BarChart(props: BarChartProps) {
           keys={['value']}
           indexBy="id"
           
-          // Margins zeradas verticalmente
-          margin={{ top: 0, right: 12, bottom: 0, left: 50 }}
+          // Margin mínima para evitar cortes
+          margin={{ top: 20, right: 12, bottom: 0, left: 50 }}
           padding={0.2}
           
           // Cor elegante
