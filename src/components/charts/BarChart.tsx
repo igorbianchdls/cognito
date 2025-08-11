@@ -75,7 +75,7 @@ export function BarChart(props: BarChartProps) {
   const chartConfig: ChartConfig = {
     value: {
       label: yColumn || 'Value',
-      color: 'hsl(var(--chart-1))',
+      color: "var(--chart-1)",
     }
   };
 
@@ -126,6 +126,7 @@ export function BarChart(props: BarChartProps) {
         }}
       >
         <RechartsBarChart
+          accessibilityLayer
           data={chartData}
           margin={{
             top: margin?.top || 20,
@@ -134,14 +135,13 @@ export function BarChart(props: BarChartProps) {
             left: margin?.left || 12,
           }}
         >
-          {enableGridX && <CartesianGrid vertical={true} />}
-          {enableGridY && <CartesianGrid horizontal={true} />}
+          <CartesianGrid vertical={false} />
           
           <XAxis
             dataKey="category"
             tickLine={false}
+            tickMargin={10}
             axisLine={false}
-            tickMargin={8}
             tickFormatter={(value) => value}
           />
           
@@ -154,7 +154,7 @@ export function BarChart(props: BarChartProps) {
           
           <ChartTooltip
             cursor={false}
-            content={<ChartTooltipContent />}
+            content={<ChartTooltipContent hideLabel />}
           />
           
           {usedKeys.map((key, index) => (
@@ -162,7 +162,7 @@ export function BarChart(props: BarChartProps) {
               key={key}
               dataKey={key}
               fill={`var(--color-${key})`}
-              radius={4}
+              radius={8}
             />
           ))}
         </RechartsBarChart>
