@@ -21,6 +21,12 @@ export interface BigQueryCredentials {
   client_x509_cert_url: string
 }
 
+export interface BigQueryField {
+  name: string
+  type: string
+  mode?: string
+}
+
 export interface QueryOptions {
   query: string
   parameters?: Record<string, unknown>
@@ -242,7 +248,7 @@ class BigQueryService {
       
       // Try to get schema from job statistics first (most reliable)
       if (jobMetadata.statistics?.query?.schema?.fields) {
-        schema = jobMetadata.statistics.query.schema.fields.map((field: any) => ({
+        schema = jobMetadata.statistics.query.schema.fields.map((field: BigQueryField) => ({
           name: field.name,
           type: field.type,
           mode: field.mode || 'NULLABLE'
