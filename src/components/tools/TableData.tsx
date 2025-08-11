@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 interface Schema {
   name: string;
   type: string;
@@ -13,6 +15,7 @@ interface TableDataProps {
   executionTime?: number;
   datasetId?: string;
   tableId?: string;
+  query?: string;
   success?: boolean;
   error?: string;
 }
@@ -61,9 +64,12 @@ export default function TableData({
   executionTime, 
   datasetId, 
   tableId, 
+  query,
   success, 
   error 
 }: TableDataProps) {
+  const [activeTab, setActiveTab] = useState<'table' | 'sql'>('table');
+  
   // Debug logs para identificar problema
   console.log('🎨 ===== TABLEDATA DEBUG =====');
   console.log('🎨 TableData received props:', { 
@@ -153,72 +159,126 @@ export default function TableData({
         </div>
       </div>
 
-      {/* Schema info */}
-      {schema && schema.length > 0 && (
-        <div className="bg-gray-25 px-4 py-2 border-b border-gray-200">
-          <div className="flex flex-wrap gap-2">
-            {schema.map((col, index) => (
-              <span
-                key={index}
-                className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(col.type)}`}
+      {/* Tabs Navigation */}
+      <div className="border-b border-gray-200">
+        <div className="flex">
+          <button
+            onClick={() => setActiveTab('table')}
+            className={`px-4 py-2 font-medium text-sm transition-colors ${
+              activeTab === 'table'
+                ? 'text-blue-700 border-b-2 border-blue-500 bg-blue-50'
+                : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+            }`}
+          >
+            📊 Tabela
+          </button>
+          {query && (
+            <button
+              onClick={() => setActiveTab('sql')}
+              className={`px-4 py-2 font-medium text-sm transition-colors ${
+                activeTab === 'sql'
+                  ? 'text-blue-700 border-b-2 border-blue-500 bg-blue-50'
+                  : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+              }`}
+            >
+              💾 SQL
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Table Tab Content */}
+      {activeTab === 'table' && (
+        <>
+          {/* Schema info */}
+          {schema && schema.length > 0 && (
+            <div className="bg-gray-25 px-4 py-2 border-b border-gray-200">
+              <div className="flex flex-wrap gap-2">
+                {schema.map((col, index) => (
+                  <span
+                    key={index}
+                    className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(col.type)}`}
+                  >
+                    {col.name}
+                    <span className="ml-1 opacity-75">({col.type})</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Data table */}
+          <div className="overflow-x-auto max-h-96">
+            <table className="w-full">
+              <thead className="bg-gray-100 border-b border-gray-200 sticky top-0">
+                <tr>
+                  {schema && schema.map((col) => (
+                    <th
+                      key={col.name}
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      {col.name}
+                    </th>
+                  ))}
+                  {!schema && actualData.length > 0 && Object.keys(actualData[0]).map((key) => (
+                    <th
+                      key={key}
+                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      {key}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {actualData.map((row, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    {schema && schema.map((col) => (
+                      <td key={col.name} className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                        {formatValue(row[col.name], col.type)}
+                      </td>
+                    ))}
+                    {!schema && Object.entries(row).map(([key, value]) => (
+                      <td key={key} className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
+                        {formatValue(value, 'STRING')}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Footer */}
+          <div className="bg-gray-50 px-4 py-2 border-t border-gray-200">
+            <p className="text-xs text-gray-500">
+              Mostrando {actualData.length} de {totalRows || actualData.length} linhas
+              {actualData.length < (totalRows || 0) && " (resultados limitados)"}
+            </p>
+          </div>
+        </>
+      )}
+
+      {/* SQL Tab Content */}
+      {activeTab === 'sql' && query && (
+        <div className="bg-white border border-gray-300 rounded-lg overflow-hidden">
+          <div className="p-4">
+            <div className="flex justify-between items-start mb-3">
+              <h4 className="text-sm font-medium text-blue-700">🔍 Query SQL Executada</h4>
+              <button
+                onClick={() => navigator.clipboard.writeText(query)}
+                className="text-xs px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded transition-colors"
+                title="Copiar SQL"
               >
-                {col.name}
-                <span className="ml-1 opacity-75">({col.type})</span>
-              </span>
-            ))}
+                📋 Copiar
+              </button>
+            </div>
+            <pre className="bg-gray-50 p-3 rounded border text-sm font-mono text-gray-800 overflow-x-auto whitespace-pre-wrap">
+              {query}
+            </pre>
           </div>
         </div>
       )}
-      
-      {/* Data table */}
-      <div className="overflow-x-auto max-h-96">
-        <table className="w-full">
-          <thead className="bg-gray-100 border-b border-gray-200 sticky top-0">
-            <tr>
-              {schema && schema.map((col) => (
-                <th
-                  key={col.name}
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  {col.name}
-                </th>
-              ))}
-              {!schema && actualData.length > 0 && Object.keys(actualData[0]).map((key) => (
-                <th
-                  key={key}
-                  className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  {key}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {actualData.map((row, index) => (
-              <tr key={index} className="hover:bg-gray-50">
-                {schema && schema.map((col) => (
-                  <td key={col.name} className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
-                    {formatValue(row[col.name], col.type)}
-                  </td>
-                ))}
-                {!schema && Object.entries(row).map(([key, value]) => (
-                  <td key={key} className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
-                    {formatValue(value, 'STRING')}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Footer */}
-      <div className="bg-gray-50 px-4 py-2 border-t border-gray-200">
-        <p className="text-xs text-gray-500">
-          Mostrando {actualData.length} de {totalRows || actualData.length} linhas
-          {actualData.length < (totalRows || 0) && " (resultados limitados)"}
-        </p>
-      </div>
     </div>
   );
 }

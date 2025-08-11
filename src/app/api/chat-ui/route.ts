@@ -248,6 +248,7 @@ Always call the appropriate tool rather than asking for more parameters. Use mul
               executionTime,
               datasetId,
               tableId,
+              query: result.query,         // SQL query that was executed
               success: true
             };
           } catch (error) {

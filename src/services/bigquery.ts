@@ -44,6 +44,7 @@ export interface QueryResult {
   }[]
   executionTime: number
   bytesProcessed?: number
+  query?: string
 }
 
 export interface TableInfo {
@@ -284,7 +285,8 @@ class BigQueryService {
         executionTime,
         bytesProcessed: jobMetadata.statistics?.totalBytesProcessed 
           ? parseInt(jobMetadata.statistics.totalBytesProcessed) 
-          : undefined
+          : undefined,
+        query: options.query
       }
 
       // Cache the result
