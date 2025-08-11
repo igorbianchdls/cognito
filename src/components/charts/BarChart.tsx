@@ -98,7 +98,7 @@ export function BarChart(props: BarChartProps) {
     >
       {title && (
         <h3 style={{ 
-          margin: '0 0 4px 0', 
+          margin: '0 0 x 4px 0', 
           fontSize: `${titleFontSize}px`, 
           fontWeight: titleFontWeight, 
           color: titleColor
