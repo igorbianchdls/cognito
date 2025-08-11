@@ -111,7 +111,7 @@ type InterpretarDadosToolOutput = {
 
 type CriarGraficoToolInput = {
   tableData: Array<Record<string, unknown>>;
-  chartType: 'bar' | 'line' | 'pie' | 'scatter' | 'area';
+  chartType: 'bar' | 'line' | 'pie' | 'scatter' | 'area' | 'heatmap' | 'radar' | 'funnel' | 'treemap' | 'stream';
   xColumn: string;
   yColumn: string;
   title?: string;

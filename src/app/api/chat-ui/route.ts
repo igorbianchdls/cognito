@@ -18,7 +18,7 @@ Available tools:
 - getTables: Get tables from a specific dataset (requires datasetId)
 - getData: Get data from a specific table (requires datasetId and tableId)
 - interpretarDados: Analyze and interpret data with insights and recommendations (requires datasetId, tableId)
-- criarGrafico: Create visualizations and charts (requires datasetId, tableId, chartType, xColumn, yColumn)
+- criarGrafico: Create visualizations and charts (supports: bar, line, pie, scatter, area, heatmap, radar, funnel, treemap, stream)
 - retrieveResult: Search documents using RAG (requires query parameter) - retrieves relevant documents from vector database
 - criarDashboard: Create interactive dashboards with KPIs (requires datasetIds, title, dashboardType)
 - executarSQL: Execute custom SQL queries with validation (requires sqlQuery, optional datasetId, dryRun)
@@ -360,7 +360,7 @@ This optimization reduces token usage significantly while maintaining full chart
         description: 'Create data visualizations and charts from getData results. CRITICAL INSTRUCTIONS: 1) You MUST first use getData tool to get table data, 2) Copy the EXACT "data" array from getData output, 3) Paste it as tableData parameter - DO NOT make new queries or type data manually',
         inputSchema: z.object({
           tableData: z.array(z.record(z.unknown())).describe('PASTE the exact "data" array from previous getData tool output here. This should be an array of objects like [{col1: value1, col2: value2}, ...]. NEVER type this manually - always copy from getData results.'),
-          chartType: z.enum(['bar', 'line', 'pie', 'scatter', 'area']).describe('Type of chart to create'),
+          chartType: z.enum(['bar', 'line', 'pie', 'scatter', 'area', 'heatmap', 'radar', 'funnel', 'treemap', 'stream']).describe('Type of chart to create'),
           xColumn: z.string().describe('Column name for X-axis'),
           yColumn: z.string().describe('Column name for Y-axis (should be numeric for most charts)'),
           title: z.string().optional().describe('Chart title'),

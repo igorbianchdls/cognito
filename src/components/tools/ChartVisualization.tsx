@@ -4,6 +4,14 @@ import { useState } from 'react';
 import { WebPreviewNavigationButton } from '@/components/ai-elements/web-preview';
 import { Download, Settings, Maximize, FileImage } from 'lucide-react';
 import { ResponsiveBar } from '@nivo/bar';
+import { ResponsiveLine } from '@nivo/line';
+import { ResponsivePie } from '@nivo/pie';
+import { ResponsiveScatterPlot } from '@nivo/scatterplot';
+import { ResponsiveHeatMap } from '@nivo/heatmap';
+import { ResponsiveRadar } from '@nivo/radar';
+import { ResponsiveFunnel } from '@nivo/funnel';
+import { ResponsiveTreeMap } from '@nivo/treemap';
+import { ResponsiveStream } from '@nivo/stream';
 
 interface ChartVisualizationProps {
   chartData?: Array<{
@@ -13,7 +21,7 @@ interface ChartVisualizationProps {
     value?: number;
     color?: string;
   }>;
-  chartType?: string;
+  chartType?: 'bar' | 'line' | 'pie' | 'scatter' | 'area' | 'heatmap' | 'radar' | 'funnel' | 'treemap' | 'stream';
   title?: string;
   xColumn?: string;
   yColumn?: string;
@@ -26,6 +34,47 @@ interface ChartVisualizationProps {
   success?: boolean;
   error?: string;
 }
+
+function getChartTypeName(chartType?: string): string {
+  switch (chartType) {
+    case 'bar': return 'Bar';
+    case 'line': return 'Line';
+    case 'pie': return 'Pie';
+    case 'scatter': return 'Scatter Plot';
+    case 'area': return 'Area';
+    case 'heatmap': return 'Heatmap';
+    case 'radar': return 'Radar';
+    case 'funnel': return 'Funnel';
+    case 'treemap': return 'TreeMap';
+    case 'stream': return 'Stream';
+    default: return 'Chart';
+  }
+}
+
+// Common theme for all Nivo charts
+const nivoTheme = {
+  axis: {
+    ticks: {
+      text: { fontSize: 12, fill: '#6b7280' }
+    },
+    legend: {
+      text: { fontSize: 14, fill: '#374151', fontWeight: 500 }
+    }
+  },
+  labels: {
+    text: { fontSize: 11, fill: '#1f2937', fontWeight: 500 }
+  },
+  tooltip: {
+    container: {
+      background: '#ffffff',
+      color: '#1f2937',
+      fontSize: 12,
+      borderRadius: 8,
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+      border: '1px solid #e5e7eb'
+    }
+  }
+};
 
 export default function ChartVisualization({
   chartData,
@@ -81,6 +130,16 @@ export default function ChartVisualization({
         return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0M12 8m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0M16 16m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" />;
       case 'area':
         return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3v18h18M7 10l4-4 4 4 4-4v8a1 1 0 01-1 1H8a1 1 0 01-1-1V10z" />;
+      case 'heatmap':
+        return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7 20l4-16 4 16M15 4l4 4-4 4" />;
+      case 'radar':
+        return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />;
+      case 'funnel':
+        return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 4H3l5 7v6l4 2v-8l5-7z" />;
+      case 'treemap':
+        return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h6v6H3V3zm8 0h6v3h-6V3zm0 5h6v4h-6V8zm0 6h6v3h-6v-3zM3 11h6v8H3v-8z" />;
+      case 'stream':
+        return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15s4-8 8-8 8 8 8 8" />;
       default:
         return <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />;
     }
@@ -96,7 +155,7 @@ export default function ChartVisualization({
             {getChartIcon()}
           </svg>
           <h2 className="text-lg font-bold text-gray-900">
-            {title || `Gráfico ${chartType}`}
+            {title || `${getChartTypeName(chartType)} Chart`}
           </h2>
         </div>
 
@@ -210,158 +269,338 @@ export default function ChartVisualization({
 
         {chartType === 'line' && (
           <div className="space-y-4">
-            {/* Chart Legend */}
-            <div className="flex items-center gap-6 px-2">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-0.5 bg-blue-500"></div>
-                <span className="text-sm text-gray-700">Série Principal</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-0.5 bg-green-500"></div>
-                <span className="text-sm text-gray-700">Tendência</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-0.5 bg-orange-500"></div>
-                <span className="text-sm text-gray-700">Meta</span>
-              </div>
-            </div>
-            
-            {/* Chart Container */}
-            <div className={`bg-white border border-gray-100 rounded-lg p-6 ${isFullscreen ? 'h-96' : 'h-64'}`}>
-              <svg className="w-full h-full" viewBox="0 0 500 200" style={{ overflow: 'visible' }}>
-                {/* Grid Lines */}
-                <defs>
-                  <pattern id="grid" width="50" height="40" patternUnits="userSpaceOnUse">
-                    <path d="M 50 0 L 0 0 0 40" fill="none" stroke="#f3f4f6" strokeWidth="1"/>
-                  </pattern>
-                </defs>
-                <rect width="100%" height="100%" fill="url(#grid)" />
-                
-                {/* Main Line */}
-                <polyline
-                  points={chartData?.map((item, index) => 
-                    `${(index * 480) / (chartData.length - 1)},${180 - ((item.y || 0) / Math.max(...(chartData?.map(d => d.y || 0) || [1])) * 160)}`
-                  ).join(' ')}
-                  fill="none"
-                  stroke="#3b82f6"
-                  strokeWidth="3"
-                  className="drop-shadow-sm"
+            <div className={`bg-white border border-gray-100 rounded-lg p-6 ${isFullscreen ? 'h-[600px]' : 'h-80'}`}>
+              {chartData && chartData.length > 0 ? (
+                <ResponsiveLine
+                  data={[
+                    {
+                      id: 'series',
+                      data: chartData.map(item => ({
+                        x: item.x || item.label || 'Unknown',
+                        y: item.y || item.value || 0
+                      }))
+                    }
+                  ]}
+                  margin={{ top: 20, right: 20, bottom: 60, left: 80 }}
+                  xScale={{ type: 'point' }}
+                  yScale={{
+                    type: 'linear',
+                    min: 'auto',
+                    max: 'auto',
+                    stacked: false,
+                    reverse: false
+                  }}
+                  yFormat={(value) => Number(value).toLocaleString('pt-BR')}
+                  axisTop={null}
+                  axisRight={null}
+                  axisBottom={{
+                    tickSize: 5,
+                    tickPadding: 5,
+                    tickRotation: -45,
+                    legend: xColumn || 'X Axis',
+                    legendOffset: 50,
+                    legendPosition: 'middle'
+                  }}
+                  axisLeft={{
+                    tickSize: 5,
+                    tickPadding: 5,
+                    tickRotation: 0,
+                    legend: yColumn || 'Y Axis',
+                    legendOffset: -60,
+                    legendPosition: 'middle',
+                    format: (value) => Number(value).toLocaleString('pt-BR')
+                  }}
+                  pointSize={8}
+                  pointColor={{ from: 'color' }}
+                  pointBorderWidth={2}
+                  pointBorderColor={{ from: 'serieColor' }}
+                  pointLabel={(point) => `${point.data.y}`}
+                  pointLabelYOffset={-12}
+                  useMesh={true}
+                  theme={nivoTheme}
+                  colors={{ scheme: 'blue_green' }}
+                  animate={true}
+                  motionConfig="gentle"
                 />
-                
-                {/* Data Points */}
-                {chartData?.map((item, index) => (
-                  <g key={index}>
-                    <circle
-                      cx={(index * 480) / (chartData.length - 1)}
-                      cy={180 - ((item.y || 0) / Math.max(...(chartData?.map(d => d.y || 0) || [1])) * 160)}
-                      r="4"
-                      fill="#3b82f6"
-                      stroke="#fff"
-                      strokeWidth="2"
-                      className="hover:r-6 transition-all cursor-pointer"
-                    />
-                    {/* Value Labels */}
-                    <text
-                      x={(index * 480) / (chartData.length - 1)}
-                      y={190}
-                      textAnchor="middle"
-                      className="fill-gray-600 text-xs font-medium"
-                    >
-                      {item.x || item.label}
-                    </text>
-                  </g>
-                ))}
-                
-                {/* Y-axis Labels */}
-                {[0, 25, 50, 75, 100].map((percent) => (
-                  <text
-                    key={percent}
-                    x="-10"
-                    y={180 - (percent / 100) * 160}
-                    textAnchor="end"
-                    className="fill-gray-500 text-xs"
-                  >
-                    {Math.round((percent / 100) * Math.max(...(chartData?.map(d => d.y || 0) || [1])))}
-                  </text>
-                ))}
-              </svg>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  <div className="text-center">
+                    <div className="text-lg font-semibold mb-2">Sem dados para exibir</div>
+                    <div className="text-sm">Verifique se os dados foram carregados corretamente</div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
 
         {chartType === 'pie' && (
-          <div className="flex items-center gap-6">
-            <div className="w-48 h-48 bg-gray-50 rounded-full flex items-center justify-center relative">
-              <div className="w-40 h-40 rounded-full bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500"></div>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="bg-white rounded-full w-20 h-20 flex items-center justify-center shadow-lg">
-                  <span className="text-xs font-medium text-gray-600">Total</span>
+          <div className="space-y-4">
+            <div className={`bg-white border border-gray-100 rounded-lg p-6 ${isFullscreen ? 'h-[600px]' : 'h-80'}`}>
+              {chartData && chartData.length > 0 ? (
+                <ResponsivePie
+                  data={chartData.map(item => ({
+                    id: item.x || item.label || 'Unknown',
+                    label: item.x || item.label || 'Unknown',
+                    value: item.y || item.value || 0
+                  }))}
+                  margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
+                  innerRadius={0.5}
+                  padAngle={0.7}
+                  cornerRadius={3}
+                  activeOuterRadiusOffset={8}
+                  colors={{ scheme: 'blue_green' }}
+                  borderWidth={1}
+                  borderColor={{ from: 'color', modifiers: [['darker', 0.2]] }}
+                  arcLinkLabelsSkipAngle={10}
+                  arcLinkLabelsTextColor="#333333"
+                  arcLinkLabelsThickness={2}
+                  arcLinkLabelsColor={{ from: 'color' }}
+                  arcLabelsSkipAngle={10}
+                  arcLabelsTextColor={{ from: 'color', modifiers: [['darker', 2]] }}
+                  theme={nivoTheme}
+                  animate={true}
+                  motionConfig="gentle"
+                  valueFormat={(value) => Number(value).toLocaleString('pt-BR')}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  <div className="text-center">
+                    <div className="text-lg font-semibold mb-2">Sem dados para exibir</div>
+                    <div className="text-sm">Verifique se os dados foram carregados corretamente</div>
+                  </div>
                 </div>
-              </div>
-            </div>
-            <div className="flex-1 space-y-2">
-              {chartData?.map((item, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <div 
-                    className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: item.color || '#3b82f6' }}
-                  />
-                  <span className="text-sm text-gray-700">{item.label}</span>
-                  <span className="text-sm font-medium text-gray-900 ml-auto">{item.value}%</span>
-                </div>
-              ))}
+              )}
             </div>
           </div>
         )}
 
         {chartType === 'scatter' && (
-          <div className="h-48 bg-gray-50 rounded-lg p-4 flex items-center justify-center">
-            <svg className="w-full h-full" viewBox="0 0 400 160">
-              {chartData?.map((item, index) => {
-                const maxX = Math.max(...(chartData?.map(d => parseFloat(d.x || '0')) || [1]));
-                const maxY = Math.max(...(chartData?.map(d => d.y || 0) || [1]));
-                const x = (parseFloat(item.x || '0') / maxX) * 380;
-                const y = 160 - ((item.y || 0) / maxY) * 140;
-                return (
-                  <circle
-                    key={index}
-                    cx={x}
-                    cy={y}
-                    r="6"
-                    fill="#3b82f6"
-                    className="hover:fill-blue-700 transition-colors"
-                    opacity="0.8"
-                  />
-                );
-              })}
-            </svg>
+          <div className="space-y-4">
+            <div className={`bg-white border border-gray-100 rounded-lg p-6 ${isFullscreen ? 'h-[600px]' : 'h-80'}`}>
+              {chartData && chartData.length > 0 ? (
+                <ResponsiveScatterPlot
+                  data={[
+                    {
+                      id: 'series',
+                      data: chartData.map(item => ({
+                        x: parseFloat(String(item.x)) || 0,
+                        y: item.y || item.value || 0
+                      }))
+                    }
+                  ]}
+                  margin={{ top: 20, right: 20, bottom: 60, left: 80 }}
+                  xScale={{ type: 'linear', min: 'auto', max: 'auto' }}
+                  yScale={{ type: 'linear', min: 'auto', max: 'auto' }}
+                  colors={{ scheme: 'blue_green' }}
+                  blendMode="multiply"
+                  axisTop={null}
+                  axisRight={null}
+                  axisBottom={{
+                    tickSize: 5,
+                    tickPadding: 5,
+                    tickRotation: 0,
+                    legend: xColumn || 'X Axis',
+                    legendOffset: 46,
+                    legendPosition: 'middle',
+                    format: (value) => Number(value).toLocaleString('pt-BR')
+                  }}
+                  axisLeft={{
+                    tickSize: 5,
+                    tickPadding: 5,
+                    tickRotation: 0,
+                    legend: yColumn || 'Y Axis',
+                    legendOffset: -60,
+                    legendPosition: 'middle',
+                    format: (value) => Number(value).toLocaleString('pt-BR')
+                  }}
+                  theme={nivoTheme}
+                  animate={true}
+                  motionConfig="gentle"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  <div className="text-center">
+                    <div className="text-lg font-semibold mb-2">Sem dados para exibir</div>
+                    <div className="text-sm">Verifique se os dados foram carregados corretamente</div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         {chartType === 'area' && (
-          <div className="h-48 bg-gray-50 rounded-lg p-4 flex items-center justify-center">
-            <svg className="w-full h-full" viewBox="0 0 400 160">
-              <defs>
-                <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.1" />
-                </linearGradient>
-              </defs>
-              <polygon
-                points={chartData?.map((item, index) => 
-                  `${(index * 380) / (chartData.length - 1)},${160 - ((item.y || 0) / Math.max(...(chartData?.map(d => d.y || 0) || [1])) * 140)}`
-                ).concat(['380,160', '0,160']).join(' ')}
-                fill="url(#areaGradient)"
-              />
-              <polyline
-                points={chartData?.map((item, index) => 
-                  `${(index * 380) / (chartData.length - 1)},${160 - ((item.y || 0) / Math.max(...(chartData?.map(d => d.y || 0) || [1])) * 140)}`
-                ).join(' ')}
-                fill="none"
-                stroke="#3b82f6"
-                strokeWidth="2"
-              />
-            </svg>
+          <div className="space-y-4">
+            <div className={`bg-white border border-gray-100 rounded-lg p-6 ${isFullscreen ? 'h-[600px]' : 'h-80'}`}>
+              {chartData && chartData.length > 0 ? (
+                <ResponsiveLine
+                  data={[
+                    {
+                      id: 'series',
+                      data: chartData.map(item => ({
+                        x: item.x || item.label || 'Unknown',
+                        y: item.y || item.value || 0
+                      }))
+                    }
+                  ]}
+                  margin={{ top: 20, right: 20, bottom: 60, left: 80 }}
+                  xScale={{ type: 'point' }}
+                  yScale={{ type: 'linear', min: 0, max: 'auto' }}
+                  enableArea={true}
+                  areaOpacity={0.3}
+                  colors={{ scheme: 'blue_green' }}
+                  axisTop={null}
+                  axisRight={null}
+                  axisBottom={{
+                    tickSize: 5,
+                    tickPadding: 5,
+                    tickRotation: -45,
+                    legend: xColumn || 'X Axis',
+                    legendOffset: 50,
+                    legendPosition: 'middle'
+                  }}
+                  axisLeft={{
+                    tickSize: 5,
+                    tickPadding: 5,
+                    tickRotation: 0,
+                    legend: yColumn || 'Y Axis',
+                    legendOffset: -60,
+                    legendPosition: 'middle',
+                    format: (value) => Number(value).toLocaleString('pt-BR')
+                  }}
+                  pointSize={6}
+                  pointColor={{ from: 'color' }}
+                  pointBorderWidth={2}
+                  pointBorderColor={{ from: 'serieColor' }}
+                  useMesh={true}
+                  theme={nivoTheme}
+                  animate={true}
+                  motionConfig="gentle"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  <div className="text-center">
+                    <div className="text-lg font-semibold mb-2">Sem dados para exibir</div>
+                    <div className="text-sm">Verifique se os dados foram carregados corretamente</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {chartType === 'heatmap' && (
+          <div className="space-y-4">
+            <div className={`bg-white border border-gray-100 rounded-lg p-6 ${isFullscreen ? 'h-[600px]' : 'h-80'}`}>
+              <div className="flex items-center justify-center h-full text-gray-500">
+                <div className="text-center">
+                  <div className="text-lg font-semibold mb-2">Heatmap Chart</div>
+                  <div className="text-sm">Heatmap requires matrix data format - coming soon!</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {chartType === 'radar' && (
+          <div className="space-y-4">
+            <div className={`bg-white border border-gray-100 rounded-lg p-6 ${isFullscreen ? 'h-[600px]' : 'h-80'}`}>
+              <div className="flex items-center justify-center h-full text-gray-500">
+                <div className="text-center">
+                  <div className="text-lg font-semibold mb-2">Radar Chart</div>
+                  <div className="text-sm">Radar requires multi-dimensional data - coming soon!</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {chartType === 'funnel' && (
+          <div className="space-y-4">
+            <div className={`bg-white border border-gray-100 rounded-lg p-6 ${isFullscreen ? 'h-[600px]' : 'h-80'}`}>
+              {chartData && chartData.length > 0 ? (
+                <ResponsiveFunnel
+                  data={chartData.map(item => ({
+                    id: item.x || item.label || 'Unknown',
+                    value: item.y || item.value || 0,
+                    label: item.x || item.label || 'Unknown'
+                  }))}
+                  margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+                  valueFormat={(value) => Number(value).toLocaleString('pt-BR')}
+                  colors={{ scheme: 'blue_green' }}
+                  borderWidth={20}
+                  labelColor={{ from: 'color', modifiers: [['darker', 3]] }}
+                  beforeSeparatorLength={100}
+                  beforeSeparatorOffset={20}
+                  afterSeparatorLength={100}
+                  afterSeparatorOffset={20}
+                  currentPartSizeExtension={10}
+                  currentBorderWidth={40}
+                  theme={nivoTheme}
+                  animate={true}
+                  motionConfig="gentle"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  <div className="text-center">
+                    <div className="text-lg font-semibold mb-2">Sem dados para exibir</div>
+                    <div className="text-sm">Verifique se os dados foram carregados corretamente</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {chartType === 'treemap' && (
+          <div className="space-y-4">
+            <div className={`bg-white border border-gray-100 rounded-lg p-6 ${isFullscreen ? 'h-[600px]' : 'h-80'}`}>
+              {chartData && chartData.length > 0 ? (
+                <ResponsiveTreeMap
+                  data={{
+                    name: "root",
+                    children: chartData.map(item => ({
+                      name: item.x || item.label || 'Unknown',
+                      value: item.y || item.value || 0
+                    }))
+                  }}
+                  identity="name"
+                  value="value"
+                  valueFormat={(value) => Number(value).toLocaleString('pt-BR')}
+                  margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
+                  labelSkipSize={12}
+                  labelTextColor={{ from: 'color', modifiers: [['darker', 1.2]] }}
+                  parentLabelPosition="left"
+                  parentLabelTextColor={{ from: 'color', modifiers: [['darker', 2]] }}
+                  borderColor={{ from: 'color', modifiers: [['darker', 0.1]] }}
+                  colors={{ scheme: 'blue_green' }}
+                  theme={nivoTheme}
+                  animate={true}
+                  motionConfig="gentle"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  <div className="text-center">
+                    <div className="text-lg font-semibold mb-2">Sem dados para exibir</div>
+                    <div className="text-sm">Verifique se os dados foram carregados corretamente</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {chartType === 'stream' && (
+          <div className="space-y-4">
+            <div className={`bg-white border border-gray-100 rounded-lg p-6 ${isFullscreen ? 'h-[600px]' : 'h-80'}`}>
+              <div className="flex items-center justify-center h-full text-gray-500">
+                <div className="text-center">
+                  <div className="text-lg font-semibold mb-2">Stream Chart</div>
+                  <div className="text-sm">Stream requires time-series data - coming soon!</div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
