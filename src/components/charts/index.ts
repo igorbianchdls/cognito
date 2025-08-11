@@ -15,7 +15,7 @@ export { ChartContainer } from './ChartContainer';
 export { EmptyState } from './EmptyState';
 
 // Types
-export type { ChartData, BaseChartProps, ChartMetadata, ChartType } from './types';
+export type { ChartData, BaseChartProps, BarChartProps, ChartMetadata, ChartType } from './types';
 
 // Theme and Utils
 export { nivoTheme, colorSchemes } from './theme';

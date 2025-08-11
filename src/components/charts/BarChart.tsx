@@ -1,12 +1,93 @@
 'use client';
 
 import { ResponsiveBar } from '@nivo/bar';
-import { BaseChartProps } from './types';
-import { nivoTheme, colorSchemes } from './theme';
+import { BarChartProps } from './types';
+import { nivoTheme } from './theme';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
 
-export function BarChart({ data, xColumn, yColumn, isFullscreen }: BaseChartProps) {
+// Valores padrão elegantes inspirados no design shadcn
+const defaultBarChartProps = {
+  // Layout elegante como shadcn
+  margin: { top: 20, right: 30, bottom: 40, left: 40 },
+  padding: 0.3,
+  borderRadius: 4, // Barras arredondadas
+  borderWidth: 0,
+  
+  // Cores suaves inspiradas no shadcn/ui
+  colors: ['#3B82F6', '#60A5FA', '#93C5FD', '#DBEAFE', '#1D4ED8'],
+  
+  // Eixos limpos
+  axisBottom: {
+    tickSize: 0,
+    tickPadding: 8,
+    tickRotation: 0,
+    legendPosition: 'middle' as const,
+    legendOffset: 32
+  },
+  axisLeft: {
+    tickSize: 0,
+    tickPadding: 8,
+    legendOffset: -35
+  },
+  
+  // Labels discretos
+  enableLabel: false, // Mais limpo por padrão
+  labelSkipWidth: 12,
+  labelSkipHeight: 12,
+  labelTextColor: { from: 'color', modifiers: [['darker', 1.4]] },
+  
+  // Animação suave
+  animate: true,
+  motionConfig: 'gentle' as const,
+  
+  // Configurações básicas
+  keys: ['value'],
+  indexBy: 'id'
+};
+
+const defaultTooltip = ({ id, value }: any) => (
+  <div className="bg-white px-3 py-2 shadow-lg rounded-lg border border-gray-200 text-sm">
+    <div className="font-medium text-gray-900">{id}</div>
+    <div className="text-blue-600 font-semibold">{formatValue(Number(value))}</div>
+  </div>
+);
+
+export function BarChart(props: BarChartProps) {
+  const {
+    data,
+    xColumn,
+    yColumn,
+    margin = defaultBarChartProps.margin,
+    padding = defaultBarChartProps.padding,
+    borderRadius = defaultBarChartProps.borderRadius,
+    colors = defaultBarChartProps.colors,
+    borderColor,
+    borderWidth = defaultBarChartProps.borderWidth,
+    axisBottom = { 
+      ...defaultBarChartProps.axisBottom, 
+      legend: xColumn || 'Category' 
+    },
+    axisLeft = { 
+      ...defaultBarChartProps.axisLeft, 
+      legend: yColumn || 'Value',
+      format: (value: any) => formatValue(Number(value))
+    },
+    axisTop = null,
+    axisRight = null,
+    enableLabel = defaultBarChartProps.enableLabel,
+    labelTextColor = defaultBarChartProps.labelTextColor,
+    labelSkipWidth = defaultBarChartProps.labelSkipWidth,
+    labelSkipHeight = defaultBarChartProps.labelSkipHeight,
+    labelFormat = (value: any) => formatValue(Number(value)),
+    animate = defaultBarChartProps.animate,
+    motionConfig = defaultBarChartProps.motionConfig,
+    theme = nivoTheme,
+    tooltip = defaultTooltip,
+    keys = defaultBarChartProps.keys,
+    indexBy = defaultBarChartProps.indexBy
+  } = props;
+
   if (!data || data.length === 0) {
     return <EmptyState />;
   }
@@ -21,45 +102,27 @@ export function BarChart({ data, xColumn, yColumn, isFullscreen }: BaseChartProp
     <div style={{ width: '100%', height: '100%', minHeight: '250px' }}>
       <ResponsiveBar
         data={chartData}
-      keys={['value']}
-      indexBy="id"
-      margin={{ top: 20, right: 20, bottom: 60, left: 80 }}
-      padding={0.2}
-      colors={{ scheme: colorSchemes.primary }}
-      borderColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
-      axisTop={null}
-      axisRight={null}
-      axisBottom={{
-        tickSize: 5,
-        tickPadding: 5,
-        tickRotation: -45,
-        legend: xColumn || 'X Axis',
-        legendPosition: 'middle',
-        legendOffset: 50
-      }}
-      axisLeft={{
-        tickSize: 5,
-        tickPadding: 5,
-        tickRotation: 0,
-        legend: yColumn || 'Y Axis',
-        legendPosition: 'middle',
-        legendOffset: -60,
-        format: (value) => formatValue(Number(value))
-      }}
-      enableLabel={true}
-      label={(d) => formatValue(Number(d.value))}
-      labelSkipWidth={12}
-      labelSkipHeight={12}
-      labelTextColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
-      animate={true}
-      motionConfig="gentle"
-      theme={nivoTheme}
-      tooltip={({ id, value }) => (
-        <div className="bg-white px-3 py-2 shadow-lg rounded border text-sm">
-          <div className="font-semibold">{id}</div>
-          <div className="text-blue-600">{formatValue(Number(value))}</div>
-        </div>
-      )}
+        keys={keys}
+        indexBy={indexBy}
+        margin={margin}
+        padding={padding}
+        borderRadius={borderRadius}
+        colors={colors}
+        borderColor={borderColor}
+        borderWidth={borderWidth}
+        axisTop={axisTop}
+        axisRight={axisRight}
+        axisBottom={axisBottom}
+        axisLeft={axisLeft}
+        enableLabel={enableLabel}
+        label={enableLabel ? (d) => labelFormat(d.value) : undefined}
+        labelSkipWidth={labelSkipWidth}
+        labelSkipHeight={labelSkipHeight}
+        labelTextColor={labelTextColor}
+        animate={animate}
+        motionConfig={motionConfig}
+        theme={theme}
+        tooltip={tooltip}
       />
     </div>
   );
