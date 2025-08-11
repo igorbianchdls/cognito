@@ -97,15 +97,9 @@ export default function ChartVisualization({
           <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             {getChartIcon()}
           </svg>
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900">
-              {title || `Gráfico ${chartType}`}
-            </h2>
-            <div className="text-sm text-gray-500 mt-0.5">
-              {datasetId}.{tableId} • {xColumn} × {yColumn}
-              {metadata?.executionTime && ` • ${metadata.executionTime}ms`}
-            </div>
-          </div>
+          <h2 className="text-lg font-bold text-gray-900">
+            {title || `Gráfico ${chartType}`}
+          </h2>
         </div>
 
         {/* Action Buttons - Right Side */}

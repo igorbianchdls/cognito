@@ -1,6 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, tool, UIMessage } from 'ai';
 import { z } from 'zod';
+import { bigQueryService } from '@/services/bigquery';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -124,47 +125,39 @@ Always call the appropriate tool rather than asking for more parameters. Use mul
           projectId: z.string().optional().describe('The project ID to get datasets from'),
         }),
         execute: async ({ projectId }) => {
-          // Mock datasets data
-          const datasets = [
-            {
-              id: 'ecommerce_data',
-              friendlyName: 'E-commerce Analytics',
-              description: 'Customer transactions, product catalog, and sales data',
-              location: 'US',
-              creationTime: '2024-01-15T10:30:00Z',
-              lastModifiedTime: '2024-08-10T14:22:00Z'
-            },
-            {
-              id: 'user_behavior',
-              friendlyName: 'User Behavior Tracking',
-              description: 'Website clicks, page views, and user journey analytics',
-              location: 'EU',
-              creationTime: '2024-02-20T16:45:00Z',
-              lastModifiedTime: '2024-08-09T09:15:00Z'
-            },
-            {
-              id: 'financial_reports',
-              friendlyName: 'Financial Data',
-              description: 'Revenue, costs, and financial performance metrics',
-              location: 'US',
-              creationTime: '2024-03-10T11:20:00Z',
-              lastModifiedTime: '2024-08-08T17:30:00Z'
-            },
-            {
-              id: 'marketing_campaigns',
-              friendlyName: 'Marketing Analytics',
-              description: 'Campaign performance, ad spend, and conversion data',
-              location: 'US',
-              creationTime: '2024-04-05T13:15:00Z',
-              lastModifiedTime: '2024-08-07T12:45:00Z'
+          console.log('📊 BigQuery datasets tool executed for nexus');
+          try {
+            // Initialize BigQuery service if not already done
+            if (!bigQueryService['client']) {
+              console.log('⚡ Initializing BigQuery service...');
+              await bigQueryService.initialize();
             }
-          ];
-
-          return {
-            datasets,
-            success: true,
-            projectId: projectId || 'default-project'
-          };
+            
+            console.log('🔍 Attempting to list datasets...');
+            const datasets = await bigQueryService.listDatasets();
+            console.log('✅ Datasets retrieved:', datasets.length);
+            
+            // Convert Date objects to strings for component compatibility
+            const datasetsWithStringDates = datasets.map(dataset => ({
+              ...dataset,
+              creationTime: dataset.creationTime ? dataset.creationTime.toISOString() : undefined,
+              lastModifiedTime: dataset.lastModifiedTime ? dataset.lastModifiedTime.toISOString() : undefined,
+            }));
+            
+            return {
+              datasets: datasetsWithStringDates,
+              success: true,
+              projectId: projectId || process.env.GOOGLE_PROJECT_ID || 'default-project'
+            };
+          } catch (error) {
+            console.error('❌ Error fetching datasets:', error);
+            return {
+              datasets: [],
+              success: false,
+              error: error instanceof Error ? error.message : 'Failed to retrieve datasets',
+              projectId: projectId || process.env.GOOGLE_PROJECT_ID || 'default-project'
+            };
+          }
         },
       }),
       getTables: tool({
@@ -173,99 +166,39 @@ Always call the appropriate tool rather than asking for more parameters. Use mul
           datasetId: z.string().describe('The dataset ID to get tables from'),
         }),
         execute: async ({ datasetId }) => {
-          // Mock tables data based on dataset
-          const tablesByDataset: Record<string, Array<{
-            tableId: string;
-            description: string;
-            numRows: number;
-            numBytes: number;
-            creationTime: string;
-          }>> = {
-            'ecommerce_data': [
-              {
-                tableId: 'customers',
-                description: 'Customer information and demographics',
-                numRows: 150000,
-                numBytes: 45000000,
-                creationTime: '2024-01-20T09:15:00Z'
-              },
-              {
-                tableId: 'orders',
-                description: 'Customer orders and transaction data',
-                numRows: 500000,
-                numBytes: 120000000,
-                creationTime: '2024-01-20T09:20:00Z'
-              },
-              {
-                tableId: 'products',
-                description: 'Product catalog with pricing and categories',
-                numRows: 25000,
-                numBytes: 8000000,
-                creationTime: '2024-01-20T09:25:00Z'
-              },
-              {
-                tableId: 'order_items',
-                description: 'Individual items within each order',
-                numRows: 1200000,
-                numBytes: 180000000,
-                creationTime: '2024-01-20T09:30:00Z'
-              }
-            ],
-            'user_behavior': [
-              {
-                tableId: 'page_views',
-                description: 'Website page view tracking data',
-                numRows: 2500000,
-                numBytes: 350000000,
-                creationTime: '2024-02-25T11:00:00Z'
-              },
-              {
-                tableId: 'sessions',
-                description: 'User session information and duration',
-                numRows: 800000,
-                numBytes: 95000000,
-                creationTime: '2024-02-25T11:10:00Z'
-              },
-              {
-                tableId: 'events',
-                description: 'Custom events and user interactions',
-                numRows: 5000000,
-                numBytes: 650000000,
-                creationTime: '2024-02-25T11:20:00Z'
-              }
-            ],
-            'financial_reports': [
-              {
-                tableId: 'revenue_daily',
-                description: 'Daily revenue breakdown by channel',
-                numRows: 3650,
-                numBytes: 1200000,
-                creationTime: '2024-03-15T14:30:00Z'
-              },
-              {
-                tableId: 'expenses',
-                description: 'Operating expenses and cost tracking',
-                numRows: 12000,
-                numBytes: 2800000,
-                creationTime: '2024-03-15T14:35:00Z'
-              },
-              {
-                tableId: 'profit_loss',
-                description: 'Monthly profit and loss statements',
-                numRows: 120,
-                numBytes: 450000,
-                creationTime: '2024-03-15T14:40:00Z'
-              }
-            ]
-          };
-
-          const tables = tablesByDataset[datasetId] || [];
-          
-          return {
-            tables,
-            datasetId,
-            success: true
-          };
+          console.log('📋 BigQuery tables tool executed for nexus, dataset:', datasetId);
+          try {
+            // Initialize BigQuery service if not already done
+            if (!bigQueryService['client']) {
+              console.log('⚡ Initializing BigQuery service...');
+              await bigQueryService.initialize();
+            }
+            
+            console.log('🔍 Attempting to list tables for dataset:', datasetId);
+            const tables = await bigQueryService.listTables(datasetId);
+            console.log('✅ Tables retrieved:', tables.length, 'for dataset:', datasetId);
+            
+            // Convert Date objects to strings for component compatibility
+            const tablesWithStringDates = tables.map(table => ({
+              ...table,
+              creationTime: table.creationTime ? table.creationTime.toISOString() : undefined,
+              lastModifiedTime: table.lastModifiedTime ? table.lastModifiedTime.toISOString() : undefined,
+            }));
+            
+            return {
+              tables: tablesWithStringDates,
+              datasetId,
+              success: true
+            };
+          } catch (error) {
+            console.error('❌ Error fetching tables:', error);
+            return {
+              tables: [],
+              datasetId,
+              success: false,
+              error: error instanceof Error ? error.message : 'Failed to retrieve tables'
+            };
+          }
         },
       }),
       getData: tool({
