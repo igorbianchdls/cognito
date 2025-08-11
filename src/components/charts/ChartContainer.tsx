@@ -134,7 +134,12 @@ export function ChartContainer({
 
       {/* Chart Area */}
       <div className={`p-6 ${isFullscreen ? 'h-full' : ''}`}>
-        <div className={`bg-white border border-gray-100 rounded-lg p-6 ${isFullscreen ? 'h-[600px]' : height ? `h-[${height}px]` : 'h-80'}`}>
+        <div className={`bg-white border border-gray-100 rounded-lg p-6 min-h-[300px] ${
+          isFullscreen ? 'h-[600px]' : 
+          height === 400 ? 'h-96' :
+          height === 500 ? 'h-[500px]' :
+          'h-80'
+        }`}>
           {children}
         </div>
       </div>

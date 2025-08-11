@@ -11,13 +11,16 @@ export function BarChart({ data, xColumn, yColumn, isFullscreen }: BaseChartProp
     return <EmptyState />;
   }
 
+  const chartData = data.map(item => ({
+    id: item.x || item.label || 'Unknown',
+    value: item.y || item.value || 0,
+    label: item.x || item.label || 'Unknown'
+  }));
+
   return (
-    <ResponsiveBar
-      data={data.map(item => ({
-        id: item.x || item.label || 'Unknown',
-        value: item.y || item.value || 0,
-        label: item.x || item.label || 'Unknown'
-      }))}
+    <div style={{ width: '100%', height: '100%', minHeight: '250px' }}>
+      <ResponsiveBar
+        data={chartData}
       keys={['value']}
       indexBy="id"
       margin={{ top: 20, right: 20, bottom: 60, left: 80 }}
@@ -57,6 +60,7 @@ export function BarChart({ data, xColumn, yColumn, isFullscreen }: BaseChartProp
           <div className="text-blue-600">{formatValue(Number(value))}</div>
         </div>
       )}
-    />
+      />
+    </div>
   );
 }

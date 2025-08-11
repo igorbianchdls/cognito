@@ -11,13 +11,16 @@ export function PieChart({ data, xColumn, yColumn, isFullscreen }: BaseChartProp
     return <EmptyState />;
   }
 
+  const chartData = data.map(item => ({
+    id: item.x || item.label || 'Unknown',
+    label: item.x || item.label || 'Unknown',
+    value: item.y || item.value || 0
+  }));
+
   return (
-    <ResponsivePie
-      data={data.map(item => ({
-        id: item.x || item.label || 'Unknown',
-        label: item.x || item.label || 'Unknown',
-        value: item.y || item.value || 0
-      }))}
+    <div style={{ width: '100%', height: '100%', minHeight: '250px' }}>
+      <ResponsivePie
+        data={chartData}
       margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
       innerRadius={0.5}
       padAngle={0.7}
@@ -36,6 +39,7 @@ export function PieChart({ data, xColumn, yColumn, isFullscreen }: BaseChartProp
       animate={true}
       motionConfig="gentle"
       valueFormat={(value) => formatValue(Number(value))}
-    />
+      />
+    </div>
   );
 }

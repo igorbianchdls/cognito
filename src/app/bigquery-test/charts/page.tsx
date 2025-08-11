@@ -24,21 +24,21 @@ import type { ChartData } from '@/components/charts';
 // Mock data for different chart types
 const mockData = {
   bar: [
-    { x: 'Janeiro', value: 245, color: '#8B5CF6' },
-    { x: 'Fevereiro', value: 182, color: '#06B6D4' },
-    { x: 'Março', value: 398, color: '#10B981' },
-    { x: 'Abril', value: 312, color: '#F59E0B' },
-    { x: 'Maio', value: 428, color: '#EF4444' },
-    { x: 'Junho', value: 256, color: '#8B5CF6' }
+    { label: 'Janeiro', value: 245, color: '#8B5CF6' },
+    { label: 'Fevereiro', value: 182, color: '#06B6D4' },
+    { label: 'Março', value: 398, color: '#10B981' },
+    { label: 'Abril', value: 312, color: '#F59E0B' },
+    { label: 'Maio', value: 428, color: '#EF4444' },
+    { label: 'Junho', value: 256, color: '#8B5CF6' }
   ] as ChartData[],
 
   line: [
-    { x: 'Jan', y: 245 },
-    { x: 'Fev', y: 182 },
-    { x: 'Mar', y: 398 },
-    { x: 'Abr', y: 312 },
-    { x: 'Mai', y: 428 },
-    { x: 'Jun', y: 256 }
+    { x: 'Jan', y: 245, color: '#8B5CF6' },
+    { x: 'Fev', y: 182, color: '#06B6D4' },
+    { x: 'Mar', y: 398, color: '#10B981' },
+    { x: 'Abr', y: 312, color: '#F59E0B' },
+    { x: 'Mai', y: 428, color: '#EF4444' },
+    { x: 'Jun', y: 256, color: '#8B5CF6' }
   ] as ChartData[],
 
   pie: [
@@ -48,23 +48,23 @@ const mockData = {
   ] as ChartData[],
 
   scatter: [
-    { x: '10', y: 20 },
-    { x: '15', y: 25 },
-    { x: '20', y: 18 },
-    { x: '25', y: 30 },
-    { x: '30', y: 22 },
-    { x: '12', y: 35 },
-    { x: '18', y: 40 },
-    { x: '22', y: 32 },
-    { x: '28', y: 45 },
-    { x: '32', y: 38 }
+    { x: '10', y: 20, color: '#8B5CF6' },
+    { x: '15', y: 25, color: '#06B6D4' },
+    { x: '20', y: 18, color: '#10B981' },
+    { x: '25', y: 30, color: '#F59E0B' },
+    { x: '30', y: 22, color: '#EF4444' },
+    { x: '12', y: 35, color: '#8B5CF6' },
+    { x: '18', y: 40, color: '#06B6D4' },
+    { x: '22', y: 32, color: '#10B981' },
+    { x: '28', y: 45, color: '#F59E0B' },
+    { x: '32', y: 38, color: '#EF4444' }
   ] as ChartData[],
 
   area: [
-    { x: 'Q1', y: 1000 },
-    { x: 'Q2', y: 1200 },
-    { x: 'Q3', y: 1500 },
-    { x: 'Q4', y: 1800 }
+    { x: 'Q1', y: 1000, color: '#8B5CF6' },
+    { x: 'Q2', y: 1200, color: '#06B6D4' },
+    { x: 'Q3', y: 1500, color: '#10B981' },
+    { x: 'Q4', y: 1800, color: '#F59E0B' }
   ] as ChartData[],
 
   funnel: [
@@ -81,29 +81,29 @@ const mockData = {
   ] as ChartData[],
 
   heatmap: [
-    { x: 'Segunda-9h', y: 8 },
-    { x: 'Segunda-12h', y: 12 },
-    { x: 'Terça-9h', y: 10 },
-    { x: 'Terça-12h', y: 14 },
-    { x: 'Quarta-9h', y: 6 },
-    { x: 'Quarta-12h', y: 16 }
+    { x: 'Segunda-9h', y: 8, color: '#8B5CF6' },
+    { x: 'Segunda-12h', y: 12, color: '#06B6D4' },
+    { x: 'Terça-9h', y: 10, color: '#10B981' },
+    { x: 'Terça-12h', y: 14, color: '#F59E0B' },
+    { x: 'Quarta-9h', y: 6, color: '#EF4444' },
+    { x: 'Quarta-12h', y: 16, color: '#8B5CF6' }
   ] as ChartData[],
 
   radar: [
-    { x: 'React', y: 85 },
-    { x: 'TypeScript', y: 75 },
-    { x: 'Node.js', y: 60 },
-    { x: 'Design', y: 40 },
-    { x: 'Analytics', y: 70 }
+    { x: 'React', y: 85, color: '#8B5CF6' },
+    { x: 'TypeScript', y: 75, color: '#06B6D4' },
+    { x: 'Node.js', y: 60, color: '#10B981' },
+    { x: 'Design', y: 40, color: '#F59E0B' },
+    { x: 'Analytics', y: 70, color: '#EF4444' }
   ] as ChartData[],
 
   stream: [
-    { x: 'Jan', y: 10 },
-    { x: 'Fev', y: 12 },
-    { x: 'Mar', y: 15 },
-    { x: 'Abr', y: 18 },
-    { x: 'Mai', y: 20 },
-    { x: 'Jun', y: 16 }
+    { x: 'Jan', y: 10, color: '#8B5CF6' },
+    { x: 'Fev', y: 12, color: '#06B6D4' },
+    { x: 'Mar', y: 15, color: '#10B981' },
+    { x: 'Abr', y: 18, color: '#F59E0B' },
+    { x: 'Mai', y: 20, color: '#EF4444' },
+    { x: 'Jun', y: 16, color: '#8B5CF6' }
   ] as ChartData[]
 };
 
