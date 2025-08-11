@@ -684,6 +684,24 @@ export default function BigQueryTestPage() {
             )}
           </Card>
 
+          {/* Charts Showcase */}
+          <Card className="p-6 bg-purple-50 border-purple-200 mb-6">
+            <h3 className="text-lg font-semibold text-purple-900 mb-3">📊 Showcase Gráficos Nivo</h3>
+            <div className="text-sm text-purple-800 space-y-2 mb-4">
+              <p>Visualize todos os tipos de gráficos Nivo implementados no projeto com dados de exemplo.</p>
+              <p><strong>10 tipos disponíveis:</strong> Bar, Line, Pie, Scatter, Area, Funnel, TreeMap, Heatmap, Radar, Stream</p>
+            </div>
+            <Button 
+              onClick={() => window.location.href = '/bigquery-test/charts'}
+              className="bg-purple-600 hover:bg-purple-700 text-white flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Ver Showcase de Gráficos
+            </Button>
+          </Card>
+
           {/* Instructions */}
           <Card className="p-6 bg-blue-50 border-blue-200">
             <h3 className="text-lg font-semibold text-blue-900 mb-3">📝 Instructions</h3>
@@ -693,6 +711,7 @@ export default function BigQueryTestPage() {
               <p><strong>3. List Tables:</strong> Enter a dataset name to see its tables</p>
               <p><strong>4. Custom Query:</strong> Run SQL queries (be careful with LIMIT to avoid costs)</p>
               <p><strong>5. Direct Tests:</strong> Test specific tables and detect dataset locations</p>
+              <p><strong>6. Charts Showcase:</strong> View all Nivo chart types with sample data</p>
             </div>
           </Card>
         </div>
