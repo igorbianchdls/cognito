@@ -21,7 +21,7 @@ export function LineChart({ data, xColumn, yColumn, isFullscreen }: BaseChartPro
   const chartConfig: ChartConfig = {
     value: {
       label: yColumn || 'Value',
-      color: "var(--chart-1)",
+      color: "#2563eb",
     }
   };
 
