@@ -1,76 +1,96 @@
 'use client';
 
-import { Area, AreaChart as RechartsAreaChart, CartesianGrid, XAxis } from 'recharts';
+import { ResponsiveLine } from '@nivo/line';
 import { BaseChartProps } from './types';
+import { nivoTheme } from './theme';
+import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
-import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, ChartConfig } from '@/components/ui/chart';
 
 export function AreaChart({ data, xColumn, yColumn, isFullscreen }: BaseChartProps) {
   if (!data || data.length === 0) {
     return <EmptyState />;
   }
 
-  // Transformar dados para formato Recharts elegante (múltiplas séries)
-  const chartData = data.map((item, index) => ({
-    category: item.x || item.label || `Item ${index + 1}`,
-    desktop: item.y || item.value || 0,
-    mobile: Math.round((item.y || item.value || 0) * 0.6), // Segunda série derivada
-  }));
-
-  // ChartConfig elegante com cores hardcoded
-  const chartConfig: ChartConfig = {
-    desktop: {
-      label: "Desktop",
-      color: "#2563eb",
+  // Tema elegante inspirado no shadcn/ui
+  const elegantTheme = {
+    ...nivoTheme,
+    axis: {
+      ticks: {
+        line: { stroke: 'transparent' }, // Remove tick lines
+        text: { fontSize: 12, fill: '#6b7280', fontFamily: 'Geist, sans-serif' }
+      },
+      domain: { line: { stroke: 'transparent' } } // Remove axis lines
     },
-    mobile: {
-      label: "Mobile",
-      color: "#dc2626",
+    grid: {
+      line: { stroke: '#f1f5f9', strokeWidth: 1 } // Grid sutil
     }
   };
 
   return (
     <div style={{ width: '100%', height: '400px', minWidth: 0 }}>
-      <ChartContainer config={chartConfig} className="h-full w-full">
-        <RechartsAreaChart
-          accessibilityLayer
-          data={chartData}
-          margin={{
-            left: 12,
-            right: 12,
-          }}
-        >
-          <CartesianGrid vertical={false} />
-          <XAxis
-            dataKey="category"
-            tickLine={false}
-            axisLine={false}
-            tickMargin={8}
-            tickFormatter={(value) => value.toString().slice(0, 3)}
-          />
-          <ChartTooltip
-            cursor={false}
-            content={<ChartTooltipContent indicator="line" />}
-          />
-          <Area
-            dataKey="mobile"
-            type="natural"
-            fill="var(--color-mobile)"
-            fillOpacity={0.4}
-            stroke="var(--color-mobile)"
-            stackId="a"
-          />
-          <Area
-            dataKey="desktop"
-            type="natural"
-            fill="var(--color-desktop)"
-            fillOpacity={0.4}
-            stroke="var(--color-desktop)"
-            stackId="a"
-          />
-          <ChartLegend content={<ChartLegendContent />} />
-        </RechartsAreaChart>
-      </ChartContainer>
+      <ResponsiveLine
+        data={[
+          {
+            id: 'series',
+            data: data.map(item => ({
+              x: item.x || item.label || 'Unknown',
+              y: item.y || item.value || 0
+            }))
+          }
+        ]}
+        // Margins mínimas elegantes
+        margin={{ top: 12, right: 12, bottom: 40, left: 50 }}
+        xScale={{ type: 'point' }}
+        yScale={{ type: 'linear', min: 0, max: 'auto' }}
+        
+        // Área elegante
+        enableArea={true}
+        areaOpacity={0.15}
+        lineWidth={2}
+        colors={['#2563eb']} // Cor elegante
+        
+        // Pontos sutis
+        pointSize={4}
+        pointColor={{ from: 'color' }}
+        pointBorderWidth={1}
+        pointBorderColor={{ from: 'serieColor' }}
+        
+        // Eixos limpos (sem linhas)
+        axisTop={null}
+        axisRight={null}
+        axisBottom={{
+          tickSize: 0,
+          tickPadding: 8,
+          tickRotation: 0,
+          format: (value) => value.toString().slice(0, 8)
+        }}
+        axisLeft={{
+          tickSize: 0,
+          tickPadding: 8,
+          tickRotation: 0,
+          format: (value) => formatValue(Number(value))
+        }}
+        
+        // Grid apenas horizontal
+        enableGridX={false}
+        enableGridY={true}
+        
+        // Interação elegante
+        useMesh={true}
+        animate={true}
+        motionConfig="gentle"
+        theme={elegantTheme}
+        
+        // Tooltip elegante
+        tooltip={({ point }) => (
+          <div className="bg-white px-3 py-2 shadow-lg rounded-lg border border-gray-200 text-xs">
+            <div className="font-medium text-gray-900">{point.data.x}</div>
+            <div className="text-blue-600 font-mono font-medium tabular-nums">
+              {formatValue(Number(point.data.y))}
+            </div>
+          </div>
+        )}
+      />
     </div>
   );
 }

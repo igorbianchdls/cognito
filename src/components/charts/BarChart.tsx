@@ -1,10 +1,10 @@
 'use client';
 
-import { Bar, BarChart as RechartsBarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { ResponsiveBar } from '@nivo/bar';
 import { BarChartProps, ChartData } from './types';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
-import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
+import { nivoTheme } from './theme';
 
 // Valores padrão robustos e flexíveis
 const DEFAULT_WIDTH = 600;
@@ -59,17 +59,25 @@ export function BarChart(props: BarChartProps) {
     return <EmptyState />;
   }
 
-  // Transformar dados para formato Recharts elegante
-  const chartData = data.map((item, index) => ({
-    category: item.x || item.label || `Item ${index + 1}`,
+  // Transformar dados para formato Nivo
+  const chartData = data.map(item => ({
+    id: item.x || item.label || 'Unknown',
     value: item.y || item.value || 0,
+    label: item.x || item.label || 'Unknown'
   }));
 
-  // ChartConfig elegante com cores hardcoded
-  const chartConfig: ChartConfig = {
-    value: {
-      label: yColumn || 'Value',
-      color: "#2563eb",
+  // Tema elegante inspirado no shadcn/ui
+  const elegantTheme = {
+    ...nivoTheme,
+    axis: {
+      ticks: {
+        line: { stroke: 'transparent' }, // Remove tick lines
+        text: { fontSize: 12, fill: '#6b7280', fontFamily: 'Geist, sans-serif' }
+      },
+      domain: { line: { stroke: 'transparent' } } // Remove axis lines
+    },
+    grid: {
+      line: { stroke: '#f1f5f9', strokeWidth: 1 } // Grid sutil
     }
   };
 
@@ -111,51 +119,68 @@ export function BarChart(props: BarChartProps) {
         </div>
       )}
       
-      <ChartContainer
-        config={chartConfig}
-        className="flex-1 w-full"
+      <div
         style={{ 
+          flex: 1,
           minHeight: `${minHeight}px`,
           height: gridHeight && rowHeight ? calculatedHeight : '100%'
         }}
       >
-        <RechartsBarChart
-          accessibilityLayer
+        <ResponsiveBar
           data={chartData}
-          margin={{
-            left: 12,
-            right: 12,
+          keys={['value']}
+          indexBy="id"
+          
+          // Margins mínimas elegantes
+          margin={{ top: 12, right: 12, bottom: 40, left: 50 }}
+          padding={0.2}
+          
+          // Cor elegante
+          colors={['#2563eb']}
+          
+          // Bordas sutis
+          borderRadius={4}
+          borderColor={{ from: 'color', modifiers: [['darker', 0.3]] }}
+          borderWidth={0}
+          
+          // Eixos limpos (sem linhas)
+          axisTop={null}
+          axisRight={null}
+          axisBottom={{
+            tickSize: 0,
+            tickPadding: 8,
+            tickRotation: 0,
+            format: (value) => value.toString().slice(0, 10)
           }}
-        >
-          <CartesianGrid vertical={false} />
+          axisLeft={{
+            tickSize: 0,
+            tickPadding: 8,
+            tickRotation: 0,
+            format: (value) => formatValue(Number(value))
+          }}
           
-          <XAxis
-            dataKey="category"
-            tickLine={false}
-            tickMargin={10}
-            axisLine={false}
-            tickFormatter={(value) => value.toString().slice(0, 10)}
-          />
+          // Grid apenas horizontal
+          enableGridX={false}
+          enableGridY={true}
           
-          <YAxis
-            tickLine={false}
-            axisLine={false}
-            tickMargin={8}
-            tickFormatter={(value) => formatValue(value)}
-          />
+          // Labels elegantes
+          enableLabel={false}
           
-          <ChartTooltip
-            cursor={false}
-            content={<ChartTooltipContent hideLabel />}
-          />
+          animate={true}
+          motionConfig="gentle"
+          theme={elegantTheme}
           
-          <Bar
-            dataKey="value"
-            fill="var(--color-value)"
-            radius={8}
-          />
-        </RechartsBarChart>
-      </ChartContainer>
+          // Tooltip elegante
+          tooltip={({ id, value }) => (
+            <div className="bg-white px-3 py-2 shadow-lg rounded-lg border border-gray-200 text-xs">
+              <div className="font-medium text-gray-900">{id}</div>
+              <div className="text-blue-600 font-mono font-medium tabular-nums">
+                {formatValue(Number(value))}
+              </div>
+            </div>
+          )}
+        />
+      </div>
     </div>
   );
 }

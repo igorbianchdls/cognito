@@ -1,61 +1,73 @@
 'use client';
 
-import { Pie, PieChart as RechartsPieChart } from 'recharts';
+import { ResponsivePie } from '@nivo/pie';
 import { BaseChartProps } from './types';
+import { nivoTheme } from './theme';
+import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
-import { ChartContainer, ChartLegend, ChartLegendContent, ChartConfig } from '@/components/ui/chart';
 
 export function PieChart({ data, xColumn, yColumn, isFullscreen }: BaseChartProps) {
   if (!data || data.length === 0) {
     return <EmptyState />;
   }
 
-  // Transformar dados para formato Recharts elegante
-  const chartData = data.map((item, index) => {
-    const category = item.x || item.label || `Item ${index + 1}`;
-    const key = category.toLowerCase().replace(/\s+/g, '-');
-    return {
-      category,
-      value: item.y || item.value || 0,
-      fill: `var(--color-${key})`
-    };
-  });
+  // Transformar dados para formato Nivo
+  const chartData = data.map(item => ({
+    id: item.x || item.label || 'Unknown',
+    label: item.x || item.label || 'Unknown',
+    value: item.y || item.value || 0
+  }));
 
-  // ChartConfig elegante com cores hardcoded
-  const chartConfig: ChartConfig = {
-    value: {
-      label: yColumn || 'Value',
+  // Tema elegante inspirado no shadcn/ui
+  const elegantTheme = {
+    ...nivoTheme,
+    labels: {
+      text: { fontSize: 12, fill: '#374151', fontFamily: 'Geist, sans-serif', fontWeight: 500 }
     }
   };
 
-  // Cores hardcoded elegantes
-  const hardcodedColors = ['#2563eb', '#dc2626', '#16a34a', '#ca8a04', '#9333ea', '#c2410c'];
-  chartData.forEach((item, index) => {
-    const key = item.category.toLowerCase().replace(/\s+/g, '-');
-    chartConfig[key] = {
-      label: item.category,
-      color: hardcodedColors[index % hardcodedColors.length]
-    };
-  });
+  // Cores elegantes
+  const elegantColors = ['#2563eb', '#dc2626', '#16a34a', '#ca8a04', '#9333ea', '#c2410c'];
 
   return (
     <div style={{ width: '100%', height: '400px', minWidth: 0 }}>
-      <ChartContainer
-        config={chartConfig}
-        className="mx-auto aspect-square max-h-[300px]"
-      >
-        <RechartsPieChart>
-          <Pie 
-            data={chartData} 
-            dataKey="value"
-            nameKey="category"
-          />
-          <ChartLegend
-            content={<ChartLegendContent nameKey="category" />}
-            className="-translate-y-2 flex-wrap gap-2 *:basis-1/4 *:justify-center"
-          />
-        </RechartsPieChart>
-      </ChartContainer>
+      <ResponsivePie
+        data={chartData}
+        
+        // Margins m\u00ednimas elegantes
+        margin={{ top: 20, right: 20, bottom: 20, left: 20 }}
+        
+        // Estilo elegante
+        innerRadius={0.5}
+        padAngle={1}
+        cornerRadius={2}
+        activeOuterRadiusOffset={4}
+        
+        // Cores elegantes
+        colors={elegantColors}
+        
+        // Bordas sutis
+        borderWidth={0}
+        
+        // Labels elegantes (sem links)
+        enableArcLinkLabels={false}
+        arcLabelsSkipAngle={15}
+        arcLabelsTextColor={{ from: 'color', modifiers: [['darker', 1.8]] }}
+        
+        animate={true}
+        motionConfig="gentle"
+        theme={elegantTheme}
+        
+        // Tooltip elegante
+        tooltip={({ datum }) => (
+          <div className="bg-white px-3 py-2 shadow-lg rounded-lg border border-gray-200 text-xs">
+            <div className="font-medium text-gray-900">{datum.id}</div>
+            <div className="font-mono font-medium tabular-nums" style={{ color: datum.color }}>
+              {formatValue(Number(datum.value))}
+            </div>
+          </div>
+        )}
+      />
     </div>
   );
 }
