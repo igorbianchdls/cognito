@@ -216,8 +216,12 @@ Always call the appropriate tool rather than asking for more parameters. Use mul
               await bigQueryService.initialize();
             }
             
-            // Query table data using BigQuery service
+            // Construct the query that will be executed (for transparency)
+            const projectId = process.env.GOOGLE_PROJECT_ID;
+            const queryToExecute = `SELECT * FROM \`${projectId}.${datasetId}.${tableId}\` LIMIT ${limit}`;
+            
             console.log('🔍 Querying table data...');
+            console.log('📋 SQL Query to execute:', queryToExecute);
             const startTime = Date.now();
             const result = await bigQueryService.queryTable(datasetId, tableId, {
               limit,
@@ -248,7 +252,7 @@ Always call the appropriate tool rather than asking for more parameters. Use mul
               executionTime,
               datasetId,
               tableId,
-              query: result.query,         // SQL query that was executed
+              query: queryToExecute,       // SQL query that was executed (for transparency)
               success: true
             };
           } catch (error) {
