@@ -46,7 +46,7 @@ const defaultBarChartProps = {
   indexBy: 'id'
 };
 
-const defaultTooltip = ({ id, value }: any) => (
+const defaultTooltip = ({ id, value }: { id: string; value: number }) => (
   <div className="bg-white px-3 py-2 shadow-lg rounded-lg border border-gray-200 text-sm">
     <div className="font-medium text-gray-900">{id}</div>
     <div className="text-blue-600 font-semibold">{formatValue(Number(value))}</div>
@@ -71,7 +71,7 @@ export function BarChart(props: BarChartProps) {
     axisLeft = { 
       ...defaultBarChartProps.axisLeft, 
       legend: yColumn || 'Value',
-      format: (value: any) => formatValue(Number(value))
+      format: (value: number) => formatValue(Number(value))
     },
     axisTop = null,
     axisRight = null,
@@ -79,7 +79,7 @@ export function BarChart(props: BarChartProps) {
     labelTextColor = defaultBarChartProps.labelTextColor,
     labelSkipWidth = defaultBarChartProps.labelSkipWidth,
     labelSkipHeight = defaultBarChartProps.labelSkipHeight,
-    labelFormat = (value: any) => formatValue(Number(value)),
+    labelFormat = (value: number) => formatValue(Number(value)),
     animate = defaultBarChartProps.animate,
     motionConfig = defaultBarChartProps.motionConfig,
     theme = nivoTheme,

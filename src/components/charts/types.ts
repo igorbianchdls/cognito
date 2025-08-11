@@ -21,7 +21,7 @@ export interface BarChartProps extends BaseChartProps {
   
   // Colors & Style
   colors?: string[] | { scheme: string };
-  borderColor?: string | { from: string; modifiers: any[] };
+  borderColor?: string | { from: string; modifiers: Array<[string, number]> };
   borderWidth?: number;
   
   // Axes Configuration
@@ -38,25 +38,25 @@ export interface BarChartProps extends BaseChartProps {
     tickPadding?: number;
     legend?: string;
     legendOffset?: number;
-    format?: (value: any) => string;
+    format?: (value: number) => string;
   } | null;
-  axisTop?: any | null;
-  axisRight?: any | null;
+  axisTop?: object | null;
+  axisRight?: object | null;
   
   // Labels
   enableLabel?: boolean;
-  labelTextColor?: string | { from: string; modifiers: any[] };
+  labelTextColor?: string | { from: string; modifiers: Array<[string, number]> };
   labelSkipWidth?: number;
   labelSkipHeight?: number;
-  labelFormat?: (value: any) => string;
+  labelFormat?: (value: number) => string;
   
   // Animation
   animate?: boolean;
   motionConfig?: 'default' | 'gentle' | 'wobbly' | 'stiff' | 'slow';
   
   // Advanced
-  theme?: any;
-  tooltip?: (data: any) => React.ReactNode;
+  theme?: object;
+  tooltip?: (data: { id: string; value: number }) => React.ReactNode;
   keys?: string[];
   indexBy?: string;
 }
