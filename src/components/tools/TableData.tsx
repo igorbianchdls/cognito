@@ -79,6 +79,8 @@ export default function TableData({
     hasSchema: !!schema,
     schemaLength: schema?.length,
     totalRows,
+    hasQuery: !!query,
+    query: query || 'no query provided',
     success,
     error
   });

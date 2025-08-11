@@ -84,6 +84,7 @@ type DataToolOutput = {
   executionTime: number;
   datasetId: string;
   tableId: string;
+  query?: string;
   success: boolean;
   error?: string;
 };
@@ -539,6 +540,7 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
                   executionTime={(dataTool.output as DataToolOutput).executionTime}
                   datasetId={(dataTool.output as DataToolOutput).datasetId}
                   tableId={(dataTool.output as DataToolOutput).tableId}
+                  query={(dataTool.output as DataToolOutput).query}
                   success={(dataTool.output as DataToolOutput).success}
                   error={(dataTool.output as DataToolOutput).error}
                 />
