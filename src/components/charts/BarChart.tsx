@@ -1,6 +1,6 @@
 'use client';
 
-import { ResponsiveBar } from '@nivo/bar';
+import { ResponsiveBar, BarChart as NivoBarChart } from '@nivo/bar';
 import { BarChartProps, ChartData } from './types';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
@@ -127,7 +127,10 @@ export function BarChart(props: BarChartProps) {
           height: '100%'
         }}
       >
-        <ResponsiveBar
+        <div style={{ height: '280px', width: '100%' }}>
+          <NivoBarChart
+            width={800}
+            height={280}
           data={chartData}
           keys={['value']}
           indexBy="id"
@@ -180,7 +183,8 @@ export function BarChart(props: BarChartProps) {
               </div>
             </div>
           )}
-        />
+          />
+        </div>
       </div>
     </div>
   );
