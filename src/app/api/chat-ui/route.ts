@@ -337,70 +337,143 @@ Always call the appropriate tool rather than asking for more parameters. Use mul
         },
       }),
       criarGrafico: tool({
-        description: 'Create data visualizations and charts from BigQuery data',
+        description: 'Create data visualizations and charts from previously loaded table data - use after getData',
         inputSchema: z.object({
-          datasetId: z.string().describe('The dataset ID'),
-          tableId: z.string().describe('The table ID'),
+          tableData: z.array(z.record(z.unknown())).describe('Raw table data from previous getData result (array of row objects)'),
           chartType: z.enum(['bar', 'line', 'pie', 'scatter', 'area']).describe('Type of chart to create'),
-          xColumn: z.string().describe('Column for X-axis'),
-          yColumn: z.string().describe('Column for Y-axis'),
-          title: z.string().optional().describe('Chart title')
+          xColumn: z.string().describe('Column name for X-axis'),
+          yColumn: z.string().describe('Column name for Y-axis (should be numeric for most charts)'),
+          title: z.string().optional().describe('Chart title'),
+          groupBy: z.string().optional().describe('Optional column to group/aggregate by - useful for pie charts')
         }),
-        execute: async ({ datasetId, tableId, chartType, xColumn, yColumn, title }) => {
-          // Mock chart data
-          const chartData = {
-            bar: [
-              { x: 'Jan', y: 4500, label: 'Janeiro' },
-              { x: 'Feb', y: 5200, label: 'Fevereiro' },
-              { x: 'Mar', y: 4800, label: 'Março' },
-              { x: 'Apr', y: 6100, label: 'Abril' },
-              { x: 'May', y: 5900, label: 'Maio' }
-            ],
-            line: [
-              { x: '2024-01', y: 150000 },
-              { x: '2024-02', y: 162000 },
-              { x: '2024-03', y: 158000 },
-              { x: '2024-04', y: 175000 },
-              { x: '2024-05', y: 182000 }
-            ],
-            pie: [
-              { label: 'São Paulo', value: 35, color: '#3b82f6' },
-              { label: 'Rio de Janeiro', value: 25, color: '#ef4444' },
-              { label: 'Belo Horizonte', value: 15, color: '#22c55e' },
-              { label: 'Salvador', value: 12, color: '#f59e0b' },
-              { label: 'Outros', value: 13, color: '#8b5cf6' }
-            ],
-            scatter: [
-              { x: '10', y: 45, label: 'Ponto 1' },
-              { x: '20', y: 65, label: 'Ponto 2' },
-              { x: '30', y: 40, label: 'Ponto 3' },
-              { x: '40', y: 80, label: 'Ponto 4' },
-              { x: '50', y: 75, label: 'Ponto 5' }
-            ],
-            area: [
-              { x: 'Q1', y: 3200 },
-              { x: 'Q2', y: 4100 },
-              { x: 'Q3', y: 3800 },
-              { x: 'Q4', y: 4500 },
-              { x: 'Q5', y: 4200 }
-            ]
-          };
+        execute: async ({ tableData, chartType, xColumn, yColumn, title, groupBy }) => {
+          console.log('📊 Chart from table tool executed:', { 
+            dataRows: tableData.length, 
+            chartType, 
+            xColumn, 
+            yColumn, 
+            title, 
+            groupBy 
+          });
+          
+          try {
+            if (!tableData || tableData.length === 0) {
+              return {
+                success: false,
+                error: 'No table data provided for chart',
+                chartType,
+                xColumn,
+                yColumn
+              };
+            }
 
-          return {
-            chartData: chartData[chartType] || chartData.bar,
-            chartType,
-            title: title || `${yColumn} por ${xColumn}`,
-            xColumn,
-            yColumn,
-            datasetId,
-            tableId,
-            metadata: {
-              totalDataPoints: chartData[chartType]?.length || 0,
-              generatedAt: new Date().toISOString(),
-              executionTime: Math.floor(Math.random() * 800) + 200
-            },
-            success: true
-          };
+            // Validate columns exist in data
+            const firstRow = tableData[0];
+            if (!firstRow.hasOwnProperty(xColumn)) {
+              return {
+                success: false,
+                error: `Column '${xColumn}' not found in table data. Available columns: ${Object.keys(firstRow).join(', ')}`,
+                chartType,
+                xColumn,
+                yColumn
+              };
+            }
+
+            if (!firstRow.hasOwnProperty(yColumn)) {
+              return {
+                success: false,
+                error: `Column '${yColumn}' not found in table data. Available columns: ${Object.keys(firstRow).join(', ')}`,
+                chartType,
+                xColumn,
+                yColumn
+              };
+            }
+
+            let processedData: Array<{ x: string; y: number; label: string; value: number }> = [];
+
+            // Process data based on chart type and groupBy
+            if (chartType === 'pie' || groupBy) {
+              const aggregateColumn = groupBy || xColumn;
+              const valueColumn = yColumn;
+
+              // Group and aggregate data
+              const grouped: Record<string, number> = {};
+              
+              tableData.forEach(row => {
+                const key = String(row[aggregateColumn] || 'Unknown');
+                const value = chartType === 'pie' ? 1 : Number(row[valueColumn]) || 0;
+                grouped[key] = (grouped[key] || 0) + value;
+              });
+
+              // Convert to chart data format and sort by value
+              processedData = Object.entries(grouped)
+                .map(([key, value]) => ({
+                  x: key,
+                  y: value,
+                  label: key,
+                  value: value
+                }))
+                .sort((a, b) => b.y - a.y)
+                .slice(0, 10); // Limit to top 10
+
+            } else {
+              // For scatter/line/bar charts, use raw data
+              processedData = tableData
+                .filter(row => 
+                  row[xColumn] != null && 
+                  row[yColumn] != null &&
+                  !isNaN(Number(row[yColumn]))
+                )
+                .map((row) => ({
+                  x: String(row[xColumn]),
+                  y: Number(row[yColumn]) || 0,
+                  label: String(row[xColumn]),
+                  value: Number(row[yColumn]) || 0
+                }))
+                .slice(0, 20); // Limit to 20 points for performance
+            }
+
+            if (processedData.length === 0) {
+              return {
+                success: false,
+                error: `No valid data points found for chart. Check if column '${yColumn}' contains numeric values.`,
+                chartType,
+                xColumn,
+                yColumn
+              };
+            }
+
+            console.log('📊 Chart data processed:', {
+              originalRows: tableData.length,
+              processedPoints: processedData.length,
+              sampleData: processedData.slice(0, 3)
+            });
+
+            return {
+              success: true,
+              chartData: processedData,
+              chartType,
+              xColumn,
+              yColumn,
+              title: title || `${yColumn} por ${xColumn}`,
+              metadata: {
+                totalDataPoints: processedData.length,
+                generatedAt: new Date().toISOString(),
+                executionTime: Date.now() - Date.now(), // Instant since no query
+                dataSource: 'table-data'
+              }
+            };
+
+          } catch (error) {
+            console.error('❌ Error creating chart from table data:', error);
+            return {
+              success: false,
+              error: error instanceof Error ? error.message : 'Failed to create chart from table data',
+              chartType,
+              xColumn,
+              yColumn
+            };
+          }
         },
       }),
       retrieveResult: tool({

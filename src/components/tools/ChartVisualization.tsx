@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { WebPreviewNavigationButton } from '@/components/ai-elements/web-preview';
 import { Download, Settings, Maximize, FileImage } from 'lucide-react';
+import { ResponsiveBar } from '@nivo/bar';
 
 interface ChartVisualizationProps {
   chartData?: Array<{
@@ -16,12 +17,11 @@ interface ChartVisualizationProps {
   title?: string;
   xColumn?: string;
   yColumn?: string;
-  datasetId?: string;
-  tableId?: string;
   metadata?: {
     totalDataPoints?: number;
     generatedAt?: string;
     executionTime?: number;
+    dataSource?: string;
   };
   success?: boolean;
   error?: string;
@@ -33,8 +33,6 @@ export default function ChartVisualization({
   title,
   xColumn,
   yColumn,
-  datasetId,
-  tableId,
   metadata,
   success,
   error
@@ -138,22 +136,75 @@ export default function ChartVisualization({
       <div className={`p-6 ${isFullscreen ? 'h-full' : ''}`}>
         {chartType === 'bar' && (
           <div className="space-y-4">
-            <div className={`bg-white border border-gray-100 rounded-lg p-6 ${isFullscreen ? 'h-96' : 'h-64'}`}>
-              <div className="flex items-end justify-between h-full">
-                {chartData?.map((item, index) => (
-                  <div key={index} className="flex flex-col items-center h-full justify-end">
-                    <div
-                      className="bg-gradient-to-t from-blue-600 to-blue-400 rounded-t-sm transition-all duration-300 hover:from-blue-700 hover:to-blue-500 shadow-sm"
-                      style={{
-                        width: '32px',
-                        height: `${Math.max((item.y || 0) / Math.max(...(chartData?.map(d => d.y || 0) || [1])) * 80, 2)}%`
-                      }}
-                    />
-                    <div className="text-xs text-gray-600 mt-3 font-medium">{item.x || item.label}</div>
-                    <div className="text-xs text-gray-800 font-semibold">{item.y?.toLocaleString() || item.value}</div>
+            <div className={`bg-white border border-gray-100 rounded-lg p-6 ${isFullscreen ? 'h-[600px]' : 'h-80'}`}>
+              {chartData && chartData.length > 0 ? (
+                <ResponsiveBar
+                  data={chartData.map(item => ({
+                    id: item.x || item.label || 'Unknown',
+                    value: item.y || item.value || 0,
+                    label: item.x || item.label || 'Unknown'
+                  }))}
+                  keys={['value']}
+                  indexBy="id"
+                  margin={{ top: 20, right: 20, bottom: 60, left: 80 }}
+                  padding={0.2}
+                  colors={{ scheme: 'blue_green' }}
+                  borderColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+                  axisTop={null}
+                  axisRight={null}
+                  axisBottom={{
+                    tickSize: 5,
+                    tickPadding: 5,
+                    tickRotation: -45,
+                    legend: xColumn || 'X Axis',
+                    legendPosition: 'middle',
+                    legendOffset: 50
+                  }}
+                  axisLeft={{
+                    tickSize: 5,
+                    tickPadding: 5,
+                    tickRotation: 0,
+                    legend: yColumn || 'Y Axis',
+                    legendPosition: 'middle',
+                    legendOffset: -60,
+                    format: (value) => Number(value).toLocaleString('pt-BR')
+                  }}
+                  enableLabel={true}
+                  label={(d) => Number(d.value).toLocaleString('pt-BR')}
+                  labelSkipWidth={12}
+                  labelSkipHeight={12}
+                  labelTextColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
+                  animate={true}
+                  motionStiffness={90}
+                  motionDamping={15}
+                  theme={{
+                    axis: {
+                      ticks: {
+                        text: { fontSize: 12, fill: '#6b7280' }
+                      },
+                      legend: {
+                        text: { fontSize: 14, fill: '#374151', fontWeight: 500 }
+                      }
+                    },
+                    labels: {
+                      text: { fontSize: 11, fill: '#1f2937', fontWeight: 500 }
+                    }
+                  }}
+                  tooltip={({ id, value }) => (
+                    <div className="bg-white px-3 py-2 shadow-lg rounded border text-sm">
+                      <div className="font-semibold">{id}</div>
+                      <div className="text-blue-600">{Number(value).toLocaleString('pt-BR')}</div>
+                    </div>
+                  )}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  <div className="text-center">
+                    <div className="text-lg font-semibold mb-2">Sem dados para exibir</div>
+                    <div className="text-sm">Verifique se os dados foram carregados corretamente</div>
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
           </div>
         )}

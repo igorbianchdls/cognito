@@ -110,12 +110,12 @@ type InterpretarDadosToolOutput = {
 };
 
 type CriarGraficoToolInput = {
-  datasetId: string;
-  tableId: string;
+  tableData: Array<Record<string, unknown>>;
   chartType: 'bar' | 'line' | 'pie' | 'scatter' | 'area';
   xColumn: string;
   yColumn: string;
   title?: string;
+  groupBy?: string;
 };
 
 type CriarGraficoToolOutput = {
@@ -130,12 +130,11 @@ type CriarGraficoToolOutput = {
   title: string;
   xColumn: string;
   yColumn: string;
-  datasetId: string;
-  tableId: string;
   metadata: {
     totalDataPoints: number;
     generatedAt: string;
     executionTime: number;
+    dataSource?: string;
   };
   success: boolean;
   error?: string;
@@ -613,8 +612,6 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
                   title={(chartTool.output as CriarGraficoToolOutput).title}
                   xColumn={(chartTool.output as CriarGraficoToolOutput).xColumn}
                   yColumn={(chartTool.output as CriarGraficoToolOutput).yColumn}
-                  datasetId={(chartTool.output as CriarGraficoToolOutput).datasetId}
-                  tableId={(chartTool.output as CriarGraficoToolOutput).tableId}
                   metadata={(chartTool.output as CriarGraficoToolOutput).metadata}
                   success={(chartTool.output as CriarGraficoToolOutput).success}
                   error={(chartTool.output as CriarGraficoToolOutput).error}
