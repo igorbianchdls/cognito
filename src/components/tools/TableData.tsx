@@ -64,12 +64,38 @@ export default function TableData({
   success, 
   error 
 }: TableDataProps) {
+  // Debug logs para identificar problema
+  console.log('🎨 ===== TABLEDATA DEBUG =====');
+  console.log('🎨 TableData received props:', { 
+    hasData: !!data,
+    dataType: typeof data,
+    dataLength: Array.isArray(data) ? data.length : 'not array',
+    hasSchema: !!schema,
+    schemaLength: schema?.length,
+    totalRows,
+    success,
+    error
+  });
+
   // Conversão defensiva para produção
   const actualData = Array.isArray(data) 
     ? data 
     : typeof data === 'object' && data !== null 
       ? Object.values(data) as Record<string, unknown>[]
       : [];
+
+  console.log('🎨 actualData after conversion:', {
+    isArray: Array.isArray(actualData),
+    length: actualData.length,
+    sampleData: actualData[0],
+    firstRowKeys: actualData[0] ? Object.keys(actualData[0]) : []
+  });
+
+  console.log('🎨 schema details:', {
+    hasSchema: !!schema,
+    schemaArray: schema,
+    schemaLength: schema?.length
+  });
 
   if (actualData.length === 0 && data) {
     console.warn('⚠️ TableData: Unexpected data format:', typeof data);

@@ -237,10 +237,44 @@ class BigQueryService {
       
       const executionTime = Date.now() - startTime
       
+      // Extract schema from query results metadata if available
+      let schema: { name: string; type: string; mode: string }[] = []
+      
+      // Try to get schema from job statistics first (most reliable)
+      if (jobMetadata.statistics?.query?.schema?.fields) {
+        schema = jobMetadata.statistics.query.schema.fields.map((field: any) => ({
+          name: field.name,
+          type: field.type,
+          mode: field.mode || 'NULLABLE'
+        }))
+      } 
+      // Fallback: extract from destination table schema (less reliable for SELECT queries)
+      else if (jobMetadata.configuration?.query?.destinationTable?.schema?.fields) {
+        schema = jobMetadata.configuration.query.destinationTable.schema.fields
+      }
+      // Last resort: infer schema from first row of data
+      else if (rows.length > 0) {
+        const firstRow = rows[0] as Record<string, unknown>
+        schema = Object.keys(firstRow).map(key => ({
+          name: key,
+          type: this.inferFieldType(firstRow[key]),
+          mode: 'NULLABLE'
+        }))
+        console.log('🔧 Schema inferred from data:', schema)
+      }
+      
+      console.log('🔍 Schema extraction result:', {
+        fromStatistics: !!jobMetadata.statistics?.query?.schema?.fields,
+        fromDestinationTable: !!jobMetadata.configuration?.query?.destinationTable?.schema?.fields,
+        fromInference: !jobMetadata.statistics?.query?.schema?.fields && !jobMetadata.configuration?.query?.destinationTable?.schema?.fields && rows.length > 0,
+        schemaLength: schema.length,
+        schema: schema
+      })
+      
       const result: QueryResult = {
         data: rows as Record<string, unknown>[],
         totalRows: rows.length,
-        schema: jobMetadata.configuration?.query?.destinationTable?.schema?.fields || [],
+        schema,
         executionTime,
         bytesProcessed: jobMetadata.statistics?.totalBytesProcessed 
           ? parseInt(jobMetadata.statistics.totalBytesProcessed) 
@@ -472,6 +506,29 @@ class BigQueryService {
     const entries = Object.keys(this.cache).length
     const size = JSON.stringify(this.cache).length
     return { totalEntries: entries, totalSize: size }
+  }
+
+  /**
+   * Infer BigQuery field type from JavaScript value
+   */
+  private inferFieldType(value: unknown): string {
+    if (value === null || value === undefined) return 'STRING'
+    
+    if (typeof value === 'string') {
+      // Try to detect if it's a date/timestamp
+      if (value.match(/^\d{4}-\d{2}-\d{2}$/)) return 'DATE'
+      if (value.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)) return 'TIMESTAMP'
+      return 'STRING'
+    }
+    
+    if (typeof value === 'number') {
+      return Number.isInteger(value) ? 'INTEGER' : 'FLOAT'
+    }
+    
+    if (typeof value === 'boolean') return 'BOOLEAN'
+    
+    // Default to STRING for complex types
+    return 'STRING'
   }
 
   /**

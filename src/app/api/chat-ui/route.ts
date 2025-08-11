@@ -227,6 +227,20 @@ Always call the appropriate tool rather than asking for more parameters. Use mul
             const executionTime = Date.now() - startTime;
             console.log('✅ Table data retrieved:', result.data.length, 'rows');
             
+            // 🔍 DEBUG: Log da estrutura completa do resultado
+            console.log('🔍 BigQuery result structure:', {
+              hasData: !!result.data,
+              dataLength: result.data?.length,
+              dataType: typeof result.data,
+              isArray: Array.isArray(result.data),
+              hasSchema: !!result.schema,
+              schemaLength: result.schema?.length,
+              sampleData: result.data?.[0],
+              schemaArray: result.schema,
+              totalRows: result.totalRows,
+              resultKeys: Object.keys(result)
+            });
+            
             return {
               data: result.data,           // Array of row objects
               schema: result.schema,       // Column definitions
