@@ -134,6 +134,8 @@ export function BarChart(props: BarChartProps) {
             bottom: margin?.bottom || 12,
             left: margin?.left || 12,
           }}
+          barCategoryGap="20%"
+          maxBarSize={60}
         >
           <CartesianGrid vertical={false} />
           

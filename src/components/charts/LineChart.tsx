@@ -59,10 +59,10 @@ export function LineChart({ data, xColumn, yColumn, isFullscreen }: BaseChartPro
           <Line
             dataKey="value"
             type="natural"
-            stroke="var(--color-value)"
+            stroke="hsl(var(--chart-1))"
             strokeWidth={2}
             dot={{
-              fill: "var(--color-value)",
+              fill: "hsl(var(--chart-1))",
             }}
             activeDot={{
               r: 6,
