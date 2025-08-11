@@ -175,8 +175,7 @@ export default function ChartVisualization({
                   labelSkipHeight={12}
                   labelTextColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
                   animate={true}
-                  motionStiffness={90}
-                  motionDamping={15}
+                  motionConfig="gentle"
                   theme={{
                     axis: {
                       ticks: {
