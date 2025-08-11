@@ -1,10 +1,10 @@
 'use client';
 
-import { ResponsiveBar } from '@nivo/bar';
-import { BarChartProps } from './types';
-import { nivoTheme } from './theme';
+import { Bar, BarChart as RechartsBarChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from 'recharts';
+import { BarChartProps, ChartData } from './types';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, ChartConfig } from '@/components/ui/chart';
 
 // Valores padrão robustos e flexíveis
 const DEFAULT_WIDTH = 600;
@@ -40,46 +40,8 @@ export function BarChart(props: BarChartProps) {
     minHeight = 300,
     xColumn,
     yColumn,
-    padding = DEFAULT_PADDING,
-    innerPadding = DEFAULT_INNER_PADDING,
-    borderRadius = DEFAULT_BORDER_RADIUS,
-    colors = 'nivo',
-    borderColor = { from: 'color' },
-    borderWidth = DEFAULT_BORDER_WIDTH,
-    groupMode = DEFAULT_GROUP_MODE,
-    layout = DEFAULT_LAYOUT,
-    valueScale = { type: 'linear' },
-    indexScale = { type: 'band', round: true },
     enableGridX = DEFAULT_ENABLE_GRID_X,
     enableGridY = DEFAULT_ENABLE_GRID_Y,
-    axisBottom = {
-      tickSize: 5,
-      tickPadding: 5,
-      tickRotation: 0,
-      legend: xColumn || 'Category',
-      legendOffset: 40,
-      legendPosition: 'middle'
-    },
-    axisLeft = {
-      tickSize: 5,
-      tickPadding: 5,
-      tickRotation: 0,
-      legend: yColumn || 'Value',
-      legendOffset: -56,
-      format: (value: number) => formatValue(Number(value))
-    },
-    axisTop = null,
-    axisRight = null,
-    enableLabel = DEFAULT_ENABLE_LABEL,
-    labelTextColor = { from: 'color', modifiers: [['darker', 1.6]] },
-    labelSkipWidth = 0,
-    labelSkipHeight = 0,
-    labelOffset = DEFAULT_LABEL_OFFSET,
-    enableTotals = DEFAULT_ENABLE_TOTALS,
-    totalsOffset = DEFAULT_TOTALS_OFFSET,
-    legends = [],
-    animate = true,
-    motionConfig = 'gentle',
     title,
     subtitle,
     titleFontSize = 18,
@@ -89,30 +51,33 @@ export function BarChart(props: BarChartProps) {
     subtitleFontWeight = 400,
     subtitleColor = '#6b7280',
     backgroundColor = '#fff',
-    theme = nivoTheme,
-    tooltip = defaultTooltip,
     keys,
-    indexBy = 'categoria'
+    indexBy = 'category'
   } = props;
 
   if (!data || data.length === 0) {
     return <EmptyState />;
   }
 
-  // Adaptar dados dinamicamente como na referência
-  const nivoData = data.map(item => ({
-    categoria: item.x || item.label || 'Unknown',
-    valor: item.y || item.value || 0,
+  // Transformar dados para formato Recharts
+  const chartData = data.map((item, index) => ({
+    category: item.x || item.label || `Item ${index + 1}`,
+    value: item.y || item.value || 0,
     ...item // Para múltiplas séries
   }));
 
   // Inferir keys dinamicamente se não for passado
   const usedKeys = keys && keys.length > 0
     ? keys
-    : Object.keys(nivoData[0] || {}).filter(k => k !== 'categoria' && k !== 'label');
+    : ['value']; // Recharts usa keys simples
 
-  // Normalizar colors para garantir esquema válido
-  const normalizedColors = typeof colors === 'string' ? { scheme: colors } : colors;
+  // Configuração de cores para shadcn/ui chart
+  const chartConfig: ChartConfig = {
+    value: {
+      label: yColumn || 'Value',
+      color: 'hsl(var(--chart-1))',
+    }
+  };
 
   // Calcular altura baseada no grid layout
   const calculatedHeight = gridHeight && rowHeight ? rowHeight * gridHeight : height;
@@ -123,7 +88,6 @@ export function BarChart(props: BarChartProps) {
         width: '100%',
         height: gridHeight && rowHeight ? `${calculatedHeight}px` : '100%',
         background: backgroundColor,
-        borderRadius: borderRadius,
         padding: 12,
         margin: '0 auto',
         display: 'flex',
@@ -152,73 +116,57 @@ export function BarChart(props: BarChartProps) {
           {subtitle}
         </div>
       )}
-      <div style={{ 
-        width: '100%', 
-        height: gridHeight && rowHeight ? calculatedHeight : '100%',
-        minHeight: `${minHeight}px`
-      }}>
-        <ResponsiveBar
-          data={nivoData}
-          keys={usedKeys}
-          indexBy={indexBy}
-          margin={margin}
-          padding={padding}
-          innerPadding={innerPadding}
-          groupMode={groupMode}
-          layout={layout}
-          valueScale={valueScale}
-          indexScale={indexScale}
-          colors={normalizedColors}
-          borderRadius={borderRadius}
-          borderWidth={borderWidth}
-          borderColor={borderColor}
-          axisTop={axisTop}
-          axisRight={axisRight}
-          axisBottom={axisBottom}
-          axisLeft={axisLeft}
-          enableGridX={enableGridX}
-          enableGridY={enableGridY}
-          enableLabel={enableLabel}
-          labelSkipWidth={labelSkipWidth}
-          labelSkipHeight={labelSkipHeight}
-          labelTextColor={labelTextColor}
-          labelOffset={labelOffset}
-          enableTotals={enableTotals}
-          totalsOffset={totalsOffset}
-          legends={legends.length > 0 ? legends : []}
-          animate={animate}
-          motionConfig={motionConfig}
-          theme={{
-            ...theme,
-            axis: {
-              ...theme.axis,
-              legend: {
-                text: {
-                  fontSize: 14,
-                  fontWeight: 600,
-                  fill: '#374151',
-                },
-              },
-              ticks: {
-                text: {
-                  fontSize: 12,
-                  fill: '#6b7280',
-                },
-              },
-            },
-            legends: {
-              text: {
-                fontSize: 12,
-                fill: '#6b7280',
-              },
-            },
+      
+      <ChartContainer
+        config={chartConfig}
+        className="flex-1 w-full"
+        style={{ 
+          minHeight: `${minHeight}px`,
+          height: gridHeight && rowHeight ? calculatedHeight : '100%'
+        }}
+      >
+        <RechartsBarChart
+          data={chartData}
+          margin={{
+            top: margin?.top || 20,
+            right: margin?.right || 12,
+            bottom: margin?.bottom || 12,
+            left: margin?.left || 12,
           }}
-          tooltip={tooltip}
-          role="application"
-          ariaLabel="Bar chart"
-          barAriaLabel={function(e) { return `${e.id}: ${e.formattedValue} in category: ${e.indexValue}` }}
-        />
-      </div>
+        >
+          {enableGridX && <CartesianGrid vertical={true} />}
+          {enableGridY && <CartesianGrid horizontal={true} />}
+          
+          <XAxis
+            dataKey="category"
+            tickLine={false}
+            axisLine={false}
+            tickMargin={8}
+            tickFormatter={(value) => value}
+          />
+          
+          <YAxis
+            tickLine={false}
+            axisLine={false}
+            tickMargin={8}
+            tickFormatter={(value) => formatValue(value)}
+          />
+          
+          <ChartTooltip
+            cursor={false}
+            content={<ChartTooltipContent />}
+          />
+          
+          {usedKeys.map((key, index) => (
+            <Bar
+              key={key}
+              dataKey={key}
+              fill={`var(--color-${key})`}
+              radius={4}
+            />
+          ))}
+        </RechartsBarChart>
+      </ChartContainer>
     </div>
   );
 }
