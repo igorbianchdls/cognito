@@ -2,6 +2,7 @@ import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, tool, UIMessage } from 'ai';
 import { z } from 'zod';
 import { bigQueryService } from '@/services/bigquery';
+import { agentsetService } from '@/services/agentset';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -19,7 +20,7 @@ Available tools:
 - getData: Get data from a specific table (requires datasetId and tableId)
 - interpretarDados: Analyze and interpret data with insights and recommendations (requires datasetId, tableId)
 - criarGrafico: Create visualizations and charts (supports: bar, line, pie, scatter, area, heatmap, radar, funnel, treemap, stream)
-- retrieveResult: Search documents using RAG (requires query parameter) - retrieves relevant documents from vector database
+- retrieveResult: Search documents using RAG (requires query parameter) - retrieves relevant documents from vector database with real semantic search
 - criarDashboard: Create interactive dashboards with KPIs (requires datasetIds, title, dashboardType)
 - executarSQL: Execute custom SQL queries with validation (requires sqlQuery, optional datasetId, dryRun)
 - criarTabela: Create new BigQuery tables with custom schema (requires datasetId, tableName, schema)
@@ -562,122 +563,111 @@ This optimization reduces token usage significantly while maintaining full chart
         },
       }),
       retrieveResult: tool({
-        description: 'Retrieve results from RAG search - searches documents in vector database',
+        description: 'Retrieve results from RAG search - searches documents in vector database with real semantic search',
         inputSchema: z.object({
           query: z.string().describe('Search query to find relevant documents'),
-          resultId: z.string().optional().describe('The result ID to retrieve'),
-          queryId: z.string().optional().describe('The query ID to retrieve'),
-          resultType: z.enum(['analysis', 'chart', 'dashboard', 'query', 'rag']).optional().describe('Type of result to retrieve')
+          topK: z.number().optional().default(10).describe('Number of most relevant documents to retrieve (1-20)'),
+          namespaceId: z.string().optional().describe('Optional specific namespace ID to search in')
         }),
-        execute: async ({ query, resultId, queryId, resultType = 'rag' }) => {
-          // Mock RAG search - simulate vector database search
-          const mockDocuments = [
-            {
-              id: 'doc_001',
-              title: 'BigQuery Performance Best Practices',
-              url: 'https://cloud.google.com/bigquery/docs/best-practices-performance-overview',
-              content: 'Best practices for optimizing BigQuery query performance including partitioning, clustering, and query optimization techniques.',
-              snippet: 'Use partitioning and clustering to improve query performance. Avoid SELECT * queries.',
-              relevanceScore: 0.95
-            },
-            {
-              id: 'doc_002', 
-              title: 'Data Analytics with SQL',
-              url: 'https://example.com/sql-analytics',
-              content: 'Complete guide to performing data analytics using SQL queries with practical examples.',
-              snippet: 'SQL analytics enables data-driven insights through aggregations, window functions, and CTEs.',
-              relevanceScore: 0.87
-            },
-            {
-              id: 'doc_003',
-              title: 'Machine Learning on BigQuery',
-              url: 'https://cloud.google.com/bigquery-ml/docs/introduction',
-              content: 'Introduction to BigQuery ML for creating and executing machine learning models.',
-              snippet: 'BigQuery ML enables data scientists to build ML models using SQL queries.',
-              relevanceScore: 0.79
-            },
-            {
-              id: 'doc_004',
-              title: 'Data Visualization Techniques',
-              url: 'https://example.com/data-viz',
-              content: 'Best practices for creating effective data visualizations and dashboards.',
-              snippet: 'Choose the right chart type based on your data and audience needs.',
-              relevanceScore: 0.72
+        execute: async ({ query, topK = 10, namespaceId }) => {
+          console.log('🔍 RAG search tool executed (Nexus):', { query, topK, namespaceId });
+          
+          try {
+            // Initialize agentset service if not already done
+            if (!agentsetService['client']) {
+              console.log('⚡ Initializing Agentset service...');
+              await agentsetService.initialize();
             }
-          ];
 
-          // Simulate vector search by filtering documents based on query relevance
-          const searchQuery = query?.toLowerCase() || '';
-          const relevantDocs = mockDocuments
-            .filter(doc => 
-              doc.title.toLowerCase().includes(searchQuery) ||
-              doc.content.toLowerCase().includes(searchQuery) ||
-              searchQuery.split(' ').some(term => 
-                doc.title.toLowerCase().includes(term) || 
-                doc.content.toLowerCase().includes(term)
-              )
-            )
-            .sort((a, b) => b.relevanceScore - a.relevanceScore)
-            .slice(0, 3); // Top 3 most relevant
+            // Generate answer using RAG real
+            console.log('🤖 Generating RAG answer for query:', query);
+            
+            const result = await agentsetService.generateAnswer({
+              query,
+              topK,
+              namespaceId
+            });
 
-          // If no query provided, fall back to cached results
-          if (!query) {
-            const cachedResults: Record<string, {
-              type: string;
-              data: Record<string, unknown>;
-            }> = {
-              'result_001': {
-                type: 'analysis',
+            if (!result.success) {
+              console.log('❌ RAG search failed:', result.error);
+              return {
+                resultId: `rag_${Date.now()}`,
+                resultType: 'rag',
+                result: {
+                  type: 'rag',
+                  query,
+                  response: `Não foi possível encontrar informações relevantes para "${query}".`,
+                  documentsFound: 0,
+                  data: {
+                    message: result.error || 'Failed to search knowledge base',
+                    searchQuery: query,
+                    totalDocuments: 0,
+                    relevantDocuments: 0
+                  }
+                },
+                sources: [],
+                retrievedAt: new Date().toISOString(),
+                success: false,
+                error: result.error
+              };
+            }
+
+            console.log('✅ RAG search completed successfully:', {
+              query,
+              sourcesCount: result.sources?.length || 0,
+              hasAnswer: !!result.answer
+            });
+
+            return {
+              resultId: `rag_${Date.now()}`,
+              resultType: 'rag',
+              result: {
+                type: 'rag',
+                query,
+                response: result.answer,
+                documentsFound: result.sources?.length || 0,
                 data: {
-                  dataset: 'ecommerce_data',
-                  table: 'customers',
-                  insights: ['Customer growth rate: +15%', 'Top segment: Young professionals'],
-                  generatedAt: '2024-08-10T10:30:00Z'
+                  message: result.answer,
+                  searchQuery: query,
+                  totalDocuments: result.sources?.length || 0,
+                  relevantDocuments: result.sources?.length || 0
                 }
-              }
+              },
+              sources: result.sources?.map(source => ({
+                id: `src_${Date.now()}_${Math.random()}`,
+                title: source.metadata?.title || 'Document',
+                url: source.metadata?.url || '#',
+                snippet: source.content || source.text || '',
+                relevanceScore: source.score || 0
+              })) || [],
+              retrievedAt: new Date().toISOString(),
+              success: true,
+              sourcesCount: result.sources?.length || 0
             };
 
-            const result = cachedResults[resultId || queryId || 'result_001'];
+          } catch (error) {
+            console.error('❌ Error in RAG search tool:', error);
             return {
-              resultId: resultId || queryId,
-              resultType,
-              result: result || { message: 'Result not found' },
+              resultId: `rag_${Date.now()}`,
+              resultType: 'rag',
+              result: {
+                type: 'rag',
+                query,
+                response: `Erro interno ao buscar informações para "${query}".`,
+                documentsFound: 0,
+                data: {
+                  message: 'Internal error occurred during search',
+                  searchQuery: query,
+                  totalDocuments: 0,
+                  relevantDocuments: 0
+                }
+              },
+              sources: [],
               retrievedAt: new Date().toISOString(),
-              success: !!result,
-              sources: []
+              success: false,
+              error: error instanceof Error ? error.message : 'Unknown RAG search error'
             };
           }
-
-          // Generate AI response based on found documents
-          const response = relevantDocs.length > 0 
-            ? `Based on the search for "${query}", I found ${relevantDocs.length} relevant documents. ${relevantDocs[0]?.snippet || 'Here are the key insights from the retrieved documents.'}`
-            : `No relevant documents found for "${query}". Please try a different search query.`;
-          
-          return {
-            resultId: `rag_${Date.now()}`,
-            resultType: 'rag',
-            result: {
-              type: 'rag',
-              query,
-              response,
-              documentsFound: relevantDocs.length,
-              data: { 
-                message: response,
-                searchQuery: query,
-                totalDocuments: mockDocuments.length,
-                relevantDocuments: relevantDocs.length
-              }
-            },
-            sources: relevantDocs.map(doc => ({
-              id: doc.id,
-              title: doc.title,
-              url: doc.url,
-              snippet: doc.snippet,
-              relevanceScore: doc.relevanceScore
-            })),
-            retrievedAt: new Date().toISOString(),
-            success: true
-          };
         },
       }),
       criarDashboard: tool({
