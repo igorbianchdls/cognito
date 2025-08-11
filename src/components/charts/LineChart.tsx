@@ -1,67 +1,75 @@
 'use client';
 
-import { ResponsiveLine } from '@nivo/line';
+import { CartesianGrid, Line, LineChart as RechartsLineChart, XAxis, YAxis } from 'recharts';
 import { BaseChartProps } from './types';
-import { nivoTheme, colorSchemes } from './theme';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartConfig } from '@/components/ui/chart';
 
 export function LineChart({ data, xColumn, yColumn, isFullscreen }: BaseChartProps) {
   if (!data || data.length === 0) {
     return <EmptyState />;
   }
 
+  // Transformar dados para formato Recharts
+  const chartData = data.map((item, index) => ({
+    category: item.x || item.label || `Item ${index + 1}`,
+    value: item.y || item.value || 0,
+  }));
+
+  // Configuração de cores para shadcn/ui chart
+  const chartConfig: ChartConfig = {
+    value: {
+      label: yColumn || 'Value',
+      color: "var(--chart-1)",
+    }
+  };
+
   return (
-    <ResponsiveLine
-      data={[
-        {
-          id: 'series',
-          data: data.map(item => ({
-            x: item.x || item.label || 'Unknown',
-            y: item.y || item.value || 0
-          }))
-        }
-      ]}
-      margin={{ top: 20, right: 20, bottom: 60, left: 80 }}
-      xScale={{ type: 'point' }}
-      yScale={{
-        type: 'linear',
-        min: 'auto',
-        max: 'auto',
-        stacked: false,
-        reverse: false
-      }}
-      yFormat={(value) => formatValue(Number(value))}
-      axisTop={null}
-      axisRight={null}
-      axisBottom={{
-        tickSize: 5,
-        tickPadding: 5,
-        tickRotation: -45,
-        legend: xColumn || 'X Axis',
-        legendOffset: 50,
-        legendPosition: 'middle'
-      }}
-      axisLeft={{
-        tickSize: 5,
-        tickPadding: 5,
-        tickRotation: 0,
-        legend: yColumn || 'Y Axis',
-        legendOffset: -60,
-        legendPosition: 'middle',
-        format: (value) => formatValue(Number(value))
-      }}
-      pointSize={8}
-      pointColor={{ from: 'color' }}
-      pointBorderWidth={2}
-      pointBorderColor={{ from: 'serieColor' }}
-      pointLabel={(point) => `${point.data.y}`}
-      pointLabelYOffset={-12}
-      useMesh={true}
-      theme={nivoTheme}
-      colors={{ scheme: colorSchemes.primary }}
-      animate={true}
-      motionConfig="gentle"
-    />
+    <div style={{ width: '100%', height: '400px', minWidth: 0 }}>
+      <ChartContainer config={chartConfig} className="h-full w-full">
+        <RechartsLineChart
+          accessibilityLayer
+          data={chartData}
+          margin={{
+            left: 12,
+            right: 12,
+            top: 12,
+            bottom: 12,
+          }}
+        >
+          <CartesianGrid vertical={false} />
+          <XAxis
+            dataKey="category"
+            tickLine={false}
+            axisLine={false}
+            tickMargin={8}
+            tickFormatter={(value) => value.toString().slice(0, 3)}
+          />
+          <YAxis
+            tickLine={false}
+            axisLine={false}
+            tickMargin={8}
+            tickFormatter={(value) => formatValue(value)}
+          />
+          <ChartTooltip
+            cursor={false}
+            content={<ChartTooltipContent hideLabel />}
+          />
+          <Line
+            dataKey="value"
+            type="natural"
+            stroke="var(--color-value)"
+            strokeWidth={2}
+            dot={{
+              fill: "var(--color-value)",
+            }}
+            activeDot={{
+              r: 6,
+            }}
+          />
+        </RechartsLineChart>
+      </ChartContainer>
+    </div>
   );
 }
