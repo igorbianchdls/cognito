@@ -117,7 +117,7 @@ export function BarChart(props: BarChartProps) {
           indexBy="id"
           margin={{ top: 20, right: 20, bottom: 60, left: 80 }}
           padding={0.2}
-          colors={{ scheme: colorSchemes.primary }}
+          colors={{ scheme: 'category10' }}
           borderColor={{ from: 'color', modifiers: [['darker', 1.6]] }}
           axisTop={null}
           axisRight={null}

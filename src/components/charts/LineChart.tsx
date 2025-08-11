@@ -60,7 +60,9 @@ export function LineChart({ data, xColumn, yColumn, isFullscreen }: BaseChartPro
         pointLabelYOffset={-12}
         useMesh={true}
         theme={nivoTheme}
-        colors={{ scheme: colorSchemes.primary }}
+        lineWidth={3}
+        enableArea={false}
+        colors={{ scheme: 'category10' }}
         animate={true}
         motionConfig="gentle"
       />
