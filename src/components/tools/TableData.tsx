@@ -64,6 +64,17 @@ export default function TableData({
   success, 
   error 
 }: TableDataProps) {
+  // Conversão defensiva para produção
+  const actualData = Array.isArray(data) 
+    ? data 
+    : typeof data === 'object' && data !== null 
+      ? Object.values(data) as Record<string, unknown>[]
+      : [];
+
+  if (actualData.length === 0 && data) {
+    console.warn('⚠️ TableData: Unexpected data format:', typeof data);
+  }
+
   if (error || !success) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -78,7 +89,7 @@ export default function TableData({
     );
   }
 
-  if (!data || data.length === 0) {
+  if (!actualData || actualData.length === 0) {
     return (
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
         <div className="flex items-center gap-2">
@@ -146,7 +157,7 @@ export default function TableData({
                   {col.name}
                 </th>
               ))}
-              {!schema && data.length > 0 && Object.keys(data[0]).map((key) => (
+              {!schema && actualData.length > 0 && Object.keys(actualData[0]).map((key) => (
                 <th
                   key={key}
                   className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
@@ -157,7 +168,7 @@ export default function TableData({
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {data.map((row, index) => (
+            {actualData.map((row, index) => (
               <tr key={index} className="hover:bg-gray-50">
                 {schema && schema.map((col) => (
                   <td key={col.name} className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
@@ -178,8 +189,8 @@ export default function TableData({
       {/* Footer */}
       <div className="bg-gray-50 px-4 py-2 border-t border-gray-200">
         <p className="text-xs text-gray-500">
-          Mostrando {data.length} de {totalRows || data.length} linhas
-          {data.length < (totalRows || 0) && " (resultados limitados)"}
+          Mostrando {actualData.length} de {totalRows || actualData.length} linhas
+          {actualData.length < (totalRows || 0) && " (resultados limitados)"}
         </p>
       </div>
     </div>
