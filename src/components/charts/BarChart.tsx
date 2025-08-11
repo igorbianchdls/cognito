@@ -1,6 +1,6 @@
 'use client';
 
-import { ResponsiveBar, BarChart as NivoBarChart } from '@nivo/bar';
+import { ResponsiveBar } from '@nivo/bar';
 import { BarChartProps, ChartData } from './types';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
@@ -127,16 +127,14 @@ export function BarChart(props: BarChartProps) {
           height: '100%'
         }}
       >
-        <div style={{ height: '280px', width: '100%' }}>
-          <NivoBarChart
-            width={800}
-            height={280}
+        <div style={{ height: '280px', width: '100%', overflow: 'hidden' }}>
+          <ResponsiveBar
           data={chartData}
           keys={['value']}
           indexBy="id"
           
-          // Margins idênticas ao LineChart funcionando
-          margin={{ top: 12, right: 12, bottom: 40, left: 50 }}
+          // Margins reduzidas para evitar overflow
+          margin={{ top: 12, right: 12, bottom: 20, left: 50 }}
           padding={0.2}
           
           // Cor elegante
