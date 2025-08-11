@@ -126,7 +126,7 @@ type CriarGraficoToolOutput = {
     value?: number;
     color?: string;
   }>;
-  chartType: string;
+  chartType: 'bar' | 'line' | 'pie' | 'scatter' | 'area' | 'heatmap' | 'radar' | 'funnel' | 'treemap' | 'stream';
   title: string;
   xColumn: string;
   yColumn: string;
