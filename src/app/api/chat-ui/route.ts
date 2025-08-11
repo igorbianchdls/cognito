@@ -141,7 +141,6 @@ Always call the appropriate tool rather than asking for more parameters. Use mul
             const datasetsWithStringDates = datasets.map(dataset => ({
               ...dataset,
               creationTime: dataset.creationTime ? dataset.creationTime.toISOString() : undefined,
-              lastModifiedTime: dataset.lastModifiedTime ? dataset.lastModifiedTime.toISOString() : undefined,
             }));
             
             return {
