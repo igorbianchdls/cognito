@@ -22,12 +22,12 @@ import type { ChartData } from '@/components/charts';
 // Mock data for different chart types
 const mockData = {
   bar: [
-    { id: 'Janeiro', value: 245, color: '#8B5CF6' },
-    { id: 'Fevereiro', value: 182, color: '#06B6D4' },
-    { id: 'Março', value: 398, color: '#10B981' },
-    { id: 'Abril', value: 312, color: '#F59E0B' },
-    { id: 'Maio', value: 428, color: '#EF4444' },
-    { id: 'Junho', value: 256, color: '#8B5CF6' }
+    { x: 'Janeiro', value: 245, color: '#8B5CF6' },
+    { x: 'Fevereiro', value: 182, color: '#06B6D4' },
+    { x: 'Março', value: 398, color: '#10B981' },
+    { x: 'Abril', value: 312, color: '#F59E0B' },
+    { x: 'Maio', value: 428, color: '#EF4444' },
+    { x: 'Junho', value: 256, color: '#8B5CF6' }
   ] as ChartData[],
 
   line: [
@@ -53,12 +53,12 @@ const mockData = {
         { x: 'Jun', y: 110 }
       ]
     }
-  ],
+  ] as any,
 
   pie: [
-    { id: 'Desktop', value: 45, color: '#8B5CF6' },
-    { id: 'Mobile', value: 35, color: '#06B6D4' },
-    { id: 'Tablet', value: 20, color: '#10B981' }
+    { label: 'Desktop', value: 45, color: '#8B5CF6' },
+    { label: 'Mobile', value: 35, color: '#06B6D4' },
+    { label: 'Tablet', value: 20, color: '#10B981' }
   ] as ChartData[],
 
   scatter: [
@@ -82,7 +82,7 @@ const mockData = {
         { x: 32, y: 38 }
       ]
     }
-  ],
+  ] as any,
 
   area: [
     {
@@ -103,13 +103,13 @@ const mockData = {
         { x: 'Q4', y: 980 }
       ]
     }
-  ],
+  ] as any,
 
   funnel: [
-    { id: 'Visitantes', value: 10000, color: '#8B5CF6' },
-    { id: 'Interessados', value: 5000, color: '#06B6D4' },
-    { id: 'Leads', value: 2000, color: '#10B981' },
-    { id: 'Clientes', value: 500, color: '#F59E0B' }
+    { label: 'Visitantes', value: 10000, color: '#8B5CF6' },
+    { label: 'Interessados', value: 5000, color: '#06B6D4' },
+    { label: 'Leads', value: 2000, color: '#10B981' },
+    { label: 'Clientes', value: 500, color: '#F59E0B' }
   ] as ChartData[],
 
   treemap: {
@@ -119,7 +119,7 @@ const mockData = {
       { id: 'Produto B', value: 30, color: '#06B6D4' },
       { id: 'Produto C', value: 25, color: '#10B981' }
     ]
-  },
+  } as any,
 
   heatmap: [
     { id: 'Segunda', data: [{ x: '9h', y: 8 }, { x: '12h', y: 12 }, { x: '15h', y: 15 }, { x: '18h', y: 10 }] },
@@ -127,7 +127,7 @@ const mockData = {
     { id: 'Quarta', data: [{ x: '9h', y: 6 }, { x: '12h', y: 16 }, { x: '15h', y: 20 }, { x: '18h', y: 14 }] },
     { id: 'Quinta', data: [{ x: '9h', y: 12 }, { x: '12h', y: 18 }, { x: '15h', y: 22 }, { x: '18h', y: 16 }] },
     { id: 'Sexta', data: [{ x: '9h', y: 14 }, { x: '12h', y: 20 }, { x: '15h', y: 25 }, { x: '18h', y: 18 }] }
-  ],
+  ] as any,
 
   radar: [
     {
@@ -160,7 +160,7 @@ const mockData = {
       user2: 50,
       user3: 80
     }
-  ],
+  ] as any,
 
   stream: [
     {
@@ -187,7 +187,7 @@ const mockData = {
       'Mai': 16,
       'Jun': 20
     }
-  ]
+  ] as any
 };
 
 export default function NivoChartsShowcase() {
