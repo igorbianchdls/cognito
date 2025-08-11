@@ -1,3 +1,6 @@
+import { OrdinalColorScaleConfig } from '@nivo/colors';
+import { ComputedDatum, BarDatum } from '@nivo/bar';
+
 export interface ChartData {
   x?: string;
   y?: number;
@@ -20,7 +23,7 @@ export interface BarChartProps extends BaseChartProps {
   borderRadius?: number;
   
   // Colors & Style
-  colors?: string[] | { scheme: string };
+  colors?: OrdinalColorScaleConfig<ComputedDatum<BarDatum>>;
   borderColor?: string | { from: string; modifiers: Array<[string, number]> };
   borderWidth?: number;
   

@@ -14,8 +14,8 @@ const defaultBarChartProps = {
   borderRadius: 4, // Barras arredondadas
   borderWidth: 0,
   
-  // Cores suaves inspiradas no shadcn/ui
-  colors: ['#3B82F6', '#60A5FA', '#93C5FD', '#DBEAFE', '#1D4ED8'],
+  // Cores suaves inspiradas no shadcn/ui - usando scheme do Nivo
+  colors: { scheme: 'category10' },
   
   // Eixos limpos
   axisBottom: {
