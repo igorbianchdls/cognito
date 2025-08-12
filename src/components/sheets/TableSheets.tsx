@@ -182,7 +182,7 @@ export function TableSheets<TData extends TableData>({
         header: ({ column }: { column: { toggleSorting: (desc?: boolean) => void; getIsSorted: () => false | "asc" | "desc" } }) => {
           const headerText = typeof col.header === 'string' ? col.header : 
                             typeof col.header === 'function' ? 'Column' : 
-                            (col as any).accessorKey || 'Column'
+                            (col as { accessorKey?: string }).accessorKey || 'Column'
           
           return (
             <Button
@@ -315,7 +315,7 @@ export function TableSheets<TData extends TableData>({
           )
         }
       }
-    }))
+    })
 
     return [...cols, ...editableColumns]
   }, [columns, data, editable, editingCell, onCellEdit])
