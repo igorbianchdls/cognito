@@ -136,7 +136,7 @@ export function TableSheets<TData extends TableData>({
     // Add original columns with edit functionality
     const editableColumns = columns.map((col) => ({
       ...col,
-      cell: editable ? ({ row, column }: { row: any; column: any }) => {
+      cell: editable ? ({ row, column }: { row: { index: number; getValue: (id: string) => unknown }; column: { id: string } }) => {
         const value = row.getValue(column.id)
         const isEditing = editingCell?.rowIndex === row.index && editingCell?.field === column.id
         
@@ -168,7 +168,7 @@ export function TableSheets<TData extends TableData>({
             className="cursor-pointer hover:bg-gray-50 p-1 rounded"
             onDoubleClick={() => setEditingCell({ rowIndex: row.index, field: column.id })}
           >
-            {value}
+            {String(value || '')}
           </div>
         )
       } : col.cell,
@@ -215,7 +215,7 @@ export function TableSheets<TData extends TableData>({
       const headers = columns.map(col => col.id || '').join(',')
       const rows = data.map(row => 
         columns.map(col => {
-          const accessorKey = (col as any).accessorKey || col.id
+          const accessorKey = (col as ColumnDef<TData> & { accessorKey?: string }).accessorKey || col.id
           const value = row[accessorKey as keyof TData]
           return typeof value === 'string' && value.includes(',') 
             ? `"${value}"` 
