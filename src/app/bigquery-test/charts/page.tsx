@@ -134,7 +134,7 @@ const tableColumns: ColumnDef<typeof tableData[0]>[] = [
     cell: ({ row }) => {
       const value = parseFloat(row.getValue("value"))
       const formatted = new Intl.NumberFormat("pt-BR").format(value)
-      return <div className="font-medium">{formatted}</div>
+      return <div className="font-medium text-muted-foreground">{formatted}</div>
     },
   },
   {
@@ -162,7 +162,7 @@ const tableColumns: ColumnDef<typeof tableData[0]>[] = [
     header: createSortableHeader("Data"),
     cell: ({ row }) => {
       const date = new Date(row.getValue("date"))
-      return <div>{date.toLocaleDateString('pt-BR')}</div>
+      return <div className="text-muted-foreground">{date.toLocaleDateString('pt-BR')}</div>
     },
   },
   createActionsColumn([
