@@ -88,24 +88,11 @@ export default function DatasetsList({ datasets, success, error }: DatasetsListP
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-      <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-        <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 1.79 4 4 4h8c2.21 0 4-1.79 4-4V7c0-2.21-1.79-4-4-4H8c-2.21 0-4 1.79-4 4z" />
-          </svg>
-          Datasets BigQuery ({datasets.length})
-        </h3>
-      </div>
-      
-      <div className="p-4">
-        <DataTable
-          columns={columns}
-          data={datasets}
-          searchPlaceholder="Filtrar datasets..."
-          pageSize={10}
-        />
-      </div>
-    </div>
+    <DataTable
+      columns={columns}
+      data={datasets}
+      searchPlaceholder="Filtrar datasets..."
+      pageSize={10}
+    />
   );
 }

@@ -175,41 +175,21 @@ export default function TableData({
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-      {/* Header com informações */}
-      <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-            Dados: {datasetId}.{tableId}
-          </h3>
-          <div className="flex items-center gap-4 text-sm text-gray-600">
-            {totalRows && (
-              <span>Total: {totalRows.toLocaleString('pt-BR')} linhas</span>
-            )}
-            {executionTime && (
-              <span>Tempo: {executionTime}ms</span>
-            )}
-          </div>
-        </div>
-      </div>
-
+    <div>
       {/* Tabs Navigation */}
-      <div className="border-b border-gray-200">
-        <div className="flex">
-          <button
-            onClick={() => setActiveTab('table')}
-            className={`px-4 py-2 font-medium text-sm transition-colors ${
-              activeTab === 'table'
-                ? 'text-blue-700 border-b-2 border-blue-500 bg-blue-50'
-                : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
-            }`}
-          >
-            📊 Tabela
-          </button>
-          {query && (
+      {query && (
+        <div className="border-b border-gray-200 mb-4">
+          <div className="flex">
+            <button
+              onClick={() => setActiveTab('table')}
+              className={`px-4 py-2 font-medium text-sm transition-colors ${
+                activeTab === 'table'
+                  ? 'text-blue-700 border-b-2 border-blue-500 bg-blue-50'
+                  : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+              }`}
+            >
+              📊 Tabela
+            </button>
             <button
               onClick={() => setActiveTab('sql')}
               className={`px-4 py-2 font-medium text-sm transition-colors ${
@@ -220,16 +200,16 @@ export default function TableData({
             >
               💾 SQL
             </button>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Table Tab Content */}
       {activeTab === 'table' && (
-        <>
+        <div>
           {/* Schema info */}
           {schema && schema.length > 0 && (
-            <div className="bg-gray-25 px-4 py-2 border-b border-gray-200">
+            <div className="mb-4">
               <div className="flex flex-wrap gap-2">
                 {schema.map((col, index) => (
                   <span
@@ -245,23 +225,21 @@ export default function TableData({
           )}
           
           {/* Data table */}
-          <div className="p-4">
-            <DataTable
-              columns={columns}
-              data={actualData as TableDataType[]}
-              searchPlaceholder="Filtrar dados..."
-              pageSize={20}
-            />
-          </div>
+          <DataTable
+            columns={columns}
+            data={actualData as TableDataType[]}
+            searchPlaceholder="Filtrar dados..."
+            pageSize={20}
+          />
 
           {/* Footer */}
-          <div className="bg-gray-50 px-4 py-2 border-t border-gray-200">
+          <div className="mt-4">
             <p className="text-xs text-gray-500">
               Mostrando {actualData.length} de {totalRows || actualData.length} linhas
               {actualData.length < (totalRows || 0) && " (resultados limitados)"}
             </p>
           </div>
-        </>
+        </div>
       )}
 
       {/* SQL Tab Content */}

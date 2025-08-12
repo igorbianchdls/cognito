@@ -94,132 +94,100 @@ export default function SQLExecution({
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-      {/* Header */}
-      <div className={`bg-gradient-to-r ${getQueryTypeColor().split(' ').slice(0, 2).join(' ')} px-4 py-3 border-b border-gray-200`}>
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-            <svg className={`w-5 h-5 ${getQueryTypeColor().split(' ')[2]}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    <div className="space-y-4">
+      {/* SQL Query */}
+      <div>
+        <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+          <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+          </svg>
+          Query SQL
+        </h4>
+        <pre className="bg-gray-900 text-gray-100 p-3 rounded-lg overflow-x-auto text-sm font-mono">
+          {sqlQuery}
+        </pre>
+      </div>
+
+      {/* Validation Errors */}
+      {validationErrors && validationErrors.length > 0 && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+          <h4 className="font-medium text-yellow-800 mb-2 flex items-center gap-2">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            Execução SQL {dryRun && '(Dry Run)'}
-          </h3>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <span className="uppercase font-mono">{queryType}</span>
-            {executionTime && <span>• {executionTime}ms</span>}
-          </div>
+            Avisos de Validação
+          </h4>
+          <ul className="space-y-1">
+            {validationErrors.map((error, index) => (
+              <li key={index} className="text-sm text-yellow-700 flex items-start gap-2">
+                <span>•</span>
+                {error}
+              </li>
+            ))}
+          </ul>
         </div>
-        <div className="mt-1 text-sm text-gray-600">
-          Dataset: {datasetId}
+      )}
+
+      {/* Execution Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-gray-50 rounded-lg p-3">
+          <div className="text-xs text-gray-600 mb-1">Linhas Retornadas</div>
+          <div className="text-lg font-semibold text-gray-900">{rowsReturned?.toLocaleString() || 0}</div>
+        </div>
+        <div className="bg-gray-50 rounded-lg p-3">
+          <div className="text-xs text-gray-600 mb-1">Linhas Afetadas</div>
+          <div className="text-lg font-semibold text-gray-900">{rowsAffected?.toLocaleString() || 0}</div>
+        </div>
+        <div className="bg-gray-50 rounded-lg p-3">
+          <div className="text-xs text-gray-600 mb-1">Tempo de Execução</div>
+          <div className="text-lg font-semibold text-gray-900">{executionTime}ms</div>
+        </div>
+        <div className="bg-gray-50 rounded-lg p-3">
+          <div className="text-xs text-gray-600 mb-1">Bytes Processados</div>
+          <div className="text-lg font-semibold text-gray-900">{bytesProcessed ? formatBytes(bytesProcessed) : '0 B'}</div>
         </div>
       </div>
 
-      <div className="p-4 space-y-4">
-        {/* SQL Query */}
+      {/* Results Table */}
+      {data && data.length > 0 && (
         <div>
-          <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
-            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-            </svg>
-            Query SQL
-          </h4>
-          <pre className="bg-gray-900 text-gray-100 p-3 rounded-lg overflow-x-auto text-sm font-mono">
-            {sqlQuery}
-          </pre>
-        </div>
-
-        {/* Validation Errors */}
-        {validationErrors && validationErrors.length > 0 && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-            <h4 className="font-medium text-yellow-800 mb-2 flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Avisos de Validação
-            </h4>
-            <ul className="space-y-1">
-              {validationErrors.map((error, index) => (
-                <li key={index} className="text-sm text-yellow-700 flex items-start gap-2">
-                  <span>•</span>
-                  {error}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Execution Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-gray-50 rounded-lg p-3">
-            <div className="text-xs text-gray-600 mb-1">Linhas Retornadas</div>
-            <div className="text-lg font-semibold text-gray-900">{rowsReturned?.toLocaleString() || 0}</div>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-3">
-            <div className="text-xs text-gray-600 mb-1">Linhas Afetadas</div>
-            <div className="text-lg font-semibold text-gray-900">{rowsAffected?.toLocaleString() || 0}</div>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-3">
-            <div className="text-xs text-gray-600 mb-1">Tempo de Execução</div>
-            <div className="text-lg font-semibold text-gray-900">{executionTime}ms</div>
-          </div>
-          <div className="bg-gray-50 rounded-lg p-3">
-            <div className="text-xs text-gray-600 mb-1">Bytes Processados</div>
-            <div className="text-lg font-semibold text-gray-900">{bytesProcessed ? formatBytes(bytesProcessed) : '0 B'}</div>
-          </div>
-        </div>
-
-        {/* Results Table */}
-        {data && data.length > 0 && (
-          <div>
-            <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2z" />
-              </svg>
-              Resultados ({data.length} de {totalRows?.toLocaleString()})
-            </h4>
-            
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              {/* Schema info display */}
-              {schema && schema.length > 0 && (
-                <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
-                  <div className="flex flex-wrap gap-2">
-                    {schema.map((col, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                      >
-                        {col.name}
-                        <span className="ml-1 opacity-75">
-                          ({col.type} {col.mode !== 'NULLABLE' && `- ${col.mode}`})
-                        </span>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              <div className="p-4">
-                <DataTable
-                  columns={columns}
-                  data={(data || []) as TableData[]}
-                  searchPlaceholder="Filtrar resultados..."
-                  pageSize={15}
-                />
+          {/* Schema info display */}
+          {schema && schema.length > 0 && (
+            <div className="mb-4">
+              <div className="flex flex-wrap gap-2">
+                {schema.map((col, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                  >
+                    {col.name}
+                    <span className="ml-1 opacity-75">
+                      ({col.type} {col.mode !== 'NULLABLE' && `- ${col.mode}`})
+                    </span>
+                  </span>
+                ))}
               </div>
             </div>
-          </div>
-        )}
+          )}
+          
+          <DataTable
+            columns={columns}
+            data={(data || []) as TableData[]}
+            searchPlaceholder="Filtrar resultados..."
+            pageSize={15}
+          />
+        </div>
+      )}
 
-        {/* No Results Message */}
-        {(!data || data.length === 0) && queryType === 'SELECT' && (
-          <div className="text-center py-8 text-gray-500">
-            <svg className="w-12 h-12 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p>Nenhum resultado retornado</p>
-          </div>
-        )}
-      </div>
+      {/* No Results Message */}
+      {(!data || data.length === 0) && queryType === 'SELECT' && (
+        <div className="text-center py-8 text-gray-500">
+          <svg className="w-12 h-12 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <p>Nenhum resultado retornado</p>
+        </div>
+      )}
     </div>
   );
 }

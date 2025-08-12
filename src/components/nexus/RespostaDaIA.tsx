@@ -14,7 +14,7 @@ import ResultDisplay from '../tools/ResultDisplay';
 import Dashboard from '../tools/Dashboard';
 import SQLExecution from '../tools/SQLExecution';
 import TableCreation from '../tools/TableCreation';
-import KPIDisplay from '../tools/KPIDisplay';
+import { KPICard } from '../widgets/KPICard';
 import WebPreviewCard from '../tools/WebPreviewCard';
 
 interface ReasoningPart {
@@ -805,7 +805,7 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
                 </ToolContent>
               </Tool>
               {kpiTool.state === 'output-available' && (
-                <KPIDisplay 
+                <KPICard 
                   kpiId={(kpiTool.output as CriarKPIToolOutput).kpiId}
                   name={(kpiTool.output as CriarKPIToolOutput).name}
                   datasetId={(kpiTool.output as CriarKPIToolOutput).datasetId}
