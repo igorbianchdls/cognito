@@ -174,15 +174,19 @@ export function TableSheets<TData extends TableData>({
     })
 
     // Add original columns with enhanced functionality
-    const editableColumns = columns.map((col) => {
-      const fieldType = detectFieldType(data, col.accessorKey as string)
+    const editableColumns = columns.map((col, index) => {
+      // Safe way to get field identifier - use multiple methods
+      const fieldId = (col as unknown as { accessorKey?: string; id?: string }).accessorKey || 
+                     (col as unknown as { accessorKey?: string; id?: string }).id || 
+                     `column-${index}`
+      const fieldType = detectFieldType(data, fieldId)
       
       return {
         ...col,
         header: ({ column }: { column: { toggleSorting: (desc?: boolean) => void; getIsSorted: () => false | "asc" | "desc" } }) => {
           const headerText = typeof col.header === 'string' ? col.header : 
                             typeof col.header === 'function' ? 'Column' : 
-                            (col as { accessorKey?: string }).accessorKey || 'Column'
+                            fieldId || 'Column'
           
           return (
             <Button
@@ -315,7 +319,7 @@ export function TableSheets<TData extends TableData>({
           )
         }
       }
-    })
+    }) as ColumnDef<TData>[]
 
     return [...cols, ...editableColumns]
   }, [columns, data, editable, editingCell, onCellEdit])
