@@ -24,7 +24,8 @@
       "Bash(timeout 30 npm run build)",
       "WebFetch(domain:docs.agentset.ai)",
       "Bash(timeout 60 npm run build)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "WebFetch(domain:ui.shadcn.com)"
     ],
     "deny": []
   }

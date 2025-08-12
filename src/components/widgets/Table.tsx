@@ -1,95 +1,282 @@
-'use client';
+"use client"
 
-interface TableColumn {
-  key: string;
-  label: string;
-  width?: string;
-  align?: 'left' | 'center' | 'right';
-}
+import * as React from "react"
+import {
+  ColumnDef,
+  ColumnFiltersState,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+  VisibilityState,
+} from "@tanstack/react-table"
+import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
 
-interface TableRow {
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+
+// Generic data type for table rows
+export type TableData = {
   [key: string]: string | number | boolean | null | undefined;
 }
 
-interface TableProps {
-  columns: TableColumn[];
-  data: TableRow[];
-  className?: string;
-  striped?: boolean;
-  bordered?: boolean;
-  hover?: boolean;
+interface DataTableProps<TData extends TableData> {
+  columns: ColumnDef<TData>[]
+  data: TData[]
+  searchPlaceholder?: string
+  showColumnToggle?: boolean
+  showPagination?: boolean
+  pageSize?: number
 }
 
-export function Table({ 
-  columns, 
-  data, 
-  className = '', 
-  striped = true, 
-  bordered = false, 
-  hover = true 
-}: TableProps) {
-  if (!data || data.length === 0) {
-    return (
-      <div className="flex items-center justify-center py-8 text-gray-500">
-        <div className="text-center">
-          <div className="text-lg font-medium">Nenhum dado encontrado</div>
-          <div className="text-sm">A tabela está vazia</div>
-        </div>
-      </div>
-    );
-  }
+export function DataTable<TData extends TableData>({
+  columns,
+  data,
+  searchPlaceholder = "Filtrar...",
+  showColumnToggle = true,
+  showPagination = true,
+  pageSize = 10,
+}: DataTableProps<TData>) {
+  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
+  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
+  const [rowSelection, setRowSelection] = React.useState({})
+
+  const table = useReactTable({
+    data,
+    columns,
+    initialState: {
+      pagination: {
+        pageSize: pageSize,
+      },
+    },
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
+    onRowSelectionChange: setRowSelection,
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      rowSelection,
+    },
+  })
+
+  const globalFilter = table.getState().globalFilter
 
   return (
-    <div className={`overflow-x-auto ${className}`}>
-      <table className={`min-w-full ${bordered ? 'border border-gray-200' : ''}`}>
-        <thead className="bg-gray-50">
-          <tr>
-            {columns.map((column) => (
-              <th
-                key={column.key}
-                className={`
-                  px-4 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider
-                  ${column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'}
-                  ${bordered ? 'border-b border-gray-200' : ''}
-                `}
-                style={{ width: column.width }}
-              >
-                {column.label}
-              </th>
+    <div className="w-full">
+      <div className="flex items-center py-4">
+        <Input
+          placeholder={searchPlaceholder}
+          value={globalFilter ?? ""}
+          onChange={(event) => table.setGlobalFilter(event.target.value)}
+          className="max-w-sm"
+        />
+        {showColumnToggle && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="ml-auto">
+                Colunas <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => {
+                  return (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) =>
+                        column.toggleVisibility(!!value)
+                      }
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
+                  )
+                })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  )
+                })}
+              </TableRow>
             ))}
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {data.map((row, index) => (
-            <tr
-              key={index}
-              className={`
-                ${striped && index % 2 === 1 ? 'bg-gray-50' : ''}
-                ${hover ? 'hover:bg-gray-100' : ''}
-                transition-colors duration-150
-              `}
-            >
-              {columns.map((column) => (
-                <td
-                  key={column.key}
-                  className={`
-                    px-4 py-3 text-sm text-gray-900 whitespace-nowrap
-                    ${column.align === 'center' ? 'text-center' : column.align === 'right' ? 'text-right' : 'text-left'}
-                    ${bordered ? 'border-b border-gray-200' : ''}
-                  `}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
                 >
-                  {row[column.key] !== null && row[column.key] !== undefined 
-                    ? String(row[column.key]) 
-                    : '-'
-                  }
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={columns.length} className="h-24 text-center">
+                  Nenhum resultado encontrado.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+      {showPagination && (
+        <div className="flex items-center justify-end space-x-2 py-4">
+          <div className="flex-1 text-sm text-muted-foreground">
+            {table.getFilteredSelectedRowModel().rows.length} de{" "}
+            {table.getFilteredRowModel().rows.length} linha(s) selecionada(s).
+          </div>
+          <div className="space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+            >
+              Anterior
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+            >
+              Próximo
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
-  );
+  )
 }
 
-export default Table;
+// Helper function to create sortable header
+export function createSortableHeader(title: string) {
+  return ({ column }: { column: any }) => {
+    return (
+      <Button
+        variant="ghost"
+        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+      >
+        {title}
+        <ArrowUpDown className="ml-2 h-4 w-4" />
+      </Button>
+    )
+  }
+}
+
+// Helper function to create selection column
+export function createSelectionColumn<TData>(): ColumnDef<TData> {
+  return {
+    id: "select",
+    header: ({ table }) => (
+      <Checkbox
+        checked={
+          table.getIsAllPageRowsSelected() ||
+          (table.getIsSomePageRowsSelected() && "indeterminate")
+        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+        aria-label="Selecionar todos"
+      />
+    ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Selecionar linha"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  }
+}
+
+// Helper function to create actions column
+export function createActionsColumn<TData>(
+  actions: Array<{
+    label: string
+    onClick: (row: TData) => void
+  }>
+): ColumnDef<TData> {
+  return {
+    id: "actions",
+    enableHiding: false,
+    cell: ({ row }) => {
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Abrir menu</span>
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Ações</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {actions.map((action, index) => (
+              <DropdownMenuItem
+                key={index}
+                onClick={() => action.onClick(row.original)}
+              >
+                {action.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
+    },
+  }
+}
+
+export default DataTable
