@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useStore } from '@nanostores/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { TableSheets, createSortableHeader, type TableData } from './TableSheets';
+import TableHeader, { FilterState, SortState } from './TableHeader';
 import { 
   activeDatasetStore, 
   initializeDefaultDataset
@@ -44,6 +45,9 @@ const formatValue = (value: unknown, colDef?: { field?: string; enableValue?: bo
 
 export default function AGGridSheet() {
   const [isClient, setIsClient] = useState(false);
+  const [filters, setFilters] = useState<FilterState[]>([]);
+  const [sorting, setSorting] = useState<SortState[]>([]);
+  const [view, setView] = useState<'grid' | 'list'>('grid');
   
   // Store subscriptions
   const activeDataset = useStore(activeDatasetStore);
@@ -93,20 +97,22 @@ export default function AGGridSheet() {
                 </p>
               </div>
               
+              {/* Table Header with Controls */}
+              <TableHeader
+                onFiltersChange={setFilters}
+                onSortChange={setSorting}
+                onViewChange={setView}
+              />
+              
               {/* Data Table */}
               <div className="flex-1 min-h-0">
                 <TableSheets
                   columns={columns}
                   data={rowData}
-                  searchPlaceholder="Filtrar dados da planilha..."
-                  showColumnToggle={true}
-                  showPagination={true}
-                  showRowNumbers={true}
-                  showStats={true}
-                  showToolbar={true}
                   editable={false}
-                  compactMode={true}
                   pageSize={50}
+                  filters={filters}
+                  sorting={sorting}
                 />
               </div>
             </div>

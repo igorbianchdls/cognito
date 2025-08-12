@@ -2,43 +2,194 @@
 
 import { useState } from 'react';
 import { getActiveDatasetInfo } from '@/stores/sheetsStore';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+export interface FilterState {
+  column: string;
+  operator: string;
+  value: string;
+}
+
+export interface SortState {
+  column: string;
+  direction: 'asc' | 'desc';
+}
 
 interface TableHeaderProps {
   className?: string;
+  onFiltersChange?: (filters: FilterState[]) => void;
+  onSortChange?: (sorting: SortState[]) => void;
+  onViewChange?: (view: 'grid' | 'list') => void;
 }
 
-export default function TableHeader({ className = '' }: TableHeaderProps) {
-  const [_activeView, _setActiveView] = useState<'data' | 'details'>('data');
-  const _datasetInfo = getActiveDatasetInfo();
+export default function TableHeader({ 
+  className = '', 
+  onFiltersChange, 
+  onSortChange,
+  onViewChange 
+}: TableHeaderProps) {
+  const [activeView, setActiveView] = useState<'grid' | 'list'>('grid');
+  const [filters, setFilters] = useState<FilterState[]>([]);
+  const [sorting, setSorting] = useState<SortState[]>([]);
+  const datasetInfo = getActiveDatasetInfo();
+
+  const handleAddFilter = () => {
+    const newFilter: FilterState = {
+      column: '',
+      operator: 'contains',
+      value: ''
+    };
+    const updatedFilters = [...filters, newFilter];
+    setFilters(updatedFilters);
+    onFiltersChange?.(updatedFilters);
+  };
+
+  const handleRemoveFilter = (index: number) => {
+    const updatedFilters = filters.filter((_, i) => i !== index);
+    setFilters(updatedFilters);
+    onFiltersChange?.(updatedFilters);
+  };
+
+  const handleViewChange = (view: 'grid' | 'list') => {
+    setActiveView(view);
+    onViewChange?.(view);
+  };
+
+  const handleAddSort = () => {
+    const newSort: SortState = {
+      column: '',
+      direction: 'asc'
+    };
+    const updatedSorting = [...sorting, newSort];
+    setSorting(updatedSorting);
+    onSortChange?.(updatedSorting);
+  };
+
+  const handleRemoveSort = (index: number) => {
+    const updatedSorting = sorting.filter((_, i) => i !== index);
+    setSorting(updatedSorting);
+    onSortChange?.(updatedSorting);
+  };
   
   return (
     <div className={`bg-white border-b border-gray-200 ${className}`}>
       <div className="flex items-center h-12 px-6">
         {/* Left side - Toolbar (Baserow style) */}
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-            </svg>
-            Grid
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
+                {activeView === 'grid' ? 'Grid' : 'List'}
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuLabel>View Type</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleViewChange('grid')}>
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                </svg>
+                Grid View
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleViewChange('list')}>
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+                List View
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           
-          <button className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-            2 Filters
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                {filters.length > 0 ? `${filters.length} Filters` : 'Filters'}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-64">
+              <DropdownMenuLabel>Filters</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {filters.length === 0 ? (
+                <div className="p-4 text-center text-gray-500 text-sm">
+                  No filters applied
+                </div>
+              ) : (
+                filters.map((filter, index) => (
+                  <DropdownMenuItem key={index} className="flex justify-between">
+                    <span className="text-xs">{filter.column || 'Column'} {filter.operator} {filter.value || 'value'}</span>
+                    <button 
+                      onClick={() => handleRemoveFilter(index)}
+                      className="text-red-500 hover:text-red-700 ml-2"
+                    >
+                      ×
+                    </button>
+                  </DropdownMenuItem>
+                ))
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleAddFilter}>
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Filter
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           
-          <button className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
-            </svg>
-            Sort
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+                {sorting.length > 0 ? `${sorting.length} Sorts` : 'Sort'}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-64">
+              <DropdownMenuLabel>Sort Orders</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {sorting.length === 0 ? (
+                <div className="p-4 text-center text-gray-500 text-sm">
+                  No sorting applied
+                </div>
+              ) : (
+                sorting.map((sort, index) => (
+                  <DropdownMenuItem key={index} className="flex justify-between">
+                    <span className="text-xs">{sort.column || 'Column'} {sort.direction === 'asc' ? '↑' : '↓'}</span>
+                    <button 
+                      onClick={() => handleRemoveSort(index)}
+                      className="text-red-500 hover:text-red-700 ml-2"
+                    >
+                      ×
+                    </button>
+                  </DropdownMenuItem>
+                ))
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleAddSort}>
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add Sort
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           
           <button className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
