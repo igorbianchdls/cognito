@@ -87,7 +87,7 @@ export default function AGGridSheet({ filters = [], sorting = [] }: AGGridSheetP
   return (
     <div className="w-full h-full">
       {isClient ? (
-        <div className="w-full h-full p-4">
+        <div className="w-full h-full p-0">
           {activeDataset ? (
             <div className="h-full flex flex-col">
               {/* Data Table */}
