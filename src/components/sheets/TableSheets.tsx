@@ -15,11 +15,8 @@ import {
 } from "@tanstack/react-table"
 import { 
   ArrowUpDown, 
-  ChevronDown, 
-  Download, 
-  Trash2, 
-  Calculator, 
-  Search,
+  ChevronDown,
+  Calculator,
   Edit3,
   Type,
   Hash,
@@ -32,16 +29,6 @@ import {
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import {
   Table,
@@ -136,8 +123,6 @@ interface TableSheetsProps<TData extends TableData> {
   editable?: boolean
   pageSize?: number
   onCellEdit?: (rowIndex: number, field: string, value: unknown) => void
-  filters?: { column: string; operator: string; value: string }[]
-  sorting?: { column: string; direction: 'asc' | 'desc' }[]
 }
 
 export function TableSheets<TData extends TableData>({
@@ -146,8 +131,6 @@ export function TableSheets<TData extends TableData>({
   editable = false,
   pageSize = 50,
   onCellEdit,
-  filters = [],
-  sorting = [],
 }: TableSheetsProps<TData>) {
   const [internalSorting, setInternalSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])

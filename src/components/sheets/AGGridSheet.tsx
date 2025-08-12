@@ -97,8 +97,6 @@ export default function AGGridSheet({ filters = [], sorting = [] }: AGGridSheetP
                   data={rowData}
                   editable={false}
                   pageSize={50}
-                  filters={filters}
-                  sorting={sorting}
                 />
               </div>
             </div>
