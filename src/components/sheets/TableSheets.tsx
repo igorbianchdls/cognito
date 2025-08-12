@@ -184,9 +184,16 @@ export function TableSheets<TData extends TableData>({
       return {
         ...col,
         header: ({ column }: { column: { toggleSorting: (desc?: boolean) => void; getIsSorted: () => false | "asc" | "desc" } }) => {
-          const headerText = typeof col.header === 'string' ? col.header : 
-                            typeof col.header === 'function' ? 'Column' : 
-                            fieldId || 'Column'
+          // Get the header text from the function's displayName or extract from source
+          let headerText = fieldId
+          
+          if (typeof col.header === 'function' && (col.header as any).displayName) {
+            const displayName = (col.header as any).displayName
+            const match = displayName.match(/SortableHeader-(.+)/)
+            if (match) {
+              headerText = match[1]
+            }
+          }
           
           return (
             <Button
@@ -363,7 +370,7 @@ export function TableSheets<TData extends TableData>({
                   return (
                     <TableHead 
                       key={header.id} 
-                      className="bg-gray-50 font-medium text-gray-600 text-sm border-r border-gray-200 last:border-r-0 px-0 py-0 h-12"
+                      className="bg-gray-50 font-medium text-gray-600 text-sm border-r border-gray-300 last:border-r-0 px-0 py-0 h-12"
                       style={{ width: header.getSize() }}
                     >
                       {header.isPlaceholder
@@ -388,7 +395,7 @@ export function TableSheets<TData extends TableData>({
                   {row.getVisibleCells().map((cell) => (
                     <TableCell 
                       key={cell.id} 
-                      className="border-r border-gray-200 last:border-r-0 border-b border-gray-200 px-0 py-0 text-sm"
+                      className="border-r border-gray-300 last:border-r-0 border-b border-gray-200 px-0 py-0 text-sm"
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
@@ -397,7 +404,7 @@ export function TableSheets<TData extends TableData>({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={enhancedColumns.length} className="h-40 text-center border-r border-gray-200 border-b border-gray-200">
+                <TableCell colSpan={enhancedColumns.length} className="h-40 text-center border-r border-gray-300 border-b border-gray-200">
                   <div className="flex flex-col items-center gap-3 text-gray-400">
                     <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center">
                       <Edit3 className="h-8 w-8" />
