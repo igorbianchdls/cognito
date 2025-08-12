@@ -8,9 +8,9 @@ import { Card, CardContent } from '@/components/ui/card'
 import { ArrowLeft, ExternalLink, GitFork, Heart, Eye, Calendar } from 'lucide-react'
 
 interface AppDetailPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export async function generateStaticParams() {
@@ -20,7 +20,8 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: AppDetailPageProps): Promise<Metadata> {
-  const app = getAppById(params.id)
+  const { id } = await params
+  const app = getAppById(id)
   
   if (!app) {
     return {
@@ -41,8 +42,9 @@ export async function generateMetadata({ params }: AppDetailPageProps): Promise<
   }
 }
 
-export default function AppDetailPage({ params }: AppDetailPageProps) {
-  const app = getAppById(params.id)
+export default async function AppDetailPage({ params }: AppDetailPageProps) {
+  const { id } = await params
+  const app = getAppById(id)
 
   if (!app) {
     notFound()
