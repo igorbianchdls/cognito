@@ -1,6 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { ColumnDef } from '@tanstack/react-table';
+import { DataTable, createSortableHeader, type TableData as TableDataType } from '@/components/widgets/Table';
 
 interface Schema {
   name: string;
@@ -109,6 +111,39 @@ export default function TableData({
     console.warn('⚠️ TableData: Unexpected data format:', typeof data);
   }
 
+  // Generate columns dynamically based on schema or data
+  const columns: ColumnDef<TableDataType>[] = useMemo(() => {
+    if (schema && schema.length > 0) {
+      return schema.map((col) => ({
+        accessorKey: col.name,
+        header: createSortableHeader(col.name),
+        cell: ({ row }) => {
+          const value = row.getValue(col.name);
+          return (
+            <span className="whitespace-nowrap">
+              {formatValue(value, col.type)}
+            </span>
+          );
+        },
+      }));
+    } else if (actualData.length > 0) {
+      const keys = Object.keys(actualData[0]);
+      return keys.map((key) => ({
+        accessorKey: key,
+        header: createSortableHeader(key),
+        cell: ({ row }) => {
+          const value = row.getValue(key);
+          return (
+            <span className="whitespace-nowrap">
+              {formatValue(value, 'STRING')}
+            </span>
+          );
+        },
+      }));
+    }
+    return [];
+  }, [schema, actualData]);
+
   if (error || !success) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -210,45 +245,13 @@ export default function TableData({
           )}
           
           {/* Data table */}
-          <div className="overflow-x-auto max-h-96">
-            <table className="w-full">
-              <thead className="bg-gray-100 border-b border-gray-200 sticky top-0">
-                <tr>
-                  {schema && schema.map((col) => (
-                    <th
-                      key={col.name}
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      {col.name}
-                    </th>
-                  ))}
-                  {!schema && actualData.length > 0 && Object.keys(actualData[0]).map((key) => (
-                    <th
-                      key={key}
-                      className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                    >
-                      {key}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {actualData.map((row, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    {schema && schema.map((col) => (
-                      <td key={col.name} className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
-                        {formatValue(row[col.name], col.type)}
-                      </td>
-                    ))}
-                    {!schema && Object.entries(row).map(([key, value]) => (
-                      <td key={key} className="px-4 py-3 text-sm text-gray-700 whitespace-nowrap">
-                        {formatValue(value, 'STRING')}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="p-4">
+            <DataTable
+              columns={columns}
+              data={actualData as TableDataType[]}
+              searchPlaceholder="Filtrar dados..."
+              pageSize={20}
+            />
           </div>
 
           {/* Footer */}

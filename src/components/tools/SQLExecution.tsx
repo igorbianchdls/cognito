@@ -1,5 +1,9 @@
 'use client';
 
+import { useMemo } from 'react';
+import { ColumnDef } from '@tanstack/react-table';
+import { DataTable, createSortableHeader, TableData } from '@/components/widgets/Table';
+
 interface SQLExecutionProps {
   sqlQuery?: string;
   datasetId?: string;
@@ -37,6 +41,27 @@ export default function SQLExecution({
   validationErrors,
   error
 }: SQLExecutionProps) {
+  // Generate columns dynamically based on schema
+  const columns: ColumnDef<TableData>[] = useMemo(() => {
+    if (schema && schema.length > 0) {
+      return schema.map((col) => ({
+        accessorKey: col.name,
+        header: createSortableHeader(col.name),
+        cell: ({ row }) => {
+          const value = row.getValue(col.name);
+          return (
+            <span className="whitespace-nowrap text-sm">
+              {value !== null && value !== undefined
+                ? String(value)
+                : <span className="text-gray-400">NULL</span>
+              }
+            </span>
+          );
+        },
+      }));
+    }
+    return [];
+  }, [schema]);
   if (error || !success) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -154,40 +179,32 @@ export default function SQLExecution({
             </h4>
             
             <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      {schema?.map((column, index) => (
-                        <th
-                          key={index}
-                          className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          <div className="flex flex-col">
-                            <span>{column.name}</span>
-                            <span className="text-xs text-gray-400 normal-case">
-                              {column.type} {column.mode !== 'NULLABLE' && `(${column.mode})`}
-                            </span>
-                          </div>
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {data.map((row, rowIndex) => (
-                      <tr key={rowIndex} className="hover:bg-gray-50">
-                        {schema?.map((column, colIndex) => (
-                          <td key={colIndex} className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                            {row[column.name] !== null && row[column.name] !== undefined
-                              ? String(row[column.name])
-                              : <span className="text-gray-400">NULL</span>
-                            }
-                          </td>
-                        ))}
-                      </tr>
+              {/* Schema info display */}
+              {schema && schema.length > 0 && (
+                <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
+                  <div className="flex flex-wrap gap-2">
+                    {schema.map((col, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                      >
+                        {col.name}
+                        <span className="ml-1 opacity-75">
+                          ({col.type} {col.mode !== 'NULLABLE' && `- ${col.mode}`})
+                        </span>
+                      </span>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
+                </div>
+              )}
+              
+              <div className="p-4">
+                <DataTable
+                  columns={columns}
+                  data={(data || []) as TableData[]}
+                  searchPlaceholder="Filtrar resultados..."
+                  pageSize={15}
+                />
               </div>
             </div>
           </div>

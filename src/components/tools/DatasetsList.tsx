@@ -1,6 +1,9 @@
 'use client';
 
-interface Dataset {
+import { ColumnDef } from '@tanstack/react-table';
+import { DataTable, createSortableHeader, TableData } from '@/components/widgets/Table';
+
+interface Dataset extends TableData {
   id: string;
   friendlyName?: string;
   description?: string;
@@ -14,6 +17,46 @@ interface DatasetsListProps {
   success?: boolean;
   error?: string;
 }
+
+const columns: ColumnDef<Dataset>[] = [
+  {
+    accessorKey: 'id',
+    header: createSortableHeader('ID do Dataset'),
+    cell: ({ row }) => (
+      <span className="font-medium text-gray-900">{row.getValue('id')}</span>
+    ),
+  },
+  {
+    accessorKey: 'friendlyName',
+    header: createSortableHeader('Nome'),
+    cell: ({ row }) => row.getValue('friendlyName') || '-',
+  },
+  {
+    accessorKey: 'description',
+    header: createSortableHeader('Descrição'),
+    cell: ({ row }) => {
+      const description = row.getValue('description') as string;
+      return (
+        <div className="max-w-xs truncate" title={description}>
+          {description || '-'}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: 'location',
+    header: createSortableHeader('Localização'),
+    cell: ({ row }) => row.getValue('location') || '-',
+  },
+  {
+    accessorKey: 'creationTime',
+    header: createSortableHeader('Criado em'),
+    cell: ({ row }) => {
+      const creationTime = row.getValue('creationTime') as string;
+      return creationTime ? new Date(creationTime).toLocaleDateString('pt-BR') : '-';
+    },
+  },
+];
 
 export default function DatasetsList({ datasets, success, error }: DatasetsListProps) {
   if (error || !success) {
@@ -55,49 +98,13 @@ export default function DatasetsList({ datasets, success, error }: DatasetsListP
         </h3>
       </div>
       
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                ID do Dataset
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Nome
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Descrição
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Localização
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Criado em
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {datasets.map((dataset, index) => (
-              <tr key={dataset.id || index} className="hover:bg-gray-50">
-                <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                  {dataset.id}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-700">
-                  {dataset.friendlyName || '-'}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-700 max-w-xs truncate" title={dataset.description}>
-                  {dataset.description || '-'}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-700">
-                  {dataset.location || '-'}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-700">
-                  {dataset.creationTime ? new Date(dataset.creationTime).toLocaleDateString('pt-BR') : '-'}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="p-4">
+        <DataTable
+          columns={columns}
+          data={datasets}
+          searchPlaceholder="Filtrar datasets..."
+          pageSize={10}
+        />
       </div>
     </div>
   );

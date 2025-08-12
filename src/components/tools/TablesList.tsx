@@ -1,6 +1,9 @@
 'use client';
 
-interface Table {
+import { ColumnDef } from '@tanstack/react-table';
+import { DataTable, createSortableHeader, TableData } from '@/components/widgets/Table';
+
+interface Table extends TableData {
   tableId: string;
   description?: string;
   numRows?: number;
@@ -25,6 +28,52 @@ function formatBytes(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
 }
+
+const columns: ColumnDef<Table>[] = [
+  {
+    accessorKey: 'tableId',
+    header: createSortableHeader('Nome da Tabela'),
+    cell: ({ row }) => (
+      <span className="font-medium text-gray-900">{row.getValue('tableId')}</span>
+    ),
+  },
+  {
+    accessorKey: 'description',
+    header: createSortableHeader('Descrição'),
+    cell: ({ row }) => {
+      const description = row.getValue('description') as string;
+      return (
+        <div className="max-w-xs truncate" title={description}>
+          {description || '-'}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: 'numRows',
+    header: createSortableHeader('Linhas'),
+    cell: ({ row }) => {
+      const numRows = row.getValue('numRows') as number;
+      return numRows ? formatNumber(numRows) : '-';
+    },
+  },
+  {
+    accessorKey: 'numBytes',
+    header: createSortableHeader('Tamanho'),
+    cell: ({ row }) => {
+      const numBytes = row.getValue('numBytes') as number;
+      return numBytes ? formatBytes(numBytes) : '-';
+    },
+  },
+  {
+    accessorKey: 'creationTime',
+    header: createSortableHeader('Criado em'),
+    cell: ({ row }) => {
+      const creationTime = row.getValue('creationTime') as string;
+      return creationTime ? new Date(creationTime).toLocaleDateString('pt-BR') : '-';
+    },
+  },
+];
 
 export default function TablesList({ tables, datasetId, success, error }: TablesListProps) {
   if (error || !success) {
@@ -68,49 +117,13 @@ export default function TablesList({ tables, datasetId, success, error }: Tables
         </h3>
       </div>
       
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Nome da Tabela
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Descrição
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Linhas
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Tamanho
-              </th>
-              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Criado em
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {tables.map((table, index) => (
-              <tr key={table.tableId || index} className="hover:bg-gray-50">
-                <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                  {table.tableId}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-700 max-w-xs truncate" title={table.description}>
-                  {table.description || '-'}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-700">
-                  {table.numRows ? formatNumber(table.numRows) : '-'}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-700">
-                  {table.numBytes ? formatBytes(table.numBytes) : '-'}
-                </td>
-                <td className="px-4 py-3 text-sm text-gray-700">
-                  {table.creationTime ? new Date(table.creationTime).toLocaleDateString('pt-BR') : '-'}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="p-4">
+        <DataTable
+          columns={columns}
+          data={tables}
+          searchPlaceholder="Filtrar tabelas..."
+          pageSize={10}
+        />
       </div>
     </div>
   );
