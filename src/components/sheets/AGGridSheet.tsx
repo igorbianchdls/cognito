@@ -10,7 +10,7 @@ import {
 } from '@/stores/sheetsStore';
 
 // Helper function to format values based on column type
-const formatValue = (value: unknown, colDef?: any): string => {
+const formatValue = (value: unknown, colDef?: { field?: string; enableValue?: boolean; filter?: string }): string => {
   if (value === null || value === undefined) return '';
   
   // Check if it's a number column based on field name or type
