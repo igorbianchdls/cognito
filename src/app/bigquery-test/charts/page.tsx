@@ -18,6 +18,8 @@ import {
   ChartContainer,
 } from '@/components/charts';
 import type { ChartData } from '@/components/charts';
+import { DataTable, createSortableHeader, createSelectionColumn, createActionsColumn } from '@/components/widgets/Table';
+import type { ColumnDef } from '@tanstack/react-table';
 
 // All chart components use ChartData[] interface consistently
 
@@ -107,6 +109,78 @@ const mockData = {
   ] as ChartData[]
 };
 
+// Mock data for table
+const tableData = [
+  { id: '1', name: 'Janeiro', value: 245, category: 'Vendas', status: 'Ativo', date: '2024-01-15' },
+  { id: '2', name: 'Fevereiro', value: 182, category: 'Marketing', status: 'Inativo', date: '2024-02-10' },
+  { id: '3', name: 'Março', value: 398, category: 'Vendas', status: 'Ativo', date: '2024-03-20' },
+  { id: '4', name: 'Abril', value: 312, category: 'Suporte', status: 'Ativo', date: '2024-04-05' },
+  { id: '5', name: 'Maio', value: 428, category: 'Vendas', status: 'Ativo', date: '2024-05-12' },
+  { id: '6', name: 'Junho', value: 256, category: 'Marketing', status: 'Inativo', date: '2024-06-08' },
+  { id: '7', name: 'Julho', value: 380, category: 'Vendas', status: 'Ativo', date: '2024-07-22' },
+  { id: '8', name: 'Agosto', value: 295, category: 'Suporte', status: 'Ativo', date: '2024-08-15' },
+];
+
+// Table columns definition
+const tableColumns: ColumnDef<typeof tableData[0]>[] = [
+  createSelectionColumn(),
+  {
+    accessorKey: "name",
+    header: createSortableHeader("Nome"),
+  },
+  {
+    accessorKey: "value",
+    header: createSortableHeader("Valor"),
+    cell: ({ row }) => {
+      const value = parseFloat(row.getValue("value"))
+      const formatted = new Intl.NumberFormat("pt-BR").format(value)
+      return <div className="font-medium">{formatted}</div>
+    },
+  },
+  {
+    accessorKey: "category",
+    header: createSortableHeader("Categoria"),
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const status = row.getValue("status") as string
+      return (
+        <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+          status === 'Ativo' 
+            ? 'bg-green-100 text-green-800' 
+            : 'bg-red-100 text-red-800'
+        }`}>
+          {status}
+        </div>
+      )
+    },
+  },
+  {
+    accessorKey: "date",
+    header: createSortableHeader("Data"),
+    cell: ({ row }) => {
+      const date = new Date(row.getValue("date"))
+      return <div>{date.toLocaleDateString('pt-BR')}</div>
+    },
+  },
+  createActionsColumn([
+    { 
+      label: "Ver detalhes", 
+      onClick: (row) => console.log("Detalhes:", row) 
+    },
+    { 
+      label: "Editar", 
+      onClick: (row) => console.log("Editar:", row) 
+    },
+    { 
+      label: "Excluir", 
+      onClick: (row) => console.log("Excluir:", row) 
+    },
+  ])
+];
+
 export default function NivoChartsShowcase() {
   const [selectedChart, setSelectedChart] = useState<string | null>(null);
 
@@ -170,6 +244,19 @@ export default function NivoChartsShowcase() {
       title: 'Stream Chart',
       description: 'Gráfico de fluxo para dados temporais empilhados',
       component: <StreamChart data={mockData.stream} />
+    },
+    {
+      id: 'table',
+      title: 'Data Table',
+      description: 'Tabela de dados com ordenação, filtros e paginação',
+      component: (
+        <DataTable 
+          columns={tableColumns} 
+          data={tableData} 
+          searchPlaceholder="Buscar registros..."
+          pageSize={5}
+        />
+      )
     }
   ];
 
@@ -183,9 +270,9 @@ export default function NivoChartsShowcase() {
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Showcase Gráficos Nivo</h1>
+                <h1 className="text-3xl font-bold text-gray-900">Showcase Gráficos & Tabelas</h1>
                 <p className="text-gray-600 mt-2">
-                  Todos os {charts.length} tipos de gráficos Nivo implementados no projeto
+                  Todos os {charts.length} componentes de visualização implementados no projeto
                 </p>
               </div>
               <Button 
@@ -201,11 +288,11 @@ export default function NivoChartsShowcase() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
               <Card className="p-4">
                 <div className="text-2xl font-bold text-blue-600">{charts.length}</div>
-                <div className="text-sm text-gray-600">Tipos de Gráficos</div>
+                <div className="text-sm text-gray-600">Componentes</div>
               </Card>
               <Card className="p-4">
-                <div className="text-2xl font-bold text-green-600">@nivo</div>
-                <div className="text-sm text-gray-600">Biblioteca</div>
+                <div className="text-2xl font-bold text-green-600">@nivo + shadcn</div>
+                <div className="text-sm text-gray-600">Bibliotecas</div>
               </Card>
               <Card className="p-4">
                 <div className="text-2xl font-bold text-purple-600">React</div>
