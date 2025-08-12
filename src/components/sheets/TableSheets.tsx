@@ -170,11 +170,13 @@ export function TableSheets<TData extends TableData>({
           // Get the header text from the function's displayName or extract from source
           let headerText = fieldId
           
-          if (typeof col.header === 'function' && (col.header as any).displayName) {
-            const displayName = (col.header as any).displayName
-            const match = displayName.match(/SortableHeader-(.+)/)
-            if (match) {
-              headerText = match[1]
+          if (typeof col.header === 'function') {
+            const headerFunc = col.header as unknown as { displayName?: string }
+            if (headerFunc.displayName) {
+              const match = headerFunc.displayName.match(/SortableHeader-(.+)/)
+              if (match) {
+                headerText = match[1]
+              }
             }
           }
           
