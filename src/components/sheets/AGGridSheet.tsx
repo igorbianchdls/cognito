@@ -90,14 +90,6 @@ export default function AGGridSheet({ filters = [], sorting = [] }: AGGridSheetP
         <div className="w-full h-full p-4">
           {activeDataset ? (
             <div className="h-full flex flex-col">
-              {/* Dataset info header */}
-              <div className="mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">{activeDataset.name}</h2>
-                <p className="text-sm text-gray-600">
-                  {activeDataset.totalRows.toLocaleString('pt-BR')} linhas × {activeDataset.totalCols} colunas
-                </p>
-              </div>
-              
               {/* Data Table */}
               <div className="flex-1 min-h-0">
                 <TableSheets
