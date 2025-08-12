@@ -18,24 +18,37 @@ export default function ChatContainer({
   onSubmit, 
   status 
 }: ChatContainerProps) {
+  // Estado vazio - tela de boas-vindas centrada
+  if (messages.length === 0) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center px-4">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            Converse com seus dados
+          </h1>
+          <p className="text-lg text-gray-600">
+            Analise, visualize e obtenha insights dos seus dados com IA
+          </p>
+        </div>
+        <div className="w-full max-w-2xl">
+          <InputArea 
+            input={input}
+            setInput={setInput}
+            onSubmit={onSubmit}
+            status={status}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Estado com mensagens - layout normal
   return (
-    <div style={{ 
-      height: '100vh', 
-      display: 'flex', 
-      flexDirection: 'column' 
-    }}>
-      <div style={{ 
-        height: '80%', 
-        overflowY: 'auto' 
-      }}>
+    <div className="h-screen flex flex-col">
+      <div className="flex-1 overflow-y-auto">
         <MessageList messages={messages} />
       </div>
-      <div style={{ 
-        height: '20%', 
-        display: 'flex', 
-        alignItems: 'flex-end',
-        justifyContent: 'center'
-      }}>
+      <div className="h-20 flex items-end justify-center">
         <InputArea 
           input={input}
           setInput={setInput}
