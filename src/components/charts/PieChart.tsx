@@ -25,7 +25,7 @@ export function PieChart({ data, xColumn, yColumn, isFullscreen }: BaseChartProp
       text: { fontSize: 12, fill: '#374151', fontFamily: 'Geist, sans-serif', fontWeight: 500 }
     },
     legends: {
-      text: { fontSize: 12, fill: '#374151', fontFamily: 'Geist, sans-serif', fontWeight: 500 }
+      text: { fontSize: 12, fill: '#6b7280', fontFamily: 'Geist, sans-serif' }
     }
   };
 
