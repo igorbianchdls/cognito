@@ -1,9 +1,35 @@
-import JuliusChat from '@/components/julius/JuliusChat';
+'use client';
+
+import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+import { useState, FormEvent } from 'react';
+import ChatContainer from '@/components/nexus/ChatContainer';
 
 export default function Home() {
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({
+      api: '/api/chat-ui',
+    }),
+  });
+  const [input, setInput] = useState('');
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (input.trim()) {
+      sendMessage({ text: input });
+      setInput('');
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
-      <JuliusChat />
+    <div style={{ marginLeft: '25%', marginRight: '25%' }}>
+      <ChatContainer
+        messages={messages}
+        input={input}
+        setInput={setInput}
+        onSubmit={handleSubmit}
+        status={status}
+      />
     </div>
   );
 }
