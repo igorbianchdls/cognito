@@ -1,59 +1,46 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import dynamic from 'next/dynamic';
+import { useState, useEffect, useMemo } from 'react';
 import { useStore } from '@nanostores/react';
-import { ColDef, CellValueChangedEvent, RowSelectedEvent, ModuleRegistry, themeQuartz, FirstDataRenderedEvent } from 'ag-grid-community';
-import { 
-  LicenseManager, 
-  AllEnterpriseModule,
-  RangeSelectionModule,
-  MenuModule,
-  IntegratedChartsModule 
-} from 'ag-grid-enterprise';
-import { AgChartsEnterpriseModule } from 'ag-charts-enterprise';
+import { ColumnDef } from '@tanstack/react-table';
+import { DataTable, createSortableHeader, type TableData } from '@/components/widgets/Table';
 import { 
   activeDatasetStore, 
   initializeDefaultDataset
 } from '@/stores/sheetsStore';
 
-// Configure AG Grid Enterprise License
-LicenseManager.setLicenseKey('[TRIAL]_this_{AG_Charts_and_AG_Grid}_Enterprise_key_{AG-090576}_is_granted_for_evaluation_only___Use_in_production_is_not_permitted___Please_report_misuse_to_legal@ag-grid.com___For_help_with_purchasing_a_production_key_please_contact_info@ag-grid.com___You_are_granted_a_{Single_Application}_Developer_License_for_one_application_only___All_Front-End_JavaScript_developers_working_on_the_application_would_need_to_be_licensed___This_key_will_deactivate_on_{31 August 2025}____[v3]_[0102]_MTc1NjU5NDgwMDAwMA==055771d37eabf862ce4b35dbb0d2a1df');
-
-// Register AG Grid Enterprise modules
-ModuleRegistry.registerModules([
-  AllEnterpriseModule,
-  RangeSelectionModule,
-  MenuModule,
-  IntegratedChartsModule.with(AgChartsEnterpriseModule)
-]);
-
-// Custom theme
-const myTheme = themeQuartz.withParams({
-  borderRadius: 0,
-  browserColorScheme: "light",
-  columnBorder: true,
-  headerFontSize: 14,
-  rowBorder: true,
-  wrapperBorder: false,
-  wrapperBorderRadius: 0
-});
-
-// Dynamic import for AG Grid to avoid SSR issues
-const AgGridReact = dynamic(
-  () => import('ag-grid-react').then((mod) => mod.AgGridReact),
-  { 
-    ssr: false,
-    loading: () => <div className="flex items-center justify-center h-96">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-        <p className="text-sm text-gray-600">Carregando planilha...</p>
-      </div>
-    </div>
+// Helper function to format values based on column type
+const formatValue = (value: unknown, colDef?: any): string => {
+  if (value === null || value === undefined) return '';
+  
+  // Check if it's a number column based on field name or type
+  if (colDef?.enableValue && typeof value === 'number') {
+    return value.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
   }
-);
-
-// AG Grid CSS now imported in globals.css
+  
+  // Check if it's a currency column
+  if (colDef?.field?.toLowerCase().includes('price') || colDef?.field?.toLowerCase().includes('valor')) {
+    const num = Number(value);
+    if (!isNaN(num)) {
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(num);
+    }
+  }
+  
+  // Check if it's a date column
+  if (colDef?.filter === 'agDateColumnFilter') {
+    const date = new Date(String(value));
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleDateString('pt-BR');
+    }
+  }
+  
+  // Boolean formatting
+  if (typeof value === 'boolean') {
+    return value ? '✓' : '✗';
+  }
+  
+  return String(value);
+};
 
 export default function AGGridSheet() {
   const [isClient, setIsClient] = useState(false);
@@ -67,80 +54,79 @@ export default function AGGridSheet() {
     initializeDefaultDataset();
   }, []);
   
+  // Convert AG Grid column definitions to Tanstack React Table format
+  const columns: ColumnDef<TableData>[] = useMemo(() => {
+    if (!activeDataset?.columnDefs) return [];
+    
+    return activeDataset.columnDefs.map((colDef) => ({
+      accessorKey: colDef.field || '',
+      header: createSortableHeader(colDef.headerName || colDef.field || ''),
+      cell: ({ row }) => {
+        const value = row.getValue(colDef.field || '');
+        const isNumberField = colDef.enableValue || 
+                             colDef.field?.toLowerCase().includes('price') || 
+                             colDef.field?.toLowerCase().includes('valor');
+        
+        return (
+          <span className={isNumberField ? 'text-right' : ''}>
+            {formatValue(value, colDef)}
+          </span>
+        );
+      }
+    }));
+  }, [activeDataset?.columnDefs]);
+
   // Dynamic row data from store
-  const rowData = activeDataset?.data || [];
-
-  // Dynamic column definitions from store
-  const colDefs = activeDataset?.columnDefs || [];
-
-  // Grid options
-  const defaultColDef: ColDef = {
-    resizable: true,
-    sortable: true,
-    filter: true,
-    floatingFilter: false,
-    menuTabs: ['filterMenuTab', 'generalMenuTab'],
-    suppressHeaderMenuButton: false,
-    suppressHeaderFilterButton: false
-  };
-
-  // Callbacks
-  const onCellValueChanged = useCallback((event: CellValueChangedEvent) => {
-    console.log('Célula alterada:', {
-      field: event.colDef.field,
-      oldValue: event.oldValue,
-      newValue: event.newValue,
-      data: event.data
-    });
-  }, []);
-
-  const onRowSelected = useCallback((event: RowSelectedEvent) => {
-    if (event.node.isSelected()) {
-      console.log('Linha selecionada:', event.data);
-    }
-  }, []);
-
-  // Auto-size columns based on content when data loads
-  const onFirstDataRendered = useCallback((params: FirstDataRenderedEvent) => {
-    params.api.autoSizeAllColumns();
-  }, []);
+  const rowData = (activeDataset?.data || []) as TableData[];
 
   return (
     <div className="w-full h-full">
-      {/* AG Grid - Ocupando a tela toda */}
       {isClient ? (
-        <div className="w-full h-full">
-          <AgGridReact
-            theme={myTheme}
-            loadThemeGoogleFonts={true}
-            rowData={rowData}
-            columnDefs={colDefs}
-            defaultColDef={defaultColDef}
-            rowSelection={'multiple'}
-            suppressRowClickSelection={false}
-            animateRows={true}
-            pagination={true}
-            paginationPageSize={20}
-            enableRangeSelection={true}
-            enableCharts={true}
-            allowContextMenuWithControlKey={true}
-            sideBar={false}
-            pivotMode={false}
-            rowGroupPanelShow={'never'}
-            onCellValueChanged={onCellValueChanged}
-            onRowSelected={onRowSelected}
-            onFirstDataRendered={onFirstDataRendered}
-          />
+        <div className="w-full h-full p-4">
+          {activeDataset ? (
+            <div className="h-full flex flex-col">
+              {/* Dataset info header */}
+              <div className="mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">{activeDataset.name}</h2>
+                <p className="text-sm text-gray-600">
+                  {activeDataset.totalRows.toLocaleString('pt-BR')} linhas × {activeDataset.totalCols} colunas
+                </p>
+              </div>
+              
+              {/* Data Table */}
+              <div className="flex-1 min-h-0">
+                <DataTable
+                  columns={columns}
+                  data={rowData}
+                  searchPlaceholder="Filtrar dados da planilha..."
+                  showColumnToggle={true}
+                  showPagination={true}
+                  pageSize={50}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <div className="text-gray-400 mb-4">
+                  <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum dataset selecionado</h3>
+                <p className="text-gray-600">Selecione um dataset no painel lateral para visualizar os dados</p>
+              </div>
+            </div>
+          )}
         </div>
       ) : (
-        <div className="w-full flex-1 flex items-center justify-center">
+        <div className="w-full h-full flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
             <p className="text-sm text-gray-600">Carregando planilha...</p>
           </div>
         </div>
       )}
-      
     </div>
   );
 }
