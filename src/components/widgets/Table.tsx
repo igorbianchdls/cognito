@@ -203,7 +203,7 @@ export function DataTable<TData extends TableData>({
 
 // Helper function to create sortable header
 export function createSortableHeader(title: string) {
-  return ({ column }: { column: any }) => {
+  const SortableHeader = ({ column }: { column: { toggleSorting: (desc?: boolean) => void; getIsSorted: () => false | "asc" | "desc" } }) => {
     return (
       <Button
         variant="ghost"
@@ -214,6 +214,9 @@ export function createSortableHeader(title: string) {
       </Button>
     )
   }
+  
+  SortableHeader.displayName = `SortableHeader-${title}`
+  return SortableHeader
 }
 
 // Helper function to create selection column
