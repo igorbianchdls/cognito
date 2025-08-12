@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { useStore } from '@nanostores/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { TableSheets, createSortableHeader, type TableData } from './TableSheets';
-import TableHeader, { FilterState, SortState } from './TableHeader';
 import { 
   activeDatasetStore, 
   initializeDefaultDataset
@@ -43,11 +42,13 @@ const formatValue = (value: unknown, colDef?: { field?: string; enableValue?: bo
   return String(value);
 };
 
-export default function AGGridSheet() {
+interface AGGridSheetProps {
+  filters?: { column: string; operator: string; value: string }[];
+  sorting?: { column: string; direction: 'asc' | 'desc' }[];
+}
+
+export default function AGGridSheet({ filters = [], sorting = [] }: AGGridSheetProps) {
   const [isClient, setIsClient] = useState(false);
-  const [filters, setFilters] = useState<FilterState[]>([]);
-  const [sorting, setSorting] = useState<SortState[]>([]);
-  const [view, setView] = useState<'grid' | 'list'>('grid');
   
   // Store subscriptions
   const activeDataset = useStore(activeDatasetStore);
@@ -96,13 +97,6 @@ export default function AGGridSheet() {
                   {activeDataset.totalRows.toLocaleString('pt-BR')} linhas × {activeDataset.totalCols} colunas
                 </p>
               </div>
-              
-              {/* Table Header with Controls */}
-              <TableHeader
-                onFiltersChange={setFilters}
-                onSortChange={setSorting}
-                onViewChange={setView}
-              />
               
               {/* Data Table */}
               <div className="flex-1 min-h-0">

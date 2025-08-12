@@ -4,11 +4,14 @@ import { useState } from 'react';
 import Sidebar from '@/components/navigation/Sidebar'
 import AGGridSheet from '@/components/sheets/AGGridSheet'
 import RightPanel from '@/components/sheets/RightPanel'
-import TableHeader from '@/components/sheets/TableHeader'
+import TableHeader, { FilterState, SortState } from '@/components/sheets/TableHeader'
 import CollapseButton from '@/components/sheets/CollapseButton'
 
 export default function SheetsPage() {
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
+  const [filters, setFilters] = useState<FilterState[]>([]);
+  const [sorting, setSorting] = useState<SortState[]>([]);
+  const [view, setView] = useState<'grid' | 'list'>('grid');
 
   const toggleRightPanel = () => {
     setIsRightPanelCollapsed(!isRightPanelCollapsed);
@@ -22,13 +25,20 @@ export default function SheetsPage() {
       {/* Área Principal */}
       <div className="flex-1 min-w-0 flex flex-col">
         {/* TableHeader - Ocupando 100% da largura */}
-        <TableHeader />
+        <TableHeader 
+          onFiltersChange={setFilters}
+          onSortChange={setSorting}
+          onViewChange={setView}
+        />
         
         {/* Área inferior: AG Grid + RightPanel lado a lado */}
         <div className="flex-1 min-h-0 flex">
           {/* AG Grid - Área central */}
           <div className="flex-1 min-w-0 relative">
-            <AGGridSheet />
+            <AGGridSheet 
+              filters={filters}
+              sorting={sorting}
+            />
             
             {/* Collapse Button - Visível apenas em md+ */}
             <div className="hidden md:block">
