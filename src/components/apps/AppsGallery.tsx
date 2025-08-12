@@ -1,57 +1,29 @@
 'use client'
 
 import { useState, useMemo, useCallback } from 'react'
-import { AppData, mockApps, getAppsByCategory, searchApps, getTrendingApps } from '@/data/appsData'
+import { AppData, mockApps, searchApps } from '@/data/appsData'
 import AppCard from './AppCard'
-import CategoryFilter from './CategoryFilter'
 import SearchBar from './SearchBar'
 
 export default function AppsGallery() {
-  const [activeCategory, setActiveCategory] = useState('All')
   const [searchQuery, setSearchQuery] = useState('')
-  const [showTrending, setShowTrending] = useState(false)
 
   // Filter and search logic
   const filteredApps = useMemo(() => {
-    let apps: AppData[] = []
-
-    if (showTrending) {
-      apps = getTrendingApps()
-    } else if (searchQuery) {
-      apps = searchApps(searchQuery)
-    } else {
-      apps = getAppsByCategory(activeCategory)
+    if (searchQuery) {
+      return searchApps(searchQuery)
     }
-
-    return apps
-  }, [activeCategory, searchQuery, showTrending])
-
-  const handleCategoryChange = useCallback((category: string) => {
-    setActiveCategory(category)
-    setSearchQuery('')
-    setShowTrending(false)
-  }, [])
+    return mockApps
+  }, [searchQuery])
 
   const handleSearch = useCallback((query: string) => {
     setSearchQuery(query)
-    if (query) {
-      setActiveCategory('All')
-      setShowTrending(false)
-    }
   }, [])
 
-  const handleTrendingToggle = useCallback(() => {
-    setShowTrending(!showTrending)
-    if (!showTrending) {
-      setActiveCategory('All')
-      setSearchQuery('')
-    }
-  }, [showTrending])
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
             <div className="flex justify-center items-center gap-3 mb-6">
@@ -74,30 +46,15 @@ export default function AppsGallery() {
         </div>
       </div>
 
-      {/* Category Filter */}
-      <CategoryFilter 
-        activeCategory={activeCategory}
-        onCategoryChange={handleCategoryChange}
-        showTrending={showTrending}
-        onTrendingToggle={handleTrendingToggle}
-      />
-
       {/* Results */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Results Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="text-sm text-gray-600">
-            {showTrending ? (
-              <span>Showing {filteredApps.length} trending apps</span>
-            ) : searchQuery ? (
+            {searchQuery ? (
               <span>Found {filteredApps.length} results for &ldquo;{searchQuery}&rdquo;</span>
             ) : (
-              <span>
-                {activeCategory === 'All' 
-                  ? `Showing all ${filteredApps.length} apps` 
-                  : `${filteredApps.length} apps in ${activeCategory}`
-                }
-              </span>
+              <span>Showing all {filteredApps.length} apps</span>
             )}
           </div>
           
@@ -122,17 +79,11 @@ export default function AppsGallery() {
             <p className="text-gray-600 mb-6">
               {searchQuery 
                 ? `No results found for &ldquo;${searchQuery}&rdquo;. Try a different search term.`
-                : showTrending
-                ? "No trending apps at the moment. Check back later!"
-                : `No apps found in the ${activeCategory} category.`
+                : "No apps found."
               }
             </p>
             <button 
-              onClick={() => {
-                setSearchQuery('')
-                setActiveCategory('All')
-                setShowTrending(false)
-              }}
+              onClick={() => setSearchQuery('')}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Browse all apps
@@ -142,7 +93,7 @@ export default function AppsGallery() {
       </div>
 
       {/* Footer */}
-      <div className="bg-white border-t border-gray-200 mt-16">
+      <div className="bg-white mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center text-gray-600">
             <p className="mb-2">
