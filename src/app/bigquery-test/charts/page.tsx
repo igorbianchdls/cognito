@@ -20,6 +20,7 @@ import {
 import type { ChartData } from '@/components/charts';
 import { DataTable, createSortableHeader, createSelectionColumn, createActionsColumn } from '@/components/widgets/Table';
 import type { ColumnDef } from '@tanstack/react-table';
+import { KPICard } from '@/components/widgets/KPICard';
 
 // All chart components use ChartData[] interface consistently
 
@@ -257,6 +258,12 @@ export default function NivoChartsShowcase() {
           pageSize={5}
         />
       )
+    },
+    {
+      id: 'kpi',
+      title: 'KPI Cards',
+      description: 'Cards de métricas com indicadores de performance',
+      component: <KPICard />
     }
   ];
 
