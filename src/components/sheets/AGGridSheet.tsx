@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useStore } from '@nanostores/react';
 import { ColumnDef } from '@tanstack/react-table';
-import { DataTable, createSortableHeader, type TableData } from '@/components/widgets/Table';
+import { TableSheets, createSortableHeader, type TableData } from './TableSheets';
 import { 
   activeDatasetStore, 
   initializeDefaultDataset
@@ -95,12 +95,17 @@ export default function AGGridSheet() {
               
               {/* Data Table */}
               <div className="flex-1 min-h-0">
-                <DataTable
+                <TableSheets
                   columns={columns}
                   data={rowData}
                   searchPlaceholder="Filtrar dados da planilha..."
                   showColumnToggle={true}
                   showPagination={true}
+                  showRowNumbers={true}
+                  showStats={true}
+                  showToolbar={true}
+                  editable={false}
+                  compactMode={true}
                   pageSize={50}
                 />
               </div>
