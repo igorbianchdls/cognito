@@ -1,7 +1,6 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport } from 'ai';
 import { useState, FormEvent, useEffect } from 'react';
 import ChatContainer from '@/components/nexus/ChatContainer';
 
@@ -15,9 +14,7 @@ export default function Home() {
   console.log('🔍 [page.tsx] apiEndpoint calculado:', apiEndpoint);
   
   const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({
-      api: apiEndpoint,
-    }),
+    api: apiEndpoint,
   });
   const [input, setInput] = useState('');
   

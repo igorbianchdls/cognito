@@ -1,7 +1,6 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport } from 'ai';
 import { useState, FormEvent, useEffect } from 'react';
 import ChatContainer from '../../components/nexus/ChatContainer';
 
@@ -10,9 +9,7 @@ export default function Page() {
   const [currentAgent, setCurrentAgent] = useState<string>('nexus');
   
   const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({
-      api: currentAgent === 'nexus' ? '/api/chat-ui' : '/api/meta-analyst',
-    }),
+    api: currentAgent === 'nexus' ? '/api/chat-ui' : '/api/meta-analyst',
   });
   const [input, setInput] = useState('');
   
