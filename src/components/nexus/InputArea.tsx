@@ -13,28 +13,24 @@ import {
 } from '@/components/ai-elements/prompt-input';
 import { GlobeIcon, MicIcon } from 'lucide-react';
 import { FormEvent } from 'react';
-import { useStore } from '@nanostores/react';
 import type { ChatStatus } from 'ai';
-import { currentAgent as agentStore, setCurrentAgent } from '@/stores/agentStore';
 
 interface InputAreaProps {
   input: string;
   setInput: (value: string) => void;
   onSubmit: (e: FormEvent) => void;
   status: string;
+  selectedAgent: string;
+  onAgentChange: (agent: string) => void;
 }
 
 const models = [
   { id: 'nexus', name: 'Nexus' },
-  { id: 'meta-analyst', name: 'MetaAnalyst' },
+  { id: 'teste', name: 'Teste' },
 ];
 
-export default function InputArea({ input, setInput, onSubmit, status }: InputAreaProps) {
-  const agent = useStore(agentStore);
-  
-  console.log('🎤 [InputArea] Agent do nanostore:', agent);
-  console.log('🎤 [InputArea] typeof agent:', typeof agent);
-  console.log('🎤 [InputArea] agentStore.get():', agentStore.get());
+export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange }: InputAreaProps) {
+  console.log('🎤 [InputArea] Agent via prop:', selectedAgent);
 
   return (
     <PromptInput onSubmit={onSubmit} className="mt-4 border-gray-100">
@@ -54,14 +50,9 @@ export default function InputArea({ input, setInput, onSubmit, status }: InputAr
           <PromptInputModelSelect
             onValueChange={(value) => {
               console.log('🎤 [InputArea] onValueChange chamado:', value);
-              console.log('🎤 [InputArea] typeof value:', typeof value);
-              console.log('🎤 [InputArea] agent antes da mudança:', agent);
-              console.log('🎤 [InputArea] agentStore.get() antes:', agentStore.get());
-              setCurrentAgent(value); // Usa diretamente o nanostore
-              console.log('🎤 [InputArea] setCurrentAgent executado com:', value);
-              console.log('🎤 [InputArea] agentStore.get() depois:', agentStore.get());
+              onAgentChange(value);
             }}
-            value={agent}
+            value={selectedAgent}
           >
             <PromptInputModelSelectTrigger>
               <PromptInputModelSelectValue />

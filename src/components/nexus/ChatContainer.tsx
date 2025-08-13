@@ -9,6 +9,8 @@ interface ChatContainerProps {
   setInput: (value: string) => void;
   onSubmit: (e: FormEvent) => void;
   status: string;
+  selectedAgent: string;
+  onAgentChange: (agent: string) => void;
 }
 
 export default function ChatContainer({ 
@@ -16,7 +18,9 @@ export default function ChatContainer({
   input, 
   setInput, 
   onSubmit, 
-  status
+  status,
+  selectedAgent,
+  onAgentChange
 }: ChatContainerProps) {
   console.log('📦 [ChatContainer] Props recebidas:', { 
     messagesCount: messages.length 
@@ -39,6 +43,8 @@ export default function ChatContainer({
             setInput={setInput}
             onSubmit={onSubmit}
             status={status}
+            selectedAgent={selectedAgent}
+            onAgentChange={onAgentChange}
           />
         </div>
       </div>
@@ -57,6 +63,8 @@ export default function ChatContainer({
           setInput={setInput}
           onSubmit={onSubmit}
           status={status}
+          selectedAgent={selectedAgent}
+          onAgentChange={onAgentChange}
         />
       </div>
     </div>

@@ -2,28 +2,31 @@
 
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
-import { useState, FormEvent, useEffect } from 'react';
-import { useStore } from '@nanostores/react';
+import { useState, FormEvent } from 'react';
 import ChatContainer from '../../components/nexus/ChatContainer';
 import type { UIMessage } from 'ai';
-import { currentAgent } from '@/stores/agentStore';
 
 export default function Page() {
-  // Usar o nanostore como fonte única de verdade
-  const selectedAgent = useStore(currentAgent);
+  // Estado local em vez de nanostore
+  const [selectedAgent, setSelectedAgent] = useState('teste');
   
   // DEBUG: Log detalhado do estado atual
   console.log('🔄 [nexus/Page] Component montado para agente:', selectedAgent);
-  console.log('🎯 [nexus/Page] typeof selectedAgent:', typeof selectedAgent);
-  console.log('🎯 [nexus/Page] currentAgent store value:', currentAgent.get());
   
-  // Single useChat - usando API de teste
-  const apiEndpoint = '/api/teste';
-  console.log('🔄 [nexus/useChat] Criando para API:', apiEndpoint);
+  // Chats separados para cada agente
+  const chats = {
+    nexus: useChat({ 
+      transport: new DefaultChatTransport({ api: '/api/chat-ui' }), 
+      id: 'nexus' 
+    }),
+    teste: useChat({ 
+      transport: new DefaultChatTransport({ api: '/api/teste' }), 
+      id: 'teste'
+    }),
+  };
   
-  const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({ api: apiEndpoint }),
-  });
+  // Usa o chat do agente selecionado
+  const { messages, sendMessage, status } = chats[selectedAgent === 'nexus' ? 'nexus' : 'teste'];
   const [input, setInput] = useState('');
   
   // COMENTADO TEMPORARIAMENTE - localStorage
@@ -66,6 +69,8 @@ export default function Page() {
         setInput={setInput}
         onSubmit={handleSubmit}
         status={status}
+        selectedAgent={selectedAgent}
+        onAgentChange={setSelectedAgent}
       />
     </div>
   );
