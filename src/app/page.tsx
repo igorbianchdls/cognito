@@ -1,12 +1,15 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 import { useState, FormEvent, useEffect } from 'react';
 import ChatContainer from '@/components/nexus/ChatContainer';
+import type { UIMessage } from 'ai';
 
 export default function Home() {
-  // Estado para o agente atual
+  // Estado para o agente atual e mensagens salvas
   const [currentAgent, setCurrentAgent] = useState<string>('nexus');
+  const [savedMessages, setSavedMessages] = useState<UIMessage[]>([]);
   
   console.log('🔍 [page.tsx] currentAgent inicial:', currentAgent);
   
@@ -14,9 +17,19 @@ export default function Home() {
   console.log('🔍 [page.tsx] apiEndpoint calculado:', apiEndpoint);
   
   const { messages, sendMessage, status } = useChat({
-    api: apiEndpoint,
+    key: currentAgent, // Re-cria useChat quando muda agente
+    initialMessages: savedMessages, // Preserva mensagens anteriores
+    transport: new DefaultChatTransport({
+      api: apiEndpoint,
+    }),
   });
   const [input, setInput] = useState('');
+  
+  // Salva mensagens quando mudarem
+  useEffect(() => {
+    console.log('💾 [page.tsx] Salvando mensagens no estado:', messages.length);
+    setSavedMessages(messages);
+  }, [messages]);
   
   // Salvar estado no localStorage
   useEffect(() => {
@@ -44,7 +57,9 @@ export default function Home() {
   // Callback para mudança de agente
   const handleAgentChange = (agent: string) => {
     console.log('🔄 [page.tsx] handleAgentChange chamado. Mudando de', currentAgent, 'para', agent);
-    setCurrentAgent(agent);
+    console.log('🔄 [page.tsx] Salvando', messages.length, 'mensagens antes da troca');
+    setSavedMessages(messages); // Salva mensagens atuais
+    setCurrentAgent(agent);     // Troca agente (re-cria useChat)
     console.log('🔄 [page.tsx] setCurrentAgent executado');
   };
 

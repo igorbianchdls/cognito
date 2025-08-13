@@ -1,17 +1,29 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 import { useState, FormEvent, useEffect } from 'react';
 import ChatContainer from '../../components/nexus/ChatContainer';
+import type { UIMessage } from 'ai';
 
 export default function Page() {
-  // Estado para o agente atual
+  // Estado para o agente atual e mensagens salvas
   const [currentAgent, setCurrentAgent] = useState<string>('nexus');
+  const [savedMessages, setSavedMessages] = useState<UIMessage[]>([]);
   
   const { messages, sendMessage, status } = useChat({
-    api: currentAgent === 'nexus' ? '/api/chat-ui' : '/api/meta-analyst',
+    key: currentAgent, // Re-cria useChat quando muda agente
+    initialMessages: savedMessages, // Preserva mensagens anteriores
+    transport: new DefaultChatTransport({
+      api: currentAgent === 'nexus' ? '/api/chat-ui' : '/api/meta-analyst',
+    }),
   });
   const [input, setInput] = useState('');
+  
+  // Salva mensagens quando mudarem
+  useEffect(() => {
+    setSavedMessages(messages);
+  }, [messages]);
   
   // Salvar estado no localStorage
   useEffect(() => {
@@ -35,7 +47,8 @@ export default function Page() {
   // Callback para mudança de agente
   const handleAgentChange = (agent: string) => {
     console.log('Agent changed to:', agent);
-    setCurrentAgent(agent);
+    setSavedMessages(messages); // Salva mensagens atuais
+    setCurrentAgent(agent);     // Troca agente (re-cria useChat)
   };
 
   const handleSubmit = (e: FormEvent) => {
