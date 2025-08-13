@@ -13,15 +13,15 @@ export default function Page() {
   // DEBUG: Log detalhado do estado atual
   console.log('🔄 [nexus/Page] Component montado para agente:', selectedAgent);
   
-  // Chats separados para cada agente
+  // Chats separados para cada agente - ID compartilhado
   const chats = {
     nexus: useChat({ 
       transport: new DefaultChatTransport({ api: '/api/chat-ui' }), 
-      id: 'nexus' 
+      id: 'shared'
     }),
     teste: useChat({ 
       transport: new DefaultChatTransport({ api: '/api/teste' }), 
-      id: 'teste'
+      id: 'shared'
     }),
   };
   
