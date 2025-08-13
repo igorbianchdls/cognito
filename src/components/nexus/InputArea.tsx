@@ -15,7 +15,7 @@ import { GlobeIcon, MicIcon } from 'lucide-react';
 import { FormEvent } from 'react';
 import { useStore } from '@nanostores/react';
 import type { ChatStatus } from 'ai';
-import { currentAgent, setCurrentAgent } from '@/stores/agentStore';
+import { currentAgent as agentStore, setCurrentAgent } from '@/stores/agentStore';
 
 interface InputAreaProps {
   input: string;
@@ -32,7 +32,7 @@ const models = [
 ];
 
 export default function InputArea({ input, setInput, onSubmit, status, currentAgent, onAgentChange }: InputAreaProps) {
-  const agent = useStore(currentAgent);
+  const agent = useStore(agentStore);
   
   console.log('🎤 [InputArea] Agent do nanostore:', agent);
   console.log('🎤 [InputArea] Props recebidas:', { currentAgent, hasOnAgentChange: !!onAgentChange });
