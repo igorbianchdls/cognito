@@ -12,11 +12,17 @@ export default function Page() {
   // Usar o nanostore como fonte única de verdade
   const selectedAgent = useStore(currentAgent);
   
+  // DEBUG: Log detalhado do estado atual
+  console.log('🎯 [nexus/Page] RENDER! selectedAgent from store:', selectedAgent);
+  console.log('🎯 [nexus/Page] typeof selectedAgent:', typeof selectedAgent);
+  console.log('🎯 [nexus/Page] currentAgent store value:', currentAgent.get());
+  
   // Recria transport quando selectedAgent muda
   const transport = useMemo(() => {
     const apiEndpoint = selectedAgent === 'nexus' ? '/api/chat-ui' : '/api/meta-analyst';
     console.log('🔄 [nexus/useMemo] EXECUTANDO! selectedAgent:', selectedAgent);
     console.log('🔄 [nexus/useMemo] EXECUTANDO! transport para:', apiEndpoint);
+    console.log('🔄 [nexus/useMemo] Lógica: selectedAgent === "nexus"?', selectedAgent === 'nexus');
     
     const newTransport = new DefaultChatTransport({
       api: apiEndpoint,
