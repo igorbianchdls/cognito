@@ -13,15 +13,15 @@ export default function Page() {
   // DEBUG: Log detalhado do estado atual
   console.log('🔄 [nexus/Page] Component montado para agente:', selectedAgent);
   
-  // Chats separados para cada agente - ID compartilhado
+  // Chats separados para cada agente - IDs únicos
   const chats = {
     nexus: useChat({ 
       transport: new DefaultChatTransport({ api: '/api/chat-ui' }), 
-      id: 'shared'
+      id: 'nexus-chat'
     }),
     teste: useChat({ 
       transport: new DefaultChatTransport({ api: '/api/teste' }), 
-      id: 'shared'
+      id: 'teste-chat'
     }),
   };
   
@@ -56,6 +56,7 @@ export default function Page() {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
+      console.log('🔄 [nexus/handleSubmit] Enviando mensagem via:', selectedAgent);
       sendMessage({ text: input });
       setInput('');
     }
@@ -70,7 +71,10 @@ export default function Page() {
         onSubmit={handleSubmit}
         status={status}
         selectedAgent={selectedAgent}
-        onAgentChange={setSelectedAgent}
+        onAgentChange={(newAgent) => {
+          console.log('🔄 [nexus/Page] Trocando agente de', selectedAgent, 'para', newAgent);
+          setSelectedAgent(newAgent);
+        }}
       />
     </div>
   );
