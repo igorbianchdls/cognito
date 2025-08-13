@@ -21,7 +21,6 @@ export default function Page() {
   }, [currentAgent]);
   
   const { messages, sendMessage, status } = useChat({
-    initialMessages: savedMessages, // Preserva mensagens anteriores
     transport,
   });
   const [input, setInput] = useState('');

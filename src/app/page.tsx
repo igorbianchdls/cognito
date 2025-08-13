@@ -25,7 +25,6 @@ export default function Home() {
   }, [apiEndpoint]);
   
   const { messages, sendMessage, status } = useChat({
-    initialMessages: savedMessages, // Preserva mensagens anteriores
     transport,
   });
   const [input, setInput] = useState('');
