@@ -10,6 +10,7 @@ import { currentAgent as agentStore, setCurrentAgent } from '@/stores/agentStore
 export default function Home() {
   // Estado global do agente via nanostore
   const agent = useStore(agentStore);
+  const [selectedAgent, setSelectedAgent] = useState('nexus');
   
   console.log('🔍 [page.tsx] agent do nanostore:', agent);
   
@@ -51,6 +52,8 @@ export default function Home() {
         setInput={setInput}
         onSubmit={handleSubmit}
         status={status}
+        selectedAgent={selectedAgent}
+        onAgentChange={setSelectedAgent}
       />
     </div>
   );
