@@ -3,6 +3,11 @@ import { streamText, tool, stepCountIs } from 'ai';
 import { z } from 'zod';
 
 export async function POST(req: Request) {
+  console.log('🚨 === META-ANALYST API HIT! ===');
+  console.log('🚨 REQUEST CHEGOU na API meta-analyst!');
+  console.log('🚨 URL:', req.url);
+  console.log('🚨 Method:', req.method);
+  console.log('🚨 Headers:', Object.fromEntries(req.headers.entries()));
   console.log('=== META-ANALYST API DEBUG ===');
   console.log('API Key exists:', !!process.env.ANTHROPIC_API_KEY);
   console.log('API Key length:', process.env.ANTHROPIC_API_KEY?.length || 0);
@@ -10,8 +15,9 @@ export async function POST(req: Request) {
   
   try {
     const { messages, files } = await req.json();
-    console.log('Messages received:', messages?.length || 0);
-    console.log('Files received:', files?.length || 0);
+    console.log('🚨 Messages received in meta-analyst:', messages?.length || 0);
+    console.log('🚨 Files received in meta-analyst:', files?.length || 0);
+    console.log('🚨 First message:', messages?.[0]);
 
     if (!process.env.ANTHROPIC_API_KEY) {
       console.error('Missing ANTHROPIC_API_KEY environment variable');
@@ -114,10 +120,15 @@ export async function POST(req: Request) {
     });
 
     console.log('🚀 MetaAnalyst streaming response...');
+    console.log('🚨 === META-ANALYST RETORNANDO RESPOSTA! ===');
     
-    return result.toUIMessageStreamResponse();
+    const response = result.toUIMessageStreamResponse();
+    console.log('🚨 Response object:', response);
+    return response;
   } catch (error) {
-    console.error('Error in meta-analyst API:', error);
+    console.error('🚨 === META-ANALYST ERROR! ===');
+    console.error('🚨 Error in meta-analyst API:', error);
+    console.error('🚨 Error stack:', error instanceof Error ? error.stack : 'No stack');
     return new Response(JSON.stringify({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
