@@ -13,24 +13,18 @@ export default function Page() {
   const selectedAgent = useStore(currentAgent);
   
   // DEBUG: Log detalhado do estado atual
-  console.log('🎯 [nexus/Page] RENDER! selectedAgent from store:', selectedAgent);
+  console.log('🔄 [nexus/Page] Component montado para agente:', selectedAgent);
   console.log('🎯 [nexus/Page] typeof selectedAgent:', typeof selectedAgent);
   console.log('🎯 [nexus/Page] currentAgent store value:', currentAgent.get());
   
-  // Chats separados para cada agente
-  const chats = {
-    nexus: useChat({ 
-      transport: new DefaultChatTransport({ api: '/api/chat-ui' }), 
-      id: 'nexus' 
-    }),
-    meta: useChat({ 
-      transport: new DefaultChatTransport({ api: '/api/meta-analyst' }), 
-      id: 'meta' 
-    }),
-  };
+  // Single useChat - será recriado quando key muda
+  const apiEndpoint = selectedAgent === 'nexus' ? '/api/chat-ui' : '/api/meta-analyst';
+  console.log('🔄 [nexus/useChat] Criando para API:', apiEndpoint);
   
-  // Usa o chat do agente selecionado
-  const { messages, sendMessage, status } = chats[selectedAgent === 'nexus' ? 'nexus' : 'meta'];
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({ api: apiEndpoint }),
+    id: selectedAgent,
+  });
   const [input, setInput] = useState('');
   
   // COMENTADO TEMPORARIAMENTE - localStorage
@@ -66,7 +60,7 @@ export default function Page() {
   };
 
   return (
-    <div style={{ marginLeft: '25%', marginRight: '25%' }}>
+    <div key={selectedAgent} style={{ marginLeft: '25%', marginRight: '25%' }}>
       <ChatContainer
         messages={messages}
         input={input}
