@@ -34,15 +34,10 @@ export default function Page() {
   // Escolhe qual hook vai enviar a próxima mensagem
   const { sendMessage, status } = chats[selectedAgent === 'nexus' ? 'nexus' : 'teste'];
 
-  // Combina mensagens de todos os hooks e ordena por timestamp
-  const displayedMessages: UIMessage[] = [
-    ...chats.nexus.messages,
-    ...chats.teste.messages
-  ].sort((a, b) => {
-    const timeA = new Date(a.date || 0).getTime();
-    const timeB = new Date(b.date || 0).getTime();
-    return timeA - timeB; // Ordem cronológica
-  });
+  // Combina mensagens: agente inativo primeiro, agente ativo por último
+  const displayedMessages: UIMessage[] = selectedAgent === 'nexus' 
+    ? [...chats.teste.messages, ...chats.nexus.messages]
+    : [...chats.nexus.messages, ...chats.teste.messages];
 
   const [input, setInput] = useState('');
   
