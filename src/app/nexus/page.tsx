@@ -34,10 +34,10 @@ export default function Page() {
   // Escolhe qual hook vai enviar a próxima mensagem
   const { sendMessage, status } = chats[selectedAgent === 'nexus' ? 'nexus' : 'teste'];
 
-  // Combina mensagens: agente inativo primeiro, agente ativo por último
-  const displayedMessages: UIMessage[] = selectedAgent === 'nexus' 
-    ? [...chats.teste.messages, ...chats.nexus.messages]
-    : [...chats.nexus.messages, ...chats.teste.messages];
+  // Combina mensagens: agente selecionado sempre por último
+  const displayedMessages: UIMessage[] = Object.keys(chats)
+    .sort(key => key === selectedAgent ? 1 : -1) // coloca o agente selecionado no final
+    .flatMap(key => chats[key].messages); // junta todas as mensagens
 
   const [input, setInput] = useState('');
   
