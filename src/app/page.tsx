@@ -28,13 +28,13 @@ export default function Home() {
   });
   const [input, setInput] = useState('');
   
-  // Salva mensagens quando mudarem
+  // COMENTADO TEMPORARIAMENTE - localStorage
+  /*
   useEffect(() => {
     console.log('💾 [page.tsx] Salvando mensagens no estado:', messages.length);
     setSavedMessages(messages);
   }, [messages]);
   
-  // Salvar estado no localStorage
   useEffect(() => {
     console.log('💾 [page.tsx] Saving to localStorage:', { agent: currentAgent, messagesCount: messages.length });
     localStorage.setItem('chat-state', JSON.stringify({
@@ -43,7 +43,6 @@ export default function Home() {
     }));
   }, [messages, currentAgent]);
   
-  // Carregar estado do localStorage
   useEffect(() => {
     console.log('📂 [page.tsx] useEffect carregar localStorage executado');
     const savedState = localStorage.getItem('chat-state');
@@ -56,6 +55,7 @@ export default function Home() {
       console.log('📂 [page.tsx] Nenhum estado salvo encontrado');
     }
   }, []);
+  */
   
   // Callback para mudança de agente
   const handleAgentChange = (agent: string) => {
