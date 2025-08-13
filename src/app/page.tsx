@@ -2,20 +2,21 @@
 
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
-import { useState, FormEvent, useEffect, useMemo } from 'react';
+import { useState, FormEvent, useMemo } from 'react';
+import { useStore } from '@nanostores/react';
 import ChatContainer from '@/components/nexus/ChatContainer';
-import type { UIMessage } from 'ai';
+import { currentAgent, setCurrentAgent } from '@/stores/agentStore';
 
 export default function Home() {
-  // Estado para o agente atual
-  const [currentAgent, setCurrentAgent] = useState<string>('nexus');
+  // Estado global do agente via nanostore
+  const agent = useStore(currentAgent);
   
-  console.log('🔍 [page.tsx] currentAgent inicial:', currentAgent);
+  console.log('🔍 [page.tsx] agent do nanostore:', agent);
   
-  // Recria transport quando currentAgent muda
+  // Recria transport quando agent do nanostore muda
   const transport = useMemo(() => {
-    const apiEndpoint = currentAgent === 'nexus' ? '/api/chat-ui' : '/api/meta-analyst';
-    console.log('🔄 [useMemo] EXECUTANDO! currentAgent:', currentAgent);
+    const apiEndpoint = agent === 'nexus' ? '/api/chat-ui' : '/api/meta-analyst';
+    console.log('🔄 [useMemo] EXECUTANDO! agent:', agent);
     console.log('🔄 [useMemo] EXECUTANDO! transport para:', apiEndpoint);
     
     const newTransport = new DefaultChatTransport({
@@ -23,10 +24,9 @@ export default function Home() {
     });
     
     console.log('🔄 [useMemo] TRANSPORT CRIADO:', newTransport);
-    console.log('🔄 [useMemo] TRANSPORT.api:', newTransport);
     
     return newTransport;
-  }, [currentAgent]);
+  }, [agent]);
   
   console.log('🔄 [useChat] Recebendo transport:', transport);
   const { messages, sendMessage, status } = useChat({
@@ -34,39 +34,11 @@ export default function Home() {
   });
   const [input, setInput] = useState('');
   
-  // COMENTADO TEMPORARIAMENTE - localStorage
-  /*
-  useEffect(() => {
-    console.log('💾 [page.tsx] Salvando mensagens no estado:', messages.length);
-    setSavedMessages(messages);
-  }, [messages]);
   
-  useEffect(() => {
-    console.log('💾 [page.tsx] Saving to localStorage:', { agent: currentAgent, messagesCount: messages.length });
-    localStorage.setItem('chat-state', JSON.stringify({
-      agent: currentAgent,
-      messages: messages
-    }));
-  }, [messages, currentAgent]);
-  
-  useEffect(() => {
-    console.log('📂 [page.tsx] useEffect carregar localStorage executado');
-    const savedState = localStorage.getItem('chat-state');
-    if (savedState) {
-      const parsed = JSON.parse(savedState);
-      console.log('📂 [page.tsx] Loaded from localStorage:', { agent: parsed.agent, messagesCount: parsed.messages?.length || 0 });
-      console.log('📂 [page.tsx] Mudando currentAgent de', currentAgent, 'para', parsed.agent || 'nexus');
-      setCurrentAgent(parsed.agent || 'nexus');
-    } else {
-      console.log('📂 [page.tsx] Nenhum estado salvo encontrado');
-    }
-  }, []);
-  */
-  
-  // Callback para mudança de agente
-  const handleAgentChange = (agent: string) => {
-    console.log('🔄 [page.tsx] handleAgentChange chamado. Mudando de', currentAgent, 'para', agent);
-    setCurrentAgent(agent); // Força re-criação do componente
+  // Callback para mudança de agente (agora usa nanostore)
+  const handleAgentChange = (newAgent: string) => {
+    console.log('🔄 [page.tsx] handleAgentChange chamado. Mudando de', agent, 'para', newAgent);
+    setCurrentAgent(newAgent); // Usa action do nanostore
     console.log('🔄 [page.tsx] setCurrentAgent executado');
   };
 
@@ -86,7 +58,7 @@ export default function Home() {
         setInput={setInput}
         onSubmit={handleSubmit}
         status={status}
-        currentAgent={currentAgent}
+        currentAgent={agent}
         onAgentChange={handleAgentChange}
       />
     </div>

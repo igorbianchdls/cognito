@@ -12,8 +12,10 @@ import {
   PromptInputTools,
 } from '@/components/ai-elements/prompt-input';
 import { GlobeIcon, MicIcon } from 'lucide-react';
-import { useState, FormEvent } from 'react';
+import { FormEvent } from 'react';
+import { useStore } from '@nanostores/react';
 import type { ChatStatus } from 'ai';
+import { currentAgent, setCurrentAgent } from '@/stores/agentStore';
 
 interface InputAreaProps {
   input: string;
@@ -30,6 +32,9 @@ const models = [
 ];
 
 export default function InputArea({ input, setInput, onSubmit, status, currentAgent, onAgentChange }: InputAreaProps) {
+  const agent = useStore(currentAgent);
+  
+  console.log('🎤 [InputArea] Agent do nanostore:', agent);
   console.log('🎤 [InputArea] Props recebidas:', { currentAgent, hasOnAgentChange: !!onAgentChange });
 
   return (
@@ -50,11 +55,11 @@ export default function InputArea({ input, setInput, onSubmit, status, currentAg
           <PromptInputModelSelect
             onValueChange={(value) => {
               console.log('🎤 [InputArea] onValueChange chamado:', value);
-              console.log('🎤 [InputArea] currentAgent antes da mudança:', currentAgent);
-              onAgentChange(value);
-              console.log('🎤 [InputArea] onAgentChange executado');
+              console.log('🎤 [InputArea] agent antes da mudança:', agent);
+              setCurrentAgent(value); // Usa diretamente o nanostore
+              console.log('🎤 [InputArea] setCurrentAgent executado');
             }}
-            value={currentAgent}
+            value={agent}
           >
             <PromptInputModelSelectTrigger>
               <PromptInputModelSelectValue />
