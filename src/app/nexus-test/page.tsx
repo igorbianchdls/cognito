@@ -8,7 +8,7 @@ export default function NexusTestPage() {
   
   // useChat DIRETO sem transport customizado
   console.log('🧪 [NEXUS-TEST] Inicializando useChat direto para /api/meta-analyst');
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+  const { messages, sendMessage, isLoading } = useChat({
     api: '/api/meta-analyst',
     onError: (error) => {
       console.log('🧪 [NEXUS-TEST] ERRO:', error);
@@ -20,6 +20,8 @@ export default function NexusTestPage() {
       console.log('🧪 [NEXUS-TEST] MENSAGEM FINALIZADA:', message);
     }
   });
+
+  const [input, setInput] = useState('');
 
   console.log('🧪 [NEXUS-TEST] Estado atual:', { 
     messagesCount: messages.length, 
@@ -83,10 +85,17 @@ export default function NexusTestPage() {
       </div>
 
       {/* Formulário de envio */}
-      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: '10px' }}>
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        if (input.trim()) {
+          console.log('🧪 [NEXUS-TEST] ENVIANDO MENSAGEM:', input);
+          sendMessage({ text: input });
+          setInput('');
+        }
+      }} style={{ display: 'flex', gap: '10px' }}>
         <input
           value={input}
-          onChange={handleInputChange}
+          onChange={(e) => setInput(e.target.value)}
           placeholder="Digite sua mensagem aqui..."
           disabled={isLoading}
           style={{
