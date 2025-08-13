@@ -18,19 +18,19 @@ export default function Page() {
     nexus: useChat({
       transport: new DefaultChatTransport({ api: '/api/chat-ui' }),
       id: 'nexus-chat',
-      onFinish: ({ messages }) => {
-        console.log('NEXUS terminou. Salvando todas as mensagens:', messages);
+      onFinish: ({ message }) => {
+        console.log('NEXUS terminou. Salvando todas as mensagens:', chats.nexus.messages);
         // Atualiza o estado global com TODAS as mensagens
-        setGlobalMessages(messages);
+        setGlobalMessages(chats.nexus.messages);
       },
     }),
     teste: useChat({
       transport: new DefaultChatTransport({ api: '/api/teste' }),
       id: 'teste-chat',
-      onFinish: ({ messages }) => {
-        console.log('TESTE terminou. Salvando todas as mensagens:', messages);
+      onFinish: ({ message }) => {
+        console.log('TESTE terminou. Salvando todas as mensagens:', chats.teste.messages);
         // Atualiza o estado global com TODAS as mensagens
-        setGlobalMessages(messages);
+        setGlobalMessages(chats.teste.messages);
       },
     }),
   };
@@ -38,8 +38,11 @@ export default function Page() {
   // Escolhe qual hook vai enviar a próxima mensagem
   const { sendMessage, status } = chats[selectedAgent];
 
-  // Sempre renderiza todas as mensagens globais
-  const displayedMessages = globalMessages;
+  // Combina mensagens de todos os hooks
+  const displayedMessages: UIMessage[] = [
+    ...chats.nexus.messages,
+    ...chats.teste.messages
+  ];
 
   const [input, setInput] = useState('');
   
