@@ -8,7 +8,7 @@ export default function NexusTestPage() {
   
   // useChat DIRETO sem transport customizado
   console.log('🧪 [NEXUS-TEST] Inicializando useChat direto para /api/meta-analyst');
-  const { messages, sendMessage, isLoading } = useChat({
+  const { messages, sendMessage, status } = useChat({
     api: '/api/meta-analyst',
     onError: (error) => {
       console.log('🧪 [NEXUS-TEST] ERRO:', error);
@@ -23,9 +23,12 @@ export default function NexusTestPage() {
 
   const [input, setInput] = useState('');
 
+  const isLoading = status === 'loading';
+  
   console.log('🧪 [NEXUS-TEST] Estado atual:', { 
     messagesCount: messages.length, 
-    isLoading, 
+    status,
+    isLoading,
     input 
   });
 
@@ -47,7 +50,7 @@ export default function NexusTestPage() {
       }}>
         <h1>🧪 NEXUS TEST - MetaAnalyst ONLY</h1>
         <p>Esta página FORÇA o uso do MetaAnalyst - /api/meta-analyst</p>
-        <p>Status: {isLoading ? 'Carregando...' : 'Pronto'}</p>
+        <p>Status: {status} {isLoading ? '(Carregando...)' : '(Pronto)'}</p>
         <p>Mensagens: {messages.length}</p>
       </div>
 
