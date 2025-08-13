@@ -7,9 +7,8 @@ import ChatContainer from '@/components/nexus/ChatContainer';
 import type { UIMessage } from 'ai';
 
 export default function Home() {
-  // Estado para o agente atual e mensagens salvas
+  // Estado para o agente atual
   const [currentAgent, setCurrentAgent] = useState<string>('nexus');
-  const [savedMessages, setSavedMessages] = useState<UIMessage[]>([]);
   
   console.log('🔍 [page.tsx] currentAgent inicial:', currentAgent);
   
@@ -60,9 +59,7 @@ export default function Home() {
   // Callback para mudança de agente
   const handleAgentChange = (agent: string) => {
     console.log('🔄 [page.tsx] handleAgentChange chamado. Mudando de', currentAgent, 'para', agent);
-    console.log('🔄 [page.tsx] Salvando', messages.length, 'mensagens antes da troca');
-    setSavedMessages(messages); // Salva mensagens atuais
-    setCurrentAgent(agent);     // Troca agente (re-cria useChat)
+    setCurrentAgent(agent); // Força re-criação do componente
     console.log('🔄 [page.tsx] setCurrentAgent executado');
   };
 
@@ -75,7 +72,7 @@ export default function Home() {
   };
 
   return (
-    <div style={{ marginLeft: '24%', marginRight: '25%' }}>
+    <div key={currentAgent} style={{ marginLeft: '24%', marginRight: '25%' }}>
       <ChatContainer
         messages={messages}
         input={input}
