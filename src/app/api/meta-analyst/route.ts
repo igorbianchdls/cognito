@@ -15,7 +15,13 @@ export async function POST(req: Request) {
   
   try {
     console.log('🚨 1. META-ANALYST: Request processamento iniciado');
-    const { messages, files } = await req.json();
+    const data = await req.json();
+    console.log('🚨 1.5. Raw data received:', data);
+    console.log('🚨 1.5. Data keys:', Object.keys(data || {}));
+    
+    const messages = data.messages || [];
+    const files = data.files || [];
+    
     console.log('🚨 2. Messages received in meta-analyst:', messages?.length || 0);
     console.log('🚨 2. Files received in meta-analyst:', files?.length || 0);
     console.log('🚨 2. First message:', messages?.[0]);
