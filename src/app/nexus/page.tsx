@@ -37,7 +37,7 @@ export default function Page() {
   // Combina mensagens: agente selecionado sempre por último
   const displayedMessages: UIMessage[] = Object.keys(chats)
     .sort(key => key === selectedAgent ? 1 : -1) // coloca o agente selecionado no final
-    .flatMap(key => chats[key].messages); // junta todas as mensagens
+    .flatMap(key => chats[key as keyof typeof chats].messages); // junta todas as mensagens
 
   const [input, setInput] = useState('');
   
