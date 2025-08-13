@@ -14,10 +14,12 @@ export async function POST(req: Request) {
   console.log('API Key starts with:', process.env.ANTHROPIC_API_KEY?.substring(0, 15) || 'N/A');
   
   try {
+    console.log('🚨 1. META-ANALYST: Request processamento iniciado');
     const { messages, files } = await req.json();
-    console.log('🚨 Messages received in meta-analyst:', messages?.length || 0);
-    console.log('🚨 Files received in meta-analyst:', files?.length || 0);
-    console.log('🚨 First message:', messages?.[0]);
+    console.log('🚨 2. Messages received in meta-analyst:', messages?.length || 0);
+    console.log('🚨 2. Files received in meta-analyst:', files?.length || 0);
+    console.log('🚨 2. First message:', messages?.[0]);
+    console.log('🚨 2. All messages:', messages);
 
     if (!process.env.ANTHROPIC_API_KEY) {
       console.error('Missing ANTHROPIC_API_KEY environment variable');
@@ -59,7 +61,9 @@ export async function POST(req: Request) {
       systemMessage += 'Analise estes arquivos e responda às perguntas do usuário baseado no conteúdo dos documentos. Você pode fazer análises, extrair insights, responder perguntas específicas sobre os dados, ou qualquer outra operação solicitada.';
     }
 
-    console.log('🚀 Starting MetaAnalyst streamText...');
+    console.log('🚨 3. Starting MetaAnalyst streamText...');
+    console.log('🚨 3. System message length:', systemMessage.length);
+    console.log('🚨 3. Total messages to send:', [{ role: 'system', content: systemMessage }, ...messages].length);
     
     const result = streamText({
       model: anthropic('claude-3-5-sonnet-20241022'),
@@ -119,11 +123,14 @@ export async function POST(req: Request) {
       },
     });
 
-    console.log('🚀 MetaAnalyst streaming response...');
-    console.log('🚨 === META-ANALYST RETORNANDO RESPOSTA! ===');
+    console.log('🚨 4. StreamText criado, result:', typeof result);
+    console.log('🚨 4. Result properties:', Object.keys(result));
+    console.log('🚨 5. Convertendo para UIMessageStreamResponse...');
     
     const response = result.toUIMessageStreamResponse();
-    console.log('🚨 Response object:', response);
+    console.log('🚨 5. Response object created:', typeof response);
+    console.log('🚨 5. Response properties:', Object.keys(response));
+    console.log('🚨 6. === META-ANALYST RETORNANDO RESPOSTA! ===');
     return response;
   } catch (error) {
     console.error('🚨 === META-ANALYST ERROR! ===');
