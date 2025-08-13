@@ -3,30 +3,44 @@
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useState, FormEvent } from 'react';
+import { useStore } from '@nanostores/react';
 import ChatContainer from '../../components/nexus/ChatContainer';
 import type { UIMessage } from 'ai';
+import { currentAgent, setCurrentAgent } from '../../stores/agentStore';
 
 export default function Page() {
-  // Estado local em vez de nanostore
-  const [selectedAgent, setSelectedAgent] = useState('teste');
+  const selectedAgent = useStore(currentAgent);
   
-  // DEBUG: Log detalhado do estado atual
-  console.log('🔄 [nexus/Page] Component montado para agente:', selectedAgent);
-  
-  // Chats separados para cada agente - IDs únicos
+  // Estado que guarda TODAS as mensagens globalmente
+  const [globalMessages, setGlobalMessages] = useState<UIMessage[]>([]);
+
   const chats = {
-    nexus: useChat({ 
-      transport: new DefaultChatTransport({ api: '/api/chat-ui' }), 
-      id: 'nexus-chat'
+    nexus: useChat({
+      transport: new DefaultChatTransport({ api: '/api/chat-ui' }),
+      id: 'nexus-chat',
+      onFinish: ({ messages }) => {
+        console.log('NEXUS terminou. Salvando todas as mensagens:', messages);
+        // Atualiza o estado global com TODAS as mensagens
+        setGlobalMessages(messages);
+      },
     }),
-    teste: useChat({ 
-      transport: new DefaultChatTransport({ api: '/api/teste' }), 
-      id: 'teste-chat'
+    teste: useChat({
+      transport: new DefaultChatTransport({ api: '/api/teste' }),
+      id: 'teste-chat',
+      onFinish: ({ messages }) => {
+        console.log('TESTE terminou. Salvando todas as mensagens:', messages);
+        // Atualiza o estado global com TODAS as mensagens
+        setGlobalMessages(messages);
+      },
     }),
   };
-  
-  // Usa o chat do agente selecionado
-  const { messages, sendMessage, status } = chats[selectedAgent === 'nexus' ? 'nexus' : 'teste'];
+
+  // Escolhe qual hook vai enviar a próxima mensagem
+  const { sendMessage, status } = chats[selectedAgent];
+
+  // Sempre renderiza todas as mensagens globais
+  const displayedMessages = globalMessages;
+
   const [input, setInput] = useState('');
   
   // COMENTADO TEMPORARIAMENTE - localStorage
@@ -56,7 +70,7 @@ export default function Page() {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
-      console.log('🔄 [nexus/handleSubmit] Enviando mensagem via:', selectedAgent);
+      console.log('Enviando mensagem via:', selectedAgent);
       sendMessage({ text: input });
       setInput('');
     }
@@ -65,16 +79,13 @@ export default function Page() {
   return (
     <div style={{ marginLeft: '25%', marginRight: '25%' }}>
       <ChatContainer
-        messages={messages}
+        messages={displayedMessages}
         input={input}
         setInput={setInput}
         onSubmit={handleSubmit}
         status={status}
         selectedAgent={selectedAgent}
-        onAgentChange={(newAgent) => {
-          console.log('🔄 [nexus/Page] Trocando agente de', selectedAgent, 'para', newAgent);
-          setSelectedAgent(newAgent);
-        }}
+        onAgentChange={setCurrentAgent}
       />
     </div>
   );
