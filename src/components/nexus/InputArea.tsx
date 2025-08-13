@@ -20,6 +20,8 @@ interface InputAreaProps {
   setInput: (value: string) => void;
   onSubmit: (e: FormEvent) => void;
   status: string;
+  currentAgent: string;
+  onAgentChange: (agent: string) => void;
 }
 
 const models = [
@@ -27,8 +29,7 @@ const models = [
   { id: 'meta-analyst', name: 'MetaAnalyst' },
 ];
 
-export default function InputArea({ input, setInput, onSubmit, status }: InputAreaProps) {
-  const [agent, setAgent] = useState<string>(models[0].id);
+export default function InputArea({ input, setInput, onSubmit, status, currentAgent, onAgentChange }: InputAreaProps) {
 
   return (
     <PromptInput onSubmit={onSubmit} className="mt-4 border-gray-100">
@@ -48,9 +49,9 @@ export default function InputArea({ input, setInput, onSubmit, status }: InputAr
           <PromptInputModelSelect
             onValueChange={(value) => {
               console.log('Agent changed to:', value);
-              setAgent(value);
+              onAgentChange(value);
             }}
-            value={agent}
+            value={currentAgent}
           >
             <PromptInputModelSelectTrigger>
               <PromptInputModelSelectValue />
