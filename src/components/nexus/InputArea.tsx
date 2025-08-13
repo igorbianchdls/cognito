@@ -30,6 +30,7 @@ const models = [
 ];
 
 export default function InputArea({ input, setInput, onSubmit, status, currentAgent, onAgentChange }: InputAreaProps) {
+  console.log('🎤 [InputArea] Props recebidas:', { currentAgent, hasOnAgentChange: !!onAgentChange });
 
   return (
     <PromptInput onSubmit={onSubmit} className="mt-4 border-gray-100">
@@ -48,8 +49,10 @@ export default function InputArea({ input, setInput, onSubmit, status, currentAg
           </PromptInputButton>
           <PromptInputModelSelect
             onValueChange={(value) => {
-              console.log('Agent changed to:', value);
+              console.log('🎤 [InputArea] onValueChange chamado:', value);
+              console.log('🎤 [InputArea] currentAgent antes da mudança:', currentAgent);
               onAgentChange(value);
+              console.log('🎤 [InputArea] onAgentChange executado');
             }}
             value={currentAgent}
           >

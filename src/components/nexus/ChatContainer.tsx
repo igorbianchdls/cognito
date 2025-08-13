@@ -22,6 +22,11 @@ export default function ChatContainer({
   currentAgent,
   onAgentChange
 }: ChatContainerProps) {
+  console.log('📦 [ChatContainer] Props recebidas:', { 
+    messagesCount: messages.length, 
+    currentAgent, 
+    hasOnAgentChange: !!onAgentChange 
+  });
   // Estado vazio - tela de boas-vindas centrada
   if (messages.length === 0) {
     return (
