@@ -71,7 +71,7 @@ export default function Page() {
   };
 
   return (
-    <div key={currentAgent} style={{ marginLeft: '25%', marginRight: '25%' }}>
+    <div style={{ marginLeft: '25%', marginRight: '25%' }}>
       <ChatContainer
         messages={messages}
         input={input}
