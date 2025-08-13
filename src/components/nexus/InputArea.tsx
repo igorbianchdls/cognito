@@ -23,12 +23,12 @@ interface InputAreaProps {
 }
 
 const models = [
-  { id: 'gpt-4o', name: 'GPT-4o' },
-  { id: 'claude-opus-4-20250514', name: 'Claude 4 Opus' },
+  { id: 'nexus', name: 'Nexus' },
+  { id: 'meta-analyst', name: 'MetaAnalyst' },
 ];
 
 export default function InputArea({ input, setInput, onSubmit, status }: InputAreaProps) {
-  const [model, setModel] = useState<string>(models[0].id);
+  const [agent, setAgent] = useState<string>(models[0].id);
 
   return (
     <PromptInput onSubmit={onSubmit} className="mt-4 border-gray-100">
@@ -47,9 +47,10 @@ export default function InputArea({ input, setInput, onSubmit, status }: InputAr
           </PromptInputButton>
           <PromptInputModelSelect
             onValueChange={(value) => {
-              setModel(value);
+              console.log('Agent changed to:', value);
+              setAgent(value);
             }}
-            value={model}
+            value={agent}
           >
             <PromptInputModelSelectTrigger>
               <PromptInputModelSelectValue />
