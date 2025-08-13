@@ -15,11 +15,18 @@ export default function Page() {
     const apiEndpoint = currentAgent === 'nexus' ? '/api/chat-ui' : '/api/meta-analyst';
     console.log('🔄 [nexus/useMemo] EXECUTANDO! currentAgent:', currentAgent);
     console.log('🔄 [nexus/useMemo] EXECUTANDO! transport para:', apiEndpoint);
-    return new DefaultChatTransport({
+    
+    const newTransport = new DefaultChatTransport({
       api: apiEndpoint,
     });
+    
+    console.log('🔄 [nexus/useMemo] TRANSPORT CRIADO:', newTransport);
+    console.log('🔄 [nexus/useMemo] TRANSPORT.api:', newTransport);
+    
+    return newTransport;
   }, [currentAgent]);
   
+  console.log('🔄 [nexus/useChat] Recebendo transport:', transport);
   const { messages, sendMessage, status } = useChat({
     transport,
   });
