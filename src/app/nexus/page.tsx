@@ -3,17 +3,19 @@
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useState, FormEvent, useEffect, useMemo } from 'react';
+import { useStore } from '@nanostores/react';
 import ChatContainer from '../../components/nexus/ChatContainer';
 import type { UIMessage } from 'ai';
+import { currentAgent } from '@/stores/agentStore';
 
 export default function Page() {
-  // Estado para o agente atual
-  const [currentAgent, setCurrentAgent] = useState<string>('nexus');
+  // Usar o nanostore como fonte única de verdade
+  const selectedAgent = useStore(currentAgent);
   
-  // Recria transport quando currentAgent muda
+  // Recria transport quando selectedAgent muda
   const transport = useMemo(() => {
-    const apiEndpoint = currentAgent === 'nexus' ? '/api/chat-ui' : '/api/meta-analyst';
-    console.log('🔄 [nexus/useMemo] EXECUTANDO! currentAgent:', currentAgent);
+    const apiEndpoint = selectedAgent === 'nexus' ? '/api/chat-ui' : '/api/meta-analyst';
+    console.log('🔄 [nexus/useMemo] EXECUTANDO! selectedAgent:', selectedAgent);
     console.log('🔄 [nexus/useMemo] EXECUTANDO! transport para:', apiEndpoint);
     
     const newTransport = new DefaultChatTransport({
@@ -24,7 +26,7 @@ export default function Page() {
     console.log('🔄 [nexus/useMemo] TRANSPORT.api:', newTransport);
     
     return newTransport;
-  }, [currentAgent]);
+  }, [selectedAgent]);
   
   console.log('🔄 [nexus/useChat] Recebendo transport:', transport);
   const { messages, sendMessage, status } = useChat({
@@ -56,12 +58,6 @@ export default function Page() {
   }, []);
   */
   
-  // Callback para mudança de agente
-  const handleAgentChange = (agent: string) => {
-    console.log('Agent changed to:', agent);
-    setCurrentAgent(agent); // Força re-criação do componente
-  };
-
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
@@ -78,8 +74,6 @@ export default function Page() {
         setInput={setInput}
         onSubmit={handleSubmit}
         status={status}
-        currentAgent={currentAgent}
-        onAgentChange={handleAgentChange}
       />
     </div>
   );

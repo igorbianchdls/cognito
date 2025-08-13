@@ -22,8 +22,6 @@ interface InputAreaProps {
   setInput: (value: string) => void;
   onSubmit: (e: FormEvent) => void;
   status: string;
-  currentAgent: string;
-  onAgentChange: (agent: string) => void;
 }
 
 const models = [
@@ -31,11 +29,10 @@ const models = [
   { id: 'meta-analyst', name: 'MetaAnalyst' },
 ];
 
-export default function InputArea({ input, setInput, onSubmit, status, currentAgent, onAgentChange }: InputAreaProps) {
+export default function InputArea({ input, setInput, onSubmit, status }: InputAreaProps) {
   const agent = useStore(agentStore);
   
   console.log('🎤 [InputArea] Agent do nanostore:', agent);
-  console.log('🎤 [InputArea] Props recebidas:', { currentAgent, hasOnAgentChange: !!onAgentChange });
 
   return (
     <PromptInput onSubmit={onSubmit} className="mt-4 border-gray-100">
