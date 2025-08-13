@@ -1,24 +1,20 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 import { useState, FormEvent } from 'react';
 
 export default function NexusTestPage() {
   console.log('🧪 [NEXUS-TEST] PÁGINA CARREGADA! MetaAnalyst FORÇADO!');
   
-  // useChat DIRETO sem transport customizado
-  console.log('🧪 [NEXUS-TEST] Inicializando useChat direto para /api/meta-analyst');
-  const { messages, sendMessage, status } = useChat({
+  // Transport FIXO para meta-analyst
+  const transport = new DefaultChatTransport({
     api: '/api/meta-analyst',
-    onError: (error) => {
-      console.log('🧪 [NEXUS-TEST] ERRO:', error);
-    },
-    onResponse: (response) => {
-      console.log('🧪 [NEXUS-TEST] RESPOSTA RECEBIDA:', response);
-    },
-    onFinish: (message) => {
-      console.log('🧪 [NEXUS-TEST] MENSAGEM FINALIZADA:', message);
-    }
+  });
+  
+  console.log('🧪 [NEXUS-TEST] Transport criado:', transport);
+  const { messages, sendMessage, status } = useChat({
+    transport,
   });
 
   const [input, setInput] = useState('');
