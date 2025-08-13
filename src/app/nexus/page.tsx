@@ -17,13 +17,12 @@ export default function Page() {
   console.log('🎯 [nexus/Page] typeof selectedAgent:', typeof selectedAgent);
   console.log('🎯 [nexus/Page] currentAgent store value:', currentAgent.get());
   
-  // Single useChat - será recriado quando key muda
-  const apiEndpoint = selectedAgent === 'nexus' ? '/api/chat-ui' : '/api/meta-analyst';
+  // Single useChat - usando API de teste
+  const apiEndpoint = '/api/teste';
   console.log('🔄 [nexus/useChat] Criando para API:', apiEndpoint);
   
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({ api: apiEndpoint }),
-    id: selectedAgent,
   });
   const [input, setInput] = useState('');
   
