@@ -2,29 +2,33 @@
 
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useMemo } from 'react';
 
 export default function NexusTestPage() {
   console.log('🧪 [NEXUS-TEST] PÁGINA CARREGADA! MetaAnalyst FORÇADO!');
   
-  // Transport FIXO para meta-analyst
-  const transport = new DefaultChatTransport({
-    api: '/api/meta-analyst',
-  });
+  // Transport FIXO para meta-analyst (copiando exatamente de /nexus)
+  const transport = useMemo(() => {
+    const apiEndpoint = '/api/meta-analyst';
+    console.log('🧪 [NEXUS-TEST] CRIANDO TRANSPORT:', apiEndpoint);
+    
+    const newTransport = new DefaultChatTransport({
+      api: apiEndpoint,
+    });
+    
+    console.log('🧪 [NEXUS-TEST] TRANSPORT CRIADO:', newTransport);
+    return newTransport;
+  }, []);
   
-  console.log('🧪 [NEXUS-TEST] Transport criado:', transport);
+  console.log('🧪 [NEXUS-TEST] useChat inicializando com transport:', transport);
   const { messages, sendMessage, status } = useChat({
     transport,
   });
-
   const [input, setInput] = useState('');
-
-  const isLoading = status === 'loading';
   
   console.log('🧪 [NEXUS-TEST] Estado atual:', { 
     messagesCount: messages.length, 
     status,
-    isLoading,
     input 
   });
 
@@ -46,7 +50,7 @@ export default function NexusTestPage() {
       }}>
         <h1>🧪 NEXUS TEST - MetaAnalyst ONLY</h1>
         <p>Esta página FORÇA o uso do MetaAnalyst - /api/meta-analyst</p>
-        <p>Status: {status} {isLoading ? '(Carregando...)' : '(Pronto)'}</p>
+        <p>Status: {status}</p>
         <p>Mensagens: {messages.length}</p>
       </div>
 
@@ -76,7 +80,7 @@ export default function NexusTestPage() {
             </div>
           ))
         )}
-        {isLoading && (
+        {status === 'loading' && (
           <div style={{ textAlign: 'center', color: '#2196F3' }}>
             🤖 MetaAnalyst está pensando...
           </div>
@@ -96,7 +100,7 @@ export default function NexusTestPage() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Digite sua mensagem aqui..."
-          disabled={isLoading}
+          disabled={status === 'loading'}
           style={{
             flex: 1,
             padding: '10px',
@@ -107,18 +111,18 @@ export default function NexusTestPage() {
         />
         <button 
           type="submit" 
-          disabled={isLoading || !input.trim()}
+          disabled={status === 'loading' || !input.trim()}
           style={{
             padding: '10px 20px',
             backgroundColor: '#2196F3',
             color: 'white',
             border: 'none',
             borderRadius: '5px',
-            cursor: isLoading || !input.trim() ? 'not-allowed' : 'pointer',
+            cursor: status === 'loading' || !input.trim() ? 'not-allowed' : 'pointer',
             fontSize: '16px'
           }}
         >
-          {isLoading ? 'Enviando...' : 'Enviar'}
+          {status === 'loading' ? 'Enviando...' : 'Enviar'}
         </button>
       </form>
     </div>
