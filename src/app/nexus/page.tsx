@@ -19,18 +19,14 @@ export default function Page() {
       transport: new DefaultChatTransport({ api: '/api/chat-ui' }),
       id: 'nexus-chat',
       onFinish: ({ message }) => {
-        console.log('NEXUS terminou. Adicionando mensagem ao final:', message);
-        // Adiciona a nova mensagem ao final do array global
-        setGlobalMessages(prev => [...prev, message]);
+        console.log('NEXUS terminou:', message);
       },
     }),
     teste: useChat({
       transport: new DefaultChatTransport({ api: '/api/teste' }),
       id: 'teste-chat',
       onFinish: ({ message }) => {
-        console.log('TESTE terminou. Adicionando mensagem ao final:', message);
-        // Adiciona a nova mensagem ao final do array global
-        setGlobalMessages(prev => [...prev, message]);
+        console.log('TESTE terminou:', message);
       },
     }),
   };
@@ -38,8 +34,15 @@ export default function Page() {
   // Escolhe qual hook vai enviar a próxima mensagem
   const { sendMessage, status } = chats[selectedAgent === 'nexus' ? 'nexus' : 'teste'];
 
-  // Usa as mensagens globais acumuladas
-  const displayedMessages = globalMessages;
+  // Combina mensagens de todos os hooks e ordena por timestamp
+  const displayedMessages: UIMessage[] = [
+    ...chats.nexus.messages,
+    ...chats.teste.messages
+  ].sort((a, b) => {
+    const timeA = new Date(a.createdAt || a.timestamp || 0).getTime();
+    const timeB = new Date(b.createdAt || b.timestamp || 0).getTime();
+    return timeA - timeB; // Ordem cronológica
+  });
 
   const [input, setInput] = useState('');
   
