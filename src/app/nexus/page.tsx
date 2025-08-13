@@ -36,7 +36,7 @@ export default function Page() {
   };
 
   // Escolhe qual hook vai enviar a próxima mensagem
-  const { sendMessage, status } = chats[selectedAgent];
+  const { sendMessage, status } = chats[selectedAgent === 'nexus' ? 'nexus' : 'teste'];
 
   // Combina mensagens de todos os hooks
   const displayedMessages: UIMessage[] = [
