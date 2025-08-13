@@ -14,7 +14,8 @@ export default function Page() {
   // Recria transport quando currentAgent muda
   const transport = useMemo(() => {
     const apiEndpoint = currentAgent === 'nexus' ? '/api/chat-ui' : '/api/meta-analyst';
-    console.log('🔄 [nexus/page.tsx] Criando novo transport para:', apiEndpoint);
+    console.log('🔄 [nexus/useMemo] EXECUTANDO! currentAgent:', currentAgent);
+    console.log('🔄 [nexus/useMemo] EXECUTANDO! transport para:', apiEndpoint);
     return new DefaultChatTransport({
       api: apiEndpoint,
     });

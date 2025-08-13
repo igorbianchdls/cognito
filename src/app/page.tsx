@@ -13,16 +13,15 @@ export default function Home() {
   
   console.log('🔍 [page.tsx] currentAgent inicial:', currentAgent);
   
-  const apiEndpoint = currentAgent === 'nexus' ? '/api/chat-ui' : '/api/meta-analyst';
-  console.log('🔍 [page.tsx] apiEndpoint calculado:', apiEndpoint);
-  
   // Recria transport quando currentAgent muda
   const transport = useMemo(() => {
-    console.log('🔄 [page.tsx] Criando novo transport para:', apiEndpoint);
+    const apiEndpoint = currentAgent === 'nexus' ? '/api/chat-ui' : '/api/meta-analyst';
+    console.log('🔄 [useMemo] EXECUTANDO! currentAgent:', currentAgent);
+    console.log('🔄 [useMemo] EXECUTANDO! transport para:', apiEndpoint);
     return new DefaultChatTransport({
       api: apiEndpoint,
     });
-  }, [apiEndpoint]);
+  }, [currentAgent]);
   
   const { messages, sendMessage, status } = useChat({
     transport,
