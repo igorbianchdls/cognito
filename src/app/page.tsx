@@ -35,13 +35,6 @@ export default function Home() {
   const [input, setInput] = useState('');
   
   
-  // Callback para mudança de agente (agora usa nanostore)
-  const handleAgentChange = (newAgent: string) => {
-    console.log('🔄 [page.tsx] handleAgentChange chamado. Mudando de', agent, 'para', newAgent);
-    setCurrentAgent(newAgent); // Usa action do nanostore
-    console.log('🔄 [page.tsx] setCurrentAgent executado');
-  };
-
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
@@ -58,8 +51,6 @@ export default function Home() {
         setInput={setInput}
         onSubmit={handleSubmit}
         status={status}
-        currentAgent={agent}
-        onAgentChange={handleAgentChange}
       />
     </div>
   );
