@@ -401,6 +401,13 @@ interface RespostaDaIAProps {
 }
 
 export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAProps) {
+  console.log('🔍 MESSAGE INSPECTION:', {
+    id: message.id,
+    role: message.role,
+    selectedAgent,
+    fullMessage: message
+  });
+  
   const agentInfo = getAgentInfo(selectedAgent);
   const handleCopy = async () => {
     const textParts = message.parts
