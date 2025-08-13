@@ -4,6 +4,7 @@ import { Reasoning, ReasoningTrigger, ReasoningContent } from '@/components/ai-e
 import { Actions, Action } from '@/components/ai-elements/actions';
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool';
 import { CopyIcon, ThumbsUpIcon, ThumbsDownIcon } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import WeatherCard from '../tools/WeatherCard';
 import DatasetsList from '../tools/DatasetsList';
 import TablesList from '../tools/TablesList';
@@ -382,11 +383,25 @@ type NexusToolUIPart = ToolUIPart<{
   };
 }>;
 
+// Função para mapear agente
+const getAgentInfo = (agent: string) => {
+  switch (agent) {
+    case 'nexus':
+      return { initial: 'N', title: 'Nexus AI', color: 'bg-blue-500' };
+    case 'teste':
+      return { initial: 'T', title: 'Teste AI', color: 'bg-green-500' };
+    default:
+      return { initial: 'A', title: 'AI Assistant', color: 'bg-gray-500' };
+  }
+};
+
 interface RespostaDaIAProps {
   message: UIMessage;
+  selectedAgent: string;
 }
 
-export default function RespostaDaIA({ message }: RespostaDaIAProps) {
+export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAProps) {
+  const agentInfo = getAgentInfo(selectedAgent);
   const handleCopy = async () => {
     const textParts = message.parts
       .filter(part => part.type === 'text')
@@ -402,6 +417,15 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
 
   return (
     <div key={message.id}>
+      {/* Header com Avatar + Título */}
+      <div className="flex items-center gap-3 mb-3">
+        <Avatar className="w-8 h-8">
+          <AvatarFallback className={`${agentInfo.color} text-white font-semibold`}>
+            {agentInfo.initial}
+          </AvatarFallback>
+        </Avatar>
+        <h3 className="font-medium text-gray-900">{agentInfo.title}</h3>
+      </div>
       {message.parts.map((part, index) => {
         if (part.type === 'text') {
           return <Response key={index}>{part.text}</Response>;

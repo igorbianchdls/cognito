@@ -54,8 +54,8 @@ export default function ChatContainer({
   // Estado com mensagens - layout normal
   return (
     <div className="h-screen flex flex-col">
-      <div className="flex-1 overflow-y-auto">
-        <MessageList messages={messages} />
+      <div className="flex-1 overflow-hidden">
+        <MessageList messages={messages} selectedAgent={selectedAgent} />
       </div>
       <div className="h-20 flex items-end justify-center">
         <InputArea 
