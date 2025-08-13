@@ -1,7 +1,8 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
-import { useState, FormEvent, useEffect } from 'react';
+import { DefaultChatTransport } from 'ai';
+import { useState, FormEvent, useEffect, useMemo } from 'react';
 import { useStore } from '@nanostores/react';
 import ChatContainer from '../../components/nexus/ChatContainer';
 import type { UIMessage } from 'ai';
@@ -16,12 +17,15 @@ export default function Page() {
   console.log('🎯 [nexus/Page] typeof selectedAgent:', typeof selectedAgent);
   console.log('🎯 [nexus/Page] currentAgent store value:', currentAgent.get());
   
-  // API endpoint baseado no agente selecionado
-  const apiEndpoint = selectedAgent === 'nexus' ? '/api/chat-ui' : '/api/meta-analyst';
-  console.log('🔄 [nexus/useChat] selectedAgent:', selectedAgent, '-> API:', apiEndpoint);
+  // Transport baseado no agente selecionado
+  const transport = useMemo(() => {
+    const apiEndpoint = selectedAgent === 'nexus' ? '/api/chat-ui' : '/api/meta-analyst';
+    console.log('🔄 [nexus/transport] selectedAgent:', selectedAgent, '-> API:', apiEndpoint);
+    return new DefaultChatTransport({ api: apiEndpoint });
+  }, [selectedAgent]);
   
   const { messages, sendMessage, status } = useChat({
-    api: apiEndpoint,
+    transport,
     id: selectedAgent,
   });
   const [input, setInput] = useState('');
