@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "../styles/ag-grid-theme.css";
 
+/* React Grid Layout CSS */
+@import "react-grid-layout/css/styles.css";
+@import "react-resizable/css/styles.css";
+
 :root {
   --background: #ffffff;
   --foreground: #171717;

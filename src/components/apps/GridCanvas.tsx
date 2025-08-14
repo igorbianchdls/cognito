@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useCallback } from 'react'
+import { useMemo, useCallback } from 'react'
 import { Responsive, WidthProvider } from 'react-grid-layout'
 import DroppedWidget from './DroppedWidget'
 import type { DroppedWidget as DroppedWidgetType, Widget, Position, LayoutItem } from '@/types/widget'
@@ -20,7 +20,6 @@ export default function GridCanvas({
   onRemoveWidget, 
   onWidgetDrop 
 }: GridCanvasProps) {
-  const gridRef = useRef<HTMLDivElement>(null)
 
   const layout = useMemo(() => 
     widgets.map(widget => ({
@@ -34,36 +33,34 @@ export default function GridCanvas({
     })), [widgets]
   )
 
-  const handleDrop = useCallback((_layout: LayoutItem[], _layoutItem: LayoutItem, _event: Event) => {
-    // This is called when an item is dropped from outside
-    // Currently handled manually in handleDrop2
-  }, [])
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'copy'
-  }, [])
-
-  const handleDrop2 = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    
-    const widgetData = e.dataTransfer.getData('application/json')
-    if (!widgetData) return
+  const handleDrop = useCallback((layout: LayoutItem[], layoutItem: LayoutItem, event: DragEvent) => {
+    // Get widget data from drag event
+    const dragData = (event as unknown as { dataTransfer?: DataTransfer })?.dataTransfer?.getData('application/json')
+    if (!dragData) return
 
     try {
-      const widget = JSON.parse(widgetData)
-      const rect = gridRef.current?.getBoundingClientRect()
-      if (!rect) return
-
-      // Calculate grid position based on mouse position
-      const x = Math.floor((e.clientX - rect.left) / 120) // Approximate grid cell width
-      const y = Math.floor((e.clientY - rect.top) / 120)  // Approximate grid cell height
-
-      onWidgetDrop(widget, { x: Math.max(0, x), y: Math.max(0, y) })
+      const widget = JSON.parse(dragData) as Widget
+      onWidgetDrop(widget, { x: layoutItem.x, y: layoutItem.y })
     } catch (error) {
       console.error('Error parsing widget data:', error)
     }
   }, [onWidgetDrop])
+
+  const handleDropDragOver = useCallback((event: DragEvent) => {
+    // Return the size for the dropping item
+    const dragData = (event as unknown as { dataTransfer?: DataTransfer })?.dataTransfer?.getData('application/json')
+    if (!dragData) return { w: 2, h: 2 }
+
+    try {
+      const widget = JSON.parse(dragData) as Widget
+      return { 
+        w: widget.defaultWidth, 
+        h: widget.defaultHeight 
+      }
+    } catch (_error) {
+      return { w: 2, h: 2 }
+    }
+  }, [])
 
   return (
     <div className="h-full flex flex-col">
@@ -79,12 +76,7 @@ export default function GridCanvas({
       </div>
 
       {/* Grid Container */}
-      <div 
-        ref={gridRef}
-        className="flex-1 bg-white rounded-lg border-2 border-dashed border-gray-300 relative overflow-hidden"
-        onDragOver={handleDragOver}
-        onDrop={handleDrop2}
-      >
+      <div className="flex-1 bg-white rounded-lg border-2 border-dashed border-gray-300 relative overflow-hidden">
         {widgets.length === 0 ? (
           <div className="absolute inset-0 flex items-center justify-center text-gray-400">
             <div className="text-center">
@@ -93,32 +85,33 @@ export default function GridCanvas({
               <p className="text-sm">Drag from the widgets panel to create your dashboard</p>
             </div>
           </div>
-        ) : (
-          <ResponsiveGridLayout
-            className="layout"
-            layouts={{ lg: layout }}
-            breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-            cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-            rowHeight={60}
-            onLayoutChange={onLayoutChange}
-            isDraggable={true}
-            isResizable={true}
-            margin={[10, 10]}
-            containerPadding={[20, 20]}
-            useCSSTransforms={true}
-            onDrop={handleDrop}
-            isDroppable={false} // We handle drops manually
-          >
-            {widgets.map((widget) => (
-              <div key={widget.i}>
-                <DroppedWidget 
-                  widget={widget} 
-                  onRemove={() => onRemoveWidget(widget.i)}
-                />
-              </div>
-            ))}
-          </ResponsiveGridLayout>
-        )}
+        ) : null}
+        
+        <ResponsiveGridLayout
+          className="layout"
+          layouts={{ lg: layout }}
+          breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+          cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
+          rowHeight={60}
+          onLayoutChange={onLayoutChange}
+          isDraggable={true}
+          isResizable={true}
+          margin={[10, 10]}
+          containerPadding={[20, 20]}
+          useCSSTransforms={true}
+          isDroppable={true}
+          onDrop={handleDrop}
+          onDropDragOver={handleDropDragOver}
+        >
+          {widgets.map((widget) => (
+            <div key={widget.i}>
+              <DroppedWidget 
+                widget={widget} 
+                onRemove={() => onRemoveWidget(widget.i)}
+              />
+            </div>
+          ))}
+        </ResponsiveGridLayout>
       </div>
     </div>
   )
