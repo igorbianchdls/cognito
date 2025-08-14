@@ -1,12 +1,24 @@
 'use client'
 
 import { useChat } from '@ai-sdk/react'
+import { DefaultChatTransport } from 'ai'
+import { useState, FormEvent } from 'react'
 
 export default function ChatPanel() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: '/api/chat',
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({ api: '/api/chat' }),
     id: 'apps-chat'
   })
+
+  const [input, setInput] = useState('')
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault()
+    if (input.trim()) {
+      sendMessage({ text: input })
+      setInput('')
+    }
+  }
 
   return (
     <div className="h-full flex flex-col">
@@ -50,7 +62,7 @@ export default function ChatPanel() {
           </div>
         ))}
         
-        {isLoading && (
+        {status === 'in_progress' && (
           <div className="flex justify-start">
             <div className="bg-gray-100 rounded-lg p-3 text-sm">
               <div className="flex items-center gap-1">
@@ -69,14 +81,14 @@ export default function ChatPanel() {
           <input
             type="text"
             value={input}
-            onChange={handleInputChange}
+            onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            disabled={isLoading}
+            disabled={status === 'in_progress'}
           />
           <button
             type="submit"
-            disabled={!input.trim() || isLoading}
+            disabled={!input.trim() || status === 'in_progress'}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Send
