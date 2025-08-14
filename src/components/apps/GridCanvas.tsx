@@ -46,20 +46,10 @@ export default function GridCanvas({
     }
   }, [onWidgetDrop])
 
-  const handleDropDragOver = useCallback((event: DragEvent) => {
-    // Return the size for the dropping item
-    const dragData = (event as unknown as { dataTransfer?: DataTransfer })?.dataTransfer?.getData('application/json')
-    if (!dragData) return { w: 2, h: 2 }
-
-    try {
-      const widget = JSON.parse(dragData) as Widget
-      return { 
-        w: widget.defaultWidth, 
-        h: widget.defaultHeight 
-      }
-    } catch (_error) {
-      return { w: 2, h: 2 }
-    }
+  const handleDropDragOver = useCallback(() => {
+    // Return default size for dropping item
+    // DragOverEvent doesn't have dataTransfer access
+    return { w: 2, h: 2 }
   }, [])
 
   return (
