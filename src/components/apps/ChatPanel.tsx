@@ -1,7 +1,7 @@
 'use client'
 
 import { useChat } from '@ai-sdk/react'
-import { DefaultChatTransport, convertToModelMessages } from 'ai'
+import { DefaultChatTransport } from 'ai'
 import { useState, FormEvent } from 'react'
 import type { DroppedWidget } from '@/types/widget'
 import CanvasWidgets from '../tools/appsChat/CanvasWidgets'
@@ -70,7 +70,23 @@ export default function ChatPanel({ droppedWidgets }: ChatPanelProps) {
                   }
                   
                   if (part.type === 'tool-getCanvasWidgets') {
-                    const widgetTool = part as any
+                    const widgetTool = part as {
+                      state: string
+                      output: {
+                        widgets: Array<{
+                          id: string
+                          name: string
+                          type: string
+                          position: { x: number; y: number }
+                          size: { width: number; height: number }
+                          description: string
+                          icon: string
+                        }>
+                        totalWidgets: number
+                        summary: string
+                        success: boolean
+                      }
+                    }
                     if (widgetTool.state === 'output-available') {
                       return (
                         <CanvasWidgets
