@@ -6,8 +6,9 @@ import { useState, FormEvent } from 'react'
 
 export default function ChatPanel() {
   const { messages, sendMessage, status } = useChat({
-    api: '/api/chat',
-    id: 'apps-chat',
+    transport: new DefaultChatTransport({
+      api: '/api/chat',
+    }),
     onFinish: ({ message }) => {
       console.log('✅ Mensagem finalizada:', message)
     },
@@ -59,7 +60,7 @@ export default function ChatPanel() {
           </div>
         ))}
         
-        {status === 'streaming' && (
+        {status !== 'ready' && (
           <div className="flex justify-start">
             <div className="bg-gray-100 rounded-lg p-3 text-sm">
               <div className="flex items-center gap-1">
@@ -81,11 +82,11 @@ export default function ChatPanel() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            disabled={status === 'streaming'}
+            disabled={status !== 'ready'}
           />
           <button
             type="submit"
-            disabled={!input.trim() || status === 'streaming'}
+            disabled={!input.trim() || status !== 'ready'}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Send
