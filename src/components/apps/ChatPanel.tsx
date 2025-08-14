@@ -55,7 +55,12 @@ export default function ChatPanel() {
                   : 'bg-gray-100 text-gray-900'
               }`}
             >
-              <p>{message.content}</p>
+              <p>
+                {message.parts
+                  ?.filter(part => part.type === 'text')
+                  .map((part, index) => <span key={index}>{part.text}</span>)
+                }
+              </p>
             </div>
           </div>
         ))}
