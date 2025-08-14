@@ -63,7 +63,7 @@ export default function AppsPage() {
         <div className="flex-1 flex">
           {/* Left Panel */}
           <div className="w-80 bg-white border-r border-gray-200 flex-shrink-0">
-            {activeTab === 'widgets' ? <WidgetsPanel /> : <ChatPanel />}
+            {activeTab === 'widgets' ? <WidgetsPanel /> : <ChatPanel droppedWidgets={droppedWidgets} />}
           </div>
           
           {/* Right Canvas - Grid Layout (only visible when widgets tab is active) */}

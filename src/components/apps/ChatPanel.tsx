@@ -3,11 +3,17 @@
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport, convertToModelMessages } from 'ai'
 import { useState, FormEvent } from 'react'
+import type { DroppedWidget } from '@/types/widget'
 
-export default function ChatPanel() {
+interface ChatPanelProps {
+  droppedWidgets: DroppedWidget[]
+}
+
+export default function ChatPanel({ droppedWidgets }: ChatPanelProps) {
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
       api: '/api/appschat',
+      body: { widgets: droppedWidgets }
     }),
     onFinish: ({ message }) => {
       console.log('✅ Mensagem finalizada:', message)
