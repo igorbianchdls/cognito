@@ -14,6 +14,7 @@ export interface DroppedWidget extends Widget {
   y: number
   w: number
   h: number
+  color?: string
 }
 
 export interface Position {
