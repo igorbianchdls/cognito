@@ -7,13 +7,7 @@ import { useState, FormEvent } from 'react'
 export default function ChatPanel() {
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
-      api: '/api/chat',
-      transform: {
-        request: (request) => ({
-          ...request,
-          messages: convertToModelMessages(request.messages)
-        })
-      }
+      api: '/api/chat-ui',
     }),
     onFinish: ({ message }) => {
       console.log('✅ Mensagem finalizada:', message)
