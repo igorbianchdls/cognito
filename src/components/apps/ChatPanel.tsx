@@ -116,7 +116,18 @@ export default function ChatPanel({ droppedWidgets }: ChatPanelProps) {
                         action: string
                         widgetId: string
                         widgetName: string
-                        changes?: Record<string, any>
+                        changes?: {
+                          x?: number
+                          y?: number  
+                          w?: number
+                          h?: number
+                          color?: string
+                          style?: {
+                            borderRadius?: 'small' | 'medium' | 'large'
+                            shadow?: boolean
+                            background?: 'solid' | 'gradient'
+                          }
+                        }
                         message: string
                         error?: string
                         note?: string

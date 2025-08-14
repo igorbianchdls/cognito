@@ -1,9 +1,22 @@
+type WidgetChanges = {
+  x?: number
+  y?: number  
+  w?: number
+  h?: number
+  color?: string
+  style?: {
+    borderRadius?: 'small' | 'medium' | 'large'
+    shadow?: boolean
+    background?: 'solid' | 'gradient'
+  }
+}
+
 interface EditWidgetProps {
   success: boolean
   action: string
   widgetId: string
   widgetName: string
-  changes?: Record<string, any>
+  changes?: WidgetChanges
   message: string
   error?: string
   note?: string
