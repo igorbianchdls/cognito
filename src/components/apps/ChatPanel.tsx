@@ -50,19 +50,6 @@ export default function ChatPanel() {
                   .map((part, index) => <span key={index}>{part.text}</span>)
                 }
               </p>
-              <p
-                className={`text-xs mt-1 ${
-                  message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
-                }`}
-              >
-                {message.createdAt?.toLocaleTimeString([], { 
-                  hour: '2-digit', 
-                  minute: '2-digit' 
-                }) || new Date().toLocaleTimeString([], { 
-                  hour: '2-digit', 
-                  minute: '2-digit' 
-                })}
-              </p>
             </div>
           </div>
         ))}
