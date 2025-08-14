@@ -7,14 +7,24 @@ import { useState, FormEvent } from 'react'
 export default function ChatPanel() {
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({ api: '/api/chat' }),
-    id: 'apps-chat'
+    id: 'apps-chat',
+    onFinish: ({ message }) => {
+      console.log('✅ Mensagem finalizada:', message)
+    },
+    onError: (error) => {
+      console.error('❌ Erro no chat:', error)
+    }
   })
 
   const [input, setInput] = useState('')
+  
+  console.log('🔍 Chat state:', { messagesCount: messages.length, status })
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     if (input.trim()) {
+      console.log('🚀 Enviando mensagem:', input)
+      console.log('📡 Status atual:', status)
       sendMessage({ text: input })
       setInput('')
     }
