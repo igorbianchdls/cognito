@@ -2,13 +2,16 @@
 
 import { useState } from 'react'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core'
+import AppsHeader from '@/components/apps/AppsHeader'
 import WidgetsPanel from '@/components/apps/WidgetsPanel'
+import ChatPanel from '@/components/apps/ChatPanel'
 import GridCanvas from '@/components/apps/GridCanvas'
 import type { DroppedWidget, Widget, LayoutItem } from '@/types/widget'
 
 export default function AppsPage() {
   const [droppedWidgets, setDroppedWidgets] = useState<DroppedWidget[]>([])
   const [activeWidget, setActiveWidget] = useState<Widget | null>(null)
+  const [activeTab, setActiveTab] = useState<'widgets' | 'chat'>('widgets')
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event
@@ -52,19 +55,40 @@ export default function AppsPage() {
 
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="h-screen flex bg-gray-50">
-        {/* Left Panel - Widgets */}
-        <div className="w-80 bg-white border-r border-gray-200 flex-shrink-0">
-          <WidgetsPanel />
-        </div>
+      <div className="h-screen flex flex-col bg-gray-50">
+        {/* Header */}
+        <AppsHeader activeTab={activeTab} onTabChange={setActiveTab} />
         
-        {/* Right Canvas - Grid Layout */}
-        <div className="flex-1 p-6">
-          <GridCanvas 
-            widgets={droppedWidgets}
-            onLayoutChange={handleLayoutChange}
-            onRemoveWidget={handleRemoveWidget}
-          />
+        {/* Main Content */}
+        <div className="flex-1 flex">
+          {/* Left Panel */}
+          <div className="w-80 bg-white border-r border-gray-200 flex-shrink-0">
+            {activeTab === 'widgets' ? <WidgetsPanel /> : <ChatPanel />}
+          </div>
+          
+          {/* Right Canvas - Grid Layout (only visible when widgets tab is active) */}
+          {activeTab === 'widgets' && (
+            <div className="flex-1 p-6">
+              <GridCanvas 
+                widgets={droppedWidgets}
+                onLayoutChange={handleLayoutChange}
+                onRemoveWidget={handleRemoveWidget}
+              />
+            </div>
+          )}
+          
+          {/* Chat area when chat tab is active */}
+          {activeTab === 'chat' && (
+            <div className="flex-1 p-6">
+              <div className="h-full bg-white rounded-lg border border-gray-200 flex items-center justify-center text-gray-500">
+                <div className="text-center">
+                  <div className="text-4xl mb-2">💬</div>
+                  <p className="text-lg font-medium">Chat Mode</p>
+                  <p className="text-sm">Use the chat panel to interact with the AI assistant</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       
