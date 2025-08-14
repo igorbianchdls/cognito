@@ -1,13 +1,19 @@
 'use client'
 
 import { useChat } from '@ai-sdk/react'
-import { DefaultChatTransport } from 'ai'
+import { DefaultChatTransport, convertToModelMessages } from 'ai'
 import { useState, FormEvent } from 'react'
 
 export default function ChatPanel() {
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
       api: '/api/chat',
+      transform: {
+        request: (request) => ({
+          ...request,
+          messages: convertToModelMessages(request.messages)
+        })
+      }
     }),
     onFinish: ({ message }) => {
       console.log('✅ Mensagem finalizada:', message)
