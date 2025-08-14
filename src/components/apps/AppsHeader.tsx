@@ -1,14 +1,15 @@
 'use client'
 
 interface AppsHeaderProps {
-  activeTab: 'widgets' | 'chat'
-  onTabChange: (tab: 'widgets' | 'chat') => void
+  activeTab: 'widgets' | 'chat' | 'editor'
+  onTabChange: (tab: 'widgets' | 'chat' | 'editor') => void
 }
 
 export default function AppsHeader({ activeTab, onTabChange }: AppsHeaderProps) {
   const tabs = [
     { id: 'widgets', label: 'Widgets', icon: '📊' },
     { id: 'chat', label: 'Chat', icon: '💬' },
+    { id: 'editor', label: 'Editor', icon: '⚙️' },
   ] as const
 
   return (

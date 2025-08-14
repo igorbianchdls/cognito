@@ -1,9 +1,11 @@
 'use client'
 
 import { useMemo } from 'react'
+import { useStore } from '@nanostores/react'
 import { useDroppable } from '@dnd-kit/core'
 import { Responsive, WidthProvider } from 'react-grid-layout'
 import DroppedWidget from './DroppedWidget'
+import { $selectedWidgetId, widgetActions } from '@/stores/widgetStore'
 import type { DroppedWidget as DroppedWidgetType, LayoutItem } from '@/types/widget'
 
 const ResponsiveGridLayout = WidthProvider(Responsive)
@@ -19,9 +21,14 @@ export default function GridCanvas({
   onLayoutChange, 
   onRemoveWidget
 }: GridCanvasProps) {
+  const selectedWidgetId = useStore($selectedWidgetId)
   const { setNodeRef, isOver } = useDroppable({
     id: 'canvas-droppable'
   })
+
+  const handleWidgetClick = (widgetId: string) => {
+    widgetActions.selectWidget(widgetId)
+  }
 
   const layout = useMemo(() => 
     widgets.map(widget => ({
@@ -81,10 +88,19 @@ export default function GridCanvas({
           useCSSTransforms={true}
         >
           {widgets.map((widget) => (
-            <div key={widget.i}>
+            <div 
+              key={widget.i}
+              onClick={() => handleWidgetClick(widget.i)}
+              className={`cursor-pointer transition-all ${
+                selectedWidgetId === widget.i 
+                  ? 'ring-2 ring-blue-500 ring-opacity-50' 
+                  : ''
+              }`}
+            >
               <DroppedWidget 
                 widget={widget} 
                 onRemove={() => onRemoveWidget(widget.i)}
+                isSelected={selectedWidgetId === widget.i}
               />
             </div>
           ))}

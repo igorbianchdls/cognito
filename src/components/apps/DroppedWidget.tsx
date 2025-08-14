@@ -8,9 +8,10 @@ import type { DroppedWidget as DroppedWidgetType } from '@/types/widget'
 interface DroppedWidgetProps {
   widget: DroppedWidgetType
   onRemove: () => void
+  isSelected?: boolean
 }
 
-export default function DroppedWidget({ widget, onRemove }: DroppedWidgetProps) {
+export default function DroppedWidget({ widget, onRemove, isSelected = false }: DroppedWidgetProps) {
   const [isHovered, setIsHovered] = useState(false)
 
   const renderWidget = () => {
@@ -33,7 +34,11 @@ export default function DroppedWidget({ widget, onRemove }: DroppedWidgetProps) 
 
   return (
     <div 
-      className="h-full bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 relative overflow-hidden"
+      className={`h-full bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 relative overflow-hidden ${
+        isSelected 
+          ? 'border-2 border-blue-500 shadow-lg' 
+          : 'border border-gray-200'
+      }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
