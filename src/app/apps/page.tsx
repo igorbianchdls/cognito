@@ -9,6 +9,8 @@ export default function AppsPage() {
   const [droppedWidgets, setDroppedWidgets] = useState<DroppedWidget[]>([])
 
   const handleWidgetDrop = (widget: Widget, position: Position) => {
+    console.log('🎯 handleWidgetDrop called!', { widget, position })
+    
     const newWidget = {
       ...widget,
       i: `widget-${Date.now()}`,
@@ -17,7 +19,13 @@ export default function AppsPage() {
       w: widget.defaultWidth || 2,
       h: widget.defaultHeight || 2,
     }
-    setDroppedWidgets(prev => [...prev, newWidget])
+    
+    console.log('🆕 New widget created:', newWidget)
+    setDroppedWidgets(prev => {
+      const updated = [...prev, newWidget]
+      console.log('📊 Updated widgets array:', updated)
+      return updated
+    })
   }
 
   const handleLayoutChange = (layout: LayoutItem[]) => {

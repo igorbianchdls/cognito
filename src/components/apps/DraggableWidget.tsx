@@ -9,7 +9,12 @@ interface DraggableWidgetProps {
 
 export default function DraggableWidget({ widget }: DraggableWidgetProps) {
   const handleDragStart = useCallback((e: React.DragEvent) => {
-    e.dataTransfer.setData('application/json', JSON.stringify(widget))
+    console.log('🚀 Drag started for widget:', widget)
+    
+    const widgetData = JSON.stringify(widget)
+    console.log('📤 Setting drag data:', widgetData)
+    
+    e.dataTransfer.setData('application/json', widgetData)
     e.dataTransfer.effectAllowed = 'copy'
     
     // Create a custom drag image

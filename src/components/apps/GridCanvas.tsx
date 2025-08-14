@@ -34,15 +34,24 @@ export default function GridCanvas({
   )
 
   const handleDrop = useCallback((layout: LayoutItem[], layoutItem: LayoutItem, event: DragEvent) => {
+    console.log('🔥 handleDrop called!', { layout, layoutItem, event })
+    
     // Get widget data from drag event
     const dragData = (event as unknown as { dataTransfer?: DataTransfer })?.dataTransfer?.getData('application/json')
-    if (!dragData) return
+    console.log('📦 dragData:', dragData)
+    
+    if (!dragData) {
+      console.log('❌ No dragData found')
+      return
+    }
 
     try {
       const widget = JSON.parse(dragData) as Widget
+      console.log('✅ Parsed widget:', widget)
+      console.log('📍 Position:', { x: layoutItem.x, y: layoutItem.y })
       onWidgetDrop(widget, { x: layoutItem.x, y: layoutItem.y })
     } catch (error) {
-      console.error('Error parsing widget data:', error)
+      console.error('❌ Error parsing widget data:', error)
     }
   }, [onWidgetDrop])
 
