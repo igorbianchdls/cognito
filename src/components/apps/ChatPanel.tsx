@@ -4,6 +4,7 @@ import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport, convertToModelMessages } from 'ai'
 import { useState, FormEvent } from 'react'
 import type { DroppedWidget } from '@/types/widget'
+import CanvasWidgets from '../tools/appsChat/CanvasWidgets'
 
 interface ChatPanelProps {
   droppedWidgets: DroppedWidget[]
@@ -62,12 +63,37 @@ export default function ChatPanel({ droppedWidgets }: ChatPanelProps) {
                   : 'bg-gray-100 text-gray-900'
               }`}
             >
-              <p>
-                {message.parts
-                  ?.filter(part => part.type === 'text')
-                  .map((part, index) => <span key={index}>{part.text}</span>)
-                }
-              </p>
+              <div>
+                {message.parts?.map((part, index) => {
+                  if (part.type === 'text') {
+                    return <span key={index}>{part.text}</span>
+                  }
+                  
+                  if (part.type === 'tool-getCanvasWidgets') {
+                    const widgetTool = part as any
+                    if (widgetTool.state === 'output-available') {
+                      return (
+                        <CanvasWidgets
+                          key={index}
+                          widgets={widgetTool.output.widgets}
+                          totalWidgets={widgetTool.output.totalWidgets}
+                          summary={widgetTool.output.summary}
+                          success={widgetTool.output.success}
+                        />
+                      )
+                    }
+                    if (widgetTool.state === 'input-available') {
+                      return (
+                        <div key={index} className="mt-2 p-3 bg-gray-100 rounded-lg text-sm text-gray-600">
+                          🔍 Checking canvas widgets...
+                        </div>
+                      )
+                    }
+                  }
+                  
+                  return null
+                })}
+              </div>
             </div>
           </div>
         ))}
