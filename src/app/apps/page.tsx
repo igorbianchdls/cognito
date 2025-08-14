@@ -9,7 +9,7 @@ import ChatPanel from '@/components/apps/ChatPanel'
 import WidgetEditor from '@/components/apps/WidgetEditor'
 import GridCanvas from '@/components/apps/GridCanvas'
 import { $widgets, widgetActions } from '@/stores/widgetStore'
-import type { Widget, LayoutItem } from '@/types/widget'
+import type { Widget, LayoutItem, DroppedWidget } from '@/types/widget'
 
 export default function AppsPage() {
   const droppedWidgets = useStore($widgets)
@@ -51,7 +51,7 @@ export default function AppsPage() {
     widgetActions.removeWidget(widgetId)
   }
 
-  const handleEditWidget = useCallback((widgetId: string, changes: any) => {
+  const handleEditWidget = useCallback((widgetId: string, changes: Partial<DroppedWidget>) => {
     widgetActions.editWidget(widgetId, changes)
   }, [])
 

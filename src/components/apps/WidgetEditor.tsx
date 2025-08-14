@@ -131,7 +131,7 @@ export default function WidgetEditor() {
           {selectedWidget && (
             <div className="border-t pt-4">
               <h3 className="text-sm font-medium text-gray-700 mb-3">
-                Edit "{selectedWidget.name}"
+                Edit &quot;{selectedWidget.name}&quot;
               </h3>
               
               <div className="space-y-4">
