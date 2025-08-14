@@ -54,7 +54,7 @@ export default function ChatContainer({
   // Estado com mensagens - layout com InputArea sticky
   return (
     <div className="h-screen flex flex-col">
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
         <MessageList messages={messages} selectedAgent={selectedAgent} />
       </div>
       <div className="sticky bottom-0 bg-white">
