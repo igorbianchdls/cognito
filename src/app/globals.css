@@ -154,9 +154,9 @@ form[class*="divide"] button:focus-visible {
   -webkit-line-clamp: 3;
 }
 
-/* Custom scrollbar - invisible by default, appears on hover */
+/* Custom scrollbar - completely invisible by default, appears on hover */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
+  width: 0px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -165,11 +165,16 @@ form[class*="divide"] button:focus-visible {
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: transparent;
-  border-radius: 3px;
+}
+
+/* Show scrollbar when hovering over the container */
+.custom-scrollbar:hover::-webkit-scrollbar {
+  width: 6px;
 }
 
 .custom-scrollbar:hover::-webkit-scrollbar-thumb {
   background: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
 }
 
 .custom-scrollbar:hover::-webkit-scrollbar-thumb:hover {
