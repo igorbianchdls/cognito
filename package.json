@@ -12,6 +12,8 @@
     "@ai-sdk/anthropic": "^2.0.0",
     "@ai-sdk/react": "^2.0.8",
     "@daytonaio/sdk": "^0.25.5",
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/utilities": "^3.2.2",
     "@google-cloud/bigquery": "^8.1.1",
     "@icons-pack/react-simple-icons": "^13.7.0",
     "@monaco-editor/react": "^4.7.0",

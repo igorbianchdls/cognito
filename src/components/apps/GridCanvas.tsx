@@ -1,9 +1,10 @@
 'use client'
 
-import { useMemo, useCallback } from 'react'
+import { useMemo } from 'react'
+import { useDroppable } from '@dnd-kit/core'
 import { Responsive, WidthProvider } from 'react-grid-layout'
 import DroppedWidget from './DroppedWidget'
-import type { DroppedWidget as DroppedWidgetType, Widget, Position, LayoutItem } from '@/types/widget'
+import type { DroppedWidget as DroppedWidgetType, LayoutItem } from '@/types/widget'
 
 const ResponsiveGridLayout = WidthProvider(Responsive)
 
@@ -11,15 +12,16 @@ interface GridCanvasProps {
   widgets: DroppedWidgetType[]
   onLayoutChange: (layout: LayoutItem[]) => void
   onRemoveWidget: (widgetId: string) => void
-  onWidgetDrop: (widget: Widget, position: Position) => void
 }
 
 export default function GridCanvas({ 
   widgets, 
   onLayoutChange, 
-  onRemoveWidget, 
-  onWidgetDrop 
+  onRemoveWidget
 }: GridCanvasProps) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: 'canvas-droppable'
+  })
 
   const layout = useMemo(() => 
     widgets.map(widget => ({
@@ -32,34 +34,6 @@ export default function GridCanvas({
       minH: 1,
     })), [widgets]
   )
-
-  const handleDrop = useCallback((layout: LayoutItem[], layoutItem: LayoutItem, event: DragEvent) => {
-    console.log('🔥 handleDrop called!', { layout, layoutItem, event })
-    
-    // Get widget data from drag event
-    const dragData = (event as unknown as { dataTransfer?: DataTransfer })?.dataTransfer?.getData('application/json')
-    console.log('📦 dragData:', dragData)
-    
-    if (!dragData) {
-      console.log('❌ No dragData found')
-      return
-    }
-
-    try {
-      const widget = JSON.parse(dragData) as Widget
-      console.log('✅ Parsed widget:', widget)
-      console.log('📍 Position:', { x: layoutItem.x, y: layoutItem.y })
-      onWidgetDrop(widget, { x: layoutItem.x, y: layoutItem.y })
-    } catch (error) {
-      console.error('❌ Error parsing widget data:', error)
-    }
-  }, [onWidgetDrop])
-
-  const handleDropDragOver = useCallback(() => {
-    // Return default size for dropping item
-    // DragOverEvent doesn't have dataTransfer access
-    return { w: 2, h: 2 }
-  }, [])
 
   return (
     <div className="h-full flex flex-col">
@@ -75,7 +49,14 @@ export default function GridCanvas({
       </div>
 
       {/* Grid Container */}
-      <div className="flex-1 bg-white rounded-lg border-2 border-dashed border-gray-300 relative overflow-hidden">
+      <div 
+        ref={setNodeRef}
+        className={`flex-1 bg-white rounded-lg border-2 border-dashed relative overflow-hidden transition-colors ${
+          isOver 
+            ? 'border-blue-500 bg-blue-50' 
+            : 'border-gray-300'
+        }`}
+      >
         {widgets.length === 0 ? (
           <div className="absolute inset-0 flex items-center justify-center text-gray-400">
             <div className="text-center">
@@ -98,9 +79,6 @@ export default function GridCanvas({
           margin={[10, 10]}
           containerPadding={[20, 20]}
           useCSSTransforms={true}
-          isDroppable={true}
-          onDrop={handleDrop}
-          onDropDragOver={handleDropDragOver}
         >
           {widgets.map((widget) => (
             <div key={widget.i}>
