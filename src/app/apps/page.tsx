@@ -1,18 +1,53 @@
-import { Metadata } from 'next'
-import AppsGallery from '@/components/apps/AppsGallery'
+'use client'
 
-export const metadata: Metadata = {
-  title: 'Apps Gallery | Discover the best apps, components and starters',
-  description: 'Browse through a curated collection of apps, components, and starters created by the community. Find inspiration and kickstart your next project.',
-  keywords: 'apps, components, starters, templates, dashboard, landing pages, forms, ecommerce',
-  openGraph: {
-    title: 'Apps Gallery | Discover the best apps, components and starters',
-    description: 'Browse through a curated collection of apps, components, and starters created by the community.',
-    type: 'website',
-    siteName: 'Apps Gallery',
-  },
-}
+import { useState } from 'react'
+import WidgetsPanel from '@/components/apps/WidgetsPanel'
+import GridCanvas from '@/components/apps/GridCanvas'
 
 export default function AppsPage() {
-  return <AppsGallery />
+  const [droppedWidgets, setDroppedWidgets] = useState<any[]>([])
+
+  const handleWidgetDrop = (widget: any, position: any) => {
+    const newWidget = {
+      ...widget,
+      i: `widget-${Date.now()}`,
+      x: position.x || 0,
+      y: position.y || 0,
+      w: widget.defaultWidth || 2,
+      h: widget.defaultHeight || 2,
+    }
+    setDroppedWidgets(prev => [...prev, newWidget])
+  }
+
+  const handleLayoutChange = (layout: any[]) => {
+    setDroppedWidgets(prev => 
+      prev.map(widget => {
+        const layoutItem = layout.find(l => l.i === widget.i)
+        return layoutItem ? { ...widget, ...layoutItem } : widget
+      })
+    )
+  }
+
+  const handleRemoveWidget = (widgetId: string) => {
+    setDroppedWidgets(prev => prev.filter(w => w.i !== widgetId))
+  }
+
+  return (
+    <div className="h-screen flex bg-gray-50">
+      {/* Left Panel - Widgets */}
+      <div className="w-80 bg-white border-r border-gray-200 flex-shrink-0">
+        <WidgetsPanel onWidgetDrop={handleWidgetDrop} />
+      </div>
+      
+      {/* Right Canvas - Grid Layout */}
+      <div className="flex-1 p-6">
+        <GridCanvas 
+          widgets={droppedWidgets}
+          onLayoutChange={handleLayoutChange}
+          onRemoveWidget={handleRemoveWidget}
+          onWidgetDrop={handleWidgetDrop}
+        />
+      </div>
+    </div>
+  )
 }
