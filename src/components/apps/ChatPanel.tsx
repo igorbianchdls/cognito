@@ -1,55 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-
-interface ChatMessage {
-  id: string
-  text: string
-  isUser: boolean
-  timestamp: Date
-}
+import { useChat } from '@ai-sdk/react'
 
 export default function ChatPanel() {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: '1',
-      text: 'Hello! I\'m your AI assistant. How can I help you today?',
-      isUser: false,
-      timestamp: new Date(),
-    }
-  ])
-  const [inputValue, setInputValue] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!inputValue.trim() || isLoading) return
-
-    const userMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
-      text: inputValue.trim(),
-      isUser: true,
-      timestamp: new Date(),
-    }
-
-    setMessages(prev => [...prev, userMessage])
-    setInputValue('')
-    setIsLoading(true)
-
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMessage: ChatMessage = {
-        id: `ai-${Date.now()}`,
-        text: 'Thank you for your message! This is a simple chatbot response. In the future, this will be connected to a real AI service.',
-        isUser: false,
-        timestamp: new Date(),
-      }
-      
-      setMessages(prev => [...prev, aiMessage])
-      setIsLoading(false)
-    }, 1000)
-  }
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+    api: '/api/chat',
+    id: 'apps-chat'
+  })
 
   return (
     <div className="h-full flex flex-col">
@@ -66,22 +23,25 @@ export default function ChatPanel() {
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+            className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
               className={`max-w-[80%] rounded-lg p-3 text-sm ${
-                message.isUser
+                message.role === 'user'
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 text-gray-900'
               }`}
             >
-              <p>{message.text}</p>
+              <p>{message.content}</p>
               <p
                 className={`text-xs mt-1 ${
-                  message.isUser ? 'text-blue-100' : 'text-gray-500'
+                  message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
                 }`}
               >
-                {message.timestamp.toLocaleTimeString([], { 
+                {message.createdAt?.toLocaleTimeString([], { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                }) || new Date().toLocaleTimeString([], { 
                   hour: '2-digit', 
                   minute: '2-digit' 
                 })}
@@ -105,18 +65,18 @@ export default function ChatPanel() {
 
       {/* Input */}
       <div className="p-4 border-t border-gray-200">
-        <form onSubmit={handleSendMessage} className="flex gap-2">
+        <form onSubmit={handleSubmit} className="flex gap-2">
           <input
             type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            value={input}
+            onChange={handleInputChange}
             placeholder="Type your message..."
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             disabled={isLoading}
           />
           <button
             type="submit"
-            disabled={!inputValue.trim() || isLoading}
+            disabled={!input.trim() || isLoading}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Send
