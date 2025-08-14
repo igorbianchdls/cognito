@@ -5,8 +5,8 @@ import { DefaultChatTransport } from 'ai'
 import { useState, FormEvent } from 'react'
 
 export default function ChatPanel() {
-  const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({ api: '/api/chat' }),
+  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+    api: '/api/chat',
     id: 'apps-chat',
     onFinish: ({ message }) => {
       console.log('✅ Mensagem finalizada:', message)
@@ -16,19 +16,7 @@ export default function ChatPanel() {
     }
   })
 
-  const [input, setInput] = useState('')
-  
-  console.log('🔍 Chat state:', { messagesCount: messages.length, status })
-
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
-    if (input.trim()) {
-      console.log('🚀 Enviando mensagem:', input)
-      console.log('📡 Status atual:', status)
-      sendMessage({ text: input })
-      setInput('')
-    }
-  }
+  console.log('🔍 Chat state:', { messagesCount: messages.length, isLoading })
 
   return (
     <div className="h-full flex flex-col">
@@ -54,17 +42,12 @@ export default function ChatPanel() {
                   : 'bg-gray-100 text-gray-900'
               }`}
             >
-              <p>
-                {message.parts
-                  ?.filter(part => part.type === 'text')
-                  .map((part, index) => <span key={index}>{part.text}</span>)
-                }
-              </p>
+              <p>{message.content}</p>
             </div>
           </div>
         ))}
         
-        {status === 'streaming' && (
+        {isLoading && (
           <div className="flex justify-start">
             <div className="bg-gray-100 rounded-lg p-3 text-sm">
               <div className="flex items-center gap-1">
@@ -83,14 +66,14 @@ export default function ChatPanel() {
           <input
             type="text"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
             placeholder="Type your message..."
             className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            disabled={status === 'streaming'}
+            disabled={isLoading}
           />
           <button
             type="submit"
-            disabled={!input.trim() || status === 'streaming'}
+            disabled={!input.trim() || isLoading}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Send
