@@ -7,14 +7,17 @@ import type { DroppedWidget } from '@/types/widget';
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
+  console.log('📡 API POST iniciado');
+  
+  let messages: UIMessage[];
+  let widgets: DroppedWidget[];
+  let onEditWidget: ((widgetId: string, changes: Partial<DroppedWidget>) => void) | undefined;
+  
   try {
-    console.log('📡 API POST iniciado');
-    
-    const { messages, widgets, onEditWidget }: { 
-      messages: UIMessage[], 
-      widgets: DroppedWidget[], 
-      onEditWidget?: (widgetId: string, changes: Partial<DroppedWidget>) => void 
-    } = await req.json();
+    const requestData = await req.json();
+    messages = requestData.messages;
+    widgets = requestData.widgets;
+    onEditWidget = requestData.onEditWidget;
     
     console.log('📦 API Request received:', { 
       messagesCount: messages.length, 
