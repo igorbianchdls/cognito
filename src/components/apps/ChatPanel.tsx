@@ -5,6 +5,7 @@ import { DefaultChatTransport } from 'ai'
 import { useState, FormEvent } from 'react'
 import type { DroppedWidget } from '@/types/widget'
 import CanvasWidgets from '../tools/appsChat/CanvasWidgets'
+import EditWidget from '../tools/appsChat/EditWidget'
 
 interface ChatPanelProps {
   droppedWidgets: DroppedWidget[]
@@ -102,6 +103,46 @@ export default function ChatPanel({ droppedWidgets }: ChatPanelProps) {
                       return (
                         <div key={index} className="mt-2 p-3 bg-gray-100 rounded-lg text-sm text-gray-600">
                           🔍 Checking canvas widgets...
+                        </div>
+                      )
+                    }
+                  }
+                  
+                  if (part.type === 'tool-editWidget') {
+                    const editTool = part as {
+                      state: string
+                      output: {
+                        success: boolean
+                        action: string
+                        widgetId: string
+                        widgetName: string
+                        changes?: Record<string, any>
+                        message: string
+                        error?: string
+                        note?: string
+                        availableWidgets?: Array<{ id: string; name: string }>
+                      }
+                    }
+                    if (editTool.state === 'output-available') {
+                      return (
+                        <EditWidget
+                          key={index}
+                          success={editTool.output.success}
+                          action={editTool.output.action}
+                          widgetId={editTool.output.widgetId}
+                          widgetName={editTool.output.widgetName}
+                          changes={editTool.output.changes}
+                          message={editTool.output.message}
+                          error={editTool.output.error}
+                          note={editTool.output.note}
+                          availableWidgets={editTool.output.availableWidgets}
+                        />
+                      )
+                    }
+                    if (editTool.state === 'input-available') {
+                      return (
+                        <div key={index} className="mt-2 p-3 bg-gray-100 rounded-lg text-sm text-gray-600">
+                          ⚙️ Editing widget...
                         </div>
                       )
                     }
