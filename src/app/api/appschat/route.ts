@@ -8,6 +8,12 @@ export const maxDuration = 30;
 
 export async function POST(req: Request) {
   const { messages, widgets }: { messages: UIMessage[], widgets: DroppedWidget[] } = await req.json();
+  
+  console.log('📦 API Request received:', { 
+    messagesCount: messages.length, 
+    widgetsCount: widgets?.length || 0 
+  });
+  console.log('🎯 Widgets recebidos na API:', widgets);
 
   const result = streamText({
     model: anthropic('claude-sonnet-4-20250514'),
@@ -26,7 +32,8 @@ Respond in a clear, helpful manner. Keep responses concise and actionable.`,
         description: 'Get current widgets on the dashboard canvas with their positions, sizes and properties',
         inputSchema: z.object({}),
         execute: async () => {
-          console.log('🔍 Getting canvas widgets:', widgets.length);
+          console.log('🚀 TOOL CALL EXECUTADA! Getting canvas widgets:', widgets?.length || 0);
+          console.log('🎯 Widgets disponíveis para tool:', widgets);
           
           return {
             success: true,

@@ -26,6 +26,7 @@ export default function ChatPanel({ droppedWidgets }: ChatPanelProps) {
   const [input, setInput] = useState('')
   
   console.log('🔍 Chat state:', { messagesCount: messages.length, status })
+  console.log('📦 Widgets enviados para API:', droppedWidgets)
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()

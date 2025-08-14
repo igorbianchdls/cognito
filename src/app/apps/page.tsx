@@ -66,29 +66,14 @@ export default function AppsPage() {
             {activeTab === 'widgets' ? <WidgetsPanel /> : <ChatPanel droppedWidgets={droppedWidgets} />}
           </div>
           
-          {/* Right Canvas - Grid Layout (only visible when widgets tab is active) */}
-          {activeTab === 'widgets' && (
-            <div className="flex-1 p-6">
-              <GridCanvas 
-                widgets={droppedWidgets}
-                onLayoutChange={handleLayoutChange}
-                onRemoveWidget={handleRemoveWidget}
-              />
-            </div>
-          )}
-          
-          {/* Chat area when chat tab is active */}
-          {activeTab === 'chat' && (
-            <div className="flex-1 p-6">
-              <div className="h-full bg-white rounded-lg border border-gray-200 flex items-center justify-center text-gray-500">
-                <div className="text-center">
-                  <div className="text-4xl mb-2">💬</div>
-                  <p className="text-lg font-medium">Chat Mode</p>
-                  <p className="text-sm">Use the chat panel to interact with the AI assistant</p>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Right Canvas - Always visible */}
+          <div className="flex-1 p-6">
+            <GridCanvas 
+              widgets={droppedWidgets}
+              onLayoutChange={handleLayoutChange}
+              onRemoveWidget={handleRemoveWidget}
+            />
+          </div>
         </div>
       </div>
       
