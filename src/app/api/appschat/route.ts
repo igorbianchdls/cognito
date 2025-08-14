@@ -162,7 +162,7 @@ Respond in a clear, helpful manner. Keep responses concise and actionable.`,
                 if (onEditWidget) {
                   try {
                     console.log('🗑️ Executando callback de deleção');
-                    onEditWidget(widgetId, { _delete: true } as any);
+                    onEditWidget(widgetId, { _delete: true } as Partial<DroppedWidget>);
                     console.log('✅ Widget deletado com sucesso');
                   } catch (deleteError) {
                     console.error('❌ Erro ao deletar widget:', deleteError);
