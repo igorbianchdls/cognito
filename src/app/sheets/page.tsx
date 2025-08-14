@@ -23,7 +23,7 @@ export default function SheetsPage() {
       <Sidebar />
       
       {/* Área Principal */}
-      <div className="flex-1 min-w-0 flex flex-col">
+      <div className="flex-1 min-w-0 x flex flex-col">
         {/* TableHeader - Ocupando 100% da largura */}
         <TableHeader 
           onFiltersChange={setFilters}
