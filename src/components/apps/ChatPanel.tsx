@@ -9,19 +9,25 @@ import EditWidget from '../tools/appsChat/EditWidget'
 
 interface ChatPanelProps {
   droppedWidgets: DroppedWidget[]
+  onEditWidget: (widgetId: string, changes: Partial<DroppedWidget>) => void
 }
 
-export default function ChatPanel({ droppedWidgets }: ChatPanelProps) {
+export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelProps) {
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
       api: '/api/appschat',
-      body: { widgets: droppedWidgets }
+      body: { widgets: droppedWidgets, onEditWidget }
     }),
     onFinish: ({ message }) => {
       console.log('✅ Mensagem finalizada:', message)
     },
     onError: (error) => {
       console.error('❌ Erro no chat:', error)
+      console.error('❌ Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      })
     }
   })
 
@@ -35,8 +41,18 @@ export default function ChatPanel({ droppedWidgets }: ChatPanelProps) {
     if (input.trim()) {
       console.log('🚀 Enviando mensagem:', input)
       console.log('📡 Status atual:', status)
-      sendMessage({ text: input })
-      setInput('')
+      console.log('📡 Widgets count sendo enviados:', droppedWidgets.length)
+      console.log('📡 onEditWidget callback disponível:', typeof onEditWidget === 'function')
+      
+      try {
+        sendMessage({ text: input })
+        setInput('')
+        console.log('✅ Mensagem enviada com sucesso')
+      } catch (error) {
+        console.error('❌ Erro ao enviar mensagem:', error)
+      }
+    } else {
+      console.warn('⚠️ Tentativa de enviar mensagem vazia')
     }
   }
 

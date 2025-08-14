@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core'
 import AppsHeader from '@/components/apps/AppsHeader'
 import WidgetsPanel from '@/components/apps/WidgetsPanel'
@@ -53,6 +53,54 @@ export default function AppsPage() {
     setDroppedWidgets(prev => prev.filter(w => w.i !== widgetId))
   }
 
+  const handleEditWidget = useCallback((widgetId: string, changes: Partial<DroppedWidget>) => {
+    try {
+      console.log('🎨 AppsPage handleEditWidget chamado:', { widgetId, changes });
+      console.log('📦 Current widgets before edit:', droppedWidgets.map(w => ({ id: w.i, name: w.name })));
+      
+      // Special handling for delete action
+      if ('_delete' in changes) {
+        console.log('🗑️ AppsPage: Deletando widget:', widgetId);
+        const widgetToDelete = droppedWidgets.find(w => w.i === widgetId);
+        if (widgetToDelete) {
+          console.log('🗑️ Widget encontrado para deleção:', widgetToDelete.name);
+          setDroppedWidgets(prev => {
+            const newWidgets = prev.filter(w => w.i !== widgetId);
+            console.log('✅ Widget deletado. Widgets restantes:', newWidgets.length);
+            return newWidgets;
+          });
+        } else {
+          console.error('❌ Widget para deletar não encontrado:', widgetId);
+        }
+        return;
+      }
+      
+      // Regular edit
+      console.log('🔄 AppsPage: Editando widget normalmente');
+      setDroppedWidgets(prev => {
+        const updatedWidgets = prev.map(w => {
+          if (w.i === widgetId) {
+            const updated = {...w, ...changes};
+            console.log('✅ Widget atualizado:', { before: w, after: updated });
+            return updated;
+          }
+          return w;
+        });
+        console.log('📦 Widgets após edição:', updatedWidgets.length);
+        return updatedWidgets;
+      });
+      
+    } catch (error) {
+      console.error('❌ Erro em handleEditWidget:', error);
+      console.error('❌ Error details:', {
+        widgetId,
+        changes,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack'
+      });
+    }
+  }, [droppedWidgets])
+
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="h-screen flex flex-col bg-gray-50">
@@ -63,7 +111,7 @@ export default function AppsPage() {
         <div className="flex-1 flex">
           {/* Left Panel */}
           <div className="w-80 bg-white border-r border-gray-200 flex-shrink-0">
-            {activeTab === 'widgets' ? <WidgetsPanel /> : <ChatPanel droppedWidgets={droppedWidgets} />}
+            {activeTab === 'widgets' ? <WidgetsPanel /> : <ChatPanel droppedWidgets={droppedWidgets} onEditWidget={handleEditWidget} />}
           </div>
           
           {/* Right Canvas - Always visible */}

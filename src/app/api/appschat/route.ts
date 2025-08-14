@@ -7,13 +7,26 @@ import type { DroppedWidget } from '@/types/widget';
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const { messages, widgets }: { messages: UIMessage[], widgets: DroppedWidget[] } = await req.json();
-  
-  console.log('📦 API Request received:', { 
-    messagesCount: messages.length, 
-    widgetsCount: widgets?.length || 0 
-  });
-  console.log('🎯 Widgets recebidos na API:', widgets);
+  try {
+    console.log('📡 API POST iniciado');
+    
+    const { messages, widgets, onEditWidget }: { 
+      messages: UIMessage[], 
+      widgets: DroppedWidget[], 
+      onEditWidget?: (widgetId: string, changes: Partial<DroppedWidget>) => void 
+    } = await req.json();
+    
+    console.log('📦 API Request received:', { 
+      messagesCount: messages.length, 
+      widgetsCount: widgets?.length || 0,
+      hasCallback: typeof onEditWidget === 'function'
+    });
+    console.log('🎯 Widgets recebidos na API:', widgets);
+    
+  } catch (error) {
+    console.error('❌ Erro ao fazer parse do JSON:', error);
+    return new Response('Invalid JSON', { status: 400 });
+  }
 
   const result = streamText({
     model: anthropic('claude-sonnet-4-20250514'),
@@ -32,8 +45,9 @@ Respond in a clear, helpful manner. Keep responses concise and actionable.`,
         description: 'Get current widgets on the dashboard canvas with their positions, sizes and properties',
         inputSchema: z.object({}),
         execute: async () => {
-          console.log('🚀 TOOL CALL EXECUTADA! Getting canvas widgets:', widgets?.length || 0);
-          console.log('🎯 Widgets disponíveis para tool:', widgets);
+          try {
+            console.log('🚀 TOOL CALL EXECUTADA! Getting canvas widgets:', widgets?.length || 0);
+            console.log('🎯 Widgets disponíveis para tool:', widgets);
           
           return {
             success: true,
@@ -51,6 +65,15 @@ Respond in a clear, helpful manner. Keep responses concise and actionable.`,
               ? 'No widgets on canvas'
               : `${widgets.length} widget(s) on canvas: ${widgets.map(w => w.name).join(', ')}`
           };
+          } catch (error) {
+            console.error('❌ Erro na tool getCanvasWidgets:', error);
+            return {
+              success: false,
+              widgets: [],
+              totalWidgets: 0,
+              summary: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
+            };
+          }
         }
       }),
       
@@ -79,11 +102,17 @@ Respond in a clear, helpful manner. Keep responses concise and actionable.`,
           }).optional().describe('Style properties (required for changeStyle action)')
         }),
         execute: async ({ widgetId, action, position, size, color, style }) => {
-          console.log('🎨 EDIT WIDGET TOOL EXECUTADA!', { widgetId, action, position, size, color, style });
+          try {
+            console.log('🎨 EDIT WIDGET TOOL EXECUTADA!', { widgetId, action, position, size, color, style });
+            console.log('🔍 Procurando widget com ID:', widgetId);
+            console.log('🔍 Widgets disponíveis:', widgets.map(w => ({ id: w.i, name: w.name })));
           
           // Find the widget to edit
           const widgetIndex = widgets.findIndex(w => w.i === widgetId);
+          console.log('🔍 Widget encontrado no índice:', widgetIndex);
+          
           if (widgetIndex === -1) {
+            console.error('❌ Widget não encontrado:', widgetId);
             return {
               success: false,
               error: `Widget with ID "${widgetId}" not found on canvas`,
@@ -92,9 +121,10 @@ Respond in a clear, helpful manner. Keep responses concise and actionable.`,
           }
           
           const widget = widgets[widgetIndex];
+          console.log('🎯 Widget encontrado:', { id: widget.i, name: widget.name });
           let changes = {};
           
-          try {
+            console.log('🔄 Processando ação:', action);
             switch (action) {
               case 'move':
                 if (!position) {
@@ -127,17 +157,47 @@ Respond in a clear, helpful manner. Keep responses concise and actionable.`,
                 break;
                 
               case 'delete':
-                // Note: This would need to trigger widget removal
+                // Execute deletion via callback
+                console.log('🗑️ Processando deleção do widget:', widgetId);
+                if (onEditWidget) {
+                  try {
+                    console.log('🗑️ Executando callback de deleção');
+                    onEditWidget(widgetId, { _delete: true } as any);
+                    console.log('✅ Widget deletado com sucesso');
+                  } catch (deleteError) {
+                    console.error('❌ Erro ao deletar widget:', deleteError);
+                    throw deleteError;
+                  }
+                } else {
+                  console.warn('⚠️ Callback não disponível para deleção');
+                }
                 return {
                   success: true,
                   action: 'delete',
                   widgetId,
                   widgetName: widget.name,
-                  message: `Widget "${widget.name}" would be deleted (not implemented yet - needs frontend callback)`
+                  message: onEditWidget 
+                    ? `Widget "${widget.name}" has been deleted` 
+                    : `Widget "${widget.name}" would be deleted (callback not available)`,
+                  note: onEditWidget ? 'Widget removed from canvas' : 'Changes are simulated - callback not available'
                 };
                 
               default:
                 return { success: false, error: `Unknown action: ${action}` };
+            }
+            
+            // Execute the callback to actually update widget state
+            if (onEditWidget) {
+              console.log('🔄 Executando callback onEditWidget:', { widgetId, changes });
+              try {
+                onEditWidget(widgetId, changes);
+                console.log('✅ Callback executado com sucesso');
+              } catch (callbackError) {
+                console.error('❌ Erro ao executar callback:', callbackError);
+                throw callbackError;
+              }
+            } else {
+              console.warn('⚠️ Callback onEditWidget não disponível');
             }
             
             return {
@@ -146,11 +206,13 @@ Respond in a clear, helpful manner. Keep responses concise and actionable.`,
               widgetId,
               widgetName: widget.name,
               changes,
-              message: `Widget "${widget.name}" ${action} completed`,
-              note: 'Changes are simulated - real implementation needs frontend state updates'
+              message: `Widget "${widget.name}" ${action} completed successfully`,
+              note: onEditWidget ? 'Changes applied to canvas' : 'Changes are simulated - callback not available'
             };
             
           } catch (error) {
+            console.error('❌ Erro na tool editWidget:', error);
+            console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack available');
             return {
               success: false,
               error: error instanceof Error ? error.message : 'Unknown error occurred',
