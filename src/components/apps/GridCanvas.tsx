@@ -3,14 +3,15 @@
 import { useMemo, useRef, useCallback } from 'react'
 import { Responsive, WidthProvider } from 'react-grid-layout'
 import DroppedWidget from './DroppedWidget'
+import type { DroppedWidget as DroppedWidgetType, Widget, Position, LayoutItem } from '@/types/widget'
 
 const ResponsiveGridLayout = WidthProvider(Responsive)
 
 interface GridCanvasProps {
-  widgets: any[]
-  onLayoutChange: (layout: any[]) => void
+  widgets: DroppedWidgetType[]
+  onLayoutChange: (layout: LayoutItem[]) => void
   onRemoveWidget: (widgetId: string) => void
-  onWidgetDrop: (widget: any, position: any) => void
+  onWidgetDrop: (widget: Widget, position: Position) => void
 }
 
 export default function GridCanvas({ 
@@ -33,9 +34,9 @@ export default function GridCanvas({
     })), [widgets]
   )
 
-  const handleDrop = useCallback((layout: any[], layoutItem: any, _event: any) => {
+  const handleDrop = useCallback((_layout: LayoutItem[], _layoutItem: LayoutItem, _event: Event) => {
     // This is called when an item is dropped from outside
-    console.log('Item dropped:', layoutItem)
+    // Currently handled manually in handleDrop2
   }, [])
 
   const handleDragOver = useCallback((e: React.DragEvent) => {

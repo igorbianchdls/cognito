@@ -3,19 +3,10 @@
 import { useState } from 'react'
 import ChartWidget from './widgets/ChartWidget'
 import MetricWidget from './widgets/MetricWidget'
+import type { DroppedWidget as DroppedWidgetType } from '@/types/widget'
 
 interface DroppedWidgetProps {
-  widget: {
-    i: string
-    id: string
-    name: string
-    type: string
-    icon: string
-    x: number
-    y: number
-    w: number
-    h: number
-  }
+  widget: DroppedWidgetType
   onRemove: () => void
 }
 

@@ -3,11 +3,12 @@
 import { useState } from 'react'
 import WidgetsPanel from '@/components/apps/WidgetsPanel'
 import GridCanvas from '@/components/apps/GridCanvas'
+import type { DroppedWidget, Widget, Position, LayoutItem } from '@/types/widget'
 
 export default function AppsPage() {
-  const [droppedWidgets, setDroppedWidgets] = useState<any[]>([])
+  const [droppedWidgets, setDroppedWidgets] = useState<DroppedWidget[]>([])
 
-  const handleWidgetDrop = (widget: any, position: any) => {
+  const handleWidgetDrop = (widget: Widget, position: Position) => {
     const newWidget = {
       ...widget,
       i: `widget-${Date.now()}`,
@@ -19,7 +20,7 @@ export default function AppsPage() {
     setDroppedWidgets(prev => [...prev, newWidget])
   }
 
-  const handleLayoutChange = (layout: any[]) => {
+  const handleLayoutChange = (layout: LayoutItem[]) => {
     setDroppedWidgets(prev => 
       prev.map(widget => {
         const layoutItem = layout.find(l => l.i === widget.i)
@@ -36,7 +37,7 @@ export default function AppsPage() {
     <div className="h-screen flex bg-gray-50">
       {/* Left Panel - Widgets */}
       <div className="w-80 bg-white border-r border-gray-200 flex-shrink-0">
-        <WidgetsPanel onWidgetDrop={handleWidgetDrop} />
+        <WidgetsPanel />
       </div>
       
       {/* Right Canvas - Grid Layout */}

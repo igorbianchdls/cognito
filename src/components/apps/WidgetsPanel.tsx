@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
 import DraggableWidget from './DraggableWidget'
+import type { Widget } from '@/types/widget'
 
-const availableWidgets = [
+const availableWidgets: Widget[] = [
   {
     id: 'chart-widget',
     name: 'Chart Widget',
@@ -24,11 +24,10 @@ const availableWidgets = [
   },
 ]
 
-interface WidgetsPanelProps {
-  onWidgetDrop: (widget: any, position: any) => void
-}
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+interface WidgetsPanelProps {}
 
-export default function WidgetsPanel({ onWidgetDrop }: WidgetsPanelProps) {
+export default function WidgetsPanel({}: WidgetsPanelProps) {
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
@@ -45,7 +44,6 @@ export default function WidgetsPanel({ onWidgetDrop }: WidgetsPanelProps) {
           <DraggableWidget
             key={widget.id}
             widget={widget}
-            onWidgetDrop={onWidgetDrop}
           />
         ))}
       </div>

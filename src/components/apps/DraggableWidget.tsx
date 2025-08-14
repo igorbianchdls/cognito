@@ -1,21 +1,13 @@
 'use client'
 
 import { useCallback } from 'react'
+import type { Widget } from '@/types/widget'
 
 interface DraggableWidgetProps {
-  widget: {
-    id: string
-    name: string
-    type: string
-    icon: string
-    description: string
-    defaultWidth: number
-    defaultHeight: number
-  }
-  onWidgetDrop: (widget: any, position: any) => void
+  widget: Widget
 }
 
-export default function DraggableWidget({ widget, onWidgetDrop }: DraggableWidgetProps) {
+export default function DraggableWidget({ widget }: DraggableWidgetProps) {
   const handleDragStart = useCallback((e: React.DragEvent) => {
     e.dataTransfer.setData('application/json', JSON.stringify(widget))
     e.dataTransfer.effectAllowed = 'copy'
@@ -48,7 +40,7 @@ export default function DraggableWidget({ widget, onWidgetDrop }: DraggableWidge
     }, 0)
   }, [widget])
 
-  const handleDragEnd = useCallback((e: React.DragEvent) => {
+  const handleDragEnd = useCallback((_e: React.DragEvent) => {
     // Optional: Add any cleanup logic here
   }, [])
 
