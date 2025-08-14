@@ -54,10 +54,10 @@ export default function ChatContainer({
   // Estado com mensagens - layout com InputArea fixa
   return (
     <div className="h-screen flex flex-col">
-      <div className="flex-1 overflow-hidden pb-20">
+      <div className="flex-1 overflow-hidden pb-32">
         <MessageList messages={messages} selectedAgent={selectedAgent} />
       </div>
-      <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-4xl px-4 pb-4 bg-white border-t">
+      <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full max-w-4xl px-4 pb-4 bg-white">
         <InputArea 
           input={input}
           setInput={setInput}
