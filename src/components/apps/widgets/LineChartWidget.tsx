@@ -3,8 +3,13 @@
 import { useState, useEffect } from 'react'
 import { LineChart } from '@/components/charts'
 import type { ChartData } from '@/components/charts/types'
+import type { DroppedWidget } from '@/types/widget'
 
-export default function LineChartWidget() {
+interface LineChartWidgetProps {
+  widget: DroppedWidget
+}
+
+export default function LineChartWidget({ widget }: LineChartWidgetProps) {
   const [data, setData] = useState<ChartData[]>([
     { x: 'Jan', y: 45 },
     { x: 'Feb', y: 52 },
@@ -30,11 +35,22 @@ export default function LineChartWidget() {
     return () => clearInterval(interval)
   }, [])
 
+  // Get chart configuration with defaults
+  const chartConfig = widget.chartConfig || {}
+  
+  // Prepare props for LineChart (using BaseChartProps)
+  const chartProps = {
+    data,
+    // Line chart specific configurations would be applied here
+    // Note: LineChart component uses BaseChartProps, so we pass basic props
+    xColumn: 'x',
+    yColumn: 'y',
+    isFullscreen: false
+  }
+
   return (
     <div className="h-full w-full">
-      <LineChart 
-        data={data}
-      />
+      <LineChart {...chartProps} />
     </div>
   )
 }

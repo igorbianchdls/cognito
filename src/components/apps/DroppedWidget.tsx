@@ -21,13 +21,13 @@ export default function DroppedWidget({ widget, onRemove, isSelected = false }: 
     switch (widget.type) {
       case 'chart':
       case 'chart-bar':
-        return <ChartWidget />
+        return <ChartWidget widget={widget} />
       case 'chart-line':
-        return <LineChartWidget />
+        return <LineChartWidget widget={widget} />
       case 'chart-pie':
-        return <PieChartWidget />
+        return <PieChartWidget widget={widget} />
       case 'chart-area':
-        return <AreaChartWidget />
+        return <AreaChartWidget widget={widget} />
       case 'metric':
         return <MetricWidget />
       default:

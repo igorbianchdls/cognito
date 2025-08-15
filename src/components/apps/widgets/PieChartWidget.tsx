@@ -3,8 +3,13 @@
 import { useState, useEffect } from 'react'
 import { PieChart } from '@/components/charts'
 import type { ChartData } from '@/components/charts/types'
+import type { DroppedWidget } from '@/types/widget'
 
-export default function PieChartWidget() {
+interface PieChartWidgetProps {
+  widget: DroppedWidget
+}
+
+export default function PieChartWidget({ widget }: PieChartWidgetProps) {
   const [data, setData] = useState<ChartData[]>([
     { x: 'Desktop', y: 42 },
     { x: 'Mobile', y: 35 },
@@ -35,11 +40,20 @@ export default function PieChartWidget() {
     return () => clearInterval(interval)
   }, [])
 
+  // Get chart configuration with defaults
+  const chartConfig = widget.chartConfig || {}
+  
+  // Prepare props for PieChart (using BaseChartProps)
+  const chartProps = {
+    data,
+    xColumn: 'x',
+    yColumn: 'y',
+    isFullscreen: false
+  }
+
   return (
     <div className="h-full w-full">
-      <PieChart 
-        data={data}
-      />
+      <PieChart {...chartProps} />
     </div>
   )
 }

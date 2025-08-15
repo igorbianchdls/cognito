@@ -3,8 +3,13 @@
 import { useState, useEffect } from 'react'
 import { AreaChart } from '@/components/charts'
 import type { ChartData } from '@/components/charts/types'
+import type { DroppedWidget } from '@/types/widget'
 
-export default function AreaChartWidget() {
+interface AreaChartWidgetProps {
+  widget: DroppedWidget
+}
+
+export default function AreaChartWidget({ widget }: AreaChartWidgetProps) {
   const [data, setData] = useState<ChartData[]>([
     { x: 'Q1', y: 120 },
     { x: 'Q2', y: 135 },
@@ -30,11 +35,20 @@ export default function AreaChartWidget() {
     return () => clearInterval(interval)
   }, [])
 
+  // Get chart configuration with defaults
+  const chartConfig = widget.chartConfig || {}
+  
+  // Prepare props for AreaChart (using BaseChartProps)
+  const chartProps = {
+    data,
+    xColumn: 'x',
+    yColumn: 'y',
+    isFullscreen: false
+  }
+
   return (
     <div className="h-full w-full">
-      <AreaChart 
-        data={data}
-      />
+      <AreaChart {...chartProps} />
     </div>
   )
 }

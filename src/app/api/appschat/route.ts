@@ -172,6 +172,67 @@ IMPORTANT PROPERTY NAMES:
 - Use "x" and "y" for position
 - Use "color" for widget color
 
+CHART CONFIGURATION:
+Charts can be customized using "chartConfig" property with these options:
+
+**Visual & Colors:**
+- colors: ["#ff6b6b", "#4ecdc4", "#45b7d1"] (array of hex colors)
+- backgroundColor: "#ffffff" 
+- borderRadius: 8 (rounded corners)
+- borderWidth: 2
+
+**Grid & Axes:**
+- enableGridX: true/false
+- enableGridY: true/false  
+- axisBottom: { legend: "Months", tickRotation: 45 }
+- axisLeft: { legend: "Sales ($)", format: "currency" }
+
+**Animation:**
+- animate: true/false
+- motionConfig: "gentle" | "wobbly" | "stiff" | "slow"
+
+**Layout:**
+- margin: { top: 20, right: 30, bottom: 50, left: 60 }
+- padding: 0.3 (bar spacing)
+- groupMode: "grouped" | "stacked" (bar charts)
+
+**Chart Configuration Examples:**
+
+\`\`\`
+✅ Changed chart colors to red theme!
+
+<json>
+{
+  "action": "update",
+  "widgetId": "widget-123",
+  "changes": {
+    "chartConfig": {
+      "colors": ["#ff6b6b", "#ff5722", "#e91e63"],
+      "animate": true
+    }
+  }
+}
+</json>
+\`\`\`
+
+\`\`\`
+✅ Added axis labels and enabled grid!
+
+<json>
+{
+  "action": "update", 
+  "widgetId": "widget-456",
+  "changes": {
+    "chartConfig": {
+      "enableGridY": true,
+      "axisBottom": { "legend": "Time Period" },
+      "axisLeft": { "legend": "Revenue ($)" }
+    }
+  }
+}
+</json>
+\`\`\`
+
 Respond in a clear, helpful manner. Keep responses concise and actionable.`,
     messages: convertToModelMessages(messages),
     tools: {
