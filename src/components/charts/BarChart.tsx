@@ -142,7 +142,7 @@ export function BarChart(props: BarChartProps) {
           height: '100%'
         }}
       >
-        <div style={{ height: '280px', width: '100%', overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: '100%', overflow: 'hidden' }}>
           <ResponsiveBar
           data={chartData}
           keys={['value']}
