@@ -6,6 +6,27 @@ import yaml from 'js-yaml'
 import { $widgets, widgetActions } from '@/stores/widgetStore'
 import type { DroppedWidget } from '@/types/widget'
 
+interface YamlWidget {
+  i: string
+  name: string
+  type: string
+  position: { x: number; y: number }
+  size: { w: number; h: number }
+  style?: { color?: string }
+  icon?: string
+  description?: string
+  id?: string
+}
+
+interface YamlData {
+  meta?: {
+    title?: string
+    created?: string
+    totalWidgets?: number
+  }
+  widgets: YamlWidget[]
+}
+
 interface CodeEditorState {
   code: string
   error: string | null
@@ -87,7 +108,7 @@ export default function CodeEditor() {
   // Apply YAML changes to widgets
   const handleApplyChanges = () => {
     try {
-      const parsed = yaml.load(state.code) as { meta?: any; widgets?: any[] }
+      const parsed = yaml.load(state.code) as YamlData
       
       if (!parsed || !parsed.widgets || !Array.isArray(parsed.widgets)) {
         setState(prev => ({ ...prev, error: 'YAML must contain a "widgets" array' }))
@@ -95,7 +116,7 @@ export default function CodeEditor() {
       }
 
       // Transform YAML widgets back to DroppedWidget format
-      const newWidgets: DroppedWidget[] = parsed.widgets.map((widget: any, index: number) => {
+      const newWidgets: DroppedWidget[] = parsed.widgets.map((widget: YamlWidget, index: number) => {
         if (!widget.i) {
           widget.i = `widget-${Date.now()}-${index}`
         }
