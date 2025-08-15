@@ -6,7 +6,49 @@ import { nivoTheme } from './theme';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
 
-export function AreaChart({ data, xColumn, yColumn, isFullscreen }: BaseChartProps) {
+interface AreaChartProps extends BaseChartProps {
+  colors?: string[]
+  enableGridX?: boolean
+  enableGridY?: boolean
+  enableArea?: boolean
+  areaOpacity?: number
+  lineWidth?: number
+  pointSize?: number
+  animate?: boolean
+  motionConfig?: 'default' | 'gentle' | 'wobbly' | 'stiff' | 'slow'
+  margin?: { top?: number; right?: number; bottom?: number; left?: number }
+  axisBottom?: {
+    legend?: string
+    tickRotation?: number
+    tickSize?: number
+    tickPadding?: number
+  }
+  axisLeft?: {
+    legend?: string
+    tickRotation?: number
+    tickSize?: number
+    tickPadding?: number
+  }
+}
+
+export function AreaChart({ 
+  data, 
+  xColumn, 
+  yColumn, 
+  isFullscreen,
+  colors,
+  enableGridX,
+  enableGridY,
+  enableArea,
+  areaOpacity,
+  lineWidth,
+  pointSize,
+  animate,
+  motionConfig,
+  margin,
+  axisBottom,
+  axisLeft
+}: AreaChartProps) {
   if (!data || data.length === 0) {
     return <EmptyState />;
   }
@@ -30,7 +72,7 @@ export function AreaChart({ data, xColumn, yColumn, isFullscreen }: BaseChartPro
   };
 
   return (
-    <div style={{ width: '100%', minHeight: '300px', height: 'auto', minWidth: 0 }}>
+    <div style={{ width: '100%', height: '100%', minWidth: 0 }}>
       <ResponsiveLine
         data={[
           {
@@ -41,19 +83,24 @@ export function AreaChart({ data, xColumn, yColumn, isFullscreen }: BaseChartPro
             }))
           }
         ]}
-        // Margins com espaço para legenda na parte inferior
-        margin={{ top: 12, right: 12, bottom: 80, left: 50 }}
+        // Margins configuráveis
+        margin={{
+          top: margin?.top ?? 12,
+          right: margin?.right ?? 12,
+          bottom: margin?.bottom ?? 80,
+          left: margin?.left ?? 50
+        }}
         xScale={{ type: 'point' }}
         yScale={{ type: 'linear', min: 0, max: 'auto' }}
         
-        // Área elegante
-        enableArea={true}
-        areaOpacity={0.15}
-        lineWidth={2}
-        colors={['#2563eb']} // Cor elegante
+        // Área configurável
+        enableArea={enableArea ?? true}
+        areaOpacity={areaOpacity ?? 0.15}
+        lineWidth={lineWidth ?? 2}
+        colors={colors || ['#2563eb']}
         
-        // Pontos sutis
-        pointSize={4}
+        // Pontos configuráveis
+        pointSize={pointSize ?? 4}
         pointColor={{ from: 'color' }}
         pointBorderWidth={1}
         pointBorderColor={{ from: 'serieColor' }}
@@ -61,27 +108,39 @@ export function AreaChart({ data, xColumn, yColumn, isFullscreen }: BaseChartPro
         // Eixos limpos (sem linhas)
         axisTop={null}
         axisRight={null}
-        axisBottom={{
+        axisBottom={axisBottom ? {
+          tickSize: axisBottom.tickSize ?? 0,
+          tickPadding: axisBottom.tickPadding ?? 8,
+          tickRotation: axisBottom.tickRotation ?? 0,
+          legend: axisBottom.legend,
+          format: (value) => value.toString().slice(0, 8)
+        } : {
           tickSize: 0,
           tickPadding: 8,
           tickRotation: 0,
           format: (value) => value.toString().slice(0, 8)
         }}
-        axisLeft={{
+        axisLeft={axisLeft ? {
+          tickSize: axisLeft.tickSize ?? 0,
+          tickPadding: axisLeft.tickPadding ?? 8,
+          tickRotation: axisLeft.tickRotation ?? 0,
+          legend: axisLeft.legend,
+          format: (value) => formatValue(Number(value))
+        } : {
           tickSize: 0,
           tickPadding: 8,
           tickRotation: 0,
           format: (value) => formatValue(Number(value))
         }}
         
-        // Grid apenas horizontal
-        enableGridX={false}
-        enableGridY={true}
+        // Grid configurável
+        enableGridX={enableGridX ?? false}
+        enableGridY={enableGridY ?? true}
         
         // Interação elegante
         useMesh={true}
-        animate={true}
-        motionConfig="gentle"
+        animate={animate ?? true}
+        motionConfig={motionConfig || "gentle"}
         theme={elegantTheme}
         
         // Tooltip elegante

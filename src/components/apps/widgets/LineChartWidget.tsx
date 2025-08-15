@@ -38,14 +38,39 @@ export default function LineChartWidget({ widget }: LineChartWidgetProps) {
   // Get chart configuration with defaults
   const chartConfig = widget.chartConfig || {}
   
-  // Prepare props for LineChart (using BaseChartProps)
+  // Prepare props for LineChart
   const chartProps = {
     data,
-    // Line chart specific configurations would be applied here
-    // Note: LineChart component uses BaseChartProps, so we pass basic props
     xColumn: 'x',
     yColumn: 'y',
-    isFullscreen: false
+    isFullscreen: false,
+    colors: chartConfig.colors || ['#2563eb'],
+    enableGridX: chartConfig.enableGridX ?? false,
+    enableGridY: chartConfig.enableGridY ?? true,
+    enablePoints: chartConfig.enablePoints ?? true,
+    pointSize: chartConfig.pointSize ?? 4,
+    curve: chartConfig.curve || 'cardinal',
+    enableArea: chartConfig.enableArea ?? false,
+    animate: chartConfig.animate ?? true,
+    motionConfig: chartConfig.motionConfig || 'gentle',
+    margin: {
+      top: chartConfig.margin?.top ?? 12,
+      right: chartConfig.margin?.right ?? 12,
+      bottom: chartConfig.margin?.bottom ?? 80,
+      left: chartConfig.margin?.left ?? 50,
+    },
+    axisBottom: chartConfig.axisBottom ? {
+      tickSize: chartConfig.axisBottom.tickSize ?? 0,
+      tickPadding: chartConfig.axisBottom.tickPadding ?? 8,
+      tickRotation: chartConfig.axisBottom.tickRotation ?? 0,
+      legend: chartConfig.axisBottom.legend,
+    } : undefined,
+    axisLeft: chartConfig.axisLeft ? {
+      tickSize: chartConfig.axisLeft.tickSize ?? 0,
+      tickPadding: chartConfig.axisLeft.tickPadding ?? 8,
+      tickRotation: chartConfig.axisLeft.tickRotation ?? 0,
+      legend: chartConfig.axisLeft.legend,
+    } : undefined,
   }
 
   return (

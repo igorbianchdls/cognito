@@ -6,7 +6,37 @@ import { nivoTheme } from './theme';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
 
-export function PieChart({ data, xColumn, yColumn, isFullscreen }: BaseChartProps) {
+interface PieChartProps extends BaseChartProps {
+  colors?: string[]
+  innerRadius?: number
+  padAngle?: number
+  cornerRadius?: number
+  activeOuterRadiusOffset?: number
+  borderWidth?: number
+  enableArcLinkLabels?: boolean
+  arcLabelsSkipAngle?: number
+  animate?: boolean
+  motionConfig?: 'default' | 'gentle' | 'wobbly' | 'stiff' | 'slow'
+  margin?: { top?: number; right?: number; bottom?: number; left?: number }
+}
+
+export function PieChart({ 
+  data, 
+  xColumn, 
+  yColumn, 
+  isFullscreen,
+  colors,
+  innerRadius,
+  padAngle,
+  cornerRadius,
+  activeOuterRadiusOffset,
+  borderWidth,
+  enableArcLinkLabels,
+  arcLabelsSkipAngle,
+  animate,
+  motionConfig,
+  margin
+}: PieChartProps) {
   if (!data || data.length === 0) {
     return <EmptyState />;
   }
@@ -33,32 +63,37 @@ export function PieChart({ data, xColumn, yColumn, isFullscreen }: BaseChartProp
   const elegantColors = ['#2563eb', '#dc2626', '#16a34a', '#ca8a04', '#9333ea', '#c2410c'];
 
   return (
-    <div style={{ width: '100%', minHeight: '300px', height: 'auto', minWidth: 0 }}>
+    <div style={{ width: '100%', height: '100%', minWidth: 0 }}>
       <ResponsivePie
         data={chartData}
         
-        // Margins com espaço para legenda na parte inferior
-        margin={{ top: 20, right: 20, bottom: 80, left: 20 }}
+        // Margins configuráveis
+        margin={{
+          top: margin?.top ?? 20,
+          right: margin?.right ?? 20,
+          bottom: margin?.bottom ?? 80,
+          left: margin?.left ?? 20
+        }}
         
-        // Estilo elegante
-        innerRadius={0.5}
-        padAngle={1}
-        cornerRadius={2}
-        activeOuterRadiusOffset={4}
+        // Estilo configurável
+        innerRadius={innerRadius ?? 0.5}
+        padAngle={padAngle ?? 1}
+        cornerRadius={cornerRadius ?? 2}
+        activeOuterRadiusOffset={activeOuterRadiusOffset ?? 4}
         
-        // Cores elegantes
-        colors={elegantColors}
+        // Cores configuráveis
+        colors={colors || elegantColors}
         
-        // Bordas sutis
-        borderWidth={0}
+        // Bordas configuráveis
+        borderWidth={borderWidth ?? 0}
         
-        // Labels elegantes (sem links)
-        enableArcLinkLabels={false}
-        arcLabelsSkipAngle={15}
+        // Labels configuráveis
+        enableArcLinkLabels={enableArcLinkLabels ?? false}
+        arcLabelsSkipAngle={arcLabelsSkipAngle ?? 15}
         arcLabelsTextColor={{ from: 'color', modifiers: [['darker', 1.8]] }}
         
-        animate={true}
-        motionConfig="gentle"
+        animate={animate ?? true}
+        motionConfig={motionConfig || "gentle"}
         theme={elegantTheme}
         
         // Tooltip elegante

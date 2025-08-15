@@ -43,12 +43,28 @@ export default function PieChartWidget({ widget }: PieChartWidgetProps) {
   // Get chart configuration with defaults
   const chartConfig = widget.chartConfig || {}
   
-  // Prepare props for PieChart (using BaseChartProps)
+  // Prepare props for PieChart
   const chartProps = {
     data,
     xColumn: 'x',
     yColumn: 'y',
-    isFullscreen: false
+    isFullscreen: false,
+    colors: chartConfig.colors,
+    innerRadius: chartConfig.innerRadius ?? 0.5,
+    padAngle: chartConfig.padAngle ?? 1,
+    cornerRadius: chartConfig.cornerRadius ?? 2,
+    activeOuterRadiusOffset: chartConfig.activeOuterRadiusOffset ?? 4,
+    borderWidth: chartConfig.borderWidth ?? 0,
+    enableArcLinkLabels: chartConfig.enableArcLinkLabels ?? false,
+    arcLabelsSkipAngle: chartConfig.arcLabelsSkipAngle ?? 15,
+    animate: chartConfig.animate ?? true,
+    motionConfig: chartConfig.motionConfig || 'gentle',
+    margin: {
+      top: chartConfig.margin?.top ?? 20,
+      right: chartConfig.margin?.right ?? 20,
+      bottom: chartConfig.margin?.bottom ?? 80,
+      left: chartConfig.margin?.left ?? 20,
+    },
   }
 
   return (
