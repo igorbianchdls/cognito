@@ -6,6 +6,7 @@ import LineChartWidget from './widgets/LineChartWidget'
 import PieChartWidget from './widgets/PieChartWidget'
 import AreaChartWidget from './widgets/AreaChartWidget'
 import MetricWidget from './widgets/MetricWidget'
+import KPIWidget from './widgets/KPIWidget'
 import type { DroppedWidget as DroppedWidgetType } from '@/types/widget'
 
 interface DroppedWidgetProps {
@@ -30,6 +31,8 @@ export default function DroppedWidget({ widget, onRemove, isSelected = false }: 
         return <AreaChartWidget widget={widget} />
       case 'metric':
         return <MetricWidget />
+      case 'kpi':
+        return <KPIWidget widget={widget} />
       default:
         return (
           <div className="h-full flex items-center justify-center text-gray-500">

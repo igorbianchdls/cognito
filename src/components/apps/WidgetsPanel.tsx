@@ -49,6 +49,15 @@ const availableWidgets: Widget[] = [
     defaultWidth: 2,
     defaultHeight: 1,
   },
+  {
+    id: 'kpi-widget',
+    name: 'KPI Widget',
+    type: 'kpi',
+    icon: '📊',
+    description: 'Display key performance indicators with trends',
+    defaultWidth: 3,
+    defaultHeight: 2,
+  },
 ]
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
