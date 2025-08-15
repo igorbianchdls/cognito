@@ -153,11 +153,43 @@ export interface KPIConfig {
   targetColor?: string
 }
 
+// Table-specific configuration
+export interface TableConfig {
+  // Data properties
+  data?: Array<{ [key: string]: string | number | boolean | null | undefined }>
+  columns?: Array<{
+    id: string
+    header: string
+    accessorKey: string
+    sortable?: boolean
+    width?: number | string
+  }>
+  
+  // Display options (matching DataTable props)
+  searchPlaceholder?: string
+  showColumnToggle?: boolean
+  showPagination?: boolean
+  pageSize?: number
+  
+  // Data source and simulation control
+  dataSource?: string
+  refreshRate?: string
+  enableSimulation?: boolean
+  
+  // Styling options
+  headerBackground?: string
+  headerTextColor?: string
+  rowHoverColor?: string
+  borderColor?: string
+  fontSize?: number
+  padding?: number
+}
+
 // Unified widget configuration interface
 export interface WidgetConfig {
   chartConfig?: ChartConfig  // For chart widgets (Bar, Line, Pie, Area)
   kpiConfig?: KPIConfig      // For KPI widgets
-  // Future: tableConfig?: TableConfig, mapConfig?: MapConfig, etc.
+  tableConfig?: TableConfig  // For table widgets
 }
 
 export interface DroppedWidget extends Widget {

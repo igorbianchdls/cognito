@@ -58,6 +58,15 @@ const availableWidgets: Widget[] = [
     defaultWidth: 3,
     defaultHeight: 2,
   },
+  {
+    id: 'table-widget',
+    name: 'Table Widget',
+    type: 'table',
+    icon: '📋',
+    description: 'Display data in organized table format with sorting and filtering',
+    defaultWidth: 4,
+    defaultHeight: 3,
+  },
 ]
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
