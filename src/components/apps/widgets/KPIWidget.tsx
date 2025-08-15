@@ -45,32 +45,7 @@ function isLegacyChartConfigWithKPI(config: ChartConfig | undefined): config is 
 }
 
 export default function KPIWidget({ widget }: KPIWidgetProps) {
-  const [kpiData, setKpiData] = useState({
-    currentValue: 1247,
-    previousValue: 1156,
-    target: 1500,
-    change: 7.9,
-  })
-
-  // Simulate real-time KPI updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const baseValue = 1200
-      const variation = Math.random() * 600 + 800 // Range: 800-1400
-      const newValue = Math.floor(variation)
-      const newChange = ((newValue - kpiData.previousValue) / kpiData.previousValue) * 100
-      
-      setKpiData(prev => ({
-        ...prev,
-        currentValue: newValue,
-        change: Number(newChange.toFixed(1))
-      }))
-    }, 5000)
-
-    return () => clearInterval(interval)
-  }, [kpiData.previousValue])
-
-  // Get KPI configuration with backward compatibility
+  // Get KPI configuration with backward compatibility (same pattern as charts)
   const kpiConfig: KPIConfig = widget.config?.kpiConfig || 
     // Backward compatibility: extract KPI props from old chartConfig
     (isLegacyChartConfigWithKPI(widget.chartConfig) ? {
@@ -104,13 +79,49 @@ export default function KPIWidget({ widget }: KPIWidgetProps) {
       changeColor: widget.chartConfig.kpiChangeColor,
       targetColor: widget.chartConfig.kpiTargetColor,
     } : {}) || {}
+
+  // Default simulation data (only used if no real data provided)
+  const [simulatedData, setSimulatedData] = useState({
+    currentValue: 1247,
+    previousValue: 1156,
+    target: 1500,
+    change: 7.9,
+  })
+
+  // Determine if we should use simulation (like charts - only when no real data provided)
+  const hasRealData = kpiConfig.value !== undefined || 
+                      kpiConfig.target !== undefined || 
+                      kpiConfig.change !== undefined
+  const shouldSimulate = kpiConfig.enableSimulation !== false && !hasRealData
+
+  // Simulate real-time KPI updates (only if simulation is enabled and no real data)
+  useEffect(() => {
+    if (!shouldSimulate) return
+
+    const interval = setInterval(() => {
+      const minValue = kpiConfig.simulationRange?.min ?? 800
+      const maxValue = kpiConfig.simulationRange?.max ?? 1400
+      const range = maxValue - minValue
+      const variation = Math.random() * range + minValue
+      const newValue = Math.floor(variation)
+      const newChange = ((newValue - simulatedData.previousValue) / simulatedData.previousValue) * 100
+      
+      setSimulatedData(prev => ({
+        ...prev,
+        currentValue: newValue,
+        change: Number(newChange.toFixed(1))
+      }))
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [shouldSimulate, simulatedData.previousValue, kpiConfig.simulationRange])
   
   // Determine KPI status based on current value vs target
   const getKpiStatus = () => {
     if (kpiConfig.status) return kpiConfig.status
     
-    const currentValue = kpiConfig.value ?? kpiData.currentValue
-    const target = kpiConfig.target ?? kpiData.target
+    const currentValue = kpiConfig.value ?? simulatedData.currentValue
+    const target = kpiConfig.target ?? simulatedData.target
     
     if (!target) return 'unknown'
     
@@ -125,25 +136,25 @@ export default function KPIWidget({ widget }: KPIWidgetProps) {
   const getKpiTrend = () => {
     if (kpiConfig.trend) return kpiConfig.trend
     
-    const change = kpiConfig.change ?? kpiData.change
+    const change = kpiConfig.change ?? simulatedData.change
     if (Math.abs(change) < 0.5) return 'stable'
     return change > 0 ? 'increasing' : 'decreasing'
   }
 
-  // Prepare props for KPI components
+  // Prepare props for KPI components (following chart pattern)
   const kpiProps = {
     kpiId: `kpi-${widget.i}`,
-    name: kpiConfig.name || 'Total Revenue',
-    metric: kpiConfig.metric || 'revenue',
-    calculation: kpiConfig.calculation || 'SUM(sales_amount)',
-    currentValue: kpiConfig.value ?? kpiData.currentValue,
-    previousValue: kpiData.previousValue,
-    target: kpiConfig.target ?? kpiData.target,
-    unit: kpiConfig.unit || '$',
-    change: kpiConfig.change ?? kpiData.change,
+    name: kpiConfig.name || 'Sample KPI',
+    metric: kpiConfig.metric || 'metric',
+    calculation: kpiConfig.calculation || 'VALUE',
+    currentValue: kpiConfig.value ?? simulatedData.currentValue,
+    previousValue: simulatedData.previousValue,
+    target: kpiConfig.target ?? simulatedData.target,
+    unit: kpiConfig.unit || '',
+    change: kpiConfig.change ?? simulatedData.change,
     trend: getKpiTrend(),
     status: getKpiStatus(),
-    timeRange: kpiConfig.timeRange || 'Last 30 days',
+    timeRange: kpiConfig.timeRange || 'Current Period',
     visualization: {
       chartType: kpiConfig.visualizationType === 'gauge' ? 'gauge' : 'default',
       color: kpiConfig.colorScheme || 'blue',
@@ -151,8 +162,8 @@ export default function KPIWidget({ widget }: KPIWidgetProps) {
       showTarget: kpiConfig.showTarget ?? true,
     },
     metadata: {
-      dataSource: 'Sales Database',
-      refreshRate: '5 minutes',
+      dataSource: kpiConfig.dataSource || 'Default Source',
+      refreshRate: kpiConfig.refreshRate || '5 minutes',
       lastUpdated: new Date().toISOString(),
       createdAt: new Date().toISOString(),
     },
@@ -198,7 +209,7 @@ export default function KPIWidget({ widget }: KPIWidgetProps) {
 
     const changeStyle: React.CSSProperties = {
       fontSize: `${(kpiConfig.nameFontSize || 14) * 0.85}px`,
-      color: kpiConfig.changeColor || (kpiData.change >= 0 ? '#16a34a' : '#dc2626'),
+      color: kpiConfig.changeColor || (kpiProps.change >= 0 ? '#16a34a' : '#dc2626'),
       fontWeight: 600,
       display: 'flex',
       alignItems: 'center',
@@ -228,30 +239,30 @@ export default function KPIWidget({ widget }: KPIWidgetProps) {
       <div style={containerStyle}>
         {/* KPI Name */}
         <div style={nameStyle}>
-          {kpiConfig.name || 'Total Revenue'}
+          {kpiProps.name}
         </div>
         
         {/* Main KPI Value */}
         <div style={valueStyle}>
-          {formatValue(kpiConfig.value ?? kpiData.currentValue, kpiConfig.unit || '$')}
+          {formatValue(kpiProps.currentValue, kpiProps.unit)}
         </div>
         
         {/* Change indicator */}
-        {(kpiConfig.showTrend ?? true) && (
+        {kpiProps.visualization.showTrend && (
           <div style={changeStyle}>
             <span style={{ fontSize: '16px' }}>
-              {(kpiConfig.change ?? kpiData.change) >= 0 ? '↗' : '↘'}
+              {kpiProps.change >= 0 ? '↗' : '↘'}
             </span>
             <span>
-              {Math.abs(kpiConfig.change ?? kpiData.change).toFixed(1)}%
+              {Math.abs(kpiProps.change).toFixed(1)}%
             </span>
           </div>
         )}
         
         {/* Target */}
-        {(kpiConfig.showTarget ?? true) && (
+        {kpiProps.visualization.showTarget && kpiProps.target && (
           <div style={targetStyle}>
-            Meta: {formatValue(kpiConfig.target ?? kpiData.target, kpiConfig.unit || '$')}
+            Meta: {formatValue(kpiProps.target, kpiProps.unit)}
           </div>
         )}
       </div>

@@ -119,6 +119,16 @@ export interface KPIConfig {
   calculation?: string
   timeRange?: string
   
+  // Data source and simulation control
+  dataSource?: string
+  refreshRate?: string
+  enableSimulation?: boolean
+  simulationRange?: {
+    min?: number
+    max?: number
+    baseValue?: number
+  }
+  
   // Display options
   showTarget?: boolean
   showTrend?: boolean
