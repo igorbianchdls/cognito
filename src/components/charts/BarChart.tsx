@@ -52,7 +52,19 @@ export function BarChart(props: BarChartProps) {
     subtitleColor = '#6b7280',
     backgroundColor = '#fff',
     keys,
-    indexBy = 'category'
+    indexBy = 'category',
+    // Configurable props
+    colors,
+    borderRadius,
+    borderWidth,
+    padding,
+    groupMode,
+    layout,
+    enableLabel,
+    animate,
+    motionConfig,
+    axisBottom,
+    axisLeft
   } = props;
 
   if (!data || data.length === 0) {
@@ -137,42 +149,42 @@ export function BarChart(props: BarChartProps) {
           indexBy="id"
           
           // Margins com espaço para legenda na parte inferior
-          margin={{ top: 12, right: 12, bottom: 60, left: 50 }}
-          padding={0.2}
+          margin={margin}
+          padding={padding ?? 0.2}
           
-          // Cor elegante
-          colors={['#2563eb']}
+          // Cores configuráveis
+          colors={colors || ['#2563eb']}
           
-          // Bordas sutis
-          borderRadius={4}
+          // Bordas configuráveis
+          borderRadius={borderRadius ?? 4}
           borderColor={{ from: 'color', modifiers: [['darker', 0.3]] }}
-          borderWidth={0}
+          borderWidth={borderWidth ?? 0}
           
-          // Eixos limpos (sem linhas)
+          // Eixos configuráveis
           axisTop={null}
           axisRight={null}
-          axisBottom={{
+          axisBottom={axisBottom || {
             tickSize: 0,
             tickPadding: 8,
             tickRotation: 0,
             format: (value) => value.toString().slice(0, 10)
           }}
-          axisLeft={{
+          axisLeft={axisLeft || {
             tickSize: 0,
             tickPadding: 8,
             tickRotation: 0,
             format: (value) => formatValue(Number(value))
           }}
           
-          // Grid apenas horizontal
-          enableGridX={false}
-          enableGridY={true}
+          // Grid configurável
+          enableGridX={enableGridX}
+          enableGridY={enableGridY}
           
-          // Labels elegantes
-          enableLabel={false}
+          // Labels configuráveis
+          enableLabel={enableLabel ?? false}
           
-          animate={true}
-          motionConfig="gentle"
+          animate={animate ?? true}
+          motionConfig={motionConfig || "gentle"}
           theme={elegantTheme}
           
           // Tooltip elegante
