@@ -103,8 +103,7 @@ export function BarChart(props: BarChartProps) {
     <div
       style={{
         width: '100%',
-        height: gridHeight && rowHeight ? `${baseHeight}px` : '100%',
-        minHeight: '300px',
+        height: '100%',
         background: backgroundColor,
         padding: 0,
         margin: '0 auto',
@@ -138,7 +137,6 @@ export function BarChart(props: BarChartProps) {
       <div
         style={{ 
           flex: 1,
-          minHeight: `${minHeight}px`,
           height: '100%'
         }}
       >
