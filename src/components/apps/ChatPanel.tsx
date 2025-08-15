@@ -2,7 +2,7 @@
 
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
-import { useState, FormEvent, useEffect } from 'react'
+import { useState, FormEvent } from 'react'
 import type { DroppedWidget } from '@/types/widget'
 import CanvasWidgets from '../tools/appsChat/CanvasWidgets'
 import { widgetActions } from '@/stores/widgetStore'
@@ -10,6 +10,18 @@ import { widgetActions } from '@/stores/widgetStore'
 interface ChatPanelProps {
   droppedWidgets: DroppedWidget[]
   onEditWidget: (widgetId: string, changes: Partial<DroppedWidget>) => void
+}
+
+interface JsonWidget {
+  i: string
+  name?: string
+  type?: string
+  position?: { x: number; y: number }
+  size?: { w: number; h: number }
+  style?: { color?: string }
+  icon?: string
+  description?: string
+  id?: string
 }
 
 // Function to remove JSON tags from display text
@@ -36,7 +48,7 @@ const parseAndApplyJson = (text: string) => {
         console.log(`📊 Found ${parsed.widgets.length} widgets in JSON`)
         
         // Transform JSON widgets to DroppedWidget format
-        const newWidgets: DroppedWidget[] = parsed.widgets.map((widget: any, index: number) => {
+        const newWidgets: DroppedWidget[] = parsed.widgets.map((widget: JsonWidget, index: number) => {
           const transformedWidget = {
             id: widget.id || widget.i,
             i: widget.i || `widget-${Date.now()}-${index}`,
