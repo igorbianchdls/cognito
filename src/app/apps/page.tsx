@@ -7,6 +7,7 @@ import AppsHeader from '@/components/apps/AppsHeader'
 import WidgetsPanel from '@/components/apps/WidgetsPanel'
 import ChatPanel from '@/components/apps/ChatPanel'
 import WidgetEditor from '@/components/apps/WidgetEditor'
+import CodeEditor from '@/components/apps/CodeEditor'
 import GridCanvas from '@/components/apps/GridCanvas'
 import { $widgets, widgetActions } from '@/stores/widgetStore'
 import type { Widget, LayoutItem, DroppedWidget } from '@/types/widget'
@@ -14,7 +15,7 @@ import type { Widget, LayoutItem, DroppedWidget } from '@/types/widget'
 export default function AppsPage() {
   const droppedWidgets = useStore($widgets)
   const [activeWidget, setActiveWidget] = useState<Widget | null>(null)
-  const [activeTab, setActiveTab] = useState<'widgets' | 'chat' | 'editor'>('widgets')
+  const [activeTab, setActiveTab] = useState<'widgets' | 'chat' | 'editor' | 'code'>('widgets')
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event
@@ -68,6 +69,7 @@ export default function AppsPage() {
             {activeTab === 'widgets' && <WidgetsPanel />}
             {activeTab === 'chat' && <ChatPanel droppedWidgets={droppedWidgets} onEditWidget={handleEditWidget} />}
             {activeTab === 'editor' && <WidgetEditor />}
+            {activeTab === 'code' && <CodeEditor />}
           </div>
           
           {/* Right Canvas - Always visible */}

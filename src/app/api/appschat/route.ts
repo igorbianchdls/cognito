@@ -41,6 +41,31 @@ export async function POST(req: Request) {
 
 Use the getCanvasWidgets tool to see what widgets are currently on the canvas when users ask about their dashboard.
 
+IMPORTANT: When users ask to modify, move, resize, or change widgets, respond with YAML code that they can copy and paste into the Code editor tab. Do NOT use tool calls for editing - only provide YAML code.
+
+YAML Structure to use:
+\`\`\`yaml
+meta:
+  title: "Updated Dashboard"
+  created: "2024-01-15"
+  totalWidgets: [number]
+
+widgets:
+  - i: widget-id
+    name: "Widget Name"
+    type: chart|metric
+    position: { x: 0, y: 0 }
+    size: { w: 3, h: 2 }
+    style:
+      color: "#3B82F6"
+\`\`\`
+
+Always provide the complete YAML with ALL widgets, including the ones being modified and the unchanged ones. Tell users to:
+1. Copy the YAML code
+2. Go to the "Code" tab
+3. Paste the YAML 
+4. Click "Apply Changes"
+
 Respond in a clear, helpful manner. Keep responses concise and actionable.`,
     messages: convertToModelMessages(messages),
     tools: {
@@ -75,152 +100,6 @@ Respond in a clear, helpful manner. Keep responses concise and actionable.`,
               widgets: [],
               totalWidgets: 0,
               summary: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
-            };
-          }
-        }
-      }),
-      
-      editWidget: tool({
-        description: 'Edit widget properties like position, size, color, and styling on the dashboard canvas',
-        inputSchema: z.object({
-          widgetId: z.string().describe('ID of the widget to edit (use the "i" property from getCanvasWidgets)'),
-          action: z.enum(['move', 'resize', 'changeColor', 'changeStyle', 'delete']).describe('Type of edit to perform'),
-          
-          position: z.object({
-            x: z.number().min(0).describe('X coordinate in grid units'),
-            y: z.number().min(0).describe('Y coordinate in grid units')
-          }).optional().describe('New position (required for move action)'),
-          
-          size: z.object({
-            width: z.number().min(1).describe('Width in grid units'),
-            height: z.number().min(1).describe('Height in grid units')
-          }).optional().describe('New size (required for resize action)'),
-          
-          color: z.string().optional().describe('New color theme: blue, red, green, purple, or hex code (required for changeColor action)'),
-          
-          style: z.object({
-            borderRadius: z.enum(['small', 'medium', 'large']).optional(),
-            shadow: z.boolean().optional(),
-            background: z.enum(['solid', 'gradient']).optional()
-          }).optional().describe('Style properties (required for changeStyle action)')
-        }),
-        execute: async ({ widgetId, action, position, size, color, style }) => {
-          try {
-            console.log('🎨 EDIT WIDGET TOOL EXECUTADA!', { widgetId, action, position, size, color, style });
-            console.log('🔍 Procurando widget com ID:', widgetId);
-            console.log('🔍 Widgets disponíveis:', widgets.map(w => ({ id: w.i, name: w.name })));
-          
-          // Find the widget to edit
-          const widgetIndex = widgets.findIndex(w => w.i === widgetId);
-          console.log('🔍 Widget encontrado no índice:', widgetIndex);
-          
-          if (widgetIndex === -1) {
-            console.error('❌ Widget não encontrado:', widgetId);
-            return {
-              success: false,
-              error: `Widget with ID "${widgetId}" not found on canvas`,
-              availableWidgets: widgets.map(w => ({ id: w.i, name: w.name }))
-            };
-          }
-          
-          const widget = widgets[widgetIndex];
-          console.log('🎯 Widget encontrado:', { id: widget.i, name: widget.name });
-          let changes = {};
-          
-            console.log('🔄 Processando ação:', action);
-            switch (action) {
-              case 'move':
-                if (!position) {
-                  return { success: false, error: 'Position is required for move action' };
-                }
-                changes = { x: position.x, y: position.y };
-                break;
-                
-              case 'resize':
-                if (!size) {
-                  return { success: false, error: 'Size is required for resize action' };
-                }
-                changes = { w: size.width, h: size.height };
-                break;
-                
-              case 'changeColor':
-                if (!color) {
-                  return { success: false, error: 'Color is required for changeColor action' };
-                }
-                // Note: This would need to be implemented in the widget component
-                changes = { color };
-                break;
-                
-              case 'changeStyle':
-                if (!style) {
-                  return { success: false, error: 'Style is required for changeStyle action' };
-                }
-                // Note: This would need to be implemented in the widget component  
-                changes = { style };
-                break;
-                
-              case 'delete':
-                // Execute deletion via callback
-                console.log('🗑️ Processando deleção do widget:', widgetId);
-                if (onEditWidget) {
-                  try {
-                    console.log('🗑️ Executando callback de deleção');
-                    onEditWidget(widgetId, { _delete: true } as Partial<DroppedWidget>);
-                    console.log('✅ Widget deletado com sucesso');
-                  } catch (deleteError) {
-                    console.error('❌ Erro ao deletar widget:', deleteError);
-                    throw deleteError;
-                  }
-                } else {
-                  console.warn('⚠️ Callback não disponível para deleção');
-                }
-                return {
-                  success: true,
-                  action: 'delete',
-                  widgetId,
-                  widgetName: widget.name,
-                  message: onEditWidget 
-                    ? `Widget "${widget.name}" has been deleted` 
-                    : `Widget "${widget.name}" would be deleted (callback not available)`,
-                  note: onEditWidget ? 'Widget removed from canvas' : 'Changes are simulated - callback not available'
-                };
-                
-              default:
-                return { success: false, error: `Unknown action: ${action}` };
-            }
-            
-            // Execute the callback to actually update widget state
-            if (onEditWidget) {
-              console.log('🔄 Executando callback onEditWidget:', { widgetId, changes });
-              try {
-                onEditWidget(widgetId, changes);
-                console.log('✅ Callback executado com sucesso');
-              } catch (callbackError) {
-                console.error('❌ Erro ao executar callback:', callbackError);
-                throw callbackError;
-              }
-            } else {
-              console.warn('⚠️ Callback onEditWidget não disponível');
-            }
-            
-            return {
-              success: true,
-              action,
-              widgetId,
-              widgetName: widget.name,
-              changes,
-              message: `Widget "${widget.name}" ${action} completed successfully`,
-              note: onEditWidget ? 'Changes applied to canvas' : 'Changes are simulated - callback not available'
-            };
-            
-          } catch (error) {
-            console.error('❌ Erro na tool editWidget:', error);
-            console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack available');
-            return {
-              success: false,
-              error: error instanceof Error ? error.message : 'Unknown error occurred',
-              widgetId,
-              action
             };
           }
         }
