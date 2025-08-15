@@ -41,10 +41,10 @@ export async function POST(req: Request) {
 
 Use the getCanvasWidgets tool to see what widgets are currently on the canvas when users ask about their dashboard.
 
-IMPORTANT: When users ask to modify, move, resize, or change widgets, respond with YAML code in markdown format that they can copy and paste into the Code editor tab. Do NOT use tool calls for editing - only provide YAML code.
+IMPORTANT: When users ask to modify, move, resize, or change widgets, respond with JSON code in markdown format that they can copy and paste into the Code editor tab. Do NOT use tool calls for editing - only provide JSON code.
 
 CRITICAL - Widget IDs:
-- Use "widgetId" from getCanvasWidgets as the "i" field in YAML (e.g., "widget-1755217093366")
+- Use "widgetId" from getCanvasWidgets as the "i" field in JSON (e.g., "widget-1755217093366")
 - "name" is the human-readable title (e.g., "Sales Chart", "Metric Widget")
 - NEVER use "name" as the "i" field - always use the actual "widgetId"
 
@@ -52,44 +52,49 @@ Response Format:
 Always respond with this markdown structure:
 
 1. Brief explanation of what you're doing
-2. YAML code block with syntax highlighting
+2. JSON code block with syntax highlighting
 3. Clear step-by-step instructions
 
 Example response format:
 \`\`\`
-Here's the updated YAML code to [describe the change]:
+Here's the updated JSON code to [describe the change]:
 
-\\\`\\\`\\\`yaml
-meta:
-  title: "Updated Dashboard"
-  created: "2024-01-15"
-  totalWidgets: 2
-
-widgets:
-  - i: widget-1755217093366    # ← Use actual widgetId from getCanvasWidgets
-    name: "Sales Chart"        # ← Keep original name
-    type: chart
-    position: { x: 2, y: 1 }   # ← Modified position
-    size: { w: 3, h: 2 }
-    style:
-      color: "#3B82F6"
-  - i: widget-1755217099999    # ← Another real widgetId
-    name: "Revenue Metric"     # ← Keep original name  
-    type: metric
-    position: { x: 3, y: 0 }
-    size: { w: 2, h: 1 }
-    style:
-      color: "#10B981"
+\\\`\\\`\\\`json
+{
+  "meta": {
+    "title": "Updated Dashboard",
+    "created": "2024-01-15",
+    "totalWidgets": 2
+  },
+  "widgets": [
+    {
+      "i": "widget-1755217093366",
+      "name": "Sales Chart",
+      "type": "chart",
+      "position": { "x": 2, "y": 1 },
+      "size": { "w": 3, "h": 2 },
+      "style": { "color": "#3B82F6" }
+    },
+    {
+      "i": "widget-1755217099999",
+      "name": "Revenue Metric",
+      "type": "metric",
+      "position": { "x": 3, "y": 0 },
+      "size": { "w": 2, "h": 1 },
+      "style": { "color": "#10B981" }
+    }
+  ]
+}
 \\\`\\\`\\\`
 
 **Instructions:**
-1. 📋 Copy the YAML code above
+1. 📋 Copy the JSON code above
 2. 🔧 Go to the **"Code"** tab
 3. 📝 Paste the code in the editor
 4. ✅ Click **"Apply Changes"**
 \`\`\`
 
-Always provide the complete YAML with ALL widgets, including the ones being modified and the unchanged ones.
+Always provide the complete JSON with ALL widgets, including the ones being modified and the unchanged ones.
 
 Respond in a clear, helpful manner. Keep responses concise and actionable.`,
     messages: convertToModelMessages(messages),

@@ -2,11 +2,10 @@
 
 import { useStore } from '@nanostores/react'
 import { useState, useEffect, useCallback } from 'react'
-import yaml from 'js-yaml'
 import { $widgets, widgetActions } from '@/stores/widgetStore'
 import type { DroppedWidget } from '@/types/widget'
 
-interface YamlWidget {
+interface JsonWidget {
   i: string
   name: string
   type: string
@@ -18,19 +17,19 @@ interface YamlWidget {
   id?: string
 }
 
-interface YamlData {
+interface JsonData {
   meta?: {
     title?: string
     created?: string
     totalWidgets?: number
   }
-  widgets: YamlWidget[]
+  widgets: JsonWidget[]
 }
 
 interface CodeEditorState {
   code: string
   error: string | null
-  isValidYaml: boolean
+  isValidJson: boolean
   lastSync: number
 }
 
@@ -39,13 +38,13 @@ export default function CodeEditor() {
   const [state, setState] = useState<CodeEditorState>({
     code: '',
     error: null,
-    isValidYaml: true,
+    isValidJson: true,
     lastSync: Date.now()
   })
 
-  // Generate initial YAML from current widgets
-  const generateYamlFromWidgets = useCallback((widgetList: DroppedWidget[]) => {
-    const yamlData = {
+  // Generate initial JSON from current widgets
+  const generateJsonFromWidgets = useCallback((widgetList: DroppedWidget[]) => {
+    const jsonData = {
       meta: {
         title: 'My Dashboard',
         created: new Date().toISOString().split('T')[0],
@@ -69,54 +68,50 @@ export default function CodeEditor() {
       }))
     }
     
-    return yaml.dump(yamlData, {
-      indent: 2,
-      lineWidth: 80,
-      noRefs: true
-    })
+    return JSON.stringify(jsonData, null, 2)
   }, [])
 
-  // Sync widgets to YAML when widgets change
+  // Sync widgets to JSON when widgets change
   useEffect(() => {
-    const newCode = generateYamlFromWidgets(widgets)
+    const newCode = generateJsonFromWidgets(widgets)
     setState(prev => ({
       ...prev,
       code: newCode,
       lastSync: Date.now()
     }))
-  }, [widgets, generateYamlFromWidgets])
+  }, [widgets, generateJsonFromWidgets])
 
-  // Validate YAML as user types
+  // Validate JSON as user types
   const handleCodeChange = (newCode: string) => {
     setState(prev => ({ ...prev, code: newCode }))
     
     // Debounced validation
     setTimeout(() => {
       try {
-        yaml.load(newCode)
-        setState(prev => ({ ...prev, error: null, isValidYaml: true }))
+        JSON.parse(newCode)
+        setState(prev => ({ ...prev, error: null, isValidJson: true }))
       } catch (error) {
         setState(prev => ({ 
           ...prev, 
-          error: error instanceof Error ? error.message : 'Invalid YAML',
-          isValidYaml: false 
+          error: error instanceof Error ? error.message : 'Invalid JSON',
+          isValidJson: false 
         }))
       }
     }, 300)
   }
 
-  // Apply YAML changes to widgets
+  // Apply JSON changes to widgets
   const handleApplyChanges = () => {
     try {
-      const parsed = yaml.load(state.code) as YamlData
+      const parsed = JSON.parse(state.code) as JsonData
       
       if (!parsed || !parsed.widgets || !Array.isArray(parsed.widgets)) {
-        setState(prev => ({ ...prev, error: 'YAML must contain a "widgets" array' }))
+        setState(prev => ({ ...prev, error: 'JSON must contain a "widgets" array' }))
         return
       }
 
-      // Transform YAML widgets back to DroppedWidget format
-      const newWidgets: DroppedWidget[] = parsed.widgets.map((widget: YamlWidget, index: number) => {
+      // Transform JSON widgets back to DroppedWidget format
+      const newWidgets: DroppedWidget[] = parsed.widgets.map((widget: JsonWidget, index: number) => {
         if (!widget.i) {
           widget.i = `widget-${Date.now()}-${index}`
         }
@@ -144,57 +139,53 @@ export default function CodeEditor() {
     } catch (error) {
       setState(prev => ({ 
         ...prev, 
-        error: error instanceof Error ? error.message : 'Failed to parse YAML' 
+        error: error instanceof Error ? error.message : 'Failed to parse JSON' 
       }))
     }
   }
 
   // Reset to current widgets state
   const handleReset = () => {
-    const newCode = generateYamlFromWidgets(widgets)
+    const newCode = generateJsonFromWidgets(widgets)
     setState(prev => ({
       ...prev,
       code: newCode,
       error: null,
-      isValidYaml: true,
+      isValidJson: true,
       lastSync: Date.now()
     }))
   }
 
-  // Format YAML
+  // Format JSON
   const handleFormat = () => {
     try {
-      const parsed = yaml.load(state.code)
-      const formatted = yaml.dump(parsed, {
-        indent: 2,
-        lineWidth: 80,
-        noRefs: true
-      })
+      const parsed = JSON.parse(state.code)
+      const formatted = JSON.stringify(parsed, null, 2)
       setState(prev => ({ ...prev, code: formatted }))
     } catch (formatError) {
       setState(prev => ({ 
         ...prev, 
-        error: 'Cannot format invalid YAML' 
+        error: 'Cannot format invalid JSON' 
       }))
     }
   }
 
-  // Export YAML
+  // Export JSON
   const handleExport = () => {
-    const blob = new Blob([state.code], { type: 'text/yaml' })
+    const blob = new Blob([state.code], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'dashboard-config.yaml'
+    a.download = 'dashboard-config.json'
     a.click()
     URL.revokeObjectURL(url)
   }
 
-  // Import YAML
+  // Import JSON
   const handleImport = () => {
     const input = document.createElement('input')
     input.type = 'file'
-    input.accept = '.yaml,.yml'
+    input.accept = '.json'
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0]
       if (file) {
@@ -215,7 +206,7 @@ export default function CodeEditor() {
       <div className="p-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900">Code Editor</h2>
         <p className="text-sm text-gray-600 mt-1">
-          Edit your dashboard using YAML code
+          Edit your dashboard using JSON code
         </p>
       </div>
 
@@ -224,7 +215,7 @@ export default function CodeEditor() {
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={handleApplyChanges}
-            disabled={!state.isValidYaml}
+            disabled={!state.isValidJson}
             className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             Apply Changes
@@ -262,9 +253,9 @@ export default function CodeEditor() {
       <div className="px-4 py-2 border-b border-gray-200 bg-gray-50">
         <div className="flex items-center justify-between text-xs">
           <div className="flex items-center gap-4">
-            <span className={`flex items-center gap-1 ${state.isValidYaml ? 'text-green-600' : 'text-red-600'}`}>
-              <span className={`w-2 h-2 rounded-full ${state.isValidYaml ? 'bg-green-500' : 'bg-red-500'}`}></span>
-              {state.isValidYaml ? 'Valid YAML' : 'Invalid YAML'}
+            <span className={`flex items-center gap-1 ${state.isValidJson ? 'text-green-600' : 'text-red-600'}`}>
+              <span className={`w-2 h-2 rounded-full ${state.isValidJson ? 'bg-green-500' : 'bg-red-500'}`}></span>
+              {state.isValidJson ? 'Valid JSON' : 'Invalid JSON'}
             </span>
             <span className="text-gray-600">
               Lines: {state.code.split('\n').length}
@@ -296,20 +287,22 @@ export default function CodeEditor() {
           value={state.code}
           onChange={(e) => handleCodeChange(e.target.value)}
           className="w-full h-full p-4 font-mono text-sm resize-none focus:outline-none border-none bg-gray-900 text-gray-100"
-          placeholder="# Your dashboard configuration in YAML format
-meta:
-  title: 'My Dashboard'
-  created: '2024-01-15'
-
-widgets:
-  - i: widget-1
-    name: 'Sample Chart'
-    type: chart
-    position: { x: 0, y: 0 }
-    size: { w: 3, h: 2 }
-    style:
-      color: '#3B82F6'
-"
+          placeholder='{
+  "meta": {
+    "title": "My Dashboard",
+    "created": "2024-01-15"
+  },
+  "widgets": [
+    {
+      "i": "widget-1",
+      "name": "Sample Chart",
+      "type": "chart",
+      "position": { "x": 0, "y": 0 },
+      "size": { "w": 3, "h": 2 },
+      "style": { "color": "#3B82F6" }
+    }
+  ]
+}'
           style={{
             fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
             lineHeight: '1.5',
@@ -323,7 +316,7 @@ widgets:
         <div className="text-xs text-gray-600">
           <p className="mb-2">💡 <strong>Quick Tips:</strong></p>
           <ul className="space-y-1 text-xs">
-            <li>• Use proper YAML indentation (2 spaces)</li>
+            <li>• Use proper JSON syntax with quotes and commas</li>
             <li>• Widgets need: i, name, type, position, size</li>
             <li>• Changes apply to canvas when you click &quot;Apply&quot;</li>
             <li>• Export/Import to save configurations</li>
