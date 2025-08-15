@@ -172,31 +172,36 @@ IMPORTANT PROPERTY NAMES:
 - Use "x" and "y" for position
 - Use "color" for widget color
 
-CHART CONFIGURATION:
-Charts can be customized using "chartConfig" property with these options:
+WIDGET CONFIGURATION:
+Widgets can be customized using "config" property with specific configurations:
 
-**Visual & Colors:**
+**Chart widgets use "chartConfig":**
 - colors: ["#ff6b6b", "#4ecdc4", "#45b7d1"] (array of hex colors)
-- backgroundColor: "#ffffff" 
-- borderRadius: 8 (rounded corners)
-- borderWidth: 2
-
-**Grid & Axes:**
-- enableGridX: true/false
-- enableGridY: true/false  
+- backgroundColor: "#ffffff", borderRadius: 8, borderWidth: 2
+- enableGridX/enableGridY: true/false
 - axisBottom: { legend: "Months", tickRotation: 45 }
 - axisLeft: { legend: "Sales ($)", format: "currency" }
-
-**Animation:**
-- animate: true/false
-- motionConfig: "gentle" | "wobbly" | "stiff" | "slow"
-
-**Layout:**
+- animate: true/false, motionConfig: "gentle" | "wobbly" | "stiff" | "slow"
 - margin: { top: 20, right: 30, bottom: 50, left: 60 }
-- padding: 0.3 (bar spacing)
-- groupMode: "grouped" | "stacked" (bar charts)
+- padding: 0.3 (bar spacing), groupMode: "grouped" | "stacked" (bar charts)
 
-**Chart Configuration Examples:**
+**KPI widgets use "kpiConfig":**
+- name: "Total Revenue" (KPI title), value: 1500 (current value)
+- unit: "$" | "%" | "units", target: 2000 (target value)
+- change: 12.5 (percentage change), trend: "increasing" | "decreasing" | "stable"
+- status: "on-target" | "above-target" | "below-target" | "critical"
+- showTarget/showTrend: true/false, visualizationType: "card" | "display" | "gauge"
+- colorScheme: "green" | "blue" | "orange" | "red"
+
+**KPI Design properties:**
+- valueFontSize: 36, valueColor: "#1f2937", valueFontWeight: 700
+- nameFontSize: 14, nameColor: "#6b7280", nameFontWeight: 500
+- backgroundColor: "#ffffff", borderColor: "#e5e7eb"
+- borderWidth: 1, borderRadius: 8, padding: 16
+- textAlign: "left" | "center" | "right", shadow: true/false
+- changeColor: "#16a34a", targetColor: "#9ca3af"
+
+**Configuration Examples:**
 
 \`\`\`
 ✅ Changed chart colors to red theme!
@@ -206,9 +211,11 @@ Charts can be customized using "chartConfig" property with these options:
   "action": "update",
   "widgetId": "widget-123",
   "changes": {
-    "chartConfig": {
-      "colors": ["#ff6b6b", "#ff5722", "#e91e63"],
-      "animate": true
+    "config": {
+      "chartConfig": {
+        "colors": ["#ff6b6b", "#ff5722", "#e91e63"],
+        "animate": true
+      }
     }
   }
 }
@@ -223,10 +230,60 @@ Charts can be customized using "chartConfig" property with these options:
   "action": "update", 
   "widgetId": "widget-456",
   "changes": {
-    "chartConfig": {
-      "enableGridY": true,
-      "axisBottom": { "legend": "Time Period" },
-      "axisLeft": { "legend": "Revenue ($)" }
+    "config": {
+      "chartConfig": {
+        "enableGridY": true,
+        "axisBottom": { "legend": "Time Period" },
+        "axisLeft": { "legend": "Revenue ($)" }
+      }
+    }
+  }
+}
+</json>
+\`\`\`
+
+\`\`\`
+✅ Updated KPI with custom styling!
+
+<json>
+{
+  "action": "update",
+  "widgetId": "widget-789",
+  "changes": {
+    "config": {
+      "kpiConfig": {
+        "name": "Monthly Sales",
+        "value": 15000,
+        "unit": "$",
+        "target": 20000,
+        "valueFontSize": 48,
+        "valueColor": "#059669",
+        "backgroundColor": "#f0fdf4",
+        "borderColor": "#22c55e",
+        "borderWidth": 2
+      }
+    }
+  }
+}
+</json>
+\`\`\`
+
+\`\`\`
+✅ Changed KPI to display mode with gauge!
+
+<json>
+{
+  "action": "update",
+  "widgetId": "widget-101",
+  "changes": {
+    "config": {
+      "kpiConfig": {
+        "visualizationType": "display",
+        "colorScheme": "blue",
+        "showTarget": true,
+        "showTrend": true,
+        "textAlign": "center"
+      }
     }
   }
 }

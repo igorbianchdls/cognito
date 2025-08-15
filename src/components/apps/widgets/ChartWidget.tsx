@@ -33,8 +33,8 @@ export default function ChartWidget({ widget }: ChartWidgetProps) {
     return () => clearInterval(interval)
   }, [])
 
-  // Get chart configuration with defaults
-  const chartConfig = widget.chartConfig || {}
+  // Get chart configuration with backward compatibility
+  const chartConfig = widget.config?.chartConfig || widget.chartConfig || {}
   
   // Prepare props for BarChart
   const chartProps = {

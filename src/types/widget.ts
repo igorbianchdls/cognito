@@ -8,6 +8,7 @@ export interface Widget {
   defaultHeight: number
 }
 
+// Chart-specific configuration
 export interface ChartConfig {
   // Visual & Colors
   colors?: string[]
@@ -70,6 +71,51 @@ export interface ChartConfig {
   enablePoints?: boolean // Line charts
 }
 
+// KPI-specific configuration
+export interface KPIConfig {
+  // Data properties
+  name?: string
+  value?: number
+  unit?: string
+  target?: number
+  change?: number
+  trend?: 'increasing' | 'decreasing' | 'stable'
+  status?: 'on-target' | 'above-target' | 'below-target' | 'critical'
+  metric?: string
+  calculation?: string
+  timeRange?: string
+  
+  // Display options
+  showTarget?: boolean
+  showTrend?: boolean
+  visualizationType?: 'card' | 'display' | 'gauge'
+  colorScheme?: 'green' | 'blue' | 'orange' | 'red'
+  
+  // Design properties
+  valueFontSize?: number
+  valueColor?: string
+  valueFontWeight?: number
+  nameFontSize?: number
+  nameColor?: string
+  nameFontWeight?: number
+  backgroundColor?: string
+  borderColor?: string
+  borderWidth?: number
+  borderRadius?: number
+  padding?: number
+  textAlign?: 'left' | 'center' | 'right'
+  shadow?: boolean
+  changeColor?: string
+  targetColor?: string
+}
+
+// Unified widget configuration interface
+export interface WidgetConfig {
+  chartConfig?: ChartConfig  // For chart widgets (Bar, Line, Pie, Area)
+  kpiConfig?: KPIConfig      // For KPI widgets
+  // Future: tableConfig?: TableConfig, mapConfig?: MapConfig, etc.
+}
+
 export interface DroppedWidget extends Widget {
   i: string
   x: number
@@ -77,7 +123,8 @@ export interface DroppedWidget extends Widget {
   w: number
   h: number
   color?: string
-  chartConfig?: ChartConfig
+  config?: WidgetConfig       // New unified configuration
+  chartConfig?: ChartConfig   // Deprecated: kept for backward compatibility
 }
 
 export interface Position {

@@ -3,7 +3,7 @@
 import { useStore } from '@nanostores/react'
 import { useState, useEffect, useCallback } from 'react'
 import { $widgets, widgetActions } from '@/stores/widgetStore'
-import type { DroppedWidget, ChartConfig } from '@/types/widget'
+import type { DroppedWidget, ChartConfig, WidgetConfig } from '@/types/widget'
 
 interface JsonWidget {
   i: string
@@ -15,7 +15,8 @@ interface JsonWidget {
   icon?: string
   description?: string
   id?: string
-  chartConfig?: ChartConfig
+  config?: WidgetConfig      // New unified config structure
+  chartConfig?: ChartConfig  // Deprecated: for backward compatibility
 }
 
 interface JsonData {
@@ -69,8 +70,11 @@ export default function CodeEditor() {
           }
         }
         
-        // Include chartConfig only if it exists
-        if (widget.chartConfig) {
+        // Include new config structure if it exists, otherwise fall back to chartConfig
+        if (widget.config) {
+          jsonWidget.config = widget.config
+        } else if (widget.chartConfig) {
+          // Backward compatibility: include chartConfig
           jsonWidget.chartConfig = widget.chartConfig
         }
         
@@ -142,8 +146,11 @@ export default function CodeEditor() {
           color: widget.style?.color || '#3B82F6'
         }
         
-        // Include chartConfig if it exists
-        if (widget.chartConfig) {
+        // Include new config structure if it exists, otherwise fall back to chartConfig
+        if (widget.config) {
+          droppedWidget.config = widget.config
+        } else if (widget.chartConfig) {
+          // Backward compatibility: convert chartConfig to new structure
           droppedWidget.chartConfig = widget.chartConfig
         }
         
