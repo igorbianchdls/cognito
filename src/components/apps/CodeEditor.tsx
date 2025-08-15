@@ -3,7 +3,7 @@
 import { useStore } from '@nanostores/react'
 import { useState, useEffect, useCallback } from 'react'
 import { $widgets, widgetActions } from '@/stores/widgetStore'
-import type { DroppedWidget } from '@/types/widget'
+import type { DroppedWidget, ChartConfig } from '@/types/widget'
 
 interface JsonWidget {
   i: string
@@ -15,6 +15,7 @@ interface JsonWidget {
   icon?: string
   description?: string
   id?: string
+  chartConfig?: ChartConfig
 }
 
 interface JsonData {
@@ -50,22 +51,31 @@ export default function CodeEditor() {
         created: new Date().toISOString().split('T')[0],
         totalWidgets: widgetList.length
       },
-      widgets: widgetList.map(widget => ({
-        i: widget.i,
-        name: widget.name,
-        type: widget.type,
-        position: {
-          x: widget.x,
-          y: widget.y
-        },
-        size: {
-          w: widget.w,
-          h: widget.h
-        },
-        style: {
-          color: widget.color || '#3B82F6'
+      widgets: widgetList.map(widget => {
+        const jsonWidget: JsonWidget = {
+          i: widget.i,
+          name: widget.name,
+          type: widget.type,
+          position: {
+            x: widget.x,
+            y: widget.y
+          },
+          size: {
+            w: widget.w,
+            h: widget.h
+          },
+          style: {
+            color: widget.color || '#3B82F6'
+          }
         }
-      }))
+        
+        // Include chartConfig only if it exists
+        if (widget.chartConfig) {
+          jsonWidget.chartConfig = widget.chartConfig
+        }
+        
+        return jsonWidget
+      })
     }
     
     return JSON.stringify(jsonData, null, 2)
@@ -116,7 +126,7 @@ export default function CodeEditor() {
           widget.i = `widget-${Date.now()}-${index}`
         }
         
-        return {
+        const droppedWidget: DroppedWidget = {
           id: widget.id || widget.i,
           i: widget.i,
           name: widget.name || 'Unnamed Widget',
@@ -131,6 +141,13 @@ export default function CodeEditor() {
           h: widget.size?.h || 2,
           color: widget.style?.color || '#3B82F6'
         }
+        
+        // Include chartConfig if it exists
+        if (widget.chartConfig) {
+          droppedWidget.chartConfig = widget.chartConfig
+        }
+        
+        return droppedWidget
       })
 
       widgetActions.setWidgets(newWidgets)
