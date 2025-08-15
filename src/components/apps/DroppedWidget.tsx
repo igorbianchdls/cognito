@@ -2,6 +2,9 @@
 
 import { useState } from 'react'
 import ChartWidget from './widgets/ChartWidget'
+import LineChartWidget from './widgets/LineChartWidget'
+import PieChartWidget from './widgets/PieChartWidget'
+import AreaChartWidget from './widgets/AreaChartWidget'
 import MetricWidget from './widgets/MetricWidget'
 import type { DroppedWidget as DroppedWidgetType } from '@/types/widget'
 
@@ -17,7 +20,14 @@ export default function DroppedWidget({ widget, onRemove, isSelected = false }: 
   const renderWidget = () => {
     switch (widget.type) {
       case 'chart':
+      case 'chart-bar':
         return <ChartWidget />
+      case 'chart-line':
+        return <LineChartWidget />
+      case 'chart-pie':
+        return <PieChartWidget />
+      case 'chart-area':
+        return <AreaChartWidget />
       case 'metric':
         return <MetricWidget />
       default:

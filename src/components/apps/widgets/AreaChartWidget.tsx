@@ -1,17 +1,19 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { BarChart } from '@/components/charts'
+import { AreaChart } from '@/components/charts'
 import type { ChartData } from '@/components/charts/types'
 
-export default function ChartWidget() {
+export default function AreaChartWidget() {
   const [data, setData] = useState<ChartData[]>([
-    { x: 'Jan', y: 65 },
-    { x: 'Feb', y: 78 },
-    { x: 'Mar', y: 52 },
-    { x: 'Apr', y: 82 },
-    { x: 'May', y: 91 },
-    { x: 'Jun', y: 73 },
+    { x: 'Q1', y: 120 },
+    { x: 'Q2', y: 135 },
+    { x: 'Q3', y: 148 },
+    { x: 'Q4', y: 162 },
+    { x: 'Q5', y: 175 },
+    { x: 'Q6', y: 168 },
+    { x: 'Q7', y: 185 },
+    { x: 'Q8', y: 192 },
   ])
 
   // Simulate real-time data updates
@@ -20,17 +22,17 @@ export default function ChartWidget() {
       setData(prevData => 
         prevData.map(item => ({
           ...item,
-          y: Math.floor(Math.random() * 100) + 20
+          y: Math.floor(Math.random() * 100) + 100 // Range: 100-200
         }))
       )
-    }, 5000)
+    }, 7000)
 
     return () => clearInterval(interval)
   }, [])
 
   return (
     <div className="h-full w-full">
-      <BarChart 
+      <AreaChart 
         data={data}
       />
     </div>
