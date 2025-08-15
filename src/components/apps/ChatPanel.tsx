@@ -24,6 +24,28 @@ interface JsonWidget {
   id?: string
 }
 
+interface ActionData {
+  action: 'update' | 'move' | 'resize' | 'delete' | 'add'
+  widgetId?: string
+  changes?: Partial<DroppedWidget>
+}
+
+interface ActionFormat {
+  action?: string
+  widgetId?: string
+  changes?: Partial<DroppedWidget>
+  actions?: ActionData[]
+}
+
+interface LegacyFormat {
+  widgets: JsonWidget[]
+  meta?: {
+    title?: string
+    created?: string
+    totalWidgets?: number
+  }
+}
+
 // Function to remove JSON tags from display text
 const removeJsonTags = (text: string) => {
   return text.replace(/<json>[\s\S]*?<\/json>/g, '')
@@ -67,22 +89,22 @@ const parseAndApplyJson = (text: string) => {
 }
 
 // Handle new action-based format
-const handleActionFormat = (parsed: any) => {
+const handleActionFormat = (parsed: ActionFormat) => {
   if (parsed.actions && Array.isArray(parsed.actions)) {
     // Multiple actions
     console.log(`🔄 Processing ${parsed.actions.length} actions`)
-    parsed.actions.forEach((actionData: any, index: number) => {
+    parsed.actions.forEach((actionData: ActionData, index: number) => {
       executeAction(actionData, index)
     })
   } else if (parsed.action) {
     // Single action
     console.log('🔄 Processing single action')
-    executeAction(parsed, 0)
+    executeAction(parsed as ActionData, 0)
   }
 }
 
 // Execute a single action
-const executeAction = (actionData: any, index: number) => {
+const executeAction = (actionData: ActionData, index: number) => {
   const { action, widgetId, changes } = actionData
   console.log(`⚡ Action ${index}: ${action} on widget ${widgetId}`, changes)
   
@@ -138,7 +160,7 @@ const executeAction = (actionData: any, index: number) => {
 }
 
 // Handle legacy format (complete widgets array)
-const handleLegacyFormat = (parsed: any) => {
+const handleLegacyFormat = (parsed: LegacyFormat) => {
   console.log(`📊 Found ${parsed.widgets.length} widgets in JSON`)
   
   // Transform JSON widgets to DroppedWidget format
