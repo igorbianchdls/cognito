@@ -59,8 +59,13 @@ export interface ChartConfig {
   innerRadius?: number // Pie charts
   padAngle?: number // Pie charts
   cornerRadius?: number // Pie charts
-  enableArea?: boolean // Line charts
+  activeOuterRadiusOffset?: number // Pie charts
+  enableArcLinkLabels?: boolean // Pie charts
+  arcLabelsSkipAngle?: number // Pie charts
+  enableArea?: boolean // Line/Area charts
+  areaOpacity?: number // Area charts
   curve?: 'linear' | 'cardinal' | 'catmullRom' | 'monotoneX' // Line/Area charts
+  lineWidth?: number // Line/Area charts
   pointSize?: number // Line charts
   enablePoints?: boolean // Line charts
 }
