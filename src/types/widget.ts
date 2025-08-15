@@ -71,6 +71,40 @@ export interface ChartConfig {
   enablePoints?: boolean // Line charts
 }
 
+// Legacy ChartConfig interface for backward compatibility with old KPI widgets
+export interface LegacyChartConfigWithKPI extends ChartConfig {
+  // Legacy KPI properties that were stored in chartConfig
+  kpiName?: string
+  kpiValue?: number
+  kpiUnit?: string
+  kpiTarget?: number
+  kpiChange?: number
+  kpiTrend?: 'increasing' | 'decreasing' | 'stable'
+  kpiStatus?: 'on-target' | 'above-target' | 'below-target' | 'critical'
+  showTarget?: boolean
+  showTrend?: boolean
+  kpiVisualizationType?: 'card' | 'display' | 'gauge'
+  kpiColorScheme?: 'green' | 'blue' | 'orange' | 'red'
+  kpiMetric?: string
+  kpiCalculation?: string
+  kpiTimeRange?: string
+  kpiValueFontSize?: number
+  kpiValueColor?: string
+  kpiValueFontWeight?: number
+  kpiNameFontSize?: number
+  kpiNameColor?: string
+  kpiNameFontWeight?: number
+  kpiBackgroundColor?: string
+  kpiBorderColor?: string
+  kpiBorderWidth?: number
+  kpiBorderRadius?: number
+  kpiPadding?: number
+  kpiTextAlign?: 'left' | 'center' | 'right'
+  kpiShadow?: boolean
+  kpiChangeColor?: string
+  kpiTargetColor?: string
+}
+
 // KPI-specific configuration
 export interface KPIConfig {
   // Data properties

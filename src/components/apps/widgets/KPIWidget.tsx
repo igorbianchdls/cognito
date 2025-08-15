@@ -3,10 +3,45 @@
 import { useState, useEffect } from 'react'
 import { KPICard } from '@/components/widgets/KPICard'
 import KPIDisplay from '@/components/tools/KPIDisplay'
-import type { DroppedWidget, KPIConfig } from '@/types/widget'
+import type { DroppedWidget, KPIConfig, LegacyChartConfigWithKPI, ChartConfig } from '@/types/widget'
 
 interface KPIWidgetProps {
   widget: DroppedWidget
+}
+
+// Type guard to check if chartConfig has legacy KPI properties
+function isLegacyChartConfigWithKPI(config: ChartConfig | undefined): config is LegacyChartConfigWithKPI {
+  return config !== undefined && (
+    'kpiName' in config ||
+    'kpiValue' in config ||
+    'kpiUnit' in config ||
+    'kpiTarget' in config ||
+    'kpiChange' in config ||
+    'kpiTrend' in config ||
+    'kpiStatus' in config ||
+    'showTarget' in config ||
+    'showTrend' in config ||
+    'kpiVisualizationType' in config ||
+    'kpiColorScheme' in config ||
+    'kpiMetric' in config ||
+    'kpiCalculation' in config ||
+    'kpiTimeRange' in config ||
+    'kpiValueFontSize' in config ||
+    'kpiValueColor' in config ||
+    'kpiValueFontWeight' in config ||
+    'kpiNameFontSize' in config ||
+    'kpiNameColor' in config ||
+    'kpiNameFontWeight' in config ||
+    'kpiBackgroundColor' in config ||
+    'kpiBorderColor' in config ||
+    'kpiBorderWidth' in config ||
+    'kpiBorderRadius' in config ||
+    'kpiPadding' in config ||
+    'kpiTextAlign' in config ||
+    'kpiShadow' in config ||
+    'kpiChangeColor' in config ||
+    'kpiTargetColor' in config
+  )
 }
 
 export default function KPIWidget({ widget }: KPIWidgetProps) {
@@ -38,36 +73,36 @@ export default function KPIWidget({ widget }: KPIWidgetProps) {
   // Get KPI configuration with backward compatibility
   const kpiConfig: KPIConfig = widget.config?.kpiConfig || 
     // Backward compatibility: extract KPI props from old chartConfig
-    (widget.chartConfig ? {
-      name: (widget.chartConfig as any).kpiName,
-      value: (widget.chartConfig as any).kpiValue,
-      unit: (widget.chartConfig as any).kpiUnit,
-      target: (widget.chartConfig as any).kpiTarget,
-      change: (widget.chartConfig as any).kpiChange,
-      trend: (widget.chartConfig as any).kpiTrend,
-      status: (widget.chartConfig as any).kpiStatus,
-      showTarget: (widget.chartConfig as any).showTarget,
-      showTrend: (widget.chartConfig as any).showTrend,
-      visualizationType: (widget.chartConfig as any).kpiVisualizationType,
-      colorScheme: (widget.chartConfig as any).kpiColorScheme,
-      metric: (widget.chartConfig as any).kpiMetric,
-      calculation: (widget.chartConfig as any).kpiCalculation,
-      timeRange: (widget.chartConfig as any).kpiTimeRange,
-      valueFontSize: (widget.chartConfig as any).kpiValueFontSize,
-      valueColor: (widget.chartConfig as any).kpiValueColor,
-      valueFontWeight: (widget.chartConfig as any).kpiValueFontWeight,
-      nameFontSize: (widget.chartConfig as any).kpiNameFontSize,
-      nameColor: (widget.chartConfig as any).kpiNameColor,
-      nameFontWeight: (widget.chartConfig as any).kpiNameFontWeight,
-      backgroundColor: (widget.chartConfig as any).kpiBackgroundColor,
-      borderColor: (widget.chartConfig as any).kpiBorderColor,
-      borderWidth: (widget.chartConfig as any).kpiBorderWidth,
-      borderRadius: (widget.chartConfig as any).kpiBorderRadius,
-      padding: (widget.chartConfig as any).kpiPadding,
-      textAlign: (widget.chartConfig as any).kpiTextAlign,
-      shadow: (widget.chartConfig as any).kpiShadow,
-      changeColor: (widget.chartConfig as any).kpiChangeColor,
-      targetColor: (widget.chartConfig as any).kpiTargetColor,
+    (isLegacyChartConfigWithKPI(widget.chartConfig) ? {
+      name: widget.chartConfig.kpiName,
+      value: widget.chartConfig.kpiValue,
+      unit: widget.chartConfig.kpiUnit,
+      target: widget.chartConfig.kpiTarget,
+      change: widget.chartConfig.kpiChange,
+      trend: widget.chartConfig.kpiTrend,
+      status: widget.chartConfig.kpiStatus,
+      showTarget: widget.chartConfig.showTarget,
+      showTrend: widget.chartConfig.showTrend,
+      visualizationType: widget.chartConfig.kpiVisualizationType,
+      colorScheme: widget.chartConfig.kpiColorScheme,
+      metric: widget.chartConfig.kpiMetric,
+      calculation: widget.chartConfig.kpiCalculation,
+      timeRange: widget.chartConfig.kpiTimeRange,
+      valueFontSize: widget.chartConfig.kpiValueFontSize,
+      valueColor: widget.chartConfig.kpiValueColor,
+      valueFontWeight: widget.chartConfig.kpiValueFontWeight,
+      nameFontSize: widget.chartConfig.kpiNameFontSize,
+      nameColor: widget.chartConfig.kpiNameColor,
+      nameFontWeight: widget.chartConfig.kpiNameFontWeight,
+      backgroundColor: widget.chartConfig.kpiBackgroundColor,
+      borderColor: widget.chartConfig.kpiBorderColor,
+      borderWidth: widget.chartConfig.kpiBorderWidth,
+      borderRadius: widget.chartConfig.kpiBorderRadius,
+      padding: widget.chartConfig.kpiPadding,
+      textAlign: widget.chartConfig.kpiTextAlign,
+      shadow: widget.chartConfig.kpiShadow,
+      changeColor: widget.chartConfig.kpiChangeColor,
+      targetColor: widget.chartConfig.kpiTargetColor,
     } : {}) || {}
   
   // Determine KPI status based on current value vs target
