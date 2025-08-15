@@ -134,36 +134,38 @@ export function KPICard({
   };
 
   return (
-    <Card className="@container/card bg-white border-gray-200">
-      <CardHeader>
-        <CardDescription>{name || 'KPI'}</CardDescription>
-        <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-          {formatValue(currentValue, unit || '')}
-        </CardTitle>
-        <CardAction>
-          {change !== undefined && (
-            <Badge variant={getTrendVariant()} className={getBadgeClassName()}>
-              {getTrendIcon()}
-              {change >= 0 ? '+' : ''}{change?.toFixed(1)}%
-            </Badge>
-          )}
-        </CardAction>
-      </CardHeader>
-      <CardFooter className="flex-col items-start gap-1.5 text-sm">
-        <div className="line-clamp-1 flex gap-2 font-medium">
-          {getStatusMessage()} {getTrendIcon()}
-        </div>
-        <div className="text-muted-foreground">
-          {target && `Meta: ${formatValue(target, unit || '')}`}
-          {calculation && ` • ${calculation}`}
-        </div>
-        {metadata?.dataSource && (
-          <div className="text-xs text-gray-400">
-            {metadata.dataSource}
+    <div style={{ width: '100%', height: '100%', minWidth: 0 }}>
+      <Card className="@container/card bg-white border-gray-200 h-full">
+        <CardHeader>
+          <CardDescription>{name || 'KPI'}</CardDescription>
+          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            {formatValue(currentValue, unit || '')}
+          </CardTitle>
+          <CardAction>
+            {change !== undefined && (
+              <Badge variant={getTrendVariant()} className={getBadgeClassName()}>
+                {getTrendIcon()}
+                {change >= 0 ? '+' : ''}{change?.toFixed(1)}%
+              </Badge>
+            )}
+          </CardAction>
+        </CardHeader>
+        <CardFooter className="flex-col items-start gap-1.5 text-sm">
+          <div className="line-clamp-1 flex gap-2 font-medium">
+            {getStatusMessage()} {getTrendIcon()}
           </div>
-        )}
-      </CardFooter>
-    </Card>
+          <div className="text-muted-foreground">
+            {target && `Meta: ${formatValue(target, unit || '')}`}
+            {calculation && ` • ${calculation}`}
+          </div>
+          {metadata?.dataSource && (
+            <div className="text-xs text-gray-400">
+              {metadata.dataSource}
+            </div>
+          )}
+        </CardFooter>
+      </Card>
+    </div>
   );
 }
 

@@ -121,7 +121,8 @@ export default function KPIDisplay({
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+    <div style={{ width: '100%', height: '100%', minWidth: 0 }}>
+      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden h-full">
       {/* Header */}
       <div className={`${getStatusColor()} px-4 py-3 border-b border-gray-200`}>
         <div className="flex items-center justify-between">
@@ -262,6 +263,7 @@ export default function KPIDisplay({
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }
