@@ -126,6 +126,22 @@ Example response formats:
 </json>
 \`\`\`
 
+**Resize widget:**
+\`\`\`
+✅ Widget resized successfully!
+
+<json>
+{
+  "action": "resize",
+  "widgetId": "widget-1755217093366",
+  "changes": {
+    "w": 4,
+    "h": 3
+  }
+}
+</json>
+\`\`\`
+
 **Multiple actions:**
 \`\`\`
 ✅ Updated 2 widgets successfully!
@@ -149,6 +165,12 @@ Example response formats:
 \`\`\`
 
 The JSON inside <json></json> tags will be automatically applied to the canvas. Use incremental updates - only specify the properties that actually change.
+
+IMPORTANT PROPERTY NAMES:
+- Use "h" for height (not "height") 
+- Use "w" for width (not "width")
+- Use "x" and "y" for position
+- Use "color" for widget color
 
 Respond in a clear, helpful manner. Keep responses concise and actionable.`,
     messages: convertToModelMessages(messages),

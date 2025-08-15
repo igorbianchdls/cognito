@@ -108,13 +108,26 @@ const executeAction = (actionData: ActionData, index: number) => {
   const { action, widgetId, changes } = actionData
   console.log(`⚡ Action ${index}: ${action} on widget ${widgetId}`, changes)
   
+  // Map property names for backward compatibility
+  const mappedChanges = changes ? { ...changes } : {}
+  if ('height' in mappedChanges) {
+    mappedChanges.h = mappedChanges.height as number
+    delete mappedChanges.height
+  }
+  if ('width' in mappedChanges) {
+    mappedChanges.w = mappedChanges.width as number
+    delete mappedChanges.width
+  }
+  
+  console.log(`🔄 Mapped changes:`, mappedChanges)
+  
   switch (action) {
     case 'update':
     case 'move':
     case 'resize':
-      if (widgetId && changes) {
-        widgetActions.editWidget(widgetId, changes)
-        console.log(`✅ Applied ${action} to widget ${widgetId}:`, changes)
+      if (widgetId && mappedChanges) {
+        widgetActions.editWidget(widgetId, mappedChanges)
+        console.log(`✅ Applied ${action} to widget ${widgetId}:`, mappedChanges)
       } else {
         console.error(`❌ Missing widgetId or changes for ${action}:`, actionData)
       }
@@ -130,22 +143,22 @@ const executeAction = (actionData: ActionData, index: number) => {
       break
       
     case 'add':
-      if (changes) {
+      if (mappedChanges) {
         // Transform to DroppedWidget format
         const newWidget: DroppedWidget = {
-          id: changes.id || changes.i || `widget-${Date.now()}`,
-          i: changes.i || `widget-${Date.now()}`,
-          name: changes.name || 'New Widget',
-          type: changes.type || 'chart',
-          icon: changes.icon || '📊',
-          description: changes.description || '',
-          defaultWidth: changes.w || 2,
-          defaultHeight: changes.h || 2,
-          x: changes.x || 0,
-          y: changes.y || 0,
-          w: changes.w || 2,
-          h: changes.h || 2,
-          color: changes.color || '#3B82F6'
+          id: mappedChanges.id || mappedChanges.i || `widget-${Date.now()}`,
+          i: mappedChanges.i || `widget-${Date.now()}`,
+          name: mappedChanges.name || 'New Widget',
+          type: mappedChanges.type || 'chart',
+          icon: mappedChanges.icon || '📊',
+          description: mappedChanges.description || '',
+          defaultWidth: mappedChanges.w || 2,
+          defaultHeight: mappedChanges.h || 2,
+          x: mappedChanges.x || 0,
+          y: mappedChanges.y || 0,
+          w: mappedChanges.w || 2,
+          h: mappedChanges.h || 2,
+          color: mappedChanges.color || '#3B82F6'
         }
         widgetActions.addWidget(newWidget)
         console.log('✅ Added new widget:', newWidget)
