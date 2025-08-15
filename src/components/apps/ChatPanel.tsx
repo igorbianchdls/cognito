@@ -44,36 +44,17 @@ const parseAndApplyJson = (text: string) => {
       const parsed = JSON.parse(jsonString)
       console.log(`✅ Match ${matchIndex} - Parsed JSON:`, parsed)
       
-      if (parsed && parsed.widgets && Array.isArray(parsed.widgets)) {
-        console.log(`📊 Found ${parsed.widgets.length} widgets in JSON`)
-        
-        // Transform JSON widgets to DroppedWidget format
-        const newWidgets: DroppedWidget[] = parsed.widgets.map((widget: JsonWidget, index: number) => {
-          const transformedWidget = {
-            id: widget.id || widget.i,
-            i: widget.i || `widget-${Date.now()}-${index}`,
-            name: widget.name || 'Unnamed Widget',
-            type: widget.type || 'chart',
-            icon: widget.icon || '📊',
-            description: widget.description || '',
-            defaultWidth: widget.size?.w || 2,
-            defaultHeight: widget.size?.h || 2,
-            x: widget.position?.x || 0,
-            y: widget.position?.y || 0,
-            w: widget.size?.w || 2,
-            h: widget.size?.h || 2,
-            color: widget.style?.color || '#3B82F6'
-          }
-          console.log(`🔄 Transformed widget ${index}:`, transformedWidget)
-          return transformedWidget
-        })
-        
-        // Apply changes to canvas
-        console.log(`🚀 Applying ${newWidgets.length} widgets to canvas...`)
-        widgetActions.setWidgets(newWidgets)
-        console.log('✅ JSON automatically applied to canvas:', newWidgets.length, 'widgets')
+      // Check if it's the new action format
+      if (parsed.action || parsed.actions) {
+        console.log('🎯 Detected action format - using incremental updates')
+        handleActionFormat(parsed)
+      }
+      // Fallback to old format (complete widgets array)
+      else if (parsed && parsed.widgets && Array.isArray(parsed.widgets)) {
+        console.log('📊 Detected legacy format - using complete replacement')
+        handleLegacyFormat(parsed)
       } else {
-        console.warn('⚠️ JSON does not contain valid widgets array:', parsed)
+        console.warn('⚠️ JSON format not recognized:', parsed)
       }
     } catch (error) {
       console.error('❌ Error parsing JSON from AI response:', error)
@@ -83,6 +64,108 @@ const parseAndApplyJson = (text: string) => {
   if (matches.length === 0) {
     console.log('ℹ️ No <json> tags found in AI response')
   }
+}
+
+// Handle new action-based format
+const handleActionFormat = (parsed: any) => {
+  if (parsed.actions && Array.isArray(parsed.actions)) {
+    // Multiple actions
+    console.log(`🔄 Processing ${parsed.actions.length} actions`)
+    parsed.actions.forEach((actionData: any, index: number) => {
+      executeAction(actionData, index)
+    })
+  } else if (parsed.action) {
+    // Single action
+    console.log('🔄 Processing single action')
+    executeAction(parsed, 0)
+  }
+}
+
+// Execute a single action
+const executeAction = (actionData: any, index: number) => {
+  const { action, widgetId, changes } = actionData
+  console.log(`⚡ Action ${index}: ${action} on widget ${widgetId}`, changes)
+  
+  switch (action) {
+    case 'update':
+    case 'move':
+    case 'resize':
+      if (widgetId && changes) {
+        widgetActions.editWidget(widgetId, changes)
+        console.log(`✅ Applied ${action} to widget ${widgetId}:`, changes)
+      } else {
+        console.error(`❌ Missing widgetId or changes for ${action}:`, actionData)
+      }
+      break
+      
+    case 'delete':
+      if (widgetId) {
+        widgetActions.removeWidget(widgetId)
+        console.log(`✅ Deleted widget ${widgetId}`)
+      } else {
+        console.error('❌ Missing widgetId for delete:', actionData)
+      }
+      break
+      
+    case 'add':
+      if (changes) {
+        // Transform to DroppedWidget format
+        const newWidget: DroppedWidget = {
+          id: changes.id || changes.i || `widget-${Date.now()}`,
+          i: changes.i || `widget-${Date.now()}`,
+          name: changes.name || 'New Widget',
+          type: changes.type || 'chart',
+          icon: changes.icon || '📊',
+          description: changes.description || '',
+          defaultWidth: changes.w || 2,
+          defaultHeight: changes.h || 2,
+          x: changes.x || 0,
+          y: changes.y || 0,
+          w: changes.w || 2,
+          h: changes.h || 2,
+          color: changes.color || '#3B82F6'
+        }
+        widgetActions.addWidget(newWidget)
+        console.log('✅ Added new widget:', newWidget)
+      } else {
+        console.error('❌ Missing widget data for add:', actionData)
+      }
+      break
+      
+    default:
+      console.warn(`⚠️ Unknown action type: ${action}`)
+  }
+}
+
+// Handle legacy format (complete widgets array)
+const handleLegacyFormat = (parsed: any) => {
+  console.log(`📊 Found ${parsed.widgets.length} widgets in JSON`)
+  
+  // Transform JSON widgets to DroppedWidget format
+  const newWidgets: DroppedWidget[] = parsed.widgets.map((widget: JsonWidget, index: number) => {
+    const transformedWidget = {
+      id: widget.id || widget.i,
+      i: widget.i || `widget-${Date.now()}-${index}`,
+      name: widget.name || 'Unnamed Widget',
+      type: widget.type || 'chart',
+      icon: widget.icon || '📊',
+      description: widget.description || '',
+      defaultWidth: widget.size?.w || 2,
+      defaultHeight: widget.size?.h || 2,
+      x: widget.position?.x || 0,
+      y: widget.position?.y || 0,
+      w: widget.size?.w || 2,
+      h: widget.size?.h || 2,
+      color: widget.style?.color || '#3B82F6'
+    }
+    console.log(`🔄 Transformed widget ${index}:`, transformedWidget)
+    return transformedWidget
+  })
+  
+  // Apply changes to canvas
+  console.log(`🚀 Applying ${newWidgets.length} widgets to canvas...`)
+  widgetActions.setWidgets(newWidgets)
+  console.log('✅ JSON automatically applied to canvas:', newWidgets.length, 'widgets')
 }
 
 export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelProps) {

@@ -73,7 +73,7 @@ For demonstration purposes, here's an example response with JSON that will be au
 }
 </json>
 
-IMPORTANT: When users ask to modify, move, resize, or change widgets, respond with a helpful message AND include the complete JSON configuration inside <json></json> tags. The JSON will be automatically applied to the canvas. Do NOT use tool calls for editing.
+IMPORTANT: When users ask to modify, move, resize, or change widgets, respond with a helpful message AND include a JSON action inside <json></json> tags. Use incremental updates for efficiency - only specify what changes. The JSON will be automatically applied to the canvas. Do NOT use tool calls for editing.
 
 CRITICAL - Widget IDs:
 - Use "widgetId" from getCanvasWidgets as the "i" field in JSON (e.g., "widget-1755217093366")
@@ -84,42 +84,71 @@ Response Format:
 Always respond with this structure:
 
 1. Brief explanation of what was changed
-2. Complete JSON configuration inside <json></json> tags
+2. JSON action inside <json></json> tags
 
-Example response format:
+Action Types:
+- "update" - Change specific properties of a widget
+- "move" - Change position only  
+- "resize" - Change size only
+- "delete" - Remove a widget
+- "add" - Add a new widget
+
+Example response formats:
+
+**Update specific properties:**
+\`\`\`
+✅ Widget height changed to 4 successfully!
+
+<json>
+{
+  "action": "update",
+  "widgetId": "widget-1755217093366",
+  "changes": {
+    "h": 4
+  }
+}
+</json>
+\`\`\`
+
+**Move widget:**
 \`\`\`
 ✅ Widget moved to position (2,1) successfully!
 
 <json>
 {
-  "meta": {
-    "title": "Updated Dashboard",
-    "created": "2024-01-15",
-    "totalWidgets": 2
-  },
-  "widgets": [
+  "action": "move", 
+  "widgetId": "widget-1755217093366",
+  "changes": {
+    "x": 2,
+    "y": 1
+  }
+}
+</json>
+\`\`\`
+
+**Multiple actions:**
+\`\`\`
+✅ Updated 2 widgets successfully!
+
+<json>
+{
+  "actions": [
     {
-      "i": "widget-1755217093366",
-      "name": "Sales Chart",
-      "type": "chart",
-      "position": { "x": 2, "y": 1 },
-      "size": { "w": 3, "h": 2 },
-      "style": { "color": "#3B82F6" }
+      "action": "update",
+      "widgetId": "widget-1755217093366", 
+      "changes": { "color": "#10B981" }
     },
     {
-      "i": "widget-1755217099999",
-      "name": "Revenue Metric",
-      "type": "metric",
-      "position": { "x": 3, "y": 0 },
-      "size": { "w": 2, "h": 1 },
-      "style": { "color": "#10B981" }
+      "action": "resize",
+      "widgetId": "widget-1755217099999",
+      "changes": { "w": 4, "h": 3 }
     }
   ]
 }
 </json>
 \`\`\`
 
-The JSON inside <json></json> tags will be automatically applied to the canvas. Always provide the complete JSON with ALL widgets, including the ones being modified and the unchanged ones.
+The JSON inside <json></json> tags will be automatically applied to the canvas. Use incremental updates - only specify the properties that actually change.
 
 Respond in a clear, helpful manner. Keep responses concise and actionable.`,
     messages: convertToModelMessages(messages),
