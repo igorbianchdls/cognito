@@ -2,13 +2,75 @@
 
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
-import { useState, FormEvent } from 'react'
+import { useState, FormEvent, useEffect } from 'react'
 import type { DroppedWidget } from '@/types/widget'
 import CanvasWidgets from '../tools/appsChat/CanvasWidgets'
+import { widgetActions } from '@/stores/widgetStore'
 
 interface ChatPanelProps {
   droppedWidgets: DroppedWidget[]
   onEditWidget: (widgetId: string, changes: Partial<DroppedWidget>) => void
+}
+
+// Function to remove JSON tags from display text
+const removeJsonTags = (text: string) => {
+  return text.replace(/<json>[\s\S]*?<\/json>/g, '')
+}
+
+// Function to parse and apply JSON from AI messages
+const parseAndApplyJson = (text: string) => {
+  const jsonRegex = /<json>([\s\S]*?)<\/json>/g
+  const matches = [...text.matchAll(jsonRegex)]
+  
+  console.log(`🔍 JSON matches found: ${matches.length}`)
+  
+  matches.forEach((match, matchIndex) => {
+    try {
+      const jsonString = match[1].trim()
+      console.log(`🗂️ Match ${matchIndex} - Raw JSON string:`, jsonString)
+      
+      const parsed = JSON.parse(jsonString)
+      console.log(`✅ Match ${matchIndex} - Parsed JSON:`, parsed)
+      
+      if (parsed && parsed.widgets && Array.isArray(parsed.widgets)) {
+        console.log(`📊 Found ${parsed.widgets.length} widgets in JSON`)
+        
+        // Transform JSON widgets to DroppedWidget format
+        const newWidgets: DroppedWidget[] = parsed.widgets.map((widget: any, index: number) => {
+          const transformedWidget = {
+            id: widget.id || widget.i,
+            i: widget.i || `widget-${Date.now()}-${index}`,
+            name: widget.name || 'Unnamed Widget',
+            type: widget.type || 'chart',
+            icon: widget.icon || '📊',
+            description: widget.description || '',
+            defaultWidth: widget.size?.w || 2,
+            defaultHeight: widget.size?.h || 2,
+            x: widget.position?.x || 0,
+            y: widget.position?.y || 0,
+            w: widget.size?.w || 2,
+            h: widget.size?.h || 2,
+            color: widget.style?.color || '#3B82F6'
+          }
+          console.log(`🔄 Transformed widget ${index}:`, transformedWidget)
+          return transformedWidget
+        })
+        
+        // Apply changes to canvas
+        console.log(`🚀 Applying ${newWidgets.length} widgets to canvas...`)
+        widgetActions.setWidgets(newWidgets)
+        console.log('✅ JSON automatically applied to canvas:', newWidgets.length, 'widgets')
+      } else {
+        console.warn('⚠️ JSON does not contain valid widgets array:', parsed)
+      }
+    } catch (error) {
+      console.error('❌ Error parsing JSON from AI response:', error)
+    }
+  })
+  
+  if (matches.length === 0) {
+    console.log('ℹ️ No <json> tags found in AI response')
+  }
 }
 
 export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelProps) {
@@ -19,6 +81,16 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
     }),
     onFinish: ({ message }) => {
       console.log('✅ Mensagem finalizada:', message)
+      console.log('🤖 IA Response COMPLETA:', message)
+      
+      // Parse JSON immediately when message is finished
+      message.parts?.forEach((part, index) => {
+        if (part.type === 'text') {
+          console.log(`📝 Part ${index} - Full text:`, part.text)
+          console.log(`🔍 Checking for <json> tags in:`, part.text)
+          parseAndApplyJson(part.text)
+        }
+      })
     },
     onError: (error) => {
       console.error('❌ Erro no chat:', error)
@@ -82,7 +154,8 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
               <div>
                 {message.parts?.map((part, index) => {
                   if (part.type === 'text') {
-                    return <span key={index}>{part.text}</span>
+                    const cleanText = removeJsonTags(part.text)
+                    return <span key={index}>{cleanText}</span>
                   }
                   
                   if (part.type === 'tool-getCanvasWidgets') {

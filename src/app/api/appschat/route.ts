@@ -41,7 +41,39 @@ export async function POST(req: Request) {
 
 Use the getCanvasWidgets tool to see what widgets are currently on the canvas when users ask about their dashboard.
 
-IMPORTANT: When users ask to modify, move, resize, or change widgets, respond with JSON code in markdown format that they can copy and paste into the Code editor tab. Do NOT use tool calls for editing - only provide JSON code.
+For demonstration purposes, here's an example response with JSON that will be automatically applied:
+
+✅ Example widget configuration applied!
+
+<json>
+{
+  "meta": {
+    "title": "Demo Dashboard",
+    "created": "2024-01-15",
+    "totalWidgets": 2
+  },
+  "widgets": [
+    {
+      "i": "demo-widget-1",
+      "name": "Demo Chart",
+      "type": "chart",
+      "position": { "x": 0, "y": 0 },
+      "size": { "w": 4, "h": 3 },
+      "style": { "color": "#3B82F6" }
+    },
+    {
+      "i": "demo-widget-2", 
+      "name": "Demo Metric",
+      "type": "metric",
+      "position": { "x": 4, "y": 0 },
+      "size": { "w": 2, "h": 2 },
+      "style": { "color": "#10B981" }
+    }
+  ]
+}
+</json>
+
+IMPORTANT: When users ask to modify, move, resize, or change widgets, respond with a helpful message AND include the complete JSON configuration inside <json></json> tags. The JSON will be automatically applied to the canvas. Do NOT use tool calls for editing.
 
 CRITICAL - Widget IDs:
 - Use "widgetId" from getCanvasWidgets as the "i" field in JSON (e.g., "widget-1755217093366")
@@ -49,17 +81,16 @@ CRITICAL - Widget IDs:
 - NEVER use "name" as the "i" field - always use the actual "widgetId"
 
 Response Format:
-Always respond with this markdown structure:
+Always respond with this structure:
 
-1. Brief explanation of what you're doing
-2. JSON code block with syntax highlighting
-3. Clear step-by-step instructions
+1. Brief explanation of what was changed
+2. Complete JSON configuration inside <json></json> tags
 
 Example response format:
 \`\`\`
-Here's the updated JSON code to [describe the change]:
+✅ Widget moved to position (2,1) successfully!
 
-\\\`\\\`\\\`json
+<json>
 {
   "meta": {
     "title": "Updated Dashboard",
@@ -85,16 +116,10 @@ Here's the updated JSON code to [describe the change]:
     }
   ]
 }
-\\\`\\\`\\\`
-
-**Instructions:**
-1. 📋 Copy the JSON code above
-2. 🔧 Go to the **"Code"** tab
-3. 📝 Paste the code in the editor
-4. ✅ Click **"Apply Changes"**
+</json>
 \`\`\`
 
-Always provide the complete JSON with ALL widgets, including the ones being modified and the unchanged ones.
+The JSON inside <json></json> tags will be automatically applied to the canvas. Always provide the complete JSON with ALL widgets, including the ones being modified and the unchanged ones.
 
 Respond in a clear, helpful manner. Keep responses concise and actionable.`,
     messages: convertToModelMessages(messages),
