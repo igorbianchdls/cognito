@@ -32,21 +32,12 @@ interface LineChartProps extends BaseChartProps {
     tickSize?: number
     tickPadding?: number
   }
-  // Labels
-  enableLabel?: boolean
-  labelPosition?: 'start' | 'middle' | 'end'
-  labelSkipWidth?: number
-  labelSkipHeight?: number
-  labelTextColor?: string
   // Legends
   legends?: LegendConfig | Record<string, unknown>[]
 }
 
 export function LineChart({ 
   data, 
-  xColumn, 
-  yColumn, 
-  isFullscreen,
   colors,
   enableGridX,
   enableGridY,
@@ -61,11 +52,6 @@ export function LineChart({
   margin,
   axisBottom,
   axisLeft,
-  enableLabel,
-  labelPosition,
-  labelSkipWidth,
-  labelSkipHeight,
-  labelTextColor,
   legends
 }: LineChartProps) {
   if (!data || data.length === 0) {
@@ -179,7 +165,7 @@ export function LineChart({
         legends={(() => {
           // Se legends é array, usar diretamente
           if (Array.isArray(legends)) {
-            return legends as any;
+            return legends as Record<string, unknown>[];
           }
           
           // Se legends é LegendConfig, converter para LineLegendProps[]
