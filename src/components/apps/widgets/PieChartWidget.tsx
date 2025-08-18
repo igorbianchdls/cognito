@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { PieChart } from '@/components/charts'
 import type { ChartData } from '@/components/charts/types'
 import type { DroppedWidget } from '@/types/widget'
+import type { PieChartConfig } from '@/types/chartWidgets'
 
 interface PieChartWidgetProps {
   widget: DroppedWidget
@@ -42,16 +43,16 @@ export default function PieChartWidget({ widget }: PieChartWidgetProps) {
 
   // Get chart configuration with backward compatibility
   const chartConfig = useMemo(() => {
-    let config: Record<string, any> = {}
+    let config: Partial<PieChartConfig> = {}
     
     // Priorizar configuração especializada (nova arquitetura)
     if (widget.config && typeof widget.config === 'object' && widget.config.chartConfig) {
-      config = widget.config.chartConfig as Record<string, any>
+      config = widget.config.chartConfig as PieChartConfig
       console.log('🎯 PieChartWidget usando config.chartConfig:', config)
     }
     // Fallback para legacy chartConfig
     else if (widget.chartConfig) {
-      config = widget.chartConfig as Record<string, any>
+      config = widget.chartConfig as PieChartConfig
       console.log('🎯 PieChartWidget usando chartConfig legacy:', config)
     }
     

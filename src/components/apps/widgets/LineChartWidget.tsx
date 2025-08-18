@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { LineChart } from '@/components/charts'
 import type { ChartData } from '@/components/charts/types'
 import type { DroppedWidget } from '@/types/widget'
+import type { LineChartConfig } from '@/types/chartWidgets'
 
 interface LineChartWidgetProps {
   widget: DroppedWidget
@@ -37,16 +38,16 @@ export default function LineChartWidget({ widget }: LineChartWidgetProps) {
 
   // Get chart configuration with backward compatibility
   const chartConfig = useMemo(() => {
-    let config: Record<string, any> = {}
+    let config: Partial<LineChartConfig> = {}
     
     // Priorizar configuração especializada (nova arquitetura)
     if (widget.config && typeof widget.config === 'object' && widget.config.chartConfig) {
-      config = widget.config.chartConfig as Record<string, any>
+      config = widget.config.chartConfig as LineChartConfig
       console.log('🎯 LineChartWidget usando config.chartConfig:', config)
     }
     // Fallback para legacy chartConfig
     else if (widget.chartConfig) {
-      config = widget.chartConfig as Record<string, any>
+      config = widget.chartConfig as LineChartConfig
       console.log('🎯 LineChartWidget usando chartConfig legacy:', config)
     }
     
