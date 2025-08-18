@@ -6,7 +6,6 @@ import type {
   LineChartWidget, 
   PieChartWidget, 
   AreaChartWidget,
-  ChartType,
   BarChartConfig,
   LineChartConfig,
   PieChartConfig,

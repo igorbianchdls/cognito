@@ -2,9 +2,7 @@ import { atom, computed } from 'nanostores'
 import type { 
   KPIWidget, 
   CreateKPIWidgetProps, 
-  KPIConfig,
-  KPIData,
-  KPISimulationData
+  KPIConfig
 } from '@/types/kpiWidgets'
 import { 
   DEFAULT_KPI_CONFIG,

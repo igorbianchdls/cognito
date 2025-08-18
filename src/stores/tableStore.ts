@@ -3,10 +3,8 @@ import type {
   TableWidget, 
   CreateTableWidgetProps, 
   TableConfig,
-  TableData,
   TableColumn,
-  TableRow,
-  TablePaginationInfo
+  TableRow
 } from '@/types/tableWidgets'
 import { 
   DEFAULT_TABLE_CONFIG,

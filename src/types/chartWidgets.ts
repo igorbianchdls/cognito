@@ -117,7 +117,7 @@ export type ChartWidget = BarChartWidget | LineChartWidget | PieChartWidget | Ar
 export interface ChartData {
   x: string | number
   y: number
-  [key: string]: any
+  [key: string]: string | number | boolean | null | undefined
 }
 
 // Chart creation helpers

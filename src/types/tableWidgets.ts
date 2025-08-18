@@ -8,7 +8,7 @@ export interface TableColumn {
   sortable?: boolean
   width?: number | string
   type?: 'text' | 'number' | 'boolean' | 'date'
-  formatter?: (value: any) => string
+  formatter?: (value: string | number | boolean | null | undefined) => string
 }
 
 // Table-specific configuration
@@ -67,7 +67,7 @@ export interface CreateTableWidgetProps {
 
 // Table data interface (for runtime data)
 export interface TableData {
-  rows: Array<Record<string, any>>
+  rows: Array<Record<string, string | number | boolean | null | undefined>>
   columns: TableColumn[]
   totalRows: number
   currentPage?: number
@@ -80,7 +80,7 @@ export interface TableData {
 // Table row interface
 export interface TableRow {
   id: string | number
-  [key: string]: any
+  [key: string]: string | number | boolean | null | undefined
 }
 
 // Table pagination info

@@ -5,7 +5,6 @@ import { $tableWidgets, tableActions } from './tableStore'
 import type { ChartWidget } from '@/types/chartWidgets'
 import type { KPIWidget } from '@/types/kpiWidgets'
 import type { TableWidget } from '@/types/tableWidgets'
-import type { BaseWidget } from '@/types/baseWidget'
 import type { DroppedWidget } from '@/types/widget' // Legacy type for backward compatibility
 
 // Union type for all specialized widgets
@@ -179,37 +178,37 @@ export const migrationUtils = {
     
     // Handle legacy KPI data stored in chartConfig
     if (widget.chartConfig && !kpiConfig.name) {
-      const legacy = widget.chartConfig as any
+      const legacy = widget.chartConfig as Record<string, unknown>
       kpiConfig = {
-        name: legacy.kpiName,
-        value: legacy.kpiValue,
-        unit: legacy.kpiUnit,
-        target: legacy.kpiTarget,
-        change: legacy.kpiChange,
-        trend: legacy.kpiTrend,
-        status: legacy.kpiStatus,
-        showTarget: legacy.showTarget,
-        showTrend: legacy.showTrend,
-        visualizationType: legacy.kpiVisualizationType,
-        colorScheme: legacy.kpiColorScheme,
-        metric: legacy.kpiMetric,
-        calculation: legacy.kpiCalculation,
-        timeRange: legacy.kpiTimeRange,
-        valueFontSize: legacy.kpiValueFontSize,
-        valueColor: legacy.kpiValueColor,
-        valueFontWeight: legacy.kpiValueFontWeight,
-        nameFontSize: legacy.kpiNameFontSize,
-        nameColor: legacy.kpiNameColor,
-        nameFontWeight: legacy.kpiNameFontWeight,
-        backgroundColor: legacy.kpiBackgroundColor,
-        borderColor: legacy.kpiBorderColor,
-        borderWidth: legacy.kpiBorderWidth,
-        borderRadius: legacy.kpiBorderRadius,
-        padding: legacy.kpiPadding,
-        textAlign: legacy.kpiTextAlign,
-        shadow: legacy.kpiShadow,
-        changeColor: legacy.kpiChangeColor,
-        targetColor: legacy.kpiTargetColor,
+        name: legacy.kpiName as string,
+        value: legacy.kpiValue as number,
+        unit: legacy.kpiUnit as string,
+        target: legacy.kpiTarget as number,
+        change: legacy.kpiChange as number,
+        trend: legacy.kpiTrend as 'increasing' | 'decreasing' | 'stable',
+        status: legacy.kpiStatus as 'on-target' | 'above-target' | 'below-target' | 'critical',
+        showTarget: legacy.showTarget as boolean,
+        showTrend: legacy.showTrend as boolean,
+        visualizationType: legacy.kpiVisualizationType as 'card' | 'display' | 'gauge',
+        colorScheme: legacy.kpiColorScheme as 'green' | 'blue' | 'orange' | 'red',
+        metric: legacy.kpiMetric as string,
+        calculation: legacy.kpiCalculation as string,
+        timeRange: legacy.kpiTimeRange as string,
+        valueFontSize: legacy.kpiValueFontSize as number,
+        valueColor: legacy.kpiValueColor as string,
+        valueFontWeight: legacy.kpiValueFontWeight as number,
+        nameFontSize: legacy.kpiNameFontSize as number,
+        nameColor: legacy.kpiNameColor as string,
+        nameFontWeight: legacy.kpiNameFontWeight as number,
+        backgroundColor: legacy.kpiBackgroundColor as string,
+        borderColor: legacy.kpiBorderColor as string,
+        borderWidth: legacy.kpiBorderWidth as number,
+        borderRadius: legacy.kpiBorderRadius as number,
+        padding: legacy.kpiPadding as number,
+        textAlign: legacy.kpiTextAlign as 'left' | 'center' | 'right',
+        shadow: legacy.kpiShadow as boolean,
+        changeColor: legacy.kpiChangeColor as string,
+        targetColor: legacy.kpiTargetColor as string,
         ...kpiConfig // Overlay any newer config
       }
     }
@@ -373,10 +372,10 @@ export const compositeActions = {
     console.log('📐 Updating layout via composite for', layout.length, 'widgets')
     
     // Separate layout items by widget type
-    const chartLayouts: any[] = []
-    const kpiLayouts: any[] = []
-    const tableLayouts: any[] = []
-    const legacyLayouts: any[] = []
+    const chartLayouts: Array<{ i: string; x: number; y: number; w: number; h: number }> = []
+    const kpiLayouts: Array<{ i: string; x: number; y: number; w: number; h: number }> = []
+    const tableLayouts: Array<{ i: string; x: number; y: number; w: number; h: number }> = []
+    const legacyLayouts: Array<{ i: string; x: number; y: number; w: number; h: number }> = []
     
     layout.forEach(item => {
       const allWidgets = $allWidgets.get()
