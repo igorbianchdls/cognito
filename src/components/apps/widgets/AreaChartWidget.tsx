@@ -94,7 +94,7 @@ export default function AreaChartWidget({ widget }: AreaChartWidgetProps) {
     <div className="h-full w-full flex flex-col">
       {/* Title and Subtitle */}
       {(chartConfig.showTitle !== false && chartConfig.title) && (
-        <div className="px-2 pt-2">
+        <div style={{ padding: `${chartConfig.titlePadding ?? 8}px` }}>
           <h3 
             className="text-left"
             style={{
@@ -110,7 +110,7 @@ export default function AreaChartWidget({ widget }: AreaChartWidgetProps) {
         </div>
       )}
       {(chartConfig.showSubtitle !== false && chartConfig.subtitle) && (
-        <div className="px-2 pb-2">
+        <div style={{ padding: `${chartConfig.subtitlePadding ?? 8}px` }}>
           <p 
             className="text-left"
             style={{
@@ -127,7 +127,7 @@ export default function AreaChartWidget({ widget }: AreaChartWidgetProps) {
       )}
       
       {/* Chart */}
-      <div className="flex-1">
+      <div className="flex-1" style={{ padding: `${chartConfig.chartPadding ?? 0}px` }}>
         <AreaChart {...chartProps} />
       </div>
     </div>

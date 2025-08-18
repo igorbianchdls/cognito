@@ -445,7 +445,7 @@ export default function WidgetEditor() {
                         {/* Title Styling */}
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-2">Title Styling</label>
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-4 gap-2">
                             <div>
                               <label className="block text-xs text-gray-500 mb-1">Font Size</label>
                               <input
@@ -472,6 +472,17 @@ export default function WidgetEditor() {
                               </select>
                             </div>
                             <div>
+                              <label className="block text-xs text-gray-500 mb-1">Padding</label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="32"
+                                value={(chartConfig as Record<string, unknown>)?.titlePadding as number ?? 8}
+                                onChange={(e) => handleChartConfigChange('titlePadding', parseInt(e.target.value) || 8)}
+                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              />
+                            </div>
+                            <div>
                               <label className="block text-xs text-gray-500 mb-1">Color</label>
                               <input
                                 type="color"
@@ -486,7 +497,7 @@ export default function WidgetEditor() {
                         {/* Subtitle Styling */}
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-2">Subtitle Styling</label>
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-4 gap-2">
                             <div>
                               <label className="block text-xs text-gray-500 mb-1">Font Size</label>
                               <input
@@ -513,6 +524,17 @@ export default function WidgetEditor() {
                               </select>
                             </div>
                             <div>
+                              <label className="block text-xs text-gray-500 mb-1">Padding</label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="32"
+                                value={(chartConfig as Record<string, unknown>)?.subtitlePadding as number ?? 8}
+                                onChange={(e) => handleChartConfigChange('subtitlePadding', parseInt(e.target.value) || 8)}
+                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              />
+                            </div>
+                            <div>
                               <label className="block text-xs text-gray-500 mb-1">Color</label>
                               <input
                                 type="color"
@@ -521,6 +543,22 @@ export default function WidgetEditor() {
                                 className="w-full h-8 border border-gray-300 rounded cursor-pointer"
                               />
                             </div>
+                          </div>
+                        </div>
+                        
+                        {/* Chart Padding */}
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-2">Chart Padding</label>
+                          <div>
+                            <input
+                              type="number"
+                              min="0"
+                              max="32"
+                              value={(chartConfig as Record<string, unknown>)?.chartPadding as number ?? 0}
+                              onChange={(e) => handleChartConfigChange('chartPadding', parseInt(e.target.value) || 0)}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Chart padding in pixels"
+                            />
                           </div>
                         </div>
                       </div>
