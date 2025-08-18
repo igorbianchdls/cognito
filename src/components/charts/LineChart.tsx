@@ -14,6 +14,8 @@ interface LineChartProps extends BaseChartProps {
   pointSize?: number
   curve?: 'linear' | 'cardinal' | 'catmullRom' | 'monotoneX'
   enableArea?: boolean
+  areaOpacity?: number
+  lineWidth?: number
   animate?: boolean
   motionConfig?: 'default' | 'gentle' | 'wobbly' | 'stiff' | 'slow'
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
@@ -29,6 +31,14 @@ interface LineChartProps extends BaseChartProps {
     tickSize?: number
     tickPadding?: number
   }
+  // Labels
+  enableLabel?: boolean
+  labelPosition?: 'start' | 'middle' | 'end'
+  labelSkipWidth?: number
+  labelSkipHeight?: number
+  labelTextColor?: string
+  // Legends
+  legends?: any
 }
 
 export function LineChart({ 
@@ -43,11 +53,19 @@ export function LineChart({
   pointSize,
   curve,
   enableArea,
+  areaOpacity,
+  lineWidth,
   animate,
   motionConfig,
   margin,
   axisBottom,
-  axisLeft
+  axisLeft,
+  enableLabel,
+  labelPosition,
+  labelSkipWidth,
+  labelSkipHeight,
+  labelTextColor,
+  legends
 }: LineChartProps) {
   if (!data || data.length === 0) {
     return <EmptyState />;
@@ -94,10 +112,11 @@ export function LineChart({
         yScale={{ type: 'linear', min: 'auto', max: 'auto' }}
         
         // Linha configurável
-        lineWidth={2}
+        lineWidth={lineWidth ?? 2}
         colors={colors || ['#2563eb']}
         curve={curve || 'cardinal'}
         enableArea={enableArea ?? false}
+        areaOpacity={areaOpacity ?? 0.2}
         
         // Pontos configuráveis
         enablePoints={enablePoints ?? true}
@@ -154,31 +173,67 @@ export function LineChart({
           </div>
         )}
         
-        // Legenda horizontal na parte inferior
-        legends={[
-          {
-            anchor: 'bottom',
-            direction: 'row',
-            justify: false,
-            translateX: 0,
-            translateY: 70,
-            itemsSpacing: 20,
-            itemWidth: 80,
-            itemHeight: 18,
-            itemDirection: 'left-to-right',
-            itemOpacity: 0.8,
-            symbolSize: 12,
-            symbolShape: 'circle',
-            effects: [
-              {
-                on: 'hover',
-                style: {
-                  itemOpacity: 1
-                }
-              }
-            ]
+        // Legendas configuráveis
+        legends={(() => {
+          // Se legends é array (LineLegendProps[]), usar diretamente
+          if (Array.isArray(legends)) {
+            return legends;
           }
-        ]}
+          
+          // Se legends é LegendConfig, converter para LineLegendProps[]
+          if (legends && typeof legends === 'object' && 'enabled' in legends) {
+            return legends.enabled !== false ? [
+              {
+                anchor: legends.anchor || 'bottom',
+                direction: legends.direction || 'row',
+                justify: false,
+                translateX: legends.translateX || 0,
+                translateY: legends.translateY || 70,
+                itemsSpacing: legends.itemsSpacing || 20,
+                itemWidth: legends.itemWidth || 80,
+                itemHeight: legends.itemHeight || 18,
+                itemDirection: 'left-to-right',
+                itemOpacity: 0.8,
+                symbolSize: legends.symbolSize || 12,
+                symbolShape: legends.symbolShape || 'circle',
+                effects: [
+                  {
+                    on: 'hover',
+                    style: {
+                      itemOpacity: 1
+                    }
+                  }
+                ]
+              }
+            ] : [];
+          }
+          
+          // Configuração padrão se legends não especificado
+          return [
+            {
+              anchor: 'bottom',
+              direction: 'row',
+              justify: false,
+              translateX: 0,
+              translateY: 70,
+              itemsSpacing: 20,
+              itemWidth: 80,
+              itemHeight: 18,
+              itemDirection: 'left-to-right',
+              itemOpacity: 0.8,
+              symbolSize: 12,
+              symbolShape: 'circle',
+              effects: [
+                {
+                  on: 'hover',
+                  style: {
+                    itemOpacity: 1
+                  }
+                }
+              ]
+            }
+          ];
+        })()}
       />
     </div>
   );

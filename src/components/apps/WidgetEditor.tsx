@@ -5,8 +5,8 @@ import { $widgets, $selectedWidget, $selectedWidgetId, widgetActions } from '@/s
 import { chartActions } from '@/stores/chartStore'
 import { kpiActions } from '@/stores/kpiStore'
 import { useState, useEffect, useMemo } from 'react'
-import type { ChartWidget, BarChartConfig } from '@/types/chartWidgets'
-import { isChartWidget, isBarChart } from '@/types/chartWidgets'
+import type { ChartWidget, BarChartConfig, LineChartConfig } from '@/types/chartWidgets'
+import { isChartWidget, isBarChart, isLineChart } from '@/types/chartWidgets'
 import { isKPIWidget } from '@/types/kpiWidgets'
 
 export default function WidgetEditor() {
@@ -706,6 +706,196 @@ export default function WidgetEditor() {
                           </div>
                         </div>
                       </CollapsibleSection>
+                    )}
+
+                    {/* Line Chart Specific Options */}
+                    {isLineChart(selectedWidget as ChartWidget) && (
+                      <>
+                        {/* Legends Section for LineChart */}
+                        <CollapsibleSection title="🏛️ Legends" sectionKey="legends">
+                          <div className="space-y-3">
+                            <label className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={(chartConfig as Record<string, unknown>).legends ? 
+                                  ((chartConfig as Record<string, unknown>).legends as Record<string, unknown>).enabled !== false : true}
+                                onChange={(e) => handleChartConfigChange('legends', { 
+                                  ...((chartConfig as Record<string, unknown>).legends as Record<string, unknown> || {}), 
+                                  enabled: e.target.checked 
+                                })}
+                                className="rounded"
+                              />
+                              <span className="text-xs text-gray-600">Enable Legends</span>
+                            </label>
+                            
+                            {((chartConfig as Record<string, unknown>).legends ? 
+                              ((chartConfig as Record<string, unknown>).legends as Record<string, unknown>).enabled !== false : true) && (
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="block text-xs text-gray-500 mb-1">Position (Anchor)</label>
+                                  <select
+                                    value={((chartConfig as Record<string, unknown>).legends as Record<string, unknown>)?.anchor as string || 'bottom'}
+                                    onChange={(e) => handleChartConfigChange('legends', { 
+                                      ...((chartConfig as Record<string, unknown>).legends as Record<string, unknown> || {}), 
+                                      anchor: e.target.value 
+                                    })}
+                                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  >
+                                    <option value="top-left">Top Left</option>
+                                    <option value="top">Top</option>
+                                    <option value="top-right">Top Right</option>
+                                    <option value="right">Right</option>
+                                    <option value="bottom-right">Bottom Right</option>
+                                    <option value="bottom">Bottom</option>
+                                    <option value="bottom-left">Bottom Left</option>
+                                    <option value="left">Left</option>
+                                    <option value="center">Center</option>
+                                  </select>
+                                </div>
+                                
+                                <div>
+                                  <label className="block text-xs text-gray-500 mb-1">Direction</label>
+                                  <select
+                                    value={((chartConfig as Record<string, unknown>).legends as Record<string, unknown>)?.direction as string || 'row'}
+                                    onChange={(e) => handleChartConfigChange('legends', { 
+                                      ...((chartConfig as Record<string, unknown>).legends as Record<string, unknown> || {}), 
+                                      direction: e.target.value 
+                                    })}
+                                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  >
+                                    <option value="row">Row</option>
+                                    <option value="column">Column</option>
+                                  </select>
+                                </div>
+                                
+                                <div>
+                                  <label className="block text-xs text-gray-500 mb-1">Symbol Shape</label>
+                                  <select
+                                    value={((chartConfig as Record<string, unknown>).legends as Record<string, unknown>)?.symbolShape as string || 'circle'}
+                                    onChange={(e) => handleChartConfigChange('legends', { 
+                                      ...((chartConfig as Record<string, unknown>).legends as Record<string, unknown> || {}), 
+                                      symbolShape: e.target.value 
+                                    })}
+                                    className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  >
+                                    <option value="circle">Circle</option>
+                                    <option value="square">Square</option>
+                                    <option value="triangle">Triangle</option>
+                                    <option value="diamond">Diamond</option>
+                                  </select>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div>
+                                    <label className="block text-xs text-gray-500 mb-1">Translate X</label>
+                                    <input
+                                      type="number"
+                                      value={((chartConfig as Record<string, unknown>).legends as Record<string, unknown>)?.translateX as number ?? 0}
+                                      onChange={(e) => handleChartConfigChange('legends', { 
+                                        ...((chartConfig as Record<string, unknown>).legends as Record<string, unknown> || {}), 
+                                        translateX: parseInt(e.target.value) || 0 
+                                      })}
+                                      className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-xs text-gray-500 mb-1">Translate Y</label>
+                                    <input
+                                      type="number"
+                                      value={((chartConfig as Record<string, unknown>).legends as Record<string, unknown>)?.translateY as number ?? 70}
+                                      onChange={(e) => handleChartConfigChange('legends', { 
+                                        ...((chartConfig as Record<string, unknown>).legends as Record<string, unknown> || {}), 
+                                        translateY: parseInt(e.target.value) || 70 
+                                      })}
+                                      className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </CollapsibleSection>
+
+                        {/* Line Chart Specific Options */}
+                        <CollapsibleSection title="📈 Line Chart Options" sectionKey="chartSpecific">
+                          <div className="space-y-3">
+                            <label className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={(chartConfig as LineChartConfig).enablePoints ?? true}
+                                onChange={(e) => handleChartConfigChange('enablePoints', e.target.checked)}
+                                className="rounded"
+                              />
+                              <span className="text-xs text-gray-600">Enable Points</span>
+                            </label>
+                            
+                            {(chartConfig as LineChartConfig).enablePoints !== false && (
+                              <div>
+                                <label className="block text-xs text-gray-500 mb-1">Point Size</label>
+                                <input
+                                  type="number"
+                                  min="1"
+                                  max="20"
+                                  value={(chartConfig as LineChartConfig).pointSize ?? 4}
+                                  onChange={(e) => handleChartConfigChange('pointSize', parseInt(e.target.value) || 4)}
+                                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                              </div>
+                            )}
+                            
+                            <div>
+                              <label className="block text-xs text-gray-500 mb-1">Line Width</label>
+                              <input
+                                type="number"
+                                min="1"
+                                max="10"
+                                value={(chartConfig as LineChartConfig).lineWidth ?? 2}
+                                onChange={(e) => handleChartConfigChange('lineWidth', parseInt(e.target.value) || 2)}
+                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              />
+                            </div>
+                            
+                            <div>
+                              <label className="block text-xs text-gray-500 mb-1">Curve Type</label>
+                              <select
+                                value={(chartConfig as LineChartConfig).curve || 'cardinal'}
+                                onChange={(e) => handleChartConfigChange('curve', e.target.value)}
+                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              >
+                                <option value="linear">Linear</option>
+                                <option value="cardinal">Cardinal</option>
+                                <option value="catmullRom">Catmull Rom</option>
+                                <option value="monotoneX">Monotone X</option>
+                              </select>
+                            </div>
+                            
+                            <label className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={(chartConfig as LineChartConfig).enableArea ?? false}
+                                onChange={(e) => handleChartConfigChange('enableArea', e.target.checked)}
+                                className="rounded"
+                              />
+                              <span className="text-xs text-gray-600">Enable Area</span>
+                            </label>
+                            
+                            {(chartConfig as LineChartConfig).enableArea && (
+                              <div>
+                                <label className="block text-xs text-gray-500 mb-1">Area Opacity</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="1"
+                                  step="0.1"
+                                  value={(chartConfig as LineChartConfig).areaOpacity ?? 0.2}
+                                  onChange={(e) => handleChartConfigChange('areaOpacity', parseFloat(e.target.value) || 0.2)}
+                                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </CollapsibleSection>
+                      </>
                     )}
 
                     {/* Animation Section */}

@@ -66,10 +66,13 @@ export default function LineChartWidget({ widget }: LineChartWidgetProps) {
     enableGridY: chartConfig.enableGridY ?? true,
     enablePoints: chartConfig.enablePoints ?? true,
     pointSize: chartConfig.pointSize ?? 4,
+    lineWidth: chartConfig.lineWidth ?? 2,
     curve: chartConfig.curve || 'cardinal',
     enableArea: chartConfig.enableArea ?? false,
+    areaOpacity: chartConfig.areaOpacity ?? 0.2,
     animate: chartConfig.animate ?? false,
     motionConfig: chartConfig.motionConfig || 'gentle',
+    legends: chartConfig.legends,
     margin: {
       top: chartConfig.margin?.top ?? 12,
       right: chartConfig.margin?.right ?? 12,
