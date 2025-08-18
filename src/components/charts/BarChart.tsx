@@ -57,10 +57,15 @@ export function BarChart(props: BarChartProps) {
     colors,
     borderRadius,
     borderWidth,
+    borderColor,
     padding,
     groupMode,
     layout,
     enableLabel,
+    labelPosition,
+    labelSkipWidth,
+    labelSkipHeight,
+    labelTextColor,
     animate,
     motionConfig,
     axisBottom,
@@ -159,7 +164,7 @@ export function BarChart(props: BarChartProps) {
           
           // Bordas configuráveis
           borderRadius={borderRadius ?? 4}
-          borderColor={{ from: 'color', modifiers: [['darker', 0.3]] }}
+          borderColor={borderColor ? borderColor : { from: 'color', modifiers: [['darker', 0.3]] }}
           borderWidth={borderWidth ?? 0}
           
           // Eixos configuráveis
@@ -184,6 +189,10 @@ export function BarChart(props: BarChartProps) {
           
           // Labels configuráveis
           enableLabel={enableLabel ?? false}
+          labelPosition={labelPosition || 'middle'}
+          labelSkipWidth={labelSkipWidth ?? 0}
+          labelSkipHeight={labelSkipHeight ?? 0}
+          labelTextColor={labelTextColor || '#374151'}
           
           animate={animate ?? false}
           motionConfig={motionConfig || "gentle"}

@@ -24,6 +24,17 @@ export default function WidgetEditor() {
     color: selectedWidget?.color || '#3B82F6'
   })
 
+  // State for collapsible sections
+  const [expandedSections, setExpandedSections] = useState({
+    colors: true,
+    grid: false,
+    labels: false,
+    legends: false,
+    axes: false,
+    chartSpecific: true,
+    animation: false
+  })
+
   // Computed widget-specific configurations - correct access to adapted widget
   const chartConfig = useMemo(() => {
     if (!selectedWidget || !isChartWidget(selectedWidget)) return {}
@@ -150,6 +161,42 @@ export default function WidgetEditor() {
   const handleChartColorsChange = (colors: string[]) => {
     handleChartConfigChange('colors', colors)
   }
+
+  // Toggle section expansion
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }))
+  }
+
+  // Collapsible section component
+  const CollapsibleSection = ({ 
+    title, 
+    sectionKey, 
+    children 
+  }: { 
+    title: string
+    sectionKey: keyof typeof expandedSections
+    children: React.ReactNode 
+  }) => (
+    <div className="mb-4">
+      <button
+        onClick={() => toggleSection(sectionKey)}
+        className="w-full flex items-center justify-between p-2 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 transition-colors"
+      >
+        <span>{title}</span>
+        <span className={`transform transition-transform ${expandedSections[sectionKey] ? 'rotate-90' : ''}`}>
+          ▶
+        </span>
+      </button>
+      {expandedSections[sectionKey] && (
+        <div className="mt-3 pl-3 border-l-2 border-gray-200">
+          {children}
+        </div>
+      )}
+    </div>
+  )
 
   if (widgets.length === 0) {
     return (
@@ -308,88 +355,171 @@ export default function WidgetEditor() {
                 {/* Chart-Specific Configuration */}
                 {selectedWidget && isChartWidget(selectedWidget) && (
                   <div className="border-t pt-4 mt-4">
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">Chart Configuration</h4>
+                    <h4 className="text-sm font-medium text-gray-700 mb-4">Chart Configuration</h4>
                     
-                    {/* Chart Colors */}
-                    <div className="mb-4">
-                      <label className="block text-xs font-medium text-gray-600 mb-2">Chart Colors</label>
-                      <div className="space-y-2">
-                        {(chartConfig.colors || ['#2563eb']).map((color, index) => (
-                          <div key={index} className="flex gap-2">
-                            <input
-                              type="color"
-                              value={color}
-                              onChange={(e) => {
-                                const newColors = [...(chartConfig.colors || ['#2563eb'])]
-                                newColors[index] = e.target.value
+                    {/* Colors & Styling Section */}
+                    <CollapsibleSection title="🎨 Colors & Styling" sectionKey="colors">
+                      <div className="space-y-3">
+                        {/* Chart Colors */}
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-2">Chart Colors</label>
+                          <div className="space-y-2">
+                            {(chartConfig.colors || ['#2563eb']).map((color, index) => (
+                              <div key={index} className="flex gap-2">
+                                <input
+                                  type="color"
+                                  value={color}
+                                  onChange={(e) => {
+                                    const newColors = [...(chartConfig.colors || ['#2563eb'])]
+                                    newColors[index] = e.target.value
+                                    handleChartColorsChange(newColors)
+                                  }}
+                                  className="w-10 h-8 border border-gray-300 rounded cursor-pointer"
+                                />
+                                <input
+                                  type="text"
+                                  value={color}
+                                  onChange={(e) => {
+                                    const newColors = [...(chartConfig.colors || ['#2563eb'])]
+                                    newColors[index] = e.target.value
+                                    handleChartColorsChange(newColors)
+                                  }}
+                                  className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                                {(chartConfig.colors || []).length > 1 && (
+                                  <button
+                                    onClick={() => {
+                                      const newColors = (chartConfig.colors || []).filter((_, i) => i !== index)
+                                      handleChartColorsChange(newColors)
+                                    }}
+                                    className="px-2 py-1 text-red-600 hover:bg-red-50 rounded text-sm"
+                                  >
+                                    ×
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                            <button
+                              onClick={() => {
+                                const newColors = [...(chartConfig.colors || ['#2563eb']), '#10b981']
                                 handleChartColorsChange(newColors)
                               }}
-                              className="w-10 h-8 border border-gray-300 rounded cursor-pointer"
-                            />
-                            <input
-                              type="text"
-                              value={color}
-                              onChange={(e) => {
-                                const newColors = [...(chartConfig.colors || ['#2563eb'])]
-                                newColors[index] = e.target.value
-                                handleChartColorsChange(newColors)
-                              }}
-                              className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                            {(chartConfig.colors || []).length > 1 && (
-                              <button
-                                onClick={() => {
-                                  const newColors = (chartConfig.colors || []).filter((_, i) => i !== index)
-                                  handleChartColorsChange(newColors)
-                                }}
-                                className="px-2 py-1 text-red-600 hover:bg-red-50 rounded text-sm"
-                              >
-                                ×
-                              </button>
-                            )}
+                              className="text-xs text-blue-600 hover:text-blue-700"
+                            >
+                              + Add Color
+                            </button>
                           </div>
-                        ))}
-                        <button
-                          onClick={() => {
-                            const newColors = [...(chartConfig.colors || ['#2563eb']), '#10b981']
-                            handleChartColorsChange(newColors)
-                          }}
-                          className="text-xs text-blue-600 hover:text-blue-700"
-                        >
-                          + Add Color
-                        </button>
-                      </div>
-                    </div>
+                        </div>
 
-                    {/* Grid Options */}
-                    <div className="mb-4">
-                      <label className="block text-xs font-medium text-gray-600 mb-2">Grid</label>
-                      <div className="space-y-2">
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={chartConfig.enableGridX || false}
-                            onChange={(e) => handleChartConfigChange('enableGridX', e.target.checked)}
-                            className="rounded"
-                          />
-                          <span className="text-xs text-gray-600">Enable X Grid</span>
-                        </label>
-                        <label className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={chartConfig.enableGridY !== false}
-                            onChange={(e) => handleChartConfigChange('enableGridY', e.target.checked)}
-                            className="rounded"
-                          />
-                          <span className="text-xs text-gray-600">Enable Y Grid</span>
-                        </label>
+                        {/* Border & Styling */}
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Border Radius</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={chartConfig.borderRadius ?? 4}
+                              onChange={(e) => handleChartConfigChange('borderRadius', parseInt(e.target.value) || 0)}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Border Width</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={chartConfig.borderWidth ?? 0}
+                              onChange={(e) => handleChartConfigChange('borderWidth', parseInt(e.target.value) || 0)}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    </CollapsibleSection>
+
+                    {/* Grid & Axes Section */}
+                    <CollapsibleSection title="📐 Grid & Axes" sectionKey="grid">
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={chartConfig.enableGridX || false}
+                              onChange={(e) => handleChartConfigChange('enableGridX', e.target.checked)}
+                              className="rounded"
+                            />
+                            <span className="text-xs text-gray-600">Enable X Grid</span>
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={chartConfig.enableGridY !== false}
+                              onChange={(e) => handleChartConfigChange('enableGridY', e.target.checked)}
+                              className="rounded"
+                            />
+                            <span className="text-xs text-gray-600">Enable Y Grid</span>
+                          </label>
+                        </div>
+                      </div>
+                    </CollapsibleSection>
+
+                    {/* Labels Section */}
+                    <CollapsibleSection title="🏷️ Labels" sectionKey="labels">
+                      <div className="space-y-3">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={chartConfig.enableLabel || false}
+                            onChange={(e) => handleChartConfigChange('enableLabel', e.target.checked)}
+                            className="rounded"
+                          />
+                          <span className="text-xs text-gray-600">Enable Labels</span>
+                        </label>
+                        
+                        {chartConfig.enableLabel && (
+                          <div className="space-y-2">
+                            <div>
+                              <label className="block text-xs text-gray-500 mb-1">Label Position</label>
+                              <select
+                                value={chartConfig.labelPosition || 'middle'}
+                                onChange={(e) => handleChartConfigChange('labelPosition', e.target.value)}
+                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              >
+                                <option value="start">Start</option>
+                                <option value="middle">Middle</option>
+                                <option value="end">End</option>
+                              </select>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-xs text-gray-500 mb-1">Skip Width</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={chartConfig.labelSkipWidth ?? 0}
+                                  onChange={(e) => handleChartConfigChange('labelSkipWidth', parseInt(e.target.value) || 0)}
+                                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-gray-500 mb-1">Skip Height</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={chartConfig.labelSkipHeight ?? 0}
+                                  onChange={(e) => handleChartConfigChange('labelSkipHeight', parseInt(e.target.value) || 0)}
+                                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </CollapsibleSection>
 
                     {/* Chart Type Specific Options */}
                     {isBarChart(selectedWidget as ChartWidget) && (
-                      <div className="mb-4">
-                        <label className="block text-xs font-medium text-gray-600 mb-2">Bar Chart Options</label>
+                      <CollapsibleSection title="📊 Bar Chart Options" sectionKey="chartSpecific">
                         <div className="space-y-2">
                           <div>
                             <label className="block text-xs text-gray-500 mb-1">Group Mode</label>
@@ -414,12 +544,11 @@ export default function WidgetEditor() {
                             </select>
                           </div>
                         </div>
-                      </div>
+                      </CollapsibleSection>
                     )}
 
-                    {/* Animation Options */}
-                    <div className="mb-4">
-                      <label className="block text-xs font-medium text-gray-600 mb-2">Animation</label>
+                    {/* Animation Section */}
+                    <CollapsibleSection title="🎬 Animation" sectionKey="animation">
                       <div className="space-y-2">
                         <label className="flex items-center gap-2">
                           <input
@@ -446,7 +575,7 @@ export default function WidgetEditor() {
                           </div>
                         )}
                       </div>
-                    </div>
+                    </CollapsibleSection>
                   </div>
                 )}
 

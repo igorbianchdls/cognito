@@ -1,5 +1,19 @@
 import { BaseWidget } from './baseWidget'
 
+// Legend configuration interface
+export interface LegendConfig {
+  enabled?: boolean
+  anchor?: 'top' | 'top-right' | 'right' | 'bottom-right' | 'bottom' | 'bottom-left' | 'left' | 'top-left'
+  direction?: 'row' | 'column'
+  translateX?: number
+  translateY?: number
+  itemWidth?: number
+  itemHeight?: number
+  itemsSpacing?: number
+  symbolSize?: number
+  symbolShape?: 'circle' | 'square' | 'triangle'
+}
+
 // Base chart configuration interface
 export interface BaseChartConfig {
   // Visual & Colors
@@ -7,18 +21,23 @@ export interface BaseChartConfig {
   backgroundColor?: string
   borderRadius?: number
   borderWidth?: number
+  borderColor?: string
   
   // Grid & Axes
   enableGridX?: boolean
   enableGridY?: boolean
   axisBottom?: {
     legend?: string
+    legendPosition?: 'start' | 'middle' | 'end'
+    legendOffset?: number
     tickRotation?: number
     tickSize?: number
     tickPadding?: number
+    format?: string
   }
   axisLeft?: {
     legend?: string
+    legendOffset?: number
     tickRotation?: number
     tickSize?: number
     tickPadding?: number
@@ -37,10 +56,17 @@ export interface BaseChartConfig {
   // Labels & Text
   enableLabel?: boolean
   labelTextColor?: string
+  labelPosition?: 'start' | 'middle' | 'end'
+  labelSkipWidth?: number
+  labelSkipHeight?: number
+  labelFormat?: string
   title?: string
   subtitle?: string
   titleFontSize?: number
   titleColor?: string
+  
+  // Legends
+  legends?: LegendConfig
   
   // Animation
   animate?: boolean
