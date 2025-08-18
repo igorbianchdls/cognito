@@ -99,7 +99,7 @@ export default function WidgetEditor() {
     }
   }, [selectedWidgetId]) // Only sync when widget ID changes, not object reference
 
-  // Sync editKPIForm with kpiConfig when widget changes - only on widget ID change
+  // Sync editKPIForm with kpiConfig when widget changes - specific dependencies
   useEffect(() => {
     if (selectedWidget && isKPIWidget(selectedWidget)) {
       const config = selectedWidget.config?.kpiConfig || {}
@@ -108,7 +108,11 @@ export default function WidgetEditor() {
         unit: config.unit || ''
       })
     }
-  }, [selectedWidgetId]) // Only sync when widget ID changes, not object reference
+  }, [
+    selectedWidgetId,
+    selectedWidget?.config?.kpiConfig?.name,
+    selectedWidget?.config?.kpiConfig?.unit
+  ]) // Specific dependencies for stable sync
 
 
   // Debug: Monitor re-renders and selectedWidget changes
