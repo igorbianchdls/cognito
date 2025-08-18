@@ -1,84 +1,68 @@
-import { atom, computed } from 'nanostores'
+// Legacy widgetStore.ts - Now acts as a facade over specialized stores
+// This maintains backward compatibility while routing to the new architecture
+
+import { compositeActions, $allWidgets, $selectedWidgetId, $selectedWidget } from './compositeStore'
 import type { DroppedWidget } from '@/types/widget'
 
-// Main widgets atom
-export const $widgets = atom<DroppedWidget[]>([])
+// Export the composite stores as the "main" widgets store for backward compatibility
+export const $widgets = $allWidgets
+export { $selectedWidgetId, $selectedWidget }
 
-// Selected widget atom
-export const $selectedWidgetId = atom<string | null>(null)
-
-// Computed for selected widget
-export const $selectedWidget = computed([$widgets, $selectedWidgetId], (widgets, selectedId) => {
-  if (!selectedId) return null
-  return widgets.find(w => w.i === selectedId) || null
-})
-
-// Actions
+// Export legacy actions that route to the new composite actions
 export const widgetActions = {
-  // Set all widgets
+  // Set all widgets - routes to composite with migration
   setWidgets: (widgets: DroppedWidget[]) => {
-    console.log('🔄 Setting widgets:', widgets.length)
-    $widgets.set(widgets)
+    console.log('🔄 [LEGACY] Setting widgets:', widgets.length)
+    compositeActions.setWidgets(widgets)
   },
 
-  // Add widget
+  // Add widget - routes to composite with type detection
   addWidget: (widget: DroppedWidget) => {
-    console.log('➕ Adding widget:', widget.name)
-    const currentWidgets = $widgets.get()
-    $widgets.set([...currentWidgets, widget])
+    console.log('➕ [LEGACY] Adding widget:', widget.name)
+    compositeActions.addWidget(widget)
   },
 
-  // Edit widget
+  // Edit widget - routes to composite with type detection
   editWidget: (widgetId: string, changes: Partial<DroppedWidget>) => {
-    console.log('✏️ Editing widget:', { widgetId, changes })
-    const currentWidgets = $widgets.get()
+    console.log('✏️ [LEGACY] Editing widget:', { widgetId, changes })
     
-    // Special handling for delete
+    // Special handling for delete (legacy compatibility)
     if ('_delete' in changes) {
-      console.log('🗑️ Deleting widget:', widgetId)
-      const newWidgets = currentWidgets.filter(w => w.i !== widgetId)
-      $widgets.set(newWidgets)
-      // Clear selection if deleted widget was selected
-      if ($selectedWidgetId.get() === widgetId) {
-        $selectedWidgetId.set(null)
-      }
+      console.log('🗑️ [LEGACY] Deleting widget via edit:', widgetId)
+      compositeActions.removeWidget(widgetId)
       return
     }
     
     // Regular edit
-    const updatedWidgets = currentWidgets.map(w => 
-      w.i === widgetId ? { ...w, ...changes } : w
-    )
-    $widgets.set(updatedWidgets)
+    compositeActions.editWidget(widgetId, changes)
   },
 
-  // Remove widget
+  // Remove widget - routes to composite
   removeWidget: (widgetId: string) => {
-    console.log('🗑️ Removing widget:', widgetId)
-    const currentWidgets = $widgets.get()
-    const newWidgets = currentWidgets.filter(w => w.i !== widgetId)
-    $widgets.set(newWidgets)
-    
-    // Clear selection if removed widget was selected
-    if ($selectedWidgetId.get() === widgetId) {
-      $selectedWidgetId.set(null)
-    }
+    console.log('🗑️ [LEGACY] Removing widget:', widgetId)
+    compositeActions.removeWidget(widgetId)
   },
 
-  // Select widget
+  // Select widget - routes to composite
   selectWidget: (widgetId: string | null) => {
-    console.log('🎯 Selecting widget:', widgetId)
-    $selectedWidgetId.set(widgetId)
+    console.log('🎯 [LEGACY] Selecting widget:', widgetId)
+    compositeActions.selectWidget(widgetId)
   },
 
-  // Update layout (for react-grid-layout)
+  // Update layout - routes to composite
   updateLayout: (layout: Array<{ i: string; x: number; y: number; w: number; h: number }>) => {
-    console.log('📐 Updating layout for', layout.length, 'widgets')
-    const currentWidgets = $widgets.get()
-    const updatedWidgets = currentWidgets.map(widget => {
-      const layoutItem = layout.find(l => l.i === widget.i)
-      return layoutItem ? { ...widget, ...layoutItem } : widget
-    })
-    $widgets.set(updatedWidgets)
+    console.log('📐 [LEGACY] Updating layout for', layout.length, 'widgets')
+    compositeActions.updateLayout(layout)
   }
 }
+
+// Re-export specialized stores for direct access when needed
+export { chartActions } from './chartStore'
+export { kpiActions } from './kpiStore' 
+export { tableActions } from './tableStore'
+export { compositeActions, migrationUtils } from './compositeStore'
+
+// Export specialized store atoms for granular subscriptions
+export { $chartWidgets, $selectedChartId } from './chartStore'
+export { $kpiWidgets, $selectedKPIId } from './kpiStore'
+export { $tableWidgets, $selectedTableId } from './tableStore'
