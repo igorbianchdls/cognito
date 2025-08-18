@@ -5,6 +5,7 @@ import { BaseChartProps } from './types';
 import { nivoTheme } from './theme';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
+import type { LegendConfig } from '@/types/chartWidgets';
 
 interface LineChartProps extends BaseChartProps {
   colors?: string[]
@@ -38,7 +39,7 @@ interface LineChartProps extends BaseChartProps {
   labelSkipHeight?: number
   labelTextColor?: string
   // Legends
-  legends?: any
+  legends?: LegendConfig | Record<string, unknown>[]
 }
 
 export function LineChart({ 
@@ -174,10 +175,11 @@ export function LineChart({
         )}
         
         // Legendas configuráveis
+        // @ts-expect-error - Nivo legend type compatibility
         legends={(() => {
-          // Se legends é array (LineLegendProps[]), usar diretamente
+          // Se legends é array, usar diretamente
           if (Array.isArray(legends)) {
-            return legends;
+            return legends as any;
           }
           
           // Se legends é LegendConfig, converter para LineLegendProps[]
