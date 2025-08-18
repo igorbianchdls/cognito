@@ -4,7 +4,7 @@ import { useStore } from '@nanostores/react'
 import { $widgets, $selectedWidget, $selectedWidgetId, widgetActions } from '@/stores/widgetStore'
 import { chartActions } from '@/stores/chartStore'
 import { kpiActions } from '@/stores/kpiStore'
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import type { ChartWidget, BarChartConfig, LineChartConfig, PieChartConfig } from '@/types/chartWidgets'
 import { isChartWidget, isBarChart, isLineChart, isPieChart } from '@/types/chartWidgets'
 import { isKPIWidget } from '@/types/kpiWidgets'
@@ -39,12 +39,12 @@ export default function WidgetEditor() {
     kpiDisplay: false
   })
 
-  // Local state for KPI text fields to prevent re-render issues during typing
-  const [kpiTextFields, setKpiTextFields] = useState({
+  // KPI form state - following same pattern as editForm for charts
+  const [editKPIForm, setEditKPIForm] = useState({
     name: '',
     unit: ''
   })
-  const debounceTimeout = useRef<NodeJS.Timeout | null>(null)
+  const kpiDebounceTimeout = useRef<NodeJS.Timeout | null>(null)
 
   // Computed widget-specific configurations - correct access to adapted widget
   const chartConfig = useMemo(() => {
@@ -100,22 +100,22 @@ export default function WidgetEditor() {
     }
   }, [selectedWidgetId, selectedWidget]) // Include selectedWidget to fix dependency warning
 
-  // Sync KPI text fields with kpiConfig when widget changes
+  // Sync editKPIForm with kpiConfig when widget changes (same pattern as editForm)
   useEffect(() => {
     if (selectedWidget && isKPIWidget(selectedWidget)) {
       const config = selectedWidget.config?.kpiConfig || {}
-      setKpiTextFields({
+      setEditKPIForm({
         name: config.name || '',
         unit: config.unit || ''
       })
     }
-  }, [selectedWidget?.i]) // Use ID to avoid unnecessary updates
+  }, [selectedWidgetId, selectedWidget]) // Same dependencies as editForm sync
 
   // Cleanup debounce timeout on unmount
   useEffect(() => {
     return () => {
-      if (debounceTimeout.current) {
-        clearTimeout(debounceTimeout.current)
+      if (kpiDebounceTimeout.current) {
+        clearTimeout(kpiDebounceTimeout.current)
       }
     }
   }, [])
@@ -171,6 +171,44 @@ export default function WidgetEditor() {
     }))
   }
 
+  // Handle KPI form changes - local state only like charts
+  const handleKPIFormChange = (field: string, value: string) => {
+    setEditKPIForm(prev => ({
+      ...prev,
+      [field]: value
+    }))
+    
+    // Auto-save with debounce - clear existing timeout
+    if (kpiDebounceTimeout.current) {
+      clearTimeout(kpiDebounceTimeout.current)
+    }
+    
+    // Set new timeout to save after user stops typing
+    kpiDebounceTimeout.current = setTimeout(() => {
+      handleKPIFormSave()
+    }, 500) // 500ms debounce for auto-save
+  }
+
+  // Save KPI form to store (same pattern as handleUpdateWidget)
+  const handleKPIFormSave = () => {
+    if (!selectedWidget || !isKPIWidget(selectedWidget)) return
+    
+    console.log('💾 Saving KPI form changes:', editKPIForm)
+    kpiActions.updateKPIConfig(selectedWidget.i, {
+      name: editKPIForm.name,
+      unit: editKPIForm.unit
+    })
+  }
+
+  // Handle immediate save on blur
+  const handleKPIFormBlur = () => {
+    if (kpiDebounceTimeout.current) {
+      clearTimeout(kpiDebounceTimeout.current)
+      kpiDebounceTimeout.current = null
+    }
+    handleKPIFormSave()
+  }
+
   // Handle chart configuration changes - direct to store
   const handleChartConfigChange = (field: string, value: unknown) => {
     console.log('⚙️ handleChartConfigChange ENTRADA:', { field, value })
@@ -211,39 +249,6 @@ export default function WidgetEditor() {
     }
   }
 
-  // Debounced handler for KPI text fields to prevent re-render issues
-  const handleKPITextFieldChange = useCallback((field: keyof typeof kpiTextFields, value: string) => {
-    // Update local state immediately for responsive UI
-    setKpiTextFields(prev => ({ ...prev, [field]: value }))
-    
-    // Clear existing timeout
-    if (debounceTimeout.current) {
-      clearTimeout(debounceTimeout.current)
-    }
-    
-    // Set new timeout to update store after user stops typing
-    debounceTimeout.current = setTimeout(() => {
-      if (selectedWidget && isKPIWidget(selectedWidget)) {
-        console.log('⚙️ WidgetEditor debounced KPI text update:', { field, value })
-        kpiActions.updateKPIConfig(selectedWidget.i, { [field]: value })
-      }
-    }, 300) // 300ms debounce
-  }, [selectedWidget])
-
-  // Handler for immediate KPI text field updates (onBlur)
-  const handleKPITextFieldBlur = useCallback((field: keyof typeof kpiTextFields) => {
-    if (debounceTimeout.current) {
-      clearTimeout(debounceTimeout.current)
-      debounceTimeout.current = null
-    }
-    
-    // Apply change immediately on blur
-    const value = kpiTextFields[field]
-    if (selectedWidget && isKPIWidget(selectedWidget)) {
-      console.log('⚙️ WidgetEditor immediate KPI text update (blur):', { field, value })
-      kpiActions.updateKPIConfig(selectedWidget.i, { [field]: value })
-    }
-  }, [kpiTextFields, selectedWidget])
 
   // Handle color array changes for charts
   const handleChartColorsChange = (colors: string[]) => {
@@ -1008,9 +1013,9 @@ export default function WidgetEditor() {
                           <label className="block text-xs font-medium text-gray-600 mb-1">KPI Name</label>
                           <input
                             type="text"
-                            value={kpiTextFields.name}
-                            onChange={(e) => handleKPITextFieldChange('name', e.target.value)}
-                            onBlur={() => handleKPITextFieldBlur('name')}
+                            value={editKPIForm.name}
+                            onChange={(e) => handleKPIFormChange('name', e.target.value)}
+                            onBlur={handleKPIFormBlur}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Sales Revenue"
                           />
@@ -1044,9 +1049,9 @@ export default function WidgetEditor() {
                             <label className="block text-xs font-medium text-gray-600 mb-1">Unit</label>
                             <input
                               type="text"
-                              value={kpiTextFields.unit}
-                              onChange={(e) => handleKPITextFieldChange('unit', e.target.value)}
-                              onBlur={() => handleKPITextFieldBlur('unit')}
+                              value={editKPIForm.unit}
+                              onChange={(e) => handleKPIFormChange('unit', e.target.value)}
+                              onBlur={handleKPIFormBlur}
                               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               placeholder="$, %, units"
                             />
