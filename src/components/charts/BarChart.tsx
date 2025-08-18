@@ -146,6 +146,10 @@ export function BarChart(props: BarChartProps) {
           keys={['value']}
           indexBy="id"
           
+          // Layout configurável
+          layout={layout || 'vertical'}
+          groupMode={groupMode || 'grouped'}
+          
           // Margins com espaço para legenda na parte inferior
           margin={margin}
           padding={padding ?? 0.2}
