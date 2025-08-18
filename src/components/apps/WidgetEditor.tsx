@@ -438,7 +438,7 @@ export default function WidgetEditor() {
                           <label className="block text-xs font-medium text-gray-600 mb-1">Title</label>
                           <input
                             type="text"
-                            value={chartConfig.title || ''}
+                            value={(chartConfig as any)?.title || ''}
                             onChange={(e) => handleChartConfigChange('title', e.target.value)}
                             className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Enter chart title"
@@ -448,7 +448,7 @@ export default function WidgetEditor() {
                           <label className="block text-xs font-medium text-gray-600 mb-1">Subtitle</label>
                           <input
                             type="text"
-                            value={chartConfig.subtitle || ''}
+                            value={(chartConfig as any)?.subtitle || ''}
                             onChange={(e) => handleChartConfigChange('subtitle', e.target.value)}
                             className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Enter chart subtitle"
@@ -458,7 +458,7 @@ export default function WidgetEditor() {
                           <label className="flex items-center gap-2">
                             <input
                               type="checkbox"
-                              checked={chartConfig.showTitle !== false}
+                              checked={(chartConfig as any)?.showTitle !== false}
                               onChange={(e) => handleChartConfigChange('showTitle', e.target.checked)}
                               className="rounded"
                             />
@@ -467,7 +467,7 @@ export default function WidgetEditor() {
                           <label className="flex items-center gap-2">
                             <input
                               type="checkbox"
-                              checked={chartConfig.showSubtitle !== false}
+                              checked={(chartConfig as any)?.showSubtitle !== false}
                               onChange={(e) => handleChartConfigChange('showSubtitle', e.target.checked)}
                               className="rounded"
                             />
