@@ -430,6 +430,53 @@ export default function WidgetEditor() {
                   <div className="border-t pt-4 mt-4">
                     <h4 className="text-sm font-medium text-gray-700 mb-4">Chart Configuration</h4>
                     
+                    {/* Title & Description */}
+                    <div>
+                      <h5 className="text-lg font-bold text-gray-700 mb-3 mt-2">📝 Title & Description</h5>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Title</label>
+                          <input
+                            type="text"
+                            value={chartConfig.title || ''}
+                            onChange={(e) => handleChartConfigChange('title', e.target.value)}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Enter chart title"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Subtitle</label>
+                          <input
+                            type="text"
+                            value={chartConfig.subtitle || ''}
+                            onChange={(e) => handleChartConfigChange('subtitle', e.target.value)}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Enter chart subtitle"
+                          />
+                        </div>
+                        <div className="flex gap-4">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={chartConfig.showTitle !== false}
+                              onChange={(e) => handleChartConfigChange('showTitle', e.target.checked)}
+                              className="rounded"
+                            />
+                            <span className="text-xs text-gray-600">Show Title</span>
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={chartConfig.showSubtitle !== false}
+                              onChange={(e) => handleChartConfigChange('showSubtitle', e.target.checked)}
+                              className="rounded"
+                            />
+                            <span className="text-xs text-gray-600">Show Subtitle</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    
                     {/* Colors & Styling */}
                     <div>
                       <h5 className="text-lg font-bold text-gray-700 mb-3 mt-2">🎨 Colors & Styling</h5>

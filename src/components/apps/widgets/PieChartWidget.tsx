@@ -86,8 +86,27 @@ export default function PieChartWidget({ widget }: PieChartWidgetProps) {
   }
 
   return (
-    <div className="h-full w-full">
-      <PieChart {...chartProps} />
+    <div className="h-full w-full flex flex-col">
+      {/* Title and Subtitle */}
+      {(chartConfig.showTitle !== false && chartConfig.title) && (
+        <div className="px-2 pt-2">
+          <h3 className="text-lg font-bold text-gray-900 text-left">
+            {chartConfig.title}
+          </h3>
+        </div>
+      )}
+      {(chartConfig.showSubtitle !== false && chartConfig.subtitle) && (
+        <div className="px-2 pb-2">
+          <p className="text-sm text-gray-600 text-left">
+            {chartConfig.subtitle}
+          </p>
+        </div>
+      )}
+      
+      {/* Chart */}
+      <div className="flex-1">
+        <PieChart {...chartProps} />
+      </div>
     </div>
   )
 }

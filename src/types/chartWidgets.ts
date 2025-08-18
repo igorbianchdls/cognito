@@ -60,8 +60,12 @@ export interface BaseChartConfig {
   labelSkipWidth?: number
   labelSkipHeight?: number
   labelFormat?: string
+  
+  // Title & Description
   title?: string
   subtitle?: string
+  showTitle?: boolean
+  showSubtitle?: boolean
   titleFontSize?: number
   titleColor?: string
   
