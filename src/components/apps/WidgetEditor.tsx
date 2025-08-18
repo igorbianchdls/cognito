@@ -418,7 +418,7 @@ export default function WidgetEditor() {
                             <input
                               type="number"
                               min="0"
-                              value={chartConfig.borderRadius ?? 4}
+                              value={(chartConfig as any).borderRadius ?? 4}
                               onChange={(e) => handleChartConfigChange('borderRadius', parseInt(e.target.value) || 0)}
                               className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
@@ -428,7 +428,7 @@ export default function WidgetEditor() {
                             <input
                               type="number"
                               min="0"
-                              value={chartConfig.borderWidth ?? 0}
+                              value={(chartConfig as any).borderWidth ?? 0}
                               onChange={(e) => handleChartConfigChange('borderWidth', parseInt(e.target.value) || 0)}
                               className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
@@ -469,19 +469,19 @@ export default function WidgetEditor() {
                         <label className="flex items-center gap-2">
                           <input
                             type="checkbox"
-                            checked={chartConfig.enableLabel || false}
+                            checked={(chartConfig as any).enableLabel || false}
                             onChange={(e) => handleChartConfigChange('enableLabel', e.target.checked)}
                             className="rounded"
                           />
                           <span className="text-xs text-gray-600">Enable Labels</span>
                         </label>
                         
-                        {chartConfig.enableLabel && (
+                        {(chartConfig as any).enableLabel && (
                           <div className="space-y-2">
                             <div>
                               <label className="block text-xs text-gray-500 mb-1">Label Position</label>
                               <select
-                                value={chartConfig.labelPosition || 'middle'}
+                                value={(chartConfig as any).labelPosition || 'middle'}
                                 onChange={(e) => handleChartConfigChange('labelPosition', e.target.value)}
                                 className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               >
@@ -496,7 +496,7 @@ export default function WidgetEditor() {
                                 <input
                                   type="number"
                                   min="0"
-                                  value={chartConfig.labelSkipWidth ?? 0}
+                                  value={(chartConfig as any).labelSkipWidth ?? 0}
                                   onChange={(e) => handleChartConfigChange('labelSkipWidth', parseInt(e.target.value) || 0)}
                                   className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
@@ -506,7 +506,7 @@ export default function WidgetEditor() {
                                 <input
                                   type="number"
                                   min="0"
-                                  value={chartConfig.labelSkipHeight ?? 0}
+                                  value={(chartConfig as any).labelSkipHeight ?? 0}
                                   onChange={(e) => handleChartConfigChange('labelSkipHeight', parseInt(e.target.value) || 0)}
                                   className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
