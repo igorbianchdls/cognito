@@ -91,6 +91,7 @@ export default function ChartWidget({ widget }: ChartWidgetProps) {
     labelTextColor: chartConfig.labelTextColor || '#374151',
     animate: chartConfig.animate ?? false,
     motionConfig: chartConfig.motionConfig || 'gentle',
+    legends: chartConfig.legends,
     margin: {
       top: chartConfig.margin?.top ?? 12,
       right: chartConfig.margin?.right ?? 12,

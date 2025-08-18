@@ -42,7 +42,8 @@ export function BarChart(props: BarChartProps) {
     animate,
     motionConfig,
     axisBottom,
-    axisLeft
+    axisLeft,
+    legends
   } = props;
 
   if (!data || data.length === 0) {
@@ -181,32 +182,69 @@ export function BarChart(props: BarChartProps) {
             </div>
           )}
           
-          // Legenda horizontal na parte inferior
-          legends={[
-            {
-              dataFrom: 'keys',
-              anchor: 'bottom',
-              direction: 'row',
-              justify: false,
-              translateX: 0,
-              translateY: 50,
-              itemsSpacing: 20,
-              itemWidth: 80,
-              itemHeight: 18,
-              itemDirection: 'left-to-right',
-              itemOpacity: 0.8,
-              symbolSize: 12,
-              symbolShape: 'circle',
-              effects: [
-                {
-                  on: 'hover',
-                  style: {
-                    itemOpacity: 1
-                  }
-                }
-              ]
+          // Legendas configuráveis
+          legends={(() => {
+            // Se legends é array (BarLegendProps[]), usar diretamente
+            if (Array.isArray(legends)) {
+              return legends;
             }
-          ]}
+            
+            // Se legends é LegendConfig, converter para BarLegendProps[]
+            if (legends && typeof legends === 'object' && 'enabled' in legends) {
+              return legends.enabled !== false ? [
+                {
+                  dataFrom: 'keys',
+                  anchor: legends.anchor || 'bottom',
+                  direction: legends.direction || 'row',
+                  justify: false,
+                  translateX: legends.translateX || 0,
+                  translateY: legends.translateY || 50,
+                  itemsSpacing: legends.itemsSpacing || 20,
+                  itemWidth: legends.itemWidth || 80,
+                  itemHeight: legends.itemHeight || 18,
+                  itemDirection: 'left-to-right',
+                  itemOpacity: 0.8,
+                  symbolSize: legends.symbolSize || 12,
+                  symbolShape: legends.symbolShape || 'circle',
+                  effects: [
+                    {
+                      on: 'hover',
+                      style: {
+                        itemOpacity: 1
+                      }
+                    }
+                  ]
+                }
+              ] : [];
+            }
+            
+            // Configuração padrão se legends não especificado
+            return [
+              {
+                dataFrom: 'keys',
+                anchor: 'bottom',
+                direction: 'row',
+                justify: false,
+                translateX: 0,
+                translateY: 50,
+                itemsSpacing: 20,
+                itemWidth: 80,
+                itemHeight: 18,
+                itemDirection: 'left-to-right',
+                itemOpacity: 0.8,
+                symbolSize: 12,
+                symbolShape: 'circle',
+                effects: [
+                  {
+                    on: 'hover',
+                    style: {
+                      itemOpacity: 1
+                    }
+                  }
+                ]
+              }
+            ];
+          })()}
           />
         </div>
       </div>

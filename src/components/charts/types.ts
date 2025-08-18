@@ -1,5 +1,6 @@
 import { OrdinalColorScaleConfig } from '@nivo/colors';
 import { ComputedDatum, BarDatum, BarLegendProps } from '@nivo/bar';
+import { LegendConfig } from '@/types/chartWidgets';
 
 export interface ChartData {
   x?: string;
@@ -94,7 +95,7 @@ export interface BarChartProps extends BaseChartProps {
   totalsOffset?: number;
   
   // Legends
-  legends?: readonly BarLegendProps[];
+  legends?: readonly BarLegendProps[] | LegendConfig;
   
   // Animation
   animate?: boolean;
