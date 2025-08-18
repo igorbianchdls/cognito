@@ -13,6 +13,17 @@ export type SpecializedWidget = ChartWidget | KPIWidget | TableWidget
 // Legacy widgets store (for simple widgets like 'metric')
 export const $legacyWidgets = atom<DroppedWidget[]>([])
 
+// Cache for adapter functions to prevent unnecessary re-renders
+const adapterCache = new Map<string, DroppedWidget>()
+
+// Cache cleanup to prevent memory leaks
+setInterval(() => {
+  if (adapterCache.size > 100) {
+    console.log('🧹 Clearing adapter cache:', adapterCache.size, 'entries')
+    adapterCache.clear()
+  }
+}, 30000) // Clear every 30 seconds if cache grows too large
+
 // Unified widget store - combines all specialized stores + legacy
 export const $allWidgets = computed(
   [$chartWidgets, $kpiWidgets, $tableWidgets, $legacyWidgets],
@@ -102,31 +113,85 @@ export const $selectedWidget = computed([$allWidgets, $selectedWidgetId], (widge
 
 // Adapter functions to convert specialized widgets to legacy format
 function adaptChartToLegacy(chart: ChartWidget): DroppedWidget {
-  return {
+  // Create cache key based on widget ID and config content
+  const configHash = JSON.stringify(chart.config)
+  const cacheKey = `chart_${chart.i}_${configHash}`
+  
+  // Return cached version if available
+  const cached = adapterCache.get(cacheKey)
+  if (cached) {
+    console.log('📋 Chart adapter cache hit:', chart.i)
+    return cached
+  }
+  
+  // Create new adapted widget
+  const adapted: DroppedWidget = {
     ...chart,
     chartConfig: chart.config, // Legacy compatibility
     config: {
       chartConfig: chart.config // Mantém acesso via config.chartConfig para ChartWidget.tsx
     }
   }
+  
+  // Cache the result
+  adapterCache.set(cacheKey, adapted)
+  console.log('💾 Chart adapter cache miss - cached:', chart.i)
+  
+  return adapted
 }
 
 function adaptKPIToLegacy(kpi: KPIWidget): DroppedWidget {
-  return {
+  // Create cache key based on widget ID and config content
+  const configHash = JSON.stringify(kpi.config)
+  const cacheKey = `kpi_${kpi.i}_${configHash}`
+  
+  // Return cached version if available
+  const cached = adapterCache.get(cacheKey)
+  if (cached) {
+    console.log('📋 KPI adapter cache hit:', kpi.i)
+    return cached
+  }
+  
+  // Create new adapted widget
+  const adapted: DroppedWidget = {
     ...kpi,
     config: {
       kpiConfig: kpi.config
     }
   }
+  
+  // Cache the result
+  adapterCache.set(cacheKey, adapted)
+  console.log('💾 KPI adapter cache miss - cached:', kpi.i)
+  
+  return adapted
 }
 
 function adaptTableToLegacy(table: TableWidget): DroppedWidget {
-  return {
+  // Create cache key based on widget ID and config content
+  const configHash = JSON.stringify(table.config)
+  const cacheKey = `table_${table.i}_${configHash}`
+  
+  // Return cached version if available
+  const cached = adapterCache.get(cacheKey)
+  if (cached) {
+    console.log('📋 Table adapter cache hit:', table.i)
+    return cached
+  }
+  
+  // Create new adapted widget
+  const adapted: DroppedWidget = {
     ...table,
     config: {
       tableConfig: table.config
     }
   }
+  
+  // Cache the result
+  adapterCache.set(cacheKey, adapted)
+  console.log('💾 Table adapter cache miss - cached:', table.i)
+  
+  return adapted
 }
 
 // Migration utilities - convert legacy widgets to specialized stores

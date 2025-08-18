@@ -71,7 +71,7 @@ export default function WidgetEditor() {
     if (!selectedWidget || !isKPIWidget(selectedWidget)) return {}
     
     // selectedWidget é DroppedWidget adaptado
-    console.log('🔍 WidgetEditor KPI estrutura:', {
+    console.log('🔍 WidgetEditor KPI estrutura - optimized dependencies:', {
       id: selectedWidget?.i,
       type: selectedWidget?.type,
       configStructure: selectedWidget?.config,
@@ -82,7 +82,10 @@ export default function WidgetEditor() {
     const config = selectedWidget.config?.kpiConfig || {}
     console.log('🎯 WidgetEditor computed kpiConfig final:', config)
     return config
-  }, [selectedWidget])
+  }, [
+    selectedWidget?.i,
+    selectedWidget?.config?.kpiConfig
+  ]) // Optimized dependencies - only re-compute when ID or KPI config actually changes
 
   // Update form when selected widget ID changes (not the object reference)
   useEffect(() => {
@@ -116,6 +119,26 @@ export default function WidgetEditor() {
       }
     }
   }, [])
+
+  // Debug: Monitor re-renders and selectedWidget changes
+  useEffect(() => {
+    console.log('🔄 WidgetEditor re-rendered - selectedWidget changed:', {
+      id: selectedWidget?.i,
+      type: selectedWidget?.type,
+      isKPI: selectedWidget && isKPIWidget(selectedWidget),
+      configRef: selectedWidget?.config,
+      kpiConfigRef: selectedWidget?.config?.kpiConfig,
+      timestamp: new Date().toISOString()
+    })
+  }, [selectedWidget])
+
+  useEffect(() => {
+    console.log('🎯 kpiConfig useMemo re-computed:', {
+      widgetId: selectedWidget?.i,
+      kpiConfig,
+      timestamp: new Date().toISOString()
+    })
+  }, [selectedWidget?.i, selectedWidget?.config?.kpiConfig, kpiConfig])
 
   const handleSelectWidget = (widgetId: string) => {
     widgetActions.selectWidget(widgetId)
