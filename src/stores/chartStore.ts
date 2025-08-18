@@ -202,7 +202,7 @@ export const chartActions = {
       // Handle nested config.chartConfig from chat (fix for duplication bug)
       if (changes.config && typeof changes.config === 'object' && 'chartConfig' in changes.config) {
         const { config, ...otherChanges } = changes
-        const chartConfig = (config as any).chartConfig // Extract nested chartConfig
+        const chartConfig = (config as Record<string, unknown>).chartConfig as Record<string, unknown> // Extract nested chartConfig
         console.log('🔧 [CHART-FIX] Detected nested config.chartConfig, flattening:', { chartConfig })
         const result = {
           ...chart,
