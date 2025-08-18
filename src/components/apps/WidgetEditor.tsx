@@ -917,8 +917,7 @@ export default function WidgetEditor() {
                     {/* KPI Data Section */}
                     <CollapsibleSection
                       title="📈 Data & Values"
-                      isExpanded={expandedSections.kpiData}
-                      onToggle={() => setExpandedSections(prev => ({ ...prev, kpiData: !prev.kpiData }))}
+                      sectionKey="kpiData"
                     >
                       <div className="space-y-3">
                         <div>
@@ -984,8 +983,7 @@ export default function WidgetEditor() {
                     {/* Colors & Styling Section */}
                     <CollapsibleSection
                       title="🎨 Colors & Styling"
-                      isExpanded={expandedSections.kpiStyling}
-                      onToggle={() => setExpandedSections(prev => ({ ...prev, kpiStyling: !prev.kpiStyling }))}
+                      sectionKey="kpiStyling"
                     >
                       <div className="space-y-3">
                         <div>
@@ -1062,8 +1060,7 @@ export default function WidgetEditor() {
                     {/* Typography Section */}
                     <CollapsibleSection
                       title="✍️ Typography"
-                      isExpanded={expandedSections.kpiTypography}
-                      onToggle={() => setExpandedSections(prev => ({ ...prev, kpiTypography: !prev.kpiTypography }))}
+                      sectionKey="kpiTypography"
                     >
                       <div className="space-y-3">
                         <div>
@@ -1173,8 +1170,7 @@ export default function WidgetEditor() {
                     {/* Layout & Spacing Section */}
                     <CollapsibleSection
                       title="📐 Layout & Spacing"
-                      isExpanded={expandedSections.kpiLayout}
-                      onToggle={() => setExpandedSections(prev => ({ ...prev, kpiLayout: !prev.kpiLayout }))}
+                      sectionKey="kpiLayout"
                     >
                       <div className="space-y-3">
                         <div>
@@ -1223,8 +1219,7 @@ export default function WidgetEditor() {
                     {/* Display Options Section */}
                     <CollapsibleSection
                       title="📊 Display Options"
-                      isExpanded={expandedSections.kpiDisplay}
-                      onToggle={() => setExpandedSections(prev => ({ ...prev, kpiDisplay: !prev.kpiDisplay }))}
+                      sectionKey="kpiDisplay"
                     >
                       <div className="space-y-3">
                         <div>
