@@ -6,6 +6,14 @@ import { chartActions } from '@/stores/chartStore'
 import { kpiActions } from '@/stores/kpiStore'
 import { useState, useEffect, useMemo, memo } from 'react'
 import type { ChartWidget, BarChartConfig, LineChartConfig, PieChartConfig } from '@/types/chartWidgets'
+
+// Interface for padding configuration
+interface PaddingConfig {
+  top?: number;
+  right?: number;
+  bottom?: number;
+  left?: number;
+}
 import { isChartWidget, isBarChart, isLineChart, isPieChart } from '@/types/chartWidgets'
 import { isKPIWidget } from '@/types/kpiWidgets'
 
@@ -229,13 +237,6 @@ export default function WidgetEditor() {
     handleChartConfigChange('colors', colors)
   }
 
-  // Toggle section expansion
-  const toggleSection = (section: keyof typeof expandedSections) => {
-    setExpandedSections(prev => ({
-      ...prev,
-      [section]: !prev[section]
-    }))
-  }
 
 
   if (widgets.length === 0) {
@@ -490,9 +491,9 @@ export default function WidgetEditor() {
                                   type="number"
                                   min="0"
                                   max="32"
-                                  value={((chartConfig as Record<string, unknown>)?.titlePadding as any)?.top ?? 8}
+                                  value={typeof (chartConfig as Record<string, unknown>)?.titlePadding === 'object' ? ((chartConfig as Record<string, unknown>)?.titlePadding as PaddingConfig)?.top ?? 8 : 8}
                                   onChange={(e) => {
-                                    const currentPadding = (chartConfig as Record<string, unknown>)?.titlePadding as any || {};
+                                    const currentPadding = (chartConfig as Record<string, unknown>)?.titlePadding as PaddingConfig | number | undefined || {};
                                     const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 8, right: 8, bottom: 8, left: 8 };
                                     handleChartConfigChange('titlePadding', { ...newPadding, top: parseInt(e.target.value) || 0 });
                                   }}
@@ -505,9 +506,9 @@ export default function WidgetEditor() {
                                   type="number"
                                   min="0"
                                   max="32"
-                                  value={((chartConfig as Record<string, unknown>)?.titlePadding as any)?.right ?? 8}
+                                  value={typeof (chartConfig as Record<string, unknown>)?.titlePadding === 'object' ? ((chartConfig as Record<string, unknown>)?.titlePadding as PaddingConfig)?.right ?? 8 : 8}
                                   onChange={(e) => {
-                                    const currentPadding = (chartConfig as Record<string, unknown>)?.titlePadding as any || {};
+                                    const currentPadding = (chartConfig as Record<string, unknown>)?.titlePadding as PaddingConfig | number | undefined || {};
                                     const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 8, right: 8, bottom: 8, left: 8 };
                                     handleChartConfigChange('titlePadding', { ...newPadding, right: parseInt(e.target.value) || 0 });
                                   }}
@@ -520,9 +521,9 @@ export default function WidgetEditor() {
                                   type="number"
                                   min="0"
                                   max="32"
-                                  value={((chartConfig as Record<string, unknown>)?.titlePadding as any)?.bottom ?? 8}
+                                  value={typeof (chartConfig as Record<string, unknown>)?.titlePadding === 'object' ? ((chartConfig as Record<string, unknown>)?.titlePadding as PaddingConfig)?.bottom ?? 8 : 8}
                                   onChange={(e) => {
-                                    const currentPadding = (chartConfig as Record<string, unknown>)?.titlePadding as any || {};
+                                    const currentPadding = (chartConfig as Record<string, unknown>)?.titlePadding as PaddingConfig | number | undefined || {};
                                     const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 8, right: 8, bottom: 8, left: 8 };
                                     handleChartConfigChange('titlePadding', { ...newPadding, bottom: parseInt(e.target.value) || 0 });
                                   }}
@@ -535,9 +536,9 @@ export default function WidgetEditor() {
                                   type="number"
                                   min="0"
                                   max="32"
-                                  value={((chartConfig as Record<string, unknown>)?.titlePadding as any)?.left ?? 8}
+                                  value={typeof (chartConfig as Record<string, unknown>)?.titlePadding === 'object' ? ((chartConfig as Record<string, unknown>)?.titlePadding as PaddingConfig)?.left ?? 8 : 8}
                                   onChange={(e) => {
-                                    const currentPadding = (chartConfig as Record<string, unknown>)?.titlePadding as any || {};
+                                    const currentPadding = (chartConfig as Record<string, unknown>)?.titlePadding as PaddingConfig | number | undefined || {};
                                     const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 8, right: 8, bottom: 8, left: 8 };
                                     handleChartConfigChange('titlePadding', { ...newPadding, left: parseInt(e.target.value) || 0 });
                                   }}
@@ -596,9 +597,9 @@ export default function WidgetEditor() {
                                   type="number"
                                   min="0"
                                   max="32"
-                                  value={((chartConfig as Record<string, unknown>)?.subtitlePadding as any)?.top ?? 8}
+                                  value={typeof (chartConfig as Record<string, unknown>)?.subtitlePadding === 'object' ? ((chartConfig as Record<string, unknown>)?.subtitlePadding as PaddingConfig)?.top ?? 8 : 8}
                                   onChange={(e) => {
-                                    const currentPadding = (chartConfig as Record<string, unknown>)?.subtitlePadding as any || {};
+                                    const currentPadding = (chartConfig as Record<string, unknown>)?.subtitlePadding as PaddingConfig | number | undefined || {};
                                     const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 8, right: 8, bottom: 8, left: 8 };
                                     handleChartConfigChange('subtitlePadding', { ...newPadding, top: parseInt(e.target.value) || 0 });
                                   }}
@@ -611,9 +612,9 @@ export default function WidgetEditor() {
                                   type="number"
                                   min="0"
                                   max="32"
-                                  value={((chartConfig as Record<string, unknown>)?.subtitlePadding as any)?.right ?? 8}
+                                  value={typeof (chartConfig as Record<string, unknown>)?.subtitlePadding === 'object' ? ((chartConfig as Record<string, unknown>)?.subtitlePadding as PaddingConfig)?.right ?? 8 : 8}
                                   onChange={(e) => {
-                                    const currentPadding = (chartConfig as Record<string, unknown>)?.subtitlePadding as any || {};
+                                    const currentPadding = (chartConfig as Record<string, unknown>)?.subtitlePadding as PaddingConfig | number | undefined || {};
                                     const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 8, right: 8, bottom: 8, left: 8 };
                                     handleChartConfigChange('subtitlePadding', { ...newPadding, right: parseInt(e.target.value) || 0 });
                                   }}
@@ -626,9 +627,9 @@ export default function WidgetEditor() {
                                   type="number"
                                   min="0"
                                   max="32"
-                                  value={((chartConfig as Record<string, unknown>)?.subtitlePadding as any)?.bottom ?? 8}
+                                  value={typeof (chartConfig as Record<string, unknown>)?.subtitlePadding === 'object' ? ((chartConfig as Record<string, unknown>)?.subtitlePadding as PaddingConfig)?.bottom ?? 8 : 8}
                                   onChange={(e) => {
-                                    const currentPadding = (chartConfig as Record<string, unknown>)?.subtitlePadding as any || {};
+                                    const currentPadding = (chartConfig as Record<string, unknown>)?.subtitlePadding as PaddingConfig | number | undefined || {};
                                     const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 8, right: 8, bottom: 8, left: 8 };
                                     handleChartConfigChange('subtitlePadding', { ...newPadding, bottom: parseInt(e.target.value) || 0 });
                                   }}
@@ -641,9 +642,9 @@ export default function WidgetEditor() {
                                   type="number"
                                   min="0"
                                   max="32"
-                                  value={((chartConfig as Record<string, unknown>)?.subtitlePadding as any)?.left ?? 8}
+                                  value={typeof (chartConfig as Record<string, unknown>)?.subtitlePadding === 'object' ? ((chartConfig as Record<string, unknown>)?.subtitlePadding as PaddingConfig)?.left ?? 8 : 8}
                                   onChange={(e) => {
-                                    const currentPadding = (chartConfig as Record<string, unknown>)?.subtitlePadding as any || {};
+                                    const currentPadding = (chartConfig as Record<string, unknown>)?.subtitlePadding as PaddingConfig | number | undefined || {};
                                     const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 8, right: 8, bottom: 8, left: 8 };
                                     handleChartConfigChange('subtitlePadding', { ...newPadding, left: parseInt(e.target.value) || 0 });
                                   }}
@@ -664,9 +665,9 @@ export default function WidgetEditor() {
                                 type="number"
                                 min="0"
                                 max="32"
-                                value={((chartConfig as Record<string, unknown>)?.chartPadding as any)?.top ?? 0}
+                                value={typeof (chartConfig as Record<string, unknown>)?.chartPadding === 'object' ? ((chartConfig as Record<string, unknown>)?.chartPadding as PaddingConfig)?.top ?? 0 : 0}
                                 onChange={(e) => {
-                                  const currentPadding = (chartConfig as Record<string, unknown>)?.chartPadding as any || {};
+                                  const currentPadding = (chartConfig as Record<string, unknown>)?.chartPadding as PaddingConfig | number | undefined || {};
                                   const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 0, right: 0, bottom: 0, left: 0 };
                                   handleChartConfigChange('chartPadding', { ...newPadding, top: parseInt(e.target.value) || 0 });
                                 }}
@@ -679,9 +680,9 @@ export default function WidgetEditor() {
                                 type="number"
                                 min="0"
                                 max="32"
-                                value={((chartConfig as Record<string, unknown>)?.chartPadding as any)?.right ?? 0}
+                                value={typeof (chartConfig as Record<string, unknown>)?.chartPadding === 'object' ? ((chartConfig as Record<string, unknown>)?.chartPadding as PaddingConfig)?.right ?? 0 : 0}
                                 onChange={(e) => {
-                                  const currentPadding = (chartConfig as Record<string, unknown>)?.chartPadding as any || {};
+                                  const currentPadding = (chartConfig as Record<string, unknown>)?.chartPadding as PaddingConfig | number | undefined || {};
                                   const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 0, right: 0, bottom: 0, left: 0 };
                                   handleChartConfigChange('chartPadding', { ...newPadding, right: parseInt(e.target.value) || 0 });
                                 }}
@@ -694,9 +695,9 @@ export default function WidgetEditor() {
                                 type="number"
                                 min="0"
                                 max="32"
-                                value={((chartConfig as Record<string, unknown>)?.chartPadding as any)?.bottom ?? 0}
+                                value={typeof (chartConfig as Record<string, unknown>)?.chartPadding === 'object' ? ((chartConfig as Record<string, unknown>)?.chartPadding as PaddingConfig)?.bottom ?? 0 : 0}
                                 onChange={(e) => {
-                                  const currentPadding = (chartConfig as Record<string, unknown>)?.chartPadding as any || {};
+                                  const currentPadding = (chartConfig as Record<string, unknown>)?.chartPadding as PaddingConfig | number | undefined || {};
                                   const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 0, right: 0, bottom: 0, left: 0 };
                                   handleChartConfigChange('chartPadding', { ...newPadding, bottom: parseInt(e.target.value) || 0 });
                                 }}
@@ -709,9 +710,9 @@ export default function WidgetEditor() {
                                 type="number"
                                 min="0"
                                 max="32"
-                                value={((chartConfig as Record<string, unknown>)?.chartPadding as any)?.left ?? 0}
+                                value={typeof (chartConfig as Record<string, unknown>)?.chartPadding === 'object' ? ((chartConfig as Record<string, unknown>)?.chartPadding as PaddingConfig)?.left ?? 0 : 0}
                                 onChange={(e) => {
-                                  const currentPadding = (chartConfig as Record<string, unknown>)?.chartPadding as any || {};
+                                  const currentPadding = (chartConfig as Record<string, unknown>)?.chartPadding as PaddingConfig | number | undefined || {};
                                   const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 0, right: 0, bottom: 0, left: 0 };
                                   handleChartConfigChange('chartPadding', { ...newPadding, left: parseInt(e.target.value) || 0 });
                                 }}
