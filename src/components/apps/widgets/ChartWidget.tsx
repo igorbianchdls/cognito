@@ -35,16 +35,16 @@ export default function ChartWidget({ widget }: ChartWidgetProps) {
 
   // Get chart configuration with backward compatibility
   const chartConfig = useMemo(() => {
-    let config = {}
+    let config: Record<string, any> = {}
     
     // Priorizar configuração especializada (nova arquitetura)
     if (widget.config && typeof widget.config === 'object' && widget.config.chartConfig) {
-      config = widget.config.chartConfig
+      config = widget.config.chartConfig as Record<string, any>
       console.log('🎯 ChartWidget usando config.chartConfig:', config)
     }
     // Fallback para legacy chartConfig
     else if (widget.chartConfig) {
-      config = widget.chartConfig
+      config = widget.chartConfig as Record<string, any>
       console.log('🎯 ChartWidget usando chartConfig legacy:', config)
     }
     
