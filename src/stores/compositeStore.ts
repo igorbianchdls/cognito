@@ -79,9 +79,8 @@ function adaptChartToLegacy(chart: ChartWidget): DroppedWidget {
   return {
     ...chart,
     chartConfig: chart.config, // Legacy compatibility
-    config: {
-      chartConfig: chart.config
-    }
+    config: undefined // Remove specialized config to avoid type conflicts
+    // Removed: config.chartConfig (was causing duplication bug)
   }
 }
 
