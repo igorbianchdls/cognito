@@ -4,7 +4,7 @@ import { useStore } from '@nanostores/react'
 import { $widgets, $selectedWidget, $selectedWidgetId, widgetActions } from '@/stores/widgetStore'
 import { chartActions } from '@/stores/chartStore'
 import { kpiActions } from '@/stores/kpiStore'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, memo } from 'react'
 import type { ChartWidget, BarChartConfig, LineChartConfig, PieChartConfig } from '@/types/chartWidgets'
 import { isChartWidget, isBarChart, isLineChart, isPieChart } from '@/types/chartWidgets'
 import { isKPIWidget } from '@/types/kpiWidgets'
@@ -239,8 +239,8 @@ export default function WidgetEditor() {
     }))
   }
 
-  // Collapsible section component
-  const CollapsibleSection = ({ 
+  // Collapsible section component - memoized to prevent unnecessary re-renders
+  const CollapsibleSection = memo(({ 
     title, 
     sectionKey, 
     children 
@@ -265,7 +265,7 @@ export default function WidgetEditor() {
         </div>
       )}
     </div>
-  )
+  ))
 
   if (widgets.length === 0) {
     return (
@@ -997,9 +997,8 @@ export default function WidgetEditor() {
                       sectionKey="kpiData"
                     >
                       <div className="space-y-3">
-                        {/* Original input commented for test
                         <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">KPI Name</label>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">KPI Name (Inside CollapsibleSection)</label>
                           <input
                             type="text"
                             value={editKPIForm.name}
@@ -1008,7 +1007,6 @@ export default function WidgetEditor() {
                             placeholder="Sales Revenue"
                           />
                         </div>
-                        */}
                         <div className="grid grid-cols-2 gap-3">
                           <div>
                             <label className="block text-xs font-medium text-gray-600 mb-1">Current Value</label>
