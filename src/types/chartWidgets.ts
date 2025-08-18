@@ -69,12 +69,27 @@ export interface BaseChartConfig {
   titleFontSize?: number
   titleColor?: string
   titleFontWeight?: number
-  titlePadding?: number
+  titlePadding?: {
+    top?: number
+    right?: number
+    bottom?: number
+    left?: number
+  } | number // backward compatibility
   subtitleFontSize?: number
   subtitleColor?: string
   subtitleFontWeight?: number
-  subtitlePadding?: number
-  chartPadding?: number
+  subtitlePadding?: {
+    top?: number
+    right?: number
+    bottom?: number
+    left?: number
+  } | number // backward compatibility
+  chartPadding?: {
+    top?: number
+    right?: number
+    bottom?: number
+    left?: number
+  } | number // backward compatibility
   
   // Legends
   legends?: LegendConfig

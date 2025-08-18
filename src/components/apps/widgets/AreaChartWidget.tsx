@@ -95,7 +95,10 @@ export default function AreaChartWidget({ widget }: AreaChartWidgetProps) {
       {/* Title and Subtitle */}
       {(chartConfig.showTitle !== false && chartConfig.title) && (
         <div style={{ 
-          padding: `${chartConfig.titlePadding ?? 8}px`
+          paddingTop: `${typeof chartConfig.titlePadding === 'object' ? chartConfig.titlePadding?.top ?? 8 : chartConfig.titlePadding ?? 8}px`,
+          paddingRight: `${typeof chartConfig.titlePadding === 'object' ? chartConfig.titlePadding?.right ?? 8 : chartConfig.titlePadding ?? 8}px`,
+          paddingBottom: `${typeof chartConfig.titlePadding === 'object' ? chartConfig.titlePadding?.bottom ?? 8 : chartConfig.titlePadding ?? 8}px`,
+          paddingLeft: `${typeof chartConfig.titlePadding === 'object' ? chartConfig.titlePadding?.left ?? 8 : chartConfig.titlePadding ?? 8}px`
         }}>
           <h3 
             style={{
@@ -113,7 +116,10 @@ export default function AreaChartWidget({ widget }: AreaChartWidgetProps) {
       )}
       {(chartConfig.showSubtitle !== false && chartConfig.subtitle) && (
         <div style={{ 
-          padding: `${chartConfig.subtitlePadding ?? 8}px`
+          paddingTop: `${typeof chartConfig.subtitlePadding === 'object' ? chartConfig.subtitlePadding?.top ?? 8 : chartConfig.subtitlePadding ?? 8}px`,
+          paddingRight: `${typeof chartConfig.subtitlePadding === 'object' ? chartConfig.subtitlePadding?.right ?? 8 : chartConfig.subtitlePadding ?? 8}px`,
+          paddingBottom: `${typeof chartConfig.subtitlePadding === 'object' ? chartConfig.subtitlePadding?.bottom ?? 8 : chartConfig.subtitlePadding ?? 8}px`,
+          paddingLeft: `${typeof chartConfig.subtitlePadding === 'object' ? chartConfig.subtitlePadding?.left ?? 8 : chartConfig.subtitlePadding ?? 8}px`
         }}>
           <p 
             style={{
@@ -135,10 +141,10 @@ export default function AreaChartWidget({ widget }: AreaChartWidgetProps) {
         <AreaChart {...{
           ...chartProps,
           margin: {
-            top: (chartProps.margin?.top ?? 12) + (chartConfig.chartPadding ?? 0),
-            right: (chartProps.margin?.right ?? 8) + (chartConfig.chartPadding ?? 0),
-            bottom: (chartProps.margin?.bottom ?? 80) + (chartConfig.chartPadding ?? 0),
-            left: (chartProps.margin?.left ?? 8) + (chartConfig.chartPadding ?? 0),
+            top: (chartProps.margin?.top ?? 12) + (typeof chartConfig.chartPadding === 'object' ? chartConfig.chartPadding?.top ?? 0 : chartConfig.chartPadding ?? 0),
+            right: (chartProps.margin?.right ?? 8) + (typeof chartConfig.chartPadding === 'object' ? chartConfig.chartPadding?.right ?? 0 : chartConfig.chartPadding ?? 0),
+            bottom: (chartProps.margin?.bottom ?? 80) + (typeof chartConfig.chartPadding === 'object' ? chartConfig.chartPadding?.bottom ?? 0 : chartConfig.chartPadding ?? 0),
+            left: (chartProps.margin?.left ?? 8) + (typeof chartConfig.chartPadding === 'object' ? chartConfig.chartPadding?.left ?? 0 : chartConfig.chartPadding ?? 0),
           }
         }} />
       </div>

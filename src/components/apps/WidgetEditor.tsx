@@ -445,7 +445,7 @@ export default function WidgetEditor() {
                         {/* Title Styling */}
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-2">Title Styling</label>
-                          <div className="grid grid-cols-4 gap-2">
+                          <div className="grid grid-cols-3 gap-2 mb-3">
                             <div>
                               <label className="block text-xs text-gray-500 mb-1">Font Size</label>
                               <input
@@ -472,17 +472,6 @@ export default function WidgetEditor() {
                               </select>
                             </div>
                             <div>
-                              <label className="block text-xs text-gray-500 mb-1">Padding</label>
-                              <input
-                                type="number"
-                                min="0"
-                                max="32"
-                                value={(chartConfig as Record<string, unknown>)?.titlePadding as number ?? 8}
-                                onChange={(e) => handleChartConfigChange('titlePadding', parseInt(e.target.value) || 8)}
-                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              />
-                            </div>
-                            <div>
                               <label className="block text-xs text-gray-500 mb-1">Color</label>
                               <input
                                 type="color"
@@ -492,12 +481,77 @@ export default function WidgetEditor() {
                               />
                             </div>
                           </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Title Padding</label>
+                            <div className="grid grid-cols-4 gap-1">
+                              <div>
+                                <label className="block text-xs text-gray-400 mb-1">Top</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="32"
+                                  value={((chartConfig as Record<string, unknown>)?.titlePadding as any)?.top ?? 8}
+                                  onChange={(e) => {
+                                    const currentPadding = (chartConfig as Record<string, unknown>)?.titlePadding as any || {};
+                                    const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 8, right: 8, bottom: 8, left: 8 };
+                                    handleChartConfigChange('titlePadding', { ...newPadding, top: parseInt(e.target.value) || 0 });
+                                  }}
+                                  className="w-full px-1 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-gray-400 mb-1">Right</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="32"
+                                  value={((chartConfig as Record<string, unknown>)?.titlePadding as any)?.right ?? 8}
+                                  onChange={(e) => {
+                                    const currentPadding = (chartConfig as Record<string, unknown>)?.titlePadding as any || {};
+                                    const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 8, right: 8, bottom: 8, left: 8 };
+                                    handleChartConfigChange('titlePadding', { ...newPadding, right: parseInt(e.target.value) || 0 });
+                                  }}
+                                  className="w-full px-1 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-gray-400 mb-1">Bottom</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="32"
+                                  value={((chartConfig as Record<string, unknown>)?.titlePadding as any)?.bottom ?? 8}
+                                  onChange={(e) => {
+                                    const currentPadding = (chartConfig as Record<string, unknown>)?.titlePadding as any || {};
+                                    const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 8, right: 8, bottom: 8, left: 8 };
+                                    handleChartConfigChange('titlePadding', { ...newPadding, bottom: parseInt(e.target.value) || 0 });
+                                  }}
+                                  className="w-full px-1 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-gray-400 mb-1">Left</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="32"
+                                  value={((chartConfig as Record<string, unknown>)?.titlePadding as any)?.left ?? 8}
+                                  onChange={(e) => {
+                                    const currentPadding = (chartConfig as Record<string, unknown>)?.titlePadding as any || {};
+                                    const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 8, right: 8, bottom: 8, left: 8 };
+                                    handleChartConfigChange('titlePadding', { ...newPadding, left: parseInt(e.target.value) || 0 });
+                                  }}
+                                  className="w-full px-1 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                              </div>
+                            </div>
+                          </div>
                         </div>
                         
                         {/* Subtitle Styling */}
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-2">Subtitle Styling</label>
-                          <div className="grid grid-cols-4 gap-2">
+                          <div className="grid grid-cols-3 gap-2 mb-3">
                             <div>
                               <label className="block text-xs text-gray-500 mb-1">Font Size</label>
                               <input
@@ -524,17 +578,6 @@ export default function WidgetEditor() {
                               </select>
                             </div>
                             <div>
-                              <label className="block text-xs text-gray-500 mb-1">Padding</label>
-                              <input
-                                type="number"
-                                min="0"
-                                max="32"
-                                value={(chartConfig as Record<string, unknown>)?.subtitlePadding as number ?? 8}
-                                onChange={(e) => handleChartConfigChange('subtitlePadding', parseInt(e.target.value) || 8)}
-                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              />
-                            </div>
-                            <div>
                               <label className="block text-xs text-gray-500 mb-1">Color</label>
                               <input
                                 type="color"
@@ -544,21 +587,137 @@ export default function WidgetEditor() {
                               />
                             </div>
                           </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Subtitle Padding</label>
+                            <div className="grid grid-cols-4 gap-1">
+                              <div>
+                                <label className="block text-xs text-gray-400 mb-1">Top</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="32"
+                                  value={((chartConfig as Record<string, unknown>)?.subtitlePadding as any)?.top ?? 8}
+                                  onChange={(e) => {
+                                    const currentPadding = (chartConfig as Record<string, unknown>)?.subtitlePadding as any || {};
+                                    const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 8, right: 8, bottom: 8, left: 8 };
+                                    handleChartConfigChange('subtitlePadding', { ...newPadding, top: parseInt(e.target.value) || 0 });
+                                  }}
+                                  className="w-full px-1 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-gray-400 mb-1">Right</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="32"
+                                  value={((chartConfig as Record<string, unknown>)?.subtitlePadding as any)?.right ?? 8}
+                                  onChange={(e) => {
+                                    const currentPadding = (chartConfig as Record<string, unknown>)?.subtitlePadding as any || {};
+                                    const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 8, right: 8, bottom: 8, left: 8 };
+                                    handleChartConfigChange('subtitlePadding', { ...newPadding, right: parseInt(e.target.value) || 0 });
+                                  }}
+                                  className="w-full px-1 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-gray-400 mb-1">Bottom</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="32"
+                                  value={((chartConfig as Record<string, unknown>)?.subtitlePadding as any)?.bottom ?? 8}
+                                  onChange={(e) => {
+                                    const currentPadding = (chartConfig as Record<string, unknown>)?.subtitlePadding as any || {};
+                                    const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 8, right: 8, bottom: 8, left: 8 };
+                                    handleChartConfigChange('subtitlePadding', { ...newPadding, bottom: parseInt(e.target.value) || 0 });
+                                  }}
+                                  className="w-full px-1 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-gray-400 mb-1">Left</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="32"
+                                  value={((chartConfig as Record<string, unknown>)?.subtitlePadding as any)?.left ?? 8}
+                                  onChange={(e) => {
+                                    const currentPadding = (chartConfig as Record<string, unknown>)?.subtitlePadding as any || {};
+                                    const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 8, right: 8, bottom: 8, left: 8 };
+                                    handleChartConfigChange('subtitlePadding', { ...newPadding, left: parseInt(e.target.value) || 0 });
+                                  }}
+                                  className="w-full px-1 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                              </div>
+                            </div>
+                          </div>
                         </div>
                         
                         {/* Chart Padding */}
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-2">Chart Padding</label>
-                          <div>
-                            <input
-                              type="number"
-                              min="0"
-                              max="32"
-                              value={(chartConfig as Record<string, unknown>)?.chartPadding as number ?? 0}
-                              onChange={(e) => handleChartConfigChange('chartPadding', parseInt(e.target.value) || 0)}
-                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              placeholder="Chart padding in pixels"
-                            />
+                          <div className="grid grid-cols-4 gap-1">
+                            <div>
+                              <label className="block text-xs text-gray-400 mb-1">Top</label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="32"
+                                value={((chartConfig as Record<string, unknown>)?.chartPadding as any)?.top ?? 0}
+                                onChange={(e) => {
+                                  const currentPadding = (chartConfig as Record<string, unknown>)?.chartPadding as any || {};
+                                  const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 0, right: 0, bottom: 0, left: 0 };
+                                  handleChartConfigChange('chartPadding', { ...newPadding, top: parseInt(e.target.value) || 0 });
+                                }}
+                                className="w-full px-1 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-gray-400 mb-1">Right</label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="32"
+                                value={((chartConfig as Record<string, unknown>)?.chartPadding as any)?.right ?? 0}
+                                onChange={(e) => {
+                                  const currentPadding = (chartConfig as Record<string, unknown>)?.chartPadding as any || {};
+                                  const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 0, right: 0, bottom: 0, left: 0 };
+                                  handleChartConfigChange('chartPadding', { ...newPadding, right: parseInt(e.target.value) || 0 });
+                                }}
+                                className="w-full px-1 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-gray-400 mb-1">Bottom</label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="32"
+                                value={((chartConfig as Record<string, unknown>)?.chartPadding as any)?.bottom ?? 0}
+                                onChange={(e) => {
+                                  const currentPadding = (chartConfig as Record<string, unknown>)?.chartPadding as any || {};
+                                  const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 0, right: 0, bottom: 0, left: 0 };
+                                  handleChartConfigChange('chartPadding', { ...newPadding, bottom: parseInt(e.target.value) || 0 });
+                                }}
+                                className="w-full px-1 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-gray-400 mb-1">Left</label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="32"
+                                value={((chartConfig as Record<string, unknown>)?.chartPadding as any)?.left ?? 0}
+                                onChange={(e) => {
+                                  const currentPadding = (chartConfig as Record<string, unknown>)?.chartPadding as any || {};
+                                  const newPadding = typeof currentPadding === 'object' ? currentPadding : { top: 0, right: 0, bottom: 0, left: 0 };
+                                  handleChartConfigChange('chartPadding', { ...newPadding, left: parseInt(e.target.value) || 0 });
+                                }}
+                                className="w-full px-1 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
