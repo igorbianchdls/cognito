@@ -7,9 +7,7 @@ import { kpiActions } from '@/stores/kpiStore'
 import { useState, useEffect, useMemo } from 'react'
 import type { ChartWidget, BarChartConfig } from '@/types/chartWidgets'
 import { isChartWidget, isBarChart } from '@/types/chartWidgets'
-import type { KPIWidget } from '@/types/kpiWidgets'
 import { isKPIWidget } from '@/types/kpiWidgets'
-import type { DroppedWidget } from '@/types/widget'
 
 export default function WidgetEditor() {
   const widgets = useStore($widgets)
@@ -84,7 +82,7 @@ export default function WidgetEditor() {
         color: selectedWidget.color || '#3B82F6'
       })
     }
-  }, [selectedWidgetId]) // Changed to selectedWidgetId to avoid reference changes
+  }, [selectedWidgetId, selectedWidget]) // Include selectedWidget to fix dependency warning
 
   const handleSelectWidget = (widgetId: string) => {
     widgetActions.selectWidget(widgetId)
@@ -418,7 +416,7 @@ export default function WidgetEditor() {
                             <input
                               type="number"
                               min="0"
-                              value={(chartConfig as any).borderRadius ?? 4}
+                              value={(chartConfig as Record<string, unknown>).borderRadius as number ?? 4}
                               onChange={(e) => handleChartConfigChange('borderRadius', parseInt(e.target.value) || 0)}
                               className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
@@ -428,7 +426,7 @@ export default function WidgetEditor() {
                             <input
                               type="number"
                               min="0"
-                              value={(chartConfig as any).borderWidth ?? 0}
+                              value={(chartConfig as Record<string, unknown>).borderWidth as number ?? 0}
                               onChange={(e) => handleChartConfigChange('borderWidth', parseInt(e.target.value) || 0)}
                               className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             />
@@ -469,19 +467,19 @@ export default function WidgetEditor() {
                         <label className="flex items-center gap-2">
                           <input
                             type="checkbox"
-                            checked={(chartConfig as any).enableLabel || false}
+                            checked={(chartConfig as Record<string, unknown>).enableLabel as boolean || false}
                             onChange={(e) => handleChartConfigChange('enableLabel', e.target.checked)}
                             className="rounded"
                           />
                           <span className="text-xs text-gray-600">Enable Labels</span>
                         </label>
                         
-                        {(chartConfig as any).enableLabel && (
+                        {(chartConfig as Record<string, unknown>).enableLabel && (
                           <div className="space-y-2">
                             <div>
                               <label className="block text-xs text-gray-500 mb-1">Label Position</label>
                               <select
-                                value={(chartConfig as any).labelPosition || 'middle'}
+                                value={(chartConfig as Record<string, unknown>).labelPosition as string || 'middle'}
                                 onChange={(e) => handleChartConfigChange('labelPosition', e.target.value)}
                                 className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               >
@@ -496,7 +494,7 @@ export default function WidgetEditor() {
                                 <input
                                   type="number"
                                   min="0"
-                                  value={(chartConfig as any).labelSkipWidth ?? 0}
+                                  value={(chartConfig as Record<string, unknown>).labelSkipWidth as number ?? 0}
                                   onChange={(e) => handleChartConfigChange('labelSkipWidth', parseInt(e.target.value) || 0)}
                                   className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
@@ -506,7 +504,7 @@ export default function WidgetEditor() {
                                 <input
                                   type="number"
                                   min="0"
-                                  value={(chartConfig as any).labelSkipHeight ?? 0}
+                                  value={(chartConfig as Record<string, unknown>).labelSkipHeight as number ?? 0}
                                   onChange={(e) => handleChartConfigChange('labelSkipHeight', parseInt(e.target.value) || 0)}
                                   className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                 />
