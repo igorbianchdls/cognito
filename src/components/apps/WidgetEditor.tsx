@@ -113,7 +113,7 @@ export default function WidgetEditor() {
       selectedWidgetId: selectedWidget?.i,
       currentConfigViaConfig: selectedWidget?.config?.chartConfig,
       currentConfigDirect: selectedWidget?.chartConfig,
-      fieldCurrentValue: selectedWidget?.config?.chartConfig?.[field] || selectedWidget?.chartConfig?.[field]
+      fieldCurrentValue: selectedWidget?.config?.chartConfig?.[field as keyof typeof selectedWidget.config.chartConfig] || selectedWidget?.chartConfig?.[field as keyof typeof selectedWidget.chartConfig]
     })
     
     // Apply changes directly to store (no local state)
@@ -127,7 +127,7 @@ export default function WidgetEditor() {
           selectedWidgetId: selectedWidget?.i,
           newConfigViaConfig: selectedWidget?.config?.chartConfig,
           newConfigDirect: selectedWidget?.chartConfig,
-          fieldNewValue: selectedWidget?.config?.chartConfig?.[field] || selectedWidget?.chartConfig?.[field]
+          fieldNewValue: selectedWidget?.config?.chartConfig?.[field as keyof typeof selectedWidget.config.chartConfig] || selectedWidget?.chartConfig?.[field as keyof typeof selectedWidget.chartConfig]
         })
       }, 100)
     } else {
