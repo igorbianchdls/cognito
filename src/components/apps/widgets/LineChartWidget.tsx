@@ -52,6 +52,9 @@ export default function LineChartWidget({ widget }: LineChartWidgetProps) {
     }
     
     console.log('📊 LineChartWidget final config:', config)
+    console.log('🔍 DEBUG titlePadding:', config.titlePadding, 'titleFontWeight:', config.titleFontWeight)
+    console.log('🔍 DEBUG subtitlePadding:', config.subtitlePadding, 'subtitleFontWeight:', config.subtitleFontWeight)
+    console.log('🔍 DEBUG chartPadding:', config.chartPadding)
     return config
   }, [widget.config, widget.chartConfig])
   
@@ -98,13 +101,14 @@ export default function LineChartWidget({ widget }: LineChartWidgetProps) {
       {/* Title and Subtitle */}
       {(chartConfig.showTitle !== false && chartConfig.title) && (
         <div style={{ 
-          padding: `${chartConfig.titlePadding ?? 8}px`
+          padding: "20px",
+          backgroundColor: "lightblue"
         }}>
           <h3 
             style={{
               fontSize: `${chartConfig.titleFontSize ?? 18}px`,
               color: chartConfig.titleColor ?? '#111827',
-              fontWeight: chartConfig.titleFontWeight ?? 700,
+              fontWeight: 800,
               lineHeight: 1.2,
               margin: 0,
               textAlign: 'left'
@@ -116,13 +120,14 @@ export default function LineChartWidget({ widget }: LineChartWidgetProps) {
       )}
       {(chartConfig.showSubtitle !== false && chartConfig.subtitle) && (
         <div style={{ 
-          padding: `${chartConfig.subtitlePadding ?? 8}px`
+          padding: "15px",
+          backgroundColor: "lightgreen"
         }}>
           <p 
             style={{
               fontSize: `${chartConfig.subtitleFontSize ?? 14}px`,
               color: chartConfig.subtitleColor ?? '#6B7280',
-              fontWeight: chartConfig.subtitleFontWeight ?? 400,
+              fontWeight: 600,
               lineHeight: 1.4,
               margin: 0,
               textAlign: 'left'
