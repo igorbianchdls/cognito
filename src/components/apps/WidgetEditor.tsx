@@ -2,7 +2,14 @@
 
 import { useStore } from '@nanostores/react'
 import { $widgets, $selectedWidget, $selectedWidgetId, widgetActions } from '@/stores/widgetStore'
+import { chartActions } from '@/stores/chartStore'
+import { kpiActions } from '@/stores/kpiStore'
 import { useState, useEffect } from 'react'
+import type { ChartWidget, BarChartConfig } from '@/types/chartWidgets'
+import { isChartWidget, isBarChart } from '@/types/chartWidgets'
+import type { KPIWidget } from '@/types/kpiWidgets'
+import { isKPIWidget } from '@/types/kpiWidgets'
+import type { DroppedWidget } from '@/types/widget'
 
 export default function WidgetEditor() {
   const widgets = useStore($widgets)
@@ -17,6 +24,10 @@ export default function WidgetEditor() {
     color: selectedWidget?.color || '#3B82F6'
   })
 
+  // Widget-specific configuration state
+  const [chartConfig, setChartConfig] = useState<Partial<ChartWidget['config']>>({})
+  const [kpiConfig, setKpiConfig] = useState<Partial<KPIWidget['config']>>({})
+
   // Update form when selected widget changes
   useEffect(() => {
     if (selectedWidget) {
@@ -27,6 +38,15 @@ export default function WidgetEditor() {
         h: selectedWidget.h,
         color: selectedWidget.color || '#3B82F6'
       })
+
+      // Load widget-specific config
+      if (isChartWidget(selectedWidget)) {
+        const chartWidget = selectedWidget as ChartWidget
+        setChartConfig(chartWidget.config || {})
+      } else if (isKPIWidget(selectedWidget)) {
+        const kpiWidget = selectedWidget as KPIWidget
+        setKpiConfig(kpiWidget.config || {})
+      }
     }
   }, [selectedWidget])
 
@@ -59,6 +79,33 @@ export default function WidgetEditor() {
       ...prev,
       [field]: value
     }))
+  }
+
+  // Handle chart configuration changes
+  const handleChartConfigChange = (field: string, value: unknown) => {
+    const newConfig = { ...chartConfig, [field]: value }
+    setChartConfig(newConfig)
+    
+    // Apply changes immediately
+    if (selectedWidget && isChartWidget(selectedWidget)) {
+      chartActions.updateChartConfig(selectedWidget.i, { [field]: value })
+    }
+  }
+
+  // Handle KPI configuration changes
+  const handleKPIConfigChange = (field: string, value: unknown) => {
+    const newConfig = { ...kpiConfig, [field]: value }
+    setKpiConfig(newConfig)
+    
+    // Apply changes immediately
+    if (selectedWidget && isKPIWidget(selectedWidget)) {
+      kpiActions.updateKPIConfig(selectedWidget.i, { [field]: value })
+    }
+  }
+
+  // Handle color array changes for charts
+  const handleChartColorsChange = (colors: string[]) => {
+    handleChartConfigChange('colors', colors)
   }
 
   if (widgets.length === 0) {
@@ -214,6 +261,300 @@ export default function WidgetEditor() {
                     />
                   </div>
                 </div>
+
+                {/* Chart-Specific Configuration */}
+                {selectedWidget && isChartWidget(selectedWidget) && (
+                  <div className="border-t pt-4 mt-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">Chart Configuration</h4>
+                    
+                    {/* Chart Colors */}
+                    <div className="mb-4">
+                      <label className="block text-xs font-medium text-gray-600 mb-2">Chart Colors</label>
+                      <div className="space-y-2">
+                        {(chartConfig.colors || ['#2563eb']).map((color, index) => (
+                          <div key={index} className="flex gap-2">
+                            <input
+                              type="color"
+                              value={color}
+                              onChange={(e) => {
+                                const newColors = [...(chartConfig.colors || ['#2563eb'])]
+                                newColors[index] = e.target.value
+                                handleChartColorsChange(newColors)
+                              }}
+                              className="w-10 h-8 border border-gray-300 rounded cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              value={color}
+                              onChange={(e) => {
+                                const newColors = [...(chartConfig.colors || ['#2563eb'])]
+                                newColors[index] = e.target.value
+                                handleChartColorsChange(newColors)
+                              }}
+                              className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                            {(chartConfig.colors || []).length > 1 && (
+                              <button
+                                onClick={() => {
+                                  const newColors = (chartConfig.colors || []).filter((_, i) => i !== index)
+                                  handleChartColorsChange(newColors)
+                                }}
+                                className="px-2 py-1 text-red-600 hover:bg-red-50 rounded text-sm"
+                              >
+                                ×
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                        <button
+                          onClick={() => {
+                            const newColors = [...(chartConfig.colors || ['#2563eb']), '#10b981']
+                            handleChartColorsChange(newColors)
+                          }}
+                          className="text-xs text-blue-600 hover:text-blue-700"
+                        >
+                          + Add Color
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Grid Options */}
+                    <div className="mb-4">
+                      <label className="block text-xs font-medium text-gray-600 mb-2">Grid</label>
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={chartConfig.enableGridX || false}
+                            onChange={(e) => handleChartConfigChange('enableGridX', e.target.checked)}
+                            className="rounded"
+                          />
+                          <span className="text-xs text-gray-600">Enable X Grid</span>
+                        </label>
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={chartConfig.enableGridY !== false}
+                            onChange={(e) => handleChartConfigChange('enableGridY', e.target.checked)}
+                            className="rounded"
+                          />
+                          <span className="text-xs text-gray-600">Enable Y Grid</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Chart Type Specific Options */}
+                    {isBarChart(selectedWidget as ChartWidget) && (
+                      <div className="mb-4">
+                        <label className="block text-xs font-medium text-gray-600 mb-2">Bar Chart Options</label>
+                        <div className="space-y-2">
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Group Mode</label>
+                            <select
+                              value={(chartConfig as BarChartConfig).groupMode || 'grouped'}
+                              onChange={(e) => handleChartConfigChange('groupMode', e.target.value)}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                              <option value="grouped">Grouped</option>
+                              <option value="stacked">Stacked</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Layout</label>
+                            <select
+                              value={(chartConfig as BarChartConfig).layout || 'vertical'}
+                              onChange={(e) => handleChartConfigChange('layout', e.target.value)}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                              <option value="vertical">Vertical</option>
+                              <option value="horizontal">Horizontal</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Animation Options */}
+                    <div className="mb-4">
+                      <label className="block text-xs font-medium text-gray-600 mb-2">Animation</label>
+                      <div className="space-y-2">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={chartConfig.animate !== false}
+                            onChange={(e) => handleChartConfigChange('animate', e.target.checked)}
+                            className="rounded"
+                          />
+                          <span className="text-xs text-gray-600">Enable Animation</span>
+                        </label>
+                        {chartConfig.animate !== false && (
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Motion Config</label>
+                            <select
+                              value={chartConfig.motionConfig || 'gentle'}
+                              onChange={(e) => handleChartConfigChange('motionConfig', e.target.value)}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                              <option value="gentle">Gentle</option>
+                              <option value="wobbly">Wobbly</option>
+                              <option value="stiff">Stiff</option>
+                              <option value="slow">Slow</option>
+                            </select>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* KPI-Specific Configuration */}
+                {selectedWidget && isKPIWidget(selectedWidget) && (
+                  <div className="border-t pt-4 mt-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-3">KPI Configuration</h4>
+                    
+                    {/* KPI Data */}
+                    <div className="mb-4">
+                      <label className="block text-xs font-medium text-gray-600 mb-2">Data</label>
+                      <div className="space-y-2">
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Name</label>
+                          <input
+                            type="text"
+                            value={kpiConfig.name || ''}
+                            onChange={(e) => handleKPIConfigChange('name', e.target.value)}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="KPI Name"
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Value</label>
+                            <input
+                              type="number"
+                              value={kpiConfig.value || 0}
+                              onChange={(e) => handleKPIConfigChange('value', parseFloat(e.target.value) || 0)}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Unit</label>
+                            <input
+                              type="text"
+                              value={kpiConfig.unit || ''}
+                              onChange={(e) => handleKPIConfigChange('unit', e.target.value)}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="$, %, etc."
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Target</label>
+                          <input
+                            type="number"
+                            value={kpiConfig.target || 0}
+                            onChange={(e) => handleKPIConfigChange('target', parseFloat(e.target.value) || 0)}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* KPI Display Options */}
+                    <div className="mb-4">
+                      <label className="block text-xs font-medium text-gray-600 mb-2">Display</label>
+                      <div className="space-y-2">
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Visualization Type</label>
+                          <select
+                            value={kpiConfig.visualizationType || 'card'}
+                            onChange={(e) => handleKPIConfigChange('visualizationType', e.target.value)}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          >
+                            <option value="card">Card</option>
+                            <option value="display">Display</option>
+                            <option value="gauge">Gauge</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Color Scheme</label>
+                          <select
+                            value={kpiConfig.colorScheme || 'blue'}
+                            onChange={(e) => handleKPIConfigChange('colorScheme', e.target.value)}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          >
+                            <option value="green">Green</option>
+                            <option value="blue">Blue</option>
+                            <option value="orange">Orange</option>
+                            <option value="red">Red</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={kpiConfig.showTarget !== false}
+                              onChange={(e) => handleKPIConfigChange('showTarget', e.target.checked)}
+                              className="rounded"
+                            />
+                            <span className="text-xs text-gray-600">Show Target</span>
+                          </label>
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={kpiConfig.showTrend !== false}
+                              onChange={(e) => handleKPIConfigChange('showTrend', e.target.checked)}
+                              className="rounded"
+                            />
+                            <span className="text-xs text-gray-600">Show Trend</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* KPI Typography */}
+                    <div className="mb-4">
+                      <label className="block text-xs font-medium text-gray-600 mb-2">Typography</label>
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Value Font Size</label>
+                            <input
+                              type="number"
+                              min="12"
+                              max="72"
+                              value={kpiConfig.valueFontSize || 36}
+                              onChange={(e) => handleKPIConfigChange('valueFontSize', parseInt(e.target.value) || 36)}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Name Font Size</label>
+                            <input
+                              type="number"
+                              min="8"
+                              max="24"
+                              value={kpiConfig.nameFontSize || 14}
+                              onChange={(e) => handleKPIConfigChange('nameFontSize', parseInt(e.target.value) || 14)}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Text Alignment</label>
+                          <select
+                            value={kpiConfig.textAlign || 'center'}
+                            onChange={(e) => handleKPIConfigChange('textAlign', e.target.value)}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          >
+                            <option value="left">Left</option>
+                            <option value="center">Center</option>
+                            <option value="right">Right</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Actions */}
                 <div className="flex gap-2 pt-2">
