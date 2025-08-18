@@ -83,8 +83,9 @@ export default function WidgetEditor() {
     return config
   }, [
     selectedWidget?.i,
-    selectedWidget?.config?.kpiConfig
-  ]) // Optimized dependencies - only re-compute when ID or KPI config actually changes
+    selectedWidget?.config?.kpiConfig,
+    selectedWidget
+  ]) // Dependencies for kpiConfig useMemo
 
   // Update form when selected widget ID changes (not the object reference)
   useEffect(() => {
@@ -97,7 +98,7 @@ export default function WidgetEditor() {
         color: selectedWidget.color || '#3B82F6'
       })
     }
-  }, [selectedWidgetId]) // Only sync when widget ID changes, not object reference
+  }, [selectedWidgetId, selectedWidget]) // Dependencies for editForm sync
 
   // Sync editKPIForm with kpiConfig when widget changes - specific dependencies
   useEffect(() => {
@@ -111,8 +112,9 @@ export default function WidgetEditor() {
   }, [
     selectedWidgetId,
     selectedWidget?.config?.kpiConfig?.name,
-    selectedWidget?.config?.kpiConfig?.unit
-  ]) // Specific dependencies for stable sync
+    selectedWidget?.config?.kpiConfig?.unit,
+    selectedWidget
+  ]) // Dependencies for editKPIForm sync
 
 
   // Debug: Monitor re-renders and selectedWidget changes
@@ -240,7 +242,7 @@ export default function WidgetEditor() {
   }
 
   // Collapsible section component - memoized to prevent unnecessary re-renders
-  const CollapsibleSection = memo(({ 
+  const CollapsibleSection = memo(function CollapsibleSection({ 
     title, 
     sectionKey, 
     children 
@@ -248,7 +250,8 @@ export default function WidgetEditor() {
     title: string
     sectionKey: keyof typeof expandedSections
     children: React.ReactNode 
-  }) => (
+  }) {
+    return (
     <div className="mb-4">
       <button
         onClick={() => toggleSection(sectionKey)}
@@ -265,7 +268,8 @@ export default function WidgetEditor() {
         </div>
       )}
     </div>
-  ))
+    )
+  })
 
   if (widgets.length === 0) {
     return (
