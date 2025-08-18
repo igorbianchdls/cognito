@@ -5,8 +5,8 @@ import { $widgets, $selectedWidget, $selectedWidgetId, widgetActions } from '@/s
 import { chartActions } from '@/stores/chartStore'
 import { kpiActions } from '@/stores/kpiStore'
 import { useState, useEffect, useMemo } from 'react'
-import type { ChartWidget, BarChartConfig, LineChartConfig } from '@/types/chartWidgets'
-import { isChartWidget, isBarChart, isLineChart } from '@/types/chartWidgets'
+import type { ChartWidget, BarChartConfig, LineChartConfig, PieChartConfig } from '@/types/chartWidgets'
+import { isChartWidget, isBarChart, isLineChart, isPieChart } from '@/types/chartWidgets'
 import { isKPIWidget } from '@/types/kpiWidgets'
 
 export default function WidgetEditor() {
@@ -788,6 +788,87 @@ export default function WidgetEditor() {
                             )}
                           </div>
                         </CollapsibleSection>
+                    )}
+
+                    {/* Pie Chart Specific Options */}
+                    {isPieChart(selectedWidget as ChartWidget) && (
+                      <CollapsibleSection title="🥧 Pie Chart Options" sectionKey="chartSpecific">
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Inner Radius</label>
+                            <input
+                              type="number"
+                              min="0"
+                              max="1"
+                              step="0.1"
+                              value={(chartConfig as PieChartConfig).innerRadius ?? 0.5}
+                              onChange={(e) => handleChartConfigChange('innerRadius', parseFloat(e.target.value) || 0.5)}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Pad Angle</label>
+                            <input
+                              type="number"
+                              min="0"
+                              max="10"
+                              step="0.5"
+                              value={(chartConfig as PieChartConfig).padAngle ?? 1}
+                              onChange={(e) => handleChartConfigChange('padAngle', parseFloat(e.target.value) || 1)}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Corner Radius</label>
+                            <input
+                              type="number"
+                              min="0"
+                              max="20"
+                              value={(chartConfig as PieChartConfig).cornerRadius ?? 2}
+                              onChange={(e) => handleChartConfigChange('cornerRadius', parseInt(e.target.value) || 2)}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Active Outer Radius Offset</label>
+                            <input
+                              type="number"
+                              min="0"
+                              max="20"
+                              value={(chartConfig as PieChartConfig).activeOuterRadiusOffset ?? 4}
+                              onChange={(e) => handleChartConfigChange('activeOuterRadiusOffset', parseInt(e.target.value) || 4)}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                          
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={(chartConfig as PieChartConfig).enableArcLinkLabels ?? false}
+                              onChange={(e) => handleChartConfigChange('enableArcLinkLabels', e.target.checked)}
+                              className="rounded"
+                            />
+                            <span className="text-xs text-gray-600">Enable Arc Link Labels</span>
+                          </label>
+                          
+                          {(chartConfig as PieChartConfig).enableArcLinkLabels && (
+                            <div>
+                              <label className="block text-xs text-gray-500 mb-1">Arc Labels Skip Angle</label>
+                              <input
+                                type="number"
+                                min="0"
+                                max="45"
+                                value={(chartConfig as PieChartConfig).arcLabelsSkipAngle ?? 15}
+                                onChange={(e) => handleChartConfigChange('arcLabelsSkipAngle', parseInt(e.target.value) || 15)}
+                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </CollapsibleSection>
                     )}
 
                     {/* Animation Section */}

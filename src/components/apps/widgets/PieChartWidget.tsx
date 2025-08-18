@@ -76,6 +76,7 @@ export default function PieChartWidget({ widget }: PieChartWidgetProps) {
     arcLabelsSkipAngle: chartConfig.arcLabelsSkipAngle ?? 15,
     animate: chartConfig.animate ?? false,
     motionConfig: chartConfig.motionConfig || 'gentle',
+    legends: chartConfig.legends,
     margin: {
       top: chartConfig.margin?.top ?? 20,
       right: chartConfig.margin?.right ?? 20,

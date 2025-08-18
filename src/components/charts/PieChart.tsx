@@ -5,6 +5,7 @@ import { BaseChartProps } from './types';
 import { nivoTheme } from './theme';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
+import type { LegendConfig } from '@/types/chartWidgets';
 
 interface PieChartProps extends BaseChartProps {
   colors?: string[]
@@ -18,13 +19,12 @@ interface PieChartProps extends BaseChartProps {
   animate?: boolean
   motionConfig?: 'default' | 'gentle' | 'wobbly' | 'stiff' | 'slow'
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
+  // Legends
+  legends?: LegendConfig | Record<string, unknown>[]
 }
 
 export function PieChart({ 
   data, 
-  xColumn, 
-  yColumn, 
-  isFullscreen,
   colors,
   innerRadius,
   padAngle,
@@ -35,7 +35,8 @@ export function PieChart({
   arcLabelsSkipAngle,
   animate,
   motionConfig,
-  margin
+  margin,
+  legends
 }: PieChartProps) {
   if (!data || data.length === 0) {
     return <EmptyState />;
@@ -106,31 +107,68 @@ export function PieChart({
           </div>
         )}
         
-        // Legenda horizontal na parte inferior
-        legends={[
-          {
-            anchor: 'bottom',
-            direction: 'row',
-            justify: false,
-            translateX: 0,
-            translateY: 70,
-            itemsSpacing: 20,
-            itemWidth: 80,
-            itemHeight: 18,
-            itemDirection: 'left-to-right',
-            itemOpacity: 0.8,
-            symbolSize: 12,
-            symbolShape: 'square',
-            effects: [
-              {
-                on: 'hover',
-                style: {
-                  itemOpacity: 1
-                }
-              }
-            ]
+        // Legendas configuráveis
+        // @ts-expect-error - Nivo legend type compatibility
+        legends={(() => {
+          // Se legends é array, usar diretamente
+          if (Array.isArray(legends)) {
+            return legends as Record<string, unknown>[];
           }
-        ]}
+          
+          // Se legends é LegendConfig, converter para PieLegendProps[]
+          if (legends && typeof legends === 'object' && 'enabled' in legends) {
+            return legends.enabled !== false ? [
+              {
+                anchor: legends.anchor || 'bottom',
+                direction: legends.direction || 'row',
+                justify: false,
+                translateX: legends.translateX || 0,
+                translateY: legends.translateY || 70,
+                itemsSpacing: legends.itemsSpacing || 20,
+                itemWidth: legends.itemWidth || 80,
+                itemHeight: legends.itemHeight || 18,
+                itemDirection: 'left-to-right',
+                itemOpacity: 0.8,
+                symbolSize: legends.symbolSize || 12,
+                symbolShape: legends.symbolShape || 'square',
+                effects: [
+                  {
+                    on: 'hover',
+                    style: {
+                      itemOpacity: 1
+                    }
+                  }
+                ]
+              }
+            ] : [];
+          }
+          
+          // Configuração padrão se legends não especificado
+          return [
+            {
+              anchor: 'bottom',
+              direction: 'row',
+              justify: false,
+              translateX: 0,
+              translateY: 70,
+              itemsSpacing: 20,
+              itemWidth: 80,
+              itemHeight: 18,
+              itemDirection: 'left-to-right',
+              itemOpacity: 0.8,
+              symbolSize: 12,
+              symbolShape: 'square',
+              effects: [
+                {
+                  on: 'hover',
+                  style: {
+                    itemOpacity: 1
+                  }
+                }
+              ]
+            }
+          ];
+        })()}
       />
     </div>
   );
