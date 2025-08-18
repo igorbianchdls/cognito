@@ -981,91 +981,77 @@ export default function WidgetEditor() {
                 {/* KPI-Specific Configuration */}
                 {selectedWidget && isKPIWidget(selectedWidget) && (
                   <div className="border-t pt-4 mt-4">
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">📊 KPI Configuration</h4>
+                    <h4 className="text-sm font-medium text-gray-700 mb-4">📊 KPI Configuration</h4>
                     
-                    {/* TEST: KPI Name OUTSIDE CollapsibleSection */}
-                    <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">KPI Name (TEST)</label>
-                      <input
-                        type="text"
-                        value={editKPIForm.name}
-                        onChange={(e) => handleKPIFormChange('name', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Sales Revenue"
-                      />
-                    </div>
-                    
-                    {/* KPI Data Section */}
-                    <CollapsibleSection
-                      title="📈 Data & Values"
-                      sectionKey="kpiData"
-                    >
-                      <div className="space-y-3">
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">KPI Name (Inside CollapsibleSection)</label>
-                          <input
-                            type="text"
-                            value={editKPIForm.name}
-                            onChange={(e) => handleKPIFormChange('name', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="Sales Revenue"
-                          />
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-6">
+                      {/* Data & Values */}
+                      <div>
+                        <h5 className="text-sm font-medium text-gray-700 mb-3">📈 Data & Values</h5>
+                        <div className="space-y-3">
                           <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">Current Value</label>
-                            <input
-                              type="number"
-                              step="any"
-                              value={kpiConfig.value || ''}
-                              onChange={(e) => handleKPIConfigChange('value', parseFloat(e.target.value) || 0)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              placeholder="1247"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">Target Value</label>
-                            <input
-                              type="number"
-                              step="any"
-                              value={kpiConfig.target || ''}
-                              onChange={(e) => handleKPIConfigChange('target', parseFloat(e.target.value) || 0)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              placeholder="1500"
-                            />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">Unit</label>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">KPI Name</label>
                             <input
                               type="text"
-                              value={editKPIForm.unit}
-                              onChange={(e) => handleKPIFormChange('unit', e.target.value)}
+                              value={editKPIForm.name}
+                              onChange={(e) => handleKPIFormChange('name', e.target.value)}
                               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              placeholder="$, %, units"
+                              placeholder="Sales Revenue"
                             />
                           </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-600 mb-1">Change %</label>
-                            <input
-                              type="number"
-                              step="0.1"
-                              value={kpiConfig.change || ''}
-                              onChange={(e) => handleKPIConfigChange('change', parseFloat(e.target.value) || 0)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              placeholder="7.9"
-                            />
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">Unit</label>
+                              <input
+                                type="text"
+                                value={editKPIForm.unit}
+                                onChange={(e) => handleKPIFormChange('unit', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="$, %, units"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">Current Value</label>
+                              <input
+                                type="number"
+                                step="any"
+                                value={kpiConfig.value || ''}
+                                onChange={(e) => handleKPIConfigChange('value', parseFloat(e.target.value) || 0)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="1247"
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">Target Value</label>
+                              <input
+                                type="number"
+                                step="any"
+                                value={kpiConfig.target || ''}
+                                onChange={(e) => handleKPIConfigChange('target', parseFloat(e.target.value) || 0)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="1500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-1">Change %</label>
+                              <input
+                                type="number"
+                                step="0.1"
+                                value={kpiConfig.change || ''}
+                                onChange={(e) => handleKPIConfigChange('change', parseFloat(e.target.value) || 0)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="7.9"
+                              />
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </CollapsibleSection>
+                    
 
-                    {/* Colors & Styling Section */}
-                    <CollapsibleSection
-                      title="🎨 Colors & Styling"
-                      sectionKey="kpiStyling"
-                    >
+                      {/* Colors & Styling */}
+                      <div>
+                        <h5 className="text-sm font-medium text-gray-700 mb-3">🎨 Colors & Styling</h5>
                       <div className="space-y-3">
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-1">Color Scheme</label>
@@ -1135,14 +1121,12 @@ export default function WidgetEditor() {
                             </label>
                           </div>
                         </div>
+                        </div>
                       </div>
-                    </CollapsibleSection>
 
-                    {/* Typography Section */}
-                    <CollapsibleSection
-                      title="✍️ Typography"
-                      sectionKey="kpiTypography"
-                    >
+                      {/* Typography */}
+                      <div>
+                        <h5 className="text-sm font-medium text-gray-700 mb-3">✍️ Typography</h5>
                       <div className="space-y-3">
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-2">Value Styling</label>
@@ -1245,14 +1229,12 @@ export default function WidgetEditor() {
                             />
                           </div>
                         </div>
+                        </div>
                       </div>
-                    </CollapsibleSection>
 
-                    {/* Layout & Spacing Section */}
-                    <CollapsibleSection
-                      title="📐 Layout & Spacing"
-                      sectionKey="kpiLayout"
-                    >
+                      {/* Layout & Spacing */}
+                      <div>
+                        <h5 className="text-sm font-medium text-gray-700 mb-3">📐 Layout & Spacing</h5>
                       <div className="space-y-3">
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-1">Text Alignment</label>
@@ -1294,14 +1276,12 @@ export default function WidgetEditor() {
                             <span>32px</span>
                           </div>
                         </div>
+                        </div>
                       </div>
-                    </CollapsibleSection>
 
-                    {/* Display Options Section */}
-                    <CollapsibleSection
-                      title="📊 Display Options"
-                      sectionKey="kpiDisplay"
-                    >
+                      {/* Display Options */}
+                      <div>
+                        <h5 className="text-sm font-medium text-gray-700 mb-3">📊 Display Options</h5>
                       <div className="space-y-3">
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-1">Visualization Type</label>
@@ -1390,8 +1370,9 @@ export default function WidgetEditor() {
                             </div>
                           </div>
                         )}
+                        </div>
                       </div>
-                    </CollapsibleSection>
+                    </div>
                   </div>
                 )}
 
