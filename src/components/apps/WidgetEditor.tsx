@@ -277,7 +277,7 @@ export default function WidgetEditor() {
         {/* Header */}
         <div className="p-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">Widget Editor</h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="text-sm text-gray-600 mt-2">
             Edit widget properties manually
           </p>
         </div>
@@ -301,7 +301,7 @@ export default function WidgetEditor() {
       {/* Header */}
       <div className="p-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900">Widget Editor</h2>
-        <p className="text-sm text-gray-600 mt-1">
+        <p className="text-sm text-gray-600 mt-2">
           {widgets.length} widget{widgets.length !== 1 ? 's' : ''} on canvas
         </p>
       </div>
@@ -432,7 +432,7 @@ export default function WidgetEditor() {
                     
                     {/* Colors & Styling */}
                     <div>
-                      <h5 className="text-lg font-bold text-gray-700 mb-3 mt-1">🎨 Colors & Styling</h5>
+                      <h5 className="text-lg font-bold text-gray-700 mb-3 mt-2">🎨 Colors & Styling</h5>
                       <div className="space-y-3">
                         {/* Chart Colors */}
                         <div>
@@ -513,7 +513,7 @@ export default function WidgetEditor() {
 
                     {/* Grid & Axes */}
                     <div>
-                      <h5 className="text-lg font-bold text-gray-700 mb-3 mt-1">📐 Grid & Axes</h5>
+                      <h5 className="text-lg font-bold text-gray-700 mb-3 mt-2">📐 Grid & Axes</h5>
                       <div className="space-y-3">
                         <div className="space-y-2">
                           <label className="flex items-center gap-2">
@@ -540,7 +540,7 @@ export default function WidgetEditor() {
 
                     {/* Labels */}
                     <div>
-                      <h5 className="text-lg font-bold text-gray-700 mb-3 mt-1">🏷️ Labels</h5>
+                      <h5 className="text-lg font-bold text-gray-700 mb-3 mt-2">🏷️ Labels</h5>
                       <div className="space-y-3">
                         <label className="flex items-center gap-2">
                           <input
@@ -595,7 +595,7 @@ export default function WidgetEditor() {
 
                     {/* Legends */}
                     <div>
-                      <h5 className="text-lg font-bold text-gray-700 mb-3 mt-1">🏛️ Legends</h5>
+                      <h5 className="text-lg font-bold text-gray-700 mb-3 mt-2">🏛️ Legends</h5>
                       <div className="space-y-3">
                         <label className="flex items-center gap-2">
                           <input
@@ -760,7 +760,7 @@ export default function WidgetEditor() {
                     {/* Chart Type Specific Options */}
                     {isBarChart(selectedWidget as ChartWidget) && (
                       <div>
-                        <h5 className="text-sm font-medium text-gray-700 mb-3">📊 Bar Chart Options</h5>
+                        <h5 className="text-lg font-bold text-gray-700 mb-3 mt-2">📊 Bar Chart Options</h5>
                         <div className="space-y-2">
                           <div>
                             <label className="block text-xs text-gray-500 mb-1">Group Mode</label>
@@ -791,7 +791,7 @@ export default function WidgetEditor() {
                     {/* Line Chart Specific Options */}
                     {isLineChart(selectedWidget as ChartWidget) && (
                       <div>
-                        <h5 className="text-lg font-bold text-gray-700 mb-3 mt-1">📈 Line Chart Options</h5>
+                        <h5 className="text-lg font-bold text-gray-700 mb-3 mt-2">📈 Line Chart Options</h5>
                           <div className="space-y-3">
                             <label className="flex items-center gap-2">
                               <input
@@ -874,7 +874,7 @@ export default function WidgetEditor() {
                     {/* Pie Chart Specific Options */}
                     {isPieChart(selectedWidget as ChartWidget) && (
                       <div>
-                        <h5 className="text-sm font-medium text-gray-700 mb-3">🥧 Pie Chart Options</h5>
+                        <h5 className="text-lg font-bold text-gray-700 mb-3 mt-2">🥧 Pie Chart Options</h5>
                         <div className="space-y-3">
                           <div>
                             <label className="block text-xs text-gray-500 mb-1">Inner Radius</label>
@@ -955,7 +955,7 @@ export default function WidgetEditor() {
 
                     {/* Animation */}
                     <div>
-                      <h5 className="text-lg font-bold text-gray-700 mb-3 mt-1">🎬 Animation</h5>
+                      <h5 className="text-lg font-bold text-gray-700 mb-3 mt-2">🎬 Animation</h5>
                       <div className="space-y-2">
                         <label className="flex items-center gap-2">
                           <input
@@ -1059,7 +1059,7 @@ export default function WidgetEditor() {
 
                       {/* Colors & Styling */}
                       <div>
-                        <h5 className="text-lg font-bold text-gray-700 mb-3 mt-1">🎨 Colors & Styling</h5>
+                        <h5 className="text-lg font-bold text-gray-700 mb-3 mt-2">🎨 Colors & Styling</h5>
                       <div className="space-y-3">
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-1">Color Scheme</label>
