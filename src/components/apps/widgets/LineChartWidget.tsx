@@ -97,15 +97,20 @@ export default function LineChartWidget({ widget }: LineChartWidgetProps) {
     <div className="h-full w-full flex flex-col">
       {/* Title and Subtitle */}
       {(chartConfig.showTitle !== false && chartConfig.title) && (
-        <div style={{ padding: `${chartConfig.titlePadding ?? 8}px` }}>
+        <div style={{ 
+          paddingLeft: `${chartConfig.titlePadding ?? 8}px`,
+          paddingRight: `${chartConfig.titlePadding ?? 8}px`,
+          paddingTop: `${chartConfig.titlePadding ?? 8}px`,
+          paddingBottom: `${chartConfig.titlePadding ?? 8}px`
+        }}>
           <h3 
-            className="text-left"
             style={{
               fontSize: `${chartConfig.titleFontSize ?? 18}px`,
               color: chartConfig.titleColor ?? '#111827',
-              fontWeight: chartConfig.titleFontWeight ?? 700,
+              fontWeight: `${chartConfig.titleFontWeight ?? 700} !important`,
               lineHeight: 1.2,
-              margin: 0
+              margin: 0,
+              textAlign: 'left'
             }}
           >
             {chartConfig.title}
@@ -113,15 +118,20 @@ export default function LineChartWidget({ widget }: LineChartWidgetProps) {
         </div>
       )}
       {(chartConfig.showSubtitle !== false && chartConfig.subtitle) && (
-        <div style={{ padding: `${chartConfig.subtitlePadding ?? 8}px` }}>
+        <div style={{ 
+          paddingLeft: `${chartConfig.subtitlePadding ?? 8}px`,
+          paddingRight: `${chartConfig.subtitlePadding ?? 8}px`,
+          paddingTop: `${chartConfig.subtitlePadding ?? 8}px`,
+          paddingBottom: `${chartConfig.subtitlePadding ?? 8}px`
+        }}>
           <p 
-            className="text-left"
             style={{
               fontSize: `${chartConfig.subtitleFontSize ?? 14}px`,
               color: chartConfig.subtitleColor ?? '#6B7280',
-              fontWeight: chartConfig.subtitleFontWeight ?? 400,
+              fontWeight: `${chartConfig.subtitleFontWeight ?? 400} !important`,
               lineHeight: 1.4,
-              margin: 0
+              margin: 0,
+              textAlign: 'left'
             }}
           >
             {chartConfig.subtitle}
@@ -130,8 +140,16 @@ export default function LineChartWidget({ widget }: LineChartWidgetProps) {
       )}
       
       {/* Chart */}
-      <div className="flex-1" style={{ padding: `${chartConfig.chartPadding ?? 0}px` }}>
-        <LineChart {...chartProps} />
+      <div className="flex-1">
+        <LineChart {...{
+          ...chartProps,
+          margin: {
+            top: (chartProps.margin?.top ?? 12) + (chartConfig.chartPadding ?? 0),
+            right: (chartProps.margin?.right ?? 8) + (chartConfig.chartPadding ?? 0),
+            bottom: (chartProps.margin?.bottom ?? 80) + (chartConfig.chartPadding ?? 0),
+            left: (chartProps.margin?.left ?? 8) + (chartConfig.chartPadding ?? 0),
+          }
+        }} />
       </div>
     </div>
   )
