@@ -474,7 +474,7 @@ export default function WidgetEditor() {
                           <span className="text-xs text-gray-600">Enable Labels</span>
                         </label>
                         
-                        {(chartConfig as Record<string, unknown>).enableLabel && (
+                        {(chartConfig as Record<string, unknown>).enableLabel as boolean && (
                           <div className="space-y-2">
                             <div>
                               <label className="block text-xs text-gray-500 mb-1">Label Position</label>
