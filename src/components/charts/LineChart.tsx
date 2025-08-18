@@ -140,7 +140,7 @@ export function LineChart({
         
         // Interação elegante
         useMesh={true}
-        animate={animate ?? true}
+        animate={animate ?? false}
         motionConfig={motionConfig || "gentle"}
         theme={elegantTheme}
         

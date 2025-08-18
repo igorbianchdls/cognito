@@ -92,7 +92,7 @@ export function PieChart({
         arcLabelsSkipAngle={arcLabelsSkipAngle ?? 15}
         arcLabelsTextColor={{ from: 'color', modifiers: [['darker', 1.8]] }}
         
-        animate={animate ?? true}
+        animate={animate ?? false}
         motionConfig={motionConfig || "gentle"}
         theme={elegantTheme}
         

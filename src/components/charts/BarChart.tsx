@@ -181,7 +181,7 @@ export function BarChart(props: BarChartProps) {
           // Labels configuráveis
           enableLabel={enableLabel ?? false}
           
-          animate={animate ?? true}
+          animate={animate ?? false}
           motionConfig={motionConfig || "gentle"}
           theme={elegantTheme}
           
