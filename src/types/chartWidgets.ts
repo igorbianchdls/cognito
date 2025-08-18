@@ -75,10 +75,12 @@ export interface PieChartConfig extends BaseChartConfig {
 
 // Area Chart specific configuration
 export interface AreaChartConfig extends BaseChartConfig {
+  enableArea?: boolean
   areaOpacity?: number
   curve?: 'linear' | 'cardinal' | 'catmullRom' | 'monotoneX'
   enablePoints?: boolean
   pointSize?: number
+  lineWidth?: number
 }
 
 // Chart widget type discriminators
