@@ -81,11 +81,7 @@ export default function WidgetEditor() {
     const config = selectedWidget.config?.kpiConfig || {}
     console.log('🎯 WidgetEditor computed kpiConfig final:', config)
     return config
-  }, [
-    selectedWidget?.i,
-    selectedWidget?.config?.kpiConfig,
-    selectedWidget
-  ]) // Dependencies for kpiConfig useMemo
+  }, [selectedWidget]) // Dependencies for kpiConfig useMemo
 
   // Update form when selected widget ID changes (not the object reference)
   useEffect(() => {
@@ -241,35 +237,6 @@ export default function WidgetEditor() {
     }))
   }
 
-  // Collapsible section component - memoized to prevent unnecessary re-renders
-  const CollapsibleSection = memo(function CollapsibleSection({ 
-    title, 
-    sectionKey, 
-    children 
-  }: { 
-    title: string
-    sectionKey: keyof typeof expandedSections
-    children: React.ReactNode 
-  }) {
-    return (
-    <div className="mb-4">
-      <button
-        onClick={() => toggleSection(sectionKey)}
-        className="w-full flex items-center justify-between p-2 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 transition-colors"
-      >
-        <span>{title}</span>
-        <span className={`transform transition-transform ${expandedSections[sectionKey] ? 'rotate-90' : ''}`}>
-          ▶
-        </span>
-      </button>
-      {expandedSections[sectionKey] && (
-        <div className="mt-3 pl-3 border-l-2 border-gray-200">
-          {children}
-        </div>
-      )}
-    </div>
-    )
-  })
 
   if (widgets.length === 0) {
     return (
@@ -438,7 +405,7 @@ export default function WidgetEditor() {
                           <label className="block text-xs font-medium text-gray-600 mb-1">Title</label>
                           <input
                             type="text"
-                            value={(chartConfig as any)?.title || ''}
+                            value={(chartConfig as Record<string, unknown>)?.title as string || ''}
                             onChange={(e) => handleChartConfigChange('title', e.target.value)}
                             className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Enter chart title"
@@ -448,7 +415,7 @@ export default function WidgetEditor() {
                           <label className="block text-xs font-medium text-gray-600 mb-1">Subtitle</label>
                           <input
                             type="text"
-                            value={(chartConfig as any)?.subtitle || ''}
+                            value={(chartConfig as Record<string, unknown>)?.subtitle as string || ''}
                             onChange={(e) => handleChartConfigChange('subtitle', e.target.value)}
                             className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Enter chart subtitle"
@@ -458,7 +425,7 @@ export default function WidgetEditor() {
                           <label className="flex items-center gap-2">
                             <input
                               type="checkbox"
-                              checked={(chartConfig as any)?.showTitle !== false}
+                              checked={(chartConfig as Record<string, unknown>)?.showTitle as boolean !== false}
                               onChange={(e) => handleChartConfigChange('showTitle', e.target.checked)}
                               className="rounded"
                             />
@@ -467,7 +434,7 @@ export default function WidgetEditor() {
                           <label className="flex items-center gap-2">
                             <input
                               type="checkbox"
-                              checked={(chartConfig as any)?.showSubtitle !== false}
+                              checked={(chartConfig as Record<string, unknown>)?.showSubtitle as boolean !== false}
                               onChange={(e) => handleChartConfigChange('showSubtitle', e.target.checked)}
                               className="rounded"
                             />
