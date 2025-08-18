@@ -196,9 +196,26 @@ export const chartActions = {
     console.log('✏️ Editing chart:', { chartId, changes })
     const currentCharts = $chartWidgets.get()
     
-    const updatedCharts = currentCharts.map(chart => 
-      chart.i === chartId ? { ...chart, ...changes } : chart
-    )
+    const updatedCharts = currentCharts.map(chart => {
+      if (chart.i !== chartId) return chart
+      
+      // Handle nested config.chartConfig from chat (fix for duplication bug)
+      if (changes.config && typeof changes.config === 'object' && 'chartConfig' in changes.config) {
+        const { config, ...otherChanges } = changes
+        const chartConfig = (config as any).chartConfig // Extract nested chartConfig
+        console.log('🔧 [CHART-FIX] Detected nested config.chartConfig, flattening:', { chartConfig })
+        const result = {
+          ...chart,
+          ...otherChanges,
+          config: { ...chart.config, ...chartConfig } // Apply chartConfig directly to chart.config
+        }
+        console.log('🔧 [CHART-FIX] Result config:', result.config)
+        return result
+      }
+      
+      // Regular merge for other changes
+      return { ...chart, ...changes }
+    })
     $chartWidgets.set(updatedCharts)
   },
 
