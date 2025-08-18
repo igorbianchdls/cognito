@@ -4,7 +4,7 @@ import { useStore } from '@nanostores/react'
 import { $widgets, $selectedWidget, $selectedWidgetId, widgetActions } from '@/stores/widgetStore'
 import { chartActions } from '@/stores/chartStore'
 import { kpiActions } from '@/stores/kpiStore'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import type { ChartWidget, BarChartConfig } from '@/types/chartWidgets'
 import { isChartWidget, isBarChart } from '@/types/chartWidgets'
 import type { KPIWidget } from '@/types/kpiWidgets'
@@ -24,11 +24,22 @@ export default function WidgetEditor() {
     color: selectedWidget?.color || '#3B82F6'
   })
 
-  // Widget-specific configuration state
-  const [chartConfig, setChartConfig] = useState<Partial<ChartWidget['config']>>({})
-  const [kpiConfig, setKpiConfig] = useState<Partial<KPIWidget['config']>>({})
+  // Computed widget-specific configurations - direct from store
+  const chartConfig = useMemo(() => {
+    if (!selectedWidget || !isChartWidget(selectedWidget)) return {}
+    const chartWidget = selectedWidget as ChartWidget
+    console.log('🎯 WidgetEditor computed chartConfig for widget:', selectedWidget.i, chartWidget.config)
+    return chartWidget.config || {}
+  }, [selectedWidget])
 
-  // Update form when selected widget changes
+  const kpiConfig = useMemo(() => {
+    if (!selectedWidget || !isKPIWidget(selectedWidget)) return {}
+    const kpiWidget = selectedWidget as KPIWidget
+    console.log('🎯 WidgetEditor computed kpiConfig:', kpiWidget.config)
+    return kpiWidget.config || {}
+  }, [selectedWidget])
+
+  // Update form when selected widget ID changes (not the object reference)
   useEffect(() => {
     if (selectedWidget) {
       setEditForm({
@@ -38,17 +49,8 @@ export default function WidgetEditor() {
         h: selectedWidget.h,
         color: selectedWidget.color || '#3B82F6'
       })
-
-      // Load widget-specific config
-      if (isChartWidget(selectedWidget)) {
-        const chartWidget = selectedWidget as ChartWidget
-        setChartConfig(chartWidget.config || {})
-      } else if (isKPIWidget(selectedWidget)) {
-        const kpiWidget = selectedWidget as KPIWidget
-        setKpiConfig(kpiWidget.config || {})
-      }
     }
-  }, [selectedWidget])
+  }, [selectedWidgetId]) // Changed to selectedWidgetId to avoid reference changes
 
   const handleSelectWidget = (widgetId: string) => {
     widgetActions.selectWidget(widgetId)
@@ -81,27 +83,24 @@ export default function WidgetEditor() {
     }))
   }
 
-  // Handle chart configuration changes
+  // Handle chart configuration changes - direct to store
   const handleChartConfigChange = (field: string, value: unknown) => {
-    const newConfig = { ...chartConfig, [field]: value }
-    setChartConfig(newConfig)
+    console.log('⚙️ WidgetEditor handleChartConfigChange:', { field, value })
     
-    console.log('⚙️ WidgetEditor handleChartConfigChange:', { field, value, newConfig })
-    
-    // Apply changes immediately
+    // Apply changes directly to store (no local state)
     if (selectedWidget && isChartWidget(selectedWidget)) {
       console.log('⚙️ WidgetEditor calling chartActions.updateChartConfig:', selectedWidget.i, { [field]: value })
       chartActions.updateChartConfig(selectedWidget.i, { [field]: value })
     }
   }
 
-  // Handle KPI configuration changes
+  // Handle KPI configuration changes - direct to store
   const handleKPIConfigChange = (field: string, value: unknown) => {
-    const newConfig = { ...kpiConfig, [field]: value }
-    setKpiConfig(newConfig)
+    console.log('⚙️ WidgetEditor handleKPIConfigChange:', { field, value })
     
-    // Apply changes immediately
+    // Apply changes directly to store (no local state)
     if (selectedWidget && isKPIWidget(selectedWidget)) {
+      console.log('⚙️ WidgetEditor calling kpiActions.updateKPIConfig:', selectedWidget.i, { [field]: value })
       kpiActions.updateKPIConfig(selectedWidget.i, { [field]: value })
     }
   }
