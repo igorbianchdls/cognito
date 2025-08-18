@@ -164,7 +164,7 @@ export function BarChart(props: BarChartProps) {
           
           // Bordas configuráveis
           borderRadius={borderRadius ?? 4}
-          borderColor={borderColor ? borderColor : { from: 'color', modifiers: [['darker', 0.3]] }}
+          borderColor={borderColor || { from: 'color', modifiers: [['darker', 0.3]] } as any}
           borderWidth={borderWidth ?? 0}
           
           // Eixos configuráveis
