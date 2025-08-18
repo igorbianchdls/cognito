@@ -4,7 +4,7 @@ import { useStore } from '@nanostores/react'
 import { $widgets, $selectedWidget, $selectedWidgetId, widgetActions } from '@/stores/widgetStore'
 import { chartActions } from '@/stores/chartStore'
 import { kpiActions } from '@/stores/kpiStore'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import type { ChartWidget, BarChartConfig, LineChartConfig, PieChartConfig } from '@/types/chartWidgets'
 import { isChartWidget, isBarChart, isLineChart, isPieChart } from '@/types/chartWidgets'
 import { isKPIWidget } from '@/types/kpiWidgets'
@@ -38,6 +38,13 @@ export default function WidgetEditor() {
     kpiLayout: false,
     kpiDisplay: false
   })
+
+  // Local state for KPI text fields to prevent re-render issues during typing
+  const [kpiTextFields, setKpiTextFields] = useState({
+    name: '',
+    unit: ''
+  })
+  const debounceTimeout = useRef<NodeJS.Timeout | null>(null)
 
   // Computed widget-specific configurations - correct access to adapted widget
   const chartConfig = useMemo(() => {
@@ -89,6 +96,26 @@ export default function WidgetEditor() {
       })
     }
   }, [selectedWidgetId, selectedWidget]) // Include selectedWidget to fix dependency warning
+
+  // Sync KPI text fields with kpiConfig when widget changes
+  useEffect(() => {
+    if (selectedWidget && isKPIWidget(selectedWidget)) {
+      const config = selectedWidget.config?.kpiConfig || {}
+      setKpiTextFields({
+        name: config.name || '',
+        unit: config.unit || ''
+      })
+    }
+  }, [selectedWidget?.i]) // Use ID to avoid unnecessary updates
+
+  // Cleanup debounce timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current)
+      }
+    }
+  }, [])
 
   const handleSelectWidget = (widgetId: string) => {
     widgetActions.selectWidget(widgetId)
@@ -160,6 +187,40 @@ export default function WidgetEditor() {
       kpiActions.updateKPIConfig(selectedWidget.i, { [field]: value })
     }
   }
+
+  // Debounced handler for KPI text fields to prevent re-render issues
+  const handleKPITextFieldChange = useCallback((field: keyof typeof kpiTextFields, value: string) => {
+    // Update local state immediately for responsive UI
+    setKpiTextFields(prev => ({ ...prev, [field]: value }))
+    
+    // Clear existing timeout
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current)
+    }
+    
+    // Set new timeout to update store after user stops typing
+    debounceTimeout.current = setTimeout(() => {
+      if (selectedWidget && isKPIWidget(selectedWidget)) {
+        console.log('⚙️ WidgetEditor debounced KPI text update:', { field, value })
+        kpiActions.updateKPIConfig(selectedWidget.i, { [field]: value })
+      }
+    }, 300) // 300ms debounce
+  }, [selectedWidget])
+
+  // Handler for immediate KPI text field updates (onBlur)
+  const handleKPITextFieldBlur = useCallback((field: keyof typeof kpiTextFields) => {
+    if (debounceTimeout.current) {
+      clearTimeout(debounceTimeout.current)
+      debounceTimeout.current = null
+    }
+    
+    // Apply change immediately on blur
+    const value = kpiTextFields[field]
+    if (selectedWidget && isKPIWidget(selectedWidget)) {
+      console.log('⚙️ WidgetEditor immediate KPI text update (blur):', { field, value })
+      kpiActions.updateKPIConfig(selectedWidget.i, { [field]: value })
+    }
+  }, [kpiTextFields, selectedWidget])
 
   // Handle color array changes for charts
   const handleChartColorsChange = (colors: string[]) => {
@@ -924,8 +985,9 @@ export default function WidgetEditor() {
                           <label className="block text-xs font-medium text-gray-600 mb-1">KPI Name</label>
                           <input
                             type="text"
-                            value={kpiConfig.name || ''}
-                            onChange={(e) => handleKPIConfigChange('name', e.target.value)}
+                            value={kpiTextFields.name}
+                            onChange={(e) => handleKPITextFieldChange('name', e.target.value)}
+                            onBlur={() => handleKPITextFieldBlur('name')}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             placeholder="Sales Revenue"
                           />
@@ -959,8 +1021,9 @@ export default function WidgetEditor() {
                             <label className="block text-xs font-medium text-gray-600 mb-1">Unit</label>
                             <input
                               type="text"
-                              value={kpiConfig.unit || ''}
-                              onChange={(e) => handleKPIConfigChange('unit', e.target.value)}
+                              value={kpiTextFields.unit}
+                              onChange={(e) => handleKPITextFieldChange('unit', e.target.value)}
+                              onBlur={() => handleKPITextFieldBlur('unit')}
                               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                               placeholder="$, %, units"
                             />
