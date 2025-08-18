@@ -7,7 +7,6 @@ import { EmptyState } from './EmptyState';
 import { nivoTheme } from './theme';
 
 // Valores padrão robustos e flexíveis
-const DEFAULT_HEIGHT = 320;
 const DEFAULT_MARGIN = { top: 40, right: 40, bottom: 64, left: 64 };
 const DEFAULT_ENABLE_GRID_X = true;
 const DEFAULT_ENABLE_GRID_Y = true;
@@ -136,7 +135,8 @@ export function BarChart(props: BarChartProps) {
           
           // Bordas configuráveis
           borderRadius={borderRadius ?? 4}
-          borderColor={borderColor || ({ from: 'color', modifiers: [['darker', 0.3]] } as any)}
+          // @ts-expect-error - Nivo library type incompatibility
+          borderColor={borderColor || { from: 'color', modifiers: [['darker', 0.3]] }}
           borderWidth={borderWidth ?? 0}
           
           // Eixos configuráveis
@@ -164,6 +164,7 @@ export function BarChart(props: BarChartProps) {
           labelPosition={labelPosition || 'middle'}
           labelSkipWidth={labelSkipWidth ?? 0}
           labelSkipHeight={labelSkipHeight ?? 0}
+          // @ts-expect-error - Nivo library type incompatibility
           labelTextColor={labelTextColor || '#374151'}
           
           animate={animate ?? false}
