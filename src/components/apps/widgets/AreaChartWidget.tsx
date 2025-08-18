@@ -95,16 +95,13 @@ export default function AreaChartWidget({ widget }: AreaChartWidgetProps) {
       {/* Title and Subtitle */}
       {(chartConfig.showTitle !== false && chartConfig.title) && (
         <div style={{ 
-          paddingLeft: `${chartConfig.titlePadding ?? 8}px`,
-          paddingRight: `${chartConfig.titlePadding ?? 8}px`,
-          paddingTop: `${chartConfig.titlePadding ?? 8}px`,
-          paddingBottom: `${chartConfig.titlePadding ?? 8}px`
+          padding: `${chartConfig.titlePadding ?? 8}px`
         }}>
           <h3 
             style={{
               fontSize: `${chartConfig.titleFontSize ?? 18}px`,
               color: chartConfig.titleColor ?? '#111827',
-              fontWeight: `${chartConfig.titleFontWeight ?? 700} !important`,
+              fontWeight: chartConfig.titleFontWeight ?? 700,
               lineHeight: 1.2,
               margin: 0,
               textAlign: 'left'
@@ -116,16 +113,13 @@ export default function AreaChartWidget({ widget }: AreaChartWidgetProps) {
       )}
       {(chartConfig.showSubtitle !== false && chartConfig.subtitle) && (
         <div style={{ 
-          paddingLeft: `${chartConfig.subtitlePadding ?? 8}px`,
-          paddingRight: `${chartConfig.subtitlePadding ?? 8}px`,
-          paddingTop: `${chartConfig.subtitlePadding ?? 8}px`,
-          paddingBottom: `${chartConfig.subtitlePadding ?? 8}px`
+          padding: `${chartConfig.subtitlePadding ?? 8}px`
         }}>
           <p 
             style={{
               fontSize: `${chartConfig.subtitleFontSize ?? 14}px`,
               color: chartConfig.subtitleColor ?? '#6B7280',
-              fontWeight: `${chartConfig.subtitleFontWeight ?? 400} !important`,
+              fontWeight: chartConfig.subtitleFontWeight ?? 400,
               lineHeight: 1.4,
               margin: 0,
               textAlign: 'left'
