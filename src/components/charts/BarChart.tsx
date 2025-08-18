@@ -1,45 +1,21 @@
 'use client';
 
 import { ResponsiveBar } from '@nivo/bar';
-import { BarChartProps, ChartData } from './types';
+import { BarChartProps } from './types';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
 import { nivoTheme } from './theme';
 
 // Valores padrão robustos e flexíveis
-const DEFAULT_WIDTH = 600;
 const DEFAULT_HEIGHT = 320;
 const DEFAULT_MARGIN = { top: 40, right: 40, bottom: 64, left: 64 };
-const DEFAULT_PADDING = 0.2;
-const DEFAULT_INNER_PADDING = 0;
-const DEFAULT_BORDER_RADIUS = 0;
-const DEFAULT_BORDER_WIDTH = 0;
-const DEFAULT_GROUP_MODE = 'grouped';
-const DEFAULT_LAYOUT = 'vertical';
 const DEFAULT_ENABLE_GRID_X = true;
 const DEFAULT_ENABLE_GRID_Y = true;
-const DEFAULT_ENABLE_LABEL = true;
-const DEFAULT_ENABLE_TOTALS = false;
-const DEFAULT_TOTALS_OFFSET = 10;
-const DEFAULT_LABEL_OFFSET = 0;
-
-const defaultTooltip = ({ id, value }: { id: string; value: number }) => (
-  <div className="bg-white px-3 py-2 shadow-lg rounded-lg border border-gray-200 text-sm">
-    <div className="font-medium text-gray-900">{id}</div>
-    <div className="text-blue-600 font-semibold">{formatValue(Number(value))}</div>
-  </div>
-);
 
 export function BarChart(props: BarChartProps) {
   const {
     data,
-    height = DEFAULT_HEIGHT,
     margin = DEFAULT_MARGIN,
-    rowHeight = 100,
-    gridHeight = 4,
-    minHeight = 300,
-    xColumn,
-    yColumn,
     enableGridX = DEFAULT_ENABLE_GRID_X,
     enableGridY = DEFAULT_ENABLE_GRID_Y,
     title,
@@ -51,8 +27,6 @@ export function BarChart(props: BarChartProps) {
     subtitleFontWeight = 400,
     subtitleColor = '#6b7280',
     backgroundColor = '#fff',
-    keys,
-    indexBy = 'category',
     // Configurable props
     colors,
     borderRadius,
@@ -101,8 +75,6 @@ export function BarChart(props: BarChartProps) {
     }
   };
 
-  // Calcular altura baseada no grid layout
-  const baseHeight = gridHeight && rowHeight ? rowHeight * gridHeight : height;
 
   return (
     <div
@@ -164,7 +136,7 @@ export function BarChart(props: BarChartProps) {
           
           // Bordas configuráveis
           borderRadius={borderRadius ?? 4}
-          borderColor={borderColor || { from: 'color', modifiers: [['darker', 0.3]] } as any}
+          borderColor={borderColor || ({ from: 'color', modifiers: [['darker', 0.3]] } as any)}
           borderWidth={borderWidth ?? 0}
           
           // Eixos configuráveis
