@@ -432,7 +432,7 @@ export default function WidgetEditor() {
                     
                     {/* Colors & Styling */}
                     <div>
-                      <h5 className="text-sm font-medium text-gray-700 mb-3">🎨 Colors & Styling</h5>
+                      <h5 className="text-lg font-bold text-gray-700 mb-3 mt-1">🎨 Colors & Styling</h5>
                       <div className="space-y-3">
                         {/* Chart Colors */}
                         <div>
@@ -513,7 +513,7 @@ export default function WidgetEditor() {
 
                     {/* Grid & Axes */}
                     <div>
-                      <h5 className="text-sm font-medium text-gray-700 mb-3">📐 Grid & Axes</h5>
+                      <h5 className="text-lg font-bold text-gray-700 mb-3 mt-1">📐 Grid & Axes</h5>
                       <div className="space-y-3">
                         <div className="space-y-2">
                           <label className="flex items-center gap-2">
@@ -540,7 +540,7 @@ export default function WidgetEditor() {
 
                     {/* Labels */}
                     <div>
-                      <h5 className="text-sm font-medium text-gray-700 mb-3">🏷️ Labels</h5>
+                      <h5 className="text-lg font-bold text-gray-700 mb-3 mt-1">🏷️ Labels</h5>
                       <div className="space-y-3">
                         <label className="flex items-center gap-2">
                           <input
@@ -595,7 +595,7 @@ export default function WidgetEditor() {
 
                     {/* Legends */}
                     <div>
-                      <h5 className="text-sm font-medium text-gray-700 mb-3">🏛️ Legends</h5>
+                      <h5 className="text-lg font-bold text-gray-700 mb-3 mt-1">🏛️ Legends</h5>
                       <div className="space-y-3">
                         <label className="flex items-center gap-2">
                           <input
@@ -791,7 +791,7 @@ export default function WidgetEditor() {
                     {/* Line Chart Specific Options */}
                     {isLineChart(selectedWidget as ChartWidget) && (
                       <div>
-                        <h5 className="text-sm font-medium text-gray-700 mb-3">📈 Line Chart Options</h5>
+                        <h5 className="text-lg font-bold text-gray-700 mb-3 mt-1">📈 Line Chart Options</h5>
                           <div className="space-y-3">
                             <label className="flex items-center gap-2">
                               <input
@@ -955,7 +955,7 @@ export default function WidgetEditor() {
 
                     {/* Animation */}
                     <div>
-                      <h5 className="text-sm font-medium text-gray-700 mb-3">🎬 Animation</h5>
+                      <h5 className="text-lg font-bold text-gray-700 mb-3 mt-1">🎬 Animation</h5>
                       <div className="space-y-2">
                         <label className="flex items-center gap-2">
                           <input
@@ -1059,7 +1059,7 @@ export default function WidgetEditor() {
 
                       {/* Colors & Styling */}
                       <div>
-                        <h5 className="text-sm font-medium text-gray-700 mb-3">🎨 Colors & Styling</h5>
+                        <h5 className="text-lg font-bold text-gray-700 mb-3 mt-1">🎨 Colors & Styling</h5>
                       <div className="space-y-3">
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-1">Color Scheme</label>
