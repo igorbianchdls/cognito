@@ -221,19 +221,47 @@ export const chartActions = {
 
   // Update chart config specifically
   updateChartConfig: <T extends ChartWidget>(chartId: string, configChanges: Partial<T['config']>) => {
-    console.log('🔧 Updating chart config:', { chartId, configChanges })
+    console.log('🔧 chartStore.updateChartConfig ENTRADA:', { chartId, configChanges })
     const currentCharts = $chartWidgets.get()
+    
+    const targetChart = currentCharts.find(c => c.i === chartId)
+    console.log('🔧 Target chart ANTES update:', {
+      id: targetChart?.i,
+      type: targetChart?.type,
+      configAntes: targetChart?.config,
+      configKeysAntes: Object.keys(targetChart?.config || {})
+    })
     
     const updatedCharts = currentCharts.map(chart => {
       if (chart.i === chartId) {
-        return {
+        const newChart = {
           ...chart,
           config: { ...chart.config, ...configChanges }
         }
+        console.log('🔧 Chart DEPOIS update:', {
+          id: newChart.i,
+          configDepois: newChart.config,
+          configKeysDepois: Object.keys(newChart.config || {}),
+          changesToApply: configChanges
+        })
+        return newChart
       }
       return chart
     })
+    
     $chartWidgets.set(updatedCharts)
+    console.log('🔧 chartStore.$chartWidgets.set() chamado com sucesso')
+    
+    // Verificar se realmente foi atualizado
+    setTimeout(() => {
+      const verifyCharts = $chartWidgets.get()
+      const verifyChart = verifyCharts.find(c => c.i === chartId)
+      console.log('🔧 Verificação 50ms depois:', {
+        chartId,
+        configVerify: verifyChart?.config,
+        updateSuccess: JSON.stringify(verifyChart?.config) !== JSON.stringify(targetChart?.config)
+      })
+    }, 50)
   },
 
   // Remove chart

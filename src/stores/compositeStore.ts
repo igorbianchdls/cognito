@@ -17,19 +17,33 @@ export const $legacyWidgets = atom<DroppedWidget[]>([])
 export const $allWidgets = computed(
   [$chartWidgets, $kpiWidgets, $tableWidgets, $legacyWidgets],
   (charts, kpis, tables, legacy) => {
-    console.log('🔄 Composite store update:', {
-      charts: charts.length,
-      kpis: kpis.length,
-      tables: tables.length,
-      legacy: legacy.length
+    console.log('🔄 Composite store recomputando:', {
+      chartsCount: charts.length,
+      kpisCount: kpis.length,
+      tablesCount: tables.length,
+      legacyCount: legacy.length,
+      triggeredBy: 'store update'
     })
     
     // Convert specialized widgets to legacy format for backward compatibility
-    const convertedCharts = charts.map(adaptChartToLegacy)
+    const convertedCharts = charts.map(chart => {
+      const adapted = adaptChartToLegacy(chart)
+      console.log('🔄 Chart sendo adaptado:', {
+        id: chart.i,
+        type: chart.type,
+        originalConfig: chart.config,
+        adaptedConfigStructure: adapted.config,
+        adaptedChartConfig: adapted.chartConfig,
+        configMatch: JSON.stringify(chart.config) === JSON.stringify(adapted.config?.chartConfig)
+      })
+      return adapted
+    })
     const convertedKPIs = kpis.map(adaptKPIToLegacy)
     const convertedTables = tables.map(adaptTableToLegacy)
     
-    return [...convertedCharts, ...convertedKPIs, ...convertedTables, ...legacy]
+    const result = [...convertedCharts, ...convertedKPIs, ...convertedTables, ...legacy]
+    console.log('🔄 Composite store resultado final:', result.length, 'widgets')
+    return result
   }
 )
 
@@ -71,7 +85,19 @@ export const $widgetCounts = computed([$allWidgets], (widgets) => {
 export const $selectedWidgetId = atom<string | null>(null)
 export const $selectedWidget = computed([$allWidgets, $selectedWidgetId], (widgets, selectedId) => {
   if (!selectedId) return null
-  return widgets.find(w => w.i === selectedId) || null
+  const selected = widgets.find(w => w.i === selectedId) || null
+  
+  console.log('🎯 selectedWidget atualizado:', {
+    selectedId,
+    found: !!selected,
+    type: selected?.type,
+    hasConfig: !!selected?.config,
+    hasChartConfig: !!selected?.chartConfig,
+    configStructure: selected?.config,
+    chartConfigDirect: selected?.chartConfig
+  })
+  
+  return selected
 })
 
 // Adapter functions to convert specialized widgets to legacy format

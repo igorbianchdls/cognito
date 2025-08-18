@@ -36,20 +36,39 @@ export default function ChartWidget({ widget }: ChartWidgetProps) {
 
   // Get chart configuration with backward compatibility
   const chartConfig = useMemo(() => {
+    console.log('📊 ChartWidget recebendo widget update:', {
+      id: widget.i,
+      type: widget.type,
+      hasConfig: !!widget.config,
+      hasChartConfig: !!widget.chartConfig,
+      configStructure: widget.config,
+      chartConfigDirect: widget.chartConfig,
+      configChartConfig: widget.config?.chartConfig
+    })
+    
     let config: Partial<BarChartConfig> = {}
     
     // Priorizar configuração especializada (nova arquitetura)
     if (widget.config && typeof widget.config === 'object' && widget.config.chartConfig) {
       config = widget.config.chartConfig as BarChartConfig
-      console.log('🎯 ChartWidget usando config.chartConfig:', config)
+      console.log('📊 ChartWidget usando config.chartConfig:', config)
     }
     // Fallback para legacy chartConfig
     else if (widget.chartConfig) {
       config = widget.chartConfig as BarChartConfig
-      console.log('🎯 ChartWidget usando chartConfig legacy:', config)
+      console.log('📊 ChartWidget usando chartConfig legacy:', config)
+    } else {
+      console.log('📊 ChartWidget: Nenhuma config encontrada, usando vazia')
     }
     
-    console.log('📊 ChartWidget final config:', config)
+    console.log('📊 ChartWidget final config com propriedades:', {
+      config,
+      keys: Object.keys(config),
+      groupMode: config.groupMode,
+      colors: config.colors,
+      enableGridX: config.enableGridX,
+      enableGridY: config.enableGridY
+    })
     return config
   }, [widget.config, widget.chartConfig])
   

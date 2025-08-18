@@ -24,19 +24,42 @@ export default function WidgetEditor() {
     color: selectedWidget?.color || '#3B82F6'
   })
 
-  // Computed widget-specific configurations - direct from store
+  // Computed widget-specific configurations - correct access to adapted widget
   const chartConfig = useMemo(() => {
     if (!selectedWidget || !isChartWidget(selectedWidget)) return {}
-    const chartWidget = selectedWidget as ChartWidget
-    console.log('🎯 WidgetEditor computed chartConfig for widget:', selectedWidget.i, chartWidget.config)
-    return chartWidget.config || {}
+    
+    // selectedWidget é DroppedWidget adaptado, não ChartWidget direto
+    console.log('🔍 WidgetEditor selectedWidget estrutura completa:', {
+      id: selectedWidget?.i,
+      type: selectedWidget?.type,
+      hasConfig: !!selectedWidget?.config,
+      hasChartConfig: !!selectedWidget?.chartConfig,
+      configStructure: selectedWidget?.config,
+      chartConfigDirect: selectedWidget?.chartConfig,
+      configChartConfig: selectedWidget?.config?.chartConfig
+    })
+    
+    // Acesso correto: config.chartConfig (novo) ou chartConfig (legacy)
+    const config = selectedWidget.config?.chartConfig || selectedWidget.chartConfig || {}
+    console.log('🎯 WidgetEditor computed chartConfig final:', config)
+    return config
   }, [selectedWidget])
 
   const kpiConfig = useMemo(() => {
     if (!selectedWidget || !isKPIWidget(selectedWidget)) return {}
-    const kpiWidget = selectedWidget as KPIWidget
-    console.log('🎯 WidgetEditor computed kpiConfig:', kpiWidget.config)
-    return kpiWidget.config || {}
+    
+    // selectedWidget é DroppedWidget adaptado
+    console.log('🔍 WidgetEditor KPI estrutura:', {
+      id: selectedWidget?.i,
+      type: selectedWidget?.type,
+      configStructure: selectedWidget?.config,
+      configKpiConfig: selectedWidget?.config?.kpiConfig
+    })
+    
+    // Acesso correto via adapter structure
+    const config = selectedWidget.config?.kpiConfig || {}
+    console.log('🎯 WidgetEditor computed kpiConfig final:', config)
+    return config
   }, [selectedWidget])
 
   // Update form when selected widget ID changes (not the object reference)
@@ -85,12 +108,30 @@ export default function WidgetEditor() {
 
   // Handle chart configuration changes - direct to store
   const handleChartConfigChange = (field: string, value: unknown) => {
-    console.log('⚙️ WidgetEditor handleChartConfigChange:', { field, value })
+    console.log('⚙️ handleChartConfigChange ENTRADA:', { field, value })
+    console.log('⚙️ Estado ANTES da mudança:', {
+      selectedWidgetId: selectedWidget?.i,
+      currentConfigViaConfig: selectedWidget?.config?.chartConfig,
+      currentConfigDirect: selectedWidget?.chartConfig,
+      fieldCurrentValue: selectedWidget?.config?.chartConfig?.[field] || selectedWidget?.chartConfig?.[field]
+    })
     
     // Apply changes directly to store (no local state)
     if (selectedWidget && isChartWidget(selectedWidget)) {
-      console.log('⚙️ WidgetEditor calling chartActions.updateChartConfig:', selectedWidget.i, { [field]: value })
+      console.log('⚙️ Chamando chartActions.updateChartConfig:', selectedWidget.i, { [field]: value })
       chartActions.updateChartConfig(selectedWidget.i, { [field]: value })
+      
+      // Log para verificar estado depois
+      setTimeout(() => {
+        console.log('⚙️ Estado DEPOIS da mudança (100ms):', {
+          selectedWidgetId: selectedWidget?.i,
+          newConfigViaConfig: selectedWidget?.config?.chartConfig,
+          newConfigDirect: selectedWidget?.chartConfig,
+          fieldNewValue: selectedWidget?.config?.chartConfig?.[field] || selectedWidget?.chartConfig?.[field]
+        })
+      }, 100)
+    } else {
+      console.warn('⚠️ selectedWidget não é chart ou não existe:', selectedWidget?.type)
     }
   }
 
