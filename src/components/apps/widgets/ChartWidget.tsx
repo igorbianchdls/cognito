@@ -119,15 +119,60 @@ export default function ChartWidget({ widget }: ChartWidgetProps) {
       tickRotation: 0,
     },
     backgroundColor: chartConfig.backgroundColor || '#fff',
-    title: chartConfig.title,
-    subtitle: chartConfig.subtitle,
-    titleFontSize: chartConfig.titleFontSize ?? 18,
-    titleColor: chartConfig.titleColor || '#222',
   }
 
   return (
-    <div className="h-full w-full">
-      <BarChart {...chartProps} />
+    <div className="h-full w-full flex flex-col">
+      {/* Title and Subtitle */}
+      {(chartConfig.showTitle !== false && chartConfig.title) && (
+        <div style={{ 
+          padding: `${chartConfig.titlePadding ?? 8}px`
+        }}>
+          <h3 
+            style={{
+              fontSize: `${chartConfig.titleFontSize ?? 18}px`,
+              color: chartConfig.titleColor ?? '#111827',
+              fontWeight: chartConfig.titleFontWeight ?? 700,
+              lineHeight: 1.2,
+              margin: 0,
+              textAlign: 'left'
+            }}
+          >
+            {chartConfig.title}
+          </h3>
+        </div>
+      )}
+      {(chartConfig.showSubtitle !== false && chartConfig.subtitle) && (
+        <div style={{ 
+          padding: `${chartConfig.subtitlePadding ?? 8}px`
+        }}>
+          <p 
+            style={{
+              fontSize: `${chartConfig.subtitleFontSize ?? 14}px`,
+              color: chartConfig.subtitleColor ?? '#6B7280',
+              fontWeight: chartConfig.subtitleFontWeight ?? 400,
+              lineHeight: 1.4,
+              margin: 0,
+              textAlign: 'left'
+            }}
+          >
+            {chartConfig.subtitle}
+          </p>
+        </div>
+      )}
+      
+      {/* Chart */}
+      <div className="flex-1">
+        <BarChart {...{
+          ...chartProps,
+          margin: {
+            top: (chartProps.margin?.top ?? 12) + (chartConfig.chartPadding ?? 0),
+            right: (chartProps.margin?.right ?? 12) + (chartConfig.chartPadding ?? 0),
+            bottom: (chartProps.margin?.bottom ?? 60) + (chartConfig.chartPadding ?? 0),
+            left: (chartProps.margin?.left ?? 50) + (chartConfig.chartPadding ?? 0),
+          }
+        }} />
+      </div>
     </div>
   )
 }
