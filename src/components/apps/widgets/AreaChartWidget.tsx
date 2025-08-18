@@ -68,7 +68,7 @@ export default function AreaChartWidget({ widget }: AreaChartWidgetProps) {
     areaOpacity: chartConfig.areaOpacity ?? 0.15,
     lineWidth: chartConfig.lineWidth ?? 2,
     pointSize: chartConfig.pointSize ?? 4,
-    animate: chartConfig.animate ?? true,
+    animate: chartConfig.animate ?? false,
     motionConfig: chartConfig.motionConfig || 'gentle',
     margin: {
       top: chartConfig.margin?.top ?? 12,

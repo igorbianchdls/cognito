@@ -68,7 +68,7 @@ export default function LineChartWidget({ widget }: LineChartWidgetProps) {
     pointSize: chartConfig.pointSize ?? 4,
     curve: chartConfig.curve || 'cardinal',
     enableArea: chartConfig.enableArea ?? false,
-    animate: chartConfig.animate ?? true,
+    animate: chartConfig.animate ?? false,
     motionConfig: chartConfig.motionConfig || 'gentle',
     margin: {
       top: chartConfig.margin?.top ?? 12,

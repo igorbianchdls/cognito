@@ -84,7 +84,7 @@ export default function ChartWidget({ widget }: ChartWidgetProps) {
     groupMode: chartConfig.groupMode || 'grouped',
     layout: chartConfig.layout || 'vertical',
     enableLabel: chartConfig.enableLabel ?? false,
-    animate: chartConfig.animate ?? true,
+    animate: chartConfig.animate ?? false,
     motionConfig: chartConfig.motionConfig || 'gentle',
     margin: {
       top: chartConfig.margin?.top ?? 12,

@@ -103,7 +103,7 @@ export const chartActions = {
             enableGridX: false,
             groupMode: 'grouped',
             layout: 'vertical',
-            animate: true,
+            animate: false,
             motionConfig: 'gentle',
             margin: { top: 12, right: 12, bottom: 60, left: 50 },
             ...props.config
@@ -123,7 +123,7 @@ export const chartActions = {
             lineWidth: 2,
             pointSize: 5,
             enablePoints: true,
-            animate: true,
+            animate: false,
             motionConfig: 'gentle',
             margin: { top: 12, right: 12, bottom: 60, left: 50 },
             ...props.config
@@ -143,7 +143,7 @@ export const chartActions = {
             activeOuterRadiusOffset: 8,
             enableArcLinkLabels: true,
             arcLabelsSkipAngle: 10,
-            animate: true,
+            animate: false,
             motionConfig: 'gentle',
             margin: { top: 40, right: 80, bottom: 40, left: 80 },
             ...props.config
@@ -163,7 +163,7 @@ export const chartActions = {
             areaOpacity: 0.3,
             enablePoints: false,
             pointSize: 5,
-            animate: true,
+            animate: false,
             motionConfig: 'gentle',
             margin: { top: 12, right: 12, bottom: 60, left: 50 },
             ...props.config

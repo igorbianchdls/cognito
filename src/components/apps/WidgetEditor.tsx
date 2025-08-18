@@ -424,13 +424,13 @@ export default function WidgetEditor() {
                         <label className="flex items-center gap-2">
                           <input
                             type="checkbox"
-                            checked={chartConfig.animate !== false}
+                            checked={chartConfig.animate === true}
                             onChange={(e) => handleChartConfigChange('animate', e.target.checked)}
                             className="rounded"
                           />
                           <span className="text-xs text-gray-600">Enable Animation</span>
                         </label>
-                        {chartConfig.animate !== false && (
+                        {chartConfig.animate === true && (
                           <div>
                             <label className="block text-xs text-gray-500 mb-1">Motion Config</label>
                             <select
