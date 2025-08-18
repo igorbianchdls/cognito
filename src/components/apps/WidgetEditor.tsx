@@ -97,9 +97,9 @@ export default function WidgetEditor() {
         color: selectedWidget.color || '#3B82F6'
       })
     }
-  }, [selectedWidgetId, selectedWidget]) // Include selectedWidget to fix dependency warning
+  }, [selectedWidgetId]) // Only sync when widget ID changes, not object reference
 
-  // Sync editKPIForm with kpiConfig when widget changes (same pattern as editForm)
+  // Sync editKPIForm with kpiConfig when widget changes - only on widget ID change
   useEffect(() => {
     if (selectedWidget && isKPIWidget(selectedWidget)) {
       const config = selectedWidget.config?.kpiConfig || {}
@@ -108,7 +108,7 @@ export default function WidgetEditor() {
         unit: config.unit || ''
       })
     }
-  }, [selectedWidgetId, selectedWidget]) // Same dependencies as editForm sync
+  }, [selectedWidgetId]) // Only sync when widget ID changes, not object reference
 
 
   // Debug: Monitor re-renders and selectedWidget changes
