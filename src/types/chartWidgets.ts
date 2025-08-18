@@ -68,6 +68,10 @@ export interface BaseChartConfig {
   showSubtitle?: boolean
   titleFontSize?: number
   titleColor?: string
+  titleFontWeight?: number
+  subtitleFontSize?: number
+  subtitleColor?: string
+  subtitleFontWeight?: number
   
   // Legends
   legends?: LegendConfig

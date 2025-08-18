@@ -441,6 +441,88 @@ export default function WidgetEditor() {
                             <span className="text-xs text-gray-600">Show Subtitle</span>
                           </label>
                         </div>
+                        
+                        {/* Title Styling */}
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-2">Title Styling</label>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div>
+                              <label className="block text-xs text-gray-500 mb-1">Font Size</label>
+                              <input
+                                type="number"
+                                min="12"
+                                max="32"
+                                value={(chartConfig as Record<string, unknown>)?.titleFontSize as number ?? 18}
+                                onChange={(e) => handleChartConfigChange('titleFontSize', parseInt(e.target.value) || 18)}
+                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-gray-500 mb-1">Font Weight</label>
+                              <select
+                                value={(chartConfig as Record<string, unknown>)?.titleFontWeight as number ?? 700}
+                                onChange={(e) => handleChartConfigChange('titleFontWeight', parseInt(e.target.value))}
+                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              >
+                                <option value={400}>Normal</option>
+                                <option value={500}>Medium</option>
+                                <option value={600}>Semi Bold</option>
+                                <option value={700}>Bold</option>
+                                <option value={800}>Extra Bold</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-xs text-gray-500 mb-1">Color</label>
+                              <input
+                                type="color"
+                                value={(chartConfig as Record<string, unknown>)?.titleColor as string ?? '#111827'}
+                                onChange={(e) => handleChartConfigChange('titleColor', e.target.value)}
+                                className="w-full h-8 border border-gray-300 rounded cursor-pointer"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Subtitle Styling */}
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-2">Subtitle Styling</label>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div>
+                              <label className="block text-xs text-gray-500 mb-1">Font Size</label>
+                              <input
+                                type="number"
+                                min="10"
+                                max="20"
+                                value={(chartConfig as Record<string, unknown>)?.subtitleFontSize as number ?? 14}
+                                onChange={(e) => handleChartConfigChange('subtitleFontSize', parseInt(e.target.value) || 14)}
+                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-gray-500 mb-1">Font Weight</label>
+                              <select
+                                value={(chartConfig as Record<string, unknown>)?.subtitleFontWeight as number ?? 400}
+                                onChange={(e) => handleChartConfigChange('subtitleFontWeight', parseInt(e.target.value))}
+                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              >
+                                <option value={300}>Light</option>
+                                <option value={400}>Normal</option>
+                                <option value={500}>Medium</option>
+                                <option value={600}>Semi Bold</option>
+                                <option value={700}>Bold</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-xs text-gray-500 mb-1">Color</label>
+                              <input
+                                type="color"
+                                value={(chartConfig as Record<string, unknown>)?.subtitleColor as string ?? '#6B7280'}
+                                onChange={(e) => handleChartConfigChange('subtitleColor', e.target.value)}
+                                className="w-full h-8 border border-gray-300 rounded cursor-pointer"
+                              />
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                     

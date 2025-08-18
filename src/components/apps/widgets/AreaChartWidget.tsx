@@ -72,9 +72,9 @@ export default function AreaChartWidget({ widget }: AreaChartWidgetProps) {
     motionConfig: chartConfig.motionConfig || 'gentle',
     margin: {
       top: chartConfig.margin?.top ?? 12,
-      right: chartConfig.margin?.right ?? 12,
+      right: chartConfig.margin?.right ?? 8,
       bottom: chartConfig.margin?.bottom ?? 80,
-      left: chartConfig.margin?.left ?? 50,
+      left: chartConfig.margin?.left ?? 8,
     },
     axisBottom: chartConfig.axisBottom ? {
       tickSize: chartConfig.axisBottom.tickSize ?? 0,
@@ -95,14 +95,32 @@ export default function AreaChartWidget({ widget }: AreaChartWidgetProps) {
       {/* Title and Subtitle */}
       {(chartConfig.showTitle !== false && chartConfig.title) && (
         <div className="px-2 pt-2">
-          <h3 className="text-lg font-bold text-gray-900 text-left">
+          <h3 
+            className="text-left"
+            style={{
+              fontSize: `${chartConfig.titleFontSize ?? 18}px`,
+              color: chartConfig.titleColor ?? '#111827',
+              fontWeight: chartConfig.titleFontWeight ?? 700,
+              lineHeight: 1.2,
+              margin: 0
+            }}
+          >
             {chartConfig.title}
           </h3>
         </div>
       )}
       {(chartConfig.showSubtitle !== false && chartConfig.subtitle) && (
         <div className="px-2 pb-2">
-          <p className="text-sm text-gray-600 text-left">
+          <p 
+            className="text-left"
+            style={{
+              fontSize: `${chartConfig.subtitleFontSize ?? 14}px`,
+              color: chartConfig.subtitleColor ?? '#6B7280',
+              fontWeight: chartConfig.subtitleFontWeight ?? 400,
+              lineHeight: 1.4,
+              margin: 0
+            }}
+          >
             {chartConfig.subtitle}
           </p>
         </div>
