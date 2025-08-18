@@ -979,12 +979,25 @@ export default function WidgetEditor() {
                   <div className="border-t pt-4 mt-4">
                     <h4 className="text-sm font-medium text-gray-700 mb-3">📊 KPI Configuration</h4>
                     
+                    {/* TEST: KPI Name OUTSIDE CollapsibleSection */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">KPI Name (TEST)</label>
+                      <input
+                        type="text"
+                        value={editKPIForm.name}
+                        onChange={(e) => handleKPIFormChange('name', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="Sales Revenue"
+                      />
+                    </div>
+                    
                     {/* KPI Data Section */}
                     <CollapsibleSection
                       title="📈 Data & Values"
                       sectionKey="kpiData"
                     >
                       <div className="space-y-3">
+                        {/* Original input commented for test
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-1">KPI Name</label>
                           <input
@@ -995,6 +1008,7 @@ export default function WidgetEditor() {
                             placeholder="Sales Revenue"
                           />
                         </div>
+                        */}
                         <div className="grid grid-cols-2 gap-3">
                           <div>
                             <label className="block text-xs font-medium text-gray-600 mb-1">Current Value</label>
