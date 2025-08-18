@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { LineChart } from '@/components/charts'
 import type { ChartData } from '@/components/charts/types'
 import type { DroppedWidget } from '@/types/widget'
@@ -36,7 +36,23 @@ export default function LineChartWidget({ widget }: LineChartWidgetProps) {
   }, [])
 
   // Get chart configuration with backward compatibility
-  const chartConfig = widget.config?.chartConfig || widget.chartConfig || {}
+  const chartConfig = useMemo(() => {
+    let config = {}
+    
+    // Priorizar configuração especializada (nova arquitetura)
+    if (widget.config && typeof widget.config === 'object' && widget.config.chartConfig) {
+      config = widget.config.chartConfig
+      console.log('🎯 LineChartWidget usando config.chartConfig:', config)
+    }
+    // Fallback para legacy chartConfig
+    else if (widget.chartConfig) {
+      config = widget.chartConfig
+      console.log('🎯 LineChartWidget usando chartConfig legacy:', config)
+    }
+    
+    console.log('📊 LineChartWidget final config:', config)
+    return config
+  }, [widget.config, widget.chartConfig])
   
   // Prepare props for LineChart
   const chartProps = {

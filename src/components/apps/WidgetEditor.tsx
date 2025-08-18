@@ -86,8 +86,11 @@ export default function WidgetEditor() {
     const newConfig = { ...chartConfig, [field]: value }
     setChartConfig(newConfig)
     
+    console.log('⚙️ WidgetEditor handleChartConfigChange:', { field, value, newConfig })
+    
     // Apply changes immediately
     if (selectedWidget && isChartWidget(selectedWidget)) {
+      console.log('⚙️ WidgetEditor calling chartActions.updateChartConfig:', selectedWidget.i, { [field]: value })
       chartActions.updateChartConfig(selectedWidget.i, { [field]: value })
     }
   }
