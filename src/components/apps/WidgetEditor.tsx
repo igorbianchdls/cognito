@@ -430,8 +430,9 @@ export default function WidgetEditor() {
                   <div className="border-t pt-4 mt-4">
                     <h4 className="text-sm font-medium text-gray-700 mb-4">Chart Configuration</h4>
                     
-                    {/* Colors & Styling Section */}
-                    <CollapsibleSection title="🎨 Colors & Styling" sectionKey="colors">
+                    {/* Colors & Styling */}
+                    <div>
+                      <h5 className="text-sm font-medium text-gray-700 mb-3">🎨 Colors & Styling</h5>
                       <div className="space-y-3">
                         {/* Chart Colors */}
                         <div>
@@ -508,10 +509,11 @@ export default function WidgetEditor() {
                           </div>
                         </div>
                       </div>
-                    </CollapsibleSection>
+                    </div>
 
-                    {/* Grid & Axes Section */}
-                    <CollapsibleSection title="📐 Grid & Axes" sectionKey="grid">
+                    {/* Grid & Axes */}
+                    <div>
+                      <h5 className="text-sm font-medium text-gray-700 mb-3">📐 Grid & Axes</h5>
                       <div className="space-y-3">
                         <div className="space-y-2">
                           <label className="flex items-center gap-2">
@@ -534,10 +536,11 @@ export default function WidgetEditor() {
                           </label>
                         </div>
                       </div>
-                    </CollapsibleSection>
+                    </div>
 
-                    {/* Labels Section */}
-                    <CollapsibleSection title="🏷️ Labels" sectionKey="labels">
+                    {/* Labels */}
+                    <div>
+                      <h5 className="text-sm font-medium text-gray-700 mb-3">🏷️ Labels</h5>
                       <div className="space-y-3">
                         <label className="flex items-center gap-2">
                           <input
@@ -588,10 +591,11 @@ export default function WidgetEditor() {
                           </div>
                         )}
                       </div>
-                    </CollapsibleSection>
+                    </div>
 
-                    {/* Legends Section */}
-                    <CollapsibleSection title="🏛️ Legends" sectionKey="legends">
+                    {/* Legends */}
+                    <div>
+                      <h5 className="text-sm font-medium text-gray-700 mb-3">🏛️ Legends</h5>
                       <div className="space-y-3">
                         <label className="flex items-center gap-2">
                           <input
@@ -751,11 +755,12 @@ export default function WidgetEditor() {
                           </div>
                         )}
                       </div>
-                    </CollapsibleSection>
+                    </div>
 
                     {/* Chart Type Specific Options */}
                     {isBarChart(selectedWidget as ChartWidget) && (
-                      <CollapsibleSection title="📊 Bar Chart Options" sectionKey="chartSpecific">
+                      <div>
+                        <h5 className="text-sm font-medium text-gray-700 mb-3">📊 Bar Chart Options</h5>
                         <div className="space-y-2">
                           <div>
                             <label className="block text-xs text-gray-500 mb-1">Group Mode</label>
@@ -780,12 +785,13 @@ export default function WidgetEditor() {
                             </select>
                           </div>
                         </div>
-                      </CollapsibleSection>
+                      </div>
                     )}
 
                     {/* Line Chart Specific Options */}
                     {isLineChart(selectedWidget as ChartWidget) && (
-                      <CollapsibleSection title="📈 Line Chart Options" sectionKey="chartSpecific">
+                      <div>
+                        <h5 className="text-sm font-medium text-gray-700 mb-3">📈 Line Chart Options</h5>
                           <div className="space-y-3">
                             <label className="flex items-center gap-2">
                               <input
@@ -862,12 +868,13 @@ export default function WidgetEditor() {
                               </div>
                             )}
                           </div>
-                        </CollapsibleSection>
+                      </div>
                     )}
 
                     {/* Pie Chart Specific Options */}
                     {isPieChart(selectedWidget as ChartWidget) && (
-                      <CollapsibleSection title="🥧 Pie Chart Options" sectionKey="chartSpecific">
+                      <div>
+                        <h5 className="text-sm font-medium text-gray-700 mb-3">🥧 Pie Chart Options</h5>
                         <div className="space-y-3">
                           <div>
                             <label className="block text-xs text-gray-500 mb-1">Inner Radius</label>
@@ -943,11 +950,12 @@ export default function WidgetEditor() {
                             </div>
                           )}
                         </div>
-                      </CollapsibleSection>
+                      </div>
                     )}
 
-                    {/* Animation Section */}
-                    <CollapsibleSection title="🎬 Animation" sectionKey="animation">
+                    {/* Animation */}
+                    <div>
+                      <h5 className="text-sm font-medium text-gray-700 mb-3">🎬 Animation</h5>
                       <div className="space-y-2">
                         <label className="flex items-center gap-2">
                           <input
@@ -974,7 +982,7 @@ export default function WidgetEditor() {
                           </div>
                         )}
                       </div>
-                    </CollapsibleSection>
+                    </div>
                   </div>
                 )}
 
