@@ -55,7 +55,7 @@ export default function GridCanvas({
         canvasConfig.maintain16by9 && 
         containerWidth > 768) {
       // Desktop: apply 16:9 aspect ratio
-      return Math.floor(containerWidth * 0.5625) // 9/16 = 0.5625
+      return Math.floor(containerWidth * 0.75) // 12/16 = 0.75
     }
     return null // Mobile/tablet or disabled: maintain current behavior
   }, [containerWidth, canvasConfig.canvasMode, canvasConfig.maintain16by9])
