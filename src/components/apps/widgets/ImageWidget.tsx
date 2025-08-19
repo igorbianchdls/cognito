@@ -78,7 +78,7 @@ export default function ImageWidget({ widget }: ImageWidgetProps) {
   const imageStyle: React.CSSProperties = {
     width: '100%',
     height: '100%',
-    objectFit: objectFit as any,
+    objectFit: objectFit as React.CSSProperties['objectFit'],
     objectPosition,
     transition: 'opacity 0.2s ease-in-out'
   }
