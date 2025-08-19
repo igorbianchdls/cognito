@@ -1479,6 +1479,30 @@ export default function WidgetEditor() {
                           </div>
                         </AccordionContent>
                       </AccordionItem>
+
+                      {/* Legends */}
+                      <AccordionItem value="legends">
+                        <AccordionTrigger className="text-lg font-bold text-gray-700">
+                          🏛️ Legends
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-3">
+                            <label className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={(chartConfig as Record<string, unknown>).legends ? 
+                                  ((chartConfig as Record<string, unknown>).legends as Record<string, unknown>).enabled !== false : true}
+                                onChange={(e) => handleChartConfigChange('legends', { 
+                                  ...((chartConfig as Record<string, unknown>).legends as Record<string, unknown> || {}), 
+                                  enabled: e.target.checked 
+                                })}
+                                className="rounded"
+                              />
+                              <span className="text-xs text-gray-600">Enable Legends</span>
+                            </label>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
                     </Accordion>
 
 
