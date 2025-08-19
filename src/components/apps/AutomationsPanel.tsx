@@ -111,8 +111,8 @@ export default function AutomationsPanel() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Selecione uma condição</option>
-                  <option value="vendas > 1000">Vendas > 1000</option>
-                  <option value="lucro < 500">Lucro < 500</option>
+                  <option value="vendas > 1000">Vendas &gt; 1000</option>
+                  <option value="lucro < 500">Lucro &lt; 500</option>
                   <option value="meta_atingida">Meta atingida</option>
                   <option value="erro_sistema">Erro no sistema</option>
                 </select>
