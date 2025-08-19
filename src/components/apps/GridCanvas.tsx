@@ -186,6 +186,9 @@ export default function GridCanvas({
           margin={canvasConfig.margin}
           containerPadding={canvasConfig.containerPadding}
           useCSSTransforms={true}
+          compactType={null}
+          preventCollision={true}
+          allowOverlap={false}
         >
           {widgets.map((widget) => (
             <div 
