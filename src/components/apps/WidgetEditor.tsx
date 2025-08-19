@@ -1038,9 +1038,13 @@ export default function WidgetEditor() {
                     <h4 className="text-sm font-medium text-gray-700 mb-4">Chart Configuration</h4>
                     
                     {/* Title & Description */}
-                    <div>
-                      <h5 className="text-lg font-bold text-gray-700 mb-3 mt-2">📝 Title & Description</h5>
-                      <div className="space-y-3">
+                    <Accordion type="multiple" className="w-full space-y-2">
+                      <AccordionItem value="title">
+                        <AccordionTrigger className="text-lg font-bold text-gray-700">
+                          📝 Title & Description
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-3">
                         <div>
                           <label className="block text-xs font-medium text-gray-600 mb-1">Title</label>
                           <input
@@ -1360,8 +1364,10 @@ export default function WidgetEditor() {
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
                     
                     {/* Colors & Styling */}
                     <Accordion type="multiple" className="w-full space-y-2">
