@@ -191,7 +191,7 @@ export default function GridCanvas({
           useCSSTransforms={true}
           compactType={null}
           preventCollision={true}
-          allowOverlap={false}
+          allowOverlap={true}
           autoSize={false}
           isBounded={true}
         >
