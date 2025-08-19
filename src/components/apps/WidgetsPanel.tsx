@@ -83,7 +83,7 @@ interface WidgetsPanelProps {}
 
 export default function WidgetsPanel({}: WidgetsPanelProps) {
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex flex-col" style={{ height: 'calc(100vh - 80px)' }}>
       {/* Header */}
       <div className="p-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900">Widgets</h2>
@@ -93,7 +93,7 @@ export default function WidgetsPanel({}: WidgetsPanelProps) {
       </div>
 
       {/* Widgets List */}
-      <div className="flex-1 p-4 space-y-3">
+      <div className="flex-1 p-4 space-y-3 overflow-y-auto">
         {availableWidgets.map((widget) => (
           <DraggableWidget
             key={widget.id}
