@@ -62,7 +62,7 @@ export default function WidgetEditor() {
     src: '',
     alt: '',
     title: '',
-    objectFit: 'cover' as const,
+    objectFit: 'cover' as ImageConfig['objectFit'],
     objectPosition: 'center'
   })
 
