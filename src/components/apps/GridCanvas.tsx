@@ -72,7 +72,10 @@ export default function GridCanvas({
     }
 
     // Min/max constraints
-    styles.minHeight = `${canvasConfig.minHeight}px`
+    // Only apply minHeight in responsive mode, not in fixed mode
+    if (canvasConfig.canvasMode !== 'fixed') {
+      styles.minHeight = `${canvasConfig.minHeight}px`
+    }
     if (canvasConfig.maxWidth) {
       styles.maxWidth = `${canvasConfig.maxWidth}px`
     }
