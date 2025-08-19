@@ -259,6 +259,35 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
 
   return (
     <div className="h-full flex flex-col">
+      {/* Custom Scrollbar Styles */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:active {
+            background: #64748b;
+          }
+          /* For Firefox */
+          .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f1f5f9;
+          }
+        `
+      }} />
+      
       {/* Header */}
       <div className="p-4 border-b border-gray-200">
         <h2 className="text-lg font-semibold text-gray-900">AI Assistant</h2>
@@ -268,7 +297,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
       </div>
 
       {/* Messages */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-4">
+      <div className="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar">
         {messages.map((message) => (
           <div
             key={message.id}
@@ -348,7 +377,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-gray-200 bg-white flex-shrink-0">
         <form onSubmit={handleSubmit} className="flex gap-2">
           <input
             type="text"
