@@ -51,33 +51,18 @@ export default function GridCanvas({
 
   // Calculate height for responsive mode in desktop
   const calculateResponsiveHeight = useMemo(() => {
-    console.log('🔍 Canvas Debug:', {
-      canvasMode: canvasConfig.canvasMode,
-      containerWidth,
-      maintain16by9: canvasConfig.maintain16by9,
-      responsiveHeight: canvasConfig.responsiveHeight,
-      responsiveHeightType: typeof canvasConfig.responsiveHeight
-    })
-    
     if (canvasConfig.canvasMode === 'responsive' && containerWidth > 768) {
       // Priority: 16:12 ratio > manual height > auto
       if (canvasConfig.maintain16by9) {
-        const ratio = Math.floor(containerWidth * 0.75)
-        console.log('📐 Using 16:12 ratio:', ratio)
-        return ratio // 12/16 = 0.75
+        return Math.floor(containerWidth * 0.75) // 12/16 = 0.75
       } else if (typeof canvasConfig.responsiveHeight === 'number') {
-        console.log('📏 Using manual height:', canvasConfig.responsiveHeight)
         return canvasConfig.responsiveHeight // manual height
       } else if (canvasConfig.responsiveHeight === 'viewport') {
-        const viewport = Math.max(400, window.innerHeight - 200)
-        console.log('📱 Using viewport height:', viewport)
-        return viewport // viewport - space for headers
+        return Math.max(400, window.innerHeight - 200) // viewport - space for headers
       }
       // 'auto' or fallback
-      console.log('⚡ Using auto/fallback (null)')
       return null
     }
-    console.log('📱 Mobile/tablet mode or not responsive')
     return null // Mobile/tablet: maintain current behavior
   }, [containerWidth, canvasConfig.canvasMode, canvasConfig.maintain16by9, canvasConfig.responsiveHeight])
 

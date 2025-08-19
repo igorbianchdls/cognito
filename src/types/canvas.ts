@@ -54,7 +54,7 @@ export const defaultCanvasConfig: CanvasConfig = {
   canvasMode: 'responsive',
   width: 'auto',
   height: 'auto',
-  minHeight: 400,
+  minHeight: 800,
   maxWidth: undefined,
   
   rowHeight: 60,
