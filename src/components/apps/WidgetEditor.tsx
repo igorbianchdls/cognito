@@ -5,7 +5,7 @@ import { $widgets, $selectedWidget, $selectedWidgetId, widgetActions } from '@/s
 import { chartActions } from '@/stores/chartStore'
 import { kpiActions } from '@/stores/kpiStore'
 import { $canvasConfig, canvasActions } from '@/stores/canvasStore'
-import { useState, useEffect, useMemo, memo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import type { ChartWidget, BarChartConfig, LineChartConfig, PieChartConfig } from '@/types/chartWidgets'
 
 // Interface for padding configuration
@@ -32,22 +32,22 @@ export default function WidgetEditor() {
     color: selectedWidget?.color || '#3B82F6'
   })
 
-  // State for collapsible sections
-  const [expandedSections, setExpandedSections] = useState({
-    colors: true,
-    grid: false,
-    labels: false,
-    legends: false,
-    axes: false,
-    chartSpecific: true,
-    animation: false,
-    // KPI sections
-    kpiData: true,
-    kpiStyling: false,
-    kpiTypography: false,
-    kpiLayout: false,
-    kpiDisplay: false
-  })
+  // State for collapsible sections (currently not used but preserved for future enhancement)
+  // const [expandedSections, setExpandedSections] = useState({
+  //   colors: true,
+  //   grid: false,
+  //   labels: false,
+  //   legends: false,
+  //   axes: false,
+  //   chartSpecific: true,
+  //   animation: false,
+  //   // KPI sections
+  //   kpiData: true,
+  //   kpiStyling: false,
+  //   kpiTypography: false,
+  //   kpiLayout: false,
+  //   kpiDisplay: false
+  // })
 
   // KPI form state - following same pattern as editForm for charts
   const [editKPIForm, setEditKPIForm] = useState({
@@ -364,7 +364,7 @@ export default function WidgetEditor() {
                             <label className="block text-xs text-gray-500 mb-1">Size</label>
                             <select
                               value={canvasConfig.backgroundSize}
-                              onChange={(e) => canvasActions.setBackgroundSize(e.target.value as any)}
+                              onChange={(e) => canvasActions.setBackgroundSize(e.target.value as 'cover' | 'contain' | 'auto' | 'stretch')}
                               className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             >
                               <option value="cover">Cover</option>
@@ -377,7 +377,7 @@ export default function WidgetEditor() {
                             <label className="block text-xs text-gray-500 mb-1">Position</label>
                             <select
                               value={canvasConfig.backgroundPosition}
-                              onChange={(e) => canvasActions.setBackgroundPosition(e.target.value as any)}
+                              onChange={(e) => canvasActions.setBackgroundPosition(e.target.value as 'center' | 'top' | 'bottom' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right')}
                               className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             >
                               <option value="center">Center</option>
@@ -396,7 +396,7 @@ export default function WidgetEditor() {
                           <label className="block text-xs text-gray-500 mb-1">Repeat</label>
                           <select
                             value={canvasConfig.backgroundRepeat}
-                            onChange={(e) => canvasActions.setBackgroundRepeat(e.target.value as any)}
+                            onChange={(e) => canvasActions.setBackgroundRepeat(e.target.value as 'no-repeat' | 'repeat' | 'repeat-x' | 'repeat-y')}
                             className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           >
                             <option value="no-repeat">No Repeat</option>
@@ -424,7 +424,7 @@ export default function WidgetEditor() {
                         ].map((mode) => (
                           <button
                             key={mode.value}
-                            onClick={() => canvasActions.setCanvasMode(mode.value as any)}
+                            onClick={() => canvasActions.setCanvasMode(mode.value as 'responsive' | 'fixed')}
                             className={`flex-1 px-3 py-2 text-xs border rounded-md transition-colors ${
                               canvasConfig.canvasMode === mode.value
                                 ? 'bg-blue-50 border-blue-300 text-blue-700'
@@ -654,7 +654,7 @@ export default function WidgetEditor() {
                         <label className="block text-xs text-gray-500 mb-1">Overflow</label>
                         <select
                           value={canvasConfig.overflow}
-                          onChange={(e) => canvasActions.setOverflow(e.target.value as any)}
+                          onChange={(e) => canvasActions.setOverflow(e.target.value as 'visible' | 'hidden' | 'scroll' | 'auto')}
                           className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                         >
                           <option value="visible">Visible</option>
