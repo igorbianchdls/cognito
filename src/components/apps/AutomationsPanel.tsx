@@ -160,7 +160,7 @@ export default function AutomationsPanel() {
           <div className="text-center py-8 text-gray-500">
             <div className="text-4xl mb-3">🤖</div>
             <p className="text-lg font-medium mb-2">Nenhuma automação configurada</p>
-            <p className="text-sm">Clique em "Nova" para criar sua primeira automação</p>
+            <p className="text-sm">Clique em &quot;Nova&quot; para criar sua primeira automação</p>
           </div>
         ) : (
           <div className="space-y-3">
