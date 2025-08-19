@@ -193,6 +193,7 @@ export default function GridCanvas({
           preventCollision={true}
           allowOverlap={false}
           autoSize={false}
+          maxRows={12}
         >
           {widgets.map((widget) => (
             <div 
