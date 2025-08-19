@@ -55,6 +55,9 @@ export default function WidgetEditor() {
     unit: ''
   })
 
+  // State for canvas selection - default to true when no widgets exist
+  const [canvasSelected, setCanvasSelected] = useState(widgets.length === 0)
+
   // Computed widget-specific configurations - correct access to adapted widget
   const chartConfig = useMemo(() => {
     if (!selectedWidget || !isChartWidget(selectedWidget)) return {}
@@ -122,6 +125,13 @@ export default function WidgetEditor() {
     selectedWidget
   ]) // Dependencies for editKPIForm sync
 
+  // Auto-select canvas when no widgets exist
+  useEffect(() => {
+    if (widgets.length === 0 && !canvasSelected && !selectedWidget) {
+      setCanvasSelected(true)
+    }
+  }, [widgets.length, canvasSelected, selectedWidget])
+
 
   // Debug: Monitor re-renders and selectedWidget changes
   useEffect(() => {
@@ -144,7 +154,13 @@ export default function WidgetEditor() {
   }, [selectedWidget?.i, selectedWidget?.config?.kpiConfig, kpiConfig])
 
   const handleSelectWidget = (widgetId: string) => {
+    setCanvasSelected(false)
     widgetActions.selectWidget(widgetId)
+  }
+
+  const handleSelectCanvas = () => {
+    setCanvasSelected(true)
+    widgetActions.selectWidget(null)
   }
 
   const handleUpdateWidget = () => {
@@ -281,6 +297,30 @@ export default function WidgetEditor() {
         <div className="p-4">
           <h3 className="text-sm font-medium text-gray-700 mb-3">Widgets</h3>
           <div className="space-y-2 mb-6">
+            {/* Canvas Settings Item */}
+            <div
+              onClick={handleSelectCanvas}
+              className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                canvasSelected
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-200 hover:border-gray-300 bg-white'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-xl">🎨</span>
+                <div className="flex-1">
+                  <div className="font-medium text-sm">Canvas Settings</div>
+                  <div className="text-xs text-gray-500">
+                    Configure canvas appearance and layout
+                  </div>
+                </div>
+                {canvasSelected && (
+                  <span className="text-blue-500">✓</span>
+                )}
+              </div>
+            </div>
+
+            {/* Widget Items */}
             {widgets.map((widget) => (
               <div
                 key={widget.i}
@@ -308,7 +348,7 @@ export default function WidgetEditor() {
           </div>
 
           {/* Canvas Settings or Widget Edit Form */}
-          {!selectedWidget ? (
+          {canvasSelected ? (
             <div className="border-t pt-4">
               <h3 className="text-sm font-medium text-gray-700 mb-4">
                 🎨 Canvas Settings
@@ -678,7 +718,7 @@ export default function WidgetEditor() {
                 </div>
               </div>
             </div>
-          ) : (
+          ) : selectedWidget ? (
             <div className="border-t pt-4">
               <h3 className="text-sm font-medium text-gray-700 mb-3">
                 Edit &quot;{selectedWidget.name}&quot;
@@ -2065,6 +2105,16 @@ export default function WidgetEditor() {
                     🗑️
                   </button>
                 </div>
+              </div>
+            </div>
+          ) : (
+            <div className="border-t pt-4">
+              <div className="text-center py-8">
+                <span className="text-4xl mb-4 block">🎨</span>
+                <p className="text-gray-500 mb-2">No selection</p>
+                <p className="text-sm text-gray-400">
+                  Click on "Canvas Settings" or a widget to start editing
+                </p>
               </div>
             </div>
           )}
