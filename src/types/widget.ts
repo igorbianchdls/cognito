@@ -185,11 +185,42 @@ export interface TableConfig {
   padding?: number
 }
 
+// Image-specific configuration
+export interface ImageConfig {
+  // Basic properties
+  src?: string
+  alt?: string
+  title?: string
+  
+  // Layout properties
+  objectFit?: 'cover' | 'contain' | 'fill' | 'scale-down' | 'none'
+  objectPosition?: string
+  
+  // Style properties
+  borderRadius?: number
+  borderWidth?: number
+  borderColor?: string
+  shadow?: boolean
+  opacity?: number
+  backgroundColor?: string
+  
+  // Behavior properties
+  clickAction?: 'none' | 'link' | 'modal'
+  linkUrl?: string
+  openInNewTab?: boolean
+  
+  // Fallback properties
+  fallbackSrc?: string
+  showPlaceholder?: boolean
+  placeholderText?: string
+}
+
 // Unified widget configuration interface
 export interface WidgetConfig {
   chartConfig?: ChartConfig  // For chart widgets (Bar, Line, Pie, Area)
   kpiConfig?: KPIConfig      // For KPI widgets
   tableConfig?: TableConfig  // For table widgets
+  imageConfig?: ImageConfig  // For image widgets
 }
 
 export interface DroppedWidget extends Widget {

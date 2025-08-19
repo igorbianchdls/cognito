@@ -67,6 +67,15 @@ const availableWidgets: Widget[] = [
     defaultWidth: 4,
     defaultHeight: 3,
   },
+  {
+    id: 'image-widget',
+    name: 'Image',
+    type: 'image',
+    icon: '🖼️',
+    description: 'Display images with customizable styling and behavior',
+    defaultWidth: 3,
+    defaultHeight: 2,
+  },
 ]
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
