@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { useStore } from '@nanostores/react'
 import { useDroppable } from '@dnd-kit/core'
 import { Responsive, WidthProvider } from 'react-grid-layout'
@@ -28,9 +28,37 @@ export default function GridCanvas({
     id: 'canvas-droppable'
   })
 
+  // State for container width measurement
+  const [containerWidth, setContainerWidth] = useState(0)
+  const containerRef = useRef<HTMLDivElement>(null)
+
   const handleWidgetClick = (widgetId: string) => {
     widgetActions.selectWidget(widgetId)
   }
+
+  // Effect to measure container width for 16:9 calculation
+  useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth)
+      }
+    }
+    
+    updateWidth()
+    window.addEventListener('resize', updateWidth)
+    return () => window.removeEventListener('resize', updateWidth)
+  }, [])
+
+  // Calculate 16:9 height for responsive mode in desktop
+  const calculate16by9Height = useMemo(() => {
+    if (canvasConfig.canvasMode === 'responsive' && 
+        canvasConfig.maintain16by9 && 
+        containerWidth > 768) {
+      // Desktop: apply 16:9 aspect ratio
+      return Math.floor(containerWidth * 0.5625) // 9/16 = 0.5625
+    }
+    return null // Mobile/tablet or disabled: maintain current behavior
+  }, [containerWidth, canvasConfig.canvasMode, canvasConfig.maintain16by9])
 
   const layout = useMemo(() => 
     widgets.map(widget => ({
@@ -71,9 +99,13 @@ export default function GridCanvas({
       }
     }
 
-    // Min/max constraints
-    // Only apply minHeight in responsive mode, not in fixed mode
-    if (canvasConfig.canvasMode !== 'fixed') {
+    // Min/max constraints and 16:9 aspect ratio
+    if (calculate16by9Height && canvasConfig.canvasMode === 'responsive') {
+      // Apply 16:9 height for desktop responsive mode
+      styles.height = `${calculate16by9Height}px`
+      // Don't apply minHeight to allow exact 16:9 ratio
+    } else if (canvasConfig.canvasMode !== 'fixed') {
+      // Apply minHeight only in responsive mode without 16:9
       styles.minHeight = `${canvasConfig.minHeight}px`
     }
     if (canvasConfig.maxWidth) {
@@ -102,7 +134,7 @@ export default function GridCanvas({
   }), [canvasConfig.breakpoints])
 
   return (
-    <div className="h-full flex flex-col">
+    <div ref={containerRef} className="h-full flex flex-col">
       {/* Canvas Header */}
       <div className="mb-4">
         <h2 className="text-xl font-semibold text-gray-900">Dashboard Canvas</h2>

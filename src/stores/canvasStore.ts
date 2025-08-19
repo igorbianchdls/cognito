@@ -109,6 +109,12 @@ export const canvasActions = {
     canvasActions.updateConfig({ overflow })
   },
 
+  // Aspect ratio actions
+  setMaintain16by9: (maintain16by9: boolean) => {
+    console.log('📐 Setting 16:9 aspect ratio:', maintain16by9)
+    canvasActions.updateConfig({ maintain16by9 })
+  },
+
   // Reset to defaults
   resetToDefaults: () => {
     console.log('🔄 Resetting canvas to defaults')

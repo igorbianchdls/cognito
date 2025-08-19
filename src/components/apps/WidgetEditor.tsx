@@ -704,6 +704,22 @@ export default function WidgetEditor() {
                         </select>
                       </div>
                     </div>
+
+                    {/* 16:9 Aspect Ratio */}
+                    <div>
+                      <label className="flex items-center gap-2 text-xs">
+                        <input
+                          type="checkbox"
+                          checked={canvasConfig.maintain16by9}
+                          onChange={(e) => canvasActions.setMaintain16by9(e.target.checked)}
+                          className="rounded"
+                        />
+                        Maintain 16:9 aspect ratio (desktop only)
+                      </label>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Automatically calculates height for 16:9 proportion in responsive mode on screens wider than 768px
+                      </p>
+                    </div>
                   </div>
                 </div>
 

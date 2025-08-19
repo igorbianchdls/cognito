@@ -34,6 +34,9 @@ export interface CanvasConfig {
   borderRadius: number
   boxShadow: boolean
   overflow: 'visible' | 'hidden' | 'scroll' | 'auto'
+  
+  // Aspect ratio
+  maintain16by9: boolean
 }
 
 // Default configuration with sensible values for a dashboard canvas
@@ -64,5 +67,7 @@ export const defaultCanvasConfig: CanvasConfig = {
   
   borderRadius: 8,
   boxShadow: false,
-  overflow: 'visible'
+  overflow: 'visible',
+  
+  maintain16by9: true
 }
