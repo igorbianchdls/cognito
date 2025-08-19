@@ -311,7 +311,7 @@ export default function WidgetEditor() {
       const newImageConfig = { ...currentImageConfig, [field]: value }
       
       // Update the widget with the new imageConfig
-      widgetActions.updateWidget(selectedWidget.i, {
+      widgetActions.editWidget(selectedWidget.i, {
         config: {
           ...selectedWidget.config,
           imageConfig: newImageConfig
