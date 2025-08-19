@@ -11,8 +11,8 @@ export interface CanvasConfig {
   
   // Canvas dimensions
   canvasMode: 'responsive' | 'fixed'
-  width?: number | 'auto' | '100%'
-  height?: number | 'auto' | '100vh'
+  width: number | 'auto' | '100%'
+  height: number | 'auto' | '100vh'
   minHeight: number
   maxWidth?: number
   
