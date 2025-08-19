@@ -291,12 +291,16 @@ export const chartActions = {
 
   // Update layout (for react-grid-layout)
   updateChartsLayout: (layout: LayoutItem[]) => {
-    console.log('📐 Updating charts layout for', layout.length, 'items')
+    console.log('[CHART-STORE] Atualizando layout de', layout.length, 'charts')
     const currentCharts = $chartWidgets.get()
     
     const updatedCharts = currentCharts.map(chart => {
       const layoutItem = layout.find(l => l.i === chart.i)
-      return layoutItem ? { ...chart, ...layoutItem } : chart
+      if (layoutItem) {
+        console.log('[CHART-STORE] Salvando posição:', chart.i, { x: layoutItem.x, y: layoutItem.y, w: layoutItem.w, h: layoutItem.h })
+        return { ...chart, ...layoutItem }
+      }
+      return chart
     })
     $chartWidgets.set(updatedCharts)
   },

@@ -56,49 +56,32 @@ const parseAndApplyJson = (text: string) => {
   const jsonRegex = /<json>([\s\S]*?)<\/json>/g
   const matches = [...text.matchAll(jsonRegex)]
   
-  console.log(`🔍 JSON matches found: ${matches.length}`)
-  
   matches.forEach((match, matchIndex) => {
     try {
       const jsonString = match[1].trim()
-      console.log(`🗂️ Match ${matchIndex} - Raw JSON string:`, jsonString)
-      
       const parsed = JSON.parse(jsonString)
-      console.log(`✅ Match ${matchIndex} - Parsed JSON:`, parsed)
       
       // Check if it's the new action format
       if (parsed.action || parsed.actions) {
-        console.log('🎯 Detected action format - using incremental updates')
         handleActionFormat(parsed)
       }
       // Fallback to old format (complete widgets array)
       else if (parsed && parsed.widgets && Array.isArray(parsed.widgets)) {
-        console.log('📊 Detected legacy format - using complete replacement')
         handleLegacyFormat(parsed)
-      } else {
-        console.warn('⚠️ JSON format not recognized:', parsed)
       }
     } catch (error) {
-      console.error('❌ Error parsing JSON from AI response:', error)
+      // JSON parsing failed - ignore
     }
   })
-  
-  if (matches.length === 0) {
-    console.log('ℹ️ No <json> tags found in AI response')
-  }
 }
 
 // Handle new action-based format
 const handleActionFormat = (parsed: ActionFormat) => {
   if (parsed.actions && Array.isArray(parsed.actions)) {
-    // Multiple actions
-    console.log(`🔄 Processing ${parsed.actions.length} actions`)
     parsed.actions.forEach((actionData: ActionData, index: number) => {
       executeAction(actionData, index)
     })
   } else if (parsed.action) {
-    // Single action
-    console.log('🔄 Processing single action')
     executeAction(parsed as ActionData, 0)
   }
 }
@@ -106,7 +89,6 @@ const handleActionFormat = (parsed: ActionFormat) => {
 // Execute a single action
 const executeAction = (actionData: ActionData, index: number) => {
   const { action, widgetId, changes } = actionData
-  console.log(`⚡ Action ${index}: ${action} on widget ${widgetId}`, changes)
   
   // Map property names for backward compatibility
   const mappedChanges = changes ? { ...changes } : {}
@@ -119,26 +101,18 @@ const executeAction = (actionData: ActionData, index: number) => {
     delete mappedChanges.width
   }
   
-  console.log(`🔄 Mapped changes:`, mappedChanges)
-  
   switch (action) {
     case 'update':
     case 'move':
     case 'resize':
       if (widgetId && mappedChanges) {
         widgetActions.editWidget(widgetId, mappedChanges)
-        console.log(`✅ Applied ${action} to widget ${widgetId}:`, mappedChanges)
-      } else {
-        console.error(`❌ Missing widgetId or changes for ${action}:`, actionData)
       }
       break
       
     case 'delete':
       if (widgetId) {
         widgetActions.removeWidget(widgetId)
-        console.log(`✅ Deleted widget ${widgetId}`)
-      } else {
-        console.error('❌ Missing widgetId for delete:', actionData)
       }
       break
       
@@ -161,21 +135,13 @@ const executeAction = (actionData: ActionData, index: number) => {
           color: mappedChanges.color || '#3B82F6'
         }
         widgetActions.addWidget(newWidget)
-        console.log('✅ Added new widget:', newWidget)
-      } else {
-        console.error('❌ Missing widget data for add:', actionData)
       }
       break
-      
-    default:
-      console.warn(`⚠️ Unknown action type: ${action}`)
   }
 }
 
 // Handle legacy format (complete widgets array)
 const handleLegacyFormat = (parsed: LegacyFormat) => {
-  console.log(`📊 Found ${parsed.widgets.length} widgets in JSON`)
-  
   // Transform JSON widgets to DroppedWidget format
   const newWidgets: DroppedWidget[] = parsed.widgets.map((widget: JsonWidget, index: number) => {
     const transformedWidget = {
@@ -193,14 +159,11 @@ const handleLegacyFormat = (parsed: LegacyFormat) => {
       h: widget.size?.h || 2,
       color: widget.style?.color || '#3B82F6'
     }
-    console.log(`🔄 Transformed widget ${index}:`, transformedWidget)
     return transformedWidget
   })
   
   // Apply changes to canvas
-  console.log(`🚀 Applying ${newWidgets.length} widgets to canvas...`)
   widgetActions.setWidgets(newWidgets)
-  console.log('✅ JSON automatically applied to canvas:', newWidgets.length, 'widgets')
 }
 
 export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelProps) {
@@ -210,50 +173,29 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
       body: { widgets: droppedWidgets, onEditWidget }
     }),
     onFinish: ({ message }) => {
-      console.log('✅ Mensagem finalizada:', message)
-      console.log('🤖 IA Response COMPLETA:', message)
-      
       // Parse JSON immediately when message is finished
       message.parts?.forEach((part, index) => {
         if (part.type === 'text') {
-          console.log(`📝 Part ${index} - Full text:`, part.text)
-          console.log(`🔍 Checking for <json> tags in:`, part.text)
           parseAndApplyJson(part.text)
         }
       })
     },
     onError: (error) => {
-      console.error('❌ Erro no chat:', error)
-      console.error('❌ Error details:', {
-        message: error.message,
-        stack: error.stack,
-        name: error.name
-      })
+      // Chat error occurred
     }
   })
 
   const [input, setInput] = useState('')
-  
-  console.log('🔍 Chat state:', { messagesCount: messages.length, status })
-  console.log('📦 Widgets enviados para API:', droppedWidgets)
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     if (input.trim()) {
-      console.log('🚀 Enviando mensagem:', input)
-      console.log('📡 Status atual:', status)
-      console.log('📡 Widgets count sendo enviados:', droppedWidgets.length)
-      console.log('📡 onEditWidget callback disponível:', typeof onEditWidget === 'function')
-      
       try {
         sendMessage({ text: input })
         setInput('')
-        console.log('✅ Mensagem enviada com sucesso')
       } catch (error) {
-        console.error('❌ Erro ao enviar mensagem:', error)
+        // Message sending failed
       }
-    } else {
-      console.warn('⚠️ Tentativa de enviar mensagem vazia')
     }
   }
 

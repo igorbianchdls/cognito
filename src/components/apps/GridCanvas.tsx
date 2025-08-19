@@ -66,8 +66,11 @@ export default function GridCanvas({
     return null // Mobile/tablet: maintain current behavior
   }, [containerWidth, canvasConfig.canvasMode, canvasConfig.maintain16by9, canvasConfig.responsiveHeight])
 
-  const layout = useMemo(() => 
-    widgets.map(widget => ({
+  const layout = useMemo(() => {
+    console.log('[GRID] Recalculando layout - widgets:', widgets.length)
+    widgets.forEach(w => console.log('[GRID] Widget', w.i, 'posição no store:', { x: w.x, y: w.y, w: w.w, h: w.h }))
+    
+    return widgets.map(widget => ({
       i: widget.i,
       x: widget.x,
       y: widget.y,
@@ -75,8 +78,8 @@ export default function GridCanvas({
       h: widget.h,
       minW: 1,
       minH: 1,
-    })), [widgets]
-  )
+    }))
+  }, [widgets])
 
   // Generate canvas styles based on configuration
   // Applies user-customized background, dimensions, and styling

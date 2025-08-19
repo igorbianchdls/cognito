@@ -460,11 +460,11 @@ export const compositeActions = {
 
   // Update layout for all widgets
   updateLayout: (layout: Array<{ i: string; x: number; y: number; w: number; h: number }>) => {
-    console.log('📐 Updating layout via composite for', layout.length, 'widgets')
+    console.log('[STORE] Recebendo updateLayout para', layout.length, 'widgets')
     
     // Get all widgets once to avoid race condition
     const allWidgets = $allWidgets.get()
-    console.log('🔍 Current widgets in store:', allWidgets.length, 'Layout items:', layout.length)
+    console.log('[STORE] Widgets no store:', allWidgets.length, '| Layout items:', layout.length)
     
     // Separate layout items by widget type
     const chartLayouts: Array<{ i: string; x: number; y: number; w: number; h: number }> = []
@@ -476,9 +476,11 @@ export const compositeActions = {
       const widget = allWidgets.find(w => w.i === item.i)
       
       if (!widget) {
-        console.warn('⚠️ Widget órfão no layout:', item.i, '- ignorando')
+        console.warn('[STORE] Widget órfão no layout:', item.i, '- ignorando')
         return
       }
+      
+      console.log('[POSITION]', widget.type, item.i, '→', { x: item.x, y: item.y, w: item.w, h: item.h })
       
       switch (widget.type) {
         case 'chart':

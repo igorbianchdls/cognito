@@ -41,11 +41,13 @@ export default function AppsPage() {
         h: widget.defaultHeight || 2,
       }
       
+      console.log('[ADD] Adicionando novo widget:', newWidget.i, 'na posição', { x: newWidget.x, y: newWidget.y })
       widgetActions.addWidget(newWidget)
     }
   }
 
   const handleLayoutChange = (layout: LayoutItem[]) => {
+    console.log('[LAYOUT] Mudança detectada:', layout.map(l => ({ id: l.i, x: l.x, y: l.y, w: l.w, h: l.h })))
     widgetActions.updateLayout(layout)
   }
 
