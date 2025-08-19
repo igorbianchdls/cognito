@@ -113,14 +113,17 @@ export const $selectedWidget = computed([$allWidgets, $selectedWidgetId], (widge
 
 // Adapter functions to convert specialized widgets to legacy format
 function adaptChartToLegacy(chart: ChartWidget): DroppedWidget {
-  // Create cache key based on widget ID and config content
+  console.log('[ADAPTER] Entrada - Chart:', chart.i, { x: chart.x, y: chart.y, w: chart.w, h: chart.h })
+  
+  // Create cache key based on widget ID, config AND position
   const configHash = JSON.stringify(chart.config)
-  const cacheKey = `chart_${chart.i}_${configHash}`
+  const positionHash = `${chart.x}_${chart.y}_${chart.w}_${chart.h}`
+  const cacheKey = `chart_${chart.i}_${configHash}_${positionHash}`
   
   // Return cached version if available
   const cached = adapterCache.get(cacheKey)
   if (cached) {
-    console.log('📋 Chart adapter cache hit:', chart.i)
+    console.log('[ADAPTER] Cache hit:', chart.i, '→ posições cached:', { x: cached.x, y: cached.y, w: cached.w, h: cached.h })
     return cached
   }
   
@@ -133,17 +136,20 @@ function adaptChartToLegacy(chart: ChartWidget): DroppedWidget {
     }
   }
   
+  console.log('[ADAPTER] Saída - Adapted:', adapted.i, { x: adapted.x, y: adapted.y, w: adapted.w, h: adapted.h })
+  
   // Cache the result
   adapterCache.set(cacheKey, adapted)
-  console.log('💾 Chart adapter cache miss - cached:', chart.i)
+  console.log('[ADAPTER] Cache miss - novo cached:', chart.i)
   
   return adapted
 }
 
 function adaptKPIToLegacy(kpi: KPIWidget): DroppedWidget {
-  // Create cache key based on widget ID and config content
+  // Create cache key based on widget ID, config AND position
   const configHash = JSON.stringify(kpi.config)
-  const cacheKey = `kpi_${kpi.i}_${configHash}`
+  const positionHash = `${kpi.x}_${kpi.y}_${kpi.w}_${kpi.h}`
+  const cacheKey = `kpi_${kpi.i}_${configHash}_${positionHash}`
   
   // Return cached version if available
   const cached = adapterCache.get(cacheKey)
@@ -168,9 +174,10 @@ function adaptKPIToLegacy(kpi: KPIWidget): DroppedWidget {
 }
 
 function adaptTableToLegacy(table: TableWidget): DroppedWidget {
-  // Create cache key based on widget ID and config content
+  // Create cache key based on widget ID, config AND position
   const configHash = JSON.stringify(table.config)
-  const cacheKey = `table_${table.i}_${configHash}`
+  const positionHash = `${table.x}_${table.y}_${table.w}_${table.h}`
+  const cacheKey = `table_${table.i}_${configHash}_${positionHash}`
   
   // Return cached version if available
   const cached = adapterCache.get(cacheKey)

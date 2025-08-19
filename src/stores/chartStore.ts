@@ -303,6 +303,12 @@ export const chartActions = {
       return chart
     })
     $chartWidgets.set(updatedCharts)
+    
+    // Debug: Verificar se posições foram salvas no chartStore
+    const verificacao = $chartWidgets.get()
+    verificacao.forEach(chart => {
+      console.log('[CHART-STORE] Estado final:', chart.i, { x: chart.x, y: chart.y, w: chart.w, h: chart.h })
+    })
   },
 
   // Duplicate chart
