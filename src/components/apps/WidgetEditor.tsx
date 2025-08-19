@@ -1364,7 +1364,7 @@ export default function WidgetEditor() {
                     </div>
                     
                     {/* Colors & Styling */}
-                    <Accordion type="single" collapsible className="w-full">
+                    <Accordion type="multiple" className="w-full space-y-2">
                       <AccordionItem value="visual">
                         <AccordionTrigger className="text-lg font-bold text-gray-700">
                           🎨 Visual & Colors
@@ -1448,34 +1448,39 @@ export default function WidgetEditor() {
                           </div>
                         </AccordionContent>
                       </AccordionItem>
+
+                      {/* Grid & Axes */}
+                      <AccordionItem value="grid">
+                        <AccordionTrigger className="text-lg font-bold text-gray-700">
+                          📐 Grid & Axes
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-3">
+                            <div className="space-y-2">
+                              <label className="flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  checked={chartConfig.enableGridX || false}
+                                  onChange={(e) => handleChartConfigChange('enableGridX', e.target.checked)}
+                                  className="rounded"
+                                />
+                                <span className="text-xs text-gray-600">Enable X Grid</span>
+                              </label>
+                              <label className="flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  checked={chartConfig.enableGridY !== false}
+                                  onChange={(e) => handleChartConfigChange('enableGridY', e.target.checked)}
+                                  className="rounded"
+                                />
+                                <span className="text-xs text-gray-600">Enable Y Grid</span>
+                              </label>
+                            </div>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
                     </Accordion>
 
-                    {/* Grid & Axes */}
-                    <div>
-                      <h5 className="text-lg font-bold text-gray-700 mb-3 mt-2">📐 Grid & Axes</h5>
-                      <div className="space-y-3">
-                        <div className="space-y-2">
-                          <label className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={chartConfig.enableGridX || false}
-                              onChange={(e) => handleChartConfigChange('enableGridX', e.target.checked)}
-                              className="rounded"
-                            />
-                            <span className="text-xs text-gray-600">Enable X Grid</span>
-                          </label>
-                          <label className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={chartConfig.enableGridY !== false}
-                              onChange={(e) => handleChartConfigChange('enableGridY', e.target.checked)}
-                              className="rounded"
-                            />
-                            <span className="text-xs text-gray-600">Enable Y Grid</span>
-                          </label>
-                        </div>
-                      </div>
-                    </div>
 
                     {/* Labels */}
                     <div>
