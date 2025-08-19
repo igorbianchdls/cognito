@@ -301,62 +301,105 @@ export default function WidgetEditor() {
 
   const handleImageConfigChange = (field: string, value: unknown) => {
     console.log('⚙️ WidgetEditor handleImageConfigChange:', { field, value })
+    console.log('🎯 selectedWidget:', selectedWidget?.i, selectedWidget?.type)
+    console.log('🔍 isImageWidget check:', selectedWidget ? isImageWidget(selectedWidget) : 'no widget')
     
     // Apply changes directly to store using widgetActions
     if (selectedWidget && isImageWidget(selectedWidget)) {
-      console.log('⚙️ WidgetEditor calling widgetActions.updateWidget for imageConfig:', selectedWidget.i, { [field]: value })
+      console.log('✅ Widget is valid Image widget, proceeding...')
+      console.log('⚙️ WidgetEditor calling widgetActions.editWidget for imageConfig:', selectedWidget.i, { [field]: value })
       
       // Get current imageConfig and update the specific field
       const currentImageConfig = selectedWidget.config?.imageConfig || {}
       const newImageConfig = { ...currentImageConfig, [field]: value }
       
+      console.log('📝 Current imageConfig:', currentImageConfig)
+      console.log('📝 New imageConfig:', newImageConfig)
+      
       // Update the widget with the new imageConfig
-      widgetActions.editWidget(selectedWidget.i, {
+      const updatePayload = {
         config: {
           ...selectedWidget.config,
           imageConfig: newImageConfig
         }
-      })
+      }
+      console.log('📤 Update payload:', updatePayload)
+      
+      widgetActions.editWidget(selectedWidget.i, updatePayload)
+      console.log('✅ widgetActions.editWidget called successfully')
+    } else {
+      console.log('❌ Cannot update: selectedWidget missing or not Image widget')
+      console.log('❌ selectedWidget exists:', !!selectedWidget)
+      console.log('❌ selectedWidget type:', selectedWidget?.type)
     }
   }
 
   // Handle image upload and convert to Base64
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('🖼️ handleImageUpload triggered', event)
+    
     const file = event.target.files?.[0]
-    if (!file) return
+    console.log('📁 Selected file:', file)
+    
+    if (!file) {
+      console.log('❌ No file selected')
+      return
+    }
+
+    console.log('📊 File details:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      sizeKB: Math.round(file.size / 1024)
+    })
 
     // Validate file type
     const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']
     if (!validTypes.includes(file.type)) {
+      console.log('❌ Invalid file type:', file.type)
       alert('Formato não suportado. Use PNG, JPG, GIF ou WebP.')
       return
     }
+    console.log('✅ File type valid:', file.type)
 
     // Validate file size (max 2MB)
     const maxSize = 2 * 1024 * 1024 // 2MB
     if (file.size > maxSize) {
+      console.log('❌ File too large:', file.size, 'bytes')
       alert('Arquivo muito grande. Máximo 2MB.')
       return
     }
+    console.log('✅ File size valid:', file.size, 'bytes')
 
     // Convert to Base64
+    console.log('🔄 Starting Base64 conversion...')
     const reader = new FileReader()
     reader.onload = (e) => {
+      console.log('✅ FileReader onload triggered')
       const base64 = e.target?.result as string
+      console.log('📝 Base64 result:', base64 ? `${base64.slice(0, 50)}...` : 'null')
+      
       if (base64) {
+        console.log('📤 Calling handleImageConfigChange with src:', base64.slice(0, 50) + '...')
         handleImageConfigChange('src', base64)
         
         // Set default alt if empty
         if (!editImageForm.alt) {
           const fileName = file.name.split('.')[0]
+          console.log('📝 Setting default alt text:', fileName)
           handleImageConfigChange('alt', fileName)
         }
+        console.log('✅ Image upload completed successfully')
+      } else {
+        console.log('❌ Base64 conversion failed - empty result')
       }
     }
-    reader.onerror = () => {
+    reader.onerror = (error) => {
+      console.log('❌ FileReader error:', error)
       alert('Erro ao carregar imagem.')
     }
     reader.readAsDataURL(file)
+    console.log('🔄 FileReader.readAsDataURL called')
   }
 
   // Handle removing image
