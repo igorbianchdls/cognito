@@ -192,6 +192,7 @@ export default function GridCanvas({
           compactType={null}
           preventCollision={true}
           allowOverlap={false}
+          autoSize={false}
         >
           {widgets.map((widget) => (
             <div 
