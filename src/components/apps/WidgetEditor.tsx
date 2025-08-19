@@ -17,6 +17,8 @@ interface PaddingConfig {
 }
 import { isChartWidget, isBarChart, isLineChart, isPieChart } from '@/types/chartWidgets'
 import { isKPIWidget } from '@/types/kpiWidgets'
+import { isImageWidget } from '@/types/widget'
+import type { ImageConfig } from '@/types/widget'
 
 export default function WidgetEditor() {
   const widgets = useStore($widgets)
@@ -53,6 +55,15 @@ export default function WidgetEditor() {
   const [editKPIForm, setEditKPIForm] = useState({
     name: '',
     unit: ''
+  })
+
+  // Image form state - following same pattern as other widgets
+  const [editImageForm, setEditImageForm] = useState({
+    src: '',
+    alt: '',
+    title: '',
+    objectFit: 'cover' as const,
+    objectPosition: 'center'
   })
 
   // State for canvas selection - default to true when no widgets exist
@@ -96,6 +107,23 @@ export default function WidgetEditor() {
     return config
   }, [selectedWidget]) // Dependencies for kpiConfig useMemo
 
+  const imageConfig = useMemo(() => {
+    if (!selectedWidget || !isImageWidget(selectedWidget)) return {}
+    
+    // selectedWidget é DroppedWidget adaptado
+    console.log('🔍 WidgetEditor Image estrutura:', {
+      id: selectedWidget?.i,
+      type: selectedWidget?.type,
+      configStructure: selectedWidget?.config,
+      configImageConfig: selectedWidget?.config?.imageConfig
+    })
+    
+    // Acesso correto via adapter structure
+    const config = selectedWidget.config?.imageConfig || {}
+    console.log('🎯 WidgetEditor computed imageConfig final:', config)
+    return config
+  }, [selectedWidget]) // Dependencies for imageConfig useMemo
+
   // Update form when selected widget ID changes (not the object reference)
   useEffect(() => {
     if (selectedWidget) {
@@ -124,6 +152,28 @@ export default function WidgetEditor() {
     selectedWidget?.config?.kpiConfig?.unit,
     selectedWidget
   ]) // Dependencies for editKPIForm sync
+
+  // Sync editImageForm with imageConfig when widget changes - specific dependencies
+  useEffect(() => {
+    if (selectedWidget && isImageWidget(selectedWidget)) {
+      const config = selectedWidget.config?.imageConfig || {}
+      setEditImageForm({
+        src: config.src || '',
+        alt: config.alt || '',
+        title: config.title || '',
+        objectFit: config.objectFit || 'cover',
+        objectPosition: config.objectPosition || 'center'
+      })
+    }
+  }, [
+    selectedWidgetId,
+    selectedWidget?.config?.imageConfig?.src,
+    selectedWidget?.config?.imageConfig?.alt,
+    selectedWidget?.config?.imageConfig?.title,
+    selectedWidget?.config?.imageConfig?.objectFit,
+    selectedWidget?.config?.imageConfig?.objectPosition,
+    selectedWidget
+  ]) // Dependencies for editImageForm sync
 
   // Auto-select canvas when no widgets exist
   useEffect(() => {
@@ -249,6 +299,70 @@ export default function WidgetEditor() {
     }
   }
 
+  const handleImageConfigChange = (field: string, value: unknown) => {
+    console.log('⚙️ WidgetEditor handleImageConfigChange:', { field, value })
+    
+    // Apply changes directly to store using widgetActions
+    if (selectedWidget && isImageWidget(selectedWidget)) {
+      console.log('⚙️ WidgetEditor calling widgetActions.updateWidget for imageConfig:', selectedWidget.i, { [field]: value })
+      
+      // Get current imageConfig and update the specific field
+      const currentImageConfig = selectedWidget.config?.imageConfig || {}
+      const newImageConfig = { ...currentImageConfig, [field]: value }
+      
+      // Update the widget with the new imageConfig
+      widgetActions.updateWidget(selectedWidget.i, {
+        config: {
+          ...selectedWidget.config,
+          imageConfig: newImageConfig
+        }
+      })
+    }
+  }
+
+  // Handle image upload and convert to Base64
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']
+    if (!validTypes.includes(file.type)) {
+      alert('Formato não suportado. Use PNG, JPG, GIF ou WebP.')
+      return
+    }
+
+    // Validate file size (max 2MB)
+    const maxSize = 2 * 1024 * 1024 // 2MB
+    if (file.size > maxSize) {
+      alert('Arquivo muito grande. Máximo 2MB.')
+      return
+    }
+
+    // Convert to Base64
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string
+      if (base64) {
+        handleImageConfigChange('src', base64)
+        
+        // Set default alt if empty
+        if (!editImageForm.alt) {
+          const fileName = file.name.split('.')[0]
+          handleImageConfigChange('alt', fileName)
+        }
+      }
+    }
+    reader.onerror = () => {
+      alert('Erro ao carregar imagem.')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  // Handle removing image
+  const handleImageRemove = () => {
+    handleImageConfigChange('src', '')
+  }
 
   // Handle color array changes for charts
   const handleChartColorsChange = (colors: string[]) => {
@@ -2153,6 +2267,231 @@ export default function WidgetEditor() {
                             </div>
                           </div>
                         )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Image-Specific Configuration */}
+                {selectedWidget && isImageWidget(selectedWidget) && (
+                  <div className="border-t pt-4 mt-4">
+                    <h4 className="text-sm font-medium text-gray-700 mb-4">🖼️ Image Configuration</h4>
+                    
+                    <div className="space-y-6">
+                      {/* Image Upload */}
+                      <div>
+                        <h5 className="text-lg font-bold text-gray-700 mb-3">📷 Image Upload</h5>
+                        <div className="space-y-4">
+                          {/* Current Image Preview */}
+                          {editImageForm.src && (
+                            <div className="border border-gray-200 rounded-lg p-3">
+                              <label className="block text-xs font-medium text-gray-600 mb-2">Preview</label>
+                              <div className="relative">
+                                <img
+                                  src={editImageForm.src}
+                                  alt={editImageForm.alt || 'Preview'}
+                                  className="w-full h-32 object-cover rounded border"
+                                  style={{ objectFit: editImageForm.objectFit }}
+                                />
+                                <button
+                                  onClick={handleImageRemove}
+                                  className="absolute top-2 right-2 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs"
+                                  title="Remove image"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Upload Input */}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">
+                              Upload Image (PNG, JPG, GIF, WebP - max 2MB)
+                            </label>
+                            <input
+                              type="file"
+                              accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
+                              onChange={handleImageUpload}
+                              className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+
+                          {/* URL Input */}
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Or Image URL</label>
+                            <input
+                              type="url"
+                              value={editImageForm.src?.startsWith('http') ? editImageForm.src : ''}
+                              onChange={(e) => handleImageConfigChange('src', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="https://example.com/image.jpg"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Basic Properties */}
+                      <div>
+                        <h5 className="text-lg font-bold text-gray-700 mb-3">📝 Basic Properties</h5>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Alt Text</label>
+                            <input
+                              type="text"
+                              value={editImageForm.alt}
+                              onChange={(e) => handleImageConfigChange('alt', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Description of the image"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Title</label>
+                            <input
+                              type="text"
+                              value={editImageForm.title}
+                              onChange={(e) => handleImageConfigChange('title', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Image title (tooltip)"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Layout Properties */}
+                      <div>
+                        <h5 className="text-lg font-bold text-gray-700 mb-3">📐 Layout</h5>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Object Fit</label>
+                            <select
+                              value={editImageForm.objectFit}
+                              onChange={(e) => handleImageConfigChange('objectFit', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                              <option value="cover">Cover</option>
+                              <option value="contain">Contain</option>
+                              <option value="fill">Fill</option>
+                              <option value="scale-down">Scale Down</option>
+                              <option value="none">None</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Object Position</label>
+                            <input
+                              type="text"
+                              value={editImageForm.objectPosition}
+                              onChange={(e) => handleImageConfigChange('objectPosition', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="center, top left, etc."
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Style Properties */}
+                      <div>
+                        <h5 className="text-lg font-bold text-gray-700 mb-3">🎨 Style</h5>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Border Radius</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={(imageConfig as Record<string, unknown>).borderRadius as number ?? 8}
+                              onChange={(e) => handleImageConfigChange('borderRadius', parseInt(e.target.value) || 0)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Border Width</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={(imageConfig as Record<string, unknown>).borderWidth as number ?? 0}
+                              onChange={(e) => handleImageConfigChange('borderWidth', parseInt(e.target.value) || 0)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Border Color</label>
+                            <input
+                              type="color"
+                              value={(imageConfig as Record<string, unknown>).borderColor as string || '#e5e7eb'}
+                              onChange={(e) => handleImageConfigChange('borderColor', e.target.value)}
+                              className="w-full h-10 border border-gray-300 rounded cursor-pointer"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Opacity</label>
+                            <input
+                              type="range"
+                              min="0"
+                              max="1"
+                              step="0.1"
+                              value={(imageConfig as Record<string, unknown>).opacity as number ?? 1}
+                              onChange={(e) => handleImageConfigChange('opacity', parseFloat(e.target.value))}
+                              className="w-full"
+                            />
+                            <span className="text-xs text-gray-500">
+                              {((imageConfig as Record<string, unknown>).opacity as number ?? 1) * 100}%
+                            </span>
+                          </div>
+                        </div>
+                        <div className="mt-3">
+                          <label className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={(imageConfig as Record<string, unknown>).shadow as boolean ?? false}
+                              onChange={(e) => handleImageConfigChange('shadow', e.target.checked)}
+                              className="rounded"
+                            />
+                            <span className="text-xs text-gray-600">Add Shadow</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Behavior Properties */}
+                      <div>
+                        <h5 className="text-lg font-bold text-gray-700 mb-3">🔗 Behavior</h5>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-600 mb-1">Click Action</label>
+                            <select
+                              value={(imageConfig as Record<string, unknown>).clickAction as string || 'none'}
+                              onChange={(e) => handleImageConfigChange('clickAction', e.target.value)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                              <option value="none">None</option>
+                              <option value="link">Open Link</option>
+                            </select>
+                          </div>
+                          {(imageConfig as Record<string, unknown>).clickAction === 'link' && (
+                            <>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-600 mb-1">Link URL</label>
+                                <input
+                                  type="url"
+                                  value={(imageConfig as Record<string, unknown>).linkUrl as string || ''}
+                                  onChange={(e) => handleImageConfigChange('linkUrl', e.target.value)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                  placeholder="https://example.com"
+                                />
+                              </div>
+                              <div>
+                                <label className="flex items-center gap-2">
+                                  <input
+                                    type="checkbox"
+                                    checked={(imageConfig as Record<string, unknown>).openInNewTab as boolean ?? true}
+                                    onChange={(e) => handleImageConfigChange('openInNewTab', e.target.checked)}
+                                    className="rounded"
+                                  />
+                                  <span className="text-xs text-gray-600">Open in New Tab</span>
+                                </label>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>

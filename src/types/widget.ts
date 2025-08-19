@@ -248,3 +248,8 @@ export interface LayoutItem {
   minW?: number
   minH?: number
 }
+
+// Type guard functions
+export function isImageWidget(widget: DroppedWidget): boolean {
+  return widget.type === 'image'
+}
