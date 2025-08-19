@@ -1656,9 +1656,13 @@ export default function WidgetEditor() {
                     </Accordion>
 
                     {/* Labels */}
-                    <div>
-                      <h5 className="text-lg font-bold text-gray-700 mb-3 mt-2">🏷️ Labels</h5>
-                      <div className="space-y-3">
+                    <Accordion type="multiple" className="w-full space-y-2">
+                      <AccordionItem value="labels">
+                        <AccordionTrigger className="text-lg font-bold text-gray-700">
+                          🏷️ Labels
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-3">
                         <label className="flex items-center gap-2">
                           <input
                             type="checkbox"
@@ -1707,8 +1711,10 @@ export default function WidgetEditor() {
                             </div>
                           </div>
                         )}
-                      </div>
-                    </div>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
 
 
                     {/* Chart Type Specific Options */}
