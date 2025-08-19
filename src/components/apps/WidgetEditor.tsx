@@ -2113,7 +2113,7 @@ export default function WidgetEditor() {
                 <span className="text-4xl mb-4 block">🎨</span>
                 <p className="text-gray-500 mb-2">No selection</p>
                 <p className="text-sm text-gray-400">
-                  Click on "Canvas Settings" or a widget to start editing
+                  Click on &quot;Canvas Settings&quot; or a widget to start editing
                 </p>
               </div>
             </div>
