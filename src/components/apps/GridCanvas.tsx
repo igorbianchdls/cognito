@@ -191,9 +191,8 @@ export default function GridCanvas({
           useCSSTransforms={true}
           compactType={null}
           preventCollision={true}
-          allowOverlap={true}
+          allowOverlap={false}
           autoSize={false}
-          isBounded={true}
         >
           {widgets.map((widget) => (
             <div 
