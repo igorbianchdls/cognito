@@ -61,8 +61,10 @@ export { chartActions } from './chartStore'
 export { kpiActions } from './kpiStore' 
 export { tableActions } from './tableStore'
 export { compositeActions, migrationUtils } from './compositeStore'
+export { canvasActions } from './canvasStore' // Canvas configuration actions
 
 // Export specialized store atoms for granular subscriptions
 export { $chartWidgets, $selectedChartId } from './chartStore'
 export { $kpiWidgets, $selectedKPIId } from './kpiStore'
 export { $tableWidgets, $selectedTableId } from './tableStore'
+export { $canvasConfig } from './canvasStore'

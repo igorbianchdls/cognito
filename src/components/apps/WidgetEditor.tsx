@@ -4,6 +4,7 @@ import { useStore } from '@nanostores/react'
 import { $widgets, $selectedWidget, $selectedWidgetId, widgetActions } from '@/stores/widgetStore'
 import { chartActions } from '@/stores/chartStore'
 import { kpiActions } from '@/stores/kpiStore'
+import { $canvasConfig, canvasActions } from '@/stores/canvasStore'
 import { useState, useEffect, useMemo, memo } from 'react'
 import type { ChartWidget, BarChartConfig, LineChartConfig, PieChartConfig } from '@/types/chartWidgets'
 
@@ -21,6 +22,7 @@ export default function WidgetEditor() {
   const widgets = useStore($widgets)
   const selectedWidget = useStore($selectedWidget)
   const selectedWidgetId = useStore($selectedWidgetId)
+  const canvasConfig = useStore($canvasConfig)
 
   const [editForm, setEditForm] = useState({
     x: selectedWidget?.x || 0,
@@ -305,8 +307,378 @@ export default function WidgetEditor() {
             ))}
           </div>
 
-          {/* Edit Form */}
-          {selectedWidget && (
+          {/* Canvas Settings or Widget Edit Form */}
+          {!selectedWidget ? (
+            <div className="border-t pt-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-4">
+                🎨 Canvas Settings
+              </h3>
+              {/* Customize the dashboard canvas appearance and behavior */}
+              
+              <div className="space-y-6">
+                {/* Background Settings */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">🎨 Background</h4>
+                  <div className="space-y-3">
+                    {/* Background Color */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-2">
+                        Background Color
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="color"
+                          value={canvasConfig.backgroundColor}
+                          onChange={(e) => canvasActions.setBackgroundColor(e.target.value)}
+                          className="w-12 h-8 border border-gray-300 rounded cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={canvasConfig.backgroundColor}
+                          onChange={(e) => canvasActions.setBackgroundColor(e.target.value)}
+                          className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          placeholder="#ffffff"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Background Image */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-2">
+                        Background Image URL (optional)
+                      </label>
+                      <input
+                        type="url"
+                        value={canvasConfig.backgroundImage || ''}
+                        onChange={(e) => canvasActions.setBackgroundImage(e.target.value || undefined)}
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="https://example.com/image.jpg"
+                      />
+                    </div>
+
+                    {/* Background Image Options */}
+                    {canvasConfig.backgroundImage && (
+                      <>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Size</label>
+                            <select
+                              value={canvasConfig.backgroundSize}
+                              onChange={(e) => canvasActions.setBackgroundSize(e.target.value as any)}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                              <option value="cover">Cover</option>
+                              <option value="contain">Contain</option>
+                              <option value="auto">Auto</option>
+                              <option value="stretch">Stretch</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Position</label>
+                            <select
+                              value={canvasConfig.backgroundPosition}
+                              onChange={(e) => canvasActions.setBackgroundPosition(e.target.value as any)}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            >
+                              <option value="center">Center</option>
+                              <option value="top">Top</option>
+                              <option value="bottom">Bottom</option>
+                              <option value="left">Left</option>
+                              <option value="right">Right</option>
+                              <option value="top-left">Top Left</option>
+                              <option value="top-right">Top Right</option>
+                              <option value="bottom-left">Bottom Left</option>
+                              <option value="bottom-right">Bottom Right</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Repeat</label>
+                          <select
+                            value={canvasConfig.backgroundRepeat}
+                            onChange={(e) => canvasActions.setBackgroundRepeat(e.target.value as any)}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          >
+                            <option value="no-repeat">No Repeat</option>
+                            <option value="repeat">Repeat</option>
+                            <option value="repeat-x">Repeat X</option>
+                            <option value="repeat-y">Repeat Y</option>
+                          </select>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Canvas Dimensions */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">📏 Canvas Dimensions</h4>
+                  <div className="space-y-3">
+                    {/* Canvas Mode */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-2">Canvas Mode</label>
+                      <div className="flex gap-1">
+                        {[
+                          { value: 'responsive', label: 'Responsive' },
+                          { value: 'fixed', label: 'Fixed Size' }
+                        ].map((mode) => (
+                          <button
+                            key={mode.value}
+                            onClick={() => canvasActions.setCanvasMode(mode.value as any)}
+                            className={`flex-1 px-3 py-2 text-xs border rounded-md transition-colors ${
+                              canvasConfig.canvasMode === mode.value
+                                ? 'bg-blue-50 border-blue-300 text-blue-700'
+                                : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                            }`}
+                          >
+                            {mode.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Fixed Size Options */}
+                    {canvasConfig.canvasMode === 'fixed' && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Width (px)</label>
+                          <input
+                            type="number"
+                            min="300"
+                            value={typeof canvasConfig.width === 'number' ? canvasConfig.width : ''}
+                            onChange={(e) => canvasActions.setCanvasDimensions(
+                              e.target.value ? parseInt(e.target.value) : 'auto',
+                              canvasConfig.height
+                            )}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Auto"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Height (px)</label>
+                          <input
+                            type="number"
+                            min="200"
+                            value={typeof canvasConfig.height === 'number' ? canvasConfig.height : ''}
+                            onChange={(e) => canvasActions.setCanvasDimensions(
+                              canvasConfig.width,
+                              e.target.value ? parseInt(e.target.value) : 'auto'
+                            )}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                            placeholder="Auto"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Min Height */}
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Min Height (px)</label>
+                      <input
+                        type="number"
+                        min="200"
+                        value={canvasConfig.minHeight}
+                        onChange={(e) => canvasActions.setMinHeight(parseInt(e.target.value) || 400)}
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Max Width */}
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Max Width (px)</label>
+                      <input
+                        type="number"
+                        min="400"
+                        value={canvasConfig.maxWidth || ''}
+                        onChange={(e) => canvasActions.setMaxWidth(e.target.value ? parseInt(e.target.value) : undefined)}
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="No limit"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Grid Configuration */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">📐 Grid Configuration</h4>
+                  <div className="space-y-3">
+                    {/* Row Height */}
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Row Height: {canvasConfig.rowHeight}px</label>
+                      <input
+                        type="range"
+                        min="40"
+                        max="120"
+                        step="10"
+                        value={canvasConfig.rowHeight}
+                        onChange={(e) => canvasActions.setRowHeight(parseInt(e.target.value))}
+                        className="w-full"
+                      />
+                    </div>
+
+                    {/* Container Padding */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-2">Container Padding</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">X: {canvasConfig.containerPadding[0]}px</label>
+                          <input
+                            type="range"
+                            min="0"
+                            max="50"
+                            step="5"
+                            value={canvasConfig.containerPadding[0]}
+                            onChange={(e) => canvasActions.setContainerPadding([parseInt(e.target.value), canvasConfig.containerPadding[1]])}
+                            className="w-full"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Y: {canvasConfig.containerPadding[1]}px</label>
+                          <input
+                            type="range"
+                            min="0"
+                            max="50"
+                            step="5"
+                            value={canvasConfig.containerPadding[1]}
+                            onChange={(e) => canvasActions.setContainerPadding([canvasConfig.containerPadding[0], parseInt(e.target.value)])}
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Widget Spacing */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-2">Widget Spacing</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">X: {canvasConfig.margin[0]}px</label>
+                          <input
+                            type="range"
+                            min="0"
+                            max="30"
+                            step="2"
+                            value={canvasConfig.margin[0]}
+                            onChange={(e) => canvasActions.setMargin([parseInt(e.target.value), canvasConfig.margin[1]])}
+                            className="w-full"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Y: {canvasConfig.margin[1]}px</label>
+                          <input
+                            type="range"
+                            min="0"
+                            max="30"
+                            step="2"
+                            value={canvasConfig.margin[1]}
+                            onChange={(e) => canvasActions.setMargin([canvasConfig.margin[0], parseInt(e.target.value)])}
+                            className="w-full"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Responsive Columns */}
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-2">Responsive Columns</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Large ({canvasConfig.breakpoints.lg})</label>
+                          <input
+                            type="number"
+                            min="6"
+                            max="24"
+                            value={canvasConfig.breakpoints.lg}
+                            onChange={(e) => canvasActions.setBreakpoints({ lg: parseInt(e.target.value) || 12 })}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Medium ({canvasConfig.breakpoints.md})</label>
+                          <input
+                            type="number"
+                            min="4"
+                            max="20"
+                            value={canvasConfig.breakpoints.md}
+                            onChange={(e) => canvasActions.setBreakpoints({ md: parseInt(e.target.value) || 10 })}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-500 mb-1">Small ({canvasConfig.breakpoints.sm})</label>
+                          <input
+                            type="number"
+                            min="2"
+                            max="12"
+                            value={canvasConfig.breakpoints.sm}
+                            onChange={(e) => canvasActions.setBreakpoints({ sm: parseInt(e.target.value) || 6 })}
+                            className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Styling Options */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">🎨 Styling</h4>
+                  <div className="space-y-3">
+                    {/* Border Radius */}
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Border Radius: {canvasConfig.borderRadius}px</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="24"
+                        step="2"
+                        value={canvasConfig.borderRadius}
+                        onChange={(e) => canvasActions.setBorderRadius(parseInt(e.target.value))}
+                        className="w-full"
+                      />
+                    </div>
+
+                    {/* Box Shadow & Overflow */}
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 text-xs">
+                        <input
+                          type="checkbox"
+                          checked={canvasConfig.boxShadow}
+                          onChange={(e) => canvasActions.setBoxShadow(e.target.checked)}
+                          className="rounded"
+                        />
+                        Box Shadow
+                      </label>
+                      
+                      <div className="flex-1">
+                        <label className="block text-xs text-gray-500 mb-1">Overflow</label>
+                        <select
+                          value={canvasConfig.overflow}
+                          onChange={(e) => canvasActions.setOverflow(e.target.value as any)}
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                        >
+                          <option value="visible">Visible</option>
+                          <option value="hidden">Hidden</option>
+                          <option value="scroll">Scroll</option>
+                          <option value="auto">Auto</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Reset Button */}
+                <div className="pt-2">
+                  <button
+                    onClick={() => canvasActions.resetToDefaults()}
+                    className="w-full px-3 py-2 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                  >
+                    🔄 Reset to Defaults
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
             <div className="border-t pt-4">
               <h3 className="text-sm font-medium text-gray-700 mb-3">
                 Edit &quot;{selectedWidget.name}&quot;

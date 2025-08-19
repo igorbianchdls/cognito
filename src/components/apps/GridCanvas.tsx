@@ -6,6 +6,7 @@ import { useDroppable } from '@dnd-kit/core'
 import { Responsive, WidthProvider } from 'react-grid-layout'
 import DroppedWidget from './DroppedWidget'
 import { $selectedWidgetId, widgetActions } from '@/stores/widgetStore'
+import { $canvasConfig } from '@/stores/canvasStore' // Canvas customization store
 import type { DroppedWidget as DroppedWidgetType, LayoutItem } from '@/types/widget'
 
 const ResponsiveGridLayout = WidthProvider(Responsive)
@@ -22,6 +23,7 @@ export default function GridCanvas({
   onRemoveWidget
 }: GridCanvasProps) {
   const selectedWidgetId = useStore($selectedWidgetId)
+  const canvasConfig = useStore($canvasConfig)
   const { setNodeRef, isOver } = useDroppable({
     id: 'canvas-droppable'
   })
@@ -42,6 +44,60 @@ export default function GridCanvas({
     })), [widgets]
   )
 
+  // Generate canvas styles based on configuration
+  // Applies user-customized background, dimensions, and styling
+  const canvasStyles = useMemo(() => {
+    const styles: React.CSSProperties = {
+      backgroundColor: canvasConfig.backgroundColor,
+      borderRadius: `${canvasConfig.borderRadius}px`,
+      overflow: canvasConfig.overflow,
+    }
+
+    // Background image
+    if (canvasConfig.backgroundImage) {
+      styles.backgroundImage = `url(${canvasConfig.backgroundImage})`
+      styles.backgroundSize = canvasConfig.backgroundSize
+      styles.backgroundPosition = canvasConfig.backgroundPosition
+      styles.backgroundRepeat = canvasConfig.backgroundRepeat
+    }
+
+    // Canvas dimensions
+    if (canvasConfig.canvasMode === 'fixed') {
+      if (canvasConfig.width !== 'auto' && canvasConfig.width !== '100%') {
+        styles.width = typeof canvasConfig.width === 'number' ? `${canvasConfig.width}px` : canvasConfig.width
+      }
+      if (canvasConfig.height !== 'auto' && canvasConfig.height !== '100vh') {
+        styles.height = typeof canvasConfig.height === 'number' ? `${canvasConfig.height}px` : canvasConfig.height
+      }
+    }
+
+    // Min/max constraints
+    styles.minHeight = `${canvasConfig.minHeight}px`
+    if (canvasConfig.maxWidth) {
+      styles.maxWidth = `${canvasConfig.maxWidth}px`
+    }
+
+    // Box shadow
+    if (canvasConfig.boxShadow) {
+      styles.boxShadow = '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'
+    }
+
+    return styles
+  }, [canvasConfig])
+
+  // Generate responsive breakpoints for react-grid-layout
+  const responsiveBreakpoints = useMemo(() => ({
+    lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0
+  }), [])
+
+  const responsiveCols = useMemo(() => ({
+    lg: canvasConfig.breakpoints.lg,
+    md: canvasConfig.breakpoints.md,
+    sm: canvasConfig.breakpoints.sm,
+    xs: canvasConfig.breakpoints.xs,
+    xxs: canvasConfig.breakpoints.xxs
+  }), [canvasConfig.breakpoints])
+
   return (
     <div className="h-full flex flex-col">
       {/* Canvas Header */}
@@ -58,9 +114,10 @@ export default function GridCanvas({
       {/* Grid Container */}
       <div 
         ref={setNodeRef}
-        className={`flex-1 bg-white rounded-lg border-2 border-dashed relative overflow-hidden transition-colors ${
+        style={canvasStyles}
+        className={`flex-1 border-2 border-dashed relative transition-colors ${
           isOver 
-            ? 'border-blue-500 bg-blue-50' 
+            ? 'border-blue-500' 
             : 'border-gray-300'
         }`}
       >
@@ -77,14 +134,14 @@ export default function GridCanvas({
         <ResponsiveGridLayout
           className="layout"
           layouts={{ lg: layout }}
-          breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-          cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-          rowHeight={60}
+          breakpoints={responsiveBreakpoints}
+          cols={responsiveCols}
+          rowHeight={canvasConfig.rowHeight}
           onLayoutChange={onLayoutChange}
           isDraggable={true}
           isResizable={true}
-          margin={[10, 10]}
-          containerPadding={[20, 20]}
+          margin={canvasConfig.margin}
+          containerPadding={canvasConfig.containerPadding}
           useCSSTransforms={true}
         >
           {widgets.map((widget) => (
