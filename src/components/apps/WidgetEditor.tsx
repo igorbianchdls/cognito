@@ -705,19 +705,72 @@ export default function WidgetEditor() {
                       </div>
                     </div>
 
-                    {/* 16:9 Aspect Ratio */}
+                    {/* Responsive Height Control */}
                     <div>
-                      <label className="flex items-center gap-2 text-xs">
-                        <input
-                          type="checkbox"
-                          checked={canvasConfig.maintain16by9}
-                          onChange={(e) => canvasActions.setMaintain16by9(e.target.checked)}
-                          className="rounded"
-                        />
-                        Maintain 16:9 aspect ratio (desktop only)
+                      <label className="block text-xs font-medium text-gray-600 mb-2">
+                        Responsive Height Mode (desktop only)
                       </label>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Automatically calculates height for 16:9 proportion in responsive mode on screens wider than 768px
+                      <div className="space-y-2">
+                        {[
+                          { value: 'auto', label: 'Auto (flexible)' },
+                          { value: 'viewport', label: 'Viewport based' },
+                          { value: 'manual', label: 'Manual (px)' },
+                          { value: 'ratio', label: '16:12 Aspect ratio' }
+                        ].map((mode) => (
+                          <label key={mode.value} className="flex items-center gap-2 text-xs">
+                            <input
+                              type="radio"
+                              name="responsiveHeight"
+                              checked={
+                                mode.value === 'manual' 
+                                  ? typeof canvasConfig.responsiveHeight === 'number'
+                                  : mode.value === 'ratio'
+                                  ? canvasConfig.maintain16by9
+                                  : canvasConfig.responsiveHeight === mode.value
+                              }
+                              onChange={() => {
+                                if (mode.value === 'manual') {
+                                  canvasActions.setMaintain16by9(false)
+                                  canvasActions.setResponsiveHeight(canvasConfig.responsiveHeightValue)
+                                } else if (mode.value === 'ratio') {
+                                  canvasActions.setMaintain16by9(true)
+                                  canvasActions.setResponsiveHeight('auto')
+                                } else {
+                                  canvasActions.setMaintain16by9(false)
+                                  canvasActions.setResponsiveHeight(mode.value as 'auto' | 'viewport')
+                                }
+                              }}
+                              className="rounded"
+                            />
+                            {mode.label}
+                          </label>
+                        ))}
+                        
+                        {/* Input para altura manual */}
+                        {typeof canvasConfig.responsiveHeight === 'number' && (
+                          <div className="mt-2 ml-5">
+                            <input
+                              type="number"
+                              min="200"
+                              max="2000"
+                              step="50"
+                              value={canvasConfig.responsiveHeight}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value) || 600
+                                canvasActions.setResponsiveHeight(value)
+                                canvasActions.setResponsiveHeightValue(value)
+                              }}
+                              className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Height in pixels"
+                            />
+                            <p className="text-xs text-gray-400 mt-1">
+                              Fixed height in pixels (200-2000)
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-400 mt-2">
+                        Controls how canvas height is calculated in responsive mode on screens wider than 768px
                       </p>
                     </div>
                   </div>

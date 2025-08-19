@@ -37,6 +37,10 @@ export interface CanvasConfig {
   
   // Aspect ratio
   maintain16by9: boolean
+  
+  // Responsive height control
+  responsiveHeight: number | 'auto' | 'viewport'
+  responsiveHeightValue: number
 }
 
 // Default configuration with sensible values for a dashboard canvas
@@ -69,5 +73,8 @@ export const defaultCanvasConfig: CanvasConfig = {
   boxShadow: false,
   overflow: 'visible',
   
-  maintain16by9: true
+  maintain16by9: false,
+  
+  responsiveHeight: 600,
+  responsiveHeightValue: 600
 }

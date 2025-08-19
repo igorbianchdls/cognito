@@ -115,6 +115,17 @@ export const canvasActions = {
     canvasActions.updateConfig({ maintain16by9 })
   },
 
+  // Responsive height actions
+  setResponsiveHeight: (height: number | 'auto' | 'viewport') => {
+    console.log('📏 Setting responsive height:', height)
+    canvasActions.updateConfig({ responsiveHeight: height })
+  },
+
+  setResponsiveHeightValue: (value: number) => {
+    console.log('📏 Setting responsive height value:', value)
+    canvasActions.updateConfig({ responsiveHeightValue: value })
+  },
+
   // Reset to defaults
   resetToDefaults: () => {
     console.log('🔄 Resetting canvas to defaults')

@@ -27,7 +27,9 @@
       "Bash(curl:*)",
       "WebFetch(domain:ui.shadcn.com)",
       "WebFetch(domain:nivo.rocks)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }

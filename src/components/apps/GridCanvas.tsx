@@ -49,16 +49,22 @@ export default function GridCanvas({
     return () => window.removeEventListener('resize', updateWidth)
   }, [])
 
-  // Calculate 16:9 height for responsive mode in desktop
-  const calculate16by9Height = useMemo(() => {
-    if (canvasConfig.canvasMode === 'responsive' && 
-        canvasConfig.maintain16by9 && 
-        containerWidth > 768) {
-      // Desktop: apply 16:9 aspect ratio
-      return Math.floor(containerWidth * 0.75) // 12/16 = 0.75
+  // Calculate height for responsive mode in desktop
+  const calculateResponsiveHeight = useMemo(() => {
+    if (canvasConfig.canvasMode === 'responsive' && containerWidth > 768) {
+      // Priority: 16:12 ratio > manual height > auto
+      if (canvasConfig.maintain16by9) {
+        return Math.floor(containerWidth * 0.75) // 12/16 = 0.75
+      } else if (typeof canvasConfig.responsiveHeight === 'number') {
+        return canvasConfig.responsiveHeight // manual height
+      } else if (canvasConfig.responsiveHeight === 'viewport') {
+        return Math.max(400, window.innerHeight - 200) // viewport - space for headers
+      }
+      // 'auto' or fallback
+      return null
     }
-    return null // Mobile/tablet or disabled: maintain current behavior
-  }, [containerWidth, canvasConfig.canvasMode, canvasConfig.maintain16by9])
+    return null // Mobile/tablet: maintain current behavior
+  }, [containerWidth, canvasConfig.canvasMode, canvasConfig.maintain16by9, canvasConfig.responsiveHeight])
 
   const layout = useMemo(() => 
     widgets.map(widget => ({
@@ -99,13 +105,13 @@ export default function GridCanvas({
       }
     }
 
-    // Min/max constraints and 16:9 aspect ratio
-    if (calculate16by9Height && canvasConfig.canvasMode === 'responsive') {
-      // Apply 16:9 height for desktop responsive mode
-      styles.height = `${calculate16by9Height}px`
-      // Don't apply minHeight to allow exact 16:9 ratio
+    // Min/max constraints and responsive height control
+    if (calculateResponsiveHeight && canvasConfig.canvasMode === 'responsive') {
+      // Apply calculated height for desktop responsive mode
+      styles.height = `${calculateResponsiveHeight}px`
+      // Don't apply minHeight to allow exact height control
     } else if (canvasConfig.canvasMode !== 'fixed') {
-      // Apply minHeight only in responsive mode without 16:9
+      // Apply minHeight only in responsive mode without specific height
       styles.minHeight = `${canvasConfig.minHeight}px`
     }
     if (canvasConfig.maxWidth) {
