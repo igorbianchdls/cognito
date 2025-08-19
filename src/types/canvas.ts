@@ -75,6 +75,6 @@ export const defaultCanvasConfig: CanvasConfig = {
   
   maintain16by9: false,
   
-  responsiveHeight: 600,
-  responsiveHeightValue: 600
+  responsiveHeight: 800,
+  responsiveHeightValue: 800
 }
