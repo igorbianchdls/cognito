@@ -1,8 +1,8 @@
 'use client'
 
 interface AppsHeaderProps {
-  activeTab: 'widgets' | 'chat' | 'editor' | 'code'
-  onTabChange: (tab: 'widgets' | 'chat' | 'editor' | 'code') => void
+  activeTab: 'widgets' | 'chat' | 'editor' | 'code' | 'automations'
+  onTabChange: (tab: 'widgets' | 'chat' | 'editor' | 'code' | 'automations') => void
 }
 
 export default function AppsHeader({ activeTab, onTabChange }: AppsHeaderProps) {
@@ -11,6 +11,7 @@ export default function AppsHeader({ activeTab, onTabChange }: AppsHeaderProps) 
     { id: 'chat', label: 'Chat', icon: '💬' },
     { id: 'editor', label: 'Editor', icon: '⚙️' },
     { id: 'code', label: 'Code', icon: '</>' },
+    { id: 'automations', label: 'Automações', icon: '🤖' },
   ] as const
 
   return (
