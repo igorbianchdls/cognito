@@ -462,6 +462,10 @@ export const compositeActions = {
   updateLayout: (layout: Array<{ i: string; x: number; y: number; w: number; h: number }>) => {
     console.log('📐 Updating layout via composite for', layout.length, 'widgets')
     
+    // Get all widgets once to avoid race condition
+    const allWidgets = $allWidgets.get()
+    console.log('🔍 Current widgets in store:', allWidgets.length, 'Layout items:', layout.length)
+    
     // Separate layout items by widget type
     const chartLayouts: Array<{ i: string; x: number; y: number; w: number; h: number }> = []
     const kpiLayouts: Array<{ i: string; x: number; y: number; w: number; h: number }> = []
@@ -469,10 +473,12 @@ export const compositeActions = {
     const legacyLayouts: Array<{ i: string; x: number; y: number; w: number; h: number }> = []
     
     layout.forEach(item => {
-      const allWidgets = $allWidgets.get()
       const widget = allWidgets.find(w => w.i === item.i)
       
-      if (!widget) return
+      if (!widget) {
+        console.warn('⚠️ Widget órfão no layout:', item.i, '- ignorando')
+        return
+      }
       
       switch (widget.type) {
         case 'chart':
