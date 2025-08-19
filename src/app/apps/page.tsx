@@ -17,6 +17,7 @@ export default function AppsPage() {
   const droppedWidgets = useStore($widgets)
   const [activeWidget, setActiveWidget] = useState<Widget | null>(null)
   const [activeTab, setActiveTab] = useState<'widgets' | 'chat' | 'editor' | 'code' | 'automations'>('widgets')
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event
@@ -63,12 +64,21 @@ export default function AppsPage() {
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="h-screen flex flex-col bg-gray-50">
         {/* Header */}
-        <AppsHeader activeTab={activeTab} onTabChange={setActiveTab} />
+        <AppsHeader 
+          activeTab={activeTab} 
+          onTabChange={setActiveTab}
+          sidebarCollapsed={sidebarCollapsed}
+          onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+        />
         
         {/* Main Content */}
         <div className="flex-1 flex">
           {/* Left Panel */}
-          <div className="w-80 bg-white border-r border-gray-200 flex-shrink-0 h-full overflow-hidden">
+          <div className={`${
+            sidebarCollapsed 
+              ? 'w-0 overflow-hidden' 
+              : 'w-80 bg-white border-r border-gray-200 flex-shrink-0 overflow-hidden'
+          } h-full transition-all duration-300 ease-in-out`}>
             {activeTab === 'widgets' && <WidgetsPanel />}
             {activeTab === 'chat' && <ChatPanel droppedWidgets={droppedWidgets} onEditWidget={handleEditWidget} />}
             {activeTab === 'editor' && <WidgetEditor />}
