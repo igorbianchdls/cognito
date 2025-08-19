@@ -18,6 +18,7 @@ interface PaddingConfig {
 import { isChartWidget, isBarChart, isLineChart, isPieChart } from '@/types/chartWidgets'
 import { isKPIWidget } from '@/types/kpiWidgets'
 import { isImageWidget } from '@/types/widget'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import type { ImageConfig } from '@/types/widget'
 
 export default function WidgetEditor() {
@@ -1363,85 +1364,91 @@ export default function WidgetEditor() {
                     </div>
                     
                     {/* Colors & Styling */}
-                    <div>
-                      <h5 className="text-lg font-bold text-gray-700 mb-3 mt-2">🎨 Colors & Styling</h5>
-                      <div className="space-y-3">
-                        {/* Chart Colors */}
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-2">Chart Colors</label>
-                          <div className="space-y-2">
-                            {(chartConfig.colors || ['#2563eb']).map((color, index) => (
-                              <div key={index} className="flex gap-2">
-                                <input
-                                  type="color"
-                                  value={color}
-                                  onChange={(e) => {
-                                    const newColors = [...(chartConfig.colors || ['#2563eb'])]
-                                    newColors[index] = e.target.value
+                    <Accordion type="single" collapsible className="w-full">
+                      <AccordionItem value="visual">
+                        <AccordionTrigger className="text-lg font-bold text-gray-700">
+                          🎨 Visual & Colors
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-3">
+                            {/* Chart Colors */}
+                            <div>
+                              <label className="block text-xs font-medium text-gray-600 mb-2">Chart Colors</label>
+                              <div className="space-y-2">
+                                {(chartConfig.colors || ['#2563eb']).map((color, index) => (
+                                  <div key={index} className="flex gap-2">
+                                    <input
+                                      type="color"
+                                      value={color}
+                                      onChange={(e) => {
+                                        const newColors = [...(chartConfig.colors || ['#2563eb'])]
+                                        newColors[index] = e.target.value
+                                        handleChartColorsChange(newColors)
+                                      }}
+                                      className="w-10 h-8 border border-gray-300 rounded cursor-pointer"
+                                    />
+                                    <input
+                                      type="text"
+                                      value={color}
+                                      onChange={(e) => {
+                                        const newColors = [...(chartConfig.colors || ['#2563eb'])]
+                                        newColors[index] = e.target.value
+                                        handleChartColorsChange(newColors)
+                                      }}
+                                      className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                    />
+                                    {(chartConfig.colors || []).length > 1 && (
+                                      <button
+                                        onClick={() => {
+                                          const newColors = (chartConfig.colors || []).filter((_, i) => i !== index)
+                                          handleChartColorsChange(newColors)
+                                        }}
+                                        className="px-2 py-1 text-red-600 hover:bg-red-50 rounded text-sm"
+                                      >
+                                        ×
+                                      </button>
+                                    )}
+                                  </div>
+                                ))}
+                                <button
+                                  onClick={() => {
+                                    const newColors = [...(chartConfig.colors || ['#2563eb']), '#10b981']
                                     handleChartColorsChange(newColors)
                                   }}
-                                  className="w-10 h-8 border border-gray-300 rounded cursor-pointer"
-                                />
-                                <input
-                                  type="text"
-                                  value={color}
-                                  onChange={(e) => {
-                                    const newColors = [...(chartConfig.colors || ['#2563eb'])]
-                                    newColors[index] = e.target.value
-                                    handleChartColorsChange(newColors)
-                                  }}
-                                  className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                                />
-                                {(chartConfig.colors || []).length > 1 && (
-                                  <button
-                                    onClick={() => {
-                                      const newColors = (chartConfig.colors || []).filter((_, i) => i !== index)
-                                      handleChartColorsChange(newColors)
-                                    }}
-                                    className="px-2 py-1 text-red-600 hover:bg-red-50 rounded text-sm"
-                                  >
-                                    ×
-                                  </button>
-                                )}
+                                  className="text-xs text-blue-600 hover:text-blue-700"
+                                >
+                                  + Add Color
+                                </button>
                               </div>
-                            ))}
-                            <button
-                              onClick={() => {
-                                const newColors = [...(chartConfig.colors || ['#2563eb']), '#10b981']
-                                handleChartColorsChange(newColors)
-                              }}
-                              className="text-xs text-blue-600 hover:text-blue-700"
-                            >
-                              + Add Color
-                            </button>
-                          </div>
-                        </div>
+                            </div>
 
-                        {/* Border & Styling */}
-                        <div className="grid grid-cols-2 gap-2">
-                          <div>
-                            <label className="block text-xs text-gray-500 mb-1">Border Radius</label>
-                            <input
-                              type="number"
-                              min="0"
-                              value={(chartConfig as Record<string, unknown>).borderRadius as number ?? 4}
-                              onChange={(e) => handleChartConfigChange('borderRadius', parseInt(e.target.value) || 0)}
-                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
+                            {/* Border & Styling */}
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-xs text-gray-500 mb-1">Border Radius</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={(chartConfig as Record<string, unknown>).borderRadius as number ?? 4}
+                                  onChange={(e) => handleChartConfigChange('borderRadius', parseInt(e.target.value) || 0)}
+                                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs text-gray-500 mb-1">Border Width</label>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={(chartConfig as Record<string, unknown>).borderWidth as number ?? 0}
+                                  onChange={(e) => handleChartConfigChange('borderWidth', parseInt(e.target.value) || 0)}
+                                  className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                />
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <label className="block text-xs text-gray-500 mb-1">Border Width</label>
-                            <input
-                              type="number"
-                              min="0"
-                              value={(chartConfig as Record<string, unknown>).borderWidth as number ?? 0}
-                              onChange={(e) => handleChartConfigChange('borderWidth', parseInt(e.target.value) || 0)}
-                              className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
 
                     {/* Grid & Axes */}
                     <div>
