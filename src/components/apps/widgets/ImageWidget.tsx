@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import type { DroppedWidget, ImageConfig } from '@/types/widget'
 
 interface ImageWidgetProps {
@@ -9,10 +9,21 @@ interface ImageWidgetProps {
 
 export default function ImageWidget({ widget }: ImageWidgetProps) {
   const [imageError, setImageError] = useState(false)
-  const [imageLoading, setImageLoading] = useState(true)
+  const [imageLoading, setImageLoading] = useState(false)
 
   // Get image configuration
   const imageConfig: ImageConfig = widget.config?.imageConfig || {}
+
+  // Debug logs
+  console.log('🖼️ ImageWidget render:', {
+    widgetId: widget.i,
+    widgetType: widget.type,
+    hasConfig: !!widget.config,
+    hasImageConfig: !!widget.config?.imageConfig,
+    imageConfig,
+    imageLoading,
+    imageError
+  })
 
   // Default values
   const {
@@ -35,12 +46,26 @@ export default function ImageWidget({ widget }: ImageWidgetProps) {
     placeholderText = 'No image'
   } = imageConfig
 
+  // Reset loading state when src changes
+  useEffect(() => {
+    console.log('🔄 ImageWidget - src changed:', src ? src.slice(0, 50) + '...' : 'empty')
+    if (src) {
+      setImageLoading(true)
+      setImageError(false)
+    } else {
+      setImageLoading(false)
+      setImageError(false)
+    }
+  }, [src])
+
   const handleImageLoad = () => {
+    console.log('✅ ImageWidget - Image loaded successfully for:', widget.i)
     setImageLoading(false)
     setImageError(false)
   }
 
   const handleImageError = () => {
+    console.log('❌ ImageWidget - Image failed to load for:', widget.i)
     setImageLoading(false)
     setImageError(true)
   }
