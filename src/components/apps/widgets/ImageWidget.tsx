@@ -126,21 +126,15 @@ export default function ImageWidget({ widget }: ImageWidgetProps) {
 
   // Render image or fallback
   const renderContent = () => {
-    // Show loading state
-    if (imageLoading && src) {
-      return <Loading />
-    }
-
     // Show placeholder if no source
     if (!src) {
       return showPlaceholder ? <Placeholder /> : null
     }
 
-    // Show image error state
-    if (imageError) {
-      // Try fallback image if available
-      if (fallbackSrc) {
-        return (
+    // Show image error state with fallback
+    if (imageError && fallbackSrc) {
+      return (
+        <div className="relative w-full h-full">
           <img
             src={fallbackSrc}
             alt={alt}
@@ -149,22 +143,37 @@ export default function ImageWidget({ widget }: ImageWidgetProps) {
             onLoad={handleImageLoad}
             onError={() => setImageError(true)}
           />
-        )
-      }
-      // Show placeholder if no fallback
+        </div>
+      )
+    }
+
+    // Show error placeholder
+    if (imageError) {
       return showPlaceholder ? <Placeholder /> : null
     }
 
-    // Show main image
+    // Always render main image when src exists, with loading overlay
     return (
-      <img
-        src={src}
-        alt={alt}
-        title={title}
-        style={imageStyle}
-        onLoad={handleImageLoad}
-        onError={handleImageError}
-      />
+      <div className="relative w-full h-full">
+        <img
+          src={src}
+          alt={alt}
+          title={title}
+          style={{
+            ...imageStyle,
+            opacity: imageLoading ? 0 : 1
+          }}
+          onLoad={handleImageLoad}
+          onError={handleImageError}
+        />
+        {/* Loading overlay */}
+        {imageLoading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-50 text-gray-400">
+            <div className="animate-spin text-2xl mb-2">⏳</div>
+            <div className="text-sm">Carregando...</div>
+          </div>
+        )}
+      </div>
     )
   }
 
