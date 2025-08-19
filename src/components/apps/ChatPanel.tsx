@@ -258,7 +258,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col max-h-full">
       {/* Custom Scrollbar Styles */}
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -297,7 +297,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
       </div>
 
       {/* Messages */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar">
+      <div className="flex-1 p-4 overflow-y-scroll space-y-4 custom-scrollbar min-h-0">
         {messages.map((message) => (
           <div
             key={message.id}
