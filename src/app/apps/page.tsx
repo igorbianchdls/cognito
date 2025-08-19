@@ -66,7 +66,7 @@ export default function AppsPage() {
         {/* Main Content */}
         <div className="flex-1 flex">
           {/* Left Panel */}
-          <div className="w-80 bg-white x border-r border-gray-200 flex-shrink-0">
+          <div className="w-80 bg-white border-r border-gray-200 flex-shrink-0 h-full overflow-hidden">
             {activeTab === 'widgets' && <WidgetsPanel />}
             {activeTab === 'chat' && <ChatPanel droppedWidgets={droppedWidgets} onEditWidget={handleEditWidget} />}
             {activeTab === 'editor' && <WidgetEditor />}
