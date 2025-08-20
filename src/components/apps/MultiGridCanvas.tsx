@@ -129,11 +129,17 @@ export default function MultiGridCanvas({
   }
 
   return (
-    <div ref={containerRef} className="h-full flex flex-col">
-      {/* Navigation Widget - Fixed at top */}
+    <div ref={containerRef} className="h-full flex flex-row">
+      {/* Left Sidebar - Navigation Widget */}
       {navigationWidget && (
-        <div className="flex-shrink-0 mb-4">
-          <div className="relative">
+        <div 
+          className="flex-shrink-0 transition-all duration-300"
+          style={{
+            width: `${navigationWidget.config?.navigationConfig?.sidebarWidth || 256}px`,
+            minWidth: '64px' // Minimum width for collapsed state
+          }}
+        >
+          <div className="relative h-full">
             <DroppedWidget
               key={navigationWidget.i}
               widget={navigationWidget}
@@ -150,17 +156,18 @@ export default function MultiGridCanvas({
         </div>
       )}
 
-      {/* Active Tab Canvas - Remaining space */}
-      <div 
-        ref={setNodeRef} 
-        className={`flex-1 relative rounded-lg transition-all duration-200 ${
-          isOver ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
-        }`}
-        style={{
-          ...gridStyles,
-          minHeight: '400px'
-        }}
-      >
+      {/* Right Canvas - Main content area */}
+      <div className="flex-1 p-4">
+        <div 
+          ref={setNodeRef} 
+          className={`h-full relative rounded-lg transition-all duration-200 ${
+            isOver ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
+          }`}
+          style={{
+            ...gridStyles,
+            minHeight: '400px'
+          }}
+        >
         {/* Empty state when no widgets */}
         {activeTabWidgets.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -213,14 +220,15 @@ export default function MultiGridCanvas({
             </div>
           </div>
         )}
-      </div>
-
-      {/* Debug info (development only) */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mt-2 p-2 bg-gray-100 rounded text-xs text-gray-600">
-          <div>Active Tab: {activeTab} | Widgets: {activeTabWidgets.length} | Navigation: {navigationWidget ? 'Yes' : 'No'}</div>
         </div>
-      )}
+        
+        {/* Debug info (development only) */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-2 p-2 bg-gray-100 rounded text-xs text-gray-600">
+            <div>Active Tab: {activeTab} | Widgets: {activeTabWidgets.length} | Navigation: {navigationWidget ? 'Yes' : 'No'}</div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

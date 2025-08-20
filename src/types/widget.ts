@@ -170,6 +170,10 @@ export interface NavigationConfig {
   // Animation properties
   animateSwitch?: boolean
   animationDuration?: number
+  
+  // Sidebar theme (new for sidebar layout)
+  theme?: 'default' | 'dark' | 'blue' | 'green' | 'purple' | 'orange'
+  sidebarWidth?: number
 }
 
 // Image-specific configuration

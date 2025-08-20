@@ -9,8 +9,8 @@ import { chartActions } from '@/stores/chartStore'
 import { useState, useEffect, useMemo } from 'react'
 import { isKPIWidget } from '@/types/kpiWidgets'
 import type { KPIConfig } from '@/types/kpiWidgets'
-import { isImageWidget } from '@/types/widget'
-import type { ImageConfig } from '@/types/widget'
+import { isImageWidget, isNavigationWidget } from '@/types/widget'
+import type { ImageConfig, NavigationConfig } from '@/types/widget'
 import { isTableWidget } from '@/types/tableWidgets'
 import type { TableConfig } from '@/types/tableWidgets'
 import { isChartWidget } from '@/types/chartWidgets'
@@ -19,6 +19,7 @@ import KPIConfigEditor from './editors/KPIConfigEditor'
 import ImageConfigEditor from './editors/ImageConfigEditor'
 import TableConfigEditor from './editors/TableConfigEditor'
 import ChartConfigEditor from './editors/ChartConfigEditor'
+import NavigationConfigEditor from './editors/NavigationConfigEditor'
 
 export default function WidgetEditorNew() {
   const widgets = useStore($widgets)
@@ -132,6 +133,15 @@ export default function WidgetEditorNew() {
     // Fallback para formato deprecated
     selectedWidget?.chartConfig
   ])
+
+  // Computed Navigation config - acesso via selectedWidget
+  const navigationConfig = useMemo((): NavigationConfig => {
+    if (!selectedWidget || !isNavigationWidget(selectedWidget)) return {} as NavigationConfig
+    
+    const config = selectedWidget.config?.navigationConfig || {} as NavigationConfig
+    console.log('🎯 WidgetEditorNew computed navigationConfig:', config)
+    return config
+  }, [selectedWidget])
 
   // Sync editKPIForm with kpiConfig when widget changes
   useEffect(() => {
@@ -309,6 +319,31 @@ export default function WidgetEditorNew() {
     }
   }
 
+  // Navigation Handlers
+  const handleNavigationConfigChange = (field: string, value: unknown) => {
+    console.log('⚙️ WidgetEditorNew handleNavigationConfigChange:', { field, value })
+    
+    if (selectedWidget && isNavigationWidget(selectedWidget)) {
+      console.log('⚙️ WidgetEditorNew calling widgetActions.editWidget for navigationConfig:', selectedWidget.i, { [field]: value })
+      
+      // Get current navigationConfig and update the specific field
+      const currentNavigationConfig = selectedWidget.config?.navigationConfig || {}
+      const newNavigationConfig = { ...currentNavigationConfig, [field]: value }
+      
+      console.log('📝 New navigationConfig:', newNavigationConfig)
+      
+      // Update the widget with the new navigationConfig
+      const updatePayload = {
+        config: {
+          ...selectedWidget.config,
+          navigationConfig: newNavigationConfig
+        }
+      }
+      
+      widgetActions.editWidget(selectedWidget.i, updatePayload)
+    }
+  }
+
   // Handlers
   const handleSelectCanvas = () => {
     setCanvasSelected(true)
@@ -480,8 +515,17 @@ export default function WidgetEditorNew() {
                   />
                 )}
 
+                {/* Navigation Configuration */}
+                {isNavigationWidget(selectedWidget) && (
+                  <NavigationConfigEditor
+                    selectedWidget={selectedWidget}
+                    navigationConfig={navigationConfig}
+                    onNavigationConfigChange={handleNavigationConfigChange}
+                  />
+                )}
+
                 {/* Other widget types placeholder */}
-                {!isKPIWidget(selectedWidget) && !isImageWidget(selectedWidget) && !isTableWidget(selectedWidget) && !isChartWidget(selectedWidget) && (
+                {!isKPIWidget(selectedWidget) && !isImageWidget(selectedWidget) && !isTableWidget(selectedWidget) && !isChartWidget(selectedWidget) && !isNavigationWidget(selectedWidget) && (
                   <div className="p-4 bg-gray-50 rounded-lg text-center">
                     <p className="text-gray-600">Configuration for {selectedWidget.type} widgets will be here</p>
                   </div>
