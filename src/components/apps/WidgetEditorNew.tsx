@@ -4,6 +4,7 @@ import { useStore } from '@nanostores/react'
 import { $widgets, $selectedWidget, $selectedWidgetId, widgetActions } from '@/stores/widgetStore'
 import { $canvasConfig } from '@/stores/canvasStore'
 import { kpiActions } from '@/stores/kpiStore'
+import { tableActions } from '@/stores/tableStore'
 import { useState, useEffect, useMemo } from 'react'
 import { isKPIWidget } from '@/types/kpiWidgets'
 import type { KPIConfig } from '@/types/kpiWidgets'
@@ -248,23 +249,8 @@ export default function WidgetEditorNew() {
     console.log('⚙️ WidgetEditorNew handleTableConfigChange:', { field, value })
     
     if (selectedWidget && isTableWidget(selectedWidget)) {
-      console.log('⚙️ WidgetEditorNew calling widgetActions.editWidget for tableConfig:', selectedWidget.i, { [field]: value })
-      
-      // Get current tableConfig and update the specific field
-      const currentTableConfig = selectedWidget.config?.tableConfig || {}
-      const newTableConfig = { ...currentTableConfig, [field]: value }
-      
-      console.log('📝 New tableConfig:', newTableConfig)
-      
-      // Update the widget with the new tableConfig
-      const updatePayload = {
-        config: {
-          ...selectedWidget.config,
-          tableConfig: newTableConfig
-        }
-      }
-      
-      widgetActions.editWidget(selectedWidget.i, updatePayload)
+      console.log('⚙️ WidgetEditorNew calling tableActions.updateTableConfig:', selectedWidget.i, { [field]: value })
+      tableActions.updateTableConfig(selectedWidget.i, { [field]: value })
     }
   }
 
