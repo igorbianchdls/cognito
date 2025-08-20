@@ -9,8 +9,11 @@ import { isKPIWidget } from '@/types/kpiWidgets'
 import type { KPIConfig } from '@/types/kpiWidgets'
 import { isImageWidget } from '@/types/widget'
 import type { ImageConfig } from '@/types/widget'
+import { isTableWidget } from '@/types/tableWidgets'
+import type { TableConfig } from '@/types/tableWidgets'
 import KPIConfigEditor from './editors/KPIConfigEditor'
 import ImageConfigEditor from './editors/ImageConfigEditor'
+import TableConfigEditor from './editors/TableConfigEditor'
 
 export default function WidgetEditorNew() {
   const widgets = useStore($widgets)
@@ -51,6 +54,15 @@ export default function WidgetEditorNew() {
     
     const config = selectedWidget.config?.imageConfig || {} as ImageConfig
     console.log('🎯 WidgetEditorNew computed imageConfig:', config)
+    return config
+  }, [selectedWidget])
+
+  // Computed Table config - acesso via selectedWidget
+  const tableConfig = useMemo((): TableConfig => {
+    if (!selectedWidget || !isTableWidget(selectedWidget)) return {} as TableConfig
+    
+    const config = selectedWidget.config?.tableConfig || {} as TableConfig
+    console.log('🎯 WidgetEditorNew computed tableConfig:', config)
     return config
   }, [selectedWidget])
 
@@ -210,6 +222,31 @@ export default function WidgetEditorNew() {
     handleImageConfigChange('src', '')
   }
 
+  // Table Handlers
+  const handleTableConfigChange = (field: string, value: unknown) => {
+    console.log('⚙️ WidgetEditorNew handleTableConfigChange:', { field, value })
+    
+    if (selectedWidget && isTableWidget(selectedWidget)) {
+      console.log('⚙️ WidgetEditorNew calling widgetActions.editWidget for tableConfig:', selectedWidget.i, { [field]: value })
+      
+      // Get current tableConfig and update the specific field
+      const currentTableConfig = selectedWidget.config?.tableConfig || {}
+      const newTableConfig = { ...currentTableConfig, [field]: value }
+      
+      console.log('📝 New tableConfig:', newTableConfig)
+      
+      // Update the widget with the new tableConfig
+      const updatePayload = {
+        config: {
+          ...selectedWidget.config,
+          tableConfig: newTableConfig
+        }
+      }
+      
+      widgetActions.editWidget(selectedWidget.i, updatePayload)
+    }
+  }
+
   // Handlers
   const handleSelectCanvas = () => {
     setCanvasSelected(true)
@@ -363,8 +400,17 @@ export default function WidgetEditorNew() {
                   />
                 )}
 
+                {/* Table Configuration */}
+                {isTableWidget(selectedWidget) && (
+                  <TableConfigEditor
+                    selectedWidget={selectedWidget}
+                    tableConfig={tableConfig}
+                    onTableConfigChange={handleTableConfigChange}
+                  />
+                )}
+
                 {/* Other widget types placeholder */}
-                {!isKPIWidget(selectedWidget) && !isImageWidget(selectedWidget) && (
+                {!isKPIWidget(selectedWidget) && !isImageWidget(selectedWidget) && !isTableWidget(selectedWidget) && (
                   <div className="p-4 bg-gray-50 rounded-lg text-center">
                     <p className="text-gray-600">Configuration for {selectedWidget.type} widgets will be here</p>
                   </div>
