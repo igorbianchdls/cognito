@@ -5,6 +5,7 @@ import { $widgets, $selectedWidget, $selectedWidgetId, widgetActions } from '@/s
 import { $canvasConfig } from '@/stores/canvasStore'
 import { kpiActions } from '@/stores/kpiStore'
 import { tableActions } from '@/stores/tableStore'
+import { chartActions } from '@/stores/chartStore'
 import { useState, useEffect, useMemo } from 'react'
 import { isKPIWidget } from '@/types/kpiWidgets'
 import type { KPIConfig } from '@/types/kpiWidgets'
@@ -12,9 +13,12 @@ import { isImageWidget } from '@/types/widget'
 import type { ImageConfig } from '@/types/widget'
 import { isTableWidget } from '@/types/tableWidgets'
 import type { TableConfig } from '@/types/tableWidgets'
+import { isChartWidget } from '@/types/chartWidgets'
+import type { BaseChartConfig } from '@/types/chartWidgets'
 import KPIConfigEditor from './editors/KPIConfigEditor'
 import ImageConfigEditor from './editors/ImageConfigEditor'
 import TableConfigEditor from './editors/TableConfigEditor'
+import ChartConfigEditor from './editors/ChartConfigEditor'
 
 export default function WidgetEditorNew() {
   const widgets = useStore($widgets)
@@ -86,6 +90,44 @@ export default function WidgetEditorNew() {
     selectedWidget?.config?.tableConfig?.enableExport,
     selectedWidget?.config?.tableConfig?.exportFormats,
     selectedWidget?.config?.tableConfig?.columns
+  ])
+
+  // Computed Chart config - acesso via selectedWidget
+  const chartConfig = useMemo((): BaseChartConfig => {
+    if (!selectedWidget || !isChartWidget(selectedWidget)) return {} as BaseChartConfig
+    
+    const config = selectedWidget.config || {} as BaseChartConfig
+    console.log('🎯 WidgetEditorNew computed chartConfig:', config)
+    return config
+  }, [
+    selectedWidget,
+    selectedWidget?.config?.backgroundColor,
+    selectedWidget?.config?.borderColor,
+    selectedWidget?.config?.borderRadius,
+    selectedWidget?.config?.borderWidth,
+    selectedWidget?.config?.enableGridX,
+    selectedWidget?.config?.enableGridY,
+    selectedWidget?.config?.axisBottom,
+    selectedWidget?.config?.axisLeft,
+    selectedWidget?.config?.margin,
+    selectedWidget?.config?.padding,
+    selectedWidget?.config?.title,
+    selectedWidget?.config?.subtitle,
+    selectedWidget?.config?.titleFontSize,
+    selectedWidget?.config?.titleColor,
+    selectedWidget?.config?.titleFontWeight,
+    selectedWidget?.config?.subtitleFontSize,
+    selectedWidget?.config?.subtitleColor,
+    selectedWidget?.config?.subtitleFontWeight,
+    selectedWidget?.config?.showTitle,
+    selectedWidget?.config?.showSubtitle,
+    selectedWidget?.config?.enableLabel,
+    selectedWidget?.config?.labelTextColor,
+    selectedWidget?.config?.labelPosition,
+    selectedWidget?.config?.labelSkipWidth,
+    selectedWidget?.config?.labelSkipHeight,
+    selectedWidget?.config?.animate,
+    selectedWidget?.config?.motionConfig
   ])
 
   // Sync editKPIForm with kpiConfig when widget changes
@@ -254,6 +296,16 @@ export default function WidgetEditorNew() {
     }
   }
 
+  // Chart Handlers
+  const handleChartConfigChange = (field: string, value: unknown) => {
+    console.log('⚙️ WidgetEditorNew handleChartConfigChange:', { field, value })
+    
+    if (selectedWidget && isChartWidget(selectedWidget)) {
+      console.log('⚙️ WidgetEditorNew calling chartActions.updateChartConfig:', selectedWidget.i, { [field]: value })
+      chartActions.updateChartConfig(selectedWidget.i, { [field]: value })
+    }
+  }
+
   // Handlers
   const handleSelectCanvas = () => {
     setCanvasSelected(true)
@@ -416,8 +468,17 @@ export default function WidgetEditorNew() {
                   />
                 )}
 
+                {/* Chart Configuration */}
+                {isChartWidget(selectedWidget) && (
+                  <ChartConfigEditor
+                    selectedWidget={selectedWidget}
+                    chartConfig={chartConfig}
+                    onChartConfigChange={handleChartConfigChange}
+                  />
+                )}
+
                 {/* Other widget types placeholder */}
-                {!isKPIWidget(selectedWidget) && !isImageWidget(selectedWidget) && !isTableWidget(selectedWidget) && (
+                {!isKPIWidget(selectedWidget) && !isImageWidget(selectedWidget) && !isTableWidget(selectedWidget) && !isChartWidget(selectedWidget) && (
                   <div className="p-4 bg-gray-50 rounded-lg text-center">
                     <p className="text-gray-600">Configuration for {selectedWidget.type} widgets will be here</p>
                   </div>
