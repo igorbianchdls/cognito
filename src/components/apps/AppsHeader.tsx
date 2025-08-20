@@ -1,8 +1,10 @@
 'use client'
 
+import { savedDashboardActions } from '@/stores/savedDashboardStore'
+
 interface AppsHeaderProps {
-  activeTab: 'widgets' | 'chat' | 'editor' | 'code' | 'automations'
-  onTabChange: (tab: 'widgets' | 'chat' | 'editor' | 'code' | 'automations') => void
+  activeTab: 'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved'
+  onTabChange: (tab: 'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved') => void
   sidebarCollapsed: boolean
   onToggleSidebar: () => void
 }
@@ -14,11 +16,13 @@ export default function AppsHeader({ activeTab, onTabChange, sidebarCollapsed, o
     { id: 'editor', label: 'Editor', icon: '⚙️' },
     { id: 'code', label: 'Code', icon: '</>' },
     { id: 'automations', label: 'Automações', icon: '🤖' },
+    { id: 'saved', label: 'Salvos', icon: '💾' },
   ] as const
 
   return (
     <div className="bg-white border-b border-gray-200 px-6 py-4">
-      <div className="flex items-center gap-1">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1">
         {/* Toggle Sidebar Button */}
         <button
           onClick={onToggleSidebar}
@@ -43,6 +47,17 @@ export default function AppsHeader({ activeTab, onTabChange, sidebarCollapsed, o
             {tab.label}
           </button>
         ))}
+        </div>
+        
+        {/* Botão Salvar Atual - Extrema Direita */}
+        <button
+          onClick={savedDashboardActions.promptAndSave}
+          className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors duration-200"
+          title="Salvar dashboard atual"
+        >
+          <span className="text-base">💾</span>
+          Salvar Atual
+        </button>
       </div>
     </div>
   )
