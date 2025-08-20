@@ -947,6 +947,7 @@ export default function WidgetEditor() {
             </div>
           ) : selectedWidget ? (
             <div className="border-t pt-4">
+              {/* Seção de edição do widget */}
               <h3 className="text-sm font-medium text-gray-700 mb-3">
                 Edit &quot;{selectedWidget.name}&quot;
               </h3>
