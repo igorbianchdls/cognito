@@ -48,6 +48,13 @@ interface DataTableProps<TData extends TableData> {
   showColumnToggle?: boolean
   showPagination?: boolean
   pageSize?: number
+  // Styling props
+  headerBackground?: string
+  headerTextColor?: string
+  rowHoverColor?: string
+  borderColor?: string
+  fontSize?: number
+  padding?: number
 }
 
 export function DataTable<TData extends TableData>({
@@ -57,6 +64,13 @@ export function DataTable<TData extends TableData>({
   showColumnToggle = true,
   showPagination = true,
   pageSize = 10,
+  // Styling props with defaults
+  headerBackground = '#f9fafb',
+  headerTextColor = '#374151',
+  rowHoverColor = '#f3f4f6',
+  borderColor = '#e5e7eb',
+  fontSize = 14,
+  padding = 12,
 }: DataTableProps<TData>) {
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
@@ -131,14 +145,29 @@ export function DataTable<TData extends TableData>({
         </div>
 
         {/* Table Content - flex-1 overflow-auto */}
-        <div className="flex-1 overflow-auto rounded-md border border-gray-200">
+        <div 
+          className="flex-1 overflow-auto rounded-md border"
+          style={{ 
+            borderColor,
+            fontSize: `${fontSize}px`
+          }}
+        >
           <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
+                <TableRow 
+                  key={headerGroup.id}
+                  style={{ backgroundColor: headerBackground }}
+                >
                   {headerGroup.headers.map((header) => {
                     return (
-                      <TableHead key={header.id}>
+                      <TableHead 
+                        key={header.id}
+                        style={{ 
+                          color: headerTextColor,
+                          padding: `${padding}px`
+                        }}
+                      >
                         {header.isPlaceholder
                           ? null
                           : flexRender(
@@ -157,9 +186,25 @@ export function DataTable<TData extends TableData>({
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
+                    className="hover:bg-gray-50 transition-colors"
+                    style={{ 
+                      '--hover-color': rowHoverColor 
+                    } as React.CSSProperties & { '--hover-color': string }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = rowHoverColor
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = ''
+                    }}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell 
+                        key={cell.id}
+                        style={{ 
+                          padding: `${padding}px`,
+                          borderColor
+                        }}
+                      >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </TableCell>
                     ))}
@@ -167,7 +212,14 @@ export function DataTable<TData extends TableData>({
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
+                  <TableCell 
+                    colSpan={columns.length} 
+                    className="h-24 text-center"
+                    style={{ 
+                      padding: `${padding}px`,
+                      borderColor
+                    }}
+                  >
                     Nenhum resultado encontrado.
                   </TableCell>
                 </TableRow>

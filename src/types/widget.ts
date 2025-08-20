@@ -153,37 +153,6 @@ export interface KPIConfig {
   targetColor?: string
 }
 
-// Table-specific configuration
-export interface TableConfig {
-  // Data properties
-  data?: Array<{ [key: string]: string | number | boolean | null | undefined }>
-  columns?: Array<{
-    id: string
-    header: string
-    accessorKey: string
-    sortable?: boolean
-    width?: number | string
-  }>
-  
-  // Display options (matching DataTable props)
-  searchPlaceholder?: string
-  showColumnToggle?: boolean
-  showPagination?: boolean
-  pageSize?: number
-  
-  // Data source and simulation control
-  dataSource?: string
-  refreshRate?: string
-  enableSimulation?: boolean
-  
-  // Styling options
-  headerBackground?: string
-  headerTextColor?: string
-  rowHoverColor?: string
-  borderColor?: string
-  fontSize?: number
-  padding?: number
-}
 
 // Image-specific configuration
 export interface ImageConfig {
@@ -219,7 +188,7 @@ export interface ImageConfig {
 export interface WidgetConfig {
   chartConfig?: ChartConfig  // For chart widgets (Bar, Line, Pie, Area)
   kpiConfig?: KPIConfig      // For KPI widgets
-  tableConfig?: TableConfig  // For table widgets
+  tableConfig?: import('./tableWidgets').TableConfig  // For table widgets (import from tableWidgets.ts)
   imageConfig?: ImageConfig  // For image widgets
 }
 

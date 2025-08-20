@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react'
 import { DataTable, createSortableHeader, type TableData } from '@/components/widgets/Table'
 import type { ColumnDef } from '@tanstack/react-table'
-import type { DroppedWidget, TableConfig } from '@/types/widget'
+import type { DroppedWidget } from '@/types/widget'
+import type { TableConfig } from '@/types/tableWidgets'
 
 interface TableWidgetProps {
   widget: DroppedWidget
@@ -93,6 +94,13 @@ export default function TableWidget({ widget }: TableWidgetProps) {
     showColumnToggle: tableConfig.showColumnToggle ?? true,
     showPagination: tableConfig.showPagination ?? true,
     pageSize: tableConfig.pageSize || 10,
+    // Pass styling props
+    headerBackground: tableConfig.headerBackground,
+    headerTextColor: tableConfig.headerTextColor,
+    rowHoverColor: tableConfig.rowHoverColor,
+    borderColor: tableConfig.borderColor,
+    fontSize: tableConfig.fontSize,
+    padding: tableConfig.padding,
   }
 
   return (
