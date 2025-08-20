@@ -6,7 +6,7 @@ import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/
 import AppsHeader from '@/components/apps/AppsHeader'
 import WidgetsPanel from '@/components/apps/WidgetsPanel'
 import ChatPanel from '@/components/apps/ChatPanel'
-import WidgetEditor from '@/components/apps/WidgetEditor'
+import WidgetEditor from '@/components/apps/WidgetEditorNew'
 import CodeEditor from '@/components/apps/CodeEditor'
 import AutomationsPanel from '@/components/apps/AutomationsPanel'
 import SavedPanel from '@/components/apps/SavedPanel'
