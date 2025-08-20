@@ -10,33 +10,7 @@ interface ExtendedWidget extends Omit<Widget, 'icon'> {
 }
 
 const widgetCategories: Record<string, ExtendedWidget[]> = {
-  Components: [
-    {
-      id: 'text-widget',
-      name: 'Text',
-      type: 'text',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h7" />
-        </svg>
-      ),
-      description: 'Display text content',
-      defaultWidth: 3,
-      defaultHeight: 1,
-    },
-    {
-      id: 'table-widget',
-      name: 'Table',
-      type: 'table',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 4h18v2H3V4zm0 4h18v2H3V8zm0 4h18v2H3v-2zm0 4h18v2H3v-2z" />
-        </svg>
-      ),
-      description: 'Display data in organized table format with sorting and filtering',
-      defaultWidth: 4,
-      defaultHeight: 3,
-    },
+  Analytics: [
     {
       id: 'bar-chart-widget',
       name: 'Bar Chart',
@@ -93,6 +67,60 @@ const widgetCategories: Record<string, ExtendedWidget[]> = {
       defaultHeight: 3,
     },
     {
+      id: 'kpi-widget',
+      name: 'KPI',
+      type: 'kpi',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+        </svg>
+      ),
+      description: 'Display key performance indicators with trends',
+      defaultWidth: 3,
+      defaultHeight: 2,
+    },
+    {
+      id: 'metric-widget',
+      name: 'Metric',
+      type: 'metric',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 12l3-3 3 3 4-4m0 0l-3 3m3-3v3" />
+        </svg>
+      ),
+      description: 'Show key performance metrics',
+      defaultWidth: 2,
+      defaultHeight: 1,
+    },
+  ],
+  Components: [
+    {
+      id: 'text-widget',
+      name: 'Text',
+      type: 'text',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h7" />
+        </svg>
+      ),
+      description: 'Display text content',
+      defaultWidth: 3,
+      defaultHeight: 1,
+    },
+    {
+      id: 'table-widget',
+      name: 'Table',
+      type: 'table',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 4h18v2H3V4zm0 4h18v2H3V8zm0 4h18v2H3v-2zm0 4h18v2H3v-2z" />
+        </svg>
+      ),
+      description: 'Display data in organized table format with sorting and filtering',
+      defaultWidth: 4,
+      defaultHeight: 3,
+    },
+    {
       id: 'button-widget',
       name: 'Button',
       type: 'button',
@@ -129,34 +157,6 @@ const widgetCategories: Record<string, ExtendedWidget[]> = {
       ),
       description: 'Transform canvas into multi-tab layout system',
       defaultWidth: 12,
-      defaultHeight: 1,
-    },
-  ],
-  Analytics: [
-    {
-      id: 'kpi-widget',
-      name: 'KPI',
-      type: 'kpi',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-        </svg>
-      ),
-      description: 'Display key performance indicators with trends',
-      defaultWidth: 3,
-      defaultHeight: 2,
-    },
-    {
-      id: 'metric-widget',
-      name: 'Metric',
-      type: 'metric',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 12l3-3 3 3 4-4m0 0l-3 3m3-3v3" />
-        </svg>
-      ),
-      description: 'Show key performance metrics',
-      defaultWidth: 2,
       defaultHeight: 1,
     },
   ],
@@ -281,8 +281,8 @@ interface WidgetsPanelProps {}
 export default function WidgetsPanel({}: WidgetsPanelProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
-    Components: true,
     Analytics: true,
+    Components: true,
     Forms: true,
   })
 
