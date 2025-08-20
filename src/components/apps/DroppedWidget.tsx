@@ -22,6 +22,11 @@ interface DroppedWidgetProps {
 export default function DroppedWidget({ widget, onRemove, isSelected = false, onClick }: DroppedWidgetProps) {
   const [isHovered, setIsHovered] = useState(false)
 
+  // Special full-screen rendering for NavigationWidget (Airtable style)
+  if (widget.type === 'navigation') {
+    return <NavigationWidget widget={widget} />
+  }
+
   const renderWidget = () => {
     switch (widget.type) {
       case 'chart':
