@@ -17,11 +17,18 @@ export default function TableConfigEditor({
   onTableConfigChange
 }: TableConfigEditorProps) {
   
-  const [newColumn, setNewColumn] = useState({
+  const [newColumn, setNewColumn] = useState<{
+    id: string
+    header: string
+    accessorKey: string
+    type: 'text' | 'number' | 'boolean' | 'date'
+    width: number
+    sortable: boolean
+  }>({
     id: '',
     header: '',
     accessorKey: '',
-    type: 'text' as const,
+    type: 'text',
     width: 150,
     sortable: true
   })
@@ -42,7 +49,7 @@ export default function TableConfigEditor({
       id: '',
       header: '',
       accessorKey: '',
-      type: 'text',
+      type: 'text' as const,
       width: 150,
       sortable: true
     })
