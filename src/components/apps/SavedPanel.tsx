@@ -13,7 +13,7 @@ export default function SavedPanel() {
   }
 
   const handleDelete = (id: string, name: string) => {
-    if (confirm(`Excluir o dashboard "${name}"? Esta ação não pode ser desfeita.`)) {
+    if (confirm(`Excluir o dashboard &quot;${name}&quot;? Esta ação não pode ser desfeita.`)) {
       savedDashboardActions.delete(id)
     }
   }
@@ -45,7 +45,7 @@ export default function SavedPanel() {
             <div className="text-6xl mb-4">📄</div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum dashboard salvo</h3>
             <p className="text-gray-600 mb-4">
-              Crie um dashboard e clique em "Salvar Atual" para começar.
+              Crie um dashboard e clique em &quot;Salvar Atual&quot; para começar.
             </p>
           </div>
         ) : (
@@ -104,7 +104,7 @@ export default function SavedPanel() {
       {savedDashboards.length > 0 && (
         <div className="p-4 border-t border-gray-200 bg-gray-50">
           <p className="text-xs text-gray-600 text-center">
-            💡 Dica: Use "Salvar Atual" no header para salvar o dashboard atual
+            💡 Dica: Use &quot;Salvar Atual&quot; no header para salvar o dashboard atual
           </p>
         </div>
       )}
