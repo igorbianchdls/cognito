@@ -19,7 +19,7 @@ export default function SearchWidget({ widget }: SearchWidgetProps) {
             🔍 Search Products
           </h2>
           <p className="text-gray-600">
-            Find exactly what you're looking for
+            Find exactly what you&apos;re looking for
           </p>
         </div>
 
