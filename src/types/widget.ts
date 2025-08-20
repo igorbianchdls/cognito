@@ -186,7 +186,7 @@ export interface ImageConfig {
 
 // Unified widget configuration interface
 export interface WidgetConfig {
-  chartConfig?: ChartConfig  // For chart widgets (Bar, Line, Pie, Area)
+  chartConfig?: import('./chartWidgets').BaseChartConfig  // For chart widgets (Bar, Line, Pie, Area)
   kpiConfig?: KPIConfig      // For KPI widgets
   tableConfig?: import('./tableWidgets').TableConfig  // For table widgets (import from tableWidgets.ts)
   imageConfig?: ImageConfig  // For image widgets
