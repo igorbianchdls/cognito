@@ -64,7 +64,28 @@ export default function WidgetEditorNew() {
     const config = selectedWidget.config?.tableConfig || {} as TableConfig
     console.log('🎯 WidgetEditorNew computed tableConfig:', config)
     return config
-  }, [selectedWidget])
+  }, [
+    selectedWidget,
+    selectedWidget?.config?.tableConfig?.fontSize,
+    selectedWidget?.config?.tableConfig?.padding,
+    selectedWidget?.config?.tableConfig?.headerBackground,
+    selectedWidget?.config?.tableConfig?.headerTextColor,
+    selectedWidget?.config?.tableConfig?.rowHoverColor,
+    selectedWidget?.config?.tableConfig?.borderColor,
+    selectedWidget?.config?.tableConfig?.searchPlaceholder,
+    selectedWidget?.config?.tableConfig?.pageSize,
+    selectedWidget?.config?.tableConfig?.showPagination,
+    selectedWidget?.config?.tableConfig?.showColumnToggle,
+    selectedWidget?.config?.tableConfig?.enableSearch,
+    selectedWidget?.config?.tableConfig?.enableFiltering,
+    selectedWidget?.config?.tableConfig?.enableRowSelection,
+    selectedWidget?.config?.tableConfig?.selectionMode,
+    selectedWidget?.config?.tableConfig?.enableSimulation,
+    selectedWidget?.config?.tableConfig?.dataSource,
+    selectedWidget?.config?.tableConfig?.enableExport,
+    selectedWidget?.config?.tableConfig?.exportFormats,
+    selectedWidget?.config?.tableConfig?.columns
+  ])
 
   // Sync editKPIForm with kpiConfig when widget changes
   useEffect(() => {
