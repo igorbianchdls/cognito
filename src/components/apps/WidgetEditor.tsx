@@ -1719,9 +1719,13 @@ export default function WidgetEditor() {
 
                     {/* Chart Type Specific Options */}
                     {isBarChart(selectedWidget as ChartWidget) && (
-                      <div>
-                        <h5 className="text-lg font-bold text-gray-700 mb-3 mt-2">📊 Bar Chart Options</h5>
-                        <div className="space-y-2">
+                      <Accordion type="multiple" className="w-full space-y-2">
+                        <AccordionItem value="bar-chart">
+                          <AccordionTrigger className="text-lg font-bold text-gray-700">
+                            📊 Bar Chart Options
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="space-y-2">
                           <div>
                             <label className="block text-xs text-gray-500 mb-1">Group Mode</label>
                             <select
@@ -1744,15 +1748,21 @@ export default function WidgetEditor() {
                               <option value="horizontal">Horizontal</option>
                             </select>
                           </div>
-                        </div>
-                      </div>
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
                     )}
 
                     {/* Line Chart Specific Options */}
                     {isLineChart(selectedWidget as ChartWidget) && (
-                      <div>
-                        <h5 className="text-lg font-bold text-gray-700 mb-3 mt-2">📈 Line Chart Options</h5>
-                          <div className="space-y-3">
+                      <Accordion type="multiple" className="w-full space-y-2">
+                        <AccordionItem value="line-chart">
+                          <AccordionTrigger className="text-lg font-bold text-gray-700">
+                            📈 Line Chart Options
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="space-y-3">
                             <label className="flex items-center gap-2">
                               <input
                                 type="checkbox"
@@ -1827,15 +1837,21 @@ export default function WidgetEditor() {
                                 />
                               </div>
                             )}
-                          </div>
-                      </div>
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
                     )}
 
                     {/* Pie Chart Specific Options */}
                     {isPieChart(selectedWidget as ChartWidget) && (
-                      <div>
-                        <h5 className="text-lg font-bold text-gray-700 mb-3 mt-2">🥧 Pie Chart Options</h5>
-                        <div className="space-y-3">
+                      <Accordion type="multiple" className="w-full space-y-2">
+                        <AccordionItem value="pie-chart">
+                          <AccordionTrigger className="text-lg font-bold text-gray-700">
+                            🥧 Pie Chart Options
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="space-y-3">
                           <div>
                             <label className="block text-xs text-gray-500 mb-1">Inner Radius</label>
                             <input
@@ -1909,14 +1925,20 @@ export default function WidgetEditor() {
                               />
                             </div>
                           )}
-                        </div>
-                      </div>
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
                     )}
 
                     {/* Animation */}
-                    <div>
-                      <h5 className="text-lg font-bold text-gray-700 mb-3 mt-2">🎬 Animation</h5>
-                      <div className="space-y-2">
+                    <Accordion type="multiple" className="w-full space-y-2">
+                      <AccordionItem value="animation">
+                        <AccordionTrigger className="text-lg font-bold text-gray-700">
+                          🎬 Animation
+                        </AccordionTrigger>
+                        <AccordionContent>
+                          <div className="space-y-2">
                         <label className="flex items-center gap-2">
                           <input
                             type="checkbox"
@@ -1941,8 +1963,10 @@ export default function WidgetEditor() {
                             </select>
                           </div>
                         )}
-                      </div>
-                    </div>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
                   </div>
                 )}
 
