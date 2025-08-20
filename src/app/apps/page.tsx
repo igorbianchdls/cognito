@@ -13,6 +13,7 @@ import SavedPanel from '@/components/apps/SavedPanel'
 import GridCanvas from '@/components/apps/GridCanvas'
 import MultiGridCanvas from '@/components/apps/MultiGridCanvas'
 import { $widgets, widgetActions } from '@/stores/widgetStore'
+import { $activeTab, multiCanvasActions } from '@/stores/multiCanvasStore'
 import { isNavigationWidget } from '@/types/widget'
 import type { Widget, LayoutItem, DroppedWidget } from '@/types/widget'
 
@@ -45,8 +46,17 @@ export default function AppsPage() {
         h: widget.defaultHeight || 2,
       }
       
-      console.log('[ADD] Adicionando novo widget:', newWidget.i, 'na posição', { x: newWidget.x, y: newWidget.y })
-      widgetActions.addWidget(newWidget)
+      if (hasNavigationWidget) {
+        // Multi-canvas mode: Add widget to active tab
+        console.log('[ADD] Adding widget to multi-canvas tab:', $activeTab.get())
+        const activeTabId = $activeTab.get()
+        const currentTabWidgets = multiCanvasActions.getTabWidgets(activeTabId)
+        multiCanvasActions.updateTabWidgets(activeTabId, [...currentTabWidgets, newWidget])
+      } else {
+        // Normal mode: Add to main canvas
+        console.log('[ADD] Adding widget to main canvas:', newWidget.i)
+        widgetActions.addWidget(newWidget)
+      }
     }
   }
 

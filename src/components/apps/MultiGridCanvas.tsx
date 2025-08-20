@@ -30,7 +30,7 @@ export default function MultiGridCanvas({
   const activeTab = useStore($activeTab)
   
   const { setNodeRef, isOver } = useDroppable({
-    id: 'multi-canvas-droppable'
+    id: 'canvas-droppable'
   })
 
   // State for container width measurement
