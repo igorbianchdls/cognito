@@ -200,7 +200,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
   }
 
   return (
-    <div className="flex flex-col" style={{ height: 'calc(100vh - 80px)' }}>
+    <div className="flex flex-col h-full">
       {/* Custom Scrollbar Styles */}
       <style dangerouslySetInnerHTML={{
         __html: `
