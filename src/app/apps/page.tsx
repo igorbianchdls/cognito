@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { useStore } from '@nanostores/react'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core'
 import AppsHeader from '@/components/apps/AppsHeader'
@@ -11,7 +11,9 @@ import CodeEditor from '@/components/apps/CodeEditor'
 import AutomationsPanel from '@/components/apps/AutomationsPanel'
 import SavedPanel from '@/components/apps/SavedPanel'
 import GridCanvas from '@/components/apps/GridCanvas'
+import MultiGridCanvas from '@/components/apps/MultiGridCanvas'
 import { $widgets, widgetActions } from '@/stores/widgetStore'
+import { isNavigationWidget } from '@/types/widget'
 import type { Widget, LayoutItem, DroppedWidget } from '@/types/widget'
 
 export default function AppsPage() {
@@ -61,6 +63,11 @@ export default function AppsPage() {
     widgetActions.editWidget(widgetId, changes)
   }, [])
 
+  // Detect if Navigation Widget is present to switch between canvas modes
+  const hasNavigationWidget = useMemo(() => {
+    return droppedWidgets.some(widget => isNavigationWidget(widget))
+  }, [droppedWidgets])
+
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="h-screen flex flex-col bg-gray-50">
@@ -88,13 +95,21 @@ export default function AppsPage() {
             {activeTab === 'saved' && <SavedPanel />}
           </div>
           
-          {/* Right Canvas - Always visible */}
+          {/* Right Canvas - Conditional rendering */}
           <div className="flex-1 p-6">
-            <GridCanvas 
-              widgets={droppedWidgets}
-              onLayoutChange={handleLayoutChange}
-              onRemoveWidget={handleRemoveWidget}
-            />
+            {hasNavigationWidget ? (
+              <MultiGridCanvas 
+                widgets={droppedWidgets}
+                onLayoutChange={handleLayoutChange}
+                onRemoveWidget={handleRemoveWidget}
+              />
+            ) : (
+              <GridCanvas 
+                widgets={droppedWidgets}
+                onLayoutChange={handleLayoutChange}
+                onRemoveWidget={handleRemoveWidget}
+              />
+            )}
           </div>
         </div>
       </div>

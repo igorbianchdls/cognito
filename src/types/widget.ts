@@ -154,6 +154,24 @@ export interface KPIConfig {
 }
 
 
+// Navigation-specific configuration
+export interface NavigationConfig {
+  // Visual properties
+  backgroundColor?: string
+  borderColor?: string
+  borderRadius?: number
+  
+  // Tab properties
+  tabStyle?: 'default' | 'rounded' | 'pills'
+  tabPosition?: 'top' | 'bottom'
+  showAddButton?: boolean
+  maxTabs?: number
+  
+  // Animation properties
+  animateSwitch?: boolean
+  animationDuration?: number
+}
+
 // Image-specific configuration
 export interface ImageConfig {
   // Basic properties
@@ -190,6 +208,7 @@ export interface WidgetConfig {
   kpiConfig?: KPIConfig      // For KPI widgets
   tableConfig?: import('./tableWidgets').TableConfig  // For table widgets (import from tableWidgets.ts)
   imageConfig?: ImageConfig  // For image widgets
+  navigationConfig?: NavigationConfig  // For navigation widgets
 }
 
 export interface DroppedWidget extends Widget {
@@ -221,4 +240,8 @@ export interface LayoutItem {
 // Type guard functions
 export function isImageWidget(widget: DroppedWidget): boolean {
   return widget.type === 'image'
+}
+
+export function isNavigationWidget(widget: DroppedWidget): boolean {
+  return widget.type === 'navigation'
 }

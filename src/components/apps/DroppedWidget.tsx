@@ -9,15 +9,17 @@ import MetricWidget from './widgets/MetricWidget'
 import KPIWidget from './widgets/KPIWidget'
 import TableWidget from './widgets/TableWidget'
 import ImageWidget from './widgets/ImageWidget'
+import NavigationWidget from './widgets/NavigationWidget'
 import type { DroppedWidget as DroppedWidgetType } from '@/types/widget'
 
 interface DroppedWidgetProps {
   widget: DroppedWidgetType
   onRemove: () => void
   isSelected?: boolean
+  onClick?: () => void
 }
 
-export default function DroppedWidget({ widget, onRemove, isSelected = false }: DroppedWidgetProps) {
+export default function DroppedWidget({ widget, onRemove, isSelected = false, onClick }: DroppedWidgetProps) {
   const [isHovered, setIsHovered] = useState(false)
 
   const renderWidget = () => {
@@ -39,6 +41,8 @@ export default function DroppedWidget({ widget, onRemove, isSelected = false }: 
         return <TableWidget widget={widget} />
       case 'image':
         return <ImageWidget widget={widget} />
+      case 'navigation':
+        return <NavigationWidget widget={widget} />
       default:
         return (
           <div className="h-full flex items-center justify-center text-gray-500">
@@ -60,6 +64,7 @@ export default function DroppedWidget({ widget, onRemove, isSelected = false }: 
       }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      onClick={onClick}
     >
       {/* Header with remove button */}
       <div className={`absolute top-2 right-2 z-10 transition-opacity duration-200 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>

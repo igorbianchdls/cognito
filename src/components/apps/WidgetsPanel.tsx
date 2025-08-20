@@ -76,6 +76,15 @@ const availableWidgets: Widget[] = [
     defaultWidth: 3,
     defaultHeight: 2,
   },
+  {
+    id: 'navigation-widget',
+    name: 'Navigation',
+    type: 'navigation',
+    icon: '📑',
+    description: 'Transform canvas into multi-tab layout system',
+    defaultWidth: 12,
+    defaultHeight: 1,
+  },
 ]
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
