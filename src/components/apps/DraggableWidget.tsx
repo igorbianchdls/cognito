@@ -1,13 +1,24 @@
 'use client'
 
+import React from 'react'
 import { useDraggable } from '@dnd-kit/core'
 import type { Widget } from '@/types/widget'
 
+interface ExtendedWidget extends Omit<Widget, 'icon'> {
+  icon: React.ReactElement | string
+}
+
 interface DraggableWidgetProps {
-  widget: Widget
+  widget: Widget | ExtendedWidget
 }
 
 export default function DraggableWidget({ widget }: DraggableWidgetProps) {
+  // Convert ExtendedWidget to standard Widget for drag data
+  const dragData: Widget = {
+    ...widget,
+    icon: typeof widget.icon === 'string' ? widget.icon : '🔸'
+  }
+
   const {
     attributes,
     listeners,
@@ -15,7 +26,7 @@ export default function DraggableWidget({ widget }: DraggableWidgetProps) {
     isDragging,
   } = useDraggable({
     id: widget.id,
-    data: widget,
+    data: dragData,
   })
 
   return (
@@ -23,37 +34,21 @@ export default function DraggableWidget({ widget }: DraggableWidgetProps) {
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={`group border rounded-lg p-3 transition-all duration-200 hover:shadow-md ${
+      className={`group border rounded-lg p-4 transition-all duration-200 bg-white hover:shadow-sm cursor-grab ${
         isDragging 
-          ? 'opacity-50 cursor-grabbing bg-blue-50 border-blue-300' 
-          : 'bg-gray-50 hover:bg-blue-50 border-gray-200 hover:border-blue-300 cursor-grab'
+          ? 'opacity-50 cursor-grabbing border-blue-300 shadow-sm' 
+          : 'border-gray-200 hover:border-gray-300'
       }`}
     >
-      <div className="flex items-center gap-3">
-        <div className="text-2xl group-hover:scale-110 transition-transform duration-200">
+      <div className="flex flex-col items-center text-center space-y-2">
+        {/* Icon */}
+        <div className="text-gray-600 group-hover:text-gray-800 transition-colors duration-200">
           {widget.icon}
         </div>
         
-        <div className="flex-1 min-w-0">
-          <div className="font-medium text-gray-900 text-sm group-hover:text-blue-900">
-            {widget.name}
-          </div>
-          <div className="text-xs text-gray-500 group-hover:text-blue-600 truncate">
-            {widget.description}
-          </div>
-          <div className="text-xs text-gray-400 mt-1">
-            Size: {widget.defaultWidth}×{widget.defaultHeight}
-          </div>
-        </div>
-      </div>
-      
-      {/* Drag indicator */}
-      <div className="mt-2 flex justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-        <div className="flex space-x-1">
-          <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-          <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-          <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-          <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
+        {/* Name */}
+        <div className="text-sm font-medium text-gray-700 group-hover:text-gray-900 transition-colors duration-200">
+          {widget.name}
         </div>
       </div>
     </div>
