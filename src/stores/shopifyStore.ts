@@ -255,7 +255,7 @@ export const shopifyActions = {
     
     const updatedWidgets = currentWidgets.map(widget => {
       if (widget.i !== widgetId) return widget
-      return { ...widget, ...changes }
+      return { ...widget, ...changes } as ShopifyWidget
     })
     $shopifyWidgets.set(updatedWidgets)
   },
@@ -270,7 +270,7 @@ export const shopifyActions = {
         return {
           ...widget,
           config: { ...widget.config, ...configChanges }
-        }
+        } as ShopifyWidget
       }
       return widget
     })
@@ -305,7 +305,7 @@ export const shopifyActions = {
     const updatedWidgets = currentWidgets.map(widget => {
       const orderInfo = newOrder.find(o => o.id === widget.i)
       if (orderInfo) {
-        return { ...widget, order: orderInfo.order }
+        return { ...widget, order: orderInfo.order } as ShopifyWidget
       }
       return widget
     })
