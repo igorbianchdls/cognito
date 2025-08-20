@@ -29,7 +29,7 @@ const loadFromStorage = (): SavedDashboard[] => {
 }
 
 // Função para salvar no localStorage
-const saveToStorage = (dashboards: SavedDashboard[]) => {
+const saveToStorage = (dashboards: readonly SavedDashboard[]) => {
   if (typeof window === 'undefined') return
   
   try {
