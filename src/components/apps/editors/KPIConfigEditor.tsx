@@ -2,10 +2,11 @@
 
 import type { DroppedWidget } from '@/types/widget'
 import { isKPIWidget } from '@/types/kpiWidgets'
+import type { KPIConfig } from '@/types/kpiWidgets'
 
 interface KPIConfigEditorProps {
   selectedWidget: DroppedWidget
-  kpiConfig: any
+  kpiConfig: KPIConfig
   editKPIForm: {
     name: string
     unit: string

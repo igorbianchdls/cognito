@@ -6,6 +6,7 @@ import { $canvasConfig } from '@/stores/canvasStore'
 import { kpiActions } from '@/stores/kpiStore'
 import { useState, useEffect, useMemo } from 'react'
 import { isKPIWidget } from '@/types/kpiWidgets'
+import type { KPIConfig } from '@/types/kpiWidgets'
 import KPIConfigEditor from './editors/KPIConfigEditor'
 
 export default function WidgetEditorNew() {
@@ -24,10 +25,10 @@ export default function WidgetEditorNew() {
   })
 
   // Computed KPI config - acesso via selectedWidget
-  const kpiConfig = useMemo(() => {
-    if (!selectedWidget || !isKPIWidget(selectedWidget)) return {}
+  const kpiConfig = useMemo((): KPIConfig => {
+    if (!selectedWidget || !isKPIWidget(selectedWidget)) return {} as KPIConfig
     
-    const config = selectedWidget.config?.kpiConfig || {}
+    const config = selectedWidget.config?.kpiConfig || {} as KPIConfig
     console.log('🎯 WidgetEditorNew computed kpiConfig:', config)
     return config
   }, [selectedWidget])
@@ -188,7 +189,7 @@ export default function WidgetEditorNew() {
             ) : selectedWidget ? (
               <div>
                 <h3 className="text-sm font-medium text-gray-700 mb-4">
-                  Edit "{selectedWidget.name}"
+                  Edit &quot;{selectedWidget.name}&quot;
                 </h3>
                 
                 {/* General Info */}
@@ -221,7 +222,7 @@ export default function WidgetEditorNew() {
                 <span className="text-4xl mb-4 block">🎨</span>
                 <p className="text-gray-500 mb-2">No selection</p>
                 <p className="text-sm text-gray-400">
-                  Click on "Canvas Settings" or a widget to start editing
+                  Click on &quot;Canvas Settings&quot; or a widget to start editing
                 </p>
               </div>
             )}

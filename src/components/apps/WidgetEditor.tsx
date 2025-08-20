@@ -20,7 +20,6 @@ import { isKPIWidget } from '@/types/kpiWidgets'
 import { isImageWidget } from '@/types/widget'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import type { ImageConfig } from '@/types/widget'
-import GeneralSection from './editors/GeneralSection'
 
 export default function WidgetEditor() {
   const widgets = useStore($widgets)
@@ -949,11 +948,90 @@ export default function WidgetEditor() {
           ) : selectedWidget ? (
             <div className="border-t pt-4">
               {/* Seção de edição do widget */}
-              <GeneralSection 
-                selectedWidget={selectedWidget}
-                editForm={editForm}
-                onFormChange={handleFormChange}
-              />
+              <h3 className="text-sm font-medium text-gray-700 mb-3">
+                Edit &quot;{selectedWidget.name}&quot;
+              </h3>
+              
+              <div className="space-y-4">
+                {/* Position */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-2">
+                    Position
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">X</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editForm.x}
+                        onChange={(e) => handleFormChange('x', parseInt(e.target.value) || 0)}
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Y</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={editForm.y}
+                        onChange={(e) => handleFormChange('y', parseInt(e.target.value) || 0)}
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Size */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-2">
+                    Size
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Width</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={editForm.w}
+                        onChange={(e) => handleFormChange('w', parseInt(e.target.value) || 1)}
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Height</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={editForm.h}
+                        onChange={(e) => handleFormChange('h', parseInt(e.target.value) || 1)}
+                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Color */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-2">
+                    Color
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="color"
+                      value={editForm.color}
+                      onChange={(e) => handleFormChange('color', e.target.value)}
+                      className="w-12 h-8 border border-gray-300 rounded cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={editForm.color}
+                      onChange={(e) => handleFormChange('color', e.target.value)}
+                      className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="#3B82F6"
+                    />
+                  </div>
+                </div>
 
                 {/* Chart-Specific Configuration */}
                 {selectedWidget && isChartWidget(selectedWidget) && (
