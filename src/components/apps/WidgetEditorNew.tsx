@@ -96,38 +96,41 @@ export default function WidgetEditorNew() {
   const chartConfig = useMemo((): BaseChartConfig => {
     if (!selectedWidget || !isChartWidget(selectedWidget)) return {} as BaseChartConfig
     
-    const config = selectedWidget.config || {} as BaseChartConfig
+    // Primeiro tenta o novo formato (config.chartConfig), depois o formato deprecated (chartConfig direto)
+    const config = selectedWidget.config?.chartConfig || selectedWidget.chartConfig || {} as BaseChartConfig
     console.log('🎯 WidgetEditorNew computed chartConfig:', config)
     return config
   }, [
     selectedWidget,
-    selectedWidget?.config?.backgroundColor,
-    selectedWidget?.config?.borderColor,
-    selectedWidget?.config?.borderRadius,
-    selectedWidget?.config?.borderWidth,
-    selectedWidget?.config?.enableGridX,
-    selectedWidget?.config?.enableGridY,
-    selectedWidget?.config?.axisBottom,
-    selectedWidget?.config?.axisLeft,
-    selectedWidget?.config?.margin,
-    selectedWidget?.config?.padding,
-    selectedWidget?.config?.title,
-    selectedWidget?.config?.subtitle,
-    selectedWidget?.config?.titleFontSize,
-    selectedWidget?.config?.titleColor,
-    selectedWidget?.config?.titleFontWeight,
-    selectedWidget?.config?.subtitleFontSize,
-    selectedWidget?.config?.subtitleColor,
-    selectedWidget?.config?.subtitleFontWeight,
-    selectedWidget?.config?.showTitle,
-    selectedWidget?.config?.showSubtitle,
-    selectedWidget?.config?.enableLabel,
-    selectedWidget?.config?.labelTextColor,
-    selectedWidget?.config?.labelPosition,
-    selectedWidget?.config?.labelSkipWidth,
-    selectedWidget?.config?.labelSkipHeight,
-    selectedWidget?.config?.animate,
-    selectedWidget?.config?.motionConfig
+    selectedWidget?.config?.chartConfig?.backgroundColor,
+    selectedWidget?.config?.chartConfig?.borderColor,
+    selectedWidget?.config?.chartConfig?.borderRadius,
+    selectedWidget?.config?.chartConfig?.borderWidth,
+    selectedWidget?.config?.chartConfig?.enableGridX,
+    selectedWidget?.config?.chartConfig?.enableGridY,
+    selectedWidget?.config?.chartConfig?.axisBottom,
+    selectedWidget?.config?.chartConfig?.axisLeft,
+    selectedWidget?.config?.chartConfig?.margin,
+    selectedWidget?.config?.chartConfig?.padding,
+    selectedWidget?.config?.chartConfig?.title,
+    selectedWidget?.config?.chartConfig?.subtitle,
+    selectedWidget?.config?.chartConfig?.titleFontSize,
+    selectedWidget?.config?.chartConfig?.titleColor,
+    selectedWidget?.config?.chartConfig?.titleFontWeight,
+    selectedWidget?.config?.chartConfig?.subtitleFontSize,
+    selectedWidget?.config?.chartConfig?.subtitleColor,
+    selectedWidget?.config?.chartConfig?.subtitleFontWeight,
+    selectedWidget?.config?.chartConfig?.showTitle,
+    selectedWidget?.config?.chartConfig?.showSubtitle,
+    selectedWidget?.config?.chartConfig?.enableLabel,
+    selectedWidget?.config?.chartConfig?.labelTextColor,
+    selectedWidget?.config?.chartConfig?.labelPosition,
+    selectedWidget?.config?.chartConfig?.labelSkipWidth,
+    selectedWidget?.config?.chartConfig?.labelSkipHeight,
+    selectedWidget?.config?.chartConfig?.animate,
+    selectedWidget?.config?.chartConfig?.motionConfig,
+    // Fallback para formato deprecated
+    selectedWidget?.chartConfig
   ])
 
   // Sync editKPIForm with kpiConfig when widget changes
