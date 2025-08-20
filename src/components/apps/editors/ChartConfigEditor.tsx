@@ -3,6 +3,7 @@
 import type { DroppedWidget } from '@/types/widget'
 import { isChartWidget } from '@/types/chartWidgets'
 import type { BaseChartConfig } from '@/types/chartWidgets'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 
 interface ChartConfigEditorProps {
   selectedWidget: DroppedWidget
@@ -24,209 +25,220 @@ export default function ChartConfigEditor({
     <div className="border-t pt-4 mt-4">
       <h4 className="text-sm font-medium text-gray-700 mb-4">📊 Chart Configuration</h4>
       
-      <div className="space-y-6">
+      <Accordion type="multiple" className="w-full space-y-2">
         {/* Visual & Colors */}
-        <div>
-          <h5 className="text-sm font-medium text-gray-700 mb-3">🎨 Visual & Colors</h5>
-          <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Background Color</label>
-                <input
-                  type="color"
-                  value={chartConfig.backgroundColor || '#ffffff'}
-                  onChange={(e) => onChartConfigChange('backgroundColor', e.target.value)}
-                  className="w-full h-10 border border-gray-300 rounded cursor-pointer"
-                />
+        <AccordionItem value="visual">
+          <AccordionTrigger className="text-sm font-medium text-gray-700">
+            🎨 Visual & Colors
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Background Color</label>
+                  <input
+                    type="color"
+                    value={chartConfig.backgroundColor || '#ffffff'}
+                    onChange={(e) => onChartConfigChange('backgroundColor', e.target.value)}
+                    className="w-full h-10 border border-gray-300 rounded cursor-pointer"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Border Color</label>
+                  <input
+                    type="color"
+                    value={chartConfig.borderColor || '#e5e7eb'}
+                    onChange={(e) => onChartConfigChange('borderColor', e.target.value)}
+                    className="w-full h-10 border border-gray-300 rounded cursor-pointer"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Border Color</label>
-                <input
-                  type="color"
-                  value={chartConfig.borderColor || '#e5e7eb'}
-                  onChange={(e) => onChartConfigChange('borderColor', e.target.value)}
-                  className="w-full h-10 border border-gray-300 rounded cursor-pointer"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Border Radius</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="20"
+                    step="1"
+                    value={chartConfig.borderRadius || 0}
+                    onChange={(e) => onChartConfigChange('borderRadius', parseInt(e.target.value))}
+                    className="w-full"
+                  />
+                  <span className="text-xs text-gray-500">{chartConfig.borderRadius || 0}px</span>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Border Width</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    step="1"
+                    value={chartConfig.borderWidth || 0}
+                    onChange={(e) => onChartConfigChange('borderWidth', parseInt(e.target.value))}
+                    className="w-full"
+                  />
+                  <span className="text-xs text-gray-500">{chartConfig.borderWidth || 0}px</span>
+                </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Border Radius</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="20"
-                  step="1"
-                  value={chartConfig.borderRadius || 0}
-                  onChange={(e) => onChartConfigChange('borderRadius', parseInt(e.target.value))}
-                  className="w-full"
-                />
-                <span className="text-xs text-gray-500">{chartConfig.borderRadius || 0}px</span>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Border Width</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="10"
-                  step="1"
-                  value={chartConfig.borderWidth || 0}
-                  onChange={(e) => onChartConfigChange('borderWidth', parseInt(e.target.value))}
-                  className="w-full"
-                />
-                <span className="text-xs text-gray-500">{chartConfig.borderWidth || 0}px</span>
-              </div>
-            </div>
-          </div>
-        </div>
+          </AccordionContent>
+        </AccordionItem>
 
         {/* Grid & Axes */}
-        <div>
-          <h5 className="text-sm font-medium text-gray-700 mb-3">📐 Grid & Axes</h5>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <label className="flex items-center gap-2 text-xs">
-                <input
-                  type="checkbox"
-                  checked={chartConfig.enableGridX !== false}
-                  onChange={(e) => onChartConfigChange('enableGridX', e.target.checked)}
-                  className="rounded"
-                />
-                Enable Grid X
-              </label>
-              <label className="flex items-center gap-2 text-xs">
-                <input
-                  type="checkbox"
-                  checked={chartConfig.enableGridY !== false}
-                  onChange={(e) => onChartConfigChange('enableGridY', e.target.checked)}
-                  className="rounded"
-                />
-                Enable Grid Y
-              </label>
-            </div>
-            
-            {/* Bottom Axis */}
-            <div className="border border-gray-200 rounded-lg p-3">
-              <h6 className="text-xs font-medium text-gray-600 mb-2">Bottom Axis</h6>
-              <div className="space-y-2">
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Legend</label>
+        <AccordionItem value="grid">
+          <AccordionTrigger className="text-sm font-medium text-gray-700">
+            📐 Grid & Axes
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex items-center gap-2 text-xs">
                   <input
-                    type="text"
-                    value={chartConfig.axisBottom?.legend || ''}
-                    onChange={(e) => onChartConfigChange('axisBottom', { ...chartConfig.axisBottom, legend: e.target.value })}
-                    className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="X-axis label"
+                    type="checkbox"
+                    checked={chartConfig.enableGridX !== false}
+                    onChange={(e) => onChartConfigChange('enableGridX', e.target.checked)}
+                    className="rounded"
                   />
-                </div>
-                <div className="grid grid-cols-3 gap-2">
+                  Enable Grid X
+                </label>
+                <label className="flex items-center gap-2 text-xs">
+                  <input
+                    type="checkbox"
+                    checked={chartConfig.enableGridY !== false}
+                    onChange={(e) => onChartConfigChange('enableGridY', e.target.checked)}
+                    className="rounded"
+                  />
+                  Enable Grid Y
+                </label>
+              </div>
+              
+              {/* Bottom Axis */}
+              <div className="border border-gray-200 rounded-lg p-3">
+                <h6 className="text-xs font-medium text-gray-600 mb-2">Bottom Axis</h6>
+                <div className="space-y-2">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Tick Rotation</label>
+                    <label className="block text-xs text-gray-500 mb-1">Legend</label>
                     <input
-                      type="range"
-                      min="-90"
-                      max="90"
-                      step="15"
-                      value={chartConfig.axisBottom?.tickRotation || 0}
-                      onChange={(e) => onChartConfigChange('axisBottom', { ...chartConfig.axisBottom, tickRotation: parseInt(e.target.value) })}
-                      className="w-full"
+                      type="text"
+                      value={chartConfig.axisBottom?.legend || ''}
+                      onChange={(e) => onChartConfigChange('axisBottom', { ...chartConfig.axisBottom, legend: e.target.value })}
+                      className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="X-axis label"
                     />
-                    <span className="text-xs text-gray-400">{chartConfig.axisBottom?.tickRotation || 0}°</span>
                   </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Tick Size</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="20"
-                      step="1"
-                      value={chartConfig.axisBottom?.tickSize || 5}
-                      onChange={(e) => onChartConfigChange('axisBottom', { ...chartConfig.axisBottom, tickSize: parseInt(e.target.value) })}
-                      className="w-full"
-                    />
-                    <span className="text-xs text-gray-400">{chartConfig.axisBottom?.tickSize || 5}px</span>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Tick Padding</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="20"
-                      step="1"
-                      value={chartConfig.axisBottom?.tickPadding || 5}
-                      onChange={(e) => onChartConfigChange('axisBottom', { ...chartConfig.axisBottom, tickPadding: parseInt(e.target.value) })}
-                      className="w-full"
-                    />
-                    <span className="text-xs text-gray-400">{chartConfig.axisBottom?.tickPadding || 5}px</span>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Tick Rotation</label>
+                      <input
+                        type="range"
+                        min="-90"
+                        max="90"
+                        step="15"
+                        value={chartConfig.axisBottom?.tickRotation || 0}
+                        onChange={(e) => onChartConfigChange('axisBottom', { ...chartConfig.axisBottom, tickRotation: parseInt(e.target.value) })}
+                        className="w-full"
+                      />
+                      <span className="text-xs text-gray-400">{chartConfig.axisBottom?.tickRotation || 0}°</span>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Tick Size</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="20"
+                        step="1"
+                        value={chartConfig.axisBottom?.tickSize || 5}
+                        onChange={(e) => onChartConfigChange('axisBottom', { ...chartConfig.axisBottom, tickSize: parseInt(e.target.value) })}
+                        className="w-full"
+                      />
+                      <span className="text-xs text-gray-400">{chartConfig.axisBottom?.tickSize || 5}px</span>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Tick Padding</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="20"
+                        step="1"
+                        value={chartConfig.axisBottom?.tickPadding || 5}
+                        onChange={(e) => onChartConfigChange('axisBottom', { ...chartConfig.axisBottom, tickPadding: parseInt(e.target.value) })}
+                        className="w-full"
+                      />
+                      <span className="text-xs text-gray-400">{chartConfig.axisBottom?.tickPadding || 5}px</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* Left Axis */}
-            <div className="border border-gray-200 rounded-lg p-3">
-              <h6 className="text-xs font-medium text-gray-600 mb-2">Left Axis</h6>
-              <div className="space-y-2">
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Legend</label>
-                  <input
-                    type="text"
-                    value={chartConfig.axisLeft?.legend || ''}
-                    onChange={(e) => onChartConfigChange('axisLeft', { ...chartConfig.axisLeft, legend: e.target.value })}
-                    className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="Y-axis label"
-                  />
-                </div>
-                <div className="grid grid-cols-3 gap-2">
+              {/* Left Axis */}
+              <div className="border border-gray-200 rounded-lg p-3">
+                <h6 className="text-xs font-medium text-gray-600 mb-2">Left Axis</h6>
+                <div className="space-y-2">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">Tick Rotation</label>
+                    <label className="block text-xs text-gray-500 mb-1">Legend</label>
                     <input
-                      type="range"
-                      min="-90"
-                      max="90"
-                      step="15"
-                      value={chartConfig.axisLeft?.tickRotation || 0}
-                      onChange={(e) => onChartConfigChange('axisLeft', { ...chartConfig.axisLeft, tickRotation: parseInt(e.target.value) })}
-                      className="w-full"
+                      type="text"
+                      value={chartConfig.axisLeft?.legend || ''}
+                      onChange={(e) => onChartConfigChange('axisLeft', { ...chartConfig.axisLeft, legend: e.target.value })}
+                      className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      placeholder="Y-axis label"
                     />
-                    <span className="text-xs text-gray-400">{chartConfig.axisLeft?.tickRotation || 0}°</span>
                   </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Tick Size</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="20"
-                      step="1"
-                      value={chartConfig.axisLeft?.tickSize || 5}
-                      onChange={(e) => onChartConfigChange('axisLeft', { ...chartConfig.axisLeft, tickSize: parseInt(e.target.value) })}
-                      className="w-full"
-                    />
-                    <span className="text-xs text-gray-400">{chartConfig.axisLeft?.tickSize || 5}px</span>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">Tick Padding</label>
-                    <input
-                      type="range"
-                      min="0"
-                      max="20"
-                      step="1"
-                      value={chartConfig.axisLeft?.tickPadding || 5}
-                      onChange={(e) => onChartConfigChange('axisLeft', { ...chartConfig.axisLeft, tickPadding: parseInt(e.target.value) })}
-                      className="w-full"
-                    />
-                    <span className="text-xs text-gray-400">{chartConfig.axisLeft?.tickPadding || 5}px</span>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Tick Rotation</label>
+                      <input
+                        type="range"
+                        min="-90"
+                        max="90"
+                        step="15"
+                        value={chartConfig.axisLeft?.tickRotation || 0}
+                        onChange={(e) => onChartConfigChange('axisLeft', { ...chartConfig.axisLeft, tickRotation: parseInt(e.target.value) })}
+                        className="w-full"
+                      />
+                      <span className="text-xs text-gray-400">{chartConfig.axisLeft?.tickRotation || 0}°</span>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Tick Size</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="20"
+                        step="1"
+                        value={chartConfig.axisLeft?.tickSize || 5}
+                        onChange={(e) => onChartConfigChange('axisLeft', { ...chartConfig.axisLeft, tickSize: parseInt(e.target.value) })}
+                        className="w-full"
+                      />
+                      <span className="text-xs text-gray-400">{chartConfig.axisLeft?.tickSize || 5}px</span>
+                    </div>
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Tick Padding</label>
+                      <input
+                        type="range"
+                        min="0"
+                        max="20"
+                        step="1"
+                        value={chartConfig.axisLeft?.tickPadding || 5}
+                        onChange={(e) => onChartConfigChange('axisLeft', { ...chartConfig.axisLeft, tickPadding: parseInt(e.target.value) })}
+                        className="w-full"
+                      />
+                      <span className="text-xs text-gray-400">{chartConfig.axisLeft?.tickPadding || 5}px</span>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </AccordionContent>
+        </AccordionItem>
 
         {/* Layout & Spacing */}
-        <div>
-          <h5 className="text-sm font-medium text-gray-700 mb-3">📏 Layout & Spacing</h5>
-          <div className="space-y-4">
+        <AccordionItem value="layout">
+          <AccordionTrigger className="text-sm font-medium text-gray-700">
+            📏 Layout & Spacing
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-2">Margin</label>
               <div className="grid grid-cols-2 gap-2">
@@ -297,13 +309,17 @@ export default function ChartConfigEditor({
               />
               <span className="text-xs text-gray-500">{chartConfig.padding || 0}px</span>
             </div>
-          </div>
-        </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
 
         {/* Title & Text */}
-        <div>
-          <h5 className="text-sm font-medium text-gray-700 mb-3">✍️ Title & Text</h5>
-          <div className="space-y-4">
+        <AccordionItem value="title">
+          <AccordionTrigger className="text-sm font-medium text-gray-700">
+            ✍️ Title & Text
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="space-y-4">
             {/* Title */}
             <div className="border border-gray-200 rounded-lg p-3">
               <h6 className="text-xs font-medium text-gray-600 mb-2">Title</h6>
@@ -429,12 +445,16 @@ export default function ChartConfigEditor({
                 </label>
               </div>
             </div>
-          </div>
-        </div>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
 
         {/* Labels */}
-        <div>
-          <h5 className="text-sm font-medium text-gray-700 mb-3">🏷️ Labels</h5>
+        <AccordionItem value="labels">
+          <AccordionTrigger className="text-sm font-medium text-gray-700">
+            🏷️ Labels
+          </AccordionTrigger>
+          <AccordionContent>
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <label className="flex items-center gap-2 text-xs">
@@ -499,11 +519,15 @@ export default function ChartConfigEditor({
               </div>
             )}
           </div>
-        </div>
+          </AccordionContent>
+        </AccordionItem>
 
         {/* Animation & Interaction */}
-        <div>
-          <h5 className="text-sm font-medium text-gray-700 mb-3">🎬 Animation</h5>
+        <AccordionItem value="animation">
+          <AccordionTrigger className="text-sm font-medium text-gray-700">
+            🎬 Animation
+          </AccordionTrigger>
+          <AccordionContent>
           <div className="space-y-3">
             <label className="flex items-center gap-2 text-xs">
               <input
@@ -531,8 +555,9 @@ export default function ChartConfigEditor({
               </div>
             )}
           </div>
-        </div>
-      </div>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   )
 }
