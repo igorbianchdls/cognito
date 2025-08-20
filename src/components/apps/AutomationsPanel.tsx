@@ -53,7 +53,7 @@ export default function AutomationsPanel() {
   }
 
   return (
-    <div className="flex flex-col" style={{ height: 'calc(100vh - 80px)' }}>
+    <div className="flex flex-col h-full overflow-y-auto">
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between mb-4">
           <div>
