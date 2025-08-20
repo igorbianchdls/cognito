@@ -1,6 +1,8 @@
 'use client'
 
 interface ShopifyHeaderProps {
+  activeTab: 'widgets' | 'editor'
+  onTabChange: (tab: 'widgets' | 'editor') => void
   sidebarCollapsed: boolean
   onToggleSidebar: () => void
   widgetCount: number
@@ -8,6 +10,8 @@ interface ShopifyHeaderProps {
 }
 
 export default function ShopifyHeader({ 
+  activeTab,
+  onTabChange,
   sidebarCollapsed, 
   onToggleSidebar, 
   widgetCount,
@@ -22,14 +26,19 @@ export default function ShopifyHeader({
     }
   }
 
+  const tabs = [
+    { id: 'widgets', label: 'Widgets', icon: '🧩' },
+    { id: 'editor', label: 'Editor', icon: '⚙️' },
+  ] as const
+
   return (
     <div className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-1">
           {/* Toggle Sidebar Button */}
           <button
             onClick={onToggleSidebar}
-            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+            className="mr-4 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
             title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             <span className="text-lg font-mono">
@@ -37,19 +46,35 @@ export default function ShopifyHeader({
             </span>
           </button>
 
-          {/* Page Title */}
-          <div className="flex items-center gap-3">
+          {/* Store Title */}
+          <div className="flex items-center gap-3 mr-6">
             <span className="text-2xl">🛍️</span>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">Shopify Store Builder</h1>
+              <h1 className="text-xl font-semibold text-gray-900">Shopify Builder</h1>
               <p className="text-sm text-gray-600">
                 {widgetCount === 0 
-                  ? 'Drag widgets from the left panel to build your store'
-                  : `${widgetCount} widget${widgetCount !== 1 ? 's' : ''} in your store`
+                  ? 'Build your store with drag & drop'
+                  : `${widgetCount} component${widgetCount !== 1 ? 's' : ''} added`
                 }
               </p>
             </div>
           </div>
+
+          {/* Tabs */}
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => onTabChange(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                activeTab === tab.id
+                  ? 'bg-purple-100 text-purple-700 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              <span className="text-base">{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
         </div>
         
         {/* Action Buttons */}

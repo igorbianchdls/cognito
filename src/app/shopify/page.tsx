@@ -5,6 +5,7 @@ import { useStore } from '@nanostores/react'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core'
 import ShopifyHeader from '@/components/shopify/ShopifyHeader'
 import ShopifyWidgetsPanel from '@/components/shopify/ShopifyWidgetsPanel'
+import ShopifyEditorPanel from '@/components/shopify/ShopifyEditorPanel'
 import ShopifyCanvas from '@/components/shopify/ShopifyCanvas'
 import { $shopifyWidgets, shopifyActions } from '@/stores/shopifyStore'
 import type { ShopifyWidget } from '@/types/shopifyWidgets'
@@ -65,6 +66,7 @@ const availableShopifyWidgets: Omit<ShopifyWidget, 'i' | 'order' | 'config'>[] =
 export default function ShopifyPage() {
   const shopifyWidgets = useStore($shopifyWidgets)
   const [activeWidget, setActiveWidget] = useState<Omit<ShopifyWidget, 'i' | 'order' | 'config'> | null>(null)
+  const [activeTab, setActiveTab] = useState<'widgets' | 'editor'>('widgets')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -119,6 +121,8 @@ export default function ShopifyPage() {
       <div className="h-screen flex flex-col bg-gray-50">
         {/* Header */}
         <ShopifyHeader 
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
           sidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
           widgetCount={shopifyWidgets.length}
@@ -127,13 +131,14 @@ export default function ShopifyPage() {
         
         {/* Main Content */}
         <div className="flex-1 flex">
-          {/* Left Panel - Widgets */}
+          {/* Left Panel */}
           <div className={`${
             sidebarCollapsed 
               ? 'w-0 overflow-hidden' 
               : 'w-80 bg-white border-r border-gray-200 flex-shrink-0 overflow-hidden'
           } transition-all duration-300 ease-in-out`} style={{ height: 'calc(100vh - 80px)' }}>
-            <ShopifyWidgetsPanel availableWidgets={availableShopifyWidgets} />
+            {activeTab === 'widgets' && <ShopifyWidgetsPanel availableWidgets={availableShopifyWidgets} />}
+            {activeTab === 'editor' && <ShopifyEditorPanel />}
           </div>
           
           {/* Right Canvas - Store Preview */}
