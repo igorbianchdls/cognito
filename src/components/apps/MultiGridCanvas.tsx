@@ -157,10 +157,10 @@ export default function MultiGridCanvas({
       )}
 
       {/* Right Canvas - Main content area */}
-      <div className="flex-1 p-4">
+      <div className="flex-1">
         <div 
           ref={setNodeRef} 
-          className={`h-full relative rounded-lg transition-all duration-200 ${
+          className={`h-full relative transition-all duration-200 ${
             isOver ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
           }`}
           style={{
@@ -192,7 +192,7 @@ export default function MultiGridCanvas({
             isDraggable={true}
             isResizable={true}
             margin={[16, 16]}
-            containerPadding={[20, 20]}
+            containerPadding={[16, 16]}
           >
             {activeTabWidgets.map((widget) => (
               <div key={widget.i} className="relative">
