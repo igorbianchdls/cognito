@@ -7,7 +7,10 @@ import { kpiActions } from '@/stores/kpiStore'
 import { useState, useEffect, useMemo } from 'react'
 import { isKPIWidget } from '@/types/kpiWidgets'
 import type { KPIConfig } from '@/types/kpiWidgets'
+import { isImageWidget } from '@/types/widget'
+import type { ImageConfig } from '@/types/widget'
 import KPIConfigEditor from './editors/KPIConfigEditor'
+import ImageConfigEditor from './editors/ImageConfigEditor'
 
 export default function WidgetEditorNew() {
   const widgets = useStore($widgets)
@@ -24,12 +27,30 @@ export default function WidgetEditorNew() {
     unit: ''
   })
 
+  // Image form state - seguindo mesmo padrão do original
+  const [editImageForm, setEditImageForm] = useState({
+    src: '',
+    alt: '',
+    title: '',
+    objectFit: 'cover',
+    objectPosition: 'center'
+  })
+
   // Computed KPI config - acesso via selectedWidget
   const kpiConfig = useMemo((): KPIConfig => {
     if (!selectedWidget || !isKPIWidget(selectedWidget)) return {} as KPIConfig
     
     const config = selectedWidget.config?.kpiConfig || {} as KPIConfig
     console.log('🎯 WidgetEditorNew computed kpiConfig:', config)
+    return config
+  }, [selectedWidget])
+
+  // Computed Image config - acesso via selectedWidget
+  const imageConfig = useMemo((): ImageConfig => {
+    if (!selectedWidget || !isImageWidget(selectedWidget)) return {} as ImageConfig
+    
+    const config = selectedWidget.config?.imageConfig || {} as ImageConfig
+    console.log('🎯 WidgetEditorNew computed imageConfig:', config)
     return config
   }, [selectedWidget])
 
@@ -43,6 +64,27 @@ export default function WidgetEditorNew() {
       })
     }
   }, [selectedWidget?.config?.kpiConfig?.name, selectedWidget?.config?.kpiConfig?.unit, selectedWidget])
+
+  // Sync editImageForm with imageConfig when widget changes
+  useEffect(() => {
+    if (selectedWidget && isImageWidget(selectedWidget)) {
+      const config = selectedWidget.config?.imageConfig || {}
+      setEditImageForm({
+        src: config.src || '',
+        alt: config.alt || '',
+        title: config.title || '',
+        objectFit: config.objectFit || 'cover',
+        objectPosition: config.objectPosition || 'center'
+      })
+    }
+  }, [
+    selectedWidget?.config?.imageConfig?.src,
+    selectedWidget?.config?.imageConfig?.alt,
+    selectedWidget?.config?.imageConfig?.title,
+    selectedWidget?.config?.imageConfig?.objectFit,
+    selectedWidget?.config?.imageConfig?.objectPosition,
+    selectedWidget
+  ])
 
   // Auto-select canvas quando não há widgets
   useEffect(() => {
@@ -67,6 +109,105 @@ export default function WidgetEditorNew() {
       console.log('⚙️ WidgetEditorNew calling kpiActions.updateKPIConfig:', selectedWidget.i, { [field]: value })
       kpiActions.updateKPIConfig(selectedWidget.i, { [field]: value })
     }
+  }
+
+  // Image Handlers
+  const handleImageConfigChange = (field: string, value: unknown) => {
+    console.log('⚙️ WidgetEditorNew handleImageConfigChange:', { field, value })
+    
+    if (selectedWidget && isImageWidget(selectedWidget)) {
+      console.log('⚙️ WidgetEditorNew calling widgetActions.editWidget for imageConfig:', selectedWidget.i, { [field]: value })
+      
+      // Get current imageConfig and update the specific field
+      const currentImageConfig = selectedWidget.config?.imageConfig || {}
+      const newImageConfig = { ...currentImageConfig, [field]: value }
+      
+      console.log('📝 New imageConfig:', newImageConfig)
+      
+      // Update the widget with the new imageConfig
+      const updatePayload = {
+        config: {
+          ...selectedWidget.config,
+          imageConfig: newImageConfig
+        }
+      }
+      
+      widgetActions.editWidget(selectedWidget.i, updatePayload)
+    }
+  }
+
+  // Handle image upload and convert to Base64
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('🖼️ handleImageUpload triggered', event)
+    
+    const file = event.target.files?.[0]
+    console.log('📁 Selected file:', file)
+    
+    if (!file) {
+      console.log('❌ No file selected')
+      return
+    }
+
+    // Log file info
+    console.log('📄 File info:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      sizeKB: Math.round(file.size / 1024)
+    })
+
+    // Validate file type
+    const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']
+    if (!validTypes.includes(file.type)) {
+      console.log('❌ Invalid file type:', file.type)
+      alert('Please select a valid image file (PNG, JPG, GIF, WebP)')
+      return
+    }
+    console.log('✅ File type valid:', file.type)
+
+    // Validate file size (max 2MB)
+    const maxSize = 2 * 1024 * 1024 // 2MB
+    if (file.size > maxSize) {
+      console.log('❌ File too large:', file.size, 'bytes')
+      alert('File size must be less than 2MB')
+      return
+    }
+    console.log('✅ File size valid:', file.size, 'bytes')
+
+    // Convert to Base64
+    console.log('🔄 Starting Base64 conversion...')
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      console.log('📖 FileReader onload triggered')
+      const base64 = e.target?.result as string
+      console.log('📝 Base64 result:', base64 ? `${base64.slice(0, 50)}...` : 'null')
+      
+      if (base64) {
+        console.log('📤 Calling handleImageConfigChange with src:', base64.slice(0, 50) + '...')
+        handleImageConfigChange('src', base64)
+        
+        // Set default alt if empty
+        if (!editImageForm.alt) {
+          const fileName = file.name.split('.')[0]
+          console.log('📝 Setting default alt text:', fileName)
+          handleImageConfigChange('alt', fileName)
+        }
+        console.log('✅ Image upload completed successfully')
+      } else {
+        console.log('❌ Base64 conversion failed')
+        alert('Failed to process image file')
+      }
+    }
+    reader.onerror = () => {
+      console.log('❌ FileReader error')
+      alert('Error reading file')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  // Handle removing image
+  const handleImageRemove = () => {
+    handleImageConfigChange('src', '')
   }
 
   // Handlers
@@ -210,8 +351,20 @@ export default function WidgetEditorNew() {
                   />
                 )}
 
+                {/* Image Configuration */}
+                {isImageWidget(selectedWidget) && (
+                  <ImageConfigEditor
+                    selectedWidget={selectedWidget}
+                    imageConfig={imageConfig}
+                    editImageForm={editImageForm}
+                    onImageConfigChange={handleImageConfigChange}
+                    onImageUpload={handleImageUpload}
+                    onImageRemove={handleImageRemove}
+                  />
+                )}
+
                 {/* Other widget types placeholder */}
-                {!isKPIWidget(selectedWidget) && (
+                {!isKPIWidget(selectedWidget) && !isImageWidget(selectedWidget) && (
                   <div className="p-4 bg-gray-50 rounded-lg text-center">
                     <p className="text-gray-600">Configuration for {selectedWidget.type} widgets will be here</p>
                   </div>
