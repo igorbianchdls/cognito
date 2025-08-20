@@ -365,13 +365,13 @@ export const shopifyActions = {
     const timestamp = Date.now()
     const maxOrder = Math.max(...currentWidgets.map(w => w.order))
     
-    const duplicatedWidget: ShopifyWidget = {
+    const duplicatedWidget = {
       ...widgetToDuplicate,
       id: `shopify-${widgetToDuplicate.type}-${timestamp}`,
       i: `shopify-${widgetToDuplicate.type}-${timestamp}`,
       name: `${widgetToDuplicate.name} (Copy)`,
       order: maxOrder + 1
-    }
+    } as ShopifyWidget
     
     $shopifyWidgets.set([...currentWidgets, duplicatedWidget])
     return duplicatedWidget
