@@ -3,7 +3,6 @@
 import { atom } from 'nanostores'
 import { $widgets, widgetActions } from './widgetStore'
 import type { SavedDashboard } from '@/types/savedDashboard'
-import type { DroppedWidget } from '@/types/widget'
 
 const STORAGE_KEY = 'cognito_saved_dashboards'
 
@@ -18,7 +17,7 @@ const loadFromStorage = (): SavedDashboard[] => {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) {
       const parsed = JSON.parse(saved)
-      return parsed.map((dashboard: any) => ({
+      return parsed.map((dashboard: SavedDashboard & { createdAt: string }) => ({
         ...dashboard,
         createdAt: new Date(dashboard.createdAt)
       }))
