@@ -38,8 +38,8 @@ const widgetCategories: Record<string, ExtendedWidget[]> = {
       defaultHeight: 3,
     },
     {
-      id: 'chart-widget',
-      name: 'Chart',
+      id: 'bar-chart-widget',
+      name: 'Bar Chart',
       type: 'chart-bar',
       icon: (
         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -47,6 +47,48 @@ const widgetCategories: Record<string, ExtendedWidget[]> = {
         </svg>
       ),
       description: 'Display data with vertical bars',
+      defaultWidth: 4,
+      defaultHeight: 3,
+    },
+    {
+      id: 'line-chart-widget',
+      name: 'Line Chart',
+      type: 'chart-line',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 12l3-3 3 3 4-4" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12h-6l-2-2-2 2H3" />
+        </svg>
+      ),
+      description: 'Show trends and data over time',
+      defaultWidth: 4,
+      defaultHeight: 3,
+    },
+    {
+      id: 'pie-chart-widget',
+      name: 'Pie Chart',
+      type: 'chart-pie',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z" />
+        </svg>
+      ),
+      description: 'Show data distribution and percentages',
+      defaultWidth: 3,
+      defaultHeight: 3,
+    },
+    {
+      id: 'area-chart-widget',
+      name: 'Area Chart',
+      type: 'chart-area',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 12l3-3 3 3 4-4M3 20h18" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} fill="currentColor" fillOpacity="0.1" d="M7 12l3-3 3 3 4-4v8H7v-4z" />
+        </svg>
+      ),
+      description: 'Display filled area under data curves',
       defaultWidth: 4,
       defaultHeight: 3,
     },
@@ -60,6 +102,60 @@ const widgetCategories: Record<string, ExtendedWidget[]> = {
         </svg>
       ),
       description: 'Interactive button component',
+      defaultWidth: 2,
+      defaultHeight: 1,
+    },
+    {
+      id: 'image-widget',
+      name: 'Image',
+      type: 'image',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      ),
+      description: 'Display images with customizable styling and behavior',
+      defaultWidth: 3,
+      defaultHeight: 2,
+    },
+    {
+      id: 'navigation-widget',
+      name: 'Navigation',
+      type: 'navigation',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+        </svg>
+      ),
+      description: 'Transform canvas into multi-tab layout system',
+      defaultWidth: 12,
+      defaultHeight: 1,
+    },
+  ],
+  Analytics: [
+    {
+      id: 'kpi-widget',
+      name: 'KPI',
+      type: 'kpi',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+        </svg>
+      ),
+      description: 'Display key performance indicators with trends',
+      defaultWidth: 3,
+      defaultHeight: 2,
+    },
+    {
+      id: 'metric-widget',
+      name: 'Metric',
+      type: 'metric',
+      icon: (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 12l3-3 3 3 4-4m0 0l-3 3m3-3v3" />
+        </svg>
+      ),
+      description: 'Show key performance metrics',
       defaultWidth: 2,
       defaultHeight: 1,
     },
@@ -186,6 +282,7 @@ export default function WidgetsPanel({}: WidgetsPanelProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
     Components: true,
+    Analytics: true,
     Forms: true,
   })
 
