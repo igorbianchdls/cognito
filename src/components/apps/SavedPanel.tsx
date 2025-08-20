@@ -67,13 +67,28 @@ export default function SavedPanel() {
                       </p>
                     )}
                     <div className="flex items-center gap-4 text-xs text-gray-500">
-                      <span>
-                        📊 {dashboard.widgets.length} widget{dashboard.widgets.length !== 1 ? 's' : ''}
-                      </span>
+                      {dashboard.isMultiCanvas ? (
+                        <span className="flex items-center gap-1">
+                          📑 Multi-canvas • {dashboard.multiCanvasState?.tabs.length || 0} tabs • {dashboard.multiCanvasState?.tabs.reduce((total, tab) => total + tab.widgets.length, 0) || 0} widgets
+                        </span>
+                      ) : (
+                        <span>
+                          📊 {dashboard.widgets.length} widget{dashboard.widgets.length !== 1 ? 's' : ''}
+                        </span>
+                      )}
                       <span>
                         📅 {formatDate(dashboard.createdAt)}
                       </span>
                     </div>
+                    
+                    {/* Multi-canvas badge */}
+                    {dashboard.isMultiCanvas && (
+                      <div className="mt-2">
+                        <span className="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">
+                          📑 Multi-Canvas
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 

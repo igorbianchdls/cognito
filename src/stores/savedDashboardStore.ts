@@ -2,6 +2,8 @@
 
 import { atom } from 'nanostores'
 import { $widgets, widgetActions } from './widgetStore'
+import { $multiCanvasState, multiCanvasActions } from './multiCanvasStore'
+import { isNavigationWidget } from '@/types/widget'
 import type { SavedDashboard } from '@/types/savedDashboard'
 
 const STORAGE_KEY = 'cognito_saved_dashboards'
@@ -59,24 +61,58 @@ export const savedDashboardActions = {
   // Salvar dashboard atual
   save: (name: string, description?: string) => {
     const currentWidgets = $widgets.get()
+    const multiCanvasState = $multiCanvasState.get()
     
-    if (currentWidgets.length === 0) {
-      alert('Não há widgets no canvas para salvar!')
-      return
-    }
+    // Detect if we're in multi-canvas mode
+    const hasNavigationWidget = currentWidgets.some(widget => isNavigationWidget(widget))
+    const isMultiCanvasMode = hasNavigationWidget && multiCanvasState.hasNavigationWidget
+    
+    let newDashboard: SavedDashboard
+    
+    if (isMultiCanvasMode) {
+      // Multi-canvas mode: Check if tabs have widgets
+      const totalWidgets = multiCanvasState.tabs.reduce((total, tab) => total + tab.widgets.length, 0)
+      if (totalWidgets === 0) {
+        alert('Não há widgets nas tabs para salvar!')
+        return
+      }
+      
+      newDashboard = {
+        id: generateId(),
+        name: name.trim(),
+        description: description?.trim(),
+        createdAt: new Date(),
+        widgets: JSON.parse(JSON.stringify(currentWidgets)), // For compatibility - includes Navigation Widget
+        isMultiCanvas: true,
+        multiCanvasState: {
+          tabs: JSON.parse(JSON.stringify(multiCanvasState.tabs)), // Deep clone
+          activeTab: multiCanvasState.activeTab
+        }
+      }
+      
+      const totalTabWidgets = multiCanvasState.tabs.reduce((total, tab) => total + tab.widgets.length, 0)
+      console.log('📄 Multi-canvas dashboard saved:', newDashboard.name, 'with', multiCanvasState.tabs.length, 'tabs and', totalTabWidgets, 'widgets')
+    } else {
+      // Normal single canvas mode
+      if (currentWidgets.length === 0) {
+        alert('Não há widgets no canvas para salvar!')
+        return
+      }
 
-    const newDashboard: SavedDashboard = {
-      id: generateId(),
-      name: name.trim(),
-      description: description?.trim(),
-      createdAt: new Date(),
-      widgets: JSON.parse(JSON.stringify(currentWidgets)) // Deep clone
+      newDashboard = {
+        id: generateId(),
+        name: name.trim(),
+        description: description?.trim(),
+        createdAt: new Date(),
+        widgets: JSON.parse(JSON.stringify(currentWidgets)), // Deep clone
+        isMultiCanvas: false
+      }
+      
+      console.log('📄 Single canvas dashboard saved:', newDashboard.name, 'with', newDashboard.widgets.length, 'widgets')
     }
 
     const currentDashboards = $savedDashboards.get()
     $savedDashboards.set([...currentDashboards, newDashboard])
-    
-    console.log('📄 Dashboard saved:', newDashboard.name, 'with', newDashboard.widgets.length, 'widgets')
   },
 
   // Carregar dashboard
@@ -89,9 +125,55 @@ export const savedDashboardActions = {
       return
     }
 
-    // Limpar canvas atual e carregar widgets salvos
-    widgetActions.setWidgets(dashboard.widgets)
-    console.log('📄 Dashboard loaded:', dashboard.name, 'with', dashboard.widgets.length, 'widgets')
+    if (dashboard.isMultiCanvas && dashboard.multiCanvasState) {
+      // Multi-canvas dashboard: Restore complete structure
+      console.log('📄 Loading multi-canvas dashboard:', dashboard.name, 'with', dashboard.multiCanvasState.tabs.length, 'tabs')
+      
+      // First, clear current state
+      widgetActions.setWidgets([])
+      
+      // Initialize multi-canvas mode with the saved state
+      const multiCanvasState = dashboard.multiCanvasState
+      
+      // Add navigation widget to main store (it should be in dashboard.widgets)
+      const navigationWidget = dashboard.widgets.find(w => isNavigationWidget(w))
+      if (navigationWidget) {
+        widgetActions.setWidgets([navigationWidget])
+      }
+      
+      // Restore multi-canvas state
+      if (navigationWidget) {
+        multiCanvasActions.initializeMultiCanvas([navigationWidget])
+      }
+      
+      // Restore tabs and their widgets
+      const currentState = $multiCanvasState.get()
+      const newState = {
+        ...currentState,
+        tabs: multiCanvasState.tabs,
+        activeTab: multiCanvasState.activeTab,
+        hasNavigationWidget: true
+      }
+      
+      $multiCanvasState.set(newState)
+      
+      const totalTabWidgets = multiCanvasState.tabs.reduce((total, tab) => total + tab.widgets.length, 0)
+      console.log('📄 Multi-canvas dashboard loaded with', multiCanvasState.tabs.length, 'tabs and', totalTabWidgets, 'widgets')
+      
+    } else {
+      // Single canvas dashboard: Normal loading
+      console.log('📄 Loading single canvas dashboard:', dashboard.name, 'with', dashboard.widgets.length, 'widgets')
+      
+      // If currently in multi-canvas mode, exit it first
+      const currentMultiState = $multiCanvasState.get()
+      if (currentMultiState.hasNavigationWidget) {
+        multiCanvasActions.exitMultiCanvas()
+      }
+      
+      // Load widgets normally
+      widgetActions.setWidgets(dashboard.widgets)
+      console.log('📄 Single canvas dashboard loaded with', dashboard.widgets.length, 'widgets')
+    }
   },
 
   // Excluir dashboard
