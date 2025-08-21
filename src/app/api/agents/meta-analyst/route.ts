@@ -1,5 +1,8 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
+import * as bigqueryTools from '@/tools/bigquery';
+import * as analyticsTools from '@/tools/analytics';
+import * as utilitiesTools from '@/tools/utilities';
 
 export const maxDuration = 30;
 
@@ -11,7 +14,7 @@ export async function POST(req: Request) {
 
   const result = streamText({
     model: anthropic('claude-sonnet-4-20250514'),
-    system: 'You are MetaAnalyst AI, a specialized assistant for analyzing metadata, data structures, and providing insights about data organization and patterns. Keep responses concise and analytical.',
+    system: 'You are MetaAnalyst AI, a specialized assistant for analyzing metadata, data structures, and providing insights about data organization and patterns. You have access to BigQuery, analytics, and utility tools. Keep responses concise and analytical.',
     messages: convertToModelMessages(messages),
     providerOptions: {
       anthropic: {
@@ -20,6 +23,11 @@ export async function POST(req: Request) {
     },
     headers: {
       'anthropic-beta': 'interleaved-thinking-2025-05-14'
+    },
+    tools: {
+      ...bigqueryTools,
+      ...analyticsTools,
+      ...utilitiesTools,
     },
   });
 
