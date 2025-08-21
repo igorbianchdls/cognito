@@ -20,13 +20,13 @@ export default function AppsHeader({ activeTab, onTabChange, sidebarCollapsed, o
   ] as const
 
   return (
-    <div className="bg-white border-b border-gray-200 px-6 py-4">
+    <div className="bg-[#111111] border-b border-gray-800 px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
         {/* Toggle Sidebar Button */}
         <button
           onClick={onToggleSidebar}
-          className="mr-4 p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+          className="mr-4 p-2 text-[#888888] hover:text-[#AAAAAA] hover:bg-gray-800 rounded-lg transition-colors duration-200"
           title={sidebarCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
         >
           <span className="text-lg font-mono">
@@ -39,8 +39,8 @@ export default function AppsHeader({ activeTab, onTabChange, sidebarCollapsed, o
             onClick={() => onTabChange(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
               activeTab === tab.id
-                ? 'bg-blue-100 text-blue-700 shadow-sm'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                ? 'bg-gray-800 text-white shadow-sm'
+                : 'text-[#888888] hover:text-[#AAAAAA] hover:bg-gray-800'
             }`}
           >
             <span className="text-base">{tab.icon}</span>
@@ -52,7 +52,7 @@ export default function AppsHeader({ activeTab, onTabChange, sidebarCollapsed, o
         {/* Botão Salvar Atual - Extrema Direita */}
         <button
           onClick={savedDashboardActions.promptAndSave}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors duration-200"
+          className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors duration-200 border border-gray-600"
           title="Salvar dashboard atual"
         >
           <span className="text-base">💾</span>
