@@ -20,7 +20,6 @@ export default function Page() {
       id: 'nexus-chat',
       onFinish: ({ message }) => {
         console.log('NEXUS terminou:', message);
-        // Adicionar resposta da IA ao array unificado
         setAllMessages(prev => [...prev, { ...message, agent: 'nexus' }]);
       },
     }),
@@ -29,7 +28,6 @@ export default function Page() {
       id: 'teste-chat',
       onFinish: ({ message }) => {
         console.log('TESTE terminou:', message);
-        // Adicionar resposta da IA ao array unificado
         setAllMessages(prev => [...prev, { ...message, agent: 'teste' }]);
       },
     }),
@@ -38,8 +36,47 @@ export default function Page() {
       id: 'meta-analyst-chat',
       onFinish: ({ message }) => {
         console.log('METAANALYST terminou:', message);
-        // Adicionar resposta da IA ao array unificado
         setAllMessages(prev => [...prev, { ...message, agent: 'metaAnalyst' }]);
+      },
+    }),
+    amazonAdsAnalyst: useChat({
+      transport: new DefaultChatTransport({ api: '/api/agents/amazon-ads-analyst' }),
+      id: 'amazon-ads-analyst-chat',
+      onFinish: ({ message }) => {
+        console.log('AMAZON ADS ANALYST terminou:', message);
+        setAllMessages(prev => [...prev, { ...message, agent: 'amazonAdsAnalyst' }]);
+      },
+    }),
+    googleAnalyticsAnalyst: useChat({
+      transport: new DefaultChatTransport({ api: '/api/agents/google-analytics-analyst' }),
+      id: 'google-analytics-analyst-chat',
+      onFinish: ({ message }) => {
+        console.log('GOOGLE ANALYTICS ANALYST terminou:', message);
+        setAllMessages(prev => [...prev, { ...message, agent: 'googleAnalyticsAnalyst' }]);
+      },
+    }),
+    shopifyAnalyst: useChat({
+      transport: new DefaultChatTransport({ api: '/api/agents/shopify-analyst' }),
+      id: 'shopify-analyst-chat',
+      onFinish: ({ message }) => {
+        console.log('SHOPIFY ANALYST terminou:', message);
+        setAllMessages(prev => [...prev, { ...message, agent: 'shopifyAnalyst' }]);
+      },
+    }),
+    contaAzulAnalyst: useChat({
+      transport: new DefaultChatTransport({ api: '/api/agents/conta-azul-analyst' }),
+      id: 'conta-azul-analyst-chat',
+      onFinish: ({ message }) => {
+        console.log('CONTA AZUL ANALYST terminou:', message);
+        setAllMessages(prev => [...prev, { ...message, agent: 'contaAzulAnalyst' }]);
+      },
+    }),
+    shopeeAnalyst: useChat({
+      transport: new DefaultChatTransport({ api: '/api/agents/shopee-analyst' }),
+      id: 'shopee-analyst-chat',
+      onFinish: ({ message }) => {
+        console.log('SHOPEE ANALYST terminou:', message);
+        setAllMessages(prev => [...prev, { ...message, agent: 'shopeeAnalyst' }]);
       },
     }),
   };

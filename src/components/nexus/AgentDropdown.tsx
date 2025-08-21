@@ -12,6 +12,11 @@ const agents = [
   { id: 'nexus', name: 'Nexus', icon: 'N', color: 'text-blue-600' },
   { id: 'teste', name: 'Teste', icon: 'T', color: 'text-green-600' },
   { id: 'metaAnalyst', name: 'MetaAnalyst', icon: 'M', color: 'text-purple-600' },
+  { id: 'amazonAdsAnalyst', name: 'AmazonAdsAnalyst', icon: 'A', color: 'text-orange-600' },
+  { id: 'googleAnalyticsAnalyst', name: 'GoogleAnalyticsAnalyst', icon: 'G', color: 'text-blue-500' },
+  { id: 'shopifyAnalyst', name: 'ShopifyAnalyst', icon: 'S', color: 'text-green-500' },
+  { id: 'contaAzulAnalyst', name: 'ContaAzulAnalyst', icon: 'C', color: 'text-indigo-600' },
+  { id: 'shopeeAnalyst', name: 'ShopeeAnalyst', icon: 'H', color: 'text-red-600' },
 ];
 
 // Dropdown elegante que aparece quando o usuário digita "/" no input

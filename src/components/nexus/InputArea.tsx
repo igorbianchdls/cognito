@@ -29,6 +29,11 @@ const models = [
   { id: 'nexus', name: 'Nexus' },
   { id: 'teste', name: 'Teste' },
   { id: 'metaAnalyst', name: 'MetaAnalyst' },
+  { id: 'amazonAdsAnalyst', name: 'AmazonAdsAnalyst' },
+  { id: 'googleAnalyticsAnalyst', name: 'GoogleAnalyticsAnalyst' },
+  { id: 'shopifyAnalyst', name: 'ShopifyAnalyst' },
+  { id: 'contaAzulAnalyst', name: 'ContaAzulAnalyst' },
+  { id: 'shopeeAnalyst', name: 'ShopeeAnalyst' },
 ];
 
 export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange }: InputAreaProps) {
@@ -62,9 +67,20 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
           currentAgent={selectedAgent}
           onAgentSelect={(agentId) => {
             // Mapear ID do agente para nome legível
-            const agentName = agentId === 'nexus' ? 'Nexus' : 
-                             agentId === 'teste' ? 'Teste' : 
-                             agentId === 'metaAnalyst' ? 'MetaAnalyst' : agentId;
+            const getAgentName = (id: string) => {
+              switch (id) {
+                case 'nexus': return 'Nexus';
+                case 'teste': return 'Teste';
+                case 'metaAnalyst': return 'MetaAnalyst';
+                case 'amazonAdsAnalyst': return 'AmazonAdsAnalyst';
+                case 'googleAnalyticsAnalyst': return 'GoogleAnalyticsAnalyst';
+                case 'shopifyAnalyst': return 'ShopifyAnalyst';
+                case 'contaAzulAnalyst': return 'ContaAzulAnalyst';
+                case 'shopeeAnalyst': return 'ShopeeAnalyst';
+                default: return id;
+              }
+            };
+            const agentName = getAgentName(agentId);
             
             // Substituir o "/" pela tag do agente na posição exata onde foi digitado
             const beforeSlash = input.slice(0, slashPosition); // Texto antes do "/"

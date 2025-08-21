@@ -392,6 +392,16 @@ const getAgentInfo = (agent: string) => {
       return { initial: 'T', title: 'Teste AI', color: 'bg-green-500' };
     case 'metaAnalyst':
       return { initial: 'M', title: 'MetaAnalyst AI', color: 'bg-purple-500' };
+    case 'amazonAdsAnalyst':
+      return { initial: 'A', title: 'AmazonAds AI', color: 'bg-orange-500' };
+    case 'googleAnalyticsAnalyst':
+      return { initial: 'G', title: 'GoogleAnalytics AI', color: 'bg-blue-400' };
+    case 'shopifyAnalyst':
+      return { initial: 'S', title: 'Shopify AI', color: 'bg-green-400' };
+    case 'contaAzulAnalyst':
+      return { initial: 'C', title: 'ContaAzul AI', color: 'bg-indigo-500' };
+    case 'shopeeAnalyst':
+      return { initial: 'H', title: 'Shopee AI', color: 'bg-red-500' };
     default:
       return { initial: 'A', title: 'AI Assistant', color: 'bg-gray-500' };
   }
