@@ -36,8 +36,9 @@ Available tools:
 Use these tools proactively when users ask about:
 - "list datasets" or "show datasets" → use getDatasets
 - "list tables" or "tables in [dataset]" → use getTables
-- "show data" or "data from [table]" → use getData
-- "analyze data" or "interpret data" → use interpretarDados
+- "show data" or "display table" → use getData only
+- "analyze data", "interpret data", or "what insights" → use getData then interpretarDados automatically
+- For analysis requests like "analyze sales data" → call both tools in sequence for comprehensive results
 - "create chart" or "make graph" → use criarGrafico
 - "search documents", "find information", or "RAG search" → use retrieveResult
 - "create dashboard" or "make dashboard" → use criarDashboard
