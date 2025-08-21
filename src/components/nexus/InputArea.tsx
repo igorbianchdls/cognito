@@ -28,6 +28,7 @@ interface InputAreaProps {
 const models = [
   { id: 'nexus', name: 'Nexus' },
   { id: 'teste', name: 'Teste' },
+  { id: 'metaAnalyst', name: 'MetaAnalyst' },
 ];
 
 export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange }: InputAreaProps) {
@@ -61,7 +62,9 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
           currentAgent={selectedAgent}
           onAgentSelect={(agentId) => {
             // Mapear ID do agente para nome legível
-            const agentName = agentId === 'nexus' ? 'Nexus' : 'Teste';
+            const agentName = agentId === 'nexus' ? 'Nexus' : 
+                             agentId === 'teste' ? 'Teste' : 
+                             agentId === 'metaAnalyst' ? 'MetaAnalyst' : agentId;
             
             // Substituir o "/" pela tag do agente na posição exata onde foi digitado
             const beforeSlash = input.slice(0, slashPosition); // Texto antes do "/"

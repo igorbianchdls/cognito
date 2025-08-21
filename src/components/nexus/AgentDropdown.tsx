@@ -11,6 +11,7 @@ interface AgentDropdownProps {
 const agents = [
   { id: 'nexus', name: 'Nexus', icon: 'N', color: 'text-blue-600' },
   { id: 'teste', name: 'Teste', icon: 'T', color: 'text-green-600' },
+  { id: 'metaAnalyst', name: 'MetaAnalyst', icon: 'M', color: 'text-purple-600' },
 ];
 
 // Dropdown elegante que aparece quando o usuário digita "/" no input

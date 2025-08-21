@@ -390,6 +390,8 @@ const getAgentInfo = (agent: string) => {
       return { initial: 'N', title: 'Nexus AI', color: 'bg-blue-500' };
     case 'teste':
       return { initial: 'T', title: 'Teste AI', color: 'bg-green-500' };
+    case 'metaAnalyst':
+      return { initial: 'M', title: 'MetaAnalyst AI', color: 'bg-purple-500' };
     default:
       return { initial: 'A', title: 'AI Assistant', color: 'bg-gray-500' };
   }

@@ -33,10 +33,19 @@ export default function Page() {
         setAllMessages(prev => [...prev, { ...message, agent: 'teste' }]);
       },
     }),
+    metaAnalyst: useChat({
+      transport: new DefaultChatTransport({ api: '/api/agents/meta-analyst' }),
+      id: 'meta-analyst-chat',
+      onFinish: ({ message }) => {
+        console.log('METAANALYST terminou:', message);
+        // Adicionar resposta da IA ao array unificado
+        setAllMessages(prev => [...prev, { ...message, agent: 'metaAnalyst' }]);
+      },
+    }),
   };
 
   // Escolhe qual hook vai enviar a próxima mensagem
-  const { sendMessage, status } = chats[selectedAgent === 'nexus' ? 'nexus' : 'teste'];
+  const { sendMessage, status } = chats[selectedAgent] || chats.nexus;
 
   // Usar array unificado que já está em ordem cronológica
   const displayedMessages = allMessages;
