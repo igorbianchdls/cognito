@@ -37,7 +37,7 @@ export default function DraggableWidget({ widget }: DraggableWidgetProps) {
       className={`group border rounded-lg p-4 transition-all duration-200 bg-[#111111] hover:shadow-sm cursor-grab ${
         isDragging 
           ? 'opacity-50 cursor-grabbing border-blue-300 shadow-sm' 
-          : 'border-gray-800 hover:border-gray-700'
+          : 'border-[#888888] hover:border-[#AAAAAA]'
       }`}
     >
       <div className="flex flex-col items-center text-center space-y-2">

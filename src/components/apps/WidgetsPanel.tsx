@@ -321,7 +321,7 @@ export default function WidgetsPanel({}: WidgetsPanelProps) {
           </div>
           <input
             type="text"
-            className="block w-full pl-10 pr-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-sm text-[#888888] placeholder-[#666666] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="block w-full pl-10 pr-3 py-2 bg-[#333333] border border-gray-700 rounded-lg text-sm text-[#888888] placeholder-[#666666] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -330,7 +330,7 @@ export default function WidgetsPanel({}: WidgetsPanelProps) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400">
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
         {Object.entries(widgetCategories).map(([categoryName, widgets]) => {
           const filteredWidgets = filterWidgets(widgets)
           if (filteredWidgets.length === 0) return null
