@@ -2,71 +2,224 @@ import { tool } from 'ai';
 import { z } from 'zod';
 
 export const interpretarDados = tool({
-  description: 'Analyze and interpret data from a BigQuery table with insights and recommendations',
+  description: 'Analyze data from executarSQL results. Copy the EXACT "data" array from executarSQL output to get real insights from your SQL query results.',
   inputSchema: z.object({
-    datasetId: z.string().describe('The dataset ID'),
-    tableId: z.string().describe('The table ID to analyze'),
+    tableData: z.array(z.record(z.unknown())).describe('PASTE the exact "data" array from executarSQL tool output here. Should be array of objects like [{col1: value1, col2: value2}, ...]. NEVER type manually - always copy from executarSQL results.'),
+    sqlQuery: z.string().describe('The SQL query that generated this data'),
     analysisType: z.enum(['trends', 'summary', 'insights', 'anomalies']).optional().describe('Type of analysis to perform')
   }),
-  execute: async ({ datasetId, tableId, analysisType = 'insights' }) => {
-    // Mock analysis based on table
-    const analysisResults: Record<string, Record<string, unknown>> = {
-      'customers': {
-        summary: {
-          totalRecords: 150000,
-          avgAge: 34.2,
-          topCities: ['São Paulo', 'Rio de Janeiro', 'Belo Horizonte'],
-          signupTrend: 'Growing 15% monthly'
-        },
-        insights: [
-          'Customer base is primarily young adults (25-35 years)',
-          'Strong concentration in major Brazilian cities',
-          'Consistent growth in customer acquisition',
-          'Higher engagement in metropolitan areas'
-        ],
-        recommendations: [
-          'Focus marketing on 25-35 demographic',
-          'Expand services in secondary cities',
-          'Implement referral programs for metropolitan users'
-        ]
-      },
-      'orders': {
-        summary: {
-          totalOrders: 500000,
-          avgOrderValue: 245.50,
-          conversionRate: 3.2,
-          topProducts: ['Electronics', 'Fashion', 'Home & Garden']
-        },
-        insights: [
-          'Average order value increased 20% in last quarter',
-          'Electronics category shows highest profit margins',
-          'Weekend orders have 40% higher values',
-          'Mobile purchases account for 65% of orders'
-        ],
-        recommendations: [
-          'Promote electronics during peak hours',
-          'Optimize mobile checkout experience',
-          'Create weekend promotional campaigns'
-        ]
-      }
-    };
-
-    const result = analysisResults[tableId] || {
-      summary: { message: 'Analysis completed for unknown table' },
-      insights: ['Data patterns identified', 'Statistical analysis performed'],
-      recommendations: ['Further analysis recommended']
-    };
-
-    return {
-      datasetId,
-      tableId,
+  execute: async ({ tableData, sqlQuery, analysisType = 'insights' }) => {
+    console.log('📈 interpretarDados tool executed with real data:', { 
+      dataLength: tableData?.length || 0, 
       analysisType,
-      analysis: result,
-      executionTime: Math.floor(Math.random() * 2000) + 500,
-      success: true
-    };
+      sqlQuery: sqlQuery.substring(0, 100) + '...'
+    });
+
+    try {
+      if (!tableData || !Array.isArray(tableData) || tableData.length === 0) {
+        return {
+          analysisText: `## Análise dos Resultados
+
+### ⚠️ Sem Dados para Analisar
+Não foram encontrados dados para análise. Verifique se a consulta SQL retornou resultados.
+
+**SQL Executada:** \`${sqlQuery}\``,
+          success: false,
+          error: 'No data available for analysis'
+        };
+      }
+
+      // Análise real dos dados
+      const analysis = analyzeRealData(tableData, sqlQuery, analysisType);
+      
+      return {
+        analysisText: analysis,
+        dataPointsAnalyzed: tableData.length,
+        analysisType,
+        sqlQuery,
+        success: true
+      };
+
+    } catch (error) {
+      console.error('❌ Error analyzing data:', error);
+      return {
+        analysisText: `## Erro na Análise
+
+Ocorreu um erro ao analisar os dados. Verifique se os dados estão no formato correto.
+
+**Erro:** ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        success: false,
+        error: error instanceof Error ? error.message : 'Analysis failed'
+      };
+    }
   },
 });
+
+function analyzeRealData(data: Record<string, unknown>[], sqlQuery: string, analysisType: string): string {
+  const totalRows = data.length;
+  const columns = Object.keys(data[0] || {});
+  const numericColumns = columns.filter(col => 
+    data.some(row => typeof row[col] === 'number')
+  );
+  
+  // Análise básica dos dados
+  const stats: Record<string, any> = {};
+  numericColumns.forEach(col => {
+    const values = data.map(row => Number(row[col])).filter(v => !isNaN(v));
+    if (values.length > 0) {
+      stats[col] = {
+        min: Math.min(...values),
+        max: Math.max(...values),
+        avg: values.reduce((a, b) => a + b, 0) / values.length,
+        total: values.reduce((a, b) => a + b, 0)
+      };
+    }
+  });
+
+  // Encontrar top valores para colunas categóricas
+  const categoricalData: Record<string, Record<string, number>> = {};
+  columns.forEach(col => {
+    if (!numericColumns.includes(col)) {
+      const counts: Record<string, number> = {};
+      data.forEach(row => {
+        const val = String(row[col] || 'NULL');
+        counts[val] = (counts[val] || 0) + 1;
+      });
+      categoricalData[col] = counts;
+    }
+  });
+
+  // Gerar insights baseados nos dados reais
+  const insights: string[] = [];
+  const recommendations: string[] = [];
+
+  // Insights sobre volume de dados
+  if (totalRows > 1000) {
+    insights.push(`Dataset robusto com ${totalRows.toLocaleString()} registros analisados`);
+  } else if (totalRows > 100) {
+    insights.push(`Dataset de tamanho médio com ${totalRows} registros`);
+  } else {
+    insights.push(`Dataset pequeno com ${totalRows} registros - considere expandir a análise`);
+  }
+
+  // Insights sobre colunas numéricas
+  Object.entries(stats).forEach(([col, stat]) => {
+    const range = stat.max - stat.min;
+    const coefficient = range / stat.avg;
+    
+    if (coefficient > 10) {
+      insights.push(`**${col}** apresenta alta variabilidade (${stat.min.toLocaleString()} - ${stat.max.toLocaleString()})`);
+    }
+    
+    if (stat.avg > stat.max * 0.8) {
+      insights.push(`**${col}** tem valores concentrados no topo da faixa`);
+    }
+  });
+
+  // Insights sobre distribuição categórica
+  Object.entries(categoricalData).forEach(([col, counts]) => {
+    const entries = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    if (entries.length > 0) {
+      const topValue = entries[0];
+      const percentage = (topValue[1] / totalRows) * 100;
+      
+      if (percentage > 50) {
+        insights.push(`**${col}** dominado por "${topValue[0]}" (${percentage.toFixed(1)}% dos registros)`);
+      }
+      
+      if (entries.length > 10) {
+        insights.push(`**${col}** possui alta diversidade com ${entries.length} valores únicos`);
+      }
+    }
+  });
+
+  // Recomendações baseadas na análise
+  if (numericColumns.length > 1) {
+    recommendations.push('Considere análise de correlação entre as variáveis numéricas');
+  }
+  
+  if (totalRows > 10000) {
+    recommendations.push('Dataset grande - considere usar agregações para análises mais eficientes');
+  }
+  
+  Object.entries(categoricalData).forEach(([col, counts]) => {
+    const uniqueCount = Object.keys(counts).length;
+    if (uniqueCount > totalRows * 0.8) {
+      recommendations.push(`**${col}** tem muitos valores únicos - considere agrupamento ou categorização`);
+    }
+  });
+
+  // Montar markdown final
+  let markdown = `## Análise dos Resultados SQL
+
+### 📊 Resumo Executivo
+- **Total de registros:** ${totalRows.toLocaleString()}
+- **Colunas analisadas:** ${columns.length} (${numericColumns.length} numéricas, ${columns.length - numericColumns.length} categóricas)
+- **Consulta:** \`${sqlQuery.length > 100 ? sqlQuery.substring(0, 97) + '...' : sqlQuery}\`
+
+`;
+
+  // Estatísticas numéricas
+  if (Object.keys(stats).length > 0) {
+    markdown += `### 🔢 Estatísticas Numéricas
+`;
+    Object.entries(stats).forEach(([col, stat]) => {
+      markdown += `**${col}:**
+- Mínimo: ${stat.min.toLocaleString()}
+- Máximo: ${stat.max.toLocaleString()}  
+- Média: ${stat.avg.toLocaleString('pt-BR', {maximumFractionDigits: 2})}
+- Total: ${stat.total.toLocaleString()}
+
+`;
+    });
+  }
+
+  // Top valores categóricos
+  const topCategorical = Object.entries(categoricalData)
+    .filter(([col, counts]) => Object.keys(counts).length <= 10)
+    .slice(0, 2);
+    
+  if (topCategorical.length > 0) {
+    markdown += `### 📈 Distribuição por Categoria
+`;
+    topCategorical.forEach(([col, counts]) => {
+      const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+      markdown += `**${col}:**
+`;
+      sorted.forEach(([val, count]) => {
+        const pct = ((count / totalRows) * 100).toFixed(1);
+        markdown += `- ${val}: ${count} (${pct}%)
+`;
+      });
+      markdown += `
+`;
+    });
+  }
+
+  // Insights
+  if (insights.length > 0) {
+    markdown += `### 💡 Insights Principais
+`;
+    insights.forEach((insight, index) => {
+      markdown += `${index + 1}. ${insight}
+`;
+    });
+    markdown += `
+`;
+  }
+
+  // Recomendações
+  if (recommendations.length > 0) {
+    markdown += `### 🎯 Recomendações
+`;
+    recommendations.forEach((rec, index) => {
+      markdown += `${index + 1}. ${rec}
+`;
+    });
+  }
+
+  return markdown;
+}
 
 export const criarGrafico = tool({
   description: 'Create data visualizations and charts from getData results. CRITICAL INSTRUCTIONS: 1) You MUST first use getData tool to get table data, 2) Copy the EXACT "data" array from getData output, 3) Paste it as tableData parameter - DO NOT make new queries or type data manually',
