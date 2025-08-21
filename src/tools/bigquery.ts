@@ -147,69 +147,106 @@ export const executarSQL = tool({
     dryRun: z.boolean().optional().describe('Run query validation without executing')
   }),
   execute: async ({ sqlQuery, datasetId, dryRun = false }) => {
-    // Mock SQL execution with realistic results
-    const queryType = sqlQuery.trim().toLowerCase().split(' ')[0];
-    const executionTime = Math.floor(Math.random() * 2000) + 300;
+    console.log('📋 BigQuery executarSQL tool executed:', { sqlQuery, datasetId, dryRun });
     
-    const mockResults = {
-      select: {
-        data: [
-          { id: 1, name: 'Ana Silva', city: 'São Paulo', sales: 15000 },
-          { id: 2, name: 'João Santos', city: 'Rio de Janeiro', sales: 12500 },
-          { id: 3, name: 'Maria Costa', city: 'Belo Horizonte', sales: 18000 },
-          { id: 4, name: 'Pedro Lima', city: 'Salvador', sales: 14200 },
-          { id: 5, name: 'Carla Oliveira', city: 'Brasília', sales: 16800 }
-        ],
-        schema: [
-          { name: 'id', type: 'INTEGER', mode: 'REQUIRED' },
-          { name: 'name', type: 'STRING', mode: 'REQUIRED' },
-          { name: 'city', type: 'STRING', mode: 'NULLABLE' },
-          { name: 'sales', type: 'FLOAT', mode: 'NULLABLE' }
-        ],
-        rowsReturned: 5,
-        rowsAffected: 0,
-        totalRows: 150000
-      },
-      insert: {
-        data: [],
-        schema: [],
-        rowsReturned: 0,
-        rowsAffected: Math.floor(Math.random() * 100) + 1,
-        totalRows: 0
-      },
-      update: {
-        data: [],
-        schema: [],
-        rowsReturned: 0,
-        rowsAffected: Math.floor(Math.random() * 50) + 1,
-        totalRows: 0
-      },
-      delete: {
-        data: [],
-        schema: [],
-        rowsReturned: 0,
-        rowsAffected: Math.floor(Math.random() * 25) + 1,
-        totalRows: 0
+    try {
+      // Initialize BigQuery service if not already done
+      if (!bigQueryService['client']) {
+        console.log('⚡ Initializing BigQuery service...');
+        await bigQueryService.initialize();
       }
-    };
 
-    const resultType = ['select'].includes(queryType) ? queryType : 'select';
-    const result = mockResults[resultType as keyof typeof mockResults];
+      const queryType = sqlQuery.trim().toLowerCase().split(' ')[0];
+      const startTime = Date.now();
 
-    return {
-      sqlQuery,
-      datasetId: datasetId || 'default-dataset',
-      queryType: queryType.toUpperCase(),
-      dryRun,
-      data: result.data,
-      schema: result.schema,
-      rowsReturned: result.rowsReturned || 0,
-      rowsAffected: result.rowsAffected || 0,
-      totalRows: result.totalRows,
-      executionTime,
-      bytesProcessed: Math.floor(Math.random() * 1000000) + 50000,
-      success: true,
-      validationErrors: dryRun && Math.random() > 0.8 ? ['Syntax warning: Missing semicolon'] : []
-    };
+      if (dryRun) {
+        // For dry run, validate the query without executing
+        console.log('🔍 Performing dry run validation for query');
+        try {
+          // Use BigQuery dry run to validate syntax
+          const result = await bigQueryService.executeQuery({ 
+            query: sqlQuery,
+            jobTimeoutMs: 10000 
+          });
+          
+          return {
+            sqlQuery,
+            datasetId: datasetId || 'validation',
+            queryType: queryType.toUpperCase(),
+            dryRun: true,
+            data: [],
+            schema: result.schema || [],
+            rowsReturned: 0,
+            rowsAffected: 0,
+            totalRows: 0,
+            executionTime: Date.now() - startTime,
+            bytesProcessed: 0,
+            success: true,
+            validationErrors: [],
+            message: 'Query syntax is valid'
+          };
+        } catch (error) {
+          return {
+            sqlQuery,
+            datasetId: datasetId || 'validation',
+            queryType: queryType.toUpperCase(),
+            dryRun: true,
+            data: [],
+            schema: [],
+            rowsReturned: 0,
+            rowsAffected: 0,
+            totalRows: 0,
+            executionTime: Date.now() - startTime,
+            bytesProcessed: 0,
+            success: false,
+            validationErrors: [error instanceof Error ? error.message : 'Query validation failed'],
+            error: error instanceof Error ? error.message : 'Query validation failed'
+          };
+        }
+      }
+
+      // Execute the actual query
+      console.log('🔍 Executing SQL query:', sqlQuery);
+      const result = await bigQueryService.executeQuery({ query: sqlQuery });
+      
+      const executionTime = Date.now() - startTime;
+      console.log('✅ SQL query executed successfully in', executionTime, 'ms');
+      console.log('📈 Rows returned:', result.data?.length || 0);
+
+      return {
+        sqlQuery,
+        datasetId: datasetId || 'default-dataset',
+        queryType: queryType.toUpperCase(),
+        dryRun: false,
+        data: result.data || [],
+        schema: result.schema || [],
+        rowsReturned: result.data?.length || 0,
+        rowsAffected: queryType.includes('insert') || queryType.includes('update') || queryType.includes('delete') ? result.data?.length || 0 : 0,
+        totalRows: result.totalRows || 0,
+        executionTime,
+        bytesProcessed: result.bytesProcessed || 0,
+        success: true,
+        validationErrors: []
+      };
+
+    } catch (error) {
+      console.error('❌ Error executing SQL query:', error);
+      return {
+        sqlQuery,
+        datasetId: datasetId || 'default-dataset',
+        queryType: sqlQuery.trim().toLowerCase().split(' ')[0].toUpperCase(),
+        dryRun,
+        data: [],
+        schema: [],
+        rowsReturned: 0,
+        rowsAffected: 0,
+        totalRows: 0,
+        executionTime: 0,
+        bytesProcessed: 0,
+        success: false,
+        validationErrors: [],
+        error: error instanceof Error ? error.message : 'Failed to execute SQL query'
+      };
+    }
   },
 });

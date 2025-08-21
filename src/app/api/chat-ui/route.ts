@@ -22,7 +22,12 @@ Available tools:
 - criarGrafico: Create visualizations and charts (supports: bar, line, pie, scatter, area, heatmap, radar, funnel, treemap, stream)
 - retrieveResult: Search documents using RAG (requires query parameter) - retrieves relevant documents from vector database with real semantic search
 - criarDashboard: Create interactive dashboards with KPIs (requires datasetIds, title, dashboardType)
-- executarSQL: Execute custom SQL queries with validation (requires sqlQuery, optional datasetId, dryRun)
+- executarSQL: Execute custom SQL queries on BigQuery with real data
+  * Use fully qualified table names: `project.dataset.table`
+  * Examples: "SELECT * FROM `project.sales.orders` LIMIT 100"
+  * Complex queries: "SELECT city, COUNT(*) FROM `project.users.customers` GROUP BY city ORDER BY COUNT(*) DESC"
+  * Use dryRun=true to validate SQL syntax before execution
+  * Supports SELECT, INSERT, UPDATE, DELETE, aggregations, JOINs, CTEs
 - criarTabela: Create new BigQuery tables with custom schema (requires datasetId, tableName, schema)
 - criarKPI: Create Key Performance Indicator metrics (requires name, datasetId, tableId, metric, calculation)
 - webPreview: Generate web preview of a URL with iframe and navigation (requires url)
@@ -36,7 +41,7 @@ Use these tools proactively when users ask about:
 - "create chart" or "make graph" → use criarGrafico
 - "search documents", "find information", or "RAG search" → use retrieveResult
 - "create dashboard" or "make dashboard" → use criarDashboard
-- "run SQL" or "execute query" → use executarSQL
+- "run SQL", "execute query", or custom data analysis → use executarSQL with full SQL queries
 - "create table" or "new table" → use criarTabela
 - "create KPI" or "add metric" → use criarKPI
 - "preview website", "show website", or "web preview" → use webPreview
