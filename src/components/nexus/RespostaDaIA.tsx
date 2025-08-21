@@ -406,8 +406,6 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
     role: message.role,
     selectedAgent,
     messageKeys: Object.keys(message),
-    messageId: message.id,
-    chatId: message.chatId,
     fullMessage: message
   });
   
