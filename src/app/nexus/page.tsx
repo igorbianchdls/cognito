@@ -20,6 +20,8 @@ export default function Page() {
       id: 'nexus-chat',
       onFinish: ({ message }) => {
         console.log('NEXUS terminou:', message);
+        // Adicionar timestamp para ordenação cronológica
+        (message as UIMessage & { timestamp?: number }).timestamp = Date.now();
       },
     }),
     teste: useChat({
@@ -27,6 +29,8 @@ export default function Page() {
       id: 'teste-chat',
       onFinish: ({ message }) => {
         console.log('TESTE terminou:', message);
+        // Adicionar timestamp para ordenação cronológica
+        (message as UIMessage & { timestamp?: number }).timestamp = Date.now();
       },
     }),
   };
@@ -34,14 +38,20 @@ export default function Page() {
   // Escolhe qual hook vai enviar a próxima mensagem
   const { sendMessage, status } = chats[selectedAgent === 'nexus' ? 'nexus' : 'teste'];
 
-  // Combina mensagens em ordem natural (última mensagem por último)
+  // Combina mensagens em ordem cronológica (última mensagem por último)
   const displayedMessages: UIMessage[] = Object.keys(chats)
     .flatMap(key => 
       chats[key as keyof typeof chats].messages.map(msg => ({
         ...msg,           // preserva todas propriedades originais
         agent: key        // adiciona agent baseado no chat (nexus/teste)
       }))
-    );
+    )
+    .sort((a, b) => {
+      // Ordena por timestamp (cronológico)
+      const timestampA = (a as UIMessage & { timestamp?: number }).timestamp || 0;
+      const timestampB = (b as UIMessage & { timestamp?: number }).timestamp || 0;
+      return timestampA - timestampB;
+    });
 
   const [input, setInput] = useState('');
   
