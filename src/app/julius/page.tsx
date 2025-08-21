@@ -1,11 +1,14 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
+import { useState } from 'react';
 
 export default function JuliusPage() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+  const { messages, append, isLoading } = useChat({
     api: '/api/julius-chat',
   });
+  
+  const [input, setInput] = useState('');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 p-8">
@@ -30,10 +33,16 @@ export default function JuliusPage() {
           ))}
         </div>
 
-        <form onSubmit={handleSubmit} className="flex gap-2">
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          if (input.trim()) {
+            append({ role: 'user', content: input });
+            setInput('');
+          }
+        }} className="flex gap-2">
           <input
             value={input}
-            onChange={handleInputChange}
+            onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
             className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={isLoading}
