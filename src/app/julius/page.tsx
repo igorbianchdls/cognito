@@ -49,14 +49,14 @@ export default function JuliusPage() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
             className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={status === 'loading'}
+            disabled={status === 'streaming' || status === 'submitted'}
           />
           <button
             type="submit"
-            disabled={status === 'loading' || !input.trim()}
+            disabled={status === 'streaming' || status === 'submitted' || !input.trim()}
             className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {status === 'loading' ? 'Sending...' : 'Send'}
+            {status === 'streaming' || status === 'submitted' ? 'Sending...' : 'Send'}
           </button>
         </form>
       </div>
