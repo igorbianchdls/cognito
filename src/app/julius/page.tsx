@@ -1,11 +1,16 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
+import { useState, FormEvent } from 'react';
 
 export default function JuliusPage() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: '/api/julius-chat',
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({ api: '/api/julius-chat' }),
+    id: 'julius-chat',
   });
+  
+  const [input, setInput] = useState('');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 p-8">
@@ -24,26 +29,33 @@ export default function JuliusPage() {
                   ? 'bg-blue-500 text-white' 
                   : 'bg-gray-100 text-gray-800'
               }`}>
-                {message.content}
+                {message.text}
               </div>
             </div>
           ))}
         </div>
 
-        <form onSubmit={handleSubmit} className="flex gap-2">
+        <form onSubmit={(e: FormEvent) => {
+          e.preventDefault();
+          if (input.trim()) {
+            console.log('📤 [Julius] Enviando mensagem:', input);
+            sendMessage({ text: input });
+            setInput('');
+          }
+        }} className="flex gap-2">
           <input
             value={input}
-            onChange={handleInputChange}
+            onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
             className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={isLoading}
+            disabled={status === 'loading'}
           />
           <button
             type="submit"
-            disabled={isLoading || !input.trim()}
+            disabled={status === 'loading' || !input.trim()}
             className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Sending...' : 'Send'}
+            {status === 'loading' ? 'Sending...' : 'Send'}
           </button>
         </form>
       </div>
