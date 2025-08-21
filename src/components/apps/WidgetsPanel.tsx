@@ -330,7 +330,7 @@ export default function WidgetsPanel({}: WidgetsPanelProps) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400">
         {Object.entries(widgetCategories).map(([categoryName, widgets]) => {
           const filteredWidgets = filterWidgets(widgets)
           if (filteredWidgets.length === 0) return null
