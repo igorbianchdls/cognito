@@ -1,11 +1,13 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
+import { DefaultChatTransport } from 'ai';
 import { useState } from 'react';
 
 export default function JuliusPage() {
   const { messages, sendMessage, status } = useChat({
-    api: '/api/julius-chat',
+    transport: new DefaultChatTransport({ api: '/api/julius-chat' }),
+    id: 'julius-chat',
   });
   
   const [input, setInput] = useState('');
