@@ -37,7 +37,7 @@ export default function ChatContainer({
             Analise, visualize e obtenha insights dos seus dados com IA
           </p>
         </div>
-        <div className="w-full max-w-2xl">
+        <div className="w-full">
           <InputArea 
             input={input}
             setInput={setInput}
