@@ -19,18 +19,22 @@ export default function Page() {
       transport: new DefaultChatTransport({ api: '/api/chat-ui' }),
       id: 'nexus-chat',
       onFinish: ({ message }) => {
-        console.log('NEXUS terminou:', message);
+        console.log('🔵 [NEXUS AI] Mensagem antes timestamp:', message);
         // Adicionar timestamp para ordenação cronológica
-        (message as UIMessage & { timestamp?: number }).timestamp = Date.now();
+        const timestamp = Date.now();
+        (message as UIMessage & { timestamp?: number }).timestamp = timestamp;
+        console.log('🔵 [NEXUS AI] Timestamp adicionado:', timestamp, message);
       },
     }),
     teste: useChat({
       transport: new DefaultChatTransport({ api: '/api/teste' }),
       id: 'teste-chat',
       onFinish: ({ message }) => {
-        console.log('TESTE terminou:', message);
+        console.log('🟢 [TESTE AI] Mensagem antes timestamp:', message);
         // Adicionar timestamp para ordenação cronológica
-        (message as UIMessage & { timestamp?: number }).timestamp = Date.now();
+        const timestamp = Date.now();
+        (message as UIMessage & { timestamp?: number }).timestamp = timestamp;
+        console.log('🟢 [TESTE AI] Timestamp adicionado:', timestamp, message);
       },
     }),
   };
@@ -50,6 +54,11 @@ export default function Page() {
       // Ordena por timestamp (cronológico)
       const timestampA = (a as UIMessage & { timestamp?: number }).timestamp || 0;
       const timestampB = (b as UIMessage & { timestamp?: number }).timestamp || 0;
+      console.log('🔄 [SORT] Comparando:', {
+        msgA: { id: a.id, role: a.role, timestamp: timestampA },
+        msgB: { id: b.id, role: b.role, timestamp: timestampB },
+        result: timestampA - timestampB
+      });
       return timestampA - timestampB;
     });
 
@@ -89,6 +98,7 @@ export default function Page() {
         text: input, 
         timestamp: Date.now() 
       };
+      console.log('📤 [USER] Enviando mensagem com timestamp:', messageWithTimestamp);
       sendMessage(messageWithTimestamp);
       
       setInput('');
