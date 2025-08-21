@@ -29,7 +29,7 @@ export default function JuliusPage() {
                   ? 'bg-blue-500 text-white' 
                   : 'bg-gray-100 text-gray-800'
               }`}>
-                {message.content}
+                {message.text}
               </div>
             </div>
           ))}
