@@ -45,7 +45,7 @@ export default function Page() {
   };
 
   // Escolhe qual hook vai enviar a próxima mensagem
-  const { sendMessage, status } = chats[selectedAgent] || chats.nexus;
+  const { sendMessage, status } = chats[selectedAgent as keyof typeof chats] || chats.nexus;
 
   // Usar array unificado que já está em ordem cronológica
   const displayedMessages = allMessages;
