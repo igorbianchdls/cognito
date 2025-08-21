@@ -57,7 +57,7 @@ export default function ChatContainer({
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         <MessageList messages={messages} />
       </div>
-      <div className="sticky bottom-0 bg-white">
+      <div className="sticky bottom-0 bg-white pb-4">
         <InputArea 
           input={input}
           setInput={setInput}

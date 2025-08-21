@@ -87,7 +87,7 @@ export default function Page() {
   };
 
   return (
-    <div style={{ marginLeft: '25%', marginRight: '25%' }}>
+    <div style={{ marginLeft: '25%', marginRight: '25%', height: '100vh' }}>
       <ChatContainer
         messages={displayedMessages}
         input={input}

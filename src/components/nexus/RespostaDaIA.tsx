@@ -426,7 +426,7 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
             {agentInfo.initial}
           </AvatarFallback>
         </Avatar>
-        <h3 className="font-medium text-gray-900">{agentInfo.title}</h3>
+        <h3 className="font-bold text-gray-900">{agentInfo.title}</h3>
       </div>
       {message.parts.map((part, index) => {
         if (part.type === 'text') {
