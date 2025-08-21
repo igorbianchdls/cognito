@@ -191,7 +191,7 @@ export default function JuliusChat() {
       <Sidebar />
       
       {/* Main Chat Area */}
-      <div className="flex flex-col flex-1">
+      <div className="flex x flex-col flex-1">
 
         {/* Messages Area */}
         <div className="flex-1 overflow-y-auto">
