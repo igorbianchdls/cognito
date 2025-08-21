@@ -77,7 +77,7 @@ export default function TableConfigEditor({
               <label className="block text-xs font-medium text-gray-600 mb-2">Current Columns</label>
               <div className="space-y-2 max-h-48 overflow-y-auto">
                 {(tableConfig.columns || []).map((column) => (
-                  <div key={column.id} className="flex items-center gap-2 p-2 bg-gray-50 rounded">
+                  <div key={column.id} className="flex items-center gap-2 p-2 bg-[#333333] rounded">
                     <div className="flex-1">
                       <div className="text-sm font-medium">{column.header}</div>
                       <div className="text-xs text-gray-500">
@@ -156,7 +156,7 @@ export default function TableConfigEditor({
               <button
                 onClick={handleAddColumn}
                 disabled={!newColumn.id || !newColumn.header || !newColumn.accessorKey}
-                className="w-full px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="w-full px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed"
               >
                 Add Column
               </button>

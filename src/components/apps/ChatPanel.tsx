@@ -201,34 +201,6 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
 
   return (
     <div className="flex flex-col h-full overflow-y-auto bg-[#111111]">
-      {/* Custom Scrollbar Styles */}
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-track {
-            background: #f1f5f9;
-            border-radius: 4px;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-            transition: background-color 0.2s ease;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-          }
-          .custom-scrollbar::-webkit-scrollbar-thumb:active {
-            background: #64748b;
-          }
-          /* For Firefox */
-          .custom-scrollbar {
-            scrollbar-width: thin;
-            scrollbar-color: #cbd5e1 #f1f5f9;
-          }
-        `
-      }} />
       
       {/* Header */}
       <div className="p-4 border-b border-gray-800">

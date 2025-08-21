@@ -392,7 +392,7 @@ export default function WidgetEditorNew() {
       </div>
 
       {/* Widget List */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
         <div className="p-4">
           <h3 className="text-sm font-medium text-[#888888] mb-3">Widgets</h3>
           <div className="space-y-2 mb-6">
@@ -402,7 +402,7 @@ export default function WidgetEditorNew() {
               onClick={handleSelectCanvas}
               className={`p-3 rounded-lg border cursor-pointer transition-all ${
                 canvasSelected
-                  ? 'border-blue-500 bg-blue-50'
+                  ? 'border-blue-500 bg-blue-900'
                   : 'border-gray-800 hover:border-gray-700 bg-[#111111]'
               }`}
             >
@@ -427,7 +427,7 @@ export default function WidgetEditorNew() {
                 onClick={() => handleSelectWidget(widget.i)}
                 className={`p-3 rounded-lg border cursor-pointer transition-all ${
                   selectedWidgetId === widget.i
-                    ? 'border-blue-500 bg-blue-50'
+                    ? 'border-blue-500 bg-blue-900'
                     : 'border-gray-800 hover:border-gray-700 bg-[#111111]'
                 }`}
               >
@@ -454,7 +454,7 @@ export default function WidgetEditorNew() {
                 <h3 className="text-sm font-medium text-[#888888] mb-4">
                   🎨 Canvas Settings
                 </h3>
-                <div className="p-4 bg-gray-50 rounded-lg text-center">
+                <div className="p-4 bg-[#333333] rounded-lg text-center">
                   <p className="text-[#888888]">Canvas configuration will be here</p>
                   <p className="text-xs text-[#888888] mt-1">
                     Background: {canvasConfig.backgroundColor}
@@ -468,7 +468,7 @@ export default function WidgetEditorNew() {
                 </h3>
                 
                 {/* General Info */}
-                <div className="p-3 bg-gray-50 rounded-lg mb-4">
+                <div className="p-3 bg-[#333333] rounded-lg mb-4">
                   <p className="text-xs text-[#888888]">
                     Type: {selectedWidget.type} • Position: ({selectedWidget.x}, {selectedWidget.y}) • Size: {selectedWidget.w}×{selectedWidget.h}
                   </p>
@@ -526,7 +526,7 @@ export default function WidgetEditorNew() {
 
                 {/* Other widget types placeholder */}
                 {!isKPIWidget(selectedWidget) && !isImageWidget(selectedWidget) && !isTableWidget(selectedWidget) && !isChartWidget(selectedWidget) && !isNavigationWidget(selectedWidget) && (
-                  <div className="p-4 bg-gray-50 rounded-lg text-center">
+                  <div className="p-4 bg-[#333333] rounded-lg text-center">
                     <p className="text-[#888888]">Configuration for {selectedWidget.type} widgets will be here</p>
                   </div>
                 )}

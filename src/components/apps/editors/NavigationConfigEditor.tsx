@@ -42,7 +42,7 @@ export default function NavigationConfigEditor({
               onClick={() => onNavigationConfigChange('theme', theme.value)}
               className={`flex items-center gap-2 p-2 rounded-md border text-sm transition-all ${
                 navigationConfig.theme === theme.value
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  ? 'border-blue-500 bg-blue-900 text-blue-700'
                   : 'border-gray-200 hover:border-gray-300 text-gray-700'
               }`}
             >
@@ -150,7 +150,7 @@ export default function NavigationConfigEditor({
       </div>
 
       {/* Responsive Features */}
-      <div className="p-3 bg-blue-50 rounded-lg">
+      <div className="p-3 bg-blue-900 rounded-lg">
         <h4 className="text-sm font-medium text-blue-800 mb-2">🔄 Responsive Features</h4>
         <div className="text-xs text-blue-700 space-y-1">
           <div>• Auto-collapse on mobile screens (&lt; 768px)</div>
@@ -161,7 +161,7 @@ export default function NavigationConfigEditor({
       </div>
 
       {/* Current Theme Preview */}
-      <div className="p-3 bg-gray-50 rounded-lg">
+      <div className="p-3 bg-[#333333] rounded-lg">
         <h4 className="text-sm font-medium text-gray-700 mb-2">Preview</h4>
         <div className="text-xs text-gray-600 space-y-1">
           <div>Theme: <span className="font-medium">{navigationConfig.theme || 'default'}</span></div>

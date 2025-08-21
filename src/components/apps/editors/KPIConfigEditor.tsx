@@ -297,8 +297,8 @@ export default function KPIConfigEditor({
                   onClick={() => onKPIConfigChange('textAlign', align.value)}
                   className={`flex-1 px-3 py-2 text-xs border rounded-md transition-colors ${
                     (kpiConfig.textAlign || 'center') === align.value
-                      ? 'bg-blue-50 border-blue-300 text-blue-700'
-                      : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                      ? 'bg-blue-900 border-blue-300 text-blue-300'
+                      : 'bg-[#333333] border-gray-700 text-[#888888] hover:bg-gray-700'
                   }`}
                 >
                   <span className="mr-1">{align.icon}</span>
@@ -344,8 +344,8 @@ export default function KPIConfigEditor({
                     onClick={() => onKPIConfigChange('visualizationType', type.value)}
                     className={`px-2 py-2 text-xs border rounded-md transition-colors ${
                       (kpiConfig.visualizationType || 'card') === type.value
-                        ? 'bg-blue-50 border-blue-300 text-blue-700'
-                        : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50'
+                        ? 'bg-blue-900 border-blue-300 text-blue-300'
+                        : 'bg-[#333333] border-gray-700 text-[#888888] hover:bg-gray-700'
                     }`}
                   >
                     <span className="mr-1">{type.icon}</span>
