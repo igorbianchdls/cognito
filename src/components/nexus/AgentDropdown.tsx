@@ -61,11 +61,11 @@ export default function AgentDropdown({ currentAgent, onAgentSelect, onClose }: 
     }
   };
   return (
-    <div className="absolute bottom-full left-0 mb-2 z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-64">
+    <div className="absolute bottom-full left-0 mb-2 z-50 bg-white rounded-lg shadow-sm border border-gray-200/60 py-1 min-w-64">
       {/* Campo de busca */}
-      <div className="px-3 py-2 border-b border-gray-100">
+      <div className="px-3 py-2 border-b border-gray-100/60">
         <div className="relative">
-          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={14} />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={14} />
           <input
             ref={searchInputRef}
             type="text"
@@ -76,7 +76,7 @@ export default function AgentDropdown({ currentAgent, onAgentSelect, onClose }: 
               setSelectedIndex(0); // Reset seleção quando buscar
             }}
             onKeyDown={handleKeyDown}
-            className="w-full pl-8 pr-2 py-1 text-sm border border-gray-200 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="w-full pl-9 pr-3 py-2 text-base border-0 bg-transparent focus:outline-none placeholder:text-gray-400"
           />
         </div>
       </div>
@@ -91,21 +91,21 @@ export default function AgentDropdown({ currentAgent, onAgentSelect, onClose }: 
                 onAgentSelect(agent.id); // Notifica qual agente foi selecionado
                 onClose(); // Fecha o dropdown
               }}
-              className={`flex items-center gap-3 px-3 py-2 text-sm cursor-pointer transition-colors ${
+              className={`flex items-center gap-3 px-3 py-2 text-base cursor-pointer transition-colors ${
                 index === selectedIndex 
-                  ? 'bg-blue-50 text-blue-700' 
-                  : 'text-gray-700 hover:bg-gray-50'
+                  ? 'bg-gray-50/80 text-gray-900' 
+                  : 'text-gray-700 hover:bg-gray-50/50'
               }`}
             >
               {/* Avatar circular com inicial do agente */}
-              <div className={`w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs font-medium ${agent.color}`}>
+              <div className={`w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium ${agent.color}`}>
                 {agent.icon}
               </div>
               <span>{agent.name}</span>
             </div>
           ))
         ) : (
-          <div className="px-3 py-2 text-sm text-gray-500 text-center">
+          <div className="px-3 py-2 text-base text-gray-500 text-center">
             No agents found
           </div>
         )}
