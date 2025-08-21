@@ -17,12 +17,14 @@ interface MultiGridCanvasProps {
   widgets: DroppedWidgetType[]
   onLayoutChange: (layout: LayoutItem[]) => void
   onRemoveWidget: (widgetId: string) => void
+  onEditWidget?: (widgetId: string) => void
 }
 
 export default function MultiGridCanvas({ 
   widgets, 
   onLayoutChange, 
-  onRemoveWidget
+  onRemoveWidget,
+  onEditWidget
 }: MultiGridCanvasProps) {
   const selectedWidgetId = useStore($selectedWidgetId)
   const canvasConfig = useStore($canvasConfig)
@@ -146,6 +148,7 @@ export default function MultiGridCanvas({
               isSelected={selectedWidgetId === navigationWidget.i}
               onClick={() => handleWidgetClick(navigationWidget.i)}
               onRemove={() => handleRemoveWidget(navigationWidget.i)}
+              onEdit={onEditWidget ? () => onEditWidget(navigationWidget.i) : undefined}
             />
             
             {/* Selection indicator */}
@@ -201,6 +204,7 @@ export default function MultiGridCanvas({
                   isSelected={selectedWidgetId === widget.i}
                   onClick={() => handleWidgetClick(widget.i)}
                   onRemove={() => handleRemoveWidget(widget.i)}
+                  onEdit={onEditWidget ? () => onEditWidget(widget.i) : undefined}
                 />
                 
                 {/* Selection indicator */}

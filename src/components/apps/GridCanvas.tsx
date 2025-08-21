@@ -15,12 +15,14 @@ interface GridCanvasProps {
   widgets: DroppedWidgetType[]
   onLayoutChange: (layout: LayoutItem[]) => void
   onRemoveWidget: (widgetId: string) => void
+  onEditWidget?: (widgetId: string) => void
 }
 
 export default function GridCanvas({ 
   widgets, 
   onLayoutChange, 
-  onRemoveWidget
+  onRemoveWidget,
+  onEditWidget
 }: GridCanvasProps) {
   const selectedWidgetId = useStore($selectedWidgetId)
   const canvasConfig = useStore($canvasConfig)
@@ -208,6 +210,7 @@ export default function GridCanvas({
               <DroppedWidget 
                 widget={widget} 
                 onRemove={() => onRemoveWidget(widget.i)}
+                onEdit={onEditWidget ? () => onEditWidget(widget.i) : undefined}
                 isSelected={selectedWidgetId === widget.i}
               />
             </div>

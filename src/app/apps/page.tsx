@@ -73,6 +73,12 @@ export default function AppsPage() {
     widgetActions.editWidget(widgetId, changes)
   }, [])
 
+  const handleEditWidgetClick = useCallback((widgetId: string) => {
+    // Select the widget and switch to editor tab
+    widgetActions.selectWidget(widgetId)
+    setActiveTab('editor')
+  }, [])
+
   // Detect if Navigation Widget is present to switch between canvas modes
   const hasNavigationWidget = useMemo(() => {
     return droppedWidgets.some(widget => isNavigationWidget(widget))
@@ -112,12 +118,14 @@ export default function AppsPage() {
                 widgets={droppedWidgets}
                 onLayoutChange={handleLayoutChange}
                 onRemoveWidget={handleRemoveWidget}
+                onEditWidget={handleEditWidgetClick}
               />
             ) : (
               <GridCanvas 
                 widgets={droppedWidgets}
                 onLayoutChange={handleLayoutChange}
                 onRemoveWidget={handleRemoveWidget}
+                onEditWidget={handleEditWidgetClick}
               />
             )}
           </div>
