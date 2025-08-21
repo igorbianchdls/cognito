@@ -12,8 +12,9 @@ import {
   PromptInputTools,
 } from '@/components/ai-elements/prompt-input';
 import { GlobeIcon, MicIcon } from 'lucide-react';
-import { FormEvent } from 'react';
+import { FormEvent, useState } from 'react';
 import type { ChatStatus } from 'ai';
+import AgentDropdown from './AgentDropdown';
 
 interface InputAreaProps {
   input: string;
@@ -30,14 +31,40 @@ const models = [
 ];
 
 export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange }: InputAreaProps) {
+  const [showAgentDropdown, setShowAgentDropdown] = useState(false);
+  
   console.log('🎤 [InputArea] Agent via prop:', selectedAgent);
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setInput(value);
+    
+    // Detectar "/" para mostrar dropdown
+    if (value === '/') {
+      setShowAgentDropdown(true);
+    } else {
+      setShowAgentDropdown(false);
+    }
+  };
+
   return (
-    <PromptInput onSubmit={onSubmit} className="mt-4 border-gray-100">
-      <PromptInputTextarea
-        onChange={(e) => setInput(e.target.value)}
-        value={input}
-      />
+    <div className="relative">
+      {showAgentDropdown && (
+        <AgentDropdown
+          currentAgent={selectedAgent}
+          onAgentSelect={(agentId) => {
+            onAgentChange(agentId);
+            setInput(''); // Limpar input
+          }}
+          onClose={() => setShowAgentDropdown(false)}
+        />
+      )}
+      
+      <PromptInput onSubmit={onSubmit} className="mt-4 border-gray-100">
+        <PromptInputTextarea
+          onChange={handleInputChange}
+          value={input}
+        />
       <PromptInputToolbar>
         <PromptInputTools>
           <PromptInputButton>
@@ -69,5 +96,6 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
         <PromptInputSubmit disabled={!input} status={status as ChatStatus} />
       </PromptInputToolbar>
     </PromptInput>
+    </div>
   );
 }
