@@ -21,7 +21,7 @@ export default function AppsHeader({ activeTab, onTabChange, sidebarCollapsed, o
   ] as const
 
   return (
-    <div className="bg-[#111111] border-b border-gray-800 px-6 py-4">
+    <div className="bg-[#111111] border-b border-gray-800 px-6 py-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
         {/* Toggle Sidebar Button */}
@@ -38,7 +38,7 @@ export default function AppsHeader({ activeTab, onTabChange, sidebarCollapsed, o
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`flex items-center gap-2 px-4 py-0.5 rounded-lg text-base font-semibold transition-all duration-200 ${
+            className={`flex items-center gap-2 px-4 py-1 rounded-lg text-base font-semibold transition-all duration-200 ${
               activeTab === tab.id
                 ? 'bg-[#333333] text-white shadow-sm'
                 : 'text-[#888888] hover:text-[#AAAAAA] hover:bg-gray-800'
@@ -53,7 +53,7 @@ export default function AppsHeader({ activeTab, onTabChange, sidebarCollapsed, o
         {/* Botão Salvar Atual - Extrema Direita */}
         <button
           onClick={savedDashboardActions.promptAndSave}
-          className="flex items-center gap-2 px-4 py-0.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-base font-semibold transition-colors duration-200 border border-gray-600"
+          className="flex items-center gap-2 px-4 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-base font-semibold transition-colors duration-200 border border-gray-600"
           title="Salvar dashboard atual"
         >
           <Archive className="w-4 h-4" />
