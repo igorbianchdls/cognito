@@ -32,6 +32,7 @@ const models = [
 
 export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange }: InputAreaProps) {
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
+  const [slashPosition, setSlashPosition] = useState(-1);
   
   console.log('🎤 [InputArea] Agent via prop:', selectedAgent);
 
@@ -39,11 +40,13 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
     const value = e.target.value;
     setInput(value);
     
-    // Detectar "/" para mostrar dropdown
-    if (value === '/') {
+    // Detectar "/" em qualquer posição
+    if (value.endsWith('/')) {
       setShowAgentDropdown(true);
+      setSlashPosition(value.length - 1); // Salvar posição do "/"
     } else {
       setShowAgentDropdown(false);
+      setSlashPosition(-1);
     }
   };
 
@@ -53,8 +56,15 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
         <AgentDropdown
           currentAgent={selectedAgent}
           onAgentSelect={(agentId) => {
+            const agentName = agentId === 'nexus' ? 'Nexus' : 'Teste';
+            
+            // Substituir "/" pela tag na posição correta
+            const beforeSlash = input.slice(0, slashPosition);
+            const afterSlash = input.slice(slashPosition + 1);
+            const newValue = beforeSlash + `[${agentName}] ` + afterSlash;
+            
+            setInput(newValue);
             onAgentChange(agentId);
-            setInput(''); // Limpar input
           }}
           onClose={() => setShowAgentDropdown(false)}
         />
