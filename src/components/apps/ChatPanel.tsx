@@ -200,7 +200,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
   }
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto">
+    <div className="flex flex-col h-full overflow-y-auto bg-[#111111]">
       {/* Custom Scrollbar Styles */}
       <style dangerouslySetInnerHTML={{
         __html: `
@@ -231,9 +231,9 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
       }} />
       
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">AI Assistant</h2>
-        <p className="text-sm text-gray-600 mt-1">
+      <div className="p-4 border-b border-gray-800">
+        <h2 className="text-lg font-semibold text-[#888888]">AI Assistant</h2>
+        <p className="text-sm text-[#888888] mt-1">
           Ask questions about your data and widgets
         </p>
       </div>
@@ -249,7 +249,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
               className={`max-w-[80%] rounded-lg p-3 text-sm ${
                 message.role === 'user'
                   ? 'bg-blue-600 text-white'
-                  : 'bg-gray-100 text-gray-900'
+                  : 'bg-[#333333] text-[#888888]'
               }`}
             >
               <div>
@@ -291,7 +291,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                     }
                     if (widgetTool.state === 'input-available') {
                       return (
-                        <div key={index} className="mt-2 p-3 bg-gray-100 rounded-lg text-sm text-gray-600">
+                        <div key={index} className="mt-2 p-3 bg-[#333333] rounded-lg text-sm text-[#888888]">
                           🔍 Checking canvas widgets...
                         </div>
                       )
@@ -307,11 +307,11 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
         
         {status !== 'ready' && (
           <div className="flex justify-start">
-            <div className="bg-gray-100 rounded-lg p-3 text-sm">
+            <div className="bg-[#333333] rounded-lg p-3 text-sm">
               <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="w-2 h-2 bg-[#888888] rounded-full animate-bounce"></div>
+                <div className="w-2 h-2 bg-[#888888] rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                <div className="w-2 h-2 bg-[#888888] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
               </div>
             </div>
           </div>
@@ -319,14 +319,14 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-200 bg-white flex-shrink-0">
+      <div className="p-4 border-t border-gray-800 bg-[#111111] flex-shrink-0">
         <form onSubmit={handleSubmit} className="flex gap-2">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="flex-1 px-3 py-2 bg-[#333333] border border-gray-700 text-[#888888] placeholder-[#666666] rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             disabled={status !== 'ready'}
           />
           <button

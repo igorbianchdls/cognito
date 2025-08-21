@@ -54,11 +54,11 @@ export default function AutomationsPanel() {
 
   return (
     <div className="flex flex-col h-full overflow-y-auto">
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-gray-800">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Automações</h2>
-            <p className="text-sm text-gray-600">Configure alertas e ações automáticas</p>
+            <h2 className="text-lg font-semibold text-[#888888]">Automações</h2>
+            <p className="text-sm text-[#888888]">Configure alertas e ações automáticas</p>
           </div>
           <button
             onClick={() => setIsCreating(true)}
@@ -71,12 +71,12 @@ export default function AutomationsPanel() {
 
       <div className="flex-1 overflow-y-auto p-4">
         {isCreating && (
-          <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4">
-            <h3 className="text-md font-medium text-gray-900 mb-3">Criar Nova Automação</h3>
+          <div className="bg-[#111111] border border-gray-800 rounded-lg p-4 mb-4">
+            <h3 className="text-md font-medium text-[#888888] mb-3">Criar Nova Automação</h3>
             
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[#888888] mb-1">
                   Nome da Automação
                 </label>
                 <input
@@ -84,12 +84,12 @@ export default function AutomationsPanel() {
                   value={newAutomation.name}
                   onChange={(e) => setNewAutomation(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="Ex: Alerta de vendas altas"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[#888888] mb-1">
                   Descrição
                 </label>
                 <input
@@ -97,18 +97,18 @@ export default function AutomationsPanel() {
                   value={newAutomation.description}
                   onChange={(e) => setNewAutomation(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Descrição opcional da automação"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[#888888] mb-1">
                   Condição
                 </label>
                 <select
                   value={newAutomation.condition}
                   onChange={(e) => setNewAutomation(prev => ({ ...prev, condition: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Selecione uma condição</option>
                   <option value="vendas > 1000">Vendas &gt; 1000</option>
@@ -119,13 +119,13 @@ export default function AutomationsPanel() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[#888888] mb-1">
                   Ação
                 </label>
                 <select
                   value={newAutomation.action}
                   onChange={(e) => setNewAutomation(prev => ({ ...prev, action: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Selecione uma ação</option>
                   <option value="enviar_email">Enviar email</option>
@@ -147,7 +147,7 @@ export default function AutomationsPanel() {
                     setIsCreating(false)
                     setNewAutomation({ name: '', description: '', condition: '', action: '' })
                   }}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-400 transition-colors"
+                  className="px-4 py-2 bg-gray-700 text-[#888888] text-sm font-medium rounded-lg hover:bg-gray-400 transition-colors"
                 >
                   Cancelar
                 </button>
@@ -157,7 +157,7 @@ export default function AutomationsPanel() {
         )}
 
         {automations.length === 0 && !isCreating ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-[#888888]">
             <div className="text-4xl mb-3">🤖</div>
             <p className="text-lg font-medium mb-2">Nenhuma automação configurada</p>
             <p className="text-sm">Clique em &quot;Nova&quot; para criar sua primeira automação</p>
@@ -167,13 +167,13 @@ export default function AutomationsPanel() {
             {automations.map((automation) => (
               <div
                 key={automation.id}
-                className="bg-white border border-gray-200 rounded-lg p-4"
+                className="bg-[#111111] border border-gray-800 rounded-lg p-4"
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">{automation.name}</h4>
+                    <h4 className="font-medium text-[#888888]">{automation.name}</h4>
                     {automation.description && (
-                      <p className="text-sm text-gray-600 mt-1">{automation.description}</p>
+                      <p className="text-sm text-[#888888] mt-1">{automation.description}</p>
                     )}
                   </div>
                   <div className="flex items-center gap-2 ml-4">
@@ -182,7 +182,7 @@ export default function AutomationsPanel() {
                       className={`px-2 py-1 text-xs font-medium rounded ${
                         automation.isActive
                           ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-gray-600'
+                          : 'bg-gray-100 text-[#888888]'
                       }`}
                     >
                       {automation.isActive ? 'Ativa' : 'Inativa'}
@@ -196,7 +196,7 @@ export default function AutomationsPanel() {
                   </div>
                 </div>
                 
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-[#888888]">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-medium">Quando:</span>
                     <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">

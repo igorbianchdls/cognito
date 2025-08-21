@@ -227,15 +227,15 @@ export default function CodeEditor() {
   return (
     <div className="flex flex-col h-full overflow-y-auto">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">Code Editor</h2>
-        <p className="text-sm text-gray-600 mt-1">
+      <div className="p-4 border-b border-gray-800">
+        <h2 className="text-lg font-semibold text-[#888888]">Code Editor</h2>
+        <p className="text-sm text-[#888888] mt-1">
           Edit your dashboard using JSON code
         </p>
       </div>
 
       {/* Actions Bar */}
-      <div className="p-3 border-b border-gray-200 bg-gray-50">
+      <div className="p-3 border-b border-gray-800 bg-[#111111]">
         <div className="flex gap-2 flex-wrap">
           <button
             onClick={handleApplyChanges}
@@ -274,17 +274,17 @@ export default function CodeEditor() {
       </div>
 
       {/* Status Bar */}
-      <div className="px-4 py-2 border-b border-gray-200 bg-gray-50">
+      <div className="px-4 py-2 border-b border-gray-800 bg-[#111111]">
         <div className="flex items-center justify-between text-xs">
           <div className="flex items-center gap-4">
             <span className={`flex items-center gap-1 ${state.isValidJson ? 'text-green-600' : 'text-red-600'}`}>
               <span className={`w-2 h-2 rounded-full ${state.isValidJson ? 'bg-green-500' : 'bg-red-500'}`}></span>
               {state.isValidJson ? 'Valid JSON' : 'Invalid JSON'}
             </span>
-            <span className="text-gray-600">
+            <span className="text-[#888888]">
               Lines: {state.code.split('\n').length}
             </span>
-            <span className="text-gray-600">
+            <span className="text-[#888888]">
               Widgets: {widgets.length}
             </span>
           </div>
@@ -336,8 +336,8 @@ export default function CodeEditor() {
       </div>
 
       {/* Footer */}
-      <div className="p-3 border-t border-gray-200 bg-gray-50">
-        <div className="text-xs text-gray-600">
+      <div className="p-3 border-t border-gray-800 bg-[#111111]">
+        <div className="text-xs text-[#888888]">
           <p className="mb-2">💡 <strong>Quick Tips:</strong></p>
           <ul className="space-y-1 text-xs">
             <li>• Use proper JSON syntax with quotes and commas</li>

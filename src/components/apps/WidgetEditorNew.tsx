@@ -360,9 +360,9 @@ export default function WidgetEditorNew() {
     return (
       <div className="flex flex-col" style={{ height: 'calc(100vh - 80px)' }}>
         {/* Header */}
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">Widget Editor</h2>
-          <p className="text-sm text-gray-600 mt-2">
+        <div className="p-4 border-b border-gray-800">
+          <h2 className="text-lg font-semibold text-[#888888]">Widget Editor</h2>
+          <p className="text-sm text-[#888888] mt-2">
             Edit widget properties manually
           </p>
         </div>
@@ -371,8 +371,8 @@ export default function WidgetEditorNew() {
         <div className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <span className="text-6xl mb-4 block">📊</span>
-            <p className="text-gray-500 mb-2">No widgets on canvas</p>
-            <p className="text-sm text-gray-400">
+            <p className="text-[#888888] mb-2">No widgets on canvas</p>
+            <p className="text-sm text-[#888888]">
               Drag widgets from the Widgets tab to get started
             </p>
           </div>
@@ -384,9 +384,9 @@ export default function WidgetEditorNew() {
   return (
     <div className="flex flex-col h-full overflow-y-auto">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900">Widget Editor</h2>
-        <p className="text-sm text-gray-600 mt-2">
+      <div className="p-4 border-b border-gray-800">
+        <h2 className="text-lg font-semibold text-[#888888]">Widget Editor</h2>
+        <p className="text-sm text-[#888888] mt-2">
           {widgets.length} widget{widgets.length !== 1 ? 's' : ''} on canvas
         </p>
       </div>
@@ -394,7 +394,7 @@ export default function WidgetEditorNew() {
       {/* Widget List */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-4">
-          <h3 className="text-sm font-medium text-gray-700 mb-3">Widgets</h3>
+          <h3 className="text-sm font-medium text-[#888888] mb-3">Widgets</h3>
           <div className="space-y-2 mb-6">
             
             {/* Canvas Settings Item */}
@@ -403,14 +403,14 @@ export default function WidgetEditorNew() {
               className={`p-3 rounded-lg border cursor-pointer transition-all ${
                 canvasSelected
                   ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300 bg-white'
+                  : 'border-gray-800 hover:border-gray-700 bg-[#111111]'
               }`}
             >
               <div className="flex items-center gap-3">
                 <span className="text-xl">🎨</span>
                 <div className="flex-1">
                   <div className="font-medium text-sm">Canvas Settings</div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-[#888888]">
                     Configure canvas appearance and layout
                   </div>
                 </div>
@@ -428,14 +428,14 @@ export default function WidgetEditorNew() {
                 className={`p-3 rounded-lg border cursor-pointer transition-all ${
                   selectedWidgetId === widget.i
                     ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                    : 'border-gray-800 hover:border-gray-700 bg-[#111111]'
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <span className="text-xl">{widget.icon}</span>
                   <div className="flex-1">
                     <div className="font-medium text-sm">{widget.name}</div>
-                    <div className="text-xs text-gray-500">
+                    <div className="text-xs text-[#888888]">
                       Position: ({widget.x}, {widget.y}) • Size: {widget.w}×{widget.h}
                     </div>
                   </div>
@@ -451,25 +451,25 @@ export default function WidgetEditorNew() {
           <div className="border-t pt-4">
             {canvasSelected ? (
               <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-4">
+                <h3 className="text-sm font-medium text-[#888888] mb-4">
                   🎨 Canvas Settings
                 </h3>
                 <div className="p-4 bg-gray-50 rounded-lg text-center">
-                  <p className="text-gray-600">Canvas configuration will be here</p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-[#888888]">Canvas configuration will be here</p>
+                  <p className="text-xs text-[#888888] mt-1">
                     Background: {canvasConfig.backgroundColor}
                   </p>
                 </div>
               </div>
             ) : selectedWidget ? (
               <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-4">
+                <h3 className="text-sm font-medium text-[#888888] mb-4">
                   Edit &quot;{selectedWidget.name}&quot;
                 </h3>
                 
                 {/* General Info */}
                 <div className="p-3 bg-gray-50 rounded-lg mb-4">
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-[#888888]">
                     Type: {selectedWidget.type} • Position: ({selectedWidget.x}, {selectedWidget.y}) • Size: {selectedWidget.w}×{selectedWidget.h}
                   </p>
                 </div>
@@ -527,15 +527,15 @@ export default function WidgetEditorNew() {
                 {/* Other widget types placeholder */}
                 {!isKPIWidget(selectedWidget) && !isImageWidget(selectedWidget) && !isTableWidget(selectedWidget) && !isChartWidget(selectedWidget) && !isNavigationWidget(selectedWidget) && (
                   <div className="p-4 bg-gray-50 rounded-lg text-center">
-                    <p className="text-gray-600">Configuration for {selectedWidget.type} widgets will be here</p>
+                    <p className="text-[#888888]">Configuration for {selectedWidget.type} widgets will be here</p>
                   </div>
                 )}
               </div>
             ) : (
               <div className="text-center py-8">
                 <span className="text-4xl mb-4 block">🎨</span>
-                <p className="text-gray-500 mb-2">No selection</p>
-                <p className="text-sm text-gray-400">
+                <p className="text-[#888888] mb-2">No selection</p>
+                <p className="text-sm text-[#888888]">
                   Click on &quot;Canvas Settings&quot; or a widget to start editing
                 </p>
               </div>
