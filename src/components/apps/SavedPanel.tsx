@@ -29,7 +29,7 @@ export default function SavedPanel() {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto">
+    <div className="flex flex-col h-full overflow-y-auto bg-[#111111]">
       {/* Header */}
       <div className="p-4 border-b border-gray-800">
         <h2 className="text-lg font-semibold text-[#888888]">Dashboards Salvos</h2>
@@ -84,7 +84,7 @@ export default function SavedPanel() {
                     {/* Multi-canvas badge */}
                     {dashboard.isMultiCanvas && (
                       <div className="mt-2">
-                        <span className="inline-flex items-center px-2 py-1 bg-purple-100 text-purple-800 text-xs font-medium rounded-full">
+                        <span className="inline-flex items-center px-2 py-1 bg-purple-900 text-purple-800 text-xs font-medium rounded-full">
                           📑 Multi-Canvas
                         </span>
                       </div>

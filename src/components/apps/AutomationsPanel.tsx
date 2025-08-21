@@ -53,7 +53,7 @@ export default function AutomationsPanel() {
   }
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto">
+    <div className="flex flex-col h-full overflow-y-auto bg-[#111111]">
       <div className="p-4 border-b border-gray-800">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -84,7 +84,7 @@ export default function AutomationsPanel() {
                   value={newAutomation.name}
                   onChange={(e) => setNewAutomation(prev => ({ ...prev, name: e.target.value }))}
                   placeholder="Ex: Alerta de vendas altas"
-                  className="w-full px-3 py-2 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-[#333333] border border-gray-700 text-[#888888] placeholder-[#666666] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
 
@@ -97,7 +97,7 @@ export default function AutomationsPanel() {
                   value={newAutomation.description}
                   onChange={(e) => setNewAutomation(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Descrição opcional da automação"
-                  className="w-full px-3 py-2 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-[#333333] border border-gray-700 text-[#888888] placeholder-[#666666] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
 
@@ -108,7 +108,7 @@ export default function AutomationsPanel() {
                 <select
                   value={newAutomation.condition}
                   onChange={(e) => setNewAutomation(prev => ({ ...prev, condition: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-[#333333] border border-gray-700 text-[#888888] placeholder-[#666666] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Selecione uma condição</option>
                   <option value="vendas > 1000">Vendas &gt; 1000</option>
@@ -125,7 +125,7 @@ export default function AutomationsPanel() {
                 <select
                   value={newAutomation.action}
                   onChange={(e) => setNewAutomation(prev => ({ ...prev, action: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 bg-[#333333] border border-gray-700 text-[#888888] placeholder-[#666666] rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="">Selecione uma ação</option>
                   <option value="enviar_email">Enviar email</option>
@@ -181,8 +181,8 @@ export default function AutomationsPanel() {
                       onClick={() => handleToggleActive(automation.id)}
                       className={`px-2 py-1 text-xs font-medium rounded ${
                         automation.isActive
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-gray-100 text-[#888888]'
+                          ? 'bg-green-900 text-green-800'
+                          : 'bg-[#333333] text-[#888888]'
                       }`}
                     >
                       {automation.isActive ? 'Ativa' : 'Inativa'}
@@ -199,13 +199,13 @@ export default function AutomationsPanel() {
                 <div className="text-sm text-[#888888]">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-medium">Quando:</span>
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                    <span className="bg-blue-900 text-blue-800 px-2 py-1 rounded text-xs">
                       {automation.condition}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="font-medium">Então:</span>
-                    <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">
+                    <span className="bg-orange-900 text-orange-800 px-2 py-1 rounded text-xs">
                       {automation.action}
                     </span>
                   </div>
