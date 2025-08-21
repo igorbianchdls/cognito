@@ -31,19 +31,22 @@ const models = [
 ];
 
 export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange }: InputAreaProps) {
+  // Estado para controlar a exibição do dropdown de agentes quando "/" é digitado
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
+  // Armazena a posição exata onde o "/" foi digitado no texto
   const [slashPosition, setSlashPosition] = useState(-1);
   
   console.log('🎤 [InputArea] Agent via prop:', selectedAgent);
 
+  // Handler que detecta quando o usuário digita "/" para mostrar o dropdown de agentes
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setInput(value);
     
-    // Detectar "/" em qualquer posição
+    // Detecta se o usuário terminou de digitar com "/"
     if (value.endsWith('/')) {
       setShowAgentDropdown(true);
-      setSlashPosition(value.length - 1); // Salvar posição do "/"
+      setSlashPosition(value.length - 1); // Salva a posição do "/" para substituição posterior
     } else {
       setShowAgentDropdown(false);
       setSlashPosition(-1);
@@ -52,19 +55,21 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
 
   return (
     <div className="relative">
+      {/* Dropdown que aparece quando o usuário digita "/" */}
       {showAgentDropdown && (
         <AgentDropdown
           currentAgent={selectedAgent}
           onAgentSelect={(agentId) => {
+            // Mapear ID do agente para nome legível
             const agentName = agentId === 'nexus' ? 'Nexus' : 'Teste';
             
-            // Substituir "/" pela tag na posição correta
-            const beforeSlash = input.slice(0, slashPosition);
-            const afterSlash = input.slice(slashPosition + 1);
-            const newValue = beforeSlash + `[${agentName}] ` + afterSlash;
+            // Substituir o "/" pela tag do agente na posição exata onde foi digitado
+            const beforeSlash = input.slice(0, slashPosition); // Texto antes do "/"
+            const afterSlash = input.slice(slashPosition + 1); // Texto depois do "/"
+            const newValue = beforeSlash + `[${agentName}] ` + afterSlash; // Texto final com tag
             
             setInput(newValue);
-            onAgentChange(agentId);
+            onAgentChange(agentId); // Atualiza o agente selecionado
           }}
           onClose={() => setShowAgentDropdown(false)}
         />
