@@ -8,6 +8,18 @@ export default function JuliusPage() {
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({ api: '/api/julius-chat' }),
     id: 'julius-chat',
+    onError: (error) => {
+      console.error('🚨 [Julius] Chat error:', error);
+    },
+    onFinish: (message) => {
+      console.log('✅ [Julius] Chat finished:', message);
+    },
+  });
+  
+  console.log('🔍 [Julius] Current state:', { 
+    messagesCount: messages.length, 
+    status,
+    messages: messages 
   });
 
   const [input, setInput] = useState('');
@@ -39,9 +51,13 @@ export default function JuliusPage() {
 
         <form onSubmit={(e: FormEvent) => {
           e.preventDefault();
+          console.log('📤 [Julius] Form submitted with input:', input);
           if (input.trim()) {
+            console.log('📤 [Julius] Calling sendMessage with:', { text: input });
             sendMessage({ text: input });
             setInput('');
+          } else {
+            console.log('⚠️ [Julius] Input is empty, not sending');
           }
         }} className="flex gap-2">
           <input

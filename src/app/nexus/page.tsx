@@ -20,6 +20,8 @@ export default function Page() {
       id: 'nexus-chat',
       onFinish: ({ message }) => {
         console.log('NEXUS terminou:', message);
+        // Adicionar metadata do agente à mensagem
+        (message as any).agent = 'nexus';
       },
     }),
     teste: useChat({
@@ -27,6 +29,8 @@ export default function Page() {
       id: 'teste-chat',
       onFinish: ({ message }) => {
         console.log('TESTE terminou:', message);
+        // Adicionar metadata do agente à mensagem
+        (message as any).agent = 'teste';
       },
     }),
   };
