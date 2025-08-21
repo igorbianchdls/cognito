@@ -38,7 +38,7 @@ export default function AppsHeader({ activeTab, onTabChange, sidebarCollapsed, o
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`flex items-center gap-2 px-4 py-1.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
+            className={`flex items-center gap-2 px-4 py-1 rounded-lg text-base font-semibold transition-all duration-200 ${
               activeTab === tab.id
                 ? 'bg-gray-800 text-white shadow-sm'
                 : 'text-[#888888] hover:text-[#AAAAAA] hover:bg-gray-800'
@@ -53,7 +53,7 @@ export default function AppsHeader({ activeTab, onTabChange, sidebarCollapsed, o
         {/* Botão Salvar Atual - Extrema Direita */}
         <button
           onClick={savedDashboardActions.promptAndSave}
-          className="flex items-center gap-2 px-4 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-semibold transition-colors duration-200 border border-gray-600"
+          className="flex items-center gap-2 px-4 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-base font-semibold transition-colors duration-200 border border-gray-600"
           title="Salvar dashboard atual"
         >
           <Archive className="w-4 h-4" />
