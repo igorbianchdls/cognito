@@ -401,7 +401,7 @@ interface RespostaDaIAProps {
 
 export default function RespostaDaIA({ message }: RespostaDaIAProps) {
   // Usar o agente da própria mensagem, não selectedAgent
-  const messageAgent = (message as any).agent || 'nexus'; // fallback para nexus
+  const messageAgent = (message as UIMessage & { agent?: string }).agent || 'nexus'; // fallback para nexus
   
   console.log('🔍 MESSAGE INSPECTION:', {
     id: message.id,

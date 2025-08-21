@@ -21,7 +21,7 @@ export default function Page() {
       onFinish: ({ message }) => {
         console.log('NEXUS terminou:', message);
         // Adicionar metadata do agente à mensagem
-        (message as any).agent = 'nexus';
+        (message as UIMessage & { agent?: string }).agent = 'nexus';
       },
     }),
     teste: useChat({
@@ -30,7 +30,7 @@ export default function Page() {
       onFinish: ({ message }) => {
         console.log('TESTE terminou:', message);
         // Adicionar metadata do agente à mensagem
-        (message as any).agent = 'teste';
+        (message as UIMessage & { agent?: string }).agent = 'teste';
       },
     }),
   };
