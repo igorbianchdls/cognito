@@ -34,18 +34,14 @@ export default function Page() {
   // Escolhe qual hook vai enviar a próxima mensagem
   const { sendMessage, status } = chats[selectedAgent === 'nexus' ? 'nexus' : 'teste'];
 
-  // Combina mensagens em ordem cronológica
+  // Combina mensagens em ordem natural (última mensagem por último)
   const displayedMessages: UIMessage[] = Object.keys(chats)
     .flatMap(key => 
       chats[key as keyof typeof chats].messages.map(msg => ({
         ...msg,           // preserva todas propriedades originais
         agent: key        // adiciona agent baseado no chat (nexus/teste)
       }))
-    )
-    .sort((a, b) => {
-      // Ordena por ID da mensagem (IDs são cronológicos)
-      return a.id.localeCompare(b.id);
-    });
+    );
 
   const [input, setInput] = useState('');
   
