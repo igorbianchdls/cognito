@@ -23,9 +23,9 @@ Available tools:
 - retrieveResult: Search documents using RAG (requires query parameter) - retrieves relevant documents from vector database with real semantic search
 - criarDashboard: Create interactive dashboards with KPIs (requires datasetIds, title, dashboardType)
 - executarSQL: Execute custom SQL queries on BigQuery with real data
-  * Use fully qualified table names: `project.dataset.table`
-  * Examples: "SELECT * FROM `project.sales.orders` LIMIT 100"
-  * Complex queries: "SELECT city, COUNT(*) FROM `project.users.customers` GROUP BY city ORDER BY COUNT(*) DESC"
+  * Use fully qualified table names: project.dataset.table
+  * Examples: "SELECT * FROM project.sales.orders LIMIT 100"
+  * Complex queries: "SELECT city, COUNT(*) FROM project.users.customers GROUP BY city ORDER BY COUNT(*) DESC"
   * Use dryRun=true to validate SQL syntax before execution
   * Supports SELECT, INSERT, UPDATE, DELETE, aggregations, JOINs, CTEs
 - criarTabela: Create new BigQuery tables with custom schema (requires datasetId, tableName, schema)
