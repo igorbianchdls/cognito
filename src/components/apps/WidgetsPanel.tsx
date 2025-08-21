@@ -302,12 +302,12 @@ export default function WidgetsPanel({}: WidgetsPanelProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-[#111111]">
       {/* Header */}
-      <div className="p-4 border-b border-gray-100">
+      <div className="p-4 border-b border-gray-800">
         <div className="flex items-center gap-2 mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Components</h2>
-          <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <h2 className="text-lg font-semibold text-[#888888]">Components</h2>
+          <svg className="w-4 h-4 text-[#888888]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
           </svg>
         </div>
@@ -315,13 +315,13 @@ export default function WidgetsPanel({}: WidgetsPanelProps) {
         {/* Search Bar */}
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-4 w-4 text-[#888888]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
           <input
             type="text"
-            className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="block w-full pl-10 pr-3 py-2 bg-gray-900 border border-gray-700 rounded-lg text-sm text-[#888888] placeholder-[#666666] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -342,9 +342,9 @@ export default function WidgetsPanel({}: WidgetsPanelProps) {
                 onClick={() => toggleCategory(categoryName)}
                 className="flex items-center justify-between w-full mb-3 text-left"
               >
-                <h3 className="text-sm font-medium text-gray-700">{categoryName}</h3>
+                <h3 className="text-sm font-medium text-[#888888]">{categoryName}</h3>
                 <svg 
-                  className={`w-4 h-4 text-gray-400 transition-transform ${
+                  className={`w-4 h-4 text-[#888888] transition-transform ${
                     expandedCategories[categoryName] ? 'transform rotate-180' : ''
                   }`} 
                   fill="none" 
@@ -373,13 +373,13 @@ export default function WidgetsPanel({}: WidgetsPanelProps) {
         {/* No results message */}
         {searchQuery && Object.values(widgetCategories).every(widgets => filterWidgets(widgets).length === 0) && (
           <div className="p-8 text-center">
-            <div className="text-gray-400 mb-2">
+            <div className="text-[#888888] mb-2">
               <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <p className="text-sm text-gray-500 mb-1">No components found</p>
-            <p className="text-xs text-gray-400">Try adjusting your search</p>
+            <p className="text-sm text-[#888888] mb-1">No components found</p>
+            <p className="text-xs text-[#888888]">Try adjusting your search</p>
           </div>
         )}
       </div>
