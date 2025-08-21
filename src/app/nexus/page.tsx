@@ -19,22 +19,14 @@ export default function Page() {
       transport: new DefaultChatTransport({ api: '/api/chat-ui' }),
       id: 'nexus-chat',
       onFinish: ({ message }) => {
-        console.log('🔵 [NEXUS] onFinish called:', message);
-        // Adicionar metadata do agente à mensagem
-        (message as UIMessage & { agent?: string }).agent = 'nexus';
-        console.log('🔵 [NEXUS] Agent set, message now:', message);
-        console.log('🔵 [NEXUS] Agent property:', (message as UIMessage & { agent?: string }).agent);
+        console.log('NEXUS terminou:', message);
       },
     }),
     teste: useChat({
       transport: new DefaultChatTransport({ api: '/api/teste' }),
       id: 'teste-chat',
       onFinish: ({ message }) => {
-        console.log('🟢 [TESTE] onFinish called:', message);
-        // Adicionar metadata do agente à mensagem
-        (message as UIMessage & { agent?: string }).agent = 'teste';
-        console.log('🟢 [TESTE] Agent set, message now:', message);
-        console.log('🟢 [TESTE] Agent property:', (message as UIMessage & { agent?: string }).agent);
+        console.log('TESTE terminou:', message);
       },
     }),
   };
@@ -45,7 +37,12 @@ export default function Page() {
   // Combina mensagens: agente selecionado sempre por último
   const displayedMessages: UIMessage[] = Object.keys(chats)
     .sort(key => key === selectedAgent ? 1 : -1) // coloca o agente selecionado no final
-    .flatMap(key => chats[key as keyof typeof chats].messages); // junta todas as mensagens
+    .flatMap(key => 
+      chats[key as keyof typeof chats].messages.map(msg => ({
+        ...msg,           // preserva todas propriedades originais
+        agent: key        // adiciona agent baseado no chat (nexus/teste)
+      }))
+    );
 
   const [input, setInput] = useState('');
   
