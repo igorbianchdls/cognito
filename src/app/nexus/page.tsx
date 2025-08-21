@@ -79,6 +79,70 @@ export default function Page() {
         setAllMessages(prev => [...prev, { ...message, agent: 'shopeeAnalyst' }]);
       },
     }),
+    keywordAnalyst: useChat({
+      transport: new DefaultChatTransport({ api: '/api/agents/keyword-analyst' }),
+      id: 'keyword-analyst-chat',
+      onFinish: ({ message }) => {
+        console.log('KEYWORD ANALYST terminou:', message);
+        setAllMessages(prev => [...prev, { ...message, agent: 'keywordAnalyst' }]);
+      },
+    }),
+    googleCampaignAnalyst: useChat({
+      transport: new DefaultChatTransport({ api: '/api/agents/google-campaign-analyst' }),
+      id: 'google-campaign-analyst-chat',
+      onFinish: ({ message }) => {
+        console.log('GOOGLE CAMPAIGN ANALYST terminou:', message);
+        setAllMessages(prev => [...prev, { ...message, agent: 'googleCampaignAnalyst' }]);
+      },
+    }),
+    metaCampaignAnalyst: useChat({
+      transport: new DefaultChatTransport({ api: '/api/agents/meta-campaign-analyst' }),
+      id: 'meta-campaign-analyst-chat',
+      onFinish: ({ message }) => {
+        console.log('META CAMPAIGN ANALYST terminou:', message);
+        setAllMessages(prev => [...prev, { ...message, agent: 'metaCampaignAnalyst' }]);
+      },
+    }),
+    metaCreativeAnalyst: useChat({
+      transport: new DefaultChatTransport({ api: '/api/agents/meta-creative-analyst' }),
+      id: 'meta-creative-analyst-chat',
+      onFinish: ({ message }) => {
+        console.log('META CREATIVE ANALYST terminou:', message);
+        setAllMessages(prev => [...prev, { ...message, agent: 'metaCreativeAnalyst' }]);
+      },
+    }),
+    inventoryAnalyst: useChat({
+      transport: new DefaultChatTransport({ api: '/api/agents/inventory-analyst' }),
+      id: 'inventory-analyst-chat',
+      onFinish: ({ message }) => {
+        console.log('INVENTORY ANALYST terminou:', message);
+        setAllMessages(prev => [...prev, { ...message, agent: 'inventoryAnalyst' }]);
+      },
+    }),
+    cashFlowAnalyst: useChat({
+      transport: new DefaultChatTransport({ api: '/api/agents/cash-flow-analyst' }),
+      id: 'cash-flow-analyst-chat',
+      onFinish: ({ message }) => {
+        console.log('CASH FLOW ANALYST terminou:', message);
+        setAllMessages(prev => [...prev, { ...message, agent: 'cashFlowAnalyst' }]);
+      },
+    }),
+    pnlAnalyst: useChat({
+      transport: new DefaultChatTransport({ api: '/api/agents/pnl-analyst' }),
+      id: 'pnl-analyst-chat',
+      onFinish: ({ message }) => {
+        console.log('P&L ANALYST terminou:', message);
+        setAllMessages(prev => [...prev, { ...message, agent: 'pnlAnalyst' }]);
+      },
+    }),
+    budgetPlanningAnalyst: useChat({
+      transport: new DefaultChatTransport({ api: '/api/agents/budget-planning-analyst' }),
+      id: 'budget-planning-analyst-chat',
+      onFinish: ({ message }) => {
+        console.log('BUDGET PLANNING ANALYST terminou:', message);
+        setAllMessages(prev => [...prev, { ...message, agent: 'budgetPlanningAnalyst' }]);
+      },
+    }),
   };
 
   // Escolhe qual hook vai enviar a próxima mensagem

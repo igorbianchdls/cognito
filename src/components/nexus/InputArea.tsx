@@ -34,6 +34,14 @@ const models = [
   { id: 'shopifyAnalyst', name: 'ShopifyAnalyst' },
   { id: 'contaAzulAnalyst', name: 'ContaAzulAnalyst' },
   { id: 'shopeeAnalyst', name: 'ShopeeAnalyst' },
+  { id: 'keywordAnalyst', name: 'KeywordAnalyst' },
+  { id: 'googleCampaignAnalyst', name: 'GoogleCampaignAnalyst' },
+  { id: 'metaCampaignAnalyst', name: 'MetaCampaignAnalyst' },
+  { id: 'metaCreativeAnalyst', name: 'MetaCreativeAnalyst' },
+  { id: 'inventoryAnalyst', name: 'InventoryAnalyst' },
+  { id: 'cashFlowAnalyst', name: 'CashFlowAnalyst' },
+  { id: 'pnlAnalyst', name: 'P&LAnalyst' },
+  { id: 'budgetPlanningAnalyst', name: 'BudgetPlanningAnalyst' },
 ];
 
 export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange }: InputAreaProps) {
@@ -77,6 +85,14 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
                 case 'shopifyAnalyst': return 'ShopifyAnalyst';
                 case 'contaAzulAnalyst': return 'ContaAzulAnalyst';
                 case 'shopeeAnalyst': return 'ShopeeAnalyst';
+                case 'keywordAnalyst': return 'KeywordAnalyst';
+                case 'googleCampaignAnalyst': return 'GoogleCampaignAnalyst';
+                case 'metaCampaignAnalyst': return 'MetaCampaignAnalyst';
+                case 'metaCreativeAnalyst': return 'MetaCreativeAnalyst';
+                case 'inventoryAnalyst': return 'InventoryAnalyst';
+                case 'cashFlowAnalyst': return 'CashFlowAnalyst';
+                case 'pnlAnalyst': return 'P&LAnalyst';
+                case 'budgetPlanningAnalyst': return 'BudgetPlanningAnalyst';
                 default: return id;
               }
             };
