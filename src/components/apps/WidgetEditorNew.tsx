@@ -358,7 +358,7 @@ export default function WidgetEditorNew() {
   // Caso não haja widgets
   if (widgets.length === 0) {
     return (
-      <div className="flex flex-col" style={{ height: 'calc(100vh - 80px)' }}>
+      <div className="flex flex-col bg-[#111111]" style={{ height: 'calc(100vh - 80px)' }}>
         {/* Header */}
         <div className="p-4 border-b border-gray-800">
           <h2 className="text-lg font-semibold text-[#888888]">Widget Editor</h2>
