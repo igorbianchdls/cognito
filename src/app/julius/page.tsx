@@ -4,7 +4,7 @@ import { useChat } from '@ai-sdk/react';
 import { useState } from 'react';
 
 export default function JuliusPage() {
-  const { messages, append, isLoading } = useChat({
+  const { messages, sendMessage, status } = useChat({
     api: '/api/julius-chat',
   });
   
@@ -36,7 +36,8 @@ export default function JuliusPage() {
         <form onSubmit={(e) => {
           e.preventDefault();
           if (input.trim()) {
-            append({ role: 'user', content: input });
+            console.log('📤 [Julius] Enviando mensagem:', input);
+            sendMessage({ text: input });
             setInput('');
           }
         }} className="flex gap-2">
@@ -45,14 +46,14 @@ export default function JuliusPage() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
             className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={isLoading}
+            disabled={status === 'loading'}
           />
           <button
             type="submit"
-            disabled={isLoading || !input.trim()}
+            disabled={status === 'loading' || !input.trim()}
             className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? 'Sending...' : 'Send'}
+            {status === 'loading' ? 'Sending...' : 'Send'}
           </button>
         </form>
       </div>
