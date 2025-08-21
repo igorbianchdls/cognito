@@ -53,7 +53,6 @@ class AgentsetService {
         apiKey: apiKey
       });
 
-      console.log('✅ Agentset service initialized successfully');
     } catch (error) {
       console.error('❌ Failed to initialize Agentset service:', error);
       throw error;

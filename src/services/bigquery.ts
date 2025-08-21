@@ -86,7 +86,6 @@ class BigQueryService {
       // Test connection
       await this.testConnection()
       
-      console.log('BigQuery client initialized successfully')
     } catch (error) {
       console.error('Failed to initialize BigQuery client:', error)
       throw error
@@ -116,22 +115,18 @@ class BigQueryService {
       if (credentialsJson) {
         try {
           finalConfig.credentials = JSON.parse(credentialsJson)
-          console.log('Using JSON credentials from environment variable')
         } catch {
           throw new Error('Invalid GOOGLE_APPLICATION_CREDENTIALS_JSON format')
         }
       } else {
         // Fallback to service account auto-discovery (useful for Google Cloud environments)
-        console.log('Using default credentials (service account auto-discovery)')
       }
     } else {
       // Development: Use key file
       const keyFilename = config?.keyFilename || process.env.GOOGLE_APPLICATION_CREDENTIALS
       if (keyFilename) {
         finalConfig.keyFilename = keyFilename
-        console.log(`Using key file: ${keyFilename}`)
       } else {
-        console.log('No credentials specified, using default authentication')
       }
     }
 
@@ -225,7 +220,6 @@ class BigQueryService {
       const cacheKey = this.getCacheKey(options)
       const cached = this.getFromCache(cacheKey)
       if (cached) {
-        console.log('Returning cached query result')
         return cached
       }
 
@@ -267,16 +261,8 @@ class BigQueryService {
           type: this.inferFieldType(firstRow[key]),
           mode: 'NULLABLE'
         }))
-        console.log('🔧 Schema inferred from data:', schema)
       }
       
-      console.log('🔍 Schema extraction result:', {
-        fromStatistics: !!jobMetadata.statistics?.query?.schema?.fields,
-        fromDestinationTable: !!jobMetadata.configuration?.query?.destinationTable?.schema?.fields,
-        fromInference: !jobMetadata.statistics?.query?.schema?.fields && !jobMetadata.configuration?.query?.destinationTable?.schema?.fields && rows.length > 0,
-        schemaLength: schema.length,
-        schema: schema
-      })
       
       const result: QueryResult = {
         data: rows as Record<string, unknown>[],
@@ -354,24 +340,18 @@ class BigQueryService {
    * List datasets in the project
    */
   async listDatasets(): Promise<{ id: string; friendlyName?: string; description?: string; location?: string; creationTime?: Date }[]> {
-    console.log('🔄 BigQuery service - listDatasets() called')
     
     if (!this.client) {
       console.error('❌ BigQuery client not initialized')
       throw new Error('BigQuery client not initialized. Call initialize() first.')
     }
 
-    console.log('📡 Calling BigQuery getDatasets() API...')
     try {
       const [datasets] = await this.client.getDatasets()
-      console.log(`✅ Raw datasets received: ${datasets.length} datasets`)
-      console.log('📋 Dataset IDs:', datasets.map(d => d.id))
 
-      console.log('📋 Processing dataset metadata...')
       const datasetInfos = await Promise.all(
         datasets.map(async (dataset, index) => {
           try {
-            console.log(`📄 Getting metadata for dataset ${index + 1}/${datasets.length}: ${dataset.id}`)
             const [metadata] = await dataset.getMetadata()
             
             const info = {
@@ -381,7 +361,6 @@ class BigQueryService {
               location: metadata.location,
               creationTime: metadata.creationTime ? new Date(parseInt(metadata.creationTime)) : undefined,
             }
-            console.log(`✅ Metadata processed for ${dataset.id}:`, info)
             return info
           } catch (error) {
             console.warn(`⚠️ Failed to get metadata for dataset ${dataset.id}:`, error)
@@ -392,7 +371,6 @@ class BigQueryService {
         })
       )
 
-      console.log(`🎉 Successfully processed ${datasetInfos.length} datasets`)
       return datasetInfos
     } catch (error) {
       console.error('❌ Critical error in listDatasets:', error)
@@ -430,16 +408,9 @@ class BigQueryService {
     }
 
     try {
-      console.log(`🔍 Getting dataset info for: ${datasetId}`)
       const dataset = this.client.dataset(datasetId)
       const [metadata] = await dataset.getMetadata()
       
-      console.log('📊 Dataset metadata received:', {
-        id: metadata.id,
-        location: metadata.location,
-        creationTime: metadata.creationTime,
-        lastModifiedTime: metadata.lastModifiedTime
-      })
 
       return {
         id: metadata.id,
