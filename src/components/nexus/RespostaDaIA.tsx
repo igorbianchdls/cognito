@@ -412,7 +412,7 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
     fullMessage: message
   });
   
-  console.log('🔍 [RespostaDaIA] Raw agent value:', (message as any).agent);
+  console.log('🔍 [RespostaDaIA] Raw agent value:', (message as UIMessage & { agent?: string }).agent);
   console.log('🔍 [RespostaDaIA] Message type:', typeof message);
   console.log('🔍 [RespostaDaIA] Message constructor:', message.constructor.name);
   
