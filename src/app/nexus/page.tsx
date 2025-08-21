@@ -83,7 +83,14 @@ export default function Page() {
     e.preventDefault();
     if (input.trim()) {
       console.log('Enviando mensagem via:', selectedAgent);
-      sendMessage({ text: input });
+      
+      // Adicionar timestamp para ordenação cronológica
+      const messageWithTimestamp = { 
+        text: input, 
+        timestamp: Date.now() 
+      };
+      sendMessage(messageWithTimestamp);
+      
       setInput('');
     }
   };
