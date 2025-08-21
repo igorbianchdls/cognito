@@ -1,16 +1,11 @@
 'use client';
 
-import { useChat } from '@ai-sdk/react';
-import { DefaultChatTransport } from 'ai';
-import { useState, FormEvent } from 'react';
+import { useChat } from 'ai/react';
 
 export default function JuliusPage() {
-  const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({ api: '/api/julius-chat' }),
-    id: 'julius-chat',
+  const { messages, input, handleInputChange, handleSubmit } = useChat({
+    api: '/api/julius-chat',
   });
-  
-  const [input, setInput] = useState('');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 p-8">
@@ -29,33 +24,24 @@ export default function JuliusPage() {
                   ? 'bg-blue-500 text-white' 
                   : 'bg-gray-100 text-gray-800'
               }`}>
-                {message.text}
+                {message.content}
               </div>
             </div>
           ))}
         </div>
 
-        <form onSubmit={(e: FormEvent) => {
-          e.preventDefault();
-          if (input.trim()) {
-            console.log('📤 [Julius] Enviando mensagem:', input);
-            sendMessage({ text: input });
-            setInput('');
-          }
-        }} className="flex gap-2">
+        <form onSubmit={handleSubmit} className="flex gap-2">
           <input
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={handleInputChange}
             placeholder="Type your message..."
             className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={status === 'loading'}
           />
           <button
             type="submit"
-            disabled={status === 'loading' || !input.trim()}
             className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {status === 'loading' ? 'Sending...' : 'Send'}
+            Send
           </button>
         </form>
       </div>
