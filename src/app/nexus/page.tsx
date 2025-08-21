@@ -19,18 +19,22 @@ export default function Page() {
       transport: new DefaultChatTransport({ api: '/api/chat-ui' }),
       id: 'nexus-chat',
       onFinish: ({ message }) => {
-        console.log('NEXUS terminou:', message);
+        console.log('🔵 [NEXUS] onFinish called:', message);
         // Adicionar metadata do agente à mensagem
         (message as UIMessage & { agent?: string }).agent = 'nexus';
+        console.log('🔵 [NEXUS] Agent set, message now:', message);
+        console.log('🔵 [NEXUS] Agent property:', (message as UIMessage & { agent?: string }).agent);
       },
     }),
     teste: useChat({
       transport: new DefaultChatTransport({ api: '/api/teste' }),
       id: 'teste-chat',
       onFinish: ({ message }) => {
-        console.log('TESTE terminou:', message);
+        console.log('🟢 [TESTE] onFinish called:', message);
         // Adicionar metadata do agente à mensagem
         (message as UIMessage & { agent?: string }).agent = 'teste';
+        console.log('🟢 [TESTE] Agent set, message now:', message);
+        console.log('🟢 [TESTE] Agent property:', (message as UIMessage & { agent?: string }).agent);
       },
     }),
   };

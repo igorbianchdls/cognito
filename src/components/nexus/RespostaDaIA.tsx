@@ -403,13 +403,18 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
   // Usar o agente da própria mensagem, não selectedAgent
   const messageAgent = (message as UIMessage & { agent?: string }).agent || 'nexus'; // fallback para nexus
   
-  console.log('🔍 MESSAGE INSPECTION:', {
+  console.log('🔍 [RespostaDaIA] MESSAGE INSPECTION:', {
     id: message.id,
     role: message.role,
     messageAgent,
+    agentProperty: (message as UIMessage & { agent?: string }).agent,
     messageKeys: Object.keys(message),
     fullMessage: message
   });
+  
+  console.log('🔍 [RespostaDaIA] Raw agent value:', (message as any).agent);
+  console.log('🔍 [RespostaDaIA] Message type:', typeof message);
+  console.log('🔍 [RespostaDaIA] Message constructor:', message.constructor.name);
   
   const agentInfo = getAgentInfo(messageAgent);
   const handleCopy = async () => {
