@@ -154,11 +154,14 @@ export default function Page() {
     ...messages.filter(msg => {
       // Para mensagens do usuário: só mostrar se não existe no allMessages
       if (msg.role === 'user') {
-        return !allMessages.some(existing => 
-          existing.role === 'user' && 
-          existing.parts?.[0]?.text === msg.parts?.[0]?.text &&
-          existing.agent === selectedAgent
-        );
+        return !allMessages.some(existing => {
+          if (existing.role !== 'user' || existing.agent !== selectedAgent) return false;
+          
+          const existingText = existing.parts?.find(p => p.type === 'text')?.text;
+          const msgText = msg.parts?.find(p => p.type === 'text')?.text;
+          
+          return existingText === msgText;
+        });
       }
       // Para mensagens da IA: filtro por ID (como antes)
       return !allMessages.some(existing => existing.id === msg.id);
