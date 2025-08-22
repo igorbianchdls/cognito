@@ -28,7 +28,7 @@ export default function ChatContainer({
   // Estado vazio - tela de boas-vindas centrada
   if (messages.length === 0) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center px-4">
+      <div className="h-screen flex flex-col items-center justify-center px-4" style={{backgroundColor: '#FBFBFB'}}>
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
             Converse com seus dados
@@ -53,7 +53,7 @@ export default function ChatContainer({
 
   // Estado com mensagens - layout com InputArea sticky
   return (
-    <div className="h-screen flex flex-col">
+    <div className="h-screen flex flex-col" style={{backgroundColor: '#FBFBFB'}}>
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         <MessageList messages={messages} selectedAgent={selectedAgent} />
       </div>
