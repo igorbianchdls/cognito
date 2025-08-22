@@ -1,5 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { convertToModelMessages, streamText, UIMessage } from 'ai';
+import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/bigquery';
 import * as analyticsTools from '@/tools/analytics';
 import * as utilitiesTools from '@/tools/utilities';
@@ -85,23 +85,25 @@ When using criarGrafico after getData, you MUST optimize data transfer to save t
 
 This optimization reduces token usage significantly while maintaining full chart functionality.`,
     messages: convertToModelMessages(messages),
-    maxSteps: 3,
-    stopWhen: (step) => {
-      // Check if SQL was executed in this step
-      const hasExecutedSQL = step.toolResults?.some(result => result.toolName === 'executarSQL');
-      
-      // Check if there's substantial analysis text (more than just tool results)
-      const hasAnalysisText = step.text && step.text.trim().length > 50;
-      
-      // If SQL was executed but no analysis provided yet, continue
-      if (hasExecutedSQL && !hasAnalysisText) {
-        console.log('🔄 SQL executed, continuing for analysis...');
+    stopWhen: [
+      stepCountIs(3), // Safety limit: maximum 3 steps
+      (step) => {
+        // Custom condition: stop when SQL was executed AND analysis is provided
+        const lastStep = step.steps[step.steps.length - 1];
+        const hasExecutedSQL = lastStep?.toolResults?.some((result: any) => result.toolName === 'executarSQL');
+        const hasAnalysisText = lastStep?.text && lastStep.text.trim().length > 50;
+        
+        // Stop only if SQL was executed AND we have substantial analysis
+        if (hasExecutedSQL && hasAnalysisText) {
+          console.log('✅ SQL executed and analysis provided, stopping...');
+          return true; // Stop
+        }
+        
+        // Continue in all other cases
+        console.log('🔄 Continuing...', { hasExecutedSQL, hasAnalysisText });
         return false; // Continue
       }
-      
-      // Stop if we have analysis or if no SQL was executed
-      return true; // Stop
-    },
+    ],
     providerOptions: {
       anthropic: {
         thinking: { type: 'enabled', budgetTokens: 15000 }
