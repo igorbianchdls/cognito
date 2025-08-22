@@ -178,3 +178,8 @@ form[class*="divide"] button:focus-visible {
   background: rgba(136, 136, 136, 0.5);
 }
 
+/* Fundo específico para página nexus */
+body:has([data-page="nexus"]) {
+  background-color: #FBFBFB !important;
+}
+
