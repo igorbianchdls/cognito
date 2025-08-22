@@ -369,11 +369,11 @@ const getAgentInfo = (agent: string) => {
     case 'teste':
       return { initial: 'T', title: 'Teste AI', color: 'bg-green-500' };
     case 'metaAnalyst':
-      return { initial: 'M', title: 'MetaAnalyst AI', color: 'bg-purple-500', icon: <MetaIcon className="w-5 h-5" /> };
+      return { initial: 'M', title: 'MetaAnalyst AI', color: 'bg-purple-500', icon: <MetaIcon className="w-full h-full" /> };
     case 'amazonAdsAnalyst':
       return { initial: 'A', title: 'AmazonAds AI', color: 'bg-orange-500' };
     case 'googleAnalyticsAnalyst':
-      return { initial: 'G', title: 'GoogleAnalytics AI', color: 'bg-blue-400', icon: <GoogleIcon className="w-5 h-5" /> };
+      return { initial: 'G', title: 'GoogleAnalytics AI', color: 'bg-blue-400', icon: <GoogleIcon className="w-full h-full" /> };
     case 'shopifyAnalyst':
       return { initial: 'S', title: 'Shopify AI', color: 'bg-green-400' };
     case 'contaAzulAnalyst':
@@ -383,11 +383,11 @@ const getAgentInfo = (agent: string) => {
     case 'keywordAnalyst':
       return { initial: 'K', title: 'Keyword AI', color: 'bg-yellow-500' };
     case 'googleCampaignAnalyst':
-      return { initial: 'Y', title: 'GoogleCampaign AI', color: 'bg-blue-700', icon: <GoogleIcon className="w-5 h-5" /> };
+      return { initial: 'Y', title: 'GoogleCampaign AI', color: 'bg-blue-700', icon: <GoogleIcon className="w-full h-full" /> };
     case 'metaCampaignAnalyst':
-      return { initial: 'B', title: 'MetaCampaign AI', color: 'bg-blue-800', icon: <MetaIcon className="w-5 h-5" /> };
+      return { initial: 'B', title: 'MetaCampaign AI', color: 'bg-blue-800', icon: <MetaIcon className="w-full h-full" /> };
     case 'metaCreativeAnalyst':
-      return { initial: 'R', title: 'MetaCreative AI', color: 'bg-pink-500', icon: <MetaIcon className="w-5 h-5" /> };
+      return { initial: 'R', title: 'MetaCreative AI', color: 'bg-pink-500', icon: <MetaIcon className="w-full h-full" /> };
     case 'inventoryAnalyst':
       return { initial: 'I', title: 'Inventory AI', color: 'bg-amber-600' };
     case 'cashFlowAnalyst':
