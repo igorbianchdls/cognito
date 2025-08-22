@@ -90,7 +90,7 @@ This optimization reduces token usage significantly while maintaining full chart
       (step) => {
         // Custom condition: stop when SQL was executed AND analysis is provided
         const lastStep = step.steps[step.steps.length - 1];
-        const hasExecutedSQL = lastStep?.toolResults?.some((result: any) => result.toolName === 'executarSQL');
+        const hasExecutedSQL = lastStep?.toolResults?.some((result) => result.toolName === 'executarSQL');
         const hasAnalysisText = lastStep?.text && lastStep.text.trim().length > 50;
         
         // Stop only if SQL was executed AND we have substantial analysis
