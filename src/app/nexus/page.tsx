@@ -145,11 +145,11 @@ export default function Page() {
     }),
   };
 
-  // Escolhe qual hook vai enviar a próxima mensagem
-  const { sendMessage, status } = chats[selectedAgent as keyof typeof chats] || chats.nexus;
+  // Escolhe qual hook vai enviar a próxima mensagem E pegar streaming
+  const { messages, sendMessage, status } = chats[selectedAgent as keyof typeof chats] || chats.nexus;
 
-  // Usar array unificado que já está em ordem cronológica
-  const displayedMessages = allMessages;
+  // Combinar histórico + streaming atual
+  const displayedMessages = [...allMessages, ...messages];
 
   const [input, setInput] = useState('');
   
