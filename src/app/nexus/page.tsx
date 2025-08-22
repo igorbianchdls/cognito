@@ -214,7 +214,7 @@ export default function Page() {
   };
 
   return (
-    <div className="fixed inset-0 h-screen mx-[2.5%] md:mx-[12.5%] lg:mx-[25%]">
+    <div className="fixed inset-0 h-screen mx-[2.5%] md:mx-[12.5%] lg:mx-[25%]" style={{backgroundColor: '#FBFBFB'}}>
       <ChatContainer
         messages={displayedMessages}
         input={input}
