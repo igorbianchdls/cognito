@@ -30,7 +30,7 @@ Não foram encontrados dados para análise. Verifique se a consulta SQL retornou
       }
 
       // Análise real dos dados
-      const analysis = analyzeRealData(tableData, sqlQuery, analysisType);
+      const analysis = analyzeRealData(tableData, sqlQuery);
       
       return {
         analysisText: analysis,
@@ -55,7 +55,7 @@ Ocorreu um erro ao analisar os dados. Verifique se os dados estão no formato co
   },
 });
 
-function analyzeRealData(data: Record<string, unknown>[], sqlQuery: string, analysisType: string): string {
+function analyzeRealData(data: Record<string, unknown>[], sqlQuery: string): string {
   const totalRows = data.length;
   const columns = Object.keys(data[0] || {});
   const numericColumns = columns.filter(col => 
@@ -63,7 +63,7 @@ function analyzeRealData(data: Record<string, unknown>[], sqlQuery: string, anal
   );
   
   // Análise básica dos dados
-  const stats: Record<string, any> = {};
+  const stats: Record<string, { min: number; max: number; avg: number; total: number }> = {};
   numericColumns.forEach(col => {
     const values = data.map(row => Number(row[col])).filter(v => !isNaN(v));
     if (values.length > 0) {
@@ -176,7 +176,7 @@ function analyzeRealData(data: Record<string, unknown>[], sqlQuery: string, anal
 
   // Top valores categóricos
   const topCategorical = Object.entries(categoricalData)
-    .filter(([col, counts]) => Object.keys(counts).length <= 10)
+    .filter(([, counts]) => Object.keys(counts).length <= 10)
     .slice(0, 2);
     
   if (topCategorical.length > 0) {
@@ -543,7 +543,7 @@ export const criarKPI = tool({
     // Mock KPI calculation
     const baseValue = Math.floor(Math.random() * 10000) + 1000;
     const currentValue = target ? (baseValue % target) + (target * 0.7) : baseValue;
-    const previousValue = currentValue * (0.85 + Math.random() * 0.3);
+    // const previousValue = currentValue * (0.85 + Math.random() * 0.3);
     
     const kpiData = {
       revenue: { current: 245000, target: 250000, unit: '$' },
