@@ -9,7 +9,6 @@ import WeatherCard from '../tools/WeatherCard';
 import DatasetsList from '../tools/DatasetsList';
 import TablesList from '../tools/TablesList';
 import TableData from '../tools/TableData';
-import DataInterpretation from '../tools/DataInterpretation';
 import ChartVisualization from '../tools/ChartVisualization';
 import ResultDisplay from '../tools/ResultDisplay';
 import Dashboard from '../tools/Dashboard';
@@ -90,25 +89,6 @@ type DataToolOutput = {
   error?: string;
 };
 
-type InterpretarDadosToolInput = {
-  datasetId: string;
-  tableId: string;
-  analysisType?: 'trends' | 'summary' | 'insights' | 'anomalies';
-};
-
-type InterpretarDadosToolOutput = {
-  datasetId: string;
-  tableId: string;
-  analysisType: string;
-  analysis: {
-    summary?: Record<string, unknown>;
-    insights?: string[];
-    recommendations?: string[];
-  };
-  executionTime: number;
-  success: boolean;
-  error?: string;
-};
 
 type CriarGraficoToolInput = {
   tableData: Array<Record<string, unknown>>;
@@ -348,10 +328,6 @@ type NexusToolUIPart = ToolUIPart<{
   getData: {
     input: DataToolInput;
     output: DataToolOutput;
-  };
-  interpretarDados: {
-    input: InterpretarDadosToolInput;
-    output: InterpretarDadosToolOutput;
   };
   criarGrafico: {
     input: CriarGraficoToolInput;
@@ -602,41 +578,6 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
           );
         }
 
-        if (part.type === 'tool-interpretarDados') {
-          const interpretTool = part as NexusToolUIPart;
-          const callId = interpretTool.toolCallId;
-          const shouldBeOpen = interpretTool.state === 'output-available' || interpretTool.state === 'output-error';
-          
-          return (
-            <div key={callId}>
-              <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="tool-interpretarDados" state={interpretTool.state} />
-                <ToolContent>
-                  {interpretTool.input && (
-                    <ToolInput input={interpretTool.input} />
-                  )}
-                  {interpretTool.state === 'output-error' && (
-                    <ToolOutput 
-                      output={null}
-                      errorText={interpretTool.errorText}
-                    />
-                  )}
-                </ToolContent>
-              </Tool>
-              {interpretTool.state === 'output-available' && (
-                <DataInterpretation 
-                  datasetId={(interpretTool.output as InterpretarDadosToolOutput).datasetId}
-                  tableId={(interpretTool.output as InterpretarDadosToolOutput).tableId}
-                  analysisType={(interpretTool.output as InterpretarDadosToolOutput).analysisType}
-                  analysis={(interpretTool.output as InterpretarDadosToolOutput).analysis}
-                  executionTime={(interpretTool.output as InterpretarDadosToolOutput).executionTime}
-                  success={(interpretTool.output as InterpretarDadosToolOutput).success}
-                  error={(interpretTool.output as InterpretarDadosToolOutput).error}
-                />
-              )}
-            </div>
-          );
-        }
 
         if (part.type === 'tool-criarGrafico') {
           const chartTool = part as NexusToolUIPart;
