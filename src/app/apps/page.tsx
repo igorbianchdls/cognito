@@ -119,7 +119,7 @@ export default function AppsPage() {
           </div>
           
           {/* Right Canvas - Conditional rendering */}
-          <div className="flex-1">
+          <div className="flex-1 p-3">
             {hasNavigationWidget ? (
               <MultiGridCanvas 
                 widgets={droppedWidgets}

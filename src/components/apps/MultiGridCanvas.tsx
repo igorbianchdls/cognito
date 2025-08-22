@@ -163,7 +163,7 @@ export default function MultiGridCanvas({
       <div className="flex-1">
         <div 
           ref={setNodeRef} 
-          className={`h-full relative transition-all duration-200 p-6 bg-white ${
+          className={`h-full relative transition-all duration-200 p-3 bg-white ${
             isOver ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
           }`}
           style={{
