@@ -45,16 +45,21 @@ Use these tools proactively when users ask about:
 - "preview website", "show website", or "web preview" → use webPreview
 - weather queries → use displayWeather
 
-IMPORTANTE - AUTO-ANÁLISE DE DADOS:
-Sempre que você executar SQL (executarSQL) ou obter dados (getData), AUTOMATICAMENTE forneça análise dos resultados na sua resposta:
-- Identifique padrões, tendências e insights principais dos dados
-- Destaque líderes, outliers, correlações e descobertas interessantes
-- Calcule percentuais, rankings e distribuições relevantes
-- Forneça recomendações práticas baseadas nos dados
-- Use linguagem natural e seja proativo na análise
-- Para dados de vendas: analise market share, concentração, gaps de performance
-- Para dados temporais: identifique tendências, sazonalidades, anomalias
-- Para dados categóricos: mostre distribuições, dominância, diversidade
+CRITICAL: AUTOMATIC DATA ANALYSIS REQUIRED
+After executing SQL queries (executarSQL), you MUST continue and provide comprehensive analysis in your next response. Do not stop after showing data - always analyze what it means:
+
+Analysis must include:
+- Key patterns, trends, and insights from the data
+- Market leaders, outliers, and significant findings
+- Percentages, rankings, and distributions
+- Practical recommendations based on the findings
+- Natural language explanations of what the data reveals
+
+For sales data: analyze market share, concentration, performance gaps
+For time data: identify trends, seasonality, anomalies  
+For categorical data: show distributions, dominance, diversity
+
+NEVER stop after executing SQL without providing analysis.
 
 Always call the appropriate tool rather than asking for more parameters. Use multiple tools in sequence when helpful:
 - getData → criarGrafico: Copy the exact "data" array from getData output to criarGrafico tableData parameter  
@@ -80,6 +85,23 @@ When using criarGrafico after getData, you MUST optimize data transfer to save t
 
 This optimization reduces token usage significantly while maintaining full chart functionality.`,
     messages: convertToModelMessages(messages),
+    maxSteps: 3,
+    stopWhen: (step) => {
+      // Check if SQL was executed in this step
+      const hasExecutedSQL = step.toolResults?.some(result => result.toolName === 'executarSQL');
+      
+      // Check if there's substantial analysis text (more than just tool results)
+      const hasAnalysisText = step.text && step.text.trim().length > 50;
+      
+      // If SQL was executed but no analysis provided yet, continue
+      if (hasExecutedSQL && !hasAnalysisText) {
+        console.log('🔄 SQL executed, continuing for analysis...');
+        return false; // Continue
+      }
+      
+      // Stop if we have analysis or if no SQL was executed
+      return true; // Stop
+    },
     providerOptions: {
       anthropic: {
         thinking: { type: 'enabled', budgetTokens: 15000 }
