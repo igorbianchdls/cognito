@@ -8,6 +8,8 @@ import MetaIcon from '@/components/icons/MetaIcon';
 import GoogleIcon from '@/components/icons/GoogleIcon';
 import GoogleAnalyticsIcon from '@/components/icons/GoogleAnalyticsIcon';
 import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon';
+import ShopifyIcon from '@/components/icons/ShopifyIcon';
+import AmazonIcon from '@/components/icons/AmazonIcon';
 import WeatherCard from '../tools/WeatherCard';
 import DatasetsList from '../tools/DatasetsList';
 import TablesList from '../tools/TablesList';
@@ -372,11 +374,11 @@ const getAgentInfo = (agent: string) => {
     case 'metaAnalyst':
       return { initial: 'M', title: 'MetaAnalyst AI', color: 'bg-purple-500', icon: <MetaIcon className="w-full h-full" /> };
     case 'amazonAdsAnalyst':
-      return { initial: 'A', title: 'AmazonAds AI', color: 'bg-orange-500' };
+      return { initial: 'A', title: 'AmazonAds AI', color: 'bg-orange-500', icon: <AmazonIcon className="w-full h-full" /> };
     case 'googleAnalyticsAnalyst':
       return { initial: 'G', title: 'GoogleAnalytics AI', color: 'bg-blue-400', icon: <GoogleAnalyticsIcon className="w-full h-full" /> };
     case 'shopifyAnalyst':
-      return { initial: 'S', title: 'Shopify AI', color: 'bg-green-400' };
+      return { initial: 'S', title: 'Shopify AI', color: 'bg-green-400', icon: <ShopifyIcon className="w-full h-full" /> };
     case 'contaAzulAnalyst':
       return { initial: 'C', title: 'ContaAzul AI', color: 'bg-indigo-500' };
     case 'shopeeAnalyst':
