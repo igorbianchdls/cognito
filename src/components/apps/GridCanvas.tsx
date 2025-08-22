@@ -151,7 +151,7 @@ export default function GridCanvas({
       <div 
         ref={setNodeRef}
         style={canvasStyles}
-        className={`border-2 border-dashed relative transition-colors ${
+        className={`border-2 border-dashed relative transition-colors p-6 bg-white ${
           (canvasConfig.canvasMode === 'fixed' || containerWidth > 768) ? '' : 'flex-1'
         } ${
           isOver 
