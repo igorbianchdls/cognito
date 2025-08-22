@@ -93,6 +93,10 @@ export default function AppsPage() {
           onTabChange={setActiveTab}
           sidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+          onPreview={() => {
+            // TODO: Implementar lógica de preview
+            console.log('Preview clicado');
+          }}
         />
         
         {/* Main Content */}
