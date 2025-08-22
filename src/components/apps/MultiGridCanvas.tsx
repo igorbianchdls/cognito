@@ -18,13 +18,15 @@ interface MultiGridCanvasProps {
   onLayoutChange: (layout: LayoutItem[]) => void
   onRemoveWidget: (widgetId: string) => void
   onEditWidget?: (widgetId: string) => void
+  readOnly?: boolean
 }
 
 export default function MultiGridCanvas({ 
   widgets, 
   onLayoutChange, 
   onRemoveWidget,
-  onEditWidget
+  onEditWidget,
+  readOnly = false
 }: MultiGridCanvasProps) {
   const selectedWidgetId = useStore($selectedWidgetId)
   const canvasConfig = useStore($canvasConfig)
@@ -192,8 +194,8 @@ export default function MultiGridCanvas({
             rowHeight={60}
             width={containerWidth}
             onLayoutChange={handleLayoutChange}
-            isDraggable={true}
-            isResizable={true}
+            isDraggable={!readOnly}
+            isResizable={!readOnly}
             margin={[16, 16]}
             containerPadding={[16, 16]}
           >

@@ -16,13 +16,15 @@ interface GridCanvasProps {
   onLayoutChange: (layout: LayoutItem[]) => void
   onRemoveWidget: (widgetId: string) => void
   onEditWidget?: (widgetId: string) => void
+  readOnly?: boolean
 }
 
 export default function GridCanvas({ 
   widgets, 
   onLayoutChange, 
   onRemoveWidget,
-  onEditWidget
+  onEditWidget,
+  readOnly = false
 }: GridCanvasProps) {
   const selectedWidgetId = useStore($selectedWidgetId)
   const canvasConfig = useStore($canvasConfig)
@@ -176,8 +178,8 @@ export default function GridCanvas({
           cols={responsiveCols}
           rowHeight={canvasConfig.rowHeight}
           onLayoutChange={onLayoutChange}
-          isDraggable={true}
-          isResizable={true}
+          isDraggable={!readOnly}
+          isResizable={!readOnly}
           margin={canvasConfig.margin}
           containerPadding={canvasConfig.containerPadding}
           useCSSTransforms={true}

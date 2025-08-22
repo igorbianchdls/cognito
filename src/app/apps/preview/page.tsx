@@ -97,13 +97,14 @@ function PreviewContent() {
       </div>
 
       {/* Canvas Area */}
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-0">
         {dashboard.isMultiCanvas && dashboard.multiCanvasState ? (
           <MultiGridCanvas 
             widgets={dashboard.widgets}
             onLayoutChange={handleLayoutChange}
             onRemoveWidget={() => {}}
             onEditWidget={() => {}}
+            readOnly={true}
           />
         ) : (
           <GridCanvas 
@@ -111,6 +112,7 @@ function PreviewContent() {
             onLayoutChange={handleLayoutChange}
             onRemoveWidget={() => {}}
             onEditWidget={() => {}}
+            readOnly={true}
           />
         )}
       </div>
