@@ -96,7 +96,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
 
       {/* Sidebar */}
       <div className={`
-        fixed md:static inset-y-0 left-0 z-50 w-64 md:w-14
+        fixed md:static inset-y-0 left-0 z-50 w-64 md:w-20
         bg-[#f8f9fa] dark:bg-[#1a1a1a] 
         border-r border-[#e8eaed] dark:border-[#2d2d2d] 
         flex flex-col
@@ -140,7 +140,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
               <button
                 key={item.id}
                 onClick={() => handleItemClick(item)}
-                className={`w-full md:w-10 h-12 md:h-10 rounded-lg flex items-center md:justify-center gap-3 md:gap-0 px-4 md:px-0 transition-all duration-200 group relative ${
+                className={`w-full md:w-16 h-12 md:h-auto rounded-lg flex items-center md:flex-col md:items-center gap-3 md:gap-0 px-4 md:px-2 md:py-2 transition-all duration-200 group relative ${
                   activeItem === item.id
                     ? 'bg-[#f3f4f6] dark:bg-[#374151] text-[#374151] dark:text-[#9ca3af]'
                     : 'text-[#5f6368] dark:text-[#9aa0a6] hover:bg-[#f1f3f4] dark:hover:bg-[#2d2d2d] hover:text-[#202124] dark:hover:text-[#e8eaed]'
@@ -149,15 +149,15 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
               >
                 {item.icon}
                 
+                {/* Desktop Title Below Icon */}
+                <span className="hidden md:block text-xs font-medium mt-1 text-center truncate w-full">
+                  {item.label}
+                </span>
+                
                 {/* Mobile Label */}
                 <span className="md:hidden text-sm font-medium">
                   {item.label}
                 </span>
-                
-                {/* Desktop Tooltip */}
-                <div className="hidden md:block absolute left-full ml-3 px-2 py-1 bg-[#202124] dark:bg-[#2d2d2d] text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 shadow-lg">
-                  {item.label}
-                </div>
               </button>
             ))}
           </div>
@@ -166,7 +166,7 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
         {/* Bottom Section - User */}
         <div className="p-2">
           <button
-            className="w-full md:w-10 h-12 md:h-10 rounded-lg flex items-center md:justify-center gap-3 md:gap-0 px-4 md:px-0 text-[#5f6368] dark:text-[#9aa0a6] hover:bg-[#f1f3f4] dark:hover:bg-[#2d2d2d] hover:text-[#202124] dark:hover:text-[#e8eaed] transition-all duration-200 group relative"
+            className="w-full md:w-16 h-12 md:h-auto rounded-lg flex items-center md:flex-col md:items-center gap-3 md:gap-0 px-4 md:px-2 md:py-2 text-[#5f6368] dark:text-[#9aa0a6] hover:bg-[#f1f3f4] dark:hover:bg-[#2d2d2d] hover:text-[#202124] dark:hover:text-[#e8eaed] transition-all duration-200 group relative"
             title="Perfil"
             onClick={() => console.log('Perfil')}
           >
@@ -174,15 +174,15 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
               <span className="text-white text-xs font-medium">U</span>
             </div>
             
+            {/* Desktop Title Below Icon */}
+            <span className="hidden md:block text-xs font-medium mt-1 text-center truncate w-full">
+              Perfil
+            </span>
+            
             {/* Mobile Label */}
             <span className="md:hidden text-sm font-medium">
               Perfil
             </span>
-            
-            {/* Desktop Tooltip */}
-            <div className="hidden md:block absolute left-full ml-3 px-2 py-1 bg-[#202124] dark:bg-[#2d2d2d] text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 shadow-lg">
-              Perfil
-            </div>
           </button>
         </div>
       </div>
