@@ -94,8 +94,11 @@ export default function AppsPage() {
           sidebarCollapsed={sidebarCollapsed}
           onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
           onPreview={() => {
-            // TODO: Implementar lógica de preview
-            console.log('Preview clicado');
+            // Redirecionar para tab "Salvos" se não estiver ativa
+            if (activeTab !== 'saved') {
+              setActiveTab('saved');
+            }
+            // Usuário pode então clicar em Preview de qualquer dashboard salvo
           }}
         />
         

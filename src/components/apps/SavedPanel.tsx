@@ -2,6 +2,7 @@
 
 import { useStore } from '@nanostores/react'
 import { $savedDashboards, savedDashboardActions } from '@/stores/savedDashboardStore'
+import { Eye } from 'lucide-react'
 
 export default function SavedPanel() {
   const savedDashboards = useStore($savedDashboards)
@@ -16,6 +17,10 @@ export default function SavedPanel() {
     if (confirm(`Excluir o dashboard &quot;${name}&quot;? Esta ação não pode ser desfeita.`)) {
       savedDashboardActions.delete(id)
     }
+  }
+
+  const handlePreview = (id: string) => {
+    window.open(`/apps/preview?id=${id}`, '_blank')
   }
 
   const formatDate = (date: Date) => {
@@ -100,6 +105,13 @@ export default function SavedPanel() {
                   >
                     <span>📂</span>
                     Carregar
+                  </button>
+                  <button
+                    onClick={() => handlePreview(dashboard.id)}
+                    className="flex items-center gap-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs rounded-md transition-colors duration-200"
+                  >
+                    <Eye className="w-3 h-3" />
+                    Preview
                   </button>
                   <button
                     onClick={() => handleDelete(dashboard.id, dashboard.name)}
