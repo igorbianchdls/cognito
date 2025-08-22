@@ -19,6 +19,7 @@ interface MultiGridCanvasProps {
   onRemoveWidget: (widgetId: string) => void
   onEditWidget?: (widgetId: string) => void
   readOnly?: boolean
+  noBorder?: boolean
 }
 
 export default function MultiGridCanvas({ 
@@ -26,7 +27,8 @@ export default function MultiGridCanvas({
   onLayoutChange, 
   onRemoveWidget,
   onEditWidget,
-  readOnly = false
+  readOnly = false,
+  noBorder = false
 }: MultiGridCanvasProps) {
   const selectedWidgetId = useStore($selectedWidgetId)
   const canvasConfig = useStore($canvasConfig)
@@ -165,7 +167,7 @@ export default function MultiGridCanvas({
       <div className="flex-1">
         <div 
           ref={setNodeRef} 
-          className={`h-full relative transition-all duration-200 p-3 bg-white border border-gray-300 ${
+          className={`h-full relative transition-all duration-200 p-3 bg-white ${noBorder ? '' : 'border border-gray-300'} ${
             isOver ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
           }`}
           style={{

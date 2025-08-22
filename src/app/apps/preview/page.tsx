@@ -77,45 +77,26 @@ function PreviewContent() {
 
   // Renderizar dashboard
   return (
-    <div className="h-screen bg-gray-50" style={{backgroundColor: '#FBFBFB'}}>
-      {/* Header simples com nome do dashboard */}
-      <div className="bg-white border-b border-gray-200 px-6 py-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900">{dashboard.name}</h1>
-            {dashboard.description && (
-              <p className="text-sm text-gray-600">{dashboard.description}</p>
-            )}
-          </div>
-          <div className="text-xs text-gray-500">
-            {dashboard.isMultiCanvas ? 
-              `📑 Multi-canvas • ${dashboard.multiCanvasState?.tabs.length || 0} tabs` : 
-              `📊 ${dashboard.widgets.length} widgets`
-            }
-          </div>
-        </div>
-      </div>
-
-      {/* Canvas Area */}
-      <div className="flex-1 p-0">
-        {dashboard.isMultiCanvas && dashboard.multiCanvasState ? (
-          <MultiGridCanvas 
-            widgets={dashboard.widgets}
-            onLayoutChange={handleLayoutChange}
-            onRemoveWidget={() => {}}
-            onEditWidget={() => {}}
-            readOnly={true}
-          />
-        ) : (
-          <GridCanvas 
-            widgets={dashboard.widgets}
-            onLayoutChange={handleLayoutChange}
-            onRemoveWidget={() => {}}
-            onEditWidget={() => {}}
-            readOnly={true}
-          />
-        )}
-      </div>
+    <div className="h-screen" style={{backgroundColor: '#FBFBFB'}}>
+      {dashboard.isMultiCanvas && dashboard.multiCanvasState ? (
+        <MultiGridCanvas 
+          widgets={dashboard.widgets}
+          onLayoutChange={handleLayoutChange}
+          onRemoveWidget={() => {}}
+          onEditWidget={() => {}}
+          readOnly={true}
+          noBorder={true}
+        />
+      ) : (
+        <GridCanvas 
+          widgets={dashboard.widgets}
+          onLayoutChange={handleLayoutChange}
+          onRemoveWidget={() => {}}
+          onEditWidget={() => {}}
+          readOnly={true}
+          noBorder={true}
+        />
+      )}
     </div>
   )
 }

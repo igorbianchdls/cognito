@@ -17,6 +17,7 @@ interface GridCanvasProps {
   onRemoveWidget: (widgetId: string) => void
   onEditWidget?: (widgetId: string) => void
   readOnly?: boolean
+  noBorder?: boolean
 }
 
 export default function GridCanvas({ 
@@ -24,7 +25,8 @@ export default function GridCanvas({
   onLayoutChange, 
   onRemoveWidget,
   onEditWidget,
-  readOnly = false
+  readOnly = false,
+  noBorder = false
 }: GridCanvasProps) {
   const selectedWidgetId = useStore($selectedWidgetId)
   const canvasConfig = useStore($canvasConfig)
@@ -153,7 +155,7 @@ export default function GridCanvas({
       <div 
         ref={setNodeRef}
         style={canvasStyles}
-        className={`border border-gray-300 relative transition-colors p-3 bg-white ${
+        className={`${noBorder ? '' : 'border border-gray-300'} relative transition-colors p-3 bg-white ${
           (canvasConfig.canvasMode === 'fixed' || containerWidth > 768) ? '' : 'flex-1'
         } ${
           isOver 
