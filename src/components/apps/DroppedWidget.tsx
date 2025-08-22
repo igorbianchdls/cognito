@@ -103,23 +103,8 @@ export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = f
         </button>
       </div>
 
-      {/* Widget header - always visible */}
-      <div 
-        className="p-3 border-b border-gray-100"
-        style={{
-          backgroundColor: widget.color ? `${widget.color}20` : '#f9fafb'
-        }}
-      >
-        <div className="flex items-center gap-2">
-          <span className="text-lg">{widget.icon}</span>
-          <span className="text-sm font-medium text-gray-900 truncate">
-            {widget.name}
-          </span>
-        </div>
-      </div>
-
       {/* Widget content */}
-      <div className="p-3 h-[calc(100%-60px)]">
+      <div className="p-3 h-full">
         {renderWidget()}
       </div>
 
