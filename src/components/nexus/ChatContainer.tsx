@@ -55,7 +55,7 @@ export default function ChatContainer({
   return (
     <div className="h-screen flex flex-col">
       <div className="flex-1 overflow-y-auto custom-scrollbar">
-        <MessageList messages={messages} />
+        <MessageList messages={messages} selectedAgent={selectedAgent} />
       </div>
       <div className="sticky bottom-0 bg-white pb-4">
         <InputArea 

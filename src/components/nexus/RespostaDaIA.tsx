@@ -406,11 +406,12 @@ const getAgentInfo = (agent: string) => {
 
 interface RespostaDaIAProps {
   message: UIMessage;
+  selectedAgent: string;
 }
 
-export default function RespostaDaIA({ message }: RespostaDaIAProps) {
-  // Usar o agente da própria mensagem, não selectedAgent
-  const messageAgent = (message as UIMessage & { agent?: string }).agent || 'nexus'; // fallback para nexus
+export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAProps) {
+  // Usar o agente da própria mensagem, se não tiver usa o selectedAgent atual
+  const messageAgent = (message as UIMessage & { agent?: string }).agent || selectedAgent;
   
   const agentInfo = getAgentInfo(messageAgent);
   const handleCopy = async () => {
