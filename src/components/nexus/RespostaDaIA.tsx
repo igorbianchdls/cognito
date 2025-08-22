@@ -7,6 +7,7 @@ import { CopyIcon, ThumbsUpIcon, ThumbsDownIcon } from 'lucide-react';
 import MetaIcon from '@/components/icons/MetaIcon';
 import GoogleIcon from '@/components/icons/GoogleIcon';
 import GoogleAnalyticsIcon from '@/components/icons/GoogleAnalyticsIcon';
+import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon';
 import WeatherCard from '../tools/WeatherCard';
 import DatasetsList from '../tools/DatasetsList';
 import TablesList from '../tools/TablesList';
@@ -381,9 +382,9 @@ const getAgentInfo = (agent: string) => {
     case 'shopeeAnalyst':
       return { initial: 'H', title: 'Shopee AI', color: 'bg-red-500' };
     case 'keywordAnalyst':
-      return { initial: 'K', title: 'Keyword AI', color: 'bg-yellow-500' };
+      return { initial: 'K', title: 'Keyword AI', color: 'bg-yellow-500', icon: <GoogleAdsIcon className="w-full h-full" /> };
     case 'googleCampaignAnalyst':
-      return { initial: 'Y', title: 'GoogleCampaign AI', color: 'bg-blue-700', icon: <GoogleIcon className="w-full h-full" /> };
+      return { initial: 'Y', title: 'GoogleCampaign AI', color: 'bg-blue-700', icon: <GoogleAdsIcon className="w-full h-full" /> };
     case 'metaCampaignAnalyst':
       return { initial: 'B', title: 'MetaCampaign AI', color: 'bg-blue-800', icon: <MetaIcon className="w-full h-full" /> };
     case 'metaCreativeAnalyst':
