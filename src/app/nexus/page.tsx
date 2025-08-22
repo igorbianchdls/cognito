@@ -214,7 +214,7 @@ export default function Page() {
   };
 
   return (
-    <div style={{ marginLeft: '25%', marginRight: '25%', height: '100vh', position: 'fixed', top: 0, left: 0, right: 0 }}>
+    <div className="fixed inset-0 h-screen mx-0 md:mx-[12.5%] lg:mx-[25%]">
       <ChatContainer
         messages={displayedMessages}
         input={input}
