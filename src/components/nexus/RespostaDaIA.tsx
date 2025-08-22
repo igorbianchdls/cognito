@@ -6,6 +6,7 @@ import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/componen
 import { CopyIcon, ThumbsUpIcon, ThumbsDownIcon } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import MetaIcon from '@/components/icons/MetaIcon';
+import GoogleIcon from '@/components/icons/GoogleIcon';
 import WeatherCard from '../tools/WeatherCard';
 import DatasetsList from '../tools/DatasetsList';
 import TablesList from '../tools/TablesList';
@@ -372,7 +373,7 @@ const getAgentInfo = (agent: string) => {
     case 'amazonAdsAnalyst':
       return { initial: 'A', title: 'AmazonAds AI', color: 'bg-orange-500' };
     case 'googleAnalyticsAnalyst':
-      return { initial: 'G', title: 'GoogleAnalytics AI', color: 'bg-blue-400' };
+      return { initial: 'G', title: 'GoogleAnalytics AI', color: 'bg-blue-400', icon: <GoogleIcon className="w-5 h-5" /> };
     case 'shopifyAnalyst':
       return { initial: 'S', title: 'Shopify AI', color: 'bg-green-400' };
     case 'contaAzulAnalyst':
@@ -382,7 +383,7 @@ const getAgentInfo = (agent: string) => {
     case 'keywordAnalyst':
       return { initial: 'K', title: 'Keyword AI', color: 'bg-yellow-500' };
     case 'googleCampaignAnalyst':
-      return { initial: 'Y', title: 'GoogleCampaign AI', color: 'bg-blue-700' };
+      return { initial: 'Y', title: 'GoogleCampaign AI', color: 'bg-blue-700', icon: <GoogleIcon className="w-5 h-5" /> };
     case 'metaCampaignAnalyst':
       return { initial: 'B', title: 'MetaCampaign AI', color: 'bg-blue-800', icon: <MetaIcon className="w-5 h-5" /> };
     case 'metaCreativeAnalyst':
