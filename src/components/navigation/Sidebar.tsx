@@ -97,7 +97,7 @@ export default function Sidebar() {
               onClick={() => handleItemClick(item)}
               className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 group relative ${
                 activeItem === item.id
-                  ? 'bg-[#e8f0fe] dark:bg-[#1e3a5f] text-[#1a73e8] dark:text-[#4285f4]'
+                  ? 'bg-[#f3f4f6] dark:bg-[#374151] text-[#374151] dark:text-[#9ca3af]'
                   : 'text-[#5f6368] dark:text-[#9aa0a6] hover:bg-[#f1f3f4] dark:hover:bg-[#2d2d2d] hover:text-[#202124] dark:hover:text-[#e8eaed]'
               }`}
               title={item.label}
