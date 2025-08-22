@@ -146,16 +146,6 @@ export default function GridCanvas({
 
   return (
     <div ref={containerRef} className="h-full flex flex-col">
-      {/* Canvas Header */}
-      <div className="mb-4">
-        <h2 className="text-xl font-semibold text-gray-900">Dashboard Canvas</h2>
-        <p className="text-sm text-gray-600">
-          {widgets.length === 0 
-            ? 'Drag widgets from the left panel to get started'
-            : `${widgets.length} widget${widgets.length !== 1 ? 's' : ''} on canvas`
-          }
-        </p>
-      </div>
 
       {/* Grid Container */}
       <div 
