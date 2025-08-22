@@ -49,7 +49,7 @@ export default function GoogleAnalyticsIcon({ className = "w-4 h-4" }: GoogleAna
         <clipPath id="SVGID_9_">
           <use xlinkHref="#SVGID_8_" overflow="visible"></use>
         </clipPath>
-        <path d="M60 49h40v-1H60c-6.6 0-12 5.4-12 12v1c0-6.6 5.4-12 12-12z" style={{clipPath:"url(#SVGID_9_)",enableBackground:"new",fill:"#fff",opacity:".2"}}></path>
+        <path d="M60 49h40v-1H60c-6.6 0-12 5.4-12 12v1c0-6.6 5.4-12 12-12z" style={{clipPath:"url(#SVGID_9_)",fill:"#fff",opacity:".2"}}></path>
       </g>
       <g>
         <defs>
@@ -58,7 +58,7 @@ export default function GoogleAnalyticsIcon({ className = "w-4 h-4" }: GoogleAna
         <clipPath id="SVGID_11_">
           <use xlinkHref="#SVGID_10_" overflow="visible"></use>
         </clipPath>
-        <path d="M12 101h36v-1H12c-6.6 0-12 5.4-12 12v1c0-6.6 5.4-12 12-12z" style={{clipPath:"url(#SVGID_11_)",enableBackground:"new",fill:"#fff",opacity:".2"}}></path>
+        <path d="M12 101h36v-1H12c-6.6 0-12 5.4-12 12v1c0-6.6 5.4-12 12-12z" style={{clipPath:"url(#SVGID_11_)",fill:"#fff",opacity:".2"}}></path>
       </g>
       <g>
         <defs>
@@ -67,7 +67,7 @@ export default function GoogleAnalyticsIcon({ className = "w-4 h-4" }: GoogleAna
         <clipPath id="SVGID_13_">
           <use xlinkHref="#SVGID_12_" overflow="visible"></use>
         </clipPath>
-        <path d="M139.8 0h-27.5c-6.7 0-12.2 5.5-12.2 12.2v1c0-6.7 5.5-12.2 12.2-12.2h27.5c6.7 0 12.2 5.5 12.2 12.2v-1C152 5.5 146.5 0 139.8 0z" style={{clipPath:"url(#SVGID_13_)",enableBackground:"new",fill:"#fff",opacity:".2"}}></path>
+        <path d="M139.8 0h-27.5c-6.7 0-12.2 5.5-12.2 12.2v1c0-6.7 5.5-12.2 12.2-12.2h27.5c6.7 0 12.2 5.5 12.2 12.2v-1C152 5.5 146.5 0 139.8 0z" style={{clipPath:"url(#SVGID_13_)",fill:"#fff",opacity:".2"}}></path>
       </g>
       <g>
         <defs>
@@ -76,7 +76,7 @@ export default function GoogleAnalyticsIcon({ className = "w-4 h-4" }: GoogleAna
         <clipPath id="SVGID_15_">
           <use xlinkHref="#SVGID_14_" overflow="visible"></use>
         </clipPath>
-        <path d="M139.8 151H12c-6.6 0-12-5.4-12-12v1c0 6.6 5.4 12 12 12h127.7c6.7 0 12.2-5.5 12.2-12.2v-1c.1 6.7-5.4 12.2-12.1 12.2z" style={{clipPath:"url(#SVGID_15_)",enableBackground:"new",fill:"#bf360c",opacity:".2"}}></path>
+        <path d="M139.8 151H12c-6.6 0-12-5.4-12-12v1c0 6.6 5.4 12 12 12h127.7c6.7 0 12.2-5.5 12.2-12.2v-1c.1 6.7-5.4 12.2-12.1 12.2z" style={{clipPath:"url(#SVGID_15_)",fill:"#bf360c",opacity:".2"}}></path>
       </g>
       <linearGradient id="SVGID_16_" x1="50.969" x2="149.295" y1="102.289" y2="3.963" gradientTransform="matrix(1 0 0 -1 0 153.32)" gradientUnits="userSpaceOnUse">
         <stop offset="0" stopColor="#fff" stopOpacity=".1"></stop>
