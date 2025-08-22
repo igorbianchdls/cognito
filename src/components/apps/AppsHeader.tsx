@@ -1,6 +1,6 @@
 'use client'
 
-import { BarChart3, MessageSquare, Settings, Code, Cpu, Archive } from 'lucide-react'
+import { BarChart3, MessageSquare, Settings, Code, Cpu, Archive, Eye } from 'lucide-react'
 import { savedDashboardActions } from '@/stores/savedDashboardStore'
 
 interface AppsHeaderProps {
@@ -8,9 +8,10 @@ interface AppsHeaderProps {
   onTabChange: (tab: 'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved') => void
   sidebarCollapsed: boolean
   onToggleSidebar: () => void
+  onPreview: () => void
 }
 
-export default function AppsHeader({ activeTab, onTabChange, sidebarCollapsed, onToggleSidebar }: AppsHeaderProps) {
+export default function AppsHeader({ activeTab, onTabChange, sidebarCollapsed, onToggleSidebar, onPreview }: AppsHeaderProps) {
   const tabs = [
     { id: 'widgets', label: 'Widgets', icon: BarChart3 },
     { id: 'chat', label: 'Chat', icon: MessageSquare },
@@ -50,15 +51,26 @@ export default function AppsHeader({ activeTab, onTabChange, sidebarCollapsed, o
         ))}
         </div>
         
-        {/* Botão Salvar Atual - Extrema Direita */}
-        <button
-          onClick={savedDashboardActions.promptAndSave}
-          className="flex items-center gap-2 px-4 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-base font-semibold transition-colors duration-200 border border-gray-600"
-          title="Salvar dashboard atual"
-        >
-          <Archive className="w-4 h-4" />
-          Salvar Atual
-        </button>
+        {/* Botões da direita */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onPreview}
+            className="flex items-center gap-2 px-4 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-base font-semibold transition-colors duration-200 border border-blue-500"
+            title="Visualizar dashboard"
+          >
+            <Eye className="w-4 h-4" />
+            Preview
+          </button>
+          
+          <button
+            onClick={savedDashboardActions.promptAndSave}
+            className="flex items-center gap-2 px-4 py-1 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-base font-semibold transition-colors duration-200 border border-gray-600"
+            title="Salvar dashboard atual"
+          >
+            <Archive className="w-4 h-4" />
+            Salvar Atual
+          </button>
+        </div>
       </div>
     </div>
   )
