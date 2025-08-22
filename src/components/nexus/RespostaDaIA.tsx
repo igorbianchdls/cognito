@@ -5,6 +5,7 @@ import { Actions, Action } from '@/components/ai-elements/actions';
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool';
 import { CopyIcon, ThumbsUpIcon, ThumbsDownIcon } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import MetaIcon from '@/components/icons/MetaIcon';
 import WeatherCard from '../tools/WeatherCard';
 import DatasetsList from '../tools/DatasetsList';
 import TablesList from '../tools/TablesList';
@@ -367,7 +368,7 @@ const getAgentInfo = (agent: string) => {
     case 'teste':
       return { initial: 'T', title: 'Teste AI', color: 'bg-green-500' };
     case 'metaAnalyst':
-      return { initial: 'M', title: 'MetaAnalyst AI', color: 'bg-purple-500' };
+      return { initial: 'M', title: 'MetaAnalyst AI', color: 'bg-purple-500', icon: <MetaIcon className="w-5 h-5" /> };
     case 'amazonAdsAnalyst':
       return { initial: 'A', title: 'AmazonAds AI', color: 'bg-orange-500' };
     case 'googleAnalyticsAnalyst':
@@ -383,9 +384,9 @@ const getAgentInfo = (agent: string) => {
     case 'googleCampaignAnalyst':
       return { initial: 'Y', title: 'GoogleCampaign AI', color: 'bg-blue-700' };
     case 'metaCampaignAnalyst':
-      return { initial: 'B', title: 'MetaCampaign AI', color: 'bg-blue-800' };
+      return { initial: 'B', title: 'MetaCampaign AI', color: 'bg-blue-800', icon: <MetaIcon className="w-5 h-5" /> };
     case 'metaCreativeAnalyst':
-      return { initial: 'R', title: 'MetaCreative AI', color: 'bg-pink-500' };
+      return { initial: 'R', title: 'MetaCreative AI', color: 'bg-pink-500', icon: <MetaIcon className="w-5 h-5" /> };
     case 'inventoryAnalyst':
       return { initial: 'I', title: 'Inventory AI', color: 'bg-amber-600' };
     case 'cashFlowAnalyst':
@@ -427,7 +428,7 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
       <div className="flex items-center gap-3 mb-3">
         <Avatar className="w-8 h-8">
           <AvatarFallback className={`${agentInfo.color} text-white font-semibold`}>
-            {agentInfo.initial}
+            {agentInfo.icon || agentInfo.initial}
           </AvatarFallback>
         </Avatar>
         <h3 className="font-bold text-gray-900">{agentInfo.title}</h3>
