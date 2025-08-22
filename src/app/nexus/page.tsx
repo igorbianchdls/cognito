@@ -151,7 +151,18 @@ export default function Page() {
   // Combinar histórico + streaming atual (sem duplicatas)
   const displayedMessages = [
     ...allMessages,
-    ...messages.filter(msg => !allMessages.some(existing => existing.id === msg.id))
+    ...messages.filter(msg => {
+      // Para mensagens do usuário: só mostrar se não existe no allMessages
+      if (msg.role === 'user') {
+        return !allMessages.some(existing => 
+          existing.role === 'user' && 
+          existing.parts?.[0]?.text === msg.parts?.[0]?.text &&
+          existing.agent === selectedAgent
+        );
+      }
+      // Para mensagens da IA: filtro por ID (como antes)
+      return !allMessages.some(existing => existing.id === msg.id);
+    })
   ];
 
   const [input, setInput] = useState('');
