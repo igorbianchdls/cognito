@@ -4,6 +4,7 @@ import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
 import { useState, FormEvent } from 'react';
 import { useStore } from '@nanostores/react';
+import Sidebar from '@/components/navigation/Sidebar';
 import ChatContainer from '../../components/nexus/ChatContainer';
 import type { UIMessage } from 'ai';
 import { currentAgent, setCurrentAgent } from '../../stores/agentStore';
@@ -214,16 +215,19 @@ export default function Page() {
   };
 
   return (
-    <div data-page="nexus" className="fixed inset-0 h-screen mx-[2.5%] md:mx-[12.5%] lg:mx-[25%]" style={{backgroundColor: '#FBFBFB'}}>
-      <ChatContainer
-        messages={displayedMessages}
-        input={input}
-        setInput={setInput}
-        onSubmit={handleSubmit}
-        status={status}
-        selectedAgent={selectedAgent}
-        onAgentChange={setCurrentAgent}
-      />
+    <div className="flex h-screen" style={{backgroundColor: '#FBFBFB'}}>
+      <Sidebar />
+      <div data-page="nexus" className="flex-1 mx-[2.5%] md:mx-[12.5%] lg:mx-[25%]">
+        <ChatContainer
+          messages={displayedMessages}
+          input={input}
+          setInput={setInput}
+          onSubmit={handleSubmit}
+          status={status}
+          selectedAgent={selectedAgent}
+          onAgentChange={setCurrentAgent}
+        />
+      </div>
     </div>
   );
 }
