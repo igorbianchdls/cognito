@@ -12,6 +12,7 @@ export default function AmazonIcon({ className = "w-4 h-4" }: AmazonIconProps) {
       viewBox="0 0 48 48" 
       id="amazon"
     >
+      <rect width="48" height="48" fill="#ffffff" rx="6"/>
       <g id="Icons" fill="none" fillRule="evenodd" stroke="none" strokeWidth="1">
         <g id="Color-" transform="translate(-601 -560)">
           <g id="Amazon" transform="translate(601 560)">

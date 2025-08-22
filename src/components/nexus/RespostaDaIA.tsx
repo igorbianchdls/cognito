@@ -368,37 +368,37 @@ type NexusToolUIPart = ToolUIPart<{
 const getAgentInfo = (agent: string) => {
   switch (agent) {
     case 'nexus':
-      return { initial: 'N', title: 'Nexus AI', color: 'bg-blue-500' };
+      return { initial: 'N', title: 'Nexus', color: 'bg-blue-500' };
     case 'teste':
-      return { initial: 'T', title: 'Teste AI', color: 'bg-green-500' };
+      return { initial: 'T', title: 'Teste', color: 'bg-green-500' };
     case 'metaAnalyst':
-      return { initial: 'M', title: 'MetaAnalyst AI', color: 'bg-purple-500', icon: <MetaIcon className="w-full h-full" /> };
+      return { initial: 'M', title: 'Analista de Meta Ads', color: 'bg-purple-500', icon: <MetaIcon className="w-full h-full" /> };
     case 'amazonAdsAnalyst':
-      return { initial: 'A', title: 'AmazonAds AI', color: 'bg-orange-500', icon: <AmazonIcon className="w-full h-full" /> };
+      return { initial: 'A', title: 'Analista de Amazon Ads', color: 'bg-orange-500', icon: <AmazonIcon className="w-full h-full" /> };
     case 'googleAnalyticsAnalyst':
-      return { initial: 'G', title: 'GoogleAnalytics AI', color: 'bg-blue-400', icon: <GoogleAnalyticsIcon className="w-full h-full" /> };
+      return { initial: 'G', title: 'Analista de Google Analytics', color: 'bg-blue-400', icon: <GoogleAnalyticsIcon className="w-full h-full" /> };
     case 'shopifyAnalyst':
-      return { initial: 'S', title: 'Shopify AI', color: 'bg-green-400', icon: <ShopifyIcon className="w-full h-full" /> };
+      return { initial: 'S', title: 'Analista de Shopify', color: 'bg-green-400', icon: <ShopifyIcon className="w-full h-full" /> };
     case 'contaAzulAnalyst':
-      return { initial: 'C', title: 'ContaAzul AI', color: 'bg-indigo-500' };
+      return { initial: 'C', title: 'Especialista em ContaAzul', color: 'bg-indigo-500' };
     case 'shopeeAnalyst':
-      return { initial: 'H', title: 'Shopee AI', color: 'bg-red-500' };
+      return { initial: 'H', title: 'Analista de Shopee', color: 'bg-red-500' };
     case 'keywordAnalyst':
-      return { initial: 'K', title: 'Keyword AI', color: 'bg-yellow-500', icon: <GoogleAdsIcon className="w-full h-full" /> };
+      return { initial: 'K', title: 'Analista de Palavras-chave', color: 'bg-yellow-500', icon: <GoogleAdsIcon className="w-full h-full" /> };
     case 'googleCampaignAnalyst':
-      return { initial: 'Y', title: 'GoogleCampaign AI', color: 'bg-blue-700', icon: <GoogleAdsIcon className="w-full h-full" /> };
+      return { initial: 'Y', title: 'Analista de Campanhas Google Ads', color: 'bg-blue-700', icon: <GoogleAdsIcon className="w-full h-full" /> };
     case 'metaCampaignAnalyst':
-      return { initial: 'B', title: 'MetaCampaign AI', color: 'bg-blue-800', icon: <MetaIcon className="w-full h-full" /> };
+      return { initial: 'B', title: 'Analista de Campanhas Meta Ads', color: 'bg-blue-800', icon: <MetaIcon className="w-full h-full" /> };
     case 'metaCreativeAnalyst':
-      return { initial: 'R', title: 'MetaCreative AI', color: 'bg-pink-500', icon: <MetaIcon className="w-full h-full" /> };
+      return { initial: 'R', title: 'Analista de Criativos Meta Ads', color: 'bg-pink-500', icon: <MetaIcon className="w-full h-full" /> };
     case 'inventoryAnalyst':
-      return { initial: 'I', title: 'Inventory AI', color: 'bg-amber-600' };
+      return { initial: 'I', title: 'Especialista em Estoque', color: 'bg-amber-600' };
     case 'cashFlowAnalyst':
-      return { initial: 'F', title: 'CashFlow AI', color: 'bg-emerald-500' };
+      return { initial: 'F', title: 'Especialista em Fluxo de Caixa', color: 'bg-emerald-500' };
     case 'pnlAnalyst':
-      return { initial: 'P', title: 'P&L AI', color: 'bg-yellow-400' };
+      return { initial: 'P', title: 'Especialista em DRE', color: 'bg-yellow-400' };
     case 'budgetPlanningAnalyst':
-      return { initial: 'U', title: 'BudgetPlanning AI', color: 'bg-violet-600' };
+      return { initial: 'U', title: 'Especialista em Planejamento Orçamentário', color: 'bg-violet-600' };
     default:
       return { initial: 'A', title: 'AI Assistant', color: 'bg-gray-500' };
   }
