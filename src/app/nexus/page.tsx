@@ -148,8 +148,11 @@ export default function Page() {
   // Escolhe qual hook vai enviar a próxima mensagem E pegar streaming
   const { messages, sendMessage, status } = chats[selectedAgent as keyof typeof chats] || chats.nexus;
 
-  // Combinar histórico + streaming atual
-  const displayedMessages = [...allMessages, ...messages];
+  // Combinar histórico + streaming atual (sem duplicatas)
+  const displayedMessages = [
+    ...allMessages,
+    ...messages.filter(msg => !allMessages.some(existing => existing.id === msg.id))
+  ];
 
   const [input, setInput] = useState('');
   
