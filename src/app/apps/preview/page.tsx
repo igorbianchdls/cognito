@@ -1,13 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import GridCanvas from '@/components/apps/GridCanvas'
 import MultiGridCanvas from '@/components/apps/MultiGridCanvas'
 import { savedDashboardActions } from '@/stores/savedDashboardStore'
 import type { SavedDashboard } from '@/types/savedDashboard'
 
-export default function PreviewPage() {
+function PreviewContent() {
   const searchParams = useSearchParams()
   const dashboardId = searchParams.get('id')
   
@@ -115,5 +115,20 @@ export default function PreviewPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function PreviewPage() {
+  return (
+    <Suspense fallback={
+      <div className="h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Carregando...</p>
+        </div>
+      </div>
+    }>
+      <PreviewContent />
+    </Suspense>
   )
 }
