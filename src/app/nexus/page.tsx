@@ -5,12 +5,14 @@ import { DefaultChatTransport } from 'ai';
 import { useState, FormEvent } from 'react';
 import { useStore } from '@nanostores/react';
 import Sidebar from '@/components/navigation/Sidebar';
+import MobileHeader from '@/components/navigation/MobileHeader';
 import ChatContainer from '../../components/nexus/ChatContainer';
 import type { UIMessage } from 'ai';
 import { currentAgent, setCurrentAgent } from '../../stores/agentStore';
 
 export default function Page() {
   const selectedAgent = useStore(currentAgent);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Array unificado que guarda TODAS as mensagens em ordem cronológica
   const [allMessages, setAllMessages] = useState<(UIMessage & { agent: string })[]>([]);
@@ -215,8 +217,12 @@ export default function Page() {
   };
 
   return (
-    <div className="flex h-screen" style={{backgroundColor: '#FBFBFB'}}>
-      <Sidebar />
+    <div className="flex flex-col md:flex-row h-screen" style={{backgroundColor: '#FBFBFB'}}>
+      <MobileHeader onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
+      <Sidebar 
+        isOpen={isMobileMenuOpen} 
+        onClose={() => setIsMobileMenuOpen(false)}
+      />
       <div data-page="nexus" className="flex-1 mx-[2.5%] md:mx-[12.5%] lg:mx-[25%]">
         <ChatContainer
           messages={displayedMessages}

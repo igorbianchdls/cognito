@@ -11,7 +11,12 @@ interface SidebarItem {
   onClick?: () => void;
 }
 
-export default function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const [activeItem, setActiveItem] = useState<string>('nexus');
   const router = useRouter();
 
@@ -75,61 +80,112 @@ export default function Sidebar() {
     } else {
       item.onClick?.();
     }
+    // Close mobile menu when item is clicked
+    onClose?.();
   };
 
   return (
-    <div className="w-14 bg-[#f8f9fa] dark:bg-[#1a1a1a] border-r border-[#e8eaed] dark:border-[#2d2d2d] flex flex-col">
-      {/* Logo/Brand */}
-      <div className="h-14 flex items-center justify-center">
-        <div className="w-7 h-7 bg-[#1a73e8] rounded-lg flex items-center justify-center">
-          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-          </svg>
+    <>
+      {/* Mobile Backdrop */}
+      {isOpen && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={onClose}
+        />
+      )}
+
+      {/* Sidebar */}
+      <div className={`
+        fixed md:static inset-y-0 left-0 z-50 w-64 md:w-14
+        bg-[#f8f9fa] dark:bg-[#1a1a1a] 
+        border-r border-[#e8eaed] dark:border-[#2d2d2d] 
+        flex flex-col
+        transform transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+      `}>
+        {/* Mobile Header with Close Button */}
+        <div className="md:hidden flex items-center justify-between h-14 px-4 border-b border-[#e8eaed] dark:border-[#2d2d2d]">
+          <div className="flex items-center gap-3">
+            <div className="w-7 h-7 bg-[#1a73e8] rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+            </div>
+            <span className="text-lg font-semibold text-[#202124] dark:text-[#e8eaed]">Menu</span>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-[#5f6368] dark:text-[#9aa0a6] hover:bg-[#f1f3f4] dark:hover:bg-[#2d2d2d]"
+            aria-label="Close menu"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Desktop Logo */}
+        <div className="hidden md:flex h-14 items-center justify-center">
+          <div className="w-7 h-7 bg-[#1a73e8] rounded-lg flex items-center justify-center">
+            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+          </div>
+        </div>
+
+        {/* Navigation Items */}
+        <nav className="flex-1 py-6">
+          <div className="space-y-3 px-2 md:px-2">
+            {sidebarItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => handleItemClick(item)}
+                className={`w-full md:w-10 h-12 md:h-10 rounded-lg flex items-center md:justify-center gap-3 md:gap-0 px-4 md:px-0 transition-all duration-200 group relative ${
+                  activeItem === item.id
+                    ? 'bg-[#f3f4f6] dark:bg-[#374151] text-[#374151] dark:text-[#9ca3af]'
+                    : 'text-[#5f6368] dark:text-[#9aa0a6] hover:bg-[#f1f3f4] dark:hover:bg-[#2d2d2d] hover:text-[#202124] dark:hover:text-[#e8eaed]'
+                }`}
+                title={item.label}
+              >
+                {item.icon}
+                
+                {/* Mobile Label */}
+                <span className="md:hidden text-sm font-medium">
+                  {item.label}
+                </span>
+                
+                {/* Desktop Tooltip */}
+                <div className="hidden md:block absolute left-full ml-3 px-2 py-1 bg-[#202124] dark:bg-[#2d2d2d] text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 shadow-lg">
+                  {item.label}
+                </div>
+              </button>
+            ))}
+          </div>
+        </nav>
+
+        {/* Bottom Section - User */}
+        <div className="p-2">
+          <button
+            className="w-full md:w-10 h-12 md:h-10 rounded-lg flex items-center md:justify-center gap-3 md:gap-0 px-4 md:px-0 text-[#5f6368] dark:text-[#9aa0a6] hover:bg-[#f1f3f4] dark:hover:bg-[#2d2d2d] hover:text-[#202124] dark:hover:text-[#e8eaed] transition-all duration-200 group relative"
+            title="Perfil"
+            onClick={() => console.log('Perfil')}
+          >
+            <div className="w-6 h-6 bg-[#1a73e8] rounded-full flex items-center justify-center">
+              <span className="text-white text-xs font-medium">U</span>
+            </div>
+            
+            {/* Mobile Label */}
+            <span className="md:hidden text-sm font-medium">
+              Perfil
+            </span>
+            
+            {/* Desktop Tooltip */}
+            <div className="hidden md:block absolute left-full ml-3 px-2 py-1 bg-[#202124] dark:bg-[#2d2d2d] text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 shadow-lg">
+              Perfil
+            </div>
+          </button>
         </div>
       </div>
-
-      {/* Navigation Items */}
-      <nav className="flex-1 py-6">
-        <div className="space-y-3 px-2">
-          {sidebarItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => handleItemClick(item)}
-              className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 group relative ${
-                activeItem === item.id
-                  ? 'bg-[#f3f4f6] dark:bg-[#374151] text-[#374151] dark:text-[#9ca3af]'
-                  : 'text-[#5f6368] dark:text-[#9aa0a6] hover:bg-[#f1f3f4] dark:hover:bg-[#2d2d2d] hover:text-[#202124] dark:hover:text-[#e8eaed]'
-              }`}
-              title={item.label}
-            >
-              {item.icon}
-              
-              {/* Tooltip */}
-              <div className="absolute left-full ml-3 px-2 py-1 bg-[#202124] dark:bg-[#2d2d2d] text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 shadow-lg">
-                {item.label}
-              </div>
-            </button>
-          ))}
-        </div>
-      </nav>
-
-      {/* Bottom Section - User */}
-      <div className="p-2">
-        <button
-          className="w-10 h-10 rounded-lg flex items-center justify-center text-[#5f6368] dark:text-[#9aa0a6] hover:bg-[#f1f3f4] dark:hover:bg-[#2d2d2d] hover:text-[#202124] dark:hover:text-[#e8eaed] transition-all duration-200 group relative"
-          title="Perfil"
-          onClick={() => console.log('Perfil')}
-        >
-          <div className="w-6 h-6 bg-[#1a73e8] rounded-full flex items-center justify-center">
-            <span className="text-white text-xs font-medium">U</span>
-          </div>
-          
-          {/* Tooltip */}
-          <div className="absolute left-full ml-3 px-2 py-1 bg-[#202124] dark:bg-[#2d2d2d] text-white text-xs rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50 shadow-lg">
-            Perfil
-          </div>
-        </button>
-      </div>
-    </div>
+    </>
   );
 }

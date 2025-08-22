@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Sidebar from '@/components/navigation/Sidebar'
+import MobileHeader from '@/components/navigation/MobileHeader'
 import AGGridSheet from '@/components/sheets/AGGridSheet'
 import RightPanel from '@/components/sheets/RightPanel'
 import TableHeader, { FilterState, SortState } from '@/components/sheets/TableHeader'
@@ -9,6 +10,7 @@ import CollapseButton from '@/components/sheets/CollapseButton'
 
 export default function SheetsPage() {
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState[]>([]);
   const [sorting, setSorting] = useState<SortState[]>([]);
   const [view, setView] = useState<'grid' | 'list'>('grid');
@@ -18,12 +20,15 @@ export default function SheetsPage() {
   };
 
   return (
-    <div className="flex h-screen bg-white">
-      {/* Sidebar Esquerda */}
-      <Sidebar />
+    <div className="flex flex-col md:flex-row h-screen bg-white">
+      <MobileHeader onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
+      <Sidebar 
+        isOpen={isMobileMenuOpen} 
+        onClose={() => setIsMobileMenuOpen(false)}
+      />
       
       {/* Área Principal */}
-      <div className="flex-1 min-w-0 x flex flex-col">
+      <div className="flex-1 min-w-0 flex flex-col">
         {/* TableHeader - Ocupando 100% da largura */}
         <TableHeader 
           onFiltersChange={setFilters}
