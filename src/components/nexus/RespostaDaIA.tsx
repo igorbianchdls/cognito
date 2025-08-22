@@ -4,9 +4,9 @@ import { Reasoning, ReasoningTrigger, ReasoningContent } from '@/components/ai-e
 import { Actions, Action } from '@/components/ai-elements/actions';
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool';
 import { CopyIcon, ThumbsUpIcon, ThumbsDownIcon } from 'lucide-react';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import MetaIcon from '@/components/icons/MetaIcon';
 import GoogleIcon from '@/components/icons/GoogleIcon';
+import GoogleAnalyticsIcon from '@/components/icons/GoogleAnalyticsIcon';
 import WeatherCard from '../tools/WeatherCard';
 import DatasetsList from '../tools/DatasetsList';
 import TablesList from '../tools/TablesList';
@@ -373,7 +373,7 @@ const getAgentInfo = (agent: string) => {
     case 'amazonAdsAnalyst':
       return { initial: 'A', title: 'AmazonAds AI', color: 'bg-orange-500' };
     case 'googleAnalyticsAnalyst':
-      return { initial: 'G', title: 'GoogleAnalytics AI', color: 'bg-blue-400', icon: <GoogleIcon className="w-full h-full" /> };
+      return { initial: 'G', title: 'GoogleAnalytics AI', color: 'bg-blue-400', icon: <GoogleAnalyticsIcon className="w-full h-full" /> };
     case 'shopifyAnalyst':
       return { initial: 'S', title: 'Shopify AI', color: 'bg-green-400' };
     case 'contaAzulAnalyst':
@@ -427,11 +427,9 @@ export default function RespostaDaIA({ message }: RespostaDaIAProps) {
     <div key={message.id}>
       {/* Header com Avatar + Título */}
       <div className="flex items-center gap-3 mb-3">
-        <Avatar className="w-8 h-8">
-          <AvatarFallback className={`${agentInfo.color} text-white font-semibold`}>
-            {agentInfo.icon || agentInfo.initial}
-          </AvatarFallback>
-        </Avatar>
+        <div className={`w-8 h-8 rounded-md ${agentInfo.color} text-white font-semibold flex items-center justify-center`}>
+          {agentInfo.icon || agentInfo.initial}
+        </div>
         <h3 className="font-bold text-gray-900">{agentInfo.title}</h3>
       </div>
       {message.parts.map((part, index) => {
