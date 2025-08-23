@@ -132,7 +132,8 @@ function adaptChartToLegacy(chart: ChartWidget): DroppedWidget {
     ...chart,
     chartConfig: chart.config, // Legacy compatibility
     config: {
-      chartConfig: chart.config // Mantém acesso via config.chartConfig para ChartWidget.tsx
+      chartConfig: chart.config, // Mantém acesso via config.chartConfig para ChartWidget.tsx
+      containerConfig: (chart.config as any).containerConfig || {} // Preserva containerConfig
     }
   }
   
@@ -162,7 +163,8 @@ function adaptKPIToLegacy(kpi: KPIWidget): DroppedWidget {
   const adapted: DroppedWidget = {
     ...kpi,
     config: {
-      kpiConfig: kpi.config
+      kpiConfig: kpi.config,
+      containerConfig: (kpi.config as any).containerConfig || {} // Preserva containerConfig
     }
   }
   
@@ -190,7 +192,8 @@ function adaptTableToLegacy(table: TableWidget): DroppedWidget {
   const adapted: DroppedWidget = {
     ...table,
     config: {
-      tableConfig: table.config
+      tableConfig: table.config,
+      containerConfig: (table.config as any).containerConfig || {} // Preserva containerConfig
     }
   }
   
