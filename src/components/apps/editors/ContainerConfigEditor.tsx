@@ -27,6 +27,16 @@ interface ContainerConfigEditorProps {
   onContainerConfigChange: (field: string, value: unknown) => void
 }
 
+// Default container configuration for consistent fallbacks
+const DEFAULT_CONTAINER_CONFIG = {
+  backgroundColor: '#ffffff',
+  backgroundOpacity: 1,
+  borderColor: '#e5e7eb',
+  borderOpacity: 1,
+  borderWidth: 1,
+  borderRadius: 8
+}
+
 export default function ContainerConfigEditor({ 
   selectedWidget, 
   containerConfig, 
@@ -36,6 +46,23 @@ export default function ContainerConfigEditor({
   if (!selectedWidget) {
     return null
   }
+
+  // Ensure we always have valid values for the inputs
+  const safeContainerConfig = {
+    backgroundColor: containerConfig.backgroundColor || DEFAULT_CONTAINER_CONFIG.backgroundColor,
+    backgroundOpacity: containerConfig.backgroundOpacity ?? DEFAULT_CONTAINER_CONFIG.backgroundOpacity,
+    borderColor: containerConfig.borderColor || DEFAULT_CONTAINER_CONFIG.borderColor,
+    borderOpacity: containerConfig.borderOpacity ?? DEFAULT_CONTAINER_CONFIG.borderOpacity,
+    borderWidth: containerConfig.borderWidth ?? DEFAULT_CONTAINER_CONFIG.borderWidth,
+    borderRadius: containerConfig.borderRadius ?? DEFAULT_CONTAINER_CONFIG.borderRadius,
+  }
+
+  console.log('📦 ContainerConfigEditor render:', {
+    widgetId: selectedWidget.i,
+    rawContainerConfig: containerConfig,
+    safeContainerConfig,
+    hasContainerConfig: !!selectedWidget.config?.containerConfig
+  })
 
   return (
     <div className="border-t pt-4 mt-4">
@@ -54,8 +81,11 @@ export default function ContainerConfigEditor({
                   <label className="block text-xs font-medium text-gray-600 mb-1">Background Color</label>
                   <input
                     type="color"
-                    value={containerConfig.backgroundColor || '#ffffff'}
-                    onChange={(e) => onContainerConfigChange('backgroundColor', e.target.value)}
+                    value={safeContainerConfig.backgroundColor}
+                    onChange={(e) => {
+                      console.log('🎨 Background color change:', e.target.value)
+                      onContainerConfigChange('backgroundColor', e.target.value)
+                    }}
                     className="w-full h-10 border border-gray-300 rounded cursor-pointer"
                   />
                 </div>
@@ -66,12 +96,12 @@ export default function ContainerConfigEditor({
                     min="0"
                     max="1"
                     step="0.1"
-                    value={containerConfig.backgroundOpacity ?? 1}
+                    value={safeContainerConfig.backgroundOpacity}
                     onChange={(e) => onContainerConfigChange('backgroundOpacity', parseFloat(e.target.value))}
                     className="w-full"
                   />
                   <span className="text-xs text-gray-500">
-                    {Math.round((containerConfig.backgroundOpacity ?? 1) * 100)}%
+                    {Math.round(safeContainerConfig.backgroundOpacity * 100)}%
                   </span>
                 </div>
               </div>
@@ -80,7 +110,7 @@ export default function ContainerConfigEditor({
                   <label className="block text-xs font-medium text-gray-600 mb-1">Border Color</label>
                   <input
                     type="color"
-                    value={containerConfig.borderColor || '#e5e7eb'}
+                    value={safeContainerConfig.borderColor}
                     onChange={(e) => onContainerConfigChange('borderColor', e.target.value)}
                     className="w-full h-10 border border-gray-300 rounded cursor-pointer"
                   />
@@ -92,12 +122,12 @@ export default function ContainerConfigEditor({
                     min="0"
                     max="1"
                     step="0.1"
-                    value={containerConfig.borderOpacity ?? 1}
+                    value={safeContainerConfig.borderOpacity}
                     onChange={(e) => onContainerConfigChange('borderOpacity', parseFloat(e.target.value))}
                     className="w-full"
                   />
                   <span className="text-xs text-gray-500">
-                    {Math.round((containerConfig.borderOpacity ?? 1) * 100)}%
+                    {Math.round(safeContainerConfig.borderOpacity * 100)}%
                   </span>
                 </div>
               </div>
@@ -109,11 +139,11 @@ export default function ContainerConfigEditor({
                     min="0"
                     max="10"
                     step="1"
-                    value={containerConfig.borderWidth || 1}
+                    value={safeContainerConfig.borderWidth}
                     onChange={(e) => onContainerConfigChange('borderWidth', parseInt(e.target.value))}
                     className="w-full"
                   />
-                  <span className="text-xs text-gray-500">{containerConfig.borderWidth || 1}px</span>
+                  <span className="text-xs text-gray-500">{safeContainerConfig.borderWidth}px</span>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Border Radius</label>
@@ -122,11 +152,11 @@ export default function ContainerConfigEditor({
                     min="0"
                     max="50"
                     step="1"
-                    value={containerConfig.borderRadius || 8}
+                    value={safeContainerConfig.borderRadius}
                     onChange={(e) => onContainerConfigChange('borderRadius', parseInt(e.target.value))}
                     className="w-full"
                   />
-                  <span className="text-xs text-gray-500">{containerConfig.borderRadius || 8}px</span>
+                  <span className="text-xs text-gray-500">{safeContainerConfig.borderRadius}px</span>
                 </div>
               </div>
             </div>
@@ -144,10 +174,10 @@ export default function ContainerConfigEditor({
               <div 
                 className="w-full h-20 flex items-center justify-center text-sm text-gray-600"
                 style={{
-                  backgroundColor: hexToRgba(containerConfig.backgroundColor || '#ffffff', containerConfig.backgroundOpacity ?? 1),
-                  borderColor: hexToRgba(containerConfig.borderColor || '#e5e7eb', containerConfig.borderOpacity ?? 1),
-                  borderWidth: `${containerConfig.borderWidth || 1}px`,
-                  borderRadius: `${containerConfig.borderRadius || 8}px`,
+                  backgroundColor: hexToRgba(safeContainerConfig.backgroundColor, safeContainerConfig.backgroundOpacity),
+                  borderColor: hexToRgba(safeContainerConfig.borderColor, safeContainerConfig.borderOpacity),
+                  borderWidth: `${safeContainerConfig.borderWidth}px`,
+                  borderRadius: `${safeContainerConfig.borderRadius}px`,
                   borderStyle: 'solid'
                 }}
               >

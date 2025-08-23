@@ -151,7 +151,15 @@ export default function WidgetEditorNew() {
     const config = selectedWidget.config?.containerConfig || {} as ContainerConfig
     console.log('🎯 WidgetEditorNew computed containerConfig:', config)
     return config
-  }, [selectedWidget])
+  }, [
+    selectedWidget,
+    selectedWidget?.config?.containerConfig?.backgroundColor,
+    selectedWidget?.config?.containerConfig?.backgroundOpacity,
+    selectedWidget?.config?.containerConfig?.borderColor,
+    selectedWidget?.config?.containerConfig?.borderOpacity,
+    selectedWidget?.config?.containerConfig?.borderWidth,
+    selectedWidget?.config?.containerConfig?.borderRadius
+  ])
 
   // Sync editKPIForm with kpiConfig when widget changes
   useEffect(() => {
