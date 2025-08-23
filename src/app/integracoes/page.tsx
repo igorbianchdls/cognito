@@ -2,6 +2,8 @@
 
 import * as React from "react"
 import { useState } from "react"
+import Sidebar from "@/components/navigation/Sidebar"
+import MobileHeader from "@/components/navigation/MobileHeader"
 import { IntegrationCard } from "@/components/integrations/IntegrationCard"
 import { 
   integrations, 
@@ -14,6 +16,7 @@ type FilterTab = 'all' | 'connected' | 'disconnected'
 
 export default function IntegrationsPage() {
   const [activeTab, setActiveTab] = useState<FilterTab>('all')
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [integrationsState, setIntegrationsState] = useState(integrations)
 
   const handleToggle = (id: string, connected: boolean) => {
@@ -81,8 +84,14 @@ export default function IntegrationsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-6 py-8">
+    <div className="flex flex-col md:flex-row h-screen" style={{backgroundColor: '#FBFBFB'}}>
+      <MobileHeader onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
+      <Sidebar 
+        isOpen={isMobileMenuOpen} 
+        onClose={() => setIsMobileMenuOpen(false)}
+      />
+      <div className="flex-1 overflow-auto">
+        <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-semibold text-foreground mb-6">
@@ -107,6 +116,7 @@ export default function IntegrationsPage() {
             category="communication" 
             integrations={communicationIntegrations} 
           />
+        </div>
         </div>
       </div>
     </div>
