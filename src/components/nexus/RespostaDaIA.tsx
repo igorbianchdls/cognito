@@ -428,7 +428,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
   };
 
   return (
-    <div key={message.id}>
+    <div key={message.id} className="max-w-full overflow-hidden">
       {/* Header com Avatar + Título */}
       <div className="flex items-center gap-3 mb-3">
         <div className={`w-8 h-8 rounded-md ${agentInfo.color} text-white font-semibold flex items-center justify-center`}>
