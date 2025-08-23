@@ -12,8 +12,22 @@ export async function POST(req: Request) {
 
   const result = streamText({
     model: anthropic('claude-sonnet-4-20250514'),
-    system: `You are a helpful assistant with access to BigQuery data exploration, analysis, visualization, and management tools, plus weather information.
-
+    
+    // Sistema inicial básico
+    system: `You are a helpful assistant with access to BigQuery data exploration, analysis, visualization, and management tools, plus weather information.`,
+    
+    messages: convertToModelMessages(messages),
+    
+    // PrepareStep: Define comportamento para cada um dos 3 steps
+    prepareStep: ({ stepNumber, steps }) => {
+      console.log(`📊 NEXUS PREPARE STEP ${stepNumber}: Configurando comportamento`);
+      
+      switch (stepNumber) {
+        case 1:
+          console.log('🎯 NEXUS STEP 1: Configurando para execução de ferramentas');
+          return {
+            system: `STEP 1/3: TOOL EXECUTION
+            
 Available tools:
 - getDatasets: List available BigQuery datasets (no parameters needed)
 - getTables: Get tables from a specific dataset (requires datasetId)
@@ -45,8 +59,30 @@ Use these tools proactively when users ask about:
 - "preview website", "show website", or "web preview" → use webPreview
 - weather queries → use displayWeather
 
+Always call the appropriate tool rather than asking for more parameters. Use multiple tools in sequence when helpful.
+Focus ONLY on tool execution - do not provide analysis yet.`
+          };
+          
+        case 2:
+          console.log('🎯 NEXUS STEP 2: Configurando para análise obrigatória');
+          const allSteps = steps;
+          let hasExecutedSQL = false;
+          
+          // Verifica se SQL foi executado em qualquer step anterior
+          allSteps.forEach(step => {
+            if (step.toolResults?.some(result => result.toolName === 'executarSQL')) {
+              hasExecutedSQL = true;
+            }
+          });
+          
+          console.log('🔍 NEXUS: SQL executado nos steps anteriores:', hasExecutedSQL);
+          
+          if (hasExecutedSQL) {
+            return {
+              system: `STEP 2/3: MANDATORY DATA ANALYSIS
+              
 CRITICAL: AUTOMATIC DATA ANALYSIS REQUIRED
-After executing SQL queries (executarSQL), you MUST continue and provide comprehensive analysis in your next response. Do not stop after showing data - always analyze what it means:
+You executed SQL queries in the previous step. You MUST now provide comprehensive analysis in your response. Do not stop after showing data - always analyze what it means:
 
 Analysis must include:
 - Key patterns, trends, and insights from the data
@@ -61,10 +97,25 @@ For categorical data: show distributions, dominance, diversity
 
 NEVER stop after executing SQL without providing analysis.
 
-Always call the appropriate tool rather than asking for more parameters. Use multiple tools in sequence when helpful:
-- getData → criarGrafico: Copy the exact "data" array from getData output to criarGrafico tableData parameter  
-- For data analysis workflows: Always transfer data between tools by copying arrays exactly
-
+IMPORTANT: Do NOT execute more tools. Focus only on analyzing the data you already have.`,
+              tools: {} // Remove todas as tools - força análise textual apenas
+            };
+          } else {
+            // Se não executou SQL, continua normal
+            return {
+              system: `STEP 2/3: CONTINUE WORKFLOW
+              
+Continue with your task. You can still use tools if needed.`
+            };
+          }
+          
+        case 3:
+          console.log('🎯 NEXUS STEP 3: Configurando para visualização/conclusão');
+          return {
+            system: `STEP 3/3: VISUALIZATION & CONCLUSION
+            
+You can now create visualizations if helpful using criarGrafico.
+            
 CRITICAL: EFFICIENT DATA HANDLING FOR CHARTS
 When using criarGrafico after getData, you MUST optimize data transfer to save tokens:
 
@@ -83,27 +134,19 @@ When using criarGrafico after getData, you MUST optimize data transfer to save t
 
 5. ALWAYS: Filter to only xColumn + yColumn + any groupBy column needed.
 
-This optimization reduces token usage significantly while maintaining full chart functionality.`,
-    messages: convertToModelMessages(messages),
-    stopWhen: [
-      stepCountIs(3), // Safety limit: maximum 3 steps
-      (step) => {
-        // Custom condition: stop when SQL was executed AND analysis is provided
-        const lastStep = step.steps[step.steps.length - 1];
-        const hasExecutedSQL = lastStep?.toolResults?.some((result) => result.toolName === 'executarSQL');
-        const hasAnalysisText = lastStep?.text && lastStep.text.trim().length > 50;
-        
-        // Stop only if SQL was executed AND we have substantial analysis
-        if (hasExecutedSQL && hasAnalysisText) {
-          console.log('✅ SQL executed and analysis provided, stopping...');
-          return true; // Stop
-        }
-        
-        // Continue in all other cases
-        console.log('🔄 Continuing...', { hasExecutedSQL, hasAnalysisText });
-        return false; // Continue
+This optimization reduces token usage significantly while maintaining full chart functionality.
+            
+Provide final recommendations and conclusions.`
+          };
+          
+        default:
+          console.log(`⚠️ NEXUS STEP ${stepNumber}: Configuração padrão`);
+          return {};
       }
-    ],
+    },
+    
+    // StopWhen simples - máximo 3 steps
+    stopWhen: stepCountIs(3),
     providerOptions: {
       anthropic: {
         thinking: { type: 'enabled', budgetTokens: 15000 }
