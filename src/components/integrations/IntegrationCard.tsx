@@ -51,7 +51,7 @@ export function IntegrationCard({ integration, onToggle }: IntegrationCardProps)
       }}>
       <CardHeader className="flex-row items-start space-y-0 space-x-4 pb-4">
         <div className="flex-shrink-0">
-          <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center p-2">
+          <div className="w-12 h-12 rounded-lg flex items-center justify-center">
             <IconComponent className="w-full h-full" />
           </div>
         </div>
