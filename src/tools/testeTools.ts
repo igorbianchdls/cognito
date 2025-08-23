@@ -1,13 +1,14 @@
 import { z } from 'zod';
+import { tool } from 'ai';
 
 // Tool 1: Coletar Dados
-export const coletarDados = {
+export const coletarDados = tool({
   description: 'Simula coleta de dados inicial para análise',
   parameters: z.object({
     fonte: z.string().describe('Fonte dos dados a serem coletados'),
     periodo: z.string().optional().describe('Período opcional para coleta')
   }),
-  execute: async ({ fonte, periodo }: { fonte: string; periodo?: string }) => {
+  execute: async ({ fonte, periodo }) => {
     console.log(`🔄 STEP 1: Coletando dados de ${fonte}${periodo ? ` no período ${periodo}` : ''}`);
     
     // Simula delay de processamento
@@ -24,16 +25,16 @@ export const coletarDados = {
     console.log(`✅ STEP 1 COMPLETO: ${dadosSimulados.registros} registros coletados`);
     return dadosSimulados;
   }
-};
+});
 
 // Tool 2: Processar Dados  
-export const processarDados = {
+export const processarDados = tool({
   description: 'Simula processamento dos dados coletados',
   parameters: z.object({
     dados: z.string().describe('Dados coletados para processamento'),
     metodo: z.string().default('padrao').describe('Método de processamento')
   }),
-  execute: async ({ dados, metodo }: { dados: string; metodo: string }) => {
+  execute: async ({ dados, metodo }) => {
     console.log(`🔄 STEP 2: Processando dados com método ${metodo}`);
     
     await new Promise(resolve => setTimeout(resolve, 300));
@@ -50,16 +51,16 @@ export const processarDados = {
     console.log(`✅ STEP 2 COMPLETO: ${dadosProcessados.dadosLimpos} dados válidos, qualidade ${dadosProcessados.qualidade}`);
     return dadosProcessados;
   }
-};
+});
 
 // Tool 3: Analisar Padrões
-export const analisarPadroes = {
+export const analisarPadroes = tool({
   description: 'Simula análise de padrões nos dados processados', 
   parameters: z.object({
     dadosProcessados: z.string().describe('Dados processados para análise'),
     algoritmo: z.string().default('clustering').describe('Algoritmo de análise')
   }),
-  execute: async ({ dadosProcessados, algoritmo }: { dadosProcessados: string; algoritmo: string }) => {
+  execute: async ({ dadosProcessados, algoritmo }) => {
     console.log(`🔄 STEP 3: Analisando padrões usando ${algoritmo}`);
     
     await new Promise(resolve => setTimeout(resolve, 400));
@@ -76,16 +77,16 @@ export const analisarPadroes = {
     console.log(`✅ STEP 3 COMPLETO: ${padroes.padroesEncontrados} padrões encontrados, confiança ${padroes.confianca}`);
     return padroes;
   }
-};
+});
 
 // Tool 4: Gerar Insights
-export const gerarInsights = {
+export const gerarInsights = tool({
   description: 'Simula geração de insights baseados nos padrões encontrados',
   parameters: z.object({
     padroes: z.string().describe('Padrões encontrados na análise'),
     contexto: z.string().optional().describe('Contexto adicional para insights')
   }),
-  execute: async ({ padroes, contexto }: { padroes: string; contexto?: string }) => {
+  execute: async ({ padroes, contexto }) => {
     console.log(`🔄 STEP 4: Gerando insights dos padrões${contexto ? ` com contexto ${contexto}` : ''}`);
     
     await new Promise(resolve => setTimeout(resolve, 350));
@@ -106,16 +107,16 @@ export const gerarInsights = {
     console.log(`✅ STEP 4 COMPLETO: ${insights.insightsGerados.length} insights gerados, impacto ${insights.impacto}`);
     return insights;
   }
-};
+});
 
 // Tool 5: Criar Relatório
-export const criarRelatorio = {
+export const criarRelatorio = tool({
   description: 'Simula criação de relatório final com todos os insights',
   parameters: z.object({
     insights: z.string().describe('Insights gerados para incluir no relatório'),
     formato: z.string().default('completo').describe('Formato do relatório')
   }),
-  execute: async ({ insights, formato }: { insights: string; formato: string }) => {
+  execute: async ({ insights, formato }) => {
     console.log(`🔄 STEP 5: Criando relatório no formato ${formato}`);
     
     await new Promise(resolve => setTimeout(resolve, 600));
@@ -139,4 +140,4 @@ export const criarRelatorio = {
     console.log(`✅ STEP 5 COMPLETO: Relatório ${relatorio.id} criado com ${relatorio.paginas} páginas e ${relatorio.graficos} gráficos`);
     return relatorio;
   }
-};
+});

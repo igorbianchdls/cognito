@@ -98,7 +98,7 @@ Descreva o relatório criado.`
         case 6:
           console.log('🎯 STEP 6: Configurando para análise final');
           const allSteps = steps;
-          const executedTools = [];
+          const executedTools: string[] = [];
           
           // Verifica quais tools foram executadas
           allSteps.forEach(step => {
