@@ -34,7 +34,7 @@ export default function DraggableWidget({ widget }: DraggableWidgetProps) {
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={`group border rounded-lg p-4 transition-all duration-200 bg-white cursor-grab ${
+      className={`group border-[0.5px] rounded-lg p-4 transition-all duration-200 bg-white cursor-grab ${
         isDragging 
           ? 'opacity-50 cursor-grabbing border-blue-300' 
           : 'border-gray-300 hover:border-gray-400'
@@ -42,9 +42,10 @@ export default function DraggableWidget({ widget }: DraggableWidgetProps) {
       style={{
         boxShadow: `
           0 0 0 1px rgba(0, 0, 0, 0.05),
-          0 2px 3px -2px rgba(0, 0, 0, 0.05),
-          0 3px 12px -4px rgba(0, 0, 0, 0.15),
-          0 4px 16px -8px rgba(0, 0, 0, 0.15)
+          0 0 0 0.5px rgba(0, 0, 0, 0.05),
+          0 1px 1px 0 rgba(0, 0, 0, 0.05),
+          0 2px 1px -1px rgba(0, 0, 0, 0.05),
+          0 1px 3px 0 rgba(0, 0, 0, 0.05)
         `
       }}
     >
