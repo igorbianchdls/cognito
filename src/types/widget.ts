@@ -206,6 +206,16 @@ export interface ImageConfig {
   placeholderText?: string
 }
 
+// Container configuration interface
+export interface ContainerConfig {
+  backgroundColor?: string
+  backgroundOpacity?: number
+  borderColor?: string
+  borderOpacity?: number
+  borderWidth?: number
+  borderRadius?: number
+}
+
 // Unified widget configuration interface
 export interface WidgetConfig {
   chartConfig?: import('./chartWidgets').BaseChartConfig  // For chart widgets (Bar, Line, Pie, Area)
@@ -213,6 +223,7 @@ export interface WidgetConfig {
   tableConfig?: import('./tableWidgets').TableConfig  // For table widgets (import from tableWidgets.ts)
   imageConfig?: ImageConfig  // For image widgets
   navigationConfig?: NavigationConfig  // For navigation widgets
+  containerConfig?: ContainerConfig  // For widget container styling
 }
 
 export interface DroppedWidget extends Widget {

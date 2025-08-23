@@ -10,7 +10,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { isKPIWidget } from '@/types/kpiWidgets'
 import type { KPIConfig } from '@/types/kpiWidgets'
 import { isImageWidget, isNavigationWidget } from '@/types/widget'
-import type { ImageConfig, NavigationConfig } from '@/types/widget'
+import type { ImageConfig, NavigationConfig, ContainerConfig } from '@/types/widget'
 import { isTableWidget } from '@/types/tableWidgets'
 import type { TableConfig } from '@/types/tableWidgets'
 import { isChartWidget } from '@/types/chartWidgets'
@@ -20,6 +20,7 @@ import ImageConfigEditor from './editors/ImageConfigEditor'
 import TableConfigEditor from './editors/TableConfigEditor'
 import ChartConfigEditor from './editors/ChartConfigEditor'
 import NavigationConfigEditor from './editors/NavigationConfigEditor'
+import ContainerConfigEditor from './editors/ContainerConfigEditor'
 
 export default function WidgetEditorNew() {
   const widgets = useStore($widgets)
@@ -140,6 +141,15 @@ export default function WidgetEditorNew() {
     
     const config = selectedWidget.config?.navigationConfig || {} as NavigationConfig
     console.log('🎯 WidgetEditorNew computed navigationConfig:', config)
+    return config
+  }, [selectedWidget])
+
+  // Computed Container config - applies to all widgets
+  const containerConfig = useMemo((): ContainerConfig => {
+    if (!selectedWidget) return {} as ContainerConfig
+    
+    const config = selectedWidget.config?.containerConfig || {} as ContainerConfig
+    console.log('🎯 WidgetEditorNew computed containerConfig:', config)
     return config
   }, [selectedWidget])
 
@@ -344,6 +354,31 @@ export default function WidgetEditorNew() {
     }
   }
 
+  // Container Handlers
+  const handleContainerConfigChange = (field: string, value: unknown) => {
+    console.log('⚙️ WidgetEditorNew handleContainerConfigChange:', { field, value })
+    
+    if (selectedWidget) {
+      console.log('⚙️ WidgetEditorNew calling widgetActions.editWidget for containerConfig:', selectedWidget.i, { [field]: value })
+      
+      // Get current containerConfig and update the specific field
+      const currentContainerConfig = selectedWidget.config?.containerConfig || {}
+      const newContainerConfig = { ...currentContainerConfig, [field]: value }
+      
+      console.log('📝 New containerConfig:', newContainerConfig)
+      
+      // Update the widget with the new containerConfig
+      const updatePayload = {
+        config: {
+          ...selectedWidget.config,
+          containerConfig: newContainerConfig
+        }
+      }
+      
+      widgetActions.editWidget(selectedWidget.i, updatePayload)
+    }
+  }
+
   // Handlers
   const handleSelectCanvas = () => {
     setCanvasSelected(true)
@@ -523,6 +558,13 @@ export default function WidgetEditorNew() {
                     onNavigationConfigChange={handleNavigationConfigChange}
                   />
                 )}
+
+                {/* Container Configuration - applies to all widgets */}
+                <ContainerConfigEditor
+                  selectedWidget={selectedWidget}
+                  containerConfig={containerConfig}
+                  onContainerConfigChange={handleContainerConfigChange}
+                />
 
                 {/* Other widget types placeholder */}
                 {!isKPIWidget(selectedWidget) && !isImageWidget(selectedWidget) && !isTableWidget(selectedWidget) && !isChartWidget(selectedWidget) && !isNavigationWidget(selectedWidget) && (

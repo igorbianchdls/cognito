@@ -10,7 +10,35 @@ import KPIWidget from './widgets/KPIWidget'
 import TableWidget from './widgets/TableWidget'
 import ImageWidget from './widgets/ImageWidget'
 import NavigationWidget from './widgets/NavigationWidget'
-import type { DroppedWidget as DroppedWidgetType } from '@/types/widget'
+import type { DroppedWidget as DroppedWidgetType, ContainerConfig } from '@/types/widget'
+
+// Helper function to convert hex color + opacity to RGBA
+function hexToRgba(hex: string, opacity: number = 1): string {
+  // Remove # if present
+  hex = hex.replace('#', '')
+  
+  // Convert 3-digit hex to 6-digit
+  if (hex.length === 3) {
+    hex = hex.split('').map(char => char + char).join('')
+  }
+  
+  // Parse RGB values
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`
+}
+
+// Default container configuration
+const DEFAULT_CONTAINER_CONFIG: ContainerConfig = {
+  backgroundColor: '#ffffff',
+  backgroundOpacity: 1,
+  borderColor: '#e5e7eb',
+  borderOpacity: 1,
+  borderWidth: 1,
+  borderRadius: 8
+}
 
 interface DroppedWidgetProps {
   widget: DroppedWidgetType
@@ -22,6 +50,9 @@ interface DroppedWidgetProps {
 
 export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = false, onClick }: DroppedWidgetProps) {
   const [isHovered, setIsHovered] = useState(false)
+
+  // Get container configuration with defaults
+  const containerConfig = widget.config?.containerConfig || DEFAULT_CONTAINER_CONFIG
 
   // Special full-screen rendering for NavigationWidget (Airtable style)
   if (widget.type === 'navigation') {
@@ -63,11 +94,19 @@ export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = f
 
   return (
     <div 
-      className={`h-full bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 relative overflow-hidden ${
+      className={`h-full transition-all duration-200 relative overflow-hidden ${
         isSelected 
           ? 'border-2 border-blue-500 shadow-lg' 
-          : 'border border-gray-200'
+          : ''
       }`}
+      style={{
+        backgroundColor: hexToRgba(containerConfig.backgroundColor || '#ffffff', containerConfig.backgroundOpacity ?? 1),
+        borderColor: isSelected ? '#3b82f6' : hexToRgba(containerConfig.borderColor || '#e5e7eb', containerConfig.borderOpacity ?? 1),
+        borderWidth: isSelected ? '2px' : `${containerConfig.borderWidth || 1}px`,
+        borderRadius: `${containerConfig.borderRadius || 8}px`,
+        borderStyle: 'solid',
+        boxShadow: isSelected ? '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)' : (isHovered ? '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' : '0 1px 2px 0 rgb(0 0 0 / 0.05)')
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
