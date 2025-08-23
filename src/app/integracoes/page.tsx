@@ -35,8 +35,10 @@ export default function IntegrationsPage() {
     return true
   })
 
-  const salesIntegrations = filteredIntegrations.filter(i => i.category === 'sales')
-  const communicationIntegrations = filteredIntegrations.filter(i => i.category === 'communication')
+  const advertisingIntegrations = filteredIntegrations.filter(i => i.category === 'advertising')
+  const analyticsIntegrations = filteredIntegrations.filter(i => i.category === 'analytics')
+  const ecommerceIntegrations = filteredIntegrations.filter(i => i.category === 'ecommerce')
+  const financialIntegrations = filteredIntegrations.filter(i => i.category === 'financial')
 
   const TabButton = ({ tab, label }: { tab: FilterTab; label: string }) => (
     <button
@@ -55,7 +57,7 @@ export default function IntegrationsPage() {
     category, 
     integrations: categoryIntegrations 
   }: { 
-    category: 'sales' | 'communication';
+    category: 'advertising' | 'analytics' | 'ecommerce' | 'financial';
     integrations: Integration[]
   }) => {
     if (categoryIntegrations.length === 0) return null
@@ -109,12 +111,20 @@ export default function IntegrationsPage() {
         {/* Content */}
         <div className="space-y-12">
           <IntegrationSection 
-            category="sales" 
-            integrations={salesIntegrations} 
+            category="advertising" 
+            integrations={advertisingIntegrations} 
           />
           <IntegrationSection 
-            category="communication" 
-            integrations={communicationIntegrations} 
+            category="analytics" 
+            integrations={analyticsIntegrations} 
+          />
+          <IntegrationSection 
+            category="ecommerce" 
+            integrations={ecommerceIntegrations} 
+          />
+          <IntegrationSection 
+            category="financial" 
+            integrations={financialIntegrations} 
           />
         </div>
         </div>

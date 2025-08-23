@@ -10,13 +10,13 @@ import {
 } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
-import { 
-  Globe, 
-  Github, 
-  Music, 
-  Figma,
-  Slack
-} from "lucide-react"
+import { Globe } from "lucide-react"
+import MetaIcon from "@/components/icons/MetaIcon"
+import GoogleAdsIcon from "@/components/icons/GoogleAdsIcon"
+import GoogleAnalyticsIcon from "@/components/icons/GoogleAnalyticsIcon"
+import AmazonIcon from "@/components/icons/AmazonIcon"
+import ShopifyIcon from "@/components/icons/ShopifyIcon"
+import GoogleIcon from "@/components/icons/GoogleIcon"
 import type { Integration } from "@/data/integrations"
 
 interface IntegrationCardProps {
@@ -25,11 +25,14 @@ interface IntegrationCardProps {
 }
 
 const iconMap = {
-  globe: Globe,
-  github: Github,
-  music: Music,
-  figma: Figma,
-  slack: Slack,
+  meta: MetaIcon,
+  'google-ads': GoogleAdsIcon,
+  'google-analytics': GoogleAnalyticsIcon,
+  amazon: AmazonIcon,
+  shopify: ShopifyIcon,
+  google: GoogleIcon,
+  shopee: Globe, // fallback
+  'conta-azul': Globe, // fallback
 }
 
 export function IntegrationCard({ integration, onToggle }: IntegrationCardProps) {
@@ -48,8 +51,8 @@ export function IntegrationCard({ integration, onToggle }: IntegrationCardProps)
       }}>
       <CardHeader className="flex-row items-start space-y-0 space-x-4 pb-4">
         <div className="flex-shrink-0">
-          <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-            <IconComponent className="w-6 h-6" />
+          <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center p-2">
+            <IconComponent className="w-full h-full" />
           </div>
         </div>
         <div className="flex-1 min-w-0">

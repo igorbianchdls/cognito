@@ -4,104 +4,100 @@ export interface Integration {
   description: string;
   icon: string;
   connected: boolean;
-  category: 'sales' | 'communication';
+  category: 'advertising' | 'analytics' | 'ecommerce' | 'financial';
 }
 
 export const integrations: Integration[] = [
-  // Sales & Marketing Tools
+  // Advertising & Marketing
   {
-    id: 'google-sales',
-    name: 'Google',
-    description: 'Offers tools for lead generation, email marketing, and customer service.',
-    icon: 'globe',
+    id: 'meta-ads',
+    name: 'Meta Ads',
+    description: 'Connect your Facebook and Instagram advertising data for comprehensive campaign analysis.',
+    icon: 'meta',
     connected: true,
-    category: 'sales'
+    category: 'advertising'
   },
   {
-    id: 'github-sales',
-    name: 'Github',
-    description: 'Provides comprehensive sales and customer relationship management.',
-    icon: 'github',
+    id: 'google-ads',
+    name: 'Google Ads',
+    description: 'Import Google Ads campaign performance data and keyword insights.',
+    icon: 'google-ads',
     connected: false,
-    category: 'sales'
+    category: 'advertising'
   },
   {
-    id: 'spotify-sales',
-    name: 'Spotify',
-    description: 'Focuses on sales pipeline management with a visual pipeline management tool.',
-    icon: 'music',
+    id: 'amazon-ads',
+    name: 'Amazon Ads',
+    description: 'Analyze your Amazon advertising campaigns and product performance.',
+    icon: 'amazon',
     connected: false,
-    category: 'sales'
+    category: 'advertising'
   },
   
-  // Communication & Collaboration
+  // Analytics
   {
-    id: 'slack-comm',
-    name: 'Slack',
-    description: 'Enables real-time collaboration and updates on CRM activities.',
-    icon: 'slack',
+    id: 'google-analytics',
+    name: 'Google Analytics',
+    description: 'Connect your website analytics data for comprehensive user behavior insights.',
+    icon: 'google-analytics',
     connected: true,
-    category: 'communication'
+    category: 'analytics'
   },
+  
+  // E-commerce
   {
-    id: 'google-comm',
-    name: 'Google',
-    description: 'Enhances communication and scheduling within the CRM.',
-    icon: 'globe',
-    connected: true,
-    category: 'communication'
-  },
-  {
-    id: 'github-comm-1',
-    name: 'Github',
-    description: 'Supports seamless integrated CRM inside Microsoft Teams.',
-    icon: 'github',
+    id: 'shopify',
+    name: 'Shopify',
+    description: 'Sync your Shopify store data including orders, products, and customer information.',
+    icon: 'shopify',
     connected: false,
-    category: 'communication'
+    category: 'ecommerce'
   },
   {
-    id: 'spotify-comm',
-    name: 'Spotify',
-    description: 'Provides a unified view of customer interactions and schedules.',
-    icon: 'music',
+    id: 'shopee',
+    name: 'Shopee',
+    description: 'Connect your Shopee marketplace data for sales and inventory analysis.',
+    icon: 'shopee',
     connected: false,
-    category: 'communication'
+    category: 'ecommerce'
   },
+  
+  // Financial
   {
-    id: 'github-comm-2',
-    name: 'Github',
-    description: 'Tracks and manages customer support activities and performance.',
-    icon: 'github',
+    id: 'conta-azul',
+    name: 'ContaAzul',
+    description: 'Import financial data and accounting information from ContaAzul.',
+    icon: 'conta-azul',
     connected: false,
-    category: 'communication'
-  },
-  {
-    id: 'figma-comm',
-    name: 'Figma',
-    description: 'Streamlines customer support and ticketing within the CRM.',
-    icon: 'figma',
-    connected: false,
-    category: 'communication'
+    category: 'financial'
   }
 ];
 
-export const getCategoryTitle = (category: 'sales' | 'communication'): string => {
+export const getCategoryTitle = (category: 'advertising' | 'analytics' | 'ecommerce' | 'financial'): string => {
   switch (category) {
-    case 'sales':
-      return 'Sales & Marketing Tools';
-    case 'communication':
-      return 'Communication & Collaboration';
+    case 'advertising':
+      return 'Advertising & Marketing';
+    case 'analytics':
+      return 'Analytics & Tracking';
+    case 'ecommerce':
+      return 'E-commerce Platforms';
+    case 'financial':
+      return 'Financial & Accounting';
     default:
       return '';
   }
 };
 
-export const getCategoryDescription = (category: 'sales' | 'communication'): string => {
+export const getCategoryDescription = (category: 'advertising' | 'analytics' | 'ecommerce' | 'financial'): string => {
   switch (category) {
-    case 'sales':
-      return 'Enhancing the efficiency and effectiveness of your sales and marketing activities';
-    case 'communication':
-      return 'Enhancing the efficiency and effectiveness of team interactions and workflows';
+    case 'advertising':
+      return 'Connect your advertising platforms to analyze campaign performance and ROI';
+    case 'analytics':
+      return 'Integrate analytics tools to track user behavior and website performance';
+    case 'ecommerce':
+      return 'Sync your online store data for comprehensive sales and inventory analysis';
+    case 'financial':
+      return 'Import financial data to track revenue, expenses, and business performance';
     default:
       return '';
   }
