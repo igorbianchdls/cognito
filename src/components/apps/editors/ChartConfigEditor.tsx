@@ -44,6 +44,23 @@ export default function ChartConfigEditor({
                   />
                 </div>
                 <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Background Opacity</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={(chartConfig as Record<string, unknown>).backgroundOpacity ?? 1}
+                    onChange={(e) => onChartConfigChange('backgroundOpacity', parseFloat(e.target.value))}
+                    className="w-full"
+                  />
+                  <span className="text-xs text-gray-500">
+                    {Math.round(((chartConfig as Record<string, unknown>).backgroundOpacity as number ?? 1) * 100)}%
+                  </span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Border Color</label>
                   <input
                     type="color"
@@ -51,6 +68,21 @@ export default function ChartConfigEditor({
                     onChange={(e) => onChartConfigChange('borderColor', e.target.value)}
                     className="w-full h-10 border border-gray-300 rounded cursor-pointer"
                   />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Border Opacity</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={(chartConfig as Record<string, unknown>).borderOpacity ?? 1}
+                    onChange={(e) => onChartConfigChange('borderOpacity', parseFloat(e.target.value))}
+                    className="w-full"
+                  />
+                  <span className="text-xs text-gray-500">
+                    {Math.round(((chartConfig as Record<string, unknown>).borderOpacity as number ?? 1) * 100)}%
+                  </span>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">

@@ -114,14 +114,31 @@ export default function KPIConfigEditor({
               <option value="red">🔴 Red</option>
             </select>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Background Color</label>
-            <input
-              type="color"
-              value={kpiConfig.backgroundColor || '#ffffff'}
-              onChange={(e) => onKPIConfigChange('backgroundColor', e.target.value)}
-              className="w-full h-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Background Color</label>
+              <input
+                type="color"
+                value={kpiConfig.backgroundColor || '#ffffff'}
+                onChange={(e) => onKPIConfigChange('backgroundColor', e.target.value)}
+                className="w-full h-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Background Opacity</label>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={(kpiConfig as Record<string, unknown>).backgroundOpacity ?? 1}
+                onChange={(e) => onKPIConfigChange('backgroundOpacity', parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <span className="text-xs text-gray-500">
+                {Math.round(((kpiConfig as Record<string, unknown>).backgroundOpacity as number ?? 1) * 100)}%
+              </span>
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -134,6 +151,23 @@ export default function KPIConfigEditor({
               />
             </div>
             <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Border Opacity</label>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={(kpiConfig as Record<string, unknown>).borderOpacity ?? 1}
+                onChange={(e) => onKPIConfigChange('borderOpacity', parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <span className="text-xs text-gray-500">
+                {Math.round(((kpiConfig as Record<string, unknown>).borderOpacity as number ?? 1) * 100)}%
+              </span>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Border Width</label>
               <input
                 type="number"
@@ -144,8 +178,6 @@ export default function KPIConfigEditor({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Border Radius</label>
               <input
@@ -157,7 +189,8 @@ export default function KPIConfigEditor({
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
-            <div className="flex items-center">
+          </div>
+          <div className="flex items-center">
               <label className="flex items-center gap-2 text-xs font-medium text-gray-600">
                 <input
                   type="checkbox"

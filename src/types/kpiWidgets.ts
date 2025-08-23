@@ -38,7 +38,9 @@ export interface KPIConfig {
   nameColor?: string
   nameFontWeight?: number
   backgroundColor?: string
+  backgroundOpacity?: number
   borderColor?: string
+  borderOpacity?: number
   borderWidth?: number
   borderRadius?: number
   padding?: number

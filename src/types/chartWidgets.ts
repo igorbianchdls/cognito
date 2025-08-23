@@ -19,9 +19,11 @@ export interface BaseChartConfig {
   // Visual & Colors
   colors?: string[]
   backgroundColor?: string
+  backgroundOpacity?: number
   borderRadius?: number
   borderWidth?: number
   borderColor?: string
+  borderOpacity?: number
   
   // Grid & Axes
   enableGridX?: boolean
