@@ -38,6 +38,9 @@ export default function ChartWidget({ widget }: ChartWidgetProps) {
     { x: 'Jun', y: 73 },
   ])
 
+  // Get container configuration
+  const containerConfig = widget.config?.containerConfig || {}
+
   // Simulate real-time data updates
   useEffect(() => {
     const interval = setInterval(() => {
@@ -140,7 +143,16 @@ export default function ChartWidget({ widget }: ChartWidgetProps) {
   }
 
   return (
-    <div className="h-full w-full flex flex-col">
+    <div 
+      className="h-full w-full flex flex-col"
+      style={{
+        backgroundColor: hexToRgba(containerConfig.backgroundColor || '#ffffff', containerConfig.backgroundOpacity ?? 1),
+        borderColor: hexToRgba(containerConfig.borderColor || '#e5e7eb', containerConfig.borderOpacity ?? 1),
+        borderWidth: `${containerConfig.borderWidth || 1}px`,
+        borderRadius: `${containerConfig.borderRadius || 8}px`,
+        borderStyle: 'solid'
+      }}
+    >
       {/* Title and Subtitle */}
       {(chartConfig.showTitle !== false && chartConfig.title) && (
         <div style={{ 

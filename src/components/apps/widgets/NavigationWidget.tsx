@@ -5,6 +5,24 @@ import { useStore } from '@nanostores/react'
 import { $multiCanvasState, $activeTab, multiCanvasActions } from '@/stores/multiCanvasStore'
 import type { DroppedWidget } from '@/types/widget'
 
+// Helper function to convert hex color + opacity to RGBA
+function hexToRgba(hex: string, opacity: number = 1): string {
+  // Remove # if present
+  hex = hex.replace('#', '')
+  
+  // Convert 3-digit hex to 6-digit
+  if (hex.length === 3) {
+    hex = hex.split('').map(char => char + char).join('')
+  }
+  
+  // Parse RGB values
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`
+}
+
 interface NavigationWidgetProps {
   widget: DroppedWidget
 }
@@ -17,6 +35,9 @@ export default function NavigationWidget({ widget }: NavigationWidgetProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
+  // Get container configuration
+  const containerConfig = widget.config?.containerConfig || {}
+  
   const config = widget.config?.navigationConfig || {}
 
   // Auto-collapse on mobile screens
@@ -139,7 +160,16 @@ export default function NavigationWidget({ widget }: NavigationWidgetProps) {
   const currentTheme = themes[theme]
 
   return (
-    <div className={`w-full h-full ${currentTheme.bg} overflow-hidden flex flex-col transition-all duration-300`}>
+    <div 
+      className={`w-full h-full overflow-hidden flex flex-col transition-all duration-300`}
+      style={{
+        backgroundColor: hexToRgba(containerConfig.backgroundColor || '#ffffff', containerConfig.backgroundOpacity ?? 1),
+        borderColor: hexToRgba(containerConfig.borderColor || '#e5e7eb', containerConfig.borderOpacity ?? 1),
+        borderWidth: `${containerConfig.borderWidth || 1}px`,
+        borderRadius: `${containerConfig.borderRadius || 8}px`,
+        borderStyle: 'solid'
+      }}
+    >
       {/* Sidebar Header */}
       <div className={`px-4 py-4 border-b ${currentTheme.border}`}>
         <div className="flex items-center justify-between">

@@ -3,6 +3,24 @@
 import { useState, useEffect } from 'react'
 import type { DroppedWidget, ImageConfig } from '@/types/widget'
 
+// Helper function to convert hex color + opacity to RGBA
+function hexToRgba(hex: string, opacity: number = 1): string {
+  // Remove # if present
+  hex = hex.replace('#', '')
+  
+  // Convert 3-digit hex to 6-digit
+  if (hex.length === 3) {
+    hex = hex.split('').map(char => char + char).join('')
+  }
+  
+  // Parse RGB values
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`
+}
+
 interface ImageWidgetProps {
   widget: DroppedWidget
 }
@@ -10,6 +28,9 @@ interface ImageWidgetProps {
 export default function ImageWidget({ widget }: ImageWidgetProps) {
   const [imageError, setImageError] = useState(false)
   const [imageLoading, setImageLoading] = useState(false)
+
+  // Get container configuration
+  const containerConfig = widget.config?.containerConfig || {}
 
   // Get image configuration
   const imageConfig: ImageConfig = widget.config?.imageConfig || {}
@@ -80,16 +101,21 @@ export default function ImageWidget({ widget }: ImageWidgetProps) {
     }
   }
 
-  // Style for the container
+  // Style for the container - container config takes priority over image config
   const containerStyle: React.CSSProperties = {
     width: '100%',
     height: '100%',
-    backgroundColor,
-    borderRadius: `${borderRadius}px`,
-    borderWidth: `${borderWidth}px`,
+    backgroundColor: hexToRgba(
+      containerConfig.backgroundColor || backgroundColor, 
+      containerConfig.backgroundOpacity ?? opacity ?? 1
+    ),
+    borderRadius: `${containerConfig.borderRadius ?? borderRadius ?? 0}px`,
+    borderWidth: `${containerConfig.borderWidth ?? borderWidth ?? 0}px`,
     borderStyle: 'solid',
-    borderColor,
-    opacity,
+    borderColor: hexToRgba(
+      containerConfig.borderColor || borderColor || 'transparent', 
+      containerConfig.borderOpacity ?? 1
+    ),
     boxShadow: shadow ? '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' : 'none',
     overflow: 'hidden',
     cursor: clickAction === 'link' ? 'pointer' : 'default',

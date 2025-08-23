@@ -10,7 +10,28 @@ interface TableWidgetProps {
   widget: DroppedWidget
 }
 
+// Helper function to convert hex color + opacity to RGBA
+function hexToRgba(hex: string, opacity: number = 1): string {
+  // Remove # if present
+  hex = hex.replace('#', '')
+  
+  // Convert 3-digit hex to 6-digit
+  if (hex.length === 3) {
+    hex = hex.split('').map(char => char + char).join('')
+  }
+  
+  // Parse RGB values
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`
+}
+
 export default function TableWidget({ widget }: TableWidgetProps) {
+  // Get container configuration
+  const containerConfig = widget.config?.containerConfig || {}
+
   // Get table configuration with backward compatibility (same pattern as charts)
   const tableConfig: TableConfig = widget.config?.tableConfig || {}
 
@@ -104,7 +125,16 @@ export default function TableWidget({ widget }: TableWidgetProps) {
   }
 
   return (
-    <div className="h-full w-full">
+    <div 
+      className="h-full w-full"
+      style={{
+        backgroundColor: hexToRgba(containerConfig.backgroundColor || '#ffffff', containerConfig.backgroundOpacity ?? 1),
+        borderColor: hexToRgba(containerConfig.borderColor || '#e5e7eb', containerConfig.borderOpacity ?? 1),
+        borderWidth: `${containerConfig.borderWidth || 1}px`,
+        borderRadius: `${containerConfig.borderRadius || 8}px`,
+        borderStyle: 'solid'
+      }}
+    >
       <DataTable {...tableProps} />
     </div>
   )
