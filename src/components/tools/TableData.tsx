@@ -175,7 +175,7 @@ export default function TableData({
   }
 
   return (
-    <div>
+    <div className="max-w-full overflow-hidden">
       {/* Tabs Navigation */}
       {query && (
         <div className="border-b border-gray-200 mb-4">
@@ -225,12 +225,14 @@ export default function TableData({
           )}
           
           {/* Data table */}
-          <DataTable
-            columns={columns}
-            data={actualData as TableDataType[]}
-            searchPlaceholder="Filtrar dados..."
-            pageSize={20}
-          />
+          <div className="max-w-full overflow-x-auto">
+            <DataTable
+              columns={columns}
+              data={actualData as TableDataType[]}
+              searchPlaceholder="Filtrar dados..."
+              pageSize={20}
+            />
+          </div>
 
           {/* Footer */}
           <div className="mt-4">
