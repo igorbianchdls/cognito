@@ -36,7 +36,16 @@ export function IntegrationCard({ integration, onToggle }: IntegrationCardProps)
   const IconComponent = iconMap[integration.icon as keyof typeof iconMap] || Globe;
 
   return (
-    <Card className="flex flex-col bg-gray-50">
+    <Card 
+      className="flex flex-col bg-white border border-gray-300"
+      style={{
+        boxShadow: `
+          0 0 0 1px rgba(0, 0, 0, 0.05),
+          0 2px 3px -2px rgba(0, 0, 0, 0.05),
+          0 3px 12px -4px rgba(0, 0, 0, 0.15),
+          0 4px 16px -8px rgba(0, 0, 0, 0.15)
+        `
+      }}>
       <CardHeader className="flex-row items-start space-y-0 space-x-4 pb-4">
         <div className="flex-shrink-0">
           <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
