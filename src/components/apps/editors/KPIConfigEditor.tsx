@@ -131,7 +131,7 @@ export default function KPIConfigEditor({
                 min="0"
                 max="1"
                 step="0.1"
-                value={(kpiConfig as Record<string, unknown>).backgroundOpacity ?? 1}
+                value={((kpiConfig as Record<string, unknown>).backgroundOpacity as number) ?? 1}
                 onChange={(e) => onKPIConfigChange('backgroundOpacity', parseFloat(e.target.value))}
                 className="w-full"
               />
@@ -157,7 +157,7 @@ export default function KPIConfigEditor({
                 min="0"
                 max="1"
                 step="0.1"
-                value={(kpiConfig as Record<string, unknown>).borderOpacity ?? 1}
+                value={((kpiConfig as Record<string, unknown>).borderOpacity as number) ?? 1}
                 onChange={(e) => onKPIConfigChange('borderOpacity', parseFloat(e.target.value))}
                 className="w-full"
               />

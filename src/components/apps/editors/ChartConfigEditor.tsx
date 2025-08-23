@@ -50,7 +50,7 @@ export default function ChartConfigEditor({
                     min="0"
                     max="1"
                     step="0.1"
-                    value={(chartConfig as Record<string, unknown>).backgroundOpacity ?? 1}
+                    value={((chartConfig as Record<string, unknown>).backgroundOpacity as number) ?? 1}
                     onChange={(e) => onChartConfigChange('backgroundOpacity', parseFloat(e.target.value))}
                     className="w-full"
                   />
@@ -76,7 +76,7 @@ export default function ChartConfigEditor({
                     min="0"
                     max="1"
                     step="0.1"
-                    value={(chartConfig as Record<string, unknown>).borderOpacity ?? 1}
+                    value={((chartConfig as Record<string, unknown>).borderOpacity as number) ?? 1}
                     onChange={(e) => onChartConfigChange('borderOpacity', parseFloat(e.target.value))}
                     className="w-full"
                   />
