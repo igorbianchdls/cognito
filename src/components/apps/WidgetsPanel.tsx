@@ -321,7 +321,7 @@ export default function WidgetsPanel({}: WidgetsPanelProps) {
           </div>
           <input
             type="text"
-            className="block w-full pl-10 pr-3 py-2 bg-white border-[0.5px] border-gray-300 rounded-lg text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="block w-full pl-10 pr-3 py-2 bg-white border-[0.5px] border-gray-200 rounded-lg text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Search"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

@@ -119,9 +119,9 @@ export default function DatasetsPanel() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-gray-50">
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-200">
+      <div className="px-4 py-3 border-b border-[0.5px] border-gray-200">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
           <h3 className="text-sm font-medium text-gray-900">Datasets</h3>
@@ -180,13 +180,22 @@ export default function DatasetsPanel() {
                   key={dataset.id}
                   onClick={() => handleSelectDataset(dataset.id)}
                   className={`
-                    p-3 border rounded-lg transition-all cursor-pointer
+                    p-3 border-[0.5px] rounded-lg transition-all cursor-pointer bg-white
                     ${isActive 
                       ? 'border-blue-500 bg-blue-50 shadow-md' 
-                      : 'border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                      : 'border-gray-200 hover:bg-gray-100 hover:border-gray-300'
                     }
                     ${isLoadingThis ? 'opacity-50 cursor-not-allowed' : ''}
                   `}
+                  style={!isActive ? {
+                    boxShadow: `
+                      0 0 0 1px rgba(0, 0, 0, 0.05),
+                      0 0 0 0.5px rgba(0, 0, 0, 0.05),
+                      0 1px 1px 0 rgba(0, 0, 0, 0.05),
+                      0 2px 1px -1px rgba(0, 0, 0, 0.05),
+                      0 1px 3px 0 rgba(0, 0, 0, 0.05)
+                    `
+                  } : undefined}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
@@ -209,7 +218,7 @@ export default function DatasetsPanel() {
                     </span>
                   </div>
                   
-                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-[0.5px] border-gray-100">
                     <div className={`text-xs ${isActive ? 'text-blue-600' : 'text-gray-500'}`}>
                       <span>{dataset.size}</span>
                       <span className="mx-1">•</span>
@@ -264,7 +273,7 @@ export default function DatasetsPanel() {
       </div>
 
       {/* Actions */}
-      <div className="border-t border-gray-200 p-3">
+      <div className="border-t border-[0.5px] border-gray-200 p-3">
         <div className="space-y-2">
           {/* Custom Import Button with better integration */}
           <button
@@ -294,7 +303,7 @@ export default function DatasetsPanel() {
           <div className="grid grid-cols-2 gap-2">
             <button 
               onClick={() => window.location.reload()}
-              className="px-3 py-2 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50 transition-colors"
+              className="px-3 py-2 border-[0.5px] border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50 transition-colors"
             >
               🔄 Atualizar
             </button>
@@ -304,7 +313,7 @@ export default function DatasetsPanel() {
                   datasets.filter(ds => ds.id.startsWith('imported-')).forEach(ds => removeDataset(ds.id));
                 }
               }}
-              className="px-3 py-2 border border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50 transition-colors"
+              className="px-3 py-2 border-[0.5px] border-gray-300 text-gray-700 text-sm rounded-md hover:bg-gray-50 transition-colors"
             >
               🗑️ Limpar
             </button>
@@ -312,7 +321,7 @@ export default function DatasetsPanel() {
         </div>
 
         {/* Quick Stats */}
-        <div className="mt-3 pt-3 border-t border-gray-200">
+        <div className="mt-3 pt-3 border-t border-[0.5px] border-gray-200">
           <div className="text-xs text-gray-500 text-center">
             <span className="font-medium">{datasets.length}</span> dataset(s) • 
             <span className="font-medium ml-1">
