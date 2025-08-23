@@ -202,7 +202,6 @@ export default function KPIConfigEditor({
               </label>
             </div>
           </div>
-          </div>
         </div>
 
         {/* Typography */}
@@ -310,7 +309,6 @@ export default function KPIConfigEditor({
               />
             </div>
           </div>
-          </div>
         </div>
 
         {/* Layout & Spacing */}
@@ -356,7 +354,6 @@ export default function KPIConfigEditor({
               <span className="font-medium">{kpiConfig.padding || 16}px</span>
               <span>32px</span>
             </div>
-          </div>
           </div>
         </div>
 
@@ -450,6 +447,8 @@ export default function KPIConfigEditor({
           </div>
         </div>
       </div>
+    </div>
+    </div>
     </div>
   )
 }
