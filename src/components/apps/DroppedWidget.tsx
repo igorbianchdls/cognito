@@ -94,14 +94,21 @@ export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = f
 
   return (
     <div 
-      className={`h-full bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-200 relative overflow-hidden ${
+      className={`h-full relative overflow-hidden transition-all duration-200 ${
         isSelected 
-          ? 'border-2 border-blue-500 shadow-lg' 
-          : 'border border-gray-200'
+          ? 'ring-2 ring-blue-500 ring-opacity-75 shadow-lg' 
+          : 'hover:shadow-md'
       }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
+      style={{
+        backgroundColor: hexToRgba(containerConfig.backgroundColor || '#ffffff', containerConfig.backgroundOpacity ?? 1),
+        borderColor: hexToRgba(containerConfig.borderColor || '#e5e7eb', containerConfig.borderOpacity ?? 1),
+        borderWidth: `${containerConfig.borderWidth ?? 1}px`,
+        borderRadius: `${containerConfig.borderRadius ?? 8}px`,
+        borderStyle: 'solid'
+      }}
     >
       {/* Header with edit and remove buttons */}
       <div className={`absolute top-2 right-2 z-10 flex gap-1 transition-opacity duration-200 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
@@ -136,15 +143,7 @@ export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = f
 
       {/* Widget content */}
       <div 
-        className="h-full"
-        style={{
-          padding: '12px',
-          backgroundColor: hexToRgba(containerConfig.backgroundColor || '#ffffff', containerConfig.backgroundOpacity ?? 1),
-          borderColor: hexToRgba(containerConfig.borderColor || '#e5e7eb', containerConfig.borderOpacity ?? 1),
-          borderWidth: `${containerConfig.borderWidth || 1}px`,
-          borderRadius: `${containerConfig.borderRadius || 8}px`,
-          borderStyle: 'solid'
-        }}
+        className="h-full p-3"
       >
         {renderWidget()}
       </div>
