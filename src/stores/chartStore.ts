@@ -206,7 +206,11 @@ export const chartActions = {
       if (chart.i !== chartId) return chart
       
       // Handle nested config.chartConfig from chat (fix for duplication bug)
-      if (changes.config && typeof changes.config === 'object' && 'chartConfig' in changes.config) {
+      // ONLY apply this fix when there's actually a chartConfig nested incorrectly
+      if (changes.config && typeof changes.config === 'object' && 
+          'chartConfig' in changes.config && 
+          Object.keys(changes.config).length === 1 && // Only chartConfig, no other properties
+          Object.keys(changes.config).includes('chartConfig')) {
         const { config, ...otherChanges } = changes
         const chartConfig = (config as Record<string, unknown>).chartConfig as Record<string, unknown> // Extract nested chartConfig
         console.log('🔧 [CHART-FIX] Detected nested config.chartConfig, flattening:', { chartConfig })
@@ -219,8 +223,16 @@ export const chartActions = {
         return result
       }
       
-      // Regular merge for other changes
-      return { ...chart, ...changes }
+      // Regular merge for other changes - preserve all config properties including containerConfig
+      const result = { 
+        ...chart, 
+        ...changes,
+        config: {
+          ...chart.config,
+          ...changes.config
+        }
+      }
+      return result
     })
     $chartWidgets.set(updatedCharts)
   },

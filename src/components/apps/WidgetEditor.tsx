@@ -79,14 +79,14 @@ export default function WidgetEditor() {
       id: selectedWidget?.i,
       type: selectedWidget?.type,
       hasConfig: !!selectedWidget?.config,
-      hasChartConfig: !!selectedWidget?.chartConfig,
+      hasChartConfig: !!selectedWidget?.config,
       configStructure: selectedWidget?.config,
-      chartConfigDirect: selectedWidget?.chartConfig,
-      configChartConfig: selectedWidget?.config?.chartConfig
+      chartConfigDirect: selectedWidget?.config,
+      configChartConfig: selectedWidget?.config
     })
     
-    // Acesso correto: config.chartConfig (novo) ou chartConfig (legacy)
-    const config = selectedWidget.config?.chartConfig || selectedWidget.chartConfig || {}
+    // Acesso correto: config para chart widgets
+    const config = selectedWidget.config || {}
     console.log('🎯 WidgetEditor computed chartConfig final:', config)
     return config
   }, [selectedWidget])
@@ -265,9 +265,8 @@ export default function WidgetEditor() {
     console.log('⚙️ handleChartConfigChange ENTRADA:', { field, value })
     console.log('⚙️ Estado ANTES da mudança:', {
       selectedWidgetId: selectedWidget?.i,
-      currentConfigViaConfig: selectedWidget?.config?.chartConfig,
-      currentConfigDirect: selectedWidget?.chartConfig,
-      fieldCurrentValue: selectedWidget?.config?.chartConfig?.[field as keyof typeof selectedWidget.config.chartConfig] || selectedWidget?.chartConfig?.[field as keyof typeof selectedWidget.chartConfig]
+      currentConfig: selectedWidget?.config,
+      fieldCurrentValue: selectedWidget?.config?.[field as keyof typeof selectedWidget.config]
     })
     
     // Apply changes directly to store (no local state)
@@ -279,9 +278,8 @@ export default function WidgetEditor() {
       setTimeout(() => {
         console.log('⚙️ Estado DEPOIS da mudança (100ms):', {
           selectedWidgetId: selectedWidget?.i,
-          newConfigViaConfig: selectedWidget?.config?.chartConfig,
-          newConfigDirect: selectedWidget?.chartConfig,
-          fieldNewValue: selectedWidget?.config?.chartConfig?.[field as keyof typeof selectedWidget.config.chartConfig] || selectedWidget?.chartConfig?.[field as keyof typeof selectedWidget.chartConfig]
+          newConfig: selectedWidget?.config,
+          fieldNewValue: selectedWidget?.config?.[field as keyof typeof selectedWidget.config]
         })
       }, 100)
     } else {
