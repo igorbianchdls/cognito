@@ -104,7 +104,7 @@ export function DataTable<TData extends TableData>({
   const globalFilter = table.getState().globalFilter
 
   return (
-    <div style={{ width: '100%', height: '100%', minWidth: 0 }}>
+    <div className="w-full h-full" style={{ minWidth: 0 }}>
       <div className="w-full h-full flex flex-col">
         {/* Header/Search - flex-shrink-0 */}
         <div className="flex-shrink-0 flex items-center py-4">
