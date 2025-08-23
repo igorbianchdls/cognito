@@ -5,6 +5,24 @@ import { KPICard } from '@/components/widgets/KPICard'
 import KPIDisplay from '@/components/tools/KPIDisplay'
 import type { DroppedWidget, KPIConfig, LegacyChartConfigWithKPI, ChartConfig } from '@/types/widget'
 
+// Helper function to convert hex color + opacity to RGBA
+function hexToRgba(hex: string, opacity: number = 1): string {
+  // Remove # if present
+  hex = hex.replace('#', '')
+  
+  // Convert 3-digit hex to 6-digit
+  if (hex.length === 3) {
+    hex = hex.split('').map(char => char + char).join('')
+  }
+  
+  // Parse RGB values
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`
+}
+
 interface KPIWidgetProps {
   widget: DroppedWidget
 }
@@ -176,8 +194,8 @@ export default function KPIWidget({ widget }: KPIWidgetProps) {
   // Custom styled KPI component for design props
   const CustomKPI = () => {
     const containerStyle: React.CSSProperties = {
-      backgroundColor: kpiConfig.backgroundColor || '#ffffff',
-      borderColor: kpiConfig.borderColor || '#e5e7eb',
+      backgroundColor: hexToRgba(kpiConfig.backgroundColor || '#ffffff', (kpiConfig as Record<string, unknown>).backgroundOpacity as number ?? 1),
+      borderColor: hexToRgba(kpiConfig.borderColor || '#e5e7eb', (kpiConfig as Record<string, unknown>).borderOpacity as number ?? 1),
       borderWidth: `${kpiConfig.borderWidth || 1}px`,
       borderRadius: `${kpiConfig.borderRadius || 8}px`,
       padding: `${kpiConfig.padding || 16}px`,

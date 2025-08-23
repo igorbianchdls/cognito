@@ -6,6 +6,24 @@ import type { ChartData } from '@/components/charts/types'
 import type { DroppedWidget } from '@/types/widget'
 import type { BarChartConfig } from '@/types/chartWidgets'
 
+// Helper function to convert hex color + opacity to RGBA
+function hexToRgba(hex: string, opacity: number = 1): string {
+  // Remove # if present
+  hex = hex.replace('#', '')
+  
+  // Convert 3-digit hex to 6-digit
+  if (hex.length === 3) {
+    hex = hex.split('').map(char => char + char).join('')
+  }
+  
+  // Parse RGB values
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`
+}
+
 interface ChartWidgetProps {
   widget: DroppedWidget
 }
@@ -80,7 +98,7 @@ export default function ChartWidget({ widget }: ChartWidgetProps) {
     enableGridY: chartConfig.enableGridY ?? true,
     borderRadius: chartConfig.borderRadius ?? 4,
     borderWidth: chartConfig.borderWidth ?? 0,
-    borderColor: chartConfig.borderColor,
+    borderColor: chartConfig.borderColor ? hexToRgba(chartConfig.borderColor, (chartConfig as Record<string, unknown>).borderOpacity as number ?? 1) : undefined,
     padding: chartConfig.padding ?? 0.2,
     groupMode: chartConfig.groupMode || 'grouped',
     layout: chartConfig.layout || 'vertical',
@@ -118,7 +136,7 @@ export default function ChartWidget({ widget }: ChartWidgetProps) {
       tickPadding: 8,
       tickRotation: 0,
     },
-    backgroundColor: chartConfig.backgroundColor || '#fff',
+    backgroundColor: hexToRgba(chartConfig.backgroundColor || '#fff', (chartConfig as Record<string, unknown>).backgroundOpacity as number ?? 1),
   }
 
   return (
