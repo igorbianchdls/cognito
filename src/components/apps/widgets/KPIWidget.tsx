@@ -63,9 +63,6 @@ function isLegacyChartConfigWithKPI(config: ChartConfig | undefined): config is 
 }
 
 export default function KPIWidget({ widget }: KPIWidgetProps) {
-  // Get container configuration
-  const containerConfig = widget.config?.containerConfig || {}
-
   // Get KPI configuration with backward compatibility (same pattern as charts)
   const kpiConfig: KPIConfig = widget.config?.kpiConfig || 
     // Backward compatibility: extract KPI props from old chartConfig
@@ -197,17 +194,10 @@ export default function KPIWidget({ widget }: KPIWidgetProps) {
   // Custom styled KPI component for design props
   const CustomKPI = () => {
     const containerStyle: React.CSSProperties = {
-      // Container config takes priority over KPI config
-      backgroundColor: hexToRgba(
-        containerConfig.backgroundColor || kpiConfig.backgroundColor || '#ffffff', 
-        containerConfig.backgroundOpacity ?? (kpiConfig as Record<string, unknown>).backgroundOpacity as number ?? 1
-      ),
-      borderColor: hexToRgba(
-        containerConfig.borderColor || kpiConfig.borderColor || '#e5e7eb', 
-        containerConfig.borderOpacity ?? (kpiConfig as Record<string, unknown>).borderOpacity as number ?? 1
-      ),
-      borderWidth: `${containerConfig.borderWidth ?? kpiConfig.borderWidth ?? 1}px`,
-      borderRadius: `${containerConfig.borderRadius ?? kpiConfig.borderRadius ?? 8}px`,
+      backgroundColor: hexToRgba(kpiConfig.backgroundColor || '#ffffff', (kpiConfig as Record<string, unknown>).backgroundOpacity as number ?? 1),
+      borderColor: hexToRgba(kpiConfig.borderColor || '#e5e7eb', (kpiConfig as Record<string, unknown>).borderOpacity as number ?? 1),
+      borderWidth: `${kpiConfig.borderWidth || 1}px`,
+      borderRadius: `${kpiConfig.borderRadius || 8}px`,
       padding: `${kpiConfig.padding || 16}px`,
       textAlign: kpiConfig.textAlign || 'center',
       height: '100%',

@@ -12,6 +12,24 @@ import ImageWidget from './widgets/ImageWidget'
 import NavigationWidget from './widgets/NavigationWidget'
 import type { DroppedWidget as DroppedWidgetType, ContainerConfig } from '@/types/widget'
 
+// Helper function to convert hex color + opacity to RGBA
+function hexToRgba(hex: string, opacity: number = 1): string {
+  // Remove # if present
+  hex = hex.replace('#', '')
+  
+  // Convert 3-digit hex to 6-digit
+  if (hex.length === 3) {
+    hex = hex.split('').map(char => char + char).join('')
+  }
+  
+  // Parse RGB values
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`
+}
+
 // Default container configuration
 const DEFAULT_CONTAINER_CONFIG: ContainerConfig = {
   backgroundColor: '#ffffff',
@@ -32,6 +50,9 @@ interface DroppedWidgetProps {
 
 export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = false, onClick }: DroppedWidgetProps) {
   const [isHovered, setIsHovered] = useState(false)
+
+  // Get container configuration with defaults
+  const containerConfig = widget.config?.containerConfig || DEFAULT_CONTAINER_CONFIG
 
   // Special full-screen rendering for NavigationWidget (Airtable style)
   if (widget.type === 'navigation') {
@@ -114,7 +135,17 @@ export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = f
       </div>
 
       {/* Widget content */}
-      <div className="p-3 h-full">
+      <div 
+        className="h-full"
+        style={{
+          padding: '12px',
+          backgroundColor: hexToRgba(containerConfig.backgroundColor || '#ffffff', containerConfig.backgroundOpacity ?? 1),
+          borderColor: hexToRgba(containerConfig.borderColor || '#e5e7eb', containerConfig.borderOpacity ?? 1),
+          borderWidth: `${containerConfig.borderWidth || 1}px`,
+          borderRadius: `${containerConfig.borderRadius || 8}px`,
+          borderStyle: 'solid'
+        }}
+      >
         {renderWidget()}
       </div>
 

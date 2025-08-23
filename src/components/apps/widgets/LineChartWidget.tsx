@@ -6,31 +6,11 @@ import type { ChartData } from '@/components/charts/types'
 import type { DroppedWidget } from '@/types/widget'
 import type { LineChartConfig } from '@/types/chartWidgets'
 
-// Helper function to convert hex color + opacity to RGBA
-function hexToRgba(hex: string, opacity: number = 1): string {
-  // Remove # if present
-  hex = hex.replace('#', '')
-  
-  // Convert 3-digit hex to 6-digit
-  if (hex.length === 3) {
-    hex = hex.split('').map(char => char + char).join('')
-  }
-  
-  // Parse RGB values
-  const r = parseInt(hex.substring(0, 2), 16)
-  const g = parseInt(hex.substring(2, 4), 16)
-  const b = parseInt(hex.substring(4, 6), 16)
-  
-  return `rgba(${r}, ${g}, ${b}, ${opacity})`
-}
-
 interface LineChartWidgetProps {
   widget: DroppedWidget
 }
 
 export default function LineChartWidget({ widget }: LineChartWidgetProps) {
-  // Get container configuration
-  const containerConfig = widget.config?.containerConfig || {}
   const [data, setData] = useState<ChartData[]>([
     { x: 'Jan', y: 45 },
     { x: 'Feb', y: 52 },
@@ -114,16 +94,7 @@ export default function LineChartWidget({ widget }: LineChartWidgetProps) {
   }
 
   return (
-    <div 
-      className="h-full w-full flex flex-col"
-      style={{
-        backgroundColor: hexToRgba(containerConfig.backgroundColor || '#ffffff', containerConfig.backgroundOpacity ?? 1),
-        borderColor: hexToRgba(containerConfig.borderColor || '#e5e7eb', containerConfig.borderOpacity ?? 1),
-        borderWidth: `${containerConfig.borderWidth || 1}px`,
-        borderRadius: `${containerConfig.borderRadius || 8}px`,
-        borderStyle: 'solid'
-      }}
-    >
+    <div className="h-full w-full flex flex-col">
       {/* Title and Subtitle */}
       {(chartConfig.showTitle !== false && chartConfig.title) && (
         <div style={{ 
