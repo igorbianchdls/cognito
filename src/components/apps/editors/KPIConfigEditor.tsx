@@ -127,17 +127,19 @@ export default function KPIConfigEditor({
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Background Opacity</label>
-              <Slider
-                value={[((kpiConfig as Record<string, unknown>).backgroundOpacity as number) ?? 1]}
-                onValueChange={([value]) => onKPIConfigChange('backgroundOpacity', value)}
-                max={1}
-                min={0}
-                step={0.1}
-                className="w-full"
-              />
-              <span className="text-xs text-gray-500">
-                {Math.round(((kpiConfig as Record<string, unknown>).backgroundOpacity as number ?? 1) * 100)}%
-              </span>
+              <div className="flex items-center gap-2">
+                <Slider
+                  value={[((kpiConfig as Record<string, unknown>).backgroundOpacity as number) ?? 1]}
+                  onValueChange={([value]) => onKPIConfigChange('backgroundOpacity', value)}
+                  max={1}
+                  min={0}
+                  step={0.1}
+                  className="flex-1"
+                />
+                <span className="text-xs text-gray-500 min-w-[40px] text-right">
+                  {Math.round(((kpiConfig as Record<string, unknown>).backgroundOpacity as number ?? 1) * 100)} %
+                </span>
+              </div>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">

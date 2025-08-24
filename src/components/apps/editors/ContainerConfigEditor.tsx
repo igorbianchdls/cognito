@@ -92,17 +92,19 @@ export default function ContainerConfigEditor({
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Background Opacity</label>
-                  <Slider
-                    value={[safeContainerConfig.backgroundOpacity]}
-                    onValueChange={([value]) => onContainerConfigChange('backgroundOpacity', value)}
-                    max={1}
-                    min={0}
-                    step={0.1}
-                    className="w-full"
-                  />
-                  <span className="text-xs text-gray-500">
-                    {Math.round(safeContainerConfig.backgroundOpacity * 100)}%
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <Slider
+                      value={[safeContainerConfig.backgroundOpacity]}
+                      onValueChange={([value]) => onContainerConfigChange('backgroundOpacity', value)}
+                      max={1}
+                      min={0}
+                      step={0.1}
+                      className="flex-1"
+                    />
+                    <span className="text-xs text-gray-500 min-w-[40px] text-right">
+                      {Math.round(safeContainerConfig.backgroundOpacity * 100)} %
+                    </span>
+                  </div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -117,43 +119,49 @@ export default function ContainerConfigEditor({
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Border Opacity</label>
-                  <Slider
-                    value={[safeContainerConfig.borderOpacity]}
-                    onValueChange={([value]) => onContainerConfigChange('borderOpacity', value)}
-                    max={1}
-                    min={0}
-                    step={0.1}
-                    className="w-full"
-                  />
-                  <span className="text-xs text-gray-500">
-                    {Math.round(safeContainerConfig.borderOpacity * 100)}%
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <Slider
+                      value={[safeContainerConfig.borderOpacity]}
+                      onValueChange={([value]) => onContainerConfigChange('borderOpacity', value)}
+                      max={1}
+                      min={0}
+                      step={0.1}
+                      className="flex-1"
+                    />
+                    <span className="text-xs text-gray-500 min-w-[40px] text-right">
+                      {Math.round(safeContainerConfig.borderOpacity * 100)} %
+                    </span>
+                  </div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Border Width</label>
-                  <Slider
-                    value={[safeContainerConfig.borderWidth]}
-                    onValueChange={([value]) => onContainerConfigChange('borderWidth', value)}
-                    max={10}
-                    min={0}
-                    step={1}
-                    className="w-full"
-                  />
-                  <span className="text-xs text-gray-500">{safeContainerConfig.borderWidth}px</span>
+                  <div className="flex items-center gap-2">
+                    <Slider
+                      value={[safeContainerConfig.borderWidth]}
+                      onValueChange={([value]) => onContainerConfigChange('borderWidth', value)}
+                      max={10}
+                      min={0}
+                      step={1}
+                      className="flex-1"
+                    />
+                    <span className="text-xs text-gray-500 min-w-[40px] text-right">{safeContainerConfig.borderWidth} px</span>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Border Radius</label>
-                  <Slider
-                    value={[safeContainerConfig.borderRadius]}
-                    onValueChange={([value]) => onContainerConfigChange('borderRadius', value)}
-                    max={50}
-                    min={0}
-                    step={1}
-                    className="w-full"
-                  />
-                  <span className="text-xs text-gray-500">{safeContainerConfig.borderRadius}px</span>
+                  <div className="flex items-center gap-2">
+                    <Slider
+                      value={[safeContainerConfig.borderRadius]}
+                      onValueChange={([value]) => onContainerConfigChange('borderRadius', value)}
+                      max={50}
+                      min={0}
+                      step={1}
+                      className="flex-1"
+                    />
+                    <span className="text-xs text-gray-500 min-w-[40px] text-right">{safeContainerConfig.borderRadius} px</span>
+                  </div>
                 </div>
               </div>
             </div>
