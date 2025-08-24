@@ -449,54 +449,54 @@ export default function WidgetEditorNew() {
         <h3 className="text-sm font-semibold text-gray-900 mb-3">🎨 Visual & Colors</h3>
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Background Color</label>
+            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+              <label className="text-xs text-gray-600 mb-2 block">Background Color</label>
               <input
                 type="color"
                 value={chartConfig.backgroundColor || '#ffffff'}
                 onChange={(e) => handleChartConfigChange('backgroundColor', e.target.value)}
-                className="w-full h-10 border border-gray-300 rounded cursor-pointer"
+                className="w-full h-8 rounded border-0 cursor-pointer"
               />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Background Opacity</label>
-              <div className="flex items-center gap-2">
-                <Slider
-                  value={[((chartConfig as Record<string, unknown>).backgroundOpacity as number) ?? 1]}
-                  onValueChange={([value]) => handleChartConfigChange('backgroundOpacity', value)}
-                  max={1}
-                  min={0}
-                  step={0.1}
-                  className="flex-1"
-                />
-                <span className="text-xs text-gray-500 min-w-[40px] text-right">
-                  {Math.round(((chartConfig as Record<string, unknown>).backgroundOpacity as number ?? 1) * 100)} %
-                </span>
+            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+              <label className="text-xs text-gray-600 mb-2 block">Background Opacity</label>
+              <div 
+                className="text-sm font-medium text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+                onClick={() => {
+                  const newValue = prompt('Enter opacity (0-100):', String(Math.round(((chartConfig as Record<string, unknown>).backgroundOpacity as number ?? 1) * 100)));
+                  if (newValue !== null) {
+                    const opacity = Math.max(0, Math.min(100, parseInt(newValue) || 0)) / 100;
+                    handleChartConfigChange('backgroundOpacity', opacity);
+                  }
+                }}
+              >
+                {Math.round(((chartConfig as Record<string, unknown>).backgroundOpacity as number ?? 1) * 100)}%
               </div>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Border Color</label>
+            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+              <label className="text-xs text-gray-600 mb-2 block">Border Color</label>
               <input
                 type="color"
                 value={chartConfig.borderColor || '#e5e7eb'}
                 onChange={(e) => handleChartConfigChange('borderColor', e.target.value)}
-                className="w-full h-10 border border-gray-300 rounded cursor-pointer"
+                className="w-full h-8 rounded border-0 cursor-pointer"
               />
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Border Width</label>
-              <div className="flex items-center gap-2">
-                <Slider
-                  value={[chartConfig.borderWidth || 0]}
-                  onValueChange={([value]) => handleChartConfigChange('borderWidth', value)}
-                  max={10}
-                  min={0}
-                  step={1}
-                  className="flex-1"
-                />
-                <span className="text-xs text-gray-500 min-w-[40px] text-right">{chartConfig.borderWidth || 0} px</span>
+            <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+              <label className="text-xs text-gray-600 mb-2 block">Border Width</label>
+              <div 
+                className="text-sm font-medium text-gray-900 cursor-pointer hover:text-blue-600 transition-colors"
+                onClick={() => {
+                  const newValue = prompt('Enter border width (0-10):', String(chartConfig.borderWidth || 0));
+                  if (newValue !== null) {
+                    const width = Math.max(0, Math.min(10, parseInt(newValue) || 0));
+                    handleChartConfigChange('borderWidth', width);
+                  }
+                }}
+              >
+                {chartConfig.borderWidth || 0}px
               </div>
             </div>
           </div>
