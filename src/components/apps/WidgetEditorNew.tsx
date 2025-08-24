@@ -22,6 +22,7 @@ import ChartConfigEditor from './editors/ChartConfigEditor'
 import NavigationConfigEditor from './editors/NavigationConfigEditor'
 import ContainerConfigEditor from './editors/ContainerConfigEditor'
 import { Slider } from '@/components/ui/slider'
+import { ColorInput, NumberInput } from './editors/controls'
 
 export default function WidgetEditorNew() {
   const widgets = useStore($widgets)
@@ -578,15 +579,11 @@ export default function WidgetEditorNew() {
                 <span className="text-xs text-gray-500 min-w-[40px] text-right">{chartConfig.titleFontSize || 16} px</span>
               </div>
             </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Color</label>
-              <input
-                type="color"
-                value={chartConfig.titleColor || '#1f2937'}
-                onChange={(e) => handleChartConfigChange('titleColor', e.target.value)}
-                className="w-full h-8 border border-gray-300 rounded"
-              />
-            </div>
+            <ColorInput
+              label="Color"
+              value={chartConfig.titleColor || '#1f2937'}
+              onChange={(value) => handleChartConfigChange('titleColor', value)}
+            />
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Weight</label>
               <select
@@ -879,15 +876,11 @@ export default function WidgetEditorNew() {
               />
               Enable Labels
             </label>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Label Color</label>
-              <input
-                type="color"
-                value={chartConfig.labelTextColor || '#374151'}
-                onChange={(e) => handleChartConfigChange('labelTextColor', e.target.value)}
-                className="w-full h-8 border border-gray-300 rounded"
-              />
-            </div>
+            <ColorInput
+              label="Label Color"
+              value={chartConfig.labelTextColor || '#374151'}
+              onChange={(value) => handleChartConfigChange('labelTextColor', value)}
+            />
           </div>
           {chartConfig.enableLabel !== false && (
             <div className="grid grid-cols-3 gap-2">
