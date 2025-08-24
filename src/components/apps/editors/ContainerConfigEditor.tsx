@@ -2,6 +2,7 @@
 
 import type { DroppedWidget, ContainerConfig } from '@/types/widget'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
+import { Slider } from '@/components/ui/slider'
 
 // Helper function to convert hex color + opacity to RGBA
 function hexToRgba(hex: string, opacity: number = 1): string {
@@ -91,13 +92,12 @@ export default function ContainerConfigEditor({
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Background Opacity</label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.1"
-                    value={safeContainerConfig.backgroundOpacity}
-                    onChange={(e) => onContainerConfigChange('backgroundOpacity', parseFloat(e.target.value))}
+                  <Slider
+                    value={[safeContainerConfig.backgroundOpacity]}
+                    onValueChange={([value]) => onContainerConfigChange('backgroundOpacity', value)}
+                    max={1}
+                    min={0}
+                    step={0.1}
                     className="w-full"
                   />
                   <span className="text-xs text-gray-500">
@@ -117,13 +117,12 @@ export default function ContainerConfigEditor({
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Border Opacity</label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.1"
-                    value={safeContainerConfig.borderOpacity}
-                    onChange={(e) => onContainerConfigChange('borderOpacity', parseFloat(e.target.value))}
+                  <Slider
+                    value={[safeContainerConfig.borderOpacity]}
+                    onValueChange={([value]) => onContainerConfigChange('borderOpacity', value)}
+                    max={1}
+                    min={0}
+                    step={0.1}
                     className="w-full"
                   />
                   <span className="text-xs text-gray-500">
@@ -134,26 +133,24 @@ export default function ContainerConfigEditor({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Border Width</label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="10"
-                    step="1"
-                    value={safeContainerConfig.borderWidth}
-                    onChange={(e) => onContainerConfigChange('borderWidth', parseInt(e.target.value))}
+                  <Slider
+                    value={[safeContainerConfig.borderWidth]}
+                    onValueChange={([value]) => onContainerConfigChange('borderWidth', value)}
+                    max={10}
+                    min={0}
+                    step={1}
                     className="w-full"
                   />
                   <span className="text-xs text-gray-500">{safeContainerConfig.borderWidth}px</span>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Border Radius</label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="50"
-                    step="1"
-                    value={safeContainerConfig.borderRadius}
-                    onChange={(e) => onContainerConfigChange('borderRadius', parseInt(e.target.value))}
+                  <Slider
+                    value={[safeContainerConfig.borderRadius]}
+                    onValueChange={([value]) => onContainerConfigChange('borderRadius', value)}
+                    max={50}
+                    min={0}
+                    step={1}
                     className="w-full"
                   />
                   <span className="text-xs text-gray-500">{safeContainerConfig.borderRadius}px</span>

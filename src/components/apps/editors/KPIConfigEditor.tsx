@@ -3,6 +3,7 @@
 import type { DroppedWidget } from '@/types/widget'
 import { isKPIWidget } from '@/types/kpiWidgets'
 import type { KPIConfig } from '@/types/kpiWidgets'
+import { Slider } from '@/components/ui/slider'
 
 interface KPIConfigEditorProps {
   selectedWidget: DroppedWidget
@@ -126,13 +127,12 @@ export default function KPIConfigEditor({
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Background Opacity</label>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={((kpiConfig as Record<string, unknown>).backgroundOpacity as number) ?? 1}
-                onChange={(e) => onKPIConfigChange('backgroundOpacity', parseFloat(e.target.value))}
+              <Slider
+                value={[((kpiConfig as Record<string, unknown>).backgroundOpacity as number) ?? 1]}
+                onValueChange={([value]) => onKPIConfigChange('backgroundOpacity', value)}
+                max={1}
+                min={0}
+                step={0.1}
                 className="w-full"
               />
               <span className="text-xs text-gray-500">

@@ -21,6 +21,7 @@ import TableConfigEditor from './editors/TableConfigEditor'
 import ChartConfigEditor from './editors/ChartConfigEditor'
 import NavigationConfigEditor from './editors/NavigationConfigEditor'
 import ContainerConfigEditor from './editors/ContainerConfigEditor'
+import { Slider } from '@/components/ui/slider'
 
 export default function WidgetEditorNew() {
   const widgets = useStore($widgets)
@@ -459,13 +460,12 @@ export default function WidgetEditorNew() {
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Background Opacity</label>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={((chartConfig as Record<string, unknown>).backgroundOpacity as number) ?? 1}
-                onChange={(e) => handleChartConfigChange('backgroundOpacity', parseFloat(e.target.value))}
+              <Slider
+                value={[((chartConfig as Record<string, unknown>).backgroundOpacity as number) ?? 1]}
+                onValueChange={([value]) => handleChartConfigChange('backgroundOpacity', value)}
+                max={1}
+                min={0}
+                step={0.1}
                 className="w-full"
               />
               <span className="text-xs text-gray-500">
@@ -485,13 +485,12 @@ export default function WidgetEditorNew() {
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Border Width</label>
-              <input
-                type="range"
-                min="0"
-                max="10"
-                step="1"
-                value={chartConfig.borderWidth || 0}
-                onChange={(e) => handleChartConfigChange('borderWidth', parseInt(e.target.value))}
+              <Slider
+                value={[chartConfig.borderWidth || 0]}
+                onValueChange={([value]) => handleChartConfigChange('borderWidth', value)}
+                max={10}
+                min={0}
+                step={1}
                 className="w-full"
               />
               <span className="text-xs text-gray-500">{chartConfig.borderWidth || 0}px</span>
@@ -517,13 +516,12 @@ export default function WidgetEditorNew() {
           <div className="grid grid-cols-3 gap-2">
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">Font Size</label>
-              <input
-                type="range"
-                min="12"
-                max="32"
-                step="1"
-                value={chartConfig.titleFontSize || 16}
-                onChange={(e) => handleChartConfigChange('titleFontSize', parseInt(e.target.value))}
+              <Slider
+                value={[chartConfig.titleFontSize || 16]}
+                onValueChange={([value]) => handleChartConfigChange('titleFontSize', value)}
+                max={32}
+                min={12}
+                step={1}
                 className="w-full"
               />
               <span className="text-xs text-gray-500">{chartConfig.titleFontSize || 16}px</span>
@@ -599,52 +597,48 @@ export default function WidgetEditorNew() {
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="block text-xs text-gray-600 mb-1">Top</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={chartConfig.margin?.top || 60}
-                  onChange={(e) => handleChartConfigChange('margin', { ...chartConfig.margin, top: parseInt(e.target.value) })}
+                <Slider
+                  value={[chartConfig.margin?.top || 60]}
+                  onValueChange={([value]) => handleChartConfigChange('margin', { ...chartConfig.margin, top: value })}
+                  max={100}
+                  min={0}
+                  step={5}
                   className="w-full"
                 />
                 <span className="text-xs text-gray-500">{chartConfig.margin?.top || 60}px</span>
               </div>
               <div>
                 <label className="block text-xs text-gray-600 mb-1">Right</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={chartConfig.margin?.right || 80}
-                  onChange={(e) => handleChartConfigChange('margin', { ...chartConfig.margin, right: parseInt(e.target.value) })}
+                <Slider
+                  value={[chartConfig.margin?.right || 80]}
+                  onValueChange={([value]) => handleChartConfigChange('margin', { ...chartConfig.margin, right: value })}
+                  max={100}
+                  min={0}
+                  step={5}
                   className="w-full"
                 />
                 <span className="text-xs text-gray-500">{chartConfig.margin?.right || 80}px</span>
               </div>
               <div>
                 <label className="block text-xs text-gray-600 mb-1">Bottom</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={chartConfig.margin?.bottom || 60}
-                  onChange={(e) => handleChartConfigChange('margin', { ...chartConfig.margin, bottom: parseInt(e.target.value) })}
+                <Slider
+                  value={[chartConfig.margin?.bottom || 60]}
+                  onValueChange={([value]) => handleChartConfigChange('margin', { ...chartConfig.margin, bottom: value })}
+                  max={100}
+                  min={0}
+                  step={5}
                   className="w-full"
                 />
                 <span className="text-xs text-gray-500">{chartConfig.margin?.bottom || 60}px</span>
               </div>
               <div>
                 <label className="block text-xs text-gray-600 mb-1">Left</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={chartConfig.margin?.left || 60}
-                  onChange={(e) => handleChartConfigChange('margin', { ...chartConfig.margin, left: parseInt(e.target.value) })}
+                <Slider
+                  value={[chartConfig.margin?.left || 60]}
+                  onValueChange={([value]) => handleChartConfigChange('margin', { ...chartConfig.margin, left: value })}
+                  max={100}
+                  min={0}
+                  step={5}
                   className="w-full"
                 />
                 <span className="text-xs text-gray-500">{chartConfig.margin?.left || 60}px</span>
@@ -653,13 +647,12 @@ export default function WidgetEditorNew() {
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">Padding</label>
-            <input
-              type="range"
-              min="0"
-              max="50"
-              step="1"
-              value={chartConfig.padding || 0}
-              onChange={(e) => handleChartConfigChange('padding', parseInt(e.target.value))}
+            <Slider
+              value={[chartConfig.padding || 0]}
+              onValueChange={([value]) => handleChartConfigChange('padding', value)}
+              max={50}
+              min={0}
+              step={1}
               className="w-full"
             />
             <span className="text-xs text-gray-500">{chartConfig.padding || 0}px</span>
@@ -709,39 +702,36 @@ export default function WidgetEditorNew() {
               <div className="grid grid-cols-3 gap-2">
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Rotation</label>
-                  <input
-                    type="range"
-                    min="-90"
-                    max="90"
-                    step="15"
-                    value={chartConfig.axisBottom?.tickRotation || 0}
-                    onChange={(e) => handleChartConfigChange('axisBottom', { ...chartConfig.axisBottom, tickRotation: parseInt(e.target.value) })}
+                  <Slider
+                    value={[chartConfig.axisBottom?.tickRotation || 0]}
+                    onValueChange={([value]) => handleChartConfigChange('axisBottom', { ...chartConfig.axisBottom, tickRotation: value })}
+                    max={90}
+                    min={-90}
+                    step={15}
                     className="w-full"
                   />
                   <span className="text-xs text-gray-500">{chartConfig.axisBottom?.tickRotation || 0}°</span>
                 </div>
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Tick Size</label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="20"
-                    step="1"
-                    value={chartConfig.axisBottom?.tickSize || 5}
-                    onChange={(e) => handleChartConfigChange('axisBottom', { ...chartConfig.axisBottom, tickSize: parseInt(e.target.value) })}
+                  <Slider
+                    value={[chartConfig.axisBottom?.tickSize || 5]}
+                    onValueChange={([value]) => handleChartConfigChange('axisBottom', { ...chartConfig.axisBottom, tickSize: value })}
+                    max={20}
+                    min={0}
+                    step={1}
                     className="w-full"
                   />
                   <span className="text-xs text-gray-500">{chartConfig.axisBottom?.tickSize || 5}px</span>
                 </div>
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Padding</label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="20"
-                    step="1"
-                    value={chartConfig.axisBottom?.tickPadding || 5}
-                    onChange={(e) => handleChartConfigChange('axisBottom', { ...chartConfig.axisBottom, tickPadding: parseInt(e.target.value) })}
+                  <Slider
+                    value={[chartConfig.axisBottom?.tickPadding || 5]}
+                    onValueChange={([value]) => handleChartConfigChange('axisBottom', { ...chartConfig.axisBottom, tickPadding: value })}
+                    max={20}
+                    min={0}
+                    step={1}
                     className="w-full"
                   />
                   <span className="text-xs text-gray-500">{chartConfig.axisBottom?.tickPadding || 5}px</span>
@@ -767,39 +757,36 @@ export default function WidgetEditorNew() {
               <div className="grid grid-cols-3 gap-2">
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Rotation</label>
-                  <input
-                    type="range"
-                    min="-90"
-                    max="90"
-                    step="15"
-                    value={chartConfig.axisLeft?.tickRotation || 0}
-                    onChange={(e) => handleChartConfigChange('axisLeft', { ...chartConfig.axisLeft, tickRotation: parseInt(e.target.value) })}
+                  <Slider
+                    value={[chartConfig.axisLeft?.tickRotation || 0]}
+                    onValueChange={([value]) => handleChartConfigChange('axisLeft', { ...chartConfig.axisLeft, tickRotation: value })}
+                    max={90}
+                    min={-90}
+                    step={15}
                     className="w-full"
                   />
                   <span className="text-xs text-gray-500">{chartConfig.axisLeft?.tickRotation || 0}°</span>
                 </div>
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Tick Size</label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="20"
-                    step="1"
-                    value={chartConfig.axisLeft?.tickSize || 5}
-                    onChange={(e) => handleChartConfigChange('axisLeft', { ...chartConfig.axisLeft, tickSize: parseInt(e.target.value) })}
+                  <Slider
+                    value={[chartConfig.axisLeft?.tickSize || 5]}
+                    onValueChange={([value]) => handleChartConfigChange('axisLeft', { ...chartConfig.axisLeft, tickSize: value })}
+                    max={20}
+                    min={0}
+                    step={1}
                     className="w-full"
                   />
                   <span className="text-xs text-gray-500">{chartConfig.axisLeft?.tickSize || 5}px</span>
                 </div>
                 <div>
                   <label className="block text-xs text-gray-600 mb-1">Padding</label>
-                  <input
-                    type="range"
-                    min="0"
-                    max="20"
-                    step="1"
-                    value={chartConfig.axisLeft?.tickPadding || 5}
-                    onChange={(e) => handleChartConfigChange('axisLeft', { ...chartConfig.axisLeft, tickPadding: parseInt(e.target.value) })}
+                  <Slider
+                    value={[chartConfig.axisLeft?.tickPadding || 5]}
+                    onValueChange={([value]) => handleChartConfigChange('axisLeft', { ...chartConfig.axisLeft, tickPadding: value })}
+                    max={20}
+                    min={0}
+                    step={1}
                     className="w-full"
                   />
                   <span className="text-xs text-gray-500">{chartConfig.axisLeft?.tickPadding || 5}px</span>
@@ -854,26 +841,24 @@ export default function WidgetEditorNew() {
               </div>
               <div>
                 <label className="block text-xs text-gray-600 mb-1">Skip Width</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={chartConfig.labelSkipWidth || 0}
-                  onChange={(e) => handleChartConfigChange('labelSkipWidth', parseInt(e.target.value))}
+                <Slider
+                  value={[chartConfig.labelSkipWidth || 0]}
+                  onValueChange={([value]) => handleChartConfigChange('labelSkipWidth', value)}
+                  max={100}
+                  min={0}
+                  step={5}
                   className="w-full"
                 />
                 <span className="text-xs text-gray-500">{chartConfig.labelSkipWidth || 0}px</span>
               </div>
               <div>
                 <label className="block text-xs text-gray-600 mb-1">Skip Height</label>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="5"
-                  value={chartConfig.labelSkipHeight || 0}
-                  onChange={(e) => handleChartConfigChange('labelSkipHeight', parseInt(e.target.value))}
+                <Slider
+                  value={[chartConfig.labelSkipHeight || 0]}
+                  onValueChange={([value]) => handleChartConfigChange('labelSkipHeight', value)}
+                  max={100}
+                  min={0}
+                  step={5}
                   className="w-full"
                 />
                 <span className="text-xs text-gray-500">{chartConfig.labelSkipHeight || 0}px</span>
