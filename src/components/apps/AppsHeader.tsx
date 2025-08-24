@@ -22,13 +22,13 @@ export default function AppsHeader({ activeTab, onTabChange, sidebarCollapsed, o
   ] as const
 
   return (
-    <div className="bg-[#111111] border-b border-gray-800 px-6 py-2">
+    <div className="bg-gray-100 border-b border-gray-200 px-6 py-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
         {/* Toggle Sidebar Button */}
         <button
           onClick={onToggleSidebar}
-          className="mr-4 p-2 text-[#888888] hover:text-[#AAAAAA] hover:bg-gray-800 rounded-lg transition-colors duration-200"
+          className="mr-4 p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors duration-200"
           title={sidebarCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
         >
           <span className="text-lg font-mono">
@@ -41,8 +41,8 @@ export default function AppsHeader({ activeTab, onTabChange, sidebarCollapsed, o
             onClick={() => onTabChange(tab.id)}
             className={`flex items-center gap-2 px-4 py-1 rounded-lg text-base font-semibold transition-all duration-200 ${
               activeTab === tab.id
-                ? 'bg-[#333333] text-white shadow-sm'
-                : 'text-[#888888] hover:text-[#AAAAAA] hover:bg-gray-800'
+                ? 'bg-white text-gray-900 shadow-sm'
+                : 'text-gray-700 hover:text-gray-900 hover:bg-gray-200'
             }`}
           >
             <tab.icon className="w-4 h-4" />

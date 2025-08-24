@@ -1081,7 +1081,7 @@ export default function WidgetEditorNew() {
 
               {/* Container Configuration - applies to all widgets */}
               {selectedWidget && (
-                <div className="mt-6 pt-6 border-t border-gray-200">
+                <div className="mt-6 pt-6">
                   <ContainerConfigEditor
                     selectedWidget={selectedWidget}
                     containerConfig={containerConfig}
