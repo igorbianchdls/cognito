@@ -31,6 +31,9 @@ export default function WidgetEditorNew() {
   // State para controlar o modo de view: 'widgets' ou 'edit'
   const [viewMode, setViewMode] = useState<'widgets' | 'edit'>('widgets')
   
+  // State para controlar a tab ativa no edit view
+  const [activeEditTab, setActiveEditTab] = useState<'design' | 'layout' | 'data'>('design')
+  
   // State para controlar se canvas está selecionado
   const [canvasSelected, setCanvasSelected] = useState(widgets.length === 0)
 
@@ -437,6 +440,451 @@ export default function WidgetEditorNew() {
     )
   }
 
+  // Renderização das tabs do chart editor
+  const renderChartDesignTab = () => (
+    <div className="space-y-6">
+      {/* Visual & Colors */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">🎨 Visual & Colors</h3>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Background Color</label>
+              <input
+                type="color"
+                value={chartConfig.backgroundColor || '#ffffff'}
+                onChange={(e) => handleChartConfigChange('backgroundColor', e.target.value)}
+                className="w-full h-10 border border-gray-300 rounded cursor-pointer"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Background Opacity</label>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={((chartConfig as Record<string, unknown>).backgroundOpacity as number) ?? 1}
+                onChange={(e) => handleChartConfigChange('backgroundOpacity', parseFloat(e.target.value))}
+                className="w-full"
+              />
+              <span className="text-xs text-gray-500">
+                {Math.round(((chartConfig as Record<string, unknown>).backgroundOpacity as number ?? 1) * 100)}%
+              </span>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Border Color</label>
+              <input
+                type="color"
+                value={chartConfig.borderColor || '#e5e7eb'}
+                onChange={(e) => handleChartConfigChange('borderColor', e.target.value)}
+                className="w-full h-10 border border-gray-300 rounded cursor-pointer"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Border Width</label>
+              <input
+                type="range"
+                min="0"
+                max="10"
+                step="1"
+                value={chartConfig.borderWidth || 0}
+                onChange={(e) => handleChartConfigChange('borderWidth', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <span className="text-xs text-gray-500">{chartConfig.borderWidth || 0}px</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Title & Text */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">✍️ Title & Text</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Title Text</label>
+            <input
+              type="text"
+              value={chartConfig.title || ''}
+              onChange={(e) => handleChartConfigChange('title', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Chart Title"
+            />
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Font Size</label>
+              <input
+                type="range"
+                min="12"
+                max="32"
+                step="1"
+                value={chartConfig.titleFontSize || 16}
+                onChange={(e) => handleChartConfigChange('titleFontSize', parseInt(e.target.value))}
+                className="w-full"
+              />
+              <span className="text-xs text-gray-500">{chartConfig.titleFontSize || 16}px</span>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Color</label>
+              <input
+                type="color"
+                value={chartConfig.titleColor || '#1f2937'}
+                onChange={(e) => handleChartConfigChange('titleColor', e.target.value)}
+                className="w-full h-8 border border-gray-300 rounded"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Weight</label>
+              <select
+                value={chartConfig.titleFontWeight || 600}
+                onChange={(e) => handleChartConfigChange('titleFontWeight', parseInt(e.target.value))}
+                className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+              >
+                <option value={400}>Normal</option>
+                <option value={500}>Medium</option>
+                <option value={600}>Semi Bold</option>
+                <option value={700}>Bold</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Animation */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">🎬 Animation</h3>
+        <div className="space-y-3">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={chartConfig.animate !== false}
+              onChange={(e) => handleChartConfigChange('animate', e.target.checked)}
+              className="rounded"
+            />
+            Enable Animation
+          </label>
+          {chartConfig.animate !== false && (
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Motion Config</label>
+              <select
+                value={chartConfig.motionConfig || 'default'}
+                onChange={(e) => handleChartConfigChange('motionConfig', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="default">Default</option>
+                <option value="gentle">Gentle</option>
+                <option value="wobbly">Wobbly</option>
+                <option value="stiff">Stiff</option>
+                <option value="slow">Slow</option>
+              </select>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderChartLayoutTab = () => (
+    <div className="space-y-6">
+      {/* Layout & Spacing */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">📏 Layout & Spacing</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-2">Margin</label>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Top</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={chartConfig.margin?.top || 60}
+                  onChange={(e) => handleChartConfigChange('margin', { ...chartConfig.margin, top: parseInt(e.target.value) })}
+                  className="w-full"
+                />
+                <span className="text-xs text-gray-500">{chartConfig.margin?.top || 60}px</span>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Right</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={chartConfig.margin?.right || 80}
+                  onChange={(e) => handleChartConfigChange('margin', { ...chartConfig.margin, right: parseInt(e.target.value) })}
+                  className="w-full"
+                />
+                <span className="text-xs text-gray-500">{chartConfig.margin?.right || 80}px</span>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Bottom</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={chartConfig.margin?.bottom || 60}
+                  onChange={(e) => handleChartConfigChange('margin', { ...chartConfig.margin, bottom: parseInt(e.target.value) })}
+                  className="w-full"
+                />
+                <span className="text-xs text-gray-500">{chartConfig.margin?.bottom || 60}px</span>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Left</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={chartConfig.margin?.left || 60}
+                  onChange={(e) => handleChartConfigChange('margin', { ...chartConfig.margin, left: parseInt(e.target.value) })}
+                  className="w-full"
+                />
+                <span className="text-xs text-gray-500">{chartConfig.margin?.left || 60}px</span>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Padding</label>
+            <input
+              type="range"
+              min="0"
+              max="50"
+              step="1"
+              value={chartConfig.padding || 0}
+              onChange={(e) => handleChartConfigChange('padding', parseInt(e.target.value))}
+              className="w-full"
+            />
+            <span className="text-xs text-gray-500">{chartConfig.padding || 0}px</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Grid & Axes */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">📐 Grid & Axes</h3>
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={chartConfig.enableGridX !== false}
+                onChange={(e) => handleChartConfigChange('enableGridX', e.target.checked)}
+                className="rounded"
+              />
+              Enable Grid X
+            </label>
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={chartConfig.enableGridY !== false}
+                onChange={(e) => handleChartConfigChange('enableGridY', e.target.checked)}
+                className="rounded"
+              />
+              Enable Grid Y
+            </label>
+          </div>
+          
+          {/* Bottom Axis */}
+          <div className="border border-gray-200 rounded-lg p-3">
+            <h4 className="text-xs font-semibold text-gray-700 mb-2">Bottom Axis</h4>
+            <div className="space-y-2">
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Legend</label>
+                <input
+                  type="text"
+                  value={chartConfig.axisBottom?.legend || ''}
+                  onChange={(e) => handleChartConfigChange('axisBottom', { ...chartConfig.axisBottom, legend: e.target.value })}
+                  className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="X-axis label"
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Rotation</label>
+                  <input
+                    type="range"
+                    min="-90"
+                    max="90"
+                    step="15"
+                    value={chartConfig.axisBottom?.tickRotation || 0}
+                    onChange={(e) => handleChartConfigChange('axisBottom', { ...chartConfig.axisBottom, tickRotation: parseInt(e.target.value) })}
+                    className="w-full"
+                  />
+                  <span className="text-xs text-gray-500">{chartConfig.axisBottom?.tickRotation || 0}°</span>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Tick Size</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="20"
+                    step="1"
+                    value={chartConfig.axisBottom?.tickSize || 5}
+                    onChange={(e) => handleChartConfigChange('axisBottom', { ...chartConfig.axisBottom, tickSize: parseInt(e.target.value) })}
+                    className="w-full"
+                  />
+                  <span className="text-xs text-gray-500">{chartConfig.axisBottom?.tickSize || 5}px</span>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Padding</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="20"
+                    step="1"
+                    value={chartConfig.axisBottom?.tickPadding || 5}
+                    onChange={(e) => handleChartConfigChange('axisBottom', { ...chartConfig.axisBottom, tickPadding: parseInt(e.target.value) })}
+                    className="w-full"
+                  />
+                  <span className="text-xs text-gray-500">{chartConfig.axisBottom?.tickPadding || 5}px</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Left Axis */}
+          <div className="border border-gray-200 rounded-lg p-3">
+            <h4 className="text-xs font-semibold text-gray-700 mb-2">Left Axis</h4>
+            <div className="space-y-2">
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Legend</label>
+                <input
+                  type="text"
+                  value={chartConfig.axisLeft?.legend || ''}
+                  onChange={(e) => handleChartConfigChange('axisLeft', { ...chartConfig.axisLeft, legend: e.target.value })}
+                  className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="Y-axis label"
+                />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Rotation</label>
+                  <input
+                    type="range"
+                    min="-90"
+                    max="90"
+                    step="15"
+                    value={chartConfig.axisLeft?.tickRotation || 0}
+                    onChange={(e) => handleChartConfigChange('axisLeft', { ...chartConfig.axisLeft, tickRotation: parseInt(e.target.value) })}
+                    className="w-full"
+                  />
+                  <span className="text-xs text-gray-500">{chartConfig.axisLeft?.tickRotation || 0}°</span>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Tick Size</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="20"
+                    step="1"
+                    value={chartConfig.axisLeft?.tickSize || 5}
+                    onChange={(e) => handleChartConfigChange('axisLeft', { ...chartConfig.axisLeft, tickSize: parseInt(e.target.value) })}
+                    className="w-full"
+                  />
+                  <span className="text-xs text-gray-500">{chartConfig.axisLeft?.tickSize || 5}px</span>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-600 mb-1">Padding</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="20"
+                    step="1"
+                    value={chartConfig.axisLeft?.tickPadding || 5}
+                    onChange={(e) => handleChartConfigChange('axisLeft', { ...chartConfig.axisLeft, tickPadding: parseInt(e.target.value) })}
+                    className="w-full"
+                  />
+                  <span className="text-xs text-gray-500">{chartConfig.axisLeft?.tickPadding || 5}px</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderChartDataTab = () => (
+    <div className="space-y-6">
+      {/* Labels */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">🏷️ Labels</h3>
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={chartConfig.enableLabel !== false}
+                onChange={(e) => handleChartConfigChange('enableLabel', e.target.checked)}
+                className="rounded"
+              />
+              Enable Labels
+            </label>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Label Color</label>
+              <input
+                type="color"
+                value={chartConfig.labelTextColor || '#374151'}
+                onChange={(e) => handleChartConfigChange('labelTextColor', e.target.value)}
+                className="w-full h-8 border border-gray-300 rounded"
+              />
+            </div>
+          </div>
+          {chartConfig.enableLabel !== false && (
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Position</label>
+                <select
+                  value={chartConfig.labelPosition || 'middle'}
+                  onChange={(e) => handleChartConfigChange('labelPosition', e.target.value)}
+                  className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
+                >
+                  <option value="start">Start</option>
+                  <option value="middle">Middle</option>
+                  <option value="end">End</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Skip Width</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={chartConfig.labelSkipWidth || 0}
+                  onChange={(e) => handleChartConfigChange('labelSkipWidth', parseInt(e.target.value))}
+                  className="w-full"
+                />
+                <span className="text-xs text-gray-500">{chartConfig.labelSkipWidth || 0}px</span>
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 mb-1">Skip Height</label>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={chartConfig.labelSkipHeight || 0}
+                  onChange={(e) => handleChartConfigChange('labelSkipHeight', parseInt(e.target.value))}
+                  className="w-full"
+                />
+                <span className="text-xs text-gray-500">{chartConfig.labelSkipHeight || 0}px</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+
   // Renderização da view de widgets
   const renderWidgetsView = () => (
     <div className="flex flex-col h-full overflow-y-auto bg-gray-50">
@@ -499,24 +947,60 @@ export default function WidgetEditorNew() {
 
   // Renderização da view de edição
   const renderEditView = () => (
-    <div className="flex flex-col h-full overflow-y-auto bg-gray-50">
+    <div className="flex flex-col h-full overflow-y-auto bg-white">
       {/* Header com botão voltar */}
-      <div className="p-4 border-b border-[0.5px] border-gray-200">
-        <div className="flex items-center gap-3 mb-2">
+      <div className="p-4 border-b border-gray-200 bg-white">
+        <div className="flex items-center gap-3 mb-3">
           <button
             onClick={handleBackToWidgets}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
           >
             ← Back to Widgets
           </button>
         </div>
-        <h2 className="text-lg font-semibold text-gray-700">
-          {canvasSelected ? '🎨 Canvas Settings' : `Edit "${selectedWidget?.name}"`}
+        <h2 className="text-lg font-semibold text-gray-900 mb-1">
+          {canvasSelected ? '🎨 Canvas Settings' : `${selectedWidget?.name}`}
         </h2>
         {selectedWidget && (
-          <p className="text-sm text-gray-600 mt-1">
-            Type: {selectedWidget.type} • Position: ({selectedWidget.x}, {selectedWidget.y}) • Size: {selectedWidget.w}×{selectedWidget.h}
+          <p className="text-sm text-gray-500 mb-4">
+            {selectedWidget.type} • Position: ({selectedWidget.x}, {selectedWidget.y}) • Size: {selectedWidget.w}×{selectedWidget.h}
           </p>
+        )}
+        
+        {/* Tabs - só mostra para widgets que têm configuração (chart) */}
+        {selectedWidget && isChartWidget(selectedWidget) && (
+          <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+            <button
+              onClick={() => setActiveEditTab('design')}
+              className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeEditTab === 'design'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              Design
+            </button>
+            <button
+              onClick={() => setActiveEditTab('layout')}
+              className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeEditTab === 'layout'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              Layout
+            </button>
+            <button
+              onClick={() => setActiveEditTab('data')}
+              className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                activeEditTab === 'data'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              Data
+            </button>
+          </div>
         )}
       </div>
 
@@ -525,15 +1009,27 @@ export default function WidgetEditorNew() {
         <div className="p-4">
           {canvasSelected ? (
             <div>
-              <div className="p-4 bg-[#333333] rounded-lg text-center">
-                <p className="text-gray-600">Canvas configuration will be here</p>
-                <p className="text-xs text-gray-600 mt-1">
+              <div className="p-6 bg-gray-50 border border-gray-200 rounded-lg text-center">
+                <p className="text-gray-700 font-medium">Canvas Configuration</p>
+                <p className="text-sm text-gray-600 mt-2">
                   Background: {canvasConfig.backgroundColor}
+                </p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Canvas settings will be implemented here
                 </p>
               </div>
             </div>
           ) : selectedWidget ? (
             <div>
+              {/* Chart Configuration com Tabs */}
+              {isChartWidget(selectedWidget) && (
+                <div>
+                  {activeEditTab === 'design' && renderChartDesignTab()}
+                  {activeEditTab === 'layout' && renderChartLayoutTab()}
+                  {activeEditTab === 'data' && renderChartDataTab()}
+                </div>
+              )}
+
               {/* KPI Configuration */}
               {isKPIWidget(selectedWidget) && (
                 <KPIConfigEditor
@@ -566,15 +1062,6 @@ export default function WidgetEditorNew() {
                 />
               )}
 
-              {/* Chart Configuration */}
-              {isChartWidget(selectedWidget) && (
-                <ChartConfigEditor
-                  selectedWidget={selectedWidget}
-                  chartConfig={chartConfig}
-                  onChartConfigChange={handleChartConfigChange}
-                />
-              )}
-
               {/* Navigation Configuration */}
               {isNavigationWidget(selectedWidget) && (
                 <NavigationConfigEditor
@@ -585,23 +1072,30 @@ export default function WidgetEditorNew() {
               )}
 
               {/* Container Configuration - applies to all widgets */}
-              <ContainerConfigEditor
-                selectedWidget={selectedWidget}
-                containerConfig={containerConfig}
-                onContainerConfigChange={handleContainerConfigChange}
-              />
+              {selectedWidget && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <ContainerConfigEditor
+                    selectedWidget={selectedWidget}
+                    containerConfig={containerConfig}
+                    onContainerConfigChange={handleContainerConfigChange}
+                  />
+                </div>
+              )}
 
               {/* Other widget types placeholder */}
               {!isKPIWidget(selectedWidget) && !isImageWidget(selectedWidget) && !isTableWidget(selectedWidget) && !isChartWidget(selectedWidget) && !isNavigationWidget(selectedWidget) && (
-                <div className="p-4 bg-[#333333] rounded-lg text-center">
-                  <p className="text-gray-600">Configuration for {selectedWidget.type} widgets will be here</p>
+                <div className="p-6 bg-gray-50 border border-gray-200 rounded-lg text-center">
+                  <p className="text-gray-700 font-medium">Configuration for {selectedWidget.type} widgets</p>
+                  <p className="text-sm text-gray-600 mt-2">
+                    This widget type configuration is coming soon
+                  </p>
                 </div>
               )}
             </div>
           ) : (
-            <div className="text-center py-8">
+            <div className="text-center py-12">
               <span className="text-4xl mb-4 block">🎨</span>
-              <p className="text-gray-600 mb-2">No selection</p>
+              <p className="text-gray-700 font-medium mb-2">No selection</p>
               <p className="text-sm text-gray-600">
                 Something went wrong. Please go back to widgets.
               </p>
