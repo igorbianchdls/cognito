@@ -21,7 +21,6 @@ import TableConfigEditor from './editors/TableConfigEditor'
 import ChartConfigEditor from './editors/ChartConfigEditor'
 import NavigationConfigEditor from './editors/NavigationConfigEditor'
 import ContainerConfigEditor from './editors/ContainerConfigEditor'
-import { Slider } from '@/components/ui/slider'
 import { ColorInput, NumberInput } from './editors/controls'
 
 export default function WidgetEditorNew() {
@@ -740,42 +739,37 @@ export default function WidgetEditorNew() {
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">Rotation</label>
-                  <div className="flex items-center gap-2">
-                    <Slider
-                      value={[chartConfig.axisBottom?.tickRotation || 0]}
-                      onValueChange={([value]) => handleChartConfigChange('axisBottom', { ...chartConfig.axisBottom, tickRotation: value })}
-                      max={90}
-                      min={-90}
-                      step={15}
-                      className="flex-1"
-                    />
-                    <span className="text-xs text-gray-500 min-w-[40px] text-right">{chartConfig.axisBottom?.tickRotation || 0}°</span>
-                  </div>
+                  <NumberInput
+                    label="Rotation"
+                    value={chartConfig.axisBottom?.tickRotation || 0}
+                    onChange={(value) => handleChartConfigChange('axisBottom', { ...chartConfig.axisBottom, tickRotation: value })}
+                    min={-90}
+                    max={90}
+                    step={15}
+                    suffix="°"
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">Tick Size</label>
-                  <Slider
-                    value={[chartConfig.axisBottom?.tickSize || 5]}
-                    onValueChange={([value]) => handleChartConfigChange('axisBottom', { ...chartConfig.axisBottom, tickSize: value })}
-                    max={20}
+                  <NumberInput
+                    label="Tick Size"
+                    value={chartConfig.axisBottom?.tickSize || 5}
+                    onChange={(value) => handleChartConfigChange('axisBottom', { ...chartConfig.axisBottom, tickSize: value })}
                     min={0}
+                    max={20}
                     step={1}
-                    className="w-full"
+                    suffix="px"
                   />
-                  <span className="text-xs text-gray-500">{chartConfig.axisBottom?.tickSize || 5}px</span>
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">Padding</label>
-                  <Slider
-                    value={[chartConfig.axisBottom?.tickPadding || 5]}
-                    onValueChange={([value]) => handleChartConfigChange('axisBottom', { ...chartConfig.axisBottom, tickPadding: value })}
-                    max={20}
+                  <NumberInput
+                    label="Padding"
+                    value={chartConfig.axisBottom?.tickPadding || 5}
+                    onChange={(value) => handleChartConfigChange('axisBottom', { ...chartConfig.axisBottom, tickPadding: value })}
                     min={0}
+                    max={20}
                     step={1}
-                    className="w-full"
+                    suffix="px"
                   />
-                  <span className="text-xs text-gray-500">{chartConfig.axisBottom?.tickPadding || 5}px</span>
                 </div>
               </div>
             </div>
@@ -797,40 +791,37 @@ export default function WidgetEditorNew() {
               </div>
               <div className="grid grid-cols-3 gap-2">
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">Rotation</label>
-                  <Slider
-                    value={[chartConfig.axisLeft?.tickRotation || 0]}
-                    onValueChange={([value]) => handleChartConfigChange('axisLeft', { ...chartConfig.axisLeft, tickRotation: value })}
-                    max={90}
+                  <NumberInput
+                    label="Rotation"
+                    value={chartConfig.axisLeft?.tickRotation || 0}
+                    onChange={(value) => handleChartConfigChange('axisLeft', { ...chartConfig.axisLeft, tickRotation: value })}
                     min={-90}
+                    max={90}
                     step={15}
-                    className="w-full"
+                    suffix="°"
                   />
-                  <span className="text-xs text-gray-500">{chartConfig.axisLeft?.tickRotation || 0}°</span>
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">Tick Size</label>
-                  <Slider
-                    value={[chartConfig.axisLeft?.tickSize || 5]}
-                    onValueChange={([value]) => handleChartConfigChange('axisLeft', { ...chartConfig.axisLeft, tickSize: value })}
-                    max={20}
+                  <NumberInput
+                    label="Tick Size"
+                    value={chartConfig.axisLeft?.tickSize || 5}
+                    onChange={(value) => handleChartConfigChange('axisLeft', { ...chartConfig.axisLeft, tickSize: value })}
                     min={0}
+                    max={20}
                     step={1}
-                    className="w-full"
+                    suffix="px"
                   />
-                  <span className="text-xs text-gray-500">{chartConfig.axisLeft?.tickSize || 5}px</span>
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-600 mb-1">Padding</label>
-                  <Slider
-                    value={[chartConfig.axisLeft?.tickPadding || 5]}
-                    onValueChange={([value]) => handleChartConfigChange('axisLeft', { ...chartConfig.axisLeft, tickPadding: value })}
-                    max={20}
+                  <NumberInput
+                    label="Padding"
+                    value={chartConfig.axisLeft?.tickPadding || 5}
+                    onChange={(value) => handleChartConfigChange('axisLeft', { ...chartConfig.axisLeft, tickPadding: value })}
                     min={0}
+                    max={20}
                     step={1}
-                    className="w-full"
+                    suffix="px"
                   />
-                  <span className="text-xs text-gray-500">{chartConfig.axisLeft?.tickPadding || 5}px</span>
                 </div>
               </div>
             </div>
@@ -877,28 +868,26 @@ export default function WidgetEditorNew() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Skip Width</label>
-                <Slider
-                  value={[chartConfig.labelSkipWidth || 0]}
-                  onValueChange={([value]) => handleChartConfigChange('labelSkipWidth', value)}
-                  max={100}
+                <NumberInput
+                  label="Skip Width"
+                  value={chartConfig.labelSkipWidth || 0}
+                  onChange={(value) => handleChartConfigChange('labelSkipWidth', value)}
                   min={0}
+                  max={100}
                   step={5}
-                  className="w-full"
+                  suffix="px"
                 />
-                <span className="text-xs text-gray-500">{chartConfig.labelSkipWidth || 0}px</span>
               </div>
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Skip Height</label>
-                <Slider
-                  value={[chartConfig.labelSkipHeight || 0]}
-                  onValueChange={([value]) => handleChartConfigChange('labelSkipHeight', value)}
-                  max={100}
+                <NumberInput
+                  label="Skip Height"
+                  value={chartConfig.labelSkipHeight || 0}
+                  onChange={(value) => handleChartConfigChange('labelSkipHeight', value)}
                   min={0}
+                  max={100}
                   step={5}
-                  className="w-full"
+                  suffix="px"
                 />
-                <span className="text-xs text-gray-500">{chartConfig.labelSkipHeight || 0}px</span>
               </div>
             </div>
           )}
