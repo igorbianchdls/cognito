@@ -455,7 +455,7 @@ export default function WidgetEditorNew() {
               <div className="bg-gray-50 rounded p-2">
                 <div className="flex items-center gap-2">
                   <div 
-                    className="w-4 h-4 rounded cursor-pointer border border-gray-300"
+                    className="w-6 h-6 rounded cursor-pointer border border-gray-300"
                     style={{ backgroundColor: chartConfig.backgroundColor || '#ffffff' }}
                     onClick={() => {
                       const input = document.createElement('input');
@@ -505,7 +505,7 @@ export default function WidgetEditorNew() {
               <div className="bg-gray-50 rounded p-2">
                 <div className="flex items-center gap-2">
                   <div 
-                    className="w-4 h-4 rounded cursor-pointer border border-gray-300"
+                    className="w-6 h-6 rounded cursor-pointer border border-gray-300"
                     style={{ backgroundColor: chartConfig.borderColor || '#e5e7eb' }}
                     onClick={() => {
                       const input = document.createElement('input');
