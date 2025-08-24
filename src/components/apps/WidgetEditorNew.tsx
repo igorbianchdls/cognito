@@ -28,6 +28,9 @@ export default function WidgetEditorNew() {
   const selectedWidgetId = useStore($selectedWidgetId)
   const canvasConfig = useStore($canvasConfig)
   
+  // State para controlar o modo de view: 'widgets' ou 'edit'
+  const [viewMode, setViewMode] = useState<'widgets' | 'edit'>('widgets')
+  
   // State para controlar se canvas está selecionado
   const [canvasSelected, setCanvasSelected] = useState(widgets.length === 0)
 
@@ -391,11 +394,21 @@ export default function WidgetEditorNew() {
   const handleSelectCanvas = () => {
     setCanvasSelected(true)
     widgetActions.selectWidget(null)
+    setViewMode('edit') // Navegar para view de edição
   }
 
   const handleSelectWidget = (widgetId: string) => {
     setCanvasSelected(false)
     widgetActions.selectWidget(widgetId)
+    setViewMode('edit') // Navegar para view de edição
+  }
+
+  // Voltar para lista de widgets
+  const handleBackToWidgets = () => {
+    setViewMode('widgets')
+    // Opcional: desselecionar widget ao voltar
+    // widgetActions.selectWidget(null)
+    // setCanvasSelected(false)
   }
 
   // Caso não haja widgets
@@ -424,7 +437,8 @@ export default function WidgetEditorNew() {
     )
   }
 
-  return (
+  // Renderização da view de widgets
+  const renderWidgetsView = () => (
     <div className="flex flex-col h-full overflow-y-auto bg-gray-50">
       {/* Header */}
       <div className="p-4 border-b border-[0.5px] border-gray-200">
@@ -443,11 +457,7 @@ export default function WidgetEditorNew() {
             {/* Canvas Settings Item */}
             <div
               onClick={handleSelectCanvas}
-              className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                canvasSelected
-                  ? 'border-blue-500 bg-blue-900'
-                  : 'border-[0.5px] border-gray-200 hover:border-gray-300 bg-white'
-              }`}
+              className="p-3 rounded-lg border cursor-pointer transition-all border-[0.5px] border-gray-200 hover:border-gray-300 bg-white"
             >
               <div className="flex items-center gap-3">
                 <span className="text-xl">🎨</span>
@@ -457,9 +467,7 @@ export default function WidgetEditorNew() {
                     Configure canvas appearance and layout
                   </div>
                 </div>
-                {canvasSelected && (
-                  <span className="text-blue-500">✓</span>
-                )}
+                <span className="text-gray-400">→</span>
               </div>
             </div>
 
@@ -468,11 +476,7 @@ export default function WidgetEditorNew() {
               <div
                 key={widget.i}
                 onClick={() => handleSelectWidget(widget.i)}
-                className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                  selectedWidgetId === widget.i
-                    ? 'border-blue-500 bg-blue-900'
-                    : 'border-[0.5px] border-gray-200 hover:border-gray-300 bg-white'
-                }`}
+                className="p-3 rounded-lg border cursor-pointer transition-all border-[0.5px] border-gray-200 hover:border-gray-300 bg-white"
               >
                 <div className="flex items-center gap-3">
                   <span className="text-xl">{widget.icon}</span>
@@ -482,117 +486,132 @@ export default function WidgetEditorNew() {
                       Position: ({widget.x}, {widget.y}) • Size: {widget.w}×{widget.h}
                     </div>
                   </div>
-                  {selectedWidgetId === widget.i && (
-                    <span className="text-blue-500">✓</span>
-                  )}
+                  <span className="text-gray-400">→</span>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Configuration Panel */}
-          <div className="border-t pt-4">
-            {canvasSelected ? (
-              <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-4">
-                  🎨 Canvas Settings
-                </h3>
-                <div className="p-4 bg-[#333333] rounded-lg text-center">
-                  <p className="text-gray-600">Canvas configuration will be here</p>
-                  <p className="text-xs text-gray-600 mt-1">
-                    Background: {canvasConfig.backgroundColor}
-                  </p>
-                </div>
-              </div>
-            ) : selectedWidget ? (
-              <div>
-                <h3 className="text-sm font-medium text-gray-700 mb-4">
-                  Edit &quot;{selectedWidget.name}&quot;
-                </h3>
-                
-                {/* General Info */}
-                <div className="p-3 bg-[#333333] rounded-lg mb-4">
-                  <p className="text-xs text-gray-600">
-                    Type: {selectedWidget.type} • Position: ({selectedWidget.x}, {selectedWidget.y}) • Size: {selectedWidget.w}×{selectedWidget.h}
-                  </p>
-                </div>
-
-                {/* KPI Configuration */}
-                {isKPIWidget(selectedWidget) && (
-                  <KPIConfigEditor
-                    selectedWidget={selectedWidget}
-                    kpiConfig={kpiConfig}
-                    editKPIForm={editKPIForm}
-                    onKPIFormChange={handleKPIFormChange}
-                    onKPIConfigChange={handleKPIConfigChange}
-                  />
-                )}
-
-                {/* Image Configuration */}
-                {isImageWidget(selectedWidget) && (
-                  <ImageConfigEditor
-                    selectedWidget={selectedWidget}
-                    imageConfig={imageConfig}
-                    editImageForm={editImageForm}
-                    onImageConfigChange={handleImageConfigChange}
-                    onImageUpload={handleImageUpload}
-                    onImageRemove={handleImageRemove}
-                  />
-                )}
-
-                {/* Table Configuration */}
-                {isTableWidget(selectedWidget) && (
-                  <TableConfigEditor
-                    selectedWidget={selectedWidget}
-                    tableConfig={tableConfig}
-                    onTableConfigChange={handleTableConfigChange}
-                  />
-                )}
-
-                {/* Chart Configuration */}
-                {isChartWidget(selectedWidget) && (
-                  <ChartConfigEditor
-                    selectedWidget={selectedWidget}
-                    chartConfig={chartConfig}
-                    onChartConfigChange={handleChartConfigChange}
-                  />
-                )}
-
-                {/* Navigation Configuration */}
-                {isNavigationWidget(selectedWidget) && (
-                  <NavigationConfigEditor
-                    selectedWidget={selectedWidget}
-                    navigationConfig={navigationConfig}
-                    onNavigationConfigChange={handleNavigationConfigChange}
-                  />
-                )}
-
-                {/* Container Configuration - applies to all widgets */}
-                <ContainerConfigEditor
-                  selectedWidget={selectedWidget}
-                  containerConfig={containerConfig}
-                  onContainerConfigChange={handleContainerConfigChange}
-                />
-
-                {/* Other widget types placeholder */}
-                {!isKPIWidget(selectedWidget) && !isImageWidget(selectedWidget) && !isTableWidget(selectedWidget) && !isChartWidget(selectedWidget) && !isNavigationWidget(selectedWidget) && (
-                  <div className="p-4 bg-[#333333] rounded-lg text-center">
-                    <p className="text-gray-600">Configuration for {selectedWidget.type} widgets will be here</p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <span className="text-4xl mb-4 block">🎨</span>
-                <p className="text-gray-600 mb-2">No selection</p>
-                <p className="text-sm text-gray-600">
-                  Click on &quot;Canvas Settings&quot; or a widget to start editing
-                </p>
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </div>
   )
+
+  // Renderização da view de edição
+  const renderEditView = () => (
+    <div className="flex flex-col h-full overflow-y-auto bg-gray-50">
+      {/* Header com botão voltar */}
+      <div className="p-4 border-b border-[0.5px] border-gray-200">
+        <div className="flex items-center gap-3 mb-2">
+          <button
+            onClick={handleBackToWidgets}
+            className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            ← Back to Widgets
+          </button>
+        </div>
+        <h2 className="text-lg font-semibold text-gray-700">
+          {canvasSelected ? '🎨 Canvas Settings' : `Edit "${selectedWidget?.name}"`}
+        </h2>
+        {selectedWidget && (
+          <p className="text-sm text-gray-600 mt-1">
+            Type: {selectedWidget.type} • Position: ({selectedWidget.x}, {selectedWidget.y}) • Size: {selectedWidget.w}×{selectedWidget.h}
+          </p>
+        )}
+      </div>
+
+      {/* Editor Content */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <div className="p-4">
+          {canvasSelected ? (
+            <div>
+              <div className="p-4 bg-[#333333] rounded-lg text-center">
+                <p className="text-gray-600">Canvas configuration will be here</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  Background: {canvasConfig.backgroundColor}
+                </p>
+              </div>
+            </div>
+          ) : selectedWidget ? (
+            <div>
+              {/* KPI Configuration */}
+              {isKPIWidget(selectedWidget) && (
+                <KPIConfigEditor
+                  selectedWidget={selectedWidget}
+                  kpiConfig={kpiConfig}
+                  editKPIForm={editKPIForm}
+                  onKPIFormChange={handleKPIFormChange}
+                  onKPIConfigChange={handleKPIConfigChange}
+                />
+              )}
+
+              {/* Image Configuration */}
+              {isImageWidget(selectedWidget) && (
+                <ImageConfigEditor
+                  selectedWidget={selectedWidget}
+                  imageConfig={imageConfig}
+                  editImageForm={editImageForm}
+                  onImageConfigChange={handleImageConfigChange}
+                  onImageUpload={handleImageUpload}
+                  onImageRemove={handleImageRemove}
+                />
+              )}
+
+              {/* Table Configuration */}
+              {isTableWidget(selectedWidget) && (
+                <TableConfigEditor
+                  selectedWidget={selectedWidget}
+                  tableConfig={tableConfig}
+                  onTableConfigChange={handleTableConfigChange}
+                />
+              )}
+
+              {/* Chart Configuration */}
+              {isChartWidget(selectedWidget) && (
+                <ChartConfigEditor
+                  selectedWidget={selectedWidget}
+                  chartConfig={chartConfig}
+                  onChartConfigChange={handleChartConfigChange}
+                />
+              )}
+
+              {/* Navigation Configuration */}
+              {isNavigationWidget(selectedWidget) && (
+                <NavigationConfigEditor
+                  selectedWidget={selectedWidget}
+                  navigationConfig={navigationConfig}
+                  onNavigationConfigChange={handleNavigationConfigChange}
+                />
+              )}
+
+              {/* Container Configuration - applies to all widgets */}
+              <ContainerConfigEditor
+                selectedWidget={selectedWidget}
+                containerConfig={containerConfig}
+                onContainerConfigChange={handleContainerConfigChange}
+              />
+
+              {/* Other widget types placeholder */}
+              {!isKPIWidget(selectedWidget) && !isImageWidget(selectedWidget) && !isTableWidget(selectedWidget) && !isChartWidget(selectedWidget) && !isNavigationWidget(selectedWidget) && (
+                <div className="p-4 bg-[#333333] rounded-lg text-center">
+                  <p className="text-gray-600">Configuration for {selectedWidget.type} widgets will be here</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <span className="text-4xl mb-4 block">🎨</span>
+              <p className="text-gray-600 mb-2">No selection</p>
+              <p className="text-sm text-gray-600">
+                Something went wrong. Please go back to widgets.
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+
+  // Renderização principal baseada no viewMode
+  return viewMode === 'widgets' ? renderWidgetsView() : renderEditView()
 }
