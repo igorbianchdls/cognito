@@ -39,15 +39,6 @@ export default function DraggableWidget({ widget }: DraggableWidgetProps) {
           ? 'opacity-50 cursor-grabbing border-blue-300' 
           : 'border-gray-300 hover:border-gray-400'
       }`}
-      style={{
-        boxShadow: `
-          0 0 0 1px rgba(0, 0, 0, 0.05),
-          0 0 0 0.5px rgba(0, 0, 0, 0.05),
-          0 1px 1px 0 rgba(0, 0, 0, 0.05),
-          0 2px 1px -1px rgba(0, 0, 0, 0.05),
-          0 1px 3px 0 rgba(0, 0, 0, 0.05)
-        `
-      }}
     >
       <div className="flex flex-col items-center text-center space-y-2">
         {/* Icon */}

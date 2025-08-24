@@ -304,7 +304,7 @@ export default function WidgetsPanel({}: WidgetsPanelProps) {
   return (
     <div className="flex flex-col h-full bg-white">
       {/* Header */}
-      <div className="p-4 border-b border-gray-800">
+      <div className="p-4">
         <div className="flex items-center gap-2 mb-4">
           <h2 className="text-lg font-semibold text-[#888888]">Components</h2>
           <svg className="w-4 h-4 text-[#888888]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
