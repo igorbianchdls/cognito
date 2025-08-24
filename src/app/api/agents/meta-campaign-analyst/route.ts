@@ -167,7 +167,7 @@ Execute a query SQL principal para obter dados de performance de campanhas e IME
 4. Gere insights estratégicos sobre budget allocation e ROI
 5. Destaque campanhas candidatas a scaling ou otimização
 
-**ALWAYS use:** \\`FROM \\`creatto-463117.biquery_data.metaads\\`\\`
+**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.metaads\`\`
 
 📈 **ANÁLISE ESTRATÉGICA IMEDIATA:**
 - Compare ROAS entre campanhas do mesmo objetivo
@@ -199,7 +199,7 @@ Execute query complementar baseada nos insights do Step 2 e conduza análise est
 4. Identifique causas raíz de performance patterns
 5. Desenvolva recomendações estratégicas mais específicas
 
-**ALWAYS use:** \\`FROM \\`creatto-463117.biquery_data.metaads\\`\\`
+**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.metaads\`\`
 
 📈 **ANÁLISES ESPECIALIZADAS:**
 - Temporal analysis dos top performers
@@ -232,7 +232,7 @@ Execute query estratégica final para completar a análise e consolide todos os 
 4. Prepare foundation para recomendações de budget optimization
 5. Quantifique impact potential das opportunities identificadas
 
-**ALWAYS use:** \\`FROM \\`creatto-463117.biquery_data.metaads\\`\\`
+**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.metaads\`\`
 
 📊 **CONSOLIDAÇÃO ESTRATÉGICA:**
 - Budget reallocation opportunities com impact quantificado
