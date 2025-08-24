@@ -100,7 +100,7 @@ Focus em strategic recommendations que impactem revenue growth, detectando budge
     messages: convertToModelMessages(messages),
     
     // PrepareStep: Sistema inteligente com classificação de complexidade
-    prepareStep: ({ stepNumber, steps, userMessage }) => {
+    prepareStep: ({ stepNumber, steps }) => {
       console.log(`🎯 CAMPAIGN PERFORMANCE ANALYST STEP ${stepNumber}: Configurando análise de performance`);
 
       switch (stepNumber) {
