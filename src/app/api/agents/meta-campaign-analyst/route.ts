@@ -349,29 +349,7 @@ Consolide TODOS os insights dos steps anteriores em síntese executiva focada em
     },
     
     // StopWhen inteligente baseado na classificação de complexidade
-    stopWhen: (step, results) => {
-      console.log(`🛑 CAMPAIGN PERFORMANCE ANALYST STOP CHECK: Step ${step.stepNumber}`);
-      
-      // CONTEXTUAL: vai direto para resumo/resposta
-      if (results?.classification === 'CONTEXTUAL' && step.stepNumber >= 2) {
-        console.log('⚡ Parando: Pergunta CONTEXTUAL respondida');
-        return true;
-      }
-      
-      // SIMPLES: para após query base + gráfico + resumo (steps 2, 5, 6)
-      if (results?.classification === 'SIMPLES' && step.stepNumber >= 6) {
-        console.log('⚡ Parando: Análise SIMPLES completada');
-        return true;
-      }
-      
-      // COMPLEXA: vai até o final (step 6)
-      if (step.stepNumber >= 6) {
-        console.log('⚡ Parando: Análise COMPLEXA completada');
-        return true;
-      }
-      
-      return false;
-    },
+    stopWhen: stepCountIs(6),
     providerOptions: {
       anthropic: {
         thinking: { type: 'enabled', budgetTokens: 15000 }
