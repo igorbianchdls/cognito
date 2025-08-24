@@ -452,10 +452,10 @@ export default function WidgetEditorNew() {
           <div>
             <h4 className="text-xs font-medium text-gray-700 mb-2">Background</h4>
             <div className="grid grid-cols-2 gap-2">
-              <div className="bg-gray-50 rounded p-2">
+              <div className="bg-gray-50 rounded px-2 py-1">
                 <div className="flex items-center gap-2">
                   <div 
-                    className="w-6 h-6 min-w-6 min-h-6 flex-shrink-0 rounded cursor-pointer border border-gray-300"
+                    className="w-4 h-4 min-w-4 min-h-4 flex-shrink-0 rounded cursor-pointer border border-gray-300"
                     style={{ backgroundColor: chartConfig.backgroundColor || '#ffffff' }}
                     onClick={() => {
                       const input = document.createElement('input');
@@ -479,7 +479,7 @@ export default function WidgetEditorNew() {
                   />
                 </div>
               </div>
-              <div className="bg-gray-50 rounded p-2">
+              <div className="bg-gray-50 rounded px-2 py-1">
                 <div className="flex items-center">
                   <input
                     type="number"
@@ -502,10 +502,10 @@ export default function WidgetEditorNew() {
           <div>
             <h4 className="text-xs font-medium text-gray-700 mb-2">Border</h4>
             <div className="grid grid-cols-2 gap-2">
-              <div className="bg-gray-50 rounded p-2">
+              <div className="bg-gray-50 rounded px-2 py-1">
                 <div className="flex items-center gap-2">
                   <div 
-                    className="w-6 h-6 min-w-6 min-h-6 flex-shrink-0 rounded cursor-pointer border border-gray-300"
+                    className="w-4 h-4 min-w-4 min-h-4 flex-shrink-0 rounded cursor-pointer border border-gray-300"
                     style={{ backgroundColor: chartConfig.borderColor || '#e5e7eb' }}
                     onClick={() => {
                       const input = document.createElement('input');
@@ -529,7 +529,7 @@ export default function WidgetEditorNew() {
                   />
                 </div>
               </div>
-              <div className="bg-gray-50 rounded p-2">
+              <div className="bg-gray-50 rounded px-2 py-1">
                 <input
                   type="number"
                   min="0"
