@@ -174,9 +174,19 @@ Execute a query SQL principal para obter dados de performance de campanhas e IME
 - Identifique budget misallocation (low ROAS com high spend)
 - Detecte scaling opportunities (high ROAS com budget constraints)
 - Avalie efficiency ranking dentro de cada objetivo
-- Sinalize performance trends e consistency issues`,
+- Sinalize performance trends e consistency issues
+
+📊 **VISUALIZAÇÃO OPCIONAL:**
+Após executar a query e analisar os dados, considere criar um gráfico SE:
+- Os dados são visuais por natureza (comparações, rankings, trends)
+- O volume é adequado para visualização clara
+- O gráfico adicionaria clareza aos insights
+- Não force - só crie se realmente agregar valor
+
+Use criarGrafico() quando fizer sentido estratégico para o insight.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL
+              executarSQL: bigqueryTools.executarSQL,
+              criarGrafico: analyticsTools.criarGrafico
             }
           };
 
@@ -207,9 +217,19 @@ Execute query complementar baseada nos insights do Step 2 e conduza análise est
 - Segmentação de performance por lifecycle stage
 - Cross-campaign synergies ou cannibalização
 - Market positioning e competitive analysis
-- Seasonal patterns e timing optimization`,
+- Seasonal patterns e timing optimization
+
+📊 **VISUALIZAÇÃO OPCIONAL:**
+Após executar a query e analisar os dados, considere criar um gráfico SE:
+- Os dados são visuais por natureza (comparações, rankings, trends)
+- O volume é adequado para visualização clara
+- O gráfico adicionaria clareza aos insights
+- Não force - só crie se realmente agregar valor
+
+Use criarGrafico() quando fizer sentido estratégico para o insight.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL
+              executarSQL: bigqueryTools.executarSQL,
+              criarGrafico: analyticsTools.criarGrafico
             }
           };
 
@@ -240,9 +260,19 @@ Execute query estratégica final para completar a análise e consolide todos os 
 - Risk assessment de underperformers
 - Timeline recommendations para implementação
 - Expected ROI impact das mudanças propostas
-- Priority ranking das optimization opportunities`,
+- Priority ranking das optimization opportunities
+
+📊 **VISUALIZAÇÃO OPCIONAL:**
+Após executar a query e analisar os dados, considere criar um gráfico SE:
+- Os dados são visuais por natureza (comparações, rankings, trends)
+- O volume é adequado para visualização clara
+- O gráfico adicionaria clareza aos insights
+- Não force - só crie se realmente agregar valor
+
+Use criarGrafico() quando fizer sentido estratégico para o insight.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL
+              executarSQL: bigqueryTools.executarSQL,
+              criarGrafico: analyticsTools.criarGrafico
             }
           };
 
