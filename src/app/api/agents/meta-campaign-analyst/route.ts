@@ -302,7 +302,7 @@ Consolide TODOS os insights dos steps anteriores em síntese executiva focada em
 
 **Para CONTEXTUAL:** Responda diretamente baseado no contexto da conversa anterior.
 
-**Para SIMPLES/COMPLEXA:** Use gerarResumo() para consolidar análise completa.
+**Para SIMPLES/COMPLEXA:** Gere resumo em markdown padrão consolidando análise completa.
 
 🎯 **ESTRUTURA DO RESUMO:**
 
@@ -325,7 +325,7 @@ Consolide TODOS os insights dos steps anteriores em síntese executiva focada em
 - Success metrics para tracking
 
 🔧 **PROCESS:**
-1. Use gerarResumo() com analysisType='executive' para análises SIMPLES/COMPLEXA
+1. Para análises SIMPLES/COMPLEXA, gere resumo em markdown padrão sem tool calls
 2. Para CONTEXTUAL, responda diretamente sem tools
 3. Estruture recommendations por priority e expected impact
 4. Include quantified impact estimates quando possível
@@ -336,9 +336,7 @@ Consolide TODOS os insights dos steps anteriores em síntese executiva focada em
 - Actionable recommendations com timelines
 - Quantified impact quando possível
 - Strategic priorities, não tactical details`,
-            tools: {
-              gerarResumo: analyticsTools.gerarResumo
-            }
+            tools: {}
           };
 
         default:
