@@ -530,17 +530,19 @@ export default function WidgetEditorNew() {
                 </div>
               </div>
               <div className="bg-gray-50 rounded px-2 py-1">
-                <input
-                  type="number"
-                  min="0"
-                  max="10"
-                  value={chartConfig.borderWidth || 0}
-                  onChange={(e) => {
-                    const width = Math.max(0, Math.min(10, parseInt(e.target.value) || 0));
-                    handleChartConfigChange('borderWidth', width);
-                  }}
-                  className="w-full h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
-                />
+                <div className="flex items-center">
+                  <input
+                    type="number"
+                    min="0"
+                    max="10"
+                    value={chartConfig.borderWidth || 0}
+                    onChange={(e) => {
+                      const width = Math.max(0, Math.min(10, parseInt(e.target.value) || 0));
+                      handleChartConfigChange('borderWidth', width);
+                    }}
+                    className="w-full h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -1005,13 +1007,10 @@ export default function WidgetEditorNew() {
             ← Back to Widgets
           </button>
         </div>
-        <h2 className="text-lg font-semibold text-gray-900 mb-1">
-          {canvasSelected ? '🎨 Canvas Settings' : `${selectedWidget?.name}`}
-        </h2>
-        {selectedWidget && (
-          <p className="text-sm text-gray-500 mb-4">
-            {selectedWidget.type} • Position: ({selectedWidget.x}, {selectedWidget.y}) • Size: {selectedWidget.w}×{selectedWidget.h}
-          </p>
+        {canvasSelected && (
+          <h2 className="text-lg font-semibold text-gray-900 mb-1">
+            🎨 Canvas Settings
+          </h2>
         )}
         
         {/* Tabs - só mostra para widgets que têm configuração (chart) */}
