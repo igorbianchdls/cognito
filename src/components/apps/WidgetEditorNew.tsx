@@ -452,26 +452,48 @@ export default function WidgetEditorNew() {
           <div>
             <h4 className="text-xs font-medium text-gray-700 mb-2">Background</h4>
             <div className="grid grid-cols-2 gap-2">
-              <div className="bg-gray-50 rounded p-2 border border-gray-200">
-                <input
-                  type="color"
-                  value={chartConfig.backgroundColor || '#ffffff'}
-                  onChange={(e) => handleChartConfigChange('backgroundColor', e.target.value)}
-                  className="w-full h-6 rounded border-0 cursor-pointer"
-                />
+              <div className="bg-gray-50 rounded p-2">
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-4 h-4 rounded cursor-pointer border border-gray-300"
+                    style={{ backgroundColor: chartConfig.backgroundColor || '#ffffff' }}
+                    onClick={() => {
+                      const input = document.createElement('input');
+                      input.type = 'color';
+                      input.value = chartConfig.backgroundColor || '#ffffff';
+                      input.onchange = (e) => handleChartConfigChange('backgroundColor', (e.target as HTMLInputElement).value);
+                      input.click();
+                    }}
+                  />
+                  <input
+                    type="text"
+                    value={(chartConfig.backgroundColor || '#ffffff').replace('#', '').toUpperCase()}
+                    onChange={(e) => {
+                      const hex = e.target.value.replace('#', '');
+                      if (/^[0-9A-Fa-f]{0,6}$/.test(hex)) {
+                        handleChartConfigChange('backgroundColor', `#${hex}`);
+                      }
+                    }}
+                    className="flex-1 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                    maxLength={6}
+                  />
+                </div>
               </div>
-              <div className="bg-gray-50 rounded p-2 border border-gray-200">
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={Math.round(((chartConfig as Record<string, unknown>).backgroundOpacity as number ?? 1) * 100)}
-                  onChange={(e) => {
-                    const opacity = Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) / 100;
-                    handleChartConfigChange('backgroundOpacity', opacity);
-                  }}
-                  className="w-full h-6 bg-transparent border-0 text-sm font-medium text-gray-900 focus:outline-none"
-                />
+              <div className="bg-gray-50 rounded p-2">
+                <div className="flex items-center">
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={Math.round(((chartConfig as Record<string, unknown>).backgroundOpacity as number ?? 1) * 100)}
+                    onChange={(e) => {
+                      const opacity = Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) / 100;
+                      handleChartConfigChange('backgroundOpacity', opacity);
+                    }}
+                    className="flex-1 h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                  />
+                  <span className="text-xs text-gray-500">%</span>
+                </div>
               </div>
             </div>
           </div>
@@ -480,15 +502,34 @@ export default function WidgetEditorNew() {
           <div>
             <h4 className="text-xs font-medium text-gray-700 mb-2">Border</h4>
             <div className="grid grid-cols-2 gap-2">
-              <div className="bg-gray-50 rounded p-2 border border-gray-200">
-                <input
-                  type="color"
-                  value={chartConfig.borderColor || '#e5e7eb'}
-                  onChange={(e) => handleChartConfigChange('borderColor', e.target.value)}
-                  className="w-full h-6 rounded border-0 cursor-pointer"
-                />
+              <div className="bg-gray-50 rounded p-2">
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-4 h-4 rounded cursor-pointer border border-gray-300"
+                    style={{ backgroundColor: chartConfig.borderColor || '#e5e7eb' }}
+                    onClick={() => {
+                      const input = document.createElement('input');
+                      input.type = 'color';
+                      input.value = chartConfig.borderColor || '#e5e7eb';
+                      input.onchange = (e) => handleChartConfigChange('borderColor', (e.target as HTMLInputElement).value);
+                      input.click();
+                    }}
+                  />
+                  <input
+                    type="text"
+                    value={(chartConfig.borderColor || '#e5e7eb').replace('#', '').toUpperCase()}
+                    onChange={(e) => {
+                      const hex = e.target.value.replace('#', '');
+                      if (/^[0-9A-Fa-f]{0,6}$/.test(hex)) {
+                        handleChartConfigChange('borderColor', `#${hex}`);
+                      }
+                    }}
+                    className="flex-1 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                    maxLength={6}
+                  />
+                </div>
               </div>
-              <div className="bg-gray-50 rounded p-2 border border-gray-200">
+              <div className="bg-gray-50 rounded p-2">
                 <input
                   type="number"
                   min="0"
@@ -498,7 +539,7 @@ export default function WidgetEditorNew() {
                     const width = Math.max(0, Math.min(10, parseInt(e.target.value) || 0));
                     handleChartConfigChange('borderWidth', width);
                   }}
-                  className="w-full h-6 bg-transparent border-0 text-sm font-medium text-gray-900 focus:outline-none"
+                  className="w-full h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
                 />
               </div>
             </div>
