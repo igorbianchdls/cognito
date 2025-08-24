@@ -565,20 +565,15 @@ export default function WidgetEditorNew() {
             />
           </div>
           <div className="grid grid-cols-3 gap-2">
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">Font Size</label>
-              <div className="flex items-center gap-2">
-                <Slider
-                  value={[chartConfig.titleFontSize || 16]}
-                  onValueChange={([value]) => handleChartConfigChange('titleFontSize', value)}
-                  max={32}
-                  min={12}
-                  step={1}
-                  className="flex-1"
-                />
-                <span className="text-xs text-gray-500 min-w-[40px] text-right">{chartConfig.titleFontSize || 16} px</span>
-              </div>
-            </div>
+            <NumberInput
+              label="Font Size"
+              value={chartConfig.titleFontSize || 16}
+              onChange={(value) => handleChartConfigChange('titleFontSize', value)}
+              min={12}
+              max={32}
+              step={1}
+              suffix="px"
+            />
             <ColorInput
               label="Color"
               value={chartConfig.titleColor || '#1f2937'}
@@ -645,76 +640,61 @@ export default function WidgetEditorNew() {
             <label className="block text-xs font-medium text-gray-700 mb-2">Margin</label>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Top</label>
-                <div className="flex items-center gap-2">
-                  <Slider
-                    value={[chartConfig.margin?.top || 60]}
-                    onValueChange={([value]) => handleChartConfigChange('margin', { ...chartConfig.margin, top: value })}
-                    max={100}
-                    min={0}
-                    step={5}
-                    className="flex-1"
-                  />
-                  <span className="text-xs text-gray-500 min-w-[40px] text-right">{chartConfig.margin?.top || 60} px</span>
-                </div>
+                <NumberInput
+                  label="Top"
+                  value={chartConfig.margin?.top || 60}
+                  onChange={(value) => handleChartConfigChange('margin', { ...chartConfig.margin, top: value })}
+                  min={0}
+                  max={100}
+                  step={5}
+                  suffix="px"
+                />
               </div>
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Right</label>
-                <div className="flex items-center gap-2">
-                  <Slider
-                    value={[chartConfig.margin?.right || 80]}
-                    onValueChange={([value]) => handleChartConfigChange('margin', { ...chartConfig.margin, right: value })}
-                    max={100}
-                    min={0}
-                    step={5}
-                    className="flex-1"
-                  />
-                  <span className="text-xs text-gray-500 min-w-[40px] text-right">{chartConfig.margin?.right || 80} px</span>
-                </div>
+                <NumberInput
+                  label="Right"
+                  value={chartConfig.margin?.right || 80}
+                  onChange={(value) => handleChartConfigChange('margin', { ...chartConfig.margin, right: value })}
+                  min={0}
+                  max={100}
+                  step={5}
+                  suffix="px"
+                />
               </div>
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Bottom</label>
-                <div className="flex items-center gap-2">
-                  <Slider
-                    value={[chartConfig.margin?.bottom || 60]}
-                    onValueChange={([value]) => handleChartConfigChange('margin', { ...chartConfig.margin, bottom: value })}
-                    max={100}
-                    min={0}
-                    step={5}
-                    className="flex-1"
-                  />
-                  <span className="text-xs text-gray-500 min-w-[40px] text-right">{chartConfig.margin?.bottom || 60} px</span>
-                </div>
+                <NumberInput
+                  label="Bottom"
+                  value={chartConfig.margin?.bottom || 60}
+                  onChange={(value) => handleChartConfigChange('margin', { ...chartConfig.margin, bottom: value })}
+                  min={0}
+                  max={100}
+                  step={5}
+                  suffix="px"
+                />
               </div>
               <div>
-                <label className="block text-xs text-gray-600 mb-1">Left</label>
-                <div className="flex items-center gap-2">
-                  <Slider
-                    value={[chartConfig.margin?.left || 60]}
-                    onValueChange={([value]) => handleChartConfigChange('margin', { ...chartConfig.margin, left: value })}
-                    max={100}
-                    min={0}
-                    step={5}
-                    className="flex-1"
-                  />
-                  <span className="text-xs text-gray-500 min-w-[40px] text-right">{chartConfig.margin?.left || 60} px</span>
-                </div>
+                <NumberInput
+                  label="Left"
+                  value={chartConfig.margin?.left || 60}
+                  onChange={(value) => handleChartConfigChange('margin', { ...chartConfig.margin, left: value })}
+                  min={0}
+                  max={100}
+                  step={5}
+                  suffix="px"
+                />
               </div>
             </div>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Padding</label>
-            <div className="flex items-center gap-2">
-              <Slider
-                value={[chartConfig.padding || 0]}
-                onValueChange={([value]) => handleChartConfigChange('padding', value)}
-                max={50}
-                min={0}
-                step={1}
-                className="flex-1"
-              />
-              <span className="text-xs text-gray-500 min-w-[40px] text-right">{chartConfig.padding || 0} px</span>
-            </div>
+            <NumberInput
+              label="Padding"
+              value={chartConfig.padding || 0}
+              onChange={(value) => handleChartConfigChange('padding', value)}
+              min={0}
+              max={50}
+              step={1}
+              suffix="px"
+            />
           </div>
         </div>
       </div>
