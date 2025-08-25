@@ -25,7 +25,7 @@ export default function SidebarPanel({
     <div className={`${
       collapsed 
         ? 'w-0 overflow-hidden' 
-        : 'w-80 bg-white border-r border-gray-200 flex-shrink-0 overflow-hidden h-full'
+        : 'w-80 bg-gray-50 border-r border-gray-200 flex-shrink-0 overflow-hidden h-full'
     } transition-all duration-300 ease-in-out`}>
       {activeTab === 'widgets' && <WidgetsPanel />}
       {activeTab === 'chat' && <ChatPanel droppedWidgets={droppedWidgets} onEditWidget={onEditWidget} />}
