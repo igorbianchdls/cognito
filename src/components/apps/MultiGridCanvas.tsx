@@ -247,10 +247,10 @@ export default function MultiGridCanvas({
           {/* Canvas direto dentro do WebPreview, sem iframe */}
           <div 
             ref={setNodeRef} 
-            className="flex-1 relative transition-all duration-200 p-0 bg-white"
+            className="relative transition-all duration-200 p-0 bg-white"
             style={{
               ...gridStyles,
-              minHeight: '400px'
+              height: '880px'
             }}
           >
             {/* Empty state when no widgets */}

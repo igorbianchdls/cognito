@@ -160,113 +160,6 @@ const widgetCategories: Record<string, ExtendedWidget[]> = {
       defaultHeight: 1,
     },
   ],
-  Forms: [
-    {
-      id: 'form-widget',
-      name: 'Form',
-      type: 'form',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      ),
-      description: 'Form container with validation',
-      defaultWidth: 4,
-      defaultHeight: 4,
-    },
-    {
-      id: 'input-widget',
-      name: 'Input',
-      type: 'input',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16m-7 6h7" />
-        </svg>
-      ),
-      description: 'Text input field',
-      defaultWidth: 3,
-      defaultHeight: 1,
-    },
-    {
-      id: 'dropdown-widget',
-      name: 'Dropdown',
-      type: 'dropdown',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
-        </svg>
-      ),
-      description: 'Dropdown selection',
-      defaultWidth: 3,
-      defaultHeight: 1,
-    },
-    {
-      id: 'datepicker-widget',
-      name: 'Datepicker',
-      type: 'datepicker',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      ),
-      description: 'Date picker component',
-      defaultWidth: 3,
-      defaultHeight: 1,
-    },
-    {
-      id: 'checkbox-widget',
-      name: 'Checkbox',
-      type: 'checkbox',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 13l4 4L19 7" />
-        </svg>
-      ),
-      description: 'Checkbox input',
-      defaultWidth: 2,
-      defaultHeight: 1,
-    },
-    {
-      id: 'radio-widget',
-      name: 'Radio',
-      type: 'radio',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
-          <circle cx="12" cy="12" r="10" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} />
-        </svg>
-      ),
-      description: 'Radio button input',
-      defaultWidth: 2,
-      defaultHeight: 1,
-    },
-    {
-      id: 'rich-text-widget',
-      name: 'Rich Text',
-      type: 'rich-text',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 10h16M4 14h16M4 18h7" />
-        </svg>
-      ),
-      description: 'Rich text editor',
-      defaultWidth: 4,
-      defaultHeight: 3,
-    },
-    {
-      id: 'file-picker-widget',
-      name: 'FilePicker',
-      type: 'file-picker',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
-        </svg>
-      ),
-      description: 'File upload component',
-      defaultWidth: 3,
-      defaultHeight: 1,
-    },
-  ],
 }
 
 // Convert ExtendedWidget to standard Widget for drag and drop
@@ -283,7 +176,6 @@ export default function WidgetsPanel({}: WidgetsPanelProps) {
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
     Analytics: true,
     Components: true,
-    Forms: true,
   })
 
   // Filter widgets based on search query
