@@ -12,14 +12,14 @@ interface SidebarPanelProps {
   activeTab: 'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved'
   collapsed?: boolean
   droppedWidgets?: DroppedWidget[]
-  onEditWidget?: (widgetId: string, changes: Partial<DroppedWidget>) => void
+  onEditWidget: (widgetId: string, changes: Partial<DroppedWidget>) => void
 }
 
 export default function SidebarPanel({ 
   activeTab, 
   collapsed = false, 
   droppedWidgets = [],
-  onEditWidget 
+  onEditWidget
 }: SidebarPanelProps) {
   return (
     <div className={`${
