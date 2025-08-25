@@ -7,7 +7,8 @@ import { Responsive, WidthProvider } from 'react-grid-layout'
 import DroppedWidget from './DroppedWidget'
 import { $selectedWidgetId, widgetActions } from '@/stores/widgetStore'
 import { $canvasConfig } from '@/stores/canvasStore' // Canvas customization store
-import { WebPreview, WebPreviewNavigation, WebPreviewUrl } from '@/components/ai-elements/web-preview'
+import { WebPreview, WebPreviewNavigation, WebPreviewUrl, WebPreviewNavigationButton } from '@/components/ai-elements/web-preview'
+import { Eye, Save, Download, Settings } from 'lucide-react'
 import type { DroppedWidget as DroppedWidgetType, LayoutItem } from '@/types/widget'
 
 const ResponsiveGridLayout = WidthProvider(Responsive)
@@ -41,6 +42,63 @@ export default function GridCanvas({
 
   const handleWidgetClick = (widgetId: string) => {
     widgetActions.selectWidget(widgetId)
+  }
+
+  // Navigation button handlers
+  const handlePreview = () => {
+    // Enter fullscreen preview mode
+    const canvasElement = containerRef.current
+    if (canvasElement && canvasElement.requestFullscreen) {
+      canvasElement.requestFullscreen()
+    }
+    console.log('Preview dashboard - entering fullscreen')
+  }
+
+  const handleSave = () => {
+    // Save dashboard configuration to localStorage
+    const dashboardData = {
+      widgets,
+      canvasConfig,
+      timestamp: new Date().toISOString(),
+      version: '1.0'
+    }
+    
+    try {
+      localStorage.setItem('dashboard-canvas', JSON.stringify(dashboardData))
+      console.log('Dashboard saved successfully', dashboardData)
+      // TODO: Show success toast notification
+    } catch (error) {
+      console.error('Failed to save dashboard:', error)
+      // TODO: Show error toast notification
+    }
+  }
+
+  const handleExport = () => {
+    // Export dashboard as JSON file
+    const dashboardData = {
+      widgets,
+      canvasConfig,
+      exportDate: new Date().toISOString(),
+      title: 'My Dashboard Export'
+    }
+    
+    const dataStr = JSON.stringify(dashboardData, null, 2)
+    const dataBlob = new Blob([dataStr], { type: 'application/json' })
+    
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(dataBlob)
+    link.download = `dashboard-export-${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    console.log('Dashboard exported as JSON file')
+  }
+
+  const handleSettings = () => {
+    // TODO: Open canvas settings panel/modal
+    console.log('Open canvas settings - this could open a settings modal')
+    alert('Canvas Settings - This feature will be implemented with a settings modal')
   }
 
   // Effect to measure container width for 16:9 calculation
@@ -158,11 +216,27 @@ export default function GridCanvas({
         }`}
       >
         <WebPreviewNavigation>
+          <WebPreviewNavigationButton tooltip="Preview Dashboard" onClick={handlePreview}>
+            <Eye className="h-4 w-4" />
+          </WebPreviewNavigationButton>
+          
+          <WebPreviewNavigationButton tooltip="Save Dashboard" onClick={handleSave}>
+            <Save className="h-4 w-4" />
+          </WebPreviewNavigationButton>
+          
           <WebPreviewUrl 
-            value="Dashboard Canvas" 
+            value="https://dashboard.app/canvas/my-dashboard" 
             readOnly
-            className="text-center font-medium bg-gray-50"
+            className="text-sm bg-gray-50"
           />
+          
+          <WebPreviewNavigationButton tooltip="Export Dashboard" onClick={handleExport}>
+            <Download className="h-4 w-4" />
+          </WebPreviewNavigationButton>
+          
+          <WebPreviewNavigationButton tooltip="Canvas Settings" onClick={handleSettings}>
+            <Settings className="h-4 w-4" />
+          </WebPreviewNavigationButton>
         </WebPreviewNavigation>
         
         {/* Canvas direto dentro do WebPreview, sem iframe */}

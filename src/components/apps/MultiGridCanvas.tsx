@@ -8,7 +8,8 @@ import DroppedWidget from './DroppedWidget'
 import { $selectedWidgetId, widgetActions } from '@/stores/widgetStore'
 import { $canvasConfig } from '@/stores/canvasStore'
 import { $multiCanvasState, $activeTab, multiCanvasActions } from '@/stores/multiCanvasStore'
-import { WebPreview, WebPreviewNavigation, WebPreviewUrl } from '@/components/ai-elements/web-preview'
+import { WebPreview, WebPreviewNavigation, WebPreviewUrl, WebPreviewNavigationButton } from '@/components/ai-elements/web-preview'
+import { Eye, Save, Download, Settings } from 'lucide-react'
 import { isNavigationWidget } from '@/types/widget'
 import type { DroppedWidget as DroppedWidgetType, LayoutItem } from '@/types/widget'
 
@@ -67,6 +68,67 @@ export default function MultiGridCanvas({
 
   const handleWidgetClick = (widgetId: string) => {
     widgetActions.selectWidget(widgetId)
+  }
+
+  // Navigation button handlers
+  const handlePreview = () => {
+    // Enter fullscreen preview mode for multi-canvas
+    const canvasElement = containerRef.current
+    if (canvasElement && canvasElement.requestFullscreen) {
+      canvasElement.requestFullscreen()
+    }
+    console.log('Preview multi-canvas dashboard - entering fullscreen', { activeTab })
+  }
+
+  const handleSave = () => {
+    // Save multi-canvas dashboard configuration to localStorage
+    const multiCanvasData = {
+      multiCanvasState,
+      navigationWidget,
+      activeTab,
+      timestamp: new Date().toISOString(),
+      version: '1.0'
+    }
+    
+    try {
+      localStorage.setItem('multi-canvas-dashboard', JSON.stringify(multiCanvasData))
+      console.log('Multi-canvas dashboard saved successfully', multiCanvasData)
+      // TODO: Show success toast notification
+    } catch (error) {
+      console.error('Failed to save multi-canvas dashboard:', error)
+      // TODO: Show error toast notification
+    }
+  }
+
+  const handleExport = () => {
+    // Export active tab as JSON file
+    const activeTabData = multiCanvasState.tabs.find(tab => tab.id === activeTab)
+    const exportData = {
+      tabName: activeTabData?.name || 'Dashboard',
+      tabId: activeTab,
+      widgets: activeTabWidgets,
+      navigationWidget,
+      exportDate: new Date().toISOString(),
+      title: `${activeTabData?.name || 'Tab'} Export`
+    }
+    
+    const dataStr = JSON.stringify(exportData, null, 2)
+    const dataBlob = new Blob([dataStr], { type: 'application/json' })
+    
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(dataBlob)
+    link.download = `tab-${activeTabData?.name.toLowerCase().replace(/\s+/g, '-') || 'export'}-${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    
+    console.log('Tab exported as JSON file', { activeTab, tabName: activeTabData?.name })
+  }
+
+  const handleSettings = () => {
+    // TODO: Open multi-canvas settings panel/modal
+    console.log('Open multi-canvas settings - this could open a settings modal')
+    alert('Multi-Canvas Settings - This feature will be implemented with a settings modal')
   }
 
   // Effect to measure container width for responsive calculations
@@ -173,11 +235,27 @@ export default function MultiGridCanvas({
           }`}
         >
           <WebPreviewNavigation>
+            <WebPreviewNavigationButton tooltip="Preview Dashboard" onClick={handlePreview}>
+              <Eye className="h-4 w-4" />
+            </WebPreviewNavigationButton>
+            
+            <WebPreviewNavigationButton tooltip="Save Dashboard" onClick={handleSave}>
+              <Save className="h-4 w-4" />
+            </WebPreviewNavigationButton>
+            
             <WebPreviewUrl 
-              value={`Tab: ${multiCanvasState.tabs.find(t => t.id === activeTab)?.name || 'Dashboard'}`}
+              value={`https://dashboard.app/tabs/${multiCanvasState.tabs.find(t => t.id === activeTab)?.name.toLowerCase().replace(/\s+/g, '-') || 'dashboard'}`}
               readOnly
-              className="text-center font-medium bg-gray-50"
+              className="text-sm bg-gray-50"
             />
+            
+            <WebPreviewNavigationButton tooltip="Export Tab" onClick={handleExport}>
+              <Download className="h-4 w-4" />
+            </WebPreviewNavigationButton>
+            
+            <WebPreviewNavigationButton tooltip="Multi-Canvas Settings" onClick={handleSettings}>
+              <Settings className="h-4 w-4" />
+            </WebPreviewNavigationButton>
           </WebPreviewNavigation>
           
           {/* Canvas direto dentro do WebPreview, sem iframe */}
