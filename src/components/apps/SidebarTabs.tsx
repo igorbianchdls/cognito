@@ -19,7 +19,7 @@ export default function SidebarTabs({ activeTab, onTabChange, collapsed = false 
   ] as const
 
   return (
-    <div className={`bg-gray-800 border-r border-gray-700 flex flex-col ${collapsed ? 'w-0 overflow-hidden' : 'w-16'} transition-all duration-300 ease-in-out`}>
+    <div className={`bg-white border-r border-gray-200 flex flex-col ${collapsed ? 'w-0 overflow-hidden' : 'w-16'} transition-all duration-300 ease-in-out`}>
       <div className="flex flex-col gap-1 p-2">
         {tabs.map((tab) => (
           <button
@@ -27,8 +27,8 @@ export default function SidebarTabs({ activeTab, onTabChange, collapsed = false 
             onClick={() => onTabChange(tab.id)}
             className={`flex flex-col items-center justify-center gap-1 p-3 rounded-lg transition-all duration-200 group relative ${
               activeTab === tab.id
-                ? 'bg-blue-600 text-white shadow-sm'
-                : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                ? 'bg-gray-100 text-[#888888] shadow-sm'
+                : 'text-[#888888] hover:text-[#888888] hover:bg-gray-50'
             }`}
             title={tab.label}
           >
