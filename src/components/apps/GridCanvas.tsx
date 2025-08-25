@@ -195,10 +195,10 @@ export default function GridCanvas({
   }), [canvasConfig.breakpoints])
 
   return (
-    <div ref={containerRef} className="h-full flex flex-col">
+    <div ref={containerRef} className="flex flex-col">
       <WebPreview 
         defaultUrl="dashboard-canvas"
-        className={`h-full ${noBorder ? 'border-0' : ''} ${
+        className={`${noBorder ? 'border-0' : ''} ${
           isOver ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
         }`}
       >

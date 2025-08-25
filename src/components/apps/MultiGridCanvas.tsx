@@ -184,7 +184,7 @@ export default function MultiGridCanvas({
   }
 
   return (
-    <div ref={containerRef} className="h-full flex flex-row">
+    <div ref={containerRef} className="flex flex-row">
       {/* Left Sidebar - Navigation Widget */}
       {navigationWidget && (
         <div 
@@ -216,7 +216,7 @@ export default function MultiGridCanvas({
       <div className="flex-1">
         <WebPreview 
           defaultUrl={`dashboard-tab-${activeTab}`}
-          className={`h-full ${noBorder ? 'border-0' : ''} ${
+          className={`${noBorder ? 'border-0' : ''} ${
             isOver ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
           }`}
         >
