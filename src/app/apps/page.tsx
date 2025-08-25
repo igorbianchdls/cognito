@@ -80,7 +80,7 @@ export default function AppsPage() {
   }, [droppedWidgets])
 
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={false}>
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div className="h-screen flex bg-gray-50">
           {/* SidebarNav */}

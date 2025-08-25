@@ -35,7 +35,7 @@ export default function SidebarNav({ activeTab, onTabChange }: SidebarNavProps) 
   ] as const
 
   return (
-    <Sidebar collapsible="icon" className="w-16">
+    <Sidebar collapsible="icon" className="w-16 data-[state=collapsed]:w-16">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
