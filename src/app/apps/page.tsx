@@ -3,7 +3,6 @@
 import { useState, useCallback, useMemo } from 'react'
 import { useStore } from '@nanostores/react'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core'
-import AppsHeader from '@/components/apps/AppsHeader'
 import SidebarTabs from '@/components/apps/SidebarTabs'
 import SidebarPanel from '@/components/apps/SidebarPanel'
 import GridCanvas from '@/components/apps/GridCanvas'
@@ -17,8 +16,6 @@ export default function AppsPage() {
   const droppedWidgets = useStore($widgets)
   const [activeWidget, setActiveWidget] = useState<Widget | null>(null)
   const [activeTab, setActiveTab] = useState<'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved'>('widgets')
-  const [sidebarTabsCollapsed, setSidebarTabsCollapsed] = useState(false)
-  const [sidebarPanelCollapsed, setSidebarPanelCollapsed] = useState(false)
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event
@@ -83,57 +80,37 @@ export default function AppsPage() {
 
   return (
     <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="h-screen flex flex-col bg-gray-50">
-        {/* Header */}
-        <AppsHeader 
-          onToggleSidebarTabs={() => setSidebarTabsCollapsed(!sidebarTabsCollapsed)}
-          onToggleSidebarPanel={() => setSidebarPanelCollapsed(!sidebarPanelCollapsed)}
-          sidebarTabsCollapsed={sidebarTabsCollapsed}
-          sidebarPanelCollapsed={sidebarPanelCollapsed}
-          onPreview={() => {
-            // Redirecionar para tab "Salvos" se não estiver ativa
-            if (activeTab !== 'saved') {
-              setActiveTab('saved');
-            }
-            // Usuário pode então clicar em Preview de qualquer dashboard salvo
-          }}
+      <div className="h-screen flex bg-gray-50">
+        {/* SidebarTabs */}
+        <SidebarTabs 
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
         />
         
-        {/* Main Content */}
-        <div className="flex-1 flex">
-          {/* SidebarTabs */}
-          <SidebarTabs 
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            collapsed={sidebarTabsCollapsed}
-          />
-          
-          {/* SidebarPanel */}
-          <SidebarPanel 
-            activeTab={activeTab}
-            collapsed={sidebarPanelCollapsed}
-            droppedWidgets={droppedWidgets}
-            onEditWidget={handleEditWidget}
-          />
-          
-          {/* Canvas */}
-          <div className="flex-1 p-3">
-            {hasNavigationWidget ? (
-              <MultiGridCanvas 
-                widgets={droppedWidgets}
-                onLayoutChange={handleLayoutChange}
-                onRemoveWidget={handleRemoveWidget}
-                onEditWidget={handleEditWidgetClick}
-              />
-            ) : (
-              <GridCanvas 
-                widgets={droppedWidgets}
-                onLayoutChange={handleLayoutChange}
-                onRemoveWidget={handleRemoveWidget}
-                onEditWidget={handleEditWidgetClick}
-              />
-            )}
-          </div>
+        {/* SidebarPanel */}
+        <SidebarPanel 
+          activeTab={activeTab}
+          droppedWidgets={droppedWidgets}
+          onEditWidget={handleEditWidget}
+        />
+        
+        {/* Canvas */}
+        <div className="flex-1 p-3">
+          {hasNavigationWidget ? (
+            <MultiGridCanvas 
+              widgets={droppedWidgets}
+              onLayoutChange={handleLayoutChange}
+              onRemoveWidget={handleRemoveWidget}
+              onEditWidget={handleEditWidgetClick}
+            />
+          ) : (
+            <GridCanvas 
+              widgets={droppedWidgets}
+              onLayoutChange={handleLayoutChange}
+              onRemoveWidget={handleRemoveWidget}
+              onEditWidget={handleEditWidgetClick}
+            />
+          )}
         </div>
       </div>
       
