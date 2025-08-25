@@ -4,12 +4,8 @@ import { useState, useCallback, useMemo } from 'react'
 import { useStore } from '@nanostores/react'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core'
 import AppsHeader from '@/components/apps/AppsHeader'
-import WidgetsPanel from '@/components/apps/WidgetsPanel'
-import ChatPanel from '@/components/apps/ChatPanel'
-import WidgetEditor from '@/components/apps/WidgetEditorNew'
-import CodeEditor from '@/components/apps/CodeEditor'
-import AutomationsPanel from '@/components/apps/AutomationsPanel'
-import SavedPanel from '@/components/apps/SavedPanel'
+import SidebarTabs from '@/components/apps/SidebarTabs'
+import SidebarPanel from '@/components/apps/SidebarPanel'
 import GridCanvas from '@/components/apps/GridCanvas'
 import MultiGridCanvas from '@/components/apps/MultiGridCanvas'
 import { $widgets, widgetActions } from '@/stores/widgetStore'
@@ -21,7 +17,8 @@ export default function AppsPage() {
   const droppedWidgets = useStore($widgets)
   const [activeWidget, setActiveWidget] = useState<Widget | null>(null)
   const [activeTab, setActiveTab] = useState<'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved'>('widgets')
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [sidebarTabsCollapsed, setSidebarTabsCollapsed] = useState(false)
+  const [sidebarPanelCollapsed, setSidebarPanelCollapsed] = useState(false)
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event
@@ -89,10 +86,10 @@ export default function AppsPage() {
       <div className="h-screen flex flex-col bg-gray-50">
         {/* Header */}
         <AppsHeader 
-          activeTab={activeTab} 
-          onTabChange={setActiveTab}
-          sidebarCollapsed={sidebarCollapsed}
-          onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+          onToggleSidebarTabs={() => setSidebarTabsCollapsed(!sidebarTabsCollapsed)}
+          onToggleSidebarPanel={() => setSidebarPanelCollapsed(!sidebarPanelCollapsed)}
+          sidebarTabsCollapsed={sidebarTabsCollapsed}
+          sidebarPanelCollapsed={sidebarPanelCollapsed}
           onPreview={() => {
             // Redirecionar para tab "Salvos" se não estiver ativa
             if (activeTab !== 'saved') {
@@ -104,21 +101,22 @@ export default function AppsPage() {
         
         {/* Main Content */}
         <div className="flex-1 flex">
-          {/* Left Panel */}
-          <div className={`${
-            sidebarCollapsed 
-              ? 'w-0 overflow-hidden' 
-              : 'w-80 bg-white border-r border-gray-200 flex-shrink-0 overflow-hidden'
-          } transition-all duration-300 ease-in-out`} style={{ height: 'calc(100vh - 80px)' }}>
-            {activeTab === 'widgets' && <WidgetsPanel />}
-            {activeTab === 'chat' && <ChatPanel droppedWidgets={droppedWidgets} onEditWidget={handleEditWidget} />}
-            {activeTab === 'editor' && <WidgetEditor />}
-            {activeTab === 'code' && <CodeEditor />}
-            {activeTab === 'automations' && <AutomationsPanel />}
-            {activeTab === 'saved' && <SavedPanel />}
-          </div>
+          {/* SidebarTabs */}
+          <SidebarTabs 
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            collapsed={sidebarTabsCollapsed}
+          />
           
-          {/* Right Canvas - Conditional rendering */}
+          {/* SidebarPanel */}
+          <SidebarPanel 
+            activeTab={activeTab}
+            collapsed={sidebarPanelCollapsed}
+            droppedWidgets={droppedWidgets}
+            onEditWidget={handleEditWidget}
+          />
+          
+          {/* Canvas */}
           <div className="flex-1 p-3">
             {hasNavigationWidget ? (
               <MultiGridCanvas 

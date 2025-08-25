@@ -1,54 +1,41 @@
 'use client'
 
-import { BarChart3, MessageSquare, Settings, Code, Cpu, Archive, Eye } from 'lucide-react'
+import { Archive, Eye } from 'lucide-react'
 import { savedDashboardActions } from '@/stores/savedDashboardStore'
 
 interface AppsHeaderProps {
-  activeTab: 'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved'
-  onTabChange: (tab: 'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved') => void
-  sidebarCollapsed: boolean
-  onToggleSidebar: () => void
+  onToggleSidebarTabs: () => void
+  onToggleSidebarPanel: () => void
+  sidebarTabsCollapsed: boolean
+  sidebarPanelCollapsed: boolean
   onPreview: () => void
 }
 
-export default function AppsHeader({ activeTab, onTabChange, sidebarCollapsed, onToggleSidebar, onPreview }: AppsHeaderProps) {
-  const tabs = [
-    { id: 'widgets', label: 'Widgets', icon: BarChart3 },
-    { id: 'chat', label: 'Chat', icon: MessageSquare },
-    { id: 'editor', label: 'Editor', icon: Settings },
-    { id: 'code', label: 'Code', icon: Code },
-    { id: 'automations', label: 'Automações', icon: Cpu },
-    { id: 'saved', label: 'Salvos', icon: Archive },
-  ] as const
-
+export default function AppsHeader({ onToggleSidebarTabs, onToggleSidebarPanel, sidebarTabsCollapsed, sidebarPanelCollapsed, onPreview }: AppsHeaderProps) {
   return (
     <div className="bg-gray-100 border-b border-gray-200 px-6 py-2">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1">
-        {/* Toggle Sidebar Button */}
+        {/* Toggle SidebarTabs Button */}
         <button
-          onClick={onToggleSidebar}
+          onClick={onToggleSidebarTabs}
           className="mr-4 p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors duration-200"
-          title={sidebarCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
+          title={sidebarTabsCollapsed ? 'Expandir sidebar tabs' : 'Colapsar sidebar tabs'}
         >
           <span className="text-lg font-mono">
-            {sidebarCollapsed ? '☰' : '⟨'}
+            {sidebarTabsCollapsed ? '☰' : '⟨'}
           </span>
         </button>
-        {tabs.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => onTabChange(tab.id)}
-            className={`flex items-center gap-2 px-4 py-1 rounded-lg text-base font-semibold transition-all duration-200 ${
-              activeTab === tab.id
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-700 hover:text-gray-900 hover:bg-gray-200'
-            }`}
-          >
-            <tab.icon className="w-4 h-4" />
-            {tab.label}
-          </button>
-        ))}
+        {/* Toggle SidebarPanel Button */}
+        <button
+          onClick={onToggleSidebarPanel}
+          className="mr-4 p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+          title={sidebarPanelCollapsed ? 'Expandir panel' : 'Colapsar panel'}
+        >
+          <span className="text-lg font-mono">
+            {sidebarPanelCollapsed ? '☰' : '⟨'}
+          </span>
+        </button>
         </div>
         
         {/* Botões da direita */}
