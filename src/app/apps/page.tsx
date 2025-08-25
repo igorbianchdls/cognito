@@ -3,7 +3,8 @@
 import { useState, useCallback, useMemo } from 'react'
 import { useStore } from '@nanostores/react'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core'
-import SidebarTabs from '@/components/apps/SidebarTabs'
+import SidebarNav from '@/components/apps/SidebarNav'
+import { SidebarProvider } from '@/components/ui/sidebar'
 import SidebarPanel from '@/components/apps/SidebarPanel'
 import GridCanvas from '@/components/apps/GridCanvas'
 import MultiGridCanvas from '@/components/apps/MultiGridCanvas'
@@ -79,20 +80,21 @@ export default function AppsPage() {
   }, [droppedWidgets])
 
   return (
-    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-      <div className="h-screen flex bg-gray-50">
-        {/* SidebarTabs */}
-        <SidebarTabs 
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
-        
-        {/* SidebarPanel */}
-        <SidebarPanel 
-          activeTab={activeTab}
-          droppedWidgets={droppedWidgets}
-          onEditWidget={handleEditWidget}
-        />
+    <SidebarProvider>
+      <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        <div className="h-screen flex bg-gray-50">
+          {/* SidebarNav */}
+          <SidebarNav 
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+          />
+          
+          {/* SidebarPanel */}
+          <SidebarPanel 
+            activeTab={activeTab}
+            droppedWidgets={droppedWidgets}
+            onEditWidget={handleEditWidget}
+          />
         
         {/* Canvas */}
         <div className="flex-1 p-3">
@@ -112,9 +114,9 @@ export default function AppsPage() {
             />
           )}
         </div>
-      </div>
-      
-      <DragOverlay>
+        </div>
+        
+        <DragOverlay>
         {activeWidget ? (
           <div className="bg-white border-2 border-blue-500 rounded-lg p-3 shadow-lg opacity-90">
             <div className="flex items-center gap-3">
@@ -126,7 +128,8 @@ export default function AppsPage() {
             </div>
           </div>
         ) : null}
-      </DragOverlay>
-    </DndContext>
+        </DragOverlay>
+      </DndContext>
+    </SidebarProvider>
   )
 }
