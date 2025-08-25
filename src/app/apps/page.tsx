@@ -16,7 +16,7 @@ import type { Widget, LayoutItem, DroppedWidget } from '@/types/widget'
 export default function AppsPage() {
   const droppedWidgets = useStore($widgets)
   const [activeWidget, setActiveWidget] = useState<Widget | null>(null)
-  const [activeTab, setActiveTab] = useState<'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved'>('widgets')
+  const [activeTab, setActiveTab] = useState<'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved'>('chat')
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event

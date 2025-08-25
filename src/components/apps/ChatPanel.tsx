@@ -200,7 +200,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
   }
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto bg-white">
+    <div className="flex flex-col h-full overflow-y-auto bg-gray-50">
       
       {/* Header */}
       <div className="p-4 border-b border-[0.5px] border-gray-200">
