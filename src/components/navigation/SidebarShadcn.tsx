@@ -11,6 +11,11 @@ import {
   GalleryVerticalEnd,
 } from "lucide-react"
 
+import MetaIcon from "@/components/icons/MetaIcon"
+import GoogleAdsIcon from "@/components/icons/GoogleAdsIcon"
+import GoogleAnalyticsIcon from "@/components/icons/GoogleAnalyticsIcon"
+import ShopifyIcon from "@/components/icons/ShopifyIcon"
+
 import { NavMainSimple } from "@/components/navigation/nav-main-simple"
 import { NavUser } from "@/components/nav-user"
 import { TeamSwitcher } from "@/components/team-switcher"
@@ -20,6 +25,11 @@ import {
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
 } from "@/components/ui/sidebar"
 
 // Navigation data adapted to shadcn format
@@ -64,6 +74,24 @@ const navigationData = {
       icon: Database,
     },
   ],
+  integrations: [
+    {
+      title: "Meta Ads",
+      icon: MetaIcon,
+    },
+    {
+      title: "Google Ads", 
+      icon: GoogleAdsIcon,
+    },
+    {
+      title: "Google Analytics",
+      icon: GoogleAnalyticsIcon,
+    },
+    {
+      title: "Shopify",
+      icon: ShopifyIcon,
+    },
+  ],
 }
 
 export function SidebarShadcn({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -87,6 +115,19 @@ export function SidebarShadcn({ ...props }: React.ComponentProps<typeof Sidebar>
       </SidebarHeader>
       <SidebarContent>
         <NavMainSimple items={dataWithActiveState.navMain} />
+        <SidebarGroup>
+          <SidebarGroupLabel>Integrações</SidebarGroupLabel>
+          <SidebarMenu>
+            {navigationData.integrations.map((integration) => (
+              <SidebarMenuItem key={integration.title}>
+                <SidebarMenuButton tooltip={integration.title}>
+                  <integration.icon className="w-4 h-4" />
+                  <span>{integration.title}</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={dataWithActiveState.user} />
