@@ -8,7 +8,7 @@ import DroppedWidget from './DroppedWidget'
 import { $selectedWidgetId, widgetActions } from '@/stores/widgetStore'
 import { $canvasConfig } from '@/stores/canvasStore'
 import { $multiCanvasState, $activeTab, multiCanvasActions } from '@/stores/multiCanvasStore'
-import { WebPreview, WebPreviewNavigation, WebPreviewUrl, WebPreviewBody } from '@/components/ai-elements/web-preview'
+import { WebPreview, WebPreviewNavigation, WebPreviewUrl } from '@/components/ai-elements/web-preview'
 import { isNavigationWidget } from '@/types/widget'
 import type { DroppedWidget as DroppedWidgetType, LayoutItem } from '@/types/widget'
 
@@ -180,70 +180,69 @@ export default function MultiGridCanvas({
             />
           </WebPreviewNavigation>
           
-          <WebPreviewBody className="!border-0 !rounded-none">
-            <div 
-              ref={setNodeRef} 
-              className="size-full relative transition-all duration-200 p-0 bg-white"
-              style={{
-                ...gridStyles,
-                minHeight: '400px'
-              }}
-            >
-              {/* Empty state when no widgets */}
-              {activeTabWidgets.length === 0 && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center text-gray-400">
-                    <div className="text-4xl mb-4">📊</div>
-                    <div className="text-lg font-medium">Tab: {multiCanvasState.tabs.find(t => t.id === activeTab)?.name}</div>
-                    <div className="text-sm mt-2">Drag widgets here to get started</div>
-                  </div>
+          {/* Canvas direto dentro do WebPreview, sem iframe */}
+          <div 
+            ref={setNodeRef} 
+            className="flex-1 relative transition-all duration-200 p-0 bg-white"
+            style={{
+              ...gridStyles,
+              minHeight: '400px'
+            }}
+          >
+            {/* Empty state when no widgets */}
+            {activeTabWidgets.length === 0 && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-center text-gray-400">
+                  <div className="text-4xl mb-4">📊</div>
+                  <div className="text-lg font-medium">Tab: {multiCanvasState.tabs.find(t => t.id === activeTab)?.name}</div>
+                  <div className="text-sm mt-2">Drag widgets here to get started</div>
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Grid Layout for active tab */}
-              {activeTabWidgets.length > 0 && (
-                <ResponsiveGridLayout
-                  className="layout"
-                  layouts={{ lg: activeTabWidgets.map(w => ({ i: w.i, x: w.x, y: w.y, w: w.w, h: w.h })) }}
-                  breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-                  cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-                  rowHeight={60}
-                  width={containerWidth}
-                  onLayoutChange={handleLayoutChange}
-                  isDraggable={!readOnly}
-                  isResizable={!readOnly}
-                  margin={[16, 16]}
-                  containerPadding={[16, 16]}
-                >
-                  {activeTabWidgets.map((widget) => (
-                    <div key={widget.i} className="relative">
-                      <DroppedWidget
-                        widget={widget}
-                        isSelected={selectedWidgetId === widget.i}
-                        onClick={() => handleWidgetClick(widget.i)}
-                        onRemove={() => handleRemoveWidget(widget.i)}
-                        onEdit={onEditWidget ? () => onEditWidget(widget.i) : undefined}
-                      />
-                      
-                      {/* Selection indicator */}
-                      {selectedWidgetId === widget.i && (
-                        <div className="absolute inset-0 border-2 border-blue-500 rounded-lg pointer-events-none" />
-                      )}
-                    </div>
-                  ))}
-                </ResponsiveGridLayout>
-              )}
-
-              {/* Drop zone overlay when dragging */}
-              {isOver && (
-                <div className="absolute inset-0 bg-blue-500 bg-opacity-10 border-2 border-dashed border-blue-500 rounded-lg flex items-center justify-center">
-                  <div className="bg-white px-4 py-2 rounded-lg shadow-lg">
-                    <span className="text-blue-600 font-medium">Drop widget in {multiCanvasState.tabs.find(t => t.id === activeTab)?.name}</span>
+            {/* Grid Layout for active tab */}
+            {activeTabWidgets.length > 0 && (
+              <ResponsiveGridLayout
+                className="layout"
+                layouts={{ lg: activeTabWidgets.map(w => ({ i: w.i, x: w.x, y: w.y, w: w.w, h: w.h })) }}
+                breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+                cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
+                rowHeight={60}
+                width={containerWidth}
+                onLayoutChange={handleLayoutChange}
+                isDraggable={!readOnly}
+                isResizable={!readOnly}
+                margin={[16, 16]}
+                containerPadding={[16, 16]}
+              >
+                {activeTabWidgets.map((widget) => (
+                  <div key={widget.i} className="relative">
+                    <DroppedWidget
+                      widget={widget}
+                      isSelected={selectedWidgetId === widget.i}
+                      onClick={() => handleWidgetClick(widget.i)}
+                      onRemove={() => handleRemoveWidget(widget.i)}
+                      onEdit={onEditWidget ? () => onEditWidget(widget.i) : undefined}
+                    />
+                    
+                    {/* Selection indicator */}
+                    {selectedWidgetId === widget.i && (
+                      <div className="absolute inset-0 border-2 border-blue-500 rounded-lg pointer-events-none" />
+                    )}
                   </div>
+                ))}
+              </ResponsiveGridLayout>
+            )}
+
+            {/* Drop zone overlay when dragging */}
+            {isOver && (
+              <div className="absolute inset-0 bg-blue-500 bg-opacity-10 border-2 border-dashed border-blue-500 rounded-lg flex items-center justify-center">
+                <div className="bg-white px-4 py-2 rounded-lg shadow-lg">
+                  <span className="text-blue-600 font-medium">Drop widget in {multiCanvasState.tabs.find(t => t.id === activeTab)?.name}</span>
                 </div>
-              )}
-            </div>
-          </WebPreviewBody>
+              </div>
+            )}
+          </div>
         </WebPreview>
         
         {/* Debug info (development only) */}
