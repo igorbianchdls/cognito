@@ -105,9 +105,9 @@ Focus em strategic recommendations que impactem revenue growth, detectando budge
 
       switch (stepNumber) {
         case 1:
-          console.log('📊 STEP 1/6: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
+          console.log('📊 STEP 1/8: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
           return {
-            system: `STEP 1/6: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
+            system: `STEP 1/8: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
 
 Você é um especialista em performance de campanhas Facebook/Meta Ads focado em ROI, ROAS e budget optimization. Analise a demanda do usuário E classifique a complexidade para otimizar o workflow.
 
@@ -120,19 +120,19 @@ Você é um especialista em performance de campanhas Facebook/Meta Ads focado em
 
 🎯 **CLASSIFICAÇÃO OBRIGATÓRIA:**
 
-**CONTEXTUAL** (pula para Step 6 - resumo direto):
+**CONTEXTUAL** (pula para Step 8 - resumo direto):
 - Perguntas sobre análises já realizadas na conversa
 - Esclarecimentos sobre insights ou gráficos já mostrados
 - Interpretação de dados já apresentados
 - Ex: "o que significa ROAS 4.2?", "por que campanha X está performando melhor?"
 
-**SIMPLES** (3-4 steps):
+**SIMPLES** (4-5 steps):
 - Pergunta específica sobre 1-2 campanhas ou métricas pontuais
 - Análise direta sem necessidade de deep dive estratégico
 - Resposta focada sem múltiplas correlações
 - Ex: "ROAS da campanha Conversão Q4?", "qual campanha tem melhor performance?", "budget atual da campanha X"
 
-**COMPLEXA** (6 steps completos):
+**COMPLEXA** (8 steps completos):
 - Análise estratégica multi-dimensional de performance
 - Budget optimization e reallocação entre campanhas
 - Identificação de scaling opportunities e underperformers
@@ -148,70 +148,118 @@ Você é um especialista em performance de campanhas Facebook/Meta Ads focado em
           };
 
         case 2:
-          console.log('🎯 STEP 2/6: QUERY BASE + ANÁLISE DE PERFORMANCE');
+          console.log('🎯 STEP 2/8: QUERY 1 - CONSULTA PRINCIPAL');
           return {
-            system: `STEP 2/6: QUERY BASE + ANÁLISE IMEDIATA DE PERFORMANCE
+            system: `STEP 2/8: QUERY 1 - CONSULTA PRINCIPAL
 
-Execute a query SQL principal para obter dados de performance de campanhas e IMEDIATAMENTE analise os resultados no mesmo response.
+Execute a primeira query SQL para obter dados de performance de campanhas. APENAS execute a query - NÃO analise os resultados neste step.
 
-📊 **FOCO DE PERFORMANCE:**
+📊 **FOCO DA CONSULTA:**
 - Priorize métricas de ROI: ROAS, CPA, budget efficiency
-- Identifique top performers vs underperformers
-- Analise budget allocation vs performance real
-- Detecte scaling opportunities e campanhas saturadas
+- Identifique campanhas principais e suas métricas core
+- Obtenha dados de performance e budget allocation
+- Capture métricas fundamentais para análise posterior
 
-🔧 **PROCESSO OBRIGATÓRIO:**
+🔧 **PROCESSO:**
 1. Execute executarSQL() com query focada na demanda do usuário
-2. IMEDIATAMENTE após ver os dados JSON, analise no mesmo response
-3. Identifique patterns de performance, anomalias, opportunities
-4. Gere insights estratégicos sobre budget allocation e ROI
-5. Destaque campanhas candidatas a scaling ou otimização
+2. APENAS execute - sem análise neste step
+3. Os dados serão analisados no próximo step
 
 **ALWAYS use:** \`FROM \`creatto-463117.biquery_data.metaads\`\`
 
-📈 **ANÁLISE ESTRATÉGICA IMEDIATA:**
+**IMPORTANTE:** Este é um step de coleta de dados. A análise será feita no Step 3.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 3:
+          console.log('🎯 STEP 3/8: ANÁLISE + GRÁFICO 1');
+          return {
+            system: `STEP 3/8: ANÁLISE + GRÁFICO 1 - ANÁLISE DOS DADOS DA QUERY 1
+
+Analise os dados obtidos na Query 1 (Step 2) e crie visualização estratégica se apropriado.
+
+📈 **ANÁLISE ESTRATÉGICA DOS DADOS:**
 - Compare ROAS entre campanhas do mesmo objetivo
 - Identifique budget misallocation (low ROAS com high spend)
 - Detecte scaling opportunities (high ROAS com budget constraints)
 - Avalie efficiency ranking dentro de cada objetivo
 - Sinalize performance trends e consistency issues
 
+🔧 **PROCESSO:**
+1. Analise os dados JSON obtidos no Step 2
+2. Identifique patterns de performance, anomalias, opportunities
+3. Gere insights estratégicos sobre budget allocation e ROI
+4. Destaque campanhas candidatas a scaling ou otimização
+
 📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
+Considere criar um gráfico SE:
 - Os dados são visuais por natureza (comparações, rankings, trends)
 - O volume é adequado para visualização clara
 - O gráfico adicionaria clareza aos insights
 - Não force - só crie se realmente agregar valor
 
-Use criarGrafico() quando fizer sentido estratégico para o insight.`,
+Use criarGrafico() quando fizer sentido estratégico para o insight.
+
+**IMPORTANTE:** Este step é só para análise. Novas queries serão feitas nos próximos steps.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL,
               criarGrafico: analyticsTools.criarGrafico
             }
           };
 
-        case 3:
-          console.log('🎯 STEP 3/6: QUERY COMPLEMENTAR + DEEP ANALYSIS');
+        case 4:
+          console.log('🎯 STEP 4/8: QUERY 2 - CONSULTA COMPLEMENTAR');
           return {
-            system: `STEP 3/6: QUERY COMPLEMENTAR + ANÁLISE ESTRATÉGICA PROFUNDA
+            system: `STEP 4/8: QUERY 2 - CONSULTA COMPLEMENTAR
 
-Execute query complementar baseada nos insights do Step 2 e conduza análise estratégica mais profunda.
+Execute a segunda query SQL baseada nos insights da análise anterior. APENAS execute a query - NÃO analise os resultados neste step.
 
-🎯 **FOQUE EM INSIGHTS DO STEP ANTERIOR:**
-- Use os top/bottom performers identificados no Step 2
+🎯 **FOCO DA CONSULTA:**
+- Base-se nos padrões identificados no Step 3
 - Aprofunde análise temporal, correlações, ou segmentações específicas
 - Investigue patterns de performance identificados anteriormente
+- Obtenha dados complementares para análise mais rica
 
 🔧 **PROCESSO:**
-1. Execute executarSQL() com query que complementa/aprofunda análise do Step 2
-2. IMEDIATAMENTE analise os novos dados no contexto dos insights anteriores
-3. Correlacione com findings do Step 2 para insights mais ricos
-4. Identifique causas raíz de performance patterns
-5. Desenvolva recomendações estratégicas mais específicas
+1. Execute executarSQL() com query que complementa os dados do Step 2
+2. APENAS execute - sem análise neste step
+3. Os dados serão analisados no próximo step
 
 **ALWAYS use:** \`FROM \`creatto-463117.biquery_data.metaads\`\`
 
-📈 **ANÁLISES ESPECIALIZADAS:**
+**EXEMPLOS DE QUERIES COMPLEMENTARES:**
+- Temporal analysis dos top performers identificados
+- Correlação spend vs ROAS por objetivo
+- Segmentação de performance por lifecycle stage
+- Cross-campaign synergies ou cannibalização
+
+**IMPORTANTE:** Este é um step de coleta de dados. A análise será feita no Step 5.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 5:
+          console.log('🎯 STEP 5/8: ANÁLISE + GRÁFICO 2');
+          return {
+            system: `STEP 5/8: ANÁLISE + GRÁFICO 2 - ANÁLISE DOS DADOS DA QUERY 2
+
+Analise os dados obtidos na Query 2 (Step 4) e crie visualização estratégica se apropriado.
+
+📈 **ANÁLISE ESTRATÉGICA DOS DADOS:**
+- Correlacione com findings do Step 3 para insights mais ricos
+- Identifique causas raíz de performance patterns
+- Desenvolva recomendações estratégicas mais específicas
+- Aprofunde análise temporal, correlações, ou segmentações
+
+🔧 **PROCESSO:**
+1. Analise os dados JSON obtidos no Step 4
+2. Correlacione com insights anteriores do Step 3
+3. Identifique padrões mais profundos e correlações
+4. Desenvolva insights estratégicos complementares
+
+📊 **ANÁLISES ESPECIALIZADAS:**
 - Temporal analysis dos top performers
 - Correlação spend vs ROAS por objetivo
 - Segmentação de performance por lifecycle stage
@@ -220,39 +268,71 @@ Execute query complementar baseada nos insights do Step 2 e conduza análise est
 - Seasonal patterns e timing optimization
 
 📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
+Considere criar um gráfico SE:
 - Os dados são visuais por natureza (comparações, rankings, trends)
 - O volume é adequado para visualização clara
 - O gráfico adicionaria clareza aos insights
 - Não force - só crie se realmente agregar valor
 
-Use criarGrafico() quando fizer sentido estratégico para o insight.`,
+Use criarGrafico() quando fizer sentido estratégico para o insight.
+
+**IMPORTANTE:** Este step é só para análise. Nova query será feita no próximo step.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL,
               criarGrafico: analyticsTools.criarGrafico
             }
           };
 
-        case 4:
-          console.log('🎯 STEP 4/6: QUERY ESTRATÉGICA FINAL + INSIGHTS CONSOLIDADOS');
+        case 6:
+          console.log('🎯 STEP 6/8: QUERY 3 - CONSULTA FINAL');
           return {
-            system: `STEP 4/6: QUERY ESTRATÉGICA FINAL + CONSOLIDAÇÃO DE INSIGHTS
+            system: `STEP 6/8: QUERY 3 - CONSULTA FINAL
 
-Execute query estratégica final para completar a análise e consolide todos os insights para recommendations finais.
+Execute a terceira query SQL para completar gaps analíticos e obter dados finais. APENAS execute a query - NÃO analise os resultados neste step.
 
-🎯 **COMPLEMENTAR ANÁLISE ANTERIOR:**
-- Base-se nos padrões e opportunities identificados nos Steps 2 e 3
+🎯 **FOCO DA CONSULTA:**
+- Base-se nos padrões e opportunities identificados nos Steps anteriores
 - Foque em gaps de análise que ainda precisam ser preenchidos
 - Investigue correlações ou validações necessárias para recomendações sólidas
+- Obtenha dados finais para consolidação estratégica
 
-🔧 **PROCESSO FINAL:**
+🔧 **PROCESSO:**
 1. Execute executarSQL() com query que fecha lacunas analíticas restantes
-2. IMEDIATAMENTE integre insights com achados dos steps anteriores
-3. Consolide performance patterns em strategic narrative
-4. Prepare foundation para recomendações de budget optimization
-5. Quantifique impact potential das opportunities identificadas
+2. APENAS execute - sem análise neste step
+3. Os dados serão analisados no próximo step
 
 **ALWAYS use:** \`FROM \`creatto-463117.biquery_data.metaads\`\`
+
+**EXEMPLOS DE QUERIES FINAIS:**
+- Budget reallocation opportunities com impact quantificado
+- Scaling readiness assessment das top performers
+- Risk assessment de underperformers
+- Expected ROI impact das mudanças propostas
+- Priority ranking das optimization opportunities
+
+**IMPORTANTE:** Este é um step de coleta de dados. A análise será feita no Step 7.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 7:
+          console.log('🎯 STEP 7/8: ANÁLISE + GRÁFICO 3');
+          return {
+            system: `STEP 7/8: ANÁLISE + GRÁFICO 3 - ANÁLISE DOS DADOS DA QUERY 3
+
+Analise os dados obtidos na Query 3 (Step 6) e crie visualização estratégica se apropriado. Consolide insights de todos os steps para preparar o resumo executivo.
+
+📈 **ANÁLISE ESTRATÉGICA FINAL:**
+- Integre insights com achados dos steps anteriores (3 e 5)
+- Consolide performance patterns em strategic narrative
+- Prepare foundation para recomendações de budget optimization
+- Quantifique impact potential das opportunities identificadas
+
+🔧 **PROCESSO:**
+1. Analise os dados JSON obtidos no Step 6
+2. Integre com todos os insights anteriores
+3. Consolide todos os padrões identificados
+4. Prepare insights finais para o resumo executivo
 
 📊 **CONSOLIDAÇÃO ESTRATÉGICA:**
 - Budget reallocation opportunities com impact quantificado
@@ -263,68 +343,24 @@ Execute query estratégica final para completar a análise e consolide todos os 
 - Priority ranking das optimization opportunities
 
 📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
+Considere criar um gráfico final SE:
 - Os dados são visuais por natureza (comparações, rankings, trends)
 - O volume é adequado para visualização clara
-- O gráfico adicionaria clareza aos insights
+- O gráfico adicionaria clareza aos insights consolidados
 - Não force - só crie se realmente agregar valor
 
-Use criarGrafico() quando fizer sentido estratégico para o insight.`,
-            tools: {
-              executarSQL: bigqueryTools.executarSQL,
-              criarGrafico: analyticsTools.criarGrafico
-            }
-          };
+Use criarGrafico() quando fizer sentido estratégico para o insight.
 
-        case 5:
-          console.log('🎯 STEP 5/6: VISUALIZAÇÃO ESTRATÉGICA DE PERFORMANCE');
-          return {
-            system: `STEP 5/6: VISUALIZAÇÃO ESTRATÉGICA DE PERFORMANCE
-
-Crie visualização que melhor representa os insights de performance e suporta as recomendações estratégicas identificadas nos steps anteriores.
-
-📊 **ESCOLHA INTELIGENTE DE GRÁFICO:**
-Baseado na análise dos steps 2-4, escolha a visualização mais impactful:
-
-**Bar Chart (Vertical/Horizontal):**
-- Performance ranking: ROAS, CPA comparison entre campanhas
-- Budget efficiency: spend vs returns
-- Máximo: 8 campanhas (vertical) ou 15 (horizontal)
-
-**Line Chart:**
-- Trends temporais de performance dos top performers
-- Evolution de ROAS ao longo do tempo
-- Máximo: 5 campanhas simultâneas, 100 pontos temporais
-
-**Scatter Plot:**
-- Correlações: Spend vs ROAS, CPA vs Volume
-- Identificação de efficient frontier
-- Máximo: 50 campanhas
-
-**Pie Chart:**
-- Budget distribution por objetivo
-- Market share por campaign type
-- Máximo: 6 fatias (mín. 2% cada)
-
-🔧 **PROCESS:**
-1. Use criarGrafico() com dados dos steps anteriores
-2. Escolha tipo de gráfico que melhor suporta suas recomendações
-3. Foque em visualizar performance gaps e opportunities
-4. Prepare para sustentar arguments do resumo executivo
-
-**REGRAS CRÍTICAS:**
-- Se dados excedem limites → Top N performers + "Outros"
-- Always respect visualization limits por tipo de gráfico
-- Choose chart type que melhor suporta strategic narrative`,
+**IMPORTANTE:** Este é o último step de análise antes do resumo executivo.`,
             tools: {
               criarGrafico: analyticsTools.criarGrafico
             }
           };
 
-        case 6:
-          console.log('🎯 STEP 6/6: RESUMO EXECUTIVO + STRATEGIC RECOMMENDATIONS');
+        case 8:
+          console.log('🎯 STEP 8/8: RESUMO EXECUTIVO + STRATEGIC RECOMMENDATIONS');
           return {
-            system: `STEP 6/6: RESUMO EXECUTIVO + STRATEGIC RECOMMENDATIONS
+            system: `STEP 8/8: RESUMO EXECUTIVO + STRATEGIC RECOMMENDATIONS
 
 Consolide TODOS os insights dos steps anteriores em síntese executiva focada em business impact e ROI optimization.
 
@@ -379,7 +415,7 @@ Consolide TODOS os insights dos steps anteriores em síntese executiva focada em
     },
     
     // StopWhen inteligente baseado na classificação de complexidade
-    stopWhen: stepCountIs(6),
+    stopWhen: stepCountIs(8),
     providerOptions: {
       anthropic: {
         thinking: { type: 'enabled', budgetTokens: 15000 }
