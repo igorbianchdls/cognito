@@ -204,11 +204,11 @@ export default function GridCanvas({
       >
         <WebPreviewNavigation>
           <WebPreviewNavigationButton tooltip="Preview Dashboard" onClick={handlePreview}>
-            <Eye className="h-4 w-4" />
+            <Eye className="h-6 w-6" />
           </WebPreviewNavigationButton>
           
           <WebPreviewNavigationButton tooltip="Save Dashboard" onClick={handleSave}>
-            <Save className="h-4 w-4" />
+            <Save className="h-6 w-6" />
           </WebPreviewNavigationButton>
           
           <WebPreviewUrl 
@@ -218,11 +218,11 @@ export default function GridCanvas({
           />
           
           <WebPreviewNavigationButton tooltip="Export Dashboard" onClick={handleExport}>
-            <Download className="h-4 w-4" />
+            <Download className="h-6 w-6" />
           </WebPreviewNavigationButton>
           
           <WebPreviewNavigationButton tooltip="Canvas Settings" onClick={handleSettings}>
-            <Settings className="h-4 w-4" />
+            <Settings className="h-6 w-6" />
           </WebPreviewNavigationButton>
         </WebPreviewNavigation>
         
