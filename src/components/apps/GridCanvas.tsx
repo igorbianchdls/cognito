@@ -7,6 +7,7 @@ import { Responsive, WidthProvider } from 'react-grid-layout'
 import DroppedWidget from './DroppedWidget'
 import { $selectedWidgetId, widgetActions } from '@/stores/widgetStore'
 import { $canvasConfig } from '@/stores/canvasStore' // Canvas customization store
+import { WebPreview, WebPreviewNavigation, WebPreviewUrl, WebPreviewBody } from '@/components/ai-elements/web-preview'
 import type { DroppedWidget as DroppedWidgetType, LayoutItem } from '@/types/widget'
 
 const ResponsiveGridLayout = WidthProvider(Responsive)
@@ -150,67 +151,78 @@ export default function GridCanvas({
 
   return (
     <div ref={containerRef} className="h-full flex flex-col">
-
-      {/* Grid Container */}
-      <div 
-        ref={setNodeRef}
-        style={canvasStyles}
-        className={`${noBorder ? '' : 'border border-gray-300'} relative transition-colors p-0 bg-white ${
-          (canvasConfig.canvasMode === 'fixed' || containerWidth > 768) ? '' : 'flex-1'
-        } ${
-          isOver 
-            ? 'border-blue-500' 
-            : 'border-gray-300'
+      <WebPreview 
+        defaultUrl="dashboard-canvas"
+        className={`h-full ${noBorder ? 'border-0' : ''} ${
+          isOver ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
         }`}
       >
-        {widgets.length === 0 ? (
-          <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-            <div className="text-center">
-              <div className="text-6xl mb-4">📊</div>
-              <p className="text-lg font-medium">Drop widgets here</p>
-              <p className="text-sm">Drag from the widgets panel to create your dashboard</p>
-            </div>
-          </div>
-        ) : null}
+        <WebPreviewNavigation>
+          <WebPreviewUrl 
+            value="Dashboard Canvas" 
+            readOnly
+            className="text-center font-medium bg-gray-50"
+          />
+        </WebPreviewNavigation>
         
-        <ResponsiveGridLayout
-          className="layout"
-          layouts={{ lg: layout }}
-          breakpoints={responsiveBreakpoints}
-          cols={responsiveCols}
-          rowHeight={canvasConfig.rowHeight}
-          onLayoutChange={onLayoutChange}
-          isDraggable={!readOnly}
-          isResizable={!readOnly}
-          margin={canvasConfig.margin}
-          containerPadding={canvasConfig.containerPadding}
-          useCSSTransforms={true}
-          compactType={null}
-          preventCollision={true}
-          allowOverlap={false}
-          autoSize={false}
-          maxRows={12}
-        >
-          {widgets.map((widget) => (
-            <div 
-              key={widget.i}
-              onClick={() => handleWidgetClick(widget.i)}
-              className={`cursor-pointer transition-all ${
-                selectedWidgetId === widget.i 
-                  ? 'ring-2 ring-blue-500 ring-opacity-50' 
-                  : ''
-              }`}
+        <WebPreviewBody className="!border-0 !rounded-none">
+          <div 
+            ref={setNodeRef}
+            style={canvasStyles}
+            className={`relative transition-colors p-0 bg-white size-full ${
+              (canvasConfig.canvasMode === 'fixed' || containerWidth > 768) ? '' : 'flex-1'
+            }`}
+          >
+            {widgets.length === 0 ? (
+              <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                <div className="text-center">
+                  <div className="text-6xl mb-4">📊</div>
+                  <p className="text-lg font-medium">Drop widgets here</p>
+                  <p className="text-sm">Drag from the widgets panel to create your dashboard</p>
+                </div>
+              </div>
+            ) : null}
+            
+            <ResponsiveGridLayout
+              className="layout"
+              layouts={{ lg: layout }}
+              breakpoints={responsiveBreakpoints}
+              cols={responsiveCols}
+              rowHeight={canvasConfig.rowHeight}
+              onLayoutChange={onLayoutChange}
+              isDraggable={!readOnly}
+              isResizable={!readOnly}
+              margin={canvasConfig.margin}
+              containerPadding={canvasConfig.containerPadding}
+              useCSSTransforms={true}
+              compactType={null}
+              preventCollision={true}
+              allowOverlap={false}
+              autoSize={false}
+              maxRows={12}
             >
-              <DroppedWidget 
-                widget={widget} 
-                onRemove={() => onRemoveWidget(widget.i)}
-                onEdit={onEditWidget ? () => onEditWidget(widget.i) : undefined}
-                isSelected={selectedWidgetId === widget.i}
-              />
-            </div>
-          ))}
-        </ResponsiveGridLayout>
-      </div>
+              {widgets.map((widget) => (
+                <div 
+                  key={widget.i}
+                  onClick={() => handleWidgetClick(widget.i)}
+                  className={`cursor-pointer transition-all ${
+                    selectedWidgetId === widget.i 
+                      ? 'ring-2 ring-blue-500 ring-opacity-50' 
+                      : ''
+                  }`}
+                >
+                  <DroppedWidget 
+                    widget={widget} 
+                    onRemove={() => onRemoveWidget(widget.i)}
+                    onEdit={onEditWidget ? () => onEditWidget(widget.i) : undefined}
+                    isSelected={selectedWidgetId === widget.i}
+                  />
+                </div>
+              ))}
+            </ResponsiveGridLayout>
+          </div>
+        </WebPreviewBody>
+      </WebPreview>
     </div>
   )
 }
