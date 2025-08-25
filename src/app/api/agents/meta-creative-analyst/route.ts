@@ -126,9 +126,9 @@ Focus em strategic recommendations que impactem conversion growth, detectando cr
 
       switch (stepNumber) {
         case 1:
-          console.log('📊 STEP 1/8: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
+          console.log('📊 STEP 1/9: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
           return {
-            system: `STEP 1/8: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
+            system: `STEP 1/9: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
 
 Você é um especialista em performance de criativos Facebook/Meta Ads focado em conversion rate, ROAS criativo e creative optimization. Analise a demanda do usuário E classifique a complexidade para otimizar o workflow.
 
@@ -141,19 +141,19 @@ Você é um especialista em performance de criativos Facebook/Meta Ads focado em
 
 🎯 **CLASSIFICAÇÃO OBRIGATÓRIA:**
 
-**CONTEXTUAL** (pula para Step 8 - resumo direto):
+**CONTEXTUAL** (pula para Step 9 - resumo direto):
 - Perguntas sobre análises criativas já realizadas na conversa
 - Esclarecimentos sobre insights ou gráficos já mostrados sobre criativos
 - Interpretação de dados criativos já apresentados
 - Ex: "o que significa creative fatigue?", "por que criativo X está convertendo melhor?", "como interpretar esse ROAS criativo?"
 
-**SIMPLES** (4-5 steps):
+**SIMPLES** (5-6 steps):
 - Pergunta específica sobre 1-2 criativos ou métricas pontuais criativas
 - Análise direta sem necessidade de deep dive estratégico criativo
 - Resposta focada sem múltiplas correlações criativas
 - Ex: "conversion rate do criativo Video_001?", "qual criativo tem melhor ROAS?", "performance do criativo de imagem X"
 
-**COMPLEXA** (8 steps completos):
+**COMPLEXA** (9 steps completos):
 - Análise estratégica multi-dimensional de performance criativa
 - Creative optimization e rotation strategy entre criativos
 - Identificação de scaling opportunities e creative fatigue detection
@@ -169,9 +169,32 @@ Você é um especialista em performance de criativos Facebook/Meta Ads focado em
           };
 
         case 2:
-          console.log('🎯 STEP 2/8: QUERY 1 - CONSULTA CRIATIVA PRINCIPAL');
+          console.log('🎯 STEP 2/9: EXPLORAÇÃO DE TABELAS - getTables');
           return {
-            system: `STEP 2/8: QUERY 1 - CONSULTA CRIATIVA PRINCIPAL
+            system: `STEP 2/9: EXPLORAÇÃO DE TABELAS - getTables
+
+Explore as tabelas disponíveis no dataset para entender a estrutura de dados disponível antes de executar queries.
+
+📊 **EXPLORAÇÃO DE DADOS:**
+- Use getTables para listar tabelas do dataset 'biquery_data'
+- Identifique quais tabelas estão disponíveis para análise
+- Prepare contexto para queries mais precisas nos próximos steps
+
+🔧 **PROCESSO:**
+1. Execute getTables() com datasetId "biquery_data"
+2. Analise rapidamente as tabelas disponíveis
+3. Prepare contexto para queries nos próximos steps
+
+**IMPORTANTE:** Este step prepara o contexto. As queries SQL serão feitas nos próximos steps.`,
+            tools: {
+              getTables: bigqueryTools.getTables
+            }
+          };
+
+        case 3:
+          console.log('🎯 STEP 3/9: QUERY 1 - CONSULTA CRIATIVA PRINCIPAL');
+          return {
+            system: `STEP 3/9: QUERY 1 - CONSULTA CRIATIVA PRINCIPAL
 
 Execute a primeira query SQL para obter dados de performance de criativos. APENAS execute a query - NÃO analise os resultados neste step.
 
@@ -189,18 +212,18 @@ Execute a primeira query SQL para obter dados de performance de criativos. APENA
 
 **ALWAYS use:** \`FROM \`creatto-463117.biquery_data.metaads\`\`
 
-**IMPORTANTE:** Este é um step de coleta de dados criativos. A análise será feita no Step 3.`,
+**IMPORTANTE:** Este é um step de coleta de dados criativos. A análise será feita no Step 4.`,
             tools: {
               executarSQL: bigqueryTools.executarSQL
             }
           };
 
-        case 3:
-          console.log('🎯 STEP 3/8: ANÁLISE + GRÁFICO CRIATIVO 1');
+        case 4:
+          console.log('🎯 STEP 4/9: ANÁLISE + GRÁFICO CRIATIVO 1');
           return {
-            system: `STEP 3/8: ANÁLISE + GRÁFICO CRIATIVO 1 - ANÁLISE DOS DADOS DA QUERY 1
+            system: `STEP 4/9: ANÁLISE + GRÁFICO CRIATIVO 1 - ANÁLISE DOS DADOS DA QUERY 1
 
-Analise os dados criativos obtidos na Query 1 (Step 2) e crie visualização estratégica se apropriado.
+Analise os dados criativos obtidos na Query 1 (Step 3) e crie visualização estratégica se apropriado.
 
 🎨 **ANÁLISE ESTRATÉGICA DOS DADOS CRIATIVOS:**
 - Compare conversion rates entre criativos do mesmo formato
@@ -211,7 +234,7 @@ Analise os dados criativos obtidos na Query 1 (Step 2) e crie visualização est
 - Analise correlação entre creative age e performance decline
 
 🔧 **PROCESSO:**
-1. Analise os dados JSON criativos obtidos no Step 2
+1. Analise os dados JSON criativos obtidos no Step 3
 2. Identifique patterns de performance criativa, anomalias, opportunities
 3. Gere insights estratégicos sobre creative optimization e scaling
 4. Destaque criativos candidatos a scaling ou refresh
@@ -237,21 +260,21 @@ Use criarGrafico() quando fizer sentido estratégico para o insight criativo.
             }
           };
 
-        case 4:
-          console.log('🎯 STEP 4/8: QUERY 2 - CONSULTA CRIATIVA COMPLEMENTAR');
+        case 5:
+          console.log('🎯 STEP 5/9: QUERY 2 - CONSULTA CRIATIVA COMPLEMENTAR');
           return {
-            system: `STEP 4/8: QUERY 2 - CONSULTA CRIATIVA COMPLEMENTAR
+            system: `STEP 5/9: QUERY 2 - CONSULTA CRIATIVA COMPLEMENTAR
 
 Execute a segunda query SQL baseada nos insights criativos da análise anterior. APENAS execute a query - NÃO analise os resultados neste step.
 
 🎯 **FOCO DA CONSULTA CRIATIVA:**
-- Base-se nos padrões criativos identificados no Step 3
+- Base-se nos padrões criativos identificados no Step 4
 - Aprofunde análise temporal criativa, correlações de elementos, ou segmentações específicas
 - Investigue patterns de creative performance identificados anteriormente
 - Obtenha dados criativos complementares para análise mais rica
 
 🔧 **PROCESSO:**
-1. Execute executarSQL() com query que complementa os dados criativos do Step 2
+1. Execute executarSQL() com query que complementa os dados criativos do Step 3
 2. APENAS execute - sem análise neste step
 3. Os dados criativos serão analisados no próximo step
 
@@ -265,28 +288,28 @@ Execute a segunda query SQL baseada nos insights criativos da análise anterior.
 - Creative element attribution e format analysis
 - Creative fatigue progression analysis
 
-**IMPORTANTE:** Este é um step de coleta de dados criativos. A análise será feita no Step 5.`,
+**IMPORTANTE:** Este é um step de coleta de dados criativos. A análise será feita no Step 6.`,
             tools: {
               executarSQL: bigqueryTools.executarSQL
             }
           };
 
-        case 5:
-          console.log('🎯 STEP 5/8: ANÁLISE + GRÁFICO CRIATIVO 2');
+        case 6:
+          console.log('🎯 STEP 6/9: ANÁLISE + GRÁFICO CRIATIVO 2');
           return {
-            system: `STEP 5/8: ANÁLISE + GRÁFICO CRIATIVO 2 - ANÁLISE DOS DADOS DA QUERY 2
+            system: `STEP 6/9: ANÁLISE + GRÁFICO CRIATIVO 2 - ANÁLISE DOS DADOS DA QUERY 2
 
-Analise os dados criativos obtidos na Query 2 (Step 4) e crie visualização estratégica se apropriado.
+Analise os dados criativos obtidos na Query 2 (Step 5) e crie visualização estratégica se apropriado.
 
 🎨 **ANÁLISE ESTRATÉGICA DOS DADOS CRIATIVOS:**
-- Correlacione com findings criativos do Step 3 para insights mais ricos
+- Correlacione com findings criativos do Step 4 para insights mais ricos
 - Identifique causas raíz de creative performance patterns
 - Desenvolva recomendações estratégicas criativas mais específicas
 - Aprofunde análise temporal criativa, correlações, segmentações
 
 🔧 **PROCESSO:**
-1. Analise os dados JSON criativos obtidos no Step 4
-2. Correlacione com insights criativos anteriores do Step 3
+1. Analise os dados JSON criativos obtidos no Step 5
+2. Correlacione com insights criativos anteriores do Step 4
 3. Identifique padrões criativos mais profundos e correlações
 4. Desenvolva insights estratégicos criativos complementares
 
@@ -315,10 +338,10 @@ Use criarGrafico() quando fizer sentido estratégico para o insight criativo.
             }
           };
 
-        case 6:
-          console.log('🎯 STEP 6/8: QUERY 3 - CONSULTA CRIATIVA FINAL');
+        case 7:
+          console.log('🎯 STEP 7/9: QUERY 3 - CONSULTA CRIATIVA FINAL');
           return {
-            system: `STEP 6/8: QUERY 3 - CONSULTA CRIATIVA FINAL
+            system: `STEP 7/9: QUERY 3 - CONSULTA CRIATIVA FINAL
 
 Execute a terceira query SQL para completar gaps analíticos criativos e obter dados finais. APENAS execute a query - NÃO analise os resultados neste step.
 
@@ -343,27 +366,27 @@ Execute a terceira query SQL para completar gaps analíticos criativos e obter d
 - Priority ranking das creative optimization opportunities
 - Creative fatigue timeline e refresh schedule
 
-**IMPORTANTE:** Este é um step de coleta de dados criativos. A análise será feita no Step 7.`,
+**IMPORTANTE:** Este é um step de coleta de dados criativos. A análise será feita no Step 8.`,
             tools: {
               executarSQL: bigqueryTools.executarSQL
             }
           };
 
-        case 7:
-          console.log('🎯 STEP 7/8: ANÁLISE + GRÁFICO CRIATIVO 3');
+        case 8:
+          console.log('🎯 STEP 8/9: ANÁLISE + GRÁFICO CRIATIVO 3');
           return {
-            system: `STEP 7/8: ANÁLISE + GRÁFICO CRIATIVO 3 - ANÁLISE DOS DADOS DA QUERY 3
+            system: `STEP 8/9: ANÁLISE + GRÁFICO CRIATIVO 3 - ANÁLISE DOS DADOS DA QUERY 3
 
-Analise os dados criativos obtidos na Query 3 (Step 6) e crie visualização estratégica se apropriado. Consolide insights criativos de todos os steps para preparar o resumo executivo.
+Analise os dados criativos obtidos na Query 3 (Step 7) e crie visualização estratégica se apropriado. Consolide insights criativos de todos os steps para preparar o resumo executivo.
 
 🎨 **ANÁLISE ESTRATÉGICA CRIATIVA FINAL:**
-- Integre insights criativos com achados dos steps anteriores (3 e 5)
+- Integre insights criativos com achados dos steps anteriores (4 e 6)
 - Consolide creative performance patterns em strategic narrative
 - Prepare foundation para recomendações de creative optimization
 - Quantifique impact potential das creative opportunities identificadas
 
 🔧 **PROCESSO:**
-1. Analise os dados JSON criativos obtidos no Step 6
+1. Analise os dados JSON criativos obtidos no Step 7
 2. Integre com todos os insights criativos anteriores
 3. Consolide todos os padrões criativos identificados
 4. Prepare insights criativos finais para o resumo executivo
@@ -393,10 +416,10 @@ Use criarGrafico() quando fizer sentido estratégico para o insight criativo.
             }
           };
 
-        case 8:
-          console.log('🎯 STEP 8/8: RESUMO EXECUTIVO + CREATIVE STRATEGIC RECOMMENDATIONS');
+        case 9:
+          console.log('🎯 STEP 9/9: RESUMO EXECUTIVO + CREATIVE STRATEGIC RECOMMENDATIONS');
           return {
-            system: `STEP 8/8: RESUMO EXECUTIVO + CREATIVE STRATEGIC RECOMMENDATIONS
+            system: `STEP 9/9: RESUMO EXECUTIVO + CREATIVE STRATEGIC RECOMMENDATIONS
 
 Consolide TODOS os insights criativos dos steps anteriores em síntese executiva focada em conversion impact e creative ROI optimization.
 
@@ -455,7 +478,7 @@ Consolide TODOS os insights criativos dos steps anteriores em síntese executiva
     },
     
     // StopWhen inteligente baseado na classificação de complexidade
-    stopWhen: stepCountIs(8),
+    stopWhen: stepCountIs(9),
     providerOptions: {
       anthropic: {
         thinking: { type: 'enabled', budgetTokens: 15000 }

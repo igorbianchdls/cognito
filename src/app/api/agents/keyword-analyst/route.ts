@@ -129,9 +129,9 @@ Focus em strategic recommendations que impactem organic traffic growth, detectan
 
       switch (stepNumber) {
         case 1:
-          console.log('📊 STEP 1/8: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
+          console.log('📊 STEP 1/9: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
           return {
-            system: `STEP 1/8: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
+            system: `STEP 1/9: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
 
 Você é um especialista em performance de keywords SEO focado em organic traffic, CTR e keyword optimization. Analise a demanda do usuário E classifique a complexidade para otimizar o workflow.
 
@@ -144,19 +144,19 @@ Você é um especialista em performance de keywords SEO focado em organic traffi
 
 🎯 **CLASSIFICAÇÃO OBRIGATÓRIA:**
 
-**CONTEXTUAL** (pula para Step 8 - resumo direto):
+**CONTEXTUAL** (pula para Step 9 - resumo direto):
 - Perguntas sobre análises SEO já realizadas na conversa
 - Esclarecimentos sobre insights ou gráficos já mostrados sobre keywords
 - Interpretação de dados SEO já apresentados
 - Ex: "o que significa CTR baixo?", "por que keyword X está rankando melhor?", "como interpretar average position?"
 
-**SIMPLES** (4-5 steps):
+**SIMPLES** (5-6 steps):
 - Pergunta específica sobre 1-2 keywords ou métricas pontuais SEO
 - Análise direta sem necessidade de deep dive estratégico
 - Resposta focada sem múltiplas correlações SEO
 - Ex: "CTR da keyword marketing digital?", "qual keyword tem melhor position?", "clicks da keyword SEO", "ranking position atual"
 
-**COMPLEXA** (8 steps completos):
+**COMPLEXA** (9 steps completos):
 - Análise estratégica multi-dimensional de keyword performance
 - Content optimization e keyword strategy development
 - Identificação de ranking opportunities e content gap analysis
@@ -172,9 +172,32 @@ Você é um especialista em performance de keywords SEO focado em organic traffi
           };
 
         case 2:
-          console.log('🎯 STEP 2/8: QUERY 1 - CONSULTA SEO PRINCIPAL');
+          console.log('🎯 STEP 2/9: EXPLORAÇÃO DE TABELAS - getTables');
           return {
-            system: `STEP 2/8: QUERY 1 - CONSULTA SEO PRINCIPAL
+            system: `STEP 2/9: EXPLORAÇÃO DE TABELAS - getTables
+
+Explore as tabelas disponíveis no dataset para entender a estrutura de dados disponível antes de executar queries.
+
+📊 **EXPLORAÇÃO DE DADOS:**
+- Use getTables para listar tabelas do dataset 'biquery_data'
+- Identifique quais tabelas estão disponíveis para análise
+- Prepare contexto para queries mais precisas nos próximos steps
+
+🔧 **PROCESSO:**
+1. Execute getTables() com datasetId "biquery_data"
+2. Analise rapidamente as tabelas disponíveis
+3. Prepare contexto para queries nos próximos steps
+
+**IMPORTANTE:** Este step prepara o contexto. As queries SQL serão feitas nos próximos steps.`,
+            tools: {
+              getTables: bigqueryTools.getTables
+            }
+          };
+
+        case 3:
+          console.log('🎯 STEP 3/9: QUERY 1 - CONSULTA SEO PRINCIPAL');
+          return {
+            system: `STEP 3/9: QUERY 1 - CONSULTA SEO PRINCIPAL
 
 Execute a primeira query SQL para obter dados de performance de keywords SEO. APENAS execute a query - NÃO analise os resultados neste step.
 
@@ -192,18 +215,18 @@ Execute a primeira query SQL para obter dados de performance de keywords SEO. AP
 
 **ALWAYS use:** Dataset SEO disponível (search_console, seo_data, keywords, etc.)
 
-**IMPORTANTE:** Este é um step de coleta de dados SEO. A análise será feita no Step 3.`,
+**IMPORTANTE:** Este é um step de coleta de dados SEO. A análise será feita no Step 4.`,
             tools: {
               executarSQL: bigqueryTools.executarSQL
             }
           };
 
-        case 3:
-          console.log('🎯 STEP 3/8: ANÁLISE + GRÁFICO SEO 1');
+        case 4:
+          console.log('🎯 STEP 4/9: ANÁLISE + GRÁFICO SEO 1');
           return {
-            system: `STEP 3/8: ANÁLISE + GRÁFICO SEO 1 - ANÁLISE DOS DADOS DA QUERY 1
+            system: `STEP 4/9: ANÁLISE + GRÁFICO SEO 1 - ANÁLISE DOS DADOS DA QUERY 1
 
-Analise os dados de keywords obtidos na Query 1 (Step 2) e crie visualização estratégica se apropriado.
+Analise os dados de keywords obtidos na Query 1 (Step 3) e crie visualização estratégica se apropriado.
 
 🔍 **ANÁLISE ESTRATÉGICA DOS DADOS SEO:**
 - Compare CTR entre keywords do mesmo search intent
@@ -214,7 +237,7 @@ Analise os dados de keywords obtidos na Query 1 (Step 2) e crie visualização e
 - Analise competitor keyword advantages
 
 🔧 **PROCESSO:**
-1. Analise os dados JSON de keywords obtidos no Step 2
+1. Analise os dados JSON de keywords obtidos no Step 3
 2. Identifique patterns de keyword performance, anomalias, opportunities
 3. Gere insights estratégicos sobre content optimization e keyword targeting
 4. Destaque keywords candidatas a optimization ou new content creation
@@ -240,21 +263,21 @@ Use criarGrafico() quando fizer sentido estratégico para o insight SEO.
             }
           };
 
-        case 4:
-          console.log('🎯 STEP 4/8: QUERY 2 - CONSULTA SEO COMPLEMENTAR');
+        case 5:
+          console.log('🎯 STEP 5/9: QUERY 2 - CONSULTA SEO COMPLEMENTAR');
           return {
-            system: `STEP 4/8: QUERY 2 - CONSULTA SEO COMPLEMENTAR
+            system: `STEP 5/9: QUERY 2 - CONSULTA SEO COMPLEMENTAR
 
 Execute a segunda query SQL baseada nos insights SEO da análise anterior. APENAS execute a query - NÃO analise os resultados neste step.
 
 🎯 **FOCO DA CONSULTA SEO:**
-- Base-se nos padrões de keywords identificados no Step 3
+- Base-se nos padrões de keywords identificados no Step 4
 - Aprofunde análise temporal de keywords, correlações de search intent, ou segmentações específicas
 - Investigue patterns de keyword performance identificados anteriormente
 - Obtenha dados SEO complementares para análise mais rica
 
 🔧 **PROCESSO:**
-1. Execute executarSQL() com query que complementa os dados SEO do Step 2
+1. Execute executarSQL() com query que complementa os dados SEO do Step 3
 2. APENAS execute - sem análise neste step
 3. Os dados de keywords serão analisados no próximo step
 
@@ -268,28 +291,28 @@ Execute a segunda query SQL baseada nos insights SEO da análise anterior. APENA
 - Competitor keyword positioning analysis
 - Featured snippet opportunities identification
 
-**IMPORTANTE:** Este é um step de coleta de dados SEO. A análise será feita no Step 5.`,
+**IMPORTANTE:** Este é um step de coleta de dados SEO. A análise será feita no Step 6.`,
             tools: {
               executarSQL: bigqueryTools.executarSQL
             }
           };
 
-        case 5:
-          console.log('🎯 STEP 5/8: ANÁLISE + GRÁFICO SEO 2');
+        case 6:
+          console.log('🎯 STEP 6/9: ANÁLISE + GRÁFICO SEO 2');
           return {
-            system: `STEP 5/8: ANÁLISE + GRÁFICO SEO 2 - ANÁLISE DOS DADOS DA QUERY 2
+            system: `STEP 6/9: ANÁLISE + GRÁFICO SEO 2 - ANÁLISE DOS DADOS DA QUERY 2
 
-Analise os dados de keywords obtidos na Query 2 (Step 4) e crie visualização estratégica se apropriado.
+Analise os dados de keywords obtidos na Query 2 (Step 5) e crie visualização estratégica se apropriado.
 
 🔍 **ANÁLISE ESTRATÉGICA DOS DADOS SEO:**
-- Correlacione com findings SEO do Step 3 para insights mais ricos
+- Correlacione com findings SEO do Step 4 para insights mais ricos
 - Identifique causas raíz de keyword performance patterns
 - Desenvolva recomendações estratégicas SEO mais específicas
 - Aprofunde análise temporal de keywords, correlações, segmentações
 
 🔧 **PROCESSO:**
-1. Analise os dados JSON de keywords obtidos no Step 4
-2. Correlacione com insights SEO anteriores do Step 3
+1. Analise os dados JSON de keywords obtidos no Step 5
+2. Correlacione com insights SEO anteriores do Step 4
 3. Identifique padrões de keywords mais profundos e correlações
 4. Desenvolva insights estratégicos SEO complementares
 
@@ -319,10 +342,10 @@ Use criarGrafico() quando fizer sentido estratégico para o insight SEO.
             }
           };
 
-        case 6:
-          console.log('🎯 STEP 6/8: QUERY 3 - CONSULTA SEO FINAL');
+        case 7:
+          console.log('🎯 STEP 7/9: QUERY 3 - CONSULTA SEO FINAL');
           return {
-            system: `STEP 6/8: QUERY 3 - CONSULTA SEO FINAL
+            system: `STEP 7/9: QUERY 3 - CONSULTA SEO FINAL
 
 Execute a terceira query SQL para completar gaps analíticos SEO e obter dados finais. APENAS execute a query - NÃO analise os resultados neste step.
 
@@ -347,27 +370,27 @@ Execute a terceira query SQL para completar gaps analíticos SEO e obter dados f
 - Priority ranking das keyword optimization opportunities
 - Technical SEO improvements para keyword performance
 
-**IMPORTANTE:** Este é um step de coleta de dados SEO. A análise será feita no Step 7.`,
+**IMPORTANTE:** Este é um step de coleta de dados SEO. A análise será feita no Step 8.`,
             tools: {
               executarSQL: bigqueryTools.executarSQL
             }
           };
 
-        case 7:
-          console.log('🎯 STEP 7/8: ANÁLISE + GRÁFICO SEO 3');
+        case 8:
+          console.log('🎯 STEP 8/9: ANÁLISE + GRÁFICO SEO 3');
           return {
-            system: `STEP 7/8: ANÁLISE + GRÁFICO SEO 3 - ANÁLISE DOS DADOS DA QUERY 3
+            system: `STEP 8/9: ANÁLISE + GRÁFICO SEO 3 - ANÁLISE DOS DADOS DA QUERY 3
 
-Analise os dados de keywords obtidos na Query 3 (Step 6) e crie visualização estratégica se apropriado. Consolide insights SEO de todos os steps para preparar o resumo executivo.
+Analise os dados de keywords obtidos na Query 3 (Step 7) e crie visualização estratégica se apropriado. Consolide insights SEO de todos os steps para preparar o resumo executivo.
 
 🔍 **ANÁLISE ESTRATÉGICA SEO FINAL:**
-- Integre insights SEO com achados dos steps anteriores (3 e 5)
+- Integre insights SEO com achados dos steps anteriores (4 e 6)
 - Consolide keyword performance patterns em strategic narrative
 - Prepare foundation para recomendações de content optimization
 - Quantifique impact potential das keyword opportunities identificadas
 
 🔧 **PROCESSO:**
-1. Analise os dados JSON de keywords obtidos no Step 6
+1. Analise os dados JSON de keywords obtidos no Step 7
 2. Integre com todos os insights SEO anteriores
 3. Consolide todos os padrões de keywords identificados
 4. Prepare insights SEO finais para o resumo executivo
@@ -398,10 +421,10 @@ Use criarGrafico() quando fizer sentido estratégico para o insight SEO.
             }
           };
 
-        case 8:
-          console.log('🎯 STEP 8/8: RESUMO EXECUTIVO + SEO STRATEGIC RECOMMENDATIONS');
+        case 9:
+          console.log('🎯 STEP 9/9: RESUMO EXECUTIVO + SEO STRATEGIC RECOMMENDATIONS');
           return {
-            system: `STEP 8/8: RESUMO EXECUTIVO + SEO STRATEGIC RECOMMENDATIONS
+            system: `STEP 9/9: RESUMO EXECUTIVO + SEO STRATEGIC RECOMMENDATIONS
 
 Consolide TODOS os insights SEO dos steps anteriores em síntese executiva focada em organic traffic impact e keyword optimization.
 
@@ -460,7 +483,7 @@ Consolide TODOS os insights SEO dos steps anteriores em síntese executiva focad
     },
     
     // StopWhen inteligente baseado na classificação de complexidade
-    stopWhen: stepCountIs(8),
+    stopWhen: stepCountIs(9),
     providerOptions: {
       anthropic: {
         thinking: { type: 'enabled', budgetTokens: 15000 }
