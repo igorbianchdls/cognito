@@ -15,7 +15,7 @@ export default function GoogleAdsIcon({ className = "w-4 h-4", backgroundColor =
       enableBackground="new 0 0 510 510" 
       viewBox="0 0 510 510"
     >
-      <rect width="510" height="510" fill={backgroundColor} rx="50"/>
+      <rect width="510" height="510" fill="transparent" rx="50"/>
       <linearGradient id="SVGID_1_" x1="-150.076" x2="-11.6" y1="211.162" y2="287.973" gradientTransform="matrix(-1 0 0 1 273.535 0)" gradientUnits="userSpaceOnUse">
         <stop offset="0" stopColor="#28a265"></stop>
         <stop offset="1" stopColor="#28895e"></stop>

@@ -12,7 +12,7 @@ export default function GoogleAnalyticsIcon({ className = "w-4 h-4", backgroundC
       id="google-analytics" 
       viewBox="0 0 152.1 152"
     >
-      <rect width="152.1" height="152" fill={backgroundColor} rx="12"/>
+      <rect width="152.1" height="152" fill="transparent" rx="12"/>
       <linearGradient id="SVGID_1_" x2="152.1" y1="77.32" y2="77.32" gradientTransform="matrix(1 0 0 -1 0 153.32)" gradientUnits="userSpaceOnUse">
         <stop offset="0" stopColor="#fff" stopOpacity=".1"></stop>
         <stop offset="1" stopColor="#fff" stopOpacity="0"></stop>

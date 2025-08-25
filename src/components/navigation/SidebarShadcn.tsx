@@ -121,7 +121,7 @@ export function SidebarShadcn({ ...props }: React.ComponentProps<typeof Sidebar>
             {navigationData.integrations.map((integration) => (
               <SidebarMenuItem key={integration.title}>
                 <SidebarMenuButton tooltip={integration.title}>
-                  <integration.icon className="w-4 h-4" backgroundColor="hsl(var(--sidebar))" />
+                  <integration.icon className="w-4 h-4" backgroundColor="transparent" />
                   <span>{integration.title}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
