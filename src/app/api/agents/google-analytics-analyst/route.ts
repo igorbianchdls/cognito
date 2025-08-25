@@ -131,9 +131,9 @@ Focus em strategic recommendations que impactem user experience e business growt
 
       switch (stepNumber) {
         case 1:
-          console.log('📊 STEP 1/6: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
+          console.log('📊 STEP 1/8: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
           return {
-            system: `STEP 1/6: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
+            system: `STEP 1/8: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
 
 Você é um especialista em Google Analytics 4 focado em user behavior, customer journey e business intelligence. Analise a demanda do usuário E classifique a complexidade para otimizar o workflow.
 
@@ -146,19 +146,19 @@ Você é um especialista em Google Analytics 4 focado em user behavior, customer
 
 🎯 **CLASSIFICAÇÃO OBRIGATÓRIA:**
 
-**CONTEXTUAL** (pula para Step 6 - resumo direto):
+**CONTEXTUAL** (pula para Step 8 - resumo direto):
 - Perguntas sobre análises GA4 já realizadas na conversa
 - Esclarecimentos sobre insights ou gráficos já mostrados
 - Interpretação de dados de user behavior já apresentados
 - Ex: "o que significa engagement rate baixo?", "por que canal X está convertendo melhor?", "como interpretar cohort analysis?"
 
-**SIMPLES** (3-4 steps):
+**SIMPLES** (4-5 steps):
 - Pergunta específica sobre 1-2 métricas ou eventos pontuais
 - Análise direta sem necessidade de deep dive em customer journey
 - Resposta focada sem múltiplas correlações de user behavior
 - Ex: "users da página homepage?", "qual canal tem melhor conversion rate?", "eventos de purchase último mês", "bounce rate da landing page X"
 
-**COMPLEXA** (6 steps completos):
+**COMPLEXA** (8 steps completos):
 - Análise estratégica multi-dimensional de user behavior
 - Customer journey mapping e attribution analysis
 - Identificação de funnel drop-offs e channel optimization opportunities
@@ -174,29 +174,40 @@ Você é um especialista em Google Analytics 4 focado em user behavior, customer
           };
 
         case 2:
-          console.log('🎯 STEP 2/6: QUERY BASE + ANÁLISE DE USER BEHAVIOR');
+          console.log('🎯 STEP 2/8: QUERY 1 - CONSULTA GA4 PRINCIPAL');
           return {
-            system: `STEP 2/6: QUERY BASE + ANÁLISE IMEDIATA DE USER BEHAVIOR
+            system: `STEP 2/8: QUERY 1 - CONSULTA GA4 PRINCIPAL
 
-Execute a query SQL principal para obter dados de Google Analytics 4 e IMEDIATAMENTE analise os resultados no mesmo response.
+Execute a primeira query SQL para obter dados de Google Analytics 4. APENAS execute a query - NÃO analise os resultados neste step.
 
-📊 **FOCO DE USER BEHAVIOR ANALYTICS:**
+📊 **FOCO DA CONSULTA GA4:**
 - Priorize métricas de engagement: users, sessions, engagement rate, conversion rate
-- Identifique top performing vs underperforming channels/pages
-- Analise customer journey patterns e touchpoint effectiveness
-- Detecte drop-offs no funnel e oportunidades de user experience optimization
-- Correlacione traffic sources com conversion performance
+- Identifique dados principais de user behavior e suas métricas core
+- Obtenha dados de customer journey patterns e touchpoint effectiveness
+- Capture métricas fundamentais GA4 para análise posterior
+- Correlacione traffic sources com dados base de performance
 
-🔧 **PROCESSO OBRIGATÓRIO:**
+🔧 **PROCESSO:**
 1. Execute executarSQL() com query focada na demanda GA4 do usuário
-2. IMEDIATAMENTE após ver os dados JSON, analise no mesmo response
-3. Identifique patterns de user behavior, anomalias, conversion opportunities
-4. Gere insights estratégicos sobre customer journey e channel effectiveness
-5. Destaque páginas/canais candidatos a optimization ou investment scaling
+2. APENAS execute - sem análise neste step
+3. Os dados de user behavior serão analisados no próximo step
 
 **ALWAYS use:** \`FROM \`creatto-463117.biquery_data.ga4_events\`\`
 
-📊 **ANÁLISE ESTRATÉGICA IMEDIATA:**
+**IMPORTANTE:** Este é um step de coleta de dados GA4. A análise será feita no Step 3.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 3:
+          console.log('🎯 STEP 3/8: ANÁLISE + GRÁFICO GA4 1');
+          return {
+            system: `STEP 3/8: ANÁLISE + GRÁFICO GA4 1 - ANÁLISE DOS DADOS DA QUERY 1
+
+Analise os dados de GA4 obtidos na Query 1 (Step 2) e crie visualização estratégica se apropriado.
+
+📊 **ANÁLISE ESTRATÉGICA DOS DADOS GA4:**
 - Compare conversion rates entre traffic sources
 - Identifique content gaps (high exit rates, low engagement)
 - Detecte user journey optimization opportunities (funnel drop-offs)
@@ -204,40 +215,85 @@ Execute a query SQL principal para obter dados de Google Analytics 4 e IMEDIATAM
 - Sinalize seasonal trends e user behavior consistency issues
 - Analise cross-device user journey patterns
 
+🔧 **PROCESSO:**
+1. Analise os dados JSON de GA4 obtidos no Step 2
+2. Identifique patterns de user behavior, anomalias, conversion opportunities
+3. Gere insights estratégicos sobre customer journey e channel effectiveness
+4. Destaque páginas/canais candidatos a optimization ou investment scaling
+
+📊 **INSIGHTS GA4 PRIORITÁRIOS:**
+- Top performing vs underperforming channels/pages
+- Customer journey patterns e touchpoint effectiveness detectados
+- Drop-offs no funnel e oportunidades de user experience optimization
+- Correlações entre traffic sources e conversion performance
+
 📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
+Considere criar um gráfico GA4 SE:
 - Os dados são visuais por natureza (comparações, rankings, trends)
 - O volume é adequado para visualização clara
 - O gráfico adicionaria clareza aos insights de user behavior
 - Não force - só crie se realmente agregar valor
 
-Use criarGrafico() quando fizer sentido estratégico para o insight GA4.`,
+Use criarGrafico() quando fizer sentido estratégico para o insight GA4.
+
+**IMPORTANTE:** Este step é só para análise GA4. Novas queries serão feitas nos próximos steps.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL,
               criarGrafico: analyticsTools.criarGrafico
             }
           };
 
-        case 3:
-          console.log('🎯 STEP 3/6: QUERY COMPLEMENTAR + DEEP USER BEHAVIOR ANALYSIS');
+        case 4:
+          console.log('🎯 STEP 4/8: QUERY 2 - CONSULTA GA4 COMPLEMENTAR');
           return {
-            system: `STEP 3/6: QUERY COMPLEMENTAR + ANÁLISE ESTRATÉGICA DE USER BEHAVIOR PROFUNDA
+            system: `STEP 4/8: QUERY 2 - CONSULTA GA4 COMPLEMENTAR
 
-Execute query complementar baseada nos insights GA4 do Step 2 e conduza análise estratégica mais profunda.
+Execute a segunda query SQL baseada nos insights GA4 da análise anterior. APENAS execute a query - NÃO analise os resultados neste step.
 
-🎯 **FOQUE EM INSIGHTS GA4 DO STEP ANTERIOR:**
-- Use os top/bottom performing channels/pages identificados no Step 2
+🎯 **FOCO DA CONSULTA GA4:**
+- Base-se nos padrões de user behavior identificados no Step 3
 - Aprofunde análise de customer journey, attribution analysis, ou cohort segmentation
 - Investigue patterns de user behavior identificados anteriormente
+- Obtenha dados GA4 complementares para análise mais rica
 
 🔧 **PROCESSO:**
-1. Execute executarSQL() com query que complementa/aprofunda análise GA4 do Step 2
-2. IMEDIATAMENTE analise os novos dados no contexto dos insights anteriores
-3. Correlacione com findings do Step 2 para insights de user behavior mais ricos
-4. Identifique causas raíz de conversion patterns e user journey issues
-5. Desenvolva recomendações estratégicas de user experience mais específicas
+1. Execute executarSQL() com query que complementa os dados GA4 do Step 2
+2. APENAS execute - sem análise neste step
+3. Os dados de user behavior serão analisados no próximo step
 
 **ALWAYS use:** \`FROM \`creatto-463117.biquery_data.ga4_events\`\`
+
+**EXEMPLOS DE QUERIES GA4 COMPLEMENTARES:**
+- Temporal analysis dos top performing channels/content identificados
+- Correlação user engagement vs conversion outcomes
+- Segmentação de performance por user demographics e behavior
+- Cross-channel attribution e customer journey mapping
+- Cohort analysis e user retention patterns
+- Funnel analysis e drop-off identification por user segment
+
+**IMPORTANTE:** Este é um step de coleta de dados GA4. A análise será feita no Step 5.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 5:
+          console.log('🎯 STEP 5/8: ANÁLISE + GRÁFICO GA4 2');
+          return {
+            system: `STEP 5/8: ANÁLISE + GRÁFICO GA4 2 - ANÁLISE DOS DADOS DA QUERY 2
+
+Analise os dados de GA4 obtidos na Query 2 (Step 4) e crie visualização estratégica se apropriado.
+
+📊 **ANÁLISE ESTRATÉGICA DOS DADOS GA4:**
+- Correlacione com findings GA4 do Step 3 para insights mais ricos
+- Identifique causas raíz de conversion patterns e user journey issues
+- Desenvolva recomendações estratégicas de user experience mais específicas
+- Aprofunde análise de customer journey, attribution analysis, cohort segmentation
+
+🔧 **PROCESSO:**
+1. Analise os dados JSON de GA4 obtidos no Step 4
+2. Correlacione com insights GA4 anteriores do Step 3
+3. Identifique padrões de user behavior mais profundos e correlações
+4. Desenvolva insights estratégicos GA4 complementares
 
 📊 **ANÁLISES GA4 ESPECIALIZADAS:**
 - Temporal analysis dos top performing channels/content
@@ -251,39 +307,72 @@ Execute query complementar baseada nos insights GA4 do Step 2 e conduza análise
 - Content performance e internal user flow analysis
 
 📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
+Considere criar um gráfico GA4 SE:
 - Os dados são visuais por natureza (comparações, rankings, trends)
 - O volume é adequado para visualização clara
 - O gráfico adicionaria clareza aos insights GA4
 - Não force - só crie se realmente agregar valor
 
-Use criarGrafico() quando fizer sentido estratégico para o insight GA4.`,
+Use criarGrafico() quando fizer sentido estratégico para o insight GA4.
+
+**IMPORTANTE:** Este step é só para análise GA4. Nova query será feita no próximo step.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL,
               criarGrafico: analyticsTools.criarGrafico
             }
           };
 
-        case 4:
-          console.log('🎯 STEP 4/6: QUERY ESTRATÉGICA FINAL + INSIGHTS CONSOLIDADOS');
+        case 6:
+          console.log('🎯 STEP 6/8: QUERY 3 - CONSULTA GA4 FINAL');
           return {
-            system: `STEP 4/6: QUERY ESTRATÉGICA FINAL + CONSOLIDAÇÃO DE INSIGHTS GA4
+            system: `STEP 6/8: QUERY 3 - CONSULTA GA4 FINAL
 
-Execute query estratégica final para completar a análise GA4 e consolide todos os insights para user experience recommendations finais.
+Execute a terceira query SQL para completar gaps analíticos GA4 e obter dados finais. APENAS execute a query - NÃO analise os resultados neste step.
 
-🎯 **COMPLEMENTAR ANÁLISE GA4 ANTERIOR:**
-- Base-se nos padrões e opportunities identificados nos Steps 2 e 3
+🎯 **FOCO DA CONSULTA GA4:**
+- Base-se nos padrões de user behavior e opportunities identificados nos Steps anteriores
 - Foque em gaps de análise GA4 que ainda precisam ser preenchidos
 - Investigue correlações ou validações necessárias para user experience recommendations sólidas
+- Obtenha dados GA4 finais para consolidação estratégica
 
-🔧 **PROCESSO FINAL:**
+🔧 **PROCESSO:**
 1. Execute executarSQL() com query que fecha lacunas analíticas GA4 restantes
-2. IMEDIATAMENTE integre insights com achados dos steps anteriores
-3. Consolide user behavior patterns em strategic narrative
-4. Prepare foundation para recomendações de business optimization
-5. Quantifique impact potential das user experience opportunities identificadas
+2. APENAS execute - sem análise neste step
+3. Os dados de user behavior serão analisados no próximo step
 
 **ALWAYS use:** \`FROM \`creatto-463117.biquery_data.ga4_events\`\`
+
+**EXEMPLOS DE QUERIES GA4 FINAIS:**
+- User experience optimization opportunities com impact quantificado
+- Channel investment readiness assessment dos top performers
+- Content optimization recommendations baseadas em user behavior
+- Expected conversion rate impact das mudanças propostas
+- Priority ranking das business optimization opportunities
+- Attribution modeling insights para cross-channel strategy
+
+**IMPORTANTE:** Este é um step de coleta de dados GA4. A análise será feita no Step 7.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 7:
+          console.log('🎯 STEP 7/8: ANÁLISE + GRÁFICO GA4 3');
+          return {
+            system: `STEP 7/8: ANÁLISE + GRÁFICO GA4 3 - ANÁLISE DOS DADOS DA QUERY 3
+
+Analise os dados de GA4 obtidos na Query 3 (Step 6) e crie visualização estratégica se apropriado. Consolide insights GA4 de todos os steps para preparar o resumo executivo.
+
+📊 **ANÁLISE ESTRATÉGICA GA4 FINAL:**
+- Integre insights GA4 com achados dos steps anteriores (3 e 5)
+- Consolide user behavior patterns em strategic narrative
+- Prepare foundation para recomendações de business optimization
+- Quantifique impact potential das user experience opportunities identificadas
+
+🔧 **PROCESSO:**
+1. Analise os dados JSON de GA4 obtidos no Step 6
+2. Integre com todos os insights GA4 anteriores
+3. Consolide todos os padrões de user behavior identificados
+4. Prepare insights GA4 finais para o resumo executivo
 
 📊 **CONSOLIDAÇÃO ESTRATÉGICA GA4:**
 - User experience optimization opportunities com impact quantificado
@@ -297,73 +386,24 @@ Execute query estratégica final para completar a análise GA4 e consolide todos
 - Cohort-based retention improvement recommendations
 
 📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
+Considere criar um gráfico GA4 final SE:
 - Os dados são visuais por natureza (comparações, rankings, trends)
 - O volume é adequado para visualização clara
-- O gráfico adicionaria clareza aos insights GA4
+- O gráfico adicionaria clareza aos insights GA4 consolidados
 - Não force - só crie se realmente agregar valor
 
-Use criarGrafico() quando fizer sentido estratégico para o insight GA4.`,
-            tools: {
-              executarSQL: bigqueryTools.executarSQL,
-              criarGrafico: analyticsTools.criarGrafico
-            }
-          };
+Use criarGrafico() quando fizer sentido estratégico para o insight GA4.
 
-        case 5:
-          console.log('🎯 STEP 5/6: VISUALIZAÇÃO ESTRATÉGICA DE USER BEHAVIOR');
-          return {
-            system: `STEP 5/6: VISUALIZAÇÃO ESTRATÉGICA DE USER BEHAVIOR
-
-Crie visualização que melhor representa os insights de user behavior e suporta as recomendações estratégicas GA4 identificadas nos steps anteriores.
-
-📊 **ESCOLHA INTELIGENTE DE GRÁFICO GA4:**
-Baseado na análise GA4 dos steps 2-4, escolha a visualização mais impactful:
-
-**Bar Chart (Vertical/Horizontal):**
-- User behavior ranking: conversion rate, engagement comparison entre channels/pages
-- Traffic source effectiveness: users vs conversions por channel
-- Máximo: 8 channels/pages (vertical) ou 15 (horizontal)
-
-**Line Chart:**
-- User behavior trends temporais: evolution de engagement ao longo do tempo
-- Cohort analysis: user retention patterns
-- Máximo: 5 metrics simultâneas, 100 pontos temporais
-
-**Scatter Plot:**
-- Correlações GA4: Session duration vs conversion rate, Users vs Revenue
-- Identificação de channel efficiency frontier
-- Page performance analysis: engagement vs conversion correlation
-- Máximo: 50 pages/channels
-
-**Pie Chart:**
-- Traffic source distribution por volume ou conversion
-- User segment share por behavior category
-- Máximo: 6 fatias (mín. 2% cada)
-
-**Heatmap:**
-- Performance por day x hour matrix
-- Cross-device user behavior patterns
-
-🔧 **PROCESS:**
-1. Use criarGrafico() com dados GA4 dos steps anteriores
-2. Escolha tipo de gráfico que melhor suporta suas user experience recommendations
-3. Foque em visualizar user behavior gaps e business opportunities
-4. Prepare para sustentar arguments do resumo executivo GA4
-
-**REGRAS CRÍTICAS:**
-- Se dados excedem limites → Top N performers + "Outros"
-- Always respect visualization limits por tipo de gráfico
-- Choose chart type que melhor suporta user behavior strategic narrative`,
+**IMPORTANTE:** Este é o último step de análise GA4 antes do resumo executivo.`,
             tools: {
               criarGrafico: analyticsTools.criarGrafico
             }
           };
 
-        case 6:
-          console.log('🎯 STEP 6/6: RESUMO EXECUTIVO + GA4 STRATEGIC RECOMMENDATIONS');
+        case 8:
+          console.log('🎯 STEP 8/8: RESUMO EXECUTIVO + GA4 STRATEGIC RECOMMENDATIONS');
           return {
-            system: `STEP 6/6: RESUMO EXECUTIVO + GA4 STRATEGIC RECOMMENDATIONS
+            system: `STEP 8/8: RESUMO EXECUTIVO + GA4 STRATEGIC RECOMMENDATIONS
 
 Consolide TODOS os insights GA4 dos steps anteriores em síntese executiva focada em business impact e user experience optimization.
 
@@ -422,7 +462,7 @@ Consolide TODOS os insights GA4 dos steps anteriores em síntese executiva focad
     },
     
     // StopWhen inteligente baseado na classificação de complexidade
-    stopWhen: stepCountIs(6),
+    stopWhen: stepCountIs(8),
     providerOptions: {
       anthropic: {
         thinking: { type: 'enabled', budgetTokens: 15000 }
