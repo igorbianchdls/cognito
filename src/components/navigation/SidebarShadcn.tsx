@@ -1,42 +1,51 @@
 "use client"
 
 import * as React from "react"
-import { useRouter, usePathname } from "next/navigation"
+import { usePathname } from "next/navigation"
 import {
   MessageSquare,
   LayoutGrid,
   Users,
   Sheet,
   Database,
-  User
+  GalleryVerticalEnd,
 } from "lucide-react"
 
+import { NavMainSimple } from "@/components/navigation/nav-main-simple"
+import { NavUser } from "@/components/nav-user"
+import { TeamSwitcher } from "@/components/team-switcher"
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
   SidebarRail,
 } from "@/components/ui/sidebar"
 
-// Navigation data adapted from the current sidebar
+// Navigation data adapted to shadcn format
 const navigationData = {
   user: {
     name: "Usuário",
-    avatar: "U",
+    email: "usuario@exemplo.com",
+    avatar: "/avatars/user.jpg", // fallback will show initials
   },
-  navItems: [
+  teams: [
+    {
+      name: "Creatto",
+      logo: GalleryVerticalEnd,
+      plan: "Professional",
+    },
+  ],
+  navMain: [
     {
       title: "Nexus",
       url: "/nexus",
       icon: MessageSquare,
+      isActive: false, // Will be set dynamically
     },
     {
-      title: "Apps",
-      url: "/apps", 
+      title: "Apps", 
+      url: "/apps",
       icon: LayoutGrid,
     },
     {
@@ -58,60 +67,30 @@ const navigationData = {
 }
 
 export function SidebarShadcn({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const router = useRouter()
   const pathname = usePathname()
 
-  const handleNavigation = (url: string) => {
-    router.push(url)
+  // Update active state based on current path
+  const navMainWithActiveState = navigationData.navMain.map(item => ({
+    ...item,
+    isActive: pathname === item.url
+  }))
+
+  const dataWithActiveState = {
+    ...navigationData,
+    navMain: navMainWithActiveState
   }
 
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        {/* Logo Section */}
-        <div className="flex h-14 items-center justify-center">
-          <div className="w-7 h-7 bg-[#1a73e8] rounded-lg flex items-center justify-center">
-            <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-            </svg>
-          </div>
-        </div>
+        <TeamSwitcher teams={dataWithActiveState.teams} />
       </SidebarHeader>
-
       <SidebarContent>
-        <SidebarMenu>
-          {navigationData.navItems.map((item) => (
-            <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton
-                tooltip={item.title}
-                onClick={() => handleNavigation(item.url)}
-                isActive={pathname === item.url}
-              >
-                <item.icon />
-                <span>{item.title}</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
+        <NavMainSimple items={dataWithActiveState.navMain} />
       </SidebarContent>
-
       <SidebarFooter>
-        {/* User Profile */}
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip="Perfil"
-              onClick={() => console.log('Perfil')}
-            >
-              <div className="w-4 h-4 bg-[#1a73e8] rounded-full flex items-center justify-center">
-                <User className="w-3 h-3 text-white" />
-              </div>
-              <span>Perfil</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <NavUser user={dataWithActiveState.user} />
       </SidebarFooter>
-      
       <SidebarRail />
     </Sidebar>
   )
