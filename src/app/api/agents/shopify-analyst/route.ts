@@ -142,9 +142,9 @@ Sempre estruture: current store performance → traffic/conversion analysis → 
 
       switch (stepNumber) {
         case 1:
-          console.log('📊 STEP 1/6: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
+          console.log('📊 STEP 1/8: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
           return {
-            system: `STEP 1/6: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
+            system: `STEP 1/8: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
 
 Você é um especialista em Shopify store performance focado em conversion optimization, customer acquisition e revenue growth. Analise a demanda do usuário E classifique a complexidade para otimizar o workflow.
 
@@ -157,19 +157,19 @@ Você é um especialista em Shopify store performance focado em conversion optim
 
 🎯 **CLASSIFICAÇÃO OBRIGATÓRIA:**
 
-**CONTEXTUAL** (pula para Step 6 - resumo direto):
+**CONTEXTUAL** (pula para Step 8 - resumo direto):
 - Perguntas sobre análises de Shopify já realizadas na conversa
 - Esclarecimentos sobre insights ou gráficos já mostrados
 - Interpretação de dados de e-commerce já apresentados
 - Ex: "o que significa conversion rate baixo?", "por que AOV diminuiu?", "como interpretar cart abandonment?"
 
-**SIMPLES** (3-4 steps):
+**SIMPLES** (4-5 steps):
 - Pergunta específica sobre 1-2 produtos/métricas pontuais de Shopify
 - Análise direta sem necessidade de deep dive em e-commerce strategy
 - Resposta focada sem múltiplas correlações de store performance
 - Ex: "conversion rate do produto A?", "qual produto tem melhor AOV?", "CAC por traffic source", "performance da Black Friday"
 
-**COMPLEXA** (6 steps completos):
+**COMPLEXA** (8 steps completos):
 - Análise estratégica multi-dimensional de Shopify store performance
 - E-commerce optimization e customer journey improvement strategies
 - Identificação de conversion opportunities e customer retention gaps
@@ -185,29 +185,40 @@ Você é um especialista em Shopify store performance focado em conversion optim
           };
 
         case 2:
-          console.log('🎯 STEP 2/6: QUERY BASE + ANÁLISE DE SHOPIFY STORE PERFORMANCE');
+          console.log('🎯 STEP 2/8: QUERY 1 - CONSULTA SHOPIFY PRINCIPAL');
           return {
-            system: `STEP 2/6: QUERY BASE + ANÁLISE IMEDIATA DE SHOPIFY STORE PERFORMANCE
+            system: `STEP 2/8: QUERY 1 - CONSULTA SHOPIFY PRINCIPAL
 
-Execute a query SQL principal para obter dados de Shopify store performance e IMEDIATAMENTE analise os resultados no mesmo response.
+Execute a primeira query SQL para obter dados de Shopify store performance. APENAS execute a query - NÃO analise os resultados neste step.
 
-🛒 **FOCO DE SHOPIFY STORE PERFORMANCE:**
+🛒 **FOCO DA CONSULTA SHOPIFY:**
 - Priorize métricas de e-commerce success: conversion rate, AOV, customer acquisition effectiveness
-- Identifique top performing vs underperforming products e traffic sources
-- Analise sales funnel efficiency e cart abandonment patterns
-- Detecte customer behavior issues e retention opportunities
-- Correlacione marketing spend com customer acquisition e lifetime value
+- Identifique dados principais da loja e suas métricas core de performance
+- Obtenha dados de sales funnel efficiency e cart abandonment patterns
+- Capture métricas fundamentais Shopify para análise posterior
+- Correlacione marketing spend com dados base de customer acquisition
 
-🔧 **PROCESSO OBRIGATÓRIO:**
+🔧 **PROCESSO:**
 1. Execute executarSQL() com query focada na demanda de Shopify do usuário
-2. IMEDIATAMENTE após ver os dados JSON, analise no mesmo response
-3. Identifique patterns de store performance, anomalias, conversion opportunities
-4. Gere insights estratégicos sobre e-commerce optimization e customer strategies
-5. Destaque products/channels candidatos a optimization ou investment prioritário
+2. APENAS execute - sem análise neste step
+3. Os dados da loja serão analisados no próximo step
 
 **ALWAYS use:** \`FROM \`creatto-463117.biquery_data.shopify_store\`\`
 
-🛒 **ANÁLISE ESTRATÉGICA IMEDIATA:**
+**IMPORTANTE:** Este é um step de coleta de dados Shopify. A análise será feita no Step 3.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 3:
+          console.log('🎯 STEP 3/8: ANÁLISE + GRÁFICO SHOPIFY 1');
+          return {
+            system: `STEP 3/8: ANÁLISE + GRÁFICO SHOPIFY 1 - ANÁLISE DOS DADOS DA QUERY 1
+
+Analise os dados de Shopify obtidos na Query 1 (Step 2) e crie visualização estratégica se apropriado.
+
+🛒 **ANÁLISE ESTRATÉGICA DOS DADOS SHOPIFY:**
 - Compare conversion rates entre traffic sources e identify acquisition quality
 - Identifique funnel gaps (high traffic, low conversion, cart abandonment issues)
 - Detecte product performance opportunities (bestsellers vs underperformers)
@@ -215,40 +226,85 @@ Execute a query SQL principal para obter dados de Shopify store performance e IM
 - Sinalize seasonal e-commerce trends e holiday preparation needs
 - Analise customer behavior patterns e retention improvement opportunities
 
+🔧 **PROCESSO:**
+1. Analise os dados JSON de Shopify obtidos no Step 2
+2. Identifique patterns de store performance, anomalias, conversion opportunities
+3. Gere insights estratégicos sobre e-commerce optimization e customer strategies
+4. Destaque products/channels candidatos a optimization ou investment prioritário
+
+🛒 **INSIGHTS SHOPIFY PRIORITÁRIOS:**
+- Top performing vs underperforming products e traffic sources
+- Sales funnel efficiency e cart abandonment patterns detectados
+- Customer behavior issues e retention opportunities identificadas
+- Marketing spend correlation com customer acquisition e lifetime value
+
 📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
+Considere criar um gráfico Shopify SE:
 - Os dados são visuais por natureza (comparações, rankings, trends)
 - O volume é adequado para visualização clara
 - O gráfico adicionaria clareza aos insights de Shopify
 - Não force - só crie se realmente agregar valor
 
-Use criarGrafico() quando fizer sentido estratégico para o insight de Shopify.`,
+Use criarGrafico() quando fizer sentido estratégico para o insight de Shopify.
+
+**IMPORTANTE:** Este step é só para análise Shopify. Novas queries serão feitas nos próximos steps.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL,
               criarGrafico: analyticsTools.criarGrafico
             }
           };
 
-        case 3:
-          console.log('🎯 STEP 3/6: QUERY COMPLEMENTAR + DEEP SHOPIFY STORE ANALYSIS');
+        case 4:
+          console.log('🎯 STEP 4/8: QUERY 2 - CONSULTA SHOPIFY COMPLEMENTAR');
           return {
-            system: `STEP 3/6: QUERY COMPLEMENTAR + ANÁLISE ESTRATÉGICA DE SHOPIFY STORE PROFUNDA
+            system: `STEP 4/8: QUERY 2 - CONSULTA SHOPIFY COMPLEMENTAR
 
-Execute query complementar baseada nos insights de Shopify do Step 2 e conduza análise estratégica mais profunda.
+Execute a segunda query SQL baseada nos insights Shopify da análise anterior. APENAS execute a query - NÃO analise os resultados neste step.
 
-🎯 **FOQUE EM INSIGHTS DE SHOPIFY DO STEP ANTERIOR:**
-- Use os top/bottom performing products/sources identificados no Step 2
+🎯 **FOCO DA CONSULTA SHOPIFY:**
+- Base-se nos padrões de loja identificados no Step 3
 - Aprofunde análise temporal de store trends, customer behavior patterns, ou sales funnel optimization
 - Investigue patterns de e-commerce performance identificados anteriormente
+- Obtenha dados Shopify complementares para análise mais rica
 
 🔧 **PROCESSO:**
-1. Execute executarSQL() com query que complementa/aprofunda análise de Shopify do Step 2
-2. IMEDIATAMENTE analise os novos dados no contexto dos insights anteriores
-3. Correlacione com findings do Step 2 para insights de e-commerce mais ricos
-4. Identifique causas raíz de store performance patterns
-5. Desenvolva recomendações estratégicas de e-commerce optimization mais específicas
+1. Execute executarSQL() com query que complementa os dados Shopify do Step 2
+2. APENAS execute - sem análise neste step
+3. Os dados da loja serão analisados no próximo step
 
 **ALWAYS use:** \`FROM \`creatto-463117.biquery_data.shopify_store\`\`
+
+**EXEMPLOS DE QUERIES SHOPIFY COMPLEMENTARES:**
+- Temporal analysis dos conversion trends e seasonal e-commerce patterns
+- Correlação customer acquisition cost vs lifetime value por traffic source
+- Segmentação de performance por customer demographics e behavior patterns
+- Cross-product analysis e bundle opportunity identification
+- Customer journey analysis from first visit to repeat purchase
+- Cart abandonment root cause analysis
+
+**IMPORTANTE:** Este é um step de coleta de dados Shopify. A análise será feita no Step 5.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 5:
+          console.log('🎯 STEP 5/8: ANÁLISE + GRÁFICO SHOPIFY 2');
+          return {
+            system: `STEP 5/8: ANÁLISE + GRÁFICO SHOPIFY 2 - ANÁLISE DOS DADOS DA QUERY 2
+
+Analise os dados de Shopify obtidos na Query 2 (Step 4) e crie visualização estratégica se apropriado.
+
+🛒 **ANÁLISE ESTRATÉGICA DOS DADOS SHOPIFY:**
+- Correlacione com findings Shopify do Step 3 para insights mais ricos
+- Identifique causas raíz de store performance patterns
+- Desenvolva recomendações estratégicas de e-commerce optimization mais específicas
+- Aprofunde análise temporal de store trends, customer behavior patterns
+
+🔧 **PROCESSO:**
+1. Analise os dados JSON de Shopify obtidos no Step 4
+2. Correlacione com insights Shopify anteriores do Step 3
+3. Identifique padrões de loja mais profundos e correlações
+4. Desenvolva insights estratégicos Shopify complementares
 
 🛒 **ANÁLISES SHOPIFY ESPECIALIZADAS:**
 - Temporal analysis dos conversion trends e seasonal e-commerce patterns
@@ -262,41 +318,74 @@ Execute query complementar baseada nos insights de Shopify do Step 2 e conduza a
 - Retention analysis e churn prevention strategy development
 
 📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
+Considere criar um gráfico Shopify SE:
 - Os dados são visuais por natureza (comparações, rankings, trends)
 - O volume é adequado para visualização clara
-- O gráfico adicionaria clareza aos insights de Shopify
+- O gráfico adicionaria clareza aos insights Shopify
 - Não force - só crie se realmente agregar valor
 
-Use criarGrafico() quando fizer sentido estratégico para o insight de Shopify.`,
+Use criarGrafico() quando fizer sentido estratégico para o insight Shopify.
+
+**IMPORTANTE:** Este step é só para análise Shopify. Nova query será feita no próximo step.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL,
               criarGrafico: analyticsTools.criarGrafico
             }
           };
 
-        case 4:
-          console.log('🎯 STEP 4/6: QUERY ESTRATÉGICA FINAL + INSIGHTS CONSOLIDADOS');
+        case 6:
+          console.log('🎯 STEP 6/8: QUERY 3 - CONSULTA SHOPIFY FINAL');
           return {
-            system: `STEP 4/6: QUERY ESTRATÉGICA FINAL + CONSOLIDAÇÃO DE INSIGHTS DE SHOPIFY
+            system: `STEP 6/8: QUERY 3 - CONSULTA SHOPIFY FINAL
 
-Execute query estratégica final para completar a análise de Shopify store e consolide todos os insights para e-commerce recommendations finais.
+Execute a terceira query SQL para completar gaps analíticos Shopify e obter dados finais. APENAS execute a query - NÃO analise os resultados neste step.
 
-🎯 **COMPLEMENTAR ANÁLISE DE SHOPIFY ANTERIOR:**
-- Base-se nos padrões e opportunities identificados nos Steps 2 e 3
-- Foque em gaps de análise de Shopify que ainda precisam ser preenchidos
+🎯 **FOCO DA CONSULTA SHOPIFY:**
+- Base-se nos padrões de loja e opportunities identificados nos Steps anteriores
+- Foque em gaps de análise Shopify que ainda precisam ser preenchidos
 - Investigue correlações ou validações necessárias para store optimization recommendations sólidas
+- Obtenha dados Shopify finais para consolidação estratégica
 
-🔧 **PROCESSO FINAL:**
-1. Execute executarSQL() com query que fecha lacunas analíticas de Shopify restantes
-2. IMEDIATAMENTE integre insights com achados dos steps anteriores
-3. Consolide store performance patterns em strategic narrative
-4. Prepare foundation para recomendações de e-commerce optimization
-5. Quantifique impact potential das store improvement opportunities identificadas
+🔧 **PROCESSO:**
+1. Execute executarSQL() com query que fecha lacunas analíticas Shopify restantes
+2. APENAS execute - sem análise neste step
+3. Os dados da loja serão analisados no próximo step
 
 **ALWAYS use:** \`FROM \`creatto-463117.biquery_data.shopify_store\`\`
 
-🛒 **CONSOLIDAÇÃO ESTRATÉGICA DE SHOPIFY:**
+**EXEMPLOS DE QUERIES SHOPIFY FINAIS:**
+- Conversion optimization opportunities com revenue impact quantificado
+- Customer acquisition strategy readiness assessment baseado em CAC/CLV analysis
+- Product portfolio optimization recommendations baseadas em sales velocity
+- Expected revenue growth das mudanças propostas
+- Priority ranking das e-commerce optimization opportunities
+- Seasonal strategy preparation para upcoming holiday periods
+
+**IMPORTANTE:** Este é um step de coleta de dados Shopify. A análise será feita no Step 7.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 7:
+          console.log('🎯 STEP 7/8: ANÁLISE + GRÁFICO SHOPIFY 3');
+          return {
+            system: `STEP 7/8: ANÁLISE + GRÁFICO SHOPIFY 3 - ANÁLISE DOS DADOS DA QUERY 3
+
+Analise os dados de Shopify obtidos na Query 3 (Step 6) e crie visualização estratégica se apropriado. Consolide insights Shopify de todos os steps para preparar o resumo executivo.
+
+🛒 **ANÁLISE ESTRATÉGICA SHOPIFY FINAL:**
+- Integre insights Shopify com achados dos steps anteriores (3 e 5)
+- Consolide store performance patterns em strategic narrative
+- Prepare foundation para recomendações de e-commerce optimization
+- Quantifique impact potential das store improvement opportunities identificadas
+
+🔧 **PROCESSO:**
+1. Analise os dados JSON de Shopify obtidos no Step 6
+2. Integre com todos os insights Shopify anteriores
+3. Consolide todos os padrões de loja identificados
+4. Prepare insights Shopify finais para o resumo executivo
+
+🛒 **CONSOLIDAÇÃO ESTRATÉGICA SHOPIFY:**
 - Conversion optimization opportunities com revenue impact quantificado
 - Customer acquisition strategy readiness assessment baseado em CAC/CLV analysis
 - Product portfolio optimization recommendations baseadas em sales velocity
@@ -308,73 +397,24 @@ Execute query estratégica final para completar a análise de Shopify store e co
 - Seasonal strategy preparation para upcoming holiday periods
 
 📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
+Considere criar um gráfico Shopify final SE:
 - Os dados são visuais por natureza (comparações, rankings, trends)
 - O volume é adequado para visualização clara
-- O gráfico adicionaria clareza aos insights de Shopify
+- O gráfico adicionaria clareza aos insights Shopify consolidados
 - Não force - só crie se realmente agregar valor
 
-Use criarGrafico() quando fizer sentido estratégico para o insight de Shopify.`,
-            tools: {
-              executarSQL: bigqueryTools.executarSQL,
-              criarGrafico: analyticsTools.criarGrafico
-            }
-          };
+Use criarGrafico() quando fizer sentido estratégico para o insight Shopify.
 
-        case 5:
-          console.log('🎯 STEP 5/6: VISUALIZAÇÃO ESTRATÉGICA DE SHOPIFY STORE PERFORMANCE');
-          return {
-            system: `STEP 5/6: VISUALIZAÇÃO ESTRATÉGICA DE SHOPIFY STORE PERFORMANCE
-
-Crie visualização que melhor representa os insights de Shopify store performance e suporta as recomendações estratégicas de e-commerce identificadas nos steps anteriores.
-
-📊 **ESCOLHA INTELIGENTE DE GRÁFICO DE SHOPIFY:**
-Baseado na análise de Shopify dos steps 2-4, escolha a visualização mais impactful:
-
-**Bar Chart (Vertical/Horizontal):**
-- Shopify performance ranking: conversion rate, AOV comparison entre products/sources
-- Customer acquisition analysis: CAC vs CLV por traffic source
-- Máximo: 8 products/sources (vertical) ou 15 (horizontal)
-
-**Line Chart:**
-- Shopify trends temporais: evolution de conversion rate ao longo do tempo
-- Seasonal sales patterns e holiday performance analysis
-- Máximo: 5 store metrics simultâneas, 100 pontos temporais
-
-**Scatter Plot:**
-- Correlações de Shopify: Traffic vs conversion rate, AOV vs customer retention
-- Identificação de e-commerce efficiency frontier
-- Customer segmentation analysis baseada em behavior
-- Máximo: 50 products/customers
-
-**Pie Chart:**
-- Revenue distribution por traffic source ou product category
-- Customer segmentation breakdown por value tiers
-- Máximo: 6 fatias (mín. 2% cada)
-
-**Heatmap:**
-- Performance por product category x time period matrix
-- Customer behavior patterns analysis por demographics
-
-🔧 **PROCESS:**
-1. Use criarGrafico() com dados de Shopify dos steps anteriores
-2. Escolha tipo de gráfico que melhor suporta suas e-commerce recommendations
-3. Foque em visualizar store performance gaps e optimization opportunities
-4. Prepare para sustentar arguments do resumo executivo de Shopify
-
-**REGRAS CRÍTICAS:**
-- Se dados excedem limites → Top N performers + "Outros"
-- Always respect visualization limits por tipo de gráfico
-- Choose chart type que melhor suporta Shopify strategic narrative`,
+**IMPORTANTE:** Este é o último step de análise Shopify antes do resumo executivo.`,
             tools: {
               criarGrafico: analyticsTools.criarGrafico
             }
           };
 
-        case 6:
-          console.log('🎯 STEP 6/6: RESUMO EXECUTIVO + SHOPIFY STRATEGIC RECOMMENDATIONS');
+        case 8:
+          console.log('🎯 STEP 8/8: RESUMO EXECUTIVO + SHOPIFY STRATEGIC RECOMMENDATIONS');
           return {
-            system: `STEP 6/6: RESUMO EXECUTIVO + SHOPIFY STRATEGIC RECOMMENDATIONS
+            system: `STEP 8/8: RESUMO EXECUTIVO + SHOPIFY STRATEGIC RECOMMENDATIONS
 
 Consolide TODOS os insights de Shopify dos steps anteriores em síntese executiva focada em business impact e store optimization.
 
@@ -433,7 +473,7 @@ Consolide TODOS os insights de Shopify dos steps anteriores em síntese executiv
     },
     
     // StopWhen inteligente baseado na classificação de complexidade
-    stopWhen: stepCountIs(6),
+    stopWhen: stepCountIs(8),
     providerOptions: {
       anthropic: {
         thinking: { type: 'enabled', budgetTokens: 15000 }
