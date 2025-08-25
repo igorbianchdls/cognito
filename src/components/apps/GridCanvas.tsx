@@ -8,6 +8,7 @@ import DroppedWidget from './DroppedWidget'
 import { $selectedWidgetId, widgetActions } from '@/stores/widgetStore'
 import { $canvasConfig } from '@/stores/canvasStore' // Canvas customization store
 import { WebPreview, WebPreviewNavigation, WebPreviewUrl, WebPreviewNavigationButton } from '@/components/ai-elements/web-preview'
+import { savedDashboardActions } from '@/stores/savedDashboardStore'
 import { Eye, Save, Download, Settings } from 'lucide-react'
 import type { DroppedWidget as DroppedWidgetType, LayoutItem } from '@/types/widget'
 
@@ -55,22 +56,8 @@ export default function GridCanvas({
   }
 
   const handleSave = () => {
-    // Save dashboard configuration to localStorage
-    const dashboardData = {
-      widgets,
-      canvasConfig,
-      timestamp: new Date().toISOString(),
-      version: '1.0'
-    }
-    
-    try {
-      localStorage.setItem('dashboard-canvas', JSON.stringify(dashboardData))
-      console.log('Dashboard saved successfully', dashboardData)
-      // TODO: Show success toast notification
-    } catch (error) {
-      console.error('Failed to save dashboard:', error)
-      // TODO: Show error toast notification
-    }
+    // Use the same save functionality as the header button
+    savedDashboardActions.promptAndSave()
   }
 
   const handleExport = () => {

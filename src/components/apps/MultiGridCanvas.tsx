@@ -9,6 +9,7 @@ import { $selectedWidgetId, widgetActions } from '@/stores/widgetStore'
 import { $canvasConfig } from '@/stores/canvasStore'
 import { $multiCanvasState, $activeTab, multiCanvasActions } from '@/stores/multiCanvasStore'
 import { WebPreview, WebPreviewNavigation, WebPreviewUrl, WebPreviewNavigationButton } from '@/components/ai-elements/web-preview'
+import { savedDashboardActions } from '@/stores/savedDashboardStore'
 import { Eye, Save, Download, Settings } from 'lucide-react'
 import { isNavigationWidget } from '@/types/widget'
 import type { DroppedWidget as DroppedWidgetType, LayoutItem } from '@/types/widget'
@@ -81,23 +82,8 @@ export default function MultiGridCanvas({
   }
 
   const handleSave = () => {
-    // Save multi-canvas dashboard configuration to localStorage
-    const multiCanvasData = {
-      multiCanvasState,
-      navigationWidget,
-      activeTab,
-      timestamp: new Date().toISOString(),
-      version: '1.0'
-    }
-    
-    try {
-      localStorage.setItem('multi-canvas-dashboard', JSON.stringify(multiCanvasData))
-      console.log('Multi-canvas dashboard saved successfully', multiCanvasData)
-      // TODO: Show success toast notification
-    } catch (error) {
-      console.error('Failed to save multi-canvas dashboard:', error)
-      // TODO: Show error toast notification
-    }
+    // Use the same save functionality as the header button
+    savedDashboardActions.promptAndSave()
   }
 
   const handleExport = () => {
