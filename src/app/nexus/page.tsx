@@ -154,6 +154,30 @@ export default function Page() {
         setAllMessages(prev => [...prev, { ...message, agent: 'budgetPlanningAnalyst' }]);
       },
     }),
+    tiktokAdsAnalyst: useChat({
+      transport: new DefaultChatTransport({ api: '/api/agents/tiktok-ads-analyst' }),
+      id: 'tiktok-ads-analyst-chat',
+      onFinish: ({ message }) => {
+        console.log('TIKTOK ADS ANALYST terminou:', message);
+        setAllMessages(prev => [...prev, { ...message, agent: 'tiktokAdsAnalyst' }]);
+      },
+    }),
+    customerServiceAnalyst: useChat({
+      transport: new DefaultChatTransport({ api: '/api/agents/customer-service-analyst' }),
+      id: 'customer-service-analyst-chat',
+      onFinish: ({ message }) => {
+        console.log('CUSTOMER SERVICE ANALYST terminou:', message);
+        setAllMessages(prev => [...prev, { ...message, agent: 'customerServiceAnalyst' }]);
+      },
+    }),
+    taxComplianceAnalyst: useChat({
+      transport: new DefaultChatTransport({ api: '/api/agents/tax-compliance-analyst' }),
+      id: 'tax-compliance-analyst-chat',
+      onFinish: ({ message }) => {
+        console.log('TAX COMPLIANCE ANALYST terminou:', message);
+        setAllMessages(prev => [...prev, { ...message, agent: 'taxComplianceAnalyst' }]);
+      },
+    }),
   };
 
   // Escolhe qual hook vai enviar a próxima mensagem E pegar streaming

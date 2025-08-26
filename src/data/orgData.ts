@@ -78,6 +78,14 @@ export const orgData: Employee = {
               category: 'Tráfego Pago',
               icon: '🎨',
               iconColor: 'from-purple-500 to-purple-700'
+            },
+            {
+              id: '26',
+              name: 'Analista GMN',
+              description: 'Especialista em Google Merchant Network e Google Shopping',
+              category: 'Tráfego Pago',
+              icon: '🛍️',
+              iconColor: 'from-yellow-500 to-orange-600'
             }
           ]
         },
@@ -105,6 +113,14 @@ export const orgData: Employee = {
               category: 'Marketing',
               icon: '🔍',
               iconColor: 'from-teal-500 to-teal-700'
+            },
+            {
+              id: '27',
+              name: 'Estrategista SEO',
+              description: 'Especialista em SEO e estratégias de otimização orgânica',
+              category: 'Marketing',
+              icon: '🎯',
+              iconColor: 'from-green-500 to-green-700'
             }
           ]
         },
@@ -234,6 +250,24 @@ export const orgData: Employee = {
               iconColor: 'from-gray-500 to-gray-700'
             }
           ]
+        },
+        {
+          id: '28',
+          name: 'Diretor de Business Intelligence',
+          description: 'Gerencia análises de BI e criação de dashboards estratégicos',
+          category: 'Business Intelligence',
+          icon: '📊',
+          iconColor: 'from-violet-500 to-violet-700',
+          subordinates: [
+            {
+              id: '29',
+              name: 'Criador de Dashboard',
+              description: 'Especialista em criação de dashboards e visualização de dados',
+              category: 'Business Intelligence',
+              icon: '📈',
+              iconColor: 'from-blue-400 to-indigo-600'
+            }
+          ]
         }
       ]
     }
@@ -255,5 +289,6 @@ export const categoryColors: Record<string, string> = {
   'Supply Chain': 'bg-cyan-100 text-cyan-800 border-cyan-200',
   'Contábil': 'bg-slate-100 text-slate-800 border-slate-200',
   'Jurídico': 'bg-gray-100 text-gray-800 border-gray-200',
+  'Business Intelligence': 'bg-violet-100 text-violet-800 border-violet-200',
   'Todas as Equipes': 'bg-gray-100 text-gray-800 border-gray-200'
 };
