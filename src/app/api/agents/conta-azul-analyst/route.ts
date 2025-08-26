@@ -28,7 +28,7 @@ export async function POST(req: Request) {
         case 1:
           console.log('🎯 CONTA AZUL ANALYST STEP 1: Configurando para análise da pergunta');
           return {
-            system: `STEP 1/6: ANALYZE USER REQUEST
+            system: `STEP 1/10: ANALYZE USER REQUEST
             
 Carefully analyze what the user is asking for. As ContaAzulAnalyst, focus on Brazilian accounting and ContaAzul ERP aspects:
             
@@ -49,7 +49,7 @@ Provide a thoughtful analysis of the user's request from a ContaAzul and Brazili
         case 2:
           console.log('🎯 CONTA AZUL ANALYST STEP 2: Configurando para exploração de datasets');
           return {
-            system: `STEP 2/6: EXPLORE AVAILABLE DATASETS
+            system: `STEP 2/10: EXPLORE AVAILABLE DATASETS
             
 Based on your analysis, now explore what datasets are available for ContaAzul and Brazilian accounting analysis.
             
@@ -67,56 +67,63 @@ Use getDatasets to discover available BigQuery datasets. Look for datasets that 
           };
           
         case 3:
-          console.log('🎯 CONTA AZUL ANALYST STEP 3: Configurando para exploração de tabelas');
+          console.log('🎯 CONTA AZUL ANALYST STEP 3: Mapeamento de colunas e tipos');
           return {
-            system: `STEP 3/6: EXPLORE TABLES IN CHOSEN DATASET
+            system: `STEP 3/10: MAPEAMENTO DE COLUNAS E TIPOS
             
-Now explore the tables within the dataset most likely to contain ContaAzul or accounting data.
-            
-🎯 **Your Task:**
-Use getTables to explore tables that might contain invoices, customers, suppliers, or tax information.
-            
-📊 **Focus:**
-- Choose the dataset most relevant to ContaAzul analysis from step 2
-- Execute getTables with the selected datasetId
-- Look for tables with accounting data: invoices, customers, suppliers, payments, tax_obligations
-- Identify tables that contain the ContaAzul and Brazilian business data the user needs`,
+Execute query SQL para mapear colunas e tipos das tabelas de ContaAzul. APENAS execute a query - NÃO analise os resultados neste step.
+
+📊 **FOCO DO MAPEAMENTO:**
+- Use INFORMATION_SCHEMA.COLUMNS para obter estrutura completa das tabelas
+- Identifique colunas disponíveis e seus tipos de dados de ContaAzul
+- Prepare contexto detalhado para queries nos próximos steps
+- Foque na tabela conta_azul que será usada nas análises
+
+🔧 **PROCESSO:**
+1. Execute executarSQL() com query de mapeamento de estrutura da tabela conta_azul
+2. APENAS execute - sem análise neste step
+3. Os dados de estrutura serão usados para construir queries precisas nos próximos steps
+
+**ALWAYS use:** Dataset 'biquery_data' com foco na estrutura da tabela conta_azul
+
+**IMPORTANTE:** Este step mapeia a estrutura. As queries de análise de ContaAzul serão feitas nos próximos steps.`,
             tools: {
-              getTables: bigqueryTools.getTables
+              executarSQL: bigqueryTools.executarSQL
             }
           };
           
         case 4:
-          console.log('🎯 CONTA AZUL ANALYST STEP 4: Configurando para execução de SQL');
+          console.log('🎯 CONTA AZUL ANALYST STEP 4: Query 1 - Consulta ContaAzul Principal');
           return {
-            system: `STEP 4/6: EXECUTE SQL QUERY
+            system: `STEP 4/10: QUERY 1 - CONSULTA CONTAAZUL PRINCIPAL
             
-Now execute a targeted SQL query to get ContaAzul and Brazilian business data for analysis.
+Execute a primeira query SQL para obter dados ContaAzul. APENAS execute a query - NÃO analise os resultados neste step.
             
-🎯 **Your Task:**
-Use executarSQL to retrieve ContaAzul data based on your exploration in previous steps.
+💼 **FOCO DA CONSULTA CONTAAZUL:**
+- Priorize métricas de contabilidade brasileira: receitas, custos, impostos, fluxo de caixa
+- Identifique performance financeira e compliance tributário
+- Obtenha dados de faturamento, recebíveis, e obrigações fiscais
+- Capture métricas fundamentais de ContaAzul para análise posterior
             
-📊 **Guidelines:**
-- Create SQL queries focused on Brazilian accounting and ContaAzul metrics
-- Focus on invoicing, receivables, tax compliance, cash flow, customer analysis
-- Use appropriate aggregations for accounting analysis (revenue totals, tax calculations, etc.)
-- Consider time-based analysis for business performance and compliance tracking
-            
-💡 **Example Approaches:**
-- Invoice analysis: "SELECT DATE_TRUNC(issue_date, MONTH) as month, COUNT(*) as invoice_count, SUM(total_amount) as revenue, AVG(total_amount) as avg_invoice FROM project.conta_azul.invoices GROUP BY month ORDER BY month"
-- Customer analysis: "SELECT customer_type, COUNT(*) as customers, SUM(total_purchased) as revenue, AVG(total_purchased) as avg_purchase FROM project.conta_azul.customers GROUP BY customer_type ORDER BY revenue DESC"
-- Tax obligations: "SELECT tax_type, SUM(amount_due) as total_due, COUNT(*) as obligations, AVG(amount_due) as avg_obligation FROM project.conta_azul.tax_obligations WHERE status = 'pending' GROUP BY tax_type"`,
+🔧 **PROCESSO:**
+1. Execute executarSQL() com query focada na demanda ContaAzul do usuário
+2. APENAS execute - sem análise neste step
+3. Os dados serão analisados no Step 5
+
+**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.conta_azul\`\`
+
+**IMPORTANTE:** Este é um step de coleta de dados ContaAzul. A análise será feita no Step 5.`,
             tools: {
               executarSQL: bigqueryTools.executarSQL
             }
           };
           
         case 5:
-          console.log('🎯 CONTA AZUL ANALYST STEP 5: Configurando para análise obrigatória dos dados');
+          console.log('🎯 CONTA AZUL ANALYST STEP 5: Análise dos dados + primeira visualização');
           return {
-            system: `STEP 5/6: MANDATORY CONTA AZUL ANALYSIS
+            system: `STEP 5/10: ANÁLISE DOS DADOS + PRIMEIRA VISUALIZAÇÃO
             
-CRITICAL: You executed SQL queries in the previous step. You MUST now provide comprehensive ContaAzul and Brazilian business analysis.
+⚠️ CRITICAL: You executed SQL queries in the previous step. You MUST now provide comprehensive ContaAzul and Brazilian business analysis.
             
 💼 **Required ContaAzul Analysis:**
 - **Business Performance:** How is the business performing financially through ContaAzul data?
@@ -125,50 +132,153 @@ CRITICAL: You executed SQL queries in the previous step. You MUST now provide co
 - **Customer Insights:** What customer behavior patterns emerge from the ContaAzul data?
 - **Operational Efficiency:** How efficiently is the business operating based on ERP data?
             
-🎯 **Specific Focus Areas:**
-- Revenue trends and seasonal patterns from invoice data
-- Receivables aging and collection efficiency analysis
-- Tax obligation management and compliance status
-- Customer segmentation and purchasing behavior
-- Supplier payment patterns and cash flow optimization
-- Brazilian tax regulations compliance (ICMS, IPI, PIS, COFINS)
+📊 **PRIMEIRA VISUALIZAÇÃO OBRIGATÓRIA:**
+Crie um gráfico que melhor represente os principais insights ContaAzul encontrados nos dados.
+
+⚡ **CRITICAL: EFFICIENT DATA HANDLING**
+Otimize data transfer para economizar tokens - use máximo 50-100 registros para gráficos.
             
 ⚠️ **IMPORTANT:** 
 - Focus on actionable ContaAzul insights and Brazilian business optimization
-- Provide specific recommendations for ERP utilization and financial management
-- Do NOT execute more tools - focus only on analyzing existing data
+- Primeira visualização estratégica dos insights principais
 - Give concrete suggestions for improving cash flow, tax compliance, and business efficiency`,
-            tools: {} // Remove todas as tools - força análise textual apenas
-          };
-          
-        case 6:
-          console.log('🎯 CONTA AZUL ANALYST STEP 6: Configurando para criação de gráfico');
-          return {
-            system: `STEP 6/6: CREATE CONTA AZUL VISUALIZATION
-            
-Finalize with a visualization that represents ContaAzul insights and Brazilian business optimization opportunities.
-            
-🎯 **Your Task:**
-Create a chart that best represents the ContaAzul and Brazilian business insights from previous steps.
-            
-📊 **Chart Guidelines:**
-- Choose charts appropriate for accounting analysis (line charts for revenue trends, bar charts for tax breakdown, pie charts for customer segments)
-- Focus on key ContaAzul KPIs: revenue, receivables, tax obligations, customer metrics, cash flow
-- Use data from the SQL query in step 4
-- Make sure the visualization supports your ContaAzul analysis from step 5
-            
-⚡ **CRITICAL: EFFICIENT DATA HANDLING**
-Optimize data transfer to save tokens:
-            
-1. **FILTER DATA:** Only include necessary columns for ContaAzul visualization
-2. **LIMIT RECORDS:** Use maximum 50-100 records for charts
-3. **Focus on:** key Brazilian business metrics and ERP indicators
-            
-🎨 **Final Touch:**
-Provide final ContaAzul optimization recommendations and Brazilian business management strategies based on the complete analysis and visualization.`,
             tools: {
               criarGrafico: analyticsTools.criarGrafico
             }
+          };
+          
+        case 6:
+          console.log('🎯 CONTA AZUL ANALYST STEP 6: Query 2 - Consulta Complementar');
+          return {
+            system: `STEP 6/10: QUERY 2 - CONSULTA COMPLEMENTAR
+
+Execute segunda query SQL para obter dados complementares baseados nos insights do Step 5. APENAS execute a query - NÃO analise os resultados neste step.
+
+💼 **FOCO DA CONSULTA COMPLEMENTAR:**
+- Baseie-se nos insights encontrados no Step 5
+- Obtenha dados complementares para deeper ContaAzul analysis
+- Foque em correlações, time-series, ou segmentações relevantes
+- Capture dados que suportem optimization recommendations
+
+🔧 **PROCESSO:**
+1. Execute executarSQL() com query complementar focada nos insights do Step 5
+2. APENAS execute - sem análise neste step
+3. Os dados complementares serão analisados no próximo step
+
+**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.conta_azul\`\`
+
+**IMPORTANTE:** Este é um step de coleta de dados complementares. A análise será feita no Step 7.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 7:
+          console.log('🎯 CONTA AZUL ANALYST STEP 7: Análise complementar + segunda visualização');
+          return {
+            system: `STEP 7/10: ANÁLISE COMPLEMENTAR + SEGUNDA VISUALIZAÇÃO
+
+⚠️ CRITICAL: Você executou query complementar no Step 6. Você DEVE agora analisar esses dados complementares em conjunto com insights anteriores.
+
+🎯 **ANÁLISE COMPLEMENTAR OBRIGATÓRIA:**
+- Integre insights da query complementar com análise do Step 5
+- Identifique deeper patterns e correlations de ContaAzul performance
+- Desenvolva understanding mais rico dos Brazilian business optimization opportunities
+- Quantifique impact potential das mudanças propostas
+
+📊 **SEGUNDA VISUALIZAÇÃO:**
+Crie segunda visualização complementar que explore aspectos diferentes dos insights ContaAzul.
+
+⚡ **EFFICIENT DATA HANDLING**
+Use máximo 50-100 registros para gráficos.
+
+🎯 **REQUIREMENTS:**
+- Análise integrada dos dados complementares
+- Segunda visualização estratégica
+- Deeper ContaAzul optimization insights`,
+            tools: {
+              criarGrafico: analyticsTools.criarGrafico
+            }
+          };
+
+        case 8:
+          console.log('🎯 CONTA AZUL ANALYST STEP 8: Query 3 - Consulta Final');
+          return {
+            system: `STEP 8/10: QUERY 3 - CONSULTA FINAL
+
+Execute terceira e última query SQL para validar insights ou obter dados finais necessários para recomendações executivas. APENAS execute a query - NÃO analise os resultados neste step.
+
+🎯 **FOCO DA CONSULTA FINAL:**
+- Complete gaps de análise identificados nos steps anteriores
+- Valide hipóteses ou quantifique opportunities identificadas
+- Obtenha dados finais para sustentar recomendações executivas
+- Foque em dados que permitam quantificar ROI das mudanças propostas
+
+🔧 **PROCESSO:**
+1. Execute executarSQL() com query final baseada em todos os insights anteriores
+2. APENAS execute - sem análise neste step
+3. Os dados finais serão analisados no Step 9
+
+**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.conta_azul\`\`
+
+**IMPORTANTE:** Esta é a última coleta de dados. A análise final será feita no Step 9.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 9:
+          console.log('🎯 CONTA AZUL ANALYST STEP 9: Análise final + terceira visualização');
+          return {
+            system: `STEP 9/10: ANÁLISE FINAL + TERCEIRA VISUALIZAÇÃO
+
+⚠️ CRITICAL: Você executou query final no Step 8. Você DEVE agora consolidar TODAS as análises e criar visualização final.
+
+🎯 **CONSOLIDAÇÃO FINAL OBRIGATÓRIA:**
+- Integre TODOS os insights dos steps 5, 7 e este step
+- Consolide ContaAzul patterns em narrative estratégico
+- Quantifique impact das Brazilian business optimization opportunities
+- Prepare foundation para recomendações executivas do Step 10
+
+📊 **TERCEIRA E FINAL VISUALIZAÇÃO:**
+Crie visualização final que sintetiza os principais insights ContaAzul e suporta recomendações executivas.
+
+⚡ **EFFICIENT DATA HANDLING**
+Use máximo 50-100 registros para gráficos.
+
+🎯 **REQUIREMENTS:**
+- Consolidação de TODOS os insights anteriores
+- Terceira visualização estratégica final
+- Preparação para recomendações executivas`,
+            tools: {
+              criarGrafico: analyticsTools.criarGrafico
+            }
+          };
+
+        case 10:
+          console.log('🎯 CONTA AZUL ANALYST STEP 10: Resumo executivo + recomendações estratégicas');
+          return {
+            system: `STEP 10/10: RESUMO EXECUTIVO + CONTAAZUL STRATEGIC RECOMMENDATIONS
+            
+Consolide TODOS os insights ContaAzul dos steps anteriores em síntese executiva focada em Brazilian business optimization.
+            
+📊 **RESUMO EXECUTIVO CONTAAZUL OBRIGATÓRIO:**
+- **Business Performance:** Performance financeira geral via dados ContaAzul
+- **Cash Flow Health:** Saúde do fluxo de caixa e recebíveis
+- **Tax Compliance:** Status de compliance tributário brasileiro
+- **Customer Insights:** Padrões de comportamento de clientes
+- **Operational Efficiency:** Eficiência operacional via ERP
+            
+🎯 **STRATEGIC CONTAAZUL RECOMMENDATIONS:**
+- Otimização de fluxo de caixa e recebíveis
+- Melhorias no compliance tributário brasileiro
+- Estratégias de segmentação de clientes
+- Otimização de utilização do ERP ContaAzul
+- Timeline para implementação das melhorias
+            
+🎨 **Final Touch:**
+Provide final ContaAzul optimization recommendations and Brazilian business management strategies based on the complete analysis and visualization.`,
+            tools: {}
           };
           
         default:
@@ -177,8 +287,8 @@ Provide final ContaAzul optimization recommendations and Brazilian business mana
       }
     },
     
-    // StopWhen simples - máximo 6 steps
-    stopWhen: stepCountIs(6),
+    // StopWhen simples - máximo 10 steps
+    stopWhen: stepCountIs(10),
     providerOptions: {
       anthropic: {
         thinking: { type: 'enabled', budgetTokens: 15000 }

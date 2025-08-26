@@ -133,9 +133,9 @@ Focus em strategic recommendations que impactem cash liberation e liquidity impr
 
       switch (stepNumber) {
         case 1:
-          console.log('📊 STEP 1/6: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
+          console.log('📊 STEP 1/10: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
           return {
-            system: `STEP 1/6: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
+            system: `STEP 1/10: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
 
 Você é um especialista em cash flow management focado em working capital, liquidity e cash optimization. Analise a demanda do usuário E classifique a complexidade para otimizar o workflow.
 
@@ -148,7 +148,7 @@ Você é um especialista em cash flow management focado em working capital, liqu
 
 🎯 **CLASSIFICAÇÃO OBRIGATÓRIA:**
 
-**CONTEXTUAL** (pula para Step 6 - resumo direto):
+**CONTEXTUAL** (pula para Step 10 - resumo direto):
 - Perguntas sobre análises de cash flow já realizadas na conversa
 - Esclarecimentos sobre insights ou gráficos já mostrados
 - Interpretação de dados de cash flow já apresentados
@@ -160,7 +160,7 @@ Você é um especialista em cash flow management focado em working capital, liqu
 - Resposta focada sem múltiplas correlações de cash flow
 - Ex: "DSO atual da empresa?", "qual o cash conversion cycle?", "position de caixa atual", "DPO médio dos fornecedores"
 
-**COMPLEXA** (6 steps completos):
+**COMPLEXA** (10 steps completos):
 - Análise estratégica multi-dimensional de cash flow performance
 - Working capital optimization e liquidity management strategies
 - Identificação de cash liberation opportunities e payment optimization
@@ -176,196 +176,222 @@ Você é um especialista em cash flow management focado em working capital, liqu
           };
 
         case 2:
-          console.log('🎯 STEP 2/6: QUERY BASE + ANÁLISE DE CASH FLOW PERFORMANCE');
+          console.log('🎯 STEP 2/10: EXPLORAÇÃO DE TABELAS - getTables');
           return {
-            system: `STEP 2/6: QUERY BASE + ANÁLISE IMEDIATA DE CASH FLOW PERFORMANCE
+            system: `STEP 2/10: EXPLORAÇÃO DE TABELAS - getTables
 
-Execute a query SQL principal para obter dados de cash flow e IMEDIATAMENTE analise os resultados no mesmo response.
+Explore as tabelas disponíveis no dataset para entender a estrutura de dados disponível antes de executar queries.
 
-💸 **FOCO DE CASH FLOW PERFORMANCE:**
-- Priorize métricas de liquidity: operating cash flow, DSO, DPO, cash conversion cycle
-- Identifique cash liberation opportunities vs working capital constraints
-- Analise payment efficiency e collection performance
-- Detecte cash flow volatility e seasonal patterns impacting liquidity
-- Correlacione payment terms com actual cash collection/payment timing
+📊 **EXPLORAÇÃO DE DADOS:**
+- Use getTables para listar tabelas do dataset 'biquery_data'
+- Identifique quais tabelas estão disponíveis para análise de cash flow
+- Prepare contexto para queries mais precisas nos próximos steps
 
-🔧 **PROCESSO OBRIGATÓRIO:**
-1. Execute executarSQL() com query focada na demanda de cash flow do usuário
-2. IMEDIATAMENTE após ver os dados JSON, analise no mesmo response
-3. Identifique patterns de cash flow, anomalias, working capital opportunities
-4. Gere insights estratégicos sobre liquidity optimization e payment management
-5. Destaque areas candidatas a cash liberation ou payment term optimization
+🔧 **PROCESSO:**
+1. Execute getTables() com datasetId "biquery_data"
+2. Analise rapidamente as tabelas disponíveis
+3. Prepare contexto para queries de cash flow nos próximos steps
 
-**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.cash_flow\`\`
-
-💸 **ANÁLISE ESTRATÉGICA IMEDIATA:**
-- Compare DSO trends e identify collection efficiency gaps
-- Identifique DPO optimization opportunities sem impactar supplier relationships
-- Detecte cash conversion cycle bottlenecks e improvement potential
-- Avalie liquidity adequacy vs operating cash requirements
-- Sinalize seasonal cash flow patterns e planning needs
-- Analise receivables aging e payables management efficiency
-
-📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
-- Os dados são visuais por natureza (comparações, rankings, trends)
-- O volume é adequado para visualização clara
-- O gráfico adicionaria clareza aos insights de cash flow
-- Não force - só crie se realmente agregar valor
-
-Use criarGrafico() quando fizer sentido estratégico para o insight de cash flow.`,
+**IMPORTANTE:** Este step prepara o contexto. As queries SQL serão feitas nos próximos steps.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL,
-              criarGrafico: analyticsTools.criarGrafico
+              getTables: bigqueryTools.getTables
             }
           };
 
         case 3:
-          console.log('🎯 STEP 3/6: QUERY COMPLEMENTAR + DEEP CASH FLOW ANALYSIS');
+          console.log('🎯 STEP 3/10: MAPEAMENTO DE COLUNAS E TIPOS');
           return {
-            system: `STEP 3/6: QUERY COMPLEMENTAR + ANÁLISE ESTRATÉGICA DE CASH FLOW PROFUNDA
+            system: `STEP 3/10: MAPEAMENTO DE COLUNAS E TIPOS
 
-Execute query complementar baseada nos insights de cash flow do Step 2 e conduza análise estratégica mais profunda.
+Execute query SQL para mapear colunas e tipos das tabelas identificadas no Step 2. APENAS execute a query - NÃO analise os resultados neste step.
 
-🎯 **FOQUE EM INSIGHTS DE CASH FLOW DO STEP ANTERIOR:**
-- Use os bottlenecks e opportunities identificados no Step 2
-- Aprofunde análise temporal de working capital, customer/supplier payment analysis, ou seasonal planning
-- Investigue patterns de cash flow performance identificados anteriormente
+📊 **FOCO DO MAPEAMENTO:**
+- Use INFORMATION_SCHEMA.COLUMNS para obter estrutura completa das tabelas
+- Identifique colunas disponíveis e seus tipos de dados de cash flow
+- Prepare contexto detalhado para queries nos próximos steps
+- Foque na tabela cash_flow que será usada nas análises
 
 🔧 **PROCESSO:**
-1. Execute executarSQL() com query que complementa/aprofunda análise de cash flow do Step 2
-2. IMEDIATAMENTE analise os novos dados no contexto dos insights anteriores
-3. Correlacione com findings do Step 2 para insights de liquidity mais ricos
-4. Identifique causas raíz de cash flow performance patterns
-5. Desenvolva recomendações estratégicas de cash management mais específicas
+1. Execute executarSQL() com query de mapeamento de estrutura da tabela cash_flow
+2. APENAS execute - sem análise neste step
+3. Os dados de estrutura serão usados para construir queries precisas nos próximos steps
 
-**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.cash_flow\`\`
+**ALWAYS use:** Dataset 'biquery_data' com foco na estrutura da tabela cash_flow
 
-💸 **ANÁLISES CASH FLOW ESPECIALIZADAS:**
-- Temporal analysis dos cash flow trends e seasonal patterns
-- Correlação payment terms vs actual collection/payment performance
-- Segmentação de cash flow por customer tiers e supplier categories
-- Cross-period working capital analysis e efficiency improvements
-- Seasonal cash planning e liquidity requirements analysis
-- Customer credit risk analysis baseado em payment history
-- Supplier payment optimization analysis sem relationship impact
-- Cash runway analysis e scenario planning para sustainability
-- Receivables aging analysis e collection strategy optimization
-
-📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
-- Os dados são visuais por natureza (comparações, rankings, trends)
-- O volume é adequado para visualização clara
-- O gráfico adicionaria clareza aos insights de cash flow
-- Não force - só crie se realmente agregar valor
-
-Use criarGrafico() quando fizer sentido estratégico para o insight de cash flow.`,
+**IMPORTANTE:** Este step mapeia a estrutura. As queries de análise de cash flow serão feitas nos próximos steps.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL,
-              criarGrafico: analyticsTools.criarGrafico
+              executarSQL: bigqueryTools.executarSQL
             }
           };
 
         case 4:
-          console.log('🎯 STEP 4/6: QUERY ESTRATÉGICA FINAL + INSIGHTS CONSOLIDADOS');
+          console.log('🎯 STEP 4/10: QUERY 1 - CONSULTA CASH FLOW PRINCIPAL');
           return {
-            system: `STEP 4/6: QUERY ESTRATÉGICA FINAL + CONSOLIDAÇÃO DE INSIGHTS DE CASH FLOW
+            system: `STEP 4/10: QUERY 1 - CONSULTA CASH FLOW PRINCIPAL
 
-Execute query estratégica final para completar a análise de cash flow e consolide todos os insights para liquidity recommendations finais.
+Execute a primeira query SQL para obter dados de performance de cash flow. APENAS execute a query - NÃO analise os resultados neste step.
 
-🎯 **COMPLEMENTAR ANÁLISE DE CASH FLOW ANTERIOR:**
-- Base-se nos padrões e opportunities identificados nos Steps 2 e 3
-- Foque em gaps de análise de cash flow que ainda precisam ser preenchidos
-- Investigue correlações ou validações necessárias para cash optimization recommendations sólidas
+💸 **FOCO DA CONSULTA CASH FLOW:**
+- Priorize métricas de liquidity: operating cash flow, DSO, DPO, cash conversion cycle
+- Identifique cash generation vs consumption patterns principais
+- Obtenha dados de working capital impact e cash efficiency patterns
+- Capture métricas fundamentais de cash flow para análise posterior
+- Correlacione payment cycles com current cash position
 
-🔧 **PROCESSO FINAL:**
-1. Execute executarSQL() com query que fecha lacunas analíticas de cash flow restantes
-2. IMEDIATAMENTE integre insights com achados dos steps anteriores
-3. Consolide cash flow patterns em strategic narrative
-4. Prepare foundation para recomendações de liquidity optimization
-5. Quantifique impact potential das cash liberation opportunities identificadas
+🔧 **PROCESSO:**
+1. Execute executarSQL() com query focada na demanda de cash flow do usuário
+2. APENAS execute - sem análise neste step
+3. Os dados de performance serão analisados no próximo step
 
 **ALWAYS use:** \`FROM \`creatto-463117.biquery_data.cash_flow\`\`
 
-💸 **CONSOLIDAÇÃO ESTRATÉGICA DE CASH FLOW:**
-- Cash liberation opportunities com impact quantificado
-- Working capital optimization readiness assessment
-- Payment terms adjustment recommendations baseadas em relationship impact
-- Collection process improvement priorities baseadas em DSO analysis
-- Timeline recommendations para cash flow optimization implementation
-- Expected cash impact das mudanças propostas
-- Priority ranking das liquidity improvement opportunities
-- Supplier payment strategy adjustments para cash preservation
-- Customer credit management recommendations para risk mitigation
-
-📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
-- Os dados são visuais por natureza (comparações, rankings, trends)
-- O volume é adequado para visualização clara
-- O gráfico adicionaria clareza aos insights de cash flow
-- Não force - só crie se realmente agregar valor
-
-Use criarGrafico() quando fizer sentido estratégico para o insight de cash flow.`,
+**IMPORTANTE:** Este é um step de coleta de dados de cash flow. A análise será feita no Step 5.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL,
-              criarGrafico: analyticsTools.criarGrafico
+              executarSQL: bigqueryTools.executarSQL
             }
           };
 
         case 5:
-          console.log('🎯 STEP 5/6: VISUALIZAÇÃO ESTRATÉGICA DE CASH FLOW PERFORMANCE');
+          console.log('🎯 STEP 5/10: ANÁLISE DOS DADOS + PRIMEIRA VISUALIZAÇÃO');
           return {
-            system: `STEP 5/6: VISUALIZAÇÃO ESTRATÉGICA DE CASH FLOW PERFORMANCE
+            system: `STEP 5/10: ANÁLISE DOS DADOS + PRIMEIRA VISUALIZAÇÃO
 
-Crie visualização que melhor representa os insights de cash flow performance e suporta as recomendações estratégicas de liquidity identificadas nos steps anteriores.
+⚠️ CRITICAL: Você executou queries SQL nos steps anteriores. Você DEVE agora analisar os dados e criar primeira visualização.
 
-📊 **ESCOLHA INTELIGENTE DE GRÁFICO DE CASH FLOW:**
-Baseado na análise de cash flow dos steps 2-4, escolha a visualização mais impactful:
+🎯 **ANÁLISE OBRIGATÓRIA DE CASH FLOW PERFORMANCE:**
+- **Working Capital Analysis**: Como está a eficiência do capital de giro?
+- **Cash Conversion Efficiency**: DSO, DPO, DIO trends e cash conversion cycle optimization
+- **Liquidity Position**: Current ratio, quick ratio, cash runway analysis
+- **Operating Cash Flow Quality**: Strength e consistency do operating cash flow
+- **Payment Optimization Opportunities**: Identificar inefficiencies em receivables e payables
 
-**Bar Chart (Vertical/Horizontal):**
-- Cash flow performance ranking: DSO, DPO comparison entre períodos
-- Working capital efficiency: cash conversion cycle por período
-- Máximo: 8 períodos (vertical) ou 15 (horizontal)
+📊 **PRIMEIRA VISUALIZAÇÃO OBRIGATÓRIA:**
+Crie um gráfico que melhor represente os principais insights de cash flow encontrados nos dados.
 
-**Line Chart:**
-- Cash flow trends temporais: evolution de cash position ao longo do tempo
-- Working capital metrics trends: DSO, DPO, cash conversion cycle
-- Máximo: 5 cash metrics simultâneas, 100 pontos temporais
+⚡ **CRITICAL: EFFICIENT DATA HANDLING**
+Otimize data transfer para economizar tokens - use máximo 50-100 registros para gráficos.
 
-**Scatter Plot:**
-- Correlações de cash flow: Payment terms vs DSO, Supplier size vs DPO
-- Identificação de cash efficiency frontier
-- Customer payment behavior analysis
-- Máximo: 50 customers/suppliers
-
-**Pie Chart:**
-- Cash flow sources distribution por category
-- Working capital components breakdown
-- Máximo: 6 fatias (mín. 2% cada)
-
-**Heatmap:**
-- Performance por month x cash flow category matrix
-- Seasonal cash flow patterns analysis
-
-🔧 **PROCESS:**
-1. Use criarGrafico() com dados de cash flow dos steps anteriores
-2. Escolha tipo de gráfico que melhor suporta suas liquidity recommendations
-3. Foque em visualizar cash flow gaps e working capital opportunities
-4. Prepare para sustentar arguments do resumo executivo de cash flow
-
-**REGRAS CRÍTICAS:**
-- Se dados excedem limites → Top N contributors + "Outros"
-- Always respect visualization limits por tipo de gráfico
-- Choose chart type que melhor suporta cash flow strategic narrative`,
+🎯 **ANALYSIS + VISUALIZATION REQUIREMENTS:**
+- Análise detalhada dos cash flow patterns identificados
+- Identificação de cash optimization opportunities
+- Primeira visualização estratégica dos insights principais`,
             tools: {
               criarGrafico: analyticsTools.criarGrafico
             }
           };
 
         case 6:
-          console.log('🎯 STEP 6/6: RESUMO EXECUTIVO + CASH FLOW STRATEGIC RECOMMENDATIONS');
+          console.log('🎯 STEP 6/10: QUERY 2 - CONSULTA COMPLEMENTAR');
           return {
-            system: `STEP 6/6: RESUMO EXECUTIVO + CASH FLOW STRATEGIC RECOMMENDATIONS
+            system: `STEP 6/10: QUERY 2 - CONSULTA COMPLEMENTAR
+
+Execute segunda query SQL para obter dados complementares baseados nos insights do Step 5. APENAS execute a query - NÃO analise os resultados neste step.
+
+💸 **FOCO DA CONSULTA COMPLEMENTAR:**
+- Baseie-se nos insights encontrados no Step 5
+- Obtenha dados complementares para deeper cash flow analysis
+- Foque em correlations, time-series, ou segmentações relevantes
+- Capture dados que suportem optimization recommendations
+
+🔧 **PROCESSO:**
+1. Execute executarSQL() com query complementar focada nos insights do Step 5
+2. APENAS execute - sem análise neste step
+3. Os dados complementares serão analisados no próximo step
+
+**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.cash_flow\`\`
+
+**IMPORTANTE:** Este é um step de coleta de dados complementares. A análise será feita no Step 7.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 7:
+          console.log('🎯 STEP 7/10: ANÁLISE COMPLEMENTAR + SEGUNDA VISUALIZAÇÃO');
+          return {
+            system: `STEP 7/10: ANÁLISE COMPLEMENTAR + SEGUNDA VISUALIZAÇÃO
+
+⚠️ CRITICAL: Você executou query complementar no Step 6. Você DEVE agora analisar esses dados complementares em conjunto com insights anteriores.
+
+🎯 **ANÁLISE COMPLEMENTAR OBRIGATÓRIA:**
+- Integre insights da query complementar com análise do Step 5
+- Identifique deeper patterns e correlations de cash flow
+- Desenvolva understanding mais rico dos cash optimization opportunities
+- Quantifique impact potential das mudanças propostas
+
+📊 **SEGUNDA VISUALIZAÇÃO:**
+Crie segunda visualização complementar que explore aspectos diferentes dos insights de cash flow.
+
+⚡ **EFFICIENT DATA HANDLING**
+Use máximo 50-100 registros para gráficos.
+
+🎯 **REQUIREMENTS:**
+- Análise integrada dos dados complementares
+- Segunda visualização estratégica
+- Deeper cash flow optimization insights`,
+            tools: {
+              criarGrafico: analyticsTools.criarGrafico
+            }
+          };
+
+        case 8:
+          console.log('🎯 STEP 8/10: QUERY 3 - CONSULTA FINAL');
+          return {
+            system: `STEP 8/10: QUERY 3 - CONSULTA FINAL
+
+Execute terceira e última query SQL para validar insights ou obter dados finais necessários para recomendações executivas. APENAS execute a query - NÃO analise os resultados neste step.
+
+🎯 **FOCO DA CONSULTA FINAL:**
+- Complete gaps de análise identificados nos steps anteriores
+- Valide hipóteses ou quantifique opportunities identificadas
+- Obtenha dados finais para sustentar recomendações executivas
+- Foque em dados que permitam quantificar ROI das mudanças propostas
+
+🔧 **PROCESSO:**
+1. Execute executarSQL() com query final baseada em todos os insights anteriores
+2. APENAS execute - sem análise neste step
+3. Os dados finais serão analisados no Step 9
+
+**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.cash_flow\`\`
+
+**IMPORTANTE:** Esta é a última coleta de dados. A análise final será feita no Step 9.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 9:
+          console.log('🎯 STEP 9/10: ANÁLISE FINAL + TERCEIRA VISUALIZAÇÃO');
+          return {
+            system: `STEP 9/10: ANÁLISE FINAL + TERCEIRA VISUALIZAÇÃO
+
+⚠️ CRITICAL: Você executou query final no Step 8. Você DEVE agora consolidar TODAS as análises e criar visualização final.
+
+🎯 **CONSOLIDAÇÃO FINAL OBRIGATÓRIA:**
+- Integre TODOS os insights dos steps 5, 7 e este step
+- Consolide cash flow patterns em narrative estratégico
+- Quantifique impact das cash optimization opportunities
+- Prepare foundation para recomendações executivas do Step 10
+
+📊 **TERCEIRA E FINAL VISUALIZAÇÃO:**
+Crie visualização final que sintetiza os principais insights de cash flow e suporta recomendações executivas.
+
+⚡ **EFFICIENT DATA HANDLING**
+Use máximo 50-100 registros para gráficos.
+
+🎯 **REQUIREMENTS:**
+- Consolidação de TODOS os insights anteriores
+- Terceira visualização estratégica final
+- Preparação para recomendações executivas`,
+            tools: {
+              criarGrafico: analyticsTools.criarGrafico
+            }
+          };
+
+        case 10:
+          console.log('🎯 STEP 10/10: RESUMO EXECUTIVO + CASH FLOW STRATEGIC RECOMMENDATIONS');
+          return {
+            system: `STEP 10/10: RESUMO EXECUTIVO + CASH FLOW STRATEGIC RECOMMENDATIONS
 
 Consolide TODOS os insights de cash flow dos steps anteriores em síntese executiva focada em business impact e liquidity optimization.
 
@@ -424,7 +450,7 @@ Consolide TODOS os insights de cash flow dos steps anteriores em síntese execut
     },
     
     // StopWhen inteligente baseado na classificação de complexidade
-    stopWhen: stepCountIs(6),
+    stopWhen: stepCountIs(10),
     providerOptions: {
       anthropic: {
         thinking: { type: 'enabled', budgetTokens: 15000 }

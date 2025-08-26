@@ -129,9 +129,9 @@ Focus em strategic recommendations que impactem cost savings e planning improvem
 
       switch (stepNumber) {
         case 1:
-          console.log('📊 STEP 1/6: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
+          console.log('📊 STEP 1/10: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
           return {
-            system: `STEP 1/6: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
+            system: `STEP 1/10: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
 
 Você é um especialista em budget planning focado em variance analysis, forecasting accuracy e resource optimization. Analise a demanda do usuário E classifique a complexidade para otimizar o workflow.
 
@@ -144,7 +144,7 @@ Você é um especialista em budget planning focado em variance analysis, forecas
 
 🎯 **CLASSIFICAÇÃO OBRIGATÓRIA:**
 
-**CONTEXTUAL** (pula para Step 6 - resumo direto):
+**CONTEXTUAL** (pula para Step 10 - resumo direto):
 - Perguntas sobre análises de budget já realizadas na conversa
 - Esclarecimentos sobre insights ou gráficos já mostrados
 - Interpretação de dados orçamentários já apresentados
@@ -156,7 +156,7 @@ Você é um especialista em budget planning focado em variance analysis, forecas
 - Resposta focada sem múltiplas correlações orçamentárias
 - Ex: "variance do departamento Marketing?", "qual departamento tem melhor budget adherence?", "forecast accuracy Q3", "utilização atual do budget"
 
-**COMPLEXA** (6 steps completos):
+**COMPLEXA** (10 steps completos):
 - Análise estratégica multi-dimensional de budget performance
 - Budget optimization e resource allocation improvement strategies
 - Identificação de variance patterns e forecast improvement opportunities
@@ -172,196 +172,224 @@ Você é um especialista em budget planning focado em variance analysis, forecas
           };
 
         case 2:
-          console.log('🎯 STEP 2/6: QUERY BASE + ANÁLISE DE BUDGET PERFORMANCE');
+          console.log('🎯 STEP 2/10: EXPLORAÇÃO DE TABELAS - getTables');
           return {
-            system: `STEP 2/6: QUERY BASE + ANÁLISE IMEDIATA DE BUDGET PERFORMANCE
+            system: `STEP 2/10: EXPLORAÇÃO DE TABELAS - getTables
 
-Execute a query SQL principal para obter dados de budget planning e IMEDIATAMENTE analise os resultados no mesmo response.
+Explore as tabelas disponíveis no dataset para identificar estruturas de dados de budget planning. APENAS explore - NÃO execute queries neste step.
 
-💼 **FOCO DE BUDGET PERFORMANCE:**
-- Priorize métricas de planning: budget variance, forecast accuracy, utilization por department
-- Identifique departments com consistent overruns vs underutilization
-- Analise allocation efficiency e resource optimization opportunities
-- Detecte seasonal patterns e forecast drift impacting planning accuracy
-- Correlacione budget performance com business drivers e department objectives
+🎯 **FOCO DA EXPLORAÇÃO:**
+- Identifique tabelas que contenham dados de orçamento, variance analysis, forecasting
+- Procure por tabelas com dados de departamentos: budgets, actuals, forecasts, allocations
+- Entenda a estrutura de dados disponível para análise de planejamento orçamentário
 
-🔧 **PROCESSO OBRIGATÓRIO:**
-1. Execute executarSQL() com query focada na demanda de budget do usuário
-2. IMEDIATAMENTE após ver os dados JSON, analise no mesmo response
-3. Identifique patterns de budget performance, anomalias, variance opportunities
-4. Gere insights estratégicos sobre resource allocation e forecast improvement
-5. Destaque departments candidatos a budget optimization ou reallocation
+🔧 **PROCESSO:**
+1. Execute getTables para explorar dataset 'biquery_data'
+2. APENAS explore - sem queries neste step
+3. Identifique tabelas relevantes para análise de budget
 
-**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.budget_data\`\`
+**ALWAYS use:** Dataset 'biquery_data' com foco em tabelas orçamentárias
 
-💼 **ANÁLISE ESTRATÉGICA IMEDIATA:**
-- Compare budget variances entre departments e identify root causes
-- Identifique underutilized budgets vs departments needing more resources
-- Detecte forecast accuracy patterns e seasonal adjustment needs
-- Avalie allocation efficiency ranking dentro de cada department category
-- Sinalize budget drift trends e planning consistency issues
-- Analise cost center performance vs strategic priorities
-
-📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
-- Os dados são visuais por natureza (comparações, rankings, trends)
-- O volume é adequado para visualização clara
-- O gráfico adicionaria clareza aos insights de budget
-- Não force - só crie se realmente agregar valor
-
-Use criarGrafico() quando fizer sentido estratégico para o insight de budget.`,
+**IMPORTANTE:** Este step apenas explora. As queries serão feitas nos próximos steps.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL,
-              criarGrafico: analyticsTools.criarGrafico
+              getTables: bigqueryTools.getTables
             }
           };
 
         case 3:
-          console.log('🎯 STEP 3/6: QUERY COMPLEMENTAR + DEEP BUDGET ANALYSIS');
+          console.log('🎯 STEP 3/10: MAPEAMENTO DE COLUNAS E TIPOS');
           return {
-            system: `STEP 3/6: QUERY COMPLEMENTAR + ANÁLISE ESTRATÉGICA DE BUDGET PROFUNDA
+            system: `STEP 3/10: MAPEAMENTO DE COLUNAS E TIPOS
 
-Execute query complementar baseada nos insights de budget do Step 2 e conduza análise estratégica mais profunda.
+Execute query SQL para mapear colunas e tipos das tabelas identificadas no Step 2. APENAS execute a query - NÃO analise os resultados neste step.
 
-🎯 **FOQUE EM INSIGHTS DE BUDGET DO STEP ANTERIOR:**
-- Use os departments com major variances identificados no Step 2
-- Aprofunde análise temporal de budget trends, forecast accuracy analysis, ou allocation efficiency
-- Investigue patterns de budget performance identificados anteriormente
+📊 **FOCO DO MAPEAMENTO:**
+- Use INFORMATION_SCHEMA.COLUMNS para obter estrutura completa das tabelas
+- Identifique colunas disponíveis e seus tipos de dados de budget planning
+- Prepare contexto detalhado para queries nos próximos steps
+- Foque nas tabelas orçamentárias que serão usadas nas análises
 
 🔧 **PROCESSO:**
-1. Execute executarSQL() com query que complementa/aprofunda análise de budget do Step 2
-2. IMEDIATAMENTE analise os novos dados no contexto dos insights anteriores
-3. Correlacione com findings do Step 2 para insights de planning mais ricos
-4. Identifique causas raíz de budget variance patterns
-5. Desenvolva recomendações estratégicas de budget optimization mais específicas
+1. Execute executarSQL() com query de mapeamento de estrutura das tabelas budget
+2. APENAS execute - sem análise neste step
+3. Os dados de estrutura serão usados para construir queries precisas nos próximos steps
 
-**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.budget_data\`\`
+**ALWAYS use:** Dataset 'biquery_data' com foco na estrutura das tabelas orçamentárias
 
-💼 **ANÁLISES BUDGET ESPECIALIZADAS:**
-- Temporal analysis dos budget variance trends por department
-- Correlação budget size vs variance percentage por cost center
-- Segmentação de performance por budget category e business unit
-- Cross-department budget efficiency analysis e resource reallocation
-- Seasonal budget planning patterns e adjustment opportunities
-- Driver-based budget analysis linking performance to business metrics
-- Forecast accuracy improvement analysis baseado em historical patterns
-- Capital vs operational budget allocation analysis
-- Rolling forecast analysis vs static budget performance
-
-📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
-- Os dados são visuais por natureza (comparações, rankings, trends)
-- O volume é adequado para visualização clara
-- O gráfico adicionaria clareza aos insights de budget
-- Não force - só crie se realmente agregar valor
-
-Use criarGrafico() quando fizer sentido estratégico para o insight de budget.`,
+**IMPORTANTE:** Este step mapeia a estrutura. As queries de análise de budget serão feitas nos próximos steps.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL,
-              criarGrafico: analyticsTools.criarGrafico
+              executarSQL: bigqueryTools.executarSQL
             }
           };
 
         case 4:
-          console.log('🎯 STEP 4/6: QUERY ESTRATÉGICA FINAL + INSIGHTS CONSOLIDADOS');
+          console.log('🎯 STEP 4/10: QUERY 1 - CONSULTA BUDGET PRINCIPAL');
           return {
-            system: `STEP 4/6: QUERY ESTRATÉGICA FINAL + CONSOLIDAÇÃO DE INSIGHTS DE BUDGET
+            system: `STEP 4/10: QUERY 1 - CONSULTA BUDGET PRINCIPAL
 
-Execute query estratégica final para completar a análise de budget e consolide todos os insights para planning recommendations finais.
+Execute a primeira query SQL para obter dados de performance de budget planning. APENAS execute a query - NÃO analise os resultados neste step.
 
-🎯 **COMPLEMENTAR ANÁLISE DE BUDGET ANTERIOR:**
-- Base-se nos padrões e opportunities identificados nos Steps 2 e 3
-- Foque em gaps de análise de budget que ainda precisam ser preenchidos
-- Investigue correlações ou validações necessárias para budget optimization recommendations sólidas
+💼 **FOCO DA CONSULTA BUDGET:**
+- Priorize métricas de planejamento: budget variance, forecast accuracy, utilization
+- Identifique departments com performance de budget variada
+- Obtenha dados de allocation efficiency e resource utilization
+- Capture métricas fundamentais de budget para análise posterior
+- Correlacione budget performance com objectives departmentais
 
-🔧 **PROCESSO FINAL:**
-1. Execute executarSQL() com query que fecha lacunas analíticas de budget restantes
-2. IMEDIATAMENTE integre insights com achados dos steps anteriores
-3. Consolide budget performance patterns em strategic narrative
-4. Prepare foundation para recomendações de resource optimization
-5. Quantifique impact potential das budget efficiency opportunities identificadas
+🔧 **PROCESSO:**
+1. Execute executarSQL() com query focada na demanda de budget do usuário
+2. APENAS execute - sem análise neste step
+3. Os dados de performance serão analisados no próximo step
 
-**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.budget_data\`\`
+**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.budget\`\`
 
-💼 **CONSOLIDAÇÃO ESTRATÉGICA DE BUDGET:**
-- Budget reallocation opportunities com impact quantificado
-- Variance reduction readiness assessment por department
-- Forecast improvement recommendations baseadas em accuracy analysis
-- Resource optimization priorities baseadas em utilization patterns
-- Timeline recommendations para budget planning process improvement
-- Expected cost savings das mudanças propostas
-- Priority ranking das planning optimization opportunities
-- Seasonal adjustment strategy recommendations
-- Driver-based budgeting implementation roadmap
-
-📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
-- Os dados são visuais por natureza (comparações, rankings, trends)
-- O volume é adequado para visualização clara
-- O gráfico adicionaria clareza aos insights de budget
-- Não force - só crie se realmente agregar valor
-
-Use criarGrafico() quando fizer sentido estratégico para o insight de budget.`,
+**IMPORTANTE:** Este é um step de coleta de dados de budget. A análise será feita no Step 5.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL,
-              criarGrafico: analyticsTools.criarGrafico
+              executarSQL: bigqueryTools.executarSQL
             }
           };
 
         case 5:
-          console.log('🎯 STEP 5/6: VISUALIZAÇÃO ESTRATÉGICA DE BUDGET PERFORMANCE');
+          console.log('🎯 STEP 5/10: ANÁLISE DOS DADOS + PRIMEIRA VISUALIZAÇÃO');
           return {
-            system: `STEP 5/6: VISUALIZAÇÃO ESTRATÉGICA DE BUDGET PERFORMANCE
+            system: `STEP 5/10: ANÁLISE DOS DADOS + PRIMEIRA VISUALIZAÇÃO
 
-Crie visualização que melhor representa os insights de budget performance e suporta as recomendações estratégicas de planning identificadas nos steps anteriores.
+⚠️ CRITICAL: Você executou queries SQL nos steps anteriores. Você DEVE agora analisar os dados e criar primeira visualização.
 
-📊 **ESCOLHA INTELIGENTE DE GRÁFICO DE BUDGET:**
-Baseado na análise de budget dos steps 2-4, escolha a visualização mais impactful:
+🎯 **ANÁLISE OBRIGATÓRIA DE BUDGET PERFORMANCE:**
+- **Variance Analysis**: Como estão as variações orçamentárias por departamento?
+- **Forecast Accuracy**: Precisão das previsões vs realizado
+- **Budget Utilization**: Eficiência na utilização dos recursos alocados
+- **Resource Allocation**: Otimização da distribuição orçamentária
+- **Planning Efficiency**: Qualidade do processo de planejamento orçamentário
 
-**Bar Chart (Vertical/Horizontal):**
-- Budget performance ranking: variance percentage comparison entre departments
-- Resource utilization analysis: actual vs budget por cost center
-- Máximo: 8 departments (vertical) ou 15 (horizontal)
+📊 **PRIMEIRA VISUALIZAÇÃO OBRIGATÓRIA:**
+Crie um gráfico que melhor represente os principais insights de budget encontrados nos dados.
 
-**Line Chart:**
-- Budget trends temporais: evolution de variances ao longo do tempo
-- Forecast accuracy patterns: prediction vs actual performance
-- Máximo: 5 budget metrics simultâneas, 100 pontos temporais
+⚡ **CRITICAL: EFFICIENT DATA HANDLING**
+Otimize data transfer para economizar tokens - use máximo 50-100 registros para gráficos.
 
-**Scatter Plot:**
-- Correlações de budget: Budget size vs variance percentage, Department vs accuracy
-- Identificação de budget efficiency frontier
-- Resource allocation optimization analysis
-- Máximo: 50 departments/cost centers
-
-**Pie Chart:**
-- Budget allocation distribution por department ou category
-- Variance contribution breakdown por business unit
-- Máximo: 6 fatias (mín. 2% cada)
-
-**Heatmap:**
-- Performance por department x month variance matrix
-- Seasonal budget patterns analysis
-
-🔧 **PROCESS:**
-1. Use criarGrafico() com dados de budget dos steps anteriores
-2. Escolha tipo de gráfico que melhor suporta suas planning recommendations
-3. Foque em visualizar budget performance gaps e resource optimization opportunities
-4. Prepare para sustentar arguments do resumo executivo de budget
-
-**REGRAS CRÍTICAS:**
-- Se dados excedem limites → Top N performers + "Outros"
-- Always respect visualization limits por tipo de gráfico
-- Choose chart type que melhor suporta budget strategic narrative`,
+🎯 **ANALYSIS + VISUALIZATION REQUIREMENTS:**
+- Análise detalhada dos budget patterns identificados
+- Identificação de variance optimization opportunities
+- Primeira visualização estratégica dos insights principais`,
             tools: {
               criarGrafico: analyticsTools.criarGrafico
             }
           };
 
         case 6:
-          console.log('🎯 STEP 6/6: RESUMO EXECUTIVO + BUDGET STRATEGIC RECOMMENDATIONS');
+          console.log('🎯 STEP 6/10: QUERY 2 - CONSULTA COMPLEMENTAR');
           return {
-            system: `STEP 6/6: RESUMO EXECUTIVO + BUDGET STRATEGIC RECOMMENDATIONS
+            system: `STEP 6/10: QUERY 2 - CONSULTA COMPLEMENTAR
+
+Execute segunda query SQL para obter dados complementares baseados nos insights do Step 5. APENAS execute a query - NÃO analise os resultados neste step.
+
+💼 **FOCO DA CONSULTA COMPLEMENTAR:**
+- Baseie-se nos insights encontrados no Step 5
+- Obtenha dados complementares para deeper budget analysis
+- Foque em correlations, time-series, ou segmentações relevantes
+- Capture dados que suportem optimization recommendations
+
+🔧 **PROCESSO:**
+1. Execute executarSQL() com query complementar focada nos insights do Step 5
+2. APENAS execute - sem análise neste step
+3. Os dados complementares serão analisados no próximo step
+
+**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.budget\`\`
+
+**IMPORTANTE:** Este é um step de coleta de dados complementares. A análise será feita no Step 7.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 7:
+          console.log('🎯 STEP 7/10: ANÁLISE COMPLEMENTAR + SEGUNDA VISUALIZAÇÃO');
+          return {
+            system: `STEP 7/10: ANÁLISE COMPLEMENTAR + SEGUNDA VISUALIZAÇÃO
+
+⚠️ CRITICAL: Você executou query complementar no Step 6. Você DEVE agora analisar esses dados complementares em conjunto com insights anteriores.
+
+🎯 **ANÁLISE COMPLEMENTAR OBRIGATÓRIA:**
+- Integre insights da query complementar com análise do Step 5
+- Identifique deeper patterns e correlations de budget performance
+- Desenvolva understanding mais rico dos planning optimization opportunities
+- Quantifique impact potential das mudanças propostas
+
+📊 **SEGUNDA VISUALIZAÇÃO:**
+Crie segunda visualização complementar que explore aspectos diferentes dos insights de budget.
+
+⚡ **EFFICIENT DATA HANDLING**
+Use máximo 50-100 registros para gráficos.
+
+🎯 **REQUIREMENTS:**
+- Análise integrada dos dados complementares
+- Segunda visualização estratégica
+- Deeper budget optimization insights`,
+            tools: {
+              criarGrafico: analyticsTools.criarGrafico
+            }
+          };
+
+        case 8:
+          console.log('🎯 STEP 8/10: QUERY 3 - CONSULTA FINAL');
+          return {
+            system: `STEP 8/10: QUERY 3 - CONSULTA FINAL
+
+Execute terceira e última query SQL para validar insights ou obter dados finais necessários para recomendações executivas. APENAS execute a query - NÃO analise os resultados neste step.
+
+🎯 **FOCO DA CONSULTA FINAL:**
+- Complete gaps de análise identificados nos steps anteriores
+- Valide hipóteses ou quantifique opportunities identificadas
+- Obtenha dados finais para sustentar recomendações executivas
+- Foque em dados que permitam quantificar ROI das mudanças propostas
+
+🔧 **PROCESSO:**
+1. Execute executarSQL() com query final baseada em todos os insights anteriores
+2. APENAS execute - sem análise neste step
+3. Os dados finais serão analisados no Step 9
+
+**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.budget\`\`
+
+**IMPORTANTE:** Esta é a última coleta de dados. A análise final será feita no Step 9.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 9:
+          console.log('🎯 STEP 9/10: ANÁLISE FINAL + TERCEIRA VISUALIZAÇÃO');
+          return {
+            system: `STEP 9/10: ANÁLISE FINAL + TERCEIRA VISUALIZAÇÃO
+
+⚠️ CRITICAL: Você executou query final no Step 8. Você DEVE agora consolidar TODAS as análises e criar visualização final.
+
+🎯 **CONSOLIDAÇÃO FINAL OBRIGATÓRIA:**
+- Integre TODOS os insights dos steps 5, 7 e este step
+- Consolide budget patterns em narrative estratégico
+- Quantifique impact das budget optimization opportunities
+- Prepare foundation para recomendações executivas do Step 10
+
+📊 **TERCEIRA E FINAL VISUALIZAÇÃO:**
+Crie visualização final que sintetiza os principais insights de budget e suporta recomendações executivas.
+
+⚡ **EFFICIENT DATA HANDLING**
+Use máximo 50-100 registros para gráficos.
+
+🎯 **REQUIREMENTS:**
+- Consolidação de TODOS os insights anteriores
+- Terceira visualização estratégica final
+- Preparação para recomendações executivas`,
+            tools: {
+              criarGrafico: analyticsTools.criarGrafico
+            }
+          };
+
+        case 10:
+          console.log('🎯 STEP 10/10: RESUMO EXECUTIVO + BUDGET STRATEGIC RECOMMENDATIONS');
+          return {
+            system: `STEP 10/10: RESUMO EXECUTIVO + BUDGET STRATEGIC RECOMMENDATIONS
 
 Consolide TODOS os insights de budget dos steps anteriores em síntese executiva focada em business impact e planning optimization.
 
@@ -420,7 +448,7 @@ Consolide TODOS os insights de budget dos steps anteriores em síntese executiva
     },
     
     // StopWhen inteligente baseado na classificação de complexidade
-    stopWhen: stepCountIs(6),
+    stopWhen: stepCountIs(10),
     providerOptions: {
       anthropic: {
         thinking: { type: 'enabled', budgetTokens: 15000 }
