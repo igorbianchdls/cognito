@@ -3,8 +3,18 @@
 import { useState, useCallback, useMemo } from 'react'
 import { useStore } from '@nanostores/react'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core'
+import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import SidebarNav from '@/components/apps/SidebarNav'
-import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { Separator } from "@/components/ui/separator"
 import SidebarPanel from '@/components/apps/SidebarPanel'
 import GridCanvas from '@/components/apps/GridCanvas'
 import MultiGridCanvas from '@/components/apps/MultiGridCanvas'
@@ -82,72 +92,102 @@ export default function AppsPage() {
   }, [droppedWidgets])
 
   return (
-    <SidebarProvider defaultOpen={false}>
-      <SidebarNav 
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
-      <SidebarInset className="bg-gray-50">
-        {/* Toolbar no topo direito */}
-        <div className="flex justify-end p-2">
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm">
-              <Settings className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <Share className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <Github className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="sm">Share</Button>
-            <Button variant="default" size="sm">Publish</Button>
-          </div>
-        </div>
-        
-        <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <div className="flex flex-1 bg-gray-50">
-            {/* SidebarPanel */}
-            <SidebarPanel 
-              activeTab={activeTab}
-              droppedWidgets={droppedWidgets}
-              onEditWidget={handleEditWidget}
+    <SidebarProvider>
+      <SidebarShadcn />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12" style={{backgroundColor: 'white'}}>
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator
+              orientation="vertical"
+              className="mr-2 data-[orientation=vertical]:h-4"
             />
-          
-          {/* Canvas */}
-          <div className="flex-1 py-1 px-3">
-              {hasNavigationWidget ? (
-                <MultiGridCanvas 
-                  widgets={droppedWidgets}
-                  onLayoutChange={handleLayoutChange}
-                  onRemoveWidget={handleRemoveWidget}
-                  onEditWidget={handleEditWidgetClick}
-                />
-              ) : (
-                <GridCanvas 
-                  widgets={droppedWidgets}
-                  onLayoutChange={handleLayoutChange}
-                  onRemoveWidget={handleRemoveWidget}
-                  onEditWidget={handleEditWidgetClick}
-                />
-              )}
-            </div>
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem className="hidden md:block">
+                  <BreadcrumbLink href="#">
+                    Creatto
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Apps</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
           </div>
-            
-          <DragOverlay>
-            {activeWidget ? (
-              <div className="bg-white border-2 border-blue-500 rounded-lg p-3 shadow-lg opacity-90">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{activeWidget.icon}</span>
-                  <div>
-                    <div className="font-medium text-sm">{activeWidget.name}</div>
-                    <div className="text-xs text-gray-500">{activeWidget.description}</div>
-                  </div>
+        </header>
+        <div className="flex flex-1 flex-col" style={{backgroundColor: 'white'}}>
+          {/* Sistema de Apps aninhado */}
+          <SidebarProvider defaultOpen={false}>
+            <SidebarNav 
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+            />
+            <SidebarInset className="bg-gray-50">
+              {/* Toolbar no topo direito */}
+              <div className="flex justify-end p-2">
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm">
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm">
+                    <Share className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm">
+                    <Github className="h-4 w-4" />
+                  </Button>
+                  <Button variant="outline" size="sm">Share</Button>
+                  <Button variant="default" size="sm">Publish</Button>
                 </div>
               </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
+              
+              <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+                <div className="flex flex-1 bg-gray-50">
+                  {/* SidebarPanel */}
+                  <SidebarPanel 
+                    activeTab={activeTab}
+                    droppedWidgets={droppedWidgets}
+                    onEditWidget={handleEditWidget}
+                  />
+                
+                {/* Canvas */}
+                <div className="flex-1 py-1 px-3">
+                    {hasNavigationWidget ? (
+                      <MultiGridCanvas 
+                        widgets={droppedWidgets}
+                        onLayoutChange={handleLayoutChange}
+                        onRemoveWidget={handleRemoveWidget}
+                        onEditWidget={handleEditWidgetClick}
+                      />
+                    ) : (
+                      <GridCanvas 
+                        widgets={droppedWidgets}
+                        onLayoutChange={handleLayoutChange}
+                        onRemoveWidget={handleRemoveWidget}
+                        onEditWidget={handleEditWidgetClick}
+                      />
+                    )}
+                  </div>
+                </div>
+                  
+                <DragOverlay>
+                  {activeWidget ? (
+                    <div className="bg-white border-2 border-blue-500 rounded-lg p-3 shadow-lg opacity-90">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">{activeWidget.icon}</span>
+                        <div>
+                          <div className="font-medium text-sm">{activeWidget.name}</div>
+                          <div className="text-xs text-gray-500">{activeWidget.description}</div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
+            </SidebarInset>
+          </SidebarProvider>
+        </div>
       </SidebarInset>
     </SidebarProvider>
   )
