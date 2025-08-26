@@ -4,7 +4,6 @@ import { useState, useCallback, useMemo } from 'react'
 import { useStore } from '@nanostores/react'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
-import SidebarNav from '@/components/apps/SidebarNav'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import {
   Breadcrumb,
@@ -24,6 +23,7 @@ import { isNavigationWidget } from '@/types/widget'
 import type { Widget, LayoutItem, DroppedWidget } from '@/types/widget'
 import { Button } from '@/components/ui/button'
 import { Settings, Share, Github } from 'lucide-react'
+import BreadcrumbTabs from '@/components/apps/BreadcrumbTabs'
 
 export default function AppsPage() {
   const droppedWidgets = useStore($widgets)
@@ -116,6 +116,12 @@ export default function AppsPage() {
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
+              
+              {/* Tabs integradas no breadcrumb */}
+              <BreadcrumbTabs 
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+              />
             </div>
             
             {/* Botões na extrema direita */}
@@ -136,58 +142,50 @@ export default function AppsPage() {
         </header>
         <div className="flex flex-1 flex-col" style={{backgroundColor: 'white'}}>
           {/* Sistema de Apps aninhado */}
-          <SidebarProvider defaultOpen={false}>
-            <SidebarNav 
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-            />
-            <SidebarInset className="bg-gray-50">
+          <div className="flex flex-1 bg-gray-50">
               
-              <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-                <div className="flex flex-1 bg-gray-50">
-                  {/* SidebarPanel */}
-                  <SidebarPanel 
-                    activeTab={activeTab}
-                    droppedWidgets={droppedWidgets}
-                    onEditWidget={handleEditWidget}
+            <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+              {/* SidebarPanel */}
+              <SidebarPanel 
+                activeTab={activeTab}
+                droppedWidgets={droppedWidgets}
+                onEditWidget={handleEditWidget}
+              />
+            
+              {/* Canvas */}
+              <div className="flex-1 py-1 px-3">
+                {hasNavigationWidget ? (
+                  <MultiGridCanvas 
+                    widgets={droppedWidgets}
+                    onLayoutChange={handleLayoutChange}
+                    onRemoveWidget={handleRemoveWidget}
+                    onEditWidget={handleEditWidgetClick}
                   />
-                
-                {/* Canvas */}
-                <div className="flex-1 py-1 px-3">
-                    {hasNavigationWidget ? (
-                      <MultiGridCanvas 
-                        widgets={droppedWidgets}
-                        onLayoutChange={handleLayoutChange}
-                        onRemoveWidget={handleRemoveWidget}
-                        onEditWidget={handleEditWidgetClick}
-                      />
-                    ) : (
-                      <GridCanvas 
-                        widgets={droppedWidgets}
-                        onLayoutChange={handleLayoutChange}
-                        onRemoveWidget={handleRemoveWidget}
-                        onEditWidget={handleEditWidgetClick}
-                      />
-                    )}
-                  </div>
-                </div>
-                  
-                <DragOverlay>
-                  {activeWidget ? (
-                    <div className="bg-white border-2 border-blue-500 rounded-lg p-3 shadow-lg opacity-90">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">{activeWidget.icon}</span>
-                        <div>
-                          <div className="font-medium text-sm">{activeWidget.name}</div>
-                          <div className="text-xs text-gray-500">{activeWidget.description}</div>
-                        </div>
+                ) : (
+                  <GridCanvas 
+                    widgets={droppedWidgets}
+                    onLayoutChange={handleLayoutChange}
+                    onRemoveWidget={handleRemoveWidget}
+                    onEditWidget={handleEditWidgetClick}
+                  />
+                )}
+              </div>
+              
+              <DragOverlay>
+                {activeWidget ? (
+                  <div className="bg-white border-2 border-blue-500 rounded-lg p-3 shadow-lg opacity-90">
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{activeWidget.icon}</span>
+                      <div>
+                        <div className="font-medium text-sm">{activeWidget.name}</div>
+                        <div className="text-xs text-gray-500">{activeWidget.description}</div>
                       </div>
                     </div>
-                  ) : null}
-                </DragOverlay>
-              </DndContext>
-            </SidebarInset>
-          </SidebarProvider>
+                  </div>
+                ) : null}
+              </DragOverlay>
+            </DndContext>
+          </div>
         </div>
       </SidebarInset>
     </SidebarProvider>
