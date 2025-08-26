@@ -8,10 +8,13 @@ import CanvasWidgets from '../tools/appsChat/CanvasWidgets'
 import { widgetActions } from '@/stores/widgetStore'
 import {
   PromptInput,
+  PromptInputButton,
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputToolbar,
+  PromptInputTools,
 } from '@/components/ai-elements/prompt-input'
+import { MicIcon, GlobeIcon } from 'lucide-react'
 
 interface ChatPanelProps {
   droppedWidgets: DroppedWidget[]
@@ -298,6 +301,15 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
             disabled={status !== 'ready'}
           />
           <PromptInputToolbar>
+            <PromptInputTools>
+              <PromptInputButton>
+                <MicIcon size={16} />
+              </PromptInputButton>
+              <PromptInputButton>
+                <GlobeIcon size={16} />
+                <span>Search</span>
+              </PromptInputButton>
+            </PromptInputTools>
             <PromptInputSubmit
               disabled={!input.trim() || status !== 'ready'}
               status={status}
