@@ -3,6 +3,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Employee, categoryColors } from '@/data/orgData';
+import { Edit, MessageSquare, Database } from 'lucide-react';
 
 interface EmployeeCardProps {
   employee: Employee;
@@ -12,43 +13,67 @@ interface EmployeeCardProps {
 }
 
 export default function EmployeeCard({ employee, level, isHighlighted = false, onClick }: EmployeeCardProps) {
-  const getCardStyle = () => {
-    if (level === 0) {
-      return 'border-2 border-purple-500 bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20';
-    }
-    if (isHighlighted) {
-      return 'border-2 border-blue-400 bg-blue-50 dark:bg-blue-900/20 shadow-lg';
-    }
-    return 'border border-border hover:border-gray-300 hover:shadow-md transition-all duration-200 bg-white dark:bg-gray-800';
+  const getBadgeColor = (category: string) => {
+    const colorMap: Record<string, string> = {
+      'Executivo': 'bg-purple-500',
+      'Vendas': 'bg-blue-500',
+      'Operacional': 'bg-gray-500', 
+      'Tráfego Pago': 'bg-green-500',
+      'Marketing': 'bg-pink-500',
+      'Comercial': 'bg-indigo-500',
+      'Financeiro': 'bg-yellow-500',
+      'Supply Chain': 'bg-cyan-500',
+      'Contábil': 'bg-slate-500',
+      'Jurídico': 'bg-gray-600',
+      'Business Intelligence': 'bg-violet-500'
+    };
+    return colorMap[category] || 'bg-gray-500';
   };
-  
-  const categoryColorClass = employee.category ? categoryColors[employee.category] || categoryColors['All Teams'] : categoryColors['All Teams'];
 
   return (
     <Card 
-      className={`min-w-[280px] max-w-[320px] cursor-pointer ${getCardStyle()} relative`}
+      className={`min-w-[280px] max-w-[320px] cursor-pointer bg-white border border-gray-200 hover:shadow-lg transition-all duration-200 rounded-2xl relative ${
+        isHighlighted ? 'ring-2 ring-blue-400 shadow-lg' : ''
+      }`}
       onClick={onClick}
     >
-      <CardContent className="p-4">
-        {/* Icon */}
-        <div className="flex justify-start mb-3">
-          <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${employee.iconColor} flex items-center justify-center text-white text-lg shadow-sm`}>
-            {employee.icon}
+      <CardContent className="p-6">
+        {/* Badge no canto superior direito */}
+        <div className="absolute top-4 right-4">
+          <Badge className={`${getBadgeColor(employee.category)} text-white text-xs px-2 py-1 rounded-md`}>
+            PRO
+          </Badge>
+        </div>
+
+        {/* 3 ícones no topo */}
+        <div className="flex justify-center gap-4 mb-6">
+          <div className="w-12 h-12 bg-gray-50 border border-gray-200 rounded-full flex items-center justify-center">
+            <Edit className="w-5 h-5 text-gray-600" />
+          </div>
+          <div className="w-12 h-12 bg-gray-50 border border-gray-200 rounded-full flex items-center justify-center">
+            <div className={`w-6 h-6 rounded bg-gradient-to-br ${employee.iconColor} flex items-center justify-center text-white text-sm`}>
+              {employee.icon}
+            </div>
+          </div>
+          <div className="w-12 h-12 bg-gray-50 border border-gray-200 rounded-full flex items-center justify-center">
+            <MessageSquare className="w-5 h-5 text-gray-600" />
           </div>
         </div>
 
-        {/* Title */}
-        <div className="text-left mb-3">
-          <h3 className="font-semibold text-base text-foreground leading-tight">
+        {/* Título principal centralizado */}
+        <div className="text-center mb-4">
+          <h3 className="text-xl font-semibold text-gray-900 leading-tight">
             {employee.name}
           </h3>
         </div>
 
-        {/* Description */}
-        <p className="text-sm text-muted-foreground leading-relaxed mb-3">
-          {employee.description}
+        {/* Descrição */}
+        <p className="text-sm text-gray-600 leading-relaxed text-center">
+          {employee.description.length > 80 
+            ? `${employee.description.substring(0, 80)}...`
+            : employee.description
+          }
         </p>
-
       </CardContent>
     </Card>
   );
