@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import EmployeeCard from './EmployeeCard';
 import { Employee, orgData, additionalEmployees } from '@/data/orgData';
-import Sidebar from '../navigation/Sidebar';
 
 export default function OrgChart() {
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
@@ -97,14 +96,9 @@ export default function OrgChart() {
   };
 
   return (
-    <div className="flex h-screen bg-background">
-      {/* Sidebar */}
-      <Sidebar />
-      
-      {/* Main Content */}
-      <div className="flex-1 flex">
-        {/* Org Chart Area */}
-        <div className="flex-1 overflow-x-auto overflow-y-auto p-8">
+    <div className="flex h-full">
+      {/* Org Chart Area */}
+      <div className="flex-1 overflow-x-auto overflow-y-auto p-8">
           <div className="min-w-max">
             {/* Header */}
             <div className="mb-8">
