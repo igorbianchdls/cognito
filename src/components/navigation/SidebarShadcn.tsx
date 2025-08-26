@@ -9,6 +9,7 @@ import {
   Sheet,
   Database,
   GalleryVerticalEnd,
+  Plug,
 } from "lucide-react"
 
 import MetaIcon from "@/components/icons/MetaIcon"
@@ -59,6 +60,11 @@ const navigationData = {
       title: "Apps", 
       url: "/apps",
       icon: LayoutGrid,
+    },
+    {
+      title: "Integrações",
+      url: "/integracoes",
+      icon: Plug,
     },
     {
       title: "Organograma",
