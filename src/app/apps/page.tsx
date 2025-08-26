@@ -5,14 +5,6 @@ import { useStore } from '@nanostores/react'
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/core'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
 import SidebarPanel from '@/components/apps/SidebarPanel'
 import GridCanvas from '@/components/apps/GridCanvas'
@@ -95,7 +87,7 @@ export default function AppsPage() {
     <SidebarProvider>
       <SidebarShadcn />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12" style={{backgroundColor: 'white'}}>
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b border-gray-200" style={{backgroundColor: 'white'}}>
           <div className="flex items-center justify-between w-full px-4">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="-ml-1" />
@@ -103,21 +95,8 @@ export default function AppsPage() {
                 orientation="vertical"
                 className="mr-2 data-[orientation=vertical]:h-4"
               />
-              <Breadcrumb>
-                <BreadcrumbList>
-                  <BreadcrumbItem className="hidden md:block">
-                    <BreadcrumbLink href="#">
-                      Creatto
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator className="hidden md:block" />
-                  <BreadcrumbItem>
-                    <BreadcrumbPage>Apps</BreadcrumbPage>
-                  </BreadcrumbItem>
-                </BreadcrumbList>
-              </Breadcrumb>
               
-              {/* Tabs integradas no breadcrumb */}
+              {/* Tabs integradas no header */}
               <BreadcrumbTabs 
                 activeTab={activeTab}
                 onTabChange={setActiveTab}

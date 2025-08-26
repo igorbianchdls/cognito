@@ -209,7 +209,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
   }
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto bg-gray-50">
+    <div className="flex flex-col h-full overflow-y-auto bg-white">
       
       {/* Messages */}
       <div className="flex-1 p-4 overflow-y-scroll space-y-4 custom-scrollbar min-h-0">
@@ -292,7 +292,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
       </div>
 
       {/* Input */}
-      <div className="p-4 bg-gray-50 flex-shrink-0">
+      <div className="p-4 bg-white flex-shrink-0">
         <PromptInput onSubmit={handleSubmit}>
           <PromptInputTextarea
             value={input}
