@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import { useDraggable } from '@dnd-kit/core'
 import { Button } from '@/components/ui/button'
 import { X, Minus, Square, GripHorizontal } from 'lucide-react'
 import ChatInterface from './ChatInterface'
@@ -42,9 +41,8 @@ export default function DraggableChatContainer({
     listeners,
     setNodeRef,
     transform,
-    transition,
     isDragging,
-  } = useSortable({ id: container.id })
+  } = useDraggable({ id: container.id })
 
   const style = {
     position: 'absolute' as const,
@@ -52,8 +50,7 @@ export default function DraggableChatContainer({
     top: container.position.y,
     width: container.size.width,
     height: isMinimized ? 'auto' : container.size.height,
-    transform: CSS.Transform.toString(transform),
-    transition,
+    transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
     zIndex: isDragging ? 1000 : 1,
   }
 
