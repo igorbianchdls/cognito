@@ -45,8 +45,8 @@ export default function EmployeeCard({ employee, level, isHighlighted = false, o
           </Badge>
         </div>
 
-        {/* Retângulo cinza com 3 ícones */}
-        <div className="bg-gray-100 rounded-t-2xl p-6 mb-6">
+        {/* Retângulo cinza com 3 ícones - colado no topo */}
+        <div className="bg-gray-100 rounded-t-2xl p-6">
           <div className="flex justify-center gap-4">
             <div className="w-12 h-12 bg-white border border-gray-300 rounded-full flex items-center justify-center">
               <Edit className="w-5 h-5 text-gray-600" />
@@ -63,10 +63,10 @@ export default function EmployeeCard({ employee, level, isHighlighted = false, o
         </div>
 
         {/* Conteúdo alinhado à esquerda */}
-        <div className="px-6 pb-6">
+        <div className="px-4 py-4">
           {/* Título alinhado à esquerda */}
-          <div className="mb-4">
-            <h3 className="text-xl font-semibold text-gray-900 leading-tight text-left">
+          <div className="mb-2">
+            <h3 className="text-lg font-semibold text-gray-900 leading-tight text-left">
               {employee.name}
             </h3>
           </div>
