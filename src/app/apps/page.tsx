@@ -96,25 +96,42 @@ export default function AppsPage() {
       <SidebarShadcn />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12" style={{backgroundColor: 'white'}}>
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator
-              orientation="vertical"
-              className="mr-2 data-[orientation=vertical]:h-4"
-            />
-            <Breadcrumb>
-              <BreadcrumbList>
-                <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Creatto
-                  </BreadcrumbLink>
-                </BreadcrumbItem>
-                <BreadcrumbSeparator className="hidden md:block" />
-                <BreadcrumbItem>
-                  <BreadcrumbPage>Apps</BreadcrumbPage>
-                </BreadcrumbItem>
-              </BreadcrumbList>
-            </Breadcrumb>
+          <div className="flex items-center justify-between w-full px-4">
+            <div className="flex items-center gap-2">
+              <SidebarTrigger className="-ml-1" />
+              <Separator
+                orientation="vertical"
+                className="mr-2 data-[orientation=vertical]:h-4"
+              />
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem className="hidden md:block">
+                    <BreadcrumbLink href="#">
+                      Creatto
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator className="hidden md:block" />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>Apps</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+            
+            {/* Botões na extrema direita */}
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm">
+                <Settings className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm">
+                <Share className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm">
+                <Github className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" size="sm">Share</Button>
+              <Button variant="default" size="sm">Publish</Button>
+            </div>
           </div>
         </header>
         <div className="flex flex-1 flex-col" style={{backgroundColor: 'white'}}>
@@ -125,22 +142,6 @@ export default function AppsPage() {
               onTabChange={setActiveTab}
             />
             <SidebarInset className="bg-gray-50">
-              {/* Toolbar no topo direito */}
-              <div className="flex justify-end p-2">
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Settings className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Share className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Github className="h-4 w-4" />
-                  </Button>
-                  <Button variant="outline" size="sm">Share</Button>
-                  <Button variant="default" size="sm">Publish</Button>
-                </div>
-              </div>
               
               <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
                 <div className="flex flex-1 bg-gray-50">
