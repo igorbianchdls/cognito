@@ -10,6 +10,7 @@ import {
   Database,
   GalleryVerticalEnd,
   Plug,
+  MessagesSquare,
 } from "lucide-react"
 
 import MetaIcon from "@/components/icons/MetaIcon"
@@ -60,6 +61,11 @@ const navigationData = {
       title: "Apps", 
       url: "/apps",
       icon: LayoutGrid,
+    },
+    {
+      title: "Multi Agentes",
+      url: "/multiagentes",
+      icon: MessagesSquare,
     },
     {
       title: "Integrações",

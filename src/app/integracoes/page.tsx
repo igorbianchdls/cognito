@@ -125,10 +125,10 @@ export default function IntegrationsPage() {
         {/* Header */}
         <div className="mb-10">
           <h1 className="text-3xl font-bold text-gray-900 mb-3">
-            Integrations
+            Integrações
           </h1>
           <p className="text-gray-600 text-lg mb-8">
-            Seamlessly connect your phone number with your favorite apps to automate workflows and stay updated on calls and messages.
+            Conecte facilmente seu número de telefone com seus aplicativos favoritos para automatizar fluxos de trabalho e se manter atualizado sobre chamadas e mensagens.
           </p>
           
           {/* Tabs */}
