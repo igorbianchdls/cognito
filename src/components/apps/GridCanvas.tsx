@@ -9,7 +9,8 @@ import { $selectedWidgetId, widgetActions } from '@/stores/widgetStore'
 import { $canvasConfig } from '@/stores/canvasStore' // Canvas customization store
 import { WebPreview, WebPreviewNavigation, WebPreviewUrl, WebPreviewNavigationButton } from '@/components/ai-elements/web-preview'
 import { savedDashboardActions } from '@/stores/savedDashboardStore'
-import { Eye, Save, Download, Settings } from 'lucide-react'
+import { Eye, Save, Download, Settings, Share, Github } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import type { DroppedWidget as DroppedWidgetType, LayoutItem } from '@/types/widget'
 
 const ResponsiveGridLayout = WidthProvider(Responsive)

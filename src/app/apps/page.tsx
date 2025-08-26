@@ -12,6 +12,8 @@ import { $widgets, widgetActions } from '@/stores/widgetStore'
 import { $activeTab, multiCanvasActions } from '@/stores/multiCanvasStore'
 import { isNavigationWidget } from '@/types/widget'
 import type { Widget, LayoutItem, DroppedWidget } from '@/types/widget'
+import { Button } from '@/components/ui/button'
+import { Settings, Share, Github } from 'lucide-react'
 
 export default function AppsPage() {
   const droppedWidgets = useStore($widgets)
@@ -86,8 +88,25 @@ export default function AppsPage() {
         onTabChange={setActiveTab}
       />
       <SidebarInset>
+        {/* Toolbar no topo direito */}
+        <div className="flex justify-end p-3 border-b border-gray-200 bg-white">
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm">
+              <Settings className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm">
+              <Share className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm">
+              <Github className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="sm">Share</Button>
+            <Button variant="default" size="sm">Publish</Button>
+          </div>
+        </div>
+        
         <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-          <div className="flex h-screen bg-gray-50">
+          <div className="flex flex-1 bg-gray-50">
             {/* SidebarPanel */}
             <SidebarPanel 
               activeTab={activeTab}
