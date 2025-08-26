@@ -87,7 +87,7 @@ export default function AppsPage() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
       />
-      <SidebarInset>
+      <SidebarInset className="bg-gray-50">
         {/* Toolbar no topo direito */}
         <div className="flex justify-end p-2">
           <div className="flex items-center gap-2">
