@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   console.log('📘 META CAMPAIGN ANALYST API: Messages:', messages?.length);
 
   const result = streamText({
-    model: anthropic('claude-sonnet-4-20250514'),
+    model: 'alibaba/qwen-3-32b',
     
     // Sistema estratégico completo
     system: `# Campaign Performance Analyst - System Core

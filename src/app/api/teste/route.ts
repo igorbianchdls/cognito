@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   console.log('🧪 TESTE API: Messages:', messages?.length);
 
   const result = streamText({
-    model: gateway('openai/gpt-4o'),
+    model: 'openai/gpt-5',
     
     // Sistema inicial básico
     system: `Você é um assistente de teste para workflow de 6 steps.
