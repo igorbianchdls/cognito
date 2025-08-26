@@ -129,9 +129,9 @@ Focus em strategic recommendations que impactem cash flow e service levels, dete
 
       switch (stepNumber) {
         case 1:
-          console.log('📊 STEP 1/6: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
+          console.log('📊 STEP 1/10: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
           return {
-            system: `STEP 1/6: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
+            system: `STEP 1/10: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
 
 Você é um especialista em inventory management focado em turnover, cash flow e supply chain optimization. Analise a demanda do usuário E classifique a complexidade para otimizar o workflow.
 
@@ -144,7 +144,7 @@ Você é um especialista em inventory management focado em turnover, cash flow e
 
 🎯 **CLASSIFICAÇÃO OBRIGATÓRIA:**
 
-**CONTEXTUAL** (pula para Step 6 - resumo direto):
+**CONTEXTUAL** (pula para Step 10 - resumo direto):
 - Perguntas sobre análises de inventory já realizadas na conversa
 - Esclarecimentos sobre insights ou gráficos já mostrados
 - Interpretação de dados de estoque já apresentados
@@ -156,7 +156,7 @@ Você é um especialista em inventory management focado em turnover, cash flow e
 - Resposta focada sem múltiplas correlações de inventory
 - Ex: "turnover do produto SKU123?", "qual produto tem melhor giro?", "estoque atual categoria X", "dias de estoque produto Y"
 
-**COMPLEXA** (6 steps completos):
+**COMPLEXA** (10 steps completos):
 - Análise estratégica multi-dimensional de inventory performance
 - Supply chain optimization e cash flow improvement strategies
 - Identificação de dead stock e reorder point optimization opportunities
@@ -172,29 +172,89 @@ Você é um especialista em inventory management focado em turnover, cash flow e
           };
 
         case 2:
-          console.log('🎯 STEP 2/6: QUERY BASE + ANÁLISE DE INVENTORY PERFORMANCE');
+          console.log('🎯 STEP 2/10: EXPLORAÇÃO DE TABELAS - getTables');
           return {
-            system: `STEP 2/6: QUERY BASE + ANÁLISE IMEDIATA DE INVENTORY PERFORMANCE
+            system: `STEP 2/10: EXPLORAÇÃO DE TABELAS - getTables
 
-Execute a query SQL principal para obter dados de inventory e IMEDIATAMENTE analise os resultados no mesmo response.
+Explore as tabelas disponíveis no dataset para entender a estrutura de dados disponível antes de executar queries.
 
-📦 **FOCO DE INVENTORY PERFORMANCE:**
+📊 **EXPLORAÇÃO DE DADOS:**
+- Use getTables para listar tabelas do dataset 'biquery_data'
+- Identifique quais tabelas estão disponíveis para análise de inventory
+- Prepare contexto para queries mais precisas nos próximos steps
+
+🔧 **PROCESSO:**
+1. Execute getTables() com datasetId "biquery_data"
+2. Analise rapidamente as tabelas disponíveis
+3. Prepare contexto para queries de inventory nos próximos steps
+
+**IMPORTANTE:** Este step prepara o contexto. As queries SQL serão feitas nos próximos steps.`,
+            tools: {
+              getTables: bigqueryTools.getTables
+            }
+          };
+
+        case 3:
+          console.log('🎯 STEP 3/10: MAPEAMENTO DE COLUNAS E TIPOS');
+          return {
+            system: `STEP 3/10: MAPEAMENTO DE COLUNAS E TIPOS
+
+Execute query SQL para mapear colunas e tipos das tabelas identificadas no Step 2. APENAS execute a query - NÃO analise os resultados neste step.
+
+📊 **FOCO DO MAPEAMENTO:**
+- Use INFORMATION_SCHEMA.COLUMNS para obter estrutura completa das tabelas
+- Identifique colunas disponíveis e seus tipos de dados de inventory
+- Prepare contexto detalhado para queries nos próximos steps
+- Foque na tabela inventory que será usada nas análises
+
+🔧 **PROCESSO:**
+1. Execute executarSQL() com query de mapeamento de estrutura da tabela inventory
+2. APENAS execute - sem análise neste step
+3. Os dados de estrutura serão usados para construir queries precisas nos próximos steps
+
+**ALWAYS use:** Dataset 'biquery_data' com foco na estrutura da tabela inventory
+
+**IMPORTANTE:** Este step mapeia a estrutura. As queries de análise de inventory serão feitas nos próximos steps.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 4:
+          console.log('🎯 STEP 4/10: QUERY 1 - CONSULTA INVENTORY PRINCIPAL');
+          return {
+            system: `STEP 4/10: QUERY 1 - CONSULTA INVENTORY PRINCIPAL
+
+Execute a primeira query SQL para obter dados de performance de inventory. APENAS execute a query - NÃO analise os resultados neste step.
+
+📦 **FOCO DA CONSULTA INVENTORY:**
 - Priorize métricas de efficiency: turnover, DSI, fill rate por produto/categoria
-- Identifique top performing vs underperforming products
-- Analise cash flow impact e inventory investment efficiency
-- Detecte dead stock opportunities e products com excess inventory
+- Identifique produtos principais e suas métricas core de performance
+- Obtenha dados de inventory performance patterns e cash flow opportunities
+- Capture métricas fundamentais de inventory para análise posterior
 - Correlacione demand patterns com current stock levels
 
-🔧 **PROCESSO OBRIGATÓRIO:**
+🔧 **PROCESSO:**
 1. Execute executarSQL() com query focada na demanda de inventory do usuário
-2. IMEDIATAMENTE após ver os dados JSON, analise no mesmo response
-3. Identifique patterns de inventory performance, anomalias, cash flow opportunities
-4. Gere insights estratégicos sobre turnover optimization e cost reduction
-5. Destaque produtos candidatos a optimization ou liquidation strategies
+2. APENAS execute - sem análise neste step
+3. Os dados de performance serão analisados no próximo step
 
 **ALWAYS use:** \`FROM \`creatto-463117.biquery_data.inventory\`\`
 
-📦 **ANÁLISE ESTRATÉGICA IMEDIATA:**
+**IMPORTANTE:** Este é um step de coleta de dados de inventory. A análise será feita no Step 5.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 5:
+          console.log('🎯 STEP 5/10: ANÁLISE + GRÁFICO INVENTORY 1');
+          return {
+            system: `STEP 5/10: ANÁLISE + GRÁFICO INVENTORY 1 - ANÁLISE DOS DADOS DA QUERY 1
+
+Analise os dados de inventory obtidos na Query 1 (Step 4) e crie visualização estratégica se apropriado.
+
+📦 **ANÁLISE ESTRATÉGICA DOS DADOS INVENTORY:**
 - Compare turnover rates entre produtos da mesma categoria
 - Identifique cash tied up (high value, low turnover products)
 - Detecte reorder opportunities (low stock, high demand products)
@@ -202,86 +262,162 @@ Execute a query SQL principal para obter dados de inventory e IMEDIATAMENTE anal
 - Sinalize seasonal patterns e inventory consistency issues
 - Analise ABC classification patterns e value contribution
 
+🔧 **PROCESSO:**
+1. Analise os dados JSON de inventory obtidos no Step 4
+2. Identifique patterns de inventory performance, anomalias, cash flow opportunities
+3. Gere insights estratégicos sobre turnover optimization e cost reduction
+4. Destaque produtos candidatos a optimization ou liquidation strategies
+
+📦 **INSIGHTS INVENTORY PRIORITÁRIOS:**
+- Top performing vs underperforming products
+- Cash flow patterns e inventory investment efficiency
+- Dead stock opportunities e products com excess inventory
+- Correlações entre demand patterns e current stock levels
+
 📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
+Considere criar um gráfico de inventory SE:
 - Os dados são visuais por natureza (comparações, rankings, trends)
 - O volume é adequado para visualização clara
 - O gráfico adicionaria clareza aos insights de inventory
 - Não force - só crie se realmente agregar valor
 
-Use criarGrafico() quando fizer sentido estratégico para o insight de inventory.`,
+Use criarGrafico() quando fizer sentido estratégico para o insight de inventory.
+
+**IMPORTANTE:** Este step é só para análise de inventory. Novas queries serão feitas nos próximos steps.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL,
               criarGrafico: analyticsTools.criarGrafico
             }
           };
 
-        case 3:
-          console.log('🎯 STEP 3/6: QUERY COMPLEMENTAR + DEEP INVENTORY ANALYSIS');
+        case 6:
+          console.log('🎯 STEP 6/10: QUERY 2 - CONSULTA INVENTORY COMPLEMENTAR');
           return {
-            system: `STEP 3/6: QUERY COMPLEMENTAR + ANÁLISE ESTRATÉGICA DE INVENTORY PROFUNDA
+            system: `STEP 6/10: QUERY 2 - CONSULTA INVENTORY COMPLEMENTAR
 
-Execute query complementar baseada nos insights de inventory do Step 2 e conduza análise estratégica mais profunda.
+Execute a segunda query SQL baseada nos insights de inventory da análise anterior. APENAS execute a query - NÃO analise os resultados neste step.
 
-🎯 **FOQUE EM INSIGHTS DE INVENTORY DO STEP ANTERIOR:**
-- Use os top/bottom performing products identificados no Step 2
-- Aprofunde análise temporal de turnover, ABC classification, ou aging analysis
+🎯 **FOCO DA CONSULTA INVENTORY:**
+- Base-se nos padrões de inventory performance identificados no Step 5
+- Aprofunde análise temporal, correlações de turnover, ou segmentações específicas
 - Investigue patterns de inventory performance identificados anteriormente
+- Obtenha dados de inventory complementares para análise mais rica
 
 🔧 **PROCESSO:**
-1. Execute executarSQL() com query que complementa/aprofunda análise de inventory do Step 2
-2. IMEDIATAMENTE analise os novos dados no contexto dos insights anteriores
-3. Correlacione com findings do Step 2 para insights de supply chain mais ricos
-4. Identifique causas raíz de inventory performance patterns
-5. Desenvolva recomendações estratégicas de inventory management mais específicas
+1. Execute executarSQL() com query que complementa os dados de inventory do Step 4
+2. APENAS execute - sem análise neste step
+3. Os dados de inventory serão analisados no próximo step
 
 **ALWAYS use:** \`FROM \`creatto-463117.biquery_data.inventory\`\`
 
-📦 **ANÁLISES INVENTORY ESPECIALIZADAS:**
-- Temporal analysis dos top/bottom inventory performers
+**EXEMPLOS DE QUERIES INVENTORY COMPLEMENTARES:**
+- Temporal analysis dos top/bottom inventory performers identificados
 - Correlação inventory value vs turnover rate por categoria
 - Segmentação de performance por ABC classification
 - Cross-category inventory efficiency analysis
 - Seasonal demand patterns e inventory adjustment opportunities
-- Supplier lead time impact em reorder point optimization
 - Dead stock identification e aging bucket analysis
-- Demand variability analysis para safety stock optimization
-- Cost carrying analysis e cash flow impact assessment
+
+**IMPORTANTE:** Este é um step de coleta de dados de inventory. A análise será feita no Step 7.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 7:
+          console.log('🎯 STEP 7/10: ANÁLISE + GRÁFICO INVENTORY 2');
+          return {
+            system: `STEP 7/10: ANÁLISE + GRÁFICO INVENTORY 2 - ANÁLISE DOS DADOS DA QUERY 2
+
+Analise os dados de inventory obtidos na Query 2 (Step 6) e crie visualização estratégica se apropriado.
+
+📦 **ANÁLISE ESTRATÉGICA DOS DADOS INVENTORY:**
+- Correlacione com findings de inventory do Step 5 para insights mais ricos
+- Identifique causas raíz de inventory performance patterns
+- Desenvolva recomendações estratégicas de inventory management mais específicas
+- Aprofunde análise temporal, correlações, ou segmentações
+
+🔧 **PROCESSO:**
+1. Analise os dados JSON de inventory obtidos no Step 6
+2. Correlacione com insights de inventory anteriores do Step 5
+3. Identifique padrões de inventory mais profundos e correlações
+4. Desenvolva insights estratégicos de inventory complementares
+
+📦 **ANÁLISES INVENTORY ESPECIALIZADAS:**
+- Temporal analysis dos top inventory performers
+- Correlação inventory value vs turnover rate por categoria
+- Segmentação de performance por ABC classification
+- Cross-category inventory efficiency analysis
+- Seasonal demand patterns e inventory adjustment opportunities
+- Dead stock identification e aging bucket analysis
+- Supplier lead time impact em reorder point optimization
 
 📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
+Considere criar um gráfico de inventory SE:
 - Os dados são visuais por natureza (comparações, rankings, trends)
 - O volume é adequado para visualização clara
 - O gráfico adicionaria clareza aos insights de inventory
 - Não force - só crie se realmente agregar valor
 
-Use criarGrafico() quando fizer sentido estratégico para o insight de inventory.`,
+Use criarGrafico() quando fizer sentido estratégico para o insight de inventory.
+
+**IMPORTANTE:** Este step é só para análise de inventory. Nova query será feita no próximo step.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL,
               criarGrafico: analyticsTools.criarGrafico
             }
           };
 
-        case 4:
-          console.log('🎯 STEP 4/6: QUERY ESTRATÉGICA FINAL + INSIGHTS CONSOLIDADOS');
+        case 8:
+          console.log('🎯 STEP 8/10: QUERY 3 - CONSULTA INVENTORY FINAL');
           return {
-            system: `STEP 4/6: QUERY ESTRATÉGICA FINAL + CONSOLIDAÇÃO DE INSIGHTS DE INVENTORY
+            system: `STEP 8/10: QUERY 3 - CONSULTA INVENTORY FINAL
 
-Execute query estratégica final para completar a análise de inventory e consolide todos os insights para supply chain recommendations finais.
+Execute a terceira query SQL para completar gaps analíticos de inventory e obter dados finais. APENAS execute a query - NÃO analise os resultados neste step.
 
-🎯 **COMPLEMENTAR ANÁLISE DE INVENTORY ANTERIOR:**
-- Base-se nos padrões e opportunities identificados nos Steps 2 e 3
+🎯 **FOCO DA CONSULTA INVENTORY:**
+- Base-se nos padrões de inventory e opportunities identificados nos Steps anteriores
 - Foque em gaps de análise de inventory que ainda precisam ser preenchidos
-- Investigue correlações ou validações necessárias para inventory optimization recommendations sólidas
+- Investigue correlações ou validações necessárias para inventory recommendations sólidas
+- Obtenha dados de inventory finais para consolidação estratégica
 
-🔧 **PROCESSO FINAL:**
+🔧 **PROCESSO:**
 1. Execute executarSQL() com query que fecha lacunas analíticas de inventory restantes
-2. IMEDIATAMENTE integre insights com achados dos steps anteriores
-3. Consolide inventory performance patterns em strategic narrative
-4. Prepare foundation para recomendações de supply chain optimization
-5. Quantifique impact potential das inventory opportunities identificadas
+2. APENAS execute - sem análise neste step
+3. Os dados de inventory serão analisados no próximo step
 
 **ALWAYS use:** \`FROM \`creatto-463117.biquery_data.inventory\`\`
+
+**EXEMPLOS DE QUERIES INVENTORY FINAIS:**
+- Cash liberation opportunities com impact quantificado
+- Turnover improvement readiness assessment dos underperforming products
+- Reorder point optimization recommendations baseadas em demand patterns
+- Dead stock liquidation priorities baseadas em aging e value
+- Expected cash flow impact das mudanças propostas
+- Priority ranking das inventory optimization opportunities
+
+**IMPORTANTE:** Este é um step de coleta de dados de inventory. A análise será feita no Step 9.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 9:
+          console.log('🎯 STEP 9/10: ANÁLISE + GRÁFICO INVENTORY 3');
+          return {
+            system: `STEP 9/10: ANÁLISE + GRÁFICO INVENTORY 3 - ANÁLISE DOS DADOS DA QUERY 3
+
+Analise os dados de inventory obtidos na Query 3 (Step 8) e crie visualização estratégica se apropriado. Consolide insights de inventory de todos os steps para preparar o resumo executivo.
+
+📦 **ANÁLISE ESTRATÉGICA INVENTORY FINAL:**
+- Integre insights de inventory com achados dos steps anteriores (5 e 7)
+- Consolide inventory performance patterns em strategic narrative
+- Prepare foundation para recomendações de supply chain optimization
+- Quantifique impact potential das inventory opportunities identificadas
+
+🔧 **PROCESSO:**
+1. Analise os dados JSON de inventory obtidos no Step 8
+2. Integre com todos os insights de inventory anteriores
+3. Consolide todos os padrões de inventory identificados
+4. Prepare insights de inventory finais para o resumo executivo
 
 📦 **CONSOLIDAÇÃO ESTRATÉGICA DE INVENTORY:**
 - Cash liberation opportunities com impact quantificado
@@ -292,76 +428,26 @@ Execute query estratégica final para completar a análise de inventory e consol
 - Expected cash flow impact das mudanças propostas
 - Priority ranking das supply chain optimization opportunities
 - ABC classification strategy adjustments
-- Supplier collaboration recommendations para lead time improvement
 
 📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
+Considere criar um gráfico de inventory final SE:
 - Os dados são visuais por natureza (comparações, rankings, trends)
 - O volume é adequado para visualização clara
-- O gráfico adicionaria clareza aos insights de inventory
+- O gráfico adicionaria clareza aos insights de inventory consolidados
 - Não force - só crie se realmente agregar valor
 
-Use criarGrafico() quando fizer sentido estratégico para o insight de inventory.`,
-            tools: {
-              executarSQL: bigqueryTools.executarSQL,
-              criarGrafico: analyticsTools.criarGrafico
-            }
-          };
+Use criarGrafico() quando fizer sentido estratégico para o insight de inventory.
 
-        case 5:
-          console.log('🎯 STEP 5/6: VISUALIZAÇÃO ESTRATÉGICA DE INVENTORY PERFORMANCE');
-          return {
-            system: `STEP 5/6: VISUALIZAÇÃO ESTRATÉGICA DE INVENTORY PERFORMANCE
-
-Crie visualização que melhor representa os insights de inventory performance e suporta as recomendações estratégicas de supply chain identificadas nos steps anteriores.
-
-📊 **ESCOLHA INTELIGENTE DE GRÁFICO DE INVENTORY:**
-Baseado na análise de inventory dos steps 2-4, escolha a visualização mais impactful:
-
-**Bar Chart (Vertical/Horizontal):**
-- Inventory performance ranking: turnover, DSI comparison entre produtos
-- ABC classification distribution: value contribution por categoria
-- Máximo: 8 produtos (vertical) ou 15 (horizontal)
-
-**Line Chart:**
-- Inventory trends temporais: evolution de stock levels ao longo do tempo
-- Demand vs inventory patterns por produto
-- Máximo: 5 produtos simultâneos, 100 pontos temporais
-
-**Scatter Plot:**
-- Correlações de inventory: Turnover vs Inventory Value, Demand vs Stock Level
-- Identificação de inventory efficiency frontier
-- ABC classification visualization por value vs volume
-- Máximo: 50 produtos
-
-**Pie Chart:**
-- ABC classification distribution por value contribution
-- Inventory aging buckets por value at risk
-- Máximo: 6 fatias (mín. 2% cada)
-
-**Heatmap:**
-- Performance por categoria x location matrix
-- Seasonal inventory patterns por produto/categoria
-
-🔧 **PROCESS:**
-1. Use criarGrafico() com dados de inventory dos steps anteriores
-2. Escolha tipo de gráfico que melhor suporta suas supply chain recommendations
-3. Foque em visualizar inventory performance gaps e cash flow opportunities
-4. Prepare para sustentar arguments do resumo executivo de inventory
-
-**REGRAS CRÍTICAS:**
-- Se dados excedem limites → Top N performers + "Outros"
-- Always respect visualization limits por tipo de gráfico
-- Choose chart type que melhor suporta inventory strategic narrative`,
+**IMPORTANTE:** Este é o último step de análise de inventory antes do resumo executivo.`,
             tools: {
               criarGrafico: analyticsTools.criarGrafico
             }
           };
 
-        case 6:
-          console.log('🎯 STEP 6/6: RESUMO EXECUTIVO + INVENTORY STRATEGIC RECOMMENDATIONS');
+        case 10:
+          console.log('🎯 STEP 10/10: RESUMO EXECUTIVO + INVENTORY STRATEGIC RECOMMENDATIONS');
           return {
-            system: `STEP 6/6: RESUMO EXECUTIVO + INVENTORY STRATEGIC RECOMMENDATIONS
+            system: `STEP 10/10: RESUMO EXECUTIVO + INVENTORY STRATEGIC RECOMMENDATIONS
 
 Consolide TODOS os insights de inventory dos steps anteriores em síntese executiva focada em business impact e supply chain optimization.
 
@@ -420,7 +506,7 @@ Consolide TODOS os insights de inventory dos steps anteriores em síntese execut
     },
     
     // StopWhen inteligente baseado na classificação de complexidade
-    stopWhen: stepCountIs(6),
+    stopWhen: stepCountIs(10),
     providerOptions: {
       anthropic: {
         thinking: { type: 'enabled', budgetTokens: 15000 }
