@@ -14,195 +14,222 @@ export type Employee = AIAgent; // Backward compatibility
 
 export const orgData: Employee = {
   id: '1',
-  name: 'Coordenador de IA',
-  description: 'Orquestrador central gerenciando todos os agentes de IA e otimização de fluxo',
-  category: 'Todas as Equipes',
-  icon: '🤖',
-  iconColor: 'from-purple-500 to-indigo-600',
+  name: 'Nexus',
+  description: 'CEO e orquestrador principal de todos os agentes especializados da empresa',
+  category: 'Executivo',
+  icon: '👑',
+  iconColor: 'from-purple-600 to-indigo-700',
   isFeatured: true,
-  capabilities: ['Orquestração de fluxos', 'Coordenação de agentes', 'Otimização de performance'],
   subordinates: [
     {
       id: '2',
-      name: 'Diretor de IA de Vendas',
-      description: 'Gerencia automação de vendas e agentes de engajamento com clientes',
-      category: 'Vendas',
-      icon: '💼',
-      iconColor: 'from-blue-500 to-cyan-600',
+      name: 'Diretor de Tráfego Pago',
+      description: 'Gerencia todos os agentes de publicidade e campanhas pagas',
+      category: 'Tráfego Pago',
+      icon: '💸',
+      iconColor: 'from-green-500 to-emerald-600',
       isFeatured: true,
       subordinates: [
         {
           id: '3',
-          name: 'Personalização de vendas',
-          description: 'Ajuda a criar ótimos e-mails de prospecção de vendas',
-          category: 'Vendas',
-          icon: '📧',
-          iconColor: 'from-blue-400 to-blue-600'
+          name: 'Meta Analyst',
+          description: 'Analisa performance de campanhas do Meta (Facebook/Instagram)',
+          category: 'Tráfego Pago',
+          icon: '📘',
+          iconColor: 'from-blue-500 to-blue-700'
         },
         {
           id: '4',
-          name: 'Qualificador de leads',
-          description: 'Analisa e pontua clientes potenciais para prioridade de vendas',
-          category: 'Vendas',
+          name: 'Amazon Ads Analyst',
+          description: 'Otimiza campanhas publicitárias na plataforma Amazon',
+          category: 'Tráfego Pago',
+          icon: '📦',
+          iconColor: 'from-orange-500 to-orange-700'
+        },
+        {
+          id: '5',
+          name: 'Google Campaign Analyst',
+          description: 'Gerencia e otimiza campanhas do Google Ads',
+          category: 'Tráfego Pago',
           icon: '🎯',
-          iconColor: 'from-green-400 to-green-600'
-        }
-      ]
-    },
-    {
-      id: '5',
-      name: 'Líder de IA de Engenharia',
-      description: 'Coordena agentes técnicos de IA e suporte ao desenvolvimento',
-      category: 'Engenharia',
-      icon: '⚙️',
-      iconColor: 'from-purple-500 to-purple-700',
-      isFeatured: true,
-      subordinates: [
+          iconColor: 'from-red-500 to-red-700'
+        },
         {
           id: '6',
-          name: 'Assistente de código',
-          description: 'Fornece ajuda com codificação e suporte para debugging',
-          category: 'Engenharia',
-          icon: '💻',
-          iconColor: 'from-yellow-400 to-orange-500',
-          isFeatured: true
+          name: 'Meta Campaign Analyst',
+          description: 'Especialista em otimização de campanhas Meta',
+          category: 'Tráfego Pago',
+          icon: '📊',
+          iconColor: 'from-blue-400 to-blue-600'
         },
         {
           id: '7',
-          name: 'Revisor de pull request',
-          description: 'Revisão automatizada de código e garantia de qualidade',
-          category: 'Engenharia',
-          icon: '🔍',
-          iconColor: 'from-pink-400 to-pink-600'
+          name: 'Meta Creative Analyst',
+          description: 'Analisa performance de criativos nas campanhas Meta',
+          category: 'Tráfego Pago',
+          icon: '🎨',
+          iconColor: 'from-purple-500 to-purple-700'
         }
       ]
     },
     {
       id: '8',
-      name: 'Gerente de IA de Suporte',
-      description: 'Supervisiona sistemas de IA de suporte ao cliente e assistência',
-      category: 'Suporte',
-      icon: '🆘',
-      iconColor: 'from-orange-500 to-red-500',
+      name: 'Diretor de Marketing',
+      description: 'Coordena estratégias de marketing digital e analytics',
+      category: 'Marketing',
+      icon: '📈',
+      iconColor: 'from-pink-500 to-rose-600',
+      isFeatured: true,
       subordinates: [
         {
           id: '9',
-          name: 'Assistente de dados',
-          description: 'Auxilia com análise e gerenciamento de dados',
-          category: 'Suporte',
+          name: 'Google Analytics Analyst',
+          description: 'Especialista em análise de dados do Google Analytics',
+          category: 'Marketing',
           icon: '📊',
-          iconColor: 'from-green-400 to-emerald-500',
-          isFeatured: true
+          iconColor: 'from-orange-400 to-orange-600'
+        },
+        {
+          id: '10',
+          name: 'Keyword Analyst',
+          description: 'Especialista em pesquisa e otimização de palavras-chave',
+          category: 'Marketing',
+          icon: '🔍',
+          iconColor: 'from-teal-500 to-teal-700'
         }
       ]
     },
     {
-      id: '10',
-      name: 'Líder de IA de Conteúdo',
-      description: 'Gerencia agentes de IA de criação de conteúdo e documentação',
-      category: 'Marketing',
-      icon: '✍️',
-      iconColor: 'from-green-500 to-teal-600',
+      id: '11',
+      name: 'Diretor Comercial',
+      description: 'Supervisiona vendas e plataformas de e-commerce',
+      category: 'Comercial',
+      icon: '💼',
+      iconColor: 'from-indigo-500 to-indigo-700',
+      isFeatured: true,
       subordinates: [
         {
-          id: '11',
-          name: 'Assistente de documentos',
-          description: 'Entende e interage com documentos extensos',
-          category: 'Marketing',
-          icon: '📄',
-          iconColor: 'from-blue-400 to-indigo-500',
-          isFeatured: true
+          id: '12',
+          name: 'Shopify Analyst',
+          description: 'Analisa performance e otimiza vendas na plataforma Shopify',
+          category: 'Comercial',
+          icon: '🛍️',
+          iconColor: 'from-green-400 to-green-600'
         },
         {
-          id: '12',
-          name: 'Redator de voz da marca',
-          description: 'Cria mensagens de marca consistentes e envolventes',
-          category: 'Marketing',
-          icon: '🎨',
-          iconColor: 'from-red-400 to-pink-500'
+          id: '13',
+          name: 'Shopee Analyst',
+          description: 'Especialista em análise de vendas e otimização no Shopee',
+          category: 'Comercial',
+          icon: '🛒',
+          iconColor: 'from-orange-400 to-red-500'
+        }
+      ]
+    },
+    {
+      id: '14',
+      name: 'Diretor Financeiro',
+      description: 'Gerencia análises financeiras e planejamento orçamentário',
+      category: 'Financeiro',
+      icon: '💰',
+      iconColor: 'from-yellow-500 to-amber-600',
+      isFeatured: true,
+      subordinates: [
+        {
+          id: '15',
+          name: 'Cash Flow Analyst',
+          description: 'Especialista em análise e projeção de fluxo de caixa',
+          category: 'Financeiro',
+          icon: '💵',
+          iconColor: 'from-green-500 to-green-700'
+        },
+        {
+          id: '16',
+          name: 'P&L Analyst',
+          description: 'Analisa demonstrações de resultados e lucratividade',
+          category: 'Financeiro',
+          icon: '📊',
+          iconColor: 'from-blue-500 to-blue-700'
+        },
+        {
+          id: '17',
+          name: 'Budget Planning Analyst',
+          description: 'Especialista em planejamento e controle orçamentário',
+          category: 'Financeiro',
+          icon: '📋',
+          iconColor: 'from-purple-500 to-purple-700'
+        }
+      ]
+    },
+    {
+      id: '18',
+      name: 'Diretor de Supply Chain',
+      description: 'Gerencia análises de estoque e cadeia de suprimentos',
+      category: 'Supply Chain',
+      icon: '📦',
+      iconColor: 'from-cyan-500 to-cyan-700',
+      subordinates: [
+        {
+          id: '19',
+          name: 'Inventory Analyst',
+          description: 'Analisa níveis de estoque e otimiza cadeia de suprimentos',
+          category: 'Supply Chain',
+          icon: '📊',
+          iconColor: 'from-teal-400 to-teal-600'
+        }
+      ]
+    },
+    {
+      id: '20',
+      name: 'Diretor Contábil',
+      description: 'Supervisiona análises contábeis e compliance fiscal',
+      category: 'Contábil',
+      icon: '🧮',
+      iconColor: 'from-slate-500 to-slate-700',
+      subordinates: [
+        {
+          id: '21',
+          name: 'ContaAzul Analyst',
+          description: 'Especialista em análise de dados contábeis do sistema ContaAzul',
+          category: 'Contábil',
+          icon: '📋',
+          iconColor: 'from-blue-400 to-blue-600'
+        }
+      ]
+    },
+    {
+      id: '22',
+      name: 'Diretor Jurídico',
+      description: 'Coordena análises jurídicas e compliance regulatório',
+      category: 'Jurídico',
+      icon: '⚖️',
+      iconColor: 'from-gray-600 to-gray-800',
+      subordinates: [
+        {
+          id: '23',
+          name: 'Agente de Compliance',
+          description: 'Monitora compliance regulatório e análise jurídica',
+          category: 'Jurídico',
+          icon: '📜',
+          iconColor: 'from-gray-500 to-gray-700'
         }
       ]
     }
   ]
 };
 
-// Additional AI agents for specialized tasks
-export const additionalEmployees: Employee[] = [
-  {
-    id: '13',
-    name: 'Agente de RH',
-    description: 'Otimiza processos de RH e aumenta a eficiência',
-    category: 'Administrativo',
-    icon: '👥',
-    iconColor: 'from-purple-400 to-purple-600',
-    isFeatured: true
-  },
-  {
-    id: '14',
-    name: 'Notícias do setor',
-    description: 'Identifica e resume notícias relevantes do setor',
-    category: 'Marketing',
-    icon: '📰',
-    iconColor: 'from-green-400 to-green-600'
-  },
-  {
-    id: '15',
-    name: 'Preparação de reunião',
-    description: 'Pesquisa participantes, agenda e conversas anteriores',
-    category: 'Engenharia',
-    icon: '📋',
-    iconColor: 'from-yellow-400 to-yellow-600',
-    isFeatured: true
-  },
-  {
-    id: '16',
-    name: 'Bot de avaliação de desempenho',
-    description: 'Automatiza avaliações de desempenho com feedback objetivo',
-    category: 'Administrativo',
-    icon: '📈',
-    iconColor: 'from-blue-400 to-blue-600'
-  },
-  {
-    id: '17',
-    name: 'Resumo diário',
-    description: 'Prepara seu dia com atualizações de menções e reuniões',
-    category: 'Financeiro',
-    icon: '☕',
-    iconColor: 'from-orange-400 to-orange-600'
-  },
-  {
-    id: '18',
-    name: 'Compositor de e-mail',
-    description: 'Cria e-mails profissionais com tom e contexto apropriados',
-    category: 'Vendas',
-    icon: '✉️',
-    iconColor: 'from-indigo-400 to-indigo-600'
-  },
-  {
-    id: '19',
-    name: 'Agendador de reuniões',
-    description: 'Agendamento inteligente com resolução de conflitos',
-    category: 'Suporte',
-    icon: '🗓️',
-    iconColor: 'from-teal-400 to-teal-600'
-  },
-  {
-    id: '20',
-    name: 'Assistente de pesquisa',
-    description: 'Pesquisa aprofundada sobre tópicos com compilação de fontes',
-    category: 'Engenharia',
-    icon: '🔬',
-    iconColor: 'from-cyan-400 to-cyan-600'
-  }
-];
+// Additional AI agents for specialized tasks (empty since all agents are now in main hierarchy)
+export const additionalEmployees: Employee[] = [];
 
 // Category color mapping
 export const categoryColors: Record<string, string> = {
-  'Vendas': 'bg-blue-100 text-blue-800 border-blue-200',
-  'Engenharia': 'bg-purple-100 text-purple-800 border-purple-200',
-  'Suporte': 'bg-orange-100 text-orange-800 border-orange-200',
-  'Marketing': 'bg-green-100 text-green-800 border-green-200',
+  'Executivo': 'bg-purple-100 text-purple-800 border-purple-200',
+  'Tráfego Pago': 'bg-green-100 text-green-800 border-green-200',
+  'Marketing': 'bg-pink-100 text-pink-800 border-pink-200',
+  'Comercial': 'bg-indigo-100 text-indigo-800 border-indigo-200',
   'Financeiro': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  'Administrativo': 'bg-pink-100 text-pink-800 border-pink-200',
+  'Supply Chain': 'bg-cyan-100 text-cyan-800 border-cyan-200',
+  'Contábil': 'bg-slate-100 text-slate-800 border-slate-200',
+  'Jurídico': 'bg-gray-100 text-gray-800 border-gray-200',
   'Todas as Equipes': 'bg-gray-100 text-gray-800 border-gray-200'
 };
