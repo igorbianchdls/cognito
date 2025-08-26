@@ -115,7 +115,7 @@ export default function AppsPage() {
             />
           
           {/* Canvas */}
-          <div className="flex-1 p-3">
+          <div className="flex-1 py-1 px-3">
               {hasNavigationWidget ? (
                 <MultiGridCanvas 
                   widgets={droppedWidgets}
