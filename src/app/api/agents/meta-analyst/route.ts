@@ -1,4 +1,3 @@
-import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/bigquery';
 import * as analyticsTools from '@/tools/analytics';
@@ -13,7 +12,7 @@ export async function POST(req: Request) {
   console.log('🔍 METAANALYST API: Messages:', messages?.length);
 
   const result = streamText({
-    model: anthropic('claude-sonnet-4-20250514'),
+    model: 'deepseek/deepseek-v3.1',
     
     // Sistema inicial básico
     system: `You are MetaAnalyst AI, a specialized assistant for analyzing metadata, data structures, and providing insights about data organization and patterns.`,
@@ -177,14 +176,6 @@ Provide final metadata recommendations and structural insights based on the comp
     
     // StopWhen simples - máximo 6 steps
     stopWhen: stepCountIs(6),
-    providerOptions: {
-      anthropic: {
-        thinking: { type: 'enabled', budgetTokens: 15000 }
-      }
-    },
-    headers: {
-      'anthropic-beta': 'interleaved-thinking-2025-05-14'
-    },
     tools: {
       // BigQuery tools
       ...bigqueryTools,
