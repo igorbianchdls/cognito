@@ -135,9 +135,9 @@ Focus em strategic recommendations que impactem ACoS reduction e sales growth, d
 
       switch (stepNumber) {
         case 1:
-          console.log('📊 STEP 1/6: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
+          console.log('📊 STEP 1/10: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
           return {
-            system: `STEP 1/6: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
+            system: `STEP 1/10: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
 
 Você é um especialista em Amazon Ads focado em ACoS optimization, campaign performance e marketplace advertising strategy. Analise a demanda do usuário E classifique a complexidade para otimizar o workflow.
 
@@ -150,7 +150,7 @@ Você é um especialista em Amazon Ads focado em ACoS optimization, campaign per
 
 🎯 **CLASSIFICAÇÃO OBRIGATÓRIA:**
 
-**CONTEXTUAL** (pula para Step 6 - resumo direto):
+**CONTEXTUAL** (pula para Step 10 - resumo direto):
 - Perguntas sobre análises de Amazon Ads já realizadas na conversa
 - Esclarecimentos sobre insights ou gráficos já mostrados
 - Interpretação de dados de advertising já apresentados
@@ -162,7 +162,7 @@ Você é um especialista em Amazon Ads focado em ACoS optimization, campaign per
 - Resposta focada sem múltiplas correlações de campaign performance
 - Ex: "ACoS da campanha Brand Defense?", "qual keyword tem melhor ROAS?", "CTR da campanha Sponsored Products", "performance atual vs target"
 
-**COMPLEXA** (6 steps completos):
+**COMPLEXA** (10 steps completos):
 - Análise estratégica multi-dimensional de Amazon Ads performance
 - Campaign optimization e keyword strategy development
 - Identificação de bid opportunities e search term mining
@@ -178,196 +178,224 @@ Você é um especialista em Amazon Ads focado em ACoS optimization, campaign per
           };
 
         case 2:
-          console.log('🎯 STEP 2/6: QUERY BASE + ANÁLISE DE AMAZON ADS PERFORMANCE');
+          console.log('🎯 STEP 2/10: EXPLORAÇÃO DE TABELAS - getTables');
           return {
-            system: `STEP 2/6: QUERY BASE + ANÁLISE IMEDIATA DE AMAZON ADS PERFORMANCE
+            system: `STEP 2/10: EXPLORAÇÃO DE TABELAS - getTables
 
-Execute a query SQL principal para obter dados de Amazon Ads e IMEDIATAMENTE analise os resultados no mesmo response.
+Explore as tabelas disponíveis no dataset para identificar estruturas de dados de Amazon Ads. APENAS explore - NÃO execute queries neste step.
 
-🛒 **FOCO DE AMAZON ADS PERFORMANCE:**
-- Priorize métricas de ROI: ACoS, ROAS, CPC por campaign type e keyword
-- Identifique top performing vs underperforming campaigns/keywords
-- Analise search term quality e keyword expansion opportunities
-- Detecte negative keyword needs e bid optimization opportunities
-- Correlacione ad performance com organic ranking improvements
+🎯 **FOCO DA EXPLORAÇÃO:**
+- Identifique tabelas que contenham dados de campanhas Amazon Ads, keywords, performance
+- Procure por tabelas com dados publicitários: campaigns, keywords, search_terms, ads_performance  
+- Entenda a estrutura de dados disponível para análise de performance Amazon Ads
 
-🔧 **PROCESSO OBRIGATÓRIO:**
-1. Execute executarSQL() com query focada na demanda de Amazon Ads do usuário
-2. IMEDIATAMENTE após ver os dados JSON, analise no mesmo response
-3. Identifique patterns de advertising performance, anomalias, optimization opportunities
-4. Gere insights estratégicos sobre campaign optimization e keyword strategies
-5. Destaque campaigns/keywords candidatos a scaling ou bid adjustment
+🔧 **PROCESSO:**
+1. Execute getTables para explorar dataset 'biquery_data'
+2. APENAS explore - sem queries neste step
+3. Identifique tabelas relevantes para análise de Amazon Ads
 
-**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.amazon_ads\`\`
+**ALWAYS use:** Dataset 'biquery_data' com foco em tabelas Amazon Ads
 
-🛒 **ANÁLISE ESTRATÉGICA IMEDIATA:**
-- Compare ACoS entre campaign types (Sponsored Products vs Brands vs Display)
-- Identifique keyword opportunities (high-converting search terms not targeted)
-- Detecte bid optimization needs (low impression share, high ACoS keywords)
-- Avalie campaign structure efficiency (auto vs manual targeting performance)
-- Sinalize seasonal advertising trends e marketplace competition patterns
-- Analise attribution impact e cross-campaign synergies
-
-📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
-- Os dados são visuais por natureza (comparações, rankings, trends)
-- O volume é adequado para visualização clara
-- O gráfico adicionaria clareza aos insights de Amazon Ads
-- Não force - só crie se realmente agregar valor
-
-Use criarGrafico() quando fizer sentido estratégico para o insight de Amazon Ads.`,
+**IMPORTANTE:** Este step apenas explora. As queries serão feitas nos próximos steps.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL,
-              criarGrafico: analyticsTools.criarGrafico
+              getTables: bigqueryTools.getTables
             }
           };
 
         case 3:
-          console.log('🎯 STEP 3/6: QUERY COMPLEMENTAR + DEEP AMAZON ADS ANALYSIS');
+          console.log('🎯 STEP 3/10: MAPEAMENTO DE COLUNAS E TIPOS');
           return {
-            system: `STEP 3/6: QUERY COMPLEMENTAR + ANÁLISE ESTRATÉGICA DE AMAZON ADS PROFUNDA
+            system: `STEP 3/10: MAPEAMENTO DE COLUNAS E TIPOS
 
-Execute query complementar baseada nos insights de Amazon Ads do Step 2 e conduza análise estratégica mais profunda.
+Execute query SQL para mapear colunas e tipos das tabelas identificadas no Step 2. APENAS execute a query - NÃO analise os resultados neste step.
 
-🎯 **FOQUE EM INSIGHTS DE AMAZON ADS DO STEP ANTERIOR:**
-- Use os top/bottom performing campaigns/keywords identificados no Step 2
-- Aprofunde análise temporal de advertising trends, search term mining, ou bid optimization
-- Investigue patterns de Amazon Ads performance identificados anteriormente
+📊 **FOCO DO MAPEAMENTO:**
+- Use INFORMATION_SCHEMA.COLUMNS para obter estrutura completa das tabelas
+- Identifique colunas disponíveis e seus tipos de dados Amazon Ads
+- Prepare contexto detalhado para queries nos próximos steps
+- Foque na tabela amazon_ads que será usada nas análises
 
 🔧 **PROCESSO:**
-1. Execute executarSQL() com query que complementa/aprofunda análise de Amazon Ads do Step 2
-2. IMEDIATAMENTE analise os novos dados no contexto dos insights anteriores
-3. Correlacione com findings do Step 2 para insights de advertising mais ricos
-4. Identifique causas raíz de campaign performance patterns
-5. Desenvolva recomendações estratégicas de advertising optimization mais específicas
+1. Execute executarSQL() com query de mapeamento de estrutura da tabela amazon_ads
+2. APENAS execute - sem análise neste step
+3. Os dados de estrutura serão usados para construir queries precisas nos próximos steps
 
-**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.amazon_ads\`\`
+**ALWAYS use:** Dataset 'biquery_data' com foco na estrutura da tabela amazon_ads
 
-🛒 **ANÁLISES AMAZON ADS ESPECIALIZADAS:**
-- Temporal analysis dos top performing campaigns e seasonal patterns
-- Correlação keyword match type vs performance quality
-- Segmentação de performance por product category e marketplace competition
-- Cross-campaign keyword analysis e negative keyword opportunities
-- Search term harvesting analysis para keyword expansion roadmap
-- Bid strategy effectiveness analysis (dynamic vs fixed bidding)
-- Attribution window impact analysis (1-day vs 7-day vs 14-day)
-- Competitor analysis baseado em impression share e market positioning
-- Dayparting analysis para time-of-day bid optimization
-
-📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
-- Os dados são visuais por natureza (comparações, rankings, trends)
-- O volume é adequado para visualização clara
-- O gráfico adicionaria clareza aos insights de Amazon Ads
-- Não force - só crie se realmente agregar valor
-
-Use criarGrafico() quando fizer sentido estratégico para o insight de Amazon Ads.`,
+**IMPORTANTE:** Este step mapeia a estrutura. As queries de análise de Amazon Ads serão feitas nos próximos steps.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL,
-              criarGrafico: analyticsTools.criarGrafico
+              executarSQL: bigqueryTools.executarSQL
             }
           };
 
         case 4:
-          console.log('🎯 STEP 4/6: QUERY ESTRATÉGICA FINAL + INSIGHTS CONSOLIDADOS');
+          console.log('🎯 STEP 4/10: QUERY 1 - CONSULTA AMAZON ADS PRINCIPAL');
           return {
-            system: `STEP 4/6: QUERY ESTRATÉGICA FINAL + CONSOLIDAÇÃO DE INSIGHTS DE AMAZON ADS
+            system: `STEP 4/10: QUERY 1 - CONSULTA AMAZON ADS PRINCIPAL
 
-Execute query estratégica final para completar a análise de Amazon Ads e consolide todos os insights para advertising recommendations finais.
+Execute a primeira query SQL para obter dados de performance Amazon Ads. APENAS execute a query - NÃO analise os resultados neste step.
 
-🎯 **COMPLEMENTAR ANÁLISE DE AMAZON ADS ANTERIOR:**
-- Base-se nos padrões e opportunities identificados nos Steps 2 e 3
-- Foque em gaps de análise de Amazon Ads que ainda precisam ser preenchidos
-- Investigue correlações ou validações necessárias para advertising optimization recommendations sólidas
+🛒 **FOCO DA CONSULTA AMAZON ADS:**
+- Priorize métricas de ROI: ACoS, ROAS, CPC por campaign type e keyword
+- Identifique performance de campanhas e keywords Amazon
+- Obtenha dados de search term quality e bid optimization
+- Capture métricas fundamentais de Amazon Ads para análise posterior
+- Correlacione ad performance com organic ranking improvements
 
-🔧 **PROCESSO FINAL:**
-1. Execute executarSQL() com query que fecha lacunas analíticas de Amazon Ads restantes
-2. IMEDIATAMENTE integre insights com achados dos steps anteriores
-3. Consolide advertising performance patterns em strategic narrative
-4. Prepare foundation para recomendações de campaign optimization
-5. Quantifique impact potential das advertising opportunities identificadas
+🔧 **PROCESSO:**
+1. Execute executarSQL() com query focada na demanda Amazon Ads do usuário
+2. APENAS execute - sem análise neste step
+3. Os dados de performance serão analisados no próximo step
 
 **ALWAYS use:** \`FROM \`creatto-463117.biquery_data.amazon_ads\`\`
 
-🛒 **CONSOLIDAÇÃO ESTRATÉGICA DE AMAZON ADS:**
-- Campaign optimization opportunities com ACoS impact quantificado
-- Keyword expansion readiness assessment baseado em search term performance
-- Bid adjustment recommendations baseadas em impression share analysis
-- Negative keyword strategy priorities baseadas em wasteful spend identification
-- Timeline recommendations para advertising optimization implementation
-- Expected ROAS improvement das mudanças propostas
-- Priority ranking das campaign optimization opportunities
-- Budget reallocation strategy baseada em campaign ROI analysis
-- Seasonal advertising strategy adjustments para marketplace cycles
-
-📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
-- Os dados são visuais por natureza (comparações, rankings, trends)
-- O volume é adequado para visualização clara
-- O gráfico adicionaria clareza aos insights de Amazon Ads
-- Não force - só crie se realmente agregar valor
-
-Use criarGrafico() quando fizer sentido estratégico para o insight de Amazon Ads.`,
+**IMPORTANTE:** Este é um step de coleta de dados Amazon Ads. A análise será feita no Step 5.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL,
-              criarGrafico: analyticsTools.criarGrafico
+              executarSQL: bigqueryTools.executarSQL
             }
           };
 
         case 5:
-          console.log('🎯 STEP 5/6: VISUALIZAÇÃO ESTRATÉGICA DE AMAZON ADS PERFORMANCE');
+          console.log('🎯 STEP 5/10: ANÁLISE DOS DADOS + PRIMEIRA VISUALIZAÇÃO');
           return {
-            system: `STEP 5/6: VISUALIZAÇÃO ESTRATÉGICA DE AMAZON ADS PERFORMANCE
+            system: `STEP 5/10: ANÁLISE DOS DADOS + PRIMEIRA VISUALIZAÇÃO
 
-Crie visualização que melhor representa os insights de Amazon Ads performance e suporta as recomendações estratégicas de advertising identificadas nos steps anteriores.
+⚠️ CRITICAL: Você executou queries SQL nos steps anteriores. Você DEVE agora analisar os dados e criar primeira visualização.
 
-📊 **ESCOLHA INTELIGENTE DE GRÁFICO DE AMAZON ADS:**
-Baseado na análise de Amazon Ads dos steps 2-4, escolha a visualização mais impactful:
+🎯 **ANÁLISE OBRIGATÓRIA DE AMAZON ADS PERFORMANCE:**
+- **Campaign Performance**: Como estão as campanhas por ACoS, ROAS, CPC?
+- **Keyword Analysis**: Top/bottom performing keywords e expansion opportunities
+- **Search Term Mining**: Quality dos search terms e negative keyword needs
+- **Bid Optimization**: Impression share e bid adjustment opportunities
+- **Attribution Impact**: Cross-campaign synergies e organic ranking impact
 
-**Bar Chart (Vertical/Horizontal):**
-- Amazon Ads performance ranking: ACoS, ROAS comparison entre campaigns/keywords
-- Campaign efficiency analysis: spend vs sales por campaign type
-- Máximo: 8 campaigns/keywords (vertical) ou 15 (horizontal)
+📊 **PRIMEIRA VISUALIZAÇÃO OBRIGATÓRIA:**
+Crie um gráfico que melhor represente os principais insights Amazon Ads encontrados nos dados.
 
-**Line Chart:**
-- Amazon Ads trends temporais: evolution de ACoS ao longo do tempo
-- Seasonal advertising performance patterns
-- Máximo: 5 advertising metrics simultâneas, 100 pontos temporais
+⚡ **CRITICAL: EFFICIENT DATA HANDLING**
+Otimize data transfer para economizar tokens - use máximo 50-100 registros para gráficos.
 
-**Scatter Plot:**
-- Correlações de Amazon Ads: CPC vs Conversion Rate, Impression Share vs ACoS
-- Identificação de keyword efficiency frontier
-- Campaign performance positioning analysis
-- Máximo: 50 keywords/campaigns
-
-**Pie Chart:**
-- Amazon Ads budget distribution por campaign type
-- Search term performance contribution breakdown
-- Máximo: 6 fatias (mín. 2% cada)
-
-**Heatmap:**
-- Performance por campaign type x match type matrix
-- Seasonal advertising patterns por product category
-
-🔧 **PROCESS:**
-1. Use criarGrafico() com dados de Amazon Ads dos steps anteriores
-2. Escolha tipo de gráfico que melhor suporta suas advertising recommendations
-3. Foque em visualizar campaign performance gaps e keyword opportunities
-4. Prepare para sustentar arguments do resumo executivo de Amazon Ads
-
-**REGRAS CRÍTICAS:**
-- Se dados excedem limites → Top N performers + "Outros"
-- Always respect visualization limits por tipo de gráfico
-- Choose chart type que melhor suporta Amazon Ads strategic narrative`,
+🎯 **ANALYSIS + VISUALIZATION REQUIREMENTS:**
+- Análise detalhada dos advertising patterns identificados
+- Identificação de campaign optimization opportunities
+- Primeira visualização estratégica dos insights principais`,
             tools: {
               criarGrafico: analyticsTools.criarGrafico
             }
           };
 
         case 6:
-          console.log('🎯 STEP 6/6: RESUMO EXECUTIVO + AMAZON ADS STRATEGIC RECOMMENDATIONS');
+          console.log('🎯 STEP 6/10: QUERY 2 - CONSULTA COMPLEMENTAR');
           return {
-            system: `STEP 6/6: RESUMO EXECUTIVO + AMAZON ADS STRATEGIC RECOMMENDATIONS
+            system: `STEP 6/10: QUERY 2 - CONSULTA COMPLEMENTAR
+
+Execute segunda query SQL para obter dados complementares baseados nos insights do Step 5. APENAS execute a query - NÃO analise os resultados neste step.
+
+🛒 **FOCO DA CONSULTA COMPLEMENTAR:**
+- Baseie-se nos insights encontrados no Step 5
+- Obtenha dados complementares para deeper Amazon Ads analysis
+- Foque em correlations, time-series, ou segmentações relevantes
+- Capture dados que suportem optimization recommendations
+
+🔧 **PROCESSO:**
+1. Execute executarSQL() com query complementar focada nos insights do Step 5
+2. APENAS execute - sem análise neste step
+3. Os dados complementares serão analisados no próximo step
+
+**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.amazon_ads\`\`
+
+**IMPORTANTE:** Este é um step de coleta de dados complementares. A análise será feita no Step 7.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 7:
+          console.log('🎯 STEP 7/10: ANÁLISE COMPLEMENTAR + SEGUNDA VISUALIZAÇÃO');
+          return {
+            system: `STEP 7/10: ANÁLISE COMPLEMENTAR + SEGUNDA VISUALIZAÇÃO
+
+⚠️ CRITICAL: Você executou query complementar no Step 6. Você DEVE agora analisar esses dados complementares em conjunto com insights anteriores.
+
+🎯 **ANÁLISE COMPLEMENTAR OBRIGATÓRIA:**
+- Integre insights da query complementar com análise do Step 5
+- Identifique deeper patterns e correlations de Amazon Ads performance
+- Desenvolva understanding mais rico dos advertising optimization opportunities
+- Quantifique impact potential das mudanças propostas
+
+📊 **SEGUNDA VISUALIZAÇÃO:**
+Crie segunda visualização complementar que explore aspectos diferentes dos insights Amazon Ads.
+
+⚡ **EFFICIENT DATA HANDLING**
+Use máximo 50-100 registros para gráficos.
+
+🎯 **REQUIREMENTS:**
+- Análise integrada dos dados complementares
+- Segunda visualização estratégica
+- Deeper Amazon Ads optimization insights`,
+            tools: {
+              criarGrafico: analyticsTools.criarGrafico
+            }
+          };
+
+        case 8:
+          console.log('🎯 STEP 8/10: QUERY 3 - CONSULTA FINAL');
+          return {
+            system: `STEP 8/10: QUERY 3 - CONSULTA FINAL
+
+Execute terceira e última query SQL para validar insights ou obter dados finais necessários para recomendações executivas. APENAS execute a query - NÃO analise os resultados neste step.
+
+🎯 **FOCO DA CONSULTA FINAL:**
+- Complete gaps de análise identificados nos steps anteriores
+- Valide hipóteses ou quantifique opportunities identificadas
+- Obtenha dados finais para sustentar recomendações executivas
+- Foque em dados que permitam quantificar ROI das mudanças propostas
+
+🔧 **PROCESSO:**
+1. Execute executarSQL() com query final baseada em todos os insights anteriores
+2. APENAS execute - sem análise neste step
+3. Os dados finais serão analisados no Step 9
+
+**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.amazon_ads\`\`
+
+**IMPORTANTE:** Esta é a última coleta de dados. A análise final será feita no Step 9.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 9:
+          console.log('🎯 STEP 9/10: ANÁLISE FINAL + TERCEIRA VISUALIZAÇÃO');
+          return {
+            system: `STEP 9/10: ANÁLISE FINAL + TERCEIRA VISUALIZAÇÃO
+
+⚠️ CRITICAL: Você executou query final no Step 8. Você DEVE agora consolidar TODAS as análises e criar visualização final.
+
+🎯 **CONSOLIDAÇÃO FINAL OBRIGATÓRIA:**
+- Integre TODOS os insights dos steps 5, 7 e este step
+- Consolide Amazon Ads patterns em narrative estratégico
+- Quantifique impact das advertising optimization opportunities
+- Prepare foundation para recomendações executivas do Step 10
+
+📊 **TERCEIRA E FINAL VISUALIZAÇÃO:**
+Crie visualização final que sintetiza os principais insights Amazon Ads e suporta recomendações executivas.
+
+⚡ **EFFICIENT DATA HANDLING**
+Use máximo 50-100 registros para gráficos.
+
+🎯 **REQUIREMENTS:**
+- Consolidação de TODOS os insights anteriores
+- Terceira visualização estratégica final
+- Preparação para recomendações executivas`,
+            tools: {
+              criarGrafico: analyticsTools.criarGrafico
+            }
+          };
+
+        case 10:
+          console.log('🎯 STEP 10/10: RESUMO EXECUTIVO + AMAZON ADS STRATEGIC RECOMMENDATIONS');
+          return {
+            system: `STEP 10/10: RESUMO EXECUTIVO + AMAZON ADS STRATEGIC RECOMMENDATIONS
 
 Consolide TODOS os insights de Amazon Ads dos steps anteriores em síntese executiva focada em business impact e advertising optimization.
 
@@ -426,7 +454,7 @@ Consolide TODOS os insights de Amazon Ads dos steps anteriores em síntese execu
     },
     
     // StopWhen inteligente baseado na classificação de complexidade
-    stopWhen: stepCountIs(6),
+    stopWhen: stepCountIs(10),
     providerOptions: {
       anthropic: {
         thinking: { type: 'enabled', budgetTokens: 15000 }

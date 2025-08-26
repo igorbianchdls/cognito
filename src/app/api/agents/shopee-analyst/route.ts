@@ -140,9 +140,9 @@ Focus em strategic recommendations que impactem seller score improvement e sales
 
       switch (stepNumber) {
         case 1:
-          console.log('📊 STEP 1/6: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
+          console.log('📊 STEP 1/10: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
           return {
-            system: `STEP 1/6: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
+            system: `STEP 1/10: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
 
 Você é um especialista em Shopee marketplace focado em seller performance, conversion optimization e marketplace strategy. Analise a demanda do usuário E classifique a complexidade para otimizar o workflow.
 
@@ -155,7 +155,7 @@ Você é um especialista em Shopee marketplace focado em seller performance, con
 
 🎯 **CLASSIFICAÇÃO OBRIGATÓRIA:**
 
-**CONTEXTUAL** (pula para Step 6 - resumo direto):
+**CONTEXTUAL** (pula para Step 10 - resumo direto):
 - Perguntas sobre análises de Shopee já realizadas na conversa
 - Esclarecimentos sobre insights ou gráficos já mostrados
 - Interpretação de dados de marketplace já apresentados
@@ -167,7 +167,7 @@ Você é um especialista em Shopee marketplace focado em seller performance, con
 - Resposta focada sem múltiplas correlações de seller performance
 - Ex: "conversion rate do produto A?", "qual produto tem melhor AOV?", "seller score atual", "performance na flash sale"
 
-**COMPLEXA** (6 steps completos):
+**COMPLEXA** (10 steps completos):
 - Análise estratégica multi-dimensional de Shopee seller performance
 - Marketplace optimization e listing improvement strategies
 - Identificação de promotional opportunities e customer satisfaction gaps
@@ -183,196 +183,224 @@ Você é um especialista em Shopee marketplace focado em seller performance, con
           };
 
         case 2:
-          console.log('🎯 STEP 2/6: QUERY BASE + ANÁLISE DE SHOPEE SELLER PERFORMANCE');
+          console.log('🎯 STEP 2/10: EXPLORAÇÃO DE TABELAS - getTables');
           return {
-            system: `STEP 2/6: QUERY BASE + ANÁLISE IMEDIATA DE SHOPEE SELLER PERFORMANCE
+            system: `STEP 2/10: EXPLORAÇÃO DE TABELAS - getTables
 
-Execute a query SQL principal para obter dados de Shopee seller performance e IMEDIATAMENTE analise os resultados no mesmo response.
+Explore as tabelas disponíveis no dataset para identificar estruturas de dados de Shopee seller performance. APENAS explore - NÃO execute queries neste step.
 
-🛍️ **FOCO DE SHOPEE SELLER PERFORMANCE:**
-- Priorize métricas de marketplace success: seller score, conversion rate, customer satisfaction
-- Identifique top performing vs underperforming products na loja
-- Analise listing quality e promotional effectiveness
-- Detecte customer satisfaction issues e review management needs
-- Correlacione seller actions com sales performance e marketplace visibility
+🎯 **FOCO DA EXPLORAÇÃO:**
+- Identifique tabelas que contenham dados de seller performance, produtos, ratings, vendas
+- Procure por tabelas com dados de marketplace: sales, products, reviews, promotions
+- Entenda a estrutura de dados disponível para análise de performance no Shopee
 
-🔧 **PROCESSO OBRIGATÓRIO:**
-1. Execute executarSQL() com query focada na demanda de Shopee do usuário
-2. IMEDIATAMENTE após ver os dados JSON, analise no mesmo response
-3. Identifique patterns de seller performance, anomalias, marketplace opportunities
-4. Gere insights estratégicos sobre listing optimization e promotional strategies
-5. Destaque products/areas candidatos a optimization ou investment prioritário
+🔧 **PROCESSO:**
+1. Execute getTables para explorar dataset 'biquery_data'
+2. APENAS explore - sem queries neste step
+3. Identifique tabelas relevantes para análise de Shopee seller
 
-**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.shopee_seller\`\`
+**ALWAYS use:** Dataset 'biquery_data' com foco em tabelas do Shopee
 
-🛍️ **ANÁLISE ESTRATÉGICA IMEDIATA:**
-- Compare conversion rates entre products e identify optimization opportunities
-- Identifique listing gaps (low views, poor click-through, conversion issues)
-- Detecte promotional ROI opportunities (underperforming campaigns, successful strategies)
-- Avalie customer satisfaction patterns (reviews, ratings, return rates)
-- Sinalize seasonal marketplace trends e mega sales preparation needs
-- Analise search ranking performance e visibility improvement opportunities
-
-📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
-- Os dados são visuais por natureza (comparações, rankings, trends)
-- O volume é adequado para visualização clara
-- O gráfico adicionaria clareza aos insights de Shopee
-- Não force - só crie se realmente agregar valor
-
-Use criarGrafico() quando fizer sentido estratégico para o insight de Shopee.`,
+**IMPORTANTE:** Este step apenas explora. As queries serão feitas nos próximos steps.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL,
-              criarGrafico: analyticsTools.criarGrafico
+              getTables: bigqueryTools.getTables
             }
           };
 
         case 3:
-          console.log('🎯 STEP 3/6: QUERY COMPLEMENTAR + DEEP SHOPEE SELLER ANALYSIS');
+          console.log('🎯 STEP 3/10: MAPEAMENTO DE COLUNAS E TIPOS');
           return {
-            system: `STEP 3/6: QUERY COMPLEMENTAR + ANÁLISE ESTRATÉGICA DE SHOPEE SELLER PROFUNDA
+            system: `STEP 3/10: MAPEAMENTO DE COLUNAS E TIPOS
 
-Execute query complementar baseada nos insights de Shopee do Step 2 e conduza análise estratégica mais profunda.
+Execute query SQL para mapear colunas e tipos das tabelas identificadas no Step 2. APENAS execute a query - NÃO analise os resultados neste step.
 
-🎯 **FOQUE EM INSIGHTS DE SHOPEE DO STEP ANTERIOR:**
-- Use os top/bottom performing products identificados no Step 2
-- Aprofunde análise temporal de seller trends, customer behavior patterns, ou promotional effectiveness
-- Investigue patterns de marketplace performance identificados anteriormente
+📊 **FOCO DO MAPEAMENTO:**
+- Use INFORMATION_SCHEMA.COLUMNS para obter estrutura completa das tabelas
+- Identifique colunas disponíveis e seus tipos de dados de Shopee seller
+- Prepare contexto detalhado para queries nos próximos steps
+- Foque na tabela shopee_seller que será usada nas análises
 
 🔧 **PROCESSO:**
-1. Execute executarSQL() com query que complementa/aprofunda análise de Shopee do Step 2
-2. IMEDIATAMENTE analise os novos dados no contexto dos insights anteriores
-3. Correlacione com findings do Step 2 para insights de marketplace mais ricos
-4. Identifique causas raíz de seller performance patterns
-5. Desenvolva recomendações estratégicas de marketplace optimization mais específicas
+1. Execute executarSQL() com query de mapeamento de estrutura da tabela shopee_seller
+2. APENAS execute - sem análise neste step
+3. Os dados de estrutura serão usados para construir queries precisas nos próximos steps
 
-**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.shopee_seller\`\`
+**ALWAYS use:** Dataset 'biquery_data' com foco na estrutura da tabela shopee_seller
 
-🛍️ **ANÁLISES SHOPEE ESPECIALIZADAS:**
-- Temporal analysis dos top performing products e seasonal marketplace patterns
-- Correlação listing quality vs conversion performance
-- Segmentação de performance por product category e price ranges
-- Cross-product analysis e bundle opportunity identification
-- Customer journey analysis from search to purchase completion
-- Review sentiment analysis e rating impact em sales velocity
-- Promotional campaign effectiveness analysis (flash sales, vouchers, bundles)
-- Competitor benchmarking baseado em similar products e categories
-- Regional performance analysis considerando different Shopee markets
-
-📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
-- Os dados são visuais por natureza (comparações, rankings, trends)
-- O volume é adequado para visualização clara
-- O gráfico adicionaria clareza aos insights de Shopee
-- Não force - só crie se realmente agregar valor
-
-Use criarGrafico() quando fizer sentido estratégico para o insight de Shopee.`,
+**IMPORTANTE:** Este step mapeia a estrutura. As queries de análise de Shopee serão feitas nos próximos steps.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL,
-              criarGrafico: analyticsTools.criarGrafico
+              executarSQL: bigqueryTools.executarSQL
             }
           };
 
         case 4:
-          console.log('🎯 STEP 4/6: QUERY ESTRATÉGICA FINAL + INSIGHTS CONSOLIDADOS');
+          console.log('🎯 STEP 4/10: QUERY 1 - CONSULTA SHOPEE PRINCIPAL');
           return {
-            system: `STEP 4/6: QUERY ESTRATÉGICA FINAL + CONSOLIDAÇÃO DE INSIGHTS DE SHOPEE
+            system: `STEP 4/10: QUERY 1 - CONSULTA SHOPEE PRINCIPAL
 
-Execute query estratégica final para completar a análise de Shopee seller e consolide todos os insights para marketplace recommendations finais.
+Execute a primeira query SQL para obter dados de performance do Shopee seller. APENAS execute a query - NÃO analise os resultados neste step.
 
-🎯 **COMPLEMENTAR ANÁLISE DE SHOPEE ANTERIOR:**
-- Base-se nos padrões e opportunities identificados nos Steps 2 e 3
-- Foque em gaps de análise de Shopee que ainda precisam ser preenchidos
-- Investigue correlações ou validações necessárias para seller optimization recommendations sólidas
+🛍️ **FOCO DA CONSULTA SHOPEE:**
+- Priorize métricas de marketplace: seller score, conversion rate, customer satisfaction
+- Identifique performance de produtos na loja Shopee
+- Obtenha dados de listing quality e promotional effectiveness
+- Capture métricas fundamentais de Shopee para análise posterior
+- Correlacione seller actions com sales performance
 
-🔧 **PROCESSO FINAL:**
-1. Execute executarSQL() com query que fecha lacunas analíticas de Shopee restantes
-2. IMEDIATAMENTE integre insights com achados dos steps anteriores
-3. Consolide seller performance patterns em strategic narrative
-4. Prepare foundation para recomendações de marketplace optimization
-5. Quantifique impact potential das seller improvement opportunities identificadas
+🔧 **PROCESSO:**
+1. Execute executarSQL() com query focada na demanda Shopee do usuário
+2. APENAS execute - sem análise neste step
+3. Os dados de performance serão analisados no próximo step
 
 **ALWAYS use:** \`FROM \`creatto-463117.biquery_data.shopee_seller\`\`
 
-🛍️ **CONSOLIDAÇÃO ESTRATÉGICA DE SHOPEE:**
-- Listing optimization opportunities com conversion impact quantificado
-- Promotional strategy readiness assessment baseado em historical performance
-- Customer satisfaction improvement priorities baseadas em review analysis
-- Product portfolio optimization recommendations baseadas em sales velocity
-- Timeline recommendations para seller performance improvement implementation
-- Expected sales growth das mudanças propostas
-- Priority ranking das marketplace optimization opportunities
-- Seasonal strategy adjustments para upcoming mega sales events
-- Search ranking improvement roadmap baseado em keyword performance
-
-📊 **VISUALIZAÇÃO OPCIONAL:**
-Após executar a query e analisar os dados, considere criar um gráfico SE:
-- Os dados são visuais por natureza (comparações, rankings, trends)
-- O volume é adequado para visualização clara
-- O gráfico adicionaria clareza aos insights de Shopee
-- Não force - só crie se realmente agregar valor
-
-Use criarGrafico() quando fizer sentido estratégico para o insight de Shopee.`,
+**IMPORTANTE:** Este é um step de coleta de dados Shopee. A análise será feita no Step 5.`,
             tools: {
-              executarSQL: bigqueryTools.executarSQL,
-              criarGrafico: analyticsTools.criarGrafico
+              executarSQL: bigqueryTools.executarSQL
             }
           };
 
         case 5:
-          console.log('🎯 STEP 5/6: VISUALIZAÇÃO ESTRATÉGICA DE SHOPEE SELLER PERFORMANCE');
+          console.log('🎯 STEP 5/10: ANÁLISE DOS DADOS + PRIMEIRA VISUALIZAÇÃO');
           return {
-            system: `STEP 5/6: VISUALIZAÇÃO ESTRATÉGICA DE SHOPEE SELLER PERFORMANCE
+            system: `STEP 5/10: ANÁLISE DOS DADOS + PRIMEIRA VISUALIZAÇÃO
 
-Crie visualização que melhor representa os insights de Shopee seller performance e suporta as recomendações estratégicas de marketplace identificadas nos steps anteriores.
+⚠️ CRITICAL: Você executou queries SQL nos steps anteriores. Você DEVE agora analisar os dados e criar primeira visualização.
 
-📊 **ESCOLHA INTELIGENTE DE GRÁFICO DE SHOPEE:**
-Baseado na análise de Shopee dos steps 2-4, escolha a visualização mais impactful:
+🎯 **ANÁLISE OBRIGATÓRIA DE SHOPEE PERFORMANCE:**
+- **Seller Performance**: Como está o seller score e marketplace positioning?
+- **Conversion Analysis**: Conversion rate e customer journey optimization
+- **Product Performance**: Top/bottom performing products e listing quality
+- **Customer Satisfaction**: Review sentiment e rating impact analysis
+- **Promotional Effectiveness**: ROI de campanhas e flash sales performance
 
-**Bar Chart (Vertical/Horizontal):**
-- Shopee performance ranking: conversion rate, AOV comparison entre products
-- Seller metrics comparison: rating, response rate, fulfillment performance
-- Máximo: 8 products (vertical) ou 15 (horizontal)
+📊 **PRIMEIRA VISUALIZAÇÃO OBRIGATÓRIA:**
+Crie um gráfico que melhor represente os principais insights Shopee encontrados nos dados.
 
-**Line Chart:**
-- Shopee trends temporais: evolution de seller score ao longo do tempo
-- Seasonal sales patterns e mega sales performance
-- Máximo: 5 seller metrics simultâneas, 100 pontos temporais
+⚡ **CRITICAL: EFFICIENT DATA HANDLING**
+Otimize data transfer para economizar tokens - use máximo 50-100 registros para gráficos.
 
-**Scatter Plot:**
-- Correlações de Shopee: Product views vs conversion rate, Price vs AOV
-- Identificação de marketplace efficiency frontier
-- Product performance positioning analysis
-- Máximo: 50 products
-
-**Pie Chart:**
-- Sales distribution por product category
-- Customer satisfaction breakdown por rating levels
-- Máximo: 6 fatias (mín. 2% cada)
-
-**Heatmap:**
-- Performance por product category x time period matrix
-- Regional marketplace performance patterns
-
-🔧 **PROCESS:**
-1. Use criarGrafico() com dados de Shopee dos steps anteriores
-2. Escolha tipo de gráfico que melhor suporta suas marketplace recommendations
-3. Foque em visualizar seller performance gaps e optimization opportunities
-4. Prepare para sustentar arguments do resumo executivo de Shopee
-
-**REGRAS CRÍTICAS:**
-- Se dados excedem limites → Top N performers + "Outros"
-- Always respect visualization limits por tipo de gráfico
-- Choose chart type que melhor suporta Shopee strategic narrative`,
+🎯 **ANALYSIS + VISUALIZATION REQUIREMENTS:**
+- Análise detalhada dos marketplace patterns identificados
+- Identificação de seller optimization opportunities
+- Primeira visualização estratégica dos insights principais`,
             tools: {
               criarGrafico: analyticsTools.criarGrafico
             }
           };
 
         case 6:
-          console.log('🎯 STEP 6/6: RESUMO EXECUTIVO + SHOPEE STRATEGIC RECOMMENDATIONS');
+          console.log('🎯 STEP 6/10: QUERY 2 - CONSULTA COMPLEMENTAR');
           return {
-            system: `STEP 6/6: RESUMO EXECUTIVO + SHOPEE STRATEGIC RECOMMENDATIONS
+            system: `STEP 6/10: QUERY 2 - CONSULTA COMPLEMENTAR
+
+Execute segunda query SQL para obter dados complementares baseados nos insights do Step 5. APENAS execute a query - NÃO analise os resultados neste step.
+
+🛍️ **FOCO DA CONSULTA COMPLEMENTAR:**
+- Baseie-se nos insights encontrados no Step 5
+- Obtenha dados complementares para deeper Shopee analysis
+- Foque em correlations, time-series, ou segmentações relevantes
+- Capture dados que suportem optimization recommendations
+
+🔧 **PROCESSO:**
+1. Execute executarSQL() com query complementar focada nos insights do Step 5
+2. APENAS execute - sem análise neste step
+3. Os dados complementares serão analisados no próximo step
+
+**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.shopee_seller\`\`
+
+**IMPORTANTE:** Este é um step de coleta de dados complementares. A análise será feita no Step 7.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 7:
+          console.log('🎯 STEP 7/10: ANÁLISE COMPLEMENTAR + SEGUNDA VISUALIZAÇÃO');
+          return {
+            system: `STEP 7/10: ANÁLISE COMPLEMENTAR + SEGUNDA VISUALIZAÇÃO
+
+⚠️ CRITICAL: Você executou query complementar no Step 6. Você DEVE agora analisar esses dados complementares em conjunto com insights anteriores.
+
+🎯 **ANÁLISE COMPLEMENTAR OBRIGATÓRIA:**
+- Integre insights da query complementar com análise do Step 5
+- Identifique deeper patterns e correlations de Shopee performance
+- Desenvolva understanding mais rico dos marketplace optimization opportunities
+- Quantifique impact potential das mudanças propostas
+
+📊 **SEGUNDA VISUALIZAÇÃO:**
+Crie segunda visualização complementar que explore aspectos diferentes dos insights Shopee.
+
+⚡ **EFFICIENT DATA HANDLING**
+Use máximo 50-100 registros para gráficos.
+
+🎯 **REQUIREMENTS:**
+- Análise integrada dos dados complementares
+- Segunda visualização estratégica
+- Deeper Shopee optimization insights`,
+            tools: {
+              criarGrafico: analyticsTools.criarGrafico
+            }
+          };
+
+        case 8:
+          console.log('🎯 STEP 8/10: QUERY 3 - CONSULTA FINAL');
+          return {
+            system: `STEP 8/10: QUERY 3 - CONSULTA FINAL
+
+Execute terceira e última query SQL para validar insights ou obter dados finais necessários para recomendações executivas. APENAS execute a query - NÃO analise os resultados neste step.
+
+🎯 **FOCO DA CONSULTA FINAL:**
+- Complete gaps de análise identificados nos steps anteriores
+- Valide hipóteses ou quantifique opportunities identificadas
+- Obtenha dados finais para sustentar recomendações executivas
+- Foque em dados que permitam quantificar ROI das mudanças propostas
+
+🔧 **PROCESSO:**
+1. Execute executarSQL() com query final baseada em todos os insights anteriores
+2. APENAS execute - sem análise neste step
+3. Os dados finais serão analisados no Step 9
+
+**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.shopee_seller\`\`
+
+**IMPORTANTE:** Esta é a última coleta de dados. A análise final será feita no Step 9.`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
+
+        case 9:
+          console.log('🎯 STEP 9/10: ANÁLISE FINAL + TERCEIRA VISUALIZAÇÃO');
+          return {
+            system: `STEP 9/10: ANÁLISE FINAL + TERCEIRA VISUALIZAÇÃO
+
+⚠️ CRITICAL: Você executou query final no Step 8. Você DEVE agora consolidar TODAS as análises e criar visualização final.
+
+🎯 **CONSOLIDAÇÃO FINAL OBRIGATÓRIA:**
+- Integre TODOS os insights dos steps 5, 7 e este step
+- Consolide Shopee patterns em narrative estratégico
+- Quantifique impact das marketplace optimization opportunities
+- Prepare foundation para recomendações executivas do Step 10
+
+📊 **TERCEIRA E FINAL VISUALIZAÇÃO:**
+Crie visualização final que sintetiza os principais insights Shopee e suporta recomendações executivas.
+
+⚡ **EFFICIENT DATA HANDLING**
+Use máximo 50-100 registros para gráficos.
+
+🎯 **REQUIREMENTS:**
+- Consolidação de TODOS os insights anteriores
+- Terceira visualização estratégica final
+- Preparação para recomendações executivas`,
+            tools: {
+              criarGrafico: analyticsTools.criarGrafico
+            }
+          };
+
+        case 10:
+          console.log('🎯 STEP 10/10: RESUMO EXECUTIVO + SHOPEE STRATEGIC RECOMMENDATIONS');
+          return {
+            system: `STEP 10/10: RESUMO EXECUTIVO + SHOPEE STRATEGIC RECOMMENDATIONS
 
 Consolide TODOS os insights de Shopee dos steps anteriores em síntese executiva focada em business impact e seller optimization.
 
@@ -421,6 +449,7 @@ Consolide TODOS os insights de Shopee dos steps anteriores em síntese executiva
             tools: {}
           };
 
+
         default:
           console.log(`⚠️ SHOPEE SELLER ANALYST STEP ${stepNumber}: Configuração padrão`);
           return {
@@ -431,7 +460,7 @@ Consolide TODOS os insights de Shopee dos steps anteriores em síntese executiva
     },
     
     // StopWhen inteligente baseado na classificação de complexidade
-    stopWhen: stepCountIs(6),
+    stopWhen: stepCountIs(10),
     providerOptions: {
       anthropic: {
         thinking: { type: 'enabled', budgetTokens: 15000 }
