@@ -10,7 +10,7 @@ export async function POST(req: Request) {
   console.log('🧪 TESTE API: Messages:', messages?.length);
 
   const result = streamText({
-    model: 'openai/gpt-5-nano',
+    model: 'anthropic/claude-sonnet-4',
     
     // Sistema inicial básico
     system: `Você é um assistente de teste para workflow de 6 steps.
