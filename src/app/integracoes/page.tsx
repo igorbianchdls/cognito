@@ -154,6 +154,7 @@ export default function IntegrationsPage() {
             integrations={financialIntegrations} 
           />
           </div>
+          </div>
         </div>
       </SidebarInset>
     </SidebarProvider>
