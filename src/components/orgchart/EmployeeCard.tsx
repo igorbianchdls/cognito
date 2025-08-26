@@ -37,43 +37,48 @@ export default function EmployeeCard({ employee, level, isHighlighted = false, o
       }`}
       onClick={onClick}
     >
-      <CardContent className="p-6">
+      <CardContent className="p-0">
         {/* Badge no canto superior direito */}
-        <div className="absolute top-4 right-4">
+        <div className="absolute top-4 right-4 z-10">
           <Badge className={`${getBadgeColor(employee.category)} text-white text-xs px-2 py-1 rounded-md`}>
             PRO
           </Badge>
         </div>
 
-        {/* 3 ícones no topo */}
-        <div className="flex justify-center gap-4 mb-6">
-          <div className="w-12 h-12 bg-gray-50 border border-gray-200 rounded-full flex items-center justify-center">
-            <Edit className="w-5 h-5 text-gray-600" />
-          </div>
-          <div className="w-12 h-12 bg-gray-50 border border-gray-200 rounded-full flex items-center justify-center">
-            <div className={`w-6 h-6 rounded bg-gradient-to-br ${employee.iconColor} flex items-center justify-center text-white text-sm`}>
-              {employee.icon}
+        {/* Retângulo cinza com 3 ícones */}
+        <div className="bg-gray-100 rounded-t-2xl p-6 mb-6">
+          <div className="flex justify-center gap-4">
+            <div className="w-12 h-12 bg-white border border-gray-300 rounded-full flex items-center justify-center">
+              <Edit className="w-5 h-5 text-gray-600" />
+            </div>
+            <div className="w-12 h-12 bg-white border border-gray-300 rounded-full flex items-center justify-center">
+              <div className={`w-6 h-6 rounded bg-gradient-to-br ${employee.iconColor} flex items-center justify-center text-white text-sm`}>
+                {employee.icon}
+              </div>
+            </div>
+            <div className="w-12 h-12 bg-white border border-gray-300 rounded-full flex items-center justify-center">
+              <MessageSquare className="w-5 h-5 text-gray-600" />
             </div>
           </div>
-          <div className="w-12 h-12 bg-gray-50 border border-gray-200 rounded-full flex items-center justify-center">
-            <MessageSquare className="w-5 h-5 text-gray-600" />
+        </div>
+
+        {/* Conteúdo alinhado à esquerda */}
+        <div className="px-6 pb-6">
+          {/* Título alinhado à esquerda */}
+          <div className="mb-4">
+            <h3 className="text-xl font-semibold text-gray-900 leading-tight text-left">
+              {employee.name}
+            </h3>
           </div>
-        </div>
 
-        {/* Título principal centralizado */}
-        <div className="text-center mb-4">
-          <h3 className="text-xl font-semibold text-gray-900 leading-tight">
-            {employee.name}
-          </h3>
+          {/* Descrição alinhada à esquerda */}
+          <p className="text-sm text-gray-600 leading-relaxed text-left">
+            {employee.description.length > 80 
+              ? `${employee.description.substring(0, 80)}...`
+              : employee.description
+            }
+          </p>
         </div>
-
-        {/* Descrição */}
-        <p className="text-sm text-gray-600 leading-relaxed text-center">
-          {employee.description.length > 80 
-            ? `${employee.description.substring(0, 80)}...`
-            : employee.description
-          }
-        </p>
       </CardContent>
     </Card>
   );
