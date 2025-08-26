@@ -15,6 +15,8 @@ import MetaIcon from "@/components/icons/MetaIcon"
 import GoogleAdsIcon from "@/components/icons/GoogleAdsIcon"
 import GoogleAnalyticsIcon from "@/components/icons/GoogleAnalyticsIcon"
 import ShopifyIcon from "@/components/icons/ShopifyIcon"
+import AmazonIcon from "@/components/icons/AmazonIcon"
+import GoogleIcon from "@/components/icons/GoogleIcon"
 
 import { NavMainSimple } from "@/components/navigation/nav-main-simple"
 import { NavUser } from "@/components/nav-user"
@@ -90,6 +92,18 @@ const navigationData = {
     {
       title: "Shopify",
       icon: ShopifyIcon,
+    },
+    {
+      title: "Amazon Ads",
+      icon: AmazonIcon,
+    },
+    {
+      title: "Shopee",
+      icon: ShopifyIcon,
+    },
+    {
+      title: "ContaAzul",
+      icon: GoogleIcon,
     },
   ],
 }
