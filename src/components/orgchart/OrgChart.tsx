@@ -233,7 +233,6 @@ export default function OrgChart() {
             </Card>
           </div>
         )}
-      </div>
     </div>
   );
 }
