@@ -1,4 +1,5 @@
 import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
+import { gateway } from '@ai-sdk/gateway';
 import * as testeTools from '@/tools/testeTools';
 
 export const maxDuration = 30;
@@ -10,7 +11,7 @@ export async function POST(req: Request) {
   console.log('🧪 TESTE API: Messages:', messages?.length);
 
   const result = streamText({
-    model: 'google/gemini-2.5-flash',
+    model: gateway('openai/gpt-4o'),
     
     // Sistema inicial básico
     system: `Você é um assistente de teste para workflow de 6 steps.
