@@ -89,7 +89,7 @@ export default function AppsPage() {
       />
       <SidebarInset>
         {/* Toolbar no topo direito */}
-        <div className="flex justify-end p-3 border-b border-gray-200 bg-white">
+        <div className="flex justify-end p-2">
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="sm">
               <Settings className="h-4 w-4" />
