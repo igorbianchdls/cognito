@@ -40,7 +40,7 @@ export function IntegrationCard({ integration, onToggle }: IntegrationCardProps)
 
   return (
     <Card className="bg-white border border-gray-200 hover:border-gray-300 transition-colors">
-      <CardContent className="p-6">
+      <CardContent className="px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4 flex-1">
             <div className="flex-shrink-0">

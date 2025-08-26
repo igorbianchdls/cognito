@@ -95,7 +95,7 @@ export default function IntegrationsPage() {
   }
 
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider defaultOpen={true}>
       <SidebarShadcn />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b border-gray-200" style={{backgroundColor: 'white'}}>
@@ -121,7 +121,7 @@ export default function IntegrationsPage() {
           </div>
         </header>
         <div className="flex flex-1 flex-col" style={{backgroundColor: 'white'}}>
-          <div className="mx-auto w-full max-w-6xl p-8">
+          <div className="mx-auto w-full max-w-5xl p-8">
         {/* Header */}
         <div className="mb-10">
           <h1 className="text-3xl font-bold text-gray-900 mb-3">
