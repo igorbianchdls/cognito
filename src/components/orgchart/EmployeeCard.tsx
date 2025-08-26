@@ -30,18 +30,6 @@ export default function EmployeeCard({ employee, level, isHighlighted = false, o
       onClick={onClick}
     >
       <CardContent className="p-4">
-        {/* Category Badge */}
-        <div className="flex items-center justify-between mb-3">
-          <Badge className={`text-xs px-2 py-1 rounded-full ${categoryColorClass} border`}>
-            {employee.category}
-          </Badge>
-          {employee.isFeatured && (
-            <Badge variant="secondary" className="text-xs px-2 py-1 bg-gray-100 text-gray-600 border">
-              FEATURED
-            </Badge>
-          )}
-        </div>
-
         {/* Icon */}
         <div className="flex justify-center mb-3">
           <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${employee.iconColor} flex items-center justify-center text-white text-lg shadow-sm`}>
@@ -50,7 +38,7 @@ export default function EmployeeCard({ employee, level, isHighlighted = false, o
         </div>
 
         {/* Title */}
-        <div className="text-center mb-3">
+        <div className="text-left mb-3">
           <h3 className="font-semibold text-base text-foreground leading-tight">
             {employee.name}
           </h3>
