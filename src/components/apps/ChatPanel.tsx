@@ -202,14 +202,6 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
   return (
     <div className="flex flex-col h-full overflow-y-auto bg-gray-50">
       
-      {/* Header */}
-      <div className="p-4 border-b border-[0.5px] border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-700">AI Assistant</h2>
-        <p className="text-sm text-gray-600 mt-1">
-          Ask questions about your data and widgets
-        </p>
-      </div>
-
       {/* Messages */}
       <div className="flex-1 p-4 overflow-y-scroll space-y-4 custom-scrollbar min-h-0">
         {messages.map((message) => (
