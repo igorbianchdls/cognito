@@ -46,31 +46,41 @@ export default function EmployeeCard({ employee, level, isHighlighted = false, o
 
       {/* Retângulo cinza com 3 ícones - colado completamente no topo */}
       <div className="bg-gray-100 p-6">
-        <div className="flex justify-center gap-4">
-          <div className="w-12 h-12 bg-white border border-gray-300 rounded-full flex items-center justify-center">
-            <Edit className="w-5 h-5 text-gray-600" />
+        <div className="relative flex justify-center items-center gap-8">
+          {/* Linha pontilhada conectora */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-32 border-t-2 border-dotted border-gray-400"></div>
           </div>
-          <div className="w-12 h-12 bg-white border border-gray-300 rounded-full flex items-center justify-center">
-            <div className={`w-6 h-6 rounded bg-gradient-to-br ${employee.iconColor} flex items-center justify-center text-white text-sm`}>
+          
+          {/* Esfera esquerda - menor */}
+          <div className="w-10 h-10 bg-white border border-gray-300 rounded-full flex items-center justify-center relative z-10">
+            <Edit className="w-4 h-4 text-gray-600" />
+          </div>
+          
+          {/* Esfera central - maior */}
+          <div className="w-14 h-14 bg-white border border-gray-300 rounded-full flex items-center justify-center relative z-10">
+            <div className={`w-7 h-7 rounded bg-gradient-to-br ${employee.iconColor} flex items-center justify-center text-white text-base`}>
               {employee.icon}
             </div>
           </div>
-          <div className="w-12 h-12 bg-white border border-gray-300 rounded-full flex items-center justify-center">
-            <MessageSquare className="w-5 h-5 text-gray-600" />
+          
+          {/* Esfera direita - menor */}
+          <div className="w-10 h-10 bg-white border border-gray-300 rounded-full flex items-center justify-center relative z-10">
+            <MessageSquare className="w-4 h-4 text-gray-600" />
           </div>
         </div>
       </div>
 
       {/* Conteúdo alinhado à esquerda */}
-      <div className="px-4 py-4 bg-white">
-        {/* Título alinhado à esquerda */}
+      <div className="px-4 pt-2 pb-2 bg-white">
+        {/* Título alinhado à esquerda - mais próximo do retângulo */}
         <div className="mb-2">
           <h3 className="text-lg font-semibold text-gray-900 leading-tight text-left">
             {employee.name}
           </h3>
         </div>
 
-        {/* Descrição alinhada à esquerda */}
+        {/* Descrição alinhada à esquerda - mais próxima da borda inferior */}
         <p className="text-sm text-gray-600 leading-relaxed text-left">
           {employee.description.length > 80 
             ? `${employee.description.substring(0, 80)}...`
