@@ -42,16 +42,18 @@ export default function EmployeeCard({ employee, level, isHighlighted = false, o
           )}
         </div>
 
-        {/* Icon and Title */}
-        <div className="flex items-start gap-3 mb-3">
-          <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${employee.iconColor} flex items-center justify-center text-white text-lg shadow-sm flex-shrink-0`}>
+        {/* Icon */}
+        <div className="flex justify-center mb-3">
+          <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${employee.iconColor} flex items-center justify-center text-white text-lg shadow-sm`}>
             {employee.icon}
           </div>
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-base text-foreground mb-1 leading-tight">
-              {employee.name}
-            </h3>
-          </div>
+        </div>
+
+        {/* Title */}
+        <div className="text-center mb-3">
+          <h3 className="font-semibold text-base text-foreground leading-tight">
+            {employee.name}
+          </h3>
         </div>
 
         {/* Description */}
