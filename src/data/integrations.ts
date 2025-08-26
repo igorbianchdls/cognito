@@ -61,6 +61,30 @@ export const integrations: Integration[] = [
     connected: false,
     category: 'ecommerce'
   },
+  {
+    id: 'amazon',
+    name: 'Amazon',
+    description: 'Sincronize dados da sua loja Amazon para análise de vendas e inventário.',
+    icon: 'amazon',
+    connected: false,
+    category: 'ecommerce'
+  },
+  {
+    id: 'mercado-livre',
+    name: 'Mercado Livre',
+    description: 'Conecte sua loja do Mercado Livre para análise de vendas e gestão de produtos.',
+    icon: 'mercado-livre',
+    connected: false,
+    category: 'ecommerce'
+  },
+  {
+    id: 'magalu',
+    name: 'Magazine Luiza',
+    description: 'Integre sua loja do Magalu para análise de vendas e controle de inventário.',
+    icon: 'magalu',
+    connected: false,
+    category: 'ecommerce'
+  },
   
   // Financial
   {

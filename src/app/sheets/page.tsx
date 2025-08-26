@@ -1,8 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import Sidebar from '@/components/navigation/Sidebar'
-import MobileHeader from '@/components/navigation/MobileHeader'
+import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { Separator } from "@/components/ui/separator"
 import AGGridSheet from '@/components/sheets/AGGridSheet'
 import RightPanel from '@/components/sheets/RightPanel'
 import TableHeader, { FilterState, SortState } from '@/components/sheets/TableHeader'
@@ -10,7 +19,6 @@ import CollapseButton from '@/components/sheets/CollapseButton'
 
 export default function SheetsPage() {
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [filters, setFilters] = useState<FilterState[]>([]);
   const [sorting, setSorting] = useState<SortState[]>([]);
   const [view, setView] = useState<'grid' | 'list'>('grid');
@@ -20,15 +28,33 @@ export default function SheetsPage() {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-white">
-      <MobileHeader onMenuToggle={() => setIsMobileMenuOpen(!isMobileMenuOpen)} />
-      <Sidebar 
-        isOpen={isMobileMenuOpen} 
-        onClose={() => setIsMobileMenuOpen(false)}
-      />
-      
-      {/* Área Principal */}
-      <div className="flex-1 min-w-0 flex flex-col">
+    <SidebarProvider>
+      <SidebarShadcn />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12" style={{backgroundColor: 'white'}}>
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+            <Separator
+              orientation="vertical"
+              className="mr-2 data-[orientation=vertical]:h-4"
+            />
+            <Breadcrumb>
+              <BreadcrumbList>
+                <BreadcrumbItem className="hidden md:block">
+                  <BreadcrumbLink href="#">
+                    Creatto
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator className="hidden md:block" />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Planilhas</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+        </header>
+        <div className="flex flex-1 flex-col" style={{backgroundColor: 'white'}}>
+          <div className="flex-1 min-w-0 flex flex-col">
         {/* TableHeader - Ocupando 100% da largura */}
         <TableHeader 
           onFiltersChange={setFilters}
@@ -69,7 +95,9 @@ export default function SheetsPage() {
             </div>
           </div>
         </div>
-      </div>
-    </div>
+        </div>
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }
