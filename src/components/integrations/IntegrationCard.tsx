@@ -40,16 +40,7 @@ export function IntegrationCard({ integration, onToggle }: IntegrationCardProps)
 
   return (
     <Card 
-      className="flex flex-col bg-white border-[0.5px] border-gray-300"
-      style={{
-        boxShadow: `
-          0 0 0 1px rgba(0, 0, 0, 0.05),
-          0 0 0 0.5px rgba(0, 0, 0, 0.05),
-          0 1px 1px 0 rgba(0, 0, 0, 0.05),
-          0 2px 1px -1px rgba(0, 0, 0, 0.05),
-          0 1px 3px 0 rgba(0, 0, 0, 0.05)
-        `
-      }}>
+      className="flex flex-col bg-white border-[0.5px] border-gray-300">
       <CardHeader className="flex-row items-start space-y-0 space-x-4 pb-4">
         <div className="flex-shrink-0">
           <div className="w-12 h-12 rounded-lg flex items-center justify-center">
