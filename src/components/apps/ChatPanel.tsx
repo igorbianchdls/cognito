@@ -6,6 +6,12 @@ import { useState, FormEvent } from 'react'
 import type { DroppedWidget } from '@/types/widget'
 import CanvasWidgets from '../tools/appsChat/CanvasWidgets'
 import { widgetActions } from '@/stores/widgetStore'
+import {
+  PromptInput,
+  PromptInputSubmit,
+  PromptInputTextarea,
+  PromptInputToolbar,
+} from '@/components/ai-elements/prompt-input'
 
 interface ChatPanelProps {
   droppedWidgets: DroppedWidget[]
@@ -283,24 +289,21 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-[0.5px] border-gray-200 bg-gray-50 flex-shrink-0">
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <input
-            type="text"
+      <div className="p-4 bg-gray-50 flex-shrink-0">
+        <PromptInput onSubmit={handleSubmit}>
+          <PromptInputTextarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
-            className="flex-1 px-3 py-2 bg-white border-[0.5px] border-gray-200 text-gray-700 placeholder-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             disabled={status !== 'ready'}
           />
-          <button
-            type="submit"
-            disabled={!input.trim() || status !== 'ready'}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Send
-          </button>
-        </form>
+          <PromptInputToolbar>
+            <PromptInputSubmit
+              disabled={!input.trim() || status !== 'ready'}
+              status={status}
+            />
+          </PromptInputToolbar>
+        </PromptInput>
       </div>
     </div>
   )
