@@ -132,7 +132,7 @@ export default function AppsPage() {
               />
             
               {/* Canvas */}
-              <div className="flex-1 py-1 px-3">
+              <div className="flex-1 py-1 px-3 h-[calc(100vh-4rem)] overflow-auto">
                 {hasNavigationWidget ? (
                   <MultiGridCanvas 
                     widgets={droppedWidgets}
