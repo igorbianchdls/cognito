@@ -28,7 +28,7 @@ export default function ChatContainer({
   // Estado vazio - tela de boas-vindas centrada
   if (messages.length === 0) {
     return (
-      <div className="h-screen flex flex-col items-center justify-start px-4 pt-48" style={{backgroundColor: 'white'}}>
+      <div className="h-screen flex flex-col items-center justify-start px-4 pt-64" style={{backgroundColor: 'white'}}>
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">
             Converse com seus dados
