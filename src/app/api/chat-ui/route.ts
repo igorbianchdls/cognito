@@ -1,4 +1,3 @@
-import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/bigquery';
 import * as analyticsTools from '@/tools/analytics';
@@ -11,7 +10,7 @@ export async function POST(req: Request) {
   const { messages }: { messages: UIMessage[] } = await req.json();
 
   const result = streamText({
-    model: anthropic('claude-sonnet-4-20250514'),
+    model: 'xai/grok-3',
     
     // Sistema inicial básico
     system: `You are a helpful assistant with access to BigQuery data exploration, analysis, visualization, and management tools, plus weather information.`,
@@ -179,14 +178,6 @@ Provide final recommendations and conclusions based on the complete analysis and
     
     // StopWhen simples - máximo 6 steps
     stopWhen: stepCountIs(6),
-    providerOptions: {
-      anthropic: {
-        thinking: { type: 'enabled', budgetTokens: 15000 }
-      }
-    },
-    headers: {
-      'anthropic-beta': 'interleaved-thinking-2025-05-14'
-    },
     tools: {
       // BigQuery tools
       ...bigqueryTools,
