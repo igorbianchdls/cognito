@@ -1,4 +1,3 @@
-import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
 import * as testeTools from '@/tools/testeTools';
 
@@ -11,7 +10,7 @@ export async function POST(req: Request) {
   console.log('🧪 TESTE API: Messages:', messages?.length);
 
   const result = streamText({
-    model: anthropic('claude-sonnet-4-20250514'),
+    model: 'openai/gpt-5-mini',
     
     // Sistema inicial básico
     system: `Você é um assistente de teste para workflow de 6 steps.
@@ -167,13 +166,9 @@ Tools executadas: ${executedTools.join(', ')}`,
     ],
     
     providerOptions: {
-      anthropic: {
-        thinking: { type: 'enabled', budgetTokens: 15000 }
+      openai: {
+        reasoningSummary: 'detailed'
       }
-    },
-    
-    headers: {
-      'anthropic-beta': 'interleaved-thinking-2025-05-14'
     },
     
     // Tools simuladas para teste
