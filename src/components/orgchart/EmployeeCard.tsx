@@ -32,7 +32,7 @@ export default function EmployeeCard({ employee, level, isHighlighted = false, o
 
   return (
     <Card 
-      className={`min-w-[280px] max-w-[320px] cursor-pointer bg-white border border-gray-200 hover:shadow-lg transition-all duration-200 rounded-2xl relative overflow-hidden ${
+      className={`min-w-[280px] max-w-[320px] cursor-pointer bg-white border border-gray-200 hover:shadow-lg transition-all duration-200 rounded-2xl relative overflow-hidden py-0 ${
         isHighlighted ? 'ring-2 ring-blue-400 shadow-lg' : ''
       }`}
       onClick={onClick}
