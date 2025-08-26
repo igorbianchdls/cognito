@@ -10,7 +10,7 @@ export async function POST(req: Request) {
   console.log('🧪 TESTE API: Messages:', messages?.length);
 
   const result = streamText({
-    model: 'openai/gpt-5-mini',
+    model: 'xai/grok-3',
     
     // Sistema inicial básico
     system: `Você é um assistente de teste para workflow de 6 steps.
@@ -165,11 +165,6 @@ Tools executadas: ${executedTools.join(', ')}`,
       }
     ],
     
-    providerOptions: {
-      openai: {
-        reasoningSummary: 'detailed'
-      }
-    },
     
     // Tools simuladas para teste
     tools: {
