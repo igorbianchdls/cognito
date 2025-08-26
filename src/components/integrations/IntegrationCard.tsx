@@ -39,33 +39,60 @@ export function IntegrationCard({ integration, onToggle }: IntegrationCardProps)
   const IconComponent = iconMap[integration.icon as keyof typeof iconMap] || Globe;
 
   return (
-    <Card 
-      className="flex flex-col bg-white border-[0.5px] border-gray-300">
-      <CardHeader className="flex-row items-start space-y-0 space-x-4 pb-4">
-        <div className="flex-shrink-0">
-          <div className="w-12 h-12 rounded-lg flex items-center justify-center">
-            <IconComponent className="w-full h-full" />
+    <Card className="bg-white border border-gray-200 hover:border-gray-300 transition-colors">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4 flex-1">
+            <div className="flex-shrink-0">
+              <div className="w-12 h-12 rounded-xl bg-gray-50 flex items-center justify-center">
+                <IconComponent className="w-8 h-8" />
+              </div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                {integration.name}
+              </h3>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                {integration.description}
+              </p>
+            </div>
+          </div>
+          <div className="flex-shrink-0 ml-6">
+            <Button 
+              variant={integration.connected ? "outline" : "default"}
+              className={`px-6 py-2 font-medium ${
+                integration.connected 
+                  ? "text-gray-700 bg-gray-100 hover:bg-gray-200 border-gray-300" 
+                  : "bg-black text-white hover:bg-gray-800"
+              }`}
+              onClick={() => onToggle(integration.id, !integration.connected)}
+            >
+              {integration.connected ? "Disconnect" : "Connect"}
+            </Button>
           </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <CardTitle className="text-base font-semibold">
-            {integration.name}
-          </CardTitle>
-          <CardDescription className="text-sm text-muted-foreground mt-1">
-            {integration.description}
-          </CardDescription>
-        </div>
-        <div className="flex-shrink-0">
-          <Switch
-            checked={integration.connected}
-            onCheckedChange={(checked) => onToggle(integration.id, checked)}
-          />
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <Button variant="outline" size="sm" className="text-sm">
-          Conectar
-        </Button>
+        
+        {/* Configurações específicas para integração conectada */}
+        {integration.connected && integration.id === 'slack' && (
+          <div className="mt-6 pt-6 border-t border-gray-100">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900">Messages</h4>
+                  <p className="text-sm text-gray-600">Send incoming messages to my channel</p>
+                </div>
+                <Switch checked={true} />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-medium text-gray-900">Missed calls</h4>
+                  <p className="text-sm text-gray-600">Send missed calls to my channel</p>
+                </div>
+                <Switch checked={true} />
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
