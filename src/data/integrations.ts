@@ -176,17 +176,17 @@ export const integrations: Integration[] = [
 export const getCategoryTitle = (category: 'advertising' | 'analytics' | 'ecommerce' | 'financial' | 'crm' | 'database'): string => {
   switch (category) {
     case 'advertising':
-      return 'Advertising & Marketing';
+      return 'Publicidade e Marketing';
     case 'analytics':
-      return 'Analytics & Tracking';
+      return 'Analytics e Rastreamento';
     case 'ecommerce':
-      return 'E-commerce Platforms';
+      return 'Plataformas de E-commerce';
     case 'financial':
-      return 'Financial & Accounting';
+      return 'Financeiro e Contabilidade';
     case 'crm':
-      return 'CRM & Marketing';
+      return 'CRM e Marketing';
     case 'database':
-      return 'Databases & Storage';
+      return 'Bancos de Dados e Armazenamento';
     default:
       return '';
   }
@@ -195,17 +195,17 @@ export const getCategoryTitle = (category: 'advertising' | 'analytics' | 'ecomme
 export const getCategoryDescription = (category: 'advertising' | 'analytics' | 'ecommerce' | 'financial' | 'crm' | 'database'): string => {
   switch (category) {
     case 'advertising':
-      return 'Connect your advertising platforms to analyze campaign performance and ROI';
+      return 'Conecte suas plataformas de publicidade para analisar performance de campanhas e ROI';
     case 'analytics':
-      return 'Integrate analytics tools to track user behavior and website performance';
+      return 'Integre ferramentas de analytics para rastrear comportamento do usuário e performance do site';
     case 'ecommerce':
-      return 'Sync your online store data for comprehensive sales and inventory analysis';
+      return 'Sincronize dados da sua loja online para análise abrangente de vendas e estoque';
     case 'financial':
-      return 'Import financial data to track revenue, expenses, and business performance';
+      return 'Importe dados financeiros para rastrear receita, gastos e performance do negócio';
     case 'crm':
-      return 'Connect CRM systems for customer relationship management and marketing automation';
+      return 'Conecte sistemas de CRM para gestão de relacionamento com clientes e automação de marketing';
     case 'database':
-      return 'Integrate databases and data warehouses for comprehensive data analysis';
+      return 'Integre bancos de dados e data warehouses para análise abrangente de dados';
     default:
       return '';
   }

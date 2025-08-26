@@ -46,6 +46,7 @@ export default function IntegrationsPage() {
   const advertisingIntegrations = filteredIntegrations.filter(i => i.category === 'advertising')
   const analyticsIntegrations = filteredIntegrations.filter(i => i.category === 'analytics')
   const ecommerceIntegrations = filteredIntegrations.filter(i => i.category === 'ecommerce')
+  const crmIntegrations = filteredIntegrations.filter(i => i.category === 'crm')
   const financialIntegrations = filteredIntegrations.filter(i => i.category === 'financial')
 
   const TabButton = ({ tab, label }: { tab: FilterTab; label: string }) => (
@@ -65,7 +66,7 @@ export default function IntegrationsPage() {
     category, 
     integrations: categoryIntegrations 
   }: { 
-    category: 'advertising' | 'analytics' | 'ecommerce' | 'financial';
+    category: 'advertising' | 'analytics' | 'ecommerce' | 'financial' | 'crm';
     integrations: Integration[]
   }) => {
     if (categoryIntegrations.length === 0) return null
@@ -124,14 +125,14 @@ export default function IntegrationsPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-semibold text-foreground mb-6">
-            Integrations
+            Integrações
           </h1>
           
           {/* Tabs */}
           <div className="flex items-center space-x-2">
-            <TabButton tab="all" label="All Applications" />
-            <TabButton tab="connected" label="Connected" />
-            <TabButton tab="disconnected" label="Disconnected" />
+            <TabButton tab="all" label="Todas as Aplicações" />
+            <TabButton tab="connected" label="Conectadas" />
+            <TabButton tab="disconnected" label="Desconectadas" />
           </div>
         </div>
 
@@ -148,6 +149,10 @@ export default function IntegrationsPage() {
           <IntegrationSection 
             category="ecommerce" 
             integrations={ecommerceIntegrations} 
+          />
+          <IntegrationSection 
+            category="crm" 
+            integrations={crmIntegrations} 
           />
           <IntegrationSection 
             category="financial" 
