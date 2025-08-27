@@ -441,44 +441,6 @@ Execute a query de consolidação programada no Step 2:
             }
           };
 
-📊 **ANÁLISE ESTRATÉGICA GOOGLE ADS FINAL:**
-- Integre insights Google Ads com achados dos steps anteriores (5 e 7)
-- Consolide campaign performance patterns em strategic narrative
-- Prepare foundation para recomendações de budget optimization
-- Quantifique impact potential das opportunities identificadas
-
-🔧 **PROCESSO:**
-1. Analise os dados JSON de Google Ads obtidos no Step 8
-2. Integre com todos os insights Google Ads anteriores
-3. Consolide todos os padrões de performance identificados
-4. Prepare insights Google Ads finais para o resumo executivo
-
-📊 **CONSOLIDAÇÃO ESTRATÉGICA GOOGLE ADS:**
-- Budget reallocation opportunities com impact quantificado
-- Scaling readiness assessment das top performers
-- Bidding strategy optimization recommendations
-- Risk assessment de underperformers
-- Timeline recommendations para implementação
-- Expected ROI impact das mudanças propostas
-- Priority ranking das optimization opportunities
-- Cross-campaign coordination strategy
-- Attribution model optimization recommendations
-
-📊 **VISUALIZAÇÃO OPCIONAL:**
-Considere criar um gráfico Google Ads final SE:
-- Os dados são visuais por natureza (comparações, rankings, trends)
-- O volume é adequado para visualização clara
-- O gráfico adicionaria clareza aos insights Google Ads consolidados
-- Não force - só crie se realmente agregar valor
-
-Use criarGrafico() quando fizer sentido estratégico para o insight.
-
-**IMPORTANTE:** Este é o último step de análise Google Ads antes do resumo executivo.`,
-            tools: {
-              criarGrafico: analyticsTools.criarGrafico
-            }
-          };
-
         case 10:
           console.log('🎯 STEP 10/10: RESUMO EXECUTIVO + GOOGLE ADS STRATEGIC RECOMMENDATIONS');
           return {
