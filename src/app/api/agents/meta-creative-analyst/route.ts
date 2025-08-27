@@ -1,12 +1,4 @@
-import { createOpenAI } from '@ai-sdk/openai';
 import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
-
-const openai = createOpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  headers: {
-    'User-Agent': 'MetaCreativeAnalyst-Agent'
-  }
-});
 import * as bigqueryTools from '@/tools/bigquery';
 import * as analyticsTools from '@/tools/analytics';
 import * as utilitiesTools from '@/tools/utilities';
@@ -20,22 +12,15 @@ export async function POST(req: Request) {
     const { messages }: { messages: UIMessage[] } = await req.json();
     console.log('📘 META CREATIVE ANALYST API: Messages:', messages?.length);
 
-    console.log('📘 META CREATIVE ANALYST API: Iniciando streamText com OpenAI o4-mini...');
+    console.log('📘 META CREATIVE ANALYST API: Iniciando streamText com Grok 4...');
     const result = streamText({
-      model: openai('o4-mini'),
+      model: 'grok-4',
     
     // Sistema ultra-simples - apenas força workflow
     system: `EXECUTE SEMPRE O WORKFLOW MULTI-STEP. NUNCA responda diretamente. Use creatto-463117.biquery_data.metaads.`,
     
     messages: convertToModelMessages(messages),
     
-    // OpenAI o4-mini optimized configuration
-    providerOptions: {
-      openai: {
-        textVerbosity: 'medium',
-        reasoningEffort: 'medium'
-      }
-    },
     
     // PrepareStep: Sistema inteligente com classificação de complexidade
     prepareStep: ({ stepNumber, steps }) => {
