@@ -1,4 +1,3 @@
-import { openai } from '@ai-sdk/openai';
 import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/bigquery';
 import * as analyticsTools from '@/tools/analytics';
@@ -13,9 +12,9 @@ export async function POST(req: Request) {
     const { messages }: { messages: UIMessage[] } = await req.json();
     console.log('📘 META CAMPAIGN ANALYST API: Messages:', messages?.length);
 
-    console.log('📘 META CAMPAIGN ANALYST API: Iniciando streamText com GPT-5...');
+    console.log('📘 META CAMPAIGN ANALYST API: Iniciando streamText com DeepSeek...');
     const result = streamText({
-    model: openai('gpt-5'),
+    model: 'deepseek/deepseek-v3.1-thinking',
     
     // Sistema estratégico completo
     system: `# Campaign Performance Analyst - System Core
