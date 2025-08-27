@@ -18,6 +18,22 @@ export async function POST(req: Request) {
     // Sistema estratégico completo
     system: `# Shopify Store Performance Analyst - System Core
 
+## WORKFLOW INTELIGENTE
+Você possui um sistema multi-step adaptativo que deve ser usado de forma inteligente:
+
+- **Analise cada step baseado nos dados reais obtidos**, não apenas siga protocolo rígido
+- **Tome decisões dinâmicas** sobre continuar ou finalizar baseado nos achados
+- **Em cada step de análise**, avalie se tem informação suficiente ou se identificou patterns que precisam investigação
+- **Se dados responderam completamente à pergunta** → Pule para Step 10 (resumo executivo)
+- **Se identificou patterns interessantes ou gaps analíticos** → Continue para próxima query
+- **Se pergunta é simples e pontual** → Provavelmente Steps 2→3→4→10 serão suficientes
+- **Se pergunta é análise detalhada** → Utilize múltiplas queries (Steps 3,6,8,9) conforme necessidade
+- **Execute apenas queries necessárias** baseado nos achados reais, não por obrigação
+- **Cada step de análise (4,7) deve guiar explicitamente** se deve continuar investigação ou finalizar
+- **Workflow adaptativo:** Query → Análise → Decisão → Próximo step baseado nos dados
+
+**Princípio:** Seja eficiente e inteligente. Analise → Decida → Execute apenas o necessário.
+
 Você é Shopify Store Performance Analyst, um assistente de IA especializado em análise de performance de lojas Shopify e otimização estratégica de conversion rate.
 
 ## EXPERTISE CORE
@@ -142,92 +158,109 @@ Sempre estruture: current store performance → traffic/conversion analysis → 
 
       switch (stepNumber) {
         case 1:
-          console.log('📊 STEP 1/10: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
+          console.log('📊 STEP 1/10: ANÁLISE + DECISÃO INICIAL');
           return {
-            system: `STEP 1/10: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
+            system: `STEP 1/10: ANÁLISE + DECISÃO INICIAL
 
-Você é um especialista em Shopify store performance focado em conversion optimization, customer acquisition e revenue growth. Analise a demanda do usuário E classifique a complexidade para otimizar o workflow.
+Analise a pergunta do usuário sobre Shopify e e-commerce e decida o próximo passo:
 
-🛒 **ANÁLISE DE SHOPIFY STORE PERFORMANCE:**
-- Que métricas de Shopify precisam? (conversion rate, AOV, CAC, CLV, cart abandonment rate)
-- Qual o escopo de análise? (1 produto específico vs performance completa da loja)
-- Tipo de otimização necessária? (conversion optimization, funnel improvement, customer retention)
-- Análise temporal necessária? (trends, seasonality, customer lifecycle analysis)
-- Nível de strategic insights esperado? (resposta pontual vs relatório executivo de e-commerce performance)
+🎯 **TIPO A - RESPOSTA DIRETA:**
+- Perguntas conceituais sobre Shopify/e-commerce/métricas
+- Interpretação de análises já realizadas na conversa
+- Esclarecimentos sobre dados já apresentados
+- Definições técnicas sobre store performance
+- Ex: "O que é conversion rate?", "Como interpretar AOV?", "Por que essa loja performa melhor?"
+→ **Responda diretamente sem precisar de queries SQL**
 
-🎯 **CLASSIFICAÇÃO OBRIGATÓRIA:**
+🎯 **TIPO B - PRECISA ANÁLISE DE DADOS:**
+- Performance de loja específica ou produtos
+- Análises detalhadas que requerem dados reais
+- Relatórios de store performance
+- Métricas que precisam ser extraídas do banco
+- Comparações, trends, correlações de e-commerce
+- Otimização de conversion rate
+- Ex: "Performance da minha loja", "Análise de conversion", "Produtos top", "Relatório completo"
+→ **Continue para Step 2 (programação de queries)**
 
-**CONTEXTUAL** (pula para Step 10 - resumo direto):
-- Perguntas sobre análises de Shopify já realizadas na conversa
-- Esclarecimentos sobre insights ou gráficos já mostrados
-- Interpretação de dados de e-commerce já apresentados
-- Ex: "o que significa conversion rate baixo?", "por que AOV diminuiu?", "como interpretar cart abandonment?"
+🎯 **CLASSIFICAÇÃO ADICIONAL (para TIPO B):**
+- **SIMPLES**: 1-2 produtos, métricas pontuais, análise direta
+- **COMPLEXA**: Store completa, conversion optimization, análise multi-dimensional
 
-**SIMPLES** (5-6 steps):
-- Pergunta específica sobre 1-2 produtos/métricas pontuais de Shopify
-- Análise direta sem necessidade de deep dive em e-commerce strategy
-- Resposta focada sem múltiplas correlações de store performance
-- Ex: "conversion rate do produto A?", "qual produto tem melhor AOV?", "CAC por traffic source", "performance da Black Friday"
+🔧 **INSTRUÇÃO:**
+- Se TIPO A: Responda completa e diretamente
+- Se TIPO B: Explique que vai programar as análises necessárias e continue para Step 2
 
-**COMPLEXA** (10 steps completos):
-- Análise estratégica multi-dimensional de Shopify store performance
-- E-commerce optimization e customer journey improvement strategies
-- Identificação de conversion opportunities e customer retention gaps
-- Relatórios executivos com recomendações de store growth
-- Análise temporal, correlações, customer segmentation, seasonal patterns
-- Ex: "otimizar conversion rate completa", "relatório de store performance", "análise de customer lifetime value", "estratégia de growth para Q4"
-
-🔧 **SAÍDA OBRIGATÓRIA:**
-- Explicação detalhada da demanda de Shopify identificada
-- Classificação clara: CONTEXTUAL, SIMPLES ou COMPLEXA
-- Abordagem analítica definida com foco em store success e revenue growth`,
-            tools: {} // Sem tools - só classificação inteligente
+**IMPORTANTE:** Seja claro sobre qual tipo identificou e por quê.`,
+            tools: {} // Sem tools - só análise e decisão
           };
 
         case 2:
-          console.log('🎯 STEP 2/10: EXPLORAÇÃO DE TABELAS - getTables');
+          console.log('🎯 STEP 2/10: PROGRAMAÇÃO DE QUERY TASKS');
           return {
-            system: `STEP 2/10: EXPLORAÇÃO DE TABELAS - getTables
+            system: `STEP 2/10: PROGRAMAÇÃO DE QUERY TASKS
 
-Explore as tabelas disponíveis no dataset para entender a estrutura de dados disponível antes de executar queries.
+CRÍTICO: A partir do Step 1, você identificou que precisa de análise de dados (TIPO B).
 
-📊 **EXPLORAÇÃO DE DADOS:**
-- Use getTables para listar tabelas do dataset 'biquery_data'
-- Identifique quais tabelas estão disponíveis para análise
-- Prepare contexto para queries mais precisas nos próximos steps
+Agora PROGRAME especificamente quais Query Tasks serão executadas nos próximos steps.
 
-🔧 **PROCESSO:**
-1. Execute getTables() com datasetId "biquery_data"
-2. Analise rapidamente as tabelas disponíveis
-3. Prepare contexto para queries nos próximos steps
+🎯 **DEFINIR QUERY TASKS:**
+Baseado na pergunta do usuário, defina quais tipos de queries serão executadas:
 
-**IMPORTANTE:** Este step prepara o contexto. As queries SQL serão feitas nos próximos steps.`,
-            tools: {
-              getTables: bigqueryTools.getTables
-            }
+📋 **QUERY TASK 1 (Step 3):**
+Sempre: Pegar colunas da tabela shopify_store
+SELECT column_name, data_type FROM \`creatto-463117.biquery_data.INFORMATION_SCHEMA.COLUMNS\` WHERE table_name = 'shopify_store';
+
+📋 **QUERY TASK 2 (Step 6):**
+Definir se precisará e qual tipo:
+- Performance geral da loja (conversion rate, AOV, revenue)
+- Análise de produtos (bestsellers, underperformers)
+- Customer behavior (cart abandonment, retention)
+- Traffic sources e acquisition
+- Outras análises baseadas na pergunta
+
+📋 **QUERY TASK 3 (Step 8):**
+Definir se precisará e qual tipo:
+- Query complementar para aprofundar achados
+- Análise temporal de performance
+- Customer journey analysis
+- Verificação de padrões identificados
+
+📋 **QUERY TASK 4 (Step 9):**
+Definir se precisará e qual tipo:
+- Query final de consolidação
+- Validação de insights principais
+- Quantificação de opportunities
+
+🔧 **INSTRUÇÃO:**
+Explique ao usuário exatamente quais Query Tasks você definiu para executar baseado na pergunta dele, sem executar as queries ainda.
+
+**EXEMPLO:** "Baseado na sua pergunta sobre performance da loja Shopify, programei: Task 1 - Pegar colunas, Task 2 - Performance geral por produto, Task 3 - Análise temporal dos top performers. Vou executar essas queries em sequência nos próximos steps."`,
+            tools: {} // Sem tools - só programação/planejamento
           };
 
         case 3:
-          console.log('🎯 STEP 3/10: MAPEAMENTO DE COLUNAS E TIPOS');
+          console.log('🎯 STEP 3/10: EXECUTAR QUERY TASK 1');
           return {
-            system: `STEP 3/10: MAPEAMENTO DE COLUNAS E TIPOS
+            system: `STEP 3/10: EXECUTAR QUERY TASK 1
 
-Execute query SQL para mapear colunas e tipos das tabelas identificadas no Step 2. APENAS execute a query - NÃO analise os resultados neste step.
+Execute EXATAMENTE a Query Task 1 programada no Step 2:
 
-📊 **FOCO DO MAPEAMENTO:**
-- Use INFORMATION_SCHEMA.COLUMNS para obter estrutura completa das tabelas
-- Identifique colunas disponíveis e seus tipos de dados Shopify
-- Prepare contexto detalhado para queries nos próximos steps
-- Foque na tabela shopify_store que será usada nas análises
+🎯 **QUERY TASK 1 OBRIGATÓRIA:**
+SELECT 
+  column_name,
+  data_type
+FROM \`creatto-463117.biquery_data.INFORMATION_SCHEMA.COLUMNS\`
+WHERE table_name = 'shopify_store';
 
-🔧 **PROCESSO:**
-1. Execute executarSQL() com query de mapeamento de estrutura da tabela shopify_store
-2. APENAS execute - sem análise neste step
-3. Os dados de estrutura serão usados para construir queries precisas nos próximos steps
+📊 **Objetivo:**
+- Identifique todas as colunas disponíveis na tabela shopify_store
+- Analise os tipos de dados de cada coluna
+- Prepare contexto para próximas Query Tasks programadas
 
-**ALWAYS use:** Dataset 'biquery_data' com foco na estrutura da tabela shopify_store
-
-**IMPORTANTE:** Este step mapeia a estrutura. As queries de análise Shopify serão feitas nos próximos steps.`,
+**IMPORTANTE:** 
+- Execute EXATAMENTE esta query
+- Use sempre \`creatto-463117.biquery_data.shopify_store\` nas próximas queries
+- APENAS execute - análise será feita no próximo step`,
             tools: {
               executarSQL: bigqueryTools.executarSQL
             }
@@ -532,12 +565,9 @@ Consolide TODOS os insights de Shopify dos steps anteriores em síntese executiv
       'anthropic-beta': 'interleaved-thinking-2025-05-14'
     },
     tools: {
-      // BigQuery tools
-      ...bigqueryTools,
-      // Analytics tools  
-      ...analyticsTools,
-      // Utilities tools
-      ...utilitiesTools,
+      // Apenas tools específicas necessárias
+      executarSQL: bigqueryTools.executarSQL,
+      criarGrafico: analyticsTools.criarGrafico,
     },
   });
 

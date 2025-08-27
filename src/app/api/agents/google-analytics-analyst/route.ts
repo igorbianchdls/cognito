@@ -18,6 +18,22 @@ export async function POST(req: Request) {
     // Sistema estratégico completo
     system: `# Google Analytics Performance Analyst - System Core
 
+## WORKFLOW INTELIGENTE
+Você possui um sistema multi-step adaptativo que deve ser usado de forma inteligente:
+
+- **Analise cada step baseado nos dados reais obtidos**, não apenas siga protocolo rígido
+- **Tome decisões dinâmicas** sobre continuar ou finalizar baseado nos achados
+- **Em cada step de análise**, avalie se tem informação suficiente ou se identificou patterns que precisam investigação
+- **Se dados responderam completamente à pergunta** → Pule para Step 10 (resumo executivo)
+- **Se identificou patterns interessantes ou gaps analíticos** → Continue para próxima query
+- **Se pergunta é simples e pontual** → Provavelmente Steps 2→3→4→10 serão suficientes
+- **Se pergunta é análise detalhada** → Utilize múltiplas queries (Steps 3,6,8,9) conforme necessidade
+- **Execute apenas queries necessárias** baseado nos achados reais, não por obrigação
+- **Cada step de análise (4,7) deve guiar explicitamente** se deve continuar investigação ou finalizar
+- **Workflow adaptativo:** Query → Análise → Decisão → Próximo step baseado nos dados
+
+**Princípio:** Seja eficiente e inteligente. Analise → Decida → Execute apenas o necessário.
+
 Você é Google Analytics Performance Analyst, um assistente de IA especializado em análise de comportamento de usuários e performance de negócio através de dados do Google Analytics 4.
 
 ## EXPERTISE CORE
@@ -131,11 +147,39 @@ Focus em strategic recommendations que impactem user experience e business growt
 
       switch (stepNumber) {
         case 1:
-          console.log('📊 STEP 1/10: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
+          console.log('📊 STEP 1/10: ANÁLISE + DECISÃO INICIAL');
           return {
-            system: `STEP 1/10: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
+            system: `STEP 1/10: ANÁLISE + DECISÃO INICIAL
 
-Você é um especialista em Google Analytics 4 focado em user behavior, customer journey e business intelligence. Analise a demanda do usuário E classifique a complexidade para otimizar o workflow.
+Analise a pergunta do usuário sobre Google Analytics e comportamento do usuário e decida o próximo passo:
+
+🎯 **TIPO A - RESPOSTA DIRETA:**
+- Perguntas conceituais sobre GA4/analytics/métricas
+- Interpretação de análises já realizadas na conversa
+- Esclarecimentos sobre dados já apresentados
+- Definições técnicas sobre user behavior
+- Ex: "O que é engagement rate?", "Como interpretar bounce rate?", "Por que esse canal converte melhor?"
+→ **Responda diretamente sem precisar de queries SQL**
+
+🎯 **TIPO B - PRECISA ANÁLISE DE DADOS:**
+- Performance de usuários ou canais específicos
+- Análises detalhadas que requerem dados reais
+- Relatórios de user behavior
+- Métricas que precisam ser extraídas do banco
+- Comparações, trends, correlações de analytics
+- Customer journey analysis
+- Ex: "Performance dos meus canais", "Análise de conversão", "User behavior", "Relatório completo"
+→ **Continue para Step 2 (programação de queries)**
+
+🎯 **CLASSIFICAÇÃO ADICIONAL (para TIPO B):**
+- **SIMPLES**: 1-2 eventos, métricas pontuais, análise direta
+- **COMPLEXA**: Customer journey completo, attribution analysis, análise multi-dimensional
+
+🔧 **INSTRUÇÃO:**
+- Se TIPO A: Responda completa e diretamente
+- Se TIPO B: Explique que vai programar as análises necessárias e continue para Step 2
+
+**IMPORTANTE:** Seja claro sobre qual tipo identificou e por quê.
 
 📊 **ANÁLISE DE PERFORMANCE GA4:**
 - Que métricas de user behavior precisam? (users, sessions, engagement rate, conversion rate, funnel analysis)
@@ -174,49 +218,72 @@ Você é um especialista em Google Analytics 4 focado em user behavior, customer
           };
 
         case 2:
-          console.log('🎯 STEP 2/10: EXPLORAÇÃO DE TABELAS - getTables');
+          console.log('🎯 STEP 2/10: PROGRAMAÇÃO DE QUERY TASKS');
           return {
-            system: `STEP 2/10: EXPLORAÇÃO DE TABELAS - getTables
+            system: `STEP 2/10: PROGRAMAÇÃO DE QUERY TASKS
 
-Explore as tabelas disponíveis no dataset para entender a estrutura de dados disponível antes de executar queries.
+CRÍTICO: A partir do Step 1, você identificou que precisa de análise de dados (TIPO B).
 
-📊 **EXPLORAÇÃO DE DADOS:**
-- Use getTables para listar tabelas do dataset 'biquery_data'
-- Identifique quais tabelas estão disponíveis para análise
-- Prepare contexto para queries mais precisas nos próximos steps
+Agora PROGRAME especificamente quais Query Tasks serão executadas nos próximos steps.
 
-🔧 **PROCESSO:**
-1. Execute getTables() com datasetId "biquery_data"
-2. Analise rapidamente as tabelas disponíveis
-3. Prepare contexto para queries nos próximos steps
+🎯 **DEFINIR QUERY TASKS:**
+Baseado na pergunta do usuário, defina quais tipos de queries serão executadas:
 
-**IMPORTANTE:** Este step prepara o contexto. As queries SQL serão feitas nos próximos steps.`,
-            tools: {
-              getTables: bigqueryTools.getTables
-            }
+📋 **QUERY TASK 1 (Step 3):**
+Sempre: Pegar colunas da tabela ga4_events
+SELECT column_name, data_type FROM \`creatto-463117.biquery_data.INFORMATION_SCHEMA.COLUMNS\` WHERE table_name = 'ga4_events';
+
+📋 **QUERY TASK 2 (Step 6):**
+Definir se precisará e qual tipo:
+- User behavior geral (sessions, users, engagement rate)
+- Análise de eventos específicos
+- Customer journey e attribution
+- Traffic sources e conversion
+- Outras análises baseadas na pergunta
+
+📋 **QUERY TASK 3 (Step 8):**
+Definir se precisará e qual tipo:
+- Query complementar para aprofundar achados
+- Análise temporal de behavior
+- Cohort analysis
+- Verificação de padrões identificados
+
+📋 **QUERY TASK 4 (Step 9):**
+Definir se precisará e qual tipo:
+- Query final de consolidação
+- Validação de insights principais
+- Quantificação de opportunities
+
+🔧 **INSTRUÇÃO:**
+Explique ao usuário exatamente quais Query Tasks você definiu para executar baseado na pergunta dele, sem executar as queries ainda.
+
+**EXEMPLO:** "Baseado na sua pergunta sobre comportamento do usuário, programei: Task 1 - Pegar colunas, Task 2 - Análise de engagement por canal, Task 3 - Customer journey dos top converters. Vou executar essas queries em sequência nos próximos steps."`,
+            tools: {} // Sem tools - só programação/planejamento
           };
 
         case 3:
-          console.log('🎯 STEP 3/10: MAPEAMENTO DE COLUNAS E TIPOS');
+          console.log('🎯 STEP 3/10: EXECUTAR QUERY TASK 1');
           return {
-            system: `STEP 3/10: MAPEAMENTO DE COLUNAS E TIPOS
+            system: `STEP 3/10: EXECUTAR QUERY TASK 1
 
-Execute query SQL para mapear colunas e tipos das tabelas identificadas no Step 2. APENAS execute a query - NÃO analise os resultados neste step.
+Execute EXATAMENTE a Query Task 1 programada no Step 2:
 
-📊 **FOCO DO MAPEAMENTO:**
-- Use INFORMATION_SCHEMA.COLUMNS para obter estrutura completa das tabelas
-- Identifique colunas disponíveis e seus tipos de dados GA4
-- Prepare contexto detalhado para queries nos próximos steps
-- Foque na tabela ga4_events que será usada nas análises
+🎯 **QUERY TASK 1 OBRIGATÓRIA:**
+SELECT 
+  column_name,
+  data_type
+FROM \`creatto-463117.biquery_data.INFORMATION_SCHEMA.COLUMNS\`
+WHERE table_name = 'ga4_events';
 
-🔧 **PROCESSO:**
-1. Execute executarSQL() com query de mapeamento de estrutura da tabela ga4_events
-2. APENAS execute - sem análise neste step
-3. Os dados de estrutura serão usados para construir queries precisas nos próximos steps
+📊 **Objetivo:**
+- Identifique todas as colunas disponíveis na tabela ga4_events
+- Analise os tipos de dados de cada coluna
+- Prepare contexto para próximas Query Tasks programadas
 
-**ALWAYS use:** Dataset 'biquery_data' com foco na estrutura da tabela ga4_events
-
-**IMPORTANTE:** Este step mapeia a estrutura. As queries de análise GA4 serão feitas nos próximos steps.`,
+**IMPORTANTE:** 
+- Execute EXATAMENTE esta query
+- Use sempre \`creatto-463117.biquery_data.ga4_events\` nas próximas queries
+- APENAS execute - análise será feita no próximo step`,
             tools: {
               executarSQL: bigqueryTools.executarSQL
             }
@@ -521,12 +588,9 @@ Consolide TODOS os insights GA4 dos steps anteriores em síntese executiva focad
       'anthropic-beta': 'interleaved-thinking-2025-05-14'
     },
     tools: {
-      // BigQuery tools
-      ...bigqueryTools,
-      // Analytics tools  
-      ...analyticsTools,
-      // Utilities tools
-      ...utilitiesTools,
+      // Apenas tools específicas necessárias
+      executarSQL: bigqueryTools.executarSQL,
+      criarGrafico: analyticsTools.criarGrafico,
     },
   });
 
