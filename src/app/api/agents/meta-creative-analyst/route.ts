@@ -82,7 +82,7 @@ Você excela nas seguintes tarefas:
 ## TECHNICAL SPECIFICATIONS
 
 ### SQL Workflow:
-- **ALWAYS use**: FROM creatto-463117.biquery_data.metads
+- **ALWAYS use**: FROM creatto-463117.biquery_data.metaads
 - Focus em métricas de conversão: conversion_rate, ROAS, cost_per_conversion
 - Agrupe por creative_name, creative_type para análise comparativa
 - Use análise temporal para detectar creative fatigue e opportunities
@@ -186,8 +186,8 @@ Agora PROGRAME especificamente quais Query Tasks serão executadas nos próximos
 Baseado na pergunta do usuário, defina quais tipos de queries serão executadas:
 
 📋 **QUERY TASK 1 (Step 3):**
-Sempre: Pegar colunas da tabela metads
-SELECT column_name, data_type FROM \`creatto-463117.biquery_data.INFORMATION_SCHEMA.COLUMNS\` WHERE table_name = 'metads';
+Sempre: Pegar colunas da tabela metaads
+SELECT column_name, data_type FROM \`creatto-463117.biquery_data.INFORMATION_SCHEMA.COLUMNS\` WHERE table_name = 'metaads';
 
 📋 **QUERY TASK 2 (Step 5):**
 Definir se precisará e qual tipo:
@@ -226,16 +226,16 @@ SELECT
   column_name,
   data_type
 FROM \`creatto-463117.biquery_data.INFORMATION_SCHEMA.COLUMNS\`
-WHERE table_name = 'metads';
+WHERE table_name = 'metaads';
 
 📊 **Objetivo:**
-- Identifique todas as colunas disponíveis na tabela metads
+- Identifique todas as colunas disponíveis na tabela metaads
 - Analise os tipos de dados de cada coluna
 - Prepare contexto para próximas Query Tasks programadas
 
 **IMPORTANTE:** 
 - Execute EXATAMENTE esta query
-- Use sempre \`creatto-463117.biquery_data.metads\` nas próximas queries
+- Use sempre \`creatto-463117.biquery_data.metaads\` nas próximas queries
 - APENAS execute - análise será feita no próximo step`,
             tools: {
               executarSQL: bigqueryTools.executarSQL
@@ -285,7 +285,7 @@ Execute a Query Task 2 programada no Step 2.
 A Query Task 2 foi definida no Step 2 como necessária
 
 🎨 **Query Task 2:**
-FROM \`creatto-463117.biquery_data.metads\`
+FROM \`creatto-463117.biquery_data.metaads\`
 
 Execute a query programada no Step 2 baseada na pergunta do usuário:
 - Performance geral de criativos
@@ -349,7 +349,7 @@ Execute a Query Task 3 programada no Step 2.
 A Query Task 3 foi definida no Step 2 como necessária
 
 🎨 **Query Task 3:**
-FROM \`creatto-463117.biquery_data.metads\`
+FROM \`creatto-463117.biquery_data.metaads\`
 
 Execute a query programada no Step 2:
 - Query complementar para aprofundar achados
@@ -414,7 +414,7 @@ Execute a Query Task 4 programada no Step 2.
 A Query Task 4 foi definida no Step 2 como necessária
 
 🎨 **Query Task 4:**
-FROM \`creatto-463117.biquery_data.metads\`
+FROM \`creatto-463117.biquery_data.metaads\`
 
 Execute a query de consolidação programada no Step 2:
 - Query final de consolidação
