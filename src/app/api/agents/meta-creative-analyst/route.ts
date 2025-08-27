@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   console.log('📘 META CREATIVE ANALYST API: Messages:', messages?.length);
 
   const result = streamText({
-    model: openai.reasoning('gpt-5'),
+    model: openai('gpt-5'),
     
     // Sistema direto e focado
     system: `# Creative Performance Analyst - Meta Ads

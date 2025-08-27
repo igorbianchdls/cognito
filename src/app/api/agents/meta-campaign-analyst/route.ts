@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   console.log('📘 META CAMPAIGN ANALYST API: Messages:', messages?.length);
 
   const result = streamText({
-    model: openai.reasoning('gpt-5'),
+    model: openai('gpt-5'),
     
     // Sistema estratégico completo
     system: `# Campaign Performance Analyst - System Core
