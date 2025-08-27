@@ -15,12 +15,20 @@ export async function POST(req: Request) {
 
     console.log('🔍 METAANALYST API: Iniciando Agent SDK OpenAI...');
     const result = streamText({
-      model: openai('gpt-4o'),
+      model: openai('gpt-5'),
     
     // Sistema inicial básico
     system: `You are MetaAnalyst AI, a specialized assistant for analyzing metadata, data structures, and providing insights about data organization and patterns.`,
     
     messages: convertToModelMessages(messages),
+    
+    // GPT-5 optimized configuration
+    providerOptions: {
+      openai: {
+        textVerbosity: 'medium',
+        reasoningEffort: 'medium'
+      }
+    },
     
     // PrepareStep: Define comportamento para cada um dos 5 steps
     prepareStep: ({ stepNumber, steps }) => {
