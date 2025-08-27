@@ -8,7 +8,7 @@ export default function MercadoLivreIcon({ className = "w-4 h-4" }: MercadoLivre
       src="https://i.imgur.com/1su5g81.png"
       alt="Mercado Livre"
       className={className}
-      style={{ objectFit: 'contain' }}
+      style={{ objectFit: 'cover' }}
     />
   );
 }
