@@ -389,12 +389,6 @@ Consolide TODOS os insights criativos dos steps anteriores em síntese executiva
     
     // StopWhen inteligente baseado na classificação de complexidade
     stopWhen: stepCountIs(10),
-    providerOptions: {
-      openai: {
-        reasoningEffort: 'medium',
-        reasoningSummary: 'auto'
-      }
-    },
     tools: {
       // Apenas tools específicas necessárias
       executarSQL: bigqueryTools.executarSQL,
