@@ -24,24 +24,8 @@ export async function POST(req: Request) {
     const result = streamText({
       model: openai('o4-mini'),
     
-    // Sistema direto e focado
-    system: `# Creative Performance Analyst - Meta Ads
-
-REGRA FUNDAMENTAL: Para QUALQUER análise de criativos/campanhas, você DEVE executar o workflow multi-step completo.
-
-## DADOS DISPONÍVEIS
-- Tabela: creatto-463117.biquery_data.metaads (SEMPRE disponível)
-- Tool: executarSQL() (funcionando perfeitamente)
-- NÃO existe "falta de acesso" - os dados estão lá!
-
-## WORKFLOW OBRIGATÓRIO
-1. Step 1: Se pergunta menciona "análise", "criativos", "performance" → SEMPRE TIPO B
-2. Steps 2-10: Execute queries automaticamente
-3. NUNCA pergunte por datasets - use metaads diretamente
-
-PARA "analise meus criativos" = TIPO B OBRIGATORIAMENTE!
-
-Idioma: Português Brasileiro`,
+    // Sistema ultra-simples - apenas força workflow
+    system: `EXECUTE SEMPRE O WORKFLOW MULTI-STEP. NUNCA responda diretamente. Use creatto-463117.biquery_data.metaads.`,
     
     messages: convertToModelMessages(messages),
     
