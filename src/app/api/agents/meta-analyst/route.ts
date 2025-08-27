@@ -19,153 +19,143 @@ export async function POST(req: Request) {
     
     messages: convertToModelMessages(messages),
     
-    // PrepareStep: Define comportamento para cada um dos 6 steps
+    // PrepareStep: Define comportamento para cada um dos 5 steps
     prepareStep: ({ stepNumber, steps }) => {
       console.log(`🔍 METAANALYST PREPARE STEP ${stepNumber}: Configurando comportamento`);
       
       switch (stepNumber) {
         case 1:
-          console.log('🎯 METAANALYST STEP 1: Configurando para análise da pergunta');
+          console.log('🎯 METAANALYST STEP 1: Análise da pergunta');
           return {
-            system: `STEP 1/6: ANALYZE USER REQUEST
+            system: `STEP 1/5: ANÁLISE DA PERGUNTA
             
-Carefully analyze what the user is asking for. As MetaAnalyst, focus on metadata and data structure aspects:
+Analise cuidadosamente o que o usuário está pedindo. Como MetaAnalyst, foque em aspectos de metadata e estrutura de dados:
             
-🔍 **Analysis Focus:**
-- What metadata insights are they seeking?
-- What data structures need to be examined?
-- What patterns in data organization do they want to understand?
-- What schema analysis would be helpful?
-- Are they asking about data quality, relationships, or structural patterns?
+🔍 **Foco da Análise:**
+- Que insights de metadata eles estão buscando?
+- Que estruturas de dados precisam ser examinadas?
+- Que padrões na organização de dados eles querem entender?
+- Que análise de schema seria útil?
+- Estão perguntando sobre qualidade de dados, relacionamentos ou padrões estruturais?
             
-📝 **Your Task:**
-Provide a thoughtful analysis of the user's request from a metadata perspective. Explain what you understand they want and outline your approach.
+📝 **Sua Tarefa:**
+Forneça uma análise reflexiva da solicitação do usuário de uma perspectiva de metadata. Explique o que você entende que eles querem e delineie sua abordagem.
             
-⚠️ **IMPORTANT:** Do NOT use any tools yet. Focus only on understanding and planning.`,
+⚠️ **IMPORTANTE:** NÃO use ferramentas ainda. Foque apenas em entender e planejar.`,
             tools: {} // Remove todas as tools - só análise textual
           };
           
         case 2:
-          console.log('🎯 METAANALYST STEP 2: Configurando para exploração de datasets');
+          console.log('🎯 METAANALYST STEP 2: Pegar as colunas');
           return {
-            system: `STEP 2/6: EXPLORE AVAILABLE DATASETS
+            system: `STEP 2/5: PEGAR AS COLUNAS
             
-Based on your analysis, now explore what datasets are available for metadata analysis.
+Agora execute a query para obter informações sobre as colunas da tabela car_prices.
             
-🎯 **Your Task:**
-Use getDatasets to discover available BigQuery datasets. Focus on datasets that might reveal interesting metadata patterns.
+🎯 **Sua Tarefa:**
+Use executarSQL para executar EXATAMENTE esta query:
             
-📊 **Focus:**
-- Execute getDatasets (no parameters needed)
-- Identify datasets with rich metadata potential
-- Look for datasets with diverse table structures
-- Explain which datasets offer the best metadata insights`,
-            tools: {
-              getDatasets: bigqueryTools.getDatasets
-            }
-          };
-          
-        case 3:
-          console.log('🎯 METAANALYST STEP 3: Configurando para exploração de tabelas');
-          return {
-            system: `STEP 3/6: EXPLORE TABLES IN CHOSEN DATASET
+SELECT 
+  column_name,
+  data_type
+FROM \`creatto-463117.biquery_data.INFORMATION_SCHEMA.COLUMNS\`
+WHERE table_name = 'car_prices';
             
-Now explore the table structures and metadata within the most relevant dataset.
+📊 **Foco:**
+- Execute a query exata fornecida acima
+- Identifique todas as colunas disponíveis na tabela car_prices
+- Analise os tipos de dados de cada coluna
+- Prepare contexto para a próxima query de dados
             
-🎯 **Your Task:**
-Use getTables to explore tables and their metadata in the selected dataset.
-            
-📊 **Focus:**
-- Choose the dataset with most interesting metadata from step 2
-- Execute getTables with the selected datasetId
-- Analyze table schemas, field types, and structural patterns
-- Identify tables with complex or interesting metadata structures`,
-            tools: {
-              getTables: bigqueryTools.getTables
-            }
-          };
-          
-        case 4:
-          console.log('🎯 METAANALYST STEP 4: Configurando para execução de SQL');
-          return {
-            system: `STEP 4/6: EXECUTE SQL QUERY
-            
-Now execute a targeted SQL query to extract data for metadata analysis.
-            
-🎯 **Your Task:**
-Use executarSQL to retrieve data that will help analyze metadata patterns and structures.
-            
-📊 **Guidelines:**
-- Create SQL queries that reveal data patterns and structures
-- Focus on metadata-relevant queries (data distributions, schema insights)
-- Use INFORMATION_SCHEMA queries when possible for metadata analysis
-- Consider queries that show data quality, completeness, or structural patterns
-            
-💡 **Example Approaches:**
-- "SELECT column_name, data_type, COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS GROUP BY column_name, data_type"
-- Sample data to understand patterns: "SELECT * FROM project.dataset.table LIMIT 100"
-- Analyze data distributions and quality patterns`,
+⚠️ **IMPORTANTE:** Use sempre o dataset \`creatto-463117.biquery_data\` e tabela \`car_prices\`.`,
             tools: {
               executarSQL: bigqueryTools.executarSQL
             }
           };
           
-        case 5:
-          console.log('🎯 METAANALYST STEP 5: Configurando para análise obrigatória dos dados');
+        case 3:
+          console.log('🎯 METAANALYST STEP 3: Fazer a query');
           return {
-            system: `STEP 5/6: MANDATORY METADATA ANALYSIS
+            system: `STEP 3/5: FAZER A QUERY PRINCIPAL
             
-CRITICAL: You executed SQL queries in the previous step. You MUST now provide comprehensive metadata analysis.
+Agora execute uma query SQL para extrair os dados principais da tabela car_prices.
             
-📊 **Required Metadata Analysis:**
-- **Data Structure Patterns:** What structural patterns emerge from the data?
-- **Schema Insights:** What does the schema reveal about data organization?
-- **Data Quality Indicators:** What quality patterns can you identify?
-- **Metadata Relationships:** How do different data elements relate?
-- **Organizational Patterns:** What patterns exist in data naming, types, and structures?
+🎯 **Sua Tarefa:**
+Use executarSQL para recuperar dados da tabela car_prices baseado na solicitação do usuário.
             
-🎯 **Specific Focus Areas:**
-- Field naming conventions and consistency
-- Data type distributions and appropriateness
-- Missing data patterns and completeness
-- Relational structure and foreign key patterns
-- Data validation and constraint insights
+📊 **Diretrizes Obrigatórias:**
+- SEMPRE use: \`creatto-463117.biquery_data.car_prices\`
+- Dataset fixo: creatto-463117.biquery_data
+- Tabela fixa: car_prices
+- Crie queries que revelem padrões e estruturas dos dados
+- Foque em queries relevantes para metadata (distribuições, insights de schema)
+- Use as colunas identificadas no step anterior
             
-⚠️ **IMPORTANT:** 
-- Focus on metadata and structural insights rather than business insights
-- Do NOT execute more tools - focus only on analyzing existing data
-- Provide technical recommendations for data structure optimization`,
-            tools: {} // Remove todas as tools - força análise textual apenas
+💡 **Exemplos de Abordagens:**
+- "SELECT * FROM \`creatto-463117.biquery_data.car_prices\` LIMIT 100"
+- "SELECT column1, COUNT(*) FROM \`creatto-463117.biquery_data.car_prices\` GROUP BY column1"
+- Analise distribuições e padrões de qualidade dos dados`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
           };
           
-        case 6:
-          console.log('🎯 METAANALYST STEP 6: Configurando para criação de gráfico');
+        case 4:
+          console.log('🎯 METAANALYST STEP 4: Fazer um gráfico');
           return {
-            system: `STEP 6/6: CREATE METADATA VISUALIZATION
+            system: `STEP 4/5: FAZER UM GRÁFICO
             
-Finalize with a visualization that represents metadata patterns and structures.
+Crie uma visualização que represente os padrões de metadata e estruturas identificados.
             
-🎯 **Your Task:**
-Create a chart that best represents the metadata insights from previous steps.
+🎯 **Sua Tarefa:**
+Crie um gráfico que melhor represente os insights de metadata dos steps anteriores.
             
-📊 **Chart Guidelines:**
-- Choose charts that show structural patterns (bar charts for distributions, etc.)
-- Focus on metadata aspects: field types, data quality, schema patterns
-- Use data from the SQL query in step 4
-- Make sure the visualization supports your metadata analysis from step 5
+📊 **Diretrizes do Gráfico:**
+- Escolha gráficos que mostrem padrões estruturais (gráficos de barras para distribuições, etc.)
+- Foque em aspectos de metadata: tipos de campo, qualidade de dados, padrões de schema
+- Use dados da query SQL do step 3
+- Certifique-se de que a visualização suporte sua análise de metadata
             
-⚡ **CRITICAL: EFFICIENT DATA HANDLING**
-Optimize data transfer to save tokens:
+⚡ **CRÍTICO: MANIPULAÇÃO EFICIENTE DE DADOS**
+Otimize a transferência de dados para economizar tokens:
             
-1. **FILTER DATA:** Only include necessary columns for metadata visualization
-2. **LIMIT RECORDS:** Use maximum 50-100 records for charts
-3. **Focus on:** metadata-relevant aggregations and patterns
-            
-🎨 **Final Touch:**
-Provide final metadata recommendations and structural insights based on the complete analysis and visualization.`,
+1. **FILTRAR DADOS:** Inclua apenas colunas necessárias para visualização de metadata
+2. **LIMITAR REGISTROS:** Use máximo de 50-100 registros para gráficos
+3. **Foque em:** agregações e padrões relevantes para metadata`,
             tools: {
               criarGrafico: analyticsTools.criarGrafico
             }
+          };
+          
+        case 5:
+          console.log('🎯 METAANALYST STEP 5: Fazer resumo');
+          return {
+            system: `STEP 5/5: FAZER RESUMO FINAL
+            
+CRÍTICO: Você executou queries SQL e criou visualizações nos steps anteriores. Agora DEVE fornecer análise abrangente de metadata.
+            
+📊 **Análise de Metadata Obrigatória:**
+- **Padrões de Estrutura de Dados:** Que padrões estruturais emergem dos dados?
+- **Insights de Schema:** O que o schema revela sobre a organização dos dados?
+- **Indicadores de Qualidade de Dados:** Que padrões de qualidade você pode identificar?
+- **Relacionamentos de Metadata:** Como diferentes elementos de dados se relacionam?
+- **Padrões Organizacionais:** Que padrões existem na nomenclatura, tipos e estruturas dos dados?
+            
+🎯 **Áreas de Foco Específicas:**
+- Convenções de nomenclatura de campos e consistência
+- Distribuições de tipos de dados e adequação
+- Padrões de dados ausentes e completude
+- Estrutura relacional e padrões de chave estrangeira
+- Insights de validação e restrição de dados
+            
+⚠️ **IMPORTANTE:** 
+- Foque em insights de metadata e estruturais ao invés de insights de negócio
+- NÃO execute mais ferramentas - foque apenas em analisar dados existentes
+- Forneça recomendações técnicas para otimização da estrutura de dados
+            
+🎨 **Toque Final:**
+Forneça recomendações finais de metadata e insights estruturais baseados na análise completa e visualização.`,
+            tools: {} // Remove todas as tools - força análise textual apenas
           };
           
         default:
@@ -174,8 +164,8 @@ Provide final metadata recommendations and structural insights based on the comp
       }
     },
     
-    // StopWhen simples - máximo 6 steps
-    stopWhen: stepCountIs(6),
+    // StopWhen simples - máximo 5 steps
+    stopWhen: stepCountIs(5),
     tools: {
       // BigQuery tools
       ...bigqueryTools,
