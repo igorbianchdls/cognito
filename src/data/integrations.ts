@@ -73,7 +73,7 @@ export const integrations: Integration[] = [
     id: 'mercado-livre',
     name: 'Mercado Livre',
     description: 'Conecte sua loja do Mercado Livre para análise de vendas e gestão de produtos.',
-    icon: 'mercado-livre',
+    icon: 'https://i.imgur.com/1su5g81.png',
     connected: false,
     category: 'ecommerce'
   },
