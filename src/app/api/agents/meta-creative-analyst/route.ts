@@ -1,4 +1,4 @@
-import { anthropic } from '@ai-sdk/anthropic';
+import { openai } from '@ai-sdk/openai';
 import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/bigquery';
 import * as analyticsTools from '@/tools/analytics';
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   console.log('📘 META CREATIVE ANALYST API: Messages:', messages?.length);
 
   const result = streamText({
-    model: 'deepseek/deepseek-v3.1-thinking',
+    model: openai.reasoning('gpt-5'),
     
     // Sistema direto e focado
     system: `# Creative Performance Analyst - Meta Ads
@@ -401,6 +401,12 @@ Consolide TODOS os insights criativos dos steps anteriores em síntese executiva
     
     // StopWhen inteligente baseado na classificação de complexidade
     stopWhen: stepCountIs(10),
+    providerOptions: {
+      openai: {
+        reasoningEffort: 'medium',
+        reasoningSummary: 'auto'
+      }
+    },
     tools: {
       // Apenas tools específicas necessárias
       executarSQL: bigqueryTools.executarSQL,

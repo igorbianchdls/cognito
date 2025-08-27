@@ -1,4 +1,4 @@
-import { anthropic } from '@ai-sdk/anthropic';
+import { openai } from '@ai-sdk/openai';
 import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/bigquery';
 import * as analyticsTools from '@/tools/analytics';
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   console.log('📘 META CAMPAIGN ANALYST API: Messages:', messages?.length);
 
   const result = streamText({
-    model: 'deepseek/deepseek-v3.1-thinking',
+    model: openai.reasoning('gpt-5'),
     
     // Sistema estratégico completo
     system: `# Campaign Performance Analyst - System Core
@@ -473,12 +473,10 @@ Consolide TODOS os insights dos steps anteriores em síntese executiva focada em
     // StopWhen inteligente baseado na classificação de complexidade
     stopWhen: stepCountIs(10),
     providerOptions: {
-      anthropic: {
-        thinking: { type: 'enabled', budgetTokens: 15000 }
+      openai: {
+        reasoningEffort: 'medium',
+        reasoningSummary: 'auto'
       }
-    },
-    headers: {
-      'anthropic-beta': 'interleaved-thinking-2025-05-14'
     },
     tools: {
       // Apenas tools específicas necessárias
