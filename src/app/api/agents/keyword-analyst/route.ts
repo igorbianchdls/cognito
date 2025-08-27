@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   console.log('🔍 KEYWORD ANALYST API: Messages:', messages?.length);
 
   const result = streamText({
-    model: 'deepseek/deepseek-v3.1',
+    model: 'grok-4',
     
     // Sistema estratégico completo
     system: `# Keyword Performance Analyst - System Core

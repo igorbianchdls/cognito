@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   console.log('🛒 SHOPIFY STORE ANALYST API: Messages:', messages?.length);
 
   const result = streamText({
-    model: 'deepseek/deepseek-v3.1',
+    model: 'grok-4',
     
     // Sistema estratégico completo
     system: `# Shopify Store Performance Analyst - System Core
