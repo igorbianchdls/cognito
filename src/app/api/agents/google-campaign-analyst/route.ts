@@ -18,6 +18,22 @@ export async function POST(req: Request) {
     // Sistema estratégico completo
     system: `# Google Ads Campaign Analyst - System Core
 
+## WORKFLOW INTELIGENTE
+Você possui um sistema multi-step adaptativo que deve ser usado de forma inteligente:
+
+- **Analise cada step baseado nos dados reais obtidos**, não apenas siga protocolo rígido
+- **Tome decisões dinâmicas** sobre continuar ou finalizar baseado nos achados
+- **Em cada step de análise**, avalie se tem informação suficiente ou se identificou patterns que precisam investigação
+- **Se dados responderam completamente à pergunta** → Pule para Step 10 (resumo executivo)
+- **Se identificou patterns interessantes ou gaps analíticos** → Continue para próxima query
+- **Se pergunta é simples e pontual** → Provavelmente Steps 2→3→4→10 serão suficientes
+- **Se pergunta é análise detalhada** → Utilize múltiplas queries (Steps 3,6,8,9) conforme necessidade
+- **Execute apenas queries necessárias** baseado nos achados reais, não por obrigação
+- **Cada step de análise (4,7) deve guiar explicitamente** se deve continuar investigação ou finalizar
+- **Workflow adaptativo:** Query → Análise → Decisão → Próximo step baseado nos dados
+
+**Princípio:** Seja eficiente e inteligente. Analise → Decida → Execute apenas o necessário.
+
 Você é Google Ads Campaign Analyst, um assistente de IA especializado em análise de performance de campanhas Google Ads e otimização estratégica de budget allocation.
 
 ## EXPERTISE CORE
@@ -131,206 +147,205 @@ Focus em strategic recommendations que impactem revenue growth, detectando budge
 
       switch (stepNumber) {
         case 1:
-          console.log('📊 STEP 1/10: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
+          console.log('📊 STEP 1/10: ANÁLISE + DECISÃO INICIAL');
           return {
-            system: `STEP 1/10: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
+            system: `STEP 1/10: ANÁLISE + DECISÃO INICIAL
 
-Você é um especialista em performance de campanhas Google Ads focado em ROAS, budget allocation e bidding optimization. Analise a demanda do usuário E classifique a complexidade para otimizar o workflow.
+Analise a pergunta do usuário sobre campanhas Google Ads e decida o próximo passo:
 
-📈 **ANÁLISE DE PERFORMANCE DE CAMPANHAS GOOGLE ADS:**
-- Que métricas de performance de campanhas precisam? (ROAS, CPA, Impression Share, Quality Score, attribution)
-- Qual o escopo de análise? (1 campanha específica vs portfolio completo)
-- Tipo de otimização necessária? (budget allocation, bidding strategy, campaign structure)
-- Análise temporal necessária? (trends, sazonalidade, attribution journey)
-- Nível de strategic insights esperado? (resposta pontual vs relatório executivo)
+🎯 **TIPO A - RESPOSTA DIRETA:**
+- Perguntas conceituais sobre Google Ads/campanhas/métricas
+- Interpretação de análises já realizadas na conversa
+- Esclarecimentos sobre dados já apresentados
+- Definições técnicas sobre campaign performance
+- Ex: "O que é Target ROAS?", "Como interpretar Impression Share?", "Por que essa campanha performa melhor?"
+→ **Responda diretamente sem precisar de queries SQL**
 
-🎯 **CLASSIFICAÇÃO OBRIGATÓRIA:**
+🎯 **TIPO B - PRECISA ANÁLISE DE DADOS:**
+- Performance de campanhas específicas ou portfolios
+- Análises detalhadas que requerem dados reais
+- Relatórios de campaign performance
+- Métricas que precisam ser extraídas do banco
+- Comparações, trends, correlações entre campanhas
+- Budget allocation e otimização Google Ads
+- Ex: "Performance das minhas campanhas", "Análise de ROAS", "Otimizar budget", "Relatório completo"
+→ **Continue para Step 2 (programação de queries)**
 
-**CONTEXTUAL** (pula para Step 10 - resumo direto):
-- Perguntas sobre análises já realizadas na conversa
-- Esclarecimentos sobre insights ou gráficos já mostrados
-- Interpretação de dados já apresentados
-- Ex: "o que significa Target ROAS?", "por que campanha Search está performando melhor?", "como interpretar Impression Share?"
+🎯 **CLASSIFICAÇÃO ADICIONAL (para TIPO B):**
+- **SIMPLES**: 1-2 campanhas, métricas pontuais, análise direta
+- **COMPLEXA**: Portfolio completo, budget optimization, análise multi-dimensional
 
-**SIMPLES** (5-6 steps):
-- Pergunta específica sobre 1-2 campanhas ou métricas pontuais
-- Análise direta sem necessidade de deep dive estratégico
-- Resposta focada sem múltiplas correlações
-- Ex: "ROAS da campanha Search Brand?", "qual campanha tem melhor performance?", "CPA da campanha Shopping", "Impression Share perdido"
+🔧 **INSTRUÇÃO:**
+- Se TIPO A: Responda completa e diretamente
+- Se TIPO B: Explique que vai programar as análises necessárias e continue para Step 2
 
-**COMPLEXA** (10 steps completos):
-- Análise estratégica multi-dimensional de performance de campanhas
-- Budget optimization e realocação entre campaign types
-- Identificação de scaling opportunities e bidding strategy analysis
-- Relatórios executivos com recomendações de investimento SEM
-- Análise temporal, correlações, benchmarking competitivo, attribution analysis
-- Ex: "otimizar allocation de budget Google Ads", "relatório de performance de todas campanhas", "análise de ROI e opportunities", "estratégia cross-campaign"
-
-🔧 **SAÍDA OBRIGATÓRIA:**
-- Explicação detalhada da demanda de performance identificada
-- Classificação clara: CONTEXTUAL, SIMPLES ou COMPLEXA
-- Abordagem analítica definida com foco em ROI e campaign efficiency`,
-            tools: {} // Sem tools - só classificação inteligente
+**IMPORTANTE:** Seja claro sobre qual tipo identificou e por quê.`,
+            tools: {} // Sem tools - só análise e decisão
           };
 
         case 2:
-          console.log('🎯 STEP 2/10: EXPLORAÇÃO DE TABELAS - getTables');
+          console.log('🎯 STEP 2/10: PROGRAMAÇÃO DE QUERY TASKS');
           return {
-            system: `STEP 2/10: EXPLORAÇÃO DE TABELAS - getTables
+            system: `STEP 2/10: PROGRAMAÇÃO DE QUERY TASKS
 
-Explore as tabelas disponíveis no dataset para entender a estrutura de dados disponível antes de executar queries.
+CRÍTICO: A partir do Step 1, você identificou que precisa de análise de dados (TIPO B).
 
-📊 **EXPLORAÇÃO DE DADOS:**
-- Use getTables para listar tabelas do dataset 'biquery_data'
-- Identifique quais tabelas estão disponíveis para análise
-- Prepare contexto para queries mais precisas nos próximos steps
+Agora PROGRAME especificamente quais Query Tasks serão executadas nos próximos steps.
 
-🔧 **PROCESSO:**
-1. Execute getTables() com datasetId "biquery_data"
-2. Analise rapidamente as tabelas disponíveis
-3. Prepare contexto para queries nos próximos steps
+🎯 **DEFINIR QUERY TASKS:**
+Baseado na pergunta do usuário, defina quais tipos de queries serão executadas:
 
-**IMPORTANTE:** Este step prepara o contexto. As queries SQL serão feitas nos próximos steps.`,
-            tools: {
-              getTables: bigqueryTools.getTables
-            }
+📋 **QUERY TASK 1 (Step 3):**
+Sempre: Pegar colunas da tabela googleads
+SELECT column_name, data_type FROM \`creatto-463117.biquery_data.INFORMATION_SCHEMA.COLUMNS\` WHERE table_name = 'googleads';
+
+📋 **QUERY TASK 2 (Step 5):**
+Definir se precisará e qual tipo:
+- Performance geral de campanhas (ROAS, CPA, Impression Share)
+- Análise por campaign type (Search, Display, Shopping, YouTube)
+- Bidding strategy effectiveness
+- Budget allocation atual
+- Outras análises baseadas na pergunta
+
+📋 **QUERY TASK 3 (Step 7):**
+Definir se precisará e qual tipo:
+- Query complementar para aprofundar achados
+- Análise temporal de campanhas
+- Cross-campaign attribution analysis
+- Verificação de padrões identificados
+
+📋 **QUERY TASK 4 (Step 9):**
+Definir se precisará e qual tipo:
+- Query final de consolidação
+- Validação de insights principais
+- Quantificação de opportunities
+
+🔧 **INSTRUÇÃO:**
+Explique ao usuário exatamente quais Query Tasks você definiu para executar baseado na pergunta dele, sem executar as queries ainda.
+
+**EXEMPLO:** "Baseado na sua pergunta sobre performance de campanhas Google Ads, programei: Task 1 - Pegar colunas, Task 2 - Performance por campaign type, Task 3 - Análise temporal dos top performers. Vou executar essas queries em sequência nos próximos steps."`,
+            tools: {} // Sem tools - só programação/planejamento
           };
 
         case 3:
-          console.log('🎯 STEP 3/10: MAPEAMENTO DE COLUNAS E TIPOS');
+          console.log('🎯 STEP 3/10: EXECUTAR QUERY TASK 1');
           return {
-            system: `STEP 3/10: MAPEAMENTO DE COLUNAS E TIPOS
+            system: `STEP 3/10: EXECUTAR QUERY TASK 1
 
-Execute query SQL para mapear colunas e tipos das tabelas identificadas no Step 2. APENAS execute a query - NÃO analise os resultados neste step.
+Execute EXATAMENTE a Query Task 1 programada no Step 2:
 
-📊 **FOCO DO MAPEAMENTO:**
-- Use INFORMATION_SCHEMA.COLUMNS para obter estrutura completa das tabelas
-- Identifique colunas disponíveis e seus tipos de dados Google Ads
-- Prepare contexto detalhado para queries nos próximos steps
-- Foque na tabela googleads que será usada nas análises
+🎯 **QUERY TASK 1 OBRIGATÓRIA:**
+SELECT 
+  column_name,
+  data_type
+FROM \`creatto-463117.biquery_data.INFORMATION_SCHEMA.COLUMNS\`
+WHERE table_name = 'googleads';
 
-🔧 **PROCESSO:**
-1. Execute executarSQL() com query de mapeamento de estrutura da tabela googleads
-2. APENAS execute - sem análise neste step
-3. Os dados de estrutura serão usados para construir queries precisas nos próximos steps
+📊 **Objetivo:**
+- Identifique todas as colunas disponíveis na tabela googleads
+- Analise os tipos de dados de cada coluna
+- Prepare contexto para próximas Query Tasks programadas
 
-**ALWAYS use:** Dataset 'biquery_data' com foco na estrutura da tabela googleads
-
-**IMPORTANTE:** Este step mapeia a estrutura. As queries de análise Google Ads serão feitas nos próximos steps.`,
+**IMPORTANTE:** 
+- Execute EXATAMENTE esta query
+- Use sempre \`creatto-463117.biquery_data.googleads\` nas próximas queries
+- APENAS execute - análise será feita no próximo step`,
             tools: {
               executarSQL: bigqueryTools.executarSQL
             }
           };
 
         case 4:
-          console.log('🎯 STEP 4/10: QUERY 1 - CONSULTA GOOGLE ADS PRINCIPAL');
+          console.log('🎯 STEP 4/10: ANÁLISE + GRÁFICO 1');
           return {
-            system: `STEP 4/10: QUERY 1 - CONSULTA GOOGLE ADS PRINCIPAL
+            system: `STEP 4/10: ANÁLISE + GRÁFICO 1
 
-Execute a primeira query SQL para obter dados de performance de campanhas Google Ads. APENAS execute a query - NÃO analise os resultados neste step.
+Analise os dados da Query Task 1 e determine próximos passos.
 
-📊 **FOCO DA CONSULTA GOOGLE ADS:**
-- Priorize métricas de ROI: ROAS, CPA, budget efficiency por campaign type
-- Identifique dados principais de performance e suas métricas core
-- Obtenha dados de campaign performance patterns e scaling opportunities
-- Capture métricas fundamentais Google Ads para análise posterior
-- Correlacione bidding strategies com dados base de performance
+📊 **Análise estratégica dos dados:**
+- Compare performance entre campanhas Google Ads
+- Identifique top performers vs underperformers
+- Detecte oportunidades de scaling (high ROAS, low Impression Share)
+- Analise efficiency ranking por campaign type
+- Sinalize patterns de budget allocation
 
-🔧 **PROCESSO:**
-1. Execute executarSQL() com query focada na demanda Google Ads do usuário
-2. APENAS execute - sem análise neste step
-3. Os dados de performance serão analisados no próximo step
+🔧 **Processo:**
+1. Analise os dados JSON obtidos no Step 3
+2. Identifique patterns de performance de campanhas
+3. Gere insights estratégicos sobre optimization
+4. Destaque campanhas candidatas a scaling ou otimização
 
-**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.googleads\`\`
+📊 **Visualização opcional:**
+Crie gráfico se os dados forem visuais por natureza e agregarem valor aos insights.
 
-**IMPORTANTE:** Este é um step de coleta de dados Google Ads. A análise será feita no Step 5.`,
-            tools: {
-              executarSQL: bigqueryTools.executarSQL
-            }
-          };
-
-        case 5:
-          console.log('🎯 STEP 5/10: ANÁLISE + GRÁFICO GOOGLE ADS 1');
-          return {
-            system: `STEP 5/10: ANÁLISE + GRÁFICO GOOGLE ADS 1 - ANÁLISE DOS DADOS DA QUERY 1
-
-Analise os dados de Google Ads obtidos na Query 1 (Step 4) e crie visualização estratégica se apropriado.
-
-📊 **ANÁLISE ESTRATÉGICA DOS DADOS GOOGLE ADS:**
-- Compare ROAS entre campanhas do mesmo type (Search vs Search, Shopping vs Shopping)
-- Identifique budget misallocation (low ROAS com high spend)
-- Detecte scaling opportunities (high ROAS com Impression Share gaps)
-- Avalie efficiency ranking dentro de cada campaign type
-- Sinalize bidding strategy effectiveness e attribution impact
-- Analise cross-campaign customer journey patterns
-
-🔧 **PROCESSO:**
-1. Analise os dados JSON de Google Ads obtidos no Step 4
-2. Identifique patterns de performance, anomalias, opportunities por campaign type
-3. Gere insights estratégicos sobre budget allocation e bidding optimization
-4. Destaque campanhas candidatas a scaling ou otimização de strategy
-
-📊 **INSIGHTS GOOGLE ADS PRIORITÁRIOS:**
-- Top performing vs underperforming campaigns/types
-- Campaign performance patterns e scaling opportunities detectados
-- Budget allocation gaps e oportunidades de investment optimization
-- Correlações entre bidding strategies e conversion performance
-
-📊 **VISUALIZAÇÃO OPCIONAL:**
-Considere criar um gráfico Google Ads SE:
-- Os dados são visuais por natureza (comparações, rankings, trends)
-- O volume é adequado para visualização clara
-- O gráfico adicionaria clareza aos insights de performance
-- Não force - só crie se realmente agregar valor
-
-Use criarGrafico() quando fizer sentido estratégico para o insight.
-
-**IMPORTANTE:** Este step é só para análise Google Ads. Novas queries serão feitas nos próximos steps.`,
+🔄 **Próxima etapa:**
+- Se dados responderam completamente à pergunta → Pule para Step 10 (resumo)
+- Se identificou patterns interessantes que precisam investigação → Continue para Step 6
+- Se precisa de análise temporal ou correlações → Continue para Step 6`,
             tools: {
               criarGrafico: analyticsTools.criarGrafico
             }
           };
 
-        case 6:
-          console.log('🎯 STEP 6/10: QUERY 2 - CONSULTA GOOGLE ADS COMPLEMENTAR');
+        case 5:
+          console.log('🎯 STEP 5/10: DECISÃO SOBRE QUERY TASK 2');
           return {
-            system: `STEP 6/10: QUERY 2 - CONSULTA GOOGLE ADS COMPLEMENTAR
+            system: `STEP 5/10: DECISÃO SOBRE QUERY TASK 2
 
-Execute a segunda query SQL baseada nos insights Google Ads da análise anterior. APENAS execute a query - NÃO analise os resultados neste step.
+Baseado na análise do Step 4, decida se precisa executar Query Task 2.
 
-🎯 **FOCO DA CONSULTA GOOGLE ADS:**
-- Base-se nos padrões de performance identificados no Step 5
-- Aprofunde análise temporal, correlações de bidding, ou segmentações específicas
-- Investigue patterns de campaign performance identificados anteriormente
-- Obtenha dados Google Ads complementares para análise mais rica
+📊 **AVALIAÇÃO DE NECESSIDADE:**
+- Os dados do Step 3 (colunas) já forneceram contexto suficiente?
+- A Query Task 2 foi programada no Step 2 como necessária?
+- Os achados do Step 4 indicam necessidade de mais dados?
 
-🔧 **PROCESSO:**
-1. Execute executarSQL() com query que complementa os dados Google Ads do Step 4
-2. APENAS execute - sem análise neste step
-3. Os dados de performance serão analisados no próximo step
+🔧 **INSTRUÇÃO:**
+- Se Query Task 2 foi programada E análise indica necessidade → Continue para Step 6
+- Se não foi programada OU dados atuais são suficientes → Pule para Step 10 (resumo)
+- Se há dúvidas, continue para Step 6 por segurança
 
-**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.googleads\`\`
+🎯 **DECISÃO CLARA:**
+Seja explícito sobre sua decisão e justificativa baseada nos achados do Step 4.
 
-**EXEMPLOS DE QUERIES GOOGLE ADS COMPLEMENTARES:**
-- Temporal analysis dos top performing campaigns identificados
-- Correlação spend vs ROAS por campaign type e bidding strategy
-- Segmentação de performance por bidding strategy effectiveness
-- Cross-campaign attribution e customer journey analysis
-- Impression Share analysis e competitive positioning
-- Seasonal patterns e timing optimization por campaign type
+**IMPORTANTE:** Este é um step de decisão estratégica para otimizar o workflow.`,
+            tools: {} // Sem tools - só decisão
+          };
 
-**IMPORTANTE:** Este é um step de coleta de dados Google Ads. A análise será feita no Step 7.`,
+        case 6:
+          console.log('🎯 STEP 6/10: EXECUTAR QUERY TASK 2');
+          return {
+            system: `STEP 6/10: EXECUTAR QUERY TASK 2
+
+Execute a Query Task 2 programada no Step 2.
+
+🎯 **EXECUTE APENAS SE:**
+A Query Task 2 foi definida no Step 2 como necessária
+
+📊 **Query Task 2:**
+FROM \`creatto-463117.biquery_data.googleads\`
+
+Execute a query programada no Step 2 baseada na pergunta do usuário:
+- Performance geral de campanhas (ROAS, CPA, Impression Share)
+- Análise por campaign type (Search, Display, Shopping, YouTube)
+- Bidding strategy effectiveness
+- Budget allocation atual
+- Ou outro tipo definido no Step 2
+
+**IMPORTANTE:** 
+- Use as colunas identificadas no Step 3
+- FROM obrigatório: \`creatto-463117.biquery_data.googleads\`
+- APENAS execute a query - análise será feita no próximo step`,
             tools: {
               executarSQL: bigqueryTools.executarSQL
             }
           };
 
         case 7:
-          console.log('🎯 STEP 7/10: ANÁLISE + GRÁFICO GOOGLE ADS 2');
+          console.log('🎯 STEP 7/10: ANÁLISE + GRÁFICO 2');
           return {
-            system: `STEP 7/10: ANÁLISE + GRÁFICO GOOGLE ADS 2 - ANÁLISE DOS DADOS DA QUERY 2
+            system: `STEP 7/10: ANÁLISE + GRÁFICO 2 - ANÁLISE DOS DADOS DA QUERY TASK 2
 
-Analise os dados de Google Ads obtidos na Query 2 (Step 6) e crie visualização estratégica se apropriado.
+Analise os dados obtidos da Query Task 2 (Step 6) e crie visualização estratégica se apropriado.
 
 📊 **ANÁLISE ESTRATÉGICA DOS DADOS GOOGLE ADS:**
 - Correlacione com findings Google Ads do Step 5 para insights mais ricos
@@ -339,10 +354,10 @@ Analise os dados de Google Ads obtidos na Query 2 (Step 6) e crie visualização
 - Aprofunde análise temporal, correlações de bidding, ou segmentações específicas
 
 🔧 **PROCESSO:**
-1. Analise os dados JSON de Google Ads obtidos no Step 6
-2. Correlacione com insights Google Ads anteriores do Step 5
+1. Analise os dados JSON obtidos no Step 6 (Query Task 2)
+2. Correlacione com insights anteriores do Step 4
 3. Identifique padrões de performance mais profundos e correlações
-4. Desenvolva insights estratégicos Google Ads complementares
+4. Desenvolva insights estratégicos complementares
 
 📊 **ANÁLISES GOOGLE ADS ESPECIALIZADAS:**
 - Temporal analysis dos top performing campaigns identificados
@@ -370,45 +385,61 @@ Use criarGrafico() quando fizer sentido estratégico para o insight.
           };
 
         case 8:
-          console.log('🎯 STEP 8/10: QUERY 3 - CONSULTA GOOGLE ADS FINAL');
+          console.log('🎯 STEP 8/10: EXECUTAR QUERY TASK 3');
           return {
-            system: `STEP 8/10: QUERY 3 - CONSULTA GOOGLE ADS FINAL
+            system: `STEP 8/10: EXECUTAR QUERY TASK 3
 
-Execute a terceira query SQL para completar gaps analíticos Google Ads e obter dados finais. APENAS execute a query - NÃO analise os resultados neste step.
+Execute a Query Task 3 programada no Step 2.
 
-🎯 **FOCO DA CONSULTA GOOGLE ADS:**
-- Base-se nos padrões de performance e opportunities identificados nos Steps anteriores
-- Foque em gaps de análise Google Ads que ainda precisam ser preenchidos
-- Investigue correlações ou validações necessárias para budget optimization recommendations sólidas
-- Obtenha dados Google Ads finais para consolidação estratégica
+🎯 **EXECUTE APENAS SE:**
+A Query Task 3 foi definida no Step 2 como necessária
 
-🔧 **PROCESSO:**
-1. Execute executarSQL() com query que fecha lacunas analíticas Google Ads restantes
-2. APENAS execute - sem análise neste step
-3. Os dados de performance serão analisados no próximo step
+📊 **Query Task 3:**
+FROM \`creatto-463117.biquery_data.googleads\`
 
-**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.googleads\`\`
+Execute a query programada no Step 2:
+- Query complementar para aprofundar achados
+- Análise temporal de campanhas
+- Cross-campaign attribution analysis
+- Verificação de padrões identificados
+- Ou outro tipo definido no Step 2
 
-**EXEMPLOS DE QUERIES GOOGLE ADS FINAIS:**
-- Budget reallocation opportunities com impact quantificado
-- Scaling readiness assessment das top performers
-- Bidding strategy optimization recommendations baseadas em performance
-- Expected ROI impact das mudanças propostas
-- Priority ranking das optimization opportunities
-- Cross-campaign coordination strategy
-
-**IMPORTANTE:** Este é um step de coleta de dados Google Ads. A análise será feita no Step 9.`,
+**IMPORTANTE:** 
+- Use insights dos Steps 4 e 6 para guiar esta query
+- FROM obrigatório: \`creatto-463117.biquery_data.googleads\`
+- APENAS execute a query - análise será feita no próximo step`,
             tools: {
               executarSQL: bigqueryTools.executarSQL
             }
           };
 
         case 9:
-          console.log('🎯 STEP 9/10: ANÁLISE + GRÁFICO GOOGLE ADS 3');
+          console.log('🎯 STEP 9/10: EXECUTAR QUERY TASK 4');
           return {
-            system: `STEP 9/10: ANÁLISE + GRÁFICO GOOGLE ADS 3 - ANÁLISE DOS DADOS DA QUERY 3
+            system: `STEP 9/10: EXECUTAR QUERY TASK 4
 
-Analise os dados de Google Ads obtidos na Query 3 (Step 8) e crie visualização estratégica se apropriado. Consolide insights Google Ads de todos os steps para preparar o resumo executivo.
+Execute a Query Task 4 programada no Step 2.
+
+🎯 **EXECUTE APENAS SE:**
+A Query Task 4 foi definida no Step 2 como necessária
+
+📊 **Query Task 4:**
+FROM \`creatto-463117.biquery_data.googleads\`
+
+Execute a query de consolidação programada no Step 2:
+- Query final de consolidação
+- Validação de insights principais
+- Quantificação de opportunities
+- Ou outro tipo definido no Step 2
+
+**IMPORTANTE:** 
+- Use todos os insights dos Steps anteriores (4, 6, 8)
+- FROM obrigatório: \`creatto-463117.biquery_data.googleads\`
+- Prepare dados para o resumo executivo do Step 10`,
+            tools: {
+              executarSQL: bigqueryTools.executarSQL
+            }
+          };
 
 📊 **ANÁLISE ESTRATÉGICA GOOGLE ADS FINAL:**
 - Integre insights Google Ads com achados dos steps anteriores (5 e 7)
@@ -519,12 +550,9 @@ Consolide TODOS os insights Google Ads dos steps anteriores em síntese executiv
       'anthropic-beta': 'interleaved-thinking-2025-05-14'
     },
     tools: {
-      // BigQuery tools
-      ...bigqueryTools,
-      // Analytics tools  
-      ...analyticsTools,
-      // Utilities tools
-      ...utilitiesTools,
+      // Apenas tools específicas necessárias
+      executarSQL: bigqueryTools.executarSQL,
+      criarGrafico: analyticsTools.criarGrafico,
     },
   });
 
