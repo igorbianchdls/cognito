@@ -9,10 +9,12 @@ export const maxDuration = 30;
 export async function POST(req: Request) {
   console.log('📘 META CREATIVE ANALYST API: Request recebido!');
   
-  const { messages }: { messages: UIMessage[] } = await req.json();
-  console.log('📘 META CREATIVE ANALYST API: Messages:', messages?.length);
+  try {
+    const { messages }: { messages: UIMessage[] } = await req.json();
+    console.log('📘 META CREATIVE ANALYST API: Messages:', messages?.length);
 
-  const result = streamText({
+    console.log('📘 META CREATIVE ANALYST API: Iniciando streamText com GPT-5...');
+    const result = streamText({
     model: openai('gpt-5'),
     
     // Sistema direto e focado
@@ -396,6 +398,11 @@ Consolide TODOS os insights criativos dos steps anteriores em síntese executiva
     },
   });
 
-  console.log('📘 META CREATIVE ANALYST API: Retornando response...');
-  return result.toUIMessageStreamResponse();
+    console.log('📘 META CREATIVE ANALYST API: streamText criado, retornando response...');
+    return result.toUIMessageStreamResponse();
+  } catch (error) {
+    console.error('❌ META CREATIVE ANALYST API ERROR:', error);
+    console.error('❌ ERROR STACK:', error.stack);
+    return new Response(`Error: ${error.message}`, { status: 500 });
+  }
 }
