@@ -19,6 +19,12 @@ import ShopifyIcon from "@/components/icons/ShopifyIcon"
 import GoogleIcon from "@/components/icons/GoogleIcon"
 import MercadoLivreIcon from "@/components/icons/MercadoLivreIcon"
 import ShopeeIcon from "@/components/icons/ShopeeIcon"
+import ContaAzulIcon from "@/components/icons/ContaAzulIcon"
+import SalesforceIcon from "@/components/icons/SalesforceIcon"
+import BlingIcon from "@/components/icons/BlingIcon"
+import TinyIcon from "@/components/icons/TinyIcon"
+import HubspotIcon from "@/components/icons/HubspotIcon"
+import RdStationIcon from "@/components/icons/RdStationIcon"
 import type { Integration } from "@/data/integrations"
 
 interface IntegrationCardProps {
@@ -35,7 +41,12 @@ const iconMap = {
   google: GoogleIcon,
   'mercado-livre': MercadoLivreIcon,
   shopee: ShopeeIcon,
-  'conta-azul': Globe, // fallback
+  'conta-azul': ContaAzulIcon,
+  salesforce: SalesforceIcon,
+  bling: BlingIcon,
+  tiny: TinyIcon,
+  hubspot: HubspotIcon,
+  'rd-station': RdStationIcon,
 }
 
 export function IntegrationCard({ integration, onToggle }: IntegrationCardProps) {

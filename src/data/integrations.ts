@@ -127,6 +127,14 @@ export const integrations: Integration[] = [
     connected: false,
     category: 'financial'
   },
+  {
+    id: 'tiny',
+    name: 'Tiny ERP',
+    description: 'Integrate Tiny ERP for complete business management and financial control.',
+    icon: 'tiny',
+    connected: false,
+    category: 'financial'
+  },
   
   // CRM & Marketing
   {
