@@ -50,10 +50,10 @@ Forneça uma análise reflexiva da solicitação do usuário de uma perspectiva 
           return {
             system: `STEP 2/5: PEGAR AS COLUNAS
             
-Agora execute a query para obter informações sobre as colunas da tabela car_prices.
+Agora execute APENAS a query para obter informações sobre as colunas da tabela car_prices.
             
-🎯 **Sua Tarefa:**
-Use executarSQL para executar EXATAMENTE esta query:
+🎯 **Sua Tarefa OBRIGATÓRIA:**
+Use APENAS a ferramenta executarSQL para executar EXATAMENTE esta query:
             
 SELECT 
   column_name,
@@ -62,12 +62,13 @@ FROM \`creatto-463117.biquery_data.INFORMATION_SCHEMA.COLUMNS\`
 WHERE table_name = 'car_prices';
             
 📊 **Foco:**
-- Execute a query exata fornecida acima
+- Execute APENAS a query exata fornecida acima
+- NÃO use outras ferramentas como getDatasets, getTables ou outras
 - Identifique todas as colunas disponíveis na tabela car_prices
 - Analise os tipos de dados de cada coluna
 - Prepare contexto para a próxima query de dados
             
-⚠️ **IMPORTANTE:** Use sempre o dataset \`creatto-463117.biquery_data\` e tabela \`car_prices\`.`,
+⚠️ **CRÍTICO:** Use SEMPRE o dataset \`creatto-463117.biquery_data\` e tabela \`car_prices\`. NÃO explore outros datasets ou tabelas.`,
             tools: {
               executarSQL: bigqueryTools.executarSQL
             }
@@ -78,15 +79,16 @@ WHERE table_name = 'car_prices';
           return {
             system: `STEP 3/5: FAZER A QUERY PRINCIPAL
             
-Agora execute uma query SQL para extrair os dados principais da tabela car_prices.
+Agora execute APENAS uma query SQL para extrair os dados principais da tabela car_prices.
             
-🎯 **Sua Tarefa:**
-Use executarSQL para recuperar dados da tabela car_prices baseado na solicitação do usuário.
+🎯 **Sua Tarefa OBRIGATÓRIA:**
+Use APENAS a ferramenta executarSQL para recuperar dados da tabela car_prices baseado na solicitação do usuário.
             
 📊 **Diretrizes Obrigatórias:**
 - SEMPRE use: \`creatto-463117.biquery_data.car_prices\`
 - Dataset fixo: creatto-463117.biquery_data
 - Tabela fixa: car_prices
+- NÃO use ferramentas como getDatasets, getTables, ou outras
 - Crie queries que revelem padrões e estruturas dos dados
 - Foque em queries relevantes para metadata (distribuições, insights de schema)
 - Use as colunas identificadas no step anterior
@@ -94,7 +96,9 @@ Use executarSQL para recuperar dados da tabela car_prices baseado na solicitaç�
 💡 **Exemplos de Abordagens:**
 - "SELECT * FROM \`creatto-463117.biquery_data.car_prices\` LIMIT 100"
 - "SELECT column1, COUNT(*) FROM \`creatto-463117.biquery_data.car_prices\` GROUP BY column1"
-- Analise distribuições e padrões de qualidade dos dados`,
+- Analise distribuições e padrões de qualidade dos dados
+            
+⚠️ **CRÍTICO:** Execute APENAS queries SQL. Não explore outros datasets, tabelas ou use outras ferramentas.`,
             tools: {
               executarSQL: bigqueryTools.executarSQL
             }
@@ -167,12 +171,9 @@ Forneça recomendações finais de metadata e insights estruturais baseados na a
     // StopWhen simples - máximo 5 steps
     stopWhen: stepCountIs(5),
     tools: {
-      // BigQuery tools
-      ...bigqueryTools,
-      // Analytics tools  
-      ...analyticsTools,
-      // Utilities tools
-      ...utilitiesTools,
+      // Apenas tools específicas necessárias
+      executarSQL: bigqueryTools.executarSQL,
+      criarGrafico: analyticsTools.criarGrafico,
     },
   });
 
