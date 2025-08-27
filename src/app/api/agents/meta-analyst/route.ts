@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   console.log('🔍 METAANALYST API: Messages:', messages?.length);
 
   const result = streamText({
-    model: 'xai/grok-4',
+    model: 'deepseek/deepseek-v3.1',
     
     // Sistema inicial básico
     system: `You are MetaAnalyst AI, a specialized assistant for analyzing metadata, data structures, and providing insights about data organization and patterns.`,
@@ -68,7 +68,12 @@ WHERE table_name = 'car_prices';
 - Analise os tipos de dados de cada coluna
 - Prepare contexto para a próxima query de dados
             
-⚠️ **CRÍTICO:** Use SEMPRE o dataset \`creatto-463117.biquery_data\` e tabela \`car_prices\`. NÃO explore outros datasets ou tabelas.`,
+🚫 **PROIBIDO ABSOLUTO:**
+- NÃO use bigquery-public-data
+- NÃO use bigquery-public-data.cars.car_prices  
+- NÃO explore outros datasets públicos
+            
+⚠️ **CRÍTICO:** Use EXCLUSIVAMENTE o dataset \`creatto-463117.biquery_data\` e tabela \`car_prices\`. Este é o ÚNICO dataset permitido.`,
             tools: {
               executarSQL: bigqueryTools.executarSQL
             }
@@ -93,12 +98,18 @@ Use APENAS a ferramenta executarSQL para recuperar dados da tabela car_prices ba
 - Foque em queries relevantes para metadata (distribuições, insights de schema)
 - Use as colunas identificadas no step anterior
             
-💡 **Exemplos de Abordagens:**
+🚫 **PROIBIDO ABSOLUTO:**
+- NÃO use bigquery-public-data
+- NÃO use bigquery-public-data.cars.car_prices
+- NÃO use nenhum dataset público
+- NUNCA explore fora de creatto-463117.biquery_data
+            
+💡 **Exemplos de Abordagens CORRETAS:**
 - "SELECT * FROM \`creatto-463117.biquery_data.car_prices\` LIMIT 100"
 - "SELECT column1, COUNT(*) FROM \`creatto-463117.biquery_data.car_prices\` GROUP BY column1"
 - Analise distribuições e padrões de qualidade dos dados
             
-⚠️ **CRÍTICO:** Execute APENAS queries SQL. Não explore outros datasets, tabelas ou use outras ferramentas.`,
+⚠️ **CRÍTICO:** Execute APENAS queries SQL no dataset \`creatto-463117.biquery_data\`. Este é o ÚNICO dataset autorizado.`,
             tools: {
               executarSQL: bigqueryTools.executarSQL
             }
