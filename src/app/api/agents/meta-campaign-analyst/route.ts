@@ -1,9 +1,5 @@
-import { createOpenAI } from '@ai-sdk/openai';
+import { openai } from '@ai-sdk/openai';
 import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
-
-const openai = createOpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
 import * as bigqueryTools from '@/tools/bigquery';
 import * as analyticsTools from '@/tools/analytics';
 import * as utilitiesTools from '@/tools/utilities';
@@ -17,7 +13,7 @@ export async function POST(req: Request) {
   console.log('📘 META CAMPAIGN ANALYST API: Messages:', messages?.length);
 
   const result = streamText({
-    model: openai('o3'),
+    model: openai('gpt-5'),
     
     // Sistema estratégico completo
     system: `# Campaign Performance Analyst - System Core
