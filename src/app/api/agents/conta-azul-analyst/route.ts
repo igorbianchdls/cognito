@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   console.log('💼 CONTA AZUL ANALYST API: Messages:', messages?.length);
 
   const result = streamText({
-    model: 'grok-4',
+    model: 'deepseek/deepseek-v3.1-thinking',
     
     // Sistema inicial básico
     system: `You are ContaAzulAnalyst AI, a specialized assistant for analyzing ContaAzul accounting and financial data, cash flow, invoicing, tax compliance, and business financial health for Brazilian businesses.`,

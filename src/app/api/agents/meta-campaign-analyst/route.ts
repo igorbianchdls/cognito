@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   console.log('📘 META CAMPAIGN ANALYST API: Messages:', messages?.length);
 
   const result = streamText({
-    model: 'grok-4',
+    model: 'deepseek/deepseek-v3.1-thinking',
     
     // Sistema estratégico completo
     system: `# Campaign Performance Analyst - System Core

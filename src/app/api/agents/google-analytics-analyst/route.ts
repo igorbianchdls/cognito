@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   console.log('📊 GOOGLE ANALYTICS ANALYST API: Messages:', messages?.length);
 
   const result = streamText({
-    model: 'grok-4',
+    model: 'deepseek/deepseek-v3.1-thinking',
     
     // Sistema estratégico completo
     system: `# Google Analytics Performance Analyst - System Core
