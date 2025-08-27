@@ -105,185 +105,194 @@ Focus em strategic recommendations que impactem revenue growth, detectando budge
 
       switch (stepNumber) {
         case 1:
-          console.log('📊 STEP 1/10: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE');
+          console.log('📊 STEP 1/10: ANÁLISE + DECISÃO INICIAL');
           return {
-            system: `STEP 1/10: ANÁLISE INTELIGENTE + CLASSIFICAÇÃO DE COMPLEXIDADE
+            system: `STEP 1/10: ANÁLISE + DECISÃO INICIAL
 
-Você é um especialista em performance de campanhas Facebook/Meta Ads focado em ROI, ROAS e budget optimization. Analise a demanda do usuário E classifique a complexidade para otimizar o workflow.
+Analise a pergunta do usuário sobre campanhas Meta Ads e decida o próximo passo:
 
-📈 **ANÁLISE DE PERFORMANCE ESTRATÉGICA:**
-- Que métricas de performance de campanhas precisam? (ROAS, CPA, CTR, CPM, budget efficiency)
-- Qual o escopo de análise? (1 campanha específica vs portfolio completo)
-- Tipo de otimização necessária? (budget allocation, scaling opportunities, underperformers)
-- Análise temporal necessária? (trends, sazonalidade, lifecycle analysis)
-- Nível de strategic insights esperado? (resposta pontual vs relatório executivo)
+🎯 **TIPO A - RESPOSTA DIRETA:**
+- Perguntas conceituais sobre campanhas/métricas
+- Interpretação de análises já realizadas na conversa
+- Esclarecimentos sobre dados já apresentados
+- Definições técnicas sobre campaign performance
+- Ex: "O que é ROAS?", "Por que essa campanha performa melhor?", "Como interpretar CPA?"
+→ **Responda diretamente sem precisar de queries SQL**
 
-🎯 **CLASSIFICAÇÃO OBRIGATÓRIA:**
+🎯 **TIPO B - PRECISA ANÁLISE DE DADOS:**
+- Performance de campanhas específicas ou portfolios
+- Análises detalhadas que requerem dados reais
+- Relatórios de campaign performance
+- Métricas que precisam ser extraídas do banco
+- Comparações, trends, correlações entre campanhas
+- Budget allocation e otimização
+- Ex: "Performance das minhas campanhas", "Análise de ROAS", "Otimizar budget", "Relatório completo"
+→ **Continue para Step 2 (programação de queries)**
 
-**CONTEXTUAL** (pula para Step 10 - resumo direto):
-- Perguntas sobre análises já realizadas na conversa
-- Esclarecimentos sobre insights ou gráficos já mostrados
-- Interpretação de dados já apresentados
-- Ex: "o que significa ROAS 4.2?", "por que campanha X está performando melhor?"
+🎯 **CLASSIFICAÇÃO ADICIONAL (para TIPO B):**
+- **SIMPLES**: 1-2 campanhas, métricas pontuais, análise direta
+- **COMPLEXA**: Portfolio completo, budget optimization, análise multi-dimensional
 
-**SIMPLES** (5-6 steps):
-- Pergunta específica sobre 1-2 campanhas ou métricas pontuais
-- Análise direta sem necessidade de deep dive estratégico
-- Resposta focada sem múltiplas correlações
-- Ex: "ROAS da campanha Conversão Q4?", "qual campanha tem melhor performance?", "budget atual da campanha X"
+🔧 **INSTRUÇÃO:**
+- Se TIPO A: Responda completa e diretamente
+- Se TIPO B: Explique que vai programar as análises necessárias e continue para Step 2
 
-**COMPLEXA** (10 steps completos):
-- Análise estratégica multi-dimensional de performance
-- Budget optimization e reallocação entre campanhas
-- Identificação de scaling opportunities e underperformers
-- Relatórios executivos com recomendações de investimento
-- Análise temporal, correlações, benchmarking competitivo
-- Ex: "otimizar allocation de budget", "relatório de performance de todas campanhas", "análise de ROI e opportunities"
-
-🔧 **SAÍDA OBRIGATÓRIA:**
-- Explicação detalhada da demanda de performance identificada
-- Classificação clara: CONTEXTUAL, SIMPLES ou COMPLEXA
-- Abordagem analítica definida com foco em ROI e budget efficiency`,
-            tools: {} // Sem tools - só classificação inteligente
+**IMPORTANTE:** Seja claro sobre qual tipo identificou e por quê.`,
+            tools: {} // Sem tools - só análise e decisão
           };
 
         case 2:
-          console.log('🎯 STEP 2/10: EXPLORAÇÃO DE TABELAS - getTables');
+          console.log('🎯 STEP 2/10: PROGRAMAÇÃO DE QUERY TASKS');
           return {
-            system: `STEP 2/10: EXPLORAÇÃO DE TABELAS - getTables
+            system: `STEP 2/10: PROGRAMAÇÃO DE QUERY TASKS
 
-Explore as tabelas disponíveis no dataset para entender a estrutura de dados disponível antes de executar queries.
+CRÍTICO: A partir do Step 1, você identificou que precisa de análise de dados (TIPO B).
 
-📊 **EXPLORAÇÃO DE DADOS:**
-- Use getTables para listar tabelas do dataset 'biquery_data'
-- Identifique quais tabelas estão disponíveis para análise de campanhas Meta
-- Prepare contexto para queries mais precisas nos próximos steps
+Agora PROGRAME especificamente quais Query Tasks serão executadas nos próximos steps.
 
-🔧 **PROCESSO:**
-1. Execute getTables() com datasetId "biquery_data"
-2. Analise rapidamente as tabelas disponíveis
-3. Prepare contexto para queries de Meta Ads nos próximos steps
+🎯 **DEFINIR QUERY TASKS:**
+Baseado na pergunta do usuário, defina quais tipos de queries serão executadas:
 
-**IMPORTANTE:** Este step prepara o contexto. As queries SQL serão feitas nos próximos steps.`,
-            tools: {
-              getTables: bigqueryTools.getTables
-            }
+📋 **QUERY TASK 1 (Step 3):**
+Sempre: Pegar colunas da tabela metaads
+SELECT column_name, data_type FROM \`creatto-463117.biquery_data.INFORMATION_SCHEMA.COLUMNS\` WHERE table_name = 'metaads';
+
+📋 **QUERY TASK 2 (Step 5):**
+Definir se precisará e qual tipo:
+- Performance geral de campanhas (ROAS, CPA, spend)
+- Análise temporal específica
+- Budget allocation atual
+- Correlações entre campanhas
+- Outras análises baseadas na pergunta
+
+📋 **QUERY TASK 3 (Step 7):**
+Definir se precisará e qual tipo:
+- Query complementar para aprofundar achados
+- Análise de segmentação específica
+- Verificação de padrões identificados
+- Análise temporal dos top performers
+
+📋 **QUERY TASK 4 (Step 9):**
+Definir se precisará e qual tipo:
+- Query final de consolidação
+- Validação de insights principais
+- Quantificação de opportunities
+
+🔧 **INSTRUÇÃO:**
+Explique ao usuário exatamente quais Query Tasks você definiu para executar baseado na pergunta dele, sem executar as queries ainda.
+
+**EXEMPLO:** "Baseado na sua pergunta sobre performance de campanhas, programei: Task 1 - Pegar colunas, Task 2 - Performance geral por campanha, Task 3 - Análise temporal dos top performers. Vou executar essas queries em sequência nos próximos steps."`,
+            tools: {} // Sem tools - só programação/planejamento
           };
 
         case 3:
-          console.log('🎯 STEP 3/10: MAPEAMENTO DE COLUNAS E TIPOS');
+          console.log('🎯 STEP 3/10: EXECUTAR QUERY TASK 1');
           return {
-            system: `STEP 3/10: MAPEAMENTO DE COLUNAS E TIPOS
+            system: `STEP 3/10: EXECUTAR QUERY TASK 1
 
-Execute query SQL para mapear colunas e tipos das tabelas identificadas no Step 2. APENAS execute a query - NÃO analise os resultados neste step.
+Execute EXATAMENTE a Query Task 1 programada no Step 2:
 
-📊 **FOCO DO MAPEAMENTO:**
-- Use INFORMATION_SCHEMA.COLUMNS para obter estrutura completa das tabelas
-- Identifique colunas disponíveis e seus tipos de dados Meta Ads (campanhas)
-- Prepare contexto detalhado para queries nos próximos steps
-- Foque na tabela metaads que será usada nas análises de campanhas
+🎯 **QUERY TASK 1 OBRIGATÓRIA:**
+SELECT 
+  column_name,
+  data_type
+FROM \`creatto-463117.biquery_data.INFORMATION_SCHEMA.COLUMNS\`
+WHERE table_name = 'metaads';
 
-🔧 **PROCESSO:**
-1. Execute executarSQL() com query de mapeamento de estrutura da tabela metaads
-2. APENAS execute - sem análise neste step
-3. Os dados de estrutura serão usados para construir queries precisas nos próximos steps
+📊 **Objetivo:**
+- Identifique todas as colunas disponíveis na tabela metaads
+- Analise os tipos de dados de cada coluna
+- Prepare contexto para próximas Query Tasks programadas
 
-**ALWAYS use:** Dataset 'biquery_data' com foco na estrutura da tabela metaads
-
-**IMPORTANTE:** Este step mapeia a estrutura. As queries de análise de campanhas serão feitas nos próximos steps.`,
+**IMPORTANTE:** 
+- Execute EXATAMENTE esta query
+- Use sempre \`creatto-463117.biquery_data.metaads\` nas próximas queries
+- APENAS execute - análise será feita no próximo step`,
             tools: {
               executarSQL: bigqueryTools.executarSQL
             }
           };
 
         case 4:
-          console.log('🎯 STEP 4/10: QUERY 1 - CONSULTA PRINCIPAL');
+          console.log('🎯 STEP 4/10: ANÁLISE + GRÁFICO 1');
           return {
-            system: `STEP 4/10: QUERY 1 - CONSULTA PRINCIPAL
+            system: `STEP 4/10: ANÁLISE + GRÁFICO 1
 
-Execute a primeira query SQL para obter dados de performance de campanhas. APENAS execute a query - NÃO analise os resultados neste step.
+Analise os dados da Query Task 1 e determine próximos passos.
 
-📊 **FOCO DA CONSULTA:**
-- Priorize métricas de ROI: ROAS, CPA, budget efficiency
-- Identifique campanhas principais e suas métricas core
-- Obtenha dados de performance e budget allocation
-- Capture métricas fundamentais para análise posterior
+📊 **Análise estratégica dos dados:**
+- Compare performance entre campanhas
+- Identifique top performers vs underperformers
+- Detecte oportunidades de scaling (high ROAS)
+- Analise efficiency ranking por objetivo
+- Sinalize patterns de budget misallocation
 
-🔧 **PROCESSO:**
-1. Execute executarSQL() com query focada na demanda do usuário
-2. APENAS execute - sem análise neste step
-3. Os dados serão analisados no próximo step
-
-**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.metaads\`\`
-
-**IMPORTANTE:** Este é um step de coleta de dados. A análise será feita no Step 5.`,
-            tools: {
-              executarSQL: bigqueryTools.executarSQL
-            }
-          };
-
-        case 5:
-          console.log('🎯 STEP 5/10: ANÁLISE + GRÁFICO 1');
-          return {
-            system: `STEP 5/10: ANÁLISE + GRÁFICO 1 - ANÁLISE DOS DADOS DA QUERY 1
-
-Analise os dados obtidos na Query 1 (Step 3) e crie visualização estratégica se apropriado.
-
-📈 **ANÁLISE ESTRATÉGICA DOS DADOS:**
-- Compare ROAS entre campanhas do mesmo objetivo
-- Identifique budget misallocation (low ROAS com high spend)
-- Detecte scaling opportunities (high ROAS com budget constraints)
-- Avalie efficiency ranking dentro de cada objetivo
-- Sinalize performance trends e consistency issues
-
-🔧 **PROCESSO:**
+🔧 **Processo:**
 1. Analise os dados JSON obtidos no Step 3
-2. Identifique patterns de performance, anomalias, opportunities
-3. Gere insights estratégicos sobre budget allocation e ROI
+2. Identifique patterns de performance de campanhas
+3. Gere insights estratégicos sobre optimization
 4. Destaque campanhas candidatas a scaling ou otimização
 
-📊 **VISUALIZAÇÃO OPCIONAL:**
-Considere criar um gráfico SE:
-- Os dados são visuais por natureza (comparações, rankings, trends)
-- O volume é adequado para visualização clara
-- O gráfico adicionaria clareza aos insights
-- Não force - só crie se realmente agregar valor
+📊 **Visualização opcional:**
+Crie gráfico se os dados forem visuais por natureza e agregarem valor aos insights.
 
-Use criarGrafico() quando fizer sentido estratégico para o insight.
-
-**IMPORTANTE:** Este step é só para análise. Novas queries serão feitas nos próximos steps.`,
+🔄 **Próxima etapa:**
+- Se dados responderam completamente à pergunta → Pule para Step 10 (resumo)
+- Se identificou patterns interessantes que precisam investigação → Continue para Step 6
+- Se precisa de análise temporal ou correlações → Continue para Step 6`,
             tools: {
               criarGrafico: analyticsTools.criarGrafico
             }
           };
 
-        case 6:
-          console.log('🎯 STEP 6/10: QUERY 2 - CONSULTA COMPLEMENTAR');
+        case 5:
+          console.log('🎯 STEP 5/10: DECISÃO SOBRE QUERY TASK 2');
           return {
-            system: `STEP 6/10: QUERY 2 - CONSULTA COMPLEMENTAR
+            system: `STEP 5/10: DECISÃO SOBRE QUERY TASK 2
 
-Execute a segunda query SQL baseada nos insights da análise anterior. APENAS execute a query - NÃO analise os resultados neste step.
+Baseado na análise do Step 4, decida se precisa executar Query Task 2.
 
-🎯 **FOCO DA CONSULTA:**
-- Base-se nos padrões identificados no Step 4
-- Aprofunde análise temporal, correlações, ou segmentações específicas
-- Investigue patterns de performance identificados anteriormente
-- Obtenha dados complementares para análise mais rica
+📊 **AVALIAÇÃO DE NECESSIDADE:**
+- Os dados do Step 3 (colunas) já forneceram contexto suficiente?
+- A Query Task 2 foi programada no Step 2 como necessária?
+- Os achados do Step 4 indicam necessidade de mais dados?
 
-🔧 **PROCESSO:**
-1. Execute executarSQL() com query que complementa os dados do Step 3
-2. APENAS execute - sem análise neste step
-3. Os dados serão analisados no próximo step
+🔧 **INSTRUÇÃO:**
+- Se Query Task 2 foi programada E análise indica necessidade → Continue para Step 6
+- Se não foi programada OU dados atuais são suficientes → Pule para Step 10 (resumo)
+- Se há dúvidas, continue para Step 6 por segurança
 
-**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.metaads\`\`
+🎯 **DECISÃO CLARA:**
+Seja explícito sobre sua decisão e justificativa baseada nos achados do Step 4.
 
-**EXEMPLOS DE QUERIES COMPLEMENTARES:**
-- Temporal analysis dos top performers identificados
-- Correlação spend vs ROAS por objetivo
-- Segmentação de performance por lifecycle stage
-- Cross-campaign synergies ou cannibalização
+**IMPORTANTE:** Este é um step de decisão estratégica para otimizar o workflow.`,
+            tools: {} // Sem tools - só decisão
+          };
 
-**IMPORTANTE:** Este é um step de coleta de dados. A análise será feita no Step 6.`,
+        case 6:
+          console.log('🎯 STEP 6/10: EXECUTAR QUERY TASK 2');
+          return {
+            system: `STEP 6/10: EXECUTAR QUERY TASK 2
+
+Execute a Query Task 2 programada no Step 2.
+
+🎯 **EXECUTE APENAS SE:**
+A Query Task 2 foi definida no Step 2 como necessária
+
+📊 **Query Task 2:**
+FROM \`creatto-463117.biquery_data.metaads\`
+
+Execute a query programada no Step 2 baseada na pergunta do usuário:
+- Performance geral de campanhas (ROAS, CPA, spend)
+- Análise temporal específica
+- Budget allocation atual
+- Correlações entre campanhas
+- Ou outro tipo definido no Step 2
+
+**IMPORTANTE:** 
+- Use as colunas identificadas no Step 3
+- FROM obrigatório: \`creatto-463117.biquery_data.metaads\`
+- APENAS execute a query - análise será feita no próximo step`,
             tools: {
               executarSQL: bigqueryTools.executarSQL
             }
@@ -292,9 +301,9 @@ Execute a segunda query SQL baseada nos insights da análise anterior. APENAS ex
         case 7:
           console.log('🎯 STEP 7/10: ANÁLISE + GRÁFICO 2');
           return {
-            system: `STEP 7/10: ANÁLISE + GRÁFICO 2 - ANÁLISE DOS DADOS DA QUERY 2
+            system: `STEP 7/10: ANÁLISE + GRÁFICO 2 - ANÁLISE DOS DADOS DA QUERY TASK 2
 
-Analise os dados obtidos na Query 2 (Step 5) e crie visualização estratégica se apropriado.
+Analise os dados obtidos da Query Task 2 (Step 6) e crie visualização estratégica se apropriado.
 
 📈 **ANÁLISE ESTRATÉGICA DOS DADOS:**
 - Correlacione com findings do Step 4 para insights mais ricos
@@ -303,7 +312,7 @@ Analise os dados obtidos na Query 2 (Step 5) e crie visualização estratégica 
 - Aprofunde análise temporal, correlações, ou segmentações
 
 🔧 **PROCESSO:**
-1. Analise os dados JSON obtidos no Step 5
+1. Analise os dados JSON obtidos no Step 6 (Query Task 2)
 2. Correlacione com insights anteriores do Step 4
 3. Identifique padrões mais profundos e correlações
 4. Desenvolva insights estratégicos complementares
@@ -332,77 +341,59 @@ Use criarGrafico() quando fizer sentido estratégico para o insight.
           };
 
         case 8:
-          console.log('🎯 STEP 8/10: QUERY 3 - CONSULTA FINAL');
+          console.log('🎯 STEP 8/10: EXECUTAR QUERY TASK 3');
           return {
-            system: `STEP 8/10: QUERY 3 - CONSULTA FINAL
+            system: `STEP 8/10: EXECUTAR QUERY TASK 3
 
-Execute a terceira query SQL para completar gaps analíticos e obter dados finais. APENAS execute a query - NÃO analise os resultados neste step.
+Execute a Query Task 3 programada no Step 2.
 
-🎯 **FOCO DA CONSULTA:**
-- Base-se nos padrões e opportunities identificados nos Steps anteriores
-- Foque em gaps de análise que ainda precisam ser preenchidos
-- Investigue correlações ou validações necessárias para recomendações sólidas
-- Obtenha dados finais para consolidação estratégica
+🎯 **EXECUTE APENAS SE:**
+A Query Task 3 foi definida no Step 2 como necessária
 
-🔧 **PROCESSO:**
-1. Execute executarSQL() com query que fecha lacunas analíticas restantes
-2. APENAS execute - sem análise neste step
-3. Os dados serão analisados no próximo step
+📊 **Query Task 3:**
+FROM \`creatto-463117.biquery_data.metaads\`
 
-**ALWAYS use:** \`FROM \`creatto-463117.biquery_data.metaads\`\`
+Execute a query programada no Step 2:
+- Query complementar para aprofundar achados
+- Análise de segmentação específica
+- Verificação de padrões identificados
+- Análise temporal dos top performers
+- Ou outro tipo definido no Step 2
 
-**EXEMPLOS DE QUERIES FINAIS:**
-- Budget reallocation opportunities com impact quantificado
-- Scaling readiness assessment das top performers
-- Risk assessment de underperformers
-- Expected ROI impact das mudanças propostas
-- Priority ranking das optimization opportunities
-
-**IMPORTANTE:** Este é um step de coleta de dados. A análise será feita no Step 8.`,
+**IMPORTANTE:** 
+- Use insights dos Steps 4 e 6 para guiar esta query
+- FROM obrigatório: \`creatto-463117.biquery_data.metaads\`
+- APENAS execute a query - análise será feita no próximo step`,
             tools: {
               executarSQL: bigqueryTools.executarSQL
             }
           };
 
         case 9:
-          console.log('🎯 STEP 9/10: ANÁLISE + GRÁFICO 3');
+          console.log('🎯 STEP 9/10: EXECUTAR QUERY TASK 4');
           return {
-            system: `STEP 9/10: ANÁLISE + GRÁFICO 3 - ANÁLISE DOS DADOS DA QUERY 3
+            system: `STEP 9/10: EXECUTAR QUERY TASK 4
 
-Analise os dados obtidos na Query 3 (Step 7) e crie visualização estratégica se apropriado. Consolide insights de todos os steps para preparar o resumo executivo.
+Execute a Query Task 4 programada no Step 2.
 
-📈 **ANÁLISE ESTRATÉGICA FINAL:**
-- Integre insights com achados dos steps anteriores (4 e 6)
-- Consolide performance patterns em strategic narrative
-- Prepare foundation para recomendações de budget optimization
-- Quantifique impact potential das opportunities identificadas
+🎯 **EXECUTE APENAS SE:**
+A Query Task 4 foi definida no Step 2 como necessária
 
-🔧 **PROCESSO:**
-1. Analise os dados JSON obtidos no Step 7
-2. Integre com todos os insights anteriores
-3. Consolide todos os padrões identificados
-4. Prepare insights finais para o resumo executivo
+📊 **Query Task 4:**
+FROM \`creatto-463117.biquery_data.metaads\`
 
-📊 **CONSOLIDAÇÃO ESTRATÉGICA:**
-- Budget reallocation opportunities com impact quantificado
-- Scaling readiness assessment das top performers
-- Risk assessment de underperformers
-- Timeline recommendations para implementação
-- Expected ROI impact das mudanças propostas
-- Priority ranking das optimization opportunities
+Execute a query de consolidação programada no Step 2:
+- Query final de consolidação
+- Validação de insights principais  
+- Quantificação de opportunities
+- Ou outro tipo definido no Step 2
 
-📊 **VISUALIZAÇÃO OPCIONAL:**
-Considere criar um gráfico final SE:
-- Os dados são visuais por natureza (comparações, rankings, trends)
-- O volume é adequado para visualização clara
-- O gráfico adicionaria clareza aos insights consolidados
-- Não force - só crie se realmente agregar valor
-
-Use criarGrafico() quando fizer sentido estratégico para o insight.
-
-**IMPORTANTE:** Este é o último step de análise antes do resumo executivo.`,
+**IMPORTANTE:** 
+- Use todos os insights dos Steps anteriores (4, 6, 8)
+- FROM obrigatório: \`creatto-463117.biquery_data.metaads\`
+- Prepare dados para o resumo executivo do Step 10`,
             tools: {
-              criarGrafico: analyticsTools.criarGrafico
+              executarSQL: bigqueryTools.executarSQL
             }
           };
 
@@ -474,12 +465,9 @@ Consolide TODOS os insights dos steps anteriores em síntese executiva focada em
       'anthropic-beta': 'interleaved-thinking-2025-05-14'
     },
     tools: {
-      // BigQuery tools
-      ...bigqueryTools,
-      // Analytics tools  
-      ...analyticsTools,
-      // Utilities tools
-      ...utilitiesTools,
+      // Apenas tools específicas necessárias
+      executarSQL: bigqueryTools.executarSQL,
+      criarGrafico: analyticsTools.criarGrafico,
     },
   });
 
