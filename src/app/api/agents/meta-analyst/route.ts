@@ -1,5 +1,12 @@
-import { openai } from '@ai-sdk/openai';
+import { createOpenAI } from '@ai-sdk/openai';
 import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
+
+const openai = createOpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  headers: {
+    'User-Agent': 'MetaAnalyst-Agent'
+  }
+});
 import * as bigqueryTools from '@/tools/bigquery';
 import * as analyticsTools from '@/tools/analytics';
 import * as utilitiesTools from '@/tools/utilities';
