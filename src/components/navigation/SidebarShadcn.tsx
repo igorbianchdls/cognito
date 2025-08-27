@@ -19,6 +19,8 @@ import GoogleAnalyticsIcon from "@/components/icons/GoogleAnalyticsIcon"
 import ShopifyIcon from "@/components/icons/ShopifyIcon"
 import AmazonIcon from "@/components/icons/AmazonIcon"
 import GoogleIcon from "@/components/icons/GoogleIcon"
+import ShopeeIcon from "@/components/icons/ShopeeIcon"
+import ContaAzulIcon from "@/components/icons/ContaAzulIcon"
 
 import { NavMainSimple } from "@/components/navigation/nav-main-simple"
 import { NavUser } from "@/components/nav-user"
@@ -111,11 +113,11 @@ const navigationData = {
     },
     {
       title: "Shopee",
-      icon: ShopifyIcon,
+      icon: ShopeeIcon,
     },
     {
       title: "ContaAzul",
-      icon: GoogleIcon,
+      icon: ContaAzulIcon,
     },
   ],
 }

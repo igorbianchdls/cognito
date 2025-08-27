@@ -170,7 +170,21 @@ export default function OrgChartPage() {
             {/* Content */}
             <div className="space-y-12">
               {Object.entries(groupedAgents)
-                .sort(([a], [b]) => a.localeCompare(b))
+                .sort(([a], [b]) => {
+                  const priority = ['Tráfego Pago', 'Marketing'];
+                  const aIndex = priority.indexOf(a);
+                  const bIndex = priority.indexOf(b);
+                  
+                  if (aIndex !== -1 && bIndex !== -1) {
+                    return aIndex - bIndex;
+                  } else if (aIndex !== -1) {
+                    return -1;
+                  } else if (bIndex !== -1) {
+                    return 1;
+                  } else {
+                    return a.localeCompare(b);
+                  }
+                })
                 .map(([category, agents]) => (
                 <AgentSection 
                   key={category}
