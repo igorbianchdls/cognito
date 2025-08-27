@@ -494,14 +494,6 @@ Consolide TODOS os insights criativos dos steps anteriores em síntese executiva
     
     // StopWhen inteligente baseado na classificação de complexidade
     stopWhen: stepCountIs(10),
-    providerOptions: {
-      anthropic: {
-        thinking: { type: 'enabled', budgetTokens: 15000 }
-      }
-    },
-    headers: {
-      'anthropic-beta': 'interleaved-thinking-2025-05-14'
-    },
     tools: {
       // Apenas tools específicas necessárias
       executarSQL: bigqueryTools.executarSQL,
