@@ -18,6 +18,7 @@ import AmazonIcon from "@/components/icons/AmazonIcon"
 import ShopifyIcon from "@/components/icons/ShopifyIcon"
 import GoogleIcon from "@/components/icons/GoogleIcon"
 import MercadoLivreIcon from "@/components/icons/MercadoLivreIcon"
+import ShopeeIcon from "@/components/icons/ShopeeIcon"
 import type { Integration } from "@/data/integrations"
 
 interface IntegrationCardProps {
@@ -33,7 +34,7 @@ const iconMap = {
   shopify: ShopifyIcon,
   google: GoogleIcon,
   'mercado-livre': MercadoLivreIcon,
-  shopee: Globe, // fallback
+  shopee: ShopeeIcon,
   'conta-azul': Globe, // fallback
 }
 
