@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   console.log('🔍 ESTRATEGISTA SEO API: Messages:', messages?.length);
 
   const result = streamText({
-    model: anthropic('claude-sonnet-4-20250514'),
+    model: 'deepseek/deepseek-v3.1',
     
     // Sistema inicial básico
     system: `You are EstrategistaSEO AI, a specialized assistant for comprehensive SEO strategy development, organic search optimization, and long-term search engine visibility.`,

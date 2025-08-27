@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   console.log('🔍 KEYWORD ANALYST API: Messages:', messages?.length);
 
   const result = streamText({
-    model: anthropic('claude-sonnet-4-20250514'),
+    model: 'deepseek/deepseek-v3.1',
     
     // Sistema estratégico completo
     system: `# Keyword Performance Analyst - System Core

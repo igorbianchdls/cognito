@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   console.log('📊 CRIADOR DE DASHBOARD API: Messages:', messages?.length);
 
   const result = streamText({
-    model: anthropic('claude-sonnet-4-20250514'),
+    model: 'deepseek/deepseek-v3.1',
     
     // Sistema inicial básico
     system: `You are CriadorDeDashboard AI, a specialized assistant for creating comprehensive dashboards and data visualization strategies for business intelligence and analytics.`,

@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   console.log('🛍️ ANALISTA GMN API: Messages:', messages?.length);
 
   const result = streamText({
-    model: anthropic('claude-sonnet-4-20250514'),
+    model: 'deepseek/deepseek-v3.1',
     
     // Sistema inicial básico
     system: `You are AnalistaGMN AI, a specialized assistant for Google Merchant Network, Google Shopping campaigns, and product feed optimization for e-commerce success.`,
