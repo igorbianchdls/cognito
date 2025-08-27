@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
     console.log('🔍 METAANALYST API: Iniciando Agent SDK OpenAI...');
     const result = streamText({
-      model: openai('o3'),
+      model: openai('gpt-4o'),
     
     // Sistema inicial básico
     system: `You are MetaAnalyst AI, a specialized assistant for analyzing metadata, data structures, and providing insights about data organization and patterns.`,
