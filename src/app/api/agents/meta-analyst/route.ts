@@ -1,3 +1,4 @@
+import { openai } from '@ai-sdk/openai';
 import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/bigquery';
 import * as analyticsTools from '@/tools/analytics';
@@ -8,11 +9,13 @@ export const maxDuration = 30;
 export async function POST(req: Request) {
   console.log('🔍 METAANALYST API: Request recebido!');
   
-  const { messages }: { messages: UIMessage[] } = await req.json();
-  console.log('🔍 METAANALYST API: Messages:', messages?.length);
+  try {
+    const { messages }: { messages: UIMessage[] } = await req.json();
+    console.log('🔍 METAANALYST API: Messages:', messages?.length);
 
-  const result = streamText({
-    model: 'deepseek/deepseek-v3.1-thinking',
+    console.log('🔍 METAANALYST API: Iniciando Agent SDK OpenAI...');
+    const result = streamText({
+      model: openai('gpt-4o'),
     
     // Sistema inicial básico
     system: `You are MetaAnalyst AI, a specialized assistant for analyzing metadata, data structures, and providing insights about data organization and patterns.`,
@@ -188,6 +191,11 @@ Forneça recomendações finais de metadata e insights estruturais baseados na a
     },
   });
 
-  console.log('🔍 METAANALYST API: Retornando response...');
-  return result.toUIMessageStreamResponse();
+    console.log('🔍 METAANALYST API: Agent SDK criado, retornando response...');
+    return result.toUIMessageStreamResponse();
+  } catch (error) {
+    console.error('❌ METAANALYST API ERROR:', error);
+    console.error('❌ ERROR STACK:', error instanceof Error ? error.stack : 'No stack trace');
+    return new Response(`Error: ${error instanceof Error ? error.message : String(error)}`, { status: 500 });
+  }
 }
