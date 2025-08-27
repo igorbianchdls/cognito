@@ -4,6 +4,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Employee, categoryColors } from '@/data/orgData';
 import { Edit, MessageSquare, Database } from 'lucide-react';
+import MetaIcon from '@/components/icons/MetaIcon';
+import AmazonIcon from '@/components/icons/AmazonIcon';
+import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon';
+import GoogleAnalyticsIcon from '@/components/icons/GoogleAnalyticsIcon';
+import ShopifyIcon from '@/components/icons/ShopifyIcon';
+import ShopeeIcon from '@/components/icons/ShopeeIcon';
+import ContaAzulIcon from '@/components/icons/ContaAzulIcon';
 
 interface EmployeeCardProps {
   employee: Employee;
@@ -13,6 +20,25 @@ interface EmployeeCardProps {
 }
 
 export default function EmployeeCard({ employee, level, isHighlighted = false, onClick }: EmployeeCardProps) {
+  const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+    'meta-icon': MetaIcon,
+    'amazon-icon': AmazonIcon,
+    'google-ads-icon': GoogleAdsIcon,
+    'google-analytics-icon': GoogleAnalyticsIcon,
+    'shopify-icon': ShopifyIcon,
+    'shopee-icon': ShopeeIcon,
+    'conta-azul-icon': ContaAzulIcon,
+  };
+
+  const renderIcon = () => {
+    if (employee.icon && iconMap[employee.icon]) {
+      const IconComponent = iconMap[employee.icon];
+      return <IconComponent className="w-7 h-7" />;
+    }
+    // Fallback para emojis
+    return <span className="text-base">{employee.icon}</span>;
+  };
+
   const getBadgeColor = (category: string) => {
     const colorMap: Record<string, string> = {
       'Executivo': 'bg-purple-500',
@@ -59,8 +85,8 @@ export default function EmployeeCard({ employee, level, isHighlighted = false, o
           
           {/* Esfera central - maior */}
           <div className="w-14 h-14 bg-white border border-gray-300 rounded-full flex items-center justify-center relative z-10">
-            <div className={`w-7 h-7 rounded bg-gradient-to-br ${employee.iconColor} flex items-center justify-center text-white text-base`}>
-              {employee.icon}
+            <div className={`w-7 h-7 rounded ${iconMap[employee.icon] ? 'bg-white' : `bg-gradient-to-br ${employee.iconColor}`} flex items-center justify-center text-white text-base`}>
+              {renderIcon()}
             </div>
           </div>
           

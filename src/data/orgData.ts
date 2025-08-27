@@ -44,7 +44,7 @@ export const orgData: Employee = {
               name: 'Meta Analyst',
               description: 'Analisa performance de campanhas do Meta (Facebook/Instagram)',
               category: 'Tráfego Pago',
-              icon: '📘',
+              icon: 'meta-icon',
               iconColor: 'from-blue-500 to-blue-700'
             },
             {
@@ -52,7 +52,7 @@ export const orgData: Employee = {
               name: 'Amazon Ads Analyst',
               description: 'Otimiza campanhas publicitárias na plataforma Amazon',
               category: 'Tráfego Pago',
-              icon: '📦',
+              icon: 'amazon-icon',
               iconColor: 'from-orange-500 to-orange-700'
             },
             {
@@ -60,7 +60,7 @@ export const orgData: Employee = {
               name: 'Google Campaign Analyst',
               description: 'Gerencia e otimiza campanhas do Google Ads',
               category: 'Tráfego Pago',
-              icon: '🎯',
+              icon: 'google-ads-icon',
               iconColor: 'from-red-500 to-red-700'
             },
             {
@@ -68,7 +68,7 @@ export const orgData: Employee = {
               name: 'Meta Campaign Analyst',
               description: 'Especialista em otimização de campanhas Meta',
               category: 'Tráfego Pago',
-              icon: '📊',
+              icon: 'meta-icon',
               iconColor: 'from-blue-400 to-blue-600'
             },
             {
@@ -76,7 +76,7 @@ export const orgData: Employee = {
               name: 'Meta Creative Analyst',
               description: 'Analisa performance de criativos nas campanhas Meta',
               category: 'Tráfego Pago',
-              icon: '🎨',
+              icon: 'meta-icon',
               iconColor: 'from-purple-500 to-purple-700'
             },
             {
@@ -103,7 +103,7 @@ export const orgData: Employee = {
               name: 'Google Analytics Analyst',
               description: 'Especialista em análise de dados do Google Analytics',
               category: 'Marketing',
-              icon: '📊',
+              icon: 'google-analytics-icon',
               iconColor: 'from-orange-400 to-orange-600'
             },
             {
@@ -138,7 +138,7 @@ export const orgData: Employee = {
               name: 'Shopify Analyst',
               description: 'Analisa performance e otimiza vendas na plataforma Shopify',
               category: 'Comercial',
-              icon: '🛍️',
+              icon: 'shopify-icon',
               iconColor: 'from-green-400 to-green-600'
             },
             {
@@ -146,7 +146,7 @@ export const orgData: Employee = {
               name: 'Shopee Analyst',
               description: 'Especialista em análise de vendas e otimização no Shopee',
               category: 'Comercial',
-              icon: '🛒',
+              icon: 'shopee-icon',
               iconColor: 'from-orange-400 to-red-500'
             }
           ]
@@ -228,7 +228,7 @@ export const orgData: Employee = {
               name: 'ContaAzul Analyst',
               description: 'Especialista em análise de dados contábeis do sistema ContaAzul',
               category: 'Contábil',
-              icon: '📋',
+              icon: 'conta-azul-icon',
               iconColor: 'from-blue-400 to-blue-600'
             }
           ]
