@@ -46,16 +46,8 @@ export function IntegrationCard({ integration, onToggle }: IntegrationCardProps)
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4 flex-1">
             <div className="flex-shrink-0">
-              <div className={`w-12 h-12 rounded-xl ${
-                integration.icon === 'mercado-livre' 
-                  ? '' 
-                  : 'bg-gray-50 flex items-center justify-center'
-              }`}>
-                <IconComponent className={
-                  integration.icon === 'mercado-livre' 
-                    ? 'w-12 h-12 rounded-xl' 
-                    : 'w-8 h-8'
-                } />
+              <div className="w-12 h-12 rounded-xl">
+                <IconComponent className="w-12 h-12 rounded-xl" />
               </div>
             </div>
             <div className="flex-1 min-w-0">
