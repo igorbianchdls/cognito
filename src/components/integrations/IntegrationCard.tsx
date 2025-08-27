@@ -28,6 +28,7 @@ import RdStationIcon from "@/components/icons/RdStationIcon"
 import MagaluIcon from "@/components/icons/MagaluIcon"
 import TotvsIcon from "@/components/icons/TotvsIcon"
 import OmieIcon from "@/components/icons/OmieIcon"
+import PipedriveIcon from "@/components/icons/PipedriveIcon"
 import type { Integration } from "@/data/integrations"
 
 interface IntegrationCardProps {
@@ -53,6 +54,7 @@ const iconMap = {
   magalu: MagaluIcon,
   totvs: TotvsIcon,
   omie: OmieIcon,
+  pipedrive: PipedriveIcon,
 }
 
 export function IntegrationCard({ integration, onToggle }: IntegrationCardProps) {
