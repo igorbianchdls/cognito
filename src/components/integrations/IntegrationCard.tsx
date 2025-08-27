@@ -25,6 +25,9 @@ import BlingIcon from "@/components/icons/BlingIcon"
 import TinyIcon from "@/components/icons/TinyIcon"
 import HubspotIcon from "@/components/icons/HubspotIcon"
 import RdStationIcon from "@/components/icons/RdStationIcon"
+import MagaluIcon from "@/components/icons/MagaluIcon"
+import TotvsIcon from "@/components/icons/TotvsIcon"
+import OmieIcon from "@/components/icons/OmieIcon"
 import type { Integration } from "@/data/integrations"
 
 interface IntegrationCardProps {
@@ -47,6 +50,9 @@ const iconMap = {
   tiny: TinyIcon,
   hubspot: HubspotIcon,
   'rd-station': RdStationIcon,
+  magalu: MagaluIcon,
+  totvs: TotvsIcon,
+  omie: OmieIcon,
 }
 
 export function IntegrationCard({ integration, onToggle }: IntegrationCardProps) {
