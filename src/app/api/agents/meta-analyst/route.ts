@@ -12,7 +12,7 @@ export async function POST(req: Request) {
   console.log('🔍 METAANALYST API: Messages:', messages?.length);
 
   const result = streamText({
-    model: 'deepseek/deepseek-r1',
+    model: 'deepseek/deepseek-v3.1-thinking',
     
     // Sistema inicial básico
     system: `You are MetaAnalyst AI, a specialized assistant for analyzing metadata, data structures, and providing insights about data organization and patterns.`,
