@@ -15,6 +15,13 @@ import { GlobeIcon, MicIcon } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import type { ChatStatus } from 'ai';
 import AgentDropdown from './AgentDropdown';
+import MetaIcon from '@/components/icons/MetaIcon';
+import AmazonIcon from '@/components/icons/AmazonIcon';
+import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon';
+import GoogleAnalyticsIcon from '@/components/icons/GoogleAnalyticsIcon';
+import ShopifyIcon from '@/components/icons/ShopifyIcon';
+import ShopeeIcon from '@/components/icons/ShopeeIcon';
+import ContaAzulIcon from '@/components/icons/ContaAzulIcon';
 
 interface InputAreaProps {
   input: string;
@@ -25,23 +32,43 @@ interface InputAreaProps {
   onAgentChange: (agent: string) => void;
 }
 
+// Mapeamento de ícones das integrações
+const iconMap: Record<string, React.ComponentType<{ className?: string }> | null> = {
+  'nexus': null,
+  'teste': null,
+  'metaAnalyst': MetaIcon,
+  'metaCampaignAnalyst': MetaIcon,
+  'metaCreativeAnalyst': MetaIcon,
+  'amazonAdsAnalyst': AmazonIcon,
+  'googleAnalyticsAnalyst': GoogleAnalyticsIcon,
+  'googleCampaignAnalyst': GoogleAdsIcon,
+  'shopifyAnalyst': ShopifyIcon,
+  'shopeeAnalyst': ShopeeIcon,
+  'contaAzulAnalyst': ContaAzulIcon,
+  'keywordAnalyst': null,
+  'inventoryAnalyst': null,
+  'cashFlowAnalyst': null,
+  'pnlAnalyst': null,
+  'budgetPlanningAnalyst': null,
+};
+
 const models = [
-  { id: 'nexus', name: 'Nexus' },
-  { id: 'teste', name: 'Teste' },
-  { id: 'metaAnalyst', name: 'MetaAnalyst' },
-  { id: 'amazonAdsAnalyst', name: 'AmazonAdsAnalyst' },
-  { id: 'googleAnalyticsAnalyst', name: 'GoogleAnalyticsAnalyst' },
-  { id: 'shopifyAnalyst', name: 'ShopifyAnalyst' },
-  { id: 'contaAzulAnalyst', name: 'ContaAzulAnalyst' },
-  { id: 'shopeeAnalyst', name: 'ShopeeAnalyst' },
-  { id: 'keywordAnalyst', name: 'KeywordAnalyst' },
-  { id: 'googleCampaignAnalyst', name: 'GoogleCampaignAnalyst' },
-  { id: 'metaCampaignAnalyst', name: 'MetaCampaignAnalyst' },
-  { id: 'metaCreativeAnalyst', name: 'MetaCreativeAnalyst' },
-  { id: 'inventoryAnalyst', name: 'InventoryAnalyst' },
-  { id: 'cashFlowAnalyst', name: 'CashFlowAnalyst' },
-  { id: 'pnlAnalyst', name: 'P&LAnalyst' },
-  { id: 'budgetPlanningAnalyst', name: 'BudgetPlanningAnalyst' },
+  { id: 'nexus', name: 'Nexus', icon: iconMap['nexus'] },
+  { id: 'teste', name: 'Teste', icon: iconMap['teste'] },
+  { id: 'metaAnalyst', name: 'MetaAnalyst', icon: iconMap['metaAnalyst'] },
+  { id: 'amazonAdsAnalyst', name: 'AmazonAdsAnalyst', icon: iconMap['amazonAdsAnalyst'] },
+  { id: 'googleAnalyticsAnalyst', name: 'GoogleAnalyticsAnalyst', icon: iconMap['googleAnalyticsAnalyst'] },
+  { id: 'shopifyAnalyst', name: 'ShopifyAnalyst', icon: iconMap['shopifyAnalyst'] },
+  { id: 'contaAzulAnalyst', name: 'ContaAzulAnalyst', icon: iconMap['contaAzulAnalyst'] },
+  { id: 'shopeeAnalyst', name: 'ShopeeAnalyst', icon: iconMap['shopeeAnalyst'] },
+  { id: 'keywordAnalyst', name: 'KeywordAnalyst', icon: iconMap['keywordAnalyst'] },
+  { id: 'googleCampaignAnalyst', name: 'GoogleCampaignAnalyst', icon: iconMap['googleCampaignAnalyst'] },
+  { id: 'metaCampaignAnalyst', name: 'MetaCampaignAnalyst', icon: iconMap['metaCampaignAnalyst'] },
+  { id: 'metaCreativeAnalyst', name: 'MetaCreativeAnalyst', icon: iconMap['metaCreativeAnalyst'] },
+  { id: 'inventoryAnalyst', name: 'InventoryAnalyst', icon: iconMap['inventoryAnalyst'] },
+  { id: 'cashFlowAnalyst', name: 'CashFlowAnalyst', icon: iconMap['cashFlowAnalyst'] },
+  { id: 'pnlAnalyst', name: 'P&LAnalyst', icon: iconMap['pnlAnalyst'] },
+  { id: 'budgetPlanningAnalyst', name: 'BudgetPlanningAnalyst', icon: iconMap['budgetPlanningAnalyst'] },
 ];
 
 export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange }: InputAreaProps) {
@@ -137,7 +164,12 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
             <PromptInputModelSelectContent>
               {models.map((model) => (
                 <PromptInputModelSelectItem key={model.id} value={model.id}>
-                  {model.name}
+                  <div className="flex items-center gap-2">
+                    {model.icon && (
+                      <model.icon className="w-4 h-4" />
+                    )}
+                    <span>{model.name}</span>
+                  </div>
                 </PromptInputModelSelectItem>
               ))}
             </PromptInputModelSelectContent>

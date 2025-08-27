@@ -1,11 +1,31 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search } from 'lucide-react';
+import MetaIcon from '@/components/icons/MetaIcon';
+import AmazonIcon from '@/components/icons/AmazonIcon';
+import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon';
+import GoogleAnalyticsIcon from '@/components/icons/GoogleAnalyticsIcon';
+import ShopifyIcon from '@/components/icons/ShopifyIcon';
+import ShopeeIcon from '@/components/icons/ShopeeIcon';
+import ContaAzulIcon from '@/components/icons/ContaAzulIcon';
 
 interface AgentDropdownProps {
   currentAgent: string;
   onAgentSelect: (agentId: string) => void;
   onClose: () => void;
 }
+
+// Mapeamento de ícones das integrações
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  'metaAnalyst': MetaIcon,
+  'metaCampaignAnalyst': MetaIcon,
+  'metaCreativeAnalyst': MetaIcon,
+  'amazonAdsAnalyst': AmazonIcon,
+  'googleAnalyticsAnalyst': GoogleAnalyticsIcon,
+  'googleCampaignAnalyst': GoogleAdsIcon,
+  'shopifyAnalyst': ShopifyIcon,
+  'shopeeAnalyst': ShopeeIcon,
+  'contaAzulAnalyst': ContaAzulIcon,
+};
 
 // Lista de agentes disponíveis com suas informações visuais
 const agents = [
@@ -111,9 +131,13 @@ export default function AgentDropdown({ currentAgent, onAgentSelect, onClose }: 
                   : 'text-gray-700 hover:bg-gray-50/50'
               }`}
             >
-              {/* Avatar circular com inicial do agente */}
-              <div className={`w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium ${agent.color}`}>
-                {agent.icon}
+              {/* Avatar circular com ícone da integração ou inicial do agente */}
+              <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium">
+                {iconMap[agent.id] ? (
+                  React.createElement(iconMap[agent.id], { className: "w-5 h-5" })
+                ) : (
+                  <span className={agent.color}>{agent.icon}</span>
+                )}
               </div>
               <span>{agent.name}</span>
             </div>
