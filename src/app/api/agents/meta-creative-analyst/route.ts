@@ -1,4 +1,12 @@
+import { createOpenAI } from '@ai-sdk/openai';
 import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
+
+const openai = createOpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  headers: {
+    'User-Agent': 'MetaCreativeAnalyst-Agent'
+  }
+});
 import * as bigqueryTools from '@/tools/bigquery';
 import * as analyticsTools from '@/tools/analytics';
 import * as utilitiesTools from '@/tools/utilities';
@@ -12,9 +20,9 @@ export async function POST(req: Request) {
     const { messages }: { messages: UIMessage[] } = await req.json();
     console.log('📘 META CREATIVE ANALYST API: Messages:', messages?.length);
 
-    console.log('📘 META CREATIVE ANALYST API: Iniciando streamText com DeepSeek...');
+    console.log('📘 META CREATIVE ANALYST API: Iniciando streamText com OpenAI o4-mini...');
     const result = streamText({
-    model: 'deepseek/deepseek-v3.1-thinking',
+      model: openai('o4-mini'),
     
     // Sistema direto e focado
     system: `# Creative Performance Analyst - Meta Ads
@@ -36,6 +44,14 @@ PARA "analise meus criativos" = TIPO B OBRIGATORIAMENTE!
 Idioma: Português Brasileiro`,
     
     messages: convertToModelMessages(messages),
+    
+    // OpenAI o4-mini optimized configuration
+    providerOptions: {
+      openai: {
+        textVerbosity: 'medium',
+        reasoningEffort: 'medium'
+      }
+    },
     
     // PrepareStep: Sistema inteligente com classificação de complexidade
     prepareStep: ({ stepNumber, steps }) => {

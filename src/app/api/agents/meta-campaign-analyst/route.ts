@@ -1,4 +1,12 @@
+import { createOpenAI } from '@ai-sdk/openai';
 import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
+
+const openai = createOpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  headers: {
+    'User-Agent': 'MetaCampaignAnalyst-Agent'
+  }
+});
 import * as bigqueryTools from '@/tools/bigquery';
 import * as analyticsTools from '@/tools/analytics';
 import * as utilitiesTools from '@/tools/utilities';
@@ -12,9 +20,9 @@ export async function POST(req: Request) {
     const { messages }: { messages: UIMessage[] } = await req.json();
     console.log('📘 META CAMPAIGN ANALYST API: Messages:', messages?.length);
 
-    console.log('📘 META CAMPAIGN ANALYST API: Iniciando streamText com DeepSeek...');
+    console.log('📘 META CAMPAIGN ANALYST API: Iniciando streamText com OpenAI o4-mini...');
     const result = streamText({
-    model: 'deepseek/deepseek-v3.1-thinking',
+      model: openai('o4-mini'),
     
     // Sistema estratégico completo
     system: `# Campaign Performance Analyst - System Core
@@ -115,6 +123,14 @@ Sempre estruture: current performance → strategic analysis → budget optimiza
 Focus em strategic recommendations que impactem revenue growth, detectando budget misallocation e identificando campaigns com best ROAS/CPA ratio para scaling decisions.`,
     
     messages: convertToModelMessages(messages),
+    
+    // OpenAI o4-mini optimized configuration
+    providerOptions: {
+      openai: {
+        textVerbosity: 'medium',
+        reasoningEffort: 'medium'
+      }
+    },
     
     // PrepareStep: Sistema inteligente com classificação de complexidade
     prepareStep: ({ stepNumber, steps }) => {
