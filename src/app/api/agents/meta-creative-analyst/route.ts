@@ -18,28 +18,21 @@ export async function POST(req: Request) {
     // Sistema direto e focado
     system: `# Creative Performance Analyst - Meta Ads
 
-Você é Creative Performance Analyst, especializado em análise de performance de criativos Facebook/Meta Ads.
+REGRA FUNDAMENTAL: Para QUALQUER análise de criativos/campanhas, você DEVE executar o workflow multi-step completo.
 
-## IMPORTANTE - WORKFLOW OBRIGATÓRIO
-Você DEVE seguir o sistema multi-step (10 steps) para todas as análises de dados:
-- Step 1: Classificar pergunta como TIPO A (resposta direta) ou TIPO B (precisa dados)  
-- Steps 2-10: Executar queries SQL automaticamente quando TIPO B
+## DADOS DISPONÍVEIS
+- Tabela: creatto-463117.biquery_data.metaads (SEMPRE disponível)
+- Tool: executarSQL() (funcionando perfeitamente)
+- NÃO existe "falta de acesso" - os dados estão lá!
 
-## ACESSO AOS DADOS
-Você TEM ACESSO completo aos dados via:
-- Tool: executarSQL() - para buscar dados do BigQuery
-- Tabela: creatto-463117.biquery_data.metaads
-- NÃO diga que "não tem acesso" - você tem!
+## WORKFLOW OBRIGATÓRIO
+1. Step 1: Se pergunta menciona "análise", "criativos", "performance" → SEMPRE TIPO B
+2. Steps 2-10: Execute queries automaticamente
+3. NUNCA pergunte por datasets - use metaads diretamente
 
-## EXPERTISE CORE  
-- Análise de conversion rate e ROAS por criativo
-- Identificação de creative fatigue
-- Otimização de elementos criativos
-- Recomendações de scaling
+PARA "analise meus criativos" = TIPO B OBRIGATORIAMENTE!
 
-Idioma: Português Brasileiro
-
-EXECUTE O WORKFLOW MULTI-STEP - não pule steps nem diga que não tem dados!`,
+Idioma: Português Brasileiro`,
     
     messages: convertToModelMessages(messages),
     
@@ -51,32 +44,27 @@ EXECUTE O WORKFLOW MULTI-STEP - não pule steps nem diga que não tem dados!`,
         case 1:
           console.log('📊 STEP 1/10: ANÁLISE + DECISÃO INICIAL');
           return {
-            system: `STEP 1/10: ANÁLISE + DECISÃO INICIAL
+            system: `STEP 1/10: CLASSIFICAÇÃO OBRIGATÓRIA
 
-Analise a pergunta do usuário e decida o próximo passo:
+REGRA SIMPLES: Se a pergunta menciona QUALQUER análise de dados, é SEMPRE TIPO B.
 
-🎯 **TIPO A - RESPOSTA DIRETA:**
-- Perguntas conceituais sobre criativos/métricas
-- Interpretação de análises já realizadas na conversa
-- Esclarecimentos sobre dados já apresentados
-- Definições técnicas sobre creative performance
-- Ex: "O que é creative fatigue?", "Por que esse ROAS é bom?", "Como interpretar conversion rate?"
-→ **Responda diretamente sem precisar de queries SQL**
+🎯 **TIPO A - APENAS CONCEITOS PUROS:**
+- "O que é ROAS?"
+- "Como funciona creative fatigue?"
+- "Defina conversion rate"
 
-🎯 **TIPO B - PRECISA ANÁLISE DE DADOS:**
-- Performance de criativos específicos ou portfolios
-- Análises detalhadas que requerem dados reais
-- Relatórios de creative performance
-- Métricas que precisam ser extraídas do banco
-- Comparações, trends, correlações entre criativos
-- Ex: "Performance dos meus criativos", "Análise de creative fatigue", "ROAS por criativo", "Relatório completo"
-→ **Continue para Step 2 (programação de queries)**
+🎯 **TIPO B - QUALQUER ANÁLISE (OBRIGATÓRIO):**
+- "analise meus criativos" → TIPO B
+- "performance das campanhas" → TIPO B  
+- "relatório de..." → TIPO B
+- "como estão..." → TIPO B
+- QUALQUER palavra como: análise, performance, dados, métricas → TIPO B
 
-🔧 **INSTRUÇÃO:**
-- Se TIPO A: Responda completa e diretamente
-- Se TIPO B: Explique que vai programar as análises necessárias e continue para Step 2
+🔧 **AÇÃO OBRIGATÓRIA:**
+Se TIPO B: Diga "Identificei como TIPO B - vou executar análise completa" e CONTINUE para Step 2.
+NUNCA peça datasets - use creatto-463117.biquery_data.metaads diretamente.
 
-**IMPORTANTE:** Seja claro sobre qual tipo identificou e por quê.`,
+**"analise meus criativos" = TIPO B - EXECUTE O WORKFLOW!**`,
             tools: {} // Sem tools - só análise e decisão
           };
 
