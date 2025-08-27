@@ -485,7 +485,7 @@ Consolide TODOS os insights dos steps anteriores em síntese executiva focada em
     return result.toUIMessageStreamResponse();
   } catch (error) {
     console.error('❌ META CAMPAIGN ANALYST API ERROR:', error);
-    console.error('❌ ERROR STACK:', error.stack);
-    return new Response(`Error: ${error.message}`, { status: 500 });
+    console.error('❌ ERROR STACK:', error instanceof Error ? error.stack : 'No stack trace');
+    return new Response(`Error: ${error instanceof Error ? error.message : String(error)}`, { status: 500 });
   }
 }

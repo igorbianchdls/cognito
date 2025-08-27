@@ -402,7 +402,7 @@ Consolide TODOS os insights criativos dos steps anteriores em síntese executiva
     return result.toUIMessageStreamResponse();
   } catch (error) {
     console.error('❌ META CREATIVE ANALYST API ERROR:', error);
-    console.error('❌ ERROR STACK:', error.stack);
-    return new Response(`Error: ${error.message}`, { status: 500 });
+    console.error('❌ ERROR STACK:', error instanceof Error ? error.stack : 'No stack trace');
+    return new Response(`Error: ${error instanceof Error ? error.message : String(error)}`, { status: 500 });
   }
 }
