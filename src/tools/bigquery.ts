@@ -333,25 +333,25 @@ export const getCampaigns = tool({
       let whereClause = '';
       if (dateRange?.startDate || dateRange?.endDate) {
         const conditions = [];
-        if (dateRange.startDate) conditions.push(`date >= '${dateRange.startDate}'`);
-        if (dateRange.endDate) conditions.push(`date <= '${dateRange.endDate}'`);
+        if (dateRange.startDate) conditions.push(`Date >= '${dateRange.startDate}'`);
+        if (dateRange.endDate) conditions.push(`Date <= '${dateRange.endDate}'`);
         whereClause = `WHERE ${conditions.join(' AND ')}`;
       }
       
       const query = `
         SELECT 
-          campaign_id,
-          campaign_name,
-          account_name,
-          COUNT(DISTINCT date) as days_active,
-          SUM(impressions) as total_impressions,
-          SUM(spend) as total_spend,
-          SUM(clicks) as total_clicks,
-          ROUND(SUM(clicks) / NULLIF(SUM(impressions), 0) * 100, 2) as ctr,
-          ROUND(SUM(spend) / NULLIF(SUM(clicks), 0), 2) as cpc
+          \`Campaign ID\` as campaign_id,
+          \`Campaign Name\` as campaign_name,
+          \`Account Name\` as account_name,
+          COUNT(DISTINCT Date) as days_active,
+          SUM(Impressions) as total_impressions,
+          SUM(\`Amount Spent (BRL)\`) as total_spend,
+          SUM(Clicks) as total_clicks,
+          ROUND(SUM(Clicks) / NULLIF(SUM(Impressions), 0) * 100, 2) as ctr,
+          ROUND(SUM(\`Amount Spent (BRL)\`) / NULLIF(SUM(Clicks), 0), 2) as cpc
         FROM \`${projectId}.${datasetId}.${tableName}\`
         ${whereClause}
-        GROUP BY campaign_id, campaign_name, account_name
+        GROUP BY \`Campaign ID\`, \`Campaign Name\`, \`Account Name\`
         ORDER BY ${orderBy}
         LIMIT ${limit}
       `;
