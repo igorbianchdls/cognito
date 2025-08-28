@@ -27,4 +27,4 @@ export interface ExecuteSQLRequest {
   sqlQuery: string;
 }
 
-export interface ExecuteSQLResponse extends QueryResult {}
+export type ExecuteSQLResponse = QueryResult;
