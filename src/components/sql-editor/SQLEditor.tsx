@@ -5,8 +5,7 @@ import { Editor } from '@monaco-editor/react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Loader2, Play, AlertCircle, CheckCircle } from 'lucide-react';
-import { DataTable, createSortableHeader } from '@/components/widgets/Table';
-import type { ColumnDef } from '@tanstack/react-table';
+import SQLResultsTable from './SQLResultsTable';
 import type { SQLEditorProps, QueryResult, ExecuteSQLRequest, ExecuteSQLResponse } from './types';
 
 export default function SQLEditor({ 
@@ -94,34 +93,6 @@ export default function SQLEditor({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [sql, readOnly, executeSQL]);
 
-  // Create table columns dynamically from schema or data
-  const createTableColumns = (schema: QueryResult['schema'], data: Record<string, unknown>[]): ColumnDef<Record<string, unknown>>[] => {
-    if (!schema.length && data.length > 0) {
-      // Fallback: infer columns from first row
-      return Object.keys(data[0]).map(key => ({
-        accessorKey: key,
-        header: createSortableHeader(key.charAt(0).toUpperCase() + key.slice(1)),
-        cell: ({ row }) => {
-          const value = row.getValue(key);
-          return <div className="font-mono text-sm">{String(value || '')}</div>;
-        }
-      }));
-    }
-
-    // Use schema information
-    return schema.map(column => ({
-      accessorKey: column.name,
-      header: createSortableHeader(column.name),
-      cell: ({ row }) => {
-        const value = row.getValue(column.name);
-        return (
-          <div className="font-mono text-sm" title={`Type: ${column.type} | Mode: ${column.mode}`}>
-            {String(value || '')}
-          </div>
-        );
-      }
-    }));
-  };
 
   // Format bytes for display
   const formatBytes = (bytes: number) => {
@@ -228,19 +199,11 @@ export default function SQLEditor({
 
           {/* Data Table */}
           {result.success && result.data && result.data.length > 0 && (
-            <div className="border rounded-md">
-              <div className="bg-gray-50 px-4 py-2 border-b">
-                <div className="text-sm text-gray-600">
-                  Mostrando {result.data.length} linha{result.data.length !== 1 ? 's' : ''} de {result.rowsReturned}
-                </div>
-              </div>
-              <DataTable
-                columns={createTableColumns(result.schema, result.data) as ColumnDef<Record<string, unknown>>[]}
-                data={result.data as Record<string, unknown>[]}
-                searchPlaceholder="Buscar nos resultados..."
-                pageSize={10}
-              />
-            </div>
+            <SQLResultsTable
+              data={result.data}
+              schema={result.schema}
+              pageSize={10}
+            />
           )}
 
           {/* No Data Message */}
