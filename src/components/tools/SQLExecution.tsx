@@ -196,7 +196,7 @@ export default function SQLExecution({
         <SQLEditor 
           initialSQL={sqlQuery || ''}
           height="200px"
-          immediateExecute={false}
+          immediateExecute={true}
           readOnly={false}
         />
       </div>
