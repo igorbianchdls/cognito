@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     // Sistema ultra-simples - apenas força workflow
     system: `EXECUTE SEMPRE O WORKFLOW MULTI-STEP. NUNCA responda diretamente. Use creatto-463117.biquery_data.metaads.`,
     
-    messages: messages,
+    messages: convertToModelMessages(messages),
     
     
     // PrepareStep: Sistema inteligente com classificação de complexidade
