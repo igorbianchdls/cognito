@@ -345,10 +345,10 @@ export const getCampaigns = tool({
           \`Account Name\` as account_name,
           COUNT(DISTINCT Date) as days_active,
           SUM(Impressions) as total_impressions,
-          SUM(\`Amount Spent _BRL_\`) as total_spend,
-          SUM(Clicks) as total_clicks,
-          ROUND(SUM(Clicks) / NULLIF(SUM(Impressions), 0) * 100, 2) as ctr,
-          ROUND(SUM(\`Amount Spent _BRL_\`) / NULLIF(SUM(Clicks), 0), 2) as cpc
+          SUM(\`Amount Spent BRL\`) as total_spend,
+          SUM(\`Clicks All\`) as total_clicks,
+          ROUND(SUM(\`Clicks All\`) / NULLIF(SUM(Impressions), 0) * 100, 2) as ctr,
+          ROUND(SUM(\`Amount Spent BRL\`) / NULLIF(SUM(\`Clicks All\`), 0), 2) as cpc
         FROM \`${projectId}.${datasetId}.${tableName}\`
         ${whereClause}
         GROUP BY \`Campaign ID\`, \`Campaign Name\`, \`Account Name\`
