@@ -205,28 +205,25 @@ export const executarSQL = tool({
         }
       }
 
-      // Execute the actual query
-      console.log('🔍 Executing SQL query:', sqlQuery);
-      const result = await bigQueryService.executeQuery({ query: sqlQuery });
-      
-      const executionTime = Date.now() - startTime;
-      console.log('✅ SQL query executed successfully in', executionTime, 'ms');
-      console.log('📈 Rows returned:', result.data?.length || 0);
+      // Don't execute the query - just return it for SQLEditor
+      console.log('📝 SQL query generated:', sqlQuery);
+      console.log('➡️ Sending to SQLEditor for execution...');
 
       return {
         sqlQuery,
         datasetId: datasetId || 'default-dataset',
         queryType: queryType.toUpperCase(),
         dryRun: false,
-        data: result.data || [],
-        schema: result.schema || [],
-        rowsReturned: result.data?.length || 0,
-        rowsAffected: queryType.includes('insert') || queryType.includes('update') || queryType.includes('delete') ? result.data?.length || 0 : 0,
-        totalRows: result.totalRows || 0,
-        executionTime,
-        bytesProcessed: result.bytesProcessed || 0,
+        data: [],
+        schema: [],
+        rowsReturned: 0,
+        rowsAffected: 0,
+        totalRows: 0,
+        executionTime: 0,
+        bytesProcessed: 0,
         success: true,
-        validationErrors: []
+        validationErrors: [],
+        message: 'Query gerada com sucesso. Executando no SQLEditor...'
       };
 
     } catch (error) {
