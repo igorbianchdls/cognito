@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     }
 
     // Initialize BigQuery service if not already done (same pattern as tools)
-    if (!(bigQueryService as any)['client']) {
+    if (!('client' in bigQueryService) || !bigQueryService.client) {
       console.log('⚡ Initializing BigQuery service for execute-sql...');
       await bigQueryService.initialize();
     }
