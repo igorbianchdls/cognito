@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable, createSortableHeader, TableData } from '@/components/widgets/Table';
 import { Button } from '@/components/ui/button';
@@ -45,6 +45,47 @@ export default function SQLExecution({
   error,
   onAnalyzeWithAI
 }: SQLExecutionProps) {
+  
+  // Auto-save data to localStorage when component renders with data
+  useEffect(() => {
+    if (data && data.length > 0) {
+      const analysisData = {
+        data,
+        sqlQuery: sqlQuery || 'Query executada',
+        timestamp: new Date().toISOString(),
+        rowCount: data.length
+      };
+      
+      localStorage.setItem('lastAnalysisData', JSON.stringify(analysisData));
+      console.log('🔧 SQLExecution: Data saved to localStorage for analysis:', data.length, 'rows');
+    }
+  }, [data, sqlQuery]);
+
+  // Handle analyze button click
+  const handleAnalyzeData = () => {
+    console.log('📊 SQLExecution: Analyze button clicked');
+    
+    const storedData = localStorage.getItem('lastAnalysisData');
+    if (storedData) {
+      try {
+        const analysisData = JSON.parse(storedData);
+        console.log('📊 Sending data for analysis via postMessage:', analysisData.rowCount, 'rows');
+        
+        // Send data to parent window via postMessage
+        window.postMessage({
+          type: 'ANALYZE_DATA',
+          data: analysisData.data,
+          query: analysisData.sqlQuery,
+          timestamp: analysisData.timestamp
+        }, '*');
+      } catch (error) {
+        console.error('❌ Error parsing stored analysis data:', error);
+      }
+    } else {
+      console.warn('⚠️ No analysis data found in localStorage');
+    }
+  };
+
   // Generate columns dynamically based on schema
   const columns: ColumnDef<TableData>[] = useMemo(() => {
     if (schema && schema.length > 0) {
@@ -181,11 +222,11 @@ export default function SQLExecution({
             pageSize={15}
           />
           
-          {/* Análise com IA button */}
-          {onAnalyzeWithAI && data && data.length > 0 && (
+          {/* Análise com IA button - sempre aparece quando há dados */}
+          {data && data.length > 0 && (
             <div className="mt-4 flex justify-end">
               <Button 
-                onClick={() => onAnalyzeWithAI(data, sqlQuery || '')}
+                onClick={handleAnalyzeData}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 📊 Analisar com IA

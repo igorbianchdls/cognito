@@ -282,6 +282,28 @@ export default function Page() {
     });
   };
 
+  // Listen for postMessage from SQLExecution components
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Security: only accept messages from same origin
+      if (event.origin !== window.location.origin && event.origin !== 'null') {
+        return;
+      }
+
+      if (event.data.type === 'ANALYZE_DATA') {
+        console.log('📊 Received ANALYZE_DATA message:', event.data);
+        const { data, query } = event.data;
+        
+        if (data && Array.isArray(data) && data.length > 0) {
+          handleAnalyzeWithAI(data, query || 'Query executada');
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [selectedAgent]);
+
   return (
     <SidebarProvider>
       <SidebarShadcn />
