@@ -83,7 +83,7 @@ export default function TableSchema({
         <DataTable 
           columns={schemaColumns} 
           data={columns}
-          pagination={false}
+          showPagination={false}
         />
       ) : (
         <div className="p-8 text-center text-gray-500">
