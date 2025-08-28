@@ -1,4 +1,4 @@
-import * as bigqueryTools from '@/tools/bigquery';
+import { executarSQL } from '@/tools/bigquery';
 
 export const maxDuration = 60;
 
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     console.log('📘 EXECUTE-SQL API: Executando SQL via tool existente:', sqlQuery);
 
     // Usar a tool existente que já funciona nos agentes
-    const result = await bigqueryTools.executarSQL.execute({
+    const result = await executarSQL.execute({
       sqlQuery: sqlQuery.trim()
     });
 
