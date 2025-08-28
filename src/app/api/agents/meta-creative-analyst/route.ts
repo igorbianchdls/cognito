@@ -1,8 +1,6 @@
-import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
+import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import * as bigqueryTools from '@/tools/bigquery';
-import * as analyticsTools from '@/tools/analytics';
-import * as utilitiesTools from '@/tools/utilities';
 
 export const maxDuration = 60;
 
@@ -17,12 +15,18 @@ export async function POST(req: Request) {
     const result = streamText({
       model: anthropic('claude-sonnet-4-20250514'),
     
-    system: `Você é um assistente para análise de criativos Meta Ads. SEMPRE execute o workflow completo de 4 steps em sequência:
-1) Execute getDatasets primeiro
-2) Execute getTables segundo  
-3) Execute getTableSchema terceiro
-4) Execute getCampaigns quarto
-NUNCA pule steps. Execute um step por vez na ordem correta.`,
+    system: `Você é um especialista em SQL para dados Meta Ads. Seu objetivo é gerar consultas SQL precisas.
+
+REGRAS IMPORTANTES:
+- NUNCA invente nomes de tabelas ou colunas no SELECT ou FROM
+- Use SEMPRE as 3 tools para descobrir a estrutura antes de criar SQL:
+  1) getDatasets - para ver datasets disponíveis
+  2) getTables - para ver tabelas no dataset  
+  3) getTableSchema - para ver colunas exatas da tabela
+- Depois use executarSQL para executar a query
+- NÃO interprete dados, apenas gere SQL correto
+
+Execute os 3 primeiros steps em sequência, depois use executarSQL quando necessário.`,
     
     messages: convertToModelMessages(messages),
     
@@ -44,25 +48,19 @@ NUNCA pule steps. Execute um step por vez na ordem correta.`,
             system: `Step 3: Execute getTableSchema para ver as colunas e tipos da tabela.`,
             tools: { getTableSchema: bigqueryTools.getTableSchema }
           };
-        case 4:
-          return {
-            system: `Step 4: Execute getCampaigns para obter campanhas da tabela selecionada.`,
-            tools: { getCampaigns: bigqueryTools.getCampaigns }
-          };
         default:
           return {
-            system: `Assistente para análise de criativos Meta Ads.`,
+            system: `Especialista em SQL para dados Meta Ads.`,
             tools: {}
           };
       }
     },
     
-    stopWhen: stepCountIs(4),
     tools: {
       getDatasets: bigqueryTools.getDatasets,
       getTables: bigqueryTools.getTables,
       getTableSchema: bigqueryTools.getTableSchema,
-      getCampaigns: bigqueryTools.getCampaigns,
+      executarSQL: bigqueryTools.executarSQL,
     },
   });
 
