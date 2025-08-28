@@ -13,6 +13,7 @@ import AmazonIcon from '@/components/icons/AmazonIcon';
 import WeatherCard from '../tools/WeatherCard';
 import DatasetsList from '../tools/DatasetsList';
 import TablesList from '../tools/TablesList';
+import TableSchema from '../tools/TableSchema';
 import TableData from '../tools/TableData';
 import ChartVisualization from '../tools/ChartVisualization';
 import ResultDisplay from '../tools/ResultDisplay';
@@ -91,6 +92,25 @@ type DataToolOutput = {
   tableId: string;
   query?: string;
   success: boolean;
+  error?: string;
+};
+
+type TableSchemaToolInput = {
+  tableName: string;
+  datasetId?: string;
+  projectId?: string;
+};
+
+type TableSchemaToolOutput = {
+  columns: Array<{
+    column_name: string;
+    data_type: string;
+  }>;
+  success: boolean;
+  tableName: string;
+  datasetId: string;
+  projectId: string;
+  totalColumns: number;
   error?: string;
 };
 
@@ -330,6 +350,10 @@ type NexusToolUIPart = ToolUIPart<{
     input: TablesToolInput;
     output: TablesToolOutput;
   };
+  getTableSchema: {
+    input: TableSchemaToolInput;
+    output: TableSchemaToolOutput;
+  };
   getData: {
     input: DataToolInput;
     output: DataToolOutput;
@@ -538,6 +562,42 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   datasetId={(tablesTool.output as TablesToolOutput).datasetId}
                   success={(tablesTool.output as TablesToolOutput).success}
                   error={(tablesTool.output as TablesToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getTableSchema') {
+          const schemaTool = part as NexusToolUIPart;
+          const callId = schemaTool.toolCallId;
+          const shouldBeOpen = schemaTool.state === 'output-available' || schemaTool.state === 'output-error';
+          
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getTableSchema" state={schemaTool.state} />
+                <ToolContent>
+                  {schemaTool.input && (
+                    <ToolInput input={schemaTool.input} />
+                  )}
+                  {schemaTool.state === 'output-error' && (
+                    <ToolOutput 
+                      output={null}
+                      errorText={schemaTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {schemaTool.state === 'output-available' && (
+                <TableSchema 
+                  columns={(schemaTool.output as TableSchemaToolOutput).columns}
+                  tableName={(schemaTool.output as TableSchemaToolOutput).tableName}
+                  datasetId={(schemaTool.output as TableSchemaToolOutput).datasetId}
+                  projectId={(schemaTool.output as TableSchemaToolOutput).projectId}
+                  totalColumns={(schemaTool.output as TableSchemaToolOutput).totalColumns}
+                  success={(schemaTool.output as TableSchemaToolOutput).success}
+                  error={(schemaTool.output as TableSchemaToolOutput).error}
                 />
               )}
             </div>
