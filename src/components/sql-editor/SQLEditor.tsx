@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Editor } from '@monaco-editor/react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -37,7 +37,7 @@ export default function SQLEditor({
   };
 
   // Execute SQL query
-  const executeSQL = async (querySQL?: string) => {
+  const executeSQL = useCallback(async (querySQL?: string) => {
     const sqlToExecute = querySQL || sql;
     
     if (!sqlToExecute.trim() || readOnly) {
@@ -79,7 +79,7 @@ export default function SQLEditor({
     } finally {
       setIsExecuting(false);
     }
-  };
+  }, [sql, readOnly]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -92,10 +92,10 @@ export default function SQLEditor({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [sql, readOnly]);
+  }, [sql, readOnly, executeSQL]);
 
   // Create table columns dynamically from schema or data
-  const createTableColumns = (schema: QueryResult['schema'], data: Record<string, unknown>[]): ColumnDef<any>[] => {
+  const createTableColumns = (schema: QueryResult['schema'], data: Record<string, unknown>[]): ColumnDef<Record<string, unknown>>[] => {
     if (!schema.length && data.length > 0) {
       // Fallback: infer columns from first row
       return Object.keys(data[0]).map(key => ({
@@ -235,8 +235,8 @@ export default function SQLEditor({
                 </div>
               </div>
               <DataTable
-                columns={createTableColumns(result.schema, result.data) as any}
-                data={result.data as any}
+                columns={createTableColumns(result.schema, result.data) as ColumnDef<Record<string, unknown>>[]}
+                data={result.data as Record<string, unknown>[]}
                 searchPlaceholder="Buscar nos resultados..."
                 pageSize={10}
               />
