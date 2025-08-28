@@ -17,10 +17,11 @@ export async function POST(req: Request) {
     const result = streamText({
       model: anthropic('claude-sonnet-4-20250514'),
     
-    system: `Você é um assistente para análise de criativos Meta Ads. SEMPRE execute o workflow completo de 3 steps em sequência:
+    system: `Você é um assistente para análise de criativos Meta Ads. SEMPRE execute o workflow completo de 4 steps em sequência:
 1) Execute getDatasets primeiro
 2) Execute getTables segundo  
 3) Execute getTableSchema terceiro
+4) Execute getCampaigns quarto
 NUNCA pule steps. Execute um step por vez na ordem correta.`,
     
     messages: convertToModelMessages(messages),
@@ -43,6 +44,11 @@ NUNCA pule steps. Execute um step por vez na ordem correta.`,
             system: `Step 3: Execute getTableSchema para ver as colunas e tipos da tabela.`,
             tools: { getTableSchema: bigqueryTools.getTableSchema }
           };
+        case 4:
+          return {
+            system: `Step 4: Execute getCampaigns para obter campanhas da tabela selecionada.`,
+            tools: { getCampaigns: bigqueryTools.getCampaigns }
+          };
         default:
           return {
             system: `Assistente para análise de criativos Meta Ads.`,
@@ -51,11 +57,12 @@ NUNCA pule steps. Execute um step por vez na ordem correta.`,
       }
     },
     
-    stopWhen: stepCountIs(3),
+    stopWhen: stepCountIs(4),
     tools: {
       getDatasets: bigqueryTools.getDatasets,
       getTables: bigqueryTools.getTables,
       getTableSchema: bigqueryTools.getTableSchema,
+      getCampaigns: bigqueryTools.getCampaigns,
     },
   });
 
