@@ -83,8 +83,8 @@ class BigQueryService {
       this.config = finalConfig
       this.client = new BigQuery(this.getBigQueryOptions(finalConfig))
 
-      // Test connection
-      await this.testConnection()
+      // Skip connection test - same behavior as working tool calls
+      // Test connection will be done on first actual query
       
     } catch (error) {
       console.error('Failed to initialize BigQuery client:', error)
