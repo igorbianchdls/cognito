@@ -378,7 +378,7 @@ Consolide TODOS os insights criativos dos steps anteriores em síntese executiva
     stopWhen: stepCountIs(10),
     providerOptions: {
       anthropic: {
-        thinking: { type: 'enabled', budgetTokens: 128000 }
+        thinking: { type: 'enabled' }
       }
     },
     headers: {
