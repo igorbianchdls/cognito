@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable, createSortableHeader, TableData } from '@/components/widgets/Table';
+import SQLEditor from '../sql-editor/SQLEditor';
 
 interface SQLExecutionProps {
   sqlQuery?: string;
@@ -188,6 +189,17 @@ export default function SQLExecution({
           <p>Nenhum resultado retornado</p>
         </div>
       )}
+
+      {/* TESTE: SQLEditor */}
+      <div className="mt-4">
+        <div className="text-sm font-medium mb-2">🧪 Teste SQLEditor:</div>
+        <SQLEditor 
+          initialSQL={sqlQuery || ''}
+          height="200px"
+          immediateExecute={false}
+          readOnly={false}
+        />
+      </div>
     </div>
   );
 }
