@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Loader2, Play, AlertCircle, CheckCircle } from 'lucide-react';
 import SQLResultsTable from './SQLResultsTable';
-import { executarSQL } from '@/tools/bigquery';
 import type { SQLEditorProps, QueryResult } from './types';
 
 export default function SQLEditor({ 
@@ -48,11 +47,22 @@ export default function SQLEditor({
     setResult(null);
 
     try {
-      // Executar SQL diretamente usando a tool do BigQuery
-      const result = await executarSQL.execute({
-        sqlQuery: sqlToExecute.trim()
+      // Executar SQL via endpoint que roda no servidor
+      const response = await fetch('/api/execute-sql', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sqlQuery: sqlToExecute.trim()
+        }),
       });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
       setResult(result);
     } catch (error) {
       setResult({
