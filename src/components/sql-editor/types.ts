@@ -7,14 +7,20 @@ export interface SQLEditorProps {
 }
 
 export interface QueryResult {
+  sqlQuery: string;
+  datasetId?: string;
+  queryType?: string;
+  dryRun?: boolean;
   data: Record<string, unknown>[];
   schema: QuerySchema[];
   rowsReturned: number;
+  rowsAffected?: number;
+  totalRows?: number;
   executionTime: number;
   bytesProcessed?: number;
   success: boolean;
+  validationErrors?: string[];
   error?: string;
-  sqlQuery?: string;
 }
 
 export interface QuerySchema {
