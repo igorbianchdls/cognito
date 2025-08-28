@@ -1,8 +1,8 @@
 import { atom } from 'nanostores';
 
-export const $lastQueryData = atom<any[] | null>(null);
+export const $lastQueryData = atom<Array<Record<string, unknown>> | null>(null);
 
-export function setLastQueryData(data: any[]) {
+export function setLastQueryData(data: Array<Record<string, unknown>>) {
   $lastQueryData.set(data);
 }
 

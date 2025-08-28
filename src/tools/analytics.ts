@@ -1,24 +1,22 @@
 import { tool } from 'ai';
 import { z } from 'zod';
+import { bigQueryService } from '@/services/bigquery';
 
 
 export const criarGrafico = tool({
-  description: 'Create data visualizations and charts from getData results. CRITICAL INSTRUCTIONS: 1) You MUST first use getData tool to get table data, 2) Copy the EXACT "data" array from getData output, 3) Paste it as tableData parameter - DO NOT make new queries or type data manually',
+  description: 'Execute SQL query and create data visualizations and charts from the results. The tool will execute the SQL query internally and generate the chart automatically.',
   inputSchema: z.object({
-    tableData: z.array(z.record(z.unknown())).describe('PASTE the exact "data" array from previous getData tool output here. This should be an array of objects like [{col1: value1, col2: value2}, ...]. NEVER type this manually - always copy from getData results.'),
+    sqlQuery: z.string().describe('SQL query to execute and get data for chart'),
     chartType: z.enum(['bar', 'line', 'pie', 'scatter', 'area', 'heatmap', 'radar', 'funnel', 'treemap', 'stream']).describe('Type of chart to create'),
     xColumn: z.string().describe('Column name for X-axis'),
     yColumn: z.string().describe('Column name for Y-axis (should be numeric for most charts)'),
     title: z.string().optional().describe('Chart title'),
     groupBy: z.string().optional().describe('Optional column to group/aggregate by - useful for pie charts')
   }),
-  execute: async ({ tableData, chartType, xColumn, yColumn, title, groupBy }) => {
+  execute: async ({ sqlQuery, chartType, xColumn, yColumn, title, groupBy }) => {
     console.log('📊 ===== CRIAR GRAFICO DEBUG START =====');
     console.log('📊 Raw parameters received:', { 
-      hasTableData: !!tableData,
-      tableDataType: typeof tableData,
-      isArray: Array.isArray(tableData),
-      dataLength: tableData ? tableData.length : 0, 
+      sqlQuery,
       chartType, 
       xColumn, 
       yColumn, 
@@ -26,65 +24,40 @@ export const criarGrafico = tool({
       groupBy 
     });
     
-    // EXTENSIVE DEBUG: Log complete data structure
-    if (tableData) {
-      console.log('📊 TableData full structure (first 200 chars):', JSON.stringify(tableData, null, 2).substring(0, 200));
-      
-      if (Array.isArray(tableData) && tableData.length > 0) {
-        console.log('📊 First row complete:', JSON.stringify(tableData[0], null, 2));
-        console.log('📊 Available columns:', Object.keys(tableData[0]));
-        console.log('📊 Total rows in tableData:', tableData.length);
-        console.log('📊 Sample values from first row:');
-        Object.entries(tableData[0]).forEach(([key, value]) => {
-          console.log(`   - ${key}: ${value} (${typeof value})`);
-        });
-      } else if (!Array.isArray(tableData)) {
-        console.log('❌ CRITICAL ERROR: tableData is not an array!', typeof tableData);
-        console.log('📊 Actual tableData value:', tableData);
-      } else {
-        console.log('❌ CRITICAL ERROR: tableData is empty array');
-      }
-    } else {
-      console.log('❌ CRITICAL ERROR: tableData is null/undefined');
-    }
-    
     try {
-      // ENHANCED VALIDATION with detailed error messages
-      if (!tableData) {
-        console.error('❌ VALIDATION FAILED: tableData is null/undefined');
-        return {
-          success: false,
-          error: 'ERROR: No tableData provided. You must copy the "data" array from a previous getData tool result and paste it as the tableData parameter. Do not type it manually.',
-          chartType,
-          xColumn,
-          yColumn,
-          debugInfo: 'tableData was null/undefined'
-        };
+      // Initialize BigQuery service if not already done
+      if (!bigQueryService['client']) {
+        console.log('⚡ Initializing BigQuery service...');
+        await bigQueryService.initialize();
       }
+
+      // Execute SQL query to get data
+      console.log('🔍 Executing SQL query for chart data:', sqlQuery);
+      const startTime = Date.now();
+      const queryResult = await bigQueryService.executeQuery({ 
+        query: sqlQuery,
+        jobTimeoutMs: 30000 
+      });
       
-      if (!Array.isArray(tableData)) {
-        console.error('❌ VALIDATION FAILED: tableData is not an array, received:', typeof tableData);
-        return {
-          success: false,
-          error: `ERROR: tableData must be an array, but received ${typeof tableData}. Copy the exact "data" array from getData results.`,
-          chartType,
-          xColumn,
-          yColumn,
-          debugInfo: `tableData type: ${typeof tableData}, value: ${JSON.stringify(tableData).substring(0, 100)}`
-        };
-      }
-      
+      const executionTime = Date.now() - startTime;
+      console.log('✅ Query completed in', executionTime, 'ms');
+      console.log('📈 Rows returned:', queryResult.data?.length || 0);
+
+      const tableData = queryResult.data || [];
+
       if (tableData.length === 0) {
-        console.error('❌ VALIDATION FAILED: tableData array is empty');
         return {
           success: false,
-          error: 'ERROR: tableData array is empty. Make sure to copy the "data" array from a getData result that contains actual data.',
+          error: 'SQL query returned no data. Please check your query.',
+          sqlQuery,
           chartType,
           xColumn,
-          yColumn,
-          debugInfo: 'tableData was empty array []'
+          yColumn
         };
       }
+
+      console.log('📊 First row from query:', JSON.stringify(tableData[0], null, 2));
+      console.log('📊 Available columns:', Object.keys(tableData[0]));
 
       // Validate columns exist in data
       const firstRow = tableData[0];
@@ -178,11 +151,12 @@ export const criarGrafico = tool({
         xColumn,
         yColumn,
         title: title || `${yColumn} por ${xColumn}`,
+        sqlQuery,
         metadata: {
           totalDataPoints: processedData.length,
           generatedAt: new Date().toISOString(),
-          executionTime: Date.now() - Date.now(), // Instant since no query
-          dataSource: 'table-data'
+          executionTime: executionTime,
+          dataSource: 'bigquery-sql'
         }
       };
 
@@ -192,16 +166,14 @@ export const criarGrafico = tool({
       console.log('📊 ===== CRIAR GRAFICO DEBUG FAILED =====');
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to create chart from table data',
+        error: error instanceof Error ? error.message : 'Failed to execute SQL query and create chart',
+        sqlQuery,
         chartType,
         xColumn,
         yColumn,
         debugInfo: {
           errorType: error instanceof Error ? error.constructor.name : typeof error,
-          errorMessage: error instanceof Error ? error.message : String(error),
-          tableDataReceived: !!tableData,
-          tableDataType: typeof tableData,
-          tableDataLength: tableData ? tableData.length : 'N/A'
+          errorMessage: error instanceof Error ? error.message : String(error)
         }
       };
     }
