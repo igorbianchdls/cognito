@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Loader2, Play, AlertCircle, CheckCircle } from 'lucide-react';
 import SQLResultsTable from './SQLResultsTable';
-import type { SQLEditorProps, QueryResult, ExecuteSQLRequest, ExecuteSQLResponse } from './types';
+import { executarSQL } from '@/tools/bigquery';
+import type { SQLEditorProps, QueryResult } from './types';
 
 export default function SQLEditor({ 
   initialSQL = '', 
@@ -47,33 +48,21 @@ export default function SQLEditor({
     setResult(null);
 
     try {
-      const requestBody: ExecuteSQLRequest = {
+      // Executar SQL diretamente usando a tool do BigQuery
+      const result = await executarSQL.execute({
         sqlQuery: sqlToExecute.trim()
-      };
-
-      const response = await fetch('/api/execute-sql', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data: ExecuteSQLResponse = await response.json();
-      setResult(data);
+      setResult(result);
     } catch (error) {
       setResult({
+        sqlQuery: sqlToExecute,
         data: [],
         schema: [],
         rowsReturned: 0,
         executionTime: 0,
         success: false,
-        error: error instanceof Error ? error.message : 'Erro desconhecido ao executar SQL',
-        sqlQuery: sqlToExecute
+        error: error instanceof Error ? error.message : 'Erro desconhecido ao executar SQL'
       });
     } finally {
       setIsExecuting(false);
