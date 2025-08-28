@@ -17,7 +17,10 @@ export async function POST(req: Request) {
     }
     
     console.log('🔍 Executing SQL query via execute-sql endpoint:', sqlQuery);
-    const result = await bigQueryService.executeQuery({ query: sqlQuery });
+    const result = await bigQueryService.executeQuery({ 
+      query: sqlQuery,
+      location: process.env.BIGQUERY_LOCATION 
+    });
     console.log('✅ SQL query executed successfully via execute-sql, rows:', result.data?.length || 0);
     
     return Response.json({
