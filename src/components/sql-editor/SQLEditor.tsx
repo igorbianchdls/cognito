@@ -68,8 +68,8 @@ export default function SQLEditor({
       setResult({
         ...queryResult,
         sqlQuery: sqlToExecute,
-        rowsReturned: queryResult.data?.length || 0,
-        executionTime: queryResult.executionTime || 0,
+        rowsReturned: queryResult?.data?.length || 0,
+        executionTime: queryResult?.executionTime || 0,
         success: apiResponse.success
       });
     } catch (error) {
