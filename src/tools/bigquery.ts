@@ -250,3 +250,53 @@ export const executarSQL = tool({
     }
   },
 });
+
+export const getTableSchema = tool({
+  description: 'Get complete table schema with all columns and data types from BigQuery',
+  inputSchema: z.object({
+    tableName: z.string().describe('The table name to get schema from'),
+    datasetId: z.string().optional().describe('Dataset ID (default: biquery_data)'),
+    projectId: z.string().optional().describe('Project ID (default: creatto-463117)')
+  }),
+  execute: async ({ tableName, datasetId = 'biquery_data', projectId = 'creatto-463117' }) => {
+    console.log('🔍 Getting table schema for:', tableName);
+    try {
+      // Initialize BigQuery service if not already done
+      if (!bigQueryService['client']) {
+        console.log('⚡ Initializing BigQuery service...');
+        await bigQueryService.initialize();
+      }
+      
+      const query = `
+        SELECT column_name, data_type 
+        FROM \`${projectId}.${datasetId}.INFORMATION_SCHEMA.COLUMNS\`
+        WHERE table_name = '${tableName}'
+        ORDER BY ordinal_position
+      `;
+      
+      console.log('🔍 Executing schema query:', query);
+      const results = await bigQueryService.executeQuery({ query });
+      console.log('✅ Schema retrieved for table:', tableName, 'Columns:', results.data?.length || 0);
+      
+      return {
+        columns: results.data || [],
+        success: true,
+        tableName: tableName,
+        datasetId: datasetId,
+        projectId: projectId,
+        totalColumns: results.data?.length || 0
+      };
+    } catch (error) {
+      console.error('❌ Error getting table schema:', error);
+      return {
+        columns: [],
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get table schema',
+        tableName: tableName,
+        datasetId: datasetId,
+        projectId: projectId,
+        totalColumns: 0
+      };
+    }
+  }
+});
