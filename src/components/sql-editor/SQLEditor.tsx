@@ -21,6 +21,13 @@ export default function SQLEditor({
   const [result, setResult] = useState<QueryResult | null>(null);
   const [activeTab, setActiveTab] = useState('editor');
 
+  // Execute immediately on mount if immediateExecute is true and there's initial SQL
+  useEffect(() => {
+    if (immediateExecute && initialSQL.trim() && !isExecuting && !readOnly) {
+      executeSQL(initialSQL);
+    }
+  }, [immediateExecute, initialSQL, readOnly]);
+
   // Handle SQL changes
   const handleEditorChange = (value: string | undefined) => {
     const newSQL = value || '';
