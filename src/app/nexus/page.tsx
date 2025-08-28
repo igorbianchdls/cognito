@@ -2,7 +2,7 @@
 
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { useStore } from '@nanostores/react';
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
