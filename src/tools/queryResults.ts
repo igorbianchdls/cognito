@@ -1,6 +1,6 @@
 import { tool } from 'ai';
 import { z } from 'zod';
-import { $lastQueryData } from '@/stores/queryStore';
+import { getLastQueryDataWithLog } from '@/stores/queryStore';
 
 export const getLastQueryResults = tool({
   description: 'Get data from the last executed SQL query for analysis. Use this when user asks to analyze data after running a SQL query.',
@@ -10,7 +10,7 @@ export const getLastQueryResults = tool({
     
     try {
       const startTime = Date.now();
-      const data = $lastQueryData.get();
+      const data = getLastQueryDataWithLog();
       
       if (!data || data.length === 0) {
         return {
