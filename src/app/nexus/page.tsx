@@ -248,6 +248,40 @@ export default function Page() {
     }
   };
 
+  // Handler para análise com IA dos dados SQL
+  const handleAnalyzeWithAI = (data: Record<string, unknown>[], query: string) => {
+    console.log('📊 Analisando dados com IA:', { rowCount: data.length, query });
+    
+    // Criar mensagem resumida para o chat (visível)
+    const displayMessage = `[Dados da query para análise - ${data.length} registros]`;
+    
+    // Criar mensagem com dados completos para a IA
+    const analysisMessage = {
+      id: `analysis-${Date.now()}`,
+      role: 'user' as const,
+      parts: [{ 
+        type: 'text' as const, 
+        text: `Analise esses dados da query SQL: "${query}"\n\nDados (${data.length} registros):\n${JSON.stringify(data, null, 2)}`
+      }],
+      agent: selectedAgent
+    };
+
+    // Adicionar mensagem resumida visível ao chat
+    const userMessage = {
+      id: `user-${Date.now()}`,
+      role: 'user' as const,
+      parts: [{ type: 'text' as const, text: displayMessage }],
+      agent: selectedAgent
+    };
+    
+    setAllMessages(prev => [...prev, userMessage]);
+    
+    // Enviar dados completos para a IA (não aparece no chat)
+    sendMessage({ 
+      text: `Analise esses dados da query SQL: "${query}"\n\nDados (${data.length} registros):\n${JSON.stringify(data, null, 2)}`
+    });
+  };
+
   return (
     <SidebarProvider>
       <SidebarShadcn />

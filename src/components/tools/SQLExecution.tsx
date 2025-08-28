@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable, createSortableHeader, TableData } from '@/components/widgets/Table';
+import { Button } from '@/components/ui/button';
 import SQLEditor from '../sql-editor/SQLEditor';
 
 interface SQLExecutionProps {
@@ -24,6 +25,7 @@ interface SQLExecutionProps {
   success?: boolean;
   validationErrors?: string[];
   error?: string;
+  onAnalyzeWithAI?: (data: Array<Record<string, unknown>>, query: string) => void;
 }
 
 export default function SQLExecution({
@@ -40,7 +42,8 @@ export default function SQLExecution({
   bytesProcessed,
   success,
   validationErrors,
-  error
+  error,
+  onAnalyzeWithAI
 }: SQLExecutionProps) {
   // Generate columns dynamically based on schema
   const columns: ColumnDef<TableData>[] = useMemo(() => {
@@ -177,6 +180,18 @@ export default function SQLExecution({
             searchPlaceholder="Filtrar resultados..."
             pageSize={15}
           />
+          
+          {/* Análise com IA button */}
+          {onAnalyzeWithAI && data && data.length > 0 && (
+            <div className="mt-4 flex justify-end">
+              <Button 
+                onClick={() => onAnalyzeWithAI(data, sqlQuery || '')}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                📊 Analisar com IA
+              </Button>
+            </div>
+          )}
         </div>
       )}
 
@@ -188,6 +203,7 @@ export default function SQLExecution({
           height="200px"
           immediateExecute={true}
           readOnly={false}
+          onAnalyzeWithAI={onAnalyzeWithAI}
         />
       </div>
     </div>

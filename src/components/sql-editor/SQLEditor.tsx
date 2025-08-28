@@ -15,7 +15,8 @@ export default function SQLEditor({
   autoExecute = false,
   immediateExecute = false,
   height = '200px',
-  readOnly = false
+  readOnly = false,
+  onAnalyzeWithAI
 }: SQLEditorProps) {
   const [sql, setSQL] = useState(initialSQL);
   const [isExecuting, setIsExecuting] = useState(false);
@@ -193,11 +194,23 @@ export default function SQLEditor({
           
           <TabsContent value="results" className="mt-4">
             {result && result.success && result.data && result.data.length > 0 && (
-              <SQLResultsTable
-                data={result.data}
-                schema={result.schema}
-                pageSize={10}
-              />
+              <div className="space-y-4">
+                <SQLResultsTable
+                  data={result.data}
+                  schema={result.schema}
+                  pageSize={10}
+                />
+                {onAnalyzeWithAI && (
+                  <div className="flex justify-end">
+                    <Button 
+                      onClick={() => onAnalyzeWithAI(result.data, sql)}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      📊 Analisar com IA
+                    </Button>
+                  </div>
+                )}
+              </div>
             )}
           </TabsContent>
     </Tabs>

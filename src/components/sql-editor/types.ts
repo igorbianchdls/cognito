@@ -5,6 +5,7 @@ export interface SQLEditorProps {
   immediateExecute?: boolean;
   height?: string;
   readOnly?: boolean;
+  onAnalyzeWithAI?: (data: Record<string, unknown>[], query: string) => void;
 }
 
 export interface QueryResult {
