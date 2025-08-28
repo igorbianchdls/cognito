@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Play } from 'lucide-react';
 import SQLResultsTable from './SQLResultsTable';
 import type { SQLEditorProps, QueryResult } from './types';
+import { setLastQueryData } from '@/stores/queryStore';
 
 export default function SQLEditor({ 
   initialSQL = '', 
@@ -91,6 +92,10 @@ export default function SQLEditor({
       // Auto-switch to results tab on successful execution
       if (apiResponse.success) {
         setActiveTab('results');
+        // Save data to global store for AI access
+        if (apiResponse.data) {
+          setLastQueryData(apiResponse.data);
+        }
       }
     } catch (error) {
       setResult({

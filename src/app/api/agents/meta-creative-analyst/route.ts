@@ -1,6 +1,7 @@
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
 import * as bigqueryTools from '@/tools/bigquery';
+import * as queryResultsTools from '@/tools/queryResults';
 
 export const maxDuration = 60;
 
@@ -15,7 +16,7 @@ export async function POST(req: Request) {
     const result = streamText({
       model: anthropic('claude-sonnet-4-20250514'),
     
-    system: `Você é um especialista em SQL para dados Meta Ads. Seu objetivo é gerar consultas SQL precisas.
+    system: `Você é um especialista em SQL para dados Meta Ads. Seu objetivo é gerar consultas SQL precisas e analisar dados.
 
 REGRAS IMPORTANTES:
 - NUNCA invente nomes de tabelas ou colunas no SELECT ou FROM
@@ -24,9 +25,13 @@ REGRAS IMPORTANTES:
   2) getTables - para ver tabelas no dataset  
   3) getTableSchema - para ver colunas exatas da tabela
 - Depois use executarSQL para executar a query
-- NÃO interprete dados, apenas gere SQL correto
+- NOVA FUNCIONALIDADE: Use getLastQueryResults para acessar dados já executados
+  - Quando o usuário pedir "analise esses dados" ou similar
+  - Esta tool acessa os dados da última query executada no SQLEditor
+  - Use para análises, insights e interpretações dos dados
 
-Execute os 3 primeiros steps em sequência, depois use executarSQL quando necessário.`,
+Execute os 3 primeiros steps em sequência, depois use executarSQL quando necessário.
+Para análises, use getLastQueryResults para acessar dados já executados.`,
     
     messages: convertToModelMessages(messages),
     
@@ -61,6 +66,7 @@ Execute os 3 primeiros steps em sequência, depois use executarSQL quando necess
       getTables: bigqueryTools.getTables,
       getTableSchema: bigqueryTools.getTableSchema,
       executarSQL: bigqueryTools.executarSQL,
+      getLastQueryResults: queryResultsTools.getLastQueryResults,
     },
   });
 
