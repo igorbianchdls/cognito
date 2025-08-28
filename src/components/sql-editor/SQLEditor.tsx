@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Editor } from '@monaco-editor/react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -19,7 +19,6 @@ export default function SQLEditor({
   const [sql, setSQL] = useState(initialSQL);
   const [isExecuting, setIsExecuting] = useState(false);
   const [result, setResult] = useState<QueryResult | null>(null);
-  const editorRef = useRef(null);
 
   // Handle SQL changes
   const handleEditorChange = (value: string | undefined) => {
@@ -155,7 +154,6 @@ export default function SQLEditor({
 
         <div className="border rounded-md overflow-hidden">
           <Editor
-            ref={editorRef}
             height={height}
             defaultLanguage="sql"
             value={sql}
