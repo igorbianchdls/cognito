@@ -63,7 +63,12 @@ export default function SQLEditor({
       }
 
       const result = await response.json();
-      setResult(result);
+      setResult({
+        ...result,
+        sqlQuery: sqlToExecute,
+        rowsReturned: result.data?.length || 0,
+        executionTime: 0
+      });
     } catch (error) {
       setResult({
         sqlQuery: sqlToExecute,
