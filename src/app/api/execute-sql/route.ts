@@ -1,4 +1,4 @@
-import { executarSQL } from '@/tools/bigquery';
+import { bigQueryService } from '@/services/bigquery';
 
 export const maxDuration = 60;
 
@@ -21,18 +21,67 @@ export async function POST(req: Request) {
       }, { status: 400 });
     }
 
-    console.log('📘 EXECUTE-SQL API: Executando SQL via tool existente:', sqlQuery);
+    console.log('📘 EXECUTE-SQL API: Executando SQL:', sqlQuery);
 
-    // Usar a tool existente que já funciona nos agentes (roda no servidor)
-    const result = await executarSQL.execute({
-      sqlQuery: sqlQuery.trim()
-    });
+    // Lógica extraída da tool executarSQL - mesma implementação
+    try {
+      // Initialize BigQuery service if not already done
+      if (!bigQueryService['client']) {
+        console.log('⚡ Initializing BigQuery service...');
+        await bigQueryService.initialize();
+      }
 
-    console.log('✅ EXECUTE-SQL API: Tool executada com sucesso:', result.success);
-    console.log('📊 EXECUTE-SQL API: Linhas retornadas:', result.rowsReturned);
-    console.log('⏱️ EXECUTE-SQL API: Tempo de execução:', result.executionTime, 'ms');
+      const queryType = sqlQuery.trim().toLowerCase().split(' ')[0];
+      const startTime = Date.now();
 
-    return Response.json(result);
+      // Execute the actual query
+      console.log('🔍 Executing SQL query:', sqlQuery);
+      const result = await bigQueryService.executeQuery({ query: sqlQuery });
+      
+      const executionTime = Date.now() - startTime;
+      console.log('✅ SQL query executed successfully in', executionTime, 'ms');
+      console.log('📈 Rows returned:', result.data?.length || 0);
+
+      const response = {
+        sqlQuery,
+        datasetId: 'default-dataset',
+        queryType: queryType.toUpperCase(),
+        dryRun: false,
+        data: result.data || [],
+        schema: result.schema || [],
+        rowsReturned: result.data?.length || 0,
+        rowsAffected: queryType.includes('insert') || queryType.includes('update') || queryType.includes('delete') ? result.data?.length || 0 : 0,
+        totalRows: result.totalRows || 0,
+        executionTime,
+        bytesProcessed: result.bytesProcessed || 0,
+        success: true,
+        validationErrors: []
+      };
+
+      return Response.json(response);
+
+    } catch (error) {
+      console.error('❌ Error executing SQL query:', error);
+      
+      const errorResponse = {
+        sqlQuery,
+        datasetId: 'default-dataset',
+        queryType: sqlQuery.trim().toLowerCase().split(' ')[0].toUpperCase(),
+        dryRun: false,
+        data: [],
+        schema: [],
+        rowsReturned: 0,
+        rowsAffected: 0,
+        totalRows: 0,
+        executionTime: 0,
+        bytesProcessed: 0,
+        success: false,
+        validationErrors: [],
+        error: error instanceof Error ? error.message : 'Failed to execute SQL query'
+      };
+
+      return Response.json(errorResponse, { status: 500 });
+    }
 
   } catch (error) {
     console.error('❌ EXECUTE-SQL API ERROR:', error);
@@ -41,7 +90,7 @@ export async function POST(req: Request) {
     return Response.json({
       sqlQuery: '',
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to execute SQL query',
+      error: error instanceof Error ? error.message : 'Request processing failed',
       data: [],
       schema: [],
       rowsReturned: 0,
