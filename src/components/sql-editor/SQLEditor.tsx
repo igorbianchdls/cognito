@@ -95,7 +95,7 @@ export default function SQLEditor({
   }, [sql, readOnly]);
 
   // Create table columns dynamically from schema or data
-  const createTableColumns = (schema: QueryResult['schema'], data: Record<string, unknown>[]): ColumnDef<Record<string, unknown>>[] => {
+  const createTableColumns = (schema: QueryResult['schema'], data: Record<string, unknown>[]): ColumnDef<any>[] => {
     if (!schema.length && data.length > 0) {
       // Fallback: infer columns from first row
       return Object.keys(data[0]).map(key => ({
@@ -235,8 +235,8 @@ export default function SQLEditor({
                 </div>
               </div>
               <DataTable
-                columns={createTableColumns(result.schema, result.data)}
-                data={result.data}
+                columns={createTableColumns(result.schema, result.data) as any}
+                data={result.data as any}
                 searchPlaceholder="Buscar nos resultados..."
                 pageSize={10}
               />
