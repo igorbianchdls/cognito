@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Editor } from '@monaco-editor/react';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, Play } from 'lucide-react';
 import SQLResultsTable from './SQLResultsTable';
 import type { SQLEditorProps, QueryResult } from './types';
 
@@ -129,27 +131,43 @@ export default function SQLEditor({
           </TabsList>
           
           <TabsContent value="editor" className="mt-4">
-
-            <Editor
-              height={height}
-              defaultLanguage="sql"
-              value={sql}
-              onChange={handleEditorChange}
-              theme="vs-light"
-              options={{
-                readOnly,
-                minimap: { enabled: false },
-                scrollBeyondLastLine: false,
-                fontSize: 14,
-                lineNumbers: 'on',
-                wordWrap: 'on',
-                automaticLayout: true,
-                tabSize: 2,
-                insertSpaces: true,
-                formatOnPaste: true,
-                formatOnType: true,
-              }}
-            />
+            <div className="relative">
+              <Editor
+                height={height}
+                defaultLanguage="sql"
+                value={sql}
+                onChange={handleEditorChange}
+                theme="vs-light"
+                options={{
+                  readOnly,
+                  minimap: { enabled: false },
+                  scrollBeyondLastLine: false,
+                  fontSize: 14,
+                  lineNumbers: 'on',
+                  wordWrap: 'on',
+                  automaticLayout: true,
+                  tabSize: 2,
+                  insertSpaces: true,
+                  formatOnPaste: true,
+                  formatOnType: true,
+                }}
+              />
+              
+              {!readOnly && (
+                <Button
+                  onClick={() => executeSQL()}
+                  disabled={isExecuting || !sql.trim()}
+                  className="absolute left-2 top-1/2 transform -translate-y-1/2 z-10 h-8 w-8 p-0 rounded-full bg-blue-500 hover:bg-blue-600 border-0 shadow-md"
+                  size="sm"
+                >
+                  {isExecuting ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  ) : (
+                    <Play className="h-4 w-4 text-white ml-0.5" />
+                  )}
+                </Button>
+              )}
+            </div>
             
             {/* Show errors in editor tab */}
             {result && !result.success && result.error && (
