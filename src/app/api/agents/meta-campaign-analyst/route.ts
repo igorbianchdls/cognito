@@ -1,4 +1,5 @@
 import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
+import { anthropic } from '@ai-sdk/anthropic';
 import * as bigqueryTools from '@/tools/bigquery';
 import * as analyticsTools from '@/tools/analytics';
 import * as utilitiesTools from '@/tools/utilities';
@@ -12,9 +13,9 @@ export async function POST(req: Request) {
     const { messages }: { messages: UIMessage[] } = await req.json();
     console.log('📘 META CAMPAIGN ANALYST API: Messages:', messages?.length);
 
-    console.log('📘 META CAMPAIGN ANALYST API: Iniciando streamText com Grok 4...');
+    console.log('📘 META CAMPAIGN ANALYST API: Iniciando streamText com Claude Sonnet 4...');
     const result = streamText({
-      model: 'grok-4',
+      model: anthropic('claude-sonnet-4-20250514'),
     
     // Sistema estratégico completo
     system: `# Campaign Performance Analyst - System Core
