@@ -300,3 +300,86 @@ export const getTableSchema = tool({
     }
   }
 });
+
+export const getCampaigns = tool({
+  description: 'Get campaigns from Meta Ads table with aggregated metrics',
+  inputSchema: z.object({
+    tableName: z.string().describe('The table name to get campaigns from'),
+    datasetId: z.string().optional().describe('Dataset ID (default: biquery_data)'),
+    projectId: z.string().optional().describe('Project ID (default: creatto-463117)'),
+    limit: z.number().optional().describe('Maximum number of campaigns to return (default: 100)'),
+    dateRange: z.object({
+      startDate: z.string().optional().describe('Start date (YYYY-MM-DD)'),
+      endDate: z.string().optional().describe('End date (YYYY-MM-DD)')
+    }).optional().describe('Date range filter'),
+    orderBy: z.string().optional().describe('Order by field (default: total_spend DESC)')
+  }),
+  execute: async ({ 
+    tableName, 
+    datasetId = 'biquery_data', 
+    projectId = 'creatto-463117', 
+    limit = 100,
+    dateRange,
+    orderBy = 'total_spend DESC'
+  }) => {
+    console.log('🚀 Getting campaigns for table:', tableName);
+    try {
+      // Initialize BigQuery service if not already done
+      if (!bigQueryService['client']) {
+        console.log('⚡ Initializing BigQuery service...');
+        await bigQueryService.initialize();
+      }
+      
+      let whereClause = '';
+      if (dateRange?.startDate || dateRange?.endDate) {
+        const conditions = [];
+        if (dateRange.startDate) conditions.push(`date >= '${dateRange.startDate}'`);
+        if (dateRange.endDate) conditions.push(`date <= '${dateRange.endDate}'`);
+        whereClause = `WHERE ${conditions.join(' AND ')}`;
+      }
+      
+      const query = `
+        SELECT 
+          campaign_id,
+          campaign_name,
+          account_name,
+          COUNT(DISTINCT date) as days_active,
+          SUM(impressions) as total_impressions,
+          SUM(spend) as total_spend,
+          SUM(clicks) as total_clicks,
+          ROUND(SUM(clicks) / NULLIF(SUM(impressions), 0) * 100, 2) as ctr,
+          ROUND(SUM(spend) / NULLIF(SUM(clicks), 0), 2) as cpc
+        FROM \`${projectId}.${datasetId}.${tableName}\`
+        ${whereClause}
+        GROUP BY campaign_id, campaign_name, account_name
+        ORDER BY ${orderBy}
+        LIMIT ${limit}
+      `;
+      
+      console.log('🔍 Executing campaigns query:', query);
+      const results = await bigQueryService.executeQuery({ query });
+      console.log('✅ Campaigns retrieved:', results.data?.length || 0);
+      
+      return {
+        campaigns: results.data || [],
+        success: true,
+        tableName: tableName,
+        datasetId: datasetId,
+        projectId: projectId,
+        totalCampaigns: results.data?.length || 0,
+        dateRange: dateRange
+      };
+    } catch (error) {
+      console.error('❌ Error getting campaigns:', error);
+      return {
+        campaigns: [],
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get campaigns',
+        tableName: tableName,
+        datasetId: datasetId,
+        projectId: projectId,
+        totalCampaigns: 0
+      };
+    }
+  }
+});

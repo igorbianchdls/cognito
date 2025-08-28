@@ -14,6 +14,7 @@ import WeatherCard from '../tools/WeatherCard';
 import DatasetsList from '../tools/DatasetsList';
 import TablesList from '../tools/TablesList';
 import TableSchema from '../tools/TableSchema';
+import CampaignsList from '../tools/CampaignsList';
 import TableData from '../tools/TableData';
 import ChartVisualization from '../tools/ChartVisualization';
 import ResultDisplay from '../tools/ResultDisplay';
@@ -111,6 +112,42 @@ type TableSchemaToolOutput = {
   datasetId: string;
   projectId: string;
   totalColumns: number;
+  error?: string;
+};
+
+type GetCampaignsToolInput = {
+  tableName: string;
+  datasetId?: string;
+  projectId?: string;
+  limit?: number;
+  dateRange?: {
+    startDate?: string;
+    endDate?: string;
+  };
+  orderBy?: string;
+};
+
+type GetCampaignsToolOutput = {
+  campaigns: Array<{
+    campaign_id: string;
+    campaign_name: string;
+    account_name: string;
+    days_active: number;
+    total_impressions: number;
+    total_spend: number;
+    total_clicks: number;
+    ctr: number;
+    cpc: number;
+  }>;
+  success: boolean;
+  tableName: string;
+  datasetId: string;
+  projectId: string;
+  totalCampaigns: number;
+  dateRange?: {
+    startDate?: string;
+    endDate?: string;
+  };
   error?: string;
 };
 
@@ -353,6 +390,10 @@ type NexusToolUIPart = ToolUIPart<{
   getTableSchema: {
     input: TableSchemaToolInput;
     output: TableSchemaToolOutput;
+  };
+  getCampaigns: {
+    input: GetCampaignsToolInput;
+    output: GetCampaignsToolOutput;
   };
   getData: {
     input: DataToolInput;
@@ -598,6 +639,43 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   totalColumns={(schemaTool.output as TableSchemaToolOutput).totalColumns}
                   success={(schemaTool.output as TableSchemaToolOutput).success}
                   error={(schemaTool.output as TableSchemaToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getCampaigns') {
+          const campaignsTool = part as NexusToolUIPart;
+          const callId = campaignsTool.toolCallId;
+          const shouldBeOpen = campaignsTool.state === 'output-available' || campaignsTool.state === 'output-error';
+          
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getCampaigns" state={campaignsTool.state} />
+                <ToolContent>
+                  {campaignsTool.input && (
+                    <ToolInput input={campaignsTool.input} />
+                  )}
+                  {campaignsTool.state === 'output-error' && (
+                    <ToolOutput 
+                      output={null}
+                      errorText={campaignsTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {campaignsTool.state === 'output-available' && (
+                <CampaignsList 
+                  campaigns={(campaignsTool.output as GetCampaignsToolOutput).campaigns}
+                  tableName={(campaignsTool.output as GetCampaignsToolOutput).tableName}
+                  datasetId={(campaignsTool.output as GetCampaignsToolOutput).datasetId}
+                  projectId={(campaignsTool.output as GetCampaignsToolOutput).projectId}
+                  totalCampaigns={(campaignsTool.output as GetCampaignsToolOutput).totalCampaigns}
+                  dateRange={(campaignsTool.output as GetCampaignsToolOutput).dateRange}
+                  success={(campaignsTool.output as GetCampaignsToolOutput).success}
+                  error={(campaignsTool.output as GetCampaignsToolOutput).error}
                 />
               )}
             </div>
