@@ -13,6 +13,7 @@ export default function SQLEditor({
   initialSQL = '', 
   onSQLChange,
   autoExecute = false,
+  immediateExecute = false,
   height = '200px',
   readOnly = false
 }: SQLEditorProps) {
@@ -27,7 +28,13 @@ export default function SQLEditor({
     setSQL(newSQL);
     onSQLChange?.(newSQL);
     
-    // Auto-execute with debounce
+    // Immediate execution for AI agents
+    if (immediateExecute && newSQL.trim() && !isExecuting && !readOnly) {
+      executeSQL(newSQL);
+      return;
+    }
+    
+    // Auto-execute with debounce for manual typing
     if (autoExecute && newSQL.trim() && !isExecuting && !readOnly) {
       const timeout = setTimeout(() => {
         executeSQL(newSQL);
@@ -168,7 +175,10 @@ export default function SQLEditor({
 
             {!readOnly && (
               <div className="mt-2 text-xs text-gray-500">
-                Dica: Use Ctrl+Enter para executar rapidamente
+                {immediateExecute 
+                  ? 'Execução automática ativada • Ctrl+Enter para executar manualmente'
+                  : 'Dica: Use Ctrl+Enter para executar rapidamente'
+                }
               </div>
             )}
             

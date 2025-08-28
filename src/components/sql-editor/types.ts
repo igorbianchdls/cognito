@@ -2,6 +2,7 @@ export interface SQLEditorProps {
   initialSQL?: string;
   onSQLChange?: (sql: string) => void;
   autoExecute?: boolean;
+  immediateExecute?: boolean;
   height?: string;
   readOnly?: boolean;
 }
