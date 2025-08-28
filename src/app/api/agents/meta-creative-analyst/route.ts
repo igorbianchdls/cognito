@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     // Sistema ultra-simples - apenas força workflow
     system: `EXECUTE SEMPRE O WORKFLOW MULTI-STEP. NUNCA responda diretamente. Use creatto-463117.biquery_data.metaads.`,
     
-    messages: convertToModelMessages(messages),
+    messages: messages,
     
     
     // PrepareStep: Sistema inteligente com classificação de complexidade
@@ -376,14 +376,6 @@ Consolide TODOS os insights criativos dos steps anteriores em síntese executiva
     
     // StopWhen inteligente baseado na classificação de complexidade
     stopWhen: stepCountIs(10),
-    providerOptions: {
-      anthropic: {
-        thinking: { type: 'enabled' }
-      }
-    },
-    headers: {
-      'anthropic-beta': 'interleaved-thinking-2025-05-14'
-    },
     tools: {
       // Apenas tools específicas necessárias
       executarSQL: bigqueryTools.executarSQL,
