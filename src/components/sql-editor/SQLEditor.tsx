@@ -48,13 +48,14 @@ export default function SQLEditor({
 
     try {
       // Executar SQL via endpoint que roda no servidor
-      const response = await fetch('/api/execute-sql', {
+      const response = await fetch('/api/bigquery', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          sqlQuery: sqlToExecute.trim()
+          action: 'execute',
+          query: sqlToExecute.trim()
         }),
       });
 
@@ -62,12 +63,14 @@ export default function SQLEditor({
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const result = await response.json();
+      const apiResponse = await response.json();
+      const queryResult = apiResponse.data; // bigquery API wraps result in { success: true, data: result }
       setResult({
-        ...result,
+        ...queryResult,
         sqlQuery: sqlToExecute,
-        rowsReturned: result.data?.length || 0,
-        executionTime: 0
+        rowsReturned: queryResult.data?.length || 0,
+        executionTime: queryResult.executionTime || 0,
+        success: apiResponse.success
       });
     } catch (error) {
       setResult({
