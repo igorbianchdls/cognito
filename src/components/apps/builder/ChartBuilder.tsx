@@ -158,19 +158,14 @@ export default function ChartBuilder({
 
       {/* Content */}
       <ScrollArea className="flex-1">
-        <div className="p-4 space-y-4">
-          {/* Drop Zones Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <ArrowRight className="w-4 h-4" />
-                Configuração de Dados
-              </CardTitle>
-              <CardDescription>
-                Arraste colunas das tabelas para os eixos
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
+        <div className="px-3 py-2 space-y-6">
+          {/* Drop Zones Section */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 px-2">
+              <ArrowRight className="w-4 h-4 text-muted-foreground" />
+              <h3 className="text-sm font-medium">Configuração de Dados</h3>
+            </div>
+            <div className="space-y-3 px-2">
               {/* Eixo X (Dimensions) */}
               <DropZone
                 id="x-axis-drop-zone"
@@ -203,44 +198,35 @@ export default function ChartBuilder({
                 acceptedTypes={['string', 'date', 'numeric', 'boolean']}
                 onRemoveField={(fieldName) => handleRemoveField('filters', fieldName)}
               />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          {/* Chart Type Selection Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <PieChart className="w-4 h-4" />
-                Tipo de Gráfico
-              </CardTitle>
-              <CardDescription>
-                Selecione o tipo de visualização
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-3">
-                {chartTypes.map((type) => (
-                  <Card
-                    key={type.id}
-                    className={`cursor-pointer transition-all hover:shadow-md ${
-                      data.chartType === type.id
-                        ? 'ring-2 ring-primary border-primary bg-accent'
-                        : 'hover:border-primary/30'
-                    }`}
-                    onClick={() => onChartTypeChange(type.id)}
-                  >
-                    <CardContent className="p-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        {type.icon}
-                        <span className="font-medium text-sm">{type.label}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{type.description}</p>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          {/* Chart Type Selection */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 px-2">
+              <PieChart className="w-4 h-4 text-muted-foreground" />
+              <h3 className="text-sm font-medium">Tipo de Gráfico</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-2 px-2">
+              {chartTypes.map((type) => (
+                <div
+                  key={type.id}
+                  className={`p-3 rounded-lg cursor-pointer transition-all ${
+                    data.chartType === type.id
+                      ? 'bg-accent border border-primary/30'
+                      : 'bg-background hover:bg-muted/30 border border-transparent hover:border-primary/20'
+                  }`}
+                  onClick={() => onChartTypeChange(type.id)}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    {type.icon}
+                    <span className="font-medium text-sm">{type.label}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{type.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
 
           <ChartPreview
             xAxis={data.xAxis}
@@ -254,57 +240,51 @@ export default function ChartBuilder({
             }}
           />
 
-          {/* Actions Card */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="space-y-4">
-                <Button
-                  onClick={handleAddToDashboard}
-                  disabled={!isConfigValid || previewData.length === 0}
-                  className="w-full gap-2"
-                  size="lg"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add to Dashboard
-                </Button>
+          {/* Actions Section */}
+          <div className="space-y-4 px-2">
+            <Button
+              onClick={handleAddToDashboard}
+              disabled={!isConfigValid || previewData.length === 0}
+              className="w-full gap-2"
+              size="lg"
+            >
+              <Plus className="w-4 h-4" />
+              Add to Dashboard
+            </Button>
 
-                {/* Configuration Summary */}
-                {isConfigValid && (
-                  <Card className="bg-muted/50">
-                    <CardContent className="p-4">
-                      <div className="text-sm">
-                        <CardTitle className="text-sm mb-2">Configuração</CardTitle>
-                        <div className="space-y-1 text-xs text-muted-foreground">
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">Table</Badge>
-                            <code className="bg-background px-1 rounded text-xs">{data.selectedTable}</code>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">Eixo X</Badge>
-                            <code className="bg-background px-1 rounded text-xs">{data.xAxis.map(r => r.name).join(', ')}</code>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">Eixo Y</Badge>
-                            <code className="bg-background px-1 rounded text-xs">{data.yAxis.map(c => c.name).join(', ')}</code>
-                          </div>
-                          {data.filters.length > 0 && (
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-xs">Filters</Badge>
-                              <code className="bg-background px-1 rounded text-xs">{data.filters.map(f => f.name).join(', ')}</code>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-2">
-                            <Badge variant="outline" className="text-xs">Chart</Badge>
-                            <code className="bg-background px-1 rounded text-xs">{data.chartType}</code>
-                          </div>
-                        </div>
+            {/* Configuration Summary */}
+            {isConfigValid && (
+              <div className="p-3 rounded-lg bg-muted/30">
+                <div className="text-sm">
+                  <h4 className="text-sm font-medium mb-2">Configuração</h4>
+                  <div className="space-y-1 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">Table</Badge>
+                      <code className="bg-background px-1 rounded text-xs">{data.selectedTable}</code>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">Eixo X</Badge>
+                      <code className="bg-background px-1 rounded text-xs">{data.xAxis.map(r => r.name).join(', ')}</code>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">Eixo Y</Badge>
+                      <code className="bg-background px-1 rounded text-xs">{data.yAxis.map(c => c.name).join(', ')}</code>
+                    </div>
+                    {data.filters.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">Filters</Badge>
+                        <code className="bg-background px-1 rounded text-xs">{data.filters.map(f => f.name).join(', ')}</code>
                       </div>
-                    </CardContent>
-                  </Card>
-                )}
+                    )}
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">Chart</Badge>
+                      <code className="bg-background px-1 rounded text-xs">{data.chartType}</code>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </div>
         </div>
       </ScrollArea>
     </div>

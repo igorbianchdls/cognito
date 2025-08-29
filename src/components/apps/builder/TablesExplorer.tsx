@@ -219,20 +219,20 @@ export default function TablesExplorer() {
 
                     {/* Expandable Columns Section */}
                     {isExpanded && (
-                      <div className="ml-6 mt-1 mb-2">
+                      <div className="mt-1 mb-2">
                         {isLoadingThisSchema ? (
-                          <div className="flex items-center gap-2 text-muted-foreground py-2 px-2">
+                          <div className="flex items-center gap-2 text-muted-foreground py-2">
                             <RefreshCw className="w-4 h-4 animate-spin" />
                             <span className="text-sm">Carregando colunas...</span>
                           </div>
                         ) : schemaError ? (
-                          <div className="flex items-center gap-2 px-2 py-2 text-destructive">
+                          <div className="flex items-center gap-2 py-2 text-destructive">
                             <AlertCircle className="w-4 h-4" />
                             <span className="text-sm">{schemaError}</span>
                           </div>
                         ) : schema ? (
                           <div className="space-y-1">
-                            <div className="px-2 py-1">
+                            <div className="py-1">
                               <span className="text-xs text-muted-foreground">
                                 {schema.length} columns - drag to Chart Builder →
                               </span>
@@ -250,7 +250,7 @@ export default function TablesExplorer() {
                             </ScrollArea>
                           </div>
                         ) : (
-                          <p className="text-sm text-muted-foreground py-2 px-2">
+                          <p className="text-sm text-muted-foreground py-2">
                             Click to load columns
                           </p>
                         )}
