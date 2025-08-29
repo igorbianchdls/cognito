@@ -305,7 +305,8 @@ export default function ChartBuilder({
               </div>
             </CardContent>
           </Card>
-      </div>
+        </div>
+      </ScrollArea>
     </div>
   )
 }
