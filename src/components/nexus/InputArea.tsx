@@ -11,7 +11,7 @@ import {
   PromptInputToolbar,
   PromptInputTools,
 } from '@/components/ai-elements/prompt-input';
-import { GlobeIcon, MicIcon } from 'lucide-react';
+import { GlobeIcon, MicIcon, Plus } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import type { ChatStatus } from 'ai';
 import AgentDropdown from './AgentDropdown';
@@ -79,6 +79,23 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
   
   console.log('🎤 [InputArea] Agent via prop:', selectedAgent);
 
+  // Função para handle upload de documentos
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      const fileInfo = `[Documento: ${file.name}]\n${content}`;
+      setInput(input + (input ? '\n\n' : '') + fileInfo);
+    };
+    reader.readAsText(file);
+    
+    // Reset input file
+    event.target.value = '';
+  };
+
   // Handler que detecta quando o usuário digita "/" para mostrar o dropdown de agentes
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
@@ -144,6 +161,20 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
         />
       <PromptInputToolbar>
         <PromptInputTools>
+          <PromptInputButton asChild>
+            <label htmlFor="file-upload" className="cursor-pointer">
+              <Plus size={16} />
+            </label>
+          </PromptInputButton>
+          
+          <input
+            id="file-upload"
+            type="file"
+            accept=".pdf,.doc,.docx,.txt"
+            className="hidden"
+            onChange={handleFileUpload}
+          />
+
           <PromptInputButton>
             <MicIcon size={16} />
           </PromptInputButton>
