@@ -2,6 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { Table2, Database, RefreshCw, AlertCircle, ChevronRight, ChevronDown } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
 import DraggableColumn from './DraggableColumn'
 
 export interface BigQueryField {
@@ -116,132 +121,161 @@ export default function TablesExplorer() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-white">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Database className="w-5 h-5 text-blue-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Tables</h2>
-            <span className="text-sm text-gray-500">({tables.length})</span>
+    <div className="h-full flex flex-col">
+      {/* Header Card */}
+      <Card className="border-0 border-b rounded-none">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
+                <Database className="w-5 h-5 text-primary" />
+                <CardTitle className="text-lg">Tables</CardTitle>
+                <Badge variant="secondary" className="text-xs">
+                  {tables.length}
+                </Badge>
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={loadTables}
+              disabled={loading}
+              className="gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
           </div>
-          <button
-            onClick={loadTables}
-            disabled={loading}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
-        </div>
-      </div>
+          <CardDescription>
+            Arraste colunas para o Chart Builder
+          </CardDescription>
+        </CardHeader>
+      </Card>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1">
         {loading && tables.length === 0 ? (
           <div className="flex items-center justify-center h-32">
-            <div className="flex items-center gap-2 text-gray-500">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <RefreshCw className="w-4 h-4 animate-spin" />
               <span>Carregando tabelas...</span>
             </div>
           </div>
         ) : error ? (
           <div className="p-4">
-            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
-              <AlertCircle className="w-4 h-4" />
-              <span className="text-sm">{error}</span>
-            </div>
+            <Card className="border-destructive">
+              <CardContent className="flex items-center gap-2 p-3">
+                <AlertCircle className="w-4 h-4 text-destructive" />
+                <span className="text-sm text-destructive">{error}</span>
+              </CardContent>
+            </Card>
           </div>
         ) : tables.length === 0 ? (
           <div className="flex items-center justify-center h-32">
-            <div className="text-center text-gray-500">
+            <div className="text-center text-muted-foreground">
               <Table2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm">Nenhuma tabela encontrada</p>
             </div>
           </div>
         ) : (
-          <div className="p-4 space-y-2">
-            {tables.map((table) => {
-              const tableId = table.TABLEID || table.tableId || ''
-              const numRows = table.NUMROWS || table.numRows
-              const isExpanded = selectedTableId === tableId
-              const isLoadingThisSchema = loadingSchema === tableId
-              const schema = tableSchemas[tableId]
-              
-              return (
-                <div
-                  key={tableId}
-                  className="border border-gray-200 rounded-lg hover:border-blue-300 transition-all"
-                >
-                  {/* Table Header - Clickable */}
-                  <div
-                    onClick={() => handleTableClick(tableId)}
-                    className="p-3 cursor-pointer flex items-center justify-between"
+          <ScrollArea className="h-[calc(100vh-8rem)]">
+            <div className="p-4 space-y-3">
+              {tables.map((table) => {
+                const tableId = table.TABLEID || table.tableId || ''
+                const numRows = table.NUMROWS || table.numRows
+                const isExpanded = selectedTableId === tableId
+                const isLoadingThisSchema = loadingSchema === tableId
+                const schema = tableSchemas[tableId]
+                
+                return (
+                  <Card
+                    key={tableId}
+                    className={`transition-all hover:shadow-md cursor-pointer ${
+                      isExpanded ? 'ring-2 ring-primary/20 border-primary/30' : 'hover:border-primary/30'
+                    }`}
                   >
-                    <div className="flex items-center gap-2">
-                      {isExpanded ? (
-                        <ChevronDown className="w-4 h-4 text-gray-400" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4 text-gray-400" />
-                      )}
-                      <Table2 className="w-4 h-4 text-blue-600" />
-                      <div>
-                        <h3 className="font-medium text-gray-900 text-sm">
-                          {tableId}
-                        </h3>
-                        {numRows && (
-                          <p className="text-xs text-gray-500">
-                            {formatRowCount(numRows)}
-                          </p>
+                    {/* Table Header - Clickable */}
+                    <CardHeader
+                      onClick={() => handleTableClick(tableId)}
+                      className="pb-3"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          {isExpanded ? (
+                            <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                          )}
+                          <Table2 className="w-4 h-4 text-primary" />
+                          <div>
+                            <CardTitle className="text-sm font-medium">
+                              {tableId}
+                            </CardTitle>
+                            {numRows && (
+                              <CardDescription className="text-xs">
+                                {formatRowCount(numRows)}
+                              </CardDescription>
+                            )}
+                          </div>
+                        </div>
+                        {isLoadingThisSchema && (
+                          <RefreshCw className="w-4 h-4 animate-spin text-primary" />
                         )}
                       </div>
-                    </div>
-                    {isLoadingThisSchema && (
-                      <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
-                    )}
-                  </div>
+                    </CardHeader>
 
-                  {/* Expandable Columns Section */}
-                  {isExpanded && (
-                    <div className="border-t border-gray-100 bg-gray-50">
-                      <div className="p-3">
-                        {isLoadingThisSchema ? (
-                          <div className="flex items-center gap-2 text-gray-500 py-2">
-                            <RefreshCw className="w-4 h-4 animate-spin" />
-                            <span className="text-sm">Carregando colunas...</span>
-                          </div>
-                        ) : schemaError ? (
-                          <div className="flex items-center gap-2 p-2 bg-red-50 border border-red-200 rounded text-red-700">
-                            <AlertCircle className="w-4 h-4" />
-                            <span className="text-sm">{schemaError}</span>
-                          </div>
-                        ) : schema ? (
-                          <div className="space-y-1">
-                            <p className="text-xs font-medium text-gray-700 mb-2">
-                              Columns ({schema.length}) - Drag to Chart Builder →
-                            </p>
-                            <div className="space-y-1 max-h-64 overflow-y-auto">
-                              {schema.map((field, index) => (
-                                <DraggableColumn
-                                  key={index}
-                                  field={field}
-                                  sourceTable={tableId}
-                                />
-                              ))}
+                    {/* Expandable Columns Section */}
+                    {isExpanded && (
+                      <>
+                        <Separator />
+                        <CardContent className="pt-4">
+                          {isLoadingThisSchema ? (
+                            <div className="flex items-center gap-2 text-muted-foreground py-2">
+                              <RefreshCw className="w-4 h-4 animate-spin" />
+                              <span className="text-sm">Carregando colunas...</span>
                             </div>
-                          </div>
-                        ) : (
-                          <p className="text-sm text-gray-500 py-2">
-                            Click to load columns
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
+                          ) : schemaError ? (
+                            <Card className="border-destructive">
+                              <CardContent className="flex items-center gap-2 p-3">
+                                <AlertCircle className="w-4 h-4 text-destructive" />
+                                <span className="text-sm text-destructive">{schemaError}</span>
+                              </CardContent>
+                            </Card>
+                          ) : schema ? (
+                            <div className="space-y-3">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-xs">
+                                  {schema.length} columns
+                                </Badge>
+                                <span className="text-xs text-muted-foreground">
+                                  Drag to Chart Builder →
+                                </span>
+                              </div>
+                              <ScrollArea className="max-h-64">
+                                <div className="space-y-2">
+                                  {schema.map((field, index) => (
+                                    <DraggableColumn
+                                      key={index}
+                                      field={field}
+                                      sourceTable={tableId}
+                                    />
+                                  ))}
+                                </div>
+                              </ScrollArea>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground py-2">
+                              Click to load columns
+                            </p>
+                          )}
+                        </CardContent>
+                      </>
+                    )}
+                  </Card>
+                )
+              })}
+            </div>
+          </ScrollArea>
         )}
       </div>
     </div>

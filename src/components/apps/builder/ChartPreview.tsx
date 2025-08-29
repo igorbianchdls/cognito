@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { RefreshCw, AlertCircle, TrendingUp } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import type { BigQueryField } from './TablesExplorer'
 
 interface ChartData {
@@ -255,75 +257,90 @@ LIMIT 50
   const canRender = selectedTable && xAxis.length > 0 && yAxis.length > 0
 
   return (
-    <div className="space-y-3">
-      {/* Header */}
-      <div className="flex items-center gap-2">
-        <TrendingUp className="w-4 h-4 text-blue-600" />
-        <h3 className="text-sm font-medium text-gray-900">Chart Preview</h3>
-        {loading && <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />}
-      </div>
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-4 h-4 text-primary" />
+            <CardTitle className="text-base">Preview</CardTitle>
+          </div>
+          {loading && <RefreshCw className="w-4 h-4 animate-spin text-primary" />}
+        </div>
+        <CardDescription>
+          Visualização em tempo real dos dados
+        </CardDescription>
+      </CardHeader>
 
-      {/* Content */}
-      <div className="border border-gray-200 rounded-lg p-3 bg-white min-h-[200px]">
-        {!canRender ? (
-          <div className="flex flex-col items-center justify-center h-48 text-gray-500">
-            <TrendingUp className="w-8 h-8 mb-2 opacity-50" />
-            <p className="text-sm text-center">
-              Configure eixo X e Y para ver preview
-            </p>
-            <p className="text-xs text-center text-gray-400 mt-1">
-              Arraste colunas do painel esquerdo
-            </p>
-          </div>
-        ) : loading ? (
-          <div className="flex items-center justify-center h-48">
-            <div className="text-center">
-              <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-600" />
-              <p className="text-sm text-gray-600">Loading data...</p>
+      <CardContent>
+        <div className="min-h-[200px]">
+          {!canRender ? (
+            <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
+              <TrendingUp className="w-8 h-8 mb-2 opacity-50" />
+              <p className="text-sm text-center">
+                Configure eixo X e Y para ver preview
+              </p>
+              <p className="text-xs text-center opacity-70 mt-1">
+                Arraste colunas do painel esquerdo
+              </p>
             </div>
-          </div>
-        ) : error ? (
-          <div className="flex items-center justify-center h-48">
-            <div className="text-center">
-              <AlertCircle className="w-6 h-6 mx-auto mb-2 text-red-500" />
-              <p className="text-sm text-red-600 mb-2">Error loading data</p>
-              <p className="text-xs text-gray-500">{error}</p>
-            </div>
-          </div>
-        ) : chartData.length === 0 ? (
-          <div className="flex items-center justify-center h-48">
-            <div className="text-center">
-              <TrendingUp className="w-6 h-6 mx-auto mb-2 text-gray-400" />
-              <p className="text-sm text-gray-600">No data found</p>
-              <p className="text-xs text-gray-500">Try different columns or filters</p>
-            </div>
-          </div>
-        ) : (
-          <div>
-            {renderChart()}
-            
-            {/* Data info */}
-            <div className="mt-3 pt-3 border-t border-gray-100">
-              <div className="flex items-center justify-between text-xs text-gray-500">
-                <span>{chartData.length} records</span>
-                <span>Table: {selectedTable}</span>
+          ) : loading ? (
+            <div className="flex items-center justify-center h-48">
+              <div className="text-center">
+                <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-primary" />
+                <p className="text-sm text-muted-foreground">Loading data...</p>
               </div>
             </div>
-          </div>
-        )}
-      </div>
+          ) : error ? (
+            <div className="flex items-center justify-center h-48">
+              <div className="text-center">
+                <AlertCircle className="w-6 h-6 mx-auto mb-2 text-destructive" />
+                <p className="text-sm text-destructive mb-2">Error loading data</p>
+                <p className="text-xs text-muted-foreground">{error}</p>
+              </div>
+            </div>
+          ) : chartData.length === 0 ? (
+            <div className="flex items-center justify-center h-48">
+              <div className="text-center">
+                <TrendingUp className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-sm">No data found</p>
+                <p className="text-xs text-muted-foreground">Try different columns or filters</p>
+              </div>
+            </div>
+          ) : (
+            <div>
+              {renderChart()}
+              
+              {/* Data info */}
+              <div className="mt-4 pt-3 border-t flex items-center justify-between">
+                <div className="flex gap-2">
+                  <Badge variant="secondary" className="text-xs">
+                    {chartData.length} records
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {selectedTable}
+                  </Badge>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
-      {/* Query Preview */}
-      {query && (
-        <details className="text-xs">
-          <summary className="cursor-pointer text-gray-600 hover:text-gray-900">
-            View SQL Query
-          </summary>
-          <pre className="mt-2 p-2 bg-gray-100 rounded text-xs font-mono overflow-x-auto">
-            {query}
-          </pre>
-        </details>
-      )}
-    </div>
+        {/* Query Preview */}
+        {query && (
+          <details className="mt-4">
+            <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
+              View SQL Query
+            </summary>
+            <Card className="mt-2 bg-muted/50">
+              <CardContent className="p-3">
+                <pre className="text-xs font-mono overflow-x-auto whitespace-pre-wrap">
+                  {query}
+                </pre>
+              </CardContent>
+            </Card>
+          </details>
+        )}
+      </CardContent>
+    </Card>
   )
 }

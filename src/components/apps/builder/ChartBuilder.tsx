@@ -2,6 +2,11 @@
 
 import { useState } from 'react'
 import { BarChart3, TrendingUp, PieChart, Activity, Trash2, Plus, ArrowRight, ArrowUp } from 'lucide-react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
 import DropZone from './DropZone'
 import ChartPreview from './ChartPreview'
 import type { BigQueryField } from './TablesExplorer'
@@ -125,137 +130,181 @@ export default function ChartBuilder({
   const isConfigValid = data.selectedTable && data.xAxis.length > 0 && data.yAxis.length > 0
 
   return (
-    <div className="h-full flex flex-col bg-white">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-blue-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Chart Builder</h2>
+    <div className="h-full flex flex-col">
+      {/* Header Card */}
+      <Card className="border-0 border-b rounded-none">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-primary" />
+              <CardTitle className="text-lg">Chart Builder</CardTitle>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClear}
+              disabled={!isConfigValid}
+              className="gap-2"
+            >
+              <Trash2 className="w-4 h-4" />
+              Clear
+            </Button>
           </div>
-          <button
-            onClick={onClear}
-            disabled={!isConfigValid}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Trash2 className="w-4 h-4" />
-            Clear
-          </button>
-        </div>
-      </div>
+          <CardDescription>
+            Configure seu gráfico arrastando colunas
+          </CardDescription>
+        </CardHeader>
+      </Card>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        {/* Drop Zones */}
-        <div className="space-y-4">
-          {/* Eixo X (Dimensions) */}
-          <DropZone
-            id="x-axis-drop-zone"
-            label="Eixo X"
-            description="Categorias para eixo horizontal (strings, datas)"
-            icon={<ArrowRight className="w-4 h-4 text-green-600" />}
-            fields={data.xAxis}
-            acceptedTypes={['string', 'date', 'numeric']}
-            onRemoveField={(fieldName) => handleRemoveField('xAxis', fieldName)}
-          />
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-4">
+          {/* Drop Zones Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <ArrowRight className="w-4 h-4" />
+                Configuração de Dados
+              </CardTitle>
+              <CardDescription>
+                Arraste colunas das tabelas para os eixos
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Eixo X (Dimensions) */}
+              <DropZone
+                id="x-axis-drop-zone"
+                label="Eixo X"
+                description="Categorias para eixo horizontal (strings, datas)"
+                icon={<ArrowRight className="w-4 h-4 text-green-600" />}
+                fields={data.xAxis}
+                acceptedTypes={['string', 'date', 'numeric']}
+                onRemoveField={(fieldName) => handleRemoveField('xAxis', fieldName)}
+              />
 
-          {/* Eixo Y (Measures) */}
-          <DropZone
-            id="y-axis-drop-zone"
-            label="Eixo Y"
-            description="Valores numéricos para eixo vertical (agregação)"
-            icon={<ArrowUp className="w-4 h-4 text-blue-600" />}
-            fields={data.yAxis}
-            acceptedTypes={['numeric']}
-            onRemoveField={(fieldName) => handleRemoveField('yAxis', fieldName)}
-          />
+              {/* Eixo Y (Measures) */}
+              <DropZone
+                id="y-axis-drop-zone"
+                label="Eixo Y"
+                description="Valores numéricos para eixo vertical (agregação)"
+                icon={<ArrowUp className="w-4 h-4 text-blue-600" />}
+                fields={data.yAxis}
+                acceptedTypes={['numeric']}
+                onRemoveField={(fieldName) => handleRemoveField('yAxis', fieldName)}
+              />
 
-          {/* Filters */}
-          <DropZone
-            id="filters-drop-zone"
-            label="Filters"
-            description="Drag fields here to filter data"
-            icon={<Activity className="w-4 h-4 text-orange-600" />}
-            fields={data.filters}
-            acceptedTypes={['string', 'date', 'numeric', 'boolean']}
-            onRemoveField={(fieldName) => handleRemoveField('filters', fieldName)}
-          />
-        </div>
+              {/* Filters */}
+              <DropZone
+                id="filters-drop-zone"
+                label="Filters"
+                description="Drag fields here to filter data"
+                icon={<Activity className="w-4 h-4 text-orange-600" />}
+                fields={data.filters}
+                acceptedTypes={['string', 'date', 'numeric', 'boolean']}
+                onRemoveField={(fieldName) => handleRemoveField('filters', fieldName)}
+              />
+            </CardContent>
+          </Card>
 
-        {/* Chart Type Selection */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <PieChart className="w-4 h-4 text-purple-600" />
-            <h3 className="text-sm font-medium text-gray-900">Chart Type</h3>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-2">
-            {chartTypes.map((type) => (
-              <button
-                key={type.id}
-                onClick={() => onChartTypeChange(type.id)}
-                className={`p-3 rounded-lg border text-left transition-all ${
-                  data.chartType === type.id
-                    ? 'border-blue-300 bg-blue-50 text-blue-900'
-                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                <div className="flex items-center gap-2 mb-1">
-                  {type.icon}
-                  <span className="font-medium text-sm">{type.label}</span>
-                </div>
-                <p className="text-xs text-gray-600">{type.description}</p>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Chart Preview */}
-        <ChartPreview
-          xAxis={data.xAxis}
-          yAxis={data.yAxis}
-          filters={data.filters}
-          chartType={data.chartType}
-          selectedTable={data.selectedTable}
-          onDataReady={(chartData, query) => {
-            setPreviewData(chartData)
-            setPreviewQuery(query)
-          }}
-        />
-
-        {/* Actions */}
-        <div className="space-y-3 pt-4 border-t border-gray-200">
-          <button
-            onClick={handleAddToDashboard}
-            disabled={!isConfigValid || previewData.length === 0}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-              isConfigValid && previewData.length > 0
-                ? 'bg-blue-600 text-white hover:bg-blue-700'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            <Plus className="w-4 h-4" />
-            Add to Dashboard
-          </button>
-
-          {/* Configuration Summary */}
-          {isConfigValid && (
-            <div className="p-3 bg-gray-50 rounded-lg">
-              <div className="text-sm text-gray-700">
-                <div className="font-medium mb-1">Configuration:</div>
-                <div className="space-y-1 text-xs">
-                  <div>• Table: <code className="bg-white px-1 rounded">{data.selectedTable}</code></div>
-                  <div>• Eixo X: <code className="bg-white px-1 rounded">{data.xAxis.map(r => r.name).join(', ')}</code></div>
-                  <div>• Eixo Y: <code className="bg-white px-1 rounded">{data.yAxis.map(c => c.name).join(', ')}</code></div>
-                  {data.filters.length > 0 && (
-                    <div>• Filters: <code className="bg-white px-1 rounded">{data.filters.map(f => f.name).join(', ')}</code></div>
-                  )}
-                  <div>• Chart: <code className="bg-white px-1 rounded">{data.chartType}</code></div>
-                </div>
+          {/* Chart Type Selection Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <PieChart className="w-4 h-4" />
+                Tipo de Gráfico
+              </CardTitle>
+              <CardDescription>
+                Selecione o tipo de visualização
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-3">
+                {chartTypes.map((type) => (
+                  <Card
+                    key={type.id}
+                    className={`cursor-pointer transition-all hover:shadow-md ${
+                      data.chartType === type.id
+                        ? 'ring-2 ring-primary border-primary bg-accent'
+                        : 'hover:border-primary/30'
+                    }`}
+                    onClick={() => onChartTypeChange(type.id)}
+                  >
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        {type.icon}
+                        <span className="font-medium text-sm">{type.label}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{type.description}</p>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
-            </div>
-          )}
-        </div>
+            </CardContent>
+          </Card>
+
+          <ChartPreview
+            xAxis={data.xAxis}
+            yAxis={data.yAxis}
+            filters={data.filters}
+            chartType={data.chartType}
+            selectedTable={data.selectedTable}
+            onDataReady={(chartData, query) => {
+              setPreviewData(chartData)
+              setPreviewQuery(query)
+            }}
+          />
+
+          {/* Actions Card */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="space-y-4">
+                <Button
+                  onClick={handleAddToDashboard}
+                  disabled={!isConfigValid || previewData.length === 0}
+                  className="w-full gap-2"
+                  size="lg"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add to Dashboard
+                </Button>
+
+                {/* Configuration Summary */}
+                {isConfigValid && (
+                  <Card className="bg-muted/50">
+                    <CardContent className="p-4">
+                      <div className="text-sm">
+                        <CardTitle className="text-sm mb-2">Configuração</CardTitle>
+                        <div className="space-y-1 text-xs text-muted-foreground">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">Table</Badge>
+                            <code className="bg-background px-1 rounded text-xs">{data.selectedTable}</code>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">Eixo X</Badge>
+                            <code className="bg-background px-1 rounded text-xs">{data.xAxis.map(r => r.name).join(', ')}</code>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">Eixo Y</Badge>
+                            <code className="bg-background px-1 rounded text-xs">{data.yAxis.map(c => c.name).join(', ')}</code>
+                          </div>
+                          {data.filters.length > 0 && (
+                            <div className="flex items-center gap-2">
+                              <Badge variant="outline" className="text-xs">Filters</Badge>
+                              <code className="bg-background px-1 rounded text-xs">{data.filters.map(f => f.name).join(', ')}</code>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">Chart</Badge>
+                            <code className="bg-background px-1 rounded text-xs">{data.chartType}</code>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            </CardContent>
+          </Card>
       </div>
     </div>
   )
