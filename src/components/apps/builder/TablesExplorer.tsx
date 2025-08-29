@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import DraggableColumn from './DraggableColumn'
 
 export interface BigQueryField {
@@ -397,7 +396,7 @@ export default function TablesExplorer() {
             <CardContent className="space-y-4">
               {/* Column Selection */}
               <div className="space-y-2">
-                <Label htmlFor="column">Coluna</Label>
+                <label htmlFor="column" className="text-sm font-medium">Coluna</label>
                 <Select value={selectedColumn} onValueChange={setSelectedColumn}>
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione uma coluna" />
@@ -414,7 +413,7 @@ export default function TablesExplorer() {
 
               {/* Aggregation Selection */}
               <div className="space-y-2">
-                <Label htmlFor="aggregation">Agregação</Label>
+                <label htmlFor="aggregation" className="text-sm font-medium">Agregação</label>
                 <Select value={selectedAggregation} onValueChange={setSelectedAggregation}>
                   <SelectTrigger>
                     <SelectValue />
@@ -431,7 +430,7 @@ export default function TablesExplorer() {
 
               {/* Measure Name */}
               <div className="space-y-2">
-                <Label htmlFor="name">Nome da Medida</Label>
+                <label htmlFor="name" className="text-sm font-medium">Nome da Medida</label>
                 <Input
                   id="name"
                   value={measureName}
