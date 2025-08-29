@@ -31,6 +31,17 @@ export default function SQLEditor({
   const [xColumn, setXColumn] = useState<string>('');
   const [yColumn, setYColumn] = useState<string>('');
 
+  // Transform SQL data to ChartData format
+  const transformSQLDataToChart = (data: any[], xCol: string, yCol: string): ChartData[] => {
+    return data.map(row => ({
+      x: String(row[xCol]),
+      y: Number(row[yCol]) || 0,
+      label: String(row[xCol]),
+      value: Number(row[yCol]) || 0,
+      ...row // preserve original data
+    }));
+  };
+
   // Execute immediately on mount if immediateExecute is true and there's initial SQL
   useEffect(() => {
     if (immediateExecute && initialSQL.trim() && !isExecuting && !readOnly) {
@@ -281,7 +292,7 @@ export default function SQLEditor({
                 {/* Chart Visualization */}
                 {xColumn && yColumn && (
                   <ChartVisualization
-                    chartData={result.data as ChartData[]}
+                    chartData={transformSQLDataToChart(result.data, xColumn, yColumn)}
                     chartType={chartType}
                     xColumn={xColumn}
                     yColumn={yColumn}
