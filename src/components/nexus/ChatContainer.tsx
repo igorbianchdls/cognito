@@ -54,7 +54,7 @@ export default function ChatContainer({
   // Estado com mensagens - layout com CSS Grid
   return (
     <div className="h-full grid grid-rows-[1fr_auto] overflow-hidden" style={{backgroundColor: 'white'}}>
-      <div className="overflow-y-auto custom-scrollbar">
+      <div className="overflow-y-auto custom-scrollbar focus:outline-none" tabIndex={0} autoFocus>
         <MessageList messages={messages} selectedAgent={selectedAgent} />
       </div>
       <div className="pb-4" style={{backgroundColor: 'white'}}>
