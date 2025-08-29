@@ -292,7 +292,7 @@ export default function SQLResultsTable({ data, schema, pageSize = 10 }: SQLResu
           <TableBody>
             {paginatedData.length > 0 ? (
               paginatedData.map((row, rowIndex) => (
-                <TableRow key={startIndex + rowIndex} className="hover:bg-gray-50 border-0 h-12 group">
+                <TableRow key={startIndex + rowIndex} className="hover:bg-gray-50 border-0 h-8 group">
                   {columns.map((column) => (
                     <TableCell key={column} className="font-mono text-sm border-r border-gray-300 last:border-r-0 border-b border-gray-200 px-4 py-0">
                       <div className="flex items-center h-full">
