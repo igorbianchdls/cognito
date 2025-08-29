@@ -1,12 +1,15 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Table2, Database, RefreshCw, AlertCircle, ChevronRight, ChevronDown, BarChart3, Plus } from 'lucide-react'
+import { Table2, Database, RefreshCw, AlertCircle, ChevronRight, ChevronDown, BarChart3, Plus, X } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import DraggableColumn from './DraggableColumn'
 
 export interface BigQueryField {
@@ -47,6 +50,13 @@ export default function TablesExplorer() {
   // Section expansion states
   const [expandedDimensions, setExpandedDimensions] = useState<Record<string, boolean>>({})
   const [expandedMeasures, setExpandedMeasures] = useState<Record<string, boolean>>({})
+  
+  // Create measure modal states
+  const [isCreateMeasureOpen, setIsCreateMeasureOpen] = useState(false)
+  const [selectedTableForMeasure, setSelectedTableForMeasure] = useState<string | null>(null)
+  const [selectedColumn, setSelectedColumn] = useState<string>('')
+  const [selectedAggregation, setSelectedAggregation] = useState<string>('SUM')
+  const [measureName, setMeasureName] = useState<string>('')
 
   // Load tables
   const loadTables = async () => {
@@ -139,6 +149,50 @@ export default function TablesExplorer() {
       [tableId]: !prev[tableId]
     }))
   }
+
+  // Handle create measure
+  const handleCreateMeasure = (tableId: string) => {
+    setSelectedTableForMeasure(tableId)
+    setIsCreateMeasureOpen(true)
+    // Reset form
+    setSelectedColumn('')
+    setSelectedAggregation('SUM')
+    setMeasureName('')
+  }
+
+  const handleCloseMeasureModal = () => {
+    setIsCreateMeasureOpen(false)
+    setSelectedTableForMeasure(null)
+    setSelectedColumn('')
+    setSelectedAggregation('SUM')
+    setMeasureName('')
+  }
+
+  const handleSaveMeasure = () => {
+    if (!selectedColumn || !measureName) {
+      alert('Por favor, preencha todos os campos')
+      return
+    }
+    
+    // TODO: Implement saving measure logic
+    console.log('Creating measure:', {
+      table: selectedTableForMeasure,
+      column: selectedColumn,
+      aggregation: selectedAggregation,
+      name: measureName
+    })
+    
+    handleCloseMeasureModal()
+  }
+
+  // Get aggregation options
+  const aggregationOptions = [
+    { value: 'SUM', label: 'SUM' },
+    { value: 'AVG', label: 'AVG' },
+    { value: 'COUNT', label: 'COUNT' },
+    { value: 'MAX', label: 'MAX' },
+    { value: 'MIN', label: 'MIN' }
+  ]
 
   return (
     <div className="h-full flex flex-col">
@@ -291,7 +345,10 @@ export default function TablesExplorer() {
                               </div>
                               {expandedMeasures[tableId] && (
                                 <div className="px-2 py-2 ml-4">
-                                  <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                                  <button 
+                                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                                    onClick={() => handleCreateMeasure(tableId)}
+                                  >
                                     <Plus className="w-4 h-4" />
                                     Criar Medida
                                   </button>
@@ -313,6 +370,89 @@ export default function TablesExplorer() {
           </ScrollArea>
         )}
       </div>
+
+      {/* Create Measure Modal */}
+      {isCreateMeasureOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-[500px] max-w-[90vw]">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-primary" />
+                  Criar Medida
+                </CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCloseMeasureModal}
+                  className="h-6 w-6 p-0"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              <CardDescription>
+                Crie uma medida personalizada para {selectedTableForMeasure}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Column Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="column">Coluna</Label>
+                <Select value={selectedColumn} onValueChange={setSelectedColumn}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione uma coluna" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {selectedTableForMeasure && tableSchemas[selectedTableForMeasure]?.map((column) => (
+                      <SelectItem key={column.name} value={column.name}>
+                        {column.name} ({column.type})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Aggregation Selection */}
+              <div className="space-y-2">
+                <Label htmlFor="aggregation">Agregação</Label>
+                <Select value={selectedAggregation} onValueChange={setSelectedAggregation}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {aggregationOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Measure Name */}
+              <div className="space-y-2">
+                <Label htmlFor="name">Nome da Medida</Label>
+                <Input
+                  id="name"
+                  value={measureName}
+                  onChange={(e) => setMeasureName(e.target.value)}
+                  placeholder="Ex: Total Vendas"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={handleCloseMeasureModal}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleSaveMeasure}>
+                  Salvar Medida
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }
