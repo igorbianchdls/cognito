@@ -150,15 +150,10 @@ export default function ChartBuilder({
       </div>
 
       {/* Content */}
-      <ScrollArea className="flex-1">
+      <ScrollArea className="h-[calc(100vh-8rem)]">
         <div className="px-3 py-2 space-y-6">
           {/* Drop Zones Section */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 px-2">
-              <ArrowRight className="w-4 h-4 text-muted-foreground" />
-              <h3 className="text-sm font-medium">Configuração de Dados</h3>
-            </div>
-            <div className="space-y-3 px-2">
+          <div className="space-y-3 px-2">
               {/* Eixo X (Dimensions) */}
               <DropZone
                 id="x-axis-drop-zone"
