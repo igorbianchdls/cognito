@@ -112,8 +112,7 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
   };
 
   // Detectar se há dados anexados para aplicar estilo diferente
-  const hasDataAttachment = (input.includes('[+') && input.includes('linhas de dados]')) ||
-                            input.includes('📄 SQL_Results.json');
+  const hasDataAttachment = input.startsWith('[+') && input.includes('linhas de dados]');
 
   return (
     <div className="relative">
