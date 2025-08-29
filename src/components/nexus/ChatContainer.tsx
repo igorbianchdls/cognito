@@ -53,7 +53,7 @@ export default function ChatContainer({
 
   // Estado com mensagens - layout com CSS Grid
   return (
-    <div className="h-full grid grid-rows-[1fr_auto]" style={{backgroundColor: 'white'}}>
+    <div className="h-full grid grid-rows-[1fr_auto] overflow-hidden" style={{backgroundColor: 'white'}}>
       <div className="overflow-y-auto custom-scrollbar">
         <MessageList messages={messages} selectedAgent={selectedAgent} />
       </div>

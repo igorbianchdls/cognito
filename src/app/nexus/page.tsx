@@ -359,7 +359,7 @@ export default function Page() {
             </Breadcrumb>
           </div>
         </header>
-        <div className="flex flex-1 flex-col gap-4 p-4" style={{backgroundColor: 'white'}}>
+        <div className="flex flex-1 flex-col gap-4 p-4 overflow-hidden" style={{backgroundColor: 'white'}}>
           <div data-page="nexus" className="mx-auto w-full max-w-4xl h-[calc(100vh-6rem)]">
             <ChatContainer
               messages={displayedMessages}
