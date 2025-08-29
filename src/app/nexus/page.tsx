@@ -338,6 +338,22 @@ export default function Page() {
           setPendingAnalysisData(analysisMessage);
         }
       }
+
+      if (event.data.type === 'SEND_JSON_TO_CHAT') {
+        console.log('📄 Received SEND_JSON_TO_CHAT message:', event.data);
+        const { data, displayText, fileName, query } = event.data;
+        
+        if (data && Array.isArray(data) && data.length > 0) {
+          // Set the display text in the input
+          setInput(displayText);
+          
+          // Prepare full analysis message for AI with JSON format
+          const analysisMessage = `Analise este arquivo JSON com dados da query SQL: "${query || 'Dados da tabela SQL'}"\n\nArquivo: ${fileName || 'SQL_Results.json'}\nRegistros: ${data.length}\n\nConteúdo:\n${JSON.stringify(data, null, 2)}`;
+          
+          // Store the full data for when user submits
+          setPendingAnalysisData(analysisMessage);
+        }
+      }
     };
 
     window.addEventListener('message', handleMessage);

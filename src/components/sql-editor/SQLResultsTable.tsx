@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Download, BarChart3, Copy, MessageSquare } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Download, BarChart3, Copy, MessageSquare, FileText } from 'lucide-react';
 import { useStore } from '@nanostores/react';
 import { $lastQueryData } from '@/stores/queryStore';
 
@@ -139,6 +139,28 @@ export default function SQLResultsTable({ data, schema, pageSize = 10 }: SQLResu
     }, '*');
   };
 
+  // Copy JSON to chat function
+  const copyJSONToChat = () => {
+    if (!data || data.length === 0) {
+      alert('Nenhum dado disponível para enviar');
+      return;
+    }
+
+    const displayText = `📄 SQL_Results.json (${data.length} registros)`;
+    
+    console.log('📄 SQLResultsTable: Sending JSON to chat:', data.length, 'rows');
+    
+    // Send data via postMessage to chat
+    window.postMessage({
+      type: 'SEND_JSON_TO_CHAT',
+      data: data,
+      displayText: displayText,
+      fileName: 'SQL_Results.json',
+      query: 'Dados da tabela SQL',
+      timestamp: new Date().toISOString()
+    }, '*');
+  };
+
   // Get column names from schema or data
   const columns = schema.length > 0 
     ? schema.map(s => s.name)
@@ -209,6 +231,15 @@ export default function SQLResultsTable({ data, schema, pageSize = 10 }: SQLResu
             >
               <MessageSquare className="w-4 h-4 mr-2" />
               Copiar pro Chat
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={copyJSONToChat}
+              className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              JSON pro Chat
             </Button>
             <Button
               variant="outline"
