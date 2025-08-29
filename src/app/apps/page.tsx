@@ -6,6 +6,14 @@ import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from "@/components/ui/separator"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 import SplitSidebarPanel from '@/components/apps/builder/SplitSidebarPanel'
 import GridCanvas from '@/components/apps/GridCanvas'
 import MultiGridCanvas from '@/components/apps/MultiGridCanvas'
@@ -14,13 +22,23 @@ import { $activeTab, multiCanvasActions } from '@/stores/multiCanvasStore'
 import { isNavigationWidget } from '@/types/widget'
 import type { Widget, LayoutItem, DroppedWidget } from '@/types/widget'
 import { Button } from '@/components/ui/button'
-import { Settings, Share, Github } from 'lucide-react'
-import BreadcrumbTabs from '@/components/apps/BreadcrumbTabs'
+import { Settings, Share, Github, BarChart3, MessageSquare, Code, Cpu, Archive, Database } from 'lucide-react'
 
 export default function AppsPage() {
   const droppedWidgets = useStore($widgets)
   const [activeWidget, setActiveWidget] = useState<Widget | null>(null)
   const [activeTab, setActiveTab] = useState<'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved' | 'datasets'>('chat')
+
+  // Tab configuration with icons and labels
+  const tabs = [
+    { id: 'widgets', label: 'Widgets', icon: BarChart3 },
+    { id: 'chat', label: 'Chat', icon: MessageSquare },
+    { id: 'editor', label: 'Editor', icon: Settings },
+    { id: 'code', label: 'Code', icon: Code },
+    { id: 'automations', label: 'Automações', icon: Cpu },
+    { id: 'saved', label: 'Salvos', icon: Archive },
+    { id: 'datasets', label: 'Datasets', icon: Database },
+  ] as const
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event
@@ -96,11 +114,40 @@ export default function AppsPage() {
                 className="mr-2 data-[orientation=vertical]:h-4"
               />
               
-              {/* Tabs integradas no header */}
-              <BreadcrumbTabs 
-                activeTab={activeTab}
-                onTabChange={setActiveTab}
-              />
+              {/* Tabs com UI de breadcrumb */}
+              <Breadcrumb>
+                <BreadcrumbList>
+                  {tabs.map((tab, index) => (
+                    <div key={tab.id} className="flex items-center">
+                      <BreadcrumbItem>
+                        {activeTab === tab.id ? (
+                          <BreadcrumbPage className="flex items-center gap-2">
+                            <tab.icon className="w-4 h-4" />
+                            <span className="hidden sm:inline">
+                              {tab.label === 'Automações' ? 'Auto' : tab.label}
+                            </span>
+                          </BreadcrumbPage>
+                        ) : (
+                          <BreadcrumbLink 
+                            href="#" 
+                            onClick={(e) => {
+                              e.preventDefault()
+                              setActiveTab(tab.id)
+                            }}
+                            className="flex items-center gap-2 hover:text-gray-900"
+                          >
+                            <tab.icon className="w-4 h-4" />
+                            <span className="hidden sm:inline">
+                              {tab.label === 'Automações' ? 'Auto' : tab.label}
+                            </span>
+                          </BreadcrumbLink>
+                        )}
+                      </BreadcrumbItem>
+                      {index < tabs.length - 1 && <BreadcrumbSeparator />}
+                    </div>
+                  ))}
+                </BreadcrumbList>
+              </Breadcrumb>
             </div>
             
             {/* Botões na extrema direita */}
