@@ -220,16 +220,6 @@ export default function SQLEditor({
                   schema={result.schema}
                   pageSize={10}
                 />
-                {onAnalyzeWithAI && (
-                  <div className="flex justify-end">
-                    <Button 
-                      onClick={() => onAnalyzeWithAI(result.data, sql)}
-                      className="bg-blue-600 hover:bg-blue-700"
-                    >
-                      📊 Analisar com IA
-                    </Button>
-                  </div>
-                )}
               </div>
             )}
           </TabsContent>

@@ -162,27 +162,9 @@ export default function SQLExecution({
 
 
 
-      {/* Análise com IA button - show when onAnalyzeWithAI is provided */}
-      {onAnalyzeWithAI && (
-        <div className="mt-4 flex justify-end">
-          <Button 
-            onClick={handleAnalyzeData}
-            disabled={!availableData || availableData.length === 0}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            📊 Analisar com IA
-            {availableData && availableData.length > 0 && (
-              <span className="ml-2 text-xs opacity-75">
-                ({availableData.length} registros)
-              </span>
-            )}
-          </Button>
-        </div>
-      )}
 
       {/* SQLEditor - Main execution */}
       <div className="mt-4">
-        <div className="text-sm font-medium mb-2">📊 Executar Query:</div>
         <SQLEditor 
           initialSQL={sqlQuery || ''}
           height="200px"

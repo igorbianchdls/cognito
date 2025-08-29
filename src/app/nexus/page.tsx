@@ -401,7 +401,7 @@ export default function Page() {
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 overflow-hidden" style={{backgroundColor: 'white'}}>
-          <div data-page="nexus" className="mx-auto w-full max-w-4xl h-[calc(100vh-4rem-2rem)]">
+          <div data-page="nexus" className="mx-auto w-full max-w-5xl h-[calc(100vh-4rem-2rem)]">
             <ChatContainer
               messages={displayedMessages}
               input={input}
