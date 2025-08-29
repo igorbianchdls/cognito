@@ -43,6 +43,10 @@ export default function TablesExplorer() {
   const [tableSchemas, setTableSchemas] = useState<Record<string, BigQueryField[]>>({})
   const [loadingSchema, setLoadingSchema] = useState<string | null>(null)
   const [schemaError, setSchemaError] = useState<string | null>(null)
+  
+  // Section expansion states
+  const [expandedDimensions, setExpandedDimensions] = useState<Record<string, boolean>>({})
+  const [expandedMeasures, setExpandedMeasures] = useState<Record<string, boolean>>({})
 
   // Load tables
   const loadTables = async () => {
@@ -119,6 +123,21 @@ export default function TablesExplorer() {
       return (rows / 1000).toFixed(1).replace('.0', '') + 'k rows'
     }
     return rows.toLocaleString() + ' rows'
+  }
+
+  // Toggle section expansion
+  const toggleDimensions = (tableId: string) => {
+    setExpandedDimensions(prev => ({
+      ...prev,
+      [tableId]: !prev[tableId]
+    }))
+  }
+
+  const toggleMeasures = (tableId: string) => {
+    setExpandedMeasures(prev => ({
+      ...prev,
+      [tableId]: !prev[tableId]
+    }))
   }
 
   return (
@@ -223,41 +242,61 @@ export default function TablesExplorer() {
                           <div className="space-y-3">
                             {/* Dimensões Section */}
                             <div>
-                              <div className="flex items-center gap-2 py-1 mb-2">
+                              <div 
+                                className="flex items-center gap-2 py-1 mb-2 cursor-pointer hover:bg-muted/30 rounded px-1 transition-colors"
+                                onClick={() => toggleDimensions(tableId)}
+                              >
+                                {expandedDimensions[tableId] ? (
+                                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                                ) : (
+                                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                                )}
                                 <BarChart3 className="w-4 h-4 text-blue-600" />
                                 <span className="text-sm font-medium text-gray-900">Dimensões</span>
                                 <Badge variant="outline" className="text-xs ml-1">
                                   {schema.length}
                                 </Badge>
                               </div>
-                              <ScrollArea className="max-h-48">
-                                <div className="space-y-1">
-                                  {schema.map((field, index) => (
-                                    <DraggableColumn
-                                      key={index}
-                                      field={field}
-                                      sourceTable={tableId}
-                                    />
-                                  ))}
-                                </div>
-                              </ScrollArea>
+                              {expandedDimensions[tableId] && (
+                                <ScrollArea className="max-h-48">
+                                  <div className="space-y-1 ml-4">
+                                    {schema.map((field, index) => (
+                                      <DraggableColumn
+                                        key={index}
+                                        field={field}
+                                        sourceTable={tableId}
+                                      />
+                                    ))}
+                                  </div>
+                                </ScrollArea>
+                              )}
                             </div>
 
                             {/* Medidas Section */}
                             <div>
-                              <div className="flex items-center gap-2 py-1 mb-2">
+                              <div 
+                                className="flex items-center gap-2 py-1 mb-2 cursor-pointer hover:bg-muted/30 rounded px-1 transition-colors"
+                                onClick={() => toggleMeasures(tableId)}
+                              >
+                                {expandedMeasures[tableId] ? (
+                                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                                ) : (
+                                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                                )}
                                 <BarChart3 className="w-4 h-4 text-green-600" />
                                 <span className="text-sm font-medium text-gray-900">Medidas</span>
                                 <Badge variant="outline" className="text-xs ml-1">
                                   0
                                 </Badge>
                               </div>
-                              <div className="px-2 py-2">
-                                <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                                  <Plus className="w-4 h-4" />
-                                  Criar Medida
-                                </button>
-                              </div>
+                              {expandedMeasures[tableId] && (
+                                <div className="px-2 py-2 ml-4">
+                                  <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                                    <Plus className="w-4 h-4" />
+                                    Criar Medida
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           </div>
                         ) : (
