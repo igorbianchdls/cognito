@@ -276,12 +276,12 @@ export default function SQLResultsTable({ data, schema, pageSize = 10 }: SQLResu
       </div>
 
       {/* Table */}
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
+      <div className="">
+        <Table className="border-collapse">
+          <TableHeader className="sticky top-0 bg-gray-50 z-10">
+            <TableRow className="border-0">
               {columns.map((column) => (
-                <TableHead key={column} className="font-medium">
+                <TableHead key={column} className="bg-gray-50 font-medium text-gray-600 text-sm border-r border-gray-300 last:border-r-0 px-4 py-0 h-12">
                   <div>
                     <div>{column}</div>
                     <div className="text-xs text-gray-500 font-normal">
@@ -295,18 +295,22 @@ export default function SQLResultsTable({ data, schema, pageSize = 10 }: SQLResu
           <TableBody>
             {paginatedData.length > 0 ? (
               paginatedData.map((row, rowIndex) => (
-                <TableRow key={startIndex + rowIndex}>
+                <TableRow key={startIndex + rowIndex} className="hover:bg-gray-50 border-0 h-12 group">
                   {columns.map((column) => (
-                    <TableCell key={column} className="font-mono text-sm">
-                      {formatValue(row[column])}
+                    <TableCell key={column} className="font-mono text-sm border-r border-gray-300 last:border-r-0 border-b border-gray-200 px-4 py-0">
+                      <div className="flex items-center h-full">
+                        {formatValue(row[column])}
+                      </div>
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="text-center py-8 text-gray-500">
-                  {searchTerm ? 'Nenhum resultado encontrado' : 'Nenhum dado disponível'}
+                <TableCell colSpan={columns.length} className="h-40 text-center border-r border-gray-300 border-b border-gray-200">
+                  <div className="flex flex-col items-center gap-3 text-gray-400">
+                    <span className="text-sm font-medium">{searchTerm ? 'Nenhum resultado encontrado' : 'Nenhum dado disponível'}</span>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
@@ -314,48 +318,55 @@ export default function SQLResultsTable({ data, schema, pageSize = 10 }: SQLResu
         </Table>
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <div className="text-sm text-gray-600">
-            Página {currentPage + 1} de {totalPages}
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(0)}
-              disabled={currentPage === 0}
-            >
-              <ChevronsLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(currentPage - 1)}
-              disabled={currentPage === 0}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(currentPage + 1)}
-              disabled={currentPage >= totalPages - 1}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setCurrentPage(totalPages - 1)}
-              disabled={currentPage >= totalPages - 1}
-            >
-              <ChevronsRight className="h-4 w-4" />
-            </Button>
-          </div>
+      {/* Baserow-style footer */}
+      <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50 text-xs text-gray-600">
+        <div className="flex items-center gap-6">
+          <span className="font-medium">{filteredData.length} rows</span>
         </div>
-      )}
+        {totalPages > 1 && (
+          <div className="flex items-center gap-3">
+            <span className="text-gray-500">Page {currentPage + 1} of {totalPages}</span>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCurrentPage(0)}
+                disabled={currentPage === 0}
+                className="h-7 w-7 p-0 hover:bg-gray-200"
+              >
+                ‹‹
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage === 0}
+                className="h-7 w-7 p-0 hover:bg-gray-200"
+              >
+                ‹
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage >= totalPages - 1}
+                className="h-7 w-7 p-0 hover:bg-gray-200"
+              >
+                ›
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCurrentPage(totalPages - 1)}
+                disabled={currentPage >= totalPages - 1}
+                className="h-7 w-7 p-0 hover:bg-gray-200"
+              >
+                ››
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
