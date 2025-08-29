@@ -198,7 +198,7 @@ LIMIT 50
             </div>
             <div className="flex-1 bg-gray-200 rounded h-4 relative overflow-hidden">
               <div
-                className="bg-blue-500 h-full rounded transition-all duration-500"
+                className="bg-blue-500 h-full rounded"
                 style={{ width: `${Math.max(5, (item.y / maxValue) * 100)}%` }}
               />
             </div>
@@ -223,7 +223,7 @@ LIMIT 50
           return (
             <div key={index} className="flex flex-col items-center space-y-1">
               <div
-                className="w-2 bg-blue-500 rounded-t transition-all duration-500"
+                className="w-2 bg-blue-500 rounded-t"
                 style={{ height: `${height}%` }}
                 title={`${item.label}: ${item.y}`}
               />
