@@ -179,7 +179,7 @@ export default function TablesExplorer() {
           </div>
         ) : (
           <ScrollArea className="h-[calc(100vh-8rem)]">
-            <div className="p-4 space-y-3">
+            <div className="px-3 py-2 space-y-1">
               {tables.map((table) => {
                 const tableId = table.TABLEID || table.tableId || ''
                 const numRows = table.NUMROWS || table.numRows
@@ -188,90 +188,75 @@ export default function TablesExplorer() {
                 const schema = tableSchemas[tableId]
                 
                 return (
-                  <Card
-                    key={tableId}
-                    className={`transition-all hover:shadow-md cursor-pointer ${
-                      isExpanded ? 'ring-2 ring-primary/20 border-primary/30' : 'hover:border-primary/30'
-                    }`}
-                  >
+                  <div key={tableId}>
                     {/* Table Header - Clickable */}
-                    <CardHeader
+                    <div
                       onClick={() => handleTableClick(tableId)}
-                      className="pb-3"
+                      className={`flex items-center gap-2 px-2 py-2 rounded-md cursor-pointer transition-colors ${
+                        isExpanded ? 'bg-muted/50' : 'hover:bg-muted/30'
+                      }`}
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          {isExpanded ? (
-                            <ChevronDown className="w-4 h-4 text-muted-foreground" />
-                          ) : (
-                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-                          )}
-                          <Table2 className="w-4 h-4 text-primary" />
-                          <div>
-                            <CardTitle className="text-sm font-medium">
-                              {tableId}
-                            </CardTitle>
-                            {numRows && (
-                              <CardDescription className="text-xs">
-                                {formatRowCount(numRows)}
-                              </CardDescription>
-                            )}
-                          </div>
+                      {isExpanded ? (
+                        <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      )}
+                      <Table2 className="w-4 h-4 text-primary flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">
+                          {tableId}
                         </div>
-                        {isLoadingThisSchema && (
-                          <RefreshCw className="w-4 h-4 animate-spin text-primary" />
+                        {numRows && (
+                          <div className="text-xs text-muted-foreground">
+                            {formatRowCount(numRows)}
+                          </div>
                         )}
                       </div>
-                    </CardHeader>
+                      {isLoadingThisSchema && (
+                        <RefreshCw className="w-4 h-4 animate-spin text-primary flex-shrink-0" />
+                      )}
+                    </div>
 
                     {/* Expandable Columns Section */}
                     {isExpanded && (
-                      <>
-                        <Separator />
-                        <CardContent className="pt-4">
-                          {isLoadingThisSchema ? (
-                            <div className="flex items-center gap-2 text-muted-foreground py-2">
-                              <RefreshCw className="w-4 h-4 animate-spin" />
-                              <span className="text-sm">Carregando colunas...</span>
+                      <div className="ml-6 mt-1 mb-2">
+                        {isLoadingThisSchema ? (
+                          <div className="flex items-center gap-2 text-muted-foreground py-2 px-2">
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                            <span className="text-sm">Carregando colunas...</span>
+                          </div>
+                        ) : schemaError ? (
+                          <div className="flex items-center gap-2 px-2 py-2 text-destructive">
+                            <AlertCircle className="w-4 h-4" />
+                            <span className="text-sm">{schemaError}</span>
+                          </div>
+                        ) : schema ? (
+                          <div className="space-y-1">
+                            <div className="px-2 py-1">
+                              <span className="text-xs text-muted-foreground">
+                                {schema.length} columns - drag to Chart Builder →
+                              </span>
                             </div>
-                          ) : schemaError ? (
-                            <Card className="border-destructive">
-                              <CardContent className="flex items-center gap-2 p-3">
-                                <AlertCircle className="w-4 h-4 text-destructive" />
-                                <span className="text-sm text-destructive">{schemaError}</span>
-                              </CardContent>
-                            </Card>
-                          ) : schema ? (
-                            <div className="space-y-3">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="text-xs">
-                                  {schema.length} columns
-                                </Badge>
-                                <span className="text-xs text-muted-foreground">
-                                  Drag to Chart Builder →
-                                </span>
+                            <ScrollArea className="max-h-64">
+                              <div className="space-y-1">
+                                {schema.map((field, index) => (
+                                  <DraggableColumn
+                                    key={index}
+                                    field={field}
+                                    sourceTable={tableId}
+                                  />
+                                ))}
                               </div>
-                              <ScrollArea className="max-h-64">
-                                <div className="space-y-2">
-                                  {schema.map((field, index) => (
-                                    <DraggableColumn
-                                      key={index}
-                                      field={field}
-                                      sourceTable={tableId}
-                                    />
-                                  ))}
-                                </div>
-                              </ScrollArea>
-                            </div>
-                          ) : (
-                            <p className="text-sm text-muted-foreground py-2">
-                              Click to load columns
-                            </p>
-                          )}
-                        </CardContent>
-                      </>
+                            </ScrollArea>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground py-2 px-2">
+                            Click to load columns
+                          </p>
+                        )}
+                      </div>
                     )}
-                  </Card>
+                  </div>
                 )
               })}
             </div>
