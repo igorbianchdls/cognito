@@ -212,8 +212,8 @@ export default function ChartBuilder({
 
         {/* Chart Preview */}
         <ChartPreview
-          rows={data.rows}
-          columns={data.columns}
+          xAxis={data.xAxis}
+          yAxis={data.yAxis}
           filters={data.filters}
           chartType={data.chartType}
           selectedTable={data.selectedTable}
