@@ -198,7 +198,21 @@ export default function Page() {
           const existingText = existing.parts?.find(p => p.type === 'text')?.text;
           const msgText = msg.parts?.find(p => p.type === 'text')?.text;
           
-          return existingText === msgText;
+          // Exact match for regular messages
+          if (existingText === msgText) return true;
+          
+          // Special case: if existing is data summary and incoming is data analysis
+          if (existingText?.includes('[+') && existingText?.includes('linhas de dados]') && 
+              msgText?.includes('Analise esses dados da query SQL')) {
+            return true; // Filter out the detailed message, keep the summary
+          }
+          
+          if (existingText?.includes('📄 SQL_Results.json') && 
+              msgText?.includes('Analise este arquivo JSON')) {
+            return true; // Filter out the detailed message, keep the summary
+          }
+          
+          return false;
         });
       }
       // Para mensagens da IA: filtro por ID (como antes)
@@ -252,16 +266,16 @@ export default function Page() {
         }
       }
       
-      // Add clean message to chat display
+      // Add message to chat display (always use displayText for what user sees)
       const userMessage = {
         id: `user-${Date.now()}`,
         role: 'user' as const,
-        parts: [{ type: 'text' as const, text: displayText }], // Clean text for UI
+        parts: [{ type: 'text' as const, text: displayText }], // User sees clean/summary version
         agent: selectedAgent
       };
       setAllMessages(prev => [...prev, userMessage]);
       
-      // Send complete data to AI
+      // Send complete data to AI (messageForAI contains full data when needed)
       sendMessage({ text: messageForAI });
       setInput('');
       
