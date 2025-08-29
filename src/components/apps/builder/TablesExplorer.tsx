@@ -14,6 +14,7 @@ export interface BigQueryField {
   type: string
   mode?: string
   description?: string
+  aggregation?: 'SUM' | 'AVG' | 'COUNT' | 'MAX' | 'MIN'
 }
 
 interface BigQueryTable {

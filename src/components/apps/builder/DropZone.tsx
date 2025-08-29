@@ -2,6 +2,7 @@
 
 import { useDroppable } from '@dnd-kit/core'
 import { X, Plus } from 'lucide-react'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { BigQueryField } from './TablesExplorer'
 
 interface DropZoneProps {
@@ -12,6 +13,7 @@ interface DropZoneProps {
   fields: BigQueryField[]
   acceptedTypes?: string[]
   onRemoveField?: (fieldName: string) => void
+  onAggregationChange?: (fieldName: string, aggregation: BigQueryField['aggregation']) => void
   className?: string
 }
 
@@ -23,6 +25,7 @@ export default function DropZone({
   fields,
   acceptedTypes,
   onRemoveField,
+  onAggregationChange,
   className = ''
 }: DropZoneProps) {
   const { isOver, setNodeRef } = useDroppable({
@@ -70,6 +73,24 @@ export default function DropZone({
     }
     return '📊'
   }
+
+  // Check if field is numeric and needs aggregation
+  const isNumericField = (type: string) => {
+    const lowerType = type.toLowerCase()
+    return lowerType.includes('int') || 
+           lowerType.includes('numeric') || 
+           lowerType.includes('float') ||
+           lowerType.includes('decimal')
+  }
+
+  // Aggregation options
+  const aggregationOptions = [
+    { value: 'SUM', label: 'SUM' },
+    { value: 'AVG', label: 'AVG' },
+    { value: 'COUNT', label: 'COUNT' },
+    { value: 'MAX', label: 'MAX' },
+    { value: 'MIN', label: 'MIN' }
+  ] as const
 
   return (
     <div className={`${className}`}>
@@ -129,6 +150,27 @@ export default function DropZone({
                       <span className="text-xs text-gray-500">
                         {field.type}
                       </span>
+                      
+                      {/* Aggregation selector for Y-axis numeric fields */}
+                      {id === 'y-axis-drop-zone' && isNumericField(field.type) && onAggregationChange && (
+                        <div className="mt-1">
+                          <Select
+                            value={field.aggregation || 'SUM'}
+                            onValueChange={(value) => onAggregationChange(field.name, value as BigQueryField['aggregation'])}
+                          >
+                            <SelectTrigger className="h-6 text-xs w-20">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {aggregationOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value} className="text-xs">
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                     </div>
                   </div>
                   

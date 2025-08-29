@@ -93,6 +93,17 @@ export default function SplitSidebarPanel({
     })
   }
 
+  const handleAggregationChange = (fieldName: string, aggregation: BigQueryField['aggregation']) => {
+    setChartBuilderData(prev => ({
+      ...prev,
+      yAxis: prev.yAxis.map(field => 
+        field.name === fieldName 
+          ? { ...field, aggregation }
+          : field
+      )
+    }))
+  }
+
   // Show datasets tab with split layout
   if (activeTab === 'datasets') {
     return (
@@ -114,6 +125,7 @@ export default function SplitSidebarPanel({
                 data={chartBuilderData}
                 onChartTypeChange={handleChartTypeChange}
                 onClear={handleClearBuilder}
+                onAggregationChange={handleAggregationChange}
                 droppedWidgets={droppedWidgets}
                 onEditWidget={onEditWidget}
               />

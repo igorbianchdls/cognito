@@ -32,6 +32,7 @@ interface ChartBuilderProps {
   data: ChartBuilderData
   onChartTypeChange: (chartType: ChartBuilderData['chartType']) => void
   onClear: () => void
+  onAggregationChange?: (fieldName: string, aggregation: BigQueryField['aggregation']) => void
   droppedWidgets?: DroppedWidget[]
   onEditWidget: (widgetId: string, changes: Partial<DroppedWidget>) => void
 }
@@ -40,6 +41,7 @@ export default function ChartBuilder({
   data,
   onChartTypeChange,
   onClear,
+  onAggregationChange,
   droppedWidgets = [],
   onEditWidget
 }: ChartBuilderProps) {
@@ -51,6 +53,13 @@ export default function ChartBuilder({
     // This would be handled by the parent component through drag events
     // For now, we'll just log it
     console.log(`Remove ${fieldName} from ${dropZoneType}`)
+  }
+
+  // Handle aggregation change for Y-axis fields
+  const handleAggregationChange = (fieldName: string, aggregation: BigQueryField['aggregation']) => {
+    if (onAggregationChange) {
+      onAggregationChange(fieldName, aggregation)
+    }
   }
 
   // Handle adding chart to dashboard
@@ -174,6 +183,7 @@ export default function ChartBuilder({
               fields={data.yAxis}
               acceptedTypes={['numeric']}
               onRemoveField={(fieldName) => handleRemoveField('yAxis', fieldName)}
+              onAggregationChange={handleAggregationChange}
             />
 
             {/* Filters */}

@@ -75,7 +75,7 @@ export default function ChartPreview({
     
     // Build SELECT clause
     const selectCols = [xAxisColumn.name]
-    const aggregation = getAggregationFunction(yAxisColumn.type)
+    const aggregation = getAggregationFunction(yAxisColumn)
     selectCols.push(`${aggregation}(${yAxisColumn.name}) as ${yAxisColumn.name}_agg`)
 
     // Build WHERE clause for filters
@@ -103,9 +103,15 @@ LIMIT 50
     return sql
   }
 
-  // Get appropriate aggregation function based on data type
-  const getAggregationFunction = (dataType: string) => {
-    const lowerType = dataType.toLowerCase()
+  // Get appropriate aggregation function - use selected aggregation or default
+  const getAggregationFunction = (field: BigQueryField) => {
+    // If aggregation is explicitly set, use it
+    if (field.aggregation) {
+      return field.aggregation
+    }
+    
+    // Otherwise, use default based on data type
+    const lowerType = field.type.toLowerCase()
     
     if (lowerType.includes('string') || lowerType.includes('text')) {
       return 'COUNT'
