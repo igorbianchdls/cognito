@@ -217,15 +217,6 @@ export default function SQLResultsTable({ data, schema, pageSize = 10 }: SQLResu
             <Button
               variant="outline"
               size="sm"
-              onClick={analyzeWithAI}
-              className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
-            >
-              <BarChart3 className="w-4 h-4 mr-2" />
-              Analisar com IA
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
               onClick={copyToChat}
               className="bg-sky-50 hover:bg-sky-100 text-sky-700 border-sky-200"
             >
@@ -235,42 +226,12 @@ export default function SQLResultsTable({ data, schema, pageSize = 10 }: SQLResu
             <Button
               variant="outline"
               size="sm"
-              onClick={copyJSONToChat}
-              className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
-            >
-              <FileText className="w-4 h-4 mr-2" />
-              JSON pro Chat
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={copyRawData}
-              className="bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200"
-            >
-              <Copy className="w-4 h-4 mr-2" />
-              Copiar Dados Puros
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
               onClick={exportToCSV}
               className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
             >
               <Download className="w-4 h-4 mr-2" />
-              CSV
+              Exportar como CSV
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={exportToJSON}
-              className="bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              JSON
-            </Button>
-            <span className="text-xs text-gray-500 ml-2">
-              {exportData.length} registros
-            </span>
           </div>
         )}
       </div>
