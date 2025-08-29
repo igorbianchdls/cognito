@@ -32,7 +32,7 @@ export default function SQLEditor({
   const [yColumn, setYColumn] = useState<string>('');
 
   // Transform SQL data to ChartData format
-  const transformSQLDataToChart = (data: any[], xCol: string, yCol: string): ChartData[] => {
+  const transformSQLDataToChart = (data: Record<string, unknown>[], xCol: string, yCol: string): ChartData[] => {
     return data.map(row => ({
       x: String(row[xCol]),
       y: Number(row[yCol]) || 0,
