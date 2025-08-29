@@ -276,17 +276,14 @@ export default function SQLResultsTable({ data, schema, pageSize = 10 }: SQLResu
       </div>
 
       {/* Table */}
-      <div className="">
+      <div className="border border-gray-300 rounded-lg overflow-hidden">
         <Table className="border-collapse">
           <TableHeader className="sticky top-0 bg-gray-50 z-10">
             <TableRow className="border-0">
               {columns.map((column) => (
                 <TableHead key={column} className="bg-gray-50 font-medium text-gray-600 text-sm border-r border-gray-300 last:border-r-0 px-4 py-0 h-12">
-                  <div>
-                    <div>{column}</div>
-                    <div className="text-xs text-gray-500 font-normal">
-                      {getColumnType(column)}
-                    </div>
+                  <div className="flex items-center h-full">
+                    {column}
                   </div>
                 </TableHead>
               ))}
