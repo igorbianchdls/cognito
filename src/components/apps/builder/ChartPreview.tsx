@@ -35,6 +35,35 @@ export default function ChartPreview({
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState<string>('')
 
+  // Generate programmatic code for chart creation
+  const generateChartCode = () => {
+    if (!selectedTable || xAxis.length === 0 || yAxis.length === 0) {
+      return ''
+    }
+
+    return `createChart({
+  project: "creatto-463117",
+  dataset: "biquery_data",
+  table: "${selectedTable}",
+  x: "${xAxis[0].name}",
+  y: "${yAxis[0].name}",
+  type: "${chartType}"
+})`
+  }
+
+  // Copy code to clipboard
+  const copyCodeToClipboard = async () => {
+    const code = generateChartCode()
+    if (code) {
+      try {
+        await navigator.clipboard.writeText(code)
+        // Could add a toast notification here
+      } catch (err) {
+        console.error('Failed to copy code:', err)
+      }
+    }
+  }
+
   // Generate SQL query based on current configuration
   const generateQuery = () => {
     if (!selectedTable || xAxis.length === 0 || yAxis.length === 0) {
@@ -324,6 +353,32 @@ LIMIT 50
             </div>
           )}
         </div>
+
+        {/* Generated Code */}
+        {generateChartCode() && (
+          <details className="mt-4">
+            <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground flex items-center gap-2">
+              View Generated Code
+              <Badge variant="outline" className="text-xs">JavaScript</Badge>
+            </summary>
+            <Card className="mt-2 bg-muted/50">
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-muted-foreground">Programmatic chart creation</span>
+                  <button
+                    onClick={copyCodeToClipboard}
+                    className="text-xs px-2 py-1 bg-background hover:bg-accent rounded border transition-colors"
+                  >
+                    Copy Code
+                  </button>
+                </div>
+                <pre className="text-xs font-mono overflow-x-auto whitespace-pre-wrap">
+                  {generateChartCode()}
+                </pre>
+              </CardContent>
+            </Card>
+          </details>
+        )}
 
         {/* Query Preview */}
         {query && (
