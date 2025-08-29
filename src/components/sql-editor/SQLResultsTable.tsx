@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Download, BarChart3 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Download, BarChart3, Copy } from 'lucide-react';
 import { useStore } from '@nanostores/react';
 import { $lastQueryData } from '@/stores/queryStore';
 
@@ -101,6 +101,23 @@ export default function SQLResultsTable({ data, schema, pageSize = 10 }: SQLResu
     }, '*');
   };
 
+  // Copy raw data function
+  const copyRawData = () => {
+    if (!data || data.length === 0) {
+      alert('Nenhum dado disponível para copiar');
+      return;
+    }
+
+    try {
+      const rawJson = JSON.stringify(data, null, 2);
+      navigator.clipboard.writeText(rawJson);
+      alert('Dados copiados para o clipboard!');
+    } catch (error) {
+      console.error('Erro ao copiar dados:', error);
+      alert('Erro ao copiar dados para o clipboard');
+    }
+  };
+
   // Get column names from schema or data
   const columns = schema.length > 0 
     ? schema.map(s => s.name)
@@ -162,6 +179,15 @@ export default function SQLResultsTable({ data, schema, pageSize = 10 }: SQLResu
             >
               <BarChart3 className="w-4 h-4 mr-2" />
               Analisar com IA
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={copyRawData}
+              className="bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200"
+            >
+              <Copy className="w-4 h-4 mr-2" />
+              Copiar Dados Puros
             </Button>
             <Button
               variant="outline"
