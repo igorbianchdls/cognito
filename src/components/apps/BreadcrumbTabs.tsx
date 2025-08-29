@@ -1,10 +1,10 @@
 'use client'
 
-import { BarChart3, MessageSquare, Settings, Code, Cpu, Archive } from 'lucide-react'
+import { BarChart3, MessageSquare, Settings, Code, Cpu, Archive, Database } from 'lucide-react'
 
 interface BreadcrumbTabsProps {
-  activeTab: 'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved'
-  onTabChange: (tab: 'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved') => void
+  activeTab: 'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved' | 'datasets'
+  onTabChange: (tab: 'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved' | 'datasets') => void
 }
 
 export default function BreadcrumbTabs({ activeTab, onTabChange }: BreadcrumbTabsProps) {
@@ -15,6 +15,7 @@ export default function BreadcrumbTabs({ activeTab, onTabChange }: BreadcrumbTab
     { id: 'code', label: 'Code', icon: Code },
     { id: 'automations', label: 'Automações', icon: Cpu },
     { id: 'saved', label: 'Salvos', icon: Archive },
+    { id: 'datasets', label: 'Datasets', icon: Database },
   ] as const
 
   return (

@@ -20,7 +20,7 @@ import BreadcrumbTabs from '@/components/apps/BreadcrumbTabs'
 export default function AppsPage() {
   const droppedWidgets = useStore($widgets)
   const [activeWidget, setActiveWidget] = useState<Widget | null>(null)
-  const [activeTab, setActiveTab] = useState<'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved'>('chat')
+  const [activeTab, setActiveTab] = useState<'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved' | 'datasets'>('chat')
 
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event

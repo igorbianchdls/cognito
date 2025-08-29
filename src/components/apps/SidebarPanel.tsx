@@ -6,10 +6,11 @@ import WidgetEditor from '@/components/apps/WidgetEditorNew'
 import CodeEditor from '@/components/apps/CodeEditor'
 import AutomationsPanel from '@/components/apps/AutomationsPanel'
 import SavedPanel from '@/components/apps/SavedPanel'
+import DatasetsPanel from '@/components/apps/DatasetsPanel'
 import type { DroppedWidget } from '@/types/widget'
 
 interface SidebarPanelProps {
-  activeTab: 'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved'
+  activeTab: 'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved' | 'datasets'
   collapsed?: boolean
   droppedWidgets?: DroppedWidget[]
   onEditWidget: (widgetId: string, changes: Partial<DroppedWidget>) => void
@@ -33,6 +34,7 @@ export default function SidebarPanel({
       {activeTab === 'code' && <CodeEditor />}
       {activeTab === 'automations' && <AutomationsPanel />}
       {activeTab === 'saved' && <SavedPanel />}
+      {activeTab === 'datasets' && <DatasetsPanel />}
     </div>
   )
 }
