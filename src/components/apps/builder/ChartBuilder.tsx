@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { BarChart3, TrendingUp, PieChart, Activity, Trash2, Plus } from 'lucide-react'
+import { BarChart3, TrendingUp, PieChart, Activity, Trash2, Plus, ArrowRight, ArrowUp } from 'lucide-react'
 import DropZone from './DropZone'
 import ChartPreview from './ChartPreview'
 import type { BigQueryField } from './TablesExplorer'
@@ -16,8 +16,8 @@ interface ChartData {
 }
 
 interface ChartBuilderData {
-  rows: BigQueryField[]
-  columns: BigQueryField[]
+  xAxis: BigQueryField[]
+  yAxis: BigQueryField[]
   filters: BigQueryField[]
   chartType: 'bar' | 'line' | 'pie' | 'area'
   selectedTable: string | null
@@ -42,7 +42,7 @@ export default function ChartBuilder({
   const [previewQuery, setPreviewQuery] = useState<string>('')
 
   // Handle field removal from drop zones
-  const handleRemoveField = (dropZoneType: 'rows' | 'columns' | 'filters', fieldName: string) => {
+  const handleRemoveField = (dropZoneType: 'xAxis' | 'yAxis' | 'filters', fieldName: string) => {
     // This would be handled by the parent component through drag events
     // For now, we'll just log it
     console.log(`Remove ${fieldName} from ${dropZoneType}`)
@@ -72,7 +72,7 @@ export default function ChartBuilder({
       // Use config.chartConfig structure per WidgetConfig interface
       config: {
         chartConfig: {
-          title: `${data.rows[0]?.name} by ${data.columns[0]?.name}`,
+          title: `${data.xAxis[0]?.name} por ${data.yAxis[0]?.name}`,
           colors: ['#2563eb'],
           enableGridX: false,
           enableGridY: true,
@@ -83,8 +83,8 @@ export default function ChartBuilder({
       bigqueryData: {
         chartType: data.chartType,
         data: previewData,
-        xColumn: data.rows[0]?.name,
-        yColumn: data.columns[0]?.name,
+        xColumn: data.xAxis[0]?.name,
+        yColumn: data.yAxis[0]?.name,
         query: previewQuery,
         source: 'bigquery',
         table: data.selectedTable,
@@ -122,7 +122,7 @@ export default function ChartBuilder({
   ] as const
 
   // Check if configuration is valid
-  const isConfigValid = data.selectedTable && data.rows.length > 0 && data.columns.length > 0
+  const isConfigValid = data.selectedTable && data.xAxis.length > 0 && data.yAxis.length > 0
 
   return (
     <div className="h-full flex flex-col bg-white">
@@ -148,26 +148,26 @@ export default function ChartBuilder({
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {/* Drop Zones */}
         <div className="space-y-4">
-          {/* Rows (Dimensions) */}
+          {/* Eixo X (Dimensions) */}
           <DropZone
-            id="rows-drop-zone"
-            label="Rows"
-            description="Drag dimensions here (categories, groups)"
-            icon={<BarChart3 className="w-4 h-4 text-green-600" />}
-            fields={data.rows}
+            id="x-axis-drop-zone"
+            label="Eixo X"
+            description="Categorias para eixo horizontal (strings, datas)"
+            icon={<ArrowRight className="w-4 h-4 text-green-600" />}
+            fields={data.xAxis}
             acceptedTypes={['string', 'date', 'numeric']}
-            onRemoveField={(fieldName) => handleRemoveField('rows', fieldName)}
+            onRemoveField={(fieldName) => handleRemoveField('xAxis', fieldName)}
           />
 
-          {/* Columns (Measures) */}
+          {/* Eixo Y (Measures) */}
           <DropZone
-            id="columns-drop-zone"
-            label="Columns"
-            description="Drag measures here (numeric values to aggregate)"
-            icon={<TrendingUp className="w-4 h-4 text-blue-600" />}
-            fields={data.columns}
+            id="y-axis-drop-zone"
+            label="Eixo Y"
+            description="Valores numéricos para eixo vertical (agregação)"
+            icon={<ArrowUp className="w-4 h-4 text-blue-600" />}
+            fields={data.yAxis}
             acceptedTypes={['numeric']}
-            onRemoveField={(fieldName) => handleRemoveField('columns', fieldName)}
+            onRemoveField={(fieldName) => handleRemoveField('yAxis', fieldName)}
           />
 
           {/* Filters */}
@@ -245,8 +245,8 @@ export default function ChartBuilder({
                 <div className="font-medium mb-1">Configuration:</div>
                 <div className="space-y-1 text-xs">
                   <div>• Table: <code className="bg-white px-1 rounded">{data.selectedTable}</code></div>
-                  <div>• Rows: <code className="bg-white px-1 rounded">{data.rows.map(r => r.name).join(', ')}</code></div>
-                  <div>• Columns: <code className="bg-white px-1 rounded">{data.columns.map(c => c.name).join(', ')}</code></div>
+                  <div>• Eixo X: <code className="bg-white px-1 rounded">{data.xAxis.map(r => r.name).join(', ')}</code></div>
+                  <div>• Eixo Y: <code className="bg-white px-1 rounded">{data.yAxis.map(c => c.name).join(', ')}</code></div>
                   {data.filters.length > 0 && (
                     <div>• Filters: <code className="bg-white px-1 rounded">{data.filters.map(f => f.name).join(', ')}</code></div>
                   )}

@@ -12,8 +12,8 @@ interface ChartData {
 }
 
 interface ChartPreviewProps {
-  rows: BigQueryField[]
-  columns: BigQueryField[]
+  xAxis: BigQueryField[]
+  yAxis: BigQueryField[]
   filters: BigQueryField[]
   chartType: 'bar' | 'line' | 'pie' | 'area'
   selectedTable: string | null
@@ -21,8 +21,8 @@ interface ChartPreviewProps {
 }
 
 export default function ChartPreview({
-  rows,
-  columns,
+  xAxis,
+  yAxis,
   filters,
   chartType,
   selectedTable,
@@ -35,17 +35,17 @@ export default function ChartPreview({
 
   // Generate SQL query based on current configuration
   const generateQuery = () => {
-    if (!selectedTable || rows.length === 0 || columns.length === 0) {
+    if (!selectedTable || xAxis.length === 0 || yAxis.length === 0) {
       return ''
     }
 
-    const rowColumn = rows[0]
-    const valueColumn = columns[0]
+    const xAxisColumn = xAxis[0]
+    const yAxisColumn = yAxis[0]
     
     // Build SELECT clause
-    const selectCols = [rowColumn.name]
-    const aggregation = getAggregationFunction(valueColumn.type)
-    selectCols.push(`${aggregation}(${valueColumn.name}) as ${valueColumn.name}_agg`)
+    const selectCols = [xAxisColumn.name]
+    const aggregation = getAggregationFunction(yAxisColumn.type)
+    selectCols.push(`${aggregation}(${yAxisColumn.name}) as ${yAxisColumn.name}_agg`)
 
     // Build WHERE clause for filters
     let whereClause = ''
@@ -64,8 +64,8 @@ export default function ChartPreview({
 SELECT ${selectCols.join(', ')}
 FROM \`creatto-463117.biquery_data.${selectedTable}\`
 ${whereClause}
-GROUP BY ${rowColumn.name}
-ORDER BY ${valueColumn.name}_agg DESC
+GROUP BY ${xAxisColumn.name}
+ORDER BY ${yAxisColumn.name}_agg DESC
 LIMIT 50
     `.trim()
 
@@ -89,7 +89,7 @@ LIMIT 50
 
   // Execute query and load data
   const loadChartData = async () => {
-    if (!selectedTable || rows.length === 0 || columns.length === 0) {
+    if (!selectedTable || xAxis.length === 0 || yAxis.length === 0) {
       setChartData([])
       setError(null)
       return
@@ -114,15 +114,15 @@ LIMIT 50
 
       if (result.success && result.data?.data && Array.isArray(result.data.data)) {
         const rawData = result.data.data
-        const rowColumn = rows[0]
-        const valueColumn = columns[0]
+        const xAxisColumn = xAxis[0]
+        const yAxisColumn = yAxis[0]
         
         // Transform data for chart
         const transformedData: ChartData[] = rawData.map((row: Record<string, unknown>) => ({
-          x: String(row[rowColumn.name] || 'Unknown'),
-          y: Number(row[`${valueColumn.name}_agg`] || 0),
-          label: String(row[rowColumn.name] || 'Unknown'),
-          value: Number(row[`${valueColumn.name}_agg`] || 0)
+          x: String(row[xAxisColumn.name] || 'Unknown'),
+          y: Number(row[`${yAxisColumn.name}_agg`] || 0),
+          label: String(row[xAxisColumn.name] || 'Unknown'),
+          value: Number(row[`${yAxisColumn.name}_agg`] || 0)
         }))
 
         setChartData(transformedData)
@@ -150,7 +150,7 @@ LIMIT 50
     }, 500) // Debounce to avoid too many requests
 
     return () => clearTimeout(timer)
-  }, [rows, columns, filters, selectedTable])
+  }, [xAxis, yAxis, filters, selectedTable])
 
   // Simple chart rendering functions
   const renderBarChart = () => {
@@ -252,7 +252,7 @@ LIMIT 50
   }
 
   // Check if ready to render
-  const canRender = selectedTable && rows.length > 0 && columns.length > 0
+  const canRender = selectedTable && xAxis.length > 0 && yAxis.length > 0
 
   return (
     <div className="space-y-3">
@@ -269,10 +269,10 @@ LIMIT 50
           <div className="flex flex-col items-center justify-center h-48 text-gray-500">
             <TrendingUp className="w-8 h-8 mb-2 opacity-50" />
             <p className="text-sm text-center">
-              Add rows and columns to see preview
+              Configure eixo X e Y para ver preview
             </p>
             <p className="text-xs text-center text-gray-400 mt-1">
-              Drag columns from the left panel
+              Arraste colunas do painel esquerdo
             </p>
           </div>
         ) : loading ? (

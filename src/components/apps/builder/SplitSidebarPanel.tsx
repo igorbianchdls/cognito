@@ -14,8 +14,8 @@ import type { DroppedWidget } from '@/types/widget'
 import type { BigQueryField } from './TablesExplorer'
 
 interface ChartBuilderData {
-  rows: BigQueryField[]
-  columns: BigQueryField[]
+  xAxis: BigQueryField[]
+  yAxis: BigQueryField[]
   filters: BigQueryField[]
   chartType: 'bar' | 'line' | 'pie' | 'area'
   selectedTable: string | null
@@ -35,8 +35,8 @@ export default function SplitSidebarPanel({
   onEditWidget
 }: SplitSidebarPanelProps) {
   const [chartBuilderData, setChartBuilderData] = useState<ChartBuilderData>({
-    rows: [],
-    columns: [],
+    xAxis: [],
+    yAxis: [],
     filters: [],
     chartType: 'bar',
     selectedTable: null
@@ -55,17 +55,17 @@ export default function SplitSidebarPanel({
       const newData = { ...prev }
       
       // Remove from previous locations
-      newData.rows = newData.rows.filter(col => col.name !== draggedColumn.name)
-      newData.columns = newData.columns.filter(col => col.name !== draggedColumn.name)
+      newData.xAxis = newData.xAxis.filter(col => col.name !== draggedColumn.name)
+      newData.yAxis = newData.yAxis.filter(col => col.name !== draggedColumn.name)
       newData.filters = newData.filters.filter(col => col.name !== draggedColumn.name)
       
       // Add to new location
       switch (dropZoneId) {
-        case 'rows-drop-zone':
-          newData.rows.push(draggedColumn)
+        case 'x-axis-drop-zone':
+          newData.xAxis.push(draggedColumn)
           break
-        case 'columns-drop-zone':
-          newData.columns.push(draggedColumn)
+        case 'y-axis-drop-zone':
+          newData.yAxis.push(draggedColumn)
           break
         case 'filters-drop-zone':
           newData.filters.push(draggedColumn)
@@ -85,8 +85,8 @@ export default function SplitSidebarPanel({
 
   const handleClearBuilder = () => {
     setChartBuilderData({
-      rows: [],
-      columns: [],
+      xAxis: [],
+      yAxis: [],
       filters: [],
       chartType: 'bar',
       selectedTable: null
