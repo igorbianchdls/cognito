@@ -336,7 +336,7 @@ export default function Page() {
   return (
     <SidebarProvider>
       <SidebarShadcn />
-      <SidebarInset>
+      <SidebarInset className="h-screen overflow-hidden">
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12" style={{backgroundColor: 'white'}}>
           <div className="flex items-center gap-2 px-4">
             <SidebarTrigger className="-ml-1" />
@@ -360,7 +360,7 @@ export default function Page() {
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 overflow-hidden" style={{backgroundColor: 'white'}}>
-          <div data-page="nexus" className="mx-auto w-full max-w-4xl h-[calc(100vh-6rem)]">
+          <div data-page="nexus" className="mx-auto w-full max-w-4xl h-[calc(100vh-4rem-2rem)]">
             <ChatContainer
               messages={displayedMessages}
               input={input}
