@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Table2, Database, RefreshCw, AlertCircle, ChevronRight, ChevronDown } from 'lucide-react'
+import { Table2, Database, RefreshCw, AlertCircle, ChevronRight, ChevronDown, BarChart3, Plus } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
@@ -220,23 +220,45 @@ export default function TablesExplorer() {
                             <span className="text-sm">{schemaError}</span>
                           </div>
                         ) : schema ? (
-                          <div className="space-y-1">
-                            <div className="py-1">
-                              <span className="text-xs text-muted-foreground">
-                                {schema.length} columns - drag to Chart Builder →
-                              </span>
-                            </div>
-                            <ScrollArea className="max-h-64">
-                              <div className="space-y-1">
-                                {schema.map((field, index) => (
-                                  <DraggableColumn
-                                    key={index}
-                                    field={field}
-                                    sourceTable={tableId}
-                                  />
-                                ))}
+                          <div className="space-y-3">
+                            {/* Dimensões Section */}
+                            <div>
+                              <div className="flex items-center gap-2 py-1 mb-2">
+                                <BarChart3 className="w-4 h-4 text-blue-600" />
+                                <span className="text-sm font-medium text-gray-900">Dimensões</span>
+                                <Badge variant="outline" className="text-xs ml-1">
+                                  {schema.length}
+                                </Badge>
                               </div>
-                            </ScrollArea>
+                              <ScrollArea className="max-h-48">
+                                <div className="space-y-1">
+                                  {schema.map((field, index) => (
+                                    <DraggableColumn
+                                      key={index}
+                                      field={field}
+                                      sourceTable={tableId}
+                                    />
+                                  ))}
+                                </div>
+                              </ScrollArea>
+                            </div>
+
+                            {/* Medidas Section */}
+                            <div>
+                              <div className="flex items-center gap-2 py-1 mb-2">
+                                <BarChart3 className="w-4 h-4 text-green-600" />
+                                <span className="text-sm font-medium text-gray-900">Medidas</span>
+                                <Badge variant="outline" className="text-xs ml-1">
+                                  0
+                                </Badge>
+                              </div>
+                              <div className="px-2 py-2">
+                                <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                                  <Plus className="w-4 h-4" />
+                                  Criar Medida
+                                </button>
+                              </div>
+                            </div>
                           </div>
                         ) : (
                           <p className="text-sm text-muted-foreground py-2">

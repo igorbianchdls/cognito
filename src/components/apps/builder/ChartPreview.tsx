@@ -41,12 +41,16 @@ export default function ChartPreview({
       return ''
     }
 
+    const yAxisField = yAxis[0]
+    const aggregation = getAggregationFunction(yAxisField)
+    const yFieldWithAggregation = `${aggregation}(${yAxisField.name})`
+
     return `createChart({
   project: "creatto-463117",
   dataset: "biquery_data",
   table: "${selectedTable}",
   x: "${xAxis[0].name}",
-  y: "${yAxis[0].name}",
+  y: "${yFieldWithAggregation}",
   type: "${chartType}"
 })`
   }
