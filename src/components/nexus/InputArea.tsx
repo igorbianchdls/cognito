@@ -111,6 +111,10 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
     }
   };
 
+  // Detectar se há dados anexados para aplicar estilo diferente
+  const hasDataAttachment = (input.includes('[+') && input.includes('linhas de dados]')) ||
+                            input.includes('📄 SQL_Results.json');
+
   return (
     <div className="relative">
       {/* Dropdown que aparece quando o usuário digita "/" */}
@@ -158,6 +162,7 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
         <PromptInputTextarea
           onChange={handleInputChange}
           value={input}
+          className={hasDataAttachment ? 'text-blue-600' : ''}
         />
       <PromptInputToolbar>
         <PromptInputTools>
