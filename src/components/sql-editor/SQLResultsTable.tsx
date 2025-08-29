@@ -11,7 +11,9 @@ import {
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Download, BarChart3 } from 'lucide-react';
+import { useStore } from '@nanostores/react';
+import { $lastQueryData } from '@/stores/queryStore';
 
 interface SQLResultsTableProps {
   data: Record<string, unknown>[];
@@ -22,6 +24,82 @@ interface SQLResultsTableProps {
 export default function SQLResultsTable({ data, schema, pageSize = 10 }: SQLResultsTableProps) {
   const [currentPage, setCurrentPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Access query store for fresh data
+  const queryStoreData = useStore($lastQueryData);
+  
+  // Use fresh data from store if available, fallback to props
+  const exportData = queryStoreData && queryStoreData.length > 0 ? queryStoreData : data;
+
+  // Export to CSV function
+  const exportToCSV = () => {
+    if (!exportData || exportData.length === 0) {
+      alert('Nenhum dado disponível para exportar');
+      return;
+    }
+
+    const headers = Object.keys(exportData[0]);
+    const csvContent = [
+      headers.join(','),
+      ...exportData.map(row => 
+        headers.map(header => {
+          const value = row[header];
+          // Escape quotes and wrap in quotes if contains comma
+          const stringValue = String(value || '');
+          return stringValue.includes(',') || stringValue.includes('"') 
+            ? `"${stringValue.replace(/"/g, '""')}"` 
+            : stringValue;
+        }).join(',')
+      )
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `query-results-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Export to JSON function  
+  const exportToJSON = () => {
+    if (!exportData || exportData.length === 0) {
+      alert('Nenhum dado disponível para exportar');
+      return;
+    }
+
+    const jsonContent = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([jsonContent], { type: 'application/json;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `query-results-${new Date().toISOString().slice(0,19).replace(/:/g,'-')}.json`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Analyze with AI function
+  const analyzeWithAI = () => {
+    if (!exportData || exportData.length === 0) {
+      alert('Nenhum dado disponível para analisar');
+      return;
+    }
+
+    console.log('📊 SQLResultsTable: Sending data for AI analysis:', exportData.length, 'rows');
+    
+    // Send data via postMessage to chat
+    window.postMessage({
+      type: 'ANALYZE_DATA',
+      data: exportData,
+      query: 'Dados da tabela SQL',
+      timestamp: new Date().toISOString()
+    }, '*');
+  };
 
   // Get column names from schema or data
   const columns = schema.length > 0 
@@ -56,20 +134,58 @@ export default function SQLResultsTable({ data, schema, pageSize = 10 }: SQLResu
 
   return (
     <div className="space-y-4">
-      {/* Search */}
-      <div className="flex items-center gap-2">
-        <Input
-          placeholder="Buscar nos resultados..."
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setCurrentPage(0); // Reset to first page
-          }}
-          className="max-w-sm"
-        />
-        <span className="text-sm text-gray-600">
-          {filteredData.length} de {data.length} linhas
-        </span>
+      {/* Search and Actions */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="Buscar nos resultados..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(0); // Reset to first page
+            }}
+            className="max-w-sm"
+          />
+          <span className="text-sm text-gray-600">
+            {filteredData.length} de {data.length} linhas
+          </span>
+        </div>
+        
+        {/* Action buttons - always visible when there's data */}
+        {exportData && exportData.length > 0 && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={analyzeWithAI}
+              className="bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200"
+            >
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Analisar com IA
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToCSV}
+              className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              CSV
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToJSON}
+              className="bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              JSON
+            </Button>
+            <span className="text-xs text-gray-500 ml-2">
+              {exportData.length} registros
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Table */}
