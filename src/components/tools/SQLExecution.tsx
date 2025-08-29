@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import SQLEditor from '../sql-editor/SQLEditor';
 import { useStore } from '@nanostores/react';
