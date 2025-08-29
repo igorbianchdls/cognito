@@ -51,13 +51,13 @@ export default function ChatContainer({
     );
   }
 
-  // Estado com mensagens - layout com InputArea sticky
+  // Estado com mensagens - layout com CSS Grid
   return (
-    <div className="h-screen flex flex-col" style={{backgroundColor: 'white'}}>
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
+    <div className="h-full grid grid-rows-[1fr_auto]" style={{backgroundColor: 'white'}}>
+      <div className="overflow-y-auto custom-scrollbar">
         <MessageList messages={messages} selectedAgent={selectedAgent} />
       </div>
-      <div className="sticky bottom-0 pb-4" style={{backgroundColor: 'white'}}>
+      <div className="pb-4" style={{backgroundColor: 'white'}}>
         <InputArea 
           input={input}
           setInput={setInput}
