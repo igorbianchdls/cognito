@@ -154,39 +154,38 @@ export default function ChartBuilder({
         <div className="px-3 py-2 space-y-6">
           {/* Drop Zones Section */}
           <div className="space-y-3 px-2">
-              {/* Eixo X (Dimensions) */}
-              <DropZone
-                id="x-axis-drop-zone"
-                label="Eixo X"
-                description="Categorias para eixo horizontal (strings, datas)"
-                icon={<ArrowRight className="w-4 h-4 text-green-600" />}
-                fields={data.xAxis}
-                acceptedTypes={['string', 'date', 'numeric']}
-                onRemoveField={(fieldName) => handleRemoveField('xAxis', fieldName)}
-              />
+            {/* Eixo X (Dimensions) */}
+            <DropZone
+              id="x-axis-drop-zone"
+              label="Eixo X"
+              description="Categorias para eixo horizontal (strings, datas)"
+              icon={<ArrowRight className="w-4 h-4 text-green-600" />}
+              fields={data.xAxis}
+              acceptedTypes={['string', 'date', 'numeric']}
+              onRemoveField={(fieldName) => handleRemoveField('xAxis', fieldName)}
+            />
 
-              {/* Eixo Y (Measures) */}
-              <DropZone
-                id="y-axis-drop-zone"
-                label="Eixo Y"
-                description="Valores numéricos para eixo vertical (agregação)"
-                icon={<ArrowUp className="w-4 h-4 text-blue-600" />}
-                fields={data.yAxis}
-                acceptedTypes={['numeric']}
-                onRemoveField={(fieldName) => handleRemoveField('yAxis', fieldName)}
-              />
+            {/* Eixo Y (Measures) */}
+            <DropZone
+              id="y-axis-drop-zone"
+              label="Eixo Y"
+              description="Valores numéricos para eixo vertical (agregação)"
+              icon={<ArrowUp className="w-4 h-4 text-blue-600" />}
+              fields={data.yAxis}
+              acceptedTypes={['numeric']}
+              onRemoveField={(fieldName) => handleRemoveField('yAxis', fieldName)}
+            />
 
-              {/* Filters */}
-              <DropZone
-                id="filters-drop-zone"
-                label="Filters"
-                description="Drag fields here to filter data"
-                icon={<Activity className="w-4 h-4 text-orange-600" />}
-                fields={data.filters}
-                acceptedTypes={['string', 'date', 'numeric', 'boolean']}
-                onRemoveField={(fieldName) => handleRemoveField('filters', fieldName)}
-              />
-            </div>
+            {/* Filters */}
+            <DropZone
+              id="filters-drop-zone"
+              label="Filters"
+              description="Drag fields here to filter data"
+              icon={<Activity className="w-4 h-4 text-orange-600" />}
+              fields={data.filters}
+              acceptedTypes={['string', 'date', 'numeric', 'boolean']}
+              onRemoveField={(fieldName) => handleRemoveField('filters', fieldName)}
+            />
           </div>
 
           {/* Chart Type Selection */}
