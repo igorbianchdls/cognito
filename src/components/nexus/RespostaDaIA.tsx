@@ -479,6 +479,29 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
   const messageAgent = (message as UIMessage & { agent?: string }).agent || selectedAgent;
   
   const agentInfo = getAgentInfo(messageAgent);
+  
+  // Função para analisar dados com IA
+  const handleAnalyzeWithAI = (data: Array<Record<string, unknown>>, query: string) => {
+    console.log('📊 RespostaDaIA: Analyze button clicked with data:', data.length, 'rows');
+    console.log('📊 RespostaDaIA: Query:', query);
+    
+    if (data && data.length > 0) {
+      console.log('📊 RespostaDaIA: Sending data via postMessage...');
+      
+      // Send data to parent window via postMessage
+      window.postMessage({
+        type: 'ANALYZE_DATA',
+        data: data,
+        query: query,
+        timestamp: new Date().toISOString()
+      }, '*');
+      
+      console.log('📊 RespostaDaIA: PostMessage sent successfully');
+    } else {
+      console.warn('⚠️ RespostaDaIA: No data to analyze');
+    }
+  };
+
   const handleCopy = async () => {
     const textParts = message.parts
       .filter(part => part.type === 'text')
@@ -870,6 +893,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   success={(sqlTool.output as ExecutarSQLToolOutput).success}
                   validationErrors={(sqlTool.output as ExecutarSQLToolOutput).validationErrors}
                   error={(sqlTool.output as ExecutarSQLToolOutput).error}
+                  onAnalyzeWithAI={handleAnalyzeWithAI}
                 />
               )}
             </div>
