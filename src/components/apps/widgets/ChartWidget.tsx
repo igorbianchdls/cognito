@@ -29,28 +29,48 @@ interface ChartWidgetProps {
 }
 
 export default function ChartWidget({ widget }: ChartWidgetProps) {
-  const [data, setData] = useState<ChartData[]>([
-    { x: 'Jan', y: 65 },
-    { x: 'Feb', y: 78 },
-    { x: 'Mar', y: 52 },
-    { x: 'Apr', y: 82 },
-    { x: 'May', y: 91 },
-    { x: 'Jun', y: 73 },
-  ])
+  const [data, setData] = useState<ChartData[]>([])
 
-  // Simulate real-time data updates
+  // Initialize data based on widget config
   useEffect(() => {
-    const interval = setInterval(() => {
-      setData(prevData => 
-        prevData.map(item => ({
-          ...item,
-          y: Math.floor(Math.random() * 100) + 20
-        }))
-      )
-    }, 5000)
+    // Check if widget has BigQuery data
+    if (widget.config && typeof widget.config === 'object' && 'data' in widget.config && Array.isArray(widget.config.data)) {
+      // Use BigQuery data from Chart Builder
+      const bigqueryData = widget.config.data as { x: string; y: number; label: string; value: number }[]
+      const chartData = bigqueryData.map(item => ({
+        x: item.x,
+        y: item.y,
+        label: item.label,
+        value: item.value
+      }))
+      setData(chartData)
+      console.log('📊 ChartWidget usando dados do BigQuery:', chartData)
+    } else {
+      // Use default sample data
+      const defaultData = [
+        { x: 'Jan', y: 65 },
+        { x: 'Feb', y: 78 },
+        { x: 'Mar', y: 52 },
+        { x: 'Apr', y: 82 },
+        { x: 'May', y: 91 },
+        { x: 'Jun', y: 73 },
+      ]
+      setData(defaultData)
+      console.log('📊 ChartWidget usando dados default')
+      
+      // Simulate real-time data updates for sample data only
+      const interval = setInterval(() => {
+        setData(prevData => 
+          prevData.map(item => ({
+            ...item,
+            y: Math.floor(Math.random() * 100) + 20
+          }))
+        )
+      }, 5000)
 
-    return () => clearInterval(interval)
-  }, [])
+      return () => clearInterval(interval)
+    }
+  }, [widget.config])
 
   // Get chart configuration with backward compatibility
   const chartConfig = useMemo(() => {

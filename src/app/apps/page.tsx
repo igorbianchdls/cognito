@@ -6,7 +6,7 @@ import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from "@/components/ui/separator"
-import SidebarPanel from '@/components/apps/SidebarPanel'
+import SplitSidebarPanel from '@/components/apps/SplitSidebarPanel'
 import GridCanvas from '@/components/apps/GridCanvas'
 import MultiGridCanvas from '@/components/apps/MultiGridCanvas'
 import { $widgets, widgetActions } from '@/stores/widgetStore'
@@ -124,8 +124,8 @@ export default function AppsPage() {
           <div className="flex flex-1 bg-gray-50">
               
             <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
-              {/* SidebarPanel */}
-              <SidebarPanel 
+              {/* SplitSidebarPanel */}
+              <SplitSidebarPanel 
                 activeTab={activeTab}
                 droppedWidgets={droppedWidgets}
                 onEditWidget={handleEditWidget}
