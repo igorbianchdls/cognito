@@ -82,7 +82,7 @@ export default function SheetsPage() {
           
           {/* Painel Direito com Tabs - Oculto em telas pequenas */}
           <div className={`
-            hidden md:block border-l border-gray-200 bg-white
+            hidden md:block border-l a border-gray-200 bg-white
             transition-all duration-300 ease-in-out overflow-hidden
             ${isRightPanelCollapsed ? 'w-0 border-l-0' : 'w-80'}
           `}>
