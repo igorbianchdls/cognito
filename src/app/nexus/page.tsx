@@ -237,21 +237,32 @@ export default function Page() {
     if (input.trim()) {
       console.log('Enviando mensagem via:', selectedAgent);
       
-      // Check if there's pending analysis data
-      const messageToSend = pendingAnalysisData && input.includes('[+') && input.includes('linhas de dados]')
-        ? pendingAnalysisData
-        : input;
+      // Separate display text from AI data
+      let displayText = input;
+      let messageForAI = input;
       
-      // Adicionar mensagem do user ao array unificado
+      // Check if there's data attachment pattern
+      if (input.includes('[+') && input.includes('linhas de dados]')) {
+        // Clean display text - remove data attachment indicator
+        displayText = input.replace(/\[\+\d+\s+linhas\s+de\s+dados\]/g, '').trim();
+        
+        // Use pending data for AI if available
+        if (pendingAnalysisData) {
+          messageForAI = pendingAnalysisData;
+        }
+      }
+      
+      // Add clean message to chat display
       const userMessage = {
         id: `user-${Date.now()}`,
         role: 'user' as const,
-        parts: [{ type: 'text' as const, text: input }], // Display text for UI
+        parts: [{ type: 'text' as const, text: displayText }], // Clean text for UI
         agent: selectedAgent
       };
       setAllMessages(prev => [...prev, userMessage]);
       
-      sendMessage({ text: messageToSend }); // Send full data or regular input
+      // Send complete data to AI
+      sendMessage({ text: messageForAI });
       setInput('');
       
       // Clear pending data after sending
