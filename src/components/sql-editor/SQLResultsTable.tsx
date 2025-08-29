@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Download, BarChart3, Copy } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Download, BarChart3, Copy, MessageSquare } from 'lucide-react';
 import { useStore } from '@nanostores/react';
 import { $lastQueryData } from '@/stores/queryStore';
 
@@ -118,6 +118,27 @@ export default function SQLResultsTable({ data, schema, pageSize = 10 }: SQLResu
     }
   };
 
+  // Copy to chat function
+  const copyToChat = () => {
+    if (!data || data.length === 0) {
+      alert('Nenhum dado disponível para enviar');
+      return;
+    }
+
+    const displayText = `[+${data.length} linhas de dados]`;
+    
+    console.log('📊 SQLResultsTable: Sending data to chat:', data.length, 'rows');
+    
+    // Send data via postMessage to chat
+    window.postMessage({
+      type: 'SEND_TO_CHAT',
+      data: data,
+      displayText: displayText,
+      query: 'Dados da tabela SQL',
+      timestamp: new Date().toISOString()
+    }, '*');
+  };
+
   // Get column names from schema or data
   const columns = schema.length > 0 
     ? schema.map(s => s.name)
@@ -179,6 +200,15 @@ export default function SQLResultsTable({ data, schema, pageSize = 10 }: SQLResu
             >
               <BarChart3 className="w-4 h-4 mr-2" />
               Analisar com IA
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={copyToChat}
+              className="bg-sky-50 hover:bg-sky-100 text-sky-700 border-sky-200"
+            >
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Copiar pro Chat
             </Button>
             <Button
               variant="outline"

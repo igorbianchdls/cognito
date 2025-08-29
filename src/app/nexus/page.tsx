@@ -24,6 +24,9 @@ export default function Page() {
   
   // Array unificado que guarda TODAS as mensagens em ordem cronológica
   const [allMessages, setAllMessages] = useState<(UIMessage & { agent: string })[]>([]);
+  
+  // State para armazenar dados pendentes de análise
+  const [pendingAnalysisData, setPendingAnalysisData] = useState<string | null>(null);
 
   const chats = {
     nexus: useChat({
@@ -234,17 +237,27 @@ export default function Page() {
     if (input.trim()) {
       console.log('Enviando mensagem via:', selectedAgent);
       
+      // Check if there's pending analysis data
+      const messageToSend = pendingAnalysisData && input.includes('[+') && input.includes('linhas de dados]')
+        ? pendingAnalysisData
+        : input;
+      
       // Adicionar mensagem do user ao array unificado
       const userMessage = {
         id: `user-${Date.now()}`,
         role: 'user' as const,
-        parts: [{ type: 'text' as const, text: input }],
+        parts: [{ type: 'text' as const, text: input }], // Display text for UI
         agent: selectedAgent
       };
       setAllMessages(prev => [...prev, userMessage]);
       
-      sendMessage({ text: input });
+      sendMessage({ text: messageToSend }); // Send full data or regular input
       setInput('');
+      
+      // Clear pending data after sending
+      if (pendingAnalysisData) {
+        setPendingAnalysisData(null);
+      }
     }
   };
 
@@ -296,6 +309,22 @@ export default function Page() {
         
         if (data && Array.isArray(data) && data.length > 0) {
           handleAnalyzeWithAI(data, query || 'Query executada');
+        }
+      }
+
+      if (event.data.type === 'SEND_TO_CHAT') {
+        console.log('📊 Received SEND_TO_CHAT message:', event.data);
+        const { data, displayText, query } = event.data;
+        
+        if (data && Array.isArray(data) && data.length > 0) {
+          // Set the display text in the input
+          setInput(displayText);
+          
+          // Prepare full analysis message for AI
+          const analysisMessage = `Analise esses dados da query SQL: "${query || 'Dados da tabela SQL'}"\n\nDados (${data.length} registros):\n${JSON.stringify(data, null, 2)}`;
+          
+          // Store the full data for when user submits
+          setPendingAnalysisData(analysisMessage);
         }
       }
     };
