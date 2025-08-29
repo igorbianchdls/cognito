@@ -40,6 +40,15 @@ interface ChartResult {
   message: string
 }
 
+interface CreateChartConfig {
+  project: string
+  dataset: string
+  table: string
+  x: string
+  y: string
+  type: 'bar' | 'line' | 'pie' | 'area'
+}
+
 export default function CodeEditor() {
   const widgets = useStore($widgets)
   const [state, setState] = useState<CodeEditorState>({
@@ -52,7 +61,7 @@ export default function CodeEditor() {
   const [chartResult, setChartResult] = useState<ChartResult | null>(null)
 
   // Parse createChart code
-  const parseCreateChart = (code: string) => {
+  const parseCreateChart = (code: string): CreateChartConfig => {
     try {
       const match = code.match(/createChart\s*\(\s*({[\s\S]*?})\s*\)/);
       if (!match) {
@@ -60,7 +69,7 @@ export default function CodeEditor() {
       }
       
       const configStr = match[1];
-      const config = eval(`(${configStr})`);
+      const config = eval(`(${configStr})`) as CreateChartConfig;
       
       if (!config.project || !config.dataset || !config.table || !config.x || !config.y || !config.type) {
         throw new Error('Missing required fields: project, dataset, table, x, y, type');
@@ -73,7 +82,7 @@ export default function CodeEditor() {
   };
 
   // Generate SQL from parsed config (simplified version)
-  const generateSQLFromConfig = (config: any) => {
+  const generateSQLFromConfig = (config: CreateChartConfig): string => {
     const aggregation = 'SUM'; // Simplified - always use SUM
     
     return `
@@ -123,7 +132,7 @@ LIMIT 50
       
       // 4. Processar dados
       const rawData = result.data.data;
-      const chartData = rawData.map((row: any) => ({
+      const chartData = rawData.map((row: Record<string, unknown>) => ({
         x: String(row[config.x] || 'Unknown'),
         y: Number(row[`${config.y}_agg`] || 0),
         label: String(row[config.x] || 'Unknown'),
