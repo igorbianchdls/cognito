@@ -35,6 +35,11 @@ interface CodeEditorState {
   lastSync: number
 }
 
+interface ChartResult {
+  success: boolean
+  message: string
+}
+
 export default function CodeEditor() {
   const widgets = useStore($widgets)
   const [state, setState] = useState<CodeEditorState>({
@@ -43,6 +48,146 @@ export default function CodeEditor() {
     isValidJson: true,
     lastSync: Date.now()
   })
+  const [isChartMode, setIsChartMode] = useState(false)
+  const [chartResult, setChartResult] = useState<ChartResult | null>(null)
+
+  // Parse createChart code
+  const parseCreateChart = (code: string) => {
+    try {
+      const match = code.match(/createChart\s*\(\s*({[\s\S]*?})\s*\)/);
+      if (!match) {
+        throw new Error('No createChart() function found');
+      }
+      
+      const configStr = match[1];
+      const config = eval(`(${configStr})`);
+      
+      if (!config.project || !config.dataset || !config.table || !config.x || !config.y || !config.type) {
+        throw new Error('Missing required fields: project, dataset, table, x, y, type');
+      }
+      
+      return config;
+    } catch (error) {
+      throw new Error(`Invalid createChart format: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  // Generate SQL from parsed config (simplified version)
+  const generateSQLFromConfig = (config: any) => {
+    const aggregation = 'SUM'; // Simplified - always use SUM
+    
+    return `
+SELECT ${config.x}, ${aggregation}(${config.y}) as ${config.y}_agg
+FROM \`${config.project}.${config.dataset}.${config.table}\`
+GROUP BY ${config.x}
+ORDER BY ${config.y}_agg DESC
+LIMIT 50
+    `.trim();
+  };
+
+  // Get chart icon based on type
+  const getChartIcon = (chartType: string) => {
+    switch (chartType) {
+      case 'bar': return '📊';
+      case 'line': return '📈';
+      case 'pie': return '🥧';
+      case 'area': return '📊';
+      default: return '📊';
+    }
+  };
+
+  // Execute createChart code
+  const executeCreateChart = async (code: string): Promise<ChartResult> => {
+    try {
+      // 1. Parse código
+      const config = parseCreateChart(code);
+      
+      // 2. Gerar SQL
+      const sql = generateSQLFromConfig(config);
+      
+      // 3. Executar BigQuery
+      const response = await fetch('/api/bigquery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'execute',
+          query: sql
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (!result.success || !result.data?.data) {
+        throw new Error(result.error || 'No data returned from BigQuery');
+      }
+      
+      // 4. Processar dados
+      const rawData = result.data.data;
+      const chartData = rawData.map((row: any) => ({
+        x: String(row[config.x] || 'Unknown'),
+        y: Number(row[`${config.y}_agg`] || 0),
+        label: String(row[config.x] || 'Unknown'),
+        value: Number(row[`${config.y}_agg`] || 0)
+      }));
+      
+      // 5. Criar widget
+      const widgetConfig = {
+        id: `chart-${Date.now()}`,
+        name: `${config.table} - ${config.type} Chart`,
+        type: `chart-${config.type}` as const,
+        icon: getChartIcon(config.type),
+        description: `Chart from ${config.table}`,
+        defaultWidth: 4,
+        defaultHeight: 3,
+        i: `widget-${Date.now()}`,
+        x: 0,
+        y: 0,
+        w: 4,
+        h: 3,
+        config: {
+          chartConfig: {
+            title: `${config.x} por ${config.y}`,
+            colors: ['#2563eb'],
+            enableGridX: false,
+            enableGridY: true,
+            margin: { top: 12, right: 12, bottom: 60, left: 50 }
+          }
+        },
+        bigqueryData: {
+          chartType: config.type,
+          data: chartData,
+          xColumn: config.x,
+          yColumn: config.y,
+          query: sql,
+          source: 'bigquery',
+          table: config.table,
+          lastUpdated: new Date().toISOString()
+        }
+      };
+      
+      // 6. Adicionar ao canvas
+      widgetActions.addWidget(widgetConfig);
+      
+      return { success: true, message: 'Chart created successfully!' };
+      
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error instanceof Error ? error.message : 'Unknown error' 
+      };
+    }
+  };
+
+  // Handle create chart button
+  const handleCreateChart = async () => {
+    const result = await executeCreateChart(state.code);
+    setChartResult(result);
+    
+    if (result.success) {
+      // Clear code after success
+      setState(prev => ({ ...prev, code: '', error: null }));
+    }
+  };
 
   // Generate initial JSON from current widgets
   const generateJsonFromWidgets = useCallback((widgetList: DroppedWidget[]) => {
@@ -236,40 +381,62 @@ export default function CodeEditor() {
 
       {/* Actions Bar */}
       <div className="p-3 border-b border-[0.5px] border-gray-200 bg-gray-50">
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 flex-wrap items-center">
+          {/* Mode Toggle */}
           <button
-            onClick={handleApplyChanges}
-            disabled={!state.isValidJson}
-            className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            onClick={() => setIsChartMode(!isChartMode)}
+            className={`px-3 py-1.5 text-sm rounded transition-colors ${
+              isChartMode ? 'bg-orange-600 text-white hover:bg-orange-700' : 'bg-gray-300 text-gray-700 hover:bg-gray-400'
+            }`}
           >
-            Apply Changes
+            {isChartMode ? 'Chart Mode' : 'JSON Mode'}
           </button>
-          <button
-            onClick={handleReset}
-            className="px-3 py-1.5 bg-gray-600 text-white text-sm rounded hover:bg-gray-700 transition-colors"
-          >
-            Reset
-          </button>
-          <button
-            onClick={handleFormat}
-            className="px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
-          >
-            Format
-          </button>
-          <div className="flex gap-1">
+
+          {/* Mode-specific buttons */}
+          {isChartMode ? (
             <button
-              onClick={handleExport}
-              className="px-3 py-1.5 bg-purple-600 text-white text-sm rounded hover:bg-purple-700 transition-colors"
+              onClick={handleCreateChart}
+              className="px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
             >
-              Export
+              Create Chart
             </button>
-            <button
-              onClick={handleImport}
-              className="px-3 py-1.5 bg-purple-600 text-white text-sm rounded hover:bg-purple-700 transition-colors"
-            >
-              Import
-            </button>
-          </div>
+          ) : (
+            <>
+              <button
+                onClick={handleApplyChanges}
+                disabled={!state.isValidJson}
+                className="px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Apply Changes
+              </button>
+              <button
+                onClick={handleReset}
+                className="px-3 py-1.5 bg-gray-600 text-white text-sm rounded hover:bg-gray-700 transition-colors"
+              >
+                Reset
+              </button>
+              <button
+                onClick={handleFormat}
+                className="px-3 py-1.5 bg-green-600 text-white text-sm rounded hover:bg-green-700 transition-colors"
+              >
+                Format
+              </button>
+              <div className="flex gap-1">
+                <button
+                  onClick={handleExport}
+                  className="px-3 py-1.5 bg-purple-600 text-white text-sm rounded hover:bg-purple-700 transition-colors"
+                >
+                  Export
+                </button>
+                <button
+                  onClick={handleImport}
+                  className="px-3 py-1.5 bg-purple-600 text-white text-sm rounded hover:bg-purple-700 transition-colors"
+                >
+                  Import
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -305,13 +472,47 @@ export default function CodeEditor() {
         </div>
       )}
 
+      {/* Chart Result Feedback */}
+      {chartResult && (
+        <div className={`p-3 border-b ${
+          chartResult.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+        }`}>
+          <div className={`flex items-center gap-2 ${
+            chartResult.success ? 'text-green-700' : 'text-red-700'
+          }`}>
+            <span>{chartResult.success ? '✅' : '❌'}</span>
+            <span className="text-sm font-medium">
+              {chartResult.success ? 'Success:' : 'Error:'}
+            </span>
+            <button
+              onClick={() => setChartResult(null)}
+              className="ml-auto text-xs opacity-50 hover:opacity-100"
+            >
+              ✕
+            </button>
+          </div>
+          <p className={`text-sm mt-1 ${
+            chartResult.success ? 'text-green-600' : 'text-red-600'
+          }`}>
+            {chartResult.message}
+          </p>
+        </div>
+      )}
+
       {/* Code Editor */}
       <div className="flex-1 relative">
         <textarea
           value={state.code}
           onChange={(e) => handleCodeChange(e.target.value)}
           className="w-full h-full p-4 font-mono text-sm resize-none focus:outline-none border-none bg-gray-900 text-gray-100"
-          placeholder='{
+          placeholder={isChartMode ? `createChart({
+  project: "creatto-463117",
+  dataset: "biquery_data",
+  table: "ecommerce",
+  x: "categoria",
+  y: "receita",
+  type: "bar"
+})` : `{
   "meta": {
     "title": "My Dashboard",
     "created": "2024-01-15"
@@ -326,7 +527,7 @@ export default function CodeEditor() {
       "style": { "color": "#3B82F6" }
     }
   ]
-}'
+}`}
           style={{
             fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
             lineHeight: '1.5',
