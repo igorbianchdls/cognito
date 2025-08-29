@@ -5,6 +5,8 @@ import { ColumnDef } from '@tanstack/react-table';
 import { DataTable, createSortableHeader, TableData } from '@/components/widgets/Table';
 import { Button } from '@/components/ui/button';
 import SQLEditor from '../sql-editor/SQLEditor';
+import { useStore } from '@nanostores/react';
+import { $lastQueryData } from '@/stores/queryStore';
 
 interface SQLExecutionProps {
   sqlQuery?: string;
@@ -46,6 +48,9 @@ export default function SQLExecution({
   onAnalyzeWithAI
 }: SQLExecutionProps) {
   
+  // Access query store data
+  const queryStoreData = useStore($lastQueryData);
+  
   // Local state to store analysis data
   const [analysisData, setAnalysisData] = useState<{
     data: Array<Record<string, unknown>>;
@@ -53,18 +58,31 @@ export default function SQLExecution({
     timestamp: string;
   } | null>(null);
 
+  // Combine data from props and query store (prefer query store if available)
+  const availableData = useMemo(() => {
+    if (queryStoreData && queryStoreData.length > 0) {
+      console.log('🔧 SQLExecution: Using data from query store:', queryStoreData.length, 'rows');
+      return queryStoreData;
+    } else if (data && data.length > 0) {
+      console.log('🔧 SQLExecution: Using data from props:', data.length, 'rows');
+      return data;
+    }
+    console.log('🔧 SQLExecution: No data available from props or query store');
+    return [];
+  }, [queryStoreData, data]);
+
   // Save data to local state when component renders with data
   useEffect(() => {
-    console.log('🔧 SQLExecution: useEffect triggered with data:', data?.length, 'rows');
+    console.log('🔧 SQLExecution: useEffect triggered with availableData:', availableData?.length, 'rows');
     
-    if (data && data.length > 0) {
+    if (availableData && availableData.length > 0) {
       const newAnalysisData = {
-        data,
+        data: availableData,
         sqlQuery: sqlQuery || 'Query executada',
         timestamp: new Date().toISOString(),
       };
       
-      console.log('🔧 SQLExecution: Saving data to LOCAL STATE:', data.length, 'rows');
+      console.log('🔧 SQLExecution: Saving data to LOCAL STATE:', availableData.length, 'rows');
       console.log('🔧 SQLExecution: Analysis data being saved:', {
         rowCount: newAnalysisData.data.length,
         query: newAnalysisData.sqlQuery,
@@ -74,9 +92,9 @@ export default function SQLExecution({
       setAnalysisData(newAnalysisData);
       console.log('🔧 SQLExecution: Data successfully saved to local state');
     } else {
-      console.log('🔧 SQLExecution: No data to save (data is empty or null)');
+      console.log('🔧 SQLExecution: No data to save (availableData is empty or null)');
     }
-  }, [data, sqlQuery]);
+  }, [availableData, sqlQuery]);
 
   // Log state changes for debugging
   useEffect(() => {
@@ -213,8 +231,8 @@ export default function SQLExecution({
         </div>
       </div>
 
-      {/* Hide original results table when data is empty - SQLEditor will handle execution */}
-      {data && data.length > 0 && (
+      {/* Show results table when there's available data */}
+      {availableData && availableData.length > 0 && (
         <div>
           {/* Schema info display */}
           {schema && schema.length > 0 && (
@@ -237,21 +255,28 @@ export default function SQLExecution({
           
           <DataTable
             columns={columns}
-            data={(data || []) as TableData[]}
+            data={availableData as TableData[]}
             searchPlaceholder="Filtrar resultados..."
             pageSize={15}
           />
-          
-          {/* Análise com IA button - sempre visível para debug */}
-          <div className="mt-4 flex justify-end">
-            <Button 
-              onClick={handleAnalyzeData}
-              disabled={!data || data.length === 0}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              📊 Analisar com IA
-            </Button>
-          </div>
+        </div>
+      )}
+
+      {/* Análise com IA button - show when onAnalyzeWithAI is provided */}
+      {onAnalyzeWithAI && (
+        <div className="mt-4 flex justify-end">
+          <Button 
+            onClick={handleAnalyzeData}
+            disabled={!availableData || availableData.length === 0}
+            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            📊 Analisar com IA
+            {availableData && availableData.length > 0 && (
+              <span className="ml-2 text-xs opacity-75">
+                ({availableData.length} registros)
+              </span>
+            )}
+          </Button>
         </div>
       )}
 
