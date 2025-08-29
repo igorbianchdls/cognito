@@ -243,8 +243,8 @@ export default function Page() {
       
       // Check if there's data attachment pattern
       if (input.includes('[+') && input.includes('linhas de dados]')) {
-        // Clean display text - remove data attachment indicator
-        displayText = input.replace(/\[\+\d+\s+linhas\s+de\s+dados\]/g, '').trim();
+        // Keep display text as is - maintain the summary version
+        displayText = input;
         
         // Use pending data for AI if available
         if (pendingAnalysisData) {
