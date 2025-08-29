@@ -235,6 +235,16 @@ export interface DroppedWidget extends Widget {
   color?: string
   config?: WidgetConfig       // New unified configuration
   chartConfig?: ChartConfig   // Deprecated: kept for backward compatibility
+  bigqueryData?: {            // BigQuery data from Chart Builder
+    chartType: string
+    data: Array<{ x: string; y: number; label: string; value: number }>
+    xColumn: string
+    yColumn: string
+    query: string
+    source: string
+    table: string
+    lastUpdated: string
+  }
 }
 
 export interface Position {

@@ -69,9 +69,18 @@ export default function ChartBuilder({
       y: 0,
       w: 4,
       h: 3,
-      // Chart-specific configuration
+      // Use config.chartConfig structure per WidgetConfig interface
       config: {
-        title: `${data.rows[0]?.name} by ${data.columns[0]?.name}`,
+        chartConfig: {
+          title: `${data.rows[0]?.name} by ${data.columns[0]?.name}`,
+          colors: ['#2563eb'],
+          enableGridX: false,
+          enableGridY: true,
+          margin: { top: 12, right: 12, bottom: 60, left: 50 }
+        }
+      },
+      // Store BigQuery data separately for ChartWidget to access
+      bigqueryData: {
         chartType: data.chartType,
         data: previewData,
         xColumn: data.rows[0]?.name,

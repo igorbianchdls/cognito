@@ -34,9 +34,9 @@ export default function ChartWidget({ widget }: ChartWidgetProps) {
   // Initialize data based on widget config
   useEffect(() => {
     // Check if widget has BigQuery data
-    if (widget.config && typeof widget.config === 'object' && 'data' in widget.config && Array.isArray(widget.config.data)) {
+    if (widget.bigqueryData && widget.bigqueryData.data && Array.isArray(widget.bigqueryData.data)) {
       // Use BigQuery data from Chart Builder
-      const bigqueryData = widget.config.data as { x: string; y: number; label: string; value: number }[]
+      const bigqueryData = widget.bigqueryData.data as { x: string; y: number; label: string; value: number }[]
       const chartData = bigqueryData.map(item => ({
         x: item.x,
         y: item.y,
@@ -70,7 +70,7 @@ export default function ChartWidget({ widget }: ChartWidgetProps) {
 
       return () => clearInterval(interval)
     }
-  }, [widget.config])
+  }, [widget.config, widget.bigqueryData])
 
   // Get chart configuration with backward compatibility
   const chartConfig = useMemo(() => {
