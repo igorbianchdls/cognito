@@ -118,7 +118,7 @@ LIMIT 50
         const valueColumn = columns[0]
         
         // Transform data for chart
-        const transformedData: ChartData[] = rawData.map((row: any) => ({
+        const transformedData: ChartData[] = rawData.map((row: Record<string, unknown>) => ({
           x: String(row[rowColumn.name] || 'Unknown'),
           y: Number(row[`${valueColumn.name}_agg`] || 0),
           label: String(row[rowColumn.name] || 'Unknown'),
