@@ -122,35 +122,23 @@ export default function TablesExplorer() {
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header Card */}
-      <Card className="border-0 border-b rounded-none">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2">
-                <Database className="w-5 h-5 text-primary" />
-                <CardTitle className="text-lg">Tables</CardTitle>
-                <Badge variant="secondary" className="text-xs">
-                  {tables.length}
-                </Badge>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={loadTables}
-              disabled={loading}
-              className="gap-2"
-            >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-          </div>
-          <CardDescription>
-            Arraste colunas para o Chart Builder
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      {/* Header */}
+      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-300/50">
+        <div className="flex items-center gap-2">
+          <Database className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-semibold">Tables</h2>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={loadTables}
+          disabled={loading}
+          className="gap-2"
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+      </div>
 
       {/* Content */}
       <div className="flex-1">

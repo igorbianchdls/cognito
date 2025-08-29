@@ -131,30 +131,23 @@ export default function ChartBuilder({
 
   return (
     <div className="h-full flex flex-col">
-      {/* Header Card */}
-      <Card className="border-0 border-b rounded-none">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-primary" />
-              <CardTitle className="text-lg">Chart Builder</CardTitle>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClear}
-              disabled={!isConfigValid}
-              className="gap-2"
-            >
-              <Trash2 className="w-4 h-4" />
-              Clear
-            </Button>
-          </div>
-          <CardDescription>
-            Configure seu gráfico arrastando colunas
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      {/* Header */}
+      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-300/50">
+        <div className="flex items-center gap-2">
+          <BarChart3 className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-semibold">Chart Builder</h2>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClear}
+          disabled={!isConfigValid}
+          className="gap-2"
+        >
+          <Trash2 className="w-4 h-4" />
+          Clear
+        </Button>
+      </div>
 
       {/* Content */}
       <ScrollArea className="flex-1">
