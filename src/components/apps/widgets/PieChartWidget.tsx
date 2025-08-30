@@ -3,8 +3,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { PieChart } from '@/components/charts'
 import type { ChartData } from '@/components/charts/types'
-import type { DroppedWidget } from '@/types/widget'
-import type { PieChartConfig } from '@/types/chartWidgets'
+import type { DroppedWidget } from '@/types/apps/widget'
+import type { PieChartConfig } from '@/types/apps/chartWidgets'
 
 interface PieChartWidgetProps {
   widget: DroppedWidget

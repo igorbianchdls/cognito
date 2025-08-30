@@ -10,7 +10,7 @@ import KPIWidget from './widgets/KPIWidget'
 import TableWidget from './widgets/TableWidget'
 import ImageWidget from './widgets/ImageWidget'
 import NavigationWidget from './widgets/NavigationWidget'
-import type { DroppedWidget as DroppedWidgetType, ContainerConfig } from '@/types/widget'
+import type { DroppedWidget as DroppedWidgetType, ContainerConfig } from '@/types/apps/widget'
 
 // Helper function to convert hex color + opacity to RGBA
 function hexToRgba(hex: string, opacity: number = 1): string {

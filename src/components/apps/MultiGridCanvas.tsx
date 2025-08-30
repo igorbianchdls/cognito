@@ -11,8 +11,8 @@ import { $multiCanvasState, $activeTab, multiCanvasActions } from '@/stores/apps
 import { WebPreview, WebPreviewNavigation, WebPreviewUrl, WebPreviewNavigationButton } from '@/components/ai-elements/web-preview'
 import { savedDashboardActions } from '@/stores/apps/savedDashboardStore'
 import { Eye, Save, Download, Settings } from 'lucide-react'
-import { isNavigationWidget } from '@/types/widget'
-import type { DroppedWidget as DroppedWidgetType, LayoutItem } from '@/types/widget'
+import { isNavigationWidget } from '@/types/apps/widget'
+import type { DroppedWidget as DroppedWidgetType, LayoutItem } from '@/types/apps/widget'
 
 const ResponsiveGridLayout = WidthProvider(Responsive)
 

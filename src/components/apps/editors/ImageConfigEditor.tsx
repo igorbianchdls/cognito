@@ -1,8 +1,8 @@
 'use client'
 
-import type { DroppedWidget } from '@/types/widget'
-import { isImageWidget } from '@/types/widget'
-import type { ImageConfig } from '@/types/widget'
+import type { DroppedWidget } from '@/types/apps/widget'
+import { isImageWidget } from '@/types/apps/widget'
+import type { ImageConfig } from '@/types/apps/widget'
 
 interface ImageConfigEditorProps {
   selectedWidget: DroppedWidget

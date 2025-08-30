@@ -1,8 +1,8 @@
 'use client'
 
-import type { DroppedWidget } from '@/types/widget'
-import { isChartWidget } from '@/types/chartWidgets'
-import type { BaseChartConfig } from '@/types/chartWidgets'
+import type { DroppedWidget } from '@/types/apps/widget'
+import { isChartWidget } from '@/types/apps/chartWidgets'
+import type { BaseChartConfig } from '@/types/apps/chartWidgets'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 
 interface ChartConfigEditorProps {

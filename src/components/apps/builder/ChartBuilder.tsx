@@ -10,7 +10,7 @@ import { Separator } from '@/components/ui/separator'
 import DropZone from './DropZone'
 import ChartPreview from './ChartPreview'
 import type { BigQueryField } from './TablesExplorer'
-import type { DroppedWidget } from '@/types/widget'
+import type { DroppedWidget } from '@/types/apps/widget'
 import { widgetActions } from '@/stores/apps/widgetStore'
 
 interface ChartData {

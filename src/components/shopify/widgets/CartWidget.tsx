@@ -1,6 +1,6 @@
 'use client'
 
-import type { CartWidget as CartWidgetType } from '@/types/shopifyWidgets'
+import type { CartWidget as CartWidgetType } from '@/types/apps/shopifyWidgets'
 
 interface CartWidgetProps {
   widget: CartWidgetType

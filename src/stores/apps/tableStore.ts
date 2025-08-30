@@ -5,12 +5,12 @@ import type {
   TableConfig,
   TableColumn,
   TableRow
-} from '@/types/tableWidgets'
+} from '@/types/apps/tableWidgets'
 import { 
   DEFAULT_TABLE_CONFIG,
   generateSampleTableData
-} from '@/types/tableWidgets'
-import type { LayoutItem } from '@/types/baseWidget'
+} from '@/types/apps/tableWidgets'
+import type { LayoutItem } from '@/types/apps/baseWidget'
 
 // Main tables atom
 export const $tableWidgets = atom<TableWidget[]>([])

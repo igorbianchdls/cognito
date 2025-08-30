@@ -10,8 +10,8 @@ import type {
   LineChartConfig,
   PieChartConfig,
   AreaChartConfig
-} from '@/types/chartWidgets'
-import type { LayoutItem } from '@/types/baseWidget'
+} from '@/types/apps/chartWidgets'
+import type { LayoutItem } from '@/types/apps/baseWidget'
 
 // Main charts atom
 export const $chartWidgets = atom<ChartWidget[]>([])

@@ -1,6 +1,6 @@
 'use client'
 
-import type { FooterWidget as FooterWidgetType } from '@/types/shopifyWidgets'
+import type { FooterWidget as FooterWidgetType } from '@/types/apps/shopifyWidgets'
 
 interface FooterWidgetProps {
   widget: FooterWidgetType

@@ -2,10 +2,10 @@ import { atom, computed } from 'nanostores'
 import { $chartWidgets, chartActions } from './chartStore'
 import { $kpiWidgets, kpiActions } from './kpiStore'
 import { $tableWidgets, tableActions } from './tableStore'
-import type { ChartWidget } from '@/types/chartWidgets'
-import type { KPIWidget } from '@/types/kpiWidgets'
-import type { TableWidget } from '@/types/tableWidgets'
-import type { DroppedWidget } from '@/types/widget' // Legacy type for backward compatibility
+import type { ChartWidget } from '@/types/apps/chartWidgets'
+import type { KPIWidget } from '@/types/apps/kpiWidgets'
+import type { TableWidget } from '@/types/apps/tableWidgets'
+import type { DroppedWidget } from '@/types/apps/widget' // Legacy type for backward compatibility
 
 // Union type for all specialized widgets
 export type SpecializedWidget = ChartWidget | KPIWidget | TableWidget
@@ -133,7 +133,7 @@ function adaptChartToLegacy(chart: ChartWidget): DroppedWidget {
     chartConfig: chart.config, // Legacy compatibility
     config: {
       chartConfig: chart.config, // Mantém acesso via config.chartConfig para ChartWidget.tsx
-      containerConfig: (chart.config as typeof chart.config & { containerConfig?: import('../../types/widget').ContainerConfig }).containerConfig || {} // Preserva containerConfig
+      containerConfig: (chart.config as typeof chart.config & { containerConfig?: import('../../types/apps/widget').ContainerConfig }).containerConfig || {} // Preserva containerConfig
     }
   }
   
@@ -164,7 +164,7 @@ function adaptKPIToLegacy(kpi: KPIWidget): DroppedWidget {
     ...kpi,
     config: {
       kpiConfig: kpi.config,
-      containerConfig: (kpi.config as typeof kpi.config & { containerConfig?: import('../../types/widget').ContainerConfig }).containerConfig || {} // Preserva containerConfig
+      containerConfig: (kpi.config as typeof kpi.config & { containerConfig?: import('../../types/apps/widget').ContainerConfig }).containerConfig || {} // Preserva containerConfig
     }
   }
   
@@ -193,7 +193,7 @@ function adaptTableToLegacy(table: TableWidget): DroppedWidget {
     ...table,
     config: {
       tableConfig: table.config,
-      containerConfig: (table.config as typeof table.config & { containerConfig?: import('../../types/widget').ContainerConfig }).containerConfig || {} // Preserva containerConfig
+      containerConfig: (table.config as typeof table.config & { containerConfig?: import('../../types/apps/widget').ContainerConfig }).containerConfig || {} // Preserva containerConfig
     }
   }
   

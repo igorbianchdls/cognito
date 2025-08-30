@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { useDraggable } from '@dnd-kit/core'
-import type { Widget } from '@/types/widget'
+import type { Widget } from '@/types/apps/widget'
 
 interface ExtendedWidget extends Omit<Widget, 'icon'> {
   icon: React.ReactElement | string

@@ -3,7 +3,7 @@
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import { useState, FormEvent } from 'react'
-import type { DroppedWidget } from '@/types/widget'
+import type { DroppedWidget } from '@/types/apps/widget'
 import CanvasWidgets from '../tools/appsChat/CanvasWidgets'
 import { widgetActions } from '@/stores/apps/widgetStore'
 import {

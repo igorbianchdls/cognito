@@ -6,7 +6,7 @@ import { chartActions } from '@/stores/apps/chartStore'
 import { kpiActions } from '@/stores/apps/kpiStore'
 import { $canvasConfig, canvasActions } from '@/stores/apps/canvasStore'
 import { useState, useEffect, useMemo } from 'react'
-import type { ChartWidget, BarChartConfig, LineChartConfig, PieChartConfig } from '@/types/chartWidgets'
+import type { ChartWidget, BarChartConfig, LineChartConfig, PieChartConfig } from '@/types/apps/chartWidgets'
 
 // Interface for padding configuration
 interface PaddingConfig {
@@ -15,11 +15,11 @@ interface PaddingConfig {
   bottom?: number;
   left?: number;
 }
-import { isChartWidget, isBarChart, isLineChart, isPieChart } from '@/types/chartWidgets'
-import { isKPIWidget } from '@/types/kpiWidgets'
-import { isImageWidget } from '@/types/widget'
+import { isChartWidget, isBarChart, isLineChart, isPieChart } from '@/types/apps/chartWidgets'
+import { isKPIWidget } from '@/types/apps/kpiWidgets'
+import { isImageWidget } from '@/types/apps/widget'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
-import type { ImageConfig } from '@/types/widget'
+import type { ImageConfig } from '@/types/apps/widget'
 
 export default function WidgetEditor() {
   const widgets = useStore($widgets)

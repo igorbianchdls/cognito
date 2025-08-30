@@ -5,7 +5,7 @@ import { useStore } from '@nanostores/react'
 import { useDroppable } from '@dnd-kit/core'
 import ShopifyDroppedWidget from './ShopifyDroppedWidget'
 import { $selectedShopifyId, $orderedShopifyWidgets } from '@/stores/shopifyStore'
-import type { ShopifyWidget } from '@/types/shopifyWidgets'
+import type { ShopifyWidget } from '@/types/apps/shopifyWidgets'
 
 interface ShopifyCanvasProps {
   widgets: ShopifyWidget[]

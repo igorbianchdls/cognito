@@ -3,13 +3,13 @@ import type {
   KPIWidget, 
   CreateKPIWidgetProps, 
   KPIConfig
-} from '@/types/kpiWidgets'
+} from '@/types/apps/kpiWidgets'
 import { 
   DEFAULT_KPI_CONFIG,
   calculateKPIStatus,
   calculateKPITrend
-} from '@/types/kpiWidgets'
-import type { LayoutItem } from '@/types/baseWidget'
+} from '@/types/apps/kpiWidgets'
+import type { LayoutItem } from '@/types/apps/baseWidget'
 
 // Main KPIs atom
 export const $kpiWidgets = atom<KPIWidget[]>([])

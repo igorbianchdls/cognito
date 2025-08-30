@@ -1,8 +1,8 @@
 'use client'
 
 import { atom } from 'nanostores'
-import type { CanvasTab, MultiCanvasState } from '@/types/multiCanvas'
-import type { DroppedWidget } from '@/types/widget'
+import type { CanvasTab, MultiCanvasState } from '@/types/apps/multiCanvas'
+import type { DroppedWidget } from '@/types/apps/widget'
 
 const STORAGE_KEY = 'cognito_multi_canvas'
 

@@ -1,8 +1,8 @@
 // Canvas store for managing dashboard canvas configuration
 // Handles background, dimensions, grid settings, and styling
 import { atom } from 'nanostores'
-import type { CanvasConfig } from '@/types/canvas'
-import { defaultCanvasConfig } from '@/types/canvas'
+import type { CanvasConfig } from '@/types/apps/canvas'
+import { defaultCanvasConfig } from '@/types/apps/canvas'
 
 // Canvas configuration store
 export const $canvasConfig = atom<CanvasConfig>(defaultCanvasConfig)

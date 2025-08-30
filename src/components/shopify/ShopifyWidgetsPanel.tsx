@@ -1,7 +1,7 @@
 'use client'
 
 import { useDraggable } from '@dnd-kit/core'
-import type { ShopifyWidget } from '@/types/shopifyWidgets'
+import type { ShopifyWidget } from '@/types/apps/shopifyWidgets'
 
 interface ShopifyDraggableWidgetProps {
   widget: Omit<ShopifyWidget, 'i' | 'order' | 'config'>

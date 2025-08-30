@@ -1,6 +1,6 @@
 'use client'
 
-import type { DroppedWidget, NavigationConfig } from '@/types/widget'
+import type { DroppedWidget, NavigationConfig } from '@/types/apps/widget'
 
 interface NavigationConfigEditorProps {
   selectedWidget: DroppedWidget

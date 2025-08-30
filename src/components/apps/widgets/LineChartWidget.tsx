@@ -3,8 +3,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { LineChart } from '@/components/charts'
 import type { ChartData } from '@/components/charts/types'
-import type { DroppedWidget } from '@/types/widget'
-import type { LineChartConfig } from '@/types/chartWidgets'
+import type { DroppedWidget } from '@/types/apps/widget'
+import type { LineChartConfig } from '@/types/apps/chartWidgets'
 
 interface LineChartWidgetProps {
   widget: DroppedWidget

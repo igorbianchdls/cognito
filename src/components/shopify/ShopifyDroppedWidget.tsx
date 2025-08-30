@@ -8,7 +8,7 @@ import CategoriesWidget from './widgets/CategoriesWidget'
 import FooterWidget from './widgets/FooterWidget'
 import SearchWidget from './widgets/SearchWidget'
 import CartWidget from './widgets/CartWidget'
-import type { ShopifyWidget } from '@/types/shopifyWidgets'
+import type { ShopifyWidget } from '@/types/apps/shopifyWidgets'
 
 interface ShopifyDroppedWidgetProps {
   widget: ShopifyWidget

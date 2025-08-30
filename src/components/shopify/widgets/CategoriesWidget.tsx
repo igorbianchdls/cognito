@@ -1,6 +1,6 @@
 'use client'
 
-import type { CategoriesWidget as CategoriesWidgetType } from '@/types/shopifyWidgets'
+import type { CategoriesWidget as CategoriesWidgetType } from '@/types/apps/shopifyWidgets'
 
 interface CategoriesWidgetProps {
   widget: CategoriesWidgetType

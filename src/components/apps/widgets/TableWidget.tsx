@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { DataTable, createSortableHeader, type TableData } from '@/components/widgets/Table'
 import type { ColumnDef } from '@tanstack/react-table'
-import type { DroppedWidget } from '@/types/widget'
-import type { TableConfig } from '@/types/tableWidgets'
+import type { DroppedWidget } from '@/types/apps/widget'
+import type { TableConfig } from '@/types/apps/tableWidgets'
 
 interface TableWidgetProps {
   widget: DroppedWidget

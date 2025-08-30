@@ -2,7 +2,7 @@
 // This maintains backward compatibility while routing to the new architecture
 
 import { compositeActions, $allWidgets, $selectedWidgetId, $selectedWidget } from './compositeStore'
-import type { DroppedWidget } from '@/types/widget'
+import type { DroppedWidget } from '@/types/apps/widget'
 
 // Export the composite stores as the "main" widgets store for backward compatibility
 export const $widgets = $allWidgets

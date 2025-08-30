@@ -1,6 +1,6 @@
 'use client'
 
-import type { HeroWidget as HeroWidgetType } from '@/types/shopifyWidgets'
+import type { HeroWidget as HeroWidgetType } from '@/types/apps/shopifyWidgets'
 
 interface HeroWidgetProps {
   widget: HeroWidgetType

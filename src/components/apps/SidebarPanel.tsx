@@ -2,12 +2,12 @@
 
 import WidgetsPanel from '@/components/apps/WidgetsPanel'
 import ChatPanel from '@/components/apps/ChatPanel'
-import WidgetEditor from '@/components/apps/WidgetEditorNew'
+import WidgetEditor from '@/components/apps/editor/WidgetEditorNew'
 import CodeEditor from '@/components/apps/CodeEditor'
 import AutomationsPanel from '@/components/apps/AutomationsPanel'
 import SavedPanel from '@/components/apps/SavedPanel'
 import DatasetsPanel from '@/components/apps/DatasetsPanel'
-import type { DroppedWidget } from '@/types/widget'
+import type { DroppedWidget } from '@/types/apps/widget'
 
 interface SidebarPanelProps {
   activeTab: 'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved' | 'datasets'

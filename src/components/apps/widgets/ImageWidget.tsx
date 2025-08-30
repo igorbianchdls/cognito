@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import type { DroppedWidget, ImageConfig } from '@/types/widget'
+import type { DroppedWidget, ImageConfig } from '@/types/apps/widget'
 
 interface ImageWidgetProps {
   widget: DroppedWidget

@@ -5,7 +5,7 @@ import { BaseChartProps } from './types';
 import { nivoTheme } from './theme';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
-import type { LegendConfig } from '@/types/chartWidgets';
+import type { LegendConfig } from '@/types/apps/chartWidgets';
 
 interface LineChartProps extends BaseChartProps {
   colors?: string[]

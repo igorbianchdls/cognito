@@ -1,6 +1,6 @@
 'use client'
 
-import type { SearchWidget as SearchWidgetType } from '@/types/shopifyWidgets'
+import type { SearchWidget as SearchWidgetType } from '@/types/apps/shopifyWidgets'
 
 interface SearchWidgetProps {
   widget: SearchWidgetType

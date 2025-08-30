@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useStore } from '@nanostores/react'
 import { $selectedShopifyWidget, shopifyActions } from '@/stores/shopifyStore'
-import type { ShopifyWidget, HeaderConfig, HeroConfig, ProductGridConfig, CategoriesConfig, FooterConfig, SearchConfig, CartConfig } from '@/types/shopifyWidgets'
+import type { ShopifyWidget, HeaderConfig, HeroConfig, ProductGridConfig, CategoriesConfig, FooterConfig, SearchConfig, CartConfig } from '@/types/apps/shopifyWidgets'
 
 export default function ShopifyEditorPanel() {
   const selectedWidget = useStore($selectedShopifyWidget)

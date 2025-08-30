@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { KPICard } from '@/components/widgets/KPICard'
 import KPIDisplay from '@/components/tools/KPIDisplay'
-import type { DroppedWidget, KPIConfig, LegacyChartConfigWithKPI, ChartConfig } from '@/types/widget'
+import type { DroppedWidget, KPIConfig, LegacyChartConfigWithKPI, ChartConfig } from '@/types/apps/widget'
 
 // Helper function to convert hex color + opacity to RGBA
 function hexToRgba(hex: string, opacity: number = 1): string {

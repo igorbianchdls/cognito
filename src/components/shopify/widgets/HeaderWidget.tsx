@@ -1,6 +1,6 @@
 'use client'
 
-import type { HeaderWidget as HeaderWidgetType } from '@/types/shopifyWidgets'
+import type { HeaderWidget as HeaderWidgetType } from '@/types/apps/shopifyWidgets'
 
 interface HeaderWidgetProps {
   widget: HeaderWidgetType

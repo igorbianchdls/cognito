@@ -8,7 +8,7 @@ import ShopifyWidgetsPanel from '@/components/shopify/ShopifyWidgetsPanel'
 import ShopifyEditorPanel from '@/components/shopify/ShopifyEditorPanel'
 import ShopifyCanvas from '@/components/shopify/ShopifyCanvas'
 import { $shopifyWidgets, shopifyActions } from '@/stores/shopifyStore'
-import type { ShopifyWidget } from '@/types/shopifyWidgets'
+import type { ShopifyWidget } from '@/types/apps/shopifyWidgets'
 
 // Available Shopify widgets que podem ser arrastados para o canvas
 const availableShopifyWidgets: Omit<ShopifyWidget, 'i' | 'order' | 'config'>[] = [

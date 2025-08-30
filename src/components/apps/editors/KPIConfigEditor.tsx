@@ -1,8 +1,8 @@
 'use client'
 
-import type { DroppedWidget } from '@/types/widget'
-import { isKPIWidget } from '@/types/kpiWidgets'
-import type { KPIConfig } from '@/types/kpiWidgets'
+import type { DroppedWidget } from '@/types/apps/widget'
+import { isKPIWidget } from '@/types/apps/kpiWidgets'
+import type { KPIConfig } from '@/types/apps/kpiWidgets'
 import { Slider } from '@/components/ui/slider'
 
 interface KPIConfigEditorProps {

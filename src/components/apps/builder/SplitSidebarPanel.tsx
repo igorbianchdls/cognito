@@ -6,11 +6,11 @@ import TablesExplorer from './TablesExplorer'
 import ChartBuilder from './ChartBuilder'
 import WidgetsPanel from '../WidgetsPanel'
 import ChatPanel from '../ChatPanel'
-import WidgetEditor from '../WidgetEditorNew'
+import WidgetEditor from '../editor/WidgetEditorNew'
 import CodeEditor from '../CodeEditor'
 import AutomationsPanel from '../AutomationsPanel'
 import SavedPanel from '../SavedPanel'
-import type { DroppedWidget } from '@/types/widget'
+import type { DroppedWidget } from '@/types/apps/widget'
 import type { BigQueryField } from './TablesExplorer'
 
 interface ChartBuilderData {

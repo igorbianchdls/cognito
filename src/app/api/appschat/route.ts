@@ -1,7 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage, tool } from 'ai';
 import { z } from 'zod';
-import type { DroppedWidget } from '@/types/widget';
+import type { DroppedWidget } from '@/types/apps/widget';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;

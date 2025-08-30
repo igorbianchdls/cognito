@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import GridCanvas from '@/components/apps/GridCanvas'
 import MultiGridCanvas from '@/components/apps/MultiGridCanvas'
 import { savedDashboardActions } from '@/stores/apps/savedDashboardStore'
-import type { SavedDashboard } from '@/types/savedDashboard'
+import type { SavedDashboard } from '@/types/apps/savedDashboard'
 
 function PreviewContent() {
   const searchParams = useSearchParams()

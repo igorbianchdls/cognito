@@ -3,8 +3,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { BarChart } from '@/components/charts'
 import type { ChartData } from '@/components/charts/types'
-import type { DroppedWidget } from '@/types/widget'
-import type { BarChartConfig } from '@/types/chartWidgets'
+import type { DroppedWidget } from '@/types/apps/widget'
+import type { BarChartConfig } from '@/types/apps/chartWidgets'
 
 // Helper function to convert hex color + opacity to RGBA
 function hexToRgba(hex: string, opacity: number = 1): string {

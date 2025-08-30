@@ -10,7 +10,7 @@ import type {
   SearchWidget,
   CartWidget,
   WidgetOrder
-} from '@/types/shopifyWidgets'
+} from '@/types/apps/shopifyWidgets'
 
 // Main shopify widgets atom
 export const $shopifyWidgets = atom<ShopifyWidget[]>([])

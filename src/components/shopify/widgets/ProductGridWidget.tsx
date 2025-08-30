@@ -1,6 +1,6 @@
 'use client'
 
-import type { ProductGridWidget as ProductGridWidgetType } from '@/types/shopifyWidgets'
+import type { ProductGridWidget as ProductGridWidgetType } from '@/types/apps/shopifyWidgets'
 
 interface ProductGridWidgetProps {
   widget: ProductGridWidgetType

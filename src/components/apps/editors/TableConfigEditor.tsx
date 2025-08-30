@@ -1,8 +1,8 @@
 'use client'
 
-import type { DroppedWidget } from '@/types/widget'
-import { isTableWidget } from '@/types/tableWidgets'
-import type { TableConfig } from '@/types/tableWidgets'
+import type { DroppedWidget } from '@/types/apps/widget'
+import { isTableWidget } from '@/types/apps/tableWidgets'
+import type { TableConfig } from '@/types/apps/tableWidgets'
 import { useState } from 'react'
 
 interface TableConfigEditorProps {

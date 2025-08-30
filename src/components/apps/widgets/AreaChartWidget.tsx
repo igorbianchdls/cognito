@@ -3,8 +3,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import { AreaChart } from '@/components/charts'
 import type { ChartData } from '@/components/charts/types'
-import type { DroppedWidget } from '@/types/widget'
-import type { AreaChartConfig } from '@/types/chartWidgets'
+import type { DroppedWidget } from '@/types/apps/widget'
+import type { AreaChartConfig } from '@/types/apps/chartWidgets'
 
 interface AreaChartWidgetProps {
   widget: DroppedWidget

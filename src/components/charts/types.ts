@@ -1,6 +1,6 @@
 import { OrdinalColorScaleConfig } from '@nivo/colors';
 import { ComputedDatum, BarDatum, BarLegendProps } from '@nivo/bar';
-import { LegendConfig } from '@/types/chartWidgets';
+import { LegendConfig } from '@/types/apps/chartWidgets';
 
 export interface ChartData {
   x?: string;
