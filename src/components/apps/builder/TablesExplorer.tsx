@@ -9,7 +9,10 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Input } from '@/components/ui/input'
+import { useStore } from '@nanostores/react'
 import DraggableColumn from './DraggableColumn'
+import DraggableMeasure from './DraggableMeasure'
+import { measuresStore, measureActions } from '@/stores/measureStore'
 
 export interface BigQueryField {
   name: string
@@ -39,6 +42,9 @@ export default function TablesExplorer() {
   const [tables, setTables] = useState<BigQueryTable[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  
+  // Use measures store
+  const allMeasures = useStore(measuresStore)
   
   // Schema expansion states
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null)
@@ -168,17 +174,17 @@ export default function TablesExplorer() {
   }
 
   const handleSaveMeasure = () => {
-    if (!selectedColumn || !measureName) {
+    if (!selectedColumn || !measureName || !selectedTableForMeasure) {
       alert('Por favor, preencha todos os campos')
       return
     }
     
-    // TODO: Implement saving measure logic
-    console.log('Creating measure:', {
-      table: selectedTableForMeasure,
+    // Create measure using store actions
+    measureActions.addMeasure({
+      name: measureName,
       column: selectedColumn,
-      aggregation: selectedAggregation,
-      name: measureName
+      aggregation: selectedAggregation as 'SUM' | 'AVG' | 'COUNT' | 'MAX' | 'MIN',
+      tableId: selectedTableForMeasure
     })
     
     handleCloseMeasureModal()
@@ -247,6 +253,7 @@ export default function TablesExplorer() {
                 const isExpanded = selectedTableId === tableId
                 const isLoadingThisSchema = loadingSchema === tableId
                 const schema = tableSchemas[tableId]
+                const tableMeasures = allMeasures[tableId] || []
                 
                 return (
                   <div key={tableId}>
@@ -339,18 +346,33 @@ export default function TablesExplorer() {
                                 <BarChart3 className="w-4 h-4 text-green-600" />
                                 <span className="text-sm font-medium text-gray-900">Medidas</span>
                                 <Badge variant="outline" className="text-xs ml-1">
-                                  0
+                                  {tableMeasures.length}
                                 </Badge>
                               </div>
                               {expandedMeasures[tableId] && (
-                                <div className="px-2 py-2 ml-4">
-                                  <button 
-                                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                                    onClick={() => handleCreateMeasure(tableId)}
-                                  >
-                                    <Plus className="w-4 h-4" />
-                                    Criar Medida
-                                  </button>
+                                <div className="ml-4 space-y-2">
+                                  {/* Existing measures */}
+                                  {tableMeasures.length > 0 && (
+                                    <div className="space-y-1">
+                                      {tableMeasures.map((measure) => (
+                                        <DraggableMeasure
+                                          key={measure.id}
+                                          measure={measure}
+                                        />
+                                      ))}
+                                    </div>
+                                  )}
+                                  
+                                  {/* Create measure button */}
+                                  <div className="px-2 py-2">
+                                    <button 
+                                      className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                                      onClick={() => handleCreateMeasure(tableId)}
+                                    >
+                                      <Plus className="w-4 h-4" />
+                                      Criar Medida
+                                    </button>
+                                  </div>
                                 </div>
                               )}
                             </div>
