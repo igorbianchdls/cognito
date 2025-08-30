@@ -10,7 +10,7 @@ import SQLResultsTable from './SQLResultsTable';
 import ChartVisualization from '@/components/tools/ChartVisualization';
 import { ChartType, ChartData } from '@/components/charts';
 import type { SQLEditorProps, QueryResult } from './types';
-import { setLastQueryData } from '@/stores/queryStore';
+import { setLastQueryData } from '@/stores/apps/queryStore';
 
 export default function SQLEditor({ 
   initialSQL = '', 

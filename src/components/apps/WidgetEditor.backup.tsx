@@ -1,10 +1,10 @@
 'use client'
 
 import { useStore } from '@nanostores/react'
-import { $widgets, $selectedWidget, $selectedWidgetId, widgetActions } from '@/stores/widgetStore'
-import { chartActions } from '@/stores/chartStore'
-import { kpiActions } from '@/stores/kpiStore'
-import { $canvasConfig, canvasActions } from '@/stores/canvasStore'
+import { $widgets, $selectedWidget, $selectedWidgetId, widgetActions } from '@/stores/apps/widgetStore'
+import { chartActions } from '@/stores/apps/chartStore'
+import { kpiActions } from '@/stores/apps/kpiStore'
+import { $canvasConfig, canvasActions } from '@/stores/apps/canvasStore'
 import { useState, useEffect, useMemo } from 'react'
 import type { ChartWidget, BarChartConfig, LineChartConfig, PieChartConfig } from '@/types/chartWidgets'
 

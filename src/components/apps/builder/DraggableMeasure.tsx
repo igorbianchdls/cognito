@@ -3,8 +3,8 @@
 import { useDraggable } from '@dnd-kit/core'
 import { BarChart3, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { CustomMeasure } from '@/stores/measureStore'
-import { measureActions } from '@/stores/measureStore'
+import type { CustomMeasure } from '@/stores/apps/measureStore'
+import { measureActions } from '@/stores/apps/measureStore'
 
 interface DraggableMeasureProps {
   measure: CustomMeasure

@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input'
 import { useStore } from '@nanostores/react'
 import DraggableColumn from './DraggableColumn'
 import DraggableMeasure from './DraggableMeasure'
-import { measuresStore, measureActions } from '@/stores/measureStore'
+import { measuresStore, measureActions } from '@/stores/apps/measureStore'
 
 export interface BigQueryField {
   name: string

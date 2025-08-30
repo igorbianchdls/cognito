@@ -5,7 +5,7 @@ import { DefaultChatTransport } from 'ai'
 import { useState, FormEvent } from 'react'
 import type { DroppedWidget } from '@/types/widget'
 import CanvasWidgets from '../tools/appsChat/CanvasWidgets'
-import { widgetActions } from '@/stores/widgetStore'
+import { widgetActions } from '@/stores/apps/widgetStore'
 import {
   PromptInput,
   PromptInputButton,

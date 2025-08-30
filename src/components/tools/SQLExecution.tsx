@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import SQLEditor from '../sql-editor/SQLEditor';
 import { useStore } from '@nanostores/react';
-import { $lastQueryData } from '@/stores/queryStore';
+import { $lastQueryData } from '@/stores/apps/queryStore';
 
 interface SQLExecutionProps {
   sqlQuery?: string;

@@ -11,7 +11,7 @@ import DropZone from './DropZone'
 import ChartPreview from './ChartPreview'
 import type { BigQueryField } from './TablesExplorer'
 import type { DroppedWidget } from '@/types/widget'
-import { widgetActions } from '@/stores/widgetStore'
+import { widgetActions } from '@/stores/apps/widgetStore'
 
 interface ChartData {
   x: string

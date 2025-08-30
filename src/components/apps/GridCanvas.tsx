@@ -5,10 +5,10 @@ import { useStore } from '@nanostores/react'
 import { useDroppable } from '@dnd-kit/core'
 import { Responsive, WidthProvider } from 'react-grid-layout'
 import DroppedWidget from './DroppedWidget'
-import { $selectedWidgetId, widgetActions } from '@/stores/widgetStore'
-import { $canvasConfig } from '@/stores/canvasStore' // Canvas customization store
+import { $selectedWidgetId, widgetActions } from '@/stores/apps/widgetStore'
+import { $canvasConfig } from '@/stores/apps/canvasStore' // Canvas customization store
 import { WebPreview, WebPreviewNavigation, WebPreviewUrl, WebPreviewNavigationButton } from '@/components/ai-elements/web-preview'
-import { savedDashboardActions } from '@/stores/savedDashboardStore'
+import { savedDashboardActions } from '@/stores/apps/savedDashboardStore'
 import { Eye, Save, Download, Settings, Share, Github } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { DroppedWidget as DroppedWidgetType, LayoutItem } from '@/types/widget'

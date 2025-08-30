@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Download, BarChart3, Copy, MessageSquare, FileText } from 'lucide-react';
 import { useStore } from '@nanostores/react';
-import { $lastQueryData } from '@/stores/queryStore';
+import { $lastQueryData } from '@/stores/apps/queryStore';
 
 interface SQLResultsTableProps {
   data: Record<string, unknown>[];

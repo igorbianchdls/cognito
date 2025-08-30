@@ -1,7 +1,7 @@
 'use client'
 
 import { useStore } from '@nanostores/react'
-import { $savedDashboards, savedDashboardActions } from '@/stores/savedDashboardStore'
+import { $savedDashboards, savedDashboardActions } from '@/stores/apps/savedDashboardStore'
 import { Eye } from 'lucide-react'
 
 export default function SavedPanel() {

@@ -1,6 +1,6 @@
 import { tool } from 'ai';
 import { z } from 'zod';
-import { getLastQueryDataWithLog } from '@/stores/queryStore';
+import { getLastQueryDataWithLog } from '@/stores/apps/queryStore';
 
 export const getLastQueryResults = tool({
   description: 'Get data from the last executed SQL query for analysis. Use this when user asks to analyze data after running a SQL query.',

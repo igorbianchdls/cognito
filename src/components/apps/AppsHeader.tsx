@@ -1,7 +1,7 @@
 'use client'
 
 import { Archive, Eye } from 'lucide-react'
-import { savedDashboardActions } from '@/stores/savedDashboardStore'
+import { savedDashboardActions } from '@/stores/apps/savedDashboardStore'
 
 interface AppsHeaderProps {
   onToggleSidebarTabs: () => void

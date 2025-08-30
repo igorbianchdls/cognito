@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import GridCanvas from '@/components/apps/GridCanvas'
 import MultiGridCanvas from '@/components/apps/MultiGridCanvas'
-import { savedDashboardActions } from '@/stores/savedDashboardStore'
+import { savedDashboardActions } from '@/stores/apps/savedDashboardStore'
 import type { SavedDashboard } from '@/types/savedDashboard'
 
 function PreviewContent() {
