@@ -35,7 +35,11 @@ const DEFAULT_CONTAINER_CONFIG = {
   borderColor: '#e5e7eb',
   borderOpacity: 1,
   borderWidth: 1,
-  borderRadius: 8
+  borderRadius: 8,
+  x: 0,
+  y: 0,
+  w: 4,
+  h: 3
 }
 
 export default function ContainerConfigEditor({ 

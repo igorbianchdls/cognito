@@ -904,6 +904,85 @@ export default function WidgetEditorNew() {
           )}
         </div>
       </div>
+
+      {/* Position & Size */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">📍 Position & Size</h3>
+        <div className="space-y-4">
+          <div>
+            <h4 className="text-xs font-medium text-gray-700 mb-2">Position</h4>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-gray-50 rounded px-2 py-1">
+                <div className="flex items-center">
+                  <input
+                    type="number"
+                    min="0"
+                    max="11"
+                    value={containerConfig.x || 0}
+                    onChange={(e) => {
+                      const x = Math.max(0, Math.min(11, parseInt(e.target.value) || 0));
+                      handleContainerConfigChange('x', x);
+                    }}
+                    className="flex-1 h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                  />
+                  <span className="text-xs text-gray-500">X</span>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded px-2 py-1">
+                <div className="flex items-center">
+                  <input
+                    type="number"
+                    min="0"
+                    value={containerConfig.y || 0}
+                    onChange={(e) => {
+                      const y = Math.max(0, parseInt(e.target.value) || 0);
+                      handleContainerConfigChange('y', y);
+                    }}
+                    className="flex-1 h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                  />
+                  <span className="text-xs text-gray-500">Y</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h4 className="text-xs font-medium text-gray-700 mb-2">Size</h4>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-gray-50 rounded px-2 py-1">
+                <div className="flex items-center">
+                  <input
+                    type="number"
+                    min="1"
+                    max="12"
+                    value={containerConfig.w || 4}
+                    onChange={(e) => {
+                      const w = Math.max(1, Math.min(12, parseInt(e.target.value) || 1));
+                      handleContainerConfigChange('w', w);
+                    }}
+                    className="flex-1 h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                  />
+                  <span className="text-xs text-gray-500">W</span>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded px-2 py-1">
+                <div className="flex items-center">
+                  <input
+                    type="number"
+                    min="1"
+                    value={containerConfig.h || 3}
+                    onChange={(e) => {
+                      const h = Math.max(1, parseInt(e.target.value) || 1);
+                      handleContainerConfigChange('h', h);
+                    }}
+                    className="flex-1 h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                  />
+                  <span className="text-xs text-gray-500">H</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 
