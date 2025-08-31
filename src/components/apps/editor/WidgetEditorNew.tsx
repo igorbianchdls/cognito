@@ -996,6 +996,125 @@ export default function WidgetEditorNew() {
           </div>
         </div>
       </div>
+
+      {/* Legends */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">🏷️ Legends</h3>
+        <div className="space-y-4">
+          <div>
+            <h4 className="text-xs font-medium text-gray-700 mb-2">Direction & Position</h4>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-gray-50 rounded px-2 py-1">
+                <div className="flex items-center">
+                  <select
+                    value={chartConfig.legends?.direction || 'column'}
+                    onChange={(e) => handleChartConfigChange('legends', { ...chartConfig.legends, direction: e.target.value as 'column' | 'row' })}
+                    className="flex-1 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                  >
+                    <option value="column">Column</option>
+                    <option value="row">Row</option>
+                  </select>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded px-2 py-1">
+                <div className="flex items-center">
+                  <input
+                    type="number"
+                    value={chartConfig.legends?.translateY || 0}
+                    onChange={(e) => {
+                      const translateY = parseInt(e.target.value) || 0;
+                      handleChartConfigChange('legends', { ...chartConfig.legends, translateY });
+                    }}
+                    className="flex-1 h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                  />
+                  <span className="text-xs text-gray-500">Y</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h4 className="text-xs font-medium text-gray-700 mb-2">Item Settings</h4>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-gray-50 rounded px-2 py-1">
+                <div className="flex items-center">
+                  <input
+                    type="number"
+                    min="0"
+                    value={chartConfig.legends?.itemWidth || 60}
+                    onChange={(e) => {
+                      const itemWidth = Math.max(0, parseInt(e.target.value) || 0);
+                      handleChartConfigChange('legends', { ...chartConfig.legends, itemWidth });
+                    }}
+                    className="flex-1 h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                  />
+                  <span className="text-xs text-gray-500">W</span>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded px-2 py-1">
+                <div className="flex items-center">
+                  <input
+                    type="number"
+                    min="0"
+                    value={chartConfig.legends?.itemHeight || 18}
+                    onChange={(e) => {
+                      const itemHeight = Math.max(0, parseInt(e.target.value) || 0);
+                      handleChartConfigChange('legends', { ...chartConfig.legends, itemHeight });
+                    }}
+                    className="flex-1 h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                  />
+                  <span className="text-xs text-gray-500">H</span>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded px-2 py-1">
+                <div className="flex items-center">
+                  <input
+                    type="number"
+                    min="0"
+                    value={chartConfig.legends?.itemsSpacing || 2}
+                    onChange={(e) => {
+                      const itemsSpacing = Math.max(0, parseInt(e.target.value) || 0);
+                      handleChartConfigChange('legends', { ...chartConfig.legends, itemsSpacing });
+                    }}
+                    className="flex-1 h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                  />
+                  <span className="text-xs text-gray-500">Gap</span>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded px-2 py-1">
+                <div className="flex items-center">
+                  <input
+                    type="number"
+                    min="0"
+                    value={chartConfig.legends?.symbolSize || 12}
+                    onChange={(e) => {
+                      const symbolSize = Math.max(0, parseInt(e.target.value) || 0);
+                      handleChartConfigChange('legends', { ...chartConfig.legends, symbolSize });
+                    }}
+                    className="flex-1 h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                  />
+                  <span className="text-xs text-gray-500">Symbol</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h4 className="text-xs font-medium text-gray-700 mb-2">Item Direction</h4>
+            <div className="bg-gray-50 rounded px-2 py-1">
+              <div className="flex items-center">
+                <input
+                  type="text"
+                  value={chartConfig.legends?.itemDirection || 'left-to-right'}
+                  onChange={(e) => {
+                    handleChartConfigChange('legends', { ...chartConfig.legends, itemDirection: e.target.value });
+                  }}
+                  className="flex-1 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                  placeholder="left-to-right"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 

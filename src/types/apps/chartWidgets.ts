@@ -12,6 +12,7 @@ export interface LegendConfig {
   itemsSpacing?: number
   symbolSize?: number
   symbolShape?: 'circle' | 'square' | 'triangle'
+  itemDirection?: string
 }
 
 // Base chart configuration interface
