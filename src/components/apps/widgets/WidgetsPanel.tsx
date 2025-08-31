@@ -194,7 +194,7 @@ export default function WidgetsPanel({}: WidgetsPanelProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full" style={{backgroundColor: 'hsl(0 0% 98%)'}}>
       {/* Header */}
       <div className="p-4">
         <div className="flex items-center gap-2 mb-4">

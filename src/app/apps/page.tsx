@@ -166,9 +166,9 @@ export default function AppsPage() {
             </div>
           </div>
         </header>
-        <div className="flex flex-1 flex-col" style={{backgroundColor: 'white'}}>
+        <div className="flex flex-1 flex-col" style={{backgroundColor: 'hsl(0 0% 98%)'}}>
           {/* Sistema de Apps aninhado */}
-          <div className="flex flex-1 bg-gray-50">
+          <div className="flex flex-1" style={{backgroundColor: 'hsl(0 0% 98%)'}}>
               
             <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
               {/* SplitSidebarPanel */}

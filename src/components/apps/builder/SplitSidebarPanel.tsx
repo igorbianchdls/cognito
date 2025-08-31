@@ -110,8 +110,8 @@ export default function SplitSidebarPanel({
       <div className={`${
         collapsed 
           ? 'w-0 overflow-hidden' 
-          : 'w-[720px] bg-background flex-shrink-0 overflow-hidden h-[calc(100vh-4rem)] border-r border-border shadow-sm'
-      } transition-all duration-300 ease-in-out`}>
+          : 'w-[720px] flex-shrink-0 overflow-hidden h-[calc(100vh-4rem)] border-r border-border shadow-sm'
+      } transition-all duration-300 ease-in-out`} style={{backgroundColor: 'hsl(0 0% 98%)'}}>
         <DndContext onDragEnd={handleDragEnd}>
           <div className="h-full flex">
             {/* Tables Explorer - Left Half */}
@@ -141,8 +141,8 @@ export default function SplitSidebarPanel({
     <div className={`${
       collapsed 
         ? 'w-0 overflow-hidden' 
-        : 'w-[480px] bg-background flex-shrink-0 overflow-hidden h-[calc(100vh-4rem)] border-r border-border shadow-sm'
-    } transition-all duration-300 ease-in-out`}>
+        : 'w-[480px] flex-shrink-0 overflow-hidden h-[calc(100vh-4rem)] border-r border-border shadow-sm'
+    } transition-all duration-300 ease-in-out`} style={{backgroundColor: 'hsl(0 0% 98%)'}}>
       {activeTab === 'widgets' && <WidgetsPanel />}
       {activeTab === 'chat' && <ChatPanel droppedWidgets={droppedWidgets} onEditWidget={onEditWidget} />}
       {activeTab === 'editor' && <WidgetEditor />}
