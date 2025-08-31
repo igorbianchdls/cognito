@@ -13,8 +13,8 @@ import { isImageWidget, isNavigationWidget } from '@/types/apps/widget'
 import type { ImageConfig, NavigationConfig, ContainerConfig } from '@/types/apps/widget'
 import { isTableWidget } from '@/types/apps/tableWidgets'
 import type { TableConfig } from '@/types/apps/tableWidgets'
-import { isChartWidget } from '@/types/apps/chartWidgets'
-import type { BaseChartConfig } from '@/types/apps/chartWidgets'
+import { isChartWidget, isBarChart } from '@/types/apps/chartWidgets'
+import type { BaseChartConfig, BarChartConfig } from '@/types/apps/chartWidgets'
 import KPIConfigEditor from '../editors/KPIConfigEditor'
 import ImageConfigEditor from '../editors/ImageConfigEditor'
 import TableConfigEditor from '../editors/TableConfigEditor'
@@ -651,7 +651,7 @@ export default function WidgetEditorNew() {
               <div className="bg-gray-50 rounded px-2 py-1">
                 <div className="flex items-center">
                   <select
-                    value={chartConfig.groupMode || 'stacked'}
+                    value={(chartConfig as BarChartConfig).groupMode || 'stacked'}
                     onChange={(e) => handleChartConfigChange('groupMode', e.target.value as 'grouped' | 'stacked')}
                     className="flex-1 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
                   >
@@ -663,7 +663,7 @@ export default function WidgetEditorNew() {
               <div className="bg-gray-50 rounded px-2 py-1">
                 <div className="flex items-center">
                   <select
-                    value={chartConfig.layout || 'vertical'}
+                    value={(chartConfig as BarChartConfig).layout || 'vertical'}
                     onChange={(e) => handleChartConfigChange('layout', e.target.value as 'horizontal' | 'vertical')}
                     className="flex-1 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
                   >
