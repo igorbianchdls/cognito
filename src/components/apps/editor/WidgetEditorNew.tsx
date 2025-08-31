@@ -628,13 +628,15 @@ export default function WidgetEditorNew() {
       </div>
 
       {/* Container Configuration - Design Tab Only */}
-      <div className="mt-6 pt-6 border-t border-gray-200">
-        <ContainerConfigEditor
-          selectedWidget={selectedWidget}
-          containerConfig={containerConfig}
-          onContainerConfigChange={handleContainerConfigChange}
-        />
-      </div>
+      {selectedWidget && (
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <ContainerConfigEditor
+            selectedWidget={selectedWidget}
+            containerConfig={containerConfig}
+            onContainerConfigChange={handleContainerConfigChange}
+          />
+        </div>
+      )}
     </div>
   )
 
