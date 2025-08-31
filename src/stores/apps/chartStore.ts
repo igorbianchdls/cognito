@@ -276,7 +276,7 @@ export const chartActions = {
     $chartWidgets.set(updatedCharts)
     
     // Invalidate adapter cache to force re-computation
-    invalidateAdapterCache(chartId)
+    invalidateAdapterCacheFn?.(chartId)
     console.log('🔧 chartStore.$chartWidgets.set() chamado com sucesso')
     
     // Verificar se realmente foi atualizado
