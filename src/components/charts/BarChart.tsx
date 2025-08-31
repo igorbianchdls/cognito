@@ -190,22 +190,25 @@ export function BarChart(props: BarChartProps) {
             }
             
             // Se legends é LegendConfig, converter para BarLegendProps[]
-            if (legends && typeof legends === 'object') {
-              return (legends.enabled !== false) ? [
+            if (legends && typeof legends === 'object' && !Array.isArray(legends)) {
+              // Type guard para LegendConfig
+              const legendConfig = legends as any;
+              
+              return [
                 {
-                  dataFrom: 'keys',
-                  anchor: legends.anchor || 'bottom',
-                  direction: legends.direction || 'row',
+                  dataFrom: 'keys' as const,
+                  anchor: legendConfig.anchor || 'bottom',
+                  direction: legendConfig.direction || 'row',
                   justify: false,
-                  translateX: legends.translateX || 0,
-                  translateY: legends.translateY || 50,
-                  itemsSpacing: legends.itemsSpacing || 20,
-                  itemWidth: legends.itemWidth || 80,
-                  itemHeight: legends.itemHeight || 18,
-                  itemDirection: legends.itemDirection || 'left-to-right',
+                  translateX: legendConfig.translateX || 0,
+                  translateY: legendConfig.translateY || 50,
+                  itemsSpacing: legendConfig.itemsSpacing || 20,
+                  itemWidth: legendConfig.itemWidth || 80,
+                  itemHeight: legendConfig.itemHeight || 18,
+                  itemDirection: legendConfig.itemDirection || 'left-to-right',
                   itemOpacity: 0.8,
-                  symbolSize: legends.symbolSize || 12,
-                  symbolShape: legends.symbolShape || 'circle',
+                  symbolSize: legendConfig.symbolSize || 12,
+                  symbolShape: legendConfig.symbolShape || 'circle',
                   effects: [
                     {
                       on: 'hover',
@@ -215,35 +218,11 @@ export function BarChart(props: BarChartProps) {
                     }
                   ]
                 }
-              ] : [];
+              ];
             }
             
-            // Configuração padrão se legends não especificado
-            return [
-              {
-                dataFrom: 'keys',
-                anchor: 'bottom',
-                direction: 'row',
-                justify: false,
-                translateX: 0,
-                translateY: 50,
-                itemsSpacing: 20,
-                itemWidth: 80,
-                itemHeight: 18,
-                itemDirection: 'left-to-right',
-                itemOpacity: 0.8,
-                symbolSize: 12,
-                symbolShape: 'circle',
-                effects: [
-                  {
-                    on: 'hover',
-                    style: {
-                      itemOpacity: 1
-                    }
-                  }
-                ]
-              }
-            ];
+            // Retorna array vazio se não há legends configurado
+            return [];
           })()}
           />
         </div>
