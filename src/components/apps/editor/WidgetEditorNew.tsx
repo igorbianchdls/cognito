@@ -646,7 +646,7 @@ export default function WidgetEditorNew() {
         <h3 className="text-sm font-semibold text-gray-900 mb-3">⚙️ Chart Settings</h3>
         <div className="space-y-4">
           {/* Bar Chart Settings */}
-          {selectedWidget && isBarChart(selectedWidget) && (
+          {selectedWidget && isChartWidget(selectedWidget) && isBarChart(selectedWidget) && (
             <div>
               <h4 className="text-xs font-medium text-gray-700 mb-2">Display Mode</h4>
               <div className="grid grid-cols-2 gap-2">
@@ -679,7 +679,7 @@ export default function WidgetEditorNew() {
           )}
 
           {/* Line Chart Settings */}
-          {selectedWidget && isLineChart(selectedWidget) && (
+          {selectedWidget && isChartWidget(selectedWidget) && isLineChart(selectedWidget) && (
             <div>
               <h4 className="text-xs font-medium text-gray-700 mb-2">Line Configuration</h4>
               <div className="grid grid-cols-2 gap-2">
@@ -743,7 +743,7 @@ export default function WidgetEditorNew() {
           )}
 
           {/* Pie Chart Settings */}
-          {selectedWidget && isPieChart(selectedWidget) && (
+          {selectedWidget && isChartWidget(selectedWidget) && isPieChart(selectedWidget) && (
             <div>
               <h4 className="text-xs font-medium text-gray-700 mb-2">Pie Configuration</h4>
               <div className="grid grid-cols-2 gap-2">
@@ -796,7 +796,7 @@ export default function WidgetEditorNew() {
           )}
 
           {/* Area Chart Settings */}
-          {selectedWidget && isAreaChart(selectedWidget) && (
+          {selectedWidget && isChartWidget(selectedWidget) && isAreaChart(selectedWidget) && (
             <div>
               <h4 className="text-xs font-medium text-gray-700 mb-2">Area Configuration</h4>
               <div className="grid grid-cols-2 gap-2">
