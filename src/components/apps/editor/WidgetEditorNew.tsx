@@ -394,6 +394,19 @@ export default function WidgetEditorNew() {
     }
   }
 
+  // Position & Size Handlers (for direct widget properties)
+  const handleWidgetPositionChange = (field: string, value: number) => {
+    console.log('📍 WidgetEditorNew handleWidgetPositionChange:', { field, value })
+    
+    if (selectedWidget) {
+      console.log('📍 WidgetEditorNew calling widgetActions.editWidget for position:', selectedWidget.i, { [field]: value })
+      
+      // Update widget position/size directly
+      const updatePayload = { [field]: value }
+      widgetActions.editWidget(selectedWidget.i, updatePayload)
+    }
+  }
+
   // Handlers
   const handleSelectCanvas = () => {
     setCanvasSelected(true)
@@ -918,10 +931,10 @@ export default function WidgetEditorNew() {
                     type="number"
                     min="0"
                     max="11"
-                    value={containerConfig.x || 0}
+                    value={selectedWidget?.x || 0}
                     onChange={(e) => {
                       const x = Math.max(0, Math.min(11, parseInt(e.target.value) || 0));
-                      handleContainerConfigChange('x', x);
+                      handleWidgetPositionChange('x', x);
                     }}
                     className="flex-1 h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
                   />
@@ -933,10 +946,10 @@ export default function WidgetEditorNew() {
                   <input
                     type="number"
                     min="0"
-                    value={containerConfig.y || 0}
+                    value={selectedWidget?.y || 0}
                     onChange={(e) => {
                       const y = Math.max(0, parseInt(e.target.value) || 0);
-                      handleContainerConfigChange('y', y);
+                      handleWidgetPositionChange('y', y);
                     }}
                     className="flex-1 h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
                   />
@@ -954,10 +967,10 @@ export default function WidgetEditorNew() {
                     type="number"
                     min="1"
                     max="12"
-                    value={containerConfig.w || 4}
+                    value={selectedWidget?.w || 4}
                     onChange={(e) => {
                       const w = Math.max(1, Math.min(12, parseInt(e.target.value) || 1));
-                      handleContainerConfigChange('w', w);
+                      handleWidgetPositionChange('w', w);
                     }}
                     className="flex-1 h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
                   />
@@ -969,10 +982,10 @@ export default function WidgetEditorNew() {
                   <input
                     type="number"
                     min="1"
-                    value={containerConfig.h || 3}
+                    value={selectedWidget?.h || 3}
                     onChange={(e) => {
                       const h = Math.max(1, parseInt(e.target.value) || 1);
-                      handleContainerConfigChange('h', h);
+                      handleWidgetPositionChange('h', h);
                     }}
                     className="flex-1 h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
                   />

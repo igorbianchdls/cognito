@@ -214,10 +214,6 @@ export interface ContainerConfig {
   borderOpacity?: number
   borderWidth?: number
   borderRadius?: number
-  x?: number
-  y?: number
-  w?: number
-  h?: number
 }
 
 // Unified widget configuration interface
