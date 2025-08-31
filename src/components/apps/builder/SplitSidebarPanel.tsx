@@ -110,17 +110,17 @@ export default function SplitSidebarPanel({
       <div className={`${
         collapsed 
           ? 'w-0 overflow-hidden' 
-          : 'w-[600px] bg-background flex-shrink-0 overflow-hidden h-[calc(100vh-4rem)] border-r border-border shadow-sm'
+          : 'w-[720px] bg-background flex-shrink-0 overflow-hidden h-[calc(100vh-4rem)] border-r border-border shadow-sm'
       } transition-all duration-300 ease-in-out`}>
         <DndContext onDragEnd={handleDragEnd}>
           <div className="h-full flex">
             {/* Tables Explorer - Left Half */}
-            <div className="w-1/2 border-r border-border">
+            <div className="w-1/3 border-r border-border">
               <TablesExplorer />
             </div>
             
             {/* Chart Builder - Right Half */}
-            <div className="w-1/2">
+            <div className="w-2/3">
               <ChartBuilder
                 data={chartBuilderData}
                 onChartTypeChange={handleChartTypeChange}
