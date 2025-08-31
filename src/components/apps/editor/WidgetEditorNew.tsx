@@ -1009,7 +1009,7 @@ export default function WidgetEditorNew() {
                 <div className="flex items-center">
                   <select
                     value={chartConfig.legends?.direction || 'column'}
-                    onChange={(e) => handleChartConfigChange('legends', { ...chartConfig.legends, direction: e.target.value as 'column' | 'row' })}
+                    onChange={(e) => handleChartConfigChange('legends', { ...chartConfig.legends, enabled: true, direction: e.target.value as 'column' | 'row' })}
                     className="flex-1 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
                   >
                     <option value="column">Column</option>
@@ -1021,7 +1021,7 @@ export default function WidgetEditorNew() {
                 <div className="flex items-center gap-2">
                   <Slider
                     value={[chartConfig.legends?.translateY || 0]}
-                    onValueChange={([value]) => handleChartConfigChange('legends', { ...chartConfig.legends, translateY: value })}
+                    onValueChange={([value]) => handleChartConfigChange('legends', { ...chartConfig.legends, enabled: true, translateY: value })}
                     max={100}
                     min={-100}
                     step={1}
@@ -1039,7 +1039,7 @@ export default function WidgetEditorNew() {
                 <div className="flex items-center gap-2">
                   <Slider
                     value={[chartConfig.legends?.itemWidth || 60]}
-                    onValueChange={([value]) => handleChartConfigChange('legends', { ...chartConfig.legends, itemWidth: value })}
+                    onValueChange={([value]) => handleChartConfigChange('legends', { ...chartConfig.legends, enabled: true, itemWidth: value })}
                     max={200}
                     min={20}
                     step={5}
@@ -1052,7 +1052,7 @@ export default function WidgetEditorNew() {
                 <div className="flex items-center gap-2">
                   <Slider
                     value={[chartConfig.legends?.itemHeight || 18]}
-                    onValueChange={([value]) => handleChartConfigChange('legends', { ...chartConfig.legends, itemHeight: value })}
+                    onValueChange={([value]) => handleChartConfigChange('legends', { ...chartConfig.legends, enabled: true, itemHeight: value })}
                     max={50}
                     min={10}
                     step={2}
@@ -1065,7 +1065,7 @@ export default function WidgetEditorNew() {
                 <div className="flex items-center gap-2">
                   <Slider
                     value={[chartConfig.legends?.itemsSpacing || 2]}
-                    onValueChange={([value]) => handleChartConfigChange('legends', { ...chartConfig.legends, itemsSpacing: value })}
+                    onValueChange={([value]) => handleChartConfigChange('legends', { ...chartConfig.legends, enabled: true, itemsSpacing: value })}
                     max={20}
                     min={0}
                     step={1}
@@ -1078,7 +1078,7 @@ export default function WidgetEditorNew() {
                 <div className="flex items-center gap-2">
                   <Slider
                     value={[chartConfig.legends?.symbolSize || 12]}
-                    onValueChange={([value]) => handleChartConfigChange('legends', { ...chartConfig.legends, symbolSize: value })}
+                    onValueChange={([value]) => handleChartConfigChange('legends', { ...chartConfig.legends, enabled: true, symbolSize: value })}
                     max={30}
                     min={6}
                     step={1}
@@ -1096,7 +1096,7 @@ export default function WidgetEditorNew() {
                 <select
                   value={chartConfig.legends?.itemDirection || 'left-to-right'}
                   onChange={(e) => {
-                    handleChartConfigChange('legends', { ...chartConfig.legends, itemDirection: e.target.value });
+                    handleChartConfigChange('legends', { ...chartConfig.legends, enabled: true, itemDirection: e.target.value });
                   }}
                   className="flex-1 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
                 >

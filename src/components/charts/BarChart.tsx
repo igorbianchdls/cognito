@@ -190,8 +190,8 @@ export function BarChart(props: BarChartProps) {
             }
             
             // Se legends é LegendConfig, converter para BarLegendProps[]
-            if (legends && typeof legends === 'object' && 'enabled' in legends) {
-              return legends.enabled !== false ? [
+            if (legends && typeof legends === 'object') {
+              return (legends.enabled !== false) ? [
                 {
                   dataFrom: 'keys',
                   anchor: legends.anchor || 'bottom',
@@ -202,7 +202,7 @@ export function BarChart(props: BarChartProps) {
                   itemsSpacing: legends.itemsSpacing || 20,
                   itemWidth: legends.itemWidth || 80,
                   itemHeight: legends.itemHeight || 18,
-                  itemDirection: 'left-to-right',
+                  itemDirection: legends.itemDirection || 'left-to-right',
                   itemOpacity: 0.8,
                   symbolSize: legends.symbolSize || 12,
                   symbolShape: legends.symbolShape || 'circle',
