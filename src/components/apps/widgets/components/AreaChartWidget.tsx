@@ -62,14 +62,25 @@ export default function AreaChartWidget({ widget }: AreaChartWidgetProps) {
     yColumn: 'y',
     isFullscreen: false,
     colors: chartConfig.colors || ['#2563eb'],
+    // Visual & Colors
+    backgroundColor: chartConfig.backgroundColor,
+    backgroundOpacity: chartConfig.backgroundOpacity,
+    borderColor: chartConfig.borderColor,
+    borderOpacity: chartConfig.borderOpacity,
+    borderRadius: chartConfig.borderRadius,
+    // Grid
     enableGridX: chartConfig.enableGridX ?? false,
     enableGridY: chartConfig.enableGridY ?? true,
+    // Area-specific settings
     enableArea: chartConfig.enableArea ?? true,
     areaOpacity: chartConfig.areaOpacity ?? 0.15,
     lineWidth: chartConfig.lineWidth ?? 2,
     pointSize: chartConfig.pointSize ?? 4,
+    enablePoints: chartConfig.enablePoints ?? false,
+    curve: chartConfig.curve || 'cardinal',
     animate: chartConfig.animate ?? false,
     motionConfig: chartConfig.motionConfig || 'gentle',
+    legends: chartConfig.legends,
     margin: {
       top: chartConfig.margin?.top ?? 12,
       right: chartConfig.margin?.right ?? 8,

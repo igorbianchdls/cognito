@@ -62,8 +62,16 @@ export default function LineChartWidget({ widget }: LineChartWidgetProps) {
     yColumn: 'y',
     isFullscreen: false,
     colors: chartConfig.colors || ['#2563eb'],
+    // Visual & Colors
+    backgroundColor: chartConfig.backgroundColor,
+    backgroundOpacity: chartConfig.backgroundOpacity,
+    borderColor: chartConfig.borderColor,
+    borderOpacity: chartConfig.borderOpacity,
+    borderRadius: chartConfig.borderRadius,
+    // Grid
     enableGridX: chartConfig.enableGridX ?? false,
     enableGridY: chartConfig.enableGridY ?? true,
+    // Line-specific settings
     enablePoints: chartConfig.enablePoints ?? true,
     pointSize: chartConfig.pointSize ?? 4,
     lineWidth: chartConfig.lineWidth ?? 2,

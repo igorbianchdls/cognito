@@ -5,15 +5,27 @@ import { BaseChartProps } from './types';
 import { nivoTheme } from './theme';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
+import type { LegendConfig } from '@/types/apps/chartWidgets';
 
 interface AreaChartProps extends BaseChartProps {
   colors?: string[]
+  // Visual & Style
+  backgroundColor?: string
+  backgroundOpacity?: number
+  borderColor?: string
+  borderOpacity?: number
+  borderRadius?: number
+  borderWidth?: number
+  // Grid
   enableGridX?: boolean
   enableGridY?: boolean
+  // Area-specific
   enableArea?: boolean
   areaOpacity?: number
   lineWidth?: number
   pointSize?: number
+  enablePoints?: boolean
+  curve?: 'linear' | 'cardinal' | 'catmullRom' | 'monotoneX'
   animate?: boolean
   motionConfig?: 'default' | 'gentle' | 'wobbly' | 'stiff' | 'slow'
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
@@ -29,6 +41,8 @@ interface AreaChartProps extends BaseChartProps {
     tickSize?: number
     tickPadding?: number
   }
+  // Legends
+  legends?: LegendConfig | Record<string, unknown>[]
 }
 
 export function AreaChart({ 
@@ -37,17 +51,29 @@ export function AreaChart({
   yColumn, 
   isFullscreen,
   colors,
+  // Visual & Style
+  backgroundColor,
+  backgroundOpacity,
+  borderColor,
+  borderOpacity,
+  borderRadius,
+  borderWidth,
+  // Grid
   enableGridX,
   enableGridY,
+  // Area-specific
   enableArea,
   areaOpacity,
   lineWidth,
   pointSize,
+  enablePoints,
+  curve,
   animate,
   motionConfig,
   margin,
   axisBottom,
-  axisLeft
+  axisLeft,
+  legends
 }: AreaChartProps) {
   if (!data || data.length === 0) {
     return <EmptyState />;
@@ -72,7 +98,19 @@ export function AreaChart({
   };
 
   return (
-    <div style={{ width: '100%', height: '100%', minWidth: 0 }}>
+    <div 
+      style={{ 
+        width: '100%', 
+        height: '100%', 
+        minWidth: 0,
+        backgroundColor: backgroundColor,
+        borderColor: borderColor,
+        borderWidth: borderWidth ? `${borderWidth}px` : undefined,
+        borderStyle: borderWidth ? 'solid' : undefined,
+        borderRadius: borderRadius ? `${borderRadius}px` : undefined,
+        opacity: backgroundOpacity ?? 1
+      }}
+    >
       <ResponsiveLine
         data={[
           {
@@ -98,8 +136,10 @@ export function AreaChart({
         areaOpacity={areaOpacity ?? 0.15}
         lineWidth={lineWidth ?? 2}
         colors={colors || ['#2563eb']}
+        curve={curve || 'cardinal'}
         
         // Pontos configuráveis
+        enablePoints={enablePoints ?? false}
         pointSize={pointSize ?? 4}
         pointColor={{ from: 'color' }}
         pointBorderWidth={1}
@@ -153,31 +193,68 @@ export function AreaChart({
           </div>
         )}
         
-        // Legenda horizontal na parte inferior
-        legends={[
-          {
-            anchor: 'bottom',
-            direction: 'row',
-            justify: false,
-            translateX: 0,
-            translateY: 70,
-            itemsSpacing: 20,
-            itemWidth: 80,
-            itemHeight: 18,
-            itemDirection: 'left-to-right',
-            itemOpacity: 0.8,
-            symbolSize: 12,
-            symbolShape: 'circle',
-            effects: [
-              {
-                on: 'hover',
-                style: {
-                  itemOpacity: 1
-                }
-              }
-            ]
+        // Legendas configuráveis
+        // @ts-expect-error - Nivo legend type compatibility
+        legends={(() => {
+          // Se legends é array, usar diretamente
+          if (Array.isArray(legends)) {
+            return legends as Record<string, unknown>[];
           }
-        ]}
+          
+          // Se legends é LegendConfig, converter para LineLegendProps[]
+          if (legends && typeof legends === 'object' && 'enabled' in legends) {
+            return legends.enabled !== false ? [
+              {
+                anchor: legends.anchor || 'bottom',
+                direction: legends.direction || 'row',
+                justify: false,
+                translateX: legends.translateX || 0,
+                translateY: legends.translateY || 70,
+                itemsSpacing: legends.itemsSpacing || 20,
+                itemWidth: legends.itemWidth || 80,
+                itemHeight: legends.itemHeight || 18,
+                itemDirection: 'left-to-right',
+                itemOpacity: 0.8,
+                symbolSize: legends.symbolSize || 12,
+                symbolShape: legends.symbolShape || 'circle',
+                effects: [
+                  {
+                    on: 'hover',
+                    style: {
+                      itemOpacity: 1
+                    }
+                  }
+                ]
+              }
+            ] : [];
+          }
+          
+          // Configuração padrão se legends não especificado
+          return [
+            {
+              anchor: 'bottom',
+              direction: 'row',
+              justify: false,
+              translateX: 0,
+              translateY: 70,
+              itemsSpacing: 20,
+              itemWidth: 80,
+              itemHeight: 18,
+              itemDirection: 'left-to-right',
+              itemOpacity: 0.8,
+              symbolSize: 12,
+              symbolShape: 'circle',
+              effects: [
+                {
+                  on: 'hover',
+                  style: {
+                    itemOpacity: 1
+                  }
+                }
+              ]
+            }
+          ];
+        })()}
       />
     </div>
   );

@@ -9,8 +9,17 @@ import type { LegendConfig } from '@/types/apps/chartWidgets';
 
 interface LineChartProps extends BaseChartProps {
   colors?: string[]
+  // Visual & Style
+  backgroundColor?: string
+  backgroundOpacity?: number
+  borderColor?: string
+  borderOpacity?: number
+  borderRadius?: number
+  borderWidth?: number
+  // Grid
   enableGridX?: boolean
   enableGridY?: boolean
+  // Line-specific
   enablePoints?: boolean
   pointSize?: number
   curve?: 'linear' | 'cardinal' | 'catmullRom' | 'monotoneX'
@@ -39,8 +48,17 @@ interface LineChartProps extends BaseChartProps {
 export function LineChart({ 
   data, 
   colors,
+  // Visual & Style
+  backgroundColor,
+  backgroundOpacity,
+  borderColor,
+  borderOpacity,
+  borderRadius,
+  borderWidth,
+  // Grid
   enableGridX,
   enableGridY,
+  // Line-specific
   enablePoints,
   pointSize,
   curve,
@@ -77,7 +95,19 @@ export function LineChart({
   };
 
   return (
-    <div style={{ width: '100%', height: '100%', minWidth: 0 }}>
+    <div 
+      style={{ 
+        width: '100%', 
+        height: '100%', 
+        minWidth: 0,
+        backgroundColor: backgroundColor,
+        borderColor: borderColor,
+        borderWidth: borderWidth ? `${borderWidth}px` : undefined,
+        borderStyle: borderWidth ? 'solid' : undefined,
+        borderRadius: borderRadius ? `${borderRadius}px` : undefined,
+        opacity: backgroundOpacity ?? 1
+      }}
+    >
       <ResponsiveLine
         data={[
           {

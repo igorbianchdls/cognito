@@ -13,8 +13,8 @@ import { isImageWidget, isNavigationWidget } from '@/types/apps/widget'
 import type { ImageConfig, NavigationConfig, ContainerConfig } from '@/types/apps/widget'
 import { isTableWidget } from '@/types/apps/tableWidgets'
 import type { TableConfig } from '@/types/apps/tableWidgets'
-import { isChartWidget, isBarChart } from '@/types/apps/chartWidgets'
-import type { BaseChartConfig, BarChartConfig } from '@/types/apps/chartWidgets'
+import { isChartWidget, isBarChart, isLineChart, isPieChart, isAreaChart } from '@/types/apps/chartWidgets'
+import type { BaseChartConfig, BarChartConfig, LineChartConfig, PieChartConfig, AreaChartConfig } from '@/types/apps/chartWidgets'
 import KPIConfigEditor from '../editors/KPIConfigEditor'
 import ImageConfigEditor from '../editors/ImageConfigEditor'
 import TableConfigEditor from '../editors/TableConfigEditor'
@@ -645,35 +645,211 @@ export default function WidgetEditorNew() {
       <div>
         <h3 className="text-sm font-semibold text-gray-900 mb-3">⚙️ Chart Settings</h3>
         <div className="space-y-4">
-          <div>
-            <h4 className="text-xs font-medium text-gray-700 mb-2">Display Mode</h4>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="bg-gray-50 rounded px-2 py-1">
-                <div className="flex items-center">
-                  <select
-                    value={(chartConfig as BarChartConfig).groupMode || 'stacked'}
-                    onChange={(e) => handleChartConfigChange('groupMode', e.target.value as 'grouped' | 'stacked')}
-                    className="flex-1 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
-                  >
-                    <option value="grouped">Grouped</option>
-                    <option value="stacked">Stacked</option>
-                  </select>
+          {/* Bar Chart Settings */}
+          {selectedWidget && isBarChart(selectedWidget) && (
+            <div>
+              <h4 className="text-xs font-medium text-gray-700 mb-2">Display Mode</h4>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-gray-50 rounded px-2 py-1">
+                  <div className="flex items-center">
+                    <select
+                      value={(chartConfig as BarChartConfig).groupMode || 'stacked'}
+                      onChange={(e) => handleChartConfigChange('groupMode', e.target.value as 'grouped' | 'stacked')}
+                      className="flex-1 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                    >
+                      <option value="grouped">Grouped</option>
+                      <option value="stacked">Stacked</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
-              <div className="bg-gray-50 rounded px-2 py-1">
-                <div className="flex items-center">
-                  <select
-                    value={(chartConfig as BarChartConfig).layout || 'vertical'}
-                    onChange={(e) => handleChartConfigChange('layout', e.target.value as 'horizontal' | 'vertical')}
-                    className="flex-1 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
-                  >
-                    <option value="horizontal">Horizontal</option>
-                    <option value="vertical">Vertical</option>
-                  </select>
+                <div className="bg-gray-50 rounded px-2 py-1">
+                  <div className="flex items-center">
+                    <select
+                      value={(chartConfig as BarChartConfig).layout || 'vertical'}
+                      onChange={(e) => handleChartConfigChange('layout', e.target.value as 'horizontal' | 'vertical')}
+                      className="flex-1 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                    >
+                      <option value="horizontal">Horizontal</option>
+                      <option value="vertical">Vertical</option>
+                    </select>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Line Chart Settings */}
+          {selectedWidget && isLineChart(selectedWidget) && (
+            <div>
+              <h4 className="text-xs font-medium text-gray-700 mb-2">Line Configuration</h4>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-gray-50 rounded px-2 py-1">
+                  <label className="block text-xs text-gray-600 mb-1">Curve</label>
+                  <select
+                    value={(chartConfig as LineChartConfig).curve || 'cardinal'}
+                    onChange={(e) => handleChartConfigChange('curve', e.target.value)}
+                    className="w-full bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                  >
+                    <option value="linear">Linear</option>
+                    <option value="cardinal">Cardinal</option>
+                    <option value="catmullRom">Catmull Rom</option>
+                    <option value="monotoneX">Monotone X</option>
+                  </select>
+                </div>
+                <div className="bg-gray-50 rounded px-2 py-1">
+                  <label className="block text-xs text-gray-600 mb-1">Line Width</label>
+                  <Slider
+                    value={[(chartConfig as LineChartConfig).lineWidth || 2]}
+                    onValueChange={([value]) => handleChartConfigChange('lineWidth', value)}
+                    max={10}
+                    min={1}
+                    step={1}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                <label className="flex items-center gap-2 text-xs">
+                  <input
+                    type="checkbox"
+                    checked={(chartConfig as LineChartConfig).enablePoints !== false}
+                    onChange={(e) => handleChartConfigChange('enablePoints', e.target.checked)}
+                    className="rounded"
+                  />
+                  Points
+                </label>
+                <label className="flex items-center gap-2 text-xs">
+                  <input
+                    type="checkbox"
+                    checked={(chartConfig as LineChartConfig).enableArea || false}
+                    onChange={(e) => handleChartConfigChange('enableArea', e.target.checked)}
+                    className="rounded"
+                  />
+                  Fill Area
+                </label>
+                <div className="bg-gray-50 rounded px-2 py-1">
+                  <label className="block text-xs text-gray-600 mb-1">Point Size</label>
+                  <Slider
+                    value={[(chartConfig as LineChartConfig).pointSize || 4]}
+                    onValueChange={([value]) => handleChartConfigChange('pointSize', value)}
+                    max={15}
+                    min={2}
+                    step={1}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Pie Chart Settings */}
+          {selectedWidget && isPieChart(selectedWidget) && (
+            <div>
+              <h4 className="text-xs font-medium text-gray-700 mb-2">Pie Configuration</h4>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-gray-50 rounded px-2 py-1">
+                  <label className="block text-xs text-gray-600 mb-1">Inner Radius</label>
+                  <Slider
+                    value={[(chartConfig as PieChartConfig).innerRadius || 0]}
+                    onValueChange={([value]) => handleChartConfigChange('innerRadius', value)}
+                    max={0.9}
+                    min={0}
+                    step={0.1}
+                    className="w-full"
+                  />
+                </div>
+                <div className="bg-gray-50 rounded px-2 py-1">
+                  <label className="block text-xs text-gray-600 mb-1">Corner Radius</label>
+                  <Slider
+                    value={[(chartConfig as PieChartConfig).cornerRadius || 2]}
+                    onValueChange={([value]) => handleChartConfigChange('cornerRadius', value)}
+                    max={10}
+                    min={0}
+                    step={1}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <label className="flex items-center gap-2 text-xs">
+                  <input
+                    type="checkbox"
+                    checked={(chartConfig as PieChartConfig).enableArcLinkLabels !== false}
+                    onChange={(e) => handleChartConfigChange('enableArcLinkLabels', e.target.checked)}
+                    className="rounded"
+                  />
+                  Arc Labels
+                </label>
+                <div className="bg-gray-50 rounded px-2 py-1">
+                  <label className="block text-xs text-gray-600 mb-1">Pad Angle</label>
+                  <Slider
+                    value={[(chartConfig as PieChartConfig).padAngle || 0.7]}
+                    onValueChange={([value]) => handleChartConfigChange('padAngle', value)}
+                    max={5}
+                    min={0}
+                    step={0.1}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Area Chart Settings */}
+          {selectedWidget && isAreaChart(selectedWidget) && (
+            <div>
+              <h4 className="text-xs font-medium text-gray-700 mb-2">Area Configuration</h4>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-gray-50 rounded px-2 py-1">
+                  <label className="block text-xs text-gray-600 mb-1">Curve</label>
+                  <select
+                    value={(chartConfig as AreaChartConfig).curve || 'cardinal'}
+                    onChange={(e) => handleChartConfigChange('curve', e.target.value)}
+                    className="w-full bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                  >
+                    <option value="linear">Linear</option>
+                    <option value="cardinal">Cardinal</option>
+                    <option value="catmullRom">Catmull Rom</option>
+                    <option value="monotoneX">Monotone X</option>
+                  </select>
+                </div>
+                <div className="bg-gray-50 rounded px-2 py-1">
+                  <label className="block text-xs text-gray-600 mb-1">Area Opacity</label>
+                  <Slider
+                    value={[(chartConfig as AreaChartConfig).areaOpacity || 0.15]}
+                    onValueChange={([value]) => handleChartConfigChange('areaOpacity', value)}
+                    max={1}
+                    min={0}
+                    step={0.05}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <label className="flex items-center gap-2 text-xs">
+                  <input
+                    type="checkbox"
+                    checked={(chartConfig as AreaChartConfig).enablePoints || false}
+                    onChange={(e) => handleChartConfigChange('enablePoints', e.target.checked)}
+                    className="rounded"
+                  />
+                  Show Points
+                </label>
+                <div className="bg-gray-50 rounded px-2 py-1">
+                  <label className="block text-xs text-gray-600 mb-1">Line Width</label>
+                  <Slider
+                    value={[(chartConfig as AreaChartConfig).lineWidth || 2]}
+                    onValueChange={([value]) => handleChartConfigChange('lineWidth', value)}
+                    max={10}
+                    min={1}
+                    step={1}
+                    className="w-full"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           <div>
             <h4 className="text-xs font-medium text-gray-700 mb-2">Spacing</h4>
             <div className="grid grid-cols-2 gap-2">

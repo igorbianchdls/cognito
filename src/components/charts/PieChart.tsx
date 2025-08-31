@@ -9,11 +9,18 @@ import type { LegendConfig } from '@/types/apps/chartWidgets';
 
 interface PieChartProps extends BaseChartProps {
   colors?: string[]
+  // Visual & Style
+  backgroundColor?: string
+  backgroundOpacity?: number
+  borderColor?: string
+  borderOpacity?: number
+  borderRadius?: number
+  borderWidth?: number
+  // Pie-specific
   innerRadius?: number
   padAngle?: number
   cornerRadius?: number
   activeOuterRadiusOffset?: number
-  borderWidth?: number
   enableArcLinkLabels?: boolean
   arcLabelsSkipAngle?: number
   animate?: boolean
@@ -26,11 +33,18 @@ interface PieChartProps extends BaseChartProps {
 export function PieChart({ 
   data, 
   colors,
+  // Visual & Style
+  backgroundColor,
+  backgroundOpacity,
+  borderColor,
+  borderOpacity,
+  borderRadius,
+  borderWidth,
+  // Pie-specific
   innerRadius,
   padAngle,
   cornerRadius,
   activeOuterRadiusOffset,
-  borderWidth,
   enableArcLinkLabels,
   arcLabelsSkipAngle,
   animate,
@@ -64,7 +78,20 @@ export function PieChart({
   const elegantColors = ['#2563eb', '#dc2626', '#16a34a', '#ca8a04', '#9333ea', '#c2410c'];
 
   return (
-    <div style={{ width: '100%', height: '100%', minWidth: 0 }}>
+    <div 
+      style={{ 
+        width: '100%', 
+        height: '100%', 
+        minWidth: 0,
+        backgroundColor: backgroundColor,
+        backgroundOpacity: backgroundOpacity,
+        borderColor: borderColor,
+        borderWidth: borderWidth ? `${borderWidth}px` : undefined,
+        borderStyle: borderWidth ? 'solid' : undefined,
+        borderRadius: borderRadius ? `${borderRadius}px` : undefined,
+        opacity: backgroundOpacity ?? 1
+      }}
+    >
       <ResponsivePie
         data={chartData}
         

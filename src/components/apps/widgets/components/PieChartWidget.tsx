@@ -67,6 +67,12 @@ export default function PieChartWidget({ widget }: PieChartWidgetProps) {
     yColumn: 'y',
     isFullscreen: false,
     colors: chartConfig.colors,
+    // Visual & Colors
+    backgroundColor: chartConfig.backgroundColor,
+    backgroundOpacity: chartConfig.backgroundOpacity,
+    borderColor: chartConfig.borderColor,
+    borderOpacity: chartConfig.borderOpacity,
+    // Pie-specific settings
     innerRadius: chartConfig.innerRadius ?? 0.5,
     padAngle: chartConfig.padAngle ?? 1,
     cornerRadius: chartConfig.cornerRadius ?? 2,
