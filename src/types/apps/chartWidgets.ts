@@ -55,6 +55,7 @@ export interface BaseChartConfig {
     left?: number
   }
   padding?: number
+  innerPadding?: number
   
   // Labels & Text
   enableLabel?: boolean

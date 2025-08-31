@@ -641,6 +641,73 @@ export default function WidgetEditorNew() {
         </div>
       </div>
 
+      {/* Chart Settings */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">⚙️ Chart Settings</h3>
+        <div className="space-y-4">
+          <div>
+            <h4 className="text-xs font-medium text-gray-700 mb-2">Display Mode</h4>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-gray-50 rounded px-2 py-1">
+                <div className="flex items-center">
+                  <select
+                    value={chartConfig.groupMode || 'stacked'}
+                    onChange={(e) => handleChartConfigChange('groupMode', e.target.value as 'grouped' | 'stacked')}
+                    className="flex-1 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                  >
+                    <option value="grouped">Grouped</option>
+                    <option value="stacked">Stacked</option>
+                  </select>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded px-2 py-1">
+                <div className="flex items-center">
+                  <select
+                    value={chartConfig.layout || 'vertical'}
+                    onChange={(e) => handleChartConfigChange('layout', e.target.value as 'horizontal' | 'vertical')}
+                    className="flex-1 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                  >
+                    <option value="horizontal">Horizontal</option>
+                    <option value="vertical">Vertical</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h4 className="text-xs font-medium text-gray-700 mb-2">Spacing</h4>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-gray-50 rounded px-2 py-1">
+                <div className="flex items-center gap-2">
+                  <Slider
+                    value={[chartConfig.padding || 0.1]}
+                    onValueChange={([value]) => handleChartConfigChange('padding', value)}
+                    max={1}
+                    min={0}
+                    step={0.1}
+                    className="flex-1"
+                  />
+                  <span className="text-xs text-gray-500 min-w-[30px] text-right">{chartConfig.padding || 0.1}</span>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded px-2 py-1">
+                <div className="flex items-center gap-2">
+                  <Slider
+                    value={[chartConfig.innerPadding || 0]}
+                    onValueChange={([value]) => handleChartConfigChange('innerPadding', value)}
+                    max={1}
+                    min={0}
+                    step={0.1}
+                    className="flex-1"
+                  />
+                  <span className="text-xs text-gray-500 min-w-[30px] text-right">{chartConfig.innerPadding || 0}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Container Configuration - Design Tab Only */}
       {selectedWidget && (
         <div className="mt-6 pt-6 border-t border-gray-200">
