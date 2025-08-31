@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { useStore } from '@nanostores/react';
-import MessageList from '../chat/MessageList';
-import InputArea from '../chat/InputArea';
-import { sheetDataStore, sheetToolsStore } from '@/stores/sheetsStore';
+import MessageList from '../../chat/MessageList';
+import InputArea from '../../chat/InputArea';
+import { sheetDataStore, sheetToolsStore } from '@/stores/sheets/sheetsStore';
 
 interface UploadedFile {
   id: string;
@@ -58,7 +58,7 @@ export default function SheetsChat() {
     setError(null);
 
     try {
-      const response = await fetch('/api/sheets-chat', {
+      const response = await fetch('/api/sheets/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

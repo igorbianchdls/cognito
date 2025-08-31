@@ -11,10 +11,10 @@ import {
   initializeDefaultDataset,
   addDataset,
   removeDataset
-} from '@/stores/sheetsStore';
+} from '@/stores/sheets/sheetsStore';
 import { DatasetInfo } from '@/data/mockDatasets';
-import { CSVImportPlugin } from './CSVImportPlugin';
-import CSVImportButton from './CSVImportButton';
+import { CSVImportPlugin } from '../csv/CSVImportPlugin';
+import CSVImportButton from '../csv/CSVImportButton';
 
 export default function DatasetsPanel() {
   const datasets = useStore(availableDatasetsStore);

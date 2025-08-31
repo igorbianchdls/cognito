@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useStore } from '@nanostores/react';
-import { sheetToolsStore } from '@/stores/sheetsStore';
+import { sheetToolsStore } from '@/stores/sheets/sheetsStore';
 
 // This component handles tool calls from the API and executes them on the sheet
 export default function SheetToolsHandler() {

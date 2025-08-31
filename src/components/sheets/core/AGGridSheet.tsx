@@ -7,7 +7,7 @@ import { TableSheets, createSortableHeader, type TableData } from './TableSheets
 import { 
   activeDatasetStore, 
   initializeDefaultDataset
-} from '@/stores/sheetsStore';
+} from '@/stores/sheets/sheetsStore';
 
 // Helper function to format values based on column type
 const formatValue = (value: unknown, colDef?: { field?: string; enableValue?: boolean; filter?: string }): string => {

@@ -788,7 +788,7 @@ BIGQUERY_LOCATION=us-central1
 
 ```typescript
 // In browser console
-import { availableDatasetsStore, activeDatasetStore } from '@/stores/sheetsStore'
+import { availableDatasetsStore, activeDatasetStore } from '@/stores/sheets/sheetsStore'
 
 // Check current datasets
 console.log('Datasets:', availableDatasetsStore.get())

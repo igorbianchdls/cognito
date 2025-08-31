@@ -12,10 +12,10 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
-import AGGridSheet from '@/components/sheets/AGGridSheet'
-import RightPanel from '@/components/sheets/RightPanel'
-import TableHeader, { FilterState, SortState } from '@/components/sheets/TableHeader'
-import CollapseButton from '@/components/sheets/CollapseButton'
+import AGGridSheet from '@/components/sheets/core/AGGridSheet'
+import RightPanel from '@/components/sheets/panels/RightPanel'
+import TableHeader, { FilterState, SortState } from '@/components/sheets/core/TableHeader'
+import CollapseButton from '@/components/sheets/core/CollapseButton'
 
 export default function SheetsPage() {
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);

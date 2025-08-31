@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { getActiveDatasetInfo } from '@/stores/sheetsStore';
+import { getActiveDatasetInfo } from '@/stores/sheets/sheetsStore';
 import {
   DropdownMenu,
   DropdownMenuContent,
