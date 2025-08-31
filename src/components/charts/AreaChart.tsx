@@ -97,18 +97,34 @@ export function AreaChart({
     }
   };
 
+  // Apply background with opacity
+  const getBackgroundColor = () => {
+    if (!backgroundColor) return undefined;
+    if (!backgroundOpacity || backgroundOpacity === 1) return backgroundColor;
+    
+    // Convert hex to rgba if needed
+    if (backgroundColor.startsWith('#')) {
+      const hex = backgroundColor.slice(1);
+      const r = parseInt(hex.slice(0, 2), 16);
+      const g = parseInt(hex.slice(2, 4), 16);
+      const b = parseInt(hex.slice(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${backgroundOpacity})`;
+    }
+    
+    return backgroundColor;
+  };
+
   return (
     <div 
       style={{ 
         width: '100%', 
         height: '100%', 
         minWidth: 0,
-        backgroundColor: backgroundColor,
+        backgroundColor: getBackgroundColor(),
         borderColor: borderColor,
         borderWidth: borderWidth ? `${borderWidth}px` : undefined,
         borderStyle: borderWidth ? 'solid' : undefined,
         borderRadius: borderRadius ? `${borderRadius}px` : undefined,
-        opacity: backgroundOpacity ?? 1
       }}
     >
       <ResponsiveLine
