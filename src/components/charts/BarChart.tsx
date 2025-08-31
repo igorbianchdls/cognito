@@ -192,7 +192,7 @@ export function BarChart(props: BarChartProps) {
             // Se legends é LegendConfig, converter para BarLegendProps[]
             if (legends && typeof legends === 'object' && !Array.isArray(legends)) {
               // Type guard para LegendConfig
-              const legendConfig = legends as any;
+              const legendConfig = legends as Record<string, unknown>;
               
               return [
                 {
