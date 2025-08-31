@@ -5,7 +5,7 @@ import { DefaultChatTransport } from 'ai';
 import { useState, FormEvent, useMemo } from 'react';
 import { useStore } from '@nanostores/react';
 import ChatContainer from '@/components/nexus/ChatContainer';
-import { currentAgent as agentStore, setCurrentAgent } from '@/stores/agentStore';
+import { currentAgent as agentStore, setCurrentAgent } from '@/stores/nexus/agentStore';
 
 export default function Home() {
   // Estado global do agente via nanostore

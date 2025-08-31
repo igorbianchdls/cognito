@@ -17,7 +17,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import ChatContainer from '../../components/nexus/ChatContainer';
 import type { UIMessage } from 'ai';
-import { currentAgent, setCurrentAgent } from '../../stores/agentStore';
+import { currentAgent, setCurrentAgent } from '../../stores/nexus/agentStore';
 
 export default function Page() {
   const selectedAgent = useStore(currentAgent);

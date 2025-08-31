@@ -645,6 +645,29 @@ export default function WidgetEditorNew() {
       <div>
         <h3 className="text-sm font-semibold text-gray-900 mb-3">⚙️ Chart Settings</h3>
         <div className="space-y-4">
+          {/* Color Scheme - Common to all charts */}
+          {selectedWidget && isChartWidget(selectedWidget) && (
+            <div className="bg-gray-50 rounded px-3 py-2">
+              <label className="block text-xs text-gray-600 mb-2">🎨 Color Scheme</label>
+              <select
+                value={chartConfig.colorScheme?.scheme || 'nivo'}
+                onChange={(e) => handleChartConfigChange('colorScheme', { scheme: e.target.value })}
+                className="w-full bg-white border border-gray-200 rounded text-sm px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="nivo">Nivo (Default)</option>
+                <option value="category10">Category 10</option>
+                <option value="accent">Accent</option>
+                <option value="dark2">Dark 2</option>
+                <option value="paired">Paired</option>
+                <option value="pastel1">Pastel 1</option>
+                <option value="pastel2">Pastel 2</option>
+                <option value="set1">Set 1</option>
+                <option value="set2">Set 2</option>
+                <option value="set3">Set 3</option>
+              </select>
+            </div>
+          )}
+
           {/* Bar Chart Settings */}
           {selectedWidget && isChartWidget(selectedWidget) && isBarChart(selectedWidget) && (
             <div>
@@ -672,6 +695,35 @@ export default function WidgetEditorNew() {
                       <option value="horizontal">Horizontal</option>
                       <option value="vertical">Vertical</option>
                     </select>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Additional Bar Chart Style Props */}
+              <div className="mt-3">
+                <h5 className="text-xs font-medium text-gray-600 mb-2">Style Options</h5>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-gray-50 rounded px-2 py-1">
+                    <label className="block text-xs text-gray-600 mb-1">Bar Spacing</label>
+                    <Slider
+                      value={[(chartConfig as BarChartConfig).padding || 0.3]}
+                      onValueChange={([value]) => handleChartConfigChange('padding', value)}
+                      max={0.8}
+                      min={0.1}
+                      step={0.1}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="bg-gray-50 rounded px-2 py-1">
+                    <label className="block text-xs text-gray-600 mb-1">Inner Padding</label>
+                    <Slider
+                      value={[(chartConfig as BarChartConfig).innerPadding || 0]}
+                      onValueChange={([value]) => handleChartConfigChange('innerPadding', value)}
+                      max={10}
+                      min={0}
+                      step={1}
+                      className="w-full"
+                    />
                   </div>
                 </div>
               </div>
@@ -739,6 +791,24 @@ export default function WidgetEditorNew() {
                   />
                 </div>
               </div>
+              
+              {/* Additional Line Chart Style Props */}
+              {(chartConfig as LineChartConfig).enableArea && (
+                <div className="mt-3">
+                  <h5 className="text-xs font-medium text-gray-600 mb-2">Area Style</h5>
+                  <div className="bg-gray-50 rounded px-2 py-1">
+                    <label className="block text-xs text-gray-600 mb-1">Area Opacity</label>
+                    <Slider
+                      value={[(chartConfig as LineChartConfig).areaOpacity || 0.2]}
+                      onValueChange={([value]) => handleChartConfigChange('areaOpacity', value)}
+                      max={1}
+                      min={0.1}
+                      step={0.1}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -790,6 +860,35 @@ export default function WidgetEditorNew() {
                     step={0.1}
                     className="w-full"
                   />
+                </div>
+              </div>
+              
+              {/* Additional Pie Chart Style Props */}
+              <div className="mt-3">
+                <h5 className="text-xs font-medium text-gray-600 mb-2">Advanced Style</h5>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-gray-50 rounded px-2 py-1">
+                    <label className="block text-xs text-gray-600 mb-1">Active Offset</label>
+                    <Slider
+                      value={[(chartConfig as PieChartConfig).activeOuterRadiusOffset || 8]}
+                      onValueChange={([value]) => handleChartConfigChange('activeOuterRadiusOffset', value)}
+                      max={20}
+                      min={0}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="bg-gray-50 rounded px-2 py-1">
+                    <label className="block text-xs text-gray-600 mb-1">Arc Skip Angle</label>
+                    <Slider
+                      value={[(chartConfig as PieChartConfig).arcLabelsSkipAngle || 10]}
+                      onValueChange={([value]) => handleChartConfigChange('arcLabelsSkipAngle', value)}
+                      max={45}
+                      min={0}
+                      step={5}
+                      className="w-full"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -847,6 +946,24 @@ export default function WidgetEditorNew() {
                   />
                 </div>
               </div>
+              
+              {/* Additional Area Chart Style Props */}
+              {(chartConfig as AreaChartConfig).enablePoints && (
+                <div className="mt-3">
+                  <h5 className="text-xs font-medium text-gray-600 mb-2">Point Style</h5>
+                  <div className="bg-gray-50 rounded px-2 py-1">
+                    <label className="block text-xs text-gray-600 mb-1">Point Size</label>
+                    <Slider
+                      value={[(chartConfig as AreaChartConfig).pointSize || 6]}
+                      onValueChange={([value]) => handleChartConfigChange('pointSize', value)}
+                      max={15}
+                      min={2}
+                      step={1}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
