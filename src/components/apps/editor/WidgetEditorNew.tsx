@@ -626,6 +626,15 @@ export default function WidgetEditorNew() {
           )}
         </div>
       </div>
+
+      {/* Container Configuration - Design Tab Only */}
+      <div className="mt-6 pt-6 border-t border-gray-200">
+        <ContainerConfigEditor
+          selectedWidget={selectedWidget}
+          containerConfig={containerConfig}
+          onContainerConfigChange={handleContainerConfigChange}
+        />
+      </div>
     </div>
   )
 
@@ -1079,8 +1088,8 @@ export default function WidgetEditorNew() {
                 />
               )}
 
-              {/* Container Configuration - applies to all widgets */}
-              {selectedWidget && (
+              {/* Container Configuration - applies to non-chart widgets */}
+              {selectedWidget && !isChartWidget(selectedWidget) && (
                 <div className="mt-6 pt-6">
                   <ContainerConfigEditor
                     selectedWidget={selectedWidget}

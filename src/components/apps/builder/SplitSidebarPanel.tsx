@@ -110,7 +110,7 @@ export default function SplitSidebarPanel({
       <div className={`${
         collapsed 
           ? 'w-0 overflow-hidden' 
-          : 'w-[720px] flex-shrink-0 overflow-hidden h-[calc(100vh-4rem)] border-r border-border shadow-sm'
+          : 'w-[720px] flex-shrink-0 overflow-hidden h-[calc(100vh-4rem)] shadow-sm'
       } transition-all duration-300 ease-in-out`} style={{backgroundColor: 'hsl(0 0% 98%)'}}>
         <DndContext onDragEnd={handleDragEnd}>
           <div className="h-full flex">
@@ -141,7 +141,7 @@ export default function SplitSidebarPanel({
     <div className={`${
       collapsed 
         ? 'w-0 overflow-hidden' 
-        : 'w-[480px] flex-shrink-0 overflow-hidden h-[calc(100vh-4rem)] border-r border-border shadow-sm'
+        : 'w-[480px] flex-shrink-0 overflow-hidden h-[calc(100vh-4rem)] shadow-sm'
     } transition-all duration-300 ease-in-out`} style={{backgroundColor: 'hsl(0 0% 98%)'}}>
       {activeTab === 'widgets' && <WidgetsPanel />}
       {activeTab === 'chat' && <ChatPanel droppedWidgets={droppedWidgets} onEditWidget={onEditWidget} />}

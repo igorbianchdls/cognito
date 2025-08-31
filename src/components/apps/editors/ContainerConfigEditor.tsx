@@ -76,61 +76,105 @@ export default function ContainerConfigEditor({
             🎨 Container Visual & Colors
           </AccordionTrigger>
           <AccordionContent>
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Background Color</label>
-                  <input
-                    type="color"
-                    value={safeContainerConfig.backgroundColor}
-                    onChange={(e) => {
-                      console.log('🎨 Background color change:', e.target.value)
-                      onContainerConfigChange('backgroundColor', e.target.value)
-                    }}
-                    className="w-full h-10 border border-gray-300 rounded cursor-pointer"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Background Opacity</label>
-                  <div className="flex items-center gap-2">
-                    <Slider
-                      value={[safeContainerConfig.backgroundOpacity]}
-                      onValueChange={([value]) => onContainerConfigChange('backgroundOpacity', value)}
-                      max={1}
-                      min={0}
-                      step={0.1}
-                      className="flex-1"
-                    />
-                    <span className="text-xs text-gray-500 min-w-[40px] text-right">
-                      {Math.round(safeContainerConfig.backgroundOpacity * 100)} %
-                    </span>
+            <div className="space-y-4">
+              {/* Background */}
+              <div>
+                <h4 className="text-xs font-medium text-gray-700 mb-2">Background</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-gray-50 rounded px-2 py-1">
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-4 h-4 min-w-4 min-h-4 flex-shrink-0 rounded cursor-pointer border border-gray-300"
+                        style={{ backgroundColor: safeContainerConfig.backgroundColor }}
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'color';
+                          input.value = safeContainerConfig.backgroundColor;
+                          input.onchange = (e) => {
+                            console.log('🎨 Background color change:', (e.target as HTMLInputElement).value)
+                            onContainerConfigChange('backgroundColor', (e.target as HTMLInputElement).value)
+                          };
+                          input.click();
+                        }}
+                      />
+                      <input
+                        type="text"
+                        value={safeContainerConfig.backgroundColor.replace('#', '').toUpperCase()}
+                        onChange={(e) => {
+                          const hex = e.target.value.replace('#', '');
+                          if (/^[0-9A-Fa-f]{0,6}$/.test(hex)) {
+                            onContainerConfigChange('backgroundColor', `#${hex}`);
+                          }
+                        }}
+                        className="flex-1 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                        maxLength={6}
+                      />
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 rounded px-2 py-1">
+                    <div className="flex items-center">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={Math.round(safeContainerConfig.backgroundOpacity * 100)}
+                        onChange={(e) => {
+                          const opacity = Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) / 100;
+                          onContainerConfigChange('backgroundOpacity', opacity);
+                        }}
+                        className="flex-1 h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                      />
+                      <span className="text-xs text-gray-500">%</span>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Border Color</label>
-                  <input
-                    type="color"
-                    value={safeContainerConfig.borderColor}
-                    onChange={(e) => onContainerConfigChange('borderColor', e.target.value)}
-                    className="w-full h-10 border border-gray-300 rounded cursor-pointer"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Border Opacity</label>
-                  <div className="flex items-center gap-2">
-                    <Slider
-                      value={[safeContainerConfig.borderOpacity]}
-                      onValueChange={([value]) => onContainerConfigChange('borderOpacity', value)}
-                      max={1}
-                      min={0}
-                      step={0.1}
-                      className="flex-1"
-                    />
-                    <span className="text-xs text-gray-500 min-w-[40px] text-right">
-                      {Math.round(safeContainerConfig.borderOpacity * 100)} %
-                    </span>
+              {/* Border */}
+              <div>
+                <h4 className="text-xs font-medium text-gray-700 mb-2">Border</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-gray-50 rounded px-2 py-1">
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-4 h-4 min-w-4 min-h-4 flex-shrink-0 rounded cursor-pointer border border-gray-300"
+                        style={{ backgroundColor: safeContainerConfig.borderColor }}
+                        onClick={() => {
+                          const input = document.createElement('input');
+                          input.type = 'color';
+                          input.value = safeContainerConfig.borderColor;
+                          input.onchange = (e) => onContainerConfigChange('borderColor', (e.target as HTMLInputElement).value);
+                          input.click();
+                        }}
+                      />
+                      <input
+                        type="text"
+                        value={safeContainerConfig.borderColor.replace('#', '').toUpperCase()}
+                        onChange={(e) => {
+                          const hex = e.target.value.replace('#', '');
+                          if (/^[0-9A-Fa-f]{0,6}$/.test(hex)) {
+                            onContainerConfigChange('borderColor', `#${hex}`);
+                          }
+                        }}
+                        className="flex-1 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                        maxLength={6}
+                      />
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 rounded px-2 py-1">
+                    <div className="flex items-center">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={Math.round(safeContainerConfig.borderOpacity * 100)}
+                        onChange={(e) => {
+                          const opacity = Math.max(0, Math.min(100, parseInt(e.target.value) || 0)) / 100;
+                          onContainerConfigChange('borderOpacity', opacity);
+                        }}
+                        className="flex-1 h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                      />
+                      <span className="text-xs text-gray-500">%</span>
+                    </div>
                   </div>
                 </div>
               </div>
