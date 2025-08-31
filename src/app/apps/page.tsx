@@ -105,7 +105,7 @@ export default function AppsPage() {
     <SidebarProvider defaultOpen={false}>
       <SidebarShadcn />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b border-gray-200" style={{backgroundColor: 'white'}}>
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b border-gray-200" style={{backgroundColor: 'hsl(0 0% 98%)'}}>
           <div className="flex items-center justify-between w-full px-4">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="-ml-1" />
@@ -121,8 +121,8 @@ export default function AppsPage() {
                     <div key={tab.id} className="flex items-center">
                       <BreadcrumbItem>
                         {activeTab === tab.id ? (
-                          <BreadcrumbPage className="flex items-center gap-2">
-                            <tab.icon className="w-4 h-4" />
+                          <BreadcrumbPage className="flex items-center gap-2 text-sidebar-foreground">
+                            <tab.icon className="w-4 h-4 text-sidebar-foreground" />
                             <span className="hidden sm:inline">
                               {tab.label === 'Automações' ? 'Auto' : tab.label}
                             </span>
@@ -134,9 +134,9 @@ export default function AppsPage() {
                               e.preventDefault()
                               setActiveTab(tab.id)
                             }}
-                            className="flex items-center gap-2 hover:text-gray-900"
+                            className="flex items-center gap-2 text-sidebar-foreground hover:text-sidebar-foreground/80"
                           >
-                            <tab.icon className="w-4 h-4" />
+                            <tab.icon className="w-4 h-4 text-sidebar-foreground" />
                             <span className="hidden sm:inline">
                               {tab.label === 'Automações' ? 'Auto' : tab.label}
                             </span>
@@ -153,13 +153,13 @@ export default function AppsPage() {
             {/* Botões na extrema direita */}
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm">
-                <Settings className="h-4 w-4" />
+                <Settings className="h-4 w-4 text-sidebar-foreground" />
               </Button>
               <Button variant="ghost" size="sm">
-                <Share className="h-4 w-4" />
+                <Share className="h-4 w-4 text-sidebar-foreground" />
               </Button>
               <Button variant="ghost" size="sm">
-                <Github className="h-4 w-4" />
+                <Github className="h-4 w-4 text-sidebar-foreground" />
               </Button>
               <Button variant="outline" size="sm">Share</Button>
               <Button variant="default" size="sm">Publish</Button>
