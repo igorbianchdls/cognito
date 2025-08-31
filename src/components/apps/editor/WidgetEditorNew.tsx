@@ -22,6 +22,7 @@ import ChartConfigEditor from '../editors/ChartConfigEditor'
 import NavigationConfigEditor from '../editors/NavigationConfigEditor'
 import ContainerConfigEditor from '../editors/ContainerConfigEditor'
 import { ColorInput, NumberInput } from '../editors/controls'
+import { Slider } from '@/components/ui/slider'
 
 export default function WidgetEditorNew() {
   const widgets = useStore($widgets)
@@ -1017,17 +1018,16 @@ export default function WidgetEditorNew() {
                 </div>
               </div>
               <div className="bg-gray-50 rounded px-2 py-1">
-                <div className="flex items-center">
-                  <input
-                    type="number"
-                    value={chartConfig.legends?.translateY || 0}
-                    onChange={(e) => {
-                      const translateY = parseInt(e.target.value) || 0;
-                      handleChartConfigChange('legends', { ...chartConfig.legends, translateY });
-                    }}
-                    className="flex-1 h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                <div className="flex items-center gap-2">
+                  <Slider
+                    value={[chartConfig.legends?.translateY || 0]}
+                    onValueChange={([value]) => handleChartConfigChange('legends', { ...chartConfig.legends, translateY: value })}
+                    max={100}
+                    min={-100}
+                    step={1}
+                    className="flex-1"
                   />
-                  <span className="text-xs text-gray-500">Y</span>
+                  <span className="text-xs text-gray-500 min-w-[30px] text-right">{chartConfig.legends?.translateY || 0}</span>
                 </div>
               </div>
             </div>
@@ -1036,63 +1036,55 @@ export default function WidgetEditorNew() {
             <h4 className="text-xs font-medium text-gray-700 mb-2">Item Settings</h4>
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-gray-50 rounded px-2 py-1">
-                <div className="flex items-center">
-                  <input
-                    type="number"
-                    min="0"
-                    value={chartConfig.legends?.itemWidth || 60}
-                    onChange={(e) => {
-                      const itemWidth = Math.max(0, parseInt(e.target.value) || 0);
-                      handleChartConfigChange('legends', { ...chartConfig.legends, itemWidth });
-                    }}
-                    className="flex-1 h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                <div className="flex items-center gap-2">
+                  <Slider
+                    value={[chartConfig.legends?.itemWidth || 60]}
+                    onValueChange={([value]) => handleChartConfigChange('legends', { ...chartConfig.legends, itemWidth: value })}
+                    max={200}
+                    min={20}
+                    step={5}
+                    className="flex-1"
                   />
-                  <span className="text-xs text-gray-500">W</span>
+                  <span className="text-xs text-gray-500 min-w-[30px] text-right">{chartConfig.legends?.itemWidth || 60}</span>
                 </div>
               </div>
               <div className="bg-gray-50 rounded px-2 py-1">
-                <div className="flex items-center">
-                  <input
-                    type="number"
-                    min="0"
-                    value={chartConfig.legends?.itemHeight || 18}
-                    onChange={(e) => {
-                      const itemHeight = Math.max(0, parseInt(e.target.value) || 0);
-                      handleChartConfigChange('legends', { ...chartConfig.legends, itemHeight });
-                    }}
-                    className="flex-1 h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                <div className="flex items-center gap-2">
+                  <Slider
+                    value={[chartConfig.legends?.itemHeight || 18]}
+                    onValueChange={([value]) => handleChartConfigChange('legends', { ...chartConfig.legends, itemHeight: value })}
+                    max={50}
+                    min={10}
+                    step={2}
+                    className="flex-1"
                   />
-                  <span className="text-xs text-gray-500">H</span>
+                  <span className="text-xs text-gray-500 min-w-[30px] text-right">{chartConfig.legends?.itemHeight || 18}</span>
                 </div>
               </div>
               <div className="bg-gray-50 rounded px-2 py-1">
-                <div className="flex items-center">
-                  <input
-                    type="number"
-                    min="0"
-                    value={chartConfig.legends?.itemsSpacing || 2}
-                    onChange={(e) => {
-                      const itemsSpacing = Math.max(0, parseInt(e.target.value) || 0);
-                      handleChartConfigChange('legends', { ...chartConfig.legends, itemsSpacing });
-                    }}
-                    className="flex-1 h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                <div className="flex items-center gap-2">
+                  <Slider
+                    value={[chartConfig.legends?.itemsSpacing || 2]}
+                    onValueChange={([value]) => handleChartConfigChange('legends', { ...chartConfig.legends, itemsSpacing: value })}
+                    max={20}
+                    min={0}
+                    step={1}
+                    className="flex-1"
                   />
-                  <span className="text-xs text-gray-500">Gap</span>
+                  <span className="text-xs text-gray-500 min-w-[30px] text-right">{chartConfig.legends?.itemsSpacing || 2}</span>
                 </div>
               </div>
               <div className="bg-gray-50 rounded px-2 py-1">
-                <div className="flex items-center">
-                  <input
-                    type="number"
-                    min="0"
-                    value={chartConfig.legends?.symbolSize || 12}
-                    onChange={(e) => {
-                      const symbolSize = Math.max(0, parseInt(e.target.value) || 0);
-                      handleChartConfigChange('legends', { ...chartConfig.legends, symbolSize });
-                    }}
-                    className="flex-1 h-3 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
+                <div className="flex items-center gap-2">
+                  <Slider
+                    value={[chartConfig.legends?.symbolSize || 12]}
+                    onValueChange={([value]) => handleChartConfigChange('legends', { ...chartConfig.legends, symbolSize: value })}
+                    max={30}
+                    min={6}
+                    step={1}
+                    className="flex-1"
                   />
-                  <span className="text-xs text-gray-500">Symbol</span>
+                  <span className="text-xs text-gray-500 min-w-[30px] text-right">{chartConfig.legends?.symbolSize || 12}</span>
                 </div>
               </div>
             </div>
@@ -1101,15 +1093,18 @@ export default function WidgetEditorNew() {
             <h4 className="text-xs font-medium text-gray-700 mb-2">Item Direction</h4>
             <div className="bg-gray-50 rounded px-2 py-1">
               <div className="flex items-center">
-                <input
-                  type="text"
+                <select
                   value={chartConfig.legends?.itemDirection || 'left-to-right'}
                   onChange={(e) => {
                     handleChartConfigChange('legends', { ...chartConfig.legends, itemDirection: e.target.value });
                   }}
                   className="flex-1 bg-transparent border-0 text-xs font-medium text-gray-900 focus:outline-none"
-                  placeholder="left-to-right"
-                />
+                >
+                  <option value="left-to-right">Left to Right</option>
+                  <option value="right-to-left">Right to Left</option>
+                  <option value="top-to-bottom">Top to Bottom</option>
+                  <option value="bottom-to-top">Bottom to Top</option>
+                </select>
               </div>
             </div>
           </div>
