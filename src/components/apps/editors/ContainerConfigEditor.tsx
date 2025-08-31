@@ -67,7 +67,6 @@ export default function ContainerConfigEditor({
 
   return (
     <div className="border-t pt-4 mt-4">
-      <h4 className="text-sm font-medium text-gray-700 mb-4">📦 Widget Container</h4>
       
       <Accordion type="multiple" className="w-full space-y-2">
         {/* Visual & Colors */}
@@ -212,29 +211,6 @@ export default function ContainerConfigEditor({
           </AccordionContent>
         </AccordionItem>
 
-        {/* Preview */}
-        <AccordionItem value="container-preview">
-          <AccordionTrigger className="text-sm font-medium text-gray-700">
-            👁️ Container Preview
-          </AccordionTrigger>
-          <AccordionContent>
-            <div className="space-y-3">
-              <p className="text-xs text-gray-600 mb-2">Preview of container styling:</p>
-              <div 
-                className="w-full h-20 flex items-center justify-center text-sm text-gray-600"
-                style={{
-                  backgroundColor: hexToRgba(safeContainerConfig.backgroundColor, safeContainerConfig.backgroundOpacity),
-                  borderColor: hexToRgba(safeContainerConfig.borderColor, safeContainerConfig.borderOpacity),
-                  borderWidth: `${safeContainerConfig.borderWidth}px`,
-                  borderRadius: `${safeContainerConfig.borderRadius}px`,
-                  borderStyle: 'solid'
-                }}
-              >
-                Widget Container Preview
-              </div>
-            </div>
-          </AccordionContent>
-        </AccordionItem>
       </Accordion>
     </div>
   )
