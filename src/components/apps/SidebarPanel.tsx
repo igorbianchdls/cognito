@@ -1,11 +1,11 @@
 'use client'
 
-import WidgetsPanel from '@/components/apps/WidgetsPanel'
-import ChatPanel from '@/components/apps/ChatPanel'
+import WidgetsPanel from '@/components/apps/widgets/WidgetsPanel'
+import ChatPanel from '@/components/apps/chat/ChatPanel'
 import WidgetEditor from '@/components/apps/editor/WidgetEditorNew'
-import CodeEditor from '@/components/apps/CodeEditor'
-import AutomationsPanel from '@/components/apps/AutomationsPanel'
-import SavedPanel from '@/components/apps/SavedPanel'
+import CodeEditor from '@/components/apps/code/CodeEditor'
+import AutomationsPanel from '@/components/apps/automations/AutomationsPanel'
+import SavedPanel from '@/components/apps/saved/SavedPanel'
 import DatasetsPanel from '@/components/apps/DatasetsPanel'
 import type { DroppedWidget } from '@/types/apps/widget'
 

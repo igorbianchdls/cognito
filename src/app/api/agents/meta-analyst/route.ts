@@ -7,8 +7,8 @@ const openai = createOpenAI({
     'User-Agent': 'MetaAnalyst-Agent'
   }
 });
-import * as bigqueryTools from '@/tools/bigquery';
-import * as analyticsTools from '@/tools/analytics';
+import * as bigqueryTools from '@/tools/apps/bigquery';
+import * as analyticsTools from '@/tools/apps/analytics';
 import * as utilitiesTools from '@/tools/utilities';
 
 export const maxDuration = 30;

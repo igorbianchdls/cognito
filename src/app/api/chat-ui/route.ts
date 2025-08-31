@@ -1,6 +1,6 @@
 import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
-import * as bigqueryTools from '@/tools/bigquery';
-import * as analyticsTools from '@/tools/analytics';
+import * as bigqueryTools from '@/tools/apps/bigquery';
+import * as analyticsTools from '@/tools/apps/analytics';
 import * as utilitiesTools from '@/tools/utilities';
 
 // Allow streaming responses up to 30 seconds

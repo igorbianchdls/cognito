@@ -1,7 +1,7 @@
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
-import * as bigqueryTools from '@/tools/bigquery';
-import * as queryResultsTools from '@/tools/queryResults';
+import * as bigqueryTools from '@/tools/apps/bigquery';
+import * as queryResultsTools from '@/tools/apps/queryResults';
 
 export const maxDuration = 60;
 
