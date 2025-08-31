@@ -6,6 +6,24 @@ import type { ChartData } from '@/components/charts/types'
 import type { DroppedWidget } from '@/types/apps/widget'
 import type { LineChartConfig } from '@/types/apps/chartWidgets'
 
+// Helper function to convert hex color + opacity to RGBA
+function hexToRgba(hex: string, opacity: number = 1): string {
+  // Remove # if present
+  hex = hex.replace('#', '')
+  
+  // Convert 3-digit hex to 6-digit
+  if (hex.length === 3) {
+    hex = hex.split('').map(char => char + char).join('')
+  }
+  
+  // Parse RGB values
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`
+}
+
 interface LineChartWidgetProps {
   widget: DroppedWidget
 }
@@ -58,17 +76,7 @@ export default function LineChartWidget({ widget }: LineChartWidgetProps) {
   // Prepare props for LineChart
   const chartProps = {
     data,
-    xColumn: 'x',
-    yColumn: 'y',
-    isFullscreen: false,
     colors: chartConfig.colors || ['#2563eb'],
-    // Visual & Colors
-    backgroundColor: chartConfig.backgroundColor,
-    backgroundOpacity: chartConfig.backgroundOpacity,
-    borderColor: chartConfig.borderColor,
-    borderOpacity: chartConfig.borderOpacity,
-    borderRadius: chartConfig.borderRadius,
-    // Grid
     enableGridX: chartConfig.enableGridX ?? false,
     enableGridY: chartConfig.enableGridY ?? true,
     // Line-specific settings
@@ -83,22 +91,31 @@ export default function LineChartWidget({ widget }: LineChartWidgetProps) {
     legends: chartConfig.legends,
     margin: {
       top: chartConfig.margin?.top ?? 12,
-      right: chartConfig.margin?.right ?? 8,
+      right: chartConfig.margin?.right ?? 12,
       bottom: chartConfig.margin?.bottom ?? 80,
-      left: chartConfig.margin?.left ?? 8,
+      left: chartConfig.margin?.left ?? 50,
     },
     axisBottom: chartConfig.axisBottom ? {
       tickSize: chartConfig.axisBottom.tickSize ?? 0,
       tickPadding: chartConfig.axisBottom.tickPadding ?? 8,
       tickRotation: chartConfig.axisBottom.tickRotation ?? 0,
       legend: chartConfig.axisBottom.legend,
-    } : undefined,
+    } : {
+      tickSize: 0,
+      tickPadding: 8,
+      tickRotation: 0,
+    },
     axisLeft: chartConfig.axisLeft ? {
       tickSize: chartConfig.axisLeft.tickSize ?? 0,
       tickPadding: chartConfig.axisLeft.tickPadding ?? 8,
       tickRotation: chartConfig.axisLeft.tickRotation ?? 0,
       legend: chartConfig.axisLeft.legend,
-    } : undefined,
+    } : {
+      tickSize: 0,
+      tickPadding: 8,
+      tickRotation: 0,
+    },
+    backgroundColor: hexToRgba(chartConfig.backgroundColor || '#fff', (chartConfig as Record<string, unknown>).backgroundOpacity as number ?? 1),
   }
 
   return (

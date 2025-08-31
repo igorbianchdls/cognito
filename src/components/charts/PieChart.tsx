@@ -9,42 +9,29 @@ import type { LegendConfig } from '@/types/apps/chartWidgets';
 
 interface PieChartProps extends BaseChartProps {
   colors?: string[]
-  // Visual & Style
   backgroundColor?: string
-  backgroundOpacity?: number
-  borderColor?: string
-  borderOpacity?: number
-  borderRadius?: number
-  borderWidth?: number
-  // Pie-specific
   innerRadius?: number
   padAngle?: number
   cornerRadius?: number
   activeOuterRadiusOffset?: number
+  borderWidth?: number
   enableArcLinkLabels?: boolean
   arcLabelsSkipAngle?: number
   animate?: boolean
   motionConfig?: 'default' | 'gentle' | 'wobbly' | 'stiff' | 'slow'
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
-  // Legends
   legends?: LegendConfig | Record<string, unknown>[]
 }
 
 export function PieChart({ 
   data, 
   colors,
-  // Visual & Style
   backgroundColor,
-  backgroundOpacity,
-  borderColor,
-  borderOpacity,
-  borderRadius,
-  borderWidth,
-  // Pie-specific
   innerRadius,
   padAngle,
   cornerRadius,
   activeOuterRadiusOffset,
+  borderWidth,
   enableArcLinkLabels,
   arcLabelsSkipAngle,
   animate,
@@ -77,34 +64,18 @@ export function PieChart({
   // Cores elegantes
   const elegantColors = ['#2563eb', '#dc2626', '#16a34a', '#ca8a04', '#9333ea', '#c2410c'];
 
-  // Apply background with opacity
-  const getBackgroundColor = () => {
-    if (!backgroundColor) return undefined;
-    if (!backgroundOpacity || backgroundOpacity === 1) return backgroundColor;
-    
-    // Convert hex to rgba if needed
-    if (backgroundColor.startsWith('#')) {
-      const hex = backgroundColor.slice(1);
-      const r = parseInt(hex.slice(0, 2), 16);
-      const g = parseInt(hex.slice(2, 4), 16);
-      const b = parseInt(hex.slice(4, 6), 16);
-      return `rgba(${r}, ${g}, ${b}, ${backgroundOpacity})`;
-    }
-    
-    return backgroundColor;
-  };
-
   return (
-    <div 
-      style={{ 
-        width: '100%', 
-        height: '100%', 
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        background: backgroundColor,
+        padding: 0,
+        margin: '0 auto',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'stretch',
         minWidth: 0,
-        backgroundColor: getBackgroundColor(),
-        borderColor: borderColor,
-        borderWidth: borderWidth ? `${borderWidth}px` : undefined,
-        borderStyle: borderWidth ? 'solid' : undefined,
-        borderRadius: borderRadius ? `${borderRadius}px` : undefined,
       }}
     >
       <ResponsivePie

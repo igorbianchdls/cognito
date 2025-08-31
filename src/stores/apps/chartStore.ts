@@ -13,6 +13,12 @@ import type {
 } from '@/types/apps/chartWidgets'
 import type { LayoutItem } from '@/types/apps/baseWidget'
 
+// Function reference to invalidate adapter cache (set by compositeStore)
+let invalidateAdapterCacheFn: ((widgetId: string) => void) | null = null
+export function setInvalidateAdapterCacheFn(fn: (widgetId: string) => void) {
+  invalidateAdapterCacheFn = fn
+}
+
 // Main charts atom
 export const $chartWidgets = atom<ChartWidget[]>([])
 
@@ -268,6 +274,9 @@ export const chartActions = {
     })
     
     $chartWidgets.set(updatedCharts)
+    
+    // Invalidate adapter cache to force re-computation
+    invalidateAdapterCache(chartId)
     console.log('🔧 chartStore.$chartWidgets.set() chamado com sucesso')
     
     // Verificar se realmente foi atualizado

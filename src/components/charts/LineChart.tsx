@@ -9,17 +9,9 @@ import type { LegendConfig } from '@/types/apps/chartWidgets';
 
 interface LineChartProps extends BaseChartProps {
   colors?: string[]
-  // Visual & Style
   backgroundColor?: string
-  backgroundOpacity?: number
-  borderColor?: string
-  borderOpacity?: number
-  borderRadius?: number
-  borderWidth?: number
-  // Grid
   enableGridX?: boolean
   enableGridY?: boolean
-  // Line-specific
   enablePoints?: boolean
   pointSize?: number
   curve?: 'linear' | 'cardinal' | 'catmullRom' | 'monotoneX'
@@ -41,24 +33,15 @@ interface LineChartProps extends BaseChartProps {
     tickSize?: number
     tickPadding?: number
   }
-  // Legends
   legends?: LegendConfig | Record<string, unknown>[]
 }
 
 export function LineChart({ 
   data, 
   colors,
-  // Visual & Style
   backgroundColor,
-  backgroundOpacity,
-  borderColor,
-  borderOpacity,
-  borderRadius,
-  borderWidth,
-  // Grid
   enableGridX,
   enableGridY,
-  // Line-specific
   enablePoints,
   pointSize,
   curve,
@@ -94,34 +77,18 @@ export function LineChart({
     }
   };
 
-  // Apply background with opacity
-  const getBackgroundColor = () => {
-    if (!backgroundColor) return undefined;
-    if (!backgroundOpacity || backgroundOpacity === 1) return backgroundColor;
-    
-    // Convert hex to rgba if needed
-    if (backgroundColor.startsWith('#')) {
-      const hex = backgroundColor.slice(1);
-      const r = parseInt(hex.slice(0, 2), 16);
-      const g = parseInt(hex.slice(2, 4), 16);
-      const b = parseInt(hex.slice(4, 6), 16);
-      return `rgba(${r}, ${g}, ${b}, ${backgroundOpacity})`;
-    }
-    
-    return backgroundColor;
-  };
-
   return (
-    <div 
-      style={{ 
-        width: '100%', 
-        height: '100%', 
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        background: backgroundColor,
+        padding: 0,
+        margin: '0 auto',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'stretch',
         minWidth: 0,
-        backgroundColor: getBackgroundColor(),
-        borderColor: borderColor,
-        borderWidth: borderWidth ? `${borderWidth}px` : undefined,
-        borderStyle: borderWidth ? 'solid' : undefined,
-        borderRadius: borderRadius ? `${borderRadius}px` : undefined,
       }}
     >
       <ResponsiveLine

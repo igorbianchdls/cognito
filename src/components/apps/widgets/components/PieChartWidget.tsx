@@ -6,6 +6,24 @@ import type { ChartData } from '@/components/charts/types'
 import type { DroppedWidget } from '@/types/apps/widget'
 import type { PieChartConfig } from '@/types/apps/chartWidgets'
 
+// Helper function to convert hex color + opacity to RGBA
+function hexToRgba(hex: string, opacity: number = 1): string {
+  // Remove # if present
+  hex = hex.replace('#', '')
+  
+  // Convert 3-digit hex to 6-digit
+  if (hex.length === 3) {
+    hex = hex.split('').map(char => char + char).join('')
+  }
+  
+  // Parse RGB values
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`
+}
+
 interface PieChartWidgetProps {
   widget: DroppedWidget
 }
@@ -63,15 +81,7 @@ export default function PieChartWidget({ widget }: PieChartWidgetProps) {
   // Prepare props for PieChart
   const chartProps = {
     data,
-    xColumn: 'x',
-    yColumn: 'y',
-    isFullscreen: false,
     colors: chartConfig.colors,
-    // Visual & Colors
-    backgroundColor: chartConfig.backgroundColor,
-    backgroundOpacity: chartConfig.backgroundOpacity,
-    borderColor: chartConfig.borderColor,
-    borderOpacity: chartConfig.borderOpacity,
     // Pie-specific settings
     innerRadius: chartConfig.innerRadius ?? 0.5,
     padAngle: chartConfig.padAngle ?? 1,
@@ -85,10 +95,11 @@ export default function PieChartWidget({ widget }: PieChartWidgetProps) {
     legends: chartConfig.legends,
     margin: {
       top: chartConfig.margin?.top ?? 20,
-      right: chartConfig.margin?.right ?? 8,
+      right: chartConfig.margin?.right ?? 20,
       bottom: chartConfig.margin?.bottom ?? 80,
-      left: chartConfig.margin?.left ?? 8,
+      left: chartConfig.margin?.left ?? 20,
     },
+    backgroundColor: hexToRgba(chartConfig.backgroundColor || '#fff', (chartConfig as Record<string, unknown>).backgroundOpacity as number ?? 1),
   }
 
   return (

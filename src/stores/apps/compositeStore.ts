@@ -16,6 +16,17 @@ export const $legacyWidgets = atom<DroppedWidget[]>([])
 // Cache for adapter functions to prevent unnecessary re-renders
 const adapterCache = new Map<string, DroppedWidget>()
 
+// Function to invalidate cache for a specific widget
+export function invalidateAdapterCache(widgetId: string) {
+  console.log('🚫 Invalidating adapter cache for widget:', widgetId)
+  const keysToDelete = Array.from(adapterCache.keys()).filter(key => key.includes(`_${widgetId}_`))
+  keysToDelete.forEach(key => {
+    adapterCache.delete(key)
+    console.log('🗑️ Deleted cache key:', key)
+  })
+  console.log('✅ Cache invalidated for', widgetId, '- deleted', keysToDelete.length, 'entries')
+}
+
 // Cache cleanup to prevent memory leaks
 setInterval(() => {
   if (adapterCache.size > 100) {
