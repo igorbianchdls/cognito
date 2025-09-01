@@ -129,10 +129,10 @@ export default function ChartBuilder({
 
   // Chart type options
   const chartTypes = [
-    { id: 'bar', label: 'Bar Chart', icon: <BarChart3 className="w-4 h-4" />, description: 'Compare categories' },
-    { id: 'line', label: 'Line Chart', icon: <TrendingUp className="w-4 h-4" />, description: 'Show trends over time' },
-    { id: 'pie', label: 'Pie Chart', icon: <PieChart className="w-4 h-4" />, description: 'Show proportions' },
-    { id: 'area', label: 'Area Chart', icon: <Activity className="w-4 h-4" />, description: 'Filled line chart' }
+    { id: 'bar', label: 'Bar Chart', icon: <BarChart3 className="w-6 h-6" />, description: 'Compare categories' },
+    { id: 'line', label: 'Line Chart', icon: <TrendingUp className="w-6 h-6" />, description: 'Show trends over time' },
+    { id: 'pie', label: 'Pie Chart', icon: <PieChart className="w-6 h-6" />, description: 'Show proportions' },
+    { id: 'area', label: 'Area Chart', icon: <Activity className="w-6 h-6" />, description: 'Filled line chart' }
   ] as const
 
   // Check if configuration is valid
@@ -204,11 +204,11 @@ export default function ChartBuilder({
               <PieChart className="w-4 h-4 text-muted-foreground" />
               <h3 className="text-sm font-medium">Tipo de Gráfico</h3>
             </div>
-            <div className="grid grid-cols-2 gap-2 px-2">
+            <div className="grid grid-cols-4 gap-2 px-2">
               {chartTypes.map((type) => (
                 <div
                   key={type.id}
-                  className={`p-3 rounded-lg cursor-pointer transition-all ${
+                  className={`p-2 rounded-lg cursor-pointer transition-all ${
                     data.chartType === type.id
                       ? 'bg-accent border border-primary/30'
                       : 'bg-background hover:bg-muted/30 border border-transparent hover:border-primary/20'
