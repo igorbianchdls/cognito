@@ -22,6 +22,9 @@ interface UniversalBuilderData {
   yAxis: BigQueryField[]
   chartType: 'bar' | 'line' | 'pie' | 'area'
   
+  // Table fields  
+  columns: BigQueryField[]
+  
   // Shared fields for compatibility
   dimensions: BigQueryField[]
   measures: BigQueryField[]
@@ -71,9 +74,12 @@ export default function UniversalBuilder({
     }
 
     // Check if we have required fields based on widget type
-    const hasRequiredFields = data.selectedType === 'chart' 
-      ? data.xAxis.length > 0 && data.yAxis.length > 0
-      : data.dimensions.length > 0 || data.measures.length > 0
+    const hasRequiredFields = 
+      data.selectedType === 'chart' 
+        ? data.xAxis.length > 0 && data.yAxis.length > 0
+        : data.selectedType === 'table'
+        ? data.columns.length > 0
+        : data.dimensions.length > 0 || data.measures.length > 0
 
     if (!hasRequiredFields) {
       alert('Please configure the required fields first')
@@ -167,9 +173,44 @@ export default function UniversalBuilder({
             margin: { top: 12, right: 12, bottom: 60, left: 50 }
           }
         }
+      case 'table':
+        return {
+          tableConfig: {
+            data: previewData, // BigQuery data for table
+            columns: data.columns.map(col => ({
+              id: col.name,
+              header: col.name,
+              accessorKey: col.name,
+              sortable: true,
+              type: getColumnType(col.type)
+            })),
+            showPagination: true,
+            showColumnToggle: true,
+            pageSize: 10,
+            searchPlaceholder: 'Buscar...'
+          }
+        }
       default:
         return {}
     }
+  }
+
+  // Helper function to map BigQuery types to table column types
+  const getColumnType = (bigqueryType: string): 'text' | 'number' | 'boolean' | 'date' => {
+    const lowerType = bigqueryType.toLowerCase()
+    if (lowerType.includes('string') || lowerType.includes('text')) {
+      return 'text'
+    }
+    if (lowerType.includes('int') || lowerType.includes('numeric') || lowerType.includes('float') || lowerType.includes('decimal')) {
+      return 'number'
+    }
+    if (lowerType.includes('bool')) {
+      return 'boolean'
+    }
+    if (lowerType.includes('date') || lowerType.includes('timestamp')) {
+      return 'date'
+    }
+    return 'text' // default fallback
   }
 
   const getRelevantFields = () => {
@@ -179,6 +220,12 @@ export default function UniversalBuilder({
           chartType: data.chartType,
           xColumn: data.xAxis[0]?.name || '',
           yColumn: data.yAxis[0]?.name || ''
+        }
+      case 'table':
+        return {
+          chartType: 'table',
+          xColumn: data.columns[0]?.name || '', // First column as xColumn
+          yColumn: data.columns[1]?.name || ''  // Second column as yColumn (if exists)
         }
       default:
         return {
@@ -210,7 +257,8 @@ export default function UniversalBuilder({
   // Check if configuration is valid
   const isConfigValid = data.selectedTable && (
     (data.selectedType === 'chart' && data.xAxis.length > 0 && data.yAxis.length > 0) ||
-    (data.selectedType !== 'chart' && (data.dimensions.length > 0 || data.measures.length > 0))
+    (data.selectedType === 'table' && data.columns.length > 0) ||
+    (data.selectedType !== 'chart' && data.selectedType !== 'table' && (data.dimensions.length > 0 || data.measures.length > 0))
   )
 
   return (
@@ -318,8 +366,21 @@ export default function UniversalBuilder({
               </>
             )}
 
-            {/* Generic Drop Zones for Non-Chart Types */}
-            {data.selectedType !== 'chart' && (
+            {/* Table Drop Zones */}
+            {data.selectedType === 'table' && (
+              <DropZone
+                id="columns-drop-zone"
+                label="Colunas"
+                description="Arraste campos para criar colunas da tabela"
+                icon={<Table className="w-4 h-4 text-blue-600" />}
+                fields={data.columns}
+                acceptedTypes={['string', 'date', 'numeric', 'boolean']}
+                onRemoveField={(fieldName) => handleRemoveField('columns', fieldName)}
+              />
+            )}
+
+            {/* Generic Drop Zones for Other Non-Chart Types */}
+            {data.selectedType !== 'chart' && data.selectedType !== 'table' && (
               <>
                 <DropZone
                   id="dimensions-drop-zone"
