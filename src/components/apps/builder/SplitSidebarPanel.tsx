@@ -115,8 +115,10 @@ export default function SplitSidebarPanel({
         <DndContext onDragEnd={handleDragEnd}>
           <div className="h-full flex overflow-hidden">
             {/* Tables Explorer - Left Third */}
-            <div className="w-[240px] min-w-[240px] max-w-[240px] border-r border-border overflow-hidden flex-shrink-0">
-              <TablesExplorer />
+            <div className="w-[240px] min-w-[240px] max-w-[240px] border-r border-border overflow-hidden flex-shrink-0" style={{width: '240px'}}>
+              <div className="w-full h-full overflow-hidden max-w-[240px]">
+                <TablesExplorer />
+              </div>
             </div>
             
             {/* Chart Builder - Right Two-thirds */}

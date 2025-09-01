@@ -81,27 +81,27 @@ export default function DraggableColumn({ field, sourceTable }: DraggableColumnP
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={`flex items-start justify-between p-2 bg-white rounded border border-gray-200 cursor-grab transition-all ${
+      className={`flex items-start justify-between p-2 bg-white rounded border border-gray-200 cursor-grab transition-all overflow-hidden max-w-full ${
         isDragging 
           ? 'opacity-50 cursor-grabbing border-blue-300 shadow-md' 
           : 'hover:border-blue-300 hover:shadow-sm'
       }`}
       title={field.description || `Drag ${field.name} to chart builder`}
     >
-      <div className="flex items-start gap-2 min-w-0 flex-1">
+      <div className="flex items-start gap-2 min-w-0 flex-1 overflow-hidden">
         <span className="text-gray-500 flex-shrink-0 mt-0.5">
           {getFieldIcon(field.type)}
         </span>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0 flex-1 overflow-hidden">
           <span className="text-sm font-medium text-gray-900 truncate block">
             {field.name}
           </span>
-          <div className="flex items-center gap-2 mt-1">
-            <span className={`px-1.5 py-0.5 text-xs font-mono rounded ${getTypeColor(field.type)}`}>
+          <div className="flex items-center gap-1 mt-1 overflow-hidden">
+            <span className={`px-1.5 py-0.5 text-xs font-mono rounded flex-shrink-0 max-w-[80px] truncate ${getTypeColor(field.type)}`}>
               {field.type}
             </span>
             {field.mode && field.mode !== 'NULLABLE' && (
-              <span className="px-1.5 py-0.5 text-xs bg-red-100 text-red-800 rounded">
+              <span className="px-1.5 py-0.5 text-xs bg-red-100 text-red-800 rounded flex-shrink-0 max-w-[60px] truncate">
                 {field.mode}
               </span>
             )}
@@ -115,7 +115,7 @@ export default function DraggableColumn({ field, sourceTable }: DraggableColumnP
       </div>
       
       {/* Usage indicators */}
-      <div className="flex items-center gap-1 flex-shrink-0">
+      <div className="flex items-center gap-1 flex-shrink-0 ml-1">
         {canBeUsedForRows() && (
           <div className="w-2 h-2 bg-green-400 rounded-full" title="Can be used for Rows" />
         )}

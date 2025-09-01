@@ -200,9 +200,9 @@ export default function TablesExplorer() {
   ]
 
   return (
-    <div className="h-full flex flex-col relative">
+    <div className="h-full flex flex-col relative overflow-hidden max-w-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-300/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-300/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
         <div className="flex items-center gap-2">
           <Database className="w-3 h-3 text-primary" />
           <h2 className="text-base font-semibold">Tables</h2>
@@ -245,8 +245,8 @@ export default function TablesExplorer() {
             </div>
           </div>
         ) : (
-          <ScrollArea className="h-[calc(100vh-8rem)]">
-            <div className="px-3 py-2 space-y-1">
+          <ScrollArea className="flex-1 overflow-x-hidden">
+            <div className="px-3 py-2 space-y-1 overflow-x-hidden max-w-full">
               {tables.map((table) => {
                 const tableId = table.TABLEID || table.tableId || ''
                 const numRows = table.NUMROWS || table.numRows
@@ -318,8 +318,8 @@ export default function TablesExplorer() {
                                 </Badge>
                               </div>
                               {expandedDimensions[tableId] && (
-                                <ScrollArea className="max-h-48">
-                                  <div className="space-y-1 ml-4">
+                                <ScrollArea className="max-h-48 overflow-x-hidden">
+                                  <div className="space-y-1 ml-4 overflow-x-hidden max-w-full">
                                     {schema.map((field, index) => (
                                       <DraggableColumn
                                         key={index}
@@ -350,10 +350,10 @@ export default function TablesExplorer() {
                                 </Badge>
                               </div>
                               {expandedMeasures[tableId] && (
-                                <div className="ml-4 space-y-2">
+                                <div className="ml-4 space-y-2 overflow-x-hidden max-w-full">
                                   {/* Existing measures */}
                                   {tableMeasures.length > 0 && (
-                                    <div className="space-y-1">
+                                    <div className="space-y-1 overflow-x-hidden">
                                       {tableMeasures.map((measure) => (
                                         <DraggableMeasure
                                           key={measure.id}

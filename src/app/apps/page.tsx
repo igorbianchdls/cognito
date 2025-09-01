@@ -168,18 +168,20 @@ export default function AppsPage() {
         </header>
         <div className="flex flex-1 flex-col" style={{backgroundColor: 'hsl(0 0% 98%)'}}>
           {/* Sistema de Apps aninhado */}
-          <div className="flex flex-1" style={{backgroundColor: 'hsl(0 0% 98%)'}}>
+          <div className="grid grid-cols-[auto_1fr] flex-1 overflow-hidden" style={{backgroundColor: 'hsl(0 0% 98%)'}}>
               
             <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
               {/* SplitSidebarPanel */}
-              <SplitSidebarPanel 
-                activeTab={activeTab}
-                droppedWidgets={droppedWidgets}
-                onEditWidget={handleEditWidget}
-              />
+              <div className="relative z-10">
+                <SplitSidebarPanel 
+                  activeTab={activeTab}
+                  droppedWidgets={droppedWidgets}
+                  onEditWidget={handleEditWidget}
+                />
+              </div>
             
               {/* Canvas */}
-              <div className="flex-1 py-1 px-3 h-[calc(100vh-4rem)] overflow-auto">
+              <div className="relative z-0 py-1 px-3 h-[calc(100vh-4rem)] overflow-auto min-w-0">
                 {hasNavigationWidget ? (
                   <MultiGridCanvas 
                     widgets={droppedWidgets}
