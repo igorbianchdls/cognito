@@ -128,35 +128,101 @@ LIMIT 50
     return 'COUNT'
   }
 
+  // Generate fallback data for preview when API fails
+  const generateFallbackData = (): ChartData[] => {
+    const xAxisColumn = xAxis[0]
+    const yAxisColumn = yAxis[0]
+    
+    // Generate sample data based on chart type
+    const sampleLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug']
+    const baseValue = chartType === 'pie' ? 25 : 100
+    
+    return sampleLabels.map((label, index) => {
+      const variation = Math.random() * 0.5 + 0.75 // 75%-125% variation
+      const value = Math.round(baseValue * variation * (index + 1) / 4)
+      
+      return {
+        x: label,
+        y: value,
+        label: label,
+        value: value
+      }
+    }).slice(0, chartType === 'pie' ? 4 : 6) // Limit data points
+  }
+
   // Execute query and load data
   const loadChartData = async () => {
+    console.log('📊 ChartPreview: loadChartData iniciado', {
+      selectedTable,
+      xAxisLength: xAxis.length,
+      yAxisLength: yAxis.length,
+      xAxis: xAxis.map(x => ({ name: x.name, type: x.type })),
+      yAxis: yAxis.map(y => ({ name: y.name, type: y.type, aggregation: y.aggregation }))
+    })
+
     if (!selectedTable || xAxis.length === 0 || yAxis.length === 0) {
+      console.log('📊 ChartPreview: Configuração incompleta, limpando dados')
       setChartData([])
       setError(null)
       return
     }
 
     const sql = generateQuery()
+    console.log('📊 ChartPreview: SQL gerado:', sql)
     setQuery(sql)
     setLoading(true)
     setError(null)
 
     try {
+      console.log('📊 ChartPreview: Fazendo chamada para /api/bigquery')
+      
+      // Add timeout to fetch request
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+      
       const response = await fetch('/api/bigquery', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           action: 'execute',
           query: sql
-        })
+        }),
+        signal: controller.signal
+      })
+      
+      clearTimeout(timeoutId)
+
+      console.log('📊 ChartPreview: Resposta recebida', {
+        status: response.status,
+        ok: response.ok,
+        statusText: response.statusText
       })
 
+      if (!response.ok) {
+        throw new Error(`API response: ${response.status} ${response.statusText}`)
+      }
+
       const result = await response.json()
+      console.log('📊 ChartPreview: Resultado parseado', {
+        success: result.success,
+        hasData: !!result.data,
+        dataType: typeof result.data,
+        hasDataArray: Array.isArray(result.data?.data),
+        dataLength: result.data?.data?.length,
+        error: result.error
+      })
 
       if (result.success && result.data?.data && Array.isArray(result.data.data)) {
         const rawData = result.data.data
         const xAxisColumn = xAxis[0]
         const yAxisColumn = yAxis[0]
+        
+        console.log('📊 ChartPreview: Transformando dados', {
+          rawDataLength: rawData.length,
+          sampleRow: rawData[0],
+          xColumn: xAxisColumn.name,
+          yColumn: `${yAxisColumn.name}_agg`
+        })
         
         // Transform data for chart
         const transformedData: ChartData[] = rawData.map((row: Record<string, unknown>) => ({
@@ -166,32 +232,59 @@ LIMIT 50
           value: Number(row[`${yAxisColumn.name}_agg`] || 0)
         }))
 
+        console.log('📊 ChartPreview: Dados transformados', {
+          transformedLength: transformedData.length,
+          sampleTransformed: transformedData[0]
+        })
+
         setChartData(transformedData)
         
         // Notify parent component
         if (onDataReady) {
+          console.log('📊 ChartPreview: Notificando parent component')
           onDataReady(transformedData, sql)
         }
       } else {
-        throw new Error(result.error || 'No data returned from query')
+        const errorMsg = result.error || 'No data returned from query'
+        console.error('📊 ChartPreview: Erro no resultado', errorMsg)
+        throw new Error(errorMsg)
       }
     } catch (err) {
-      console.error('Error loading chart data:', err)
-      setError(err instanceof Error ? err.message : 'Unknown error')
-      setChartData([])
+      console.error('📊 ChartPreview: Erro na execução', err)
+      
+      // Check if it's an abort error (timeout)
+      if (err instanceof Error && err.name === 'AbortError') {
+        console.log('📊 ChartPreview: Timeout - usando dados simulados')
+        setError('API timeout - usando dados simulados para preview')
+      } else {
+        console.log('📊 ChartPreview: Erro de API - usando dados simulados')
+        setError('API indisponível - usando dados simulados para preview')
+      }
+      
+      // Generate fallback data for preview
+      const fallbackData = generateFallbackData()
+      setChartData(fallbackData)
+      
+      // Notify parent component with fallback data
+      if (onDataReady) {
+        console.log('📊 ChartPreview: Notificando parent com dados simulados')
+        onDataReady(fallbackData, sql)
+      }
     } finally {
+      console.log('📊 ChartPreview: Finalizando loading')
       setLoading(false)
     }
   }
 
   // Auto-reload when configuration changes
   useEffect(() => {
+    console.log('📊 ChartPreview: Configuração mudou, agendando reload')
     const timer = setTimeout(() => {
       loadChartData()
-    }, 500) // Debounce to avoid too many requests
+    }, 200) // Reduced debounce for faster response
 
     return () => clearTimeout(timer)
-  }, [xAxis, yAxis, filters, selectedTable])
+  }, [xAxis, yAxis, filters, selectedTable, chartType]) // Added chartType to dependencies
 
   // Simple chart rendering functions
   const renderBarChart = () => {
