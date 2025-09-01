@@ -139,9 +139,9 @@ export default function ChartBuilder({
   const isConfigValid = data.selectedTable && data.xAxis.length > 0 && data.yAxis.length > 0
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col relative overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-300/50">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-300/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
         <div className="flex items-center gap-2">
           <BarChart3 className="w-3 h-3 text-primary" />
           <h2 className="text-base font-semibold">Chart Builder</h2>
@@ -159,10 +159,10 @@ export default function ChartBuilder({
       </div>
 
       {/* Content */}
-      <ScrollArea className="h-[calc(100vh-8rem)]">
+      <ScrollArea className="flex-1 overflow-y-auto">
         <div className="px-3 py-2 space-y-6">
           {/* Drop Zones Section */}
-          <div className="space-y-3 px-2">
+          <div className="space-y-3 px-2 overflow-x-hidden">
             {/* Eixo X (Dimensions) */}
             <DropZone
               id="x-axis-drop-zone"

@@ -200,9 +200,9 @@ export default function TablesExplorer() {
   ]
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col relative">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-300/50">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-300/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex items-center gap-2">
           <Database className="w-3 h-3 text-primary" />
           <h2 className="text-base font-semibold">Tables</h2>
@@ -260,7 +260,7 @@ export default function TablesExplorer() {
                     {/* Table Header - Clickable */}
                     <div
                       onClick={() => handleTableClick(tableId)}
-                      className={`flex items-center gap-2 px-2 py-2 rounded-md cursor-pointer transition-colors ${
+                      className={`flex items-center gap-2 px-2 py-2 rounded-md cursor-pointer transition-colors overflow-hidden ${
                         isExpanded ? 'bg-muted/50' : 'hover:bg-muted/30'
                       }`}
                     >
@@ -275,7 +275,7 @@ export default function TablesExplorer() {
                           {tableId}
                         </div>
                         {numRows && (
-                          <div className="text-xs text-muted-foreground">
+                          <div className="text-xs text-muted-foreground truncate">
                             {formatRowCount(numRows)}
                           </div>
                         )}
@@ -303,17 +303,17 @@ export default function TablesExplorer() {
                             {/* Dimensões Section */}
                             <div>
                               <div 
-                                className="flex items-center gap-2 py-1 mb-2 cursor-pointer hover:bg-muted/30 rounded px-1 transition-colors"
+                                className="flex items-center gap-2 py-1 mb-2 cursor-pointer hover:bg-muted/30 rounded px-1 transition-colors overflow-hidden"
                                 onClick={() => toggleDimensions(tableId)}
                               >
                                 {expandedDimensions[tableId] ? (
-                                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                                  <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                                 ) : (
-                                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                                  <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                                 )}
-                                <BarChart3 className="w-4 h-4 text-blue-600" />
-                                <span className="text-sm font-medium text-gray-900">Dimensões</span>
-                                <Badge variant="outline" className="text-xs ml-1">
+                                <BarChart3 className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                                <span className="text-sm font-medium text-gray-900 flex-1 truncate">Dimensões</span>
+                                <Badge variant="outline" className="text-xs flex-shrink-0 ml-1">
                                   {schema.length}
                                 </Badge>
                               </div>
@@ -335,17 +335,17 @@ export default function TablesExplorer() {
                             {/* Medidas Section */}
                             <div>
                               <div 
-                                className="flex items-center gap-2 py-1 mb-2 cursor-pointer hover:bg-muted/30 rounded px-1 transition-colors"
+                                className="flex items-center gap-2 py-1 mb-2 cursor-pointer hover:bg-muted/30 rounded px-1 transition-colors overflow-hidden"
                                 onClick={() => toggleMeasures(tableId)}
                               >
                                 {expandedMeasures[tableId] ? (
-                                  <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                                  <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                                 ) : (
-                                  <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                                  <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                                 )}
-                                <BarChart3 className="w-4 h-4 text-green-600" />
-                                <span className="text-sm font-medium text-gray-900">Medidas</span>
-                                <Badge variant="outline" className="text-xs ml-1">
+                                <BarChart3 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                                <span className="text-sm font-medium text-gray-900 flex-1 truncate">Medidas</span>
+                                <Badge variant="outline" className="text-xs flex-shrink-0 ml-1">
                                   {tableMeasures.length}
                                 </Badge>
                               </div>
@@ -394,8 +394,8 @@ export default function TablesExplorer() {
 
       {/* Create Measure Modal */}
       {isCreateMeasureOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className="w-[500px] max-w-[90vw]">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+          <Card className="w-[500px] max-w-[90vw] relative z-[101]">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
