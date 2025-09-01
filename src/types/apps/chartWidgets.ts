@@ -15,10 +15,16 @@ export interface LegendConfig {
   itemDirection?: string
 }
 
+// Color scheme configuration interface
+export interface ColorSchemeConfig {
+  scheme?: string
+}
+
 // Base chart configuration interface
 export interface BaseChartConfig {
   // Visual & Colors
   colors?: string[]
+  colorScheme?: ColorSchemeConfig
   backgroundColor?: string
   backgroundOpacity?: number
   borderRadius?: number
