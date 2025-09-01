@@ -318,7 +318,7 @@ export default function TablesExplorer() {
                                 </Badge>
                               </div>
                               {expandedDimensions[tableId] && (
-                                <div className="h-48 overflow-y-auto overflow-x-hidden">
+                                <div className="h-128 overflow-y-auto overflow-x-hidden">
                                   <div className="space-y-1 ml-4 pr-2" style={{maxWidth: '200px'}}>
                                     {schema.map((field, index) => (
                                       <DraggableColumn
