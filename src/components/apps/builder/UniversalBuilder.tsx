@@ -95,15 +95,19 @@ export default function UniversalBuilder({
       w: getDefaultWidth(data.selectedType),
       h: getDefaultHeight(data.selectedType),
       config: generateWidgetConfig(),
-      bigqueryData: {
-        widgetType: data.selectedType,
-        data: previewData,
-        query: previewQuery,
-        source: 'bigquery',
-        table: data.selectedTable,
-        lastUpdated: new Date().toISOString(),
-        ...getRelevantFields()
-      }
+      bigqueryData: (() => {
+        const relevantFields = getRelevantFields()
+        return {
+          chartType: relevantFields.chartType,
+          data: previewData,
+          xColumn: relevantFields.xColumn,
+          yColumn: relevantFields.yColumn,
+          query: previewQuery,
+          source: 'bigquery',
+          table: data.selectedTable,
+          lastUpdated: new Date().toISOString()
+        }
+      })()
     }
 
     // Add widget to dashboard
@@ -172,16 +176,15 @@ export default function UniversalBuilder({
     switch(data.selectedType) {
       case 'chart':
         return {
-          xAxis: data.xAxis,
-          yAxis: data.yAxis,
           chartType: data.chartType,
-          filters: data.filters
+          xColumn: data.xAxis[0]?.name || '',
+          yColumn: data.yAxis[0]?.name || ''
         }
       default:
         return {
-          dimensions: data.dimensions,
-          measures: data.measures,
-          filters: data.filters
+          chartType: 'table', // Default for non-chart widgets
+          xColumn: data.dimensions[0]?.name || '',
+          yColumn: data.measures[0]?.name || ''
         }
     }
   }
