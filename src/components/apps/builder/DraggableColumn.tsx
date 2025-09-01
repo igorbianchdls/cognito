@@ -81,11 +81,12 @@ export default function DraggableColumn({ field, sourceTable }: DraggableColumnP
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={`flex items-start justify-between p-2 bg-white rounded border border-gray-200 cursor-grab transition-all overflow-hidden max-w-full ${
+      className={`flex items-start justify-between p-2 bg-white rounded border border-gray-200 cursor-grab transition-all overflow-hidden ${
         isDragging 
           ? 'opacity-50 cursor-grabbing border-blue-300 shadow-md' 
           : 'hover:border-blue-300 hover:shadow-sm'
       }`}
+      style={{maxWidth: '180px', width: '100%'}}
       title={field.description || `Drag ${field.name} to chart builder`}
     >
       <div className="flex items-start gap-2 min-w-0 flex-1 overflow-hidden">
@@ -97,11 +98,11 @@ export default function DraggableColumn({ field, sourceTable }: DraggableColumnP
             {field.name}
           </span>
           <div className="flex items-center gap-1 mt-1 overflow-hidden">
-            <span className={`px-1.5 py-0.5 text-xs font-mono rounded flex-shrink-0 max-w-[80px] truncate ${getTypeColor(field.type)}`}>
+            <span className={`px-1 py-0.5 text-xs font-mono rounded flex-shrink-0 max-w-[60px] truncate ${getTypeColor(field.type)}`}>
               {field.type}
             </span>
             {field.mode && field.mode !== 'NULLABLE' && (
-              <span className="px-1.5 py-0.5 text-xs bg-red-100 text-red-800 rounded flex-shrink-0 max-w-[60px] truncate">
+              <span className="px-1 py-0.5 text-xs bg-red-100 text-red-800 rounded flex-shrink-0 max-w-[50px] truncate">
                 {field.mode}
               </span>
             )}

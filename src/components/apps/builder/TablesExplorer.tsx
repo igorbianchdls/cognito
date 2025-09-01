@@ -318,8 +318,8 @@ export default function TablesExplorer() {
                                 </Badge>
                               </div>
                               {expandedDimensions[tableId] && (
-                                <ScrollArea className="max-h-48 overflow-x-hidden">
-                                  <div className="space-y-1 ml-4 overflow-x-hidden max-w-full">
+                                <div className="h-48 overflow-y-auto overflow-x-hidden">
+                                  <div className="space-y-1 ml-4 pr-2" style={{maxWidth: '200px'}}>
                                     {schema.map((field, index) => (
                                       <DraggableColumn
                                         key={index}
@@ -328,7 +328,7 @@ export default function TablesExplorer() {
                                       />
                                     ))}
                                   </div>
-                                </ScrollArea>
+                                </div>
                               )}
                             </div>
 
@@ -350,7 +350,7 @@ export default function TablesExplorer() {
                                 </Badge>
                               </div>
                               {expandedMeasures[tableId] && (
-                                <div className="ml-4 space-y-2 overflow-x-hidden max-w-full">
+                                <div className="ml-4 space-y-2 overflow-x-hidden" style={{maxWidth: '200px'}}>
                                   {/* Existing measures */}
                                   {tableMeasures.length > 0 && (
                                     <div className="space-y-1 overflow-x-hidden">
