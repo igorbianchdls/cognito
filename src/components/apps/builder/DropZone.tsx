@@ -95,32 +95,30 @@ export default function DropZone({
   return (
     <div className={`${className}`}>
       {/* Drop Zone Header */}
-      <div className="mb-2">
-        <div className="flex items-center gap-2 mb-1">
+      <div className="mb-3">
+        <div className="flex items-center gap-2">
           {icon}
-          <h3 className="text-sm font-medium text-gray-900">{label}</h3>
+          <h3 className="text-sm font-medium text-gray-700">{label}</h3>
         </div>
-        <p className="text-xs text-gray-600">{description}</p>
       </div>
 
       {/* Drop Area */}
       <div
         ref={setNodeRef}
         className={`
-          min-h-[80px] p-3 border-2 border-dashed rounded-lg transition-all
+          min-h-[60px] p-4 rounded-md transition-all
           ${isOver 
-            ? 'border-blue-400 bg-blue-50' 
+            ? 'bg-blue-50 border border-blue-200' 
             : fields.length > 0
-              ? 'border-gray-300 bg-gray-50'
-              : 'border-gray-300 bg-white hover:border-gray-400'
+              ? 'bg-gray-50 border border-gray-200'
+              : 'bg-gray-50 hover:bg-gray-100'
           }
         `}
       >
         {fields.length === 0 ? (
           /* Empty State */
-          <div className="flex flex-col items-center justify-center h-full text-gray-500">
-            <Plus className="w-6 h-6 mb-1 opacity-50" />
-            <p className="text-xs text-center">
+          <div className="flex items-center justify-center h-full">
+            <p className="text-sm text-gray-500 text-center">
               {isOver ? 'Drop here' : `Drag ${label.toLowerCase()} here`}
             </p>
           </div>
@@ -134,20 +132,20 @@ export default function DropZone({
                 <div
                   key={`${field.name}-${index}`}
                   className={`
-                    flex items-center justify-between p-2 rounded border
+                    flex items-center justify-between p-2 rounded-sm
                     ${typeAccepted 
-                      ? 'bg-white border-gray-200' 
-                      : 'bg-red-50 border-red-200'
+                      ? 'bg-white hover:bg-gray-50' 
+                      : 'bg-red-50 border border-red-200'
                     }
                   `}
                 >
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <span className="text-sm">{getFieldIcon(field.type)}</span>
                     <div className="min-w-0 flex-1">
-                      <span className="text-sm font-medium text-gray-900 truncate block">
+                      <span className="text-sm font-medium text-gray-700 truncate block">
                         {field.name}
                       </span>
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-gray-400">
                         {field.type}
                       </span>
                       
@@ -198,14 +196,6 @@ export default function DropZone({
         )}
       </div>
 
-      {/* Type Hints */}
-      {acceptedTypes && acceptedTypes.length > 0 && (
-        <div className="mt-2">
-          <p className="text-xs text-gray-500">
-            Accepts: {acceptedTypes.join(', ')} types
-          </p>
-        </div>
-      )}
     </div>
   )
 }
