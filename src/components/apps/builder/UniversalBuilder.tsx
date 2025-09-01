@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import DropZone from './DropZone'
 import ChartPreview from './ChartPreview'
+import TablePreview from './TablePreview'
+import type { TableData } from './TablePreview'
 import type { BigQueryField } from './TablesExplorer'
 import type { DroppedWidget } from '@/types/apps/widget'
 import { widgetActions } from '@/stores/apps/widgetStore'
@@ -51,7 +53,7 @@ export default function UniversalBuilder({
   onClear,
   onAggregationChange
 }: UniversalBuilderProps) {
-  const [previewData, setPreviewData] = useState<Array<{ x: string; y: number; label: string; value: number }>>([])
+  const [previewData, setPreviewData] = useState<Array<{ x: string; y: number; label: string; value: number }> | TableData[]>([])
   const [previewQuery, setPreviewQuery] = useState<string>('')
 
   // Handle field removal from drop zones
@@ -426,7 +428,20 @@ export default function UniversalBuilder({
               chartType={data.chartType}
               selectedTable={data.selectedTable}
               onDataReady={(chartData, query) => {
-                setPreviewData(chartData)
+                setPreviewData(chartData as Array<{ x: string; y: number; label: string; value: number }>)
+                setPreviewQuery(query)
+              }}
+            />
+          )}
+
+          {/* Table Preview (only for tables) */}
+          {data.selectedType === 'table' && (
+            <TablePreview
+              columns={data.columns}
+              filters={data.filters}
+              selectedTable={data.selectedTable}
+              onDataReady={(tableData, query) => {
+                setPreviewData(tableData as TableData[])
                 setPreviewQuery(query)
               }}
             />
