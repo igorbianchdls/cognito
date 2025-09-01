@@ -29,35 +29,55 @@ interface PieChartWidgetProps {
 }
 
 export default function PieChartWidget({ widget }: PieChartWidgetProps) {
-  const [data, setData] = useState<ChartData[]>([
-    { x: 'Desktop', y: 42 },
-    { x: 'Mobile', y: 35 },
-    { x: 'Tablet', y: 18 },
-    { x: 'Other', y: 5 },
-  ])
+  const [data, setData] = useState<ChartData[]>([])
 
-  // Simulate real-time data updates
+  // Initialize data based on widget config
   useEffect(() => {
-    const interval = setInterval(() => {
-      setData(prevData => {
-        const total = 100
-        const newData = prevData.map((item, index) => {
-          const variation = (Math.random() - 0.5) * 10 // ±5%
-          const newValue = Math.max(5, Math.min(50, (item.y || 0) + variation))
-          return { ...item, y: newValue }
+    // Check if widget has BigQuery data
+    if (widget.bigqueryData && widget.bigqueryData.data && Array.isArray(widget.bigqueryData.data)) {
+      // Use BigQuery data from Chart Builder
+      const bigqueryData = widget.bigqueryData.data as { x: string; y: number; label: string; value: number }[]
+      const chartData = bigqueryData.map(item => ({
+        x: item.x,
+        y: item.y,
+        label: item.label,
+        value: item.value
+      }))
+      setData(chartData)
+      console.log('🥧 PieChartWidget usando dados do BigQuery:', chartData)
+    } else {
+      // Use default sample data
+      const defaultData = [
+        { x: 'Desktop', y: 42 },
+        { x: 'Mobile', y: 35 },
+        { x: 'Tablet', y: 18 },
+        { x: 'Other', y: 5 },
+      ]
+      setData(defaultData)
+      console.log('🥧 PieChartWidget usando dados default')
+      
+      // Simulate real-time data updates for sample data only
+      const interval = setInterval(() => {
+        setData(prevData => {
+          const total = 100
+          const newData = prevData.map((item, index) => {
+            const variation = (Math.random() - 0.5) * 10 // ±5%
+            const newValue = Math.max(5, Math.min(50, (item.y || 0) + variation))
+            return { ...item, y: newValue }
+          })
+          
+          // Normalize to 100%
+          const sum = newData.reduce((acc, item) => acc + (item.y || 0), 0)
+          return newData.map(item => ({
+            ...item,
+            y: Math.round(((item.y || 0) / sum) * total)
+          }))
         })
-        
-        // Normalize to 100%
-        const sum = newData.reduce((acc, item) => acc + (item.y || 0), 0)
-        return newData.map(item => ({
-          ...item,
-          y: Math.round(((item.y || 0) / sum) * total)
-        }))
-      })
-    }, 6000)
+      }, 6000)
 
-    return () => clearInterval(interval)
-  }, [])
+      return () => clearInterval(interval)
+    }
+  }, [widget.config, widget.bigqueryData])
 
   // Get chart configuration with backward compatibility
   const chartConfig = useMemo(() => {

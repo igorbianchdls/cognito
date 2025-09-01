@@ -29,30 +29,50 @@ interface LineChartWidgetProps {
 }
 
 export default function LineChartWidget({ widget }: LineChartWidgetProps) {
-  const [data, setData] = useState<ChartData[]>([
-    { x: 'Jan', y: 45 },
-    { x: 'Feb', y: 52 },
-    { x: 'Mar', y: 48 },
-    { x: 'Apr', y: 61 },
-    { x: 'May', y: 55 },
-    { x: 'Jun', y: 67 },
-    { x: 'Jul', y: 72 },
-    { x: 'Aug', y: 68 },
-  ])
+  const [data, setData] = useState<ChartData[]>([])
 
-  // Simulate real-time data updates
+  // Initialize data based on widget config
   useEffect(() => {
-    const interval = setInterval(() => {
-      setData(prevData => 
-        prevData.map(item => ({
-          ...item,
-          y: Math.floor(Math.random() * 60) + 30
-        }))
-      )
-    }, 4000)
+    // Check if widget has BigQuery data
+    if (widget.bigqueryData && widget.bigqueryData.data && Array.isArray(widget.bigqueryData.data)) {
+      // Use BigQuery data from Chart Builder
+      const bigqueryData = widget.bigqueryData.data as { x: string; y: number; label: string; value: number }[]
+      const chartData = bigqueryData.map(item => ({
+        x: item.x,
+        y: item.y,
+        label: item.label,
+        value: item.value
+      }))
+      setData(chartData)
+      console.log('📈 LineChartWidget usando dados do BigQuery:', chartData)
+    } else {
+      // Use default sample data
+      const defaultData = [
+        { x: 'Jan', y: 45 },
+        { x: 'Feb', y: 52 },
+        { x: 'Mar', y: 48 },
+        { x: 'Apr', y: 61 },
+        { x: 'May', y: 55 },
+        { x: 'Jun', y: 67 },
+        { x: 'Jul', y: 72 },
+        { x: 'Aug', y: 68 },
+      ]
+      setData(defaultData)
+      console.log('📈 LineChartWidget usando dados default')
+      
+      // Simulate real-time data updates for sample data only
+      const interval = setInterval(() => {
+        setData(prevData => 
+          prevData.map(item => ({
+            ...item,
+            y: Math.floor(Math.random() * 60) + 30
+          }))
+        )
+      }, 4000)
 
-    return () => clearInterval(interval)
-  }, [])
+      return () => clearInterval(interval)
+    }
+  }, [widget.config, widget.bigqueryData])
 
   // Get chart configuration with backward compatibility
   const chartConfig = useMemo(() => {

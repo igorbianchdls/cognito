@@ -29,30 +29,50 @@ interface AreaChartWidgetProps {
 }
 
 export default function AreaChartWidget({ widget }: AreaChartWidgetProps) {
-  const [data, setData] = useState<ChartData[]>([
-    { x: 'Q1', y: 120 },
-    { x: 'Q2', y: 135 },
-    { x: 'Q3', y: 148 },
-    { x: 'Q4', y: 162 },
-    { x: 'Q5', y: 175 },
-    { x: 'Q6', y: 168 },
-    { x: 'Q7', y: 185 },
-    { x: 'Q8', y: 192 },
-  ])
+  const [data, setData] = useState<ChartData[]>([])
 
-  // Simulate real-time data updates
+  // Initialize data based on widget config
   useEffect(() => {
-    const interval = setInterval(() => {
-      setData(prevData => 
-        prevData.map(item => ({
-          ...item,
-          y: Math.floor(Math.random() * 100) + 100 // Range: 100-200
-        }))
-      )
-    }, 7000)
+    // Check if widget has BigQuery data
+    if (widget.bigqueryData && widget.bigqueryData.data && Array.isArray(widget.bigqueryData.data)) {
+      // Use BigQuery data from Chart Builder
+      const bigqueryData = widget.bigqueryData.data as { x: string; y: number; label: string; value: number }[]
+      const chartData = bigqueryData.map(item => ({
+        x: item.x,
+        y: item.y,
+        label: item.label,
+        value: item.value
+      }))
+      setData(chartData)
+      console.log('📊 AreaChartWidget usando dados do BigQuery:', chartData)
+    } else {
+      // Use default sample data
+      const defaultData = [
+        { x: 'Q1', y: 120 },
+        { x: 'Q2', y: 135 },
+        { x: 'Q3', y: 148 },
+        { x: 'Q4', y: 162 },
+        { x: 'Q5', y: 175 },
+        { x: 'Q6', y: 168 },
+        { x: 'Q7', y: 185 },
+        { x: 'Q8', y: 192 },
+      ]
+      setData(defaultData)
+      console.log('📊 AreaChartWidget usando dados default')
+      
+      // Simulate real-time data updates for sample data only
+      const interval = setInterval(() => {
+        setData(prevData => 
+          prevData.map(item => ({
+            ...item,
+            y: Math.floor(Math.random() * 100) + 100 // Range: 100-200
+          }))
+        )
+      }, 7000)
 
-    return () => clearInterval(interval)
-  }, [])
+      return () => clearInterval(interval)
+    }
+  }, [widget.config, widget.bigqueryData])
 
   // Get chart configuration with backward compatibility
   const chartConfig = useMemo(() => {
