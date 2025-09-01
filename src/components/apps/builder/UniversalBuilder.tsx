@@ -119,7 +119,7 @@ export default function UniversalBuilder({
     }
 
     // Add widget to dashboard
-    widgetActions.addWidget(widgetConfig)
+    widgetActions.addWidget(widgetConfig as DroppedWidget)
     
     // Show success feedback
     alert(`${data.selectedType} added to dashboard! Switch to the canvas to see it.`)
