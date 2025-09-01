@@ -132,8 +132,6 @@ export default function DropZone({
               
               // Define cores baseadas no tipo de drop zone
               const getZoneColor = () => {
-                if (!typeAccepted) return 'bg-red-500 text-white'
-                
                 switch(id) {
                   case 'x-axis-drop-zone':
                     return 'bg-blue-500 text-white'
@@ -142,7 +140,7 @@ export default function DropZone({
                   case 'filters-drop-zone':
                     return 'bg-orange-500 text-white'
                   default:
-                    return 'bg-gray-500 text-white'
+                    return typeAccepted ? 'bg-gray-500 text-white' : 'bg-red-500 text-white'
                 }
               }
               

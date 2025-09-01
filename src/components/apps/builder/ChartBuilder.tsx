@@ -215,11 +215,10 @@ export default function ChartBuilder({
                   }`}
                   onClick={() => onChartTypeChange(type.id)}
                 >
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex flex-col items-center gap-2">
                     {type.icon}
-                    <span className="font-medium text-sm">{type.label}</span>
+                    <span className="font-medium text-sm text-center">{type.label}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground">{type.description}</p>
                 </div>
               ))}
             </div>
