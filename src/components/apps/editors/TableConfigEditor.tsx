@@ -491,8 +491,8 @@ LIMIT 100
                       {selectedTableSchema.map((field, index) => (
                         <DraggableColumn
                           key={`${selectedTableForDimensions}-${field.name}-${index}`}
-                          field={{ ...field, sourceTable: selectedTableForDimensions }}
-                          compact={true}
+                          field={field}
+                          sourceTable={selectedTableForDimensions || ''}
                         />
                       ))}
                     </div>
