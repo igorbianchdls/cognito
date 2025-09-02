@@ -75,36 +75,23 @@ export default function TableConfigEditor({
     console.log('🔄 TableConfigEditor Drag ended:', { draggedColumn, dropZoneId })
 
     if (dropZoneId === 'selected-columns-drop-zone') {
-      // Convert BigQuery field to TableColumn and add to table config
-      const newTableColumn: TableColumn = {
-        id: `col-${Date.now()}`,
-        header: draggedColumn.name,
-        accessorKey: draggedColumn.name,
-        type: convertBigQueryTypeToTableType(draggedColumn.type),
-        width: 120,
-        sortable: true
-      }
-      
-      const currentColumns = tableConfig.columns || []
-      const alreadyExists = currentColumns.some(col => col.accessorKey === draggedColumn.name)
-      
-      if (!alreadyExists) {
-        const updatedColumns = [...currentColumns, newTableColumn]
-        onTableConfigChange('columns', updatedColumns)
+      // Add to selectedColumns (staging only - not to table yet)
+      const alreadyInDropZone = selectedColumns.some(col => col.name === draggedColumn.name)
+      if (!alreadyInDropZone) {
+        const updatedSelectedColumns = [...selectedColumns, draggedColumn]
+        setSelectedColumns(updatedSelectedColumns)
         
-        // Add to selectedColumns (DropZone) if not already there
-        const alreadyInDropZone = selectedColumns.some(col => col.name === draggedColumn.name)
-        if (!alreadyInDropZone) {
-          const updatedSelectedColumns = [...selectedColumns, draggedColumn]
-          setSelectedColumns(updatedSelectedColumns)
-          
-          // Generate updated query with current values
-          const newQuery = generateUpdatedQuery(updatedColumns, updatedSelectedColumns)
-          setUpdatedQuery(newQuery)
-          setHasUpdatedQuery(true)
-          
-          console.log('🔄 Column added to DropZone and query updated:', draggedColumn.name)
-        }
+        // Check if this creates changes from original table columns
+        const originalColumnNames = (tableConfig.columns || []).map(col => col.accessorKey).sort()
+        const newColumnNames = updatedSelectedColumns.map(col => col.name).sort()
+        const hasChanges = JSON.stringify(originalColumnNames) !== JSON.stringify(newColumnNames)
+        
+        // Generate updated query for preview (not actual table update)
+        const newQuery = generateUpdatedQuery(tableConfig.columns || [], updatedSelectedColumns)
+        setUpdatedQuery(newQuery)
+        setHasUpdatedQuery(hasChanges) // Only show update button if there are actual changes
+        
+        console.log('🔄 Column added to staging area:', draggedColumn.name, 'Has changes:', hasChanges)
       }
     }
   }
@@ -121,6 +108,25 @@ export default function TableConfigEditor({
       return 'date'
     }
     return 'text'
+  }
+
+  // Convert TableColumn back to BigQueryField for selectedColumns initialization
+  const convertTableColumnToBigQueryField = (column: TableColumn): BigQueryField => {
+    // Map table type back to BigQuery type
+    const getOriginalBigQueryType = (tableType: TableColumn['type']): string => {
+      switch (tableType) {
+        case 'number': return 'INTEGER'
+        case 'boolean': return 'BOOLEAN'
+        case 'date': return 'TIMESTAMP'
+        default: return 'STRING'
+      }
+    }
+    
+    return {
+      name: column.accessorKey,
+      type: getOriginalBigQueryType(column.type),
+      mode: 'NULLABLE'
+    }
   }
 
   // Load available tables
@@ -277,6 +283,26 @@ export default function TableConfigEditor({
     }
   }
 
+  // Initialize selectedColumns with current table columns
+  useEffect(() => {
+    if (tableConfig.columns && tableConfig.columns.length > 0) {
+      const currentColumnsAsBigQuery = tableConfig.columns.map(convertTableColumnToBigQueryField)
+      setSelectedColumns(currentColumnsAsBigQuery)
+      
+      // Generate initial query for preview (but don't mark as having updates yet)
+      const initialQuery = generateUpdatedQuery(tableConfig.columns, currentColumnsAsBigQuery)
+      setUpdatedQuery(initialQuery)
+      setHasUpdatedQuery(false) // No changes yet, just showing current state
+      
+      console.log('🔄 Initialized selectedColumns with', currentColumnsAsBigQuery.length, 'current table columns')
+    } else {
+      // No current columns, start with empty selectedColumns
+      setSelectedColumns([])
+      setUpdatedQuery('')
+      setHasUpdatedQuery(false)
+    }
+  }, [tableConfig.columns])
+
   // Load tables on component mount
   useEffect(() => {
     loadAvailableTables()
@@ -302,15 +328,21 @@ export default function TableConfigEditor({
     const updatedColumns = selectedColumns.filter(col => col.name !== fieldName)
     setSelectedColumns(updatedColumns)
     
-    // Regenerate updated query with remaining columns
+    // Check if the new state is different from current table columns
+    const originalColumnNames = (tableConfig.columns || []).map(col => col.accessorKey).sort()
+    const newColumnNames = updatedColumns.map(col => col.name).sort()
+    const hasChanges = JSON.stringify(originalColumnNames) !== JSON.stringify(newColumnNames)
+    
     if (updatedColumns.length > 0) {
       const newQuery = generateUpdatedQuery(tableConfig.columns || [], updatedColumns)
       setUpdatedQuery(newQuery)
-      setHasUpdatedQuery(true)
+      setHasUpdatedQuery(hasChanges) // Only show update button if there are actual changes
     } else {
       setUpdatedQuery('')
-      setHasUpdatedQuery(false)
+      setHasUpdatedQuery(hasChanges) // Show update button even for empty if original had columns
     }
+    
+    console.log('🔄 Column removed. Has changes:', hasChanges)
   }
 
   // Generate updated SQL query based on current columns + selected columns
@@ -376,15 +408,39 @@ LIMIT 100
       console.log('📊 Query execution result:', result)
       
       if (result.success && result.data?.data && Array.isArray(result.data.data)) {
-        // Atualizar dados da tabela
+        // Combine current columns + selected columns
+        const currentColumnNames = (tableConfig.columns || []).map(col => col.accessorKey)
+        const selectedColumnNames = selectedColumns.map(col => col.name)
+        const allColumnNames = [...new Set([...currentColumnNames, ...selectedColumnNames])]
+        
+        // Create TableColumn objects for all columns
+        const newTableColumns: TableColumn[] = allColumnNames.map(colName => {
+          // Check if column already exists in current config
+          const existingCol = (tableConfig.columns || []).find(col => col.accessorKey === colName)
+          if (existingCol) return existingCol
+          
+          // Create new column from selected columns
+          const selectedCol = selectedColumns.find(col => col.name === colName)
+          return {
+            id: `col-${Date.now()}-${colName}`,
+            header: colName,
+            accessorKey: colName,
+            type: convertBigQueryTypeToTableType(selectedCol?.type || 'STRING'),
+            width: 120,
+            sortable: true
+          }
+        })
+        
+        // Update both columns AND data atomically
+        onTableConfigChange('columns', newTableColumns)
         onTableConfigChange('data', result.data.data)
         
-        // Reset estados após sucesso
+        // Reset staging states after successful update
         setUpdatedQuery('')
         setHasUpdatedQuery(false)
         setSelectedColumns([])
         
-        console.log('✅ Table data updated successfully with', result.data.data.length, 'rows')
+        console.log('✅ Table updated successfully with', newTableColumns.length, 'columns and', result.data.data.length, 'rows')
       } else {
         const errorMsg = result.error || 'No data returned from query'
         throw new Error(errorMsg)
