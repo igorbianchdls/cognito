@@ -77,7 +77,7 @@ export default function GalleryWidget({ widget }: GalleryWidgetProps) {
           gap: `${gap}px`
         }}
       >
-        {images.map((item: any, index: number) => (
+        {images.map((item: { image_url: string; title?: string; description?: string }, index: number) => (
           <div 
             key={index} 
             className={`relative group cursor-pointer ${getAspectRatioClass()}`}
