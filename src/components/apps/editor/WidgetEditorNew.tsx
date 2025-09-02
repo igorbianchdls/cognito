@@ -23,6 +23,28 @@ import NavigationConfigEditor from '../editors/NavigationConfigEditor'
 import ContainerConfigEditor from '../editors/ContainerConfigEditor'
 import { ColorInput, NumberInput } from '../editors/controls'
 import { Slider } from '@/components/ui/slider'
+import { DndContext, DragEndEvent } from '@dnd-kit/core'
+import { Database, Grab, Trash2, RefreshCw } from 'lucide-react'
+import type { BigQueryField } from '../builder/TablesExplorer'
+import DropZone from '../builder/DropZone'
+import DraggableColumn from '../builder/DraggableColumn'
+
+// BigQuery table type
+interface BigQueryTable {
+  datasetId: string
+  tableId: string
+  projectId?: string
+  description?: string
+  numRows?: number
+  numBytes?: number
+  creationTime?: Date
+  lastModifiedTime?: Date
+  // Support for different API response formats
+  DATASETID?: string
+  TABLEID?: string
+  NUMROWS?: number
+  NUMBYTES?: number
+}
 
 export default function WidgetEditorNew() {
   const widgets = useStore($widgets)
@@ -53,6 +75,19 @@ export default function WidgetEditorNew() {
     objectFit: 'cover',
     objectPosition: 'center'
   })
+
+  // Chart data management states
+  const [availableTables, setAvailableTables] = useState<BigQueryTable[]>([])
+  const [selectedTable, setSelectedTable] = useState<string | null>(null)
+  const [tableColumns, setTableColumns] = useState<BigQueryField[]>([])
+  const [loadingTables, setLoadingTables] = useState(false)
+  const [loadingColumns, setLoadingColumns] = useState<string | null>(null)
+  const [loadingChartUpdate, setLoadingChartUpdate] = useState(false)
+  
+  // Staging states for chart fields
+  const [stagedXAxis, setStagedXAxis] = useState<BigQueryField[]>([])
+  const [stagedYAxis, setStagedYAxis] = useState<BigQueryField[]>([])
+  const [stagedFilters, setStagedFilters] = useState<BigQueryField[]>([])
 
   // Computed KPI config - acesso via selectedWidget
   const kpiConfig = useMemo((): KPIConfig => {
@@ -438,6 +473,155 @@ export default function WidgetEditorNew() {
     // Opcional: desselecionar widget ao voltar
     // widgetActions.selectWidget(null)
     // setCanvasSelected(false)
+  }
+
+  // Chart Data Management Functions
+  const loadTables = async () => {
+    setLoadingTables(true)
+    try {
+      const response = await fetch('/api/bigquery?action=tables&dataset=biquery_data')
+      const result = await response.json()
+      
+      if (result.success && Array.isArray(result.data)) {
+        setAvailableTables(result.data)
+      } else {
+        throw new Error(result.error || 'Failed to load tables')
+      }
+    } catch (err) {
+      console.error('Error loading tables:', err)
+    } finally {
+      setLoadingTables(false)
+    }
+  }
+
+  const loadTableColumns = async (tableId: string) => {
+    setLoadingColumns(tableId)
+    try {
+      const response = await fetch(`/api/bigquery?action=schema&dataset=biquery_data&table=${tableId}`)
+      const result = await response.json()
+      
+      if (result.success && Array.isArray(result.data)) {
+        setTableColumns(result.data)
+      } else {
+        throw new Error(result.error || 'Failed to load table columns')
+      }
+    } catch (err) {
+      console.error('Error loading table columns:', err)
+      setTableColumns([])
+    } finally {
+      setLoadingColumns(null)
+    }
+  }
+
+  const handleTableClick = async (tableId: string) => {
+    setSelectedTable(tableId)
+    await loadTableColumns(tableId)
+  }
+
+  // Load tables when component mounts
+  useEffect(() => {
+    if (activeEditTab === 'data') {
+      loadTables()
+    }
+  }, [activeEditTab])
+
+  // Check if chart fields have changed
+  const hasChartChanged = () => {
+    if (!selectedWidget || !isChartWidget(selectedWidget)) return false
+    
+    // For now, simplify to just check if there are any staged fields
+    // This will show the button when user drags fields to staging areas
+    return stagedXAxis.length > 0 || stagedYAxis.length > 0 || stagedFilters.length > 0
+  }
+
+  // Handle drag end for chart fields
+  const handleChartDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    
+    if (!over || !active.data.current) return
+
+    const draggedColumn = active.data.current as BigQueryField & { sourceTable: string }
+    const dropZoneId = over.id as string
+
+    // Remove from all staging areas first
+    setStagedXAxis(prev => prev.filter(col => col.name !== draggedColumn.name))
+    setStagedYAxis(prev => prev.filter(col => col.name !== draggedColumn.name))
+    setStagedFilters(prev => prev.filter(col => col.name !== draggedColumn.name))
+
+    // Add to appropriate staging area
+    switch (dropZoneId) {
+      case 'chart-x-axis-drop-zone':
+        setStagedXAxis(prev => [...prev, draggedColumn])
+        break
+      case 'chart-y-axis-drop-zone':
+        setStagedYAxis(prev => [...prev, draggedColumn])
+        break
+      case 'chart-filters-drop-zone':
+        setStagedFilters(prev => [...prev, draggedColumn])
+        break
+    }
+  }
+
+  // Handle remove field from staging areas
+  const handleRemoveChartField = (dropZoneType: string, fieldName: string) => {
+    switch (dropZoneType) {
+      case 'xAxis':
+        setStagedXAxis(prev => prev.filter(col => col.name !== fieldName))
+        break
+      case 'yAxis':
+        setStagedYAxis(prev => prev.filter(col => col.name !== fieldName))
+        break
+      case 'filters':
+        setStagedFilters(prev => prev.filter(col => col.name !== fieldName))
+        break
+    }
+  }
+
+  // Update chart data with staged fields
+  const updateChartData = async () => {
+    if (!selectedWidget || !isChartWidget(selectedWidget)) return
+    
+    setLoadingChartUpdate(true)
+    try {
+      // Prepare update payload
+      const updatePayload: any = {}
+      
+      // Update X-Axis
+      if (stagedXAxis.length > 0) {
+        updatePayload.xColumn = stagedXAxis[0].name
+      } else {
+        updatePayload.xColumn = ''
+      }
+      
+      // Update Y-Axis  
+      if (stagedYAxis.length > 0) {
+        updatePayload.yColumn = stagedYAxis[0].name
+      } else {
+        updatePayload.yColumn = ''
+      }
+      
+      // Update Filters
+      updatePayload.filters = stagedFilters.map(field => ({
+        name: field.name,
+        type: field.type,
+        value: '' // Default empty value
+      }))
+      
+      console.log('🔄 Updating chart data:', updatePayload)
+      
+      // Apply changes to widget
+      widgetActions.editWidget(selectedWidget.i, updatePayload)
+      
+      // Clear staging areas after successful update
+      setStagedXAxis([])
+      setStagedYAxis([])
+      setStagedFilters([])
+      
+    } catch (err) {
+      console.error('Error updating chart data:', err)
+    } finally {
+      setLoadingChartUpdate(false)
+    }
   }
 
   // Caso não haja widgets
@@ -1229,6 +1413,140 @@ export default function WidgetEditorNew() {
 
   const renderChartDataTab = () => (
     <div className="space-y-6">
+      {/* Chart Data Fields */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">📊 Chart Data Fields</h3>
+        <DndContext onDragEnd={handleChartDragEnd}>
+          <div className="space-y-4">
+            {/* Tables & Columns Section */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Available Tables */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-xs font-medium text-gray-700">Available Tables</h4>
+                  <button
+                    onClick={loadTables}
+                    disabled={loadingTables}
+                    className="text-xs text-blue-600 hover:text-blue-800"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${loadingTables ? 'animate-spin' : ''}`} />
+                  </button>
+                </div>
+                <div className="border border-gray-200 rounded-lg h-32 overflow-y-auto">
+                  {loadingTables ? (
+                    <div className="flex items-center justify-center h-full">
+                      <RefreshCw className="w-4 h-4 animate-spin text-gray-400" />
+                    </div>
+                  ) : (
+                    <div className="p-2 space-y-1">
+                      {availableTables.map((table) => {
+                        const tableId = table.TABLEID || table.tableId || ''
+                        return (
+                          <div
+                            key={tableId}
+                            onClick={() => handleTableClick(tableId)}
+                            className={`text-xs p-2 rounded cursor-pointer transition-colors ${
+                              selectedTable === tableId
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'hover:bg-gray-100'
+                            }`}
+                          >
+                            {tableId}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Table Columns */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-xs font-medium text-gray-700">Columns</h4>
+                  {loadingColumns && (
+                    <RefreshCw className="w-3 h-3 animate-spin text-blue-600" />
+                  )}
+                </div>
+                <div className="border border-gray-200 rounded-lg h-32 overflow-y-auto">
+                  {selectedTable ? (
+                    <div className="p-2 space-y-1">
+                      {tableColumns.map((column) => (
+                        <DraggableColumn
+                          key={column.name}
+                          field={column}
+                          sourceTable={selectedTable}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-xs text-gray-500">
+                      Select a table to view columns
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Drop Zones */}
+            <div className="space-y-3">
+              <DropZone
+                id="chart-x-axis-drop-zone"
+                label="X-Axis"
+                description="Drag categorical fields (strings, dates)"
+                icon={<Database className="w-4 h-4 text-green-600" />}
+                fields={stagedXAxis}
+                onRemoveField={(fieldName) => handleRemoveChartField('xAxis', fieldName)}
+                acceptedTypes={['string', 'date', 'numeric']}
+              />
+              
+              <DropZone
+                id="chart-y-axis-drop-zone"
+                label="Y-Axis"
+                description="Drag numeric fields for aggregation"
+                icon={<Database className="w-4 h-4 text-blue-600" />}
+                fields={stagedYAxis}
+                onRemoveField={(fieldName) => handleRemoveChartField('yAxis', fieldName)}
+                acceptedTypes={['numeric']}
+              />
+              
+              <DropZone
+                id="chart-filters-drop-zone"
+                label="Filters"
+                description="Drag any fields to create filters"
+                icon={<Database className="w-4 h-4 text-orange-600" />}
+                fields={stagedFilters}
+                onRemoveField={(fieldName) => handleRemoveChartField('filters', fieldName)}
+                acceptedTypes={['string', 'date', 'numeric', 'boolean']}
+              />
+            </div>
+
+            {/* Update Chart Button */}
+            {hasChartChanged() && (
+              <div className="mt-4">
+                <button
+                  onClick={updateChartData}
+                  disabled={loadingChartUpdate}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {loadingChartUpdate ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      Updating Chart...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4" />
+                      Update Chart
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+        </DndContext>
+      </div>
+
       {/* Labels */}
       <div>
         <h3 className="text-sm font-semibold text-gray-900 mb-3">🏷️ Labels</h3>
