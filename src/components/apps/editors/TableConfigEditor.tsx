@@ -56,6 +56,7 @@ export default function TableConfigEditor({
   const [selectedColumns, setSelectedColumns] = useState<BigQueryField[]>([])
   const [updatedQuery, setUpdatedQuery] = useState<string>('')
   const [hasUpdatedQuery, setHasUpdatedQuery] = useState(false)
+  const [loadingUpdate, setLoadingUpdate] = useState(false)
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
@@ -300,6 +301,64 @@ LIMIT 100
     return newQuery
   }
 
+  // Update table data with current + selected columns
+  const updateTableData = async () => {
+    setLoadingUpdate(true)
+    try {
+      // Gerar query atualizada
+      const query = generateUpdatedQuery(tableConfig.columns || [], selectedColumns)
+      
+      if (!query) {
+        throw new Error('No query generated')
+      }
+
+      console.log('🔄 Executing query to update table data:', query)
+      
+      // Executar query no BigQuery
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
+      
+      const response = await fetch('/api/bigquery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'execute',
+          query: query
+        }),
+        signal: controller.signal
+      })
+      
+      clearTimeout(timeoutId)
+      
+      if (!response.ok) {
+        throw new Error(`API response: ${response.status} ${response.statusText}`)
+      }
+      
+      const result = await response.json()
+      console.log('📊 Query execution result:', result)
+      
+      if (result.success && result.data?.data && Array.isArray(result.data.data)) {
+        // Atualizar dados da tabela
+        onTableConfigChange('data', result.data.data)
+        
+        // Reset estados após sucesso
+        setUpdatedQuery('')
+        setHasUpdatedQuery(false)
+        setSelectedColumns([])
+        
+        console.log('✅ Table data updated successfully with', result.data.data.length, 'rows')
+      } else {
+        const errorMsg = result.error || 'No data returned from query'
+        throw new Error(errorMsg)
+      }
+    } catch (error) {
+      console.error('❌ Failed to update table data:', error)
+      // You could add a toast notification here
+    } finally {
+      setLoadingUpdate(false)
+    }
+  }
+
   return (
     <DndContext onDragEnd={handleDragEnd}>
       <div className="border-t pt-4 mt-4">
@@ -419,6 +478,29 @@ LIMIT 100
                     </div>
                   )}
                 </div>
+
+                {/* Update Table Button */}
+                {hasUpdatedQuery && (
+                  <div className="mt-3 pt-3 border-t border-gray-200">
+                    <Button
+                      onClick={updateTableData}
+                      disabled={loadingUpdate}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white text-sm"
+                    >
+                      {loadingUpdate ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                          Updating Table...
+                        </>
+                      ) : (
+                        <>
+                          <Database className="w-4 h-4 mr-2" />
+                          Update Table
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </AccordionContent>
