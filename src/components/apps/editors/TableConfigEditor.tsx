@@ -5,7 +5,7 @@ import { isTableWidget } from '@/types/apps/tableWidgets'
 import type { TableConfig, TableColumn } from '@/types/apps/tableWidgets'
 import { useState, useEffect, useMemo } from 'react'
 import { DndContext, DragEndEvent } from '@dnd-kit/core'
-import { Database, Grab, Plus, Trash2 } from 'lucide-react'
+import { Database, Grab, Plus, Trash2, Eye, X, RefreshCw } from 'lucide-react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -66,6 +66,12 @@ export default function TableConfigEditor({
   const [tableSchema, setTableSchema] = useState<BigQueryField[]>([])
   const [availableTables, setAvailableTables] = useState<BigQueryTable[]>([])
   const [loadingSchema, setLoadingSchema] = useState(false)
+
+  // Preview states
+  const [previewTableId, setPreviewTableId] = useState<string | null>(null)
+  const [previewData, setPreviewData] = useState<Record<string, Array<Record<string, unknown>>>>({})
+  const [loadingPreview, setLoadingPreview] = useState<string | null>(null)
+  const [showPreviewModal, setShowPreviewModal] = useState(false)
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
@@ -208,6 +214,70 @@ export default function TableConfigEditor({
       console.error('❌ Error loading BigQuery data:', error)
     } finally {
       setLoadingSchema(false)
+    }
+  }
+
+  // Load preview data for a table
+  const loadPreviewData = async (tableId: string) => {
+    // Check if already cached
+    if (previewData[tableId]) {
+      setPreviewTableId(tableId)
+      setShowPreviewModal(true)
+      return
+    }
+    
+    setLoadingPreview(tableId)
+    
+    try {
+      console.log('📊 Loading preview data for table:', tableId)
+      const response = await fetch(`/api/bigquery?action=query&dataset=biquery_data&table=${tableId}&limit=20`)
+      const result = await response.json()
+      
+      if (result.success && Array.isArray(result.data)) {
+        // Cache the preview data
+        setPreviewData(prev => ({
+          ...prev,
+          [tableId]: result.data
+        }))
+        setPreviewTableId(tableId)
+        setShowPreviewModal(true)
+        console.log('✅ Preview data loaded successfully:', result.data.length, 'rows')
+      } else {
+        console.error('❌ Failed to load preview data:', result.error)
+      }
+    } catch (error) {
+      console.error('❌ Error loading preview data:', error)
+    } finally {
+      setLoadingPreview(null)
+    }
+  }
+
+  // Use table data from preview
+  const handleUseTableData = async (tableId: string) => {
+    console.log('🔄 Using data from table:', tableId)
+    
+    // Close preview modal
+    setShowPreviewModal(false)
+    
+    // Load full data for the widget
+    await loadRealDataFromBigQuery(tableId)
+    
+    // Auto-select some basic columns if preview data exists
+    if (previewData[tableId] && previewData[tableId].length > 0) {
+      const firstRow = previewData[tableId][0]
+      const columnNames = Object.keys(firstRow).slice(0, 4) // Take first 4 columns
+      
+      const autoColumns = columnNames.map((name, index) => ({
+        id: `col-auto-${Date.now()}-${index}`,
+        header: name.charAt(0).toUpperCase() + name.slice(1),
+        accessorKey: name,
+        type: typeof firstRow[name] === 'number' ? 'number' as const : 'text' as const,
+        width: 120,
+        sortable: true
+      }))
+      
+      onTableConfigChange('columns', autoColumns)
+      console.log('✅ Auto-selected columns:', autoColumns.length)
     }
   }
 
@@ -399,21 +469,43 @@ export default function TableConfigEditor({
                           <div className="space-y-2">
                             {filteredTables.map((table) => {
                               const tableId = table.TABLEID || table.tableId || ''
+                              const isLoadingThisPreview = loadingPreview === tableId
                               return (
                                 <Card 
                                   key={tableId}
-                                  className="cursor-pointer hover:bg-accent transition-colors p-0"
-                                  onClick={() => handleTableSelect(tableId)}
+                                  className="hover:bg-accent transition-colors p-0"
                                 >
                                   <CardContent className="p-3">
                                     <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-2">
+                                      <div 
+                                        className="flex items-center gap-2 cursor-pointer flex-1"
+                                        onClick={() => handleTableSelect(tableId)}
+                                      >
                                         <Database className="w-3 h-3 text-blue-600" />
                                         <span className="text-sm font-medium">{tableId}</span>
                                       </div>
-                                      <Badge variant="outline" className="text-xs">
-                                        {table.NUMROWS || table.numRows || 0} rows
-                                      </Badge>
+                                      <div className="flex items-center gap-2">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-6 px-2 text-xs"
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            loadPreviewData(tableId)
+                                          }}
+                                          disabled={isLoadingThisPreview}
+                                        >
+                                          {isLoadingThisPreview ? (
+                                            <RefreshCw className="w-3 h-3 animate-spin" />
+                                          ) : (
+                                            <Eye className="w-3 h-3" />
+                                          )}
+                                          {isLoadingThisPreview ? 'Loading...' : 'Preview'}
+                                        </Button>
+                                        <Badge variant="outline" className="text-xs">
+                                          {table.NUMROWS || table.numRows || 0} rows
+                                        </Badge>
+                                      </div>
                                     </div>
                                   </CardContent>
                                 </Card>
@@ -1106,6 +1198,77 @@ export default function TableConfigEditor({
         </AccordionItem>
       </Accordion>
       </div>
+      
+      {/* Preview Modal */}
+      {showPreviewModal && previewTableId && previewData[previewTableId] && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+          <Card className="w-[90vw] max-w-4xl max-h-[80vh] relative z-[101] overflow-hidden">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Eye className="w-5 h-5 text-primary" />
+                  Preview: {previewTableId}
+                </CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowPreviewModal(false)}
+                  className="h-8 w-8 p-0"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Showing first {previewData[previewTableId]?.length || 0} rows
+                </p>
+                <Button
+                  onClick={() => handleUseTableData(previewTableId)}
+                  className="text-sm h-8"
+                >
+                  Use This Table
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="overflow-hidden">
+              <ScrollArea className="h-96">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="border-b">
+                        {previewData[previewTableId] && previewData[previewTableId].length > 0 && 
+                          Object.keys(previewData[previewTableId][0]).map((column) => (
+                            <th
+                              key={column}
+                              className="text-left py-2 px-3 bg-muted/50 font-medium text-xs"
+                            >
+                              {column}
+                            </th>
+                          ))
+                        }
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {previewData[previewTableId]?.map((row, index) => (
+                        <tr key={index} className="border-b hover:bg-muted/30">
+                          {Object.values(row).map((value, colIndex) => (
+                            <td key={colIndex} className="py-2 px-3 text-xs">
+                              {value === null || value === undefined 
+                                ? <span className="text-muted-foreground italic">null</span>
+                                : String(value)
+                              }
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </DndContext>
   )
 }
