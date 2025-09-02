@@ -152,6 +152,44 @@ form[class*="divide"] textarea:focus-visible {
   border-color: transparent !important;
 }
 
+/* Table Column Resizer Styles */
+.resizer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 5px;
+  background: rgba(0, 0, 0, 0.1);
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.resizer:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.resizer.isResizing {
+  background: rgba(59, 130, 246, 0.5);
+  width: 2px;
+}
+
+/* Dark mode support for resizer */
+@media (prefers-color-scheme: dark) {
+  .resizer {
+    background: rgba(255, 255, 255, 0.1);
+  }
+  
+  .resizer:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  .resizer.isResizing {
+    background: rgba(96, 165, 250, 0.5);
+  }
+}
+
 /* Remove focus styles from select components in AI Elements */
 form[class*="divide"] button:focus,
 form[class*="divide"] button:focus-visible {

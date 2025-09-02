@@ -76,6 +76,7 @@ export function DataTable<TData extends TableData>({
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
+  const [columnSizing, setColumnSizing] = React.useState({})
 
   const table = useReactTable({
     data,
@@ -85,6 +86,9 @@ export function DataTable<TData extends TableData>({
         pageSize: pageSize,
       },
     },
+    enableColumnResizing: true,
+    columnResizeMode: 'onChange',
+    columnResizeDirection: 'ltr',
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -93,11 +97,13 @@ export function DataTable<TData extends TableData>({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
+    onColumnSizingChange: setColumnSizing,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
       rowSelection,
+      columnSizing,
     },
   })
 
@@ -165,7 +171,9 @@ export function DataTable<TData extends TableData>({
                         key={header.id}
                         style={{ 
                           color: headerTextColor,
-                          padding: `${padding}px`
+                          padding: `${padding}px`,
+                          width: header.getSize(),
+                          position: 'relative'
                         }}
                       >
                         {header.isPlaceholder
@@ -174,6 +182,16 @@ export function DataTable<TData extends TableData>({
                               header.column.columnDef.header,
                               header.getContext()
                             )}
+                        
+                        {/* Column Resizer */}
+                        {header.column.getCanResize() && (
+                          <div
+                            onDoubleClick={() => header.column.resetSize()}
+                            onMouseDown={header.getResizeHandler()}
+                            onTouchStart={header.getResizeHandler()}
+                            className={`resizer ${header.column.getIsResizing() ? 'isResizing' : ''}`}
+                          />
+                        )}
                       </TableHead>
                     )
                   })}
