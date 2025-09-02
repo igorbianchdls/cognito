@@ -110,6 +110,7 @@ export interface KPIConfig {
   // Data properties
   name?: string
   value?: number
+  previousValue?: number
   unit?: string
   target?: number
   change?: number
