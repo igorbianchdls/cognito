@@ -312,14 +312,20 @@ ${whereClause}
                 </div>
               </div>
 
-              {/* SQL Query */}
+              {/* Query Preview */}
               {query && (
-                <div className="mt-4">
-                  <p className="text-xs font-medium text-gray-700 mb-2">SQL Query:</p>
-                  <pre className="bg-gray-100 p-2 rounded text-xs overflow-x-auto">
-                    {query}
-                  </pre>
-                </div>
+                <details className="mt-4">
+                  <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
+                    View SQL Query
+                  </summary>
+                  <Card className="mt-2 bg-muted/50">
+                    <CardContent className="p-3">
+                      <pre className="text-xs font-mono overflow-x-auto whitespace-pre-wrap">
+                        {query}
+                      </pre>
+                    </CardContent>
+                  </Card>
+                </details>
               )}
             </div>
           )}
