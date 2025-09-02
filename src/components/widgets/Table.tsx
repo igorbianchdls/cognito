@@ -186,10 +186,20 @@ export function DataTable<TData extends TableData>({
                         {/* Column Resizer */}
                         {header.column.getCanResize() && (
                           <div
-                            onDoubleClick={() => header.column.resetSize()}
-                            onMouseDown={header.getResizeHandler()}
-                            onTouchStart={header.getResizeHandler()}
+                            onDoubleClick={(e) => {
+                              e.stopPropagation()
+                              header.column.resetSize()
+                            }}
+                            onMouseDown={(e) => {
+                              e.stopPropagation()
+                              header.getResizeHandler()(e)
+                            }}
+                            onTouchStart={(e) => {
+                              e.stopPropagation()
+                              header.getResizeHandler()(e)
+                            }}
                             className={`resizer ${header.column.getIsResizing() ? 'isResizing' : ''}`}
+                            data-draggable="false"
                           />
                         )}
                       </TableHead>

@@ -262,6 +262,7 @@ export default function GridCanvas({
             allowOverlap={false}
             autoSize={false}
             maxRows={12}
+            draggableCancel=".resizer, .table-interactive, [data-draggable=false]"
           >
             {widgets.map((widget) => (
               <div 
