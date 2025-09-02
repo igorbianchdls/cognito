@@ -5,7 +5,7 @@ import { isTableWidget } from '@/types/apps/tableWidgets'
 import type { TableConfig, TableColumn } from '@/types/apps/tableWidgets'
 import React, { useState, useEffect } from 'react'
 import { DndContext, DragEndEvent } from '@dnd-kit/core'
-import { Database, Grab, Trash2, Eye, X, RefreshCw } from 'lucide-react'
+import { Database, Grab, Trash2, Eye, X, RefreshCw, Table2, BarChart3, AlertCircle } from 'lucide-react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import DropZone from '../builder/DropZone'
 import TablesExplorer from '../builder/TablesExplorer'
+import DraggableColumn from '../builder/DraggableColumn'
 import type { BigQueryField } from '../builder/TablesExplorer'
 
 // BigQuery table type
@@ -57,6 +58,11 @@ export default function TableConfigEditor({
   const [updatedQuery, setUpdatedQuery] = useState<string>('')
   const [hasUpdatedQuery, setHasUpdatedQuery] = useState(false)
   const [loadingUpdate, setLoadingUpdate] = useState(false)
+
+  // Table selection for dimensions
+  const [selectedTableForDimensions, setSelectedTableForDimensions] = useState<string | null>(null)
+  const [selectedTableSchema, setSelectedTableSchema] = useState<BigQueryField[]>([])
+  const [loadingTableSchema, setLoadingTableSchema] = useState(false)
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
@@ -239,6 +245,38 @@ export default function TableConfigEditor({
     }
   }
 
+  // Handle table selection for dimensions
+  const handleTableSelect = async (tableId: string) => {
+    console.log('🔍 Table selected for dimensions:', tableId)
+    
+    if (selectedTableForDimensions === tableId) {
+      // If clicking the same table, deselect
+      setSelectedTableForDimensions(null)
+      setSelectedTableSchema([])
+      return
+    }
+
+    setSelectedTableForDimensions(tableId)
+    setLoadingTableSchema(true)
+    
+    try {
+      const response = await fetch(`/api/bigquery?action=schema&dataset=biquery_data&table=${tableId}`)
+      const result = await response.json()
+      
+      if (result.success && Array.isArray(result.data)) {
+        setSelectedTableSchema(result.data)
+        console.log('✅ Table schema loaded:', result.data.length, 'fields')
+      } else {
+        throw new Error(result.error || 'Failed to load table schema')
+      }
+    } catch (error) {
+      console.error('❌ Failed to load table schema:', error)
+      setSelectedTableSchema([])
+    } finally {
+      setLoadingTableSchema(false)
+    }
+  }
+
   // Load tables on component mount
   useEffect(() => {
     loadAvailableTables()
@@ -372,35 +410,115 @@ LIMIT 100
           </AccordionTrigger>
           <AccordionContent>
             <div className="grid grid-cols-2 gap-4">
-              {/* Available Tables - Real BigQuery Data */}
+              {/* Available Tables - Clickable List */}
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-2">
                   <Database className="inline w-3 h-3 mr-1" />
-                  Available Tables
+                  Available Tables ({availableTables.length})
                 </label>
-                <div className="max-h-64 border border-gray-200 rounded bg-white">
-                  <TablesExplorer 
-                    compact={true}
-                    showMetadata={false}
-                    showMeasures={false}
-                    showHeader={false}
-                    className="max-h-64"
-                  />
+                <div className="max-h-64 border border-gray-200 rounded bg-white overflow-y-auto">
+                  <div className="space-y-1 p-2">
+                    {loadingSchema ? (
+                      <div className="flex items-center justify-center py-4">
+                        <RefreshCw className="w-4 h-4 animate-spin text-gray-400" />
+                        <span className="ml-2 text-xs text-gray-500">Loading tables...</span>
+                      </div>
+                    ) : availableTables.length > 0 ? (
+                      availableTables.map((table) => {
+                        const tableId = table.tableId || table.TABLEID || ''
+                        const isSelected = selectedTableForDimensions === tableId
+                        
+                        return (
+                          <div
+                            key={tableId}
+                            className={`
+                              cursor-pointer p-2 rounded text-xs transition-colors
+                              ${isSelected 
+                                ? 'bg-blue-100 border border-blue-300 text-blue-800' 
+                                : 'hover:bg-gray-50 border border-transparent'
+                              }
+                            `}
+                            onClick={() => handleTableSelect(tableId)}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Table2 className="w-3 h-3 flex-shrink-0" />
+                              <span className="font-medium truncate">{tableId}</span>
+                            </div>
+                            {table.numRows && (
+                              <div className="text-xs text-gray-500 ml-5">
+                                {typeof table.numRows === 'number' 
+                                  ? table.numRows.toLocaleString() 
+                                  : table.NUMROWS?.toLocaleString() || '0'
+                                } rows
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })
+                    ) : (
+                      <div className="text-xs text-gray-400 italic p-4 text-center">
+                        No tables available
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
-              {/* Selected Columns Drop Zone */}
+              {/* Dimensions & Measures */}
               <div>
-                <DropZone
-                  id="selected-columns-drop-zone"
-                  label="Selected Columns"
-                  description="Drag columns here to add to your table"
-                  icon={<Grab className="w-4 h-4" />}
-                  fields={selectedColumns}
-                  onRemoveField={handleRemoveSelectedColumn}
-                  className="h-64"
-                />
+                <label className="block text-xs font-medium text-gray-600 mb-2">
+                  <BarChart3 className="inline w-3 h-3 mr-1" />
+                  Dimensions & Measures
+                  {selectedTableForDimensions && (
+                    <span className="ml-1 text-blue-600">({selectedTableForDimensions})</span>
+                  )}
+                </label>
+                <div className="max-h-64 border border-gray-200 rounded bg-white overflow-y-auto">
+                  {!selectedTableForDimensions ? (
+                    <div className="flex items-center justify-center py-8 text-xs text-gray-400">
+                      <div className="text-center">
+                        <BarChart3 className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                        <p>Select a table to view dimensions</p>
+                      </div>
+                    </div>
+                  ) : loadingTableSchema ? (
+                    <div className="flex items-center justify-center py-8">
+                      <RefreshCw className="w-4 h-4 animate-spin text-gray-400" />
+                      <span className="ml-2 text-xs text-gray-500">Loading dimensions...</span>
+                    </div>
+                  ) : selectedTableSchema.length > 0 ? (
+                    <div className="space-y-1 p-2">
+                      {selectedTableSchema.map((field, index) => (
+                        <DraggableColumn
+                          key={`${selectedTableForDimensions}-${field.name}-${index}`}
+                          field={{ ...field, sourceTable: selectedTableForDimensions }}
+                          compact={true}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center py-8 text-xs text-gray-400">
+                      <div className="text-center">
+                        <AlertCircle className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                        <p>No dimensions available</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
+            </div>
+
+            {/* Selected Columns - Full Width */}
+            <div className="mt-4">
+              <DropZone
+                id="selected-columns-drop-zone"
+                label="Selected Columns"
+                description="Drag columns here to add to your table"
+                icon={<Grab className="w-4 h-4" />}
+                fields={selectedColumns}
+                onRemoveField={handleRemoveSelectedColumn}
+                className="w-full h-48"
+              />
             </div>
 
             {/* SQL Query Buttons */}
