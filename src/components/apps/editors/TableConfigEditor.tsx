@@ -52,6 +52,11 @@ export default function TableConfigEditor({
   const [currentQuery, setCurrentQuery] = useState<string>('')
   const [showSqlModal, setShowSqlModal] = useState(false)
 
+  // DropZone states  
+  const [selectedColumns, setSelectedColumns] = useState<BigQueryField[]>([])
+  const [updatedQuery, setUpdatedQuery] = useState<string>('')
+  const [hasUpdatedQuery, setHasUpdatedQuery] = useState(false)
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     
@@ -80,7 +85,19 @@ export default function TableConfigEditor({
         const updatedColumns = [...currentColumns, newTableColumn]
         onTableConfigChange('columns', updatedColumns)
         
-        console.log('🔄 Column added to table:', draggedColumn.name)
+        // Add to selectedColumns (DropZone) if not already there
+        const alreadyInDropZone = selectedColumns.some(col => col.name === draggedColumn.name)
+        if (!alreadyInDropZone) {
+          const updatedSelectedColumns = [...selectedColumns, draggedColumn]
+          setSelectedColumns(updatedSelectedColumns)
+          
+          // Generate updated query
+          const newQuery = generateUpdatedQuery(updatedSelectedColumns)
+          setUpdatedQuery(newQuery)
+          setHasUpdatedQuery(true)
+          
+          console.log('🔄 Column added to DropZone and query updated:', draggedColumn.name)
+        }
       }
     }
   }
@@ -240,6 +257,42 @@ export default function TableConfigEditor({
     onTableConfigChange('columns', updatedColumns)
   }
 
+  // Handle removing field from DropZone
+  const handleRemoveSelectedColumn = (fieldName: string) => {
+    console.log('🗑️ Removing selected column:', fieldName)
+    const updatedColumns = selectedColumns.filter(col => col.name !== fieldName)
+    setSelectedColumns(updatedColumns)
+    
+    // Regenerate updated query with remaining columns
+    if (updatedColumns.length > 0) {
+      const newQuery = generateUpdatedQuery(updatedColumns)
+      setUpdatedQuery(newQuery)
+      setHasUpdatedQuery(true)
+    } else {
+      setUpdatedQuery('')
+      setHasUpdatedQuery(false)
+    }
+  }
+
+  // Generate updated SQL query based on selected columns
+  const generateUpdatedQuery = (columns: BigQueryField[]): string => {
+    const baseQuery = getSavedQuery()
+    if (!baseQuery || columns.length === 0) return ''
+    
+    const tableInfo = getSavedTableInfo()
+    if (!tableInfo?.table) return ''
+    
+    // Build new SELECT clause with selected columns
+    const selectCols = columns.map(col => col.name)
+    
+    const newQuery = `
+SELECT ${selectCols.join(', ')}
+FROM \`creatto-463117.biquery_data.${tableInfo.table}\`
+LIMIT 100
+    `.trim()
+
+    return newQuery
+  }
 
   return (
     <DndContext onDragEnd={handleDragEnd}>
@@ -278,27 +331,45 @@ export default function TableConfigEditor({
                   label="Selected Columns"
                   description="Drag columns here to add to your table"
                   icon={<Grab className="w-4 h-4" />}
-                  fields={[]}
+                  fields={selectedColumns}
+                  onRemoveField={handleRemoveSelectedColumn}
                   className="h-64"
                 />
               </div>
             </div>
 
-            {/* SQL Query Button */}
-            {getSavedQuery() && (
-              <div className="mt-4">
-                <Button
-                  onClick={() => {
-                    setCurrentQuery(getSavedQuery())
-                    setShowSqlModal(true)
-                  }}
-                  variant="outline"
-                  size="sm"
-                  className="w-full text-xs"
-                >
-                  <Eye className="w-3 h-3 mr-2" />
-                  View SQL Query
-                </Button>
+            {/* SQL Query Buttons */}
+            {(getSavedQuery() || hasUpdatedQuery) && (
+              <div className="mt-4 space-y-2">
+                {hasUpdatedQuery ? (
+                  <Button
+                    onClick={() => {
+                      setCurrentQuery(updatedQuery)
+                      setShowSqlModal(true)
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-xs bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                  >
+                    <Eye className="w-3 h-3 mr-2" />
+                    View Updated SQL Query
+                  </Button>
+                ) : null}
+                
+                {getSavedQuery() && (
+                  <Button
+                    onClick={() => {
+                      setCurrentQuery(getSavedQuery())
+                      setShowSqlModal(true)
+                    }}
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-xs"
+                  >
+                    <Eye className="w-3 h-3 mr-2" />
+                    View SQL Query
+                  </Button>
+                )}
               </div>
             )}
             
