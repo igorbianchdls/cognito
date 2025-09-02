@@ -3,11 +3,16 @@
 import type { DroppedWidget } from '@/types/apps/widget'
 import { isTableWidget } from '@/types/apps/tableWidgets'
 import type { TableConfig, TableColumn } from '@/types/apps/tableWidgets'
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { DndContext, DragEndEvent } from '@dnd-kit/core'
 import { Database, Grab, Plus, Trash2 } from 'lucide-react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { ScrollArea } from '@/components/ui/scroll-area'
 import DropZone from '../builder/DropZone'
 import TablesExplorer from '../builder/TablesExplorer'
 import type { BigQueryField } from '../builder/TablesExplorer'
@@ -40,7 +45,14 @@ export default function TableConfigEditor({
     sortable: true
   })
 
-  // TablesExplorer will handle BigQuery data loading
+  // States for hierarchical Add New Column flow
+  const [activeMainTab, setActiveMainTab] = useState<'tables' | 'custom'>('tables')
+  const [selectedTable, setSelectedTable] = useState<string | null>(null)
+  const [activeSubTab, setActiveSubTab] = useState<'info' | 'dimensions' | 'measures' | 'custom'>('info')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [tableSchema, setTableSchema] = useState<BigQueryField[]>([])
+  const [availableTables, setAvailableTables] = useState<any[]>([])
+  const [loadingSchema, setLoadingSchema] = useState(false)
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
@@ -85,6 +97,105 @@ export default function TableConfigEditor({
     }
     return 'text'
   }
+
+  // Load available tables
+  const loadAvailableTables = async () => {
+    try {
+      const response = await fetch('/api/bigquery?action=tables&dataset=biquery_data')
+      const result = await response.json()
+      
+      if (result.success && Array.isArray(result.data)) {
+        setAvailableTables(result.data)
+      }
+    } catch (error) {
+      console.error('Error loading tables:', error)
+    }
+  }
+
+  // Load schema for selected table
+  const handleTableSelect = async (tableId: string) => {
+    setSelectedTable(tableId)
+    setActiveSubTab('info')
+    setLoadingSchema(true)
+    
+    try {
+      const response = await fetch(`/api/bigquery?action=schema&dataset=biquery_data&table=${tableId}`)
+      const result = await response.json()
+      
+      if (result.success && Array.isArray(result.data)) {
+        setTableSchema(result.data)
+      }
+    } catch (error) {
+      console.error('Error loading table schema:', error)
+      setTableSchema([])
+    } finally {
+      setLoadingSchema(false)
+    }
+  }
+
+  // Add column from BigQuery field
+  const handleColumnAdd = (column: BigQueryField, sourceTable?: string) => {
+    const newTableColumn: TableColumn = {
+      id: `col-${Date.now()}`,
+      header: column.name,
+      accessorKey: column.name,
+      type: convertBigQueryTypeToTableType(column.type),
+      width: 120,
+      sortable: true
+    }
+    
+    const currentColumns = tableConfig.columns || []
+    const alreadyExists = currentColumns.some(col => col.accessorKey === column.name)
+    
+    if (!alreadyExists) {
+      onTableConfigChange('columns', [...currentColumns, newTableColumn])
+    }
+  }
+
+  // Load tables on component mount
+  useEffect(() => {
+    loadAvailableTables()
+  }, [])
+
+  // Computed values for filtering columns
+  const dimensions = useMemo(() => 
+    tableSchema.filter(col => ['STRING', 'DATE', 'BOOLEAN', 'TIMESTAMP'].includes(col.type.toUpperCase()))
+  , [tableSchema])
+
+  const measures = useMemo(() => 
+    tableSchema.filter(col => ['INTEGER', 'FLOAT', 'NUMERIC', 'INT64', 'FLOAT64'].includes(col.type.toUpperCase()))
+  , [tableSchema])
+
+  // Filter tables based on search term
+  const filteredTables = useMemo(() => 
+    availableTables.filter(table => {
+      const tableId = table.TABLEID || table.tableId || ''
+      return tableId.toLowerCase().includes(searchTerm.toLowerCase())
+    })
+  , [availableTables, searchTerm])
+
+  // Filter columns based on search term and active sub-tab
+  const filteredColumns = useMemo(() => {
+    let columns: BigQueryField[] = []
+    
+    switch (activeSubTab) {
+      case 'info':
+        columns = tableSchema
+        break
+      case 'dimensions':
+        columns = dimensions
+        break
+      case 'measures':
+        columns = measures
+        break
+      default:
+        columns = tableSchema
+    }
+    
+    return columns.filter(col => 
+      col.name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  }, [tableSchema, dimensions, measures, activeSubTab, searchTerm])
 
   if (!selectedWidget || !isTableWidget(selectedWidget)) {
     return null
@@ -201,89 +312,284 @@ export default function TableConfigEditor({
                   )}
                 </div>
               </div>
-              {/* Add New Column */}
-              <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-                <h6 className="text-xs font-medium text-gray-600 mb-3">➕ Add New Column</h6>
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">Column ID *</label>
-                      <input
-                        type="text"
-                        placeholder="unique_id"
-                        value={newColumn.id}
-                        onChange={(e) => setNewColumn(prev => ({ ...prev, id: e.target.value }))}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">Header Text *</label>
-                      <input
-                        type="text"
-                        placeholder="Display Name"
-                        value={newColumn.header}
-                        onChange={(e) => setNewColumn(prev => ({ ...prev, header: e.target.value }))}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">Data Key *</label>
-                      <input
-                        type="text"
-                        placeholder="field_name"
-                        value={newColumn.accessorKey}
-                        onChange={(e) => setNewColumn(prev => ({ ...prev, accessorKey: e.target.value }))}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1">Data Type</label>
-                      <select
-                        value={newColumn.type}
-                        onChange={(e) => setNewColumn(prev => ({ ...prev, type: e.target.value as 'text' | 'number' | 'boolean' | 'date' }))}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      >
-                        <option value="text">📝 Text</option>
-                        <option value="number">🔢 Number</option>
-                        <option value="boolean">✅ Boolean</option>
-                        <option value="date">📅 Date</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="flex gap-3 items-end">
-                    <div className="flex-1">
-                      <label className="block text-xs text-gray-500 mb-1">Width (px)</label>
-                      <input
-                        type="number"
-                        min="50"
-                        max="500"
-                        placeholder="150"
-                        value={newColumn.width}
-                        onChange={(e) => setNewColumn(prev => ({ ...prev, width: parseInt(e.target.value) || 150 }))}
-                        className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                    <label className="flex items-center gap-2 text-xs text-gray-600 pb-1">
-                      <input
-                        type="checkbox"
-                        checked={newColumn.sortable}
-                        onChange={(e) => setNewColumn(prev => ({ ...prev, sortable: e.target.checked }))}
-                        className="rounded"
-                      />
-                      ↕️ Sortable
-                    </label>
-                  </div>
-                  <button
-                    onClick={handleAddColumn}
-                    disabled={!newColumn.id || !newColumn.header || !newColumn.accessorKey}
-                    className="w-full px-3 py-2 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
-                  >
-                    ➕ Add Column
-                  </button>
-                </div>
-              </div>
+              {/* Add New Column - New shadcn/ui Interface */}
+              <Card className="mt-4">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add New Column
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {/* Main Tabs */}
+                  <Tabs value={activeMainTab} onValueChange={(value) => setActiveMainTab(value as 'tables' | 'custom')}>
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="tables" className="text-xs">Available Tables</TabsTrigger>
+                      <TabsTrigger value="custom" className="text-xs">Custom</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="tables" className="mt-4">
+                      <div className="space-y-3">
+                        <Input 
+                          placeholder="Search tables..." 
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="text-sm h-8"
+                        />
+                        <ScrollArea className="h-32">
+                          <div className="space-y-2">
+                            {filteredTables.map((table) => {
+                              const tableId = table.TABLEID || table.tableId || ''
+                              return (
+                                <Card 
+                                  key={tableId}
+                                  className="cursor-pointer hover:bg-accent transition-colors p-0"
+                                  onClick={() => handleTableSelect(tableId)}
+                                >
+                                  <CardContent className="p-3">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-2">
+                                        <Database className="w-3 h-3 text-blue-600" />
+                                        <span className="text-sm font-medium">{tableId}</span>
+                                      </div>
+                                      <Badge variant="outline" className="text-xs">
+                                        {table.NUMROWS || table.numRows || 0} rows
+                                      </Badge>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              )
+                            })}
+                          </div>
+                        </ScrollArea>
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="custom" className="mt-4">
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Column ID *</label>
+                            <Input
+                              placeholder="unique_id"
+                              value={newColumn.id}
+                              onChange={(e) => setNewColumn(prev => ({ ...prev, id: e.target.value }))}
+                              className="text-xs h-8"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Header Text *</label>
+                            <Input
+                              placeholder="Display Name"
+                              value={newColumn.header}
+                              onChange={(e) => setNewColumn(prev => ({ ...prev, header: e.target.value }))}
+                              className="text-xs h-8"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Data Key *</label>
+                            <Input
+                              placeholder="field_name"
+                              value={newColumn.accessorKey}
+                              onChange={(e) => setNewColumn(prev => ({ ...prev, accessorKey: e.target.value }))}
+                              className="text-xs h-8"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Data Type</label>
+                            <select
+                              value={newColumn.type}
+                              onChange={(e) => setNewColumn(prev => ({ ...prev, type: e.target.value as 'text' | 'number' | 'boolean' | 'date' }))}
+                              className="w-full px-2 py-1 border border-input bg-background text-xs h-8 rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+                            >
+                              <option value="text">📝 Text</option>
+                              <option value="number">🔢 Number</option>
+                              <option value="boolean">✅ Boolean</option>
+                              <option value="date">📅 Date</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className="flex gap-3 items-end">
+                          <div className="flex-1">
+                            <label className="block text-xs text-gray-500 mb-1">Width (px)</label>
+                            <Input
+                              type="number"
+                              min="50"
+                              max="500"
+                              placeholder="150"
+                              value={newColumn.width}
+                              onChange={(e) => setNewColumn(prev => ({ ...prev, width: parseInt(e.target.value) || 150 }))}
+                              className="text-xs h-8"
+                            />
+                          </div>
+                          <label className="flex items-center gap-2 text-xs text-gray-600 pb-1">
+                            <input
+                              type="checkbox"
+                              checked={newColumn.sortable}
+                              onChange={(e) => setNewColumn(prev => ({ ...prev, sortable: e.target.checked }))}
+                              className="rounded"
+                            />
+                            ↕️ Sortable
+                          </label>
+                        </div>
+                        <Button
+                          onClick={handleAddColumn}
+                          disabled={!newColumn.id || !newColumn.header || !newColumn.accessorKey}
+                          className="w-full text-xs h-8"
+                          size="sm"
+                        >
+                          <Plus className="w-3 h-3 mr-1" />
+                          Add Column
+                        </Button>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                  
+                  {/* Sub-tabs (Conditional - after selecting table) */}
+                  {selectedTable && (
+                    <Card className="mt-4 border-dashed">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-xs flex items-center gap-2">
+                          <Database className="w-3 h-3" />
+                          Table: {selectedTable}
+                          {loadingSchema && <div className="animate-spin w-3 h-3 border border-current border-t-transparent rounded-full" />}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <Tabs value={activeSubTab} onValueChange={(value) => setActiveSubTab(value as 'info' | 'dimensions' | 'measures' | 'custom')}>
+                          <TabsList className="grid w-full grid-cols-4">
+                            <TabsTrigger value="info" className="text-xs">
+                              📊 Info <Badge variant="secondary" className="ml-1 text-xs">{tableSchema.length}</Badge>
+                            </TabsTrigger>
+                            <TabsTrigger value="dimensions" className="text-xs">
+                              📏 Dimensions <Badge variant="secondary" className="ml-1 text-xs">{dimensions.length}</Badge>
+                            </TabsTrigger>
+                            <TabsTrigger value="measures" className="text-xs">
+                              📊 Measures <Badge variant="secondary" className="ml-1 text-xs">{measures.length}</Badge>
+                            </TabsTrigger>
+                            <TabsTrigger value="custom" className="text-xs">⚙️ Custom</TabsTrigger>
+                          </TabsList>
+                          
+                          <TabsContent value="info" className="mt-3">
+                            <Input 
+                              placeholder="Search all columns..." 
+                              value={searchTerm}
+                              onChange={(e) => setSearchTerm(e.target.value)}
+                              className="text-xs h-7 mb-2"
+                            />
+                            <ScrollArea className="h-32">
+                              <div className="space-y-1">
+                                {filteredColumns.map((column, index) => (
+                                  <Card 
+                                    key={index}
+                                    className="cursor-pointer hover:bg-accent transition-colors p-0"
+                                    onClick={() => handleColumnAdd(column, selectedTable)}
+                                  >
+                                    <CardContent className="p-2">
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                          <Badge variant={column.type.includes('INT') || column.type.includes('FLOAT') ? 'default' : 'secondary'} className="text-xs">
+                                            {column.type}
+                                          </Badge>
+                                          <span className="text-xs font-medium">{column.name}</span>
+                                        </div>
+                                        <Button size="sm" variant="ghost" className="h-6 px-2 text-xs">
+                                          <Plus className="w-3 h-3" />
+                                        </Button>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                ))}
+                              </div>
+                            </ScrollArea>
+                          </TabsContent>
+                          
+                          <TabsContent value="dimensions" className="mt-3">
+                            <Input 
+                              placeholder="Search dimensions..." 
+                              value={searchTerm}
+                              onChange={(e) => setSearchTerm(e.target.value)}
+                              className="text-xs h-7 mb-2"
+                            />
+                            <ScrollArea className="h-32">
+                              <div className="space-y-1">
+                                {filteredColumns.map((column, index) => (
+                                  <Card 
+                                    key={index}
+                                    className="cursor-pointer hover:bg-accent transition-colors p-0"
+                                    onClick={() => handleColumnAdd(column, selectedTable)}
+                                  >
+                                    <CardContent className="p-2">
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                          <Badge variant="secondary" className="text-xs">{column.type}</Badge>
+                                          <span className="text-xs font-medium">{column.name}</span>
+                                        </div>
+                                        <Button size="sm" variant="ghost" className="h-6 px-2 text-xs">
+                                          <Plus className="w-3 h-3" />
+                                        </Button>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                ))}
+                              </div>
+                            </ScrollArea>
+                          </TabsContent>
+                          
+                          <TabsContent value="measures" className="mt-3">
+                            <Input 
+                              placeholder="Search measures..." 
+                              value={searchTerm}
+                              onChange={(e) => setSearchTerm(e.target.value)}
+                              className="text-xs h-7 mb-2"
+                            />
+                            <ScrollArea className="h-32">
+                              <div className="space-y-1">
+                                {filteredColumns.map((column, index) => (
+                                  <Card 
+                                    key={index}
+                                    className="cursor-pointer hover:bg-accent transition-colors p-0"
+                                    onClick={() => handleColumnAdd(column, selectedTable)}
+                                  >
+                                    <CardContent className="p-2">
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                          <Badge variant="default" className="text-xs">{column.type}</Badge>
+                                          <span className="text-xs font-medium">{column.name}</span>
+                                        </div>
+                                        <Button size="sm" variant="ghost" className="h-6 px-2 text-xs">
+                                          <Plus className="w-3 h-3" />
+                                        </Button>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                ))}
+                              </div>
+                            </ScrollArea>
+                          </TabsContent>
+                          
+                          <TabsContent value="custom" className="mt-3">
+                            <p className="text-xs text-muted-foreground mb-2">Create a custom column for table: {selectedTable}</p>
+                            {/* Same custom form as above, but with selectedTable context */}
+                            <div className="space-y-2">
+                              <Input 
+                                placeholder="Column name"
+                                className="text-xs h-7"
+                              />
+                              <Button size="sm" className="w-full text-xs h-7">
+                                <Plus className="w-3 h-3 mr-1" />
+                                Add Custom Column
+                              </Button>
+                            </div>
+                          </TabsContent>
+                        </Tabs>
+                      </CardContent>
+                    </Card>
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </AccordionContent>
         </AccordionItem>
