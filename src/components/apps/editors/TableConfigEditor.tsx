@@ -92,7 +92,7 @@ export default function TableConfigEditor({
           setSelectedColumns(updatedSelectedColumns)
           
           // Generate updated query
-          const newQuery = generateUpdatedQuery(updatedSelectedColumns)
+          const newQuery = generateUpdatedQuery()
           setUpdatedQuery(newQuery)
           setHasUpdatedQuery(true)
           
@@ -265,7 +265,7 @@ export default function TableConfigEditor({
     
     // Regenerate updated query with remaining columns
     if (updatedColumns.length > 0) {
-      const newQuery = generateUpdatedQuery(updatedColumns)
+      const newQuery = generateUpdatedQuery()
       setUpdatedQuery(newQuery)
       setHasUpdatedQuery(true)
     } else {
@@ -274,19 +274,25 @@ export default function TableConfigEditor({
     }
   }
 
-  // Generate updated SQL query based on selected columns
-  const generateUpdatedQuery = (columns: BigQueryField[]): string => {
+  // Generate updated SQL query based on current columns + selected columns
+  const generateUpdatedQuery = (): string => {
     const baseQuery = getSavedQuery()
-    if (!baseQuery || columns.length === 0) return ''
-    
     const tableInfo = getSavedTableInfo()
     if (!tableInfo?.table) return ''
     
-    // Build new SELECT clause with selected columns
-    const selectCols = columns.map(col => col.name)
+    // Coletar TODAS as colunas: atuais + selecionadas
+    const currentColumns = (tableConfig.columns || []).map(col => col.accessorKey)
+    const selectedColumnNames = selectedColumns.map(col => col.name)
     
+    // Merge sem duplicatas
+    const allColumns = [...new Set([...currentColumns, ...selectedColumnNames])]
+    
+    // Se não há colunas, usar query original ou retornar vazio
+    if (allColumns.length === 0) return baseQuery || ''
+    
+    // Gerar nova query com TODAS as colunas
     const newQuery = `
-SELECT ${selectCols.join(', ')}
+SELECT ${allColumns.join(', ')}
 FROM \`creatto-463117.biquery_data.${tableInfo.table}\`
 LIMIT 100
     `.trim()
