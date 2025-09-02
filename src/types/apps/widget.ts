@@ -154,6 +154,33 @@ export interface KPIConfig {
   targetColor?: string
 }
 
+// Gallery-specific configuration
+export interface GalleryConfig {
+  // Data properties
+  imageUrl?: string
+  title?: string
+  description?: string
+  
+  // Layout properties
+  columns?: number
+  gap?: number
+  aspectRatio?: 'square' | '16:9' | '4:3' | '3:2' | 'auto'
+  
+  // Visual properties
+  borderRadius?: number
+  shadow?: boolean
+  showTitles?: boolean
+  showDescriptions?: boolean
+  
+  // Interaction properties
+  enableLightbox?: boolean
+  enableHover?: boolean
+  hoverEffect?: 'zoom' | 'overlay' | 'none'
+  
+  // Data source
+  dataSource?: string
+  refreshRate?: string
+}
 
 // Navigation-specific configuration
 export interface NavigationConfig {
@@ -222,6 +249,7 @@ export interface WidgetConfig {
   chartConfig?: import('./chartWidgets').BaseChartConfig  // For chart widgets (Bar, Line, Pie, Area)
   kpiConfig?: KPIConfig      // For KPI widgets
   tableConfig?: import('./tableWidgets').TableConfig  // For table widgets (import from tableWidgets.ts)
+  galleryConfig?: GalleryConfig  // For gallery widgets
   imageConfig?: ImageConfig  // For image widgets
   navigationConfig?: NavigationConfig  // For navigation widgets
   containerConfig?: ContainerConfig  // For widget container styling

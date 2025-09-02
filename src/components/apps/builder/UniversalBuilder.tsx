@@ -10,6 +10,8 @@ import TablePreview from './TablePreview'
 import type { TableData } from './TablePreview'
 import KPIPreview from './KPIPreview'
 import type { KPIData } from './KPIPreview'
+import GalleryPreview from './GalleryPreview'
+import type { GalleryData } from './GalleryPreview'
 import type { BigQueryField } from './TablesExplorer'
 import type { DroppedWidget } from '@/types/apps/widget'
 import { widgetActions } from '@/stores/apps/widgetStore'
@@ -31,6 +33,11 @@ interface UniversalBuilderData {
   
   // KPI field (simplified)
   kpiValue: BigQueryField[]
+  
+  // Gallery fields
+  galleryImageUrl: BigQueryField[]
+  galleryTitle: BigQueryField[]
+  galleryDescription: BigQueryField[]
   
   // Shared fields for compatibility
   dimensions: BigQueryField[]
@@ -58,7 +65,7 @@ export default function UniversalBuilder({
   onClear,
   onAggregationChange
 }: UniversalBuilderProps) {
-  const [previewData, setPreviewData] = useState<Array<{ x: string; y: number; label: string; value: number }> | TableData[] | KPIData[]>([])
+  const [previewData, setPreviewData] = useState<Array<{ x: string; y: number; label: string; value: number }> | TableData[] | KPIData[] | GalleryData[]>([])
   const [previewQuery, setPreviewQuery] = useState<string>('')
 
   // Handle field removal from drop zones
@@ -88,6 +95,8 @@ export default function UniversalBuilder({
         ? data.columns.length > 0
         : data.selectedType === 'kpi'
         ? data.kpiValue.length > 0
+        : data.selectedType === 'gallery'
+        ? data.galleryImageUrl.length > 0
         : data.dimensions.length > 0 || data.measures.length > 0
 
     if (!hasRequiredFields) {
@@ -236,6 +245,28 @@ export default function UniversalBuilder({
             dataSource: 'BigQuery'
           }
         }
+      case 'gallery':
+        const galleryImageField = data.galleryImageUrl[0]
+        const galleryTitleField = data.galleryTitle?.[0]
+        const galleryDescField = data.galleryDescription?.[0]
+        return {
+          galleryConfig: {
+            imageUrl: galleryImageField?.name,
+            title: galleryTitleField?.name,
+            description: galleryDescField?.name,
+            columns: 3,
+            gap: 8,
+            aspectRatio: 'square' as 'square' | '16:9' | '4:3' | '3:2' | 'auto',
+            borderRadius: 8,
+            shadow: true,
+            showTitles: true,
+            showDescriptions: false,
+            enableLightbox: true,
+            enableHover: true,
+            hoverEffect: 'overlay' as 'zoom' | 'overlay' | 'none',
+            dataSource: 'BigQuery'
+          }
+        }
       default:
         return {}
     }
@@ -279,6 +310,12 @@ export default function UniversalBuilder({
           xColumn: '', // No grouping for simple KPI
           yColumn: data.kpiValue[0]?.name || ''    // KPI value field
         }
+      case 'gallery':
+        return {
+          chartType: 'gallery',
+          xColumn: data.galleryImageUrl[0]?.name || '', // Image URL field
+          yColumn: data.galleryTitle?.[0]?.name || ''   // Title field (optional)
+        }
       default:
         return {
           chartType: 'table', // Default for non-chart widgets
@@ -311,7 +348,8 @@ export default function UniversalBuilder({
     (data.selectedType === 'chart' && data.xAxis.length > 0 && data.yAxis.length > 0) ||
     (data.selectedType === 'table' && data.columns.length > 0) ||
     (data.selectedType === 'kpi' && data.kpiValue.length > 0) ||
-    (data.selectedType !== 'chart' && data.selectedType !== 'table' && data.selectedType !== 'kpi' && (data.dimensions.length > 0 || data.measures.length > 0))
+    (data.selectedType === 'gallery' && data.galleryImageUrl.length > 0) ||
+    (data.selectedType !== 'chart' && data.selectedType !== 'table' && data.selectedType !== 'kpi' && data.selectedType !== 'gallery' && (data.dimensions.length > 0 || data.measures.length > 0))
   )
 
   return (
@@ -446,8 +484,43 @@ export default function UniversalBuilder({
               />
             )}
 
-            {/* Generic Drop Zones for Other Non-Chart/Table/KPI Types */}
-            {data.selectedType !== 'chart' && data.selectedType !== 'table' && data.selectedType !== 'kpi' && (
+            {/* Gallery Drop Zones (specific) */}
+            {data.selectedType === 'gallery' && (
+              <>
+                <DropZone
+                  id="gallery-image-url-drop-zone"
+                  label="URL da Imagem"
+                  description="Campo string com URLs das imagens"
+                  icon={<Images className="w-4 h-4 text-pink-600" />}
+                  fields={data.galleryImageUrl}
+                  acceptedTypes={['string']}
+                  onRemoveField={(fieldName) => handleRemoveField('galleryImageUrl', fieldName)}
+                />
+                
+                <DropZone
+                  id="gallery-title-drop-zone"
+                  label="Título (Opcional)"
+                  description="Campo string para títulos das imagens"
+                  icon={<Activity className="w-4 h-4 text-blue-600" />}
+                  fields={data.galleryTitle || []}
+                  acceptedTypes={['string']}
+                  onRemoveField={(fieldName) => handleRemoveField('galleryTitle', fieldName)}
+                />
+                
+                <DropZone
+                  id="gallery-description-drop-zone"
+                  label="Descrição (Opcional)"
+                  description="Campo string para descrições das imagens"
+                  icon={<Activity className="w-4 h-4 text-gray-600" />}
+                  fields={data.galleryDescription || []}
+                  acceptedTypes={['string']}
+                  onRemoveField={(fieldName) => handleRemoveField('galleryDescription', fieldName)}
+                />
+              </>
+            )}
+
+            {/* Generic Drop Zones for Other Non-Chart/Table/KPI/Gallery Types */}
+            {data.selectedType !== 'chart' && data.selectedType !== 'table' && data.selectedType !== 'kpi' && data.selectedType !== 'gallery' && (
               <>
                 <DropZone
                   id="dimensions-drop-zone"
@@ -520,6 +593,21 @@ export default function UniversalBuilder({
               selectedTable={data.selectedTable}
               onDataReady={(kpiData, query) => {
                 setPreviewData(kpiData as KPIData[])
+                setPreviewQuery(query)
+              }}
+            />
+          )}
+
+          {/* Gallery Preview (only for gallery) */}
+          {data.selectedType === 'gallery' && (
+            <GalleryPreview
+              imageUrl={data.galleryImageUrl}
+              title={data.galleryTitle}
+              description={data.galleryDescription}
+              filters={data.filters}
+              selectedTable={data.selectedTable}
+              onDataReady={(galleryData, query) => {
+                setPreviewData(galleryData as GalleryData[])
                 setPreviewQuery(query)
               }}
             />
