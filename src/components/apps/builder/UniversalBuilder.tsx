@@ -310,7 +310,8 @@ export default function UniversalBuilder({
   const isConfigValid = data.selectedTable && (
     (data.selectedType === 'chart' && data.xAxis.length > 0 && data.yAxis.length > 0) ||
     (data.selectedType === 'table' && data.columns.length > 0) ||
-    (data.selectedType !== 'chart' && data.selectedType !== 'table' && (data.dimensions.length > 0 || data.measures.length > 0))
+    (data.selectedType === 'kpi' && data.kpiValue.length > 0) ||
+    (data.selectedType !== 'chart' && data.selectedType !== 'table' && data.selectedType !== 'kpi' && (data.dimensions.length > 0 || data.measures.length > 0))
   )
 
   return (
