@@ -557,6 +557,19 @@ export default function UniversalBuilder({
             />
           </div>
 
+          {/* Actions Section */}
+          <div className="space-y-4 px-2">
+            <Button
+              onClick={handleAddToDashboard}
+              disabled={!isConfigValid}
+              className="w-full gap-2"
+              size="lg"
+            >
+              <Plus className="w-4 h-4" />
+              Add to Dashboard
+            </Button>
+          </div>
+
           {/* Chart Preview (only for charts) */}
           {data.selectedType === 'chart' && (
             <ChartPreview
@@ -613,18 +626,6 @@ export default function UniversalBuilder({
             />
           )}
 
-          {/* Actions Section */}
-          <div className="space-y-4 px-2">
-            <Button
-              onClick={handleAddToDashboard}
-              disabled={!isConfigValid}
-              className="w-full gap-2"
-              size="lg"
-            >
-              <Plus className="w-4 h-4" />
-              Add to Dashboard
-            </Button>
-          </div>
         </div>
       </ScrollArea>
     </div>
