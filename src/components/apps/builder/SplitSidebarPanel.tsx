@@ -20,6 +20,9 @@ interface UniversalBuilderData {
   filters: BigQueryField[]
   columns: BigQueryField[]
   kpiValue: BigQueryField[]
+  galleryImageUrl: BigQueryField[]
+  galleryTitle: BigQueryField[]
+  galleryDescription: BigQueryField[]
   dimensions: BigQueryField[]
   measures: BigQueryField[]
   groupBy: BigQueryField[]
@@ -47,6 +50,9 @@ export default function SplitSidebarPanel({
     filters: [],
     columns: [],
     kpiValue: [],
+    galleryImageUrl: [],
+    galleryTitle: [],
+    galleryDescription: [],
     dimensions: [],
     measures: [],
     groupBy: [],
@@ -72,6 +78,9 @@ export default function SplitSidebarPanel({
       newData.filters = newData.filters.filter(col => col.name !== draggedColumn.name)
       newData.columns = newData.columns.filter(col => col.name !== draggedColumn.name)
       newData.kpiValue = newData.kpiValue.filter(col => col.name !== draggedColumn.name)
+      newData.galleryImageUrl = newData.galleryImageUrl.filter(col => col.name !== draggedColumn.name)
+      newData.galleryTitle = newData.galleryTitle.filter(col => col.name !== draggedColumn.name)
+      newData.galleryDescription = newData.galleryDescription.filter(col => col.name !== draggedColumn.name)
       newData.dimensions = newData.dimensions.filter(col => col.name !== draggedColumn.name)
       newData.measures = newData.measures.filter(col => col.name !== draggedColumn.name)
       newData.groupBy = newData.groupBy.filter(col => col.name !== draggedColumn.name)
@@ -92,6 +101,15 @@ export default function SplitSidebarPanel({
           break
         case 'kpi-value-drop-zone':
           newData.kpiValue.push(draggedColumn)
+          break
+        case 'gallery-image-url-drop-zone':
+          newData.galleryImageUrl.push(draggedColumn)
+          break
+        case 'gallery-title-drop-zone':
+          newData.galleryTitle.push(draggedColumn)
+          break
+        case 'gallery-description-drop-zone':
+          newData.galleryDescription.push(draggedColumn)
           break
         case 'dimensions-drop-zone':
           newData.dimensions.push(draggedColumn)
@@ -127,6 +145,9 @@ export default function SplitSidebarPanel({
       filters: [],
       columns: [],
       kpiValue: [],
+      galleryImageUrl: [],
+      galleryTitle: [],
+      galleryDescription: [],
       dimensions: [],
       measures: [],
       groupBy: [],
