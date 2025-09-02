@@ -66,11 +66,19 @@ export default function TableWidget({ widget }: TableWidgetProps) {
   const defaultColumns: ColumnDef<TableData>[] = [
     {
       accessorKey: 'name',
-      header: createSortableHeader('Nome'),
+      header: createSortableHeader('Nome', {
+        fontSize: tableConfig.headerFontSize,
+        fontFamily: tableConfig.headerFontFamily,
+        fontWeight: tableConfig.headerFontWeight
+      }),
     },
     {
       accessorKey: 'email',
-      header: createSortableHeader('Email'),
+      header: createSortableHeader('Email', {
+        fontSize: tableConfig.headerFontSize,
+        fontFamily: tableConfig.headerFontFamily,
+        fontWeight: tableConfig.headerFontWeight
+      }),
     },
     {
       accessorKey: 'status',
@@ -89,7 +97,11 @@ export default function TableWidget({ widget }: TableWidgetProps) {
     },
     {
       accessorKey: 'score',
-      header: createSortableHeader('Pontuação'),
+      header: createSortableHeader('Pontuação', {
+        fontSize: tableConfig.headerFontSize,
+        fontFamily: tableConfig.headerFontFamily,
+        fontWeight: tableConfig.headerFontWeight
+      }),
       cell: ({ row }) => (
         <div className="text-right">
           {row.getValue('score')}
@@ -102,7 +114,11 @@ export default function TableWidget({ widget }: TableWidgetProps) {
   // Convert config columns to ColumnDef format
   const configColumns: ColumnDef<TableData>[] = tableConfig.columns?.map(col => ({
     accessorKey: col.accessorKey,
-    header: col.sortable !== false ? createSortableHeader(col.header) : col.header,
+    header: col.sortable !== false ? createSortableHeader(col.header, {
+      fontSize: tableConfig.headerFontSize,
+      fontFamily: tableConfig.headerFontFamily,
+      fontWeight: tableConfig.headerFontWeight
+    }) : col.header,
     size: typeof col.width === 'number' ? col.width : undefined,
   })) || []
 
@@ -115,7 +131,11 @@ export default function TableWidget({ widget }: TableWidgetProps) {
       .filter(key => key !== 'id') // Skip the auto-generated id
       .map(key => ({
         accessorKey: key,
-        header: createSortableHeader(key.charAt(0).toUpperCase() + key.slice(1)),
+        header: createSortableHeader(key.charAt(0).toUpperCase() + key.slice(1), {
+          fontSize: tableConfig.headerFontSize,
+          fontFamily: tableConfig.headerFontFamily,
+          fontWeight: tableConfig.headerFontWeight
+        }),
         cell: ({ row }) => {
           const value = row.getValue(key)
           // Format based on value type
