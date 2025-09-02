@@ -8,6 +8,8 @@ import DropZone from './DropZone'
 import ChartPreview from './ChartPreview'
 import TablePreview from './TablePreview'
 import type { TableData } from './TablePreview'
+import KPIPreview from './KPIPreview'
+import type { KPIData } from './KPIPreview'
 import type { BigQueryField } from './TablesExplorer'
 import type { DroppedWidget } from '@/types/apps/widget'
 import { widgetActions } from '@/stores/apps/widgetStore'
@@ -53,7 +55,7 @@ export default function UniversalBuilder({
   onClear,
   onAggregationChange
 }: UniversalBuilderProps) {
-  const [previewData, setPreviewData] = useState<Array<{ x: string; y: number; label: string; value: number }> | TableData[]>([])
+  const [previewData, setPreviewData] = useState<Array<{ x: string; y: number; label: string; value: number }> | TableData[] | KPIData[]>([])
   const [previewQuery, setPreviewQuery] = useState<string>('')
 
   // Handle field removal from drop zones
@@ -81,6 +83,8 @@ export default function UniversalBuilder({
         ? data.xAxis.length > 0 && data.yAxis.length > 0
         : data.selectedType === 'table'
         ? data.columns.length > 0
+        : data.selectedType === 'kpi'
+        ? data.measures.length > 0
         : data.dimensions.length > 0 || data.measures.length > 0
 
     if (!hasRequiredFields) {
@@ -163,6 +167,26 @@ export default function UniversalBuilder({
     }
   }
 
+  // Helper function to determine unit based on field type
+  const getUnitFromFieldType = (fieldType: string | undefined): string => {
+    if (!fieldType) return ''
+    
+    const lowerType = fieldType.toLowerCase()
+    if (lowerType.includes('string') || lowerType.includes('text')) {
+      return 'items'
+    }
+    if (lowerType.includes('price') || lowerType.includes('cost') || lowerType.includes('value')) {
+      return '$'
+    }
+    if (lowerType.includes('percent') || lowerType.includes('%')) {
+      return '%'
+    }
+    if (lowerType.includes('count') || lowerType.includes('qty') || lowerType.includes('quantity')) {
+      return 'items'
+    }
+    return '' // Default: no unit
+  }
+
   const generateWidgetConfig = () => {
     switch(data.selectedType) {
       case 'chart':
@@ -190,6 +214,22 @@ export default function UniversalBuilder({
             showColumnToggle: true,
             pageSize: 10,
             searchPlaceholder: 'Buscar...'
+          }
+        }
+      case 'kpi':
+        const measureField = data.measures[0]
+        const kpiPreviewData = previewData as KPIData[]
+        return {
+          kpiConfig: {
+            name: measureField?.name || 'KPI',
+            value: kpiPreviewData.length > 0 ? kpiPreviewData[0].current_value : undefined,
+            metric: measureField?.name,
+            calculation: measureField?.aggregation || 'SUM',
+            unit: getUnitFromFieldType(measureField?.type),
+            showTarget: true,
+            showTrend: true,
+            visualizationType: 'card' as 'card' | 'display' | 'gauge',
+            enableSimulation: false
           }
         }
       default:
@@ -228,6 +268,12 @@ export default function UniversalBuilder({
           chartType: 'table',
           xColumn: data.columns[0]?.name || '', // First column as xColumn
           yColumn: data.columns[1]?.name || ''  // Second column as yColumn (if exists)
+        }
+      case 'kpi':
+        return {
+          chartType: 'kpi',
+          xColumn: data.dimensions[0]?.name || '', // Dimension for grouping
+          yColumn: data.measures[0]?.name || ''    // Measure for KPI value
         }
       default:
         return {
@@ -442,6 +488,20 @@ export default function UniversalBuilder({
               selectedTable={data.selectedTable}
               onDataReady={(tableData, query) => {
                 setPreviewData(tableData as TableData[])
+                setPreviewQuery(query)
+              }}
+            />
+          )}
+
+          {/* KPI Preview (only for kpis) */}
+          {data.selectedType === 'kpi' && (
+            <KPIPreview
+              measures={data.measures}
+              dimensions={data.dimensions}
+              filters={data.filters}
+              selectedTable={data.selectedTable}
+              onDataReady={(kpiData, query) => {
+                setPreviewData(kpiData as KPIData[])
                 setPreviewQuery(query)
               }}
             />
