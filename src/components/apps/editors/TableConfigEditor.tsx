@@ -50,10 +50,7 @@ export default function TableConfigEditor({
 
   // SQL Query states
   const [currentQuery, setCurrentQuery] = useState<string>('')
-  const [activeTable, setActiveTable] = useState<string | null>(null)
-  const [queryExecuting, setQueryExecuting] = useState(false)
   const [showSqlModal, setShowSqlModal] = useState(false)
-  const [hasUpdatedQuery, setHasUpdatedQuery] = useState(false)
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
@@ -83,13 +80,7 @@ export default function TableConfigEditor({
         const updatedColumns = [...currentColumns, newTableColumn]
         onTableConfigChange('columns', updatedColumns)
         
-        // Generate new SQL query based on updated columns
-        const newQuery = generateDynamicQuery(draggedColumn.sourceTable, updatedColumns)
-        setCurrentQuery(newQuery)
-        setActiveTable(draggedColumn.sourceTable)
-        setHasUpdatedQuery(true)
-        
-        console.log('🔄 New SQL query generated:', newQuery)
+        console.log('🔄 Column added to table:', draggedColumn.name)
       }
     }
   }
@@ -266,6 +257,25 @@ LIMIT 100
     }
   }
 
+  // Get saved SQL query from widget bigqueryData
+  const getSavedQuery = (): string => {
+    return selectedWidget?.bigqueryData?.query || ''
+  }
+
+  // Get saved table info from widget bigqueryData
+  const getSavedTableInfo = () => {
+    if (!selectedWidget?.bigqueryData) return null
+    
+    return {
+      table: selectedWidget.bigqueryData.table || '',
+      source: selectedWidget.bigqueryData.source || '',
+      lastUpdated: selectedWidget.bigqueryData.lastUpdated || '',
+      dataLength: Array.isArray(selectedWidget.bigqueryData.data) 
+        ? selectedWidget.bigqueryData.data.length 
+        : 0
+    }
+  }
+
   // Load tables on component mount
   useEffect(() => {
     loadAvailableTables()
@@ -329,30 +339,21 @@ LIMIT 100
               </div>
             </div>
 
-            {/* SQL Query Buttons */}
-            {(currentQuery || hasUpdatedQuery) && (
-              <div className="mt-4 space-y-2">
-                {hasUpdatedQuery ? (
-                  <Button
-                    onClick={() => setShowSqlModal(true)}
-                    variant="outline"
-                    size="sm"
-                    className="w-full text-xs bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
-                  >
-                    <Eye className="w-3 h-3 mr-2" />
-                    View Updated SQL Query
-                  </Button>
-                ) : currentQuery ? (
-                  <Button
-                    onClick={() => setShowSqlModal(true)}
-                    variant="outline"
-                    size="sm"
-                    className="w-full text-xs"
-                  >
-                    <Eye className="w-3 h-3 mr-2" />
-                    View SQL Query
-                  </Button>
-                ) : null}
+            {/* SQL Query Button */}
+            {getSavedQuery() && (
+              <div className="mt-4">
+                <Button
+                  onClick={() => {
+                    setCurrentQuery(getSavedQuery())
+                    setShowSqlModal(true)
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs"
+                >
+                  <Eye className="w-3 h-3 mr-2" />
+                  View SQL Query
+                </Button>
               </div>
             )}
             
@@ -863,7 +864,7 @@ LIMIT 100
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <Eye className="w-5 h-5 text-primary" />
-                  {hasUpdatedQuery ? 'Updated SQL Query' : 'Current SQL Query'}
+                  SQL Query
                 </CardTitle>
                 <Button
                   variant="ghost"
@@ -874,31 +875,22 @@ LIMIT 100
                   <X className="w-4 h-4" />
                 </Button>
               </div>
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  Table: {activeTable} | Columns: {(tableConfig.columns || []).length}
-                </p>
-                <div className="space-x-2">
-                  <Button
-                    onClick={async () => {
-                      const data = await executeQuery(currentQuery)
-                      if (data) {
-                        setHasUpdatedQuery(false)
-                        setShowSqlModal(false)
-                      }
-                    }}
-                    disabled={queryExecuting}
-                    className="text-sm h-8"
-                  >
-                    {queryExecuting ? (
-                      <RefreshCw className="w-3 h-3 animate-spin mr-1" />
-                    ) : (
-                      '⚡'
+              {(() => {
+                const tableInfo = getSavedTableInfo()
+                return tableInfo ? (
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <p><strong>Source:</strong> {tableInfo.source} | <strong>Table:</strong> {tableInfo.table}</p>
+                    <p><strong>Data Rows:</strong> {tableInfo.dataLength} | <strong>Columns:</strong> {(tableConfig.columns || []).length}</p>
+                    {tableInfo.lastUpdated && (
+                      <p><strong>Last Updated:</strong> {new Date(tableInfo.lastUpdated).toLocaleString()}</p>
                     )}
-                    {queryExecuting ? 'Executing...' : 'Execute & Load Data'}
-                  </Button>
-                </div>
-              </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Columns: {(tableConfig.columns || []).length}
+                  </p>
+                )
+              })()}
             </CardHeader>
             <CardContent className="overflow-hidden">
               <ScrollArea className="h-80">
