@@ -108,17 +108,14 @@ export const getData = tool({
       console.log('🔍 Querying table data...');
       console.log('📋 SQL Query to execute:', queryToExecute);
       const startTime = Date.now();
-      const result = await bigQueryService.queryTable(datasetId, tableId, {
-        limit,
-        columns: ['*']  // Get all columns
-      });
+      const result = await bigQueryService.queryTable(datasetId, tableId, limit);
       
       const executionTime = Date.now() - startTime;
       console.log('✅ Query completed in', executionTime, 'ms');
-      console.log('📈 Rows returned:', result.data?.length || 0);
+      console.log('📈 Rows returned:', result.length || 0);
       
       return {
-        ...result,
+        data: result,
         datasetId,
         tableId,
         executionTime,
