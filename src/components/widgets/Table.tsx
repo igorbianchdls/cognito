@@ -364,8 +364,8 @@ export function createSortableHeader(title: string, typographyProps?: {
         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
         style={{
           fontSize: typographyProps?.fontSize ? `${typographyProps.fontSize}px !important` : undefined,
-          fontFamily: typographyProps?.fontFamily !== 'inherit' ? `${typographyProps.fontFamily} !important` : undefined,
-          fontWeight: typographyProps?.fontWeight !== 'normal' ? `${typographyProps.fontWeight} !important` : undefined,
+          fontFamily: typographyProps?.fontFamily && typographyProps.fontFamily !== 'inherit' ? `${typographyProps.fontFamily} !important` : undefined,
+          fontWeight: typographyProps?.fontWeight && typographyProps.fontWeight !== 'normal' ? `${typographyProps.fontWeight} !important` : undefined,
         } as React.CSSProperties}
       >
         {title}
