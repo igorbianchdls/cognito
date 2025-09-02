@@ -1,7 +1,7 @@
 'use client'
 
 import { useStore } from '@nanostores/react'
-import { $widgets, $selectedWidget, $selectedWidgetId, widgetActions } from '@/stores/apps/widgetStore'
+import { $widgets, $selectedWidget, widgetActions } from '@/stores/apps/widgetStore'
 import { $canvasConfig } from '@/stores/apps/canvasStore'
 import { kpiActions } from '@/stores/apps/kpiStore'
 import { tableActions } from '@/stores/apps/tableStore'
@@ -18,13 +18,12 @@ import type { BaseChartConfig, BarChartConfig, LineChartConfig, PieChartConfig, 
 import KPIConfigEditor from '../editors/KPIConfigEditor'
 import ImageConfigEditor from '../editors/ImageConfigEditor'
 import TableConfigEditor from '../editors/TableConfigEditor'
-import ChartConfigEditor from '../editors/ChartConfigEditor'
 import NavigationConfigEditor from '../editors/NavigationConfigEditor'
 import ContainerConfigEditor from '../editors/ContainerConfigEditor'
 import { ColorInput, NumberInput } from '../editors/controls'
 import { Slider } from '@/components/ui/slider'
 import { DndContext, DragEndEvent } from '@dnd-kit/core'
-import { Database, Grab, Trash2, RefreshCw } from 'lucide-react'
+import { Database, RefreshCw } from 'lucide-react'
 import type { BigQueryField } from '../builder/TablesExplorer'
 import DropZone from '../builder/DropZone'
 import DraggableColumn from '../builder/DraggableColumn'
@@ -49,7 +48,6 @@ interface BigQueryTable {
 export default function WidgetEditorNew() {
   const widgets = useStore($widgets)
   const selectedWidget = useStore($selectedWidget)
-  const selectedWidgetId = useStore($selectedWidgetId)
   const canvasConfig = useStore($canvasConfig)
   
   // State para controlar o modo de view: 'widgets' ou 'edit'
@@ -114,37 +112,7 @@ export default function WidgetEditorNew() {
     const config = selectedWidget.config?.tableConfig || {} as TableConfig
     console.log('🎯 WidgetEditorNew computed tableConfig:', config)
     return config
-  }, [
-    selectedWidget,
-    selectedWidget?.config?.tableConfig?.fontSize,
-    selectedWidget?.config?.tableConfig?.padding,
-    selectedWidget?.config?.tableConfig?.headerBackground,
-    selectedWidget?.config?.tableConfig?.headerTextColor,
-    selectedWidget?.config?.tableConfig?.rowHoverColor,
-    selectedWidget?.config?.tableConfig?.borderColor,
-    selectedWidget?.config?.tableConfig?.searchPlaceholder,
-    selectedWidget?.config?.tableConfig?.pageSize,
-    selectedWidget?.config?.tableConfig?.showPagination,
-    selectedWidget?.config?.tableConfig?.showColumnToggle,
-    selectedWidget?.config?.tableConfig?.enableSearch,
-    selectedWidget?.config?.tableConfig?.enableFiltering,
-    selectedWidget?.config?.tableConfig?.enableRowSelection,
-    selectedWidget?.config?.tableConfig?.selectionMode,
-    selectedWidget?.config?.tableConfig?.enableSimulation,
-    selectedWidget?.config?.tableConfig?.dataSource,
-    selectedWidget?.config?.tableConfig?.enableExport,
-    selectedWidget?.config?.tableConfig?.exportFormats,
-    selectedWidget?.config?.tableConfig?.columns,
-    // Header typography properties
-    selectedWidget?.config?.tableConfig?.headerFontSize,
-    selectedWidget?.config?.tableConfig?.headerFontFamily,
-    selectedWidget?.config?.tableConfig?.headerFontWeight,
-    // Cell typography properties
-    selectedWidget?.config?.tableConfig?.cellFontSize,
-    selectedWidget?.config?.tableConfig?.cellFontFamily,
-    selectedWidget?.config?.tableConfig?.cellFontWeight,
-    selectedWidget?.config?.tableConfig?.cellTextColor
-  ])
+  }, [selectedWidget])
 
   // Computed Chart config - acesso via selectedWidget
   const chartConfig = useMemo((): BaseChartConfig => {
@@ -154,38 +122,7 @@ export default function WidgetEditorNew() {
     const config = selectedWidget.config?.chartConfig || selectedWidget.chartConfig || {} as BaseChartConfig
     console.log('🎯 WidgetEditorNew computed chartConfig:', config)
     return config
-  }, [
-    selectedWidget,
-    selectedWidget?.config?.chartConfig?.backgroundColor,
-    selectedWidget?.config?.chartConfig?.borderColor,
-    selectedWidget?.config?.chartConfig?.borderRadius,
-    selectedWidget?.config?.chartConfig?.borderWidth,
-    selectedWidget?.config?.chartConfig?.enableGridX,
-    selectedWidget?.config?.chartConfig?.enableGridY,
-    selectedWidget?.config?.chartConfig?.axisBottom,
-    selectedWidget?.config?.chartConfig?.axisLeft,
-    selectedWidget?.config?.chartConfig?.margin,
-    selectedWidget?.config?.chartConfig?.padding,
-    selectedWidget?.config?.chartConfig?.title,
-    selectedWidget?.config?.chartConfig?.subtitle,
-    selectedWidget?.config?.chartConfig?.titleFontSize,
-    selectedWidget?.config?.chartConfig?.titleColor,
-    selectedWidget?.config?.chartConfig?.titleFontWeight,
-    selectedWidget?.config?.chartConfig?.subtitleFontSize,
-    selectedWidget?.config?.chartConfig?.subtitleColor,
-    selectedWidget?.config?.chartConfig?.subtitleFontWeight,
-    selectedWidget?.config?.chartConfig?.showTitle,
-    selectedWidget?.config?.chartConfig?.showSubtitle,
-    selectedWidget?.config?.chartConfig?.enableLabel,
-    selectedWidget?.config?.chartConfig?.labelTextColor,
-    selectedWidget?.config?.chartConfig?.labelPosition,
-    selectedWidget?.config?.chartConfig?.labelSkipWidth,
-    selectedWidget?.config?.chartConfig?.labelSkipHeight,
-    selectedWidget?.config?.chartConfig?.animate,
-    selectedWidget?.config?.chartConfig?.motionConfig,
-    // Fallback para formato deprecated
-    selectedWidget?.chartConfig
-  ])
+  }, [selectedWidget])
 
   // Computed Navigation config - acesso via selectedWidget
   const navigationConfig = useMemo((): NavigationConfig => {
@@ -203,15 +140,7 @@ export default function WidgetEditorNew() {
     const config = selectedWidget.config?.containerConfig || {} as ContainerConfig
     console.log('🎯 WidgetEditorNew computed containerConfig:', config)
     return config
-  }, [
-    selectedWidget,
-    selectedWidget?.config?.containerConfig?.backgroundColor,
-    selectedWidget?.config?.containerConfig?.backgroundOpacity,
-    selectedWidget?.config?.containerConfig?.borderColor,
-    selectedWidget?.config?.containerConfig?.borderOpacity,
-    selectedWidget?.config?.containerConfig?.borderWidth,
-    selectedWidget?.config?.containerConfig?.borderRadius
-  ])
+  }, [selectedWidget])
 
   // Sync editKPIForm with kpiConfig when widget changes
   useEffect(() => {
@@ -584,7 +513,7 @@ export default function WidgetEditorNew() {
     setLoadingChartUpdate(true)
     try {
       // Prepare update payload
-      const updatePayload: any = {}
+      const updatePayload: Record<string, unknown> = {}
       
       // Update X-Axis
       if (stagedXAxis.length > 0) {
