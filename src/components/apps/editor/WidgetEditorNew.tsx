@@ -99,7 +99,16 @@ export default function WidgetEditorNew() {
     selectedWidget?.config?.tableConfig?.dataSource,
     selectedWidget?.config?.tableConfig?.enableExport,
     selectedWidget?.config?.tableConfig?.exportFormats,
-    selectedWidget?.config?.tableConfig?.columns
+    selectedWidget?.config?.tableConfig?.columns,
+    // Header typography properties
+    selectedWidget?.config?.tableConfig?.headerFontSize,
+    selectedWidget?.config?.tableConfig?.headerFontFamily,
+    selectedWidget?.config?.tableConfig?.headerFontWeight,
+    // Cell typography properties
+    selectedWidget?.config?.tableConfig?.cellFontSize,
+    selectedWidget?.config?.tableConfig?.cellFontFamily,
+    selectedWidget?.config?.tableConfig?.cellFontWeight,
+    selectedWidget?.config?.tableConfig?.cellTextColor
   ])
 
   // Computed Chart config - acesso via selectedWidget
