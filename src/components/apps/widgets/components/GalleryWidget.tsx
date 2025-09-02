@@ -32,9 +32,13 @@ export default function GalleryWidget({ widget }: GalleryWidgetProps) {
     { image_url: 'https://picsum.photos/400/400?random=4', title: 'Sample Image 4', description: 'Description 4' }
   ]
   
-  // Type cast and ensure consistent structure
+  // Transform and ensure consistent structure
   const images: GalleryItem[] = galleryData.length > 0 
-    ? (galleryData as GalleryItem[]) 
+    ? galleryData.map((item: any): GalleryItem => ({
+        image_url: item.image_url || item.imageUrl || item.url || '',
+        title: item.title || item.name || '',
+        description: item.description || item.desc || ''
+      }))
     : defaultImages
 
   // Configuration with defaults
