@@ -48,6 +48,13 @@ export default function TableConfigEditor({
   const [loadingPreview, setLoadingPreview] = useState<string | null>(null)
   const [showPreviewModal, setShowPreviewModal] = useState(false)
 
+  // SQL Query states
+  const [currentQuery, setCurrentQuery] = useState<string>('')
+  const [activeTable, setActiveTable] = useState<string | null>(null)
+  const [queryExecuting, setQueryExecuting] = useState(false)
+  const [showSqlModal, setShowSqlModal] = useState(false)
+  const [hasUpdatedQuery, setHasUpdatedQuery] = useState(false)
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     
@@ -73,7 +80,16 @@ export default function TableConfigEditor({
       const alreadyExists = currentColumns.some(col => col.accessorKey === draggedColumn.name)
       
       if (!alreadyExists) {
-        onTableConfigChange('columns', [...currentColumns, newTableColumn])
+        const updatedColumns = [...currentColumns, newTableColumn]
+        onTableConfigChange('columns', updatedColumns)
+        
+        // Generate new SQL query based on updated columns
+        const newQuery = generateDynamicQuery(draggedColumn.sourceTable, updatedColumns)
+        setCurrentQuery(newQuery)
+        setActiveTable(draggedColumn.sourceTable)
+        setHasUpdatedQuery(true)
+        
+        console.log('🔄 New SQL query generated:', newQuery)
       }
     }
   }
@@ -106,6 +122,62 @@ export default function TableConfigEditor({
     }
   }
 
+  // Generate dynamic SQL query based on selected columns
+  const generateDynamicQuery = (tableId: string, columns: TableColumn[]): string => {
+    if (!tableId || !columns || columns.length === 0) {
+      return ''
+    }
+
+    // Build SELECT clause with column names
+    const selectCols = columns.map(col => col.accessorKey)
+    
+    const sql = `
+SELECT ${selectCols.join(', ')}
+FROM \`creatto-463117.biquery_data.${tableId}\`
+LIMIT 100
+    `.trim()
+
+    return sql
+  }
+
+  // Execute SQL query and load data
+  const executeQuery = async (query: string) => {
+    if (!query) return null
+
+    setQueryExecuting(true)
+    
+    try {
+      console.log('📊 Executing SQL query:', query)
+      
+      const response = await fetch('/api/bigquery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'execute',
+          query: query
+        })
+      })
+      
+      const result = await response.json()
+      
+      if (result.success && result.data?.data && Array.isArray(result.data.data)) {
+        const queryData = result.data.data
+        console.log('✅ Query executed successfully:', queryData.length, 'rows')
+        
+        // Update table data with query results
+        onTableConfigChange('data', queryData)
+        return queryData
+      } else {
+        console.error('❌ Query execution failed:', result.error)
+        return null
+      }
+    } catch (error) {
+      console.error('❌ Error executing query:', error)
+      return null
+    } finally {
+      setQueryExecuting(false)
+    }
+  }
 
   // Load real data from BigQuery table
   const loadRealDataFromBigQuery = async (tableId: string) => {
@@ -256,6 +328,33 @@ export default function TableConfigEditor({
                 />
               </div>
             </div>
+
+            {/* SQL Query Buttons */}
+            {(currentQuery || hasUpdatedQuery) && (
+              <div className="mt-4 space-y-2">
+                {hasUpdatedQuery ? (
+                  <Button
+                    onClick={() => setShowSqlModal(true)}
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-xs bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                  >
+                    <Eye className="w-3 h-3 mr-2" />
+                    View Updated SQL Query
+                  </Button>
+                ) : currentQuery ? (
+                  <Button
+                    onClick={() => setShowSqlModal(true)}
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-xs"
+                  >
+                    <Eye className="w-3 h-3 mr-2" />
+                    View SQL Query
+                  </Button>
+                ) : null}
+              </div>
+            )}
             
             <div className="mt-4">
               {/* Current Columns */}
@@ -755,6 +854,62 @@ export default function TableConfigEditor({
         </AccordionItem>
       </Accordion>
       </div>
+      
+      {/* SQL Query Modal */}
+      {showSqlModal && currentQuery && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100]">
+          <Card className="w-[90vw] max-w-3xl max-h-[70vh] relative z-[101] overflow-hidden">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Eye className="w-5 h-5 text-primary" />
+                  {hasUpdatedQuery ? 'Updated SQL Query' : 'Current SQL Query'}
+                </CardTitle>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowSqlModal(false)}
+                  className="h-8 w-8 p-0"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Table: {activeTable} | Columns: {(tableConfig.columns || []).length}
+                </p>
+                <div className="space-x-2">
+                  <Button
+                    onClick={async () => {
+                      const data = await executeQuery(currentQuery)
+                      if (data) {
+                        setHasUpdatedQuery(false)
+                        setShowSqlModal(false)
+                      }
+                    }}
+                    disabled={queryExecuting}
+                    className="text-sm h-8"
+                  >
+                    {queryExecuting ? (
+                      <RefreshCw className="w-3 h-3 animate-spin mr-1" />
+                    ) : (
+                      '⚡'
+                    )}
+                    {queryExecuting ? 'Executing...' : 'Execute & Load Data'}
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="overflow-hidden">
+              <ScrollArea className="h-80">
+                <pre className="text-xs bg-gray-50 p-4 rounded border font-mono whitespace-pre-wrap">
+                  {currentQuery}
+                </pre>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </div>
+      )}
       
       {/* Preview Modal */}
       {showPreviewModal && previewTableId && previewData[previewTableId] && (
