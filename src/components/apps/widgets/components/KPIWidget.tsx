@@ -106,11 +106,11 @@ export default function KPIWidget({ widget }: KPIWidgetProps) {
     change: 7.9,
   })
 
-  // Determine if we should use simulation (like charts - only when no real data provided)
+  // Never use simulation - only real data from BigQuery
   const hasRealData = kpiConfig.value !== undefined || 
                       kpiConfig.target !== undefined || 
                       kpiConfig.change !== undefined
-  const shouldSimulate = kpiConfig.enableSimulation !== false && !hasRealData
+  const shouldSimulate = false // Always disable simulation
 
   // Simulate real-time KPI updates (only if simulation is enabled and no real data)
   useEffect(() => {
@@ -134,12 +134,12 @@ export default function KPIWidget({ widget }: KPIWidgetProps) {
     return () => clearInterval(interval)
   }, [shouldSimulate, simulatedData.previousValue, kpiConfig.simulationRange])
   
-  // Determine KPI status based on current value vs target
+  // Determine KPI status based on current value vs target (only real data)
   const getKpiStatus = () => {
     if (kpiConfig.status) return kpiConfig.status
     
-    const currentValue = kpiConfig.value ?? simulatedData.currentValue
-    const target = kpiConfig.target ?? simulatedData.target
+    const currentValue = kpiConfig.value || 0
+    const target = kpiConfig.target
     
     if (!target) return 'unknown'
     
@@ -150,26 +150,26 @@ export default function KPIWidget({ widget }: KPIWidgetProps) {
     return 'critical'
   }
 
-  // Determine trend based on change
+  // Determine trend based on change (only real data)
   const getKpiTrend = () => {
     if (kpiConfig.trend) return kpiConfig.trend
     
-    const change = kpiConfig.change ?? simulatedData.change
+    const change = kpiConfig.change || 0
     if (Math.abs(change) < 0.5) return 'stable'
     return change > 0 ? 'increasing' : 'decreasing'
   }
 
-  // Prepare props for KPI components (following chart pattern)
+  // Prepare props for KPI components (only real data from BigQuery)
   const kpiProps = {
     kpiId: `kpi-${widget.i}`,
-    name: kpiConfig.name || 'Sample KPI',
+    name: kpiConfig.name || 'KPI',
     metric: kpiConfig.metric || 'metric',
     calculation: kpiConfig.calculation || 'VALUE',
-    currentValue: kpiConfig.value ?? simulatedData.currentValue,
-    previousValue: simulatedData.previousValue,
-    target: kpiConfig.target ?? simulatedData.target,
+    currentValue: kpiConfig.value || 0, // Use only real data
+    previousValue: kpiConfig.previousValue || 0, // Use only real data
+    target: kpiConfig.target || undefined, // Use only real data
     unit: kpiConfig.unit || '',
-    change: kpiConfig.change ?? simulatedData.change,
+    change: kpiConfig.change || 0, // Use only real data
     trend: getKpiTrend(),
     status: getKpiStatus(),
     timeRange: kpiConfig.timeRange || 'Current Period',
@@ -180,7 +180,7 @@ export default function KPIWidget({ widget }: KPIWidgetProps) {
       showTarget: kpiConfig.showTarget ?? true,
     },
     metadata: {
-      dataSource: kpiConfig.dataSource || 'Default Source',
+      dataSource: kpiConfig.dataSource || 'BigQuery',
       refreshRate: kpiConfig.refreshRate || '5 minutes',
       lastUpdated: new Date().toISOString(),
       createdAt: new Date().toISOString(),

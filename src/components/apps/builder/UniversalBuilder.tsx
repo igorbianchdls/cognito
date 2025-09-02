@@ -229,10 +229,11 @@ export default function UniversalBuilder({
             metric: kpiField?.name,
             calculation: kpiField?.aggregation || 'SUM',
             unit: getUnitFromFieldType(kpiField?.type),
-            showTarget: true,
-            showTrend: true,
+            showTarget: false, // No target for simple KPI
+            showTrend: false, // No trend for simple KPI  
             visualizationType: 'card' as 'card' | 'display' | 'gauge',
-            enableSimulation: false
+            enableSimulation: false, // Never simulate
+            dataSource: 'BigQuery'
           }
         }
       default:

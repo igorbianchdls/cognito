@@ -235,7 +235,8 @@ ${whereClause}
           showTarget: false,
           showTrend: false,
           visualizationType: 'card' as 'card' | 'display' | 'gauge',
-          enableSimulation: false
+          enableSimulation: false, // Force disable simulation
+          dataSource: 'BigQuery Preview' // Mark as real data source
         }
       }
     }
