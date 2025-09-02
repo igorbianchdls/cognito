@@ -260,6 +260,24 @@ ${whereClause}
         </CardDescription>
       </CardHeader>
 
+      {/* Query Preview - moved to top for better UX */}
+      {query && (
+        <div className="px-6 pb-3">
+          <details>
+            <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
+              View SQL Query
+            </summary>
+            <Card className="mt-2 bg-muted/50">
+              <CardContent className="p-3">
+                <pre className="text-xs font-mono overflow-x-auto whitespace-pre-wrap">
+                  {query}
+                </pre>
+              </CardContent>
+            </Card>
+          </details>
+        </div>
+      )}
+
       <CardContent>
         <div className="min-h-[200px]">
           {!canRender ? (
@@ -312,21 +330,6 @@ ${whereClause}
                 </div>
               </div>
 
-              {/* Query Preview */}
-              {query && (
-                <details className="mt-4">
-                  <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
-                    View SQL Query
-                  </summary>
-                  <Card className="mt-2 bg-muted/50">
-                    <CardContent className="p-3">
-                      <pre className="text-xs font-mono overflow-x-auto whitespace-pre-wrap">
-                        {query}
-                      </pre>
-                    </CardContent>
-                  </Card>
-                </details>
-              )}
             </div>
           )}
         </div>
