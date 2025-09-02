@@ -91,8 +91,8 @@ export default function TableConfigEditor({
           const updatedSelectedColumns = [...selectedColumns, draggedColumn]
           setSelectedColumns(updatedSelectedColumns)
           
-          // Generate updated query
-          const newQuery = generateUpdatedQuery()
+          // Generate updated query with current values
+          const newQuery = generateUpdatedQuery(updatedColumns, updatedSelectedColumns)
           setUpdatedQuery(newQuery)
           setHasUpdatedQuery(true)
           
@@ -265,7 +265,7 @@ export default function TableConfigEditor({
     
     // Regenerate updated query with remaining columns
     if (updatedColumns.length > 0) {
-      const newQuery = generateUpdatedQuery()
+      const newQuery = generateUpdatedQuery(tableConfig.columns || [], updatedColumns)
       setUpdatedQuery(newQuery)
       setHasUpdatedQuery(true)
     } else {
@@ -275,14 +275,14 @@ export default function TableConfigEditor({
   }
 
   // Generate updated SQL query based on current columns + selected columns
-  const generateUpdatedQuery = (): string => {
+  const generateUpdatedQuery = (currentCols: TableColumn[], selectedCols: BigQueryField[]): string => {
     const baseQuery = getSavedQuery()
     const tableInfo = getSavedTableInfo()
     if (!tableInfo?.table) return ''
     
     // Coletar TODAS as colunas: atuais + selecionadas
-    const currentColumns = (tableConfig.columns || []).map(col => col.accessorKey)
-    const selectedColumnNames = selectedColumns.map(col => col.name)
+    const currentColumns = currentCols.map(col => col.accessorKey)
+    const selectedColumnNames = selectedCols.map(col => col.name)
     
     // Merge sem duplicatas
     const allColumns = [...new Set([...currentColumns, ...selectedColumnNames])]
