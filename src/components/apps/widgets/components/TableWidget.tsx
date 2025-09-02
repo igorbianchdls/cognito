@@ -153,8 +153,17 @@ export default function TableWidget({ widget }: TableWidgetProps) {
     headerTextColor: tableConfig.headerTextColor,
     rowHoverColor: tableConfig.rowHoverColor,
     borderColor: tableConfig.borderColor,
-    fontSize: tableConfig.fontSize,
+    fontSize: tableConfig.fontSize, // Mantém para backward compatibility
     padding: tableConfig.padding,
+    // Pass header typography props
+    headerFontSize: tableConfig.headerFontSize,
+    headerFontFamily: tableConfig.headerFontFamily,
+    headerFontWeight: tableConfig.headerFontWeight,
+    // Pass cell typography props
+    cellFontSize: tableConfig.cellFontSize,
+    cellFontFamily: tableConfig.cellFontFamily,
+    cellFontWeight: tableConfig.cellFontWeight,
+    cellTextColor: tableConfig.cellTextColor,
     // Pass new configuration props
     enableSearch: tableConfig.enableSearch ?? true,
     enableFiltering: tableConfig.enableFiltering ?? false,

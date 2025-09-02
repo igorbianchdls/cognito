@@ -33,8 +33,19 @@ export interface TableConfig {
   headerTextColor?: string
   rowHoverColor?: string
   borderColor?: string
-  fontSize?: number
   padding?: number
+  
+  // Header typography
+  headerFontSize?: number
+  headerFontFamily?: string
+  headerFontWeight?: string
+  
+  // Cell typography  
+  fontSize?: number // Mantém para backward compatibility
+  cellFontSize?: number
+  cellFontFamily?: string
+  cellFontWeight?: string
+  cellTextColor?: string
   
   // Sorting and filtering
   defaultSortColumn?: string
@@ -119,7 +130,7 @@ export const COLUMN_TYPES = {
 } as const
 
 // Default table configuration
-export const DEFAULT_TABLE_CONFIG: Required<Omit<TableConfig, 'data' | 'columns' | 'dataSource' | 'refreshRate' | 'defaultSortColumn' | 'exportFormats'>> = {
+export const DEFAULT_TABLE_CONFIG: Required<Omit<TableConfig, 'data' | 'columns' | 'dataSource' | 'refreshRate' | 'defaultSortColumn' | 'exportFormats' | 'headerFontFamily' | 'headerFontWeight' | 'cellFontFamily' | 'cellFontWeight'>> = {
   searchPlaceholder: 'Search...',
   showColumnToggle: true,
   showPagination: true,
@@ -131,6 +142,11 @@ export const DEFAULT_TABLE_CONFIG: Required<Omit<TableConfig, 'data' | 'columns'
   borderColor: '#e5e7eb',
   fontSize: 14,
   padding: 12,
+  // Header typography defaults
+  headerFontSize: 14,
+  // Cell typography defaults  
+  cellFontSize: 14,
+  cellTextColor: '#1f2937',
   defaultSortDirection: 'asc',
   enableSearch: true,
   enableFiltering: false,

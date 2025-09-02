@@ -274,27 +274,142 @@ export default function TableConfigEditor({
           </AccordionContent>
         </AccordionItem>
 
-        {/* Layout & Spacing */}
-        <AccordionItem value="layout">
+        {/* Typography & Layout */}
+        <AccordionItem value="typography">
           <AccordionTrigger className="text-sm font-medium text-gray-700">
-            📏 Layout & Spacing
+            🖋️ Typography & Layout
           </AccordionTrigger>
           <AccordionContent>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Font Size</label>
-                  <input
-                    type="range"
-                    min="10"
-                    max="18"
-                    step="1"
-                    value={tableConfig.fontSize || 14}
-                    onChange={(e) => onTableConfigChange('fontSize', parseInt(e.target.value))}
-                    className="w-full"
-                  />
-                  <span className="text-xs text-gray-500">{tableConfig.fontSize || 14}px</span>
+            <div className="space-y-6">
+              {/* Header Typography */}
+              <div className="border border-blue-200 rounded-lg p-4 bg-blue-50">
+                <h6 className="text-sm font-medium text-blue-800 mb-3 flex items-center gap-2">
+                  🎯 Header Typography
+                </h6>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-blue-600 mb-1">Font Size</label>
+                      <input
+                        type="range"
+                        min="10"
+                        max="20"
+                        step="1"
+                        value={tableConfig.headerFontSize || 14}
+                        onChange={(e) => onTableConfigChange('headerFontSize', parseInt(e.target.value))}
+                        className="w-full"
+                      />
+                      <span className="text-xs text-blue-500">{tableConfig.headerFontSize || 14}px</span>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-blue-600 mb-1">Font Weight</label>
+                      <select
+                        value={tableConfig.headerFontWeight || 'normal'}
+                        onChange={(e) => onTableConfigChange('headerFontWeight', e.target.value)}
+                        className="w-full px-2 py-1 border border-blue-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                      >
+                        <option value="normal">Normal</option>
+                        <option value="500">Medium</option>
+                        <option value="600">Semibold</option>
+                        <option value="700">Bold</option>
+                        <option value="800">Extra Bold</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-blue-600 mb-1">Font Family</label>
+                    <select
+                      value={tableConfig.headerFontFamily || 'inherit'}
+                      onChange={(e) => onTableConfigChange('headerFontFamily', e.target.value)}
+                      className="w-full px-2 py-1 border border-blue-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                    >
+                      <option value="inherit">Inherit (Default)</option>
+                      <option value="Arial, sans-serif">Arial</option>
+                      <option value="Helvetica, sans-serif">Helvetica</option>
+                      <option value="'Times New Roman', serif">Times New Roman</option>
+                      <option value="Georgia, serif">Georgia</option>
+                      <option value="'Courier New', monospace">Courier New</option>
+                      <option value="Verdana, sans-serif">Verdana</option>
+                      <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                    </select>
+                  </div>
                 </div>
+              </div>
+
+              {/* Cell Typography */}
+              <div className="border border-green-200 rounded-lg p-4 bg-green-50">
+                <h6 className="text-sm font-medium text-green-800 mb-3 flex items-center gap-2">
+                  📝 Cell Typography
+                </h6>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-green-600 mb-1">Font Size</label>
+                      <input
+                        type="range"
+                        min="10"
+                        max="18"
+                        step="1"
+                        value={tableConfig.cellFontSize || tableConfig.fontSize || 14}
+                        onChange={(e) => onTableConfigChange('cellFontSize', parseInt(e.target.value))}
+                        className="w-full"
+                      />
+                      <span className="text-xs text-green-500">{tableConfig.cellFontSize || tableConfig.fontSize || 14}px</span>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-green-600 mb-1">Font Weight</label>
+                      <select
+                        value={tableConfig.cellFontWeight || 'normal'}
+                        onChange={(e) => onTableConfigChange('cellFontWeight', e.target.value)}
+                        className="w-full px-2 py-1 border border-green-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                      >
+                        <option value="normal">Normal</option>
+                        <option value="500">Medium</option>
+                        <option value="600">Semibold</option>
+                        <option value="700">Bold</option>
+                        <option value="800">Extra Bold</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-green-600 mb-1">Font Family</label>
+                      <select
+                        value={tableConfig.cellFontFamily || 'inherit'}
+                        onChange={(e) => onTableConfigChange('cellFontFamily', e.target.value)}
+                        className="w-full px-2 py-1 border border-green-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                      >
+                        <option value="inherit">Inherit (Default)</option>
+                        <option value="Arial, sans-serif">Arial</option>
+                        <option value="Helvetica, sans-serif">Helvetica</option>
+                        <option value="'Times New Roman', serif">Times New Roman</option>
+                        <option value="Georgia, serif">Georgia</option>
+                        <option value="'Courier New', monospace">Courier New</option>
+                        <option value="Verdana, sans-serif">Verdana</option>
+                        <option value="'Trebuchet MS', sans-serif">Trebuchet MS</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-green-600 mb-2">Text Color</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={tableConfig.cellTextColor || '#1f2937'}
+                          onChange={(e) => onTableConfigChange('cellTextColor', e.target.value)}
+                          className="w-12 h-8 border border-green-300 rounded cursor-pointer"
+                        />
+                        <div className="flex-1 px-2 py-1 bg-white border border-green-200 rounded text-xs text-green-600">
+                          {tableConfig.cellTextColor || '#1f2937'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Spacing */}
+              <div className="border border-gray-200 rounded-lg p-3">
+                <h6 className="text-sm font-medium text-gray-700 mb-3">📏 Spacing</h6>
                 <div>
                   <label className="block text-xs font-medium text-gray-600 mb-1">Cell Padding</label>
                   <input

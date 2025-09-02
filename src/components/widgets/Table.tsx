@@ -55,6 +55,15 @@ interface DataTableProps<TData extends TableData> {
   borderColor?: string
   fontSize?: number
   padding?: number
+  // Header typography props
+  headerFontSize?: number
+  headerFontFamily?: string
+  headerFontWeight?: string
+  // Cell typography props
+  cellFontSize?: number
+  cellFontFamily?: string
+  cellFontWeight?: string
+  cellTextColor?: string
   // Search & filtering props
   enableSearch?: boolean
   enableFiltering?: boolean
@@ -80,6 +89,15 @@ export function DataTable<TData extends TableData>({
   borderColor = '#e5e7eb',
   fontSize = 14,
   padding = 12,
+  // Header typography props with defaults
+  headerFontSize = 14,
+  headerFontFamily = 'inherit',
+  headerFontWeight = 'normal',
+  // Cell typography props with defaults
+  cellFontSize = 14,
+  cellFontFamily = 'inherit',
+  cellFontWeight = 'normal',
+  cellTextColor = '#1f2937',
   // Search & filtering props with defaults
   enableSearch = true,
   enableFiltering = false,
@@ -192,7 +210,7 @@ export function DataTable<TData extends TableData>({
             borderColor,
           }}
         >
-          <Table style={{ fontSize: `${fontSize}px` }}>
+          <Table>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow 
@@ -207,7 +225,10 @@ export function DataTable<TData extends TableData>({
                           color: headerTextColor,
                           padding: `${padding}px`,
                           width: header.getSize(),
-                          position: 'relative'
+                          position: 'relative',
+                          fontSize: `${headerFontSize}px`,
+                          fontFamily: headerFontFamily !== 'inherit' ? headerFontFamily : undefined,
+                          fontWeight: headerFontWeight !== 'normal' ? headerFontWeight : undefined,
                         }}
                       >
                         {header.isPlaceholder
@@ -264,7 +285,11 @@ export function DataTable<TData extends TableData>({
                         key={cell.id}
                         style={{ 
                           padding: `${padding}px`,
-                          borderColor
+                          borderColor,
+                          fontSize: `${cellFontSize || fontSize}px`,
+                          fontFamily: cellFontFamily !== 'inherit' ? cellFontFamily : undefined,
+                          fontWeight: cellFontWeight !== 'normal' ? cellFontWeight : undefined,
+                          color: cellTextColor,
                         }}
                       >
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -279,7 +304,11 @@ export function DataTable<TData extends TableData>({
                     className="h-24 text-center"
                     style={{ 
                       padding: `${padding}px`,
-                      borderColor
+                      borderColor,
+                      fontSize: `${cellFontSize || fontSize}px`,
+                      fontFamily: cellFontFamily !== 'inherit' ? cellFontFamily : undefined,
+                      fontWeight: cellFontWeight !== 'normal' ? cellFontWeight : undefined,
+                      color: cellTextColor,
                     }}
                   >
                     Nenhum resultado encontrado.
