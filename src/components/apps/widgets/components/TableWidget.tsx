@@ -155,6 +155,13 @@ export default function TableWidget({ widget }: TableWidgetProps) {
     borderColor: tableConfig.borderColor,
     fontSize: tableConfig.fontSize,
     padding: tableConfig.padding,
+    // Pass new configuration props
+    enableSearch: tableConfig.enableSearch ?? true,
+    enableFiltering: tableConfig.enableFiltering ?? false,
+    enableRowSelection: tableConfig.enableRowSelection ?? false,
+    selectionMode: tableConfig.selectionMode || 'single',
+    defaultSortColumn: tableConfig.defaultSortColumn,
+    defaultSortDirection: tableConfig.defaultSortDirection || 'asc',
   }
 
   return (

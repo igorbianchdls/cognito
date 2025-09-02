@@ -55,6 +55,15 @@ interface DataTableProps<TData extends TableData> {
   borderColor?: string
   fontSize?: number
   padding?: number
+  // Search & filtering props
+  enableSearch?: boolean
+  enableFiltering?: boolean
+  // Row selection props
+  enableRowSelection?: boolean
+  selectionMode?: 'single' | 'multiple'
+  // Sorting props
+  defaultSortColumn?: string
+  defaultSortDirection?: 'asc' | 'desc'
 }
 
 export function DataTable<TData extends TableData>({
@@ -71,24 +80,46 @@ export function DataTable<TData extends TableData>({
   borderColor = '#e5e7eb',
   fontSize = 14,
   padding = 12,
+  // Search & filtering props with defaults
+  enableSearch = true,
+  enableFiltering = false,
+  // Row selection props with defaults
+  enableRowSelection = false,
+  selectionMode = 'single',
+  // Sorting props with defaults
+  defaultSortColumn,
+  defaultSortDirection = 'asc',
 }: DataTableProps<TData>) {
-  const [sorting, setSorting] = React.useState<SortingState>([])
+  const [sorting, setSorting] = React.useState<SortingState>(
+    defaultSortColumn ? [{ id: defaultSortColumn, desc: defaultSortDirection === 'desc' }] : []
+  )
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([])
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnSizing, setColumnSizing] = React.useState({})
 
+  // Prepare columns with conditional selection column
+  const tableColumns = React.useMemo(() => {
+    if (enableRowSelection) {
+      return [createSelectionColumn<TData>(), ...columns]
+    }
+    return columns
+  }, [columns, enableRowSelection])
+
   const table = useReactTable({
     data,
-    columns,
+    columns: tableColumns,
     initialState: {
       pagination: {
         pageSize: pageSize,
       },
+      sorting: defaultSortColumn ? [{ id: defaultSortColumn, desc: defaultSortDirection === 'desc' }] : [],
     },
     enableColumnResizing: true,
     columnResizeMode: 'onChange',
     columnResizeDirection: 'ltr',
+    enableRowSelection: enableRowSelection,
+    enableMultiRowSelection: selectionMode === 'multiple',
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -113,52 +144,55 @@ export function DataTable<TData extends TableData>({
     <div className="w-full h-full" style={{ minWidth: 0 }}>
       <div className="w-full h-full flex flex-col">
         {/* Header/Search - flex-shrink-0 */}
-        <div className="flex-shrink-0 flex items-center py-4">
-          <Input
-            placeholder={searchPlaceholder}
-            value={globalFilter ?? ""}
-            onChange={(event) => table.setGlobalFilter(event.target.value)}
-            className="max-w-sm"
-          />
-          {showColumnToggle && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="ml-auto">
-                  Colunas <ChevronDown className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                {table
-                  .getAllColumns()
-                  .filter((column) => column.getCanHide())
-                  .map((column) => {
-                    return (
-                      <DropdownMenuCheckboxItem
-                        key={column.id}
-                        className="capitalize"
-                        checked={column.getIsVisible()}
-                        onCheckedChange={(value) =>
-                          column.toggleVisibility(!!value)
-                        }
-                      >
-                        {column.id}
-                      </DropdownMenuCheckboxItem>
-                    )
-                  })}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
+        {(enableSearch || showColumnToggle) && (
+          <div className="flex-shrink-0 flex items-center py-4">
+            {enableSearch && (
+              <Input
+                placeholder={searchPlaceholder}
+                value={globalFilter ?? ""}
+                onChange={(event) => table.setGlobalFilter(event.target.value)}
+                className="max-w-sm"
+              />
+            )}
+            {showColumnToggle && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className={enableSearch ? "ml-auto" : ""}>
+                    Colunas <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {table
+                    .getAllColumns()
+                    .filter((column) => column.getCanHide())
+                    .map((column) => {
+                      return (
+                        <DropdownMenuCheckboxItem
+                          key={column.id}
+                          className="capitalize"
+                          checked={column.getIsVisible()}
+                          onCheckedChange={(value) =>
+                            column.toggleVisibility(!!value)
+                          }
+                        >
+                          {column.id}
+                        </DropdownMenuCheckboxItem>
+                      )
+                    })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+        )}
 
         {/* Table Content - flex-1 overflow-auto */}
         <div 
           className="flex-1 overflow-auto rounded-md border"
           style={{ 
             borderColor,
-            fontSize: `${fontSize}px`
           }}
         >
-          <Table>
+          <Table style={{ fontSize: `${fontSize}px` }}>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow 
@@ -241,7 +275,7 @@ export function DataTable<TData extends TableData>({
               ) : (
                 <TableRow>
                   <TableCell 
-                    colSpan={columns.length} 
+                    colSpan={tableColumns.length} 
                     className="h-24 text-center"
                     style={{ 
                       padding: `${padding}px`,
