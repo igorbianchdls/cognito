@@ -73,8 +73,7 @@ export default function TableConfigEditor({
         accessorKey: draggedColumn.name,
         type: convertBigQueryTypeToTableType(draggedColumn.type),
         width: 120,
-        sortable: true,
-        hidden: false
+        sortable: true
       }
       
       const currentColumns = tableConfig.columns || []
@@ -228,8 +227,6 @@ export default function TableConfigEditor({
                   )}
                 </div>
               </div>
-            </div>
-
               {/* Add New Column */}
               <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
                 <h6 className="text-xs font-medium text-gray-600 mb-3">➕ Add New Column</h6>
