@@ -17,6 +17,19 @@ import DropZone from '../builder/DropZone'
 import TablesExplorer from '../builder/TablesExplorer'
 import type { BigQueryField } from '../builder/TablesExplorer'
 
+// BigQuery table type
+interface BigQueryTable {
+  datasetId?: string
+  tableId?: string
+  TABLEID?: string
+  DATASETID?: string
+  numRows?: number
+  NUMROWS?: number
+  numBytes?: number
+  NUMBYTES?: number
+  description?: string
+}
+
 interface TableConfigEditorProps {
   selectedWidget: DroppedWidget
   tableConfig: TableConfig
@@ -51,7 +64,7 @@ export default function TableConfigEditor({
   const [activeSubTab, setActiveSubTab] = useState<'info' | 'dimensions' | 'measures' | 'custom'>('info')
   const [searchTerm, setSearchTerm] = useState('')
   const [tableSchema, setTableSchema] = useState<BigQueryField[]>([])
-  const [availableTables, setAvailableTables] = useState<any[]>([])
+  const [availableTables, setAvailableTables] = useState<BigQueryTable[]>([])
   const [loadingSchema, setLoadingSchema] = useState(false)
 
   const handleDragEnd = (event: DragEndEvent) => {
