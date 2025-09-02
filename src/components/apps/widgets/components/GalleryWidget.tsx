@@ -10,6 +10,17 @@ interface GalleryItem {
   description?: string
 }
 
+interface BigQueryGalleryData {
+  image_url?: string
+  imageUrl?: string
+  url?: string
+  title?: string
+  name?: string
+  description?: string
+  desc?: string
+  [key: string]: unknown
+}
+
 interface GalleryWidgetProps {
   widget: DroppedWidget
 }
@@ -34,7 +45,7 @@ export default function GalleryWidget({ widget }: GalleryWidgetProps) {
   
   // Transform and ensure consistent structure
   const images: GalleryItem[] = galleryData.length > 0 
-    ? galleryData.map((item: any): GalleryItem => ({
+    ? galleryData.map((item: BigQueryGalleryData): GalleryItem => ({
         image_url: item.image_url || item.imageUrl || item.url || '',
         title: item.title || item.name || '',
         description: item.description || item.desc || ''
