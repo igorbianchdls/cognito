@@ -3,7 +3,7 @@
 import type { DroppedWidget } from '@/types/apps/widget'
 import { isTableWidget } from '@/types/apps/tableWidgets'
 import type { TableConfig, TableColumn } from '@/types/apps/tableWidgets'
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { DndContext, DragEndEvent } from '@dnd-kit/core'
 import { Database, Grab, Trash2, Eye, X, RefreshCw } from 'lucide-react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
@@ -989,6 +989,7 @@ LIMIT 100
           </Card>
         </div>
       )}
+      </div>
     </DndContext>
   )
 }

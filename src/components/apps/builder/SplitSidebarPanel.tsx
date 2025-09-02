@@ -172,6 +172,7 @@ export default function SplitSidebarPanel({
     }))
   }
 
+
   // Show datasets tab with split layout
   if (activeTab === 'datasets') {
     return (
