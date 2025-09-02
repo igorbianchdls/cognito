@@ -113,62 +113,7 @@ export default function TableConfigEditor({
     }
   }
 
-  // Generate dynamic SQL query based on selected columns
-  const generateDynamicQuery = (tableId: string, columns: TableColumn[]): string => {
-    if (!tableId || !columns || columns.length === 0) {
-      return ''
-    }
 
-    // Build SELECT clause with column names
-    const selectCols = columns.map(col => col.accessorKey)
-    
-    const sql = `
-SELECT ${selectCols.join(', ')}
-FROM \`creatto-463117.biquery_data.${tableId}\`
-LIMIT 100
-    `.trim()
-
-    return sql
-  }
-
-  // Execute SQL query and load data
-  const executeQuery = async (query: string) => {
-    if (!query) return null
-
-    setQueryExecuting(true)
-    
-    try {
-      console.log('📊 Executing SQL query:', query)
-      
-      const response = await fetch('/api/bigquery', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'execute',
-          query: query
-        })
-      })
-      
-      const result = await response.json()
-      
-      if (result.success && result.data?.data && Array.isArray(result.data.data)) {
-        const queryData = result.data.data
-        console.log('✅ Query executed successfully:', queryData.length, 'rows')
-        
-        // Update table data with query results
-        onTableConfigChange('data', queryData)
-        return queryData
-      } else {
-        console.error('❌ Query execution failed:', result.error)
-        return null
-      }
-    } catch (error) {
-      console.error('❌ Error executing query:', error)
-      return null
-    } finally {
-      setQueryExecuting(false)
-    }
-  }
 
   // Load real data from BigQuery table
   const loadRealDataFromBigQuery = async (tableId: string) => {
