@@ -336,11 +336,13 @@ export default function WidgetEditorNew() {
 
   // Table Handlers
   const handleTableConfigChange = (field: string, value: unknown) => {
-    console.log('⚙️ WidgetEditorNew handleTableConfigChange:', { field, value })
+    console.log('⚙️ WidgetEditorNew handleTableConfigChange:', { field, value, valueLength: Array.isArray(value) ? value.length : 'not array' })
     
     if (selectedWidget && isTableWidget(selectedWidget)) {
       console.log('⚙️ WidgetEditorNew calling tableActions.updateTableConfig:', selectedWidget.i, { [field]: value })
       tableActions.updateTableConfig(selectedWidget.i, { [field]: value })
+    } else {
+      console.warn('❌ WidgetEditorNew handleTableConfigChange: No selected widget or not a table widget')
     }
   }
 

@@ -2,9 +2,15 @@
 
 import type { DroppedWidget } from '@/types/apps/widget'
 import { isTableWidget } from '@/types/apps/tableWidgets'
-import type { TableConfig } from '@/types/apps/tableWidgets'
+import type { TableConfig, TableColumn } from '@/types/apps/tableWidgets'
 import { useState } from 'react'
+import { DndContext, DragEndEvent } from '@dnd-kit/core'
+import { Database, Grab, Plus, Trash2 } from 'lucide-react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
+import { Button } from '@/components/ui/button'
+import DropZone from '../builder/DropZone'
+import DraggableColumn from '../builder/DraggableColumn'
+import type { BigQueryField } from '../builder/TablesExplorer'
 
 interface TableConfigEditorProps {
   selectedWidget: DroppedWidget
@@ -34,6 +40,66 @@ export default function TableConfigEditor({
     sortable: true
   })
 
+  // Sample BigQuery tables/columns for drag & drop
+  const [availableTables] = useState([
+    {
+      id: 'biquery_data.sample_table',
+      name: 'sample_table',
+      fields: [
+        { name: 'id', type: 'INTEGER', description: 'Primary key' },
+        { name: 'name', type: 'STRING', description: 'Name field' },
+        { name: 'email', type: 'STRING', description: 'Email address' },
+        { name: 'age', type: 'INTEGER', description: 'Age in years' },
+        { name: 'created_at', type: 'TIMESTAMP', description: 'Creation timestamp' },
+      ] as BigQueryField[]
+    }
+  ])
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    
+    if (!over || !active.data.current) return
+
+    const draggedColumn = active.data.current as BigQueryField & { sourceTable: string }
+    const dropZoneId = over.id as string
+
+    console.log('🔄 TableConfigEditor Drag ended:', { draggedColumn, dropZoneId })
+
+    if (dropZoneId === 'selected-columns-drop-zone') {
+      // Convert BigQuery field to TableColumn and add to table config
+      const newTableColumn: TableColumn = {
+        id: `col-${Date.now()}`,
+        header: draggedColumn.name,
+        accessorKey: draggedColumn.name,
+        type: convertBigQueryTypeToTableType(draggedColumn.type),
+        width: 120,
+        sortable: true,
+        hidden: false
+      }
+      
+      const currentColumns = tableConfig.columns || []
+      const alreadyExists = currentColumns.some(col => col.accessorKey === draggedColumn.name)
+      
+      if (!alreadyExists) {
+        onTableConfigChange('columns', [...currentColumns, newTableColumn])
+      }
+    }
+  }
+
+  const convertBigQueryTypeToTableType = (bigQueryType: string): TableColumn['type'] => {
+    const lowerType = bigQueryType.toLowerCase()
+    if (lowerType.includes('int') || lowerType.includes('numeric') || lowerType.includes('float')) {
+      return 'number'
+    }
+    if (lowerType.includes('bool')) {
+      return 'boolean'
+    }
+    if (lowerType.includes('date') || lowerType.includes('timestamp')) {
+      return 'date'
+    }
+    return 'text'
+  }
+
   if (!selectedWidget || !isTableWidget(selectedWidget)) {
     return null
   }
@@ -57,15 +123,18 @@ export default function TableConfigEditor({
   }
 
   const handleRemoveColumn = (columnId: string) => {
+    console.log('🗑️ handleRemoveColumn called:', { columnId, currentColumns: tableConfig.columns })
     const currentColumns = tableConfig.columns || []
     const updatedColumns = currentColumns.filter(col => col.id !== columnId)
+    console.log('🗑️ handleRemoveColumn after filter:', { updatedColumns })
     onTableConfigChange('columns', updatedColumns)
   }
 
 
   return (
-    <div className="border-t pt-4 mt-4">
-      <h4 className="text-sm font-medium text-gray-700 mb-4">📋 Table Configuration</h4>
+    <DndContext onDragEnd={handleDragEnd}>
+      <div className="border-t pt-4 mt-4">
+        <h4 className="text-sm font-medium text-gray-700 mb-4">📋 Table Configuration</h4>
       
       <Accordion type="multiple" className="w-full space-y-2">
         {/* Data & Columns */}
@@ -74,15 +143,59 @@ export default function TableConfigEditor({
             📊 Data & Columns
           </AccordionTrigger>
           <AccordionContent>
-            <div className="space-y-4">
-              {/* Existing Columns */}
+            <div className="grid grid-cols-2 gap-4">
+              {/* Available Tables */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-2">
+                  <Database className="inline w-3 h-3 mr-1" />
+                  Available Tables
+                </label>
+                <div className="space-y-2 max-h-64 overflow-y-auto border border-gray-200 rounded p-2 bg-white">
+                  {availableTables.map((table) => (
+                    <div key={table.id} className="border border-gray-200 rounded p-2">
+                      <div className="text-xs font-medium text-gray-800 mb-2 flex items-center gap-1">
+                        <Database className="w-3 h-3" />
+                        {table.name}
+                      </div>
+                      <div className="space-y-1">
+                        {table.fields.map((field) => (
+                          <div key={field.name} className="draggable-column-wrapper" style={{maxWidth: '100%'}}>
+                            <div style={{transform: 'scale(0.8)', transformOrigin: 'left top', maxWidth: '125%'}}>
+                              <DraggableColumn 
+                                field={field} 
+                                sourceTable={table.id}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Selected Columns Drop Zone */}
+              <div>
+                <DropZone
+                  id="selected-columns-drop-zone"
+                  label="Selected Columns"
+                  description="Drag columns here to add to your table"
+                  icon={<Grab className="w-4 h-4" />}
+                  fields={[]}
+                  className="h-64"
+                />
+              </div>
+            </div>
+            
+            <div className="mt-4">
+              {/* Current Columns */}
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-2">
                   📋 Current Columns ({(tableConfig.columns || []).length})
                 </label>
-                <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded p-2 bg-white">
+                <div className="space-y-2 max-h-32 overflow-y-auto border border-gray-200 rounded p-2 bg-white">
                   {(tableConfig.columns || []).map((column, index) => (
-                    <div key={column.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors">
+                    <div key={column.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded border border-gray-100 hover:bg-gray-100 transition-colors">
                       <div className="text-xs text-gray-400 font-mono w-6">
                         {index + 1}.
                       </div>
@@ -97,26 +210,25 @@ export default function TableConfigEditor({
                             {column.type === 'date' && '📅'}
                             {column.type}
                           </span>
-                          <span>{column.width}px</span>
-                          {column.sortable && <span>↕️</span>}
                         </div>
                       </div>
                       <button
                         onClick={() => handleRemoveColumn(column.id)}
-                        className="w-7 h-7 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-sm transition-colors"
+                        className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs transition-colors"
                         title="Remove column"
                       >
-                        🗑️
+                        <Trash2 className="w-3 h-3" />
                       </button>
                     </div>
                   ))}
                   {(!tableConfig.columns || tableConfig.columns.length === 0) && (
                     <div className="text-xs text-gray-400 italic p-4 text-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-                      📋 No columns configured. Using default sample columns.
+                      📋 No columns configured. Drag columns from available tables to add them.
                     </div>
                   )}
                 </div>
               </div>
+            </div>
 
               {/* Add New Column */}
               <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
@@ -657,6 +769,7 @@ export default function TableConfigEditor({
           </AccordionContent>
         </AccordionItem>
       </Accordion>
-    </div>
+      </div>
+    </DndContext>
   )
 }
