@@ -371,6 +371,22 @@ LIMIT 100
     return newQuery
   }
 
+  // Check if selected columns differ from current table columns
+  const hasColumnsChanged = () => {
+    const currentColumns = tableConfig.columns || []
+    const selectedColumnNames = selectedColumns.map(col => col.name)
+    const currentColumnNames = currentColumns.map(col => col.accessorKey)
+    
+    // Check if lengths are different
+    if (selectedColumns.length !== currentColumns.length) {
+      return true
+    }
+    
+    // Check if any column names are different
+    return selectedColumnNames.some(name => !currentColumnNames.includes(name)) ||
+           currentColumnNames.some(name => !selectedColumnNames.includes(name))
+  }
+
   // Update table data with current + selected columns
   const updateTableData = async () => {
     setLoadingUpdate(true)
@@ -576,6 +592,29 @@ LIMIT 100
                 className="w-full h-48"
               />
             </div>
+
+            {/* Update Table Button */}
+            {hasColumnsChanged() && (
+              <div className="mt-4">
+                <Button
+                  onClick={updateTableData}
+                  disabled={loadingUpdate}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {loadingUpdate ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Updating Table...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Update Table
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
 
             {/* SQL Query Buttons */}
             {(getSavedQuery() || hasUpdatedQuery) && (
