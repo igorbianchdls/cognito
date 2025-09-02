@@ -4,6 +4,12 @@ import { useState } from 'react'
 import { ExternalLink, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { DroppedWidget, GalleryConfig } from '@/types/apps/widget'
 
+interface GalleryItem {
+  image_url: string
+  title?: string
+  description?: string
+}
+
 interface GalleryWidgetProps {
   widget: DroppedWidget
 }
@@ -19,14 +25,17 @@ export default function GalleryWidget({ widget }: GalleryWidgetProps) {
   const galleryData = widget.bigqueryData?.data || []
   
   // Fallback/simulation data if no real data
-  const defaultImages = [
+  const defaultImages: GalleryItem[] = [
     { image_url: 'https://picsum.photos/400/400?random=1', title: 'Sample Image 1', description: 'Description 1' },
     { image_url: 'https://picsum.photos/400/400?random=2', title: 'Sample Image 2', description: 'Description 2' },
     { image_url: 'https://picsum.photos/400/400?random=3', title: 'Sample Image 3', description: 'Description 3' },
     { image_url: 'https://picsum.photos/400/400?random=4', title: 'Sample Image 4', description: 'Description 4' }
   ]
   
-  const images = galleryData.length > 0 ? galleryData : defaultImages
+  // Type cast and ensure consistent structure
+  const images: GalleryItem[] = galleryData.length > 0 
+    ? (galleryData as GalleryItem[]) 
+    : defaultImages
 
   // Configuration with defaults
   const columns = galleryConfig.columns || 3
@@ -77,7 +86,7 @@ export default function GalleryWidget({ widget }: GalleryWidgetProps) {
           gap: `${gap}px`
         }}
       >
-        {images.map((item: { image_url: string; title?: string; description?: string }, index: number) => (
+        {images.map((item: GalleryItem, index: number) => (
           <div 
             key={index} 
             className={`relative group cursor-pointer ${getAspectRatioClass()}`}
