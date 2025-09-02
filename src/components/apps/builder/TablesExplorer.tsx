@@ -38,7 +38,21 @@ interface BigQueryTable {
   NUMBYTES?: number
 }
 
-export default function TablesExplorer() {
+interface TablesExplorerProps {
+  compact?: boolean
+  showMetadata?: boolean
+  showMeasures?: boolean
+  showHeader?: boolean
+  className?: string
+}
+
+export default function TablesExplorer({
+  compact = false,
+  showMetadata = true,
+  showMeasures = true,
+  showHeader = true,
+  className = ""
+}: TablesExplorerProps) {
   const [tables, setTables] = useState<BigQueryTable[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -200,24 +214,26 @@ export default function TablesExplorer() {
   ]
 
   return (
-    <div className="h-full flex flex-col relative overflow-hidden max-w-full">
-      {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-300/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
-        <div className="flex items-center gap-2">
-          <Database className="w-3 h-3 text-primary" />
-          <h2 className="text-base font-semibold">Tables</h2>
+    <div className={`h-full flex flex-col relative overflow-hidden max-w-full ${className}`}>
+      {/* Header - Conditional */}
+      {showHeader && (
+        <div className="flex items-center justify-between px-3 py-2 border-b border-gray-300/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <Database className="w-3 h-3 text-primary" />
+            <h2 className={`font-semibold ${compact ? 'text-sm' : 'text-base'}`}>Tables</h2>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={loadTables}
+            disabled={loading}
+            className="gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={loadTables}
-          disabled={loading}
-          className="gap-2"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
-      </div>
+      )}
 
       {/* Content */}
       <div className="flex-1">
@@ -260,28 +276,28 @@ export default function TablesExplorer() {
                     {/* Table Header - Clickable */}
                     <div
                       onClick={() => handleTableClick(tableId)}
-                      className={`flex items-center gap-2 px-2 py-2 rounded-md cursor-pointer transition-colors overflow-hidden ${
+                      className={`flex items-center gap-2 ${compact ? 'px-1 py-1' : 'px-2 py-2'} rounded-md cursor-pointer transition-colors overflow-hidden ${
                         isExpanded ? 'bg-muted/50' : 'hover:bg-muted/30'
                       }`}
                     >
                       {isExpanded ? (
-                        <ChevronDown className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <ChevronDown className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} text-muted-foreground flex-shrink-0`} />
                       ) : (
-                        <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <ChevronRight className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} text-muted-foreground flex-shrink-0`} />
                       )}
-                      <Table2 className="w-4 h-4 text-primary flex-shrink-0" />
+                      <Table2 className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} text-primary flex-shrink-0`} />
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">
+                        <div className={`${compact ? 'text-xs' : 'text-sm'} font-medium truncate`}>
                           {tableId}
                         </div>
-                        {numRows && (
+                        {showMetadata && numRows && (
                           <div className="text-xs text-muted-foreground truncate">
                             {formatRowCount(numRows)}
                           </div>
                         )}
                       </div>
                       {isLoadingThisSchema && (
-                        <RefreshCw className="w-4 h-4 animate-spin text-primary flex-shrink-0" />
+                        <RefreshCw className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} animate-spin text-primary flex-shrink-0`} />
                       )}
                     </div>
 
@@ -332,7 +348,8 @@ export default function TablesExplorer() {
                               )}
                             </div>
 
-                            {/* Medidas Section */}
+                            {/* Medidas Section - Conditional */}
+                            {showMeasures && (
                             <div>
                               <div 
                                 className="flex items-center gap-2 py-1 mb-2 cursor-pointer hover:bg-muted/30 rounded px-1 transition-colors overflow-hidden"
@@ -376,6 +393,7 @@ export default function TablesExplorer() {
                                 </div>
                               )}
                             </div>
+                            )}
                           </div>
                         ) : (
                           <p className="text-sm text-muted-foreground py-2">

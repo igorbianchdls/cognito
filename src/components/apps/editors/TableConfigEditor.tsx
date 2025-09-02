@@ -9,7 +9,7 @@ import { Database, Grab, Plus, Trash2 } from 'lucide-react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Button } from '@/components/ui/button'
 import DropZone from '../builder/DropZone'
-import DraggableColumn from '../builder/DraggableColumn'
+import TablesExplorer from '../builder/TablesExplorer'
 import type { BigQueryField } from '../builder/TablesExplorer'
 
 interface TableConfigEditorProps {
@@ -40,20 +40,7 @@ export default function TableConfigEditor({
     sortable: true
   })
 
-  // Sample BigQuery tables/columns for drag & drop
-  const [availableTables] = useState([
-    {
-      id: 'biquery_data.sample_table',
-      name: 'sample_table',
-      fields: [
-        { name: 'id', type: 'INTEGER', description: 'Primary key' },
-        { name: 'name', type: 'STRING', description: 'Name field' },
-        { name: 'email', type: 'STRING', description: 'Email address' },
-        { name: 'age', type: 'INTEGER', description: 'Age in years' },
-        { name: 'created_at', type: 'TIMESTAMP', description: 'Creation timestamp' },
-      ] as BigQueryField[]
-    }
-  ])
+  // TablesExplorer will handle BigQuery data loading
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
@@ -143,33 +130,20 @@ export default function TableConfigEditor({
           </AccordionTrigger>
           <AccordionContent>
             <div className="grid grid-cols-2 gap-4">
-              {/* Available Tables */}
+              {/* Available Tables - Real BigQuery Data */}
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-2">
                   <Database className="inline w-3 h-3 mr-1" />
                   Available Tables
                 </label>
-                <div className="space-y-2 max-h-64 overflow-y-auto border border-gray-200 rounded p-2 bg-white">
-                  {availableTables.map((table) => (
-                    <div key={table.id} className="border border-gray-200 rounded p-2">
-                      <div className="text-xs font-medium text-gray-800 mb-2 flex items-center gap-1">
-                        <Database className="w-3 h-3" />
-                        {table.name}
-                      </div>
-                      <div className="space-y-1">
-                        {table.fields.map((field) => (
-                          <div key={field.name} className="draggable-column-wrapper" style={{maxWidth: '100%'}}>
-                            <div style={{transform: 'scale(0.8)', transformOrigin: 'left top', maxWidth: '125%'}}>
-                              <DraggableColumn 
-                                field={field} 
-                                sourceTable={table.id}
-                              />
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+                <div className="max-h-64 border border-gray-200 rounded bg-white">
+                  <TablesExplorer 
+                    compact={true}
+                    showMetadata={false}
+                    showMeasures={false}
+                    showHeader={false}
+                    className="max-h-64"
+                  />
                 </div>
               </div>
 
