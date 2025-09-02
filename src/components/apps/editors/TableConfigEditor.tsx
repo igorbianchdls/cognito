@@ -989,7 +989,6 @@ LIMIT 100
           </Card>
         </div>
       )}
-      </div>
     </DndContext>
   )
 }
