@@ -13,16 +13,14 @@ export interface KPIData {
 }
 
 interface KPIPreviewProps {
-  measures: BigQueryField[]
-  dimensions: BigQueryField[]
+  kpiValue: BigQueryField[]
   filters: BigQueryField[]
   selectedTable: string | null
   onDataReady?: (data: KPIData[], query: string) => void
 }
 
 export default function KPIPreview({
-  measures,
-  dimensions,
+  kpiValue,
   filters,
   selectedTable,
   onDataReady
@@ -43,25 +41,16 @@ export default function KPIPreview({
     return 'SUM' // Default for numeric fields
   }
 
-  // Generate SQL query for KPI calculation
+  // Generate SQL query for KPI calculation (simplified)
   const generateQuery = () => {
-    if (!selectedTable || measures.length === 0) {
+    if (!selectedTable || kpiValue.length === 0) {
       return ''
     }
 
-    // Build SELECT clause with measure aggregation
-    const measureField = measures[0]
-    const aggregation = getAggregationFunction(measureField)
-    const selectCols = [`${aggregation}(${measureField.name}) as current_value`]
+    // Build simple SELECT clause with KPI field aggregation
+    const kpiField = kpiValue[0]
+    const aggregation = getAggregationFunction(kpiField)
     
-    // Add total records count
-    selectCols.push('COUNT(*) as total_records')
-    
-    // Add dimensions for grouping if any
-    if (dimensions.length > 0) {
-      selectCols.unshift(...dimensions.map(dim => dim.name))
-    }
-
     // Build WHERE clause for filters
     let whereClause = ''
     if (filters.length > 0) {
@@ -74,19 +63,13 @@ export default function KPIPreview({
       }
     }
 
-    // Build GROUP BY clause if dimensions exist
-    let groupByClause = ''
-    if (dimensions.length > 0) {
-      const groupByFields = dimensions.map(dim => dim.name).join(', ')
-      groupByClause = `GROUP BY ${groupByFields}`
-    }
-
+    // Simple SQL without GROUP BY for single KPI value
     const sql = `
-SELECT ${selectCols.join(', ')}
+SELECT 
+  ${aggregation}(${kpiField.name}) as current_value,
+  COUNT(*) as total_records
 FROM \`creatto-463117.biquery_data.${selectedTable}\`
 ${whereClause}
-${groupByClause}
-LIMIT 1
     `.trim()
 
     return sql
@@ -94,14 +77,14 @@ LIMIT 1
 
   // Generate fallback data for preview when API fails
   const generateFallbackData = (): KPIData[] => {
-    const measureField = measures[0]
-    const baseValue = measureField?.type.toLowerCase().includes('string') ? 150 : 4247
+    const kpiField = kpiValue[0]
+    const baseValue = kpiField?.type.toLowerCase().includes('string') ? 150 : 4247
     
     return [{
       current_value: baseValue + Math.floor(Math.random() * 1000),
       total_records: 1847 + Math.floor(Math.random() * 500),
-      kpi_name: measureField?.name || 'Sample KPI',
-      measure_field: measureField?.name || 'metric'
+      kpi_name: kpiField?.name || 'Sample KPI',
+      kpi_field: kpiField?.name || 'metric'
     }]
   }
 
@@ -109,11 +92,11 @@ LIMIT 1
   const loadKPIData = async () => {
     console.log('📊 KPIPreview: loadKPIData iniciado', {
       selectedTable,
-      measuresLength: measures.length,
-      measures: measures.map(m => ({ name: m.name, type: m.type, aggregation: m.aggregation }))
+      kpiValueLength: kpiValue.length,
+      kpiValue: kpiValue.map(k => ({ name: k.name, type: k.type, aggregation: k.aggregation }))
     })
 
-    if (!selectedTable || measures.length === 0) {
+    if (!selectedTable || kpiValue.length === 0) {
       console.log('📊 KPIPreview: Configuração incompleta, limpando dados')
       setKpiData([])
       setError(null)
@@ -220,14 +203,14 @@ LIMIT 1
     }, 200) // Fast response for KPI preview
 
     return () => clearTimeout(timer)
-  }, [measures, dimensions, filters, selectedTable]) // React to changes
+  }, [kpiValue, filters, selectedTable]) // React to changes
 
   // Create mock widget for preview
   const createPreviewWidget = () => {
     if (kpiData.length === 0) return null
 
-    const kpiValue = kpiData[0]
-    const measureField = measures[0]
+    const kpiDataValue = kpiData[0]
+    const kpiField = kpiValue[0]
     
     return {
       id: 'kpi-preview',
@@ -244,11 +227,11 @@ LIMIT 1
       h: 2,
       config: {
         kpiConfig: {
-          name: measureField?.name || 'KPI',
-          value: kpiValue.current_value,
-          metric: measureField?.name,
-          calculation: getAggregationFunction(measureField),
-          unit: measureField?.type.toLowerCase().includes('string') ? 'items' : '',
+          name: kpiField?.name || 'KPI',
+          value: kpiDataValue.current_value,
+          metric: kpiField?.name,
+          calculation: getAggregationFunction(kpiField),
+          unit: kpiField?.type.toLowerCase().includes('string') ? 'items' : '',
           showTarget: false,
           showTrend: false,
           visualizationType: 'card' as 'card' | 'display' | 'gauge',
@@ -259,7 +242,7 @@ LIMIT 1
   }
 
   // Check if ready to render
-  const canRender = selectedTable && measures.length > 0
+  const canRender = selectedTable && kpiValue.length > 0
 
   return (
     <Card>
@@ -282,10 +265,10 @@ LIMIT 1
             <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
               <TrendingUp className="w-8 h-8 mb-2 opacity-50" />
               <p className="text-sm text-center">
-                Configure measures para ver preview do KPI
+                Configure valor do KPI para ver preview
               </p>
               <p className="text-xs text-center opacity-70 mt-1">
-                Arraste campos numéricos para measures
+                Arraste um campo numérico para Valor KPI
               </p>
             </div>
           ) : loading ? (
@@ -308,7 +291,7 @@ LIMIT 1
               <div className="text-center">
                 <TrendingUp className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
                 <p className="text-sm">No KPI data found</p>
-                <p className="text-xs text-muted-foreground">Try different measures or filters</p>
+                <p className="text-xs text-muted-foreground">Try different KPI value or filters</p>
               </div>
             </div>
           ) : (

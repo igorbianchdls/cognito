@@ -19,6 +19,7 @@ interface UniversalBuilderData {
   yAxis: BigQueryField[]
   filters: BigQueryField[]
   columns: BigQueryField[]
+  kpiValue: BigQueryField[]
   dimensions: BigQueryField[]
   measures: BigQueryField[]
   groupBy: BigQueryField[]
@@ -45,6 +46,7 @@ export default function SplitSidebarPanel({
     yAxis: [],
     filters: [],
     columns: [],
+    kpiValue: [],
     dimensions: [],
     measures: [],
     groupBy: [],
@@ -69,6 +71,7 @@ export default function SplitSidebarPanel({
       newData.yAxis = newData.yAxis.filter(col => col.name !== draggedColumn.name)
       newData.filters = newData.filters.filter(col => col.name !== draggedColumn.name)
       newData.columns = newData.columns.filter(col => col.name !== draggedColumn.name)
+      newData.kpiValue = newData.kpiValue.filter(col => col.name !== draggedColumn.name)
       newData.dimensions = newData.dimensions.filter(col => col.name !== draggedColumn.name)
       newData.measures = newData.measures.filter(col => col.name !== draggedColumn.name)
       newData.groupBy = newData.groupBy.filter(col => col.name !== draggedColumn.name)
@@ -86,6 +89,9 @@ export default function SplitSidebarPanel({
           break
         case 'columns-drop-zone':
           newData.columns.push(draggedColumn)
+          break
+        case 'kpi-value-drop-zone':
+          newData.kpiValue.push(draggedColumn)
           break
         case 'dimensions-drop-zone':
           newData.dimensions.push(draggedColumn)
@@ -120,6 +126,7 @@ export default function SplitSidebarPanel({
       yAxis: [],
       filters: [],
       columns: [],
+      kpiValue: [],
       dimensions: [],
       measures: [],
       groupBy: [],

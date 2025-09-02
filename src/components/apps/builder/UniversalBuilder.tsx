@@ -29,6 +29,9 @@ interface UniversalBuilderData {
   // Table fields  
   columns: BigQueryField[]
   
+  // KPI field (simplified)
+  kpiValue: BigQueryField[]
+  
   // Shared fields for compatibility
   dimensions: BigQueryField[]
   measures: BigQueryField[]
@@ -84,7 +87,7 @@ export default function UniversalBuilder({
         : data.selectedType === 'table'
         ? data.columns.length > 0
         : data.selectedType === 'kpi'
-        ? data.measures.length > 0
+        ? data.kpiValue.length > 0
         : data.dimensions.length > 0 || data.measures.length > 0
 
     if (!hasRequiredFields) {
@@ -217,15 +220,15 @@ export default function UniversalBuilder({
           }
         }
       case 'kpi':
-        const measureField = data.measures[0]
+        const kpiField = data.kpiValue[0]
         const kpiPreviewData = previewData as KPIData[]
         return {
           kpiConfig: {
-            name: measureField?.name || 'KPI',
+            name: kpiField?.name || 'KPI',
             value: kpiPreviewData.length > 0 ? kpiPreviewData[0].current_value : undefined,
-            metric: measureField?.name,
-            calculation: measureField?.aggregation || 'SUM',
-            unit: getUnitFromFieldType(measureField?.type),
+            metric: kpiField?.name,
+            calculation: kpiField?.aggregation || 'SUM',
+            unit: getUnitFromFieldType(kpiField?.type),
             showTarget: true,
             showTrend: true,
             visualizationType: 'card' as 'card' | 'display' | 'gauge',
@@ -272,8 +275,8 @@ export default function UniversalBuilder({
       case 'kpi':
         return {
           chartType: 'kpi',
-          xColumn: data.dimensions[0]?.name || '', // Dimension for grouping
-          yColumn: data.measures[0]?.name || ''    // Measure for KPI value
+          xColumn: '', // No grouping for simple KPI
+          yColumn: data.kpiValue[0]?.name || ''    // KPI value field
         }
       default:
         return {
@@ -427,8 +430,22 @@ export default function UniversalBuilder({
               />
             )}
 
-            {/* Generic Drop Zones for Other Non-Chart Types */}
-            {data.selectedType !== 'chart' && data.selectedType !== 'table' && (
+            {/* KPI Drop Zone (specific) */}
+            {data.selectedType === 'kpi' && (
+              <DropZone
+                id="kpi-value-drop-zone"
+                label="Valor KPI"
+                description="Campo numérico para calcular o KPI"
+                icon={<TrendingUp className="w-4 h-4 text-purple-600" />}
+                fields={data.kpiValue}
+                acceptedTypes={['numeric']}
+                onRemoveField={(fieldName) => handleRemoveField('kpiValue', fieldName)}
+                onAggregationChange={handleAggregationChange}
+              />
+            )}
+
+            {/* Generic Drop Zones for Other Non-Chart/Table/KPI Types */}
+            {data.selectedType !== 'chart' && data.selectedType !== 'table' && data.selectedType !== 'kpi' && (
               <>
                 <DropZone
                   id="dimensions-drop-zone"
@@ -496,8 +513,7 @@ export default function UniversalBuilder({
           {/* KPI Preview (only for kpis) */}
           {data.selectedType === 'kpi' && (
             <KPIPreview
-              measures={data.measures}
-              dimensions={data.dimensions}
+              kpiValue={data.kpiValue}
               filters={data.filters}
               selectedTable={data.selectedTable}
               onDataReady={(kpiData, query) => {
