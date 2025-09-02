@@ -78,9 +78,26 @@ export async function GET(request: NextRequest) {
         console.log(`📊 Dataset location detected: ${datasetInfo.location}`)
         return NextResponse.json({ success: true, data: datasetInfo })
 
+      case 'query':
+        const queryDataset = searchParams.get('dataset')
+        const queryTable = searchParams.get('table')
+        const limit = parseInt(searchParams.get('limit') || '100')
+        
+        if (!queryDataset || !queryTable) {
+          return NextResponse.json(
+            { error: 'Dataset and table parameters are required for query action' },
+            { status: 400 }
+          )
+        }
+
+        console.log(`🔍 Querying table data: ${queryDataset}.${queryTable} (limit: ${limit})`)
+        const tableData = await bigQueryService.queryTable(queryDataset, queryTable, limit)
+        console.log(`✅ Query successful: ${tableData.length} rows returned`)
+        return NextResponse.json({ success: true, data: tableData })
+
       default:
         return NextResponse.json(
-          { error: 'Invalid action. Supported actions: datasets, tables, schema, dataset-info' },
+          { error: 'Invalid action. Supported actions: datasets, tables, schema, dataset-info, query' },
           { status: 400 }
         )
     }

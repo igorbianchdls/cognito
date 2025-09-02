@@ -16,28 +16,29 @@ export default function TableWidget({ widget }: TableWidgetProps) {
 
   const [data, setData] = useState<TableData[]>([])
 
-  // Initialize data based on widget config
+  // Initialize data based on widget config with priority for real BigQuery data
   useEffect(() => {
-    // Check if widget has BigQuery data (similar to chart widgets)
-    if (widget.bigqueryData && widget.bigqueryData.data && Array.isArray(widget.bigqueryData.data)) {
-      // Use BigQuery data from Universal Builder
+    // PRIORITY 1: Real BigQuery data from TableConfigEditor (when columns are added)
+    if (tableConfig.data && tableConfig.data.length > 0) {
+      const configData = tableConfig.data.map((row, index) => ({
+        id: row.id || index + 1,
+        ...row
+      }))
+      setData(configData as TableData[])
+      console.log('📋 TableWidget using REAL BigQuery data from config:', configData.length, 'rows')
+    }
+    // PRIORITY 2: BigQuery data from Universal Builder
+    else if (widget.bigqueryData && widget.bigqueryData.data && Array.isArray(widget.bigqueryData.data)) {
       const bigqueryData = widget.bigqueryData.data as Array<Record<string, unknown>>
       const tableData = bigqueryData.map((row, index) => ({
         id: index + 1,
         ...row
       }))
       setData(tableData as TableData[])
-      console.log('📋 TableWidget usando dados do BigQuery:', tableData)
-    } else if (tableConfig.data && tableConfig.data.length > 0) {
-      // Use config data if available
-      const configData = tableConfig.data.map((row, index) => ({
-        id: index + 1,
-        ...row
-      }))
-      setData(configData as TableData[])
-      console.log('📋 TableWidget usando dados do config:', configData)
-    } else {
-      // Use default sample data as fallback
+      console.log('📋 TableWidget using BigQuery data from Universal Builder:', tableData.length, 'rows')
+    } 
+    // FALLBACK: Default sample data (only when no real data available)
+    else {
       const defaultData = [
         { id: 1, name: 'João Silva', email: 'joao@email.com', status: 'Ativo', score: 85 },
         { id: 2, name: 'Maria Santos', email: 'maria@email.com', status: 'Inativo', score: 92 },
@@ -46,7 +47,7 @@ export default function TableWidget({ widget }: TableWidgetProps) {
         { id: 5, name: 'Carlos Lima', email: 'carlos@email.com', status: 'Ativo', score: 95 },
       ]
       setData(defaultData)
-      console.log('📋 TableWidget usando dados simulados default')
+      console.log('📋 TableWidget using fallback sample data (no real data available)')
       
       // Simulate real-time data updates for sample data only
       const interval = setInterval(() => {

@@ -434,42 +434,7 @@ class BigQueryService {
   /**
    * Query a specific table with optional filters
    */
-  async queryTable(
-    datasetId: string, 
-    tableId: string, 
-    options: {
-      columns?: string[]
-      where?: string
-      orderBy?: string
-      limit?: number
-      offset?: number
-    } = {}
-  ): Promise<QueryResult> {
-    const {
-      columns = ['*'],
-      where,
-      orderBy,
-      limit = 1000,
-      offset = 0
-    } = options
-
-    const projectId = this.config?.projectId
-    const tableName = `\`${projectId}.${datasetId}.${tableId}\``
-    
-    let query = `SELECT ${columns.join(', ')} FROM ${tableName}`
-    
-    if (where) {
-      query += ` WHERE ${where}`
-    }
-    
-    if (orderBy) {
-      query += ` ORDER BY ${orderBy}`
-    }
-    
-    query += ` LIMIT ${limit} OFFSET ${offset}`
-
-    return this.executeQuery({ query })
-  }
+  // Método queryTable removido - usando a versão mais simples abaixo
 
   /**
    * Clear query cache
@@ -545,6 +510,35 @@ class BigQueryService {
       result,
       timestamp: Date.now(),
       ttl: ttl || this.defaultCacheTTL
+    }
+  }
+
+  /**
+   * Query table data for table widget
+   */
+  async queryTable(datasetId: string, tableId: string, limit: number = 100): Promise<Array<Record<string, unknown>>> {
+    if (!this.client) {
+      console.error('❌ BigQuery client not initialized')
+      throw new Error('BigQuery client not initialized. Call initialize() first.')
+    }
+
+    try {
+      console.log(`🔍 Querying table: ${datasetId}.${tableId} (limit: ${limit})`)
+      
+      const query = `SELECT * FROM \`${this.config?.projectId}.${datasetId}.${tableId}\` LIMIT ${limit}`
+      console.log('📝 Query SQL:', query)
+      
+      const [rows] = await this.client.query({
+        query,
+        location: 'US', // Adjust location as needed
+      })
+
+      console.log(`✅ Query completed: ${rows.length} rows returned`)
+      return rows as Array<Record<string, unknown>>
+      
+    } catch (error) {
+      console.error('❌ Failed to query table data:', error)
+      throw new Error(`Failed to query table data: ${error}`)
     }
   }
 }

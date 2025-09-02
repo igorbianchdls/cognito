@@ -147,7 +147,7 @@ export default function TableConfigEditor({
   }
 
   // Add column from BigQuery field
-  const handleColumnAdd = (column: BigQueryField, sourceTable?: string) => {
+  const handleColumnAdd = async (column: BigQueryField, sourceTable?: string) => {
     const newTableColumn: TableColumn = {
       id: `col-${Date.now()}`,
       header: column.name,
@@ -161,7 +161,53 @@ export default function TableConfigEditor({
     const alreadyExists = currentColumns.some(col => col.accessorKey === column.name)
     
     if (!alreadyExists) {
+      // 1. Add column to configuration
       onTableConfigChange('columns', [...currentColumns, newTableColumn])
+      
+      // 2. Auto-load BigQuery data if this is first column from this table
+      if (sourceTable && shouldLoadTableData(sourceTable)) {
+        console.log('🔄 Auto-loading data from BigQuery table:', sourceTable)
+        await loadRealDataFromBigQuery(sourceTable)
+      }
+    }
+  }
+
+  // Check if we should load data for this table
+  const shouldLoadTableData = (newTableId: string): boolean => {
+    const currentData = tableConfig.data || []
+    const currentColumns = tableConfig.columns || []
+    
+    // Load data if:
+    // 1. No data at all OR
+    // 2. Current data is sample data (has hardcoded fields like 'name', 'email') OR  
+    // 3. This is the first column being added
+    return (
+      currentData.length === 0 || 
+      currentColumns.length === 0 ||
+      (currentData.length > 0 && currentData[0].hasOwnProperty('name') && currentData[0].hasOwnProperty('email'))
+    )
+  }
+
+  // Load real data from BigQuery table
+  const loadRealDataFromBigQuery = async (tableId: string) => {
+    setLoadingSchema(true)
+    
+    try {
+      console.log('📊 Loading real data from BigQuery table:', tableId)
+      const response = await fetch(`/api/bigquery?action=query&dataset=biquery_data&table=${tableId}&limit=100`)
+      const result = await response.json()
+      
+      if (result.success && Array.isArray(result.data)) {
+        // Replace mock data with real BigQuery data
+        console.log('✅ Real data loaded successfully:', result.data.length, 'rows')
+        onTableConfigChange('data', result.data)
+      } else {
+        console.error('❌ Failed to load table data:', result.error)
+      }
+    } catch (error) {
+      console.error('❌ Error loading BigQuery data:', error)
+    } finally {
+      setLoadingSchema(false)
     }
   }
 
