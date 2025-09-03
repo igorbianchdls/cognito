@@ -1,31 +1,14 @@
 'use client'
 
-import { useStore } from '@nanostores/react'
-import { 
-  chartActions, 
-  $availableTables, 
-  $selectedTable, 
-  $tableColumns, 
-  $loadingTables, 
-  $loadingColumns, 
-  $loadingChartUpdate,
-  $stagedXAxis,
-  $stagedYAxis, 
-  $stagedFilters,
-  type BigQueryField
-} from '@/stores/apps/chartStore'
 import { isChartWidget, isBarChart, isLineChart, isPieChart, isAreaChart } from '@/types/apps/chartWidgets'
 import type { BaseChartConfig, BarChartConfig, LineChartConfig, PieChartConfig, AreaChartConfig } from '@/types/apps/chartWidgets'
 import type { BaseWidget } from '@/types/apps/baseWidget'
 import { ColorInput, NumberInput } from '../editors/controls'
 import { Slider } from '@/components/ui/slider'
-import { DndContext, DragEndEvent } from '@dnd-kit/core'
-import { Database, RefreshCw } from 'lucide-react'
-import DropZone from '../builder/DropZone'
-import DraggableColumn from '../builder/DraggableColumn'
+import { DragEndEvent } from '@dnd-kit/core'
 import ContainerConfigEditor from '../editors/ContainerConfigEditor'
 import ChartBigQueryUpdate from './ChartBigQueryUpdate'
-import type { ContainerConfig } from '@/types/apps/widget'
+import type { ContainerConfig, DroppedWidget } from '@/types/apps/widget'
 
 interface ChartEditorTabsProps {
   selectedWidget: BaseWidget
@@ -52,16 +35,6 @@ export default function ChartEditorTabs({
   onUpdateChartData,
   hasChartChanged
 }: ChartEditorTabsProps) {
-  // Chart data management (using store)
-  const availableTables = useStore($availableTables)
-  const selectedTable = useStore($selectedTable)
-  const tableColumns = useStore($tableColumns)
-  const loadingTables = useStore($loadingTables)
-  const loadingColumns = useStore($loadingColumns)
-  const loadingChartUpdate = useStore($loadingChartUpdate)
-  const stagedXAxis = useStore($stagedXAxis)
-  const stagedYAxis = useStore($stagedYAxis)
-  const stagedFilters = useStore($stagedFilters)
 
   const renderChartDesignTab = () => (
     <div className="space-y-6">
@@ -845,7 +818,7 @@ export default function ChartEditorTabs({
 
     // Get saved SQL query from widget bigqueryData
     const getSavedChartQuery = (): string => {
-      return (selectedWidget as any)?.bigqueryData?.query || ''
+      return (selectedWidget as DroppedWidget)?.bigqueryData?.query || ''
     }
 
     return (
