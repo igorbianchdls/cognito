@@ -14,7 +14,8 @@ import {
   $stagedFilters
 } from '@/stores/apps/chartStore'
 import { DndContext, DragEndEvent } from '@dnd-kit/core'
-import { Database, RefreshCw } from 'lucide-react'
+import { Database, RefreshCw, Eye } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import DropZone from '../builder/DropZone'
 import DraggableColumn from '../builder/DraggableColumn'
 
@@ -31,10 +32,16 @@ interface ChartBigQueryUpdateProps {
   currentYAxisFields?: SelectedField[]
   currentFilterFields?: SelectedField[]
   
-  // Existing props
+  // SQL Query states (similar to table)
+  getSavedChartQuery?: () => string
+  hasUpdatedChartQuery?: boolean
+  updatedChartQuery?: string
+  
+  // Handlers
   onChartDragEnd: (event: DragEndEvent) => void
   onRemoveChartField: (dropZoneType: string, fieldName: string) => void
   onUpdateChartData: () => void
+  onShowSqlModal: (query: string) => void
   hasChartChanged: boolean
 }
 
@@ -42,9 +49,13 @@ export default function ChartBigQueryUpdate({
   currentXAxisFields = [],
   currentYAxisFields = [],
   currentFilterFields = [],
+  getSavedChartQuery,
+  hasUpdatedChartQuery = false,
+  updatedChartQuery = '',
   onChartDragEnd,
   onRemoveChartField,
   onUpdateChartData,
+  onShowSqlModal,
   hasChartChanged
 }: ChartBigQueryUpdateProps) {
   // Chart data management (using store)
@@ -191,6 +202,35 @@ export default function ChartBigQueryUpdate({
                   </>
                 )}
               </button>
+            </div>
+          )}
+
+          {/* SQL Query Buttons */}
+          {(getSavedChartQuery?.() || hasUpdatedChartQuery) && (
+            <div className="mt-4 space-y-2">
+              {hasUpdatedChartQuery && (
+                <Button
+                  onClick={() => onShowSqlModal(updatedChartQuery)}
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                >
+                  <Eye className="w-3 h-3 mr-2" />
+                  View Updated SQL Query
+                </Button>
+              )}
+              
+              {getSavedChartQuery?.() && (
+                <Button
+                  onClick={() => onShowSqlModal(getSavedChartQuery())}
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs"
+                >
+                  <Eye className="w-3 h-3 mr-2" />
+                  View SQL Query
+                </Button>
+              )}
             </div>
           )}
         </div>
