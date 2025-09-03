@@ -33,6 +33,7 @@ import ImageConfigEditor from '../editors/ImageConfigEditor'
 import TableConfigEditor from '../editors/TableConfigEditor'
 import NavigationConfigEditor from '../editors/NavigationConfigEditor'
 import ContainerConfigEditor from '../editors/ContainerConfigEditor'
+import ChartBigQueryUpdate from './ChartBigQueryUpdate'
 import { ColorInput, NumberInput } from '../editors/controls'
 import { Slider } from '@/components/ui/slider'
 import { DndContext, DragEndEvent } from '@dnd-kit/core'
@@ -1238,138 +1239,22 @@ export default function WidgetEditorNew() {
   const renderChartDataTab = () => (
     <div className="space-y-6">
       {/* Chart Data Fields */}
-      <div>
-        <h3 className="text-sm font-semibold text-gray-900 mb-3">📊 Chart Data Fields</h3>
-        <DndContext onDragEnd={handleChartDragEnd}>
-          <div className="space-y-4">
-            {/* Tables & Columns Section */}
-            <div className="grid grid-cols-2 gap-4">
-              {/* Available Tables */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-xs font-medium text-gray-700">Available Tables</h4>
-                  <button
-                    onClick={chartActions.loadTables}
-                    disabled={loadingTables}
-                    className="text-xs text-blue-600 hover:text-blue-800"
-                  >
-                    <RefreshCw className={`w-3 h-3 ${loadingTables ? 'animate-spin' : ''}`} />
-                  </button>
-                </div>
-                <div className="border border-gray-200 rounded-lg h-32 overflow-y-auto">
-                  {loadingTables ? (
-                    <div className="flex items-center justify-center h-full">
-                      <RefreshCw className="w-4 h-4 animate-spin text-gray-400" />
-                    </div>
-                  ) : (
-                    <div className="p-2 space-y-1">
-                      {availableTables.map((table) => {
-                        const tableId = table.TABLEID || table.tableId || ''
-                        return (
-                          <div
-                            key={tableId}
-                            onClick={() => chartActions.selectTable(tableId)}
-                            className={`text-xs p-2 rounded cursor-pointer transition-colors ${
-                              selectedTable === tableId
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'hover:bg-gray-100'
-                            }`}
-                          >
-                            {tableId}
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Table Columns */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="text-xs font-medium text-gray-700">Columns</h4>
-                  {loadingColumns && (
-                    <RefreshCw className="w-3 h-3 animate-spin text-blue-600" />
-                  )}
-                </div>
-                <div className="border border-gray-200 rounded-lg h-32 overflow-y-auto">
-                  {selectedTable ? (
-                    <div className="p-2 space-y-1">
-                      {tableColumns.map((column) => (
-                        <DraggableColumn
-                          key={column.name}
-                          field={column}
-                          sourceTable={selectedTable}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-xs text-gray-500">
-                      Select a table to view columns
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Drop Zones */}
-            <div className="space-y-3">
-              <DropZone
-                id="chart-x-axis-drop-zone"
-                label="X-Axis"
-                description="Drag categorical fields (strings, dates)"
-                icon={<Database className="w-4 h-4 text-green-600" />}
-                fields={stagedXAxis}
-                onRemoveField={(fieldName) => handleRemoveChartField('xAxis', fieldName)}
-                acceptedTypes={['string', 'date', 'numeric']}
-              />
-              
-              <DropZone
-                id="chart-y-axis-drop-zone"
-                label="Y-Axis"
-                description="Drag numeric fields for aggregation"
-                icon={<Database className="w-4 h-4 text-blue-600" />}
-                fields={stagedYAxis}
-                onRemoveField={(fieldName) => handleRemoveChartField('yAxis', fieldName)}
-                acceptedTypes={['numeric']}
-              />
-              
-              <DropZone
-                id="chart-filters-drop-zone"
-                label="Filters"
-                description="Drag any fields to create filters"
-                icon={<Database className="w-4 h-4 text-orange-600" />}
-                fields={stagedFilters}
-                onRemoveField={(fieldName) => handleRemoveChartField('filters', fieldName)}
-                acceptedTypes={['string', 'date', 'numeric', 'boolean']}
-              />
-            </div>
-
-            {/* Update Chart Button */}
-            {hasChartChanged() && (
-              <div className="mt-4">
-                <button
-                  onClick={updateChartData}
-                  disabled={loadingChartUpdate}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {loadingChartUpdate ? (
-                    <>
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                      Updating Chart...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="w-4 h-4" />
-                      Update Chart
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
-          </div>
-        </DndContext>
-      </div>
+      <ChartBigQueryUpdate
+        currentXAxisFields={[]} // TODO: Get from chartConfig
+        currentYAxisFields={[]} // TODO: Get from chartConfig  
+        currentFilterFields={[]} // TODO: Get from chartConfig
+        getSavedChartQuery={() => ''} // TODO: Implement
+        hasUpdatedChartQuery={false} // TODO: Implement
+        updatedChartQuery={''} // TODO: Implement
+        onChartDragEnd={handleChartDragEnd}
+        onRemoveChartField={handleRemoveChartField}
+        onUpdateChartData={updateChartData}
+        onShowSqlModal={(query: string) => {
+          // TODO: Implement SQL modal display
+          console.log('Show SQL Modal:', query)
+        }}
+        hasChartChanged={hasChartChanged()}
+      />
 
       {/* Labels */}
       <div>
