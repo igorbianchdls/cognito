@@ -515,12 +515,8 @@ export const chartActions = {
       const xAxisColumn = stagedXAxis[0]
       const yAxisColumn = stagedYAxis[0]
       
-      // Helper function (copied from ChartPreview)
+      // Helper function (simplified - no aggregation property available)
       const getAggregationFunction = (field: typeof yAxisColumn) => {
-        if (field.aggregation) {
-          return field.aggregation
-        }
-        
         const lowerType = field.type.toLowerCase()
         
         if (lowerType.includes('string') || lowerType.includes('text')) {
