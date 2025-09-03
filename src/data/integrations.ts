@@ -12,7 +12,7 @@ export const integrations: Integration[] = [
   {
     id: 'meta-ads',
     name: 'Meta Ads',
-    description: 'Connect your Facebook and Instagram advertising data for comprehensive campaign analysis.',
+    description: 'Connect a your Facebook and Instagram advertising data for comprehensive campaign analysis.',
     icon: 'meta',
     connected: true,
     category: 'advertising'
