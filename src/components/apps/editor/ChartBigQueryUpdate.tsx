@@ -12,7 +12,8 @@ import {
   $loadingChartUpdate,
   $stagedXAxis,
   $stagedYAxis, 
-  $stagedFilters
+  $stagedFilters,
+  type BigQueryField
 } from '@/stores/apps/chartStore'
 import { DndContext, DragEndEvent } from '@dnd-kit/core'
 import { Database, RefreshCw, Eye } from 'lucide-react'
@@ -86,7 +87,7 @@ export default function ChartBigQueryUpdate({
     
     if (!over || !active.data.current) return
 
-    const draggedColumn = active.data.current as { name: string; type: string; sourceTable: string }
+    const draggedColumn = active.data.current as BigQueryField & { sourceTable: string }
     const dropZoneId = over.id as string
 
     // Add to appropriate staging area using store actions
