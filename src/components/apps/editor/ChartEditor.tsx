@@ -17,7 +17,7 @@ import {
 } from '@/stores/apps/chartStore'
 import { isChartWidget, isBarChart, isLineChart, isPieChart, isAreaChart } from '@/types/apps/chartWidgets'
 import type { BaseChartConfig, BarChartConfig, LineChartConfig, PieChartConfig, AreaChartConfig } from '@/types/apps/chartWidgets'
-import type { Widget } from '@/types/apps/widget'
+import type { BaseWidget } from '@/types/apps/baseWidget'
 import { ColorInput, NumberInput } from '../editors/controls'
 import { Slider } from '@/components/ui/slider'
 import { DndContext, DragEndEvent } from '@dnd-kit/core'
@@ -28,7 +28,7 @@ import ContainerConfigEditor from '../editors/ContainerConfigEditor'
 import type { ContainerConfig } from '@/types/apps/widget'
 
 interface ChartEditorProps {
-  selectedWidget: Widget
+  selectedWidget: BaseWidget
   chartConfig: BaseChartConfig
   containerConfig: ContainerConfig
   onChartConfigChange: (field: string, value: unknown) => void
