@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useStore } from '@nanostores/react'
 import { 
   chartActions, 
@@ -64,14 +65,16 @@ export default function ChartBigQueryUpdate({
   const stagedYAxis = useStore($stagedYAxis)
   const stagedFilters = useStore($stagedFilters)
 
+  // SQL text display state
+  const [showSqlText, setShowSqlText] = useState(false)
+
   // SQL Query functionality (implemented internally like TableBigQueryUpdate)
   const getSavedChartQuery = (): string => {
     return selectedWidget?.bigqueryData?.query || ''
   }
 
   const onShowSqlModal = (query: string) => {
-    // TODO: Implement SQL modal display
-    console.log('Show SQL Modal:', query)
+    setShowSqlText(true)
   }
 
   // Combine current chart fields with staged fields
@@ -222,6 +225,16 @@ export default function ChartBigQueryUpdate({
                 <Eye className="w-3 h-3 mr-2" />
                 View SQL Query
               </Button>
+              
+              {/* SQL Text Display */}
+              {showSqlText && (
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium mb-2">SQL Query:</h4>
+                  <pre className="text-xs bg-gray-50 p-3 rounded border font-mono whitespace-pre-wrap">
+                    {getSavedChartQuery()}
+                  </pre>
+                </div>
+              )}
             </div>
           )}
         </div>
