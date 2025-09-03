@@ -5,20 +5,7 @@ import { $widgets, $selectedWidget, widgetActions } from '@/stores/apps/widgetSt
 import { $canvasConfig } from '@/stores/apps/canvasStore'
 import { kpiActions } from '@/stores/apps/kpiStore'
 import { tableActions } from '@/stores/apps/tableStore'
-import { 
-  chartActions, 
-  $availableTables, 
-  $selectedTable, 
-  $tableColumns, 
-  $loadingTables, 
-  $loadingColumns, 
-  $loadingChartUpdate,
-  $stagedXAxis,
-  $stagedYAxis, 
-  $stagedFilters,
-  type BigQueryField,
-  type BigQueryTable
-} from '@/stores/apps/chartStore'
+import { chartActions } from '@/stores/apps/chartStore'
 import { useState, useEffect, useMemo } from 'react'
 import { isKPIWidget } from '@/types/apps/kpiWidgets'
 import type { KPIConfig } from '@/types/apps/kpiWidgets'
@@ -36,26 +23,12 @@ import ContainerConfigEditor from '../editors/ContainerConfigEditor'
 import ChartBigQueryUpdate from './ChartBigQueryUpdate'
 import { ColorInput, NumberInput } from '../editors/controls'
 import { Slider } from '@/components/ui/slider'
-import { DndContext, DragEndEvent } from '@dnd-kit/core'
-import { Database, RefreshCw } from 'lucide-react'
-import DropZone from '../builder/DropZone'
-import DraggableColumn from '../builder/DraggableColumn'
 
 export default function WidgetEditorNew() {
   const widgets = useStore($widgets)
   const selectedWidget = useStore($selectedWidget)
   const canvasConfig = useStore($canvasConfig)
   
-  // Chart data management (using store)
-  const availableTables = useStore($availableTables)
-  const selectedTable = useStore($selectedTable)
-  const tableColumns = useStore($tableColumns)
-  const loadingTables = useStore($loadingTables)
-  const loadingColumns = useStore($loadingColumns)
-  const loadingChartUpdate = useStore($loadingChartUpdate)
-  const stagedXAxis = useStore($stagedXAxis)
-  const stagedYAxis = useStore($stagedYAxis)
-  const stagedFilters = useStore($stagedFilters)
   
   // State para controlar o modo de view: 'widgets' ou 'edit'
   const [viewMode, setViewMode] = useState<'widgets' | 'edit'>('widgets')
@@ -404,50 +377,6 @@ export default function WidgetEditorNew() {
       chartActions.loadTables()
     }
   }, [activeEditTab])
-
-  // Check if chart fields have changed
-  const hasChartChanged = () => {
-    if (!selectedWidget || !isChartWidget(selectedWidget)) return false
-    
-    // For now, simplify to just check if there are any staged fields
-    // This will show the button when user drags fields to staging areas
-    return stagedXAxis.length > 0 || stagedYAxis.length > 0 || stagedFilters.length > 0
-  }
-
-  // Handle drag end for chart fields
-  const handleChartDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
-    
-    if (!over || !active.data.current) return
-
-    const draggedColumn = active.data.current as BigQueryField & { sourceTable: string }
-    const dropZoneId = over.id as string
-
-    // Add to appropriate staging area using store actions
-    switch (dropZoneId) {
-      case 'chart-x-axis-drop-zone':
-        chartActions.addToStagingArea(draggedColumn, 'xAxis')
-        break
-      case 'chart-y-axis-drop-zone':
-        chartActions.addToStagingArea(draggedColumn, 'yAxis')
-        break
-      case 'chart-filters-drop-zone':
-        chartActions.addToStagingArea(draggedColumn, 'filters')
-        break
-    }
-  }
-
-  // Handle remove field from staging areas
-  const handleRemoveChartField = (dropZoneType: string, fieldName: string) => {
-    chartActions.removeFromStagingArea(fieldName, dropZoneType as 'xAxis' | 'yAxis' | 'filters')
-  }
-
-  // Update chart data with staged fields
-  const updateChartData = async () => {
-    if (!selectedWidget || !isChartWidget(selectedWidget)) return
-    
-    await chartActions.updateChartWithStagedData(selectedWidget.i)
-  }
 
   // Caso não haja widgets
   if (widgets.length === 0) {
@@ -1256,10 +1185,6 @@ export default function WidgetEditorNew() {
           type: filter.type,
           sourceTable: chartConfig.dataSource || ''
         })) || []}
-        onChartDragEnd={handleChartDragEnd}
-        onRemoveChartField={handleRemoveChartField}
-        onUpdateChartData={updateChartData}
-        hasChartChanged={hasChartChanged()}
       />
 
       {/* Labels */}

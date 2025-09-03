@@ -36,23 +36,13 @@ interface ChartBigQueryUpdateProps {
   currentXAxisFields?: SelectedField[]
   currentYAxisFields?: SelectedField[]
   currentFilterFields?: SelectedField[]
-  
-  // Handlers
-  onChartDragEnd: (event: DragEndEvent) => void
-  onRemoveChartField: (dropZoneType: string, fieldName: string) => void
-  onUpdateChartData: () => void
-  hasChartChanged: boolean
 }
 
 export default function ChartBigQueryUpdate({
   selectedWidget,
   currentXAxisFields = [],
   currentYAxisFields = [],
-  currentFilterFields = [],
-  onChartDragEnd,
-  onRemoveChartField,
-  onUpdateChartData,
-  hasChartChanged
+  currentFilterFields = []
 }: ChartBigQueryUpdateProps) {
   // Chart data management (using store)
   const availableTables = useStore($availableTables)
@@ -79,6 +69,50 @@ export default function ChartBigQueryUpdate({
 
   const onShowSqlModal = (query: string) => {
     setShowSqlText(true)
+  }
+
+  // Chart logic functions (moved from WidgetEditorNew for better organization)
+  const hasChartChanged = () => {
+    if (!selectedWidget || !selectedWidget.type?.startsWith('chart')) return false
+    
+    // For now, simplify to just check if there are any staged fields
+    // This will show the button when user drags fields to staging areas
+    return stagedXAxis.length > 0 || stagedYAxis.length > 0 || stagedFilters.length > 0
+  }
+
+  // Handle drag end for chart fields
+  const handleChartDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    
+    if (!over || !active.data.current) return
+
+    const draggedColumn = active.data.current as any
+    const dropZoneId = over.id as string
+
+    // Add to appropriate staging area using store actions
+    switch (dropZoneId) {
+      case 'chart-x-axis-drop-zone':
+        chartActions.addToStagingArea(draggedColumn, 'xAxis')
+        break
+      case 'chart-y-axis-drop-zone':
+        chartActions.addToStagingArea(draggedColumn, 'yAxis')
+        break
+      case 'chart-filters-drop-zone':
+        chartActions.addToStagingArea(draggedColumn, 'filters')
+        break
+    }
+  }
+
+  // Handle remove field from staging areas
+  const handleRemoveChartField = (dropZoneType: string, fieldName: string) => {
+    chartActions.removeFromStagingArea(fieldName, dropZoneType as 'xAxis' | 'yAxis' | 'filters')
+  }
+
+  // Update chart data with staged fields
+  const updateChartData = async () => {
+    if (!selectedWidget || !selectedWidget.type?.startsWith('chart')) return
+    
+    await chartActions.updateChartWithStagedData(selectedWidget.i)
   }
 
   // Generate updated chart query based on current + staged fields (like generateUpdatedQuery in table)
@@ -168,7 +202,7 @@ LIMIT 100
   return (
     <div>
       <h3 className="text-sm font-semibold text-gray-900 mb-3">📊 Chart Data Fields</h3>
-      <DndContext onDragEnd={onChartDragEnd}>
+      <DndContext onDragEnd={handleChartDragEnd}>
         <div className="space-y-4">
           {/* Tables & Columns Section */}
           <div className="grid grid-cols-2 gap-4">
@@ -248,7 +282,7 @@ LIMIT 100
               description="Drag categorical fields (strings, dates)"
               icon={<Database className="w-4 h-4 text-green-600" />}
               fields={combinedXAxis}
-              onRemoveField={(fieldName) => onRemoveChartField('xAxis', fieldName)}
+              onRemoveField={(fieldName) => handleRemoveChartField('xAxis', fieldName)}
               acceptedTypes={['string', 'date', 'numeric']}
             />
             
@@ -258,7 +292,7 @@ LIMIT 100
               description="Drag numeric fields for aggregation"
               icon={<Database className="w-4 h-4 text-blue-600" />}
               fields={combinedYAxis}
-              onRemoveField={(fieldName) => onRemoveChartField('yAxis', fieldName)}
+              onRemoveField={(fieldName) => handleRemoveChartField('yAxis', fieldName)}
               acceptedTypes={['numeric']}
             />
             
@@ -268,16 +302,16 @@ LIMIT 100
               description="Drag any fields to create filters"
               icon={<Database className="w-4 h-4 text-orange-600" />}
               fields={combinedFilters}
-              onRemoveField={(fieldName) => onRemoveChartField('filters', fieldName)}
+              onRemoveField={(fieldName) => handleRemoveChartField('filters', fieldName)}
               acceptedTypes={['string', 'date', 'numeric', 'boolean']}
             />
           </div>
 
           {/* Update Chart Button */}
-          {hasChartChanged && (
+          {hasChartChanged() && (
             <div className="mt-4">
               <button
-                onClick={onUpdateChartData}
+                onClick={updateChartData}
                 disabled={loadingChartUpdate}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
