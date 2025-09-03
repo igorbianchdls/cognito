@@ -2,26 +2,8 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { KPICard } from '@/components/widgets/KPICard'
-import KPIDisplay from '@/components/tools/KPIDisplay'
 import type { DroppedWidget, KPIConfig, LegacyChartConfigWithKPI, ChartConfig } from '@/types/apps/widget'
 
-// Helper function to convert hex color + opacity to RGBA
-function hexToRgba(hex: string, opacity: number = 1): string {
-  // Remove # if present
-  hex = hex.replace('#', '')
-  
-  // Convert 3-digit hex to 6-digit
-  if (hex.length === 3) {
-    hex = hex.split('').map(char => char + char).join('')
-  }
-  
-  // Parse RGB values
-  const r = parseInt(hex.substring(0, 2), 16)
-  const g = parseInt(hex.substring(2, 4), 16)
-  const b = parseInt(hex.substring(4, 6), 16)
-  
-  return `rgba(${r}, ${g}, ${b}, ${opacity})`
-}
 
 interface KPIWidgetProps {
   widget: DroppedWidget
@@ -194,118 +176,29 @@ export default function KPIWidget({ widget }: KPIWidgetProps) {
     }
   }, [widget.i, kpiConfig, getKpiTrend, getKpiStatus])
 
-  // Choose component based on visualization type
-  const visualizationType = kpiConfig.visualizationType || 'card'
-
-  // Custom styled KPI component for design props - com reatividade
-  const CustomKPI = useMemo(() => {
-    const containerStyle: React.CSSProperties = {
-      backgroundColor: hexToRgba(kpiConfig.backgroundColor || '#ffffff', (kpiConfig as Record<string, unknown>).backgroundOpacity as number ?? 1),
-      borderColor: hexToRgba(kpiConfig.borderColor || '#e5e7eb', (kpiConfig as Record<string, unknown>).borderOpacity as number ?? 1),
-      borderWidth: `${kpiConfig.borderWidth || 1}px`,
-      borderRadius: `${kpiConfig.borderRadius || 8}px`,
-      padding: `${kpiConfig.padding || 16}px`,
-      textAlign: kpiConfig.textAlign || 'center',
-      height: '100%',
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: kpiConfig.textAlign === 'left' ? 'flex-start' : 
-                  kpiConfig.textAlign === 'right' ? 'flex-end' : 'center',
-      borderStyle: 'solid',
-      boxShadow: kpiConfig.shadow ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : 'none',
-    }
-
-    const valueStyle: React.CSSProperties = {
-      fontSize: `${kpiConfig.valueFontSize || 36}px`,
-      color: kpiConfig.valueColor || '#1f2937',
-      fontWeight: kpiConfig.valueFontWeight || 700,
-      lineHeight: 1.2,
-      marginBottom: '8px',
-    }
-
-    const nameStyle: React.CSSProperties = {
-      fontSize: `${kpiConfig.nameFontSize || 14}px`,
-      color: kpiConfig.nameColor || '#6b7280',
-      fontWeight: kpiConfig.nameFontWeight || 500,
-      marginBottom: '12px',
-    }
-
-    const changeStyle: React.CSSProperties = {
-      fontSize: `${(kpiConfig.nameFontSize || 14) * 0.85}px`,
-      color: kpiConfig.changeColor || (kpiProps.change >= 0 ? '#16a34a' : '#dc2626'),
-      fontWeight: 600,
-      display: 'flex',
-      alignItems: 'center',
-      gap: '4px',
-      justifyContent: kpiConfig.textAlign === 'left' ? 'flex-start' : 
-                     kpiConfig.textAlign === 'right' ? 'flex-end' : 'center',
-    }
-
-    const targetStyle: React.CSSProperties = {
-      fontSize: `${(kpiConfig.nameFontSize || 14) * 0.75}px`,
-      color: kpiConfig.targetColor || '#9ca3af',
-      marginTop: '8px',
-    }
-
-    const formatValue = (value: number | undefined, unit: string = '') => {
-      if (value === undefined || value === null) return 'N/A'
-      
-      const formattedNumber = value.toLocaleString('pt-BR', {
-        minimumFractionDigits: unit === '%' || unit === 'rating' ? 1 : 0,
-        maximumFractionDigits: unit === '%' || unit === 'rating' ? 1 : 0,
-      })
-      
-      return unit === '$' ? `${unit}${formattedNumber}` : `${formattedNumber} ${unit}`
-    }
-
-    console.log('🔄 KPIWidget CustomKPI recalculated')
-    
-    return (
-      <div style={containerStyle}>
-        {/* KPI Name */}
-        <div style={nameStyle}>
-          {kpiProps.name}
-        </div>
-        
-        {/* Main KPI Value */}
-        <div style={valueStyle}>
-          {formatValue(kpiProps.currentValue, kpiProps.unit)}
-        </div>
-        
-        {/* Change indicator */}
-        {kpiProps.visualization.showTrend && (
-          <div style={changeStyle}>
-            <span style={{ fontSize: '16px' }}>
-              {kpiProps.change >= 0 ? '↗' : '↘'}
-            </span>
-            <span>
-              {Math.abs(kpiProps.change).toFixed(1)}%
-            </span>
-          </div>
-        )}
-        
-        {/* Target */}
-        {kpiProps.visualization.showTarget && kpiProps.target && (
-          <div style={targetStyle}>
-            Meta: {formatValue(kpiProps.target, kpiProps.unit)}
-          </div>
-        )}
-      </div>
-    )
-  }, [kpiConfig, kpiProps])
 
   return (
     <div className="h-full w-full">
-      {/* Use custom component when design props are configured */}
-      {(kpiConfig.backgroundColor || kpiConfig.valueColor || kpiConfig.valueFontSize || 
-        kpiConfig.nameColor || kpiConfig.nameFontSize || kpiConfig.borderColor) ? (
-        CustomKPI
-      ) : visualizationType === 'display' ? (
-        <KPIDisplay {...kpiProps} />
-      ) : (
-        <KPICard {...kpiProps} />
-      )}
+      <KPICard 
+        {...kpiProps}
+        backgroundColor={kpiConfig.backgroundColor}
+        backgroundOpacity={(kpiConfig as Record<string, unknown>).backgroundOpacity as number}
+        borderColor={kpiConfig.borderColor}
+        borderOpacity={(kpiConfig as Record<string, unknown>).borderOpacity as number}
+        borderWidth={kpiConfig.borderWidth}
+        borderRadius={kpiConfig.borderRadius}
+        padding={kpiConfig.padding}
+        textAlign={kpiConfig.textAlign}
+        shadow={kpiConfig.shadow}
+        valueFontSize={kpiConfig.valueFontSize}
+        valueColor={kpiConfig.valueColor}
+        valueFontWeight={kpiConfig.valueFontWeight}
+        nameFontSize={kpiConfig.nameFontSize}
+        nameColor={kpiConfig.nameColor}
+        nameFontWeight={kpiConfig.nameFontWeight}
+        changeColor={kpiConfig.changeColor}
+        targetColor={kpiConfig.targetColor}
+      />
     </div>
   )
 }
