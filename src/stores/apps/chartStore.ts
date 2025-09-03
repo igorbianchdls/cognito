@@ -594,17 +594,27 @@ LIMIT 100
         
         console.log('🔄 Updating chart config with new data:', configUpdate)
         
-        // Apply config update
+        // Apply config update and bigquery data
         chartActions.updateChartConfig(chartId, configUpdate)
         
-        // Update bigqueryData (like table)
-        chartActions.updateChartBigQueryData(chartId, {
-          query: query,
-          table: selectedTable,
-          source: 'bigquery',
-          lastUpdated: new Date().toISOString(),
-          data: result.data.data
+        // Update bigqueryData directly on the chart widget (like table does)
+        const currentCharts = $chartWidgets.get()
+        const updatedCharts = currentCharts.map(chart => {
+          if (chart.i === chartId) {
+            return {
+              ...chart,
+              bigqueryData: {
+                query: query,
+                table: selectedTable,
+                source: 'bigquery',
+                lastUpdated: new Date().toISOString(),
+                data: result.data.data
+              }
+            }
+          }
+          return chart
         })
+        $chartWidgets.set(updatedCharts)
         
         // Clear staging areas after successful update
         clearStagingAreas()
@@ -621,27 +631,5 @@ LIMIT 100
     } finally {
       $loadingChartUpdate.set(false)
     }
-  },
-
-  // Update chart bigqueryData (similar to how widgets store bigquery info)
-  updateChartBigQueryData: (chartId: string, bigqueryData: {
-    query: string
-    table: string  
-    source: string
-    lastUpdated: string
-    data: Array<Record<string, unknown>>
-  }) => {
-    const currentWidgets = $widgets.get()
-    const updatedWidgets = currentWidgets.map(widget => {
-      if (widget.i === chartId) {
-        return {
-          ...widget,
-          bigqueryData: bigqueryData
-        }
-      }
-      return widget
-    })
-    $widgets.set(updatedWidgets)
-    console.log('🔄 Updated chart bigqueryData for chart:', chartId)
   }
 }
