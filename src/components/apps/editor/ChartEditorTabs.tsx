@@ -1122,6 +1122,7 @@ export default function ChartEditorTabs({
       </div>
     </div>
   )
+}
 
   return {
     renderChartDesignTab,
