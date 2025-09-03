@@ -29,7 +29,7 @@ interface SelectedField {
 
 interface ChartBigQueryUpdateProps {
   // Selected widget to access bigqueryData
-  selectedWidget: DroppedWidget
+  selectedWidget: DroppedWidget | null
   
   // Current chart fields (from existing chart config)
   currentXAxisFields?: SelectedField[]
