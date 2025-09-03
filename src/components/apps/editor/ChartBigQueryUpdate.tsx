@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useStore } from '@nanostores/react'
 import { 
   chartActions, 
@@ -67,6 +67,10 @@ export default function ChartBigQueryUpdate({
 
   // SQL text display state
   const [showSqlText, setShowSqlText] = useState(false)
+  
+  // Updated query states (like TableBigQueryUpdate)
+  const [updatedChartQuery, setUpdatedChartQuery] = useState<string>('')
+  const [hasUpdatedChartQuery, setHasUpdatedChartQuery] = useState(false)
 
   // SQL Query functionality (implemented internally like TableBigQueryUpdate)
   const getSavedChartQuery = (): string => {
@@ -76,6 +80,43 @@ export default function ChartBigQueryUpdate({
   const onShowSqlModal = (query: string) => {
     setShowSqlText(true)
   }
+
+  // Generate updated chart query based on staged fields (like generateUpdatedQuery in table)
+  const generateUpdatedChartQuery = (): string => {
+    const baseQuery = getSavedChartQuery()
+    const tableInfo = selectedWidget?.bigqueryData
+    if (!tableInfo?.table) return ''
+    
+    // Get staged fields
+    const xAxisFields = stagedXAxis.map(field => field.name)
+    const yAxisFields = stagedYAxis.map(field => field.name)
+    const filterFields = stagedFilters.map(field => field.name)
+    
+    // Combine all new fields
+    const allNewFields = [...xAxisFields, ...yAxisFields, ...filterFields]
+    
+    if (allNewFields.length === 0) return baseQuery || ''
+    
+    // Create new query with Eixo X and Eixo Y fields
+    const selectFields = [...new Set(allNewFields)].join(', ')
+    const newQuery = `SELECT ${selectFields} FROM \`${tableInfo.table}\` LIMIT 1000`
+    
+    return newQuery
+  }
+
+  // Update query states when staged fields change (like TableBigQueryUpdate)
+  useEffect(() => {
+    const hasChanges = stagedXAxis.length > 0 || stagedYAxis.length > 0 || stagedFilters.length > 0
+    
+    if (hasChanges) {
+      const newQuery = generateUpdatedChartQuery()
+      setUpdatedChartQuery(newQuery)
+      setHasUpdatedChartQuery(true)
+    } else {
+      setUpdatedChartQuery('')
+      setHasUpdatedChartQuery(false)
+    }
+  }, [stagedXAxis, stagedYAxis, stagedFilters, selectedWidget])
 
   // Combine current chart fields with staged fields
   const combinedXAxis = [...currentXAxisFields, ...stagedXAxis]
@@ -214,24 +255,38 @@ export default function ChartBigQueryUpdate({
           )}
 
           {/* SQL Query Buttons */}
-          {getSavedChartQuery() && (
+          {(getSavedChartQuery() || hasUpdatedChartQuery) && (
             <div className="mt-4 space-y-2">
-              <Button
-                onClick={() => onShowSqlModal(getSavedChartQuery())}
-                variant="outline"
-                size="sm"
-                className="w-full text-xs"
-              >
-                <Eye className="w-3 h-3 mr-2" />
-                View SQL Query
-              </Button>
+              {hasUpdatedChartQuery && (
+                <Button
+                  onClick={() => onShowSqlModal(updatedChartQuery)}
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                >
+                  <Eye className="w-3 h-3 mr-2" />
+                  View Updated SQL Query
+                </Button>
+              )}
+              
+              {getSavedChartQuery() && (
+                <Button
+                  onClick={() => onShowSqlModal(getSavedChartQuery())}
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs"
+                >
+                  <Eye className="w-3 h-3 mr-2" />
+                  View SQL Query
+                </Button>
+              )}
               
               {/* SQL Text Display */}
               {showSqlText && (
                 <div className="mt-4">
                   <h4 className="text-sm font-medium mb-2">SQL Query:</h4>
                   <pre className="text-xs bg-gray-50 p-3 rounded border font-mono whitespace-pre-wrap">
-                    {getSavedChartQuery()}
+                    {hasUpdatedChartQuery && updatedChartQuery ? updatedChartQuery : getSavedChartQuery()}
                   </pre>
                 </div>
               )}
