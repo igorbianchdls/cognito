@@ -845,7 +845,7 @@ export default function ChartEditorTabs({
 
     // Get saved SQL query from widget bigqueryData
     const getSavedChartQuery = (): string => {
-      return selectedWidget?.bigqueryData?.query || ''
+      return (selectedWidget as any)?.bigqueryData?.query || ''
     }
 
     return (
