@@ -11,6 +11,12 @@ import {
 } from '@/types/apps/kpiWidgets'
 import type { LayoutItem } from '@/types/apps/baseWidget'
 
+// Function reference to invalidate adapter cache (set by compositeStore)
+let invalidateAdapterCacheFn: ((widgetId: string) => void) | null = null
+export function setInvalidateAdapterCacheFn(fn: (widgetId: string) => void) {
+  invalidateAdapterCacheFn = fn
+}
+
 // Main KPIs atom
 export const $kpiWidgets = atom<KPIWidget[]>([])
 
@@ -126,6 +132,10 @@ export const kpiActions = {
       return kpi
     })
     $kpiWidgets.set(updatedKPIs)
+    
+    // Invalidate adapter cache to force re-computation
+    invalidateAdapterCacheFn?.(kpiId)
+    console.log('🔧 kpiStore.$kpiWidgets.set() called with cache invalidation')
   },
 
   // Update KPI value (for real-time updates)

@@ -1,6 +1,6 @@
 import { atom, computed } from 'nanostores'
-import { $chartWidgets, chartActions } from './chartStore'
-import { $kpiWidgets, kpiActions } from './kpiStore'
+import { $chartWidgets, chartActions, setInvalidateAdapterCacheFn as setChartInvalidateFn } from './chartStore'
+import { $kpiWidgets, kpiActions, setInvalidateAdapterCacheFn as setKpiInvalidateFn } from './kpiStore'
 import { $tableWidgets, tableActions } from './tableStore'
 import type { ChartWidget } from '@/types/apps/chartWidgets'
 import type { KPIWidget } from '@/types/apps/kpiWidgets'
@@ -544,3 +544,9 @@ export const compositeActions = {
     migrationUtils.migrateAllWidgets(widgets)
   }
 }
+
+// Configure cache invalidation functions for specialized stores
+// This ensures that when widgets are updated, the adapter cache is properly invalidated
+setChartInvalidateFn(invalidateAdapterCache)
+setKpiInvalidateFn(invalidateAdapterCache)
+console.log('✅ Adapter cache invalidation configured for Chart and KPI stores')
