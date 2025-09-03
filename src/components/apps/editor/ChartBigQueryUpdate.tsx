@@ -153,7 +153,7 @@ export default function ChartBigQueryUpdate({
           <div className="space-y-3">
             <DropZone
               id="chart-x-axis-drop-zone"
-              label="X-Axis"
+              label="Eixo X"
               description="Drag categorical fields (strings, dates)"
               icon={<Database className="w-4 h-4 text-green-600" />}
               fields={combinedXAxis}
@@ -163,7 +163,7 @@ export default function ChartBigQueryUpdate({
             
             <DropZone
               id="chart-y-axis-drop-zone"
-              label="Y-Axis"
+              label="Eixo Y"
               description="Drag numeric fields for aggregation"
               icon={<Database className="w-4 h-4 text-blue-600" />}
               fields={combinedYAxis}
