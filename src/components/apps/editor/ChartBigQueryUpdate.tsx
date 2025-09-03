@@ -18,7 +18,20 @@ import { Database, RefreshCw } from 'lucide-react'
 import DropZone from '../builder/DropZone'
 import DraggableColumn from '../builder/DraggableColumn'
 
+// Types for pre-selected fields
+interface SelectedField {
+  name: string
+  type: string
+  sourceTable: string
+}
+
 interface ChartBigQueryUpdateProps {
+  // Pre-selected fields from datasets
+  preSelectedXAxis?: SelectedField[]
+  preSelectedYAxis?: SelectedField[]
+  preSelectedFilters?: SelectedField[]
+  
+  // Existing props
   onChartDragEnd: (event: DragEndEvent) => void
   onRemoveChartField: (dropZoneType: string, fieldName: string) => void
   onUpdateChartData: () => void
@@ -26,6 +39,9 @@ interface ChartBigQueryUpdateProps {
 }
 
 export default function ChartBigQueryUpdate({
+  preSelectedXAxis = [],
+  preSelectedYAxis = [],
+  preSelectedFilters = [],
   onChartDragEnd,
   onRemoveChartField,
   onUpdateChartData,
@@ -41,6 +57,11 @@ export default function ChartBigQueryUpdate({
   const stagedXAxis = useStore($stagedXAxis)
   const stagedYAxis = useStore($stagedYAxis)
   const stagedFilters = useStore($stagedFilters)
+
+  // Combine pre-selected fields with staged fields
+  const combinedXAxis = [...preSelectedXAxis, ...stagedXAxis]
+  const combinedYAxis = [...preSelectedYAxis, ...stagedYAxis]
+  const combinedFilters = [...preSelectedFilters, ...stagedFilters]
 
   return (
     <div>
@@ -124,7 +145,7 @@ export default function ChartBigQueryUpdate({
               label="X-Axis"
               description="Drag categorical fields (strings, dates)"
               icon={<Database className="w-4 h-4 text-green-600" />}
-              fields={stagedXAxis}
+              fields={combinedXAxis}
               onRemoveField={(fieldName) => onRemoveChartField('xAxis', fieldName)}
               acceptedTypes={['string', 'date', 'numeric']}
             />
@@ -134,7 +155,7 @@ export default function ChartBigQueryUpdate({
               label="Y-Axis"
               description="Drag numeric fields for aggregation"
               icon={<Database className="w-4 h-4 text-blue-600" />}
-              fields={stagedYAxis}
+              fields={combinedYAxis}
               onRemoveField={(fieldName) => onRemoveChartField('yAxis', fieldName)}
               acceptedTypes={['numeric']}
             />
@@ -144,7 +165,7 @@ export default function ChartBigQueryUpdate({
               label="Filters"
               description="Drag any fields to create filters"
               icon={<Database className="w-4 h-4 text-orange-600" />}
-              fields={stagedFilters}
+              fields={combinedFilters}
               onRemoveField={(fieldName) => onRemoveChartField('filters', fieldName)}
               acceptedTypes={['string', 'date', 'numeric', 'boolean']}
             />
