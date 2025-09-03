@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { KPICard } from '@/components/widgets/KPICard'
 import KPIDisplay from '@/components/tools/KPIDisplay'
 import type { DroppedWidget, KPIConfig, LegacyChartConfigWithKPI, ChartConfig } from '@/types/apps/widget'
@@ -63,40 +63,43 @@ function isLegacyChartConfigWithKPI(config: ChartConfig | undefined): config is 
 }
 
 export default function KPIWidget({ widget }: KPIWidgetProps) {
-  // Get KPI configuration with backward compatibility (same pattern as charts)
-  const kpiConfig: KPIConfig = widget.config?.kpiConfig || 
-    // Backward compatibility: extract KPI props from old chartConfig
-    (isLegacyChartConfigWithKPI(widget.chartConfig) ? {
-      name: widget.chartConfig.kpiName,
-      value: widget.chartConfig.kpiValue,
-      unit: widget.chartConfig.kpiUnit,
-      target: widget.chartConfig.kpiTarget,
-      change: widget.chartConfig.kpiChange,
-      trend: widget.chartConfig.kpiTrend,
-      status: widget.chartConfig.kpiStatus,
-      showTarget: widget.chartConfig.showTarget,
-      showTrend: widget.chartConfig.showTrend,
-      visualizationType: widget.chartConfig.kpiVisualizationType,
-      colorScheme: widget.chartConfig.kpiColorScheme,
-      metric: widget.chartConfig.kpiMetric,
-      calculation: widget.chartConfig.kpiCalculation,
-      timeRange: widget.chartConfig.kpiTimeRange,
-      valueFontSize: widget.chartConfig.kpiValueFontSize,
-      valueColor: widget.chartConfig.kpiValueColor,
-      valueFontWeight: widget.chartConfig.kpiValueFontWeight,
-      nameFontSize: widget.chartConfig.kpiNameFontSize,
-      nameColor: widget.chartConfig.kpiNameColor,
-      nameFontWeight: widget.chartConfig.kpiNameFontWeight,
-      backgroundColor: widget.chartConfig.kpiBackgroundColor,
-      borderColor: widget.chartConfig.kpiBorderColor,
-      borderWidth: widget.chartConfig.kpiBorderWidth,
-      borderRadius: widget.chartConfig.kpiBorderRadius,
-      padding: widget.chartConfig.kpiPadding,
-      textAlign: widget.chartConfig.kpiTextAlign,
-      shadow: widget.chartConfig.kpiShadow,
-      changeColor: widget.chartConfig.kpiChangeColor,
-      targetColor: widget.chartConfig.kpiTargetColor,
-    } : {}) || {}
+  // Get KPI configuration with backward compatibility - with reactividade
+  const kpiConfig: KPIConfig = useMemo(() => {
+    console.log('🔄 KPIWidget kpiConfig recalculated for widget:', widget.i)
+    return widget.config?.kpiConfig || 
+      // Backward compatibility: extract KPI props from old chartConfig
+      (isLegacyChartConfigWithKPI(widget.chartConfig) ? {
+        name: widget.chartConfig.kpiName,
+        value: widget.chartConfig.kpiValue,
+        unit: widget.chartConfig.kpiUnit,
+        target: widget.chartConfig.kpiTarget,
+        change: widget.chartConfig.kpiChange,
+        trend: widget.chartConfig.kpiTrend,
+        status: widget.chartConfig.kpiStatus,
+        showTarget: widget.chartConfig.showTarget,
+        showTrend: widget.chartConfig.showTrend,
+        visualizationType: widget.chartConfig.kpiVisualizationType,
+        colorScheme: widget.chartConfig.kpiColorScheme,
+        metric: widget.chartConfig.kpiMetric,
+        calculation: widget.chartConfig.kpiCalculation,
+        timeRange: widget.chartConfig.kpiTimeRange,
+        valueFontSize: widget.chartConfig.kpiValueFontSize,
+        valueColor: widget.chartConfig.kpiValueColor,
+        valueFontWeight: widget.chartConfig.kpiValueFontWeight,
+        nameFontSize: widget.chartConfig.kpiNameFontSize,
+        nameColor: widget.chartConfig.kpiNameColor,
+        nameFontWeight: widget.chartConfig.kpiNameFontWeight,
+        backgroundColor: widget.chartConfig.kpiBackgroundColor,
+        borderColor: widget.chartConfig.kpiBorderColor,
+        borderWidth: widget.chartConfig.kpiBorderWidth,
+        borderRadius: widget.chartConfig.kpiBorderRadius,
+        padding: widget.chartConfig.kpiPadding,
+        textAlign: widget.chartConfig.kpiTextAlign,
+        shadow: widget.chartConfig.kpiShadow,
+        changeColor: widget.chartConfig.kpiChangeColor,
+        targetColor: widget.chartConfig.kpiTargetColor,
+      } : {}) || {}
+  }, [widget.config, widget.chartConfig, widget.i])
 
   // Default simulation data (only used if no real data provided)
   const [simulatedData, setSimulatedData] = useState({
@@ -134,8 +137,8 @@ export default function KPIWidget({ widget }: KPIWidgetProps) {
     return () => clearInterval(interval)
   }, [shouldSimulate, simulatedData.previousValue, kpiConfig.simulationRange])
   
-  // Determine KPI status based on current value vs target (only real data)
-  const getKpiStatus = () => {
+  // Determine KPI status based on current value vs target - com reatividade
+  const getKpiStatus = useMemo(() => {
     if (kpiConfig.status) return kpiConfig.status
     
     const currentValue = kpiConfig.value || 0
@@ -148,51 +151,54 @@ export default function KPIWidget({ widget }: KPIWidgetProps) {
     if (percentage >= 80) return 'above-target'
     if (percentage >= 60) return 'below-target'
     return 'critical'
-  }
+  }, [kpiConfig.status, kpiConfig.value, kpiConfig.target])
 
-  // Determine trend based on change (only real data)
-  const getKpiTrend = () => {
+  // Determine trend based on change - com reatividade
+  const getKpiTrend = useMemo(() => {
     if (kpiConfig.trend) return kpiConfig.trend
     
     const change = kpiConfig.change || 0
     if (Math.abs(change) < 0.5) return 'stable'
     return change > 0 ? 'increasing' : 'decreasing'
-  }
+  }, [kpiConfig.trend, kpiConfig.change])
 
-  // Prepare props for KPI components (only real data from BigQuery)
-  const kpiProps = {
-    kpiId: `kpi-${widget.i}`,
-    name: kpiConfig.name || 'KPI',
-    metric: kpiConfig.metric || 'metric',
-    calculation: kpiConfig.calculation || 'VALUE',
-    currentValue: kpiConfig.value || 0, // Use only real data
-    previousValue: kpiConfig.previousValue || 0, // Use only real data
-    target: kpiConfig.target || undefined, // Use only real data
-    unit: kpiConfig.unit || '',
-    change: kpiConfig.change || 0, // Use only real data
-    trend: getKpiTrend(),
-    status: getKpiStatus(),
-    timeRange: kpiConfig.timeRange || 'Current Period',
-    visualization: {
-      chartType: kpiConfig.visualizationType === 'gauge' ? 'gauge' : 'default',
-      color: kpiConfig.colorScheme || 'blue',
-      showTrend: kpiConfig.showTrend ?? true,
-      showTarget: kpiConfig.showTarget ?? true,
-    },
-    metadata: {
-      dataSource: kpiConfig.dataSource || 'BigQuery',
-      refreshRate: kpiConfig.refreshRate || '5 minutes',
-      lastUpdated: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-    },
-    success: true,
-  }
+  // Prepare props for KPI components - com reatividade
+  const kpiProps = useMemo(() => {
+    console.log('🔄 KPIWidget kpiProps recalculated')
+    return {
+      kpiId: `kpi-${widget.i}`,
+      name: kpiConfig.name || 'KPI',
+      metric: kpiConfig.metric || 'metric',
+      calculation: kpiConfig.calculation || 'VALUE',
+      currentValue: kpiConfig.value || 0, // Use only real data
+      previousValue: kpiConfig.previousValue || 0, // Use only real data
+      target: kpiConfig.target || undefined, // Use only real data
+      unit: kpiConfig.unit || '',
+      change: kpiConfig.change || 0, // Use only real data
+      trend: getKpiTrend,
+      status: getKpiStatus,
+      timeRange: kpiConfig.timeRange || 'Current Period',
+      visualization: {
+        chartType: kpiConfig.visualizationType === 'gauge' ? 'gauge' : 'default',
+        color: kpiConfig.colorScheme || 'blue',
+        showTrend: kpiConfig.showTrend ?? true,
+        showTarget: kpiConfig.showTarget ?? true,
+      },
+      metadata: {
+        dataSource: kpiConfig.dataSource || 'BigQuery',
+        refreshRate: kpiConfig.refreshRate || '5 minutes',
+        lastUpdated: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+      },
+      success: true,
+    }
+  }, [widget.i, kpiConfig, getKpiTrend, getKpiStatus])
 
   // Choose component based on visualization type
   const visualizationType = kpiConfig.visualizationType || 'card'
 
-  // Custom styled KPI component for design props
-  const CustomKPI = () => {
+  // Custom styled KPI component for design props - com reatividade
+  const CustomKPI = useMemo(() => {
     const containerStyle: React.CSSProperties = {
       backgroundColor: hexToRgba(kpiConfig.backgroundColor || '#ffffff', (kpiConfig as Record<string, unknown>).backgroundOpacity as number ?? 1),
       borderColor: hexToRgba(kpiConfig.borderColor || '#e5e7eb', (kpiConfig as Record<string, unknown>).borderOpacity as number ?? 1),
@@ -253,6 +259,8 @@ export default function KPIWidget({ widget }: KPIWidgetProps) {
       return unit === '$' ? `${unit}${formattedNumber}` : `${formattedNumber} ${unit}`
     }
 
+    console.log('🔄 KPIWidget CustomKPI recalculated')
+    
     return (
       <div style={containerStyle}>
         {/* KPI Name */}
@@ -285,14 +293,14 @@ export default function KPIWidget({ widget }: KPIWidgetProps) {
         )}
       </div>
     )
-  }
+  }, [kpiConfig, kpiProps])
 
   return (
     <div className="h-full w-full">
       {/* Use custom component when design props are configured */}
       {(kpiConfig.backgroundColor || kpiConfig.valueColor || kpiConfig.valueFontSize || 
         kpiConfig.nameColor || kpiConfig.nameFontSize || kpiConfig.borderColor) ? (
-        <CustomKPI />
+        CustomKPI
       ) : visualizationType === 'display' ? (
         <KPIDisplay {...kpiProps} />
       ) : (
