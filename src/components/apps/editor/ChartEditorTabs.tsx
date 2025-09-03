@@ -7,7 +7,6 @@ import { ColorInput, NumberInput } from '../editors/controls'
 import { Slider } from '@/components/ui/slider'
 import { DragEndEvent } from '@dnd-kit/core'
 import ContainerConfigEditor from '../editors/ContainerConfigEditor'
-import ChartBigQueryUpdate from './ChartBigQueryUpdate'
 import type { ContainerConfig, DroppedWidget } from '@/types/apps/widget'
 
 interface ChartEditorTabsProps {
@@ -796,50 +795,12 @@ export default function ChartEditorTabs({
     </div>
   )
 
-  const renderChartDataTab = () => {
-    // Convert chart config fields to SelectedField format
-    const currentXAxisFields = chartConfig.xAxis?.field ? [{
-      name: chartConfig.xAxis.field,
-      type: chartConfig.xAxis.type || 'string',
-      sourceTable: chartConfig.dataSource || ''
-    }] : []
-
-    const currentYAxisFields = chartConfig.yAxis?.field ? [{
-      name: chartConfig.yAxis.field,
-      type: chartConfig.yAxis.type || 'numeric',
-      sourceTable: chartConfig.dataSource || ''
-    }] : []
-
-    const currentFilterFields = chartConfig.filters?.map(filter => ({
-      name: filter.name,
-      type: filter.type,
-      sourceTable: chartConfig.dataSource || ''
-    })) || []
-
-    // Get saved SQL query from widget bigqueryData
-    const getSavedChartQuery = (): string => {
-      return (selectedWidget as DroppedWidget)?.bigqueryData?.query || ''
-    }
-
-    return (
+  const renderChartDataTab = () => (
       <div className="space-y-6">
-        {/* Chart Data Fields */}
-        <ChartBigQueryUpdate
-          currentXAxisFields={currentXAxisFields}
-          currentYAxisFields={currentYAxisFields}
-          currentFilterFields={currentFilterFields}
-          getSavedChartQuery={getSavedChartQuery}
-          hasUpdatedChartQuery={false} // TODO: Implement updated query tracking
-          updatedChartQuery={''} // TODO: Implement updated query tracking
-          onChartDragEnd={onChartDragEnd}
-          onRemoveChartField={onRemoveChartField}
-          onUpdateChartData={onUpdateChartData}
-          onShowSqlModal={(query: string) => {
-            // TODO: Implement SQL modal display similar to TableConfigEditor
-            console.log('Show SQL Modal:', query)
-          }}
-          hasChartChanged={hasChartChanged}
-        />
+        {/* Chart Data Fields - Moved to ChartBigQueryUpdate component */}
+        <div>
+          <p className="text-sm text-gray-500 italic">Chart Data Fields functionality has been moved to ChartBigQueryUpdate component.</p>
+        </div>
 
       {/* Labels */}
       <div>
