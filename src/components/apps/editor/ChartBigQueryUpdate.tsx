@@ -67,7 +67,7 @@ export default function ChartBigQueryUpdate({
     return selectedWidget?.bigqueryData?.query || ''
   }
 
-  const onShowSqlModal = (query: string) => {
+  const onShowSqlModal = () => {
     setShowSqlText(true)
   }
 
@@ -86,7 +86,7 @@ export default function ChartBigQueryUpdate({
     
     if (!over || !active.data.current) return
 
-    const draggedColumn = active.data.current as any
+    const draggedColumn = active.data.current as { name: string; type: string; sourceTable: string }
     const dropZoneId = over.id as string
 
     // Add to appropriate staging area using store actions
@@ -335,7 +335,7 @@ LIMIT 100
             <div className="mt-4 space-y-2">
               {hasUpdatedChartQuery && (
                 <Button
-                  onClick={() => onShowSqlModal(updatedChartQuery)}
+                  onClick={onShowSqlModal}
                   variant="outline"
                   size="sm"
                   className="w-full text-xs bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
@@ -347,7 +347,7 @@ LIMIT 100
               
               {getSavedChartQuery() && (
                 <Button
-                  onClick={() => onShowSqlModal(getSavedChartQuery())}
+                  onClick={onShowSqlModal}
                   variant="outline"
                   size="sm"
                   className="w-full text-xs"
