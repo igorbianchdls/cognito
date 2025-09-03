@@ -112,14 +112,34 @@ export default function ChartBigQueryUpdate({
     
     if (uniqueFields.length === 0) return baseQuery || ''
     
-    // Create new query with ALL fields (current + staged)
+    // Create new query with ALL fields (current + staged) - using correct FROM format like table
     const selectFields = uniqueFields.join(', ')
-    const newQuery = `SELECT ${selectFields} FROM \`${tableInfo.table}\` LIMIT 1000`
+    const newQuery = `
+SELECT ${selectFields}
+FROM \`creatto-463117.biquery_data.${tableInfo.table}\`
+LIMIT 100
+    `.trim()
     
     return newQuery
   }
 
-  // Update query states when staged fields change (like TableBigQueryUpdate)
+  // Initialize chart fields (similar to TableConfigEditor useEffect)
+  useEffect(() => {
+    if (currentXAxisFields.length > 0 || currentYAxisFields.length > 0 || currentFilterFields.length > 0) {
+      // Generate initial query for preview (but don't mark as having updates yet)
+      const initialQuery = generateUpdatedChartQuery()
+      setUpdatedChartQuery(initialQuery)
+      setHasUpdatedChartQuery(false) // No changes yet, just showing current state
+      
+      console.log('🔄 Initialized chart fields with', currentXAxisFields.length + currentYAxisFields.length + currentFilterFields.length, 'current chart fields')
+    } else {
+      // No current fields, start with empty query
+      setUpdatedChartQuery('')
+      setHasUpdatedChartQuery(false)
+    }
+  }, [currentXAxisFields, currentYAxisFields, currentFilterFields])
+
+  // Update query states when staged fields change (like TableBigQueryUpdate)  
   useEffect(() => {
     const hasChanges = stagedXAxis.length > 0 || stagedYAxis.length > 0 || stagedFilters.length > 0
     
@@ -128,10 +148,17 @@ export default function ChartBigQueryUpdate({
       setUpdatedChartQuery(newQuery)
       setHasUpdatedChartQuery(true)
     } else {
-      setUpdatedChartQuery('')
-      setHasUpdatedChartQuery(false)
+      // Reset to initial state if no staged changes
+      if (currentXAxisFields.length > 0 || currentYAxisFields.length > 0 || currentFilterFields.length > 0) {
+        const initialQuery = generateUpdatedChartQuery()
+        setUpdatedChartQuery(initialQuery)
+        setHasUpdatedChartQuery(false)
+      } else {
+        setUpdatedChartQuery('')
+        setHasUpdatedChartQuery(false)
+      }
     }
-  }, [stagedXAxis, stagedYAxis, stagedFilters, selectedWidget])
+  }, [stagedXAxis, stagedYAxis, stagedFilters, selectedWidget, currentXAxisFields, currentYAxisFields, currentFilterFields])
 
   // Combine current chart fields with staged fields
   const combinedXAxis = [...currentXAxisFields, ...stagedXAxis]
