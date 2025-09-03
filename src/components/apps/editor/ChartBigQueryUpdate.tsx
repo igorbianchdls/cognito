@@ -26,10 +26,10 @@ interface SelectedField {
 }
 
 interface ChartBigQueryUpdateProps {
-  // Pre-selected fields from datasets
-  preSelectedXAxis?: SelectedField[]
-  preSelectedYAxis?: SelectedField[]
-  preSelectedFilters?: SelectedField[]
+  // Current chart fields (from existing chart config)
+  currentXAxisFields?: SelectedField[]
+  currentYAxisFields?: SelectedField[]
+  currentFilterFields?: SelectedField[]
   
   // Existing props
   onChartDragEnd: (event: DragEndEvent) => void
@@ -39,9 +39,9 @@ interface ChartBigQueryUpdateProps {
 }
 
 export default function ChartBigQueryUpdate({
-  preSelectedXAxis = [],
-  preSelectedYAxis = [],
-  preSelectedFilters = [],
+  currentXAxisFields = [],
+  currentYAxisFields = [],
+  currentFilterFields = [],
   onChartDragEnd,
   onRemoveChartField,
   onUpdateChartData,
@@ -58,10 +58,10 @@ export default function ChartBigQueryUpdate({
   const stagedYAxis = useStore($stagedYAxis)
   const stagedFilters = useStore($stagedFilters)
 
-  // Combine pre-selected fields with staged fields
-  const combinedXAxis = [...preSelectedXAxis, ...stagedXAxis]
-  const combinedYAxis = [...preSelectedYAxis, ...stagedYAxis]
-  const combinedFilters = [...preSelectedFilters, ...stagedFilters]
+  // Combine current chart fields with staged fields
+  const combinedXAxis = [...currentXAxisFields, ...stagedXAxis]
+  const combinedYAxis = [...currentYAxisFields, ...stagedYAxis]
+  const combinedFilters = [...currentFilterFields, ...stagedFilters]
 
   return (
     <div>
