@@ -9,8 +9,7 @@ import type {
   BarChartConfig,
   LineChartConfig,
   PieChartConfig,
-  AreaChartConfig,
-  ChartColumn
+  AreaChartConfig
 } from '@/types/apps/chartWidgets'
 import type { LayoutItem } from '@/types/apps/baseWidget'
 
@@ -625,7 +624,13 @@ LIMIT 100
   },
 
   // Update chart bigqueryData (similar to how widgets store bigquery info)
-  updateChartBigQueryData: (chartId: string, bigqueryData: any) => {
+  updateChartBigQueryData: (chartId: string, bigqueryData: {
+    query: string
+    table: string  
+    source: string
+    lastUpdated: string
+    data: Array<Record<string, unknown>>
+  }) => {
     const currentWidgets = $widgets.get()
     const updatedWidgets = currentWidgets.map(widget => {
       if (widget.i === chartId) {
