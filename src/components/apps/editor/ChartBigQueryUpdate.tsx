@@ -18,6 +18,7 @@ import { Database, RefreshCw, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import DropZone from '../builder/DropZone'
 import DraggableColumn from '../builder/DraggableColumn'
+import type { DroppedWidget } from '@/types/apps/widget'
 
 // Types for pre-selected fields
 interface SelectedField {
@@ -28,7 +29,7 @@ interface SelectedField {
 
 interface ChartBigQueryUpdateProps {
   // Selected widget to access bigqueryData
-  selectedWidget: any // Will be cast to DroppedWidget internally
+  selectedWidget: DroppedWidget
   
   // Current chart fields (from existing chart config)
   currentXAxisFields?: SelectedField[]
