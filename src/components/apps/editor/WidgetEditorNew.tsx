@@ -1240,19 +1240,13 @@ export default function WidgetEditorNew() {
     <div className="space-y-6">
       {/* Chart Data Fields */}
       <ChartBigQueryUpdate
+        selectedWidget={selectedWidget}
         currentXAxisFields={[]} // TODO: Get from chartConfig
         currentYAxisFields={[]} // TODO: Get from chartConfig  
         currentFilterFields={[]} // TODO: Get from chartConfig
-        getSavedChartQuery={() => ''} // TODO: Implement
-        hasUpdatedChartQuery={false} // TODO: Implement
-        updatedChartQuery={''} // TODO: Implement
         onChartDragEnd={handleChartDragEnd}
         onRemoveChartField={handleRemoveChartField}
         onUpdateChartData={updateChartData}
-        onShowSqlModal={(query: string) => {
-          // TODO: Implement SQL modal display
-          console.log('Show SQL Modal:', query)
-        }}
         hasChartChanged={hasChartChanged()}
       />
 
