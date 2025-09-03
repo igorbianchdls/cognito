@@ -501,65 +501,142 @@ export const chartActions = {
       const stagedXAxis = $stagedXAxis.get()
       const stagedYAxis = $stagedYAxis.get()
       const stagedFilters = $stagedFilters.get()
-      
-      // Prepare config update
-      const configUpdate: Record<string, unknown> = {}
-      
-      // Update xAxis configuration
-      if (stagedXAxis.length > 0) {
-        configUpdate.xAxis = {
-          field: stagedXAxis[0].name,
-          name: stagedXAxis[0].name,
-          type: stagedXAxis[0].type
-        }
-      } else {
-        configUpdate.xAxis = undefined
-      }
-      
-      // Update yAxis configuration
-      if (stagedYAxis.length > 0) {
-        configUpdate.yAxis = {
-          field: stagedYAxis[0].name,
-          name: stagedYAxis[0].name,
-          type: stagedYAxis[0].type
-        }
-      } else {
-        configUpdate.yAxis = undefined
-      }
-      
-      // Update filters
-      configUpdate.filters = stagedFilters.map(field => ({
-        name: field.name,
-        type: field.type,
-        value: ''
-      }))
-      
-      // Set data source
       const selectedTable = $selectedTable.get()
-      if (selectedTable) {
-        configUpdate.dataSource = selectedTable
+      
+      if (!selectedTable) {
+        throw new Error('No table selected')
       }
       
-      // Set available columns
-      const tableColumns = $tableColumns.get()
-      configUpdate.columns = tableColumns.map(col => ({
-        name: col.name,
-        type: col.type,
-        sourceTable: selectedTable
-      }))
+      // Get all fields to query (like generateUpdatedChartQuery)
+      const allFields = [
+        ...stagedXAxis.map(f => f.name),
+        ...stagedYAxis.map(f => f.name), 
+        ...stagedFilters.map(f => f.name)
+      ]
       
-      console.log('🔄 Updating chart config with staged data:', configUpdate)
+      const uniqueFields = [...new Set(allFields)]
       
-      // Apply config update
-      chartActions.updateChartConfig(chartId, configUpdate)
+      if (uniqueFields.length === 0) {
+        throw new Error('No fields selected')
+      }
       
-      // Clear staging areas after successful update
-      clearStagingAreas()
+      // Generate query (like table generateUpdatedQuery)
+      const query = `
+SELECT ${uniqueFields.join(', ')}
+FROM \`creatto-463117.biquery_data.${selectedTable}\`
+LIMIT 100
+      `.trim()
+      
+      console.log('🔄 Executing query to update chart data:', query)
+      
+      // Execute BigQuery (like table updateTableData)
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000)
+      
+      const response = await fetch('/api/bigquery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'execute',
+          query: query
+        }),
+        signal: controller.signal
+      })
+      
+      clearTimeout(timeoutId)
+      
+      if (!response.ok) {
+        throw new Error(`API response: ${response.status} ${response.statusText}`)
+      }
+      
+      const result = await response.json()
+      console.log('📊 Chart query execution result:', result)
+      
+      if (result.success && result.data?.data && Array.isArray(result.data.data)) {
+        // Prepare config update with new data
+        const configUpdate: Record<string, unknown> = {}
+        
+        // Update xAxis configuration
+        if (stagedXAxis.length > 0) {
+          configUpdate.xAxis = {
+            field: stagedXAxis[0].name,
+            name: stagedXAxis[0].name,
+            type: stagedXAxis[0].type
+          }
+        }
+        
+        // Update yAxis configuration  
+        if (stagedYAxis.length > 0) {
+          configUpdate.yAxis = {
+            field: stagedYAxis[0].name,
+            name: stagedYAxis[0].name,
+            type: stagedYAxis[0].type
+          }
+        }
+        
+        // Update filters
+        configUpdate.filters = stagedFilters.map(field => ({
+          name: field.name,
+          type: field.type,
+          value: ''
+        }))
+        
+        // Set data source and columns
+        configUpdate.dataSource = selectedTable
+        const tableColumns = $tableColumns.get()
+        configUpdate.columns = tableColumns.map(col => ({
+          name: col.name,
+          type: col.type,
+          sourceTable: selectedTable
+        }))
+        
+        // Set the new data
+        configUpdate.data = result.data.data
+        
+        console.log('🔄 Updating chart config with new data:', configUpdate)
+        
+        // Apply config update
+        chartActions.updateChartConfig(chartId, configUpdate)
+        
+        // Update bigqueryData (like table)
+        chartActions.updateChartBigQueryData(chartId, {
+          query: query,
+          table: selectedTable,
+          source: 'bigquery',
+          lastUpdated: new Date().toISOString(),
+          data: result.data.data
+        })
+        
+        // Clear staging areas after successful update
+        clearStagingAreas()
+        
+        console.log('✅ Chart updated successfully with', result.data.data.length, 'rows')
+        
+      } else {
+        const errorMsg = result.error || 'No data returned from query'
+        throw new Error(errorMsg)
+      }
       
     } catch (err) {
-      console.error('Error updating chart with staged data:', err)
+      console.error('❌ Failed to update chart data:', err)
     } finally {
       $loadingChartUpdate.set(false)
     }
+  },
+
+  // Update chart bigqueryData (similar to how widgets store bigquery info)
+  updateChartBigQueryData: (chartId: string, bigqueryData: any) => {
+    const currentWidgets = $widgets.get()
+    const updatedWidgets = currentWidgets.map(widget => {
+      if (widget.i === chartId) {
+        return {
+          ...widget,
+          bigqueryData: bigqueryData
+        }
+      }
+      return widget
+    })
+    $widgets.set(updatedWidgets)
+    console.log('🔄 Updated chart bigqueryData for chart:', chartId)
   }
 }
