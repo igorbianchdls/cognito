@@ -9,9 +9,34 @@ import type {
   BarChartConfig,
   LineChartConfig,
   PieChartConfig,
-  AreaChartConfig
+  AreaChartConfig,
+  ChartColumn
 } from '@/types/apps/chartWidgets'
 import type { LayoutItem } from '@/types/apps/baseWidget'
+
+// BigQuery table type (moved from WidgetEditor)
+export interface BigQueryTable {
+  datasetId: string
+  tableId: string
+  projectId?: string
+  description?: string
+  numRows?: number
+  numBytes?: number
+  creationTime?: Date
+  lastModifiedTime?: Date
+  // Support for different API response formats
+  DATASETID?: string
+  TABLEID?: string
+  NUMROWS?: number
+  NUMBYTES?: number
+}
+
+// BigQuery field type (imported from TablesExplorer)
+export interface BigQueryField {
+  name: string
+  type: 'string' | 'numeric' | 'date' | 'boolean'
+  description?: string
+}
 
 // Function reference to invalidate adapter cache (set by compositeStore)
 let invalidateAdapterCacheFn: ((widgetId: string) => void) | null = null
@@ -24,6 +49,26 @@ export const $chartWidgets = atom<ChartWidget[]>([])
 
 // Selected chart atom
 export const $selectedChartId = atom<string | null>(null)
+
+// Chart data management atoms (moved from WidgetEditor)
+export const $availableTables = atom<BigQueryTable[]>([])
+export const $selectedTable = atom<string | null>(null)
+export const $tableColumns = atom<BigQueryField[]>([])
+export const $loadingTables = atom<boolean>(false)
+export const $loadingColumns = atom<string | null>(null)
+export const $loadingChartUpdate = atom<boolean>(false)
+
+// Staging atoms for chart fields
+export const $stagedXAxis = atom<BigQueryField[]>([])
+export const $stagedYAxis = atom<BigQueryField[]>([])
+export const $stagedFilters = atom<BigQueryField[]>([])
+
+// Clear staging areas
+export function clearStagingAreas() {
+  $stagedXAxis.set([])
+  $stagedYAxis.set([])
+  $stagedFilters.set([])
+}
 
 // Computed for selected chart
 export const $selectedChart = computed([$chartWidgets, $selectedChartId], (charts, selectedId) => {
@@ -355,5 +400,166 @@ export const chartActions = {
     
     $chartWidgets.set([...currentCharts, duplicatedChart])
     return duplicatedChart
+  },
+
+  // Chart Data Management Functions (moved from WidgetEditor)
+  
+  // Load available BigQuery tables
+  loadTables: async () => {
+    $loadingTables.set(true)
+    try {
+      const response = await fetch('/api/bigquery?action=tables&dataset=biquery_data')
+      const result = await response.json()
+      
+      if (result.success && Array.isArray(result.data)) {
+        $availableTables.set(result.data)
+      } else {
+        throw new Error(result.error || 'Failed to load tables')
+      }
+    } catch (err) {
+      console.error('Error loading tables:', err)
+    } finally {
+      $loadingTables.set(false)
+    }
+  },
+
+  // Load columns for a specific table
+  loadTableColumns: async (tableId: string) => {
+    $loadingColumns.set(tableId)
+    try {
+      const response = await fetch(`/api/bigquery?action=schema&dataset=biquery_data&table=${tableId}`)
+      const result = await response.json()
+      
+      if (result.success && Array.isArray(result.data)) {
+        $tableColumns.set(result.data)
+      } else {
+        throw new Error(result.error || 'Failed to load table columns')
+      }
+    } catch (err) {
+      console.error('Error loading table columns:', err)
+      $tableColumns.set([])
+    } finally {
+      $loadingColumns.set(null)
+    }
+  },
+
+  // Select table and load its columns
+  selectTable: async (tableId: string) => {
+    $selectedTable.set(tableId)
+    await chartActions.loadTableColumns(tableId)
+  },
+
+  // Chart field staging management
+  addToStagingArea: (field: BigQueryField, area: 'xAxis' | 'yAxis' | 'filters') => {
+    // Remove from all areas first
+    const currentXAxis = $stagedXAxis.get().filter(f => f.name !== field.name)
+    const currentYAxis = $stagedYAxis.get().filter(f => f.name !== field.name)
+    const currentFilters = $stagedFilters.get().filter(f => f.name !== field.name)
+    
+    $stagedXAxis.set(currentXAxis)
+    $stagedYAxis.set(currentYAxis)  
+    $stagedFilters.set(currentFilters)
+    
+    // Add to the specified area
+    switch (area) {
+      case 'xAxis':
+        $stagedXAxis.set([...currentXAxis, field])
+        break
+      case 'yAxis':
+        $stagedYAxis.set([...currentYAxis, field])
+        break
+      case 'filters':
+        $stagedFilters.set([...currentFilters, field])
+        break
+    }
+  },
+
+  // Remove field from staging area
+  removeFromStagingArea: (fieldName: string, area: 'xAxis' | 'yAxis' | 'filters') => {
+    switch (area) {
+      case 'xAxis':
+        const currentXAxis = $stagedXAxis.get().filter(f => f.name !== fieldName)
+        $stagedXAxis.set(currentXAxis)
+        break
+      case 'yAxis':
+        const currentYAxis = $stagedYAxis.get().filter(f => f.name !== fieldName)
+        $stagedYAxis.set(currentYAxis)
+        break
+      case 'filters':
+        const currentFilters = $stagedFilters.get().filter(f => f.name !== fieldName)
+        $stagedFilters.set(currentFilters)
+        break
+    }
+  },
+
+  // Update chart with staged data
+  updateChartWithStagedData: async (chartId: string) => {
+    if (!chartId) return
+
+    $loadingChartUpdate.set(true)
+    try {
+      const stagedXAxis = $stagedXAxis.get()
+      const stagedYAxis = $stagedYAxis.get()
+      const stagedFilters = $stagedFilters.get()
+      
+      // Prepare config update
+      const configUpdate: Record<string, unknown> = {}
+      
+      // Update xAxis configuration
+      if (stagedXAxis.length > 0) {
+        configUpdate.xAxis = {
+          field: stagedXAxis[0].name,
+          name: stagedXAxis[0].name,
+          type: stagedXAxis[0].type
+        }
+      } else {
+        configUpdate.xAxis = undefined
+      }
+      
+      // Update yAxis configuration
+      if (stagedYAxis.length > 0) {
+        configUpdate.yAxis = {
+          field: stagedYAxis[0].name,
+          name: stagedYAxis[0].name,
+          type: stagedYAxis[0].type
+        }
+      } else {
+        configUpdate.yAxis = undefined
+      }
+      
+      // Update filters
+      configUpdate.filters = stagedFilters.map(field => ({
+        name: field.name,
+        type: field.type,
+        value: ''
+      }))
+      
+      // Set data source
+      const selectedTable = $selectedTable.get()
+      if (selectedTable) {
+        configUpdate.dataSource = selectedTable
+      }
+      
+      // Set available columns
+      const tableColumns = $tableColumns.get()
+      configUpdate.columns = tableColumns.map(col => ({
+        name: col.name,
+        type: col.type,
+        sourceTable: selectedTable
+      }))
+      
+      console.log('🔄 Updating chart config with staged data:', configUpdate)
+      
+      // Apply config update
+      chartActions.updateChartConfig(chartId, configUpdate)
+      
+      // Clear staging areas after successful update
+      clearStagingAreas()
+      
+    } catch (err) {
+      console.error('Error updating chart with staged data:', err)
+    } finally {
+      $loadingChartUpdate.set(false)
+    }
   }
 }

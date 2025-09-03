@@ -20,8 +20,34 @@ export interface ColorSchemeConfig {
   scheme?: string
 }
 
+// Chart axis configuration
+export interface ChartAxisConfig {
+  field?: string
+  name?: string
+  type?: 'string' | 'numeric' | 'date' | 'boolean'
+}
+
+// Chart column configuration (similar to table columns)
+export interface ChartColumn {
+  name: string
+  type: 'string' | 'numeric' | 'date' | 'boolean'
+  sourceTable?: string
+}
+
 // Base chart configuration interface
 export interface BaseChartConfig {
+  // Data properties (similar to table config)
+  data?: Array<Record<string, string | number | boolean | null | undefined>>
+  columns?: ChartColumn[]
+  xAxis?: ChartAxisConfig
+  yAxis?: ChartAxisConfig
+  filters?: Array<{
+    name: string
+    type: string
+    value?: string | number | boolean
+  }>
+  dataSource?: string
+  
   // Visual & Colors
   colors?: string[]
   colorScheme?: ColorSchemeConfig

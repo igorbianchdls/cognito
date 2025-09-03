@@ -5,7 +5,20 @@ import { $widgets, $selectedWidget, widgetActions } from '@/stores/apps/widgetSt
 import { $canvasConfig } from '@/stores/apps/canvasStore'
 import { kpiActions } from '@/stores/apps/kpiStore'
 import { tableActions } from '@/stores/apps/tableStore'
-import { chartActions } from '@/stores/apps/chartStore'
+import { 
+  chartActions, 
+  $availableTables, 
+  $selectedTable, 
+  $tableColumns, 
+  $loadingTables, 
+  $loadingColumns, 
+  $loadingChartUpdate,
+  $stagedXAxis,
+  $stagedYAxis, 
+  $stagedFilters,
+  type BigQueryField,
+  type BigQueryTable
+} from '@/stores/apps/chartStore'
 import { useState, useEffect, useMemo } from 'react'
 import { isKPIWidget } from '@/types/apps/kpiWidgets'
 import type { KPIConfig } from '@/types/apps/kpiWidgets'
@@ -24,31 +37,24 @@ import { ColorInput, NumberInput } from '../editors/controls'
 import { Slider } from '@/components/ui/slider'
 import { DndContext, DragEndEvent } from '@dnd-kit/core'
 import { Database, RefreshCw } from 'lucide-react'
-import type { BigQueryField } from '../builder/TablesExplorer'
 import DropZone from '../builder/DropZone'
 import DraggableColumn from '../builder/DraggableColumn'
-
-// BigQuery table type
-interface BigQueryTable {
-  datasetId: string
-  tableId: string
-  projectId?: string
-  description?: string
-  numRows?: number
-  numBytes?: number
-  creationTime?: Date
-  lastModifiedTime?: Date
-  // Support for different API response formats
-  DATASETID?: string
-  TABLEID?: string
-  NUMROWS?: number
-  NUMBYTES?: number
-}
 
 export default function WidgetEditorNew() {
   const widgets = useStore($widgets)
   const selectedWidget = useStore($selectedWidget)
   const canvasConfig = useStore($canvasConfig)
+  
+  // Chart data management (using store)
+  const availableTables = useStore($availableTables)
+  const selectedTable = useStore($selectedTable)
+  const tableColumns = useStore($tableColumns)
+  const loadingTables = useStore($loadingTables)
+  const loadingColumns = useStore($loadingColumns)
+  const loadingChartUpdate = useStore($loadingChartUpdate)
+  const stagedXAxis = useStore($stagedXAxis)
+  const stagedYAxis = useStore($stagedYAxis)
+  const stagedFilters = useStore($stagedFilters)
   
   // State para controlar o modo de view: 'widgets' ou 'edit'
   const [viewMode, setViewMode] = useState<'widgets' | 'edit'>('widgets')
@@ -73,19 +79,6 @@ export default function WidgetEditorNew() {
     objectFit: 'cover',
     objectPosition: 'center'
   })
-
-  // Chart data management states
-  const [availableTables, setAvailableTables] = useState<BigQueryTable[]>([])
-  const [selectedTable, setSelectedTable] = useState<string | null>(null)
-  const [tableColumns, setTableColumns] = useState<BigQueryField[]>([])
-  const [loadingTables, setLoadingTables] = useState(false)
-  const [loadingColumns, setLoadingColumns] = useState<string | null>(null)
-  const [loadingChartUpdate, setLoadingChartUpdate] = useState(false)
-  
-  // Staging states for chart fields
-  const [stagedXAxis, setStagedXAxis] = useState<BigQueryField[]>([])
-  const [stagedYAxis, setStagedYAxis] = useState<BigQueryField[]>([])
-  const [stagedFilters, setStagedFilters] = useState<BigQueryField[]>([])
 
   // Computed KPI config - acesso via selectedWidget
   const kpiConfig = useMemo((): KPIConfig => {
@@ -404,53 +397,10 @@ export default function WidgetEditorNew() {
     // setCanvasSelected(false)
   }
 
-  // Chart Data Management Functions
-  const loadTables = async () => {
-    setLoadingTables(true)
-    try {
-      const response = await fetch('/api/bigquery?action=tables&dataset=biquery_data')
-      const result = await response.json()
-      
-      if (result.success && Array.isArray(result.data)) {
-        setAvailableTables(result.data)
-      } else {
-        throw new Error(result.error || 'Failed to load tables')
-      }
-    } catch (err) {
-      console.error('Error loading tables:', err)
-    } finally {
-      setLoadingTables(false)
-    }
-  }
-
-  const loadTableColumns = async (tableId: string) => {
-    setLoadingColumns(tableId)
-    try {
-      const response = await fetch(`/api/bigquery?action=schema&dataset=biquery_data&table=${tableId}`)
-      const result = await response.json()
-      
-      if (result.success && Array.isArray(result.data)) {
-        setTableColumns(result.data)
-      } else {
-        throw new Error(result.error || 'Failed to load table columns')
-      }
-    } catch (err) {
-      console.error('Error loading table columns:', err)
-      setTableColumns([])
-    } finally {
-      setLoadingColumns(null)
-    }
-  }
-
-  const handleTableClick = async (tableId: string) => {
-    setSelectedTable(tableId)
-    await loadTableColumns(tableId)
-  }
-
   // Load tables when component mounts
   useEffect(() => {
     if (activeEditTab === 'data') {
-      loadTables()
+      chartActions.loadTables()
     }
   }, [activeEditTab])
 
@@ -472,85 +422,30 @@ export default function WidgetEditorNew() {
     const draggedColumn = active.data.current as BigQueryField & { sourceTable: string }
     const dropZoneId = over.id as string
 
-    // Remove from all staging areas first
-    setStagedXAxis(prev => prev.filter(col => col.name !== draggedColumn.name))
-    setStagedYAxis(prev => prev.filter(col => col.name !== draggedColumn.name))
-    setStagedFilters(prev => prev.filter(col => col.name !== draggedColumn.name))
-
-    // Add to appropriate staging area
+    // Add to appropriate staging area using store actions
     switch (dropZoneId) {
       case 'chart-x-axis-drop-zone':
-        setStagedXAxis(prev => [...prev, draggedColumn])
+        chartActions.addToStagingArea(draggedColumn, 'xAxis')
         break
       case 'chart-y-axis-drop-zone':
-        setStagedYAxis(prev => [...prev, draggedColumn])
+        chartActions.addToStagingArea(draggedColumn, 'yAxis')
         break
       case 'chart-filters-drop-zone':
-        setStagedFilters(prev => [...prev, draggedColumn])
+        chartActions.addToStagingArea(draggedColumn, 'filters')
         break
     }
   }
 
   // Handle remove field from staging areas
   const handleRemoveChartField = (dropZoneType: string, fieldName: string) => {
-    switch (dropZoneType) {
-      case 'xAxis':
-        setStagedXAxis(prev => prev.filter(col => col.name !== fieldName))
-        break
-      case 'yAxis':
-        setStagedYAxis(prev => prev.filter(col => col.name !== fieldName))
-        break
-      case 'filters':
-        setStagedFilters(prev => prev.filter(col => col.name !== fieldName))
-        break
-    }
+    chartActions.removeFromStagingArea(fieldName, dropZoneType as 'xAxis' | 'yAxis' | 'filters')
   }
 
   // Update chart data with staged fields
   const updateChartData = async () => {
     if (!selectedWidget || !isChartWidget(selectedWidget)) return
     
-    setLoadingChartUpdate(true)
-    try {
-      // Prepare update payload
-      const updatePayload: Record<string, unknown> = {}
-      
-      // Update X-Axis
-      if (stagedXAxis.length > 0) {
-        updatePayload.xColumn = stagedXAxis[0].name
-      } else {
-        updatePayload.xColumn = ''
-      }
-      
-      // Update Y-Axis  
-      if (stagedYAxis.length > 0) {
-        updatePayload.yColumn = stagedYAxis[0].name
-      } else {
-        updatePayload.yColumn = ''
-      }
-      
-      // Update Filters
-      updatePayload.filters = stagedFilters.map(field => ({
-        name: field.name,
-        type: field.type,
-        value: '' // Default empty value
-      }))
-      
-      console.log('🔄 Updating chart data:', updatePayload)
-      
-      // Apply changes to widget
-      widgetActions.editWidget(selectedWidget.i, updatePayload)
-      
-      // Clear staging areas after successful update
-      setStagedXAxis([])
-      setStagedYAxis([])
-      setStagedFilters([])
-      
-    } catch (err) {
-      console.error('Error updating chart data:', err)
-    } finally {
-      setLoadingChartUpdate(false)
-    }
+    await chartActions.updateChartWithStagedData(selectedWidget.i)
   }
 
   // Caso não haja widgets
@@ -1354,7 +1249,7 @@ export default function WidgetEditorNew() {
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="text-xs font-medium text-gray-700">Available Tables</h4>
                   <button
-                    onClick={loadTables}
+                    onClick={chartActions.loadTables}
                     disabled={loadingTables}
                     className="text-xs text-blue-600 hover:text-blue-800"
                   >
@@ -1373,7 +1268,7 @@ export default function WidgetEditorNew() {
                         return (
                           <div
                             key={tableId}
-                            onClick={() => handleTableClick(tableId)}
+                            onClick={() => chartActions.selectTable(tableId)}
                             className={`text-xs p-2 rounded cursor-pointer transition-colors ${
                               selectedTable === tableId
                                 ? 'bg-blue-100 text-blue-800'
