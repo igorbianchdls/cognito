@@ -39,11 +39,6 @@ export default function WidgetEditorNew() {
   // State para controlar se canvas está selecionado
   const [canvasSelected, setCanvasSelected] = useState(widgets.length === 0)
 
-  // KPI form state - seguindo mesmo padrão do original
-  const [editKPIForm, setEditKPIForm] = useState({
-    name: '',
-    unit: ''
-  })
 
   // Image form state - seguindo mesmo padrão do original
   const [editImageForm, setEditImageForm] = useState({
@@ -109,16 +104,6 @@ export default function WidgetEditorNew() {
     return config
   }, [selectedWidget])
 
-  // Sync editKPIForm with kpiConfig when widget changes
-  useEffect(() => {
-    if (selectedWidget && isKPIWidget(selectedWidget)) {
-      const config = selectedWidget.config?.kpiConfig || {}
-      setEditKPIForm({
-        name: config.name || '',
-        unit: config.unit || ''
-      })
-    }
-  }, [selectedWidget?.config?.kpiConfig?.name, selectedWidget?.config?.kpiConfig?.unit, selectedWidget])
 
   // Sync editImageForm with imageConfig when widget changes
   useEffect(() => {
@@ -149,13 +134,6 @@ export default function WidgetEditorNew() {
     }
   }, [widgets.length, canvasSelected, selectedWidget])
 
-  // KPI Handlers
-  const handleKPIFormChange = (field: string, value: string) => {
-    setEditKPIForm(prev => ({
-      ...prev,
-      [field]: value
-    }))
-  }
 
   const handleKPIConfigChange = (field: string, value: unknown) => {
     console.log('⚙️ WidgetEditorNew handleKPIConfigChange:', { field, value })
@@ -1589,8 +1567,6 @@ export default function WidgetEditorNew() {
                 <KPIConfigEditor
                   selectedWidget={selectedWidget}
                   kpiConfig={kpiConfig}
-                  editKPIForm={editKPIForm}
-                  onKPIFormChange={handleKPIFormChange}
                   onKPIConfigChange={handleKPIConfigChange}
                 />
               )}

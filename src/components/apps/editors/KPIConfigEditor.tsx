@@ -8,19 +8,12 @@ import { Slider } from '@/components/ui/slider'
 interface KPIConfigEditorProps {
   selectedWidget: DroppedWidget
   kpiConfig: KPIConfig
-  editKPIForm: {
-    name: string
-    unit: string
-  }
-  onKPIFormChange: (field: string, value: string) => void
   onKPIConfigChange: (field: string, value: unknown) => void
 }
 
 export default function KPIConfigEditor({ 
   selectedWidget, 
   kpiConfig, 
-  editKPIForm, 
-  onKPIFormChange, 
   onKPIConfigChange 
 }: KPIConfigEditorProps) {
   
@@ -41,8 +34,8 @@ export default function KPIConfigEditor({
               <label className="block text-xs font-medium text-gray-600 mb-1">KPI Name</label>
               <input
                 type="text"
-                value={editKPIForm.name}
-                onChange={(e) => onKPIFormChange('name', e.target.value)}
+                value={kpiConfig.name || ''}
+                onChange={(e) => onKPIConfigChange('name', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="Sales Revenue"
               />
@@ -52,8 +45,8 @@ export default function KPIConfigEditor({
                 <label className="block text-xs font-medium text-gray-600 mb-1">Unit</label>
                 <input
                   type="text"
-                  value={editKPIForm.unit}
-                  onChange={(e) => onKPIFormChange('unit', e.target.value)}
+                  value={kpiConfig.unit || ''}
+                  onChange={(e) => onKPIConfigChange('unit', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="$, %, units"
                 />
