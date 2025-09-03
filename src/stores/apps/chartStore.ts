@@ -506,24 +506,59 @@ export const chartActions = {
         throw new Error('No table selected')
       }
       
-      // Get all fields to query (like generateUpdatedChartQuery)
-      const allFields = [
-        ...stagedXAxis.map(f => f.name),
-        ...stagedYAxis.map(f => f.name), 
-        ...stagedFilters.map(f => f.name)
-      ]
-      
-      const uniqueFields = [...new Set(allFields)]
-      
-      if (uniqueFields.length === 0) {
-        throw new Error('No fields selected')
+      // Validate required fields (like ChartPreview)
+      if (stagedXAxis.length === 0 || stagedYAxis.length === 0) {
+        throw new Error('X-Axis and Y-Axis fields are required')
       }
       
-      // Generate query (like table generateUpdatedQuery)
+      // Generate query exactly like ChartPreview does
+      const xAxisColumn = stagedXAxis[0]
+      const yAxisColumn = stagedYAxis[0]
+      
+      // Helper function (copied from ChartPreview)
+      const getAggregationFunction = (field: typeof yAxisColumn) => {
+        if (field.aggregation) {
+          return field.aggregation
+        }
+        
+        const lowerType = field.type.toLowerCase()
+        
+        if (lowerType.includes('string') || lowerType.includes('text')) {
+          return 'COUNT'
+        }
+        
+        if (lowerType.includes('int') || lowerType.includes('numeric') || lowerType.includes('float')) {
+          return 'SUM'
+        }
+        
+        return 'COUNT'
+      }
+      
+      // Build SELECT clause (like ChartPreview)
+      const selectCols = [xAxisColumn.name]
+      const aggregation = getAggregationFunction(yAxisColumn)
+      selectCols.push(`${aggregation}(${yAxisColumn.name}) as ${yAxisColumn.name}_agg`)
+
+      // Build WHERE clause for filters (like ChartPreview)
+      let whereClause = ''
+      if (stagedFilters.length > 0) {
+        const filterConditions = stagedFilters.map(filter => {
+          return `${filter.name} IS NOT NULL`
+        }).join(' AND ')
+        
+        if (filterConditions) {
+          whereClause = `WHERE ${filterConditions}`
+        }
+      }
+
+      // Generate query exactly like ChartPreview
       const query = `
-SELECT ${uniqueFields.join(', ')}
+SELECT ${selectCols.join(', ')}
 FROM \`creatto-463117.biquery_data.${selectedTable}\`
-LIMIT 100
+${whereClause}
+GROUP BY ${xAxisColumn.name}
+ORDER BY ${yAxisColumn.name}_agg DESC
+LIMIT 50
       `.trim()
       
       console.log('🔄 Executing query to update chart data:', query)
@@ -552,25 +587,45 @@ LIMIT 100
       console.log('📊 Chart query execution result:', result)
       
       if (result.success && result.data?.data && Array.isArray(result.data.data)) {
-        // Prepare config update with new data
+        const rawData = result.data.data
+        const xAxisColumn = stagedXAxis[0]
+        const yAxisColumn = stagedYAxis[0]
+        
+        console.log('📊 Chart Update: Transformando dados', {
+          rawDataLength: rawData.length,
+          sampleRow: rawData[0],
+          xColumn: xAxisColumn.name,
+          yColumn: `${yAxisColumn.name}_agg`
+        })
+        
+        // Transform data for chart (exactly like ChartPreview)
+        const transformedData = rawData.map((row: Record<string, unknown>) => ({
+          x: String(row[xAxisColumn.name] || 'Unknown'),
+          y: Number(row[`${yAxisColumn.name}_agg`] || 0),
+          label: String(row[xAxisColumn.name] || 'Unknown'),
+          value: Number(row[`${yAxisColumn.name}_agg`] || 0)
+        }))
+
+        console.log('📊 Chart Update: Dados transformados', {
+          transformedLength: transformedData.length,
+          sampleTransformed: transformedData[0]
+        })
+
+        // Prepare config update with transformed data (like ChartBuilder)
         const configUpdate: Record<string, unknown> = {}
         
         // Update xAxis configuration
-        if (stagedXAxis.length > 0) {
-          configUpdate.xAxis = {
-            field: stagedXAxis[0].name,
-            name: stagedXAxis[0].name,
-            type: stagedXAxis[0].type
-          }
+        configUpdate.xAxis = {
+          field: xAxisColumn.name,
+          name: xAxisColumn.name,
+          type: xAxisColumn.type
         }
         
         // Update yAxis configuration  
-        if (stagedYAxis.length > 0) {
-          configUpdate.yAxis = {
-            field: stagedYAxis[0].name,
-            name: stagedYAxis[0].name,
-            type: stagedYAxis[0].type
-          }
+        configUpdate.yAxis = {
+          field: yAxisColumn.name,
+          name: yAxisColumn.name,
+          type: yAxisColumn.type
         }
         
         // Update filters
@@ -589,26 +644,29 @@ LIMIT 100
           sourceTable: selectedTable
         }))
         
-        // Set the new data
-        configUpdate.data = result.data.data
+        // Set the transformed chart data (not raw data)
+        configUpdate.data = transformedData
         
         console.log('🔄 Updating chart config with new data:', configUpdate)
         
         // Apply config update and bigquery data
         chartActions.updateChartConfig(chartId, configUpdate)
         
-        // Update bigqueryData directly on the chart widget (like table does)
+        // Update bigqueryData directly on the chart widget (exactly like ChartBuilder does)
         const currentCharts = $chartWidgets.get()
         const updatedCharts = currentCharts.map(chart => {
           if (chart.i === chartId) {
             return {
               ...chart,
               bigqueryData: {
+                chartType: chart.type.replace('chart-', '') || 'bar', // Extract chart type
+                data: transformedData, // Use transformed data like ChartBuilder
+                xColumn: xAxisColumn.name,
+                yColumn: yAxisColumn.name,
                 query: query,
-                table: selectedTable,
                 source: 'bigquery',
-                lastUpdated: new Date().toISOString(),
-                data: result.data.data
+                table: selectedTable,
+                lastUpdated: new Date().toISOString()
               }
             }
           }
