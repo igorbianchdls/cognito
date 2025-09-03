@@ -81,24 +81,39 @@ export default function ChartBigQueryUpdate({
     setShowSqlText(true)
   }
 
-  // Generate updated chart query based on staged fields (like generateUpdatedQuery in table)
+  // Generate updated chart query based on current + staged fields (like generateUpdatedQuery in table)
   const generateUpdatedChartQuery = (): string => {
     const baseQuery = getSavedChartQuery()
     const tableInfo = selectedWidget?.bigqueryData
     if (!tableInfo?.table) return ''
     
-    // Get staged fields
-    const xAxisFields = stagedXAxis.map(field => field.name)
-    const yAxisFields = stagedYAxis.map(field => field.name)
-    const filterFields = stagedFilters.map(field => field.name)
+    // Get current fields (from existing chart config)
+    const currentXAxisFieldNames = currentXAxisFields ? currentXAxisFields.map(field => field.name) : []
+    const currentYAxisFieldNames = currentYAxisFields ? currentYAxisFields.map(field => field.name) : []
+    const currentFilterFieldNames = currentFilterFields ? currentFilterFields.map(field => field.name) : []
     
-    // Combine all new fields
-    const allNewFields = [...xAxisFields, ...yAxisFields, ...filterFields]
+    // Get staged fields (new fields being added)
+    const stagedXAxisFields = stagedXAxis.map(field => field.name)
+    const stagedYAxisFields = stagedYAxis.map(field => field.name)
+    const stagedFilterFields = stagedFilters.map(field => field.name)
     
-    if (allNewFields.length === 0) return baseQuery || ''
+    // Combine current + staged fields (like table does)
+    const allFields = [
+      ...currentXAxisFieldNames,
+      ...currentYAxisFieldNames, 
+      ...currentFilterFieldNames,
+      ...stagedXAxisFields,
+      ...stagedYAxisFields,
+      ...stagedFilterFields
+    ]
     
-    // Create new query with Eixo X and Eixo Y fields
-    const selectFields = [...new Set(allNewFields)].join(', ')
+    // Remove duplicates
+    const uniqueFields = [...new Set(allFields)]
+    
+    if (uniqueFields.length === 0) return baseQuery || ''
+    
+    // Create new query with ALL fields (current + staged)
+    const selectFields = uniqueFields.join(', ')
     const newQuery = `SELECT ${selectFields} FROM \`${tableInfo.table}\` LIMIT 1000`
     
     return newQuery

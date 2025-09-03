@@ -1241,9 +1241,21 @@ export default function WidgetEditorNew() {
       {/* Chart Data Fields */}
       <ChartBigQueryUpdate
         selectedWidget={selectedWidget}
-        currentXAxisFields={[]} // TODO: Get from chartConfig
-        currentYAxisFields={[]} // TODO: Get from chartConfig  
-        currentFilterFields={[]} // TODO: Get from chartConfig
+        currentXAxisFields={chartConfig.xAxis?.field ? [{
+          name: chartConfig.xAxis.field,
+          type: chartConfig.xAxis.type || 'string',
+          sourceTable: chartConfig.dataSource || ''
+        }] : []}
+        currentYAxisFields={chartConfig.yAxis?.field ? [{
+          name: chartConfig.yAxis.field,
+          type: chartConfig.yAxis.type || 'numeric',
+          sourceTable: chartConfig.dataSource || ''
+        }] : []}
+        currentFilterFields={chartConfig.filters?.map(filter => ({
+          name: filter.name,
+          type: filter.type,
+          sourceTable: chartConfig.dataSource || ''
+        })) || []}
         onChartDragEnd={handleChartDragEnd}
         onRemoveChartField={handleRemoveChartField}
         onUpdateChartData={updateChartData}
