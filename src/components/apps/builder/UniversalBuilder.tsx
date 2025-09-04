@@ -372,10 +372,8 @@ export default function UniversalBuilder({
           h: widgetConfig.h
         }
       })
-    } else {
-      // Use widgetActions for other widget types
-      widgetActions.addWidget(widgetConfig as DroppedWidget)
     }
+    // Note: Only chart, KPI, and table builders supported - other widget types removed
     
     // Show success feedback
     alert(`${data.selectedType} added to dashboard! Switch to the canvas to see it.`)
