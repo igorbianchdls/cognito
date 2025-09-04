@@ -41,16 +41,15 @@ export default function BarChartWrapper({ widget }: BarChartWrapperProps) {
   }, [widget.config])
 
   const barChartConfig = widget.config?.barChartConfig
-  const styling = barChartConfig?.styling || {}
 
   return (
     <div className="h-full w-full">
       <BarChart 
         data={data}
-        colors={styling.colors || ['#2563eb']}
+        colors={barChartConfig?.styling?.colors || ['#2563eb']}
         enableGridX={false}
-        enableGridY={styling.showGrid ?? true}
-        title={styling.title}
+        enableGridY={barChartConfig?.styling?.showGrid ?? true}
+        title={barChartConfig?.styling?.title}
         margin={{ top: 12, right: 12, bottom: 60, left: 50 }}
         animate={false}
       />
