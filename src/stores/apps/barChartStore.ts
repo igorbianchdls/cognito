@@ -1,4 +1,4 @@
-import { atom } from 'nanostores'
+import { atom, computed } from 'nanostores'
 
 export interface BigQueryField {
   name: string
@@ -50,6 +50,25 @@ const initialBarChartState: BarChartStore = {
 }
 
 export const $barChartStore = atom<BarChartStore>(initialBarChartState)
+
+// Computed store that converts BarChartConfig to DroppedWidget format
+export const $barChartsAsDropped = computed([$barChartStore], (store) => {
+  return store.barCharts.map(barChart => ({
+    i: barChart.id,
+    id: barChart.id,
+    type: 'chart-bar' as const,
+    name: barChart.name,
+    icon: '📊',
+    description: `Bar chart from ${barChart.bigqueryData.selectedTable}`,
+    defaultWidth: 4,
+    defaultHeight: 3,
+    x: barChart.position.x,
+    y: barChart.position.y,
+    w: barChart.position.w,
+    h: barChart.position.h,
+    barChartConfig: barChart
+  }))
+})
 
 export const barChartActions = {
   addBarChart: (config: Omit<BarChartConfig, 'id'>) => {
