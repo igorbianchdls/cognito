@@ -2,8 +2,8 @@ import { atom } from 'nanostores'
 
 export interface BigQueryField {
   name: string
-  type: 'STRING' | 'INTEGER' | 'FLOAT' | 'TIMESTAMP' | 'DATE' | 'BOOLEAN'
-  mode: 'NULLABLE' | 'REQUIRED' | 'REPEATED'
+  type: string
+  mode: string
   description?: string
   aggregation?: 'SUM' | 'AVG' | 'COUNT' | 'MIN' | 'MAX' | 'COUNT_DISTINCT'
 }
