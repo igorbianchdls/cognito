@@ -1,4 +1,4 @@
-import type { DroppedWidget } from './widget'
+import type { DroppedWidget } from './droppedWidget'
 import type { CanvasTab } from './multiCanvas'
 
 export interface SavedDashboard {
