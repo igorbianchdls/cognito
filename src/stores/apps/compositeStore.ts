@@ -231,6 +231,17 @@ function adaptBarChartToLegacy(barChart: import('./barChartStore').BarChartConfi
     return cached
   }
   
+  console.log('🐛 DEBUG - adaptBarChartToLegacy:', {
+    barChartId: barChart.id,
+    hasData: !!barChart.bigqueryData.data,
+    dataLength: Array.isArray(barChart.bigqueryData.data) ? barChart.bigqueryData.data.length : 'not array',
+    dataSample: barChart.bigqueryData.data,
+    selectedTable: barChart.bigqueryData.selectedTable,
+    query: barChart.bigqueryData.query,
+    xAxisColumns: barChart.bigqueryData.columns.xAxis.map(f => f.name),
+    yAxisColumns: barChart.bigqueryData.columns.yAxis.map(f => f.name)
+  })
+  
   // Create new adapted widget
   const adapted: DroppedWidget = {
     i: barChart.id,

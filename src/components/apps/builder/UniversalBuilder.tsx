@@ -189,6 +189,16 @@ export default function UniversalBuilder({
         data.selectedTable
       )
       
+      console.log('🐛 DEBUG - UniversalBuilder addBarChart:', {
+        hasPreviewData: !!previewData,
+        previewDataLength: Array.isArray(previewData) ? previewData.length : 'not array',
+        previewDataSample: previewData,
+        query,
+        selectedTable: data.selectedTable,
+        xAxisFields: data.xAxis.map(f => f.name),
+        yAxisFields: data.yAxis.map(f => f.name)
+      })
+      
       barChartActions.addBarChart({
         name: widgetConfig.name,
         bigqueryData: {

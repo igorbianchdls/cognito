@@ -16,6 +16,20 @@ export default function BarChartWrapper({ widget }: BarChartWrapperProps) {
     // Read data from barChartConfig
     const barChartConfig = widget.config?.barChartConfig
     
+    console.log('🐛 DEBUG - BarChartWrapper:', {
+      widgetId: widget.i,
+      hasConfig: !!widget.config,
+      hasBarChartConfig: !!barChartConfig,
+      hasBigQueryData: !!barChartConfig?.bigqueryData,
+      hasData: !!barChartConfig?.bigqueryData?.data,
+      dataType: typeof barChartConfig?.bigqueryData?.data,
+      dataLength: Array.isArray(barChartConfig?.bigqueryData?.data) ? barChartConfig.bigqueryData.data.length : 'not array',
+      dataSample: barChartConfig?.bigqueryData?.data,
+      xAxisField: barChartConfig?.bigqueryData?.columns?.xAxis?.[0]?.name,
+      yAxisField: barChartConfig?.bigqueryData?.columns?.yAxis?.[0]?.name,
+      fullWidget: widget
+    })
+    
     if (barChartConfig?.bigqueryData?.data && Array.isArray(barChartConfig.bigqueryData.data)) {
       // Use real BigQuery data from barChartStore
       const bigqueryData = barChartConfig.bigqueryData.data
@@ -32,6 +46,9 @@ export default function BarChartWrapper({ widget }: BarChartWrapperProps) {
         
         setData(chartData)
         console.log('📊 BarChartWrapper usando dados reais do barChartStore:', chartData)
+      } else {
+        console.log('🐛 BarChartWrapper: Campos xAxis/yAxis não encontrados')
+        setData([])
       }
     } else {
       // Fallback to empty data
