@@ -2,8 +2,8 @@
 
 import { atom } from 'nanostores'
 // import { $widgets, widgetActions } from './widgetStore' // REMOVED: Only KPIs supported now
-import { $multiCanvasState, multiCanvasActions } from './multiCanvasStore'
-import { isNavigationWidget } from '@/types/apps/droppedWidget'
+// import { $multiCanvasState, multiCanvasActions } from './multiCanvasStore' // REMOVED: Simplified to single canvas
+// import { isNavigationWidget } from '@/types/apps/droppedWidget' // REMOVED: No navigation widgets in KPI-only mode
 import type { SavedDashboard } from '@/types/apps/savedDashboard'
 
 const STORAGE_KEY = 'cognito_saved_dashboards'
@@ -60,12 +60,16 @@ const generateId = (): string => {
 export const savedDashboardActions = {
   // Salvar dashboard atual
   save: (name: string, description?: string) => {
-    const currentWidgets = $widgets.get()
-    const multiCanvasState = $multiCanvasState.get()
+    // REMOVED: Dashboard saving functionality disabled for KPI-only mode
+    // const currentWidgets = $widgets.get() // REMOVED: widgetStore deleted
+    // const multiCanvasState = $multiCanvasState.get() // REMOVED: simplified to single canvas
     
     // Detect if we're in multi-canvas mode
-    const hasNavigationWidget = currentWidgets.some(widget => isNavigationWidget(widget))
-    const isMultiCanvasMode = hasNavigationWidget && multiCanvasState.hasNavigationWidget
+    // const hasNavigationWidget = currentWidgets.some(widget => isNavigationWidget(widget)) // REMOVED
+    // const isMultiCanvasMode = hasNavigationWidget && multiCanvasState.hasNavigationWidget // REMOVED
+    
+    alert('Dashboard saving functionality needs to be updated for KPI-only mode')
+    return // Temporarily disabled
     
     let newDashboard: SavedDashboard
     
@@ -136,26 +140,26 @@ export const savedDashboardActions = {
       const multiCanvasState = dashboard.multiCanvasState
       
       // Add navigation widget to main store (it should be in dashboard.widgets)
-      const navigationWidget = dashboard.widgets.find(w => isNavigationWidget(w))
-      if (navigationWidget) {
-        // widgetActions.setWidgets([navigationWidget]) // REMOVED: Only KPIs supported now
-      }
+      // const navigationWidget = dashboard.widgets.find(w => isNavigationWidget(w)) // REMOVED: No navigation widgets
+      // if (navigationWidget) {
+      //   // widgetActions.setWidgets([navigationWidget]) // REMOVED: Only KPIs supported now
+      // }
       
       // Restore multi-canvas state
-      if (navigationWidget) {
-        multiCanvasActions.initializeMultiCanvas([navigationWidget])
-      }
+      // if (navigationWidget) {
+      //   multiCanvasActions.initializeMultiCanvas([navigationWidget]) // REMOVED: Single canvas only
+      // }
       
       // Restore tabs and their widgets
-      const currentState = $multiCanvasState.get()
-      const newState = {
-        ...currentState,
-        tabs: multiCanvasState.tabs,
-        activeTab: multiCanvasState.activeTab,
-        hasNavigationWidget: true
-      }
+      // const currentState = $multiCanvasState.get() // REMOVED: Single canvas only
+      // const newState = {
+      //   ...currentState,
+      //   tabs: multiCanvasState.tabs,
+      //   activeTab: multiCanvasState.activeTab,
+      //   hasNavigationWidget: true
+      // } // REMOVED: Single canvas only
       
-      $multiCanvasState.set(newState)
+      // $multiCanvasState.set(newState) // REMOVED: Single canvas only
       
       const totalTabWidgets = multiCanvasState.tabs.reduce((total, tab) => total + tab.widgets.length, 0)
       console.log('📄 Multi-canvas dashboard loaded with', multiCanvasState.tabs.length, 'tabs and', totalTabWidgets, 'widgets')
@@ -165,10 +169,10 @@ export const savedDashboardActions = {
       console.log('📄 Loading single canvas dashboard:', dashboard.name, 'with', dashboard.widgets.length, 'widgets')
       
       // If currently in multi-canvas mode, exit it first
-      const currentMultiState = $multiCanvasState.get()
-      if (currentMultiState.hasNavigationWidget) {
-        multiCanvasActions.exitMultiCanvas()
-      }
+      // const currentMultiState = $multiCanvasState.get() // REMOVED: Single canvas only
+      // if (currentMultiState.hasNavigationWidget) {
+      //   multiCanvasActions.exitMultiCanvas() // REMOVED: Single canvas only
+      // }
       
       // Load widgets normally
       // widgetActions.setWidgets(dashboard.widgets) // REMOVED: Only KPIs supported now

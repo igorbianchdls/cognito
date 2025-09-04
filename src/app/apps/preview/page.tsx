@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import GridCanvas from '@/components/apps/GridCanvas'
-import MultiGridCanvas from '@/components/apps/MultiGridCanvas'
+// import MultiGridCanvas from '@/components/apps/MultiGridCanvas' // REMOVED: Simplified to single canvas
 import { savedDashboardActions } from '@/stores/apps/savedDashboardStore'
 import type { SavedDashboard } from '@/types/apps/savedDashboard'
 
@@ -75,28 +75,17 @@ function PreviewContent() {
     // Preview é somente leitura - não faz nada
   }
 
-  // Renderizar dashboard
+  // Renderizar dashboard - Simplified to single canvas
   return (
     <div className="h-screen" style={{backgroundColor: '#FBFBFB'}}>
-      {dashboard.isMultiCanvas && dashboard.multiCanvasState ? (
-        <MultiGridCanvas 
-          widgets={dashboard.widgets}
-          onLayoutChange={handleLayoutChange}
-          onRemoveWidget={() => {}}
-          onEditWidget={() => {}}
-          readOnly={true}
-          noBorder={true}
-        />
-      ) : (
-        <GridCanvas 
-          widgets={dashboard.widgets}
-          onLayoutChange={handleLayoutChange}
-          onRemoveWidget={() => {}}
-          onEditWidget={() => {}}
-          readOnly={true}
-          noBorder={true}
-        />
-      )}
+      <GridCanvas 
+        widgets={dashboard.widgets}
+        onLayoutChange={handleLayoutChange}
+        onRemoveWidget={() => {}}
+        onEditWidget={() => {}}
+        readOnly={true}
+        noBorder={true}
+      />
     </div>
   )
 }

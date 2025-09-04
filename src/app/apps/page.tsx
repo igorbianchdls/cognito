@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/breadcrumb"
 import SplitSidebarPanel from '@/components/apps/builder/SplitSidebarPanel'
 import GridCanvas from '@/components/apps/GridCanvas'
-import MultiGridCanvas from '@/components/apps/MultiGridCanvas'
+// import MultiGridCanvas from '@/components/apps/MultiGridCanvas' // REMOVED: Simplified to single canvas
 // REMOVED: Only KPIs supported now
 // import { $widgets, widgetActions } from '@/stores/apps/widgetStore'
 // import { $barChartsAsDropped } from '@/stores/apps/barChartStore'
@@ -25,8 +25,8 @@ import MultiGridCanvas from '@/components/apps/MultiGridCanvas'
 // import { $areaChartsAsDropped } from '@/stores/apps/areaChartStore'
 import { $kpisAsDropped, kpiActions } from '@/stores/apps/kpiStore'
 // import { $tablesAsDropped } from '@/stores/apps/tableStore'
-import { $activeTab, multiCanvasActions } from '@/stores/apps/multiCanvasStore'
-import { isNavigationWidget } from '@/types/apps/droppedWidget'
+// import { $activeTab, multiCanvasActions } from '@/stores/apps/multiCanvasStore' // REMOVED: Simplified to single canvas
+// import { isNavigationWidget } from '@/types/apps/droppedWidget' // REMOVED: No navigation widgets in KPI-only mode
 import type { Widget, LayoutItem, DroppedWidget } from '@/types/apps/droppedWidget'
 import { Button } from '@/components/ui/button'
 import { Settings, Share, Github, BarChart3, MessageSquare, Code, Cpu, Archive, Database } from 'lucide-react'
@@ -101,20 +101,12 @@ export default function AppsPage() {
         h: widget.defaultHeight || 2,
       }
       
-      if (hasNavigationWidget) {
-        // Multi-canvas mode: Add widget to active tab
-        console.log('[ADD] Adding widget to multi-canvas tab:', $activeTab.get())
-        const activeTabId = $activeTab.get()
-        const currentTabWidgets = multiCanvasActions.getTabWidgets(activeTabId)
-        multiCanvasActions.updateTabWidgets(activeTabId, [...currentTabWidgets, newWidget])
-      } else {
-        // Normal mode: Add KPI to main canvas
-        console.log('[ADD] Adding KPI to main canvas:', newWidget.i)
-        if (widget.type === 'kpi') {
-          kpiActions.addKPI(newWidget)
-        }
-        // Note: Only KPIs supported now, other types ignored
+      // Single canvas mode: Add KPI to main canvas
+      console.log('[ADD] Adding KPI to main canvas:', newWidget.i)
+      if (widget.type === 'kpi') {
+        kpiActions.addKPI(newWidget)
       }
+      // Note: Only KPIs supported now, other types ignored
     }
   }
 
@@ -167,10 +159,10 @@ export default function AppsPage() {
     setActiveTab('editor')
   }, [allWidgets])
 
-  // Detect if Navigation Widget is present to switch between canvas modes
-  const hasNavigationWidget = useMemo(() => {
-    return allWidgets.some(widget => isNavigationWidget(widget))
-  }, [allWidgets])
+  // REMOVED: No navigation widgets in KPI-only mode - always use single canvas
+  // const hasNavigationWidget = useMemo(() => {
+  //   return allWidgets.some(widget => isNavigationWidget(widget))
+  // }, [allWidgets])
 
   return (
     <SidebarProvider defaultOpen={false}>
@@ -251,23 +243,14 @@ export default function AppsPage() {
                 />
               </div>
             
-              {/* Canvas */}
+              {/* Canvas - Simplified to single GridCanvas */}
               <div className="relative z-0 py-1 px-3 h-[calc(100vh-4rem)] overflow-auto min-w-0">
-                {hasNavigationWidget ? (
-                  <MultiGridCanvas 
-                    widgets={allWidgets}
-                    onLayoutChange={handleLayoutChange}
-                    onRemoveWidget={handleRemoveWidget}
-                    onEditWidget={handleEditWidgetClick}
-                  />
-                ) : (
-                  <GridCanvas 
-                    widgets={allWidgets}
-                    onLayoutChange={handleLayoutChange}
-                    onRemoveWidget={handleRemoveWidget}
-                    onEditWidget={handleEditWidgetClick}
-                  />
-                )}
+                <GridCanvas 
+                  widgets={allWidgets}
+                  onLayoutChange={handleLayoutChange}
+                  onRemoveWidget={handleRemoveWidget}
+                  onEditWidget={handleEditWidgetClick}
+                />
               </div>
               
               <DragOverlay>
