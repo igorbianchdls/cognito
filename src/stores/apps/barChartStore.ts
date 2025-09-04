@@ -3,7 +3,7 @@ import { atom } from 'nanostores'
 export interface BigQueryField {
   name: string
   type: string
-  mode: string
+  mode?: string
   description?: string
   aggregation?: 'SUM' | 'AVG' | 'COUNT' | 'MIN' | 'MAX' | 'COUNT_DISTINCT'
 }

@@ -183,9 +183,9 @@ export default function UniversalBuilder({
     } else if (data.selectedType === 'chart' && data.chartType === 'bar') {
       // Convert to BarChart format and use barChartActions
       const query = barChartActions.generateBarChartQuery(
-        data.xAxis, 
-        data.yAxis, 
-        data.filters, 
+        data.xAxis.map(field => ({ ...field, mode: field.mode || 'NULLABLE' })), 
+        data.yAxis.map(field => ({ ...field, mode: field.mode || 'NULLABLE' })), 
+        data.filters.map(field => ({ ...field, mode: field.mode || 'NULLABLE' })), 
         data.selectedTable
       )
       
