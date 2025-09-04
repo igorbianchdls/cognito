@@ -148,7 +148,14 @@ const executeAction = (actionData: ActionData, index: number) => {
         }
         // Note: Only KPIs supported now
         if (newWidget.type === 'kpi') {
-          kpiActions.addKPI(newWidget)
+          kpiActions.addKPI({
+            name: newWidget.name,
+            icon: newWidget.icon,
+            description: newWidget.description,
+            config: newWidget.config?.kpiConfig || newWidget.kpiConfig,
+            position: { x: newWidget.x, y: newWidget.y },
+            size: { w: newWidget.w, h: newWidget.h }
+          })
         }
       }
       break
