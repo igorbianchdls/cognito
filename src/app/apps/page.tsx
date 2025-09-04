@@ -19,6 +19,7 @@ import GridCanvas from '@/components/apps/GridCanvas'
 import MultiGridCanvas from '@/components/apps/MultiGridCanvas'
 import { $widgets, widgetActions } from '@/stores/apps/widgetStore'
 import { $barChartsAsDropped } from '@/stores/apps/barChartStore'
+import { $lineChartsAsDropped } from '@/stores/apps/lineChartStore'
 import { $kpisAsDropped } from '@/stores/apps/kpiStore'
 import { $tablesAsDropped } from '@/stores/apps/tableStore'
 import { $activeTab, multiCanvasActions } from '@/stores/apps/multiCanvasStore'
@@ -30,6 +31,7 @@ import { Settings, Share, Github, BarChart3, MessageSquare, Code, Cpu, Archive, 
 export default function AppsPage() {
   const droppedWidgets = useStore($widgets)
   const barCharts = useStore($barChartsAsDropped)
+  const lineCharts = useStore($lineChartsAsDropped)
   const kpis = useStore($kpisAsDropped)
   const tables = useStore($tablesAsDropped)
   
@@ -37,9 +39,10 @@ export default function AppsPage() {
   const allWidgets = useMemo(() => [
     ...droppedWidgets,
     ...barCharts,
+    ...lineCharts,
     ...kpis,
     ...tables
-  ], [droppedWidgets, barCharts, kpis, tables])
+  ], [droppedWidgets, barCharts, lineCharts, kpis, tables])
   const [activeWidget, setActiveWidget] = useState<Widget | null>(null)
   const [activeTab, setActiveTab] = useState<'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved' | 'datasets'>('chat')
 

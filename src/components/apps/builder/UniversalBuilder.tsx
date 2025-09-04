@@ -10,14 +10,15 @@ import TablePreview from './TablePreview'
 import type { TableData } from './TablePreview'
 import KPIPreview from './KPIPreview'
 import type { KPIData } from './KPIPreview'
-import BarChartPreview from './BarChartPreview'
-import type { BarChartData } from './BarChartPreview'
+import ChartPreview from './ChartPreview'
+import type { ChartData } from './ChartPreview'
 import GalleryPreview from './GalleryPreview'
 import type { GalleryData } from './GalleryPreview'
 import type { BigQueryField } from './TablesExplorer'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import { widgetActions, kpiActions, tableActions } from '@/stores/apps/widgetStore'
 import { barChartActions } from '@/stores/apps/barChartStore'
+import { lineChartActions } from '@/stores/apps/lineChartStore'
 
 // Widget Types
 type WidgetType = 'chart' | 'kpi' | 'table' | 'gauge' | 'gallery' | 'kanban'
@@ -68,7 +69,7 @@ export default function UniversalBuilder({
   onClear,
   onAggregationChange
 }: UniversalBuilderProps) {
-  const [previewData, setPreviewData] = useState<Array<{ x: string; y: number; label: string; value: number }> | TableData[] | KPIData[] | GalleryData[]>([])
+  const [previewData, setPreviewData] = useState<Array<{ x: string; y: number; label: string; value: number }> | TableData[] | KPIData[] | ChartData[] | GalleryData[]>([])
   const [previewQuery, setPreviewQuery] = useState<string>('')
 
   // Handle field removal from drop zones
@@ -219,6 +220,54 @@ export default function UniversalBuilder({
         chartType: 'bar',
         styling: {
           colors: ['#2563eb'],
+          showLegend: true,
+          showGrid: true,
+          title: `${data.xAxis[0]?.name} por ${data.yAxis[0]?.name}`
+        },
+        position: {
+          x: widgetConfig.x,
+          y: widgetConfig.y,
+          w: widgetConfig.w,
+          h: widgetConfig.h
+        }
+      })
+    } else if (data.selectedType === 'chart' && data.chartType === 'line') {
+      // Convert to LineChart format and use lineChartActions
+      const query = lineChartActions.generateLineChartQuery(
+        data.xAxis.map(field => ({ ...field, mode: field.mode || 'NULLABLE' })), 
+        data.yAxis.map(field => ({ ...field, mode: field.mode || 'NULLABLE' })), 
+        data.filters.map(field => ({ ...field, mode: field.mode || 'NULLABLE' })), 
+        data.selectedTable
+      )
+      
+      console.log('🐛 DEBUG - UniversalBuilder addLineChart:', {
+        hasPreviewData: !!previewData,
+        previewDataLength: Array.isArray(previewData) ? previewData.length : 'not array',
+        previewDataSample: previewData,
+        query,
+        selectedTable: data.selectedTable,
+        xAxisFields: data.xAxis.map(f => f.name),
+        yAxisFields: data.yAxis.map(f => f.name)
+      })
+      
+      lineChartActions.addLineChart({
+        name: widgetConfig.name,
+        bigqueryData: {
+          query,
+          selectedTable: data.selectedTable,
+          columns: {
+            xAxis: data.xAxis,
+            yAxis: data.yAxis,
+            filters: data.filters
+          },
+          data: previewData,
+          lastExecuted: new Date(),
+          isLoading: false,
+          error: null
+        },
+        chartType: 'line',
+        styling: {
+          colors: ['#10b981'],
           showLegend: true,
           showGrid: true,
           title: `${data.xAxis[0]?.name} por ${data.yAxis[0]?.name}`
@@ -651,15 +700,16 @@ export default function UniversalBuilder({
             />
           )}
 
-          {/* Bar Chart Preview (only for bar charts) */}
-          {data.selectedType === 'chart' && data.chartType === 'bar' && (
-            <BarChartPreview
+          {/* Chart Preview (for all chart types) */}
+          {data.selectedType === 'chart' && (
+            <ChartPreview
+              chartType={data.chartType}
               xAxis={data.xAxis}
               yAxis={data.yAxis}
               filters={data.filters}
               selectedTable={data.selectedTable}
-              onDataReady={(barChartData, query) => {
-                setPreviewData(barChartData as BarChartData[])
+              onDataReady={(chartData, query) => {
+                setPreviewData(chartData as ChartData[])
                 setPreviewQuery(query)
               }}
             />

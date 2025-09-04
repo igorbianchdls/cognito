@@ -2,10 +2,7 @@
 
 import { useState } from 'react'
 import ChartWidget from './widgets/components/ChartWidget'
-import BarChartWrapper from './widgets/components/BarChartWrapper'
-import LineChartWidget from './widgets/components/LineChartWidget'
-import PieChartWidget from './widgets/components/PieChartWidget'
-import AreaChartWidget from './widgets/components/AreaChartWidget'
+import ChartWrapper from './widgets/components/ChartWrapper'
 import MetricWidget from './widgets/components/MetricWidget'
 import KPIWrapper from '@/components/widgets/KPIWrapper'
 import TableWrapper from '@/components/widgets/TableWrapper'
@@ -65,13 +62,10 @@ export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = f
       case 'chart':
         return <ChartWidget widget={widget} />
       case 'chart-bar':
-        return <BarChartWrapper widget={widget} />
       case 'chart-line':
-        return <LineChartWidget widget={widget} />
       case 'chart-pie':
-        return <PieChartWidget widget={widget} />
       case 'chart-area':
-        return <AreaChartWidget widget={widget} />
+        return <ChartWrapper widget={widget} />
       case 'metric':
         return <MetricWidget />
       case 'kpi':

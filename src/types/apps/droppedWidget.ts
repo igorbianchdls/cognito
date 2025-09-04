@@ -253,6 +253,7 @@ export interface WidgetConfig {
   imageConfig?: ImageConfig  // For image widgets
   navigationConfig?: NavigationConfig  // For navigation widgets
   barChartConfig?: { bigqueryData: import('../../stores/apps/barChartStore').BarChartBigQueryData, styling: import('../../stores/apps/barChartStore').BarChartConfig['styling'] }  // For bar chart widgets
+  lineChartConfig?: { bigqueryData: import('../../stores/apps/lineChartStore').LineChartBigQueryData, styling: import('../../stores/apps/lineChartStore').LineChartConfig['styling'] }  // For line chart widgets
   containerConfig?: ContainerConfig  // For widget container styling
 }
 
@@ -266,6 +267,7 @@ export interface DroppedWidget extends Widget {
   config?: WidgetConfig       // New unified configuration
   chartConfig?: ChartConfig   // Deprecated: kept for backward compatibility
   barChartConfig?: import('../../stores/apps/barChartStore').BarChartConfig  // Direct access for bar charts
+  lineChartConfig?: import('../../stores/apps/lineChartStore').LineChartConfig  // Direct access for line charts
   kpiConfig?: import('./kpiWidgets').KPIConfig  // Direct access for KPIs
   tableConfig?: import('./tableWidgets').TableConfig  // Direct access for tables
   bigqueryData?: {            // BigQuery data from Chart Builder
