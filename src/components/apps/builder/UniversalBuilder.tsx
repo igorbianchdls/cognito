@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { BarChart3, TrendingUp, PieChart, Activity, Trash2, Plus, ArrowRight, ArrowUp, Table, Gauge, Images, Kanban } from 'lucide-react'
+import { BarChart3, TrendingUp, PieChart, Activity, Trash2, Plus, Table } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import DropZone from './DropZone'
@@ -14,8 +14,6 @@ import KPIPreview from './KPIPreview'
 import type { KPIData } from './KPIPreview'
 import ChartPreview from './ChartPreview'
 import type { ChartData } from './ChartPreview'
-import GalleryPreview from './GalleryPreview'
-import type { GalleryData } from './GalleryPreview'
 import type { BigQueryField } from './TablesExplorer'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import { widgetActions, kpiActions, tableActions } from '@/stores/apps/widgetStore'
@@ -25,7 +23,7 @@ import { pieChartActions } from '@/stores/apps/pieChartStore'
 import { areaChartActions } from '@/stores/apps/areaChartStore'
 
 // Widget Types
-type WidgetType = 'chart' | 'kpi' | 'table' | 'gauge' | 'gallery' | 'kanban'
+type WidgetType = 'chart' | 'kpi' | 'table'
 
 interface UniversalBuilderData {
   selectedType: WidgetType
@@ -39,18 +37,8 @@ interface UniversalBuilderData {
   // Table fields  
   columns: BigQueryField[]
   
-  // KPI field (simplified)
+  // KPI field
   kpiValue: BigQueryField[]
-  
-  // Gallery fields
-  galleryImageUrl: BigQueryField[]
-  galleryTitle: BigQueryField[]
-  galleryDescription: BigQueryField[]
-  
-  // Shared fields for compatibility
-  dimensions: BigQueryField[]
-  measures: BigQueryField[]
-  groupBy: BigQueryField[]
   
   // Common to all
   filters: BigQueryField[]
@@ -103,9 +91,7 @@ export default function UniversalBuilder({
         ? data.columns.length > 0
         : data.selectedType === 'kpi'
         ? data.kpiValue.length > 0
-        : data.selectedType === 'gallery'
-        ? data.galleryImageUrl.length > 0
-        : data.dimensions.length > 0 || data.measures.length > 0
+        : false
 
     if (!hasRequiredFields) {
       alert('Please configure the required fields first')
@@ -397,9 +383,6 @@ export default function UniversalBuilder({
     switch (widgetType) {
       case 'kpi': return '📈'
       case 'table': return '📋'
-      case 'gauge': return '⚡'
-      case 'gallery': return '🖼️'
-      case 'kanban': return '📌'
       default: return '📊'
     }
   }
@@ -407,10 +390,7 @@ export default function UniversalBuilder({
   const getDefaultWidth = (widgetType: string) => {
     switch(widgetType) {
       case 'kpi': return 2
-      case 'gauge': return 3
       case 'table': return 6
-      case 'gallery': return 4
-      case 'kanban': return 8
       default: return 4
     }
   }
@@ -418,10 +398,7 @@ export default function UniversalBuilder({
   const getDefaultHeight = (widgetType: string) => {
     switch(widgetType) {
       case 'kpi': return 2
-      case 'gauge': return 3
       case 'table': return 4
-      case 'gallery': return 3
-      case 'kanban': return 8
       default: return 3
     }
   }
@@ -492,28 +469,6 @@ export default function UniversalBuilder({
             dataSource: 'BigQuery'
           }
         }
-      case 'gallery':
-        const galleryImageField = data.galleryImageUrl[0]
-        const galleryTitleField = data.galleryTitle?.[0]
-        const galleryDescField = data.galleryDescription?.[0]
-        return {
-          galleryConfig: {
-            imageUrl: galleryImageField?.name,
-            title: galleryTitleField?.name,
-            description: galleryDescField?.name,
-            columns: 3,
-            gap: 8,
-            aspectRatio: 'square' as 'square' | '16:9' | '4:3' | '3:2' | 'auto',
-            borderRadius: 8,
-            shadow: true,
-            showTitles: true,
-            showDescriptions: false,
-            enableLightbox: true,
-            enableHover: true,
-            hoverEffect: 'overlay' as 'zoom' | 'overlay' | 'none',
-            dataSource: 'BigQuery'
-          }
-        }
       default:
         return {}
     }
@@ -557,17 +512,11 @@ export default function UniversalBuilder({
           xColumn: '', // No grouping for simple KPI
           yColumn: data.kpiValue[0]?.name || ''    // KPI value field
         }
-      case 'gallery':
-        return {
-          chartType: 'gallery',
-          xColumn: data.galleryImageUrl[0]?.name || '', // Image URL field
-          yColumn: data.galleryTitle?.[0]?.name || ''   // Title field (optional)
-        }
       default:
         return {
-          chartType: 'table', // Default for non-chart widgets
-          xColumn: data.dimensions[0]?.name || '',
-          yColumn: data.measures[0]?.name || ''
+          chartType: 'table',
+          xColumn: data.columns[0]?.name || '',
+          yColumn: ''
         }
     }
   }
@@ -576,10 +525,7 @@ export default function UniversalBuilder({
   const widgetTypes = [
     { id: 'chart' as const, label: 'Chart', icon: <BarChart3 className="w-6 h-6" />, description: 'Bar, line, pie charts' },
     { id: 'kpi' as const, label: 'KPI', icon: <TrendingUp className="w-6 h-6" />, description: 'Key performance indicators' },
-    { id: 'table' as const, label: 'Table', icon: <Table className="w-6 h-6" />, description: 'Data tables' },
-    { id: 'gauge' as const, label: 'Gauge', icon: <Gauge className="w-6 h-6" />, description: 'Progress gauges' },
-    { id: 'gallery' as const, label: 'Gallery', icon: <Images className="w-6 h-6" />, description: 'Image galleries' },
-    { id: 'kanban' as const, label: 'Kanban', icon: <Kanban className="w-6 h-6" />, description: 'Kanban boards' }
+    { id: 'table' as const, label: 'Table', icon: <Table className="w-6 h-6" />, description: 'Data tables' }
   ]
 
 
@@ -587,9 +533,7 @@ export default function UniversalBuilder({
   const isConfigValid = data.selectedTable && (
     (data.selectedType === 'chart' && data.xAxis.length > 0 && data.yAxis.length > 0) ||
     (data.selectedType === 'table' && data.columns.length > 0) ||
-    (data.selectedType === 'kpi' && data.kpiValue.length > 0) ||
-    (data.selectedType === 'gallery' && data.galleryImageUrl.length > 0) ||
-    (data.selectedType !== 'chart' && data.selectedType !== 'table' && data.selectedType !== 'kpi' && data.selectedType !== 'gallery' && (data.dimensions.length > 0 || data.measures.length > 0))
+    (data.selectedType === 'kpi' && data.kpiValue.length > 0)
   )
 
   return (
@@ -686,66 +630,7 @@ export default function UniversalBuilder({
               />
             )}
 
-            {/* Gallery Drop Zones (specific) */}
-            {data.selectedType === 'gallery' && (
-              <>
-                <DropZone
-                  id="gallery-image-url-drop-zone"
-                  label="URL da Imagem"
-                  description="Campo string com URLs das imagens"
-                  icon={<Images className="w-4 h-4 text-pink-600" />}
-                  fields={data.galleryImageUrl}
-                  acceptedTypes={['string']}
-                  onRemoveField={(fieldName) => handleRemoveField('galleryImageUrl', fieldName)}
-                />
-                
-                <DropZone
-                  id="gallery-title-drop-zone"
-                  label="Título (Opcional)"
-                  description="Campo string para títulos das imagens"
-                  icon={<Activity className="w-4 h-4 text-blue-600" />}
-                  fields={data.galleryTitle || []}
-                  acceptedTypes={['string']}
-                  onRemoveField={(fieldName) => handleRemoveField('galleryTitle', fieldName)}
-                />
-                
-                <DropZone
-                  id="gallery-description-drop-zone"
-                  label="Descrição (Opcional)"
-                  description="Campo string para descrições das imagens"
-                  icon={<Activity className="w-4 h-4 text-gray-600" />}
-                  fields={data.galleryDescription || []}
-                  acceptedTypes={['string']}
-                  onRemoveField={(fieldName) => handleRemoveField('galleryDescription', fieldName)}
-                />
-              </>
-            )}
 
-            {/* Generic Drop Zones for Other Non-Chart/Table/KPI/Gallery Types */}
-            {data.selectedType !== 'table' && data.selectedType !== 'kpi' && data.selectedType !== 'gallery' && (
-              <>
-                <DropZone
-                  id="dimensions-drop-zone"
-                  label="Dimensions"
-                  description="Categorical fields for grouping"
-                  icon={<ArrowRight className="w-4 h-4 text-green-600" />}
-                  fields={data.dimensions}
-                  acceptedTypes={['string', 'date']}
-                  onRemoveField={(fieldName) => handleRemoveField('dimensions', fieldName)}
-                />
-                
-                <DropZone
-                  id="measures-drop-zone"
-                  label="Measures"
-                  description="Numeric fields for calculation"
-                  icon={<ArrowUp className="w-4 h-4 text-blue-600" />}
-                  fields={data.measures}
-                  acceptedTypes={['numeric']}
-                  onRemoveField={(fieldName) => handleRemoveField('measures', fieldName)}
-                  onAggregationChange={handleAggregationChange}
-                />
-              </>
-            )}
 
             {/* Common Filters for All Types */}
             <DropZone
@@ -814,20 +699,6 @@ export default function UniversalBuilder({
             />
           )}
 
-          {/* Gallery Preview (only for gallery) */}
-          {data.selectedType === 'gallery' && (
-            <GalleryPreview
-              imageUrl={data.galleryImageUrl}
-              title={data.galleryTitle}
-              description={data.galleryDescription}
-              filters={data.filters}
-              selectedTable={data.selectedTable}
-              onDataReady={(galleryData, query) => {
-                setPreviewData(galleryData as GalleryData[])
-                setPreviewQuery(query)
-              }}
-            />
-          )}
 
         </div>
       </ScrollArea>
