@@ -28,7 +28,7 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
     } else {
       // Fallback: try to detect from available configs or use bar as default
       chartConfig = widget.barChartConfig || widget.lineChartConfig
-      chartType = widget.chartType || 'bar'
+      chartType = 'bar' // Default to bar chart
     }
     
     console.log('🐛 DEBUG - ChartWrapper (DIRECT):', {
