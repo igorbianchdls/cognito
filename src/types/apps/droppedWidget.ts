@@ -266,7 +266,7 @@ export interface DroppedWidget extends Widget {
   config?: WidgetConfig       // New unified configuration
   chartConfig?: ChartConfig   // Deprecated: kept for backward compatibility
   barChartConfig?: import('../../stores/apps/barChartStore').BarChartConfig  // Direct access for bar charts
-  kpiConfig?: import('../../../stores/apps/kpi/kpiTypes').KPIConfig  // Direct access for KPIs
+  kpiConfig?: import('./kpiWidgets').KPIConfig  // Direct access for KPIs
   tableConfig?: import('./tableWidgets').TableConfig  // Direct access for tables
   bigqueryData?: {            // BigQuery data from Chart Builder
     chartType: string

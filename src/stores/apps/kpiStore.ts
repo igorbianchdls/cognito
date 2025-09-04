@@ -18,12 +18,18 @@ export const $kpiWidgets = atom<KPIWidget[]>([])
 export const $kpisAsDropped = computed([$kpiWidgets], (kpis) => {
   return kpis.map(kpi => ({
     i: kpi.i,
+    id: kpi.id,
     type: 'kpi' as const,
     name: kpi.name,
+    icon: kpi.icon,
+    description: kpi.description,
+    defaultWidth: kpi.defaultWidth,
+    defaultHeight: kpi.defaultHeight,
     x: kpi.x,
     y: kpi.y, 
     w: kpi.w,
     h: kpi.h,
+    color: kpi.color,
     kpiConfig: kpi.config
   }))
 })

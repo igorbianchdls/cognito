@@ -19,12 +19,18 @@ export const $tableWidgets = atom<TableWidget[]>([])
 export const $tablesAsDropped = computed([$tableWidgets], (tables) => {
   return tables.map(table => ({
     i: table.i,
+    id: table.id,
     type: 'table' as const,
     name: table.name,
+    icon: table.icon,
+    description: table.description,
+    defaultWidth: table.defaultWidth,
+    defaultHeight: table.defaultHeight,
     x: table.x,
     y: table.y,
     w: table.w,
     h: table.h,
+    color: table.color,
     tableConfig: table.config
   }))
 })
