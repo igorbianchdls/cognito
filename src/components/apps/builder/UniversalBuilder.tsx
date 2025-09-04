@@ -65,7 +65,7 @@ export default function UniversalBuilder({
   droppedWidgets,
   onEditWidget
 }: UniversalBuilderProps) {
-  const [previewData, setPreviewData] = useState<Array<{ x: string; y: number; label: string; value: number }> | TableData[] | KPIData[] | ChartData[] | GalleryData[]>([])
+  const [previewData, setPreviewData] = useState<Array<{ x: string; y: number; label: string; value: number }> | TableData[] | KPIData[] | ChartData[]>([])
   const [previewQuery, setPreviewQuery] = useState<string>('')
 
   // Handle field removal from drop zones
