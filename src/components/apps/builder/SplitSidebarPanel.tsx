@@ -14,19 +14,13 @@ import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import type { BigQueryField } from './TablesExplorer'
 
 interface UniversalBuilderData {
-  selectedType: 'chart' | 'kpi' | 'table' | 'gauge' | 'gallery' | 'kanban'
+  selectedType: 'chart' | 'kpi' | 'table'
   xAxis: BigQueryField[]
   yAxis: BigQueryField[]
   chartType: 'bar' | 'line' | 'pie' | 'area'
   filters: BigQueryField[]
   columns: BigQueryField[]
   kpiValue: BigQueryField[]
-  galleryImageUrl: BigQueryField[]
-  galleryTitle: BigQueryField[]
-  galleryDescription: BigQueryField[]
-  dimensions: BigQueryField[]
-  measures: BigQueryField[]
-  groupBy: BigQueryField[]
   selectedTable: string | null
 }
 
@@ -51,12 +45,6 @@ export default function SplitSidebarPanel({
     filters: [],
     columns: [],
     kpiValue: [],
-    galleryImageUrl: [],
-    galleryTitle: [],
-    galleryDescription: [],
-    dimensions: [],
-    measures: [],
-    groupBy: [],
     selectedTable: null
   })
 
@@ -78,12 +66,6 @@ export default function SplitSidebarPanel({
       newData.filters = newData.filters.filter(col => col.name !== draggedColumn.name)
       newData.columns = newData.columns.filter(col => col.name !== draggedColumn.name)
       newData.kpiValue = newData.kpiValue.filter(col => col.name !== draggedColumn.name)
-      newData.galleryImageUrl = newData.galleryImageUrl.filter(col => col.name !== draggedColumn.name)
-      newData.galleryTitle = newData.galleryTitle.filter(col => col.name !== draggedColumn.name)
-      newData.galleryDescription = newData.galleryDescription.filter(col => col.name !== draggedColumn.name)
-      newData.dimensions = newData.dimensions.filter(col => col.name !== draggedColumn.name)
-      newData.measures = newData.measures.filter(col => col.name !== draggedColumn.name)
-      newData.groupBy = newData.groupBy.filter(col => col.name !== draggedColumn.name)
       
       // Add to new location
       switch (dropZoneId) {
@@ -101,24 +83,6 @@ export default function SplitSidebarPanel({
           break
         case 'kpi-value-drop-zone':
           newData.kpiValue.push(draggedColumn)
-          break
-        case 'gallery-image-url-drop-zone':
-          newData.galleryImageUrl.push(draggedColumn)
-          break
-        case 'gallery-title-drop-zone':
-          newData.galleryTitle.push(draggedColumn)
-          break
-        case 'gallery-description-drop-zone':
-          newData.galleryDescription.push(draggedColumn)
-          break
-        case 'dimensions-drop-zone':
-          newData.dimensions.push(draggedColumn)
-          break
-        case 'measures-drop-zone':
-          newData.measures.push(draggedColumn)
-          break
-        case 'group-by-drop-zone':
-          newData.groupBy.push(draggedColumn)
           break
       }
       
@@ -147,12 +111,6 @@ export default function SplitSidebarPanel({
       filters: [],
       columns: [],
       kpiValue: [],
-      galleryImageUrl: [],
-      galleryTitle: [],
-      galleryDescription: [],
-      dimensions: [],
-      measures: [],
-      groupBy: [],
       selectedTable: null
     })
   }
@@ -165,12 +123,31 @@ export default function SplitSidebarPanel({
           ? { ...field, aggregation }
           : field
       ),
-      measures: prev.measures.map(field => 
+      kpiValue: prev.kpiValue.map(field => 
         field.name === fieldName 
           ? { ...field, aggregation }
           : field
       )
     }))
+  }
+
+  const handleRemoveField = (dropZoneType: 'xAxis' | 'yAxis' | 'filters' | 'columns' | 'kpiValue', fieldName: string) => {
+    setUniversalBuilderData(prev => {
+      switch (dropZoneType) {
+        case 'xAxis':
+          return { ...prev, xAxis: prev.xAxis.filter(field => field.name !== fieldName) }
+        case 'yAxis':
+          return { ...prev, yAxis: prev.yAxis.filter(field => field.name !== fieldName) }
+        case 'filters':
+          return { ...prev, filters: prev.filters.filter(field => field.name !== fieldName) }
+        case 'columns':
+          return { ...prev, columns: prev.columns.filter(field => field.name !== fieldName) }
+        case 'kpiValue':
+          return { ...prev, kpiValue: prev.kpiValue.filter(field => field.name !== fieldName) }
+        default:
+          return prev
+      }
+    })
   }
 
 
@@ -198,6 +175,7 @@ export default function SplitSidebarPanel({
                 onTypeChange={handleTypeChange}
                 onChartTypeChange={handleChartTypeChange}
                 onClear={handleClearBuilder}
+                onRemoveField={handleRemoveField}
                 onAggregationChange={handleAggregationChange}
                 droppedWidgets={droppedWidgets}
                 onEditWidget={onEditWidget}

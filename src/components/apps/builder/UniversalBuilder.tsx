@@ -49,6 +49,7 @@ interface UniversalBuilderProps {
   onTypeChange: (selectedType: WidgetType) => void
   onChartTypeChange: (chartType: UniversalBuilderData['chartType']) => void
   onClear: () => void
+  onRemoveField: (dropZoneType: 'xAxis' | 'yAxis' | 'filters' | 'columns' | 'kpiValue', fieldName: string) => void
   onAggregationChange?: (fieldName: string, aggregation: BigQueryField['aggregation']) => void
   droppedWidgets?: DroppedWidget[]
   onEditWidget: (widgetId: string, changes: Partial<DroppedWidget>) => void
@@ -59,14 +60,17 @@ export default function UniversalBuilder({
   onTypeChange,
   onChartTypeChange,
   onClear,
-  onAggregationChange
+  onRemoveField,
+  onAggregationChange,
+  droppedWidgets,
+  onEditWidget
 }: UniversalBuilderProps) {
   const [previewData, setPreviewData] = useState<Array<{ x: string; y: number; label: string; value: number }> | TableData[] | KPIData[] | ChartData[] | GalleryData[]>([])
   const [previewQuery, setPreviewQuery] = useState<string>('')
 
   // Handle field removal from drop zones
-  const handleRemoveField = (dropZoneType: string, fieldName: string) => {
-    console.log(`Remove ${fieldName} from ${dropZoneType}`)
+  const handleRemoveField = (dropZoneType: 'xAxis' | 'yAxis' | 'filters' | 'columns' | 'kpiValue', fieldName: string) => {
+    onRemoveField(dropZoneType, fieldName)
   }
 
   // Handle aggregation change for numeric fields
