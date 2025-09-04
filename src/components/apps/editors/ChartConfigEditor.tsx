@@ -1,6 +1,6 @@
 'use client'
 
-import type { DroppedWidget } from '@/types/apps/widget'
+import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import { isChartWidget } from '@/types/apps/chartWidgets'
 import type { BaseChartConfig } from '@/types/apps/chartWidgets'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'

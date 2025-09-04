@@ -1,4 +1,4 @@
-import type { DroppedWidget } from '@/types/apps/widget'
+import type { DroppedWidget } from '@/types/apps/droppedWidget'
 
 interface GeneralSectionProps {
   selectedWidget: DroppedWidget

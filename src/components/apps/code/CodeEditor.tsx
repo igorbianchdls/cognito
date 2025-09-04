@@ -3,7 +3,7 @@
 import { useStore } from '@nanostores/react'
 import { useState, useEffect, useCallback } from 'react'
 import { $widgets, widgetActions } from '@/stores/apps/widgetStore'
-import type { DroppedWidget, ChartConfig, WidgetConfig } from '@/types/apps/widget'
+import type { DroppedWidget, ChartConfig, WidgetConfig } from '@/types/apps/droppedWidget'
 
 interface JsonWidget {
   i: string

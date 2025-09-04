@@ -17,9 +17,9 @@ interface PaddingConfig {
 }
 import { isChartWidget, isBarChart, isLineChart, isPieChart } from '@/types/apps/chartWidgets'
 import { isKPIWidget } from '@/types/apps/kpiWidgets'
-import { isImageWidget } from '@/types/apps/widget'
+import { isImageWidget } from '@/types/apps/droppedWidget'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
-import type { ImageConfig } from '@/types/apps/widget'
+import type { ImageConfig } from '@/types/apps/droppedWidget'
 
 export default function WidgetEditor() {
   const widgets = useStore($widgets)

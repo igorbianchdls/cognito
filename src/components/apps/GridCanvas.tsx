@@ -11,7 +11,7 @@ import { WebPreview, WebPreviewNavigation, WebPreviewUrl, WebPreviewNavigationBu
 import { savedDashboardActions } from '@/stores/apps/savedDashboardStore'
 import { Eye, Save, Download, Settings, Share, Github } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { DroppedWidget as DroppedWidgetType, LayoutItem } from '@/types/apps/widget'
+import type { DroppedWidget as DroppedWidgetType, LayoutItem } from '@/types/apps/droppedWidget'
 
 const ResponsiveGridLayout = WidthProvider(Responsive)
 

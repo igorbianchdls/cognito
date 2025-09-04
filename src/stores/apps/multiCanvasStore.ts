@@ -2,7 +2,7 @@
 
 import { atom } from 'nanostores'
 import type { CanvasTab, MultiCanvasState } from '@/types/apps/multiCanvas'
-import type { DroppedWidget } from '@/types/apps/widget'
+import type { DroppedWidget } from '@/types/apps/droppedWidget'
 
 const STORAGE_KEY = 'cognito_multi_canvas'
 

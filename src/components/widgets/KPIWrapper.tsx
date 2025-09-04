@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { KPICard } from '@/components/widgets/KPICard'
-import type { DroppedWidget, KPIConfig, LegacyChartConfigWithKPI, ChartConfig } from '@/types/apps/widget'
+import type { DroppedWidget, KPIConfig, LegacyChartConfigWithKPI, ChartConfig } from '@/types/apps/droppedWidget'
 
 
 interface KPIWidgetProps {

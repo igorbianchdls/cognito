@@ -7,7 +7,7 @@ import CodeEditor from '@/components/apps/code/CodeEditor'
 import AutomationsPanel from '@/components/apps/automations/AutomationsPanel'
 import SavedPanel from '@/components/apps/saved/SavedPanel'
 import DatasetsPanel from '@/components/apps/DatasetsPanel'
-import type { DroppedWidget } from '@/types/apps/widget'
+import type { DroppedWidget } from '@/types/apps/droppedWidget'
 
 interface SidebarPanelProps {
   activeTab: 'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved' | 'datasets'

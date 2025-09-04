@@ -7,7 +7,7 @@ import { ColorInput, NumberInput } from '../editors/controls'
 import { Slider } from '@/components/ui/slider'
 import { DragEndEvent } from '@dnd-kit/core'
 import ContainerConfigEditor from '../editors/ContainerConfigEditor'
-import type { ContainerConfig, DroppedWidget } from '@/types/apps/widget'
+import type { ContainerConfig, DroppedWidget } from '@/types/apps/droppedWidget'
 
 interface ChartEditorTabsProps {
   selectedWidget: BaseWidget

@@ -1,6 +1,6 @@
 'use client'
 
-import type { DroppedWidget } from '@/types/apps/widget'
+import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import { isKPIWidget } from '@/types/apps/kpiWidgets'
 import type { KPIConfig } from '@/types/apps/kpiWidgets'
 import { Slider } from '@/components/ui/slider'

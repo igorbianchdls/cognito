@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { ExternalLink, X, ChevronLeft, ChevronRight } from 'lucide-react'
-import type { DroppedWidget, GalleryConfig } from '@/types/apps/widget'
+import type { DroppedWidget, GalleryConfig } from '@/types/apps/droppedWidget'
 
 interface GalleryItem {
   image_url: string

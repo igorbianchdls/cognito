@@ -14,7 +14,7 @@ import type { BaseChartConfig } from '@/types/apps/chartWidgets'
 import type { BaseWidget } from '@/types/apps/baseWidget'
 import { DragEndEvent } from '@dnd-kit/core'
 import ChartEditorTabs from './ChartEditorTabs'
-import type { ContainerConfig } from '@/types/apps/widget'
+import type { ContainerConfig } from '@/types/apps/droppedWidget'
 
 interface ChartEditorProps {
   selectedWidget: BaseWidget

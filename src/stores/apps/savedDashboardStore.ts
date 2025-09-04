@@ -3,7 +3,7 @@
 import { atom } from 'nanostores'
 import { $widgets, widgetActions } from './widgetStore'
 import { $multiCanvasState, multiCanvasActions } from './multiCanvasStore'
-import { isNavigationWidget } from '@/types/apps/widget'
+import { isNavigationWidget } from '@/types/apps/droppedWidget'
 import type { SavedDashboard } from '@/types/apps/savedDashboard'
 
 const STORAGE_KEY = 'cognito_saved_dashboards'

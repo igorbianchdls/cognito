@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import DraggableWidget from './DraggableWidget'
-import type { Widget } from '@/types/apps/widget'
+import type { Widget } from '@/types/apps/droppedWidget'
 
 // Extended widget type for internal use with JSX icons
 interface ExtendedWidget extends Omit<Widget, 'icon'> {

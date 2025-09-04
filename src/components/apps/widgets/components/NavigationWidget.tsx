@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useStore } from '@nanostores/react'
 import { $multiCanvasState, $activeTab, multiCanvasActions } from '@/stores/apps/multiCanvasStore'
-import type { DroppedWidget } from '@/types/apps/widget'
+import type { DroppedWidget } from '@/types/apps/droppedWidget'
 
 interface NavigationWidgetProps {
   widget: DroppedWidget

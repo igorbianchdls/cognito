@@ -1,6 +1,6 @@
 'use client'
 
-import type { DroppedWidget } from '@/types/apps/widget'
+import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import { isTableWidget } from '@/types/apps/tableWidgets'
 import type { TableConfig, TableColumn } from '@/types/apps/tableWidgets'
 import React, { useState, useEffect } from 'react'

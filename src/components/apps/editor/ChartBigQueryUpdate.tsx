@@ -20,7 +20,7 @@ import { Database, RefreshCw, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import DropZone from '../builder/DropZone'
 import DraggableColumn from '../builder/DraggableColumn'
-import type { DroppedWidget } from '@/types/apps/widget'
+import type { DroppedWidget } from '@/types/apps/droppedWidget'
 
 // Types for pre-selected fields
 interface SelectedField {

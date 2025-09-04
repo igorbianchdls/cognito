@@ -1,6 +1,6 @@
 'use client'
 
-import type { DroppedWidget, ContainerConfig } from '@/types/apps/widget'
+import type { DroppedWidget, ContainerConfig } from '@/types/apps/droppedWidget'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Slider } from '@/components/ui/slider'
 
