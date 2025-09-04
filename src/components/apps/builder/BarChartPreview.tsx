@@ -54,7 +54,7 @@ export default function BarChartPreview({
     const aggregation = getAggregationFunction(yField)
     
     let query = `SELECT ${xField.name}, ${aggregation}(${yField.name}) as ${yField.name}`
-    query += ` FROM \`${selectedTable}\``
+    query += ` FROM \`creatto-463117.biquery_data.${selectedTable}\``
     
     // Add WHERE clause for filters
     if (filters.length > 0) {

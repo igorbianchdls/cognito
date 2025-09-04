@@ -120,7 +120,7 @@ export const barChartActions = {
     })
     
     query += selectFields.join(', ')
-    query += ` FROM \`${tableName}\``
+    query += ` FROM \`creatto-463117.biquery_data.${tableName}\``
     
     if (filters.length > 0) {
       const whereConditions = filters.map(filter => `${filter.name} IS NOT NULL`).join(' AND ')
