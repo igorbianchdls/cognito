@@ -434,7 +434,7 @@ export default function UniversalBuilder({
             )}
 
             {/* Generic Drop Zones for Other Non-Chart/Table/KPI/Gallery Types */}
-            {data.selectedType !== 'chart' && data.selectedType !== 'table' && data.selectedType !== 'kpi' && data.selectedType !== 'gallery' && (
+            {data.selectedType !== 'table' && data.selectedType !== 'kpi' && data.selectedType !== 'gallery' && (
               <>
                 <DropZone
                   id="dimensions-drop-zone"
