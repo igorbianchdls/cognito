@@ -11,7 +11,21 @@ export default function WidgetEditorNew() {
   // Get selected KPI directly from kpiStore
   const selectedKPI = useStore($selectedKPI)
 
-  // Computed KPI config - acessar diretamente do selectedKPI
+  // Adapt KPIWidget to DroppedWidget format
+  const adaptedWidget = useMemo(() => {
+    if (!selectedKPI) return null
+    
+    return {
+      ...selectedKPI,
+      type: 'kpi' as const,
+      kpiConfig: selectedKPI.config,  // Move config to kpiConfig property
+      config: {
+        kpiConfig: selectedKPI.config  // Also keep in config.kpiConfig for compatibility
+      }
+    }
+  }, [selectedKPI])
+
+  // Computed KPI config - acessar do selectedKPI.config
   const kpiConfig = useMemo((): KPIConfig => {
     if (!selectedKPI) return {} as KPIConfig
     
@@ -31,7 +45,7 @@ export default function WidgetEditorNew() {
   }
 
   // Early return if no KPI selected
-  if (!selectedKPI) {
+  if (!selectedKPI || !adaptedWidget) {
     return (
       <div className="text-center py-8 text-gray-500">
         <p>Selecione um KPI para editar suas configurações</p>
@@ -52,7 +66,7 @@ export default function WidgetEditorNew() {
       <div>
         <h3 className="text-md font-medium mb-3">Editor de Configuração</h3>
         <KPIConfigEditor
-          selectedWidget={selectedKPI}
+          selectedWidget={adaptedWidget}
           kpiConfig={kpiConfig}
           onKPIConfigChange={handleKPIConfigChange}
         />
