@@ -151,7 +151,10 @@ export const barChartActions = {
       const response = await fetch('/api/bigquery', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: chart.bigqueryData.query })
+        body: JSON.stringify({ 
+          action: 'execute',
+          query: chart.bigqueryData.query 
+        })
       })
 
       if (!response.ok) {

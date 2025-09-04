@@ -82,7 +82,10 @@ export default function BarChartPreview({
       const response = await fetch('/api/bigquery', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: sqlQuery })
+        body: JSON.stringify({ 
+          action: 'execute',
+          query: sqlQuery 
+        })
       })
 
       if (!response.ok) {
