@@ -5,7 +5,6 @@ import { BarChart3, TrendingUp, PieChart, Activity, Trash2, Plus, ArrowRight, Ar
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import DropZone from './DropZone'
-import ChartPreview from './ChartPreview'
 import TablePreview from './TablePreview'
 import type { TableData } from './TablePreview'
 import KPIPreview from './KPIPreview'
@@ -17,16 +16,12 @@ import type { DroppedWidget } from '@/types/apps/widget'
 import { widgetActions } from '@/stores/apps/widgetStore'
 
 // Widget Types
-type WidgetType = 'chart' | 'kpi' | 'table' | 'gauge' | 'gallery' | 'kanban'
+type WidgetType = 'kpi' | 'table' | 'gauge' | 'gallery' | 'kanban'
 
 interface UniversalBuilderData {
   selectedType: WidgetType
   selectedTable: string | null
   
-  // Chart fields
-  xAxis: BigQueryField[]
-  yAxis: BigQueryField[]
-  chartType: 'bar' | 'line' | 'pie' | 'area'
   
   // Table fields  
   columns: BigQueryField[]
@@ -50,8 +45,7 @@ interface UniversalBuilderData {
 
 interface UniversalBuilderProps {
   data: UniversalBuilderData
-  onTypeChange: (selectedType: 'chart' | 'kpi' | 'table' | 'gauge' | 'gallery' | 'kanban') => void
-  onChartTypeChange: (chartType: 'bar' | 'line' | 'pie' | 'area') => void
+  onTypeChange: (selectedType: WidgetType) => void
   onClear: () => void
   onAggregationChange?: (fieldName: string, aggregation: BigQueryField['aggregation']) => void
   droppedWidgets?: DroppedWidget[]
@@ -61,7 +55,6 @@ interface UniversalBuilderProps {
 export default function UniversalBuilder({
   data,
   onTypeChange,
-  onChartTypeChange,
   onClear,
   onAggregationChange
 }: UniversalBuilderProps) {
@@ -89,9 +82,7 @@ export default function UniversalBuilder({
 
     // Check if we have required fields based on widget type
     const hasRequiredFields = 
-      data.selectedType === 'chart' 
-        ? data.xAxis.length > 0 && data.yAxis.length > 0
-        : data.selectedType === 'table'
+      data.selectedType === 'table'
         ? data.columns.length > 0
         : data.selectedType === 'kpi'
         ? data.kpiValue.length > 0
@@ -108,7 +99,7 @@ export default function UniversalBuilder({
     const widgetConfig = {
       id: `${data.selectedType}-${Date.now()}`,
       name: `${data.selectedTable} - ${data.selectedType}`,
-      type: data.selectedType === 'chart' ? `chart-${data.chartType}` : data.selectedType,
+      type: data.selectedType,
       icon: getWidgetIcon(data.selectedType),
       description: `${data.selectedType} from ${data.selectedTable}`,
       defaultWidth: getDefaultWidth(data.selectedType),
@@ -147,7 +138,6 @@ export default function UniversalBuilder({
   // Get widget icon based on type
   const getWidgetIcon = (widgetType: string) => {
     switch (widgetType) {
-      case 'chart': return '📊'
       case 'kpi': return '📈'
       case 'table': return '📋'
       case 'gauge': return '⚡'
@@ -201,16 +191,6 @@ export default function UniversalBuilder({
 
   const generateWidgetConfig = () => {
     switch(data.selectedType) {
-      case 'chart':
-        return {
-          chartConfig: {
-            title: `${data.xAxis[0]?.name} por ${data.yAxis[0]?.name}`,
-            colors: ['#2563eb'],
-            enableGridX: false,
-            enableGridY: true,
-            margin: { top: 12, right: 12, bottom: 60, left: 50 }
-          }
-        }
       case 'table':
         return {
           tableConfig: {
@@ -292,12 +272,6 @@ export default function UniversalBuilder({
 
   const getRelevantFields = () => {
     switch(data.selectedType) {
-      case 'chart':
-        return {
-          chartType: data.chartType,
-          xColumn: data.xAxis[0]?.name || '',
-          yColumn: data.yAxis[0]?.name || ''
-        }
       case 'table':
         return {
           chartType: 'table',
@@ -327,7 +301,6 @@ export default function UniversalBuilder({
 
   // Widget type options (2x3 grid)
   const widgetTypes = [
-    { id: 'chart' as const, label: 'Chart', icon: <BarChart3 className="w-6 h-6" />, description: 'Bar, line, pie charts' },
     { id: 'kpi' as const, label: 'KPI', icon: <TrendingUp className="w-6 h-6" />, description: 'Key performance indicators' },
     { id: 'table' as const, label: 'Table', icon: <Table className="w-6 h-6" />, description: 'Data tables' },
     { id: 'gauge' as const, label: 'Gauge', icon: <Gauge className="w-6 h-6" />, description: 'Progress gauges' },
@@ -335,21 +308,13 @@ export default function UniversalBuilder({
     { id: 'kanban' as const, label: 'Kanban', icon: <Kanban className="w-6 h-6" />, description: 'Kanban boards' }
   ]
 
-  // Chart type options (only for charts)
-  const chartTypes = [
-    { id: 'bar', label: 'Bar Chart', icon: <BarChart3 className="w-6 h-6" />, description: 'Compare categories' },
-    { id: 'line', label: 'Line Chart', icon: <TrendingUp className="w-6 h-6" />, description: 'Show trends over time' },
-    { id: 'pie', label: 'Pie Chart', icon: <PieChart className="w-6 h-6" />, description: 'Show proportions' },
-    { id: 'area', label: 'Area Chart', icon: <Activity className="w-6 h-6" />, description: 'Filled line chart' }
-  ] as const
 
   // Check if configuration is valid
   const isConfigValid = data.selectedTable && (
-    (data.selectedType === 'chart' && data.xAxis.length > 0 && data.yAxis.length > 0) ||
     (data.selectedType === 'table' && data.columns.length > 0) ||
     (data.selectedType === 'kpi' && data.kpiValue.length > 0) ||
     (data.selectedType === 'gallery' && data.galleryImageUrl.length > 0) ||
-    (data.selectedType !== 'chart' && data.selectedType !== 'table' && data.selectedType !== 'kpi' && data.selectedType !== 'gallery' && (data.dimensions.length > 0 || data.measures.length > 0))
+    (data.selectedType !== 'table' && data.selectedType !== 'kpi' && data.selectedType !== 'gallery' && (data.dimensions.length > 0 || data.measures.length > 0))
   )
 
   return (
@@ -405,57 +370,6 @@ export default function UniversalBuilder({
           {/* Conditional Drop Zones based on Widget Type */}
           <div className="space-y-3 px-2 overflow-x-hidden">
             
-            {/* Chart Drop Zones */}
-            {data.selectedType === 'chart' && (
-              <>
-                <DropZone
-                  id="x-axis-drop-zone"
-                  label="Eixo X"
-                  description="Categorias para eixo horizontal (strings, datas)"
-                  icon={<ArrowRight className="w-4 h-4 text-green-600" />}
-                  fields={data.xAxis}
-                  acceptedTypes={['string', 'date', 'numeric']}
-                  onRemoveField={(fieldName) => handleRemoveField('xAxis', fieldName)}
-                />
-
-                <DropZone
-                  id="y-axis-drop-zone"
-                  label="Eixo Y"
-                  description="Valores numéricos para eixo vertical (agregação)"
-                  icon={<ArrowUp className="w-4 h-4 text-blue-600" />}
-                  fields={data.yAxis}
-                  acceptedTypes={['numeric']}
-                  onRemoveField={(fieldName) => handleRemoveField('yAxis', fieldName)}
-                  onAggregationChange={handleAggregationChange}
-                />
-
-                {/* Chart Type Selection for Charts */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <PieChart className="w-4 h-4 text-muted-foreground" />
-                    <h3 className="text-sm font-medium">Chart Type</h3>
-                  </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    {chartTypes.map((type) => (
-                      <div
-                        key={type.id}
-                        className={`p-2 rounded-lg cursor-pointer transition-all ${
-                          data.chartType === type.id
-                            ? 'bg-accent border border-primary/30'
-                            : 'bg-background hover:bg-muted/30 border border-transparent hover:border-primary/20'
-                        }`}
-                        onClick={() => onChartTypeChange(type.id)}
-                      >
-                        <div className="flex flex-col items-center gap-2">
-                          {type.icon}
-                          <span className="font-medium text-sm text-center">{type.label}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
 
             {/* Table Drop Zones */}
             {data.selectedType === 'table' && (
@@ -570,20 +484,6 @@ export default function UniversalBuilder({
             </Button>
           </div>
 
-          {/* Chart Preview (only for charts) */}
-          {data.selectedType === 'chart' && (
-            <ChartPreview
-              xAxis={data.xAxis}
-              yAxis={data.yAxis}
-              filters={data.filters}
-              chartType={data.chartType}
-              selectedTable={data.selectedTable}
-              onDataReady={(chartData, query) => {
-                setPreviewData(chartData as Array<{ x: string; y: number; label: string; value: number }>)
-                setPreviewQuery(query)
-              }}
-            />
-          )}
 
           {/* Table Preview (only for tables) */}
           {data.selectedType === 'table' && (
