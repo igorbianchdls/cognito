@@ -3,7 +3,6 @@
 
 /* React Grid Layout CSS */
 @import "react-grid-layout/css/styles.css";
-@import "react-resizable/css/styles.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -152,8 +151,8 @@ form[class*="divide"] textarea:focus-visible {
   border-color: transparent !important;
 }
 
-/* Table Column Resizer Styles */
-.resizer {
+/* Table Column Resizer Styles (only for tables, not grid layout) */
+.table-resizer {
   position: absolute;
   right: 0;
   top: 0;
@@ -166,26 +165,26 @@ form[class*="divide"] textarea:focus-visible {
   transition: background-color 0.2s ease-in-out;
 }
 
-.resizer:hover {
+.table-resizer:hover {
   background: rgba(0, 0, 0, 0.3);
 }
 
-.resizer.isResizing {
+.table-resizer.isResizing {
   background: rgba(59, 130, 246, 0.5);
   width: 2px;
 }
 
-/* Dark mode support for resizer */
+/* Dark mode support for table resizer */
 @media (prefers-color-scheme: dark) {
-  .resizer {
+  .table-resizer {
     background: rgba(255, 255, 255, 0.1);
   }
   
-  .resizer:hover {
+  .table-resizer:hover {
     background: rgba(255, 255, 255, 0.3);
   }
   
-  .resizer.isResizing {
+  .table-resizer.isResizing {
     background: rgba(96, 165, 250, 0.5);
   }
 }

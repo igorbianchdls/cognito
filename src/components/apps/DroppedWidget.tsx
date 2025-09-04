@@ -115,7 +115,7 @@ export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = f
               e.stopPropagation()
               onEdit()
             }}
-            className="w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-medium shadow-sm transition-colors duration-200"
+            className="widget-button w-6 h-6 bg-blue-500 hover:bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-medium shadow-sm transition-colors duration-200"
             title="Edit widget"
           >
             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,7 +130,7 @@ export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = f
             e.stopPropagation()
             onRemove()
           }}
-          className="w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-medium shadow-sm transition-colors duration-200"
+          className="widget-button w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-medium shadow-sm transition-colors duration-200"
           title="Remove widget"
         >
           ×
@@ -144,13 +144,7 @@ export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = f
         {renderWidget()}
       </div>
 
-      {/* Resize handle indicator */}
-      <div className={`absolute bottom-1 right-1 w-3 h-3 transition-opacity duration-200 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
-        <div className="w-full h-full">
-          <div className="absolute bottom-0 right-0 w-2 h-2 border-r-2 border-b-2 border-gray-400"></div>
-          <div className="absolute bottom-1 right-1 w-1 h-1 border-r border-b border-gray-300"></div>
-        </div>
-      </div>
+      {/* React-grid-layout handles resize natively - no custom resize indicator needed */}
     </div>
   )
 }
