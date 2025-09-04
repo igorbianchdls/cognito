@@ -41,6 +41,10 @@ export default function GridCanvas({
   // State for container width measurement
   const [containerWidth, setContainerWidth] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
+  
+  // States to control drag/resize interactions
+  const [isDragging, setIsDragging] = useState(false)
+  const [isResizing, setIsResizing] = useState(false)
 
   const handleWidgetClick = (widgetId: string) => {
     widgetActions.selectWidget(widgetId)
@@ -263,6 +267,24 @@ export default function GridCanvas({
             autoSize={false}
             maxRows={12}
             draggableCancel=".resizer, .table-interactive, [data-draggable=false]"
+            onDragStart={() => {
+              console.log('🎯 GridCanvas: Drag started')
+              setIsDragging(true)
+            }}
+            onDragStop={(layout) => {
+              console.log('🎯 GridCanvas: Drag stopped', layout)
+              setIsDragging(false)
+              onLayoutChange(layout)
+            }}
+            onResizeStart={() => {
+              console.log('📏 GridCanvas: Resize started')
+              setIsResizing(true)
+            }}
+            onResizeStop={(layout) => {
+              console.log('📏 GridCanvas: Resize stopped', layout)
+              setIsResizing(false)
+              onLayoutChange(layout)
+            }}
           >
             {widgets.map((widget) => (
               <div 

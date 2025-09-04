@@ -46,6 +46,10 @@ export default function MultiGridCanvas({
   const [containerWidth, setContainerWidth] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
   const [isInitialized, setIsInitialized] = useState(false)
+  
+  // States to control drag/resize interactions
+  const [isDragging, setIsDragging] = useState(false)
+  const [isResizing, setIsResizing] = useState(false)
 
   // Initialize multi-canvas mode if not already done
   useEffect(() => {
@@ -278,6 +282,24 @@ export default function MultiGridCanvas({
                 isResizable={!readOnly}
                 margin={[16, 16]}
                 containerPadding={[16, 16]}
+                onDragStart={() => {
+                  console.log('🎯 MultiGridCanvas: Drag started')
+                  setIsDragging(true)
+                }}
+                onDragStop={(layout) => {
+                  console.log('🎯 MultiGridCanvas: Drag stopped', layout)
+                  setIsDragging(false)
+                  handleLayoutChange(layout)
+                }}
+                onResizeStart={() => {
+                  console.log('📏 MultiGridCanvas: Resize started')
+                  setIsResizing(true)
+                }}
+                onResizeStop={(layout) => {
+                  console.log('📏 MultiGridCanvas: Resize stopped', layout)
+                  setIsResizing(false)
+                  handleLayoutChange(layout)
+                }}
               >
                 {activeTabWidgets.map((widget) => (
                   <div key={widget.i} className="relative">
