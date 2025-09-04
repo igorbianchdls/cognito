@@ -52,6 +52,17 @@ export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = f
   // Get container configuration with defaults
   const containerConfig = widget.config?.containerConfig || DEFAULT_CONTAINER_CONFIG
 
+  // Diagnóstico: Log renderização de KPIs
+  if (widget.type === 'kpi') {
+    console.log('🎯 DroppedWidget rendering KPI:', { 
+      id: widget.i, 
+      name: widget.name,
+      isSelected,
+      kpiConfig: widget.kpiConfig,
+      timestamp: Date.now()
+    })
+  }
+
   // Special full-screen rendering for NavigationWidget (Airtable style)
   if (widget.type === 'navigation') {
     return <NavigationWidget widget={widget} />

@@ -40,15 +40,35 @@ export default function AppsPage() {
   const tables = useStore($tablesAsDropped)
   
   // Combine all widgets from different stores
-  const allWidgets = useMemo(() => [
-    ...droppedWidgets,
-    ...barCharts,
-    ...lineCharts,
-    ...pieCharts,
-    ...areaCharts,
-    ...kpis,
-    ...tables
-  ], [droppedWidgets, barCharts, lineCharts, pieCharts, areaCharts, kpis, tables])
+  const allWidgets = useMemo(() => {
+    const combined = [
+      ...droppedWidgets,
+      ...barCharts,
+      ...lineCharts,
+      ...pieCharts,
+      ...areaCharts,
+      ...kpis,
+      ...tables
+    ]
+    
+    // Diagnóstico: Verificar duplicatas
+    const ids = combined.map(w => w.i)
+    const uniqueIds = new Set(ids)
+    if (ids.length !== uniqueIds.size) {
+      console.error('🚨 DUPLICATED WIDGET IDs DETECTED!', {
+        totalWidgets: ids.length,
+        uniqueIds: uniqueIds.size,
+        duplicatedIds: ids.filter((id, index) => ids.indexOf(id) !== index),
+        allIds: ids,
+        kpiIds: kpis.map(k => k.i),
+        barChartIds: barCharts.map(b => b.i)
+      })
+    } else {
+      console.log('✅ All widget IDs are unique:', { total: ids.length, kpisCount: kpis.length })
+    }
+    
+    return combined
+  }, [droppedWidgets, barCharts, lineCharts, pieCharts, areaCharts, kpis, tables])
   const [activeWidget, setActiveWidget] = useState<Widget | null>(null)
   const [activeTab, setActiveTab] = useState<'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved' | 'datasets'>('chat')
 
@@ -102,6 +122,21 @@ export default function AppsPage() {
 
   const handleLayoutChange = (layout: LayoutItem[]) => {
     console.log('[LAYOUT] Mudança detectada:', layout.map(l => ({ id: l.i, x: l.x, y: l.y, w: l.w, h: l.h })))
+    
+    // Diagnóstico: Separar KPIs do layout
+    const kpiLayouts = layout.filter(item => {
+      const widget = allWidgets.find(w => w.i === item.i)
+      return widget?.type === 'kpi'
+    })
+    
+    console.log('[LAYOUT] KPI layouts:', kpiLayouts.map(l => ({ 
+      id: l.i, 
+      x: l.x, 
+      y: l.y, 
+      w: l.w, 
+      h: l.h 
+    })))
+    
     widgetActions.updateLayout(layout)
   }
 

@@ -45,10 +45,10 @@ function isLegacyChartConfigWithKPI(config: ChartConfig | undefined): config is 
 }
 
 export default function KPIWrapper({ widget }: KPIWidgetProps) {
-  // Get KPI configuration with backward compatibility - with reactividade
+  // Get KPI configuration with backward compatibility - with reatividade
   const kpiConfig: KPIConfig = useMemo(() => {
     console.log('🔄 KPIWidget kpiConfig recalculated for widget:', widget.i)
-    return widget.config?.kpiConfig || 
+    return widget.kpiConfig || widget.config?.kpiConfig || 
       // Backward compatibility: extract KPI props from old chartConfig
       (isLegacyChartConfigWithKPI(widget.chartConfig) ? {
         name: widget.chartConfig.kpiName,
