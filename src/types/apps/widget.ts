@@ -252,6 +252,7 @@ export interface WidgetConfig {
   galleryConfig?: GalleryConfig  // For gallery widgets
   imageConfig?: ImageConfig  // For image widgets
   navigationConfig?: NavigationConfig  // For navigation widgets
+  barChartConfig?: import('./barChart').BarChartConfig  // For bar chart widgets
   containerConfig?: ContainerConfig  // For widget container styling
 }
 
