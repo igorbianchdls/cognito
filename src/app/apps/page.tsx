@@ -20,6 +20,7 @@ import MultiGridCanvas from '@/components/apps/MultiGridCanvas'
 import { $widgets, widgetActions } from '@/stores/apps/widgetStore'
 import { $barChartsAsDropped } from '@/stores/apps/barChartStore'
 import { $lineChartsAsDropped } from '@/stores/apps/lineChartStore'
+import { $pieChartsAsDropped } from '@/stores/apps/pieChartStore'
 import { $kpisAsDropped } from '@/stores/apps/kpiStore'
 import { $tablesAsDropped } from '@/stores/apps/tableStore'
 import { $activeTab, multiCanvasActions } from '@/stores/apps/multiCanvasStore'
@@ -32,6 +33,7 @@ export default function AppsPage() {
   const droppedWidgets = useStore($widgets)
   const barCharts = useStore($barChartsAsDropped)
   const lineCharts = useStore($lineChartsAsDropped)
+  const pieCharts = useStore($pieChartsAsDropped)
   const kpis = useStore($kpisAsDropped)
   const tables = useStore($tablesAsDropped)
   
@@ -40,9 +42,10 @@ export default function AppsPage() {
     ...droppedWidgets,
     ...barCharts,
     ...lineCharts,
+    ...pieCharts,
     ...kpis,
     ...tables
-  ], [droppedWidgets, barCharts, lineCharts, kpis, tables])
+  ], [droppedWidgets, barCharts, lineCharts, pieCharts, kpis, tables])
   const [activeWidget, setActiveWidget] = useState<Widget | null>(null)
   const [activeTab, setActiveTab] = useState<'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved' | 'datasets'>('chat')
 

@@ -19,6 +19,7 @@ import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import { widgetActions, kpiActions, tableActions } from '@/stores/apps/widgetStore'
 import { barChartActions } from '@/stores/apps/barChartStore'
 import { lineChartActions } from '@/stores/apps/lineChartStore'
+import { pieChartActions } from '@/stores/apps/pieChartStore'
 
 // Widget Types
 type WidgetType = 'chart' | 'kpi' | 'table' | 'gauge' | 'gallery' | 'kanban'
@@ -270,6 +271,54 @@ export default function UniversalBuilder({
           colors: ['#10b981'],
           showLegend: true,
           showGrid: true,
+          title: `${data.xAxis[0]?.name} por ${data.yAxis[0]?.name}`
+        },
+        position: {
+          x: widgetConfig.x,
+          y: widgetConfig.y,
+          w: widgetConfig.w,
+          h: widgetConfig.h
+        }
+      })
+    } else if (data.selectedType === 'chart' && data.chartType === 'pie') {
+      // Convert to PieChart format and use pieChartActions
+      const query = pieChartActions.generatePieChartQuery(
+        data.xAxis.map(field => ({ ...field, mode: field.mode || 'NULLABLE' })), 
+        data.yAxis.map(field => ({ ...field, mode: field.mode || 'NULLABLE' })), 
+        data.filters.map(field => ({ ...field, mode: field.mode || 'NULLABLE' })), 
+        data.selectedTable
+      )
+      
+      console.log('🐛 DEBUG - UniversalBuilder addPieChart:', {
+        hasPreviewData: !!previewData,
+        previewDataLength: Array.isArray(previewData) ? previewData.length : 'not array',
+        previewDataSample: previewData,
+        query,
+        selectedTable: data.selectedTable,
+        xAxisFields: data.xAxis.map(f => f.name),
+        yAxisFields: data.yAxis.map(f => f.name)
+      })
+      
+      pieChartActions.addPieChart({
+        name: widgetConfig.name,
+        bigqueryData: {
+          query,
+          selectedTable: data.selectedTable,
+          columns: {
+            xAxis: data.xAxis,
+            yAxis: data.yAxis,
+            filters: data.filters
+          },
+          data: previewData,
+          lastExecuted: new Date(),
+          isLoading: false,
+          error: null
+        },
+        chartType: 'pie',
+        styling: {
+          colors: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4'],
+          showLegend: true,
+          showGrid: false, // Pie charts don't use grids
           title: `${data.xAxis[0]?.name} por ${data.yAxis[0]?.name}`
         },
         position: {

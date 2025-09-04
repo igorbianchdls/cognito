@@ -25,9 +25,12 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
     } else if (widget.type === 'chart-line' && widget.lineChartConfig) {
       chartConfig = widget.lineChartConfig
       chartType = 'line'
+    } else if (widget.type === 'chart-pie' && widget.pieChartConfig) {
+      chartConfig = widget.pieChartConfig
+      chartType = 'pie'
     } else {
       // Fallback: try to detect from available configs or use bar as default
-      chartConfig = widget.barChartConfig || widget.lineChartConfig
+      chartConfig = widget.barChartConfig || widget.lineChartConfig || widget.pieChartConfig
       chartType = 'bar' // Default to bar chart
     }
     
@@ -71,20 +74,23 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
       setData([])
       console.log(`📊 ChartWrapper (${chartType}): Nenhum dado disponível`)
     }
-  }, [widget.barChartConfig, widget.lineChartConfig, widget.type])
+  }, [widget.barChartConfig, widget.lineChartConfig, widget.pieChartConfig, widget.type])
 
   // Render the appropriate chart based on widget type
   const renderChart = () => {
     const colors = widget.barChartConfig?.styling?.colors || 
                   widget.lineChartConfig?.styling?.colors || 
+                  widget.pieChartConfig?.styling?.colors || 
                   ['#2563eb']
                   
     const showGrid = widget.barChartConfig?.styling?.showGrid ?? 
                     widget.lineChartConfig?.styling?.showGrid ?? 
+                    widget.pieChartConfig?.styling?.showGrid ?? 
                     true
                     
     const title = widget.barChartConfig?.styling?.title || 
-                 widget.lineChartConfig?.styling?.title
+                 widget.lineChartConfig?.styling?.title ||
+                 widget.pieChartConfig?.styling?.title
 
     const commonProps = {
       data,
@@ -115,6 +121,12 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
         return (
           <PieChart 
             {...commonProps}
+            innerRadius={0.5}
+            padAngle={1}
+            cornerRadius={2}
+            activeOuterRadiusOffset={4}
+            enableArcLinkLabels={false}
+            arcLabelsSkipAngle={15}
           />
         )
       case 'chart-area':

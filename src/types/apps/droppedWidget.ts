@@ -254,6 +254,7 @@ export interface WidgetConfig {
   navigationConfig?: NavigationConfig  // For navigation widgets
   barChartConfig?: { bigqueryData: import('../../stores/apps/barChartStore').BarChartBigQueryData, styling: import('../../stores/apps/barChartStore').BarChartConfig['styling'] }  // For bar chart widgets
   lineChartConfig?: { bigqueryData: import('../../stores/apps/lineChartStore').LineChartBigQueryData, styling: import('../../stores/apps/lineChartStore').LineChartConfig['styling'] }  // For line chart widgets
+  pieChartConfig?: { bigqueryData: import('../../stores/apps/pieChartStore').PieChartBigQueryData, styling: import('../../stores/apps/pieChartStore').PieChartConfig['styling'] }  // For pie chart widgets
   containerConfig?: ContainerConfig  // For widget container styling
 }
 
@@ -268,6 +269,7 @@ export interface DroppedWidget extends Widget {
   chartConfig?: ChartConfig   // Deprecated: kept for backward compatibility
   barChartConfig?: import('../../stores/apps/barChartStore').BarChartConfig  // Direct access for bar charts
   lineChartConfig?: import('../../stores/apps/lineChartStore').LineChartConfig  // Direct access for line charts
+  pieChartConfig?: import('../../stores/apps/pieChartStore').PieChartConfig  // Direct access for pie charts
   kpiConfig?: import('./kpiWidgets').KPIConfig  // Direct access for KPIs
   tableConfig?: import('./tableWidgets').TableConfig  // Direct access for tables
   bigqueryData?: {            // BigQuery data from Chart Builder
