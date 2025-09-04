@@ -94,16 +94,30 @@ export default function BarChartPreview({
       }
 
       const result = await response.json()
-      const data = result.rows || []
       
-      setBarChartData(data)
+      console.log('📊 BarChartPreview: Resultado parseado', {
+        success: result.success,
+        hasData: !!result.data,
+        dataType: typeof result.data,
+        hasDataArray: Array.isArray(result.data?.data),
+        dataLength: result.data?.data?.length,
+        error: result.error
+      })
       
-      // Call onDataReady callback
-      if (onDataReady) {
-        onDataReady(data, sqlQuery)
+      if (result.success && result.data?.data && Array.isArray(result.data.data)) {
+        const data = result.data.data as BarChartData[]
+        
+        setBarChartData(data)
+        
+        // Call onDataReady callback
+        if (onDataReady) {
+          onDataReady(data, sqlQuery)
+        }
+        
+        console.log('📊 BarChartPreview: Query executed successfully', data.length, 'rows')
+      } else {
+        throw new Error(result.error || 'No data returned from query')
       }
-      
-      console.log('📊 BarChartPreview: Query executed successfully', data.length, 'rows')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error'
       setError(errorMessage)
