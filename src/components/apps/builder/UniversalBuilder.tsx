@@ -15,7 +15,7 @@ import type { BarChartData } from './BarChartPreview'
 import GalleryPreview from './GalleryPreview'
 import type { GalleryData } from './GalleryPreview'
 import type { BigQueryField } from './TablesExplorer'
-import type { DroppedWidget } from '@/types/apps/widget'
+import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import { widgetActions, kpiActions, tableActions } from '@/stores/apps/widgetStore'
 import { barChartActions } from '@/stores/apps/barChartStore'
 

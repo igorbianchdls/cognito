@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { BarChart } from '@/components/charts'
 import type { ChartData } from '@/components/charts/types'
-import type { DroppedWidget } from '@/types/apps/widget'
+import type { DroppedWidget } from '@/types/apps/droppedWidget'
 
 interface BarChartWrapperProps {
   widget: DroppedWidget
@@ -13,12 +13,11 @@ export default function BarChartWrapper({ widget }: BarChartWrapperProps) {
   const [data, setData] = useState<ChartData[]>([])
 
   useEffect(() => {
-    // Read data from barChartConfig
-    const barChartConfig = widget.config?.barChartConfig
+    // Read data directly from barChartConfig
+    const barChartConfig = widget.barChartConfig
     
-    console.log('🐛 DEBUG - BarChartWrapper:', {
+    console.log('🐛 DEBUG - BarChartWrapper (DIRECT):', {
       widgetId: widget.i,
-      hasConfig: !!widget.config,
       hasBarChartConfig: !!barChartConfig,
       hasBigQueryData: !!barChartConfig?.bigqueryData,
       hasData: !!barChartConfig?.bigqueryData?.data,
@@ -27,7 +26,7 @@ export default function BarChartWrapper({ widget }: BarChartWrapperProps) {
       dataSample: barChartConfig?.bigqueryData?.data,
       xAxisField: barChartConfig?.bigqueryData?.columns?.xAxis?.[0]?.name,
       yAxisField: barChartConfig?.bigqueryData?.columns?.yAxis?.[0]?.name,
-      fullWidget: widget
+      directAccess: true
     })
     
     if (barChartConfig?.bigqueryData?.data && Array.isArray(barChartConfig.bigqueryData.data)) {
@@ -55,18 +54,16 @@ export default function BarChartWrapper({ widget }: BarChartWrapperProps) {
       setData([])
       console.log('📊 BarChartWrapper: Nenhum dado disponível')
     }
-  }, [widget.config])
-
-  const barChartConfig = widget.config?.barChartConfig
+  }, [widget.barChartConfig])
 
   return (
     <div className="h-full w-full">
       <BarChart 
         data={data}
-        colors={barChartConfig?.styling?.colors || ['#2563eb']}
+        colors={widget.barChartConfig?.styling?.colors || ['#2563eb']}
         enableGridX={false}
-        enableGridY={barChartConfig?.styling?.showGrid ?? true}
-        title={barChartConfig?.styling?.title}
+        enableGridY={widget.barChartConfig?.styling?.showGrid ?? true}
+        title={widget.barChartConfig?.styling?.title}
         margin={{ top: 12, right: 12, bottom: 60, left: 50 }}
         animate={false}
       />

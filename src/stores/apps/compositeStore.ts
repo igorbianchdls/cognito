@@ -6,7 +6,7 @@ import { $barChartStore, barChartActions } from './barChartStore'
 import type { ChartWidget } from '@/types/apps/chartWidgets'
 import type { KPIWidget } from '@/types/apps/kpiWidgets'
 import type { TableWidget } from '@/types/apps/tableWidgets'
-import type { DroppedWidget } from '@/types/apps/widget' // Legacy type for backward compatibility
+import type { DroppedWidget } from '@/types/apps/droppedWidget' // Legacy type for backward compatibility
 
 // Union type for all specialized widgets
 export type SpecializedWidget = ChartWidget | KPIWidget | TableWidget
@@ -256,12 +256,7 @@ function adaptBarChartToLegacy(barChart: import('./barChartStore').BarChartConfi
     y: barChart.position.y,
     w: barChart.position.w,
     h: barChart.position.h,
-    config: {
-      barChartConfig: {
-        bigqueryData: barChart.bigqueryData,
-        styling: barChart.styling
-      }
-    }
+    barChartConfig: barChart  // Direct access - no config nesting
   }
   
   // Cache the result

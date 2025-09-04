@@ -10,7 +10,7 @@ import WidgetEditor from '../editor/WidgetEditorNew'
 import CodeEditor from '../code/CodeEditor'
 import AutomationsPanel from '../automations/AutomationsPanel'
 import SavedPanel from '../saved/SavedPanel'
-import type { DroppedWidget } from '@/types/apps/widget'
+import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import type { BigQueryField } from './TablesExplorer'
 
 interface UniversalBuilderData {

@@ -11,7 +11,7 @@ import KPIWrapper from '@/components/widgets/KPIWrapper'
 import TableWrapper from '@/components/widgets/TableWrapper'
 import ImageWidget from './widgets/components/ImageWidget'
 import NavigationWidget from './widgets/components/NavigationWidget'
-import type { DroppedWidget as DroppedWidgetType, ContainerConfig } from '@/types/apps/widget'
+import type { DroppedWidget as DroppedWidgetType, ContainerConfig } from '@/types/apps/droppedWidget'
 
 // Helper function to convert hex color + opacity to RGBA
 function hexToRgba(hex: string, opacity: number = 1): string {

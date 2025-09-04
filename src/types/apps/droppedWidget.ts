@@ -265,6 +265,7 @@ export interface DroppedWidget extends Widget {
   color?: string
   config?: WidgetConfig       // New unified configuration
   chartConfig?: ChartConfig   // Deprecated: kept for backward compatibility
+  barChartConfig?: import('../../stores/apps/barChartStore').BarChartConfig  // Direct access for bar charts
   bigqueryData?: {            // BigQuery data from Chart Builder
     chartType: string
     data: Array<{ x: string; y: number; label: string; value: number }>
