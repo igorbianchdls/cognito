@@ -53,7 +53,7 @@ export default function WidgetEditorNew() {
   const kpiConfig = useMemo((): KPIConfig => {
     if (!selectedWidget || !isKPIWidget(selectedWidget)) return {} as KPIConfig
     
-    const config = selectedWidget.config?.kpiConfig || {} as KPIConfig
+    const config = selectedWidget.kpiConfig || selectedWidget.config?.kpiConfig || {} as KPIConfig
     console.log('🎯 WidgetEditorNew computed kpiConfig:', config)
     return config
   }, [selectedWidget])
