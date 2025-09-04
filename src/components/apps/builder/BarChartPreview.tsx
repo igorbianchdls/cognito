@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { RefreshCw, AlertCircle, BarChart3 } from 'lucide-react'
+import { RefreshCw, AlertCircle, BarChart3, Code2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { BarChart } from '@/components/charts'
 import type { BigQueryField } from './TablesExplorer'
 
@@ -29,6 +30,7 @@ export default function BarChartPreview({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState<string>('')
+  const [showQuery, setShowQuery] = useState(false)
 
   // Get aggregation function for measure field
   const getAggregationFunction = (field: BigQueryField): string => {
@@ -74,6 +76,8 @@ export default function BarChartPreview({
     setLoading(true)
     setError(null)
 
+    console.log('📊 BarChartPreview executing query:', sqlQuery)
+
     try {
       const response = await fetch('/api/bigquery', {
         method: 'POST',
@@ -82,7 +86,8 @@ export default function BarChartPreview({
       })
 
       if (!response.ok) {
-        throw new Error(`Query failed: ${response.statusText}`)
+        const responseText = await response.text()
+        throw new Error(`Query failed: ${response.statusText} - ${responseText}`)
       }
 
       const result = await response.json()
@@ -140,16 +145,36 @@ export default function BarChartPreview({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm flex items-center gap-2">
-          <BarChart3 className="w-4 h-4" />
-          Bar Chart Preview
-          {loading && <RefreshCw className="w-4 h-4 animate-spin" />}
-        </CardTitle>
-        <CardDescription className="text-xs">
-          {barChartData.length} rows • {xAxis[0]?.name} × {yAxis[0]?.name}
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              Bar Chart Preview
+              {loading && <RefreshCw className="w-4 h-4 animate-spin" />}
+            </CardTitle>
+            <CardDescription className="text-xs">
+              {barChartData.length} rows • {xAxis[0]?.name} × {yAxis[0]?.name}
+            </CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowQuery(!showQuery)}
+            className="gap-1"
+          >
+            <Code2 className="w-3 h-3" />
+            SQL
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
+        {showQuery && (
+          <div className="mb-4 p-3 bg-gray-50 rounded-md">
+            <h4 className="text-xs font-medium mb-2">SQL Query:</h4>
+            <code className="text-xs text-gray-700 font-mono whitespace-pre-wrap">{query}</code>
+          </div>
+        )}
+        
         {error ? (
           <div className="flex items-center gap-2 text-red-600 text-sm">
             <AlertCircle className="w-4 h-4" />
