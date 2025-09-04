@@ -5,8 +5,7 @@ import { useStore } from '@nanostores/react'
 import { useDroppable } from '@dnd-kit/core'
 import { Responsive, WidthProvider } from 'react-grid-layout'
 import DroppedWidget from './DroppedWidget'
-import { $selectedWidgetId, widgetActions } from '@/stores/apps/widgetStore'
-import { kpiActions } from '@/stores/apps/kpiStore'
+import { $selectedKPI, kpiActions } from '@/stores/apps/kpiStore'
 import { $canvasConfig } from '@/stores/apps/canvasStore' // Canvas customization store
 import { WebPreview, WebPreviewNavigation, WebPreviewUrl, WebPreviewNavigationButton } from '@/components/ai-elements/web-preview'
 import { savedDashboardActions } from '@/stores/apps/savedDashboardStore'
@@ -33,7 +32,7 @@ export default function GridCanvas({
   readOnly = false,
   noBorder = false
 }: GridCanvasProps) {
-  const selectedWidgetId = useStore($selectedWidgetId)
+  const selectedKPI = useStore($selectedKPI)
   const canvasConfig = useStore($canvasConfig)
   const { setNodeRef, isOver } = useDroppable({
     id: 'canvas-droppable'
@@ -55,11 +54,8 @@ export default function GridCanvas({
       // Use kpiStore for KPI selection
       console.log('🎯 Selecting KPI:', widgetId)
       kpiActions.selectKPI(widgetId)
-    } else {
-      // Use widgetStore for other widget types
-      console.log('🎯 Selecting widget:', widgetId, 'type:', widget?.type)
-      widgetActions.selectWidget(widgetId)
     }
+    // Note: Only KPIs are supported now, other widget types removed
   }
 
   // Navigation button handlers
@@ -303,7 +299,7 @@ export default function GridCanvas({
                 key={widget.i}
                 onClick={() => handleWidgetClick(widget.i)}
                 className={`cursor-pointer transition-all ${
-                  selectedWidgetId === widget.i 
+                  widget.type === 'kpi' && selectedKPI?.i === widget.i 
                     ? 'ring-2 ring-blue-500 ring-opacity-50' 
                     : ''
                 }`}
@@ -312,7 +308,7 @@ export default function GridCanvas({
                   widget={widget} 
                   onRemove={() => onRemoveWidget(widget.i)}
                   onEdit={onEditWidget ? () => onEditWidget(widget.i) : undefined}
-                  isSelected={selectedWidgetId === widget.i}
+                  isSelected={widget.type === 'kpi' && selectedKPI?.i === widget.i}
                 />
               </div>
             ))}

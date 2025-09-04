@@ -5,6 +5,7 @@ import { useStore } from '@nanostores/react'
 import { $selectedKPI, kpiActions } from '@/stores/apps/kpiStore'
 import { isKPIWidget } from '@/types/apps/kpiWidgets'
 import type { KPIConfig } from '@/types/apps/kpiWidgets'
+import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import KPIConfigEditor from '../editors/KPIConfigEditor'
 
 export default function WidgetEditorNew() {
@@ -12,7 +13,7 @@ export default function WidgetEditorNew() {
   const selectedKPI = useStore($selectedKPI)
 
   // Adapt KPIWidget to DroppedWidget format
-  const adaptedWidget = useMemo(() => {
+  const adaptedWidget = useMemo((): DroppedWidget | null => {
     if (!selectedKPI) return null
     
     return {
@@ -22,7 +23,7 @@ export default function WidgetEditorNew() {
       config: {
         kpiConfig: selectedKPI.config  // Also keep in config.kpiConfig for compatibility
       }
-    }
+    } as DroppedWidget
   }, [selectedKPI])
 
   // Computed KPI config - acessar do selectedKPI.config

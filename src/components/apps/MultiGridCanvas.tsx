@@ -5,7 +5,7 @@ import { useStore } from '@nanostores/react'
 import { useDroppable } from '@dnd-kit/core'
 import { Responsive, WidthProvider } from 'react-grid-layout'
 import DroppedWidget from './DroppedWidget'
-import { $selectedWidgetId, widgetActions } from '@/stores/apps/widgetStore'
+// import { $selectedWidgetId, widgetActions } from '@/stores/apps/widgetStore' // REMOVED: Only KPIs supported now
 import { $canvasConfig } from '@/stores/apps/canvasStore'
 import { $multiCanvasState, $activeTab, multiCanvasActions } from '@/stores/apps/multiCanvasStore'
 import { WebPreview, WebPreviewNavigation, WebPreviewUrl, WebPreviewNavigationButton } from '@/components/ai-elements/web-preview'

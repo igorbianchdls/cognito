@@ -17,13 +17,14 @@ import {
 import SplitSidebarPanel from '@/components/apps/builder/SplitSidebarPanel'
 import GridCanvas from '@/components/apps/GridCanvas'
 import MultiGridCanvas from '@/components/apps/MultiGridCanvas'
-import { $widgets, widgetActions } from '@/stores/apps/widgetStore'
-import { $barChartsAsDropped } from '@/stores/apps/barChartStore'
-import { $lineChartsAsDropped } from '@/stores/apps/lineChartStore'
-import { $pieChartsAsDropped } from '@/stores/apps/pieChartStore'
-import { $areaChartsAsDropped } from '@/stores/apps/areaChartStore'
-import { $kpisAsDropped } from '@/stores/apps/kpiStore'
-import { $tablesAsDropped } from '@/stores/apps/tableStore'
+// REMOVED: Only KPIs supported now
+// import { $widgets, widgetActions } from '@/stores/apps/widgetStore'
+// import { $barChartsAsDropped } from '@/stores/apps/barChartStore'
+// import { $lineChartsAsDropped } from '@/stores/apps/lineChartStore'
+// import { $pieChartsAsDropped } from '@/stores/apps/pieChartStore'
+// import { $areaChartsAsDropped } from '@/stores/apps/areaChartStore'
+import { $kpisAsDropped, kpiActions } from '@/stores/apps/kpiStore'
+// import { $tablesAsDropped } from '@/stores/apps/tableStore'
 import { $activeTab, multiCanvasActions } from '@/stores/apps/multiCanvasStore'
 import { isNavigationWidget } from '@/types/apps/droppedWidget'
 import type { Widget, LayoutItem, DroppedWidget } from '@/types/apps/droppedWidget'
@@ -31,24 +32,19 @@ import { Button } from '@/components/ui/button'
 import { Settings, Share, Github, BarChart3, MessageSquare, Code, Cpu, Archive, Database } from 'lucide-react'
 
 export default function AppsPage() {
-  const droppedWidgets = useStore($widgets)
-  const barCharts = useStore($barChartsAsDropped)
-  const lineCharts = useStore($lineChartsAsDropped)
-  const pieCharts = useStore($pieChartsAsDropped)
-  const areaCharts = useStore($areaChartsAsDropped)
+  // REMOVED: Only KPIs supported now
+  // const droppedWidgets = useStore($widgets)
+  // const barCharts = useStore($barChartsAsDropped)
+  // const lineCharts = useStore($lineChartsAsDropped)
+  // const pieCharts = useStore($pieChartsAsDropped)
+  // const areaCharts = useStore($areaChartsAsDropped)
   const kpis = useStore($kpisAsDropped)
-  const tables = useStore($tablesAsDropped)
+  // const tables = useStore($tablesAsDropped)
   
-  // Combine all widgets from different stores
+  // Only KPIs supported now - no more combining from multiple stores
   const allWidgets = useMemo(() => {
     const combined = [
-      ...droppedWidgets,
-      ...barCharts,
-      ...lineCharts,
-      ...pieCharts,
-      ...areaCharts,
-      ...kpis,
-      ...tables
+      ...kpis
     ]
     
     // Diagnóstico: Verificar duplicatas
@@ -60,15 +56,14 @@ export default function AppsPage() {
         uniqueIds: uniqueIds.size,
         duplicatedIds: ids.filter((id, index) => ids.indexOf(id) !== index),
         allIds: ids,
-        kpiIds: kpis.map(k => k.i),
-        barChartIds: barCharts.map(b => b.i)
+        kpiIds: kpis.map(k => k.i)
       })
     } else {
       console.log('✅ All widget IDs are unique:', { total: ids.length, kpisCount: kpis.length })
     }
     
     return combined
-  }, [droppedWidgets, barCharts, lineCharts, pieCharts, areaCharts, kpis, tables])
+  }, [kpis])
   const [activeWidget, setActiveWidget] = useState<Widget | null>(null)
   const [activeTab, setActiveTab] = useState<'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved' | 'datasets'>('chat')
 
@@ -113,9 +108,12 @@ export default function AppsPage() {
         const currentTabWidgets = multiCanvasActions.getTabWidgets(activeTabId)
         multiCanvasActions.updateTabWidgets(activeTabId, [...currentTabWidgets, newWidget])
       } else {
-        // Normal mode: Add to main canvas
-        console.log('[ADD] Adding widget to main canvas:', newWidget.i)
-        widgetActions.addWidget(newWidget)
+        // Normal mode: Add KPI to main canvas
+        console.log('[ADD] Adding KPI to main canvas:', newWidget.i)
+        if (widget.type === 'kpi') {
+          kpiActions.addKPI(newWidget)
+        }
+        // Note: Only KPIs supported now, other types ignored
       }
     }
   }
@@ -137,22 +135,37 @@ export default function AppsPage() {
       h: l.h 
     })))
     
-    widgetActions.updateLayout(layout)
+    // Update KPI layouts using kpiStore
+    kpiActions.updateKPIsLayout(kpiLayouts)
   }
 
   const handleRemoveWidget = (widgetId: string) => {
-    widgetActions.removeWidget(widgetId)
+    // Find widget type and use appropriate store
+    const widget = allWidgets.find(w => w.i === widgetId)
+    if (widget?.type === 'kpi') {
+      kpiActions.removeKPI(widgetId)
+    }
+    // Note: Only KPIs supported now
   }
 
   const handleEditWidget = useCallback((widgetId: string, changes: Partial<DroppedWidget>) => {
-    widgetActions.editWidget(widgetId, changes)
-  }, [])
+    // Find widget type and use appropriate store
+    const widget = allWidgets.find(w => w.i === widgetId)
+    if (widget?.type === 'kpi') {
+      // KPI editing handled through KPIConfigEditor via kpiStore
+      console.log('KPI editing handled through KPIConfigEditor, changes:', changes)
+    }
+    // Note: Only KPIs supported now
+  }, [allWidgets])
 
   const handleEditWidgetClick = useCallback((widgetId: string) => {
-    // Select the widget and switch to editor tab
-    widgetActions.selectWidget(widgetId)
+    // Find widget type and use appropriate store for selection
+    const widget = allWidgets.find(w => w.i === widgetId)
+    if (widget?.type === 'kpi') {
+      kpiActions.selectKPI(widgetId)
+    }
     setActiveTab('editor')
-  }, [])
+  }, [allWidgets])
 
   // Detect if Navigation Widget is present to switch between canvas modes
   const hasNavigationWidget = useMemo(() => {

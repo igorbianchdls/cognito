@@ -1,7 +1,7 @@
 'use client'
 
 import { atom } from 'nanostores'
-import { $widgets, widgetActions } from './widgetStore'
+// import { $widgets, widgetActions } from './widgetStore' // REMOVED: Only KPIs supported now
 import { $multiCanvasState, multiCanvasActions } from './multiCanvasStore'
 import { isNavigationWidget } from '@/types/apps/droppedWidget'
 import type { SavedDashboard } from '@/types/apps/savedDashboard'
@@ -130,7 +130,7 @@ export const savedDashboardActions = {
       console.log('📄 Loading multi-canvas dashboard:', dashboard.name, 'with', dashboard.multiCanvasState.tabs.length, 'tabs')
       
       // First, clear current state
-      widgetActions.setWidgets([])
+      // widgetActions.setWidgets([]) // REMOVED: Only KPIs supported now
       
       // Initialize multi-canvas mode with the saved state
       const multiCanvasState = dashboard.multiCanvasState
@@ -138,7 +138,7 @@ export const savedDashboardActions = {
       // Add navigation widget to main store (it should be in dashboard.widgets)
       const navigationWidget = dashboard.widgets.find(w => isNavigationWidget(w))
       if (navigationWidget) {
-        widgetActions.setWidgets([navigationWidget])
+        // widgetActions.setWidgets([navigationWidget]) // REMOVED: Only KPIs supported now
       }
       
       // Restore multi-canvas state
@@ -171,7 +171,7 @@ export const savedDashboardActions = {
       }
       
       // Load widgets normally
-      widgetActions.setWidgets(dashboard.widgets)
+      // widgetActions.setWidgets(dashboard.widgets) // REMOVED: Only KPIs supported now
       console.log('📄 Single canvas dashboard loaded with', dashboard.widgets.length, 'widgets')
     }
   },
