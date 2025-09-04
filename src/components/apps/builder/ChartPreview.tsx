@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { BarChart } from '@/components/charts'
 import { LineChart } from '@/components/charts'
 import { PieChart as PieChartComponent } from '@/components/charts'
+import { AreaChart } from '@/components/charts'
 import type { BigQueryField } from './TablesExplorer'
 
 export interface ChartData {
@@ -214,12 +215,14 @@ export default function ChartPreview({
           />
         )
       case 'area':
-        // Assuming you have an AreaChart component
         return (
-          <BarChart 
+          <AreaChart 
             {...commonProps}
             enableGridX={false}
             enableGridY={true}
+            enableArea={true}
+            areaOpacity={0.4}
+            curve="cardinal"
           />
         )
       default:
