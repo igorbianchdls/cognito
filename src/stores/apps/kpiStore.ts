@@ -14,6 +14,20 @@ import type { LayoutItem } from '@/types/apps/baseWidget'
 // Main KPIs atom
 export const $kpiWidgets = atom<KPIWidget[]>([])
 
+// Convert KPIs to DroppedWidget format for direct consumption
+export const $kpisAsDropped = computed([$kpiWidgets], (kpis) => {
+  return kpis.map(kpi => ({
+    i: kpi.i,
+    type: 'kpi' as const,
+    name: kpi.name,
+    x: kpi.x,
+    y: kpi.y, 
+    w: kpi.w,
+    h: kpi.h,
+    kpiConfig: kpi.config
+  }))
+})
+
 // Selected KPI atom
 export const $selectedKPIId = atom<string | null>(null)
 

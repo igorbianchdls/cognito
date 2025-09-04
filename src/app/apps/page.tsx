@@ -18,6 +18,9 @@ import SplitSidebarPanel from '@/components/apps/builder/SplitSidebarPanel'
 import GridCanvas from '@/components/apps/GridCanvas'
 import MultiGridCanvas from '@/components/apps/MultiGridCanvas'
 import { $widgets, widgetActions } from '@/stores/apps/widgetStore'
+import { $barChartsAsDropped } from '@/stores/apps/barChartStore'
+import { $kpisAsDropped } from '@/stores/apps/kpiStore'
+import { $tablesAsDropped } from '@/stores/apps/tableStore'
 import { $activeTab, multiCanvasActions } from '@/stores/apps/multiCanvasStore'
 import { isNavigationWidget } from '@/types/apps/droppedWidget'
 import type { Widget, LayoutItem, DroppedWidget } from '@/types/apps/droppedWidget'
@@ -26,6 +29,17 @@ import { Settings, Share, Github, BarChart3, MessageSquare, Code, Cpu, Archive, 
 
 export default function AppsPage() {
   const droppedWidgets = useStore($widgets)
+  const barCharts = useStore($barChartsAsDropped)
+  const kpis = useStore($kpisAsDropped)
+  const tables = useStore($tablesAsDropped)
+  
+  // Combine all widgets from different stores
+  const allWidgets = useMemo(() => [
+    ...droppedWidgets,
+    ...barCharts,
+    ...kpis,
+    ...tables
+  ], [droppedWidgets, barCharts, kpis, tables])
   const [activeWidget, setActiveWidget] = useState<Widget | null>(null)
   const [activeTab, setActiveTab] = useState<'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved' | 'datasets'>('chat')
 
@@ -98,8 +112,8 @@ export default function AppsPage() {
 
   // Detect if Navigation Widget is present to switch between canvas modes
   const hasNavigationWidget = useMemo(() => {
-    return droppedWidgets.some(widget => isNavigationWidget(widget))
-  }, [droppedWidgets])
+    return allWidgets.some(widget => isNavigationWidget(widget))
+  }, [allWidgets])
 
   return (
     <SidebarProvider defaultOpen={false}>
@@ -175,7 +189,7 @@ export default function AppsPage() {
               <div className="relative z-10">
                 <SplitSidebarPanel 
                   activeTab={activeTab}
-                  droppedWidgets={droppedWidgets}
+                  droppedWidgets={allWidgets}
                   onEditWidget={handleEditWidget}
                 />
               </div>
@@ -184,14 +198,14 @@ export default function AppsPage() {
               <div className="relative z-0 py-1 px-3 h-[calc(100vh-4rem)] overflow-auto min-w-0">
                 {hasNavigationWidget ? (
                   <MultiGridCanvas 
-                    widgets={droppedWidgets}
+                    widgets={allWidgets}
                     onLayoutChange={handleLayoutChange}
                     onRemoveWidget={handleRemoveWidget}
                     onEditWidget={handleEditWidgetClick}
                   />
                 ) : (
                   <GridCanvas 
-                    widgets={droppedWidgets}
+                    widgets={allWidgets}
                     onLayoutChange={handleLayoutChange}
                     onRemoveWidget={handleRemoveWidget}
                     onEditWidget={handleEditWidgetClick}

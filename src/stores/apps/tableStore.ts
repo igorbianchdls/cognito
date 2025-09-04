@@ -15,6 +15,20 @@ import type { LayoutItem } from '@/types/apps/baseWidget'
 // Main tables atom
 export const $tableWidgets = atom<TableWidget[]>([])
 
+// Convert Tables to DroppedWidget format for direct consumption
+export const $tablesAsDropped = computed([$tableWidgets], (tables) => {
+  return tables.map(table => ({
+    i: table.i,
+    type: 'table' as const,
+    name: table.name,
+    x: table.x,
+    y: table.y,
+    w: table.w,
+    h: table.h,
+    tableConfig: table.config
+  }))
+})
+
 // Selected table atom
 export const $selectedTableId = atom<string | null>(null)
 
