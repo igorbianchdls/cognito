@@ -5,6 +5,7 @@ import { BarChart3, TrendingUp, PieChart, Activity, Trash2, Plus, ArrowRight, Ar
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import DropZone from './DropZone'
+import ChartBuilder from './ChartBuilder'
 import TablePreview from './TablePreview'
 import type { TableData } from './TablePreview'
 import KPIPreview from './KPIPreview'
@@ -16,12 +17,16 @@ import type { DroppedWidget } from '@/types/apps/widget'
 import { widgetActions, kpiActions, tableActions } from '@/stores/apps/widgetStore'
 
 // Widget Types
-type WidgetType = 'kpi' | 'table' | 'gauge' | 'gallery' | 'kanban'
+type WidgetType = 'chart' | 'kpi' | 'table' | 'gauge' | 'gallery' | 'kanban'
 
 interface UniversalBuilderData {
   selectedType: WidgetType
   selectedTable: string | null
   
+  // Chart fields
+  xAxis: BigQueryField[]
+  yAxis: BigQueryField[]
+  chartType: 'bar' | 'line' | 'pie' | 'area'
   
   // Table fields  
   columns: BigQueryField[]
@@ -46,6 +51,7 @@ interface UniversalBuilderData {
 interface UniversalBuilderProps {
   data: UniversalBuilderData
   onTypeChange: (selectedType: WidgetType) => void
+  onChartTypeChange: (chartType: UniversalBuilderData['chartType']) => void
   onClear: () => void
   onAggregationChange?: (fieldName: string, aggregation: BigQueryField['aggregation']) => void
   droppedWidgets?: DroppedWidget[]
@@ -55,6 +61,7 @@ interface UniversalBuilderProps {
 export default function UniversalBuilder({
   data,
   onTypeChange,
+  onChartTypeChange,
   onClear,
   onAggregationChange
 }: UniversalBuilderProps) {
@@ -82,7 +89,9 @@ export default function UniversalBuilder({
 
     // Check if we have required fields based on widget type
     const hasRequiredFields = 
-      data.selectedType === 'table'
+      data.selectedType === 'chart'
+        ? data.xAxis.length > 0 && data.yAxis.length > 0
+        : data.selectedType === 'table'
         ? data.columns.length > 0
         : data.selectedType === 'kpi'
         ? data.kpiValue.length > 0
@@ -238,6 +247,16 @@ export default function UniversalBuilder({
 
   const generateWidgetConfig = () => {
     switch(data.selectedType) {
+      case 'chart':
+        return {
+          chartConfig: {
+            title: `${data.xAxis[0]?.name} por ${data.yAxis[0]?.name}`,
+            colors: ['#2563eb'],
+            enableGridX: false,
+            enableGridY: true,
+            margin: { top: 12, right: 12, bottom: 60, left: 50 }
+          }
+        }
       case 'table':
         return {
           tableConfig: {
@@ -319,6 +338,12 @@ export default function UniversalBuilder({
 
   const getRelevantFields = () => {
     switch(data.selectedType) {
+      case 'chart':
+        return {
+          chartType: data.chartType,
+          xColumn: data.xAxis[0]?.name || '',
+          yColumn: data.yAxis[0]?.name || ''
+        }
       case 'table':
         return {
           chartType: 'table',
@@ -348,6 +373,7 @@ export default function UniversalBuilder({
 
   // Widget type options (2x3 grid)
   const widgetTypes = [
+    { id: 'chart' as const, label: 'Chart', icon: <BarChart3 className="w-6 h-6" />, description: 'Bar, line, pie charts' },
     { id: 'kpi' as const, label: 'KPI', icon: <TrendingUp className="w-6 h-6" />, description: 'Key performance indicators' },
     { id: 'table' as const, label: 'Table', icon: <Table className="w-6 h-6" />, description: 'Data tables' },
     { id: 'gauge' as const, label: 'Gauge', icon: <Gauge className="w-6 h-6" />, description: 'Progress gauges' },
@@ -358,10 +384,11 @@ export default function UniversalBuilder({
 
   // Check if configuration is valid
   const isConfigValid = data.selectedTable && (
+    (data.selectedType === 'chart' && data.xAxis.length > 0 && data.yAxis.length > 0) ||
     (data.selectedType === 'table' && data.columns.length > 0) ||
     (data.selectedType === 'kpi' && data.kpiValue.length > 0) ||
     (data.selectedType === 'gallery' && data.galleryImageUrl.length > 0) ||
-    (data.selectedType !== 'table' && data.selectedType !== 'kpi' && data.selectedType !== 'gallery' && (data.dimensions.length > 0 || data.measures.length > 0))
+    (data.selectedType !== 'chart' && data.selectedType !== 'table' && data.selectedType !== 'kpi' && data.selectedType !== 'gallery' && (data.dimensions.length > 0 || data.measures.length > 0))
   )
 
   return (
@@ -417,6 +444,21 @@ export default function UniversalBuilder({
           {/* Conditional Drop Zones based on Widget Type */}
           <div className="space-y-3 px-2 overflow-x-hidden">
             
+            {/* Chart Drop Zones */}
+            {data.selectedType === 'chart' && (
+              <ChartBuilder
+                data={{
+                  xAxis: data.xAxis,
+                  yAxis: data.yAxis,
+                  filters: data.filters,
+                  chartType: data.chartType,
+                  selectedTable: data.selectedTable
+                }}
+                onChartTypeChange={onChartTypeChange}
+                onRemoveField={handleRemoveField}
+                onAggregationChange={handleAggregationChange}
+              />
+            )}
 
             {/* Table Drop Zones */}
             {data.selectedType === 'table' && (

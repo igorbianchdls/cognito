@@ -14,7 +14,10 @@ import type { DroppedWidget } from '@/types/apps/widget'
 import type { BigQueryField } from './TablesExplorer'
 
 interface UniversalBuilderData {
-  selectedType: 'kpi' | 'table' | 'gauge' | 'gallery' | 'kanban'
+  selectedType: 'chart' | 'kpi' | 'table' | 'gauge' | 'gallery' | 'kanban'
+  xAxis: BigQueryField[]
+  yAxis: BigQueryField[]
+  chartType: 'bar' | 'line' | 'pie' | 'area'
   filters: BigQueryField[]
   columns: BigQueryField[]
   kpiValue: BigQueryField[]
@@ -41,7 +44,10 @@ export default function SplitSidebarPanel({
   onEditWidget
 }: SplitSidebarPanelProps) {
   const [universalBuilderData, setUniversalBuilderData] = useState<UniversalBuilderData>({
-    selectedType: 'kpi',
+    selectedType: 'chart',
+    xAxis: [],
+    yAxis: [],
+    chartType: 'bar',
     filters: [],
     columns: [],
     kpiValue: [],
@@ -67,6 +73,8 @@ export default function SplitSidebarPanel({
       const newData = { ...prev }
       
       // Remove from all previous locations
+      newData.xAxis = newData.xAxis.filter(col => col.name !== draggedColumn.name)
+      newData.yAxis = newData.yAxis.filter(col => col.name !== draggedColumn.name)
       newData.filters = newData.filters.filter(col => col.name !== draggedColumn.name)
       newData.columns = newData.columns.filter(col => col.name !== draggedColumn.name)
       newData.kpiValue = newData.kpiValue.filter(col => col.name !== draggedColumn.name)
@@ -79,6 +87,12 @@ export default function SplitSidebarPanel({
       
       // Add to new location
       switch (dropZoneId) {
+        case 'x-axis-drop-zone':
+          newData.xAxis.push(draggedColumn)
+          break
+        case 'y-axis-drop-zone':
+          newData.yAxis.push(draggedColumn)
+          break
         case 'filters-drop-zone':
           newData.filters.push(draggedColumn)
           break
@@ -119,10 +133,17 @@ export default function SplitSidebarPanel({
     setUniversalBuilderData(prev => ({ ...prev, selectedType }))
   }
 
+  const handleChartTypeChange = (chartType: UniversalBuilderData['chartType']) => {
+    setUniversalBuilderData(prev => ({ ...prev, chartType }))
+  }
+
 
   const handleClearBuilder = () => {
     setUniversalBuilderData({
-      selectedType: 'kpi',
+      selectedType: 'chart',
+      xAxis: [],
+      yAxis: [],
+      chartType: 'bar',
       filters: [],
       columns: [],
       kpiValue: [],
@@ -139,6 +160,11 @@ export default function SplitSidebarPanel({
   const handleAggregationChange = (fieldName: string, aggregation: BigQueryField['aggregation']) => {
     setUniversalBuilderData(prev => ({
       ...prev,
+      yAxis: prev.yAxis.map(field => 
+        field.name === fieldName 
+          ? { ...field, aggregation }
+          : field
+      ),
       measures: prev.measures.map(field => 
         field.name === fieldName 
           ? { ...field, aggregation }
@@ -170,6 +196,7 @@ export default function SplitSidebarPanel({
               <UniversalBuilder
                 data={universalBuilderData}
                 onTypeChange={handleTypeChange}
+                onChartTypeChange={handleChartTypeChange}
                 onClear={handleClearBuilder}
                 onAggregationChange={handleAggregationChange}
                 droppedWidgets={droppedWidgets}
