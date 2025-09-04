@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { RefreshCw, AlertCircle, TrendingUp } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import KPIWidget from '../widgets/components/KPIWidget'
+import KPIWrapper from '@/components/widgets/KPIWrapper'
 import type { BigQueryField } from './TablesExplorer'
 
 export interface KPIData {
@@ -324,7 +324,7 @@ ${whereClause}
                 <div className="h-32 bg-gray-50 rounded-lg flex items-center justify-center">
                   {createPreviewWidget() && (
                     <div className="w-full h-full p-2">
-                      <KPIWidget widget={createPreviewWidget()!} />
+                      <KPIWrapper widget={createPreviewWidget()!} />
                     </div>
                   )}
                 </div>

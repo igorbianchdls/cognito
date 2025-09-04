@@ -6,7 +6,7 @@ import LineChartWidget from './widgets/components/LineChartWidget'
 import PieChartWidget from './widgets/components/PieChartWidget'
 import AreaChartWidget from './widgets/components/AreaChartWidget'
 import MetricWidget from './widgets/components/MetricWidget'
-import KPIWidget from './widgets/components/KPIWidget'
+import KPIWrapper from '@/components/widgets/KPIWrapper'
 import TableWidget from './widgets/components/TableWidget'
 import ImageWidget from './widgets/components/ImageWidget'
 import NavigationWidget from './widgets/components/NavigationWidget'
@@ -73,7 +73,7 @@ export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = f
       case 'metric':
         return <MetricWidget />
       case 'kpi':
-        return <KPIWidget widget={widget} />
+        return <KPIWrapper widget={widget} />
       case 'table':
         return <TableWidget widget={widget} />
       case 'image':
