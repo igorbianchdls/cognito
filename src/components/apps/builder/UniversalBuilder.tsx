@@ -13,7 +13,7 @@ import GalleryPreview from './GalleryPreview'
 import type { GalleryData } from './GalleryPreview'
 import type { BigQueryField } from './TablesExplorer'
 import type { DroppedWidget } from '@/types/apps/widget'
-import { widgetActions, kpiActions } from '@/stores/apps/widgetStore'
+import { widgetActions, kpiActions, tableActions } from '@/stores/apps/widgetStore'
 
 // Widget Types
 type WidgetType = 'kpi' | 'table' | 'gauge' | 'gallery' | 'kanban'
@@ -143,6 +143,30 @@ export default function UniversalBuilder({
             metric: widgetConfig.bigqueryData.yColumn,
             calculation: widgetConfig.bigqueryData.xColumn ? 'GROUP_BY' : 'TOTAL',
             timeRange: 'Current Period'
+          } : {})
+        }
+      })
+    } else if (data.selectedType === 'table') {
+      // Convert to TableWidget format and use tableActions
+      const tableConfig = widgetConfig.config?.tableConfig || {}
+      tableActions.addTable({
+        name: widgetConfig.name,
+        icon: widgetConfig.icon,
+        description: widgetConfig.description,
+        position: { x: widgetConfig.x, y: widgetConfig.y },
+        size: { w: widgetConfig.w, h: widgetConfig.h },
+        config: {
+          ...tableConfig,
+          // Add BigQuery data to table config
+          ...(widgetConfig.bigqueryData ? {
+            dataSource: 'BigQuery',
+            columns: data.columns.map(col => ({
+              id: col.name,
+              header: col.name,
+              accessorKey: col.name,
+              sortable: true,
+              type: col.type.toLowerCase().includes('numeric') ? 'number' : 'text'
+            }))
           } : {})
         }
       })

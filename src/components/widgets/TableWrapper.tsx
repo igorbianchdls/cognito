@@ -10,7 +10,7 @@ interface TableWidgetProps {
   widget: DroppedWidget
 }
 
-export default function TableWidget({ widget }: TableWidgetProps) {
+export default function TableWrapper({ widget }: TableWidgetProps) {
   // Get table configuration with backward compatibility (same pattern as charts)
   const tableConfig: TableConfig = widget.config?.tableConfig || {}
 
