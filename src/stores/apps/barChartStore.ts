@@ -16,7 +16,7 @@ export interface BarChartBigQueryData {
     yAxis: BigQueryField[]
     filters: BigQueryField[]
   }
-  data: any[] | null
+  data: Record<string, unknown>[] | null
   lastExecuted: Date | null
   isLoading: boolean
   error: string | null
