@@ -3,7 +3,7 @@
 import { useStore } from '@nanostores/react'
 import { useState, useEffect, useCallback } from 'react'
 // import { $widgets, widgetActions } from '@/stores/apps/widgetStore' // REMOVED: Only KPIs supported now  
-import { $kpis, kpiActions } from '@/stores/apps/kpiStore'
+import { $kpiWidgets, kpiActions } from '@/stores/apps/kpiStore'
 import type { DroppedWidget, ChartConfig, WidgetConfig } from '@/types/apps/droppedWidget'
 
 interface JsonWidget {
@@ -51,7 +51,7 @@ interface CreateChartConfig {
 }
 
 export default function CodeEditor() {
-  const widgets = useStore($kpis) // Note: Only KPIs supported now
+  const widgets = useStore($kpiWidgets) // Note: Only KPIs supported now
   const [state, setState] = useState<CodeEditorState>({
     code: '',
     error: null,

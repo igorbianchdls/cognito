@@ -6,6 +6,7 @@ import { useDroppable } from '@dnd-kit/core'
 import { Responsive, WidthProvider } from 'react-grid-layout'
 import DroppedWidget from './DroppedWidget'
 // import { $selectedWidgetId, widgetActions } from '@/stores/apps/widgetStore' // REMOVED: Only KPIs supported now
+import { $selectedKPI, kpiActions } from '@/stores/apps/kpiStore'
 import { $canvasConfig } from '@/stores/apps/canvasStore'
 import { $multiCanvasState, $activeTab, multiCanvasActions } from '@/stores/apps/multiCanvasStore'
 import { WebPreview, WebPreviewNavigation, WebPreviewUrl, WebPreviewNavigationButton } from '@/components/ai-elements/web-preview'
@@ -33,7 +34,7 @@ export default function MultiGridCanvas({
   readOnly = false,
   noBorder = false
 }: MultiGridCanvasProps) {
-  const selectedWidgetId = useStore($selectedWidgetId)
+  const selectedKPI = useStore($selectedKPI)
   const canvasConfig = useStore($canvasConfig)
   const multiCanvasState = useStore($multiCanvasState)
   const activeTab = useStore($activeTab)
@@ -72,7 +73,15 @@ export default function MultiGridCanvas({
   }, [multiCanvasState.tabs, activeTab])
 
   const handleWidgetClick = (widgetId: string) => {
-    widgetActions.selectWidget(widgetId)
+    // Find widget from the widgets array passed as props
+    const widget = widgets.find(w => w.i === widgetId)
+    
+    if (widget?.type === 'kpi') {
+      // Use kpiStore for KPI selection
+      console.log('🎯 Selecting KPI in MultiGridCanvas:', widgetId)
+      kpiActions.selectKPI(widgetId)
+    }
+    // Note: Only KPIs supported now, other widget types removed
   }
 
   // Navigation button handlers
@@ -202,14 +211,14 @@ export default function MultiGridCanvas({
             <DroppedWidget
               key={navigationWidget.i}
               widget={navigationWidget}
-              isSelected={selectedWidgetId === navigationWidget.i}
+              isSelected={false} // Note: Navigation widgets not supported with KPI selection
               onClick={() => handleWidgetClick(navigationWidget.i)}
               onRemove={() => handleRemoveWidget(navigationWidget.i)}
               onEdit={onEditWidget ? () => onEditWidget(navigationWidget.i) : undefined}
             />
             
             {/* Selection indicator */}
-            {selectedWidgetId === navigationWidget.i && (
+            {false && ( // Note: Widget editing disabled for navigation widgets
               <div className="absolute inset-0 border-2 border-blue-500 rounded-lg pointer-events-none" />
             )}
           </div>
@@ -305,14 +314,14 @@ export default function MultiGridCanvas({
                   <div key={widget.i} className="relative">
                     <DroppedWidget
                       widget={widget}
-                      isSelected={selectedWidgetId === widget.i}
+                      isSelected={widget.type === 'kpi' && selectedKPI?.i === widget.i}
                       onClick={() => handleWidgetClick(widget.i)}
                       onRemove={() => handleRemoveWidget(widget.i)}
                       onEdit={onEditWidget ? () => onEditWidget(widget.i) : undefined}
                     />
                     
                     {/* Selection indicator */}
-                    {selectedWidgetId === widget.i && (
+                    {widget.type === 'kpi' && selectedKPI?.i === widget.i && (
                       <div className="absolute inset-0 border-2 border-blue-500 rounded-lg pointer-events-none" />
                     )}
                   </div>
