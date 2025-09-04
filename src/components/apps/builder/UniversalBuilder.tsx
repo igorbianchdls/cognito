@@ -15,6 +15,7 @@ import type { GalleryData } from './GalleryPreview'
 import type { BigQueryField } from './TablesExplorer'
 import type { DroppedWidget } from '@/types/apps/widget'
 import { widgetActions, kpiActions, tableActions } from '@/stores/apps/widgetStore'
+import { barChartActions } from '@/stores/apps/barChartStore'
 
 // Widget Types
 type WidgetType = 'chart' | 'kpi' | 'table' | 'gauge' | 'gallery' | 'kanban'
@@ -177,6 +178,44 @@ export default function UniversalBuilder({
               type: col.type.toLowerCase().includes('numeric') ? 'number' : 'text'
             }))
           } : {})
+        }
+      })
+    } else if (data.selectedType === 'chart' && data.chartType === 'bar') {
+      // Convert to BarChart format and use barChartActions
+      const query = barChartActions.generateBarChartQuery(
+        data.xAxis, 
+        data.yAxis, 
+        data.filters, 
+        data.selectedTable
+      )
+      
+      barChartActions.addBarChart({
+        name: widgetConfig.name,
+        bigqueryData: {
+          query,
+          selectedTable: data.selectedTable,
+          columns: {
+            xAxis: data.xAxis,
+            yAxis: data.yAxis,
+            filters: data.filters
+          },
+          data: previewData,
+          lastExecuted: new Date(),
+          isLoading: false,
+          error: null
+        },
+        chartType: 'bar',
+        styling: {
+          colors: ['#2563eb'],
+          showLegend: true,
+          showGrid: true,
+          title: `${data.xAxis[0]?.name} por ${data.yAxis[0]?.name}`
+        },
+        position: {
+          x: widgetConfig.x,
+          y: widgetConfig.y,
+          w: widgetConfig.w,
+          h: widgetConfig.h
         }
       })
     } else {

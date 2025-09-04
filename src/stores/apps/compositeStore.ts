@@ -2,6 +2,7 @@ import { atom, computed } from 'nanostores'
 import { $chartWidgets, chartActions } from './chartStore'
 import { $kpiWidgets, kpiActions } from './kpiStore'
 import { $tableWidgets, tableActions } from './tableStore'
+import { $barChartStore, barChartActions } from './barChartStore'
 import type { ChartWidget } from '@/types/apps/chartWidgets'
 import type { KPIWidget } from '@/types/apps/kpiWidgets'
 import type { TableWidget } from '@/types/apps/tableWidgets'
@@ -37,12 +38,13 @@ setInterval(() => {
 
 // Unified widget store - combines all specialized stores + legacy
 export const $allWidgets = computed(
-  [$chartWidgets, $kpiWidgets, $tableWidgets, $legacyWidgets],
-  (charts, kpis, tables, legacy) => {
+  [$chartWidgets, $kpiWidgets, $tableWidgets, $barChartStore, $legacyWidgets],
+  (charts, kpis, tables, barCharts, legacy) => {
     console.log('🔄 Composite store recomputando:', {
       chartsCount: charts.length,
       kpisCount: kpis.length,
       tablesCount: tables.length,
+      barChartsCount: barCharts.barCharts.length,
       legacyCount: legacy.length,
       triggeredBy: 'store update'
     })
@@ -62,8 +64,9 @@ export const $allWidgets = computed(
     })
     const convertedKPIs = kpis.map(adaptKPIToLegacy)
     const convertedTables = tables.map(adaptTableToLegacy)
+    const convertedBarCharts = barCharts.barCharts.map(adaptBarChartToLegacy)
     
-    const result = [...convertedCharts, ...convertedKPIs, ...convertedTables, ...legacy]
+    const result = [...convertedCharts, ...convertedKPIs, ...convertedTables, ...convertedBarCharts, ...legacy]
     console.log('🔄 Composite store resultado final:', result.length, 'widgets')
     return result
   }
@@ -211,6 +214,44 @@ function adaptTableToLegacy(table: TableWidget): DroppedWidget {
   // Cache the result
   adapterCache.set(cacheKey, adapted)
   console.log('💾 Table adapter cache miss - cached:', table.i)
+  
+  return adapted
+}
+
+function adaptBarChartToLegacy(barChart: import('./barChartStore').BarChartConfig): DroppedWidget {
+  // Create cache key based on widget ID, config AND position
+  const configHash = JSON.stringify(barChart.bigqueryData)
+  const positionHash = `${barChart.position.x}_${barChart.position.y}_${barChart.position.w}_${barChart.position.h}`
+  const cacheKey = `barChart_${barChart.id}_${configHash}_${positionHash}`
+  
+  // Return cached version if available
+  const cached = adapterCache.get(cacheKey)
+  if (cached) {
+    console.log('📊 BarChart adapter cache hit:', barChart.id)
+    return cached
+  }
+  
+  // Create new adapted widget
+  const adapted: DroppedWidget = {
+    i: barChart.id,
+    type: 'chart-bar',
+    name: barChart.name,
+    icon: '📊',
+    x: barChart.position.x,
+    y: barChart.position.y,
+    w: barChart.position.w,
+    h: barChart.position.h,
+    config: {
+      barChartConfig: {
+        bigqueryData: barChart.bigqueryData,
+        styling: barChart.styling
+      }
+    }
+  }
+  
+  // Cache the result
+  adapterCache.set(cacheKey, adapted)
+  console.log('💾 BarChart adapter cache miss - cached:', barChart.id)
   
   return adapted
 }
@@ -454,6 +495,7 @@ export const compositeActions = {
     chartActions.removeChart(widgetId)
     kpiActions.removeKPI(widgetId)
     tableActions.removeTable(widgetId)
+    barChartActions.removeBarChart(widgetId)
     
     // Also try legacy store
     const currentLegacy = $legacyWidgets.get()
