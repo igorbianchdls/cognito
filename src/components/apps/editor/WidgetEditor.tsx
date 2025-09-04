@@ -1,7 +1,7 @@
 'use client'
 
 import { useStore } from '@nanostores/react'
-import { $widgets, $selectedWidget, $selectedWidgetId, widgetActions } from '@/stores/apps/widgetStore'
+// import { $widgets, $selectedWidget, $selectedWidgetId, widgetActions } from '@/stores/apps/widgetStore' // REMOVED: Only KPIs supported now
 import { chartActions } from '@/stores/apps/chartStore'
 import { kpiActions } from '@/stores/apps/kpiStore'
 import { $canvasConfig, canvasActions } from '@/stores/apps/canvasStore'

@@ -2,7 +2,8 @@
 
 import { useStore } from '@nanostores/react'
 import { useState, useEffect, useCallback } from 'react'
-import { $widgets, widgetActions } from '@/stores/apps/widgetStore'
+// import { $widgets, widgetActions } from '@/stores/apps/widgetStore' // REMOVED: Only KPIs supported now  
+import { $kpis, kpiActions } from '@/stores/apps/kpiStore'
 import type { DroppedWidget, ChartConfig, WidgetConfig } from '@/types/apps/droppedWidget'
 
 interface JsonWidget {
@@ -50,7 +51,7 @@ interface CreateChartConfig {
 }
 
 export default function CodeEditor() {
-  const widgets = useStore($widgets)
+  const widgets = useStore($kpis) // Note: Only KPIs supported now
   const [state, setState] = useState<CodeEditorState>({
     code: '',
     error: null,
@@ -174,8 +175,12 @@ LIMIT 50
         }
       };
       
-      // 6. Adicionar ao canvas
-      widgetActions.addWidget(widgetConfig);
+      // 6. Adicionar ao canvas - Note: Only KPIs supported now
+      if (widgetConfig.type === 'kpi') {
+        kpiActions.addKPI(widgetConfig);
+      } else {
+        console.log('Code editor: Only KPI widgets supported now');
+      }
       
       return { success: true, message: 'Chart created successfully!' };
       
@@ -311,7 +316,9 @@ LIMIT 50
         return droppedWidget
       })
 
-      widgetActions.setWidgets(newWidgets)
+      // Note: Only KPIs supported now - setWidgets not supported
+      // widgetActions.setWidgets(newWidgets) // REMOVED: Code-based bulk widget management not supported
+      console.log('Code editor: Bulk widget management not supported - use KPI builder instead')
       setState(prev => ({ ...prev, error: null, lastSync: Date.now() }))
       
     } catch (error) {

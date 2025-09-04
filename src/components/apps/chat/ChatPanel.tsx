@@ -5,7 +5,8 @@ import { DefaultChatTransport } from 'ai'
 import { useState, FormEvent } from 'react'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import CanvasWidgets from './tools/CanvasWidgets'
-import { widgetActions } from '@/stores/apps/widgetStore'
+// import { widgetActions } from '@/stores/apps/widgetStore' // REMOVED: Only KPIs supported now
+import { kpiActions } from '@/stores/apps/kpiStore'
 import {
   PromptInput,
   PromptInputButton,
@@ -115,13 +116,15 @@ const executeAction = (actionData: ActionData, index: number) => {
     case 'move':
     case 'resize':
       if (widgetId && mappedChanges) {
-        widgetActions.editWidget(widgetId, mappedChanges)
+        // Note: Only KPIs supported now - widget editing handled via KPIConfigEditor
+        console.log('Widget editing via chat not supported - use KPI editor instead')
       }
       break
       
     case 'delete':
       if (widgetId) {
-        widgetActions.removeWidget(widgetId)
+        // Note: Only KPIs supported now
+        kpiActions.removeKPI(widgetId)
       }
       break
       
@@ -143,7 +146,10 @@ const executeAction = (actionData: ActionData, index: number) => {
           h: mappedChanges.h || 2,
           color: mappedChanges.color || '#3B82F6'
         }
-        widgetActions.addWidget(newWidget)
+        // Note: Only KPIs supported now
+        if (newWidget.type === 'kpi') {
+          kpiActions.addKPI(newWidget)
+        }
       }
       break
   }
@@ -171,8 +177,9 @@ const handleLegacyFormat = (parsed: LegacyFormat) => {
     return transformedWidget
   })
   
-  // Apply changes to canvas
-  widgetActions.setWidgets(newWidgets)
+  // Apply changes to canvas - Note: Only KPIs supported now
+  // widgetActions.setWidgets(newWidgets) // REMOVED: Chat-based widget management not supported
+  console.log('Chat-based widget management not supported - use KPI builder instead')
 }
 
 export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelProps) {
