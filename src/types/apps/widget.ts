@@ -252,7 +252,7 @@ export interface WidgetConfig {
   galleryConfig?: GalleryConfig  // For gallery widgets
   imageConfig?: ImageConfig  // For image widgets
   navigationConfig?: NavigationConfig  // For navigation widgets
-  barChartConfig?: import('./barChart').BarChartConfig  // For bar chart widgets
+  barChartConfig?: { bigqueryData: import('../../stores/apps/barChartStore').BarChartBigQueryData, styling: import('../../stores/apps/barChartStore').BarChartConfig['styling'] }  // For bar chart widgets
   containerConfig?: ContainerConfig  // For widget container styling
 }
 
