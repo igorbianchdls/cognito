@@ -10,6 +10,8 @@ import TablePreview from './TablePreview'
 import type { TableData } from './TablePreview'
 import KPIPreview from './KPIPreview'
 import type { KPIData } from './KPIPreview'
+import BarChartPreview from './BarChartPreview'
+import type { BarChartData } from './BarChartPreview'
 import GalleryPreview from './GalleryPreview'
 import type { GalleryData } from './GalleryPreview'
 import type { BigQueryField } from './TablesExplorer'
@@ -644,6 +646,20 @@ export default function UniversalBuilder({
               selectedTable={data.selectedTable}
               onDataReady={(kpiData, query) => {
                 setPreviewData(kpiData as KPIData[])
+                setPreviewQuery(query)
+              }}
+            />
+          )}
+
+          {/* Bar Chart Preview (only for bar charts) */}
+          {data.selectedType === 'chart' && data.chartType === 'bar' && (
+            <BarChartPreview
+              xAxis={data.xAxis}
+              yAxis={data.yAxis}
+              filters={data.filters}
+              selectedTable={data.selectedTable}
+              onDataReady={(barChartData, query) => {
+                setPreviewData(barChartData as BarChartData[])
                 setPreviewQuery(query)
               }}
             />
