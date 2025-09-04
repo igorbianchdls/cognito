@@ -13,7 +13,7 @@ import GalleryPreview from './GalleryPreview'
 import type { GalleryData } from './GalleryPreview'
 import type { BigQueryField } from './TablesExplorer'
 import type { DroppedWidget } from '@/types/apps/widget'
-import { widgetActions } from '@/stores/apps/widgetStore'
+import { widgetActions, kpiActions } from '@/stores/apps/widgetStore'
 
 // Widget Types
 type WidgetType = 'kpi' | 'table' | 'gauge' | 'gallery' | 'kanban'
@@ -125,8 +125,31 @@ export default function UniversalBuilder({
       })()
     }
 
-    // Add widget to dashboard
-    widgetActions.addWidget(widgetConfig as DroppedWidget)
+    // Add widget to dashboard - route to appropriate store
+    if (data.selectedType === 'kpi') {
+      // Convert to KPIWidget format and use kpiActions
+      const kpiConfig = widgetConfig.config?.kpiConfig || {}
+      kpiActions.addKPI({
+        name: widgetConfig.name,
+        icon: widgetConfig.icon,
+        description: widgetConfig.description,
+        position: { x: widgetConfig.x, y: widgetConfig.y },
+        size: { w: widgetConfig.w, h: widgetConfig.h },
+        config: {
+          ...kpiConfig,
+          // Add BigQuery data to KPI config
+          ...(widgetConfig.bigqueryData ? {
+            dataSource: 'BigQuery',
+            metric: widgetConfig.bigqueryData.yColumn,
+            calculation: widgetConfig.bigqueryData.xColumn ? 'GROUP_BY' : 'TOTAL',
+            timeRange: 'Current Period'
+          } : {})
+        }
+      })
+    } else {
+      // Use widgetActions for other widget types
+      widgetActions.addWidget(widgetConfig as DroppedWidget)
+    }
     
     // Show success feedback
     alert(`${data.selectedType} added to dashboard! Switch to the canvas to see it.`)
