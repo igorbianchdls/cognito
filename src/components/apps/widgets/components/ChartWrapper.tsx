@@ -25,15 +25,9 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
     } else if (widget.type === 'chart-line' && widget.lineChartConfig) {
       chartConfig = widget.lineChartConfig
       chartType = 'line'
-    } else if (widget.type === 'chart-pie' && widget.pieChartConfig) {
-      chartConfig = widget.pieChartConfig
-      chartType = 'pie'
-    } else if (widget.type === 'chart-area' && widget.areaChartConfig) {
-      chartConfig = widget.areaChartConfig
-      chartType = 'area'
     } else {
-      // Fallback: try to detect from widget.chartType or use bar as default
-      chartConfig = widget.barChartConfig || widget.lineChartConfig || widget.pieChartConfig
+      // Fallback: try to detect from available configs or use bar as default
+      chartConfig = widget.barChartConfig || widget.lineChartConfig
       chartType = widget.chartType || 'bar'
     }
     
@@ -77,26 +71,20 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
       setData([])
       console.log(`📊 ChartWrapper (${chartType}): Nenhum dado disponível`)
     }
-  }, [widget.barChartConfig, widget.lineChartConfig, widget.pieChartConfig, widget.areaChartConfig, widget.type])
+  }, [widget.barChartConfig, widget.lineChartConfig, widget.type])
 
   // Render the appropriate chart based on widget type
   const renderChart = () => {
     const colors = widget.barChartConfig?.styling?.colors || 
                   widget.lineChartConfig?.styling?.colors || 
-                  widget.pieChartConfig?.styling?.colors || 
-                  widget.areaChartConfig?.styling?.colors || 
                   ['#2563eb']
                   
     const showGrid = widget.barChartConfig?.styling?.showGrid ?? 
                     widget.lineChartConfig?.styling?.showGrid ?? 
-                    widget.pieChartConfig?.styling?.showGrid ?? 
-                    widget.areaChartConfig?.styling?.showGrid ?? 
                     true
                     
     const title = widget.barChartConfig?.styling?.title || 
-                 widget.lineChartConfig?.styling?.title || 
-                 widget.pieChartConfig?.styling?.title || 
-                 widget.areaChartConfig?.styling?.title
+                 widget.lineChartConfig?.styling?.title
 
     const commonProps = {
       data,
