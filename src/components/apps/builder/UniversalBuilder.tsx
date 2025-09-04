@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import DropZone from './DropZone'
 import ChartBuilder from './ChartBuilder'
+import TableBuilder from './TableBuilder'
+import KPIBuilder from './KPIBuilder'
 import TablePreview from './TablePreview'
 import type { TableData } from './TablePreview'
 import KPIPreview from './KPIPreview'
@@ -659,29 +661,27 @@ export default function UniversalBuilder({
               />
             )}
 
-            {/* Table Drop Zones */}
+            {/* Table Builder */}
             {data.selectedType === 'table' && (
-              <DropZone
-                id="columns-drop-zone"
-                label="Colunas"
-                description="Arraste campos para criar colunas da tabela"
-                icon={<Table className="w-4 h-4 text-blue-600" />}
-                fields={data.columns}
-                acceptedTypes={['string', 'date', 'numeric', 'boolean']}
-                onRemoveField={(fieldName) => handleRemoveField('columns', fieldName)}
+              <TableBuilder
+                data={{
+                  columns: data.columns,
+                  filters: data.filters,
+                  selectedTable: data.selectedTable
+                }}
+                onRemoveField={handleRemoveField}
               />
             )}
 
-            {/* KPI Drop Zone (specific) */}
+            {/* KPI Builder */}
             {data.selectedType === 'kpi' && (
-              <DropZone
-                id="kpi-value-drop-zone"
-                label="Valor KPI"
-                description="Campo numérico para calcular o KPI"
-                icon={<TrendingUp className="w-4 h-4 text-purple-600" />}
-                fields={data.kpiValue}
-                acceptedTypes={['numeric']}
-                onRemoveField={(fieldName) => handleRemoveField('kpiValue', fieldName)}
+              <KPIBuilder
+                data={{
+                  kpiValue: data.kpiValue,
+                  filters: data.filters,
+                  selectedTable: data.selectedTable
+                }}
+                onRemoveField={handleRemoveField}
                 onAggregationChange={handleAggregationChange}
               />
             )}
