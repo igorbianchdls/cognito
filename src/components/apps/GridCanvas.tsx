@@ -6,6 +6,7 @@ import { useDroppable } from '@dnd-kit/core'
 import { Responsive, WidthProvider } from 'react-grid-layout'
 import DroppedWidget from './DroppedWidget'
 import { $selectedWidgetId, widgetActions } from '@/stores/apps/widgetStore'
+import { kpiActions } from '@/stores/apps/kpiStore'
 import { $canvasConfig } from '@/stores/apps/canvasStore' // Canvas customization store
 import { WebPreview, WebPreviewNavigation, WebPreviewUrl, WebPreviewNavigationButton } from '@/components/ai-elements/web-preview'
 import { savedDashboardActions } from '@/stores/apps/savedDashboardStore'
@@ -47,7 +48,18 @@ export default function GridCanvas({
   const [isResizing, setIsResizing] = useState(false)
 
   const handleWidgetClick = (widgetId: string) => {
-    widgetActions.selectWidget(widgetId)
+    // Find the widget to determine its type
+    const widget = widgets.find(w => w.i === widgetId)
+    
+    if (widget?.type === 'kpi') {
+      // Use kpiStore for KPI selection
+      console.log('🎯 Selecting KPI:', widgetId)
+      kpiActions.selectKPI(widgetId)
+    } else {
+      // Use widgetStore for other widget types
+      console.log('🎯 Selecting widget:', widgetId, 'type:', widget?.type)
+      widgetActions.selectWidget(widgetId)
+    }
   }
 
   // Navigation button handlers
