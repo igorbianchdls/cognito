@@ -234,9 +234,13 @@ function adaptBarChartToLegacy(barChart: import('./barChartStore').BarChartConfi
   // Create new adapted widget
   const adapted: DroppedWidget = {
     i: barChart.id,
+    id: barChart.id,
     type: 'chart-bar',
     name: barChart.name,
     icon: '📊',
+    description: `Bar chart from ${barChart.bigqueryData.selectedTable}`,
+    defaultWidth: 4,
+    defaultHeight: 3,
     x: barChart.position.x,
     y: barChart.position.y,
     w: barChart.position.w,
