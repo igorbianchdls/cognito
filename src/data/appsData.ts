@@ -40,7 +40,7 @@ export const categories = [
 export const authors: Author[] = [
   {
     id: '1',
-    name: 'Alex Chen',
+    name: 'Alex aChen',
     avatar: '🧑‍💻',
     username: 'alexchen'
   },
