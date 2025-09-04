@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { BarChart } from '@/components/charts'
 import { LineChart } from '@/components/charts'
 import { PieChart } from '@/components/charts'
+import { AreaChart } from '@/components/charts'
 import type { ChartData } from '@/components/charts/types'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 
@@ -28,9 +29,12 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
     } else if (widget.type === 'chart-pie' && widget.pieChartConfig) {
       chartConfig = widget.pieChartConfig
       chartType = 'pie'
+    } else if (widget.type === 'chart-area' && widget.areaChartConfig) {
+      chartConfig = widget.areaChartConfig
+      chartType = 'area'
     } else {
       // Fallback: try to detect from available configs or use bar as default
-      chartConfig = widget.barChartConfig || widget.lineChartConfig || widget.pieChartConfig
+      chartConfig = widget.barChartConfig || widget.lineChartConfig || widget.pieChartConfig || widget.areaChartConfig
       chartType = 'bar' // Default to bar chart
     }
     
@@ -74,23 +78,26 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
       setData([])
       console.log(`📊 ChartWrapper (${chartType}): Nenhum dado disponível`)
     }
-  }, [widget.barChartConfig, widget.lineChartConfig, widget.pieChartConfig, widget.type])
+  }, [widget.barChartConfig, widget.lineChartConfig, widget.pieChartConfig, widget.areaChartConfig, widget.type])
 
   // Render the appropriate chart based on widget type
   const renderChart = () => {
     const colors = widget.barChartConfig?.styling?.colors || 
                   widget.lineChartConfig?.styling?.colors || 
                   widget.pieChartConfig?.styling?.colors || 
+                  widget.areaChartConfig?.styling?.colors || 
                   ['#2563eb']
                   
     const showGrid = widget.barChartConfig?.styling?.showGrid ?? 
                     widget.lineChartConfig?.styling?.showGrid ?? 
                     widget.pieChartConfig?.styling?.showGrid ?? 
+                    widget.areaChartConfig?.styling?.showGrid ?? 
                     true
                     
     const title = widget.barChartConfig?.styling?.title || 
                  widget.lineChartConfig?.styling?.title ||
-                 widget.pieChartConfig?.styling?.title
+                 widget.pieChartConfig?.styling?.title ||
+                 widget.areaChartConfig?.styling?.title
 
     const commonProps = {
       data,
@@ -130,12 +137,14 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
           />
         )
       case 'chart-area':
-        // Assuming you have an AreaChart component, fallback to BarChart for now
         return (
-          <BarChart 
+          <AreaChart 
             {...commonProps}
             enableGridX={false}
             enableGridY={showGrid}
+            areaOpacity={widget.areaChartConfig?.styling?.areaOpacity ?? 0.4}
+            curve="cardinal"
+            enableArea={true}
           />
         )
       default:

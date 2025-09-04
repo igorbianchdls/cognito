@@ -20,6 +20,7 @@ import { widgetActions, kpiActions, tableActions } from '@/stores/apps/widgetSto
 import { barChartActions } from '@/stores/apps/barChartStore'
 import { lineChartActions } from '@/stores/apps/lineChartStore'
 import { pieChartActions } from '@/stores/apps/pieChartStore'
+import { areaChartActions } from '@/stores/apps/areaChartStore'
 
 // Widget Types
 type WidgetType = 'chart' | 'kpi' | 'table' | 'gauge' | 'gallery' | 'kanban'
@@ -320,6 +321,55 @@ export default function UniversalBuilder({
           showLegend: true,
           showGrid: false, // Pie charts don't use grids
           title: `${data.xAxis[0]?.name} por ${data.yAxis[0]?.name}`
+        },
+        position: {
+          x: widgetConfig.x,
+          y: widgetConfig.y,
+          w: widgetConfig.w,
+          h: widgetConfig.h
+        }
+      })
+    } else if (data.selectedType === 'chart' && data.chartType === 'area') {
+      // Convert to AreaChart format and use areaChartActions
+      const query = areaChartActions.generateAreaChartQuery(
+        data.xAxis.map(field => ({ ...field, mode: field.mode || 'NULLABLE' })), 
+        data.yAxis.map(field => ({ ...field, mode: field.mode || 'NULLABLE' })), 
+        data.filters.map(field => ({ ...field, mode: field.mode || 'NULLABLE' })), 
+        data.selectedTable
+      )
+      
+      console.log('🐛 DEBUG - UniversalBuilder addAreaChart:', {
+        hasPreviewData: !!previewData,
+        previewDataLength: Array.isArray(previewData) ? previewData.length : 'not array',
+        previewDataSample: previewData,
+        query,
+        selectedTable: data.selectedTable,
+        xAxisFields: data.xAxis.map(f => f.name),
+        yAxisFields: data.yAxis.map(f => f.name)
+      })
+      
+      areaChartActions.addAreaChart({
+        name: widgetConfig.name,
+        bigqueryData: {
+          query,
+          selectedTable: data.selectedTable,
+          columns: {
+            xAxis: data.xAxis,
+            yAxis: data.yAxis,
+            filters: data.filters
+          },
+          data: previewData,
+          lastExecuted: new Date(),
+          isLoading: false,
+          error: null
+        },
+        chartType: 'area',
+        styling: {
+          colors: ['#8b5cf6'],
+          showLegend: true,
+          showGrid: true,
+          title: `${data.xAxis[0]?.name} por ${data.yAxis[0]?.name}`,
+          areaOpacity: 0.4
         },
         position: {
           x: widgetConfig.x,
