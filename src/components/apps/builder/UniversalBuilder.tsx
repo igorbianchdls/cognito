@@ -138,6 +138,14 @@ export default function UniversalBuilder({
     if (data.selectedType === 'kpi') {
       // Convert to KPIWidget format and use kpiActions
       const kpiConfig = widgetConfig.config?.kpiConfig || {}
+      
+      // Generate KPI query from dragged fields
+      const query = data.selectedTable ? kpiActions.generateKPIQuery(
+        data.kpiValue.map(field => ({ ...field, mode: field.mode || 'NULLABLE' })), 
+        data.filters.map(field => ({ ...field, mode: field.mode || 'NULLABLE' })), 
+        data.selectedTable
+      ) : null
+
       kpiActions.addKPI({
         name: widgetConfig.name,
         icon: widgetConfig.icon,
@@ -146,13 +154,17 @@ export default function UniversalBuilder({
         size: { w: widgetConfig.w, h: widgetConfig.h },
         config: {
           ...kpiConfig,
-          // Add BigQuery data to KPI config
-          ...(widgetConfig.bigqueryData ? {
-            dataSource: 'BigQuery',
-            metric: widgetConfig.bigqueryData.yColumn,
-            calculation: widgetConfig.bigqueryData.xColumn ? 'GROUP_BY' : 'TOTAL',
-            timeRange: 'Current Period'
-          } : {})
+          // Add BigQuery data with dragged fields - FIXED!
+          dataSourceType: 'bigquery',
+          bigqueryData: {
+            selectedTable: data.selectedTable,
+            kpiValueFields: data.kpiValue,
+            filterFields: data.filters,
+            query: query || undefined,
+            lastExecuted: null,
+            isLoading: false,
+            error: null
+          }
         }
       })
     } else if (data.selectedType === 'table') {

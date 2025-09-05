@@ -139,6 +139,8 @@ export default function DropZone({
                     return 'bg-green-500 text-white'
                   case 'filters-drop-zone':
                     return 'bg-orange-500 text-white'
+                  case 'kpi-value-drop-zone':
+                    return 'bg-purple-500 text-white'
                   default:
                     return typeAccepted ? 'bg-gray-500 text-white' : 'bg-red-500 text-white'
                 }
