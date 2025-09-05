@@ -3,7 +3,6 @@
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import { isTableWidget } from '@/types/apps/tableWidgets'
 import type { TableConfig } from '@/types/apps/tableWidgets'
-import { Slider } from '@/components/ui/slider'
 
 interface TableConfigEditorProps {
   selectedWidget: DroppedWidget
@@ -31,16 +30,16 @@ export default function TableConfigEditor({
           <h5 className="text-sm font-medium text-gray-700 mb-3">📊 Data & Columns</h5>
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Table Name</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Data Source</label>
               <input
                 type="text"
-                value={tableConfig.tableName || ''}
+                value={tableConfig.dataSource || ''}
                 onChange={(e) => {
-                  console.log('🎨 TableConfigEditor: Table name changed to:', e.target.value)
-                  onTableConfigChange('tableName', e.target.value)
+                  console.log('🎨 TableConfigEditor: Data source changed to:', e.target.value)
+                  onTableConfigChange('dataSource', e.target.value)
                 }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="My Data Table"
+                placeholder="BigQuery, API, etc."
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -136,47 +135,32 @@ export default function TableConfigEditor({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Border Width</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Refresh Rate</label>
                 <input
-                  type="number"
-                  min="0"
-                  max="5"
-                  value={tableConfig.borderWidth || 1}
+                  type="text"
+                  value={tableConfig.refreshRate || ''}
                   onChange={(e) => {
-                    console.log('🎨 TableConfigEditor: Border width changed to:', e.target.value)
-                    onTableConfigChange('borderWidth', parseInt(e.target.value) || 0)
+                    console.log('🎨 TableConfigEditor: Refresh rate changed to:', e.target.value)
+                    onTableConfigChange('refreshRate', e.target.value)
                   }}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="e.g. 30s, 1m, 5m"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Border Radius</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="20"
-                  value={tableConfig.borderRadius || 8}
-                  onChange={(e) => {
-                    console.log('🎨 TableConfigEditor: Border radius changed to:', e.target.value)
-                    onTableConfigChange('borderRadius', parseInt(e.target.value) || 0)
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <label className="flex items-center gap-2 text-xs font-medium text-gray-600">
+                  <input
+                    type="checkbox"
+                    checked={tableConfig.enableSimulation !== false}
+                    onChange={(e) => {
+                      console.log('🎨 TableConfigEditor: Enable simulation changed to:', e.target.checked)
+                      onTableConfigChange('enableSimulation', e.target.checked)
+                    }}
+                    className="rounded"
+                  />
+                  Enable Simulation
+                </label>
               </div>
-            </div>
-            <div className="flex items-center">
-              <label className="flex items-center gap-2 text-xs font-medium text-gray-600">
-                <input
-                  type="checkbox"
-                  checked={tableConfig.showStripes !== false}
-                  onChange={(e) => {
-                    console.log('🎨 TableConfigEditor: Show stripes changed to:', e.target.checked)
-                    onTableConfigChange('showStripes', e.target.checked)
-                  }}
-                  className="rounded"
-                />
-                Striped Rows
-              </label>
             </div>
           </div>
         </div>
@@ -207,18 +191,18 @@ export default function TableConfigEditor({
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">Weight</label>
                   <select
-                    value={tableConfig.headerFontWeight || 600}
+                    value={tableConfig.headerFontWeight || 'normal'}
                     onChange={(e) => {
                       console.log('🎨 TableConfigEditor: Header font weight changed to:', e.target.value)
-                      onTableConfigChange('headerFontWeight', parseInt(e.target.value))
+                      onTableConfigChange('headerFontWeight', e.target.value)
                     }}
                     className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                   >
-                    <option value={400}>Normal</option>
-                    <option value={500}>Medium</option>
-                    <option value={600}>Semi Bold</option>
-                    <option value={700}>Bold</option>
-                    <option value={800}>Extra Bold</option>
+                    <option value="normal">Normal</option>
+                    <option value="500">Medium</option>
+                    <option value="600">Semi Bold</option>
+                    <option value="700">Bold</option>
+                    <option value="800">Extra Bold</option>
                   </select>
                 </div>
                 <div>
@@ -273,17 +257,17 @@ export default function TableConfigEditor({
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">Weight</label>
                   <select
-                    value={tableConfig.cellFontWeight || 400}
+                    value={tableConfig.cellFontWeight || 'normal'}
                     onChange={(e) => {
                       console.log('🎨 TableConfigEditor: Cell font weight changed to:', e.target.value)
-                      onTableConfigChange('cellFontWeight', parseInt(e.target.value))
+                      onTableConfigChange('cellFontWeight', e.target.value)
                     }}
                     className="w-full px-2 py-1 border border-gray-300 rounded text-xs"
                   >
-                    <option value={400}>Normal</option>
-                    <option value={500}>Medium</option>
-                    <option value={600}>Semi Bold</option>
-                    <option value={700}>Bold</option>
+                    <option value="normal">Normal</option>
+                    <option value="500">Medium</option>
+                    <option value="600">Semi Bold</option>
+                    <option value="700">Bold</option>
                   </select>
                 </div>
               </div>
@@ -359,52 +343,25 @@ export default function TableConfigEditor({
                 <label className="flex items-center gap-2 text-xs">
                   <input
                     type="checkbox"
-                    checked={tableConfig.enableSorting !== false}
+                    checked={tableConfig.enableFiltering !== false}
                     onChange={(e) => {
-                      console.log('🎨 TableConfigEditor: Enable sorting changed to:', e.target.checked)
-                      onTableConfigChange('enableSorting', e.target.checked)
+                      console.log('🎨 TableConfigEditor: Enable filtering changed to:', e.target.checked)
+                      onTableConfigChange('enableFiltering', e.target.checked)
                     }}
                     className="rounded"
                   />
-                  <span className="font-medium text-gray-600">Enable Sorting</span>
+                  <span className="font-medium text-gray-600">Enable Filtering</span>
                 </label>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Display Options */}
+        {/* Export & Advanced Options */}
         <div>
-          <h5 className="text-sm font-medium text-gray-700 mb-3">👁️ Display Options</h5>
+          <h5 className="text-sm font-medium text-gray-700 mb-3">📤 Export & Advanced</h5>
           <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-2">Table Style</label>
-              <div className="flex gap-1">
-                {[
-                  { value: 'default', label: 'Default', icon: '📋' },
-                  { value: 'minimal', label: 'Minimal', icon: '📄' },
-                  { value: 'modern', label: 'Modern', icon: '✨' }
-                ].map((style) => (
-                  <button
-                    key={style.value}
-                    onClick={() => {
-                      console.log('🎨 TableConfigEditor: Table style changed to:', style.value)
-                      onTableConfigChange('tableStyle', style.value)
-                    }}
-                    className={`px-2 py-2 text-xs border rounded-md transition-colors ${
-                      (tableConfig.tableStyle || 'default') === style.value
-                        ? 'bg-blue-900 border-blue-300 text-blue-300'
-                        : 'bg-[#333333] border-gray-700 text-[#888888] hover:bg-gray-700'
-                    }`}
-                  >
-                    <span className="mr-1">{style.icon}</span>
-                    {style.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            <div className="space-y-2">
+            <div className="grid grid-cols-2 gap-3">
               <label className="flex items-center gap-2 text-xs">
                 <input
                   type="checkbox"
@@ -430,6 +387,23 @@ export default function TableConfigEditor({
                 <span className="font-medium text-gray-600">Row Selection</span>
               </label>
             </div>
+            
+            {tableConfig.enableRowSelection && (
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Selection Mode</label>
+                <select
+                  value={tableConfig.selectionMode || 'single'}
+                  onChange={(e) => {
+                    console.log('🎨 TableConfigEditor: Selection mode changed to:', e.target.value)
+                    onTableConfigChange('selectionMode', e.target.value)
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="single">Single Selection</option>
+                  <option value="multiple">Multiple Selection</option>
+                </select>
+              </div>
+            )}
           </div>
         </div>
       </div>
