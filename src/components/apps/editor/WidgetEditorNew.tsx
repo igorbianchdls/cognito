@@ -23,7 +23,7 @@ export default function WidgetEditorNew() {
   
   // Determine which widget is currently selected
   const selectedWidget = selectedKPI || selectedTable || selectedBarChart
-  const widgetType = selectedKPI ? 'kpi' : selectedTable ? 'table' : selectedBarChart ? 'chart' : null
+  const widgetType = selectedKPI ? 'kpi' : selectedTable ? 'table' : selectedBarChart ? 'chart-bar' : null
 
   // Adapt Widget to DroppedWidget format  
   const adaptedWidget = useMemo((): DroppedWidget | null => {
@@ -51,8 +51,18 @@ export default function WidgetEditorNew() {
     
     if (selectedBarChart) {
       return {
-        ...selectedBarChart,
-        type: 'chart' as const,
+        i: selectedBarChart.id,
+        id: selectedBarChart.id,
+        type: 'chart-bar' as const,
+        name: selectedBarChart.name,
+        icon: '📊',
+        description: `Bar chart from ${selectedBarChart.bigqueryData.selectedTable}`,
+        defaultWidth: 4,
+        defaultHeight: 3,
+        x: selectedBarChart.position.x,
+        y: selectedBarChart.position.y,
+        w: selectedBarChart.position.w,
+        h: selectedBarChart.position.h,
         barChartConfig: selectedBarChart,
         config: {
           barChartConfig: selectedBarChart
@@ -201,7 +211,7 @@ export default function WidgetEditorNew() {
           </div>
         )
       
-      case 'chart':
+      case 'chart-bar':
         return (
           <div>
             <h2 className="text-lg font-semibold mb-2">📊 Configurações do Gráfico de Barras</h2>
