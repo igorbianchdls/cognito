@@ -296,21 +296,21 @@ export default function BarChartEditor({
                   {/* Position */}
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-2">Position</label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {['bottom', 'top', 'left', 'right'].map((pos) => (
+                    <div className="grid grid-cols-4 gap-1">
+                      {['bottom', 'top', 'left', 'right', 'top-left', 'top-right', 'bottom-left', 'bottom-right'].map((pos) => (
                         <button
                           key={pos}
                           onClick={() => {
                             console.log('📊 BarChartEditor: Legend position changed to:', pos)
                             onChartConfigChange('styling.legendPosition', pos)
                           }}
-                          className={`px-3 py-2 text-xs border rounded-md transition-colors ${
+                          className={`px-2 py-1 text-xs border rounded-md transition-colors ${
                             chartConfig.styling?.legendPosition === pos
                               ? 'bg-blue-600 text-white border-blue-600'
                               : 'bg-white text-gray-600 border-gray-300 hover:border-blue-300'
                           }`}
                         >
-                          {pos}
+                          <span className="text-xs">{pos.replace('-', ' ')}</span>
                         </button>
                       ))}
                     </div>
@@ -342,12 +342,11 @@ export default function BarChartEditor({
                   {/* Symbol Shape */}
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-2">Symbol Shape</label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       {[
                         { value: 'circle', icon: '●', label: 'Circle' },
                         { value: 'square', icon: '■', label: 'Square' },
-                        { value: 'triangle', icon: '▲', label: 'Triangle' },
-                        { value: 'diamond', icon: '♦', label: 'Diamond' }
+                        { value: 'triangle', icon: '▲', label: 'Triangle' }
                       ].map((shape) => (
                         <button
                           key={shape.value}
