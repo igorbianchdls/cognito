@@ -3,7 +3,7 @@
 import WidgetsPanel from '@/components/apps/widgets/WidgetsPanel'
 import ChatPanel from '@/components/apps/chat/ChatPanel'
 import WidgetEditor from '@/components/apps/editor/WidgetEditorNew'
-import CodeEditor from '@/components/apps/code/CodeEditor'
+// import CodeEditor from '@/components/apps/code/CodeEditor' // REMOVED: CodeEditor deleted
 import AutomationsPanel from '@/components/apps/automations/AutomationsPanel'
 import SavedPanel from '@/components/apps/saved/SavedPanel'
 import DatasetsPanel from '@/components/apps/DatasetsPanel'
@@ -31,7 +31,11 @@ export default function SidebarPanel({
       {activeTab === 'widgets' && <WidgetsPanel />}
       {activeTab === 'chat' && <ChatPanel droppedWidgets={droppedWidgets} onEditWidget={onEditWidget} />}
       {activeTab === 'editor' && <WidgetEditor />}
-      {activeTab === 'code' && <CodeEditor />}
+      {activeTab === 'code' && (
+        <div className="p-4 text-center text-gray-500">
+          <p>Code Editor was removed</p>
+        </div>
+      )}
       {activeTab === 'automations' && <AutomationsPanel />}
       {activeTab === 'saved' && <SavedPanel />}
       {activeTab === 'datasets' && <DatasetsPanel />}

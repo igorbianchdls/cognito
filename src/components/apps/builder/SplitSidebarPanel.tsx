@@ -7,7 +7,7 @@ import UniversalBuilder from './UniversalBuilder'
 import WidgetsPanel from '../widgets/WidgetsPanel'
 import ChatPanel from '../chat/ChatPanel'
 import WidgetEditor from '../editor/WidgetEditorNew'
-import CodeEditor from '../code/CodeEditor'
+// import CodeEditor from '../code/CodeEditor' // REMOVED: CodeEditor deleted
 import AutomationsPanel from '../automations/AutomationsPanel'
 import SavedPanel from '../saved/SavedPanel'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
@@ -197,7 +197,11 @@ export default function SplitSidebarPanel({
       {activeTab === 'widgets' && <WidgetsPanel />}
       {activeTab === 'chat' && <ChatPanel droppedWidgets={droppedWidgets} onEditWidget={onEditWidget} />}
       {activeTab === 'editor' && <WidgetEditor />}
-      {activeTab === 'code' && <CodeEditor />}
+      {activeTab === 'code' && (
+        <div className="p-4 text-center text-gray-500">
+          <p>Code Editor was removed</p>
+        </div>
+      )}
       {activeTab === 'automations' && <AutomationsPanel />}
       {activeTab === 'saved' && <SavedPanel />}
     </div>
