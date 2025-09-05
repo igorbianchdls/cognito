@@ -161,7 +161,7 @@ export default function PieChartEditor({
                   className="w-full"
                 />
                 <div className="text-xs text-gray-500 mt-1">
-                  {chartConfig.styling?.innerRadius || 0}% (0 = pie, >0 = donut)
+                  {chartConfig.styling?.innerRadius || 0}% (0 = pie, &gt;0 = donut)
                 </div>
               </div>
               <div>
