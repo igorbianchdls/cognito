@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { DataTable, createSortableHeader, type TableData } from '@/components/widgets/Table'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
@@ -11,8 +11,19 @@ interface TableWidgetProps {
 }
 
 export default function TableWrapper({ widget }: TableWidgetProps) {
-  // Get table configuration - EQUAL to KPI pattern
-  const tableConfig: TableConfig = widget.tableConfig || widget.config?.tableConfig || {}
+  // Get table configuration - REACTIVE like KPI pattern  
+  const tableConfig: TableConfig = useMemo(() => {
+    console.log('🔄 TableWidget tableConfig recalculated for widget:', widget.i, {
+      hasTableConfig: !!widget.tableConfig,
+      hasNestedTableConfig: !!widget.config?.tableConfig,
+      configKeys: widget.tableConfig ? Object.keys(widget.tableConfig) : [],
+      timestamp: Date.now()
+    })
+    
+    const config = widget.tableConfig || widget.config?.tableConfig || {}
+    console.log('🔄 TableWidget final config:', config)
+    return config
+  }, [widget.tableConfig, widget.config?.tableConfig, widget.i])
 
   const [data, setData] = useState<TableData[]>([])
 
@@ -57,7 +68,7 @@ export default function TableWrapper({ widget }: TableWidgetProps) {
 
       return () => clearInterval(interval)
     }
-  }, [widget.config, widget.bigqueryData, tableConfig.data])
+  }, [tableConfig]) // React to any tableConfig change (like KPI)
 
   // Default columns configuration
   const defaultColumns: ColumnDef<TableData>[] = [
