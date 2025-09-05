@@ -56,7 +56,6 @@ export const $tablesWithCounts = computed([$tableWidgets], (tables) => {
 // Table creation helper
 function createBaseTable(props: CreateTableWidgetProps): TableWidget {
   const timestamp = Date.now()
-  const sampleData = generateSampleTableData(10)
   
   return {
     id: `table-${timestamp}`,
@@ -74,10 +73,7 @@ function createBaseTable(props: CreateTableWidgetProps): TableWidget {
     color: '#3B82F6',
     config: {
       ...DEFAULT_TABLE_CONFIG,
-      // Use sample data if no data provided
-      data: sampleData.rows,
-      columns: sampleData.columns,
-      ...props.config
+      ...props.config  // props.config sobrescreve tudo (igual ao KPI)
     }
   }
 }
