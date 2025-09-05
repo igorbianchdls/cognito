@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useStore } from '@nanostores/react'
 import { BarChart3, TrendingUp, PieChart, Activity, Trash2, Plus, Table } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -17,7 +18,7 @@ import type { ChartData } from './ChartPreview'
 import type { BigQueryField } from './TablesExplorer'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 // import { widgetActions, kpiActions, tableActions } from '@/stores/apps/widgetStore' // REMOVED: Only KPIs supported now
-import { kpiActions } from '@/stores/apps/kpiStore'
+import { kpiActions, $selectedKPI } from '@/stores/apps/kpiStore'
 import { tableActions } from '@/stores/apps/tableStore'
 import { barChartActions } from '@/stores/apps/barChartStore'
 import { lineChartActions } from '@/stores/apps/lineChartStore'
@@ -67,6 +68,7 @@ export default function UniversalBuilder({
   droppedWidgets,
   onEditWidget
 }: UniversalBuilderProps) {
+  const selectedKPI = useStore($selectedKPI)
   const [previewData, setPreviewData] = useState<Array<{ x: string; y: number; label: string; value: number }> | TableData[] | KPIData[] | ChartData[]>([])
   const [previewQuery, setPreviewQuery] = useState<string>('')
 
@@ -143,9 +145,6 @@ export default function UniversalBuilder({
 
     // Add widget to dashboard - route to appropriate store
     if (data.selectedType === 'kpi') {
-      // Convert to KPIWidget format and use kpiActions
-      const kpiConfig = widgetConfig.config?.kpiConfig || {}
-      
       // Generate KPI query from dragged fields
       const query = data.selectedTable ? kpiActions.generateKPIQuery(
         data.kpiValue.map(field => ({ ...field, mode: field.mode || 'NULLABLE' })), 
@@ -153,15 +152,10 @@ export default function UniversalBuilder({
         data.selectedTable
       ) : null
 
-      kpiActions.addKPI({
-        name: widgetConfig.name,
-        icon: widgetConfig.icon,
-        description: widgetConfig.description,
-        position: { x: widgetConfig.x, y: widgetConfig.y },
-        size: { w: widgetConfig.w, h: widgetConfig.h },
-        config: {
-          ...kpiConfig,
-          // Add BigQuery data with dragged fields - FIXED!
+      if (selectedKPI) {
+        // Update existing KPI
+        console.log('📊 Updating existing KPI:', selectedKPI.i)
+        kpiActions.updateKPIConfig(selectedKPI.i, {
           dataSourceType: 'bigquery',
           bigqueryData: {
             selectedTable: data.selectedTable,
@@ -172,8 +166,32 @@ export default function UniversalBuilder({
             isLoading: false,
             error: null
           }
-        }
-      })
+        })
+      } else {
+        // Create new KPI
+        console.log('📊 Creating new KPI')
+        const kpiConfig = widgetConfig.config?.kpiConfig || {}
+        kpiActions.addKPI({
+          name: widgetConfig.name,
+          icon: widgetConfig.icon,
+          description: widgetConfig.description,
+          position: { x: widgetConfig.x, y: widgetConfig.y },
+          size: { w: widgetConfig.w, h: widgetConfig.h },
+          config: {
+            ...kpiConfig,
+            dataSourceType: 'bigquery',
+            bigqueryData: {
+              selectedTable: data.selectedTable,
+              kpiValueFields: data.kpiValue,
+              filterFields: data.filters,
+              query: query || undefined,
+              lastExecuted: null,
+              isLoading: false,
+              error: null
+            }
+          }
+        })
+      }
     } else if (data.selectedType === 'table') {
       // Convert to TableWidget format and use tableActions
       const tableConfig = widgetConfig.config?.tableConfig || {}

@@ -1,7 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { DndContext, DragEndEvent } from '@dnd-kit/core'
+import { useStore } from '@nanostores/react'
+import { $selectedKPI } from '@/stores/apps/kpiStore'
 import TablesExplorer from './TablesExplorer'
 import UniversalBuilder from './UniversalBuilder'
 import WidgetsPanel from '../widgets/WidgetsPanel'
@@ -37,6 +39,7 @@ export default function SplitSidebarPanel({
   droppedWidgets = [],
   onEditWidget
 }: SplitSidebarPanelProps) {
+  const selectedKPI = useStore($selectedKPI)
   const [universalBuilderData, setUniversalBuilderData] = useState<UniversalBuilderData>({
     selectedType: 'chart',
     xAxis: [],
@@ -47,6 +50,23 @@ export default function SplitSidebarPanel({
     kpiValue: [],
     selectedTable: null
   })
+
+  // Load selected KPI data into builder when switching to datasets tab
+  useEffect(() => {
+    if (selectedKPI && activeTab === 'datasets') {
+      console.log('📊 Loading selected KPI into builder:', selectedKPI.i)
+      setUniversalBuilderData({
+        selectedType: 'kpi',
+        xAxis: [],
+        yAxis: [],
+        chartType: 'bar',
+        filters: selectedKPI.config.bigqueryData?.filterFields || [],
+        columns: [],
+        kpiValue: selectedKPI.config.bigqueryData?.kpiValueFields || [],
+        selectedTable: selectedKPI.config.bigqueryData?.selectedTable || null
+      })
+    }
+  }, [selectedKPI, activeTab])
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
