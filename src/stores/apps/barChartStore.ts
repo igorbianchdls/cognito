@@ -32,6 +32,9 @@ export interface BarChartConfig {
     showLegend: boolean
     showGrid: boolean
     title?: string
+    style?: string
+    xAxisTitle?: string
+    yAxisTitle?: string
   }
   position: {
     x: number
