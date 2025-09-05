@@ -33,6 +33,11 @@ export interface BarChartConfig {
     showGrid: boolean
     enableGridX?: boolean
     enableGridY?: boolean
+    legendPosition?: 'bottom' | 'top' | 'left' | 'right'
+    legendDirection?: 'row' | 'column'
+    legendSpacing?: number
+    legendSymbolSize?: number
+    legendSymbolShape?: 'circle' | 'square' | 'triangle' | 'diamond'
     title?: string
     style?: string
     xAxisTitle?: string

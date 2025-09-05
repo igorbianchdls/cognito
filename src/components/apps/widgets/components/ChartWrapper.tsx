@@ -109,11 +109,21 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
 
     switch (widget.type) {
       case 'chart-bar':
+        // Criar configuração de legend se showLegend estiver ativo
+        const legendConfig = widget.barChartConfig?.styling?.showLegend ? {
+          anchor: widget.barChartConfig?.styling?.legendPosition ?? 'bottom',
+          direction: widget.barChartConfig?.styling?.legendDirection ?? 'row',
+          itemsSpacing: widget.barChartConfig?.styling?.legendSpacing ?? 20,
+          symbolSize: widget.barChartConfig?.styling?.legendSymbolSize ?? 12,
+          symbolShape: widget.barChartConfig?.styling?.legendSymbolShape ?? 'circle'
+        } : undefined
+
         return (
           <BarChart 
             {...commonProps}
             enableGridX={widget.barChartConfig?.styling?.enableGridX ?? false}
             enableGridY={widget.barChartConfig?.styling?.enableGridY ?? showGrid}
+            legends={legendConfig}
           />
         )
       case 'chart-line':

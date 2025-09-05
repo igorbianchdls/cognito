@@ -2,6 +2,12 @@
 
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import type { BarChartConfig } from '@/stores/apps/barChartStore'
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
 interface BarChartEditorProps {
   selectedWidget: DroppedWidget
@@ -269,6 +275,144 @@ export default function BarChartEditor({
             </div>
 
           </div>
+        </div>
+
+        {/* Advanced Options - Accordions */}
+        <div className="mt-6">
+          <h6 className="text-sm font-medium text-gray-700 mb-3">⚙️ Advanced Options</h6>
+          <Accordion type="multiple" className="w-full space-y-2">
+            
+            {/* Legend Accordion */}
+            <AccordionItem value="legend" className="border border-gray-200 rounded-lg">
+              <AccordionTrigger className="px-4 py-3 hover:bg-gray-50">
+                <div className="flex items-center gap-2">
+                  <span>🏷️</span>
+                  <span className="text-sm font-medium">Legend Settings</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-4">
+                <div className="space-y-4">
+                  
+                  {/* Position */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-2">Position</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {['bottom', 'top', 'left', 'right'].map((pos) => (
+                        <button
+                          key={pos}
+                          onClick={() => {
+                            console.log('📊 BarChartEditor: Legend position changed to:', pos)
+                            onChartConfigChange('styling.legendPosition', pos)
+                          }}
+                          className={`px-3 py-2 text-xs border rounded-md transition-colors ${
+                            chartConfig.styling?.legendPosition === pos
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-white text-gray-600 border-gray-300 hover:border-blue-300'
+                          }`}
+                        >
+                          {pos}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Direction */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-2">Direction</label>
+                    <div className="flex gap-2">
+                      {['row', 'column'].map((dir) => (
+                        <button
+                          key={dir}
+                          onClick={() => {
+                            console.log('📊 BarChartEditor: Legend direction changed to:', dir)
+                            onChartConfigChange('styling.legendDirection', dir)
+                          }}
+                          className={`px-4 py-2 text-xs border rounded-md transition-colors ${
+                            chartConfig.styling?.legendDirection === dir
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-white text-gray-600 border-gray-300 hover:border-blue-300'
+                          }`}
+                        >
+                          {dir}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Symbol Shape */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-2">Symbol Shape</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {[
+                        { value: 'circle', icon: '●', label: 'Circle' },
+                        { value: 'square', icon: '■', label: 'Square' },
+                        { value: 'triangle', icon: '▲', label: 'Triangle' },
+                        { value: 'diamond', icon: '♦', label: 'Diamond' }
+                      ].map((shape) => (
+                        <button
+                          key={shape.value}
+                          onClick={() => {
+                            console.log('📊 BarChartEditor: Legend symbol shape changed to:', shape.value)
+                            onChartConfigChange('styling.legendSymbolShape', shape.value)
+                          }}
+                          className={`px-3 py-2 text-xs border rounded-md flex items-center gap-2 transition-colors ${
+                            chartConfig.styling?.legendSymbolShape === shape.value
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-white text-gray-600 border-gray-300 hover:border-blue-300'
+                          }`}
+                        >
+                          <span>{shape.icon}</span>
+                          <span>{shape.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Sliders */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-2">Spacing</label>
+                      <input
+                        type="range"
+                        min="5"
+                        max="50"
+                        step="5"
+                        value={chartConfig.styling?.legendSpacing ?? 20}
+                        onChange={(e) => {
+                          console.log('📊 BarChartEditor: Legend spacing changed to:', e.target.value)
+                          onChartConfigChange('styling.legendSpacing', parseInt(e.target.value))
+                        }}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <div className="text-xs text-gray-500 text-center mt-1">
+                        {chartConfig.styling?.legendSpacing ?? 20}px
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-2">Symbol Size</label>
+                      <input
+                        type="range"
+                        min="8"
+                        max="24"
+                        step="2"
+                        value={chartConfig.styling?.legendSymbolSize ?? 12}
+                        onChange={(e) => {
+                          console.log('📊 BarChartEditor: Legend symbol size changed to:', e.target.value)
+                          onChartConfigChange('styling.legendSymbolSize', parseInt(e.target.value))
+                        }}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      />
+                      <div className="text-xs text-gray-500 text-center mt-1">
+                        {chartConfig.styling?.legendSymbolSize ?? 12}px
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+          </Accordion>
         </div>
       </div>
     </div>
