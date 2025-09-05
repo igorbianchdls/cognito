@@ -31,6 +31,8 @@ export interface BarChartConfig {
     colors: string[]
     showLegend: boolean
     showGrid: boolean
+    enableGridX?: boolean
+    enableGridY?: boolean
     title?: string
     style?: string
     xAxisTitle?: string

@@ -173,6 +173,39 @@ export default function BarChartEditor({
               </label>
             </div>
 
+            {/* Grid Details - Mostrar apenas se showGrid estiver ativo */}
+            {chartConfig.styling?.showGrid && (
+              <div className="mt-3 p-3 bg-gray-50 rounded-md">
+                <h6 className="text-xs font-medium text-gray-700 mb-2">Grid Options</h6>
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="flex items-center gap-2 text-xs">
+                    <input
+                      type="checkbox"
+                      checked={chartConfig.styling?.enableGridX !== false}
+                      onChange={(e) => {
+                        console.log('📊 BarChartEditor: Enable grid X changed to:', e.target.checked)
+                        onChartConfigChange('styling.enableGridX', e.target.checked)
+                      }}
+                      className="rounded"
+                    />
+                    <span className="text-gray-600">Horizontal Lines</span>
+                  </label>
+                  <label className="flex items-center gap-2 text-xs">
+                    <input
+                      type="checkbox"
+                      checked={chartConfig.styling?.enableGridY !== false}
+                      onChange={(e) => {
+                        console.log('📊 BarChartEditor: Enable grid Y changed to:', e.target.checked)
+                        onChartConfigChange('styling.enableGridY', e.target.checked)
+                      }}
+                      className="rounded"
+                    />
+                    <span className="text-gray-600">Vertical Lines</span>
+                  </label>
+                </div>
+              </div>
+            )}
+
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-2">Chart Style</label>
               <div className="flex gap-2">

@@ -112,8 +112,8 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
         return (
           <BarChart 
             {...commonProps}
-            enableGridX={false}
-            enableGridY={showGrid}
+            enableGridX={widget.barChartConfig?.styling?.enableGridX ?? false}
+            enableGridY={widget.barChartConfig?.styling?.enableGridY ?? showGrid}
           />
         )
       case 'chart-line':
