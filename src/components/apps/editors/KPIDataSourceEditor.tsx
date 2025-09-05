@@ -292,7 +292,6 @@ export default function KPIDataSourceEditor({
   }
 
 
-  const bigqueryData = kpiConfig.bigqueryData
   const dataSourceType = kpiConfig.dataSourceType || 'manual'
 
   return (
@@ -412,7 +411,7 @@ export default function KPIDataSourceEditor({
                   label="Valor KPI"
                   description="Campo numérico para calcular o KPI (apenas um campo)"
                   icon={<TrendingUp className="w-4 h-4 text-purple-600" />}
-                  fields={bigqueryData?.kpiValueFields || []}
+                  fields={kpiConfig.bigqueryData?.kpiValueFields || []}
                   acceptedTypes={['numeric']}
                   onRemoveField={handleRemoveKPIValueField}
                 />
@@ -423,7 +422,7 @@ export default function KPIDataSourceEditor({
                   label="Filtros"
                   description="Campos para filtrar os dados do KPI (opcional)"
                   icon={<Activity className="w-4 h-4 text-orange-600" />}
-                  fields={bigqueryData?.filterFields || []}
+                  fields={kpiConfig.bigqueryData?.filterFields || []}
                   acceptedTypes={['string', 'date', 'numeric', 'boolean']}
                   onRemoveField={handleRemoveFilterField}
                 />
@@ -431,7 +430,7 @@ export default function KPIDataSourceEditor({
             )}
 
             {/* Collapsible SQL Query Preview */}
-            {bigqueryData?.query && (
+            {kpiConfig.bigqueryData?.query && (
               <div>
                 <details className="group">
                   <summary className="cursor-pointer text-sm text-gray-600 hover:text-gray-900 font-medium py-2">
@@ -444,7 +443,7 @@ export default function KPIDataSourceEditor({
                   <Card className="mt-2 bg-gray-50/50">
                     <CardContent className="p-3">
                       <pre className="text-xs font-mono overflow-x-auto whitespace-pre-wrap text-gray-800">
-                        {bigqueryData.query}
+                        {kpiConfig.bigqueryData.query}
                       </pre>
                     </CardContent>
                   </Card>
@@ -453,20 +452,20 @@ export default function KPIDataSourceEditor({
                 {/* Execution Status and Button */}
                 <div className="flex items-center justify-between mt-3 p-3 bg-blue-50 rounded border">
                   <div className="text-xs text-gray-600">
-                    {bigqueryData.lastExecuted && (
-                      <div>Last executed: {new Date(bigqueryData.lastExecuted).toLocaleString()}</div>
+                    {kpiConfig.bigqueryData.lastExecuted && (
+                      <div>Last executed: {new Date(kpiConfig.bigqueryData.lastExecuted).toLocaleString()}</div>
                     )}
-                    {bigqueryData.error && (
-                      <div className="text-red-600 font-medium">Error: {bigqueryData.error}</div>
+                    {kpiConfig.bigqueryData.error && (
+                      <div className="text-red-600 font-medium">Error: {kpiConfig.bigqueryData.error}</div>
                     )}
                   </div>
                   
                   <Button 
                     size="sm" 
                     onClick={handleExecuteQuery}
-                    disabled={bigqueryData.isLoading}
+                    disabled={kpiConfig.bigqueryData?.isLoading}
                   >
-                    {bigqueryData.isLoading ? (
+                    {kpiConfig.bigqueryData?.isLoading ? (
                       <RefreshCw className="w-4 h-4 animate-spin mr-2" />
                     ) : (
                       <Play className="w-4 h-4 mr-2" />
@@ -478,14 +477,14 @@ export default function KPIDataSourceEditor({
             )}
 
             {/* Results */}
-            {bigqueryData?.calculatedValue !== undefined && (
+            {kpiConfig.bigqueryData?.calculatedValue !== undefined && (
               <div className="bg-green-50 p-4 rounded border border-green-200">
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingUp className="w-5 h-5 text-green-600" />
                   <span className="text-sm font-medium text-green-900">Calculated KPI Value</span>
                 </div>
                 <div className="text-3xl font-bold text-green-600 mb-1">
-                  {bigqueryData.calculatedValue.toLocaleString()}
+                  {kpiConfig.bigqueryData.calculatedValue.toLocaleString()}
                 </div>
                 <div className="text-xs text-green-700">
                   📊 From BigQuery • Auto-updates widget when data source is BigQuery
