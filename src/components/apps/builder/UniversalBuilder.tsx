@@ -168,15 +168,7 @@ export default function UniversalBuilder({
           ...tableConfig,
           // Add BigQuery data to table config
           ...(widgetConfig.bigqueryData ? {
-            dataSource: 'BigQuery',
-            data: (widgetConfig.bigqueryData as { data?: unknown })?.data || tableConfig.data, // ✅ PRESERVA os dados
-            columns: data.columns.map(col => ({
-              id: col.name,
-              header: col.name,
-              accessorKey: col.name,
-              sortable: true,
-              type: col.type.toLowerCase().includes('numeric') ? 'number' : 'text'
-            }))
+            dataSource: 'BigQuery'
           } : {})
         }
       })
