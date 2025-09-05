@@ -1,5 +1,26 @@
 import { BaseWidget } from './baseWidget'
 
+// BigQuery field interface for KPI data source
+export interface BigQueryField {
+  name: string
+  type: string
+  mode?: string
+  description?: string
+  aggregation?: 'SUM' | 'AVG' | 'COUNT' | 'MIN' | 'MAX' | 'COUNT_DISTINCT'
+}
+
+// KPI BigQuery data interface
+export interface KPIBigQueryData {
+  query?: string
+  selectedTable?: string | null
+  kpiValueFields?: BigQueryField[]
+  filterFields?: BigQueryField[]
+  calculatedValue?: number
+  lastExecuted?: Date | null
+  isLoading?: boolean
+  error?: string | null
+}
+
 // KPI-specific configuration (clean, no legacy props)
 export interface KPIConfig {
   // Data properties
@@ -23,6 +44,12 @@ export interface KPIConfig {
     max?: number
     baseValue?: number
   }
+  
+  // BigQuery data source properties
+  bigqueryData?: KPIBigQueryData
+  dataSourceType?: 'manual' | 'bigquery'
+  autoRefresh?: boolean
+  refreshInterval?: number
   
   // Display options
   showTarget?: boolean

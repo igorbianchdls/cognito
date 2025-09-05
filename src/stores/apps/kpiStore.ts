@@ -2,7 +2,9 @@ import { atom, computed } from 'nanostores'
 import type { 
   KPIWidget, 
   CreateKPIWidgetProps, 
-  KPIConfig
+  KPIConfig,
+  KPIBigQueryData,
+  BigQueryField
 } from '@/types/apps/kpiWidgets'
 import { 
   DEFAULT_KPI_CONFIG,
@@ -313,5 +315,143 @@ export const kpiActions = {
     
     // Store interval ID for cleanup (in a real app, you'd want to manage this better)
     return interval
+  },
+
+  // BigQuery Actions for KPI data source integration
+
+  // Update BigQuery data for a KPI
+  updateKPIBigQueryData: (kpiId: string, bigqueryData: Partial<KPIBigQueryData>) => {
+    console.log('📊 Updating KPI BigQuery data:', { kpiId, bigqueryData })
+    const currentKPIs = $kpiWidgets.get()
+    
+    const updatedKPIs = currentKPIs.map(kpi => {
+      if (kpi.i === kpiId) {
+        return {
+          ...kpi,
+          config: {
+            ...kpi.config,
+            bigqueryData: { ...kpi.config.bigqueryData, ...bigqueryData }
+          }
+        }
+      }
+      return kpi
+    })
+    $kpiWidgets.set(updatedKPIs)
+  },
+
+  // Generate KPI query based on selected fields and table
+  generateKPIQuery: (kpiValueFields: BigQueryField[], filterFields: BigQueryField[], tableName: string): string => {
+    let query = `SELECT `
+    
+    const selectFields: string[] = []
+    
+    // Add KPI value fields with aggregation
+    kpiValueFields.forEach(field => {
+      if (field.aggregation && field.aggregation !== 'COUNT') {
+        selectFields.push(`${field.aggregation}(${field.name}) as kpi_value`)
+      } else if (field.aggregation === 'COUNT') {
+        selectFields.push(`COUNT(*) as kpi_value`)
+      } else {
+        selectFields.push(`${field.name} as kpi_value`)
+      }
+    })
+    
+    // If no KPI value fields, default to COUNT
+    if (selectFields.length === 0) {
+      selectFields.push('COUNT(*) as kpi_value')
+    }
+    
+    query += selectFields.join(', ')
+    query += ` FROM \`creatto-463117.biquery_data.${tableName}\``
+    
+    // Add filters if any
+    if (filterFields.length > 0) {
+      const whereConditions = filterFields.map(filter => `${filter.name} IS NOT NULL`).join(' AND ')
+      query += ` WHERE ${whereConditions}`
+    }
+    
+    query += ` LIMIT 1`
+    
+    return query
+  },
+
+  // Execute KPI BigQuery query
+  executeKPIQuery: async (kpiId: string): Promise<void> => {
+    console.log('🔄 Executing KPI BigQuery query:', kpiId)
+    const currentKPIs = $kpiWidgets.get()
+    const kpi = currentKPIs.find(k => k.i === kpiId)
+    
+    if (!kpi || !kpi.config.bigqueryData?.query) {
+      console.warn('KPI or query not found:', kpiId)
+      return
+    }
+
+    // Set loading state
+    kpiActions.updateKPIBigQueryData(kpiId, { 
+      isLoading: true, 
+      error: null 
+    })
+
+    try {
+      const response = await fetch('/api/bigquery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'execute',
+          query: kpi.config.bigqueryData.query 
+        })
+      })
+
+      if (!response.ok) {
+        throw new Error(`Query failed: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      const rows = data.rows || []
+      
+      // Extract KPI value from first row
+      const calculatedValue = rows.length > 0 ? (rows[0].kpi_value || 0) : 0
+
+      // Update BigQuery data
+      kpiActions.updateKPIBigQueryData(kpiId, {
+        calculatedValue,
+        lastExecuted: new Date(),
+        isLoading: false,
+        error: null
+      })
+
+      // If using BigQuery as data source, update the KPI value
+      if (kpi.config.dataSourceType === 'bigquery') {
+        const previousValue = kpi.config.value
+        kpiActions.updateKPIValue(kpiId, calculatedValue, previousValue)
+      }
+
+    } catch (error) {
+      console.error('KPI BigQuery query failed:', error)
+      kpiActions.updateKPIBigQueryData(kpiId, {
+        isLoading: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred'
+      })
+    }
+  },
+
+  // Toggle KPI data source type
+  toggleKPIDataSourceType: (kpiId: string, type: 'manual' | 'bigquery') => {
+    console.log('🔄 Toggling KPI data source type:', { kpiId, type })
+    kpiActions.updateKPIConfig(kpiId, { dataSourceType: type })
+    
+    // If switching to BigQuery and query exists, execute it
+    if (type === 'bigquery') {
+      const kpi = $kpiWidgets.get().find(k => k.i === kpiId)
+      if (kpi?.config.bigqueryData?.query) {
+        kpiActions.executeKPIQuery(kpiId)
+      }
+    }
+  },
+
+  // Refresh KPI data (execute query)
+  refreshKPIData: async (kpiId: string) => {
+    console.log('🔄 Refreshing KPI data:', kpiId)
+    await kpiActions.executeKPIQuery(kpiId)
   }
 }
