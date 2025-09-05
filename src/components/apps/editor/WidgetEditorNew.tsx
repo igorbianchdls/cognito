@@ -147,11 +147,11 @@ export default function WidgetEditorNew() {
   }, [selectedKPI, selectedTable, selectedBarChart, selectedLineChart, selectedPieChart, selectedAreaChart])
 
   // Computed configs for each widget type
-  const kpiConfig = useMemo((): KPIConfig => {
+  const kpiConfig = (() => {
     if (!selectedKPI) return {} as KPIConfig
     
     const config = selectedKPI.config || {} as KPIConfig
-    console.log('🎯 WidgetEditorNew computed kpiConfig:', {
+    console.log('🎯 WidgetEditorNew computed kpiConfig (no useMemo):', {
       kpiId: selectedKPI.i,
       hasConfig: !!config,
       hasBigQueryData: !!config.bigqueryData,
@@ -161,7 +161,7 @@ export default function WidgetEditorNew() {
       timestamp: Date.now()
     })
     return config
-  }, [selectedKPI])
+  })()
 
   const tableConfig = useMemo((): TableConfig => {
     if (!selectedTable) return {} as TableConfig
