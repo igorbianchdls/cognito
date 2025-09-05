@@ -257,7 +257,7 @@ export default function WidgetEditorNew() {
   }
 
   return (
-    <div className="p-4 space-y-6">
+    <div className="p-4 space-y-6 h-full overflow-y-auto">
       {renderWidgetEditor()}
     </div>
   )
