@@ -354,7 +354,7 @@ export default function KPIDataSourceEditor({
       {/* Manual Mode Instructions */}
       {dataSourceType === 'manual' && (
         <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded border">
-          📝 Manual mode: Use the "Data & Values" section above to set KPI values manually.
+          📝 Manual mode: Use the &quot;Data &amp; Values&quot; section above to set KPI values manually.
         </div>
       )}
     </div>
