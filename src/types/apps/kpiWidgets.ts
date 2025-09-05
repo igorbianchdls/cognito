@@ -160,7 +160,7 @@ export const KPI_COLOR_SCHEMES = {
 } as const
 
 // Default KPI configuration
-export const DEFAULT_KPI_CONFIG: Required<Omit<KPIConfig, 'name' | 'value' | 'unit' | 'target' | 'change' | 'trend' | 'status' | 'metric' | 'calculation' | 'timeRange' | 'dataSource' | 'refreshRate' | 'simulationRange'>> = {
+export const DEFAULT_KPI_CONFIG: Required<Omit<KPIConfig, 'name' | 'value' | 'unit' | 'target' | 'change' | 'trend' | 'status' | 'metric' | 'calculation' | 'timeRange' | 'dataSource' | 'refreshRate' | 'simulationRange' | 'bigqueryData'>> = {
   enableSimulation: true,
   showTarget: true,
   showTrend: true,
