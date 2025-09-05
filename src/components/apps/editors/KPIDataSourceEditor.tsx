@@ -3,8 +3,11 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { RefreshCw, Database, Play, Trash2, Plus } from 'lucide-react'
+import { Card, CardContent } from '@/components/ui/card'
+import { RefreshCw, Database, Play, TrendingUp, Activity, AlertCircle } from 'lucide-react'
+import { DndContext, DragEndEvent, useDraggable } from '@dnd-kit/core'
 import { kpiActions } from '@/stores/apps/kpiStore'
+import DropZone from '@/components/apps/builder/DropZone'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import type { KPIConfig, BigQueryField } from '@/types/apps/kpiWidgets'
 
@@ -14,36 +17,59 @@ interface KPIDataSourceEditorProps {
   onKPIConfigChange: (field: string, value: unknown) => void
 }
 
-// Mock tables - in real app would come from API
-const mockTables = [
-  'customers',
-  'orders', 
-  'products',
-  'sales_data',
-  'user_analytics'
-]
+interface BigQueryTable {
+  datasetId: string
+  tableId: string
+  projectId?: string
+  description?: string
+  numRows?: number
+  numBytes?: number
+  // Support for different API response formats
+  DATASETID?: string
+  TABLEID?: string
+  NUMROWS?: number
+  NUMBYTES?: number
+}
 
-// Mock fields for selected table - in real app would come from API
-const mockTableFields: Record<string, BigQueryField[]> = {
-  'sales_data': [
-    { name: 'revenue', type: 'NUMERIC', aggregation: 'SUM' },
-    { name: 'quantity', type: 'INTEGER', aggregation: 'COUNT' },
-    { name: 'customer_id', type: 'STRING' },
-    { name: 'sale_date', type: 'DATE' },
-    { name: 'region', type: 'STRING' }
-  ],
-  'orders': [
-    { name: 'order_value', type: 'NUMERIC', aggregation: 'SUM' },
-    { name: 'order_id', type: 'STRING' },
-    { name: 'customer_id', type: 'STRING' },
-    { name: 'status', type: 'STRING' }
-  ],
-  'customers': [
-    { name: 'customer_count', type: 'INTEGER', aggregation: 'COUNT' },
-    { name: 'name', type: 'STRING' },
-    { name: 'email', type: 'STRING' },
-    { name: 'created_at', type: 'TIMESTAMP' }
-  ]
+// Draggable field component for table fields
+interface DraggableFieldProps {
+  field: BigQueryField
+  sourceTable: string
+}
+
+function DraggableField({ field, sourceTable }: DraggableFieldProps) {
+  const getFieldIcon = (type: string) => {
+    const lowerType = type.toLowerCase()
+    if (lowerType.includes('string') || lowerType.includes('text')) return '🔤'
+    if (lowerType.includes('int') || lowerType.includes('numeric') || lowerType.includes('float')) return '🔢'
+    if (lowerType.includes('date') || lowerType.includes('timestamp')) return '📅'
+    if (lowerType.includes('bool')) return '✓'
+    return '📊'
+  }
+
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: field.name,
+    data: { field, sourceTable }
+  })
+
+  const style = transform ? {
+    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+    opacity: isDragging ? 0.5 : 1
+  } : undefined
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...listeners}
+      {...attributes}
+      className="flex items-center gap-2 p-2 text-sm border rounded cursor-grab hover:bg-gray-50 transition-colors active:cursor-grabbing"
+    >
+      <span>{getFieldIcon(field.type)}</span>
+      <span className="flex-1 truncate">{field.name}</span>
+      <span className="text-xs text-gray-500">{field.type}</span>
+    </div>
+  )
 }
 
 export default function KPIDataSourceEditor({ 
@@ -51,15 +77,71 @@ export default function KPIDataSourceEditor({
   kpiConfig, 
   onKPIConfigChange 
 }: KPIDataSourceEditorProps) {
+  // BigQuery data states
+  const [tables, setTables] = useState<BigQueryTable[]>([])
+  const [loadingTables, setLoadingTables] = useState(false)
+  const [tablesError, setTablesError] = useState<string | null>(null)
   const [availableFields, setAvailableFields] = useState<BigQueryField[]>([])
+  const [loadingFields, setLoadingFields] = useState(false)
+  const [fieldsError, setFieldsError] = useState<string | null>(null)
   const [selectedTable, setSelectedTable] = useState<string | null>(
     kpiConfig.bigqueryData?.selectedTable || null
   )
 
-  // Update available fields when table changes
+  // Load BigQuery tables
+  const loadTables = async () => {
+    setLoadingTables(true)
+    setTablesError(null)
+    
+    try {
+      const response = await fetch('/api/bigquery?action=tables&dataset=biquery_data')
+      const result = await response.json()
+      
+      if (result.success && Array.isArray(result.data)) {
+        setTables(result.data)
+      } else {
+        throw new Error(result.error || 'Failed to load tables')
+      }
+    } catch (err) {
+      console.error('Error loading tables:', err)
+      setTablesError(err instanceof Error ? err.message : 'Unknown error')
+    } finally {
+      setLoadingTables(false)
+    }
+  }
+
+  // Load table schema/fields
+  const loadTableFields = async (tableId: string) => {
+    setLoadingFields(true)
+    setFieldsError(null)
+    
+    try {
+      const response = await fetch(`/api/bigquery?action=schema&dataset=biquery_data&table=${tableId}`)
+      const result = await response.json()
+      
+      if (result.success && Array.isArray(result.data)) {
+        setAvailableFields(result.data)
+      } else {
+        throw new Error(result.error || 'Failed to load table schema')
+      }
+    } catch (err) {
+      console.error('Error loading table fields:', err)
+      setFieldsError(err instanceof Error ? err.message : 'Unknown error')
+      setAvailableFields([])
+    } finally {
+      setLoadingFields(false)
+    }
+  }
+
+  // Load tables on mount
   useEffect(() => {
-    if (selectedTable && mockTableFields[selectedTable]) {
-      setAvailableFields(mockTableFields[selectedTable])
+    loadTables()
+  }, [])
+
+  // Load fields when table changes
+  useEffect(() => {
+    if (selectedTable) {
+      loadTableFields(selectedTable)
     } else {
       setAvailableFields([])
     }
@@ -75,6 +157,62 @@ export default function KPIDataSourceEditor({
     onKPIConfigChange('bigqueryData.filterFields', [])
   }
 
+  // Handle drag and drop
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    
+    if (!over) return
+    
+    try {
+      // Get field data from the dragged element
+      const draggedData = active.data.current
+      const field = draggedData?.field as BigQueryField
+      
+      if (!field) {
+        console.log('No field data found')
+        return
+      }
+      
+      if (over.id === 'kpi-value-drop-zone') {
+        // Add to KPI Value fields (only allow one field for KPI)
+        onKPIConfigChange('bigqueryData.kpiValueFields', [field])
+        console.log('Added to KPI Value:', field.name)
+        
+        // Update query
+        updateQuery([field], kpiConfig.bigqueryData?.filterFields || [])
+      } else if (over.id === 'filters-drop-zone') {
+        // Add to filter fields (avoid duplicates)
+        const currentFields = kpiConfig.bigqueryData?.filterFields || []
+        const fieldExists = currentFields.some(f => f.name === field.name)
+        
+        if (!fieldExists) {
+          const newFields = [...currentFields, field]
+          onKPIConfigChange('bigqueryData.filterFields', newFields)
+          console.log('Added to Filters:', field.name)
+          
+          // Update query
+          updateQuery(kpiConfig.bigqueryData?.kpiValueFields || [], newFields)
+        }
+      }
+    } catch (error) {
+      console.error('Error handling drag and drop:', error)
+    }
+  }
+
+  // Remove field from KPI Value
+  const handleRemoveKPIValueField = (fieldName: string) => {
+    onKPIConfigChange('bigqueryData.kpiValueFields', [])
+    updateQuery([], kpiConfig.bigqueryData?.filterFields || [])
+  }
+
+  // Remove field from Filters
+  const handleRemoveFilterField = (fieldName: string) => {
+    const currentFields = kpiConfig.bigqueryData?.filterFields || []
+    const newFields = currentFields.filter(f => f.name !== fieldName)
+    onKPIConfigChange('bigqueryData.filterFields', newFields)
+    updateQuery(kpiConfig.bigqueryData?.kpiValueFields || [], newFields)
+  }
+
   // Handle data source type toggle
   const handleDataSourceTypeChange = (type: 'manual' | 'bigquery') => {
     onKPIConfigChange('dataSourceType', type)
@@ -83,43 +221,6 @@ export default function KPIDataSourceEditor({
     }
   }
 
-  // Add field to KPI Value
-  const handleAddKPIValueField = (field: BigQueryField) => {
-    const currentFields = kpiConfig.bigqueryData?.kpiValueFields || []
-    const newFields = [...currentFields, field]
-    onKPIConfigChange('bigqueryData.kpiValueFields', newFields)
-    
-    // Generate and update query
-    updateQuery(newFields, kpiConfig.bigqueryData?.filterFields || [])
-  }
-
-  // Add field to Filters
-  const handleAddFilterField = (field: BigQueryField) => {
-    const currentFields = kpiConfig.bigqueryData?.filterFields || []
-    const newFields = [...currentFields, field]
-    onKPIConfigChange('bigqueryData.filterFields', newFields)
-    
-    // Generate and update query
-    updateQuery(kpiConfig.bigqueryData?.kpiValueFields || [], newFields)
-  }
-
-  // Remove KPI Value field
-  const handleRemoveKPIValueField = (fieldName: string) => {
-    const currentFields = kpiConfig.bigqueryData?.kpiValueFields || []
-    const newFields = currentFields.filter(f => f.name !== fieldName)
-    onKPIConfigChange('bigqueryData.kpiValueFields', newFields)
-    
-    updateQuery(newFields, kpiConfig.bigqueryData?.filterFields || [])
-  }
-
-  // Remove Filter field  
-  const handleRemoveFilterField = (fieldName: string) => {
-    const currentFields = kpiConfig.bigqueryData?.filterFields || []
-    const newFields = currentFields.filter(f => f.name !== fieldName)
-    onKPIConfigChange('bigqueryData.filterFields', newFields)
-    
-    updateQuery(kpiConfig.bigqueryData?.kpiValueFields || [], newFields)
-  }
 
   // Update query when fields change
   const updateQuery = (kpiValueFields: BigQueryField[], filterFields: BigQueryField[]) => {
@@ -129,6 +230,19 @@ export default function KPIDataSourceEditor({
     }
   }
 
+  // Get table display name
+  const getTableDisplayName = (table: BigQueryTable) => {
+    return table.TABLEID || table.tableId || 'Unknown Table'
+  }
+
+  // Format row count
+  const formatRowCount = (rows?: number) => {
+    if (!rows) return ''
+    if (rows >= 1000000) return `${(rows / 1000000).toFixed(1).replace('.0', '')}M rows`
+    if (rows >= 1000) return `${(rows / 1000).toFixed(1).replace('.0', '')}k rows`
+    return `${rows.toLocaleString()} rows`
+  }
+
   // Execute query
   const handleExecuteQuery = async () => {
     if (selectedWidget.i) {
@@ -136,227 +250,216 @@ export default function KPIDataSourceEditor({
     }
   }
 
-  // Get field icon
-  const getFieldIcon = (type: string) => {
-    const lowerType = type.toLowerCase()
-    if (lowerType.includes('string') || lowerType.includes('text')) return '🔤'
-    if (lowerType.includes('int') || lowerType.includes('numeric') || lowerType.includes('float')) return '🔢'
-    if (lowerType.includes('date') || lowerType.includes('timestamp')) return '📅'
-    if (lowerType.includes('bool')) return '✓'
-    return '📊'
-  }
 
   const bigqueryData = kpiConfig.bigqueryData
   const dataSourceType = kpiConfig.dataSourceType || 'manual'
 
   return (
-    <div className="space-y-4">
-      {/* Data Source Type Toggle */}
-      <div>
-        <label className="block text-xs font-medium text-gray-600 mb-2">Data Source Type</label>
-        <div className="flex gap-2">
-          <Button
-            variant={dataSourceType === 'manual' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => handleDataSourceTypeChange('manual')}
-            className="flex-1"
-          >
-            ✍️ Manual Values
-          </Button>
-          <Button
-            variant={dataSourceType === 'bigquery' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => handleDataSourceTypeChange('bigquery')}
-            className="flex-1"
-          >
-            <Database className="w-4 h-4 mr-2" />
-            BigQuery Data
-          </Button>
-        </div>
-      </div>
-
-      {/* BigQuery Configuration - only show when bigquery is selected */}
-      {dataSourceType === 'bigquery' && (
-        <div className="space-y-4 border-t pt-4">
-          {/* Table Selection */}
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-2">Select Table</label>
-            <Select value={selectedTable || ''} onValueChange={handleTableChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Choose a table..." />
-              </SelectTrigger>
-              <SelectContent>
-                {mockTables.map(table => (
-                  <SelectItem key={table} value={table}>
-                    📊 {table}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+    <DndContext onDragEnd={handleDragEnd}>
+      <div className="space-y-4">
+        {/* Data Source Type Toggle */}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-2">Data Source Type</label>
+          <div className="flex gap-2">
+            <Button
+              variant={dataSourceType === 'manual' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleDataSourceTypeChange('manual')}
+              className="flex-1"
+            >
+              ✍️ Manual Values
+            </Button>
+            <Button
+              variant={dataSourceType === 'bigquery' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleDataSourceTypeChange('bigquery')}
+              className="flex-1"
+            >
+              <Database className="w-4 h-4 mr-2" />
+              BigQuery Data
+            </Button>
           </div>
+        </div>
 
-          {selectedTable && (
-            <>
-              {/* KPI Value Fields */}
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-2">KPI Value Field</label>
-                
-                {/* Current KPI Value Fields */}
-                <div className="mb-2">
-                  {bigqueryData?.kpiValueFields?.length ? (
-                    <div className="flex flex-wrap gap-2">
-                      {bigqueryData.kpiValueFields.map((field) => (
-                        <div
-                          key={field.name}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-purple-500 text-white"
-                        >
-                          <span>{getFieldIcon(field.type)}</span>
-                          <span>{field.name}</span>
-                          {field.aggregation && <span>({field.aggregation})</span>}
-                          <button
-                            onClick={() => handleRemoveKPIValueField(field.name)}
-                            className="hover:bg-white/20 rounded-full p-0.5 transition-colors"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-sm text-gray-500 p-2 border-2 border-dashed rounded">
-                      No KPI value field selected
-                    </div>
-                  )}
-                </div>
-
-                {/* Add KPI Value Field */}
-                <div className="grid grid-cols-2 gap-2">
-                  {availableFields
-                    .filter(f => !bigqueryData?.kpiValueFields?.some(kf => kf.name === f.name))
-                    .filter(f => f.type.toLowerCase().includes('int') || f.type.toLowerCase().includes('numeric'))
-                    .map((field) => (
-                    <button
-                      key={field.name}
-                      onClick={() => handleAddKPIValueField(field)}
-                      className="flex items-center gap-2 p-2 text-sm border rounded hover:bg-gray-50 transition-colors"
-                    >
-                      <Plus className="w-3 h-3" />
-                      <span>{getFieldIcon(field.type)}</span>
-                      <span>{field.name}</span>
-                      {field.aggregation && <span className="text-xs text-gray-500">({field.aggregation})</span>}
-                    </button>
-                  ))}
-                </div>
+        {/* BigQuery Configuration - only show when bigquery is selected */}
+        {dataSourceType === 'bigquery' && (
+          <div className="space-y-4 border-t pt-4">
+            {/* Table Selection */}
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-2">Select Table</label>
+              <div className="flex gap-2">
+                <Select value={selectedTable || ''} onValueChange={handleTableChange} disabled={loadingTables}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder={loadingTables ? "Loading tables..." : "Choose a table..."} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tables.map(table => {
+                      const tableId = getTableDisplayName(table)
+                      const numRows = table.NUMROWS || table.numRows
+                      return (
+                        <SelectItem key={tableId} value={tableId}>
+                          <div className="flex items-center gap-2">
+                            <span>📊</span>
+                            <span>{tableId}</span>
+                            {numRows && (
+                              <span className="text-xs text-gray-500">({formatRowCount(numRows)})</span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      )
+                    })}
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={loadTables}
+                  disabled={loadingTables}
+                >
+                  <RefreshCw className={`w-4 h-4 ${loadingTables ? 'animate-spin' : ''}`} />
+                </Button>
               </div>
+              {tablesError && (
+                <div className="flex items-center gap-2 mt-2 p-2 text-sm text-red-600 bg-red-50 rounded">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>{tablesError}</span>
+                </div>
+              )}
+            </div>
 
-              {/* Filter Fields */}
+            {/* Available Fields */}
+            {selectedTable && (
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-2">Filter Fields (Optional)</label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-medium text-gray-600">Available Fields</label>
+                  {loadingFields && <RefreshCw className="w-4 h-4 animate-spin text-primary" />}
+                </div>
                 
-                {/* Current Filter Fields */}
-                <div className="mb-2">
-                  {bigqueryData?.filterFields?.length ? (
-                    <div className="flex flex-wrap gap-2">
-                      {bigqueryData.filterFields.map((field) => (
-                        <div
-                          key={field.name}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-orange-500 text-white"
-                        >
-                          <span>{getFieldIcon(field.type)}</span>
-                          <span>{field.name}</span>
-                          <button
-                            onClick={() => handleRemoveFilterField(field.name)}
-                            className="hover:bg-white/20 rounded-full p-0.5 transition-colors"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-sm text-gray-500 p-2 border-2 border-dashed rounded">
-                      No filter fields selected
-                    </div>
-                  )}
-                </div>
-
-                {/* Add Filter Field */}
-                <div className="grid grid-cols-2 gap-2">
-                  {availableFields
-                    .filter(f => !bigqueryData?.filterFields?.some(ff => ff.name === f.name))
-                    .slice(0, 6) // Limit shown fields
-                    .map((field) => (
-                    <button
-                      key={field.name}
-                      onClick={() => handleAddFilterField(field)}
-                      className="flex items-center gap-2 p-2 text-sm border rounded hover:bg-gray-50 transition-colors"
-                    >
-                      <Plus className="w-3 h-3" />
-                      <span>{getFieldIcon(field.type)}</span>
-                      <span>{field.name}</span>
-                    </button>
-                  ))}
-                </div>
+                {fieldsError ? (
+                  <div className="flex items-center gap-2 p-2 text-sm text-red-600 bg-red-50 rounded">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>{fieldsError}</span>
+                  </div>
+                ) : (
+                  <div className="max-h-48 overflow-y-auto border rounded p-2 bg-gray-50">
+                    {availableFields.length > 0 ? (
+                      <div className="grid grid-cols-1 gap-1">
+                        {availableFields.map((field, index) => (
+                          <DraggableField 
+                            key={`${field.name}-${index}`} 
+                            field={field} 
+                            sourceTable={selectedTable} 
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center text-sm text-gray-500 py-4">
+                        {loadingFields ? 'Loading fields...' : 'No fields available'}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
+            )}
 
-              {/* Query Preview & Execute */}
-              {bigqueryData?.query && (
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-2">Generated Query</label>
-                  <div className="bg-gray-50 p-3 rounded border text-xs font-mono">
-                    {bigqueryData.query}
+            {/* DropZones for Field Selection */}
+            {selectedTable && (
+              <div className="space-y-3">
+                {/* KPI Value Drop Zone */}
+                <DropZone
+                  id="kpi-value-drop-zone"
+                  label="Valor KPI"
+                  description="Campo numérico para calcular o KPI (apenas um campo)"
+                  icon={<TrendingUp className="w-4 h-4 text-purple-600" />}
+                  fields={bigqueryData?.kpiValueFields || []}
+                  acceptedTypes={['numeric']}
+                  onRemoveField={handleRemoveKPIValueField}
+                />
+
+                {/* Filters Drop Zone */}
+                <DropZone
+                  id="filters-drop-zone"
+                  label="Filtros"
+                  description="Campos para filtrar os dados do KPI (opcional)"
+                  icon={<Activity className="w-4 h-4 text-orange-600" />}
+                  fields={bigqueryData?.filterFields || []}
+                  acceptedTypes={['string', 'date', 'numeric', 'boolean']}
+                  onRemoveField={handleRemoveFilterField}
+                />
+              </div>
+            )}
+
+            {/* Collapsible SQL Query Preview */}
+            {bigqueryData?.query && (
+              <div>
+                <details className="group">
+                  <summary className="cursor-pointer text-sm text-gray-600 hover:text-gray-900 font-medium py-2">
+                    <span className="inline-flex items-center gap-2">
+                      <Database className="w-4 h-4" />
+                      View SQL Query
+                      <span className="text-xs text-gray-500">(Click to expand)</span>
+                    </span>
+                  </summary>
+                  <Card className="mt-2 bg-gray-50/50">
+                    <CardContent className="p-3">
+                      <pre className="text-xs font-mono overflow-x-auto whitespace-pre-wrap text-gray-800">
+                        {bigqueryData.query}
+                      </pre>
+                    </CardContent>
+                  </Card>
+                </details>
+                
+                {/* Execution Status and Button */}
+                <div className="flex items-center justify-between mt-3 p-3 bg-blue-50 rounded border">
+                  <div className="text-xs text-gray-600">
+                    {bigqueryData.lastExecuted && (
+                      <div>Last executed: {new Date(bigqueryData.lastExecuted).toLocaleString()}</div>
+                    )}
+                    {bigqueryData.error && (
+                      <div className="text-red-600 font-medium">Error: {bigqueryData.error}</div>
+                    )}
                   </div>
                   
-                  <div className="flex items-center justify-between mt-2">
-                    <div className="text-xs text-gray-500">
-                      {bigqueryData.lastExecuted && (
-                        <span>Last executed: {new Date(bigqueryData.lastExecuted).toLocaleString()}</span>
-                      )}
-                      {bigqueryData.error && (
-                        <span className="text-red-500">Error: {bigqueryData.error}</span>
-                      )}
-                    </div>
-                    
-                    <Button 
-                      size="sm" 
-                      onClick={handleExecuteQuery}
-                      disabled={bigqueryData.isLoading}
-                      className="ml-2"
-                    >
-                      {bigqueryData.isLoading ? (
-                        <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-                      ) : (
-                        <Play className="w-4 h-4 mr-2" />
-                      )}
-                      Execute Query
-                    </Button>
-                  </div>
+                  <Button 
+                    size="sm" 
+                    onClick={handleExecuteQuery}
+                    disabled={bigqueryData.isLoading}
+                  >
+                    {bigqueryData.isLoading ? (
+                      <RefreshCw className="w-4 h-4 animate-spin mr-2" />
+                    ) : (
+                      <Play className="w-4 h-4 mr-2" />
+                    )}
+                    Execute Query
+                  </Button>
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Results */}
-              {bigqueryData?.calculatedValue !== undefined && (
-                <div className="bg-blue-50 p-3 rounded border">
-                  <div className="text-sm font-medium text-blue-900 mb-1">Calculated Value</div>
-                  <div className="text-2xl font-bold text-blue-600">
-                    {bigqueryData.calculatedValue.toLocaleString()}
-                  </div>
-                  <div className="text-xs text-blue-700 mt-1">
-                    From BigQuery • Auto-updates KPI when data source is BigQuery
-                  </div>
+            {/* Results */}
+            {bigqueryData?.calculatedValue !== undefined && (
+              <div className="bg-green-50 p-4 rounded border border-green-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <TrendingUp className="w-5 h-5 text-green-600" />
+                  <span className="text-sm font-medium text-green-900">Calculated KPI Value</span>
                 </div>
-              )}
-            </>
-          )}
-        </div>
-      )}
+                <div className="text-3xl font-bold text-green-600 mb-1">
+                  {bigqueryData.calculatedValue.toLocaleString()}
+                </div>
+                <div className="text-xs text-green-700">
+                  📊 From BigQuery • Auto-updates widget when data source is BigQuery
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
-      {/* Manual Mode Instructions */}
-      {dataSourceType === 'manual' && (
-        <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded border">
-          📝 Manual mode: Use the &quot;Data &amp; Values&quot; section above to set KPI values manually.
-        </div>
-      )}
-    </div>
-  )
+        {/* Manual Mode Instructions */}
+        {dataSourceType === 'manual' && (
+          <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded border">
+            📝 Manual mode: Use the &quot;Data &amp; Values&quot; section above to set KPI values manually.
+          </div>
+        )}
+      </div>
+    </DndContext>
 }
