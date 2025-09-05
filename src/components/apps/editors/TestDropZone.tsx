@@ -1,8 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { TrendingUp } from 'lucide-react'
-import DropZone from '../builder/DropZone'
 import type { BigQueryField } from '../builder/TablesExplorer'
 import type { KPIConfig } from '@/types/apps/kpiWidgets'
 
@@ -56,18 +54,48 @@ export default function TestDropZone({
 
   return (
     <div className="space-y-3">
-      {/* Test DropZone - usando estado local como datasets */}
-      <DropZone
-        id="test-kpi-value-drop-zone"
-        label="🧪 TESTE - Valor KPI (Estado Local)"
-        description="DropZone de teste com useState - deveria funcionar"
-        icon={<TrendingUp className="w-4 h-4 text-purple-600" />}
-        fields={localKpiFields}
-        acceptedTypes={['numeric']}
-        onRemoveField={handleRemoveField}
-      />
+      {/* Custom DropZone HTML - NÃO usa o componente DropZone bugado */}
+      <div className="border-2 border-dashed border-purple-300 p-4 rounded-lg bg-purple-50">
+        <div className="mb-2">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-purple-600">🎯</span>
+            <h3 className="text-sm font-medium text-purple-900">🧪 TESTE - Valor KPI (HTML Próprio)</h3>
+          </div>
+          <p className="text-xs text-purple-700">DropZone com HTML próprio - sem usar DropZone.tsx bugado</p>
+        </div>
 
-      {/* Botão para adicionar campo de teste */}
+        <div className="min-h-[60px] flex items-center justify-center">
+          {localKpiFields.length === 0 ? (
+            <p className="text-purple-500 text-sm">Nenhum campo - clique em "Adicionar Campo Teste"</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {localKpiFields.map((field) => (
+                <div
+                  key={field.name}
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium bg-purple-500 text-white hover:bg-purple-600 transition-colors"
+                >
+                  <span className="truncate max-w-[120px]">
+                    {field.name}
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      console.log('🧪 CUSTOM X button clicked:', field.name)
+                      handleRemoveField(field.name)
+                    }}
+                    className="hover:bg-white/20 rounded-full p-0.5 transition-colors cursor-pointer"
+                    title="Remove field"
+                  >
+                    ❌
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Botões de teste */}
       <div className="flex gap-2">
         <button
           onClick={handleAddTestField}
