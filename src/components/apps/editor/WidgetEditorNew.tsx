@@ -37,11 +37,25 @@ export default function WidgetEditorNew() {
 
   // KPI Config Handler - usar apenas kpiStore
   const handleKPIConfigChange = (field: string, value: unknown) => {
-    console.log('⚙️ WidgetEditorNew handleKPIConfigChange:', { field, value })
+    console.log('⚙️ WidgetEditorNew handleKPIConfigChange:', { 
+      field, 
+      value, 
+      selectedKPIId: selectedKPI?.i,
+      timestamp: Date.now()
+    })
     
     if (selectedKPI) {
-      console.log('⚙️ WidgetEditorNew calling kpiActions.updateKPIConfig:', selectedKPI.i, { [field]: value })
+      console.log('⚙️ WidgetEditorNew calling kpiActions.updateKPIConfig:', {
+        kpiId: selectedKPI.i,
+        configUpdate: { [field]: value },
+        timestamp: Date.now()
+      })
       kpiActions.updateKPIConfig(selectedKPI.i, { [field]: value })
+      
+      // Log immediately after the store update to verify it was called
+      console.log('⚙️ WidgetEditorNew store update completed for:', selectedKPI.i, field)
+    } else {
+      console.warn('⚠️ WidgetEditorNew: No KPI selected, cannot update config')
     }
   }
 

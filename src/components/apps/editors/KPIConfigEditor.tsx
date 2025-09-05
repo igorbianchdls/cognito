@@ -114,7 +114,10 @@ export default function KPIConfigEditor({
               <input
                 type="color"
                 value={kpiConfig.backgroundColor || '#ffffff'}
-                onChange={(e) => onKPIConfigChange('backgroundColor', e.target.value)}
+                onChange={(e) => {
+                  console.log('🎨 KPIConfigEditor: Background color changed to:', e.target.value)
+                  onKPIConfigChange('backgroundColor', e.target.value)
+                }}
                 className="w-full h-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -214,7 +217,10 @@ export default function KPIConfigEditor({
                   max="72"
                   step="2"
                   value={kpiConfig.valueFontSize || 36}
-                  onChange={(e) => onKPIConfigChange('valueFontSize', parseInt(e.target.value))}
+                  onChange={(e) => {
+                    console.log('🎨 KPIConfigEditor: Value font size changed to:', e.target.value)
+                    onKPIConfigChange('valueFontSize', parseInt(e.target.value))
+                  }}
                   className="w-full"
                 />
                 <span className="text-xs text-gray-500">{kpiConfig.valueFontSize || 36}px</span>
@@ -224,7 +230,10 @@ export default function KPIConfigEditor({
                 <input
                   type="color"
                   value={kpiConfig.valueColor || '#1f2937'}
-                  onChange={(e) => onKPIConfigChange('valueColor', e.target.value)}
+                  onChange={(e) => {
+                    console.log('🎨 KPIConfigEditor: Value color changed to:', e.target.value)
+                    onKPIConfigChange('valueColor', e.target.value)
+                  }}
                   className="w-full h-8 border border-gray-300 rounded"
                 />
               </div>

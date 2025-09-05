@@ -47,8 +47,15 @@ function isLegacyChartConfigWithKPI(config: ChartConfig | undefined): config is 
 export default function KPIWrapper({ widget }: KPIWidgetProps) {
   // Get KPI configuration with backward compatibility - with reatividade
   const kpiConfig: KPIConfig = useMemo(() => {
-    console.log('🔄 KPIWidget kpiConfig recalculated for widget:', widget.i)
-    return widget.kpiConfig || widget.config?.kpiConfig || 
+    console.log('🔄 KPIWidget kpiConfig recalculated for widget:', widget.i, {
+      hasKpiConfig: !!widget.kpiConfig,
+      hasNestedKpiConfig: !!widget.config?.kpiConfig,
+      hasLegacyChartConfig: isLegacyChartConfigWithKPI(widget.chartConfig),
+      configKeys: widget.kpiConfig ? Object.keys(widget.kpiConfig) : [],
+      timestamp: Date.now()
+    })
+    
+    const config = widget.kpiConfig || widget.config?.kpiConfig || 
       // Backward compatibility: extract KPI props from old chartConfig
       (isLegacyChartConfigWithKPI(widget.chartConfig) ? {
         name: widget.chartConfig.kpiName,
@@ -81,7 +88,10 @@ export default function KPIWrapper({ widget }: KPIWidgetProps) {
         changeColor: widget.chartConfig.kpiChangeColor,
         targetColor: widget.chartConfig.kpiTargetColor,
       } : {}) || {}
-  }, [widget.config, widget.chartConfig, widget.i])
+    
+    console.log('🔄 KPIWidget final config:', config)
+    return config
+  }, [widget.config, widget.chartConfig, widget.kpiConfig, widget.i])
 
   // Default simulation data (only used if no real data provided)
   const [simulatedData, setSimulatedData] = useState({
@@ -146,8 +156,17 @@ export default function KPIWrapper({ widget }: KPIWidgetProps) {
 
   // Prepare props for KPI components - com reatividade
   const kpiProps = useMemo(() => {
-    console.log('🔄 KPIWidget kpiProps recalculated')
-    return {
+    console.log('🔄 KPIWidget kpiProps recalculated for widget:', widget.i, {
+      configChanged: true,
+      hasName: !!kpiConfig.name,
+      hasValue: kpiConfig.value !== undefined,
+      hasTarget: kpiConfig.target !== undefined,
+      colorScheme: kpiConfig.colorScheme,
+      visualizationType: kpiConfig.visualizationType,
+      timestamp: Date.now()
+    })
+    
+    const props = {
       kpiId: `kpi-${widget.i}`,
       name: kpiConfig.name || 'KPI',
       metric: kpiConfig.metric || 'metric',
@@ -174,8 +193,34 @@ export default function KPIWrapper({ widget }: KPIWidgetProps) {
       },
       success: true,
     }
+    
+    console.log('🔄 KPIWidget final props:', props)
+    return props
   }, [widget.i, kpiConfig, getKpiTrend, getKpiStatus])
 
+
+  // Log the styling props being passed to KPICard for debugging
+  console.log('🎨 KPIWrapper render - styling props:', {
+    widgetId: widget.i,
+    backgroundColor: kpiConfig.backgroundColor,
+    backgroundOpacity: (kpiConfig as Record<string, unknown>).backgroundOpacity,
+    borderColor: kpiConfig.borderColor,
+    borderOpacity: (kpiConfig as Record<string, unknown>).borderOpacity,
+    borderWidth: kpiConfig.borderWidth,
+    borderRadius: kpiConfig.borderRadius,
+    padding: kpiConfig.padding,
+    textAlign: kpiConfig.textAlign,
+    shadow: kpiConfig.shadow,
+    valueFontSize: kpiConfig.valueFontSize,
+    valueColor: kpiConfig.valueColor,
+    valueFontWeight: kpiConfig.valueFontWeight,
+    nameFontSize: kpiConfig.nameFontSize,
+    nameColor: kpiConfig.nameColor,
+    nameFontWeight: kpiConfig.nameFontWeight,
+    changeColor: kpiConfig.changeColor,
+    targetColor: kpiConfig.targetColor,
+    timestamp: Date.now()
+  })
 
   return (
     <div className="h-full w-full">
