@@ -169,7 +169,7 @@ export default function UniversalBuilder({
           // Add BigQuery data to table config
           ...(widgetConfig.bigqueryData ? {
             dataSource: 'BigQuery',
-            data: widgetConfig.bigqueryData.data || tableConfig.data, // ✅ PRESERVA os dados
+            data: (widgetConfig.bigqueryData as any)?.data || tableConfig.data, // ✅ PRESERVA os dados
             columns: data.columns.map(col => ({
               id: col.name,
               header: col.name,
