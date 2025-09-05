@@ -466,6 +466,28 @@ export default function KPIDataSourceEditor({
                     </CardContent>
                   </Card>
                 </details>
+
+                {/* Updated SQL Query Preview */}
+                <details className="group mt-3">
+                  <summary className="cursor-pointer text-sm text-gray-600 hover:text-gray-900 font-medium py-2">
+                    <span className="inline-flex items-center gap-2">
+                      <Database className="w-4 h-4" />
+                      View Updated SQL Query
+                      <span className="text-xs text-gray-500">(Click to expand)</span>
+                    </span>
+                  </summary>
+                  <Card className="mt-2 bg-yellow-50/50">
+                    <CardContent className="p-3">
+                      <pre className="text-xs font-mono overflow-x-auto whitespace-pre-wrap text-gray-800">
+                        {selectedTable ? kpiActions.generateKPIQuery(
+                          kpiConfig.bigqueryData?.kpiValueFields || [], 
+                          kpiConfig.bigqueryData?.filterFields || [], 
+                          selectedTable
+                        ) : 'No table selected'}
+                      </pre>
+                    </CardContent>
+                  </Card>
+                </details>
                 
                 {/* Execution Status and Button */}
                 <div className="flex items-center justify-between mt-3 p-3 bg-blue-50 rounded border">
