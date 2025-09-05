@@ -151,7 +151,15 @@ export default function WidgetEditorNew() {
     if (!selectedKPI) return {} as KPIConfig
     
     const config = selectedKPI.config || {} as KPIConfig
-    console.log('🎯 WidgetEditorNew computed kpiConfig:', config)
+    console.log('🎯 WidgetEditorNew computed kpiConfig:', {
+      kpiId: selectedKPI.i,
+      hasConfig: !!config,
+      hasBigQueryData: !!config.bigqueryData,
+      kpiValueFieldsCount: config.bigqueryData?.kpiValueFields?.length || 0,
+      filterFieldsCount: config.bigqueryData?.filterFields?.length || 0,
+      configKeys: Object.keys(config),
+      timestamp: Date.now()
+    })
     return config
   }, [selectedKPI])
 

@@ -147,6 +147,21 @@ export default function KPIDataSourceEditor({
     }
   }, [selectedTable])
 
+  // Debug: Monitor kpiConfig changes
+  useEffect(() => {
+    console.log('📊 KPIDataSourceEditor kpiConfig updated:', {
+      hasKpiConfig: !!kpiConfig,
+      hasBigQueryData: !!kpiConfig.bigqueryData,
+      kpiValueFields: kpiConfig.bigqueryData?.kpiValueFields,
+      kpiValueFieldsCount: kpiConfig.bigqueryData?.kpiValueFields?.length || 0,
+      filterFields: kpiConfig.bigqueryData?.filterFields,
+      filterFieldsCount: kpiConfig.bigqueryData?.filterFields?.length || 0,
+      selectedTable: kpiConfig.bigqueryData?.selectedTable,
+      query: kpiConfig.bigqueryData?.query ? 'present' : 'missing',
+      timestamp: Date.now()
+    })
+  }, [kpiConfig])
+
   // Handle table selection
   const handleTableChange = (table: string) => {
     setSelectedTable(table)
