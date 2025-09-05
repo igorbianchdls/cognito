@@ -8,9 +8,8 @@ import { RefreshCw, Database, Play, TrendingUp, Activity, AlertCircle } from 'lu
 import { DndContext, DragEndEvent, useDraggable } from '@dnd-kit/core'
 import { kpiActions } from '@/stores/apps/kpiStore'
 import DropZone from '@/components/apps/builder/DropZone'
-import type { BigQueryField } from '@/components/apps/builder/TablesExplorer'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
-import type { KPIConfig } from '@/types/apps/kpiWidgets'
+import type { KPIConfig, BigQueryField } from '@/types/apps/kpiWidgets'
 
 interface KPIDataSourceEditorProps {
   selectedWidget: DroppedWidget
