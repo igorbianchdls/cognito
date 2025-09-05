@@ -6,15 +6,18 @@ import { $selectedKPI, kpiActions } from '@/stores/apps/kpiStore'
 import { $selectedTable, tableActions } from '@/stores/apps/tableStore'
 import { $selectedBarChart, barChartActions } from '@/stores/apps/barChartStore'
 import { $selectedLineChart, lineChartActions } from '@/stores/apps/lineChartStore'
+import { $selectedPieChart, pieChartActions } from '@/stores/apps/pieChartStore'
 import type { KPIConfig } from '@/types/apps/kpiWidgets'
 import type { TableConfig } from '@/types/apps/tableWidgets'
 import type { BarChartConfig } from '@/stores/apps/barChartStore'
 import type { LineChartConfig } from '@/stores/apps/lineChartStore'
+import type { PieChartConfig } from '@/stores/apps/pieChartStore'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import KPIConfigEditor from '../editors/KPIConfigEditor'
 import TableConfigEditor from '../editors/TableConfigEditor'
 import BarChartEditor from '../editors/BarChartEditor'
 import LineChartEditor from '../editors/LineChartEditor'
+import PieChartEditor from '../editors/PieChartEditor'
 
 export default function WidgetEditorNew() {
   // Get selected widgets from stores
@@ -22,10 +25,11 @@ export default function WidgetEditorNew() {
   const selectedTable = useStore($selectedTable)
   const selectedBarChart = useStore($selectedBarChart)
   const selectedLineChart = useStore($selectedLineChart)
+  const selectedPieChart = useStore($selectedPieChart)
   
   // Determine which widget is currently selected
-  const selectedWidget = selectedKPI || selectedTable || selectedBarChart || selectedLineChart
-  const widgetType = selectedKPI ? 'kpi' : selectedTable ? 'table' : selectedBarChart ? 'chart-bar' : selectedLineChart ? 'chart-line' : null
+  const selectedWidget = selectedKPI || selectedTable || selectedBarChart || selectedLineChart || selectedPieChart
+  const widgetType = selectedKPI ? 'kpi' : selectedTable ? 'table' : selectedBarChart ? 'chart-bar' : selectedLineChart ? 'chart-line' : selectedPieChart ? 'chart-pie' : null
 
   // Adapt Widget to DroppedWidget format  
   const adaptedWidget = useMemo((): DroppedWidget | null => {
@@ -93,8 +97,29 @@ export default function WidgetEditorNew() {
       } as DroppedWidget
     }
     
+    if (selectedPieChart) {
+      return {
+        i: selectedPieChart.id,
+        id: selectedPieChart.id,
+        type: 'chart-pie' as const,
+        name: selectedPieChart.name,
+        icon: '🥧',
+        description: `Pie chart from ${selectedPieChart.bigqueryData.selectedTable}`,
+        defaultWidth: 4,
+        defaultHeight: 3,
+        x: selectedPieChart.position.x,
+        y: selectedPieChart.position.y,
+        w: selectedPieChart.position.w,
+        h: selectedPieChart.position.h,
+        pieChartConfig: selectedPieChart,
+        config: {
+          pieChartConfig: selectedPieChart
+        }
+      } as DroppedWidget
+    }
+    
     return null
-  }, [selectedKPI, selectedTable, selectedBarChart, selectedLineChart])
+  }, [selectedKPI, selectedTable, selectedBarChart, selectedLineChart, selectedPieChart])
 
   // Computed configs for each widget type
   const kpiConfig = useMemo((): KPIConfig => {
@@ -128,6 +153,14 @@ export default function WidgetEditorNew() {
     console.log('📈 WidgetEditorNew computed lineChartConfig:', config)
     return config
   }, [selectedLineChart])
+
+  const pieChartConfig = useMemo((): PieChartConfig => {
+    if (!selectedPieChart) return {} as PieChartConfig
+    
+    const config = selectedPieChart
+    console.log('🥧 WidgetEditorNew computed pieChartConfig:', config)
+    return config
+  }, [selectedPieChart])
 
   // Config Handlers for each widget type
   const handleKPIConfigChange = (field: string, value: unknown) => {
@@ -254,6 +287,47 @@ export default function WidgetEditorNew() {
     }
   }
 
+  const handlePieChartConfigChange = (field: string, value: unknown) => {
+    console.log('🥧 WidgetEditorNew handlePieChartConfigChange:', { 
+      field, 
+      value, 
+      selectedPieChartId: selectedPieChart?.id,
+      timestamp: Date.now()
+    })
+    
+    if (selectedPieChart) {
+      let configUpdate: Partial<PieChartConfig>
+      
+      // Handle nested fields (e.g., 'styling.title' -> { styling: { title: value } })
+      if (field.includes('.')) {
+        const [parent, child] = field.split('.')
+        console.log('🥧 WidgetEditorNew processing nested field:', { parent, child, value })
+        
+        // Get current parent object to merge with new value
+        const currentParent = (selectedPieChart as unknown as Record<string, unknown>)[parent] || {}
+        configUpdate = {
+          [parent]: {
+            ...currentParent,
+            [child]: value
+          }
+        } as Partial<PieChartConfig>
+      } else {
+        // Handle flat fields
+        configUpdate = { [field]: value } as Partial<PieChartConfig>
+      }
+      
+      console.log('🥧 WidgetEditorNew calling pieChartActions.updatePieChart:', {
+        chartId: selectedPieChart.id,
+        configUpdate,
+        timestamp: Date.now()
+      })
+      pieChartActions.updatePieChart(selectedPieChart.id, configUpdate)
+      console.log('🥧 WidgetEditorNew PieChart store update completed for:', selectedPieChart.id, field)
+    } else {
+      console.warn('⚠️ WidgetEditorNew: No PieChart selected, cannot update config')
+    }
+  }
+
   // Early return if no widget selected
   if (!selectedWidget || !adaptedWidget) {
     return (
@@ -334,6 +408,24 @@ export default function WidgetEditorNew() {
                 selectedWidget={adaptedWidget}
                 chartConfig={lineChartConfig}
                 onChartConfigChange={handleLineChartConfigChange}
+              />
+            </div>
+          </div>
+        )
+      
+      case 'chart-pie':
+        return (
+          <div>
+            <h2 className="text-lg font-semibold mb-2">🥧 Configurações do Gráfico de Pizza</h2>
+            <p className="text-sm text-gray-600">
+              PieChart: {selectedPieChart!.name} (ID: {selectedPieChart!.id})
+            </p>
+            <div className="mt-4">
+              <h3 className="text-md font-medium mb-3">Editor de Configuração</h3>
+              <PieChartEditor
+                selectedWidget={adaptedWidget}
+                chartConfig={pieChartConfig}
+                onChartConfigChange={handlePieChartConfigChange}
               />
             </div>
           </div>

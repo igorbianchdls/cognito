@@ -20,8 +20,8 @@ import GridCanvas from '@/components/apps/GridCanvas'
 // Chart stores - needed for charts to appear in canvas
 import { $barChartsAsDropped } from '@/stores/apps/barChartStore'
 import { $lineChartsAsDropped } from '@/stores/apps/lineChartStore'
+import { $pieChartsAsDropped } from '@/stores/apps/pieChartStore'
 // TODO: Add these when needed
-// import { $pieChartsAsDropped } from '@/stores/apps/pieChartStore'
 // import { $areaChartsAsDropped } from '@/stores/apps/areaChartStore'
 import { $kpisAsDropped, kpiActions } from '@/stores/apps/kpiStore'
 import { $tablesAsDropped } from '@/stores/apps/tableStore'
@@ -37,8 +37,8 @@ export default function AppsPage() {
   const tables = useStore($tablesAsDropped)
   const barCharts = useStore($barChartsAsDropped)
   const lineCharts = useStore($lineChartsAsDropped)
+  const pieCharts = useStore($pieChartsAsDropped)
   // TODO: Add when needed
-  // const pieCharts = useStore($pieChartsAsDropped)
   // const areaCharts = useStore($areaChartsAsDropped)
   
   // KPIs, Tables, and Charts supported - combine from all stores
@@ -47,7 +47,8 @@ export default function AppsPage() {
       ...kpis,
       ...tables,
       ...barCharts,
-      ...lineCharts
+      ...lineCharts,
+      ...pieCharts
     ]
     
     // Diagnóstico: Verificar duplicatas
@@ -67,12 +68,13 @@ export default function AppsPage() {
         kpisCount: kpis.length,
         tablesCount: tables.length,
         barChartsCount: barCharts.length,
-        lineChartsCount: lineCharts.length
+        lineChartsCount: lineCharts.length,
+        pieChartsCount: pieCharts.length
       })
     }
     
     return combined
-  }, [kpis, tables, barCharts, lineCharts])
+  }, [kpis, tables, barCharts, lineCharts, pieCharts])
   const [activeWidget, setActiveWidget] = useState<Widget | null>(null)
   const [activeTab, setActiveTab] = useState<'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved' | 'datasets'>('chat')
 

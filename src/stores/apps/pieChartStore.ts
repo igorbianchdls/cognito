@@ -32,6 +32,11 @@ export interface PieChartConfig {
     showLegend: boolean
     showGrid: boolean
     title?: string
+    style?: string
+    innerRadius?: number
+    outerRadius?: number
+    enableLabels?: boolean
+    labelFormat?: 'percentage' | 'value' | 'both'
   }
   position: {
     x: number
@@ -50,6 +55,14 @@ const initialPieChartState: PieChartStore = {
 }
 
 export const $pieChartStore = atom<PieChartStore>(initialPieChartState)
+
+// Selection management - following BarChart/LineChart pattern
+export const $selectedPieChartId = atom<string | null>(null)
+
+export const $selectedPieChart = computed([$pieChartStore, $selectedPieChartId], (store, selectedId) => {
+  if (!selectedId) return null
+  return store.pieCharts.find(chart => chart.id === selectedId) || null
+})
 
 // Computed store that converts PieChartConfig to DroppedWidget format
 export const $pieChartsAsDropped = computed([$pieChartStore], (store) => {
@@ -71,6 +84,10 @@ export const $pieChartsAsDropped = computed([$pieChartStore], (store) => {
 })
 
 export const pieChartActions = {
+  selectPieChart: (chartId: string | null) => {
+    $selectedPieChartId.set(chartId)
+  },
+
   addPieChart: (config: Omit<PieChartConfig, 'id'>) => {
     const newChart: PieChartConfig = {
       ...config,
