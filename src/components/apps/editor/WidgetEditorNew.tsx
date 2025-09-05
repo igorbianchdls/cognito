@@ -156,7 +156,7 @@ export default function WidgetEditorNew() {
         console.log('📊 WidgetEditorNew processing nested field:', { parent, child, value })
         
         // Get current parent object to merge with new value
-        const currentParent = (selectedBarChart as Record<string, unknown>)[parent] || {}
+        const currentParent = (selectedBarChart as unknown as Record<string, unknown>)[parent] || {}
         configUpdate = {
           [parent]: {
             ...currentParent,
