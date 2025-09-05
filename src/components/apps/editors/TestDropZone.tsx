@@ -21,7 +21,7 @@ export default function TestDropZone({
     const initialFields = kpiConfig.bigqueryData?.kpiValueFields || []
     setLocalKpiFields(initialFields)
     console.log('🧪 TestDropZone initialized with fields:', initialFields.length)
-  }, []) // Só na inicialização
+  }, [kpiConfig.bigqueryData?.kpiValueFields]) // Sincronizar com mudanças
 
   // Handler de remoção - igual ao que funciona no datasets
   const handleRemoveField = (fieldName: string) => {
@@ -66,7 +66,7 @@ export default function TestDropZone({
 
         <div className="min-h-[60px] flex items-center justify-center">
           {localKpiFields.length === 0 ? (
-            <p className="text-purple-500 text-sm">Nenhum campo - clique em "Adicionar Campo Teste"</p>
+            <p className="text-purple-500 text-sm">Nenhum campo - clique em &ldquo;Adicionar Campo Teste&rdquo;</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {localKpiFields.map((field) => (
