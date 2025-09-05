@@ -91,6 +91,17 @@ export default function UniversalBuilder({
     }
   }
 
+  // Get aggregation function for measure field (same logic as KPIPreview)
+  const getAggregationFunction = (field: BigQueryField): string => {
+    if (field.aggregation) return field.aggregation.toUpperCase()
+    
+    const lowerType = field.type.toLowerCase()
+    if (lowerType.includes('string') || lowerType.includes('text')) {
+      return 'COUNT'
+    }
+    return 'SUM' // Default for numeric fields
+  }
+
   // Handle adding widget to dashboard
   const handleAddToDashboard = () => {
     if (!data.selectedTable) {
@@ -155,7 +166,28 @@ export default function UniversalBuilder({
       if (selectedKPI) {
         // Update existing KPI
         console.log('📊 Updating existing KPI:', selectedKPI.i)
+        
+        // Get data from preview to apply to the real KPI
+        const kpiPreviewData = previewData as KPIData[]
+        const kpiField = data.kpiValue[0]
+        
+        console.log('📊 Applying preview data to existing KPI:', {
+          kpiId: selectedKPI.i,
+          hasPreviewData: kpiPreviewData.length > 0,
+          newValue: kpiPreviewData.length > 0 ? kpiPreviewData[0].current_value : 'no data',
+          newName: kpiField?.name,
+          newCalculation: kpiField ? getAggregationFunction(kpiField) : 'no field'
+        })
+        
         kpiActions.updateKPIConfig(selectedKPI.i, {
+          // Apply visual data from preview
+          name: kpiField?.name || selectedKPI.config.name,
+          value: kpiPreviewData.length > 0 ? kpiPreviewData[0].current_value : selectedKPI.config.value,
+          metric: kpiField?.name,
+          calculation: kpiField ? getAggregationFunction(kpiField) : selectedKPI.config.calculation,
+          unit: getUnitFromFieldType(kpiField?.type),
+          
+          // Keep existing configuration but update data source
           dataSourceType: 'bigquery',
           bigqueryData: {
             selectedTable: data.selectedTable,
