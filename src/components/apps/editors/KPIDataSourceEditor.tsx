@@ -411,41 +411,16 @@ export default function KPIDataSourceEditor({
               </div>
             )}
 
-            {/* DropZones for Field Selection */}
+            {/* Test DropZone para debug/desenvolvimento */}
             {selectedTable && (
-              <div className="space-y-3">
-                {/* KPI Value Drop Zone */}
-                <DropZone
-                  id="kpi-value-drop-zone"
-                  label="Valor KPI"
-                  description="Campo numérico para calcular o KPI (apenas um campo)"
-                  icon={<TrendingUp className="w-4 h-4 text-purple-600" />}
-                  fields={kpiConfig.bigqueryData?.kpiValueFields || []}
-                  acceptedTypes={['numeric']}
-                  onRemoveField={handleRemoveKPIValueField}
-                />
-
-                {/* Filters Drop Zone */}
-                <DropZone
-                  id="filters-drop-zone"
-                  label="Filtros"
-                  description="Campos para filtrar os dados do KPI (opcional)"
-                  icon={<Activity className="w-4 h-4 text-orange-600" />}
-                  fields={kpiConfig.bigqueryData?.filterFields || []}
-                  acceptedTypes={['string', 'date', 'numeric', 'boolean']}
-                  onRemoveField={handleRemoveFilterField}
+              <div className="border-2 border-dashed border-yellow-300 p-4 rounded-lg bg-yellow-50">
+                <div className="text-sm font-medium text-yellow-800 mb-2">🧪 TESTE - DropZone com Estado Local</div>
+                <TestDropZone 
+                  kpiConfig={kpiConfig}
+                  onKPIConfigChange={onKPIConfigChange}
                 />
               </div>
             )}
-
-            {/* Test DropZone para comparação */}
-            <div className="border-2 border-dashed border-yellow-300 p-4 rounded-lg bg-yellow-50">
-              <div className="text-sm font-medium text-yellow-800 mb-2">🧪 TESTE - DropZone com Estado Local</div>
-              <TestDropZone 
-                kpiConfig={kpiConfig}
-                onKPIConfigChange={onKPIConfigChange}
-              />
-            </div>
 
             {/* Collapsible SQL Query Preview */}
             {kpiConfig.bigqueryData?.query && (
