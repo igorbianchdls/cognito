@@ -28,6 +28,15 @@ export default function DropZone({
   onAggregationChange,
   className = ''
 }: DropZoneProps) {
+  // Debug: Log props when component renders
+  console.log('🎯 DropZone render:', { 
+    id, 
+    label,
+    fieldsCount: fields?.length || 0, 
+    fields: fields?.map(f => ({ name: f.name, type: f.type })) || [],
+    hasOnRemoveField: !!onRemoveField,
+    timestamp: Date.now()
+  })
   const { isOver, setNodeRef } = useDroppable({
     id,
   })
@@ -161,8 +170,18 @@ export default function DropZone({
                   
                   {onRemoveField && (
                     <button
-                      onClick={() => onRemoveField(field.name)}
-                      className="hover:bg-white/20 rounded-full p-0.5 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        console.log('🗑️ DropZone X button clicked:', { 
+                          fieldName: field.name, 
+                          dropZoneId: id,
+                          hasOnRemoveField: !!onRemoveField,
+                          timestamp: Date.now()
+                        })
+                        onRemoveField(field.name)
+                        console.log('🗑️ DropZone onRemoveField called successfully')
+                      }}
+                      className="hover:bg-white/20 rounded-full p-0.5 transition-colors cursor-pointer"
                       title="Remove field"
                     >
                       <X className="w-3 h-3" />

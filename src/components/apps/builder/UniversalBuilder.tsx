@@ -72,7 +72,14 @@ export default function UniversalBuilder({
 
   // Handle field removal from drop zones
   const handleRemoveField = (dropZoneType: 'xAxis' | 'yAxis' | 'filters' | 'columns' | 'kpiValue', fieldName: string) => {
+    console.log('🗑️ UniversalBuilder handleRemoveField called:', { 
+      dropZoneType, 
+      fieldName,
+      hasOnRemoveField: !!onRemoveField,
+      timestamp: Date.now()
+    })
     onRemoveField(dropZoneType, fieldName)
+    console.log('🗑️ UniversalBuilder onRemoveField called successfully')
   }
 
   // Handle aggregation change for numeric fields
