@@ -118,7 +118,7 @@ export const barChartActions = {
     }
   },
 
-  selectBarChart: (chartId: string) => {
+  selectBarChart: (chartId: string | null) => {
     $selectedBarChartId.set(chartId)
   },
 
