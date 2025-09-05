@@ -188,7 +188,7 @@ export default function BarChartEditor({
                       onChartConfigChange('styling.style', style.value)
                     }}
                     className={`px-3 py-2 text-xs border rounded-md transition-colors ${
-                      (chartConfig.styling as any)?.style === style.value
+                      (chartConfig.styling as Record<string, unknown>)?.style === style.value
                         ? 'bg-blue-900 border-blue-300 text-blue-300'
                         : 'bg-[#333333] border-gray-700 text-[#888888] hover:bg-gray-700'
                     }`}
@@ -211,7 +211,7 @@ export default function BarChartEditor({
                 <label className="block text-xs font-medium text-gray-600 mb-1">X-Axis Title</label>
                 <input
                   type="text"
-                  value={(chartConfig.styling as any)?.xAxisTitle || ''}
+                  value={(chartConfig.styling as Record<string, unknown>)?.xAxisTitle || ''}
                   onChange={(e) => {
                     console.log('📊 BarChartEditor: X-axis title changed to:', e.target.value)
                     onChartConfigChange('styling.xAxisTitle', e.target.value)
@@ -224,7 +224,7 @@ export default function BarChartEditor({
                 <label className="block text-xs font-medium text-gray-600 mb-1">Y-Axis Title</label>
                 <input
                   type="text"
-                  value={(chartConfig.styling as any)?.yAxisTitle || ''}
+                  value={(chartConfig.styling as Record<string, unknown>)?.yAxisTitle || ''}
                   onChange={(e) => {
                     console.log('📊 BarChartEditor: Y-axis title changed to:', e.target.value)
                     onChartConfigChange('styling.yAxisTitle', e.target.value)
