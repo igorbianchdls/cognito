@@ -205,12 +205,32 @@ export default function WidgetEditorNew() {
     })
     
     if (selectedKPI) {
+      let configUpdate: Record<string, unknown>
+      
+      // Handle nested fields (e.g., 'bigqueryData.kpiValueFields' -> { bigqueryData: { kpiValueFields: value } })
+      if (field.includes('.')) {
+        const [parent, child] = field.split('.')
+        console.log('⚙️ WidgetEditorNew processing nested KPI field:', { parent, child, value })
+        
+        // Get current parent object to merge with new value
+        const currentParent = (selectedKPI.config as Record<string, unknown>)[parent] || {}
+        configUpdate = {
+          [parent]: {
+            ...currentParent,
+            [child]: value
+          }
+        }
+      } else {
+        // Handle flat fields
+        configUpdate = { [field]: value }
+      }
+      
       console.log('⚙️ WidgetEditorNew calling kpiActions.updateKPIConfig:', {
         kpiId: selectedKPI.i,
-        configUpdate: { [field]: value },
+        configUpdate,
         timestamp: Date.now()
       })
-      kpiActions.updateKPIConfig(selectedKPI.i, { [field]: value })
+      kpiActions.updateKPIConfig(selectedKPI.i, configUpdate)
       console.log('⚙️ WidgetEditorNew KPI store update completed for:', selectedKPI.i, field)
     } else {
       console.warn('⚠️ WidgetEditorNew: No KPI selected, cannot update config')

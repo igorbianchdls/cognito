@@ -159,28 +159,46 @@ export default function KPIDataSourceEditor({
 
   // Handle drag and drop
   const handleDragEnd = (event: DragEndEvent) => {
+    console.log('🎯 KPIDataSourceEditor handleDragEnd triggered:', { 
+      activeId: event.active.id,
+      overId: event.over?.id,
+      draggedData: event.active.data.current,
+      timestamp: Date.now()
+    })
+    
     const { active, over } = event
     
-    if (!over) return
+    if (!over) {
+      console.log('🎯 No drop target found')
+      return
+    }
     
     try {
       // Get field data from the dragged element
       const draggedData = active.data.current
       const field = draggedData?.field as BigQueryField
       
+      console.log('🎯 Processing field drop:', {
+        field: field ? { name: field.name, type: field.type } : null,
+        targetZone: over.id,
+        hasField: !!field
+      })
+      
       if (!field) {
-        console.log('No field data found')
+        console.warn('🎯 No field data found in drag event')
         return
       }
       
       if (over.id === 'kpi-value-drop-zone') {
+        console.log('🎯 Adding field to KPI Value zone:', field.name)
         // Add to KPI Value fields (only allow one field for KPI)
         onKPIConfigChange('bigqueryData.kpiValueFields', [field])
-        console.log('Added to KPI Value:', field.name)
+        console.log('🎯 KPI Value field added successfully:', field.name)
         
         // Update query
         updateQuery([field], kpiConfig.bigqueryData?.filterFields || [])
       } else if (over.id === 'filters-drop-zone') {
+        console.log('🎯 Adding field to Filters zone:', field.name)
         // Add to filter fields (avoid duplicates)
         const currentFields = kpiConfig.bigqueryData?.filterFields || []
         const fieldExists = currentFields.some(f => f.name === field.name)
@@ -188,29 +206,37 @@ export default function KPIDataSourceEditor({
         if (!fieldExists) {
           const newFields = [...currentFields, field]
           onKPIConfigChange('bigqueryData.filterFields', newFields)
-          console.log('Added to Filters:', field.name)
+          console.log('🎯 Filter field added successfully:', field.name)
           
           // Update query
           updateQuery(kpiConfig.bigqueryData?.kpiValueFields || [], newFields)
+        } else {
+          console.log('🎯 Field already exists in filters:', field.name)
         }
+      } else {
+        console.log('🎯 Unknown drop zone:', over.id)
       }
     } catch (error) {
-      console.error('Error handling drag and drop:', error)
+      console.error('🎯 Error handling drag and drop:', error)
     }
   }
 
   // Remove field from KPI Value
   const handleRemoveKPIValueField = (fieldName: string) => {
+    console.log('🗑️ KPIDataSourceEditor removing KPI Value field:', fieldName)
     onKPIConfigChange('bigqueryData.kpiValueFields', [])
     updateQuery([], kpiConfig.bigqueryData?.filterFields || [])
+    console.log('🗑️ KPI Value field removed successfully')
   }
 
   // Remove field from Filters
   const handleRemoveFilterField = (fieldName: string) => {
+    console.log('🗑️ KPIDataSourceEditor removing Filter field:', fieldName)
     const currentFields = kpiConfig.bigqueryData?.filterFields || []
     const newFields = currentFields.filter(f => f.name !== fieldName)
     onKPIConfigChange('bigqueryData.filterFields', newFields)
     updateQuery(kpiConfig.bigqueryData?.kpiValueFields || [], newFields)
+    console.log('🗑️ Filter field removed successfully:', { fieldName, remaining: newFields.length })
   }
 
   // Handle data source type toggle
