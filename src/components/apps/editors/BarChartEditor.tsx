@@ -2,6 +2,7 @@
 
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import type { BarChartConfig } from '@/stores/apps/barChartStore'
+import { isBarChart } from '@/types/apps/chartWidgets'
 
 interface BarChartEditorProps {
   selectedWidget: DroppedWidget
@@ -15,7 +16,7 @@ export default function BarChartEditor({
   onChartConfigChange 
 }: BarChartEditorProps) {
   
-  if (!selectedWidget || selectedWidget.type !== 'chart') {
+  if (!selectedWidget || !isBarChart(selectedWidget)) {
     return null
   }
 
