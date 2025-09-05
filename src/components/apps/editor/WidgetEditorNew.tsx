@@ -5,8 +5,6 @@ import { useStore } from '@nanostores/react'
 import { $selectedKPI, kpiActions } from '@/stores/apps/kpiStore'
 import { $selectedTable, tableActions } from '@/stores/apps/tableStore'
 import { $selectedBarChart, barChartActions } from '@/stores/apps/barChartStore'
-import { isKPIWidget } from '@/types/apps/kpiWidgets'
-import { isTableWidget } from '@/types/apps/tableWidgets'
 import type { KPIConfig } from '@/types/apps/kpiWidgets'
 import type { TableConfig } from '@/types/apps/tableWidgets'
 import type { BarChartConfig } from '@/stores/apps/barChartStore'
@@ -158,7 +156,7 @@ export default function WidgetEditorNew() {
         console.log('📊 WidgetEditorNew processing nested field:', { parent, child, value })
         
         // Get current parent object to merge with new value
-        const currentParent = (selectedBarChart as any)[parent] || {}
+        const currentParent = (selectedBarChart as Record<string, unknown>)[parent] || {}
         configUpdate = {
           [parent]: {
             ...currentParent,
