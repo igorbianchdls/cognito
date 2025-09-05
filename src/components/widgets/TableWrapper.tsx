@@ -11,31 +11,27 @@ interface TableWidgetProps {
 }
 
 export default function TableWrapper({ widget }: TableWidgetProps) {
-  // Get table configuration with backward compatibility (same pattern as charts)
-  const tableConfig: TableConfig = widget.config?.tableConfig || {}
+  // Get table configuration - EQUAL to KPI pattern
+  const tableConfig: TableConfig = widget.tableConfig || widget.config?.tableConfig || {}
 
   const [data, setData] = useState<TableData[]>([])
 
-  // Initialize data based on widget config with priority for real BigQuery data
+  // Initialize data - SIMPLE like KPI pattern
   useEffect(() => {
-    // PRIORITY 1: Real BigQuery data from TableConfigEditor (when columns are added)
-    if (tableConfig.data && tableConfig.data.length > 0) {
+    console.log('📋 TableWidget DEBUG:', {
+      hasTableConfigData: !!tableConfig.data,
+      tableConfigDataLength: tableConfig.data?.length,
+      tableConfig: tableConfig
+    })
+
+    // Real BigQuery data from config (like KPI)
+    if (tableConfig.data && Array.isArray(tableConfig.data) && tableConfig.data.length > 0) {
       const configData = tableConfig.data.map((row, index) => ({
         id: row.id || index + 1,
         ...row
       }))
       setData(configData as TableData[])
-      console.log('📋 TableWidget using REAL BigQuery data from config:', configData.length, 'rows')
-    }
-    // PRIORITY 2: BigQuery data from Universal Builder
-    else if (widget.bigqueryData && widget.bigqueryData.data && Array.isArray(widget.bigqueryData.data)) {
-      const bigqueryData = widget.bigqueryData.data as Array<Record<string, unknown>>
-      const tableData = bigqueryData.map((row, index) => ({
-        id: index + 1,
-        ...row
-      }))
-      setData(tableData as TableData[])
-      console.log('📋 TableWidget using BigQuery data from Universal Builder:', tableData.length, 'rows')
+      console.log('📋 TableWidget using REAL BigQuery data:', configData.length, 'rows')
     } 
     // FALLBACK: Default sample data (only when no real data available)
     else {
