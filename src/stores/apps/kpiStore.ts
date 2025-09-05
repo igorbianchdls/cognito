@@ -345,14 +345,28 @@ export const kpiActions = {
     
     const selectFields: string[] = []
     
+    // Helper function to get default aggregation based on field type
+    const getDefaultAggregation = (field: BigQueryField): string => {
+      if (field.aggregation) return field.aggregation.toUpperCase()
+      
+      const lowerType = field.type.toLowerCase()
+      if (lowerType.includes('string') || lowerType.includes('text')) {
+        return 'COUNT'
+      }
+      if (lowerType.includes('int') || lowerType.includes('numeric') || lowerType.includes('float')) {
+        return 'SUM'
+      }
+      return 'COUNT'
+    }
+    
     // Add KPI value fields with aggregation
     kpiValueFields.forEach(field => {
-      if (field.aggregation && field.aggregation !== 'COUNT') {
-        selectFields.push(`${field.aggregation}(${field.name}) as kpi_value`)
-      } else if (field.aggregation === 'COUNT') {
-        selectFields.push(`COUNT(*) as kpi_value`)
+      const aggregation = getDefaultAggregation(field)
+      
+      if (aggregation === 'COUNT') {
+        selectFields.push(`COUNT(${field.name}) as kpi_value`)
       } else {
-        selectFields.push(`${field.name} as kpi_value`)
+        selectFields.push(`${aggregation}(${field.name}) as kpi_value`)
       }
     })
     
