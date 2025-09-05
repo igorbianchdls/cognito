@@ -49,8 +49,8 @@ function DraggableField({ field, sourceTable }: DraggableFieldProps) {
   }
 
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: field.name,
-    data: { field, sourceTable }
+    id: `column-${sourceTable}-${field.name}`,
+    data: { ...field, sourceTable }
   })
 
   const style = transform ? {
@@ -190,52 +190,52 @@ export default function KPIDataSourceEditor({
     }
     
     try {
-      // Get field data from the dragged element
-      const draggedData = active.data.current
-      const field = draggedData?.field as BigQueryField
+      // Get field data from the dragged element (now structured like datasets)
+      const draggedColumn = active.data.current as BigQueryField & { sourceTable: string }
       
       console.log('🎯 Processing field drop:', {
-        field: field ? { name: field.name, type: field.type } : null,
+        field: draggedColumn ? { name: draggedColumn.name, type: draggedColumn.type } : null,
         targetZone: over.id,
-        hasField: !!field
+        sourceTable: draggedColumn?.sourceTable,
+        hasField: !!draggedColumn
       })
       
-      if (!field) {
+      if (!draggedColumn) {
         console.warn('🎯 No field data found in drag event')
         return
       }
       
       if (over.id === 'kpi-value-drop-zone') {
-        console.log('🎯 Adding field to KPI Value zone:', field.name)
+        console.log('🎯 Adding field to KPI Value zone:', draggedColumn.name)
         // Add to KPI Value fields (only allow one field for KPI)
-        onKPIConfigChange('bigqueryData.kpiValueFields', [field])
-        console.log('🎯 KPI Value field added successfully:', field.name)
+        onKPIConfigChange('bigqueryData.kpiValueFields', [draggedColumn])
+        console.log('🎯 KPI Value field added successfully:', draggedColumn.name)
         
         // Update query
-        updateQuery([field], kpiConfig.bigqueryData?.filterFields || [])
+        updateQuery([draggedColumn], kpiConfig.bigqueryData?.filterFields || [])
       } else if (over.id === 'test-kpi-value-drop-zone') {
-        console.log('🧪 Adding field to TEST KPI Value zone:', field.name)
+        console.log('🧪 Adding field to TEST KPI Value zone:', draggedColumn.name)
         // Add to KPI Value fields (only allow one field for KPI)
-        onKPIConfigChange('bigqueryData.kpiValueFields', [field])
-        console.log('🧪 TEST KPI Value field added successfully:', field.name)
+        onKPIConfigChange('bigqueryData.kpiValueFields', [draggedColumn])
+        console.log('🧪 TEST KPI Value field added successfully:', draggedColumn.name)
         
         // Update query
-        updateQuery([field], kpiConfig.bigqueryData?.filterFields || [])
+        updateQuery([draggedColumn], kpiConfig.bigqueryData?.filterFields || [])
       } else if (over.id === 'filters-drop-zone') {
-        console.log('🎯 Adding field to Filters zone:', field.name)
+        console.log('🎯 Adding field to Filters zone:', draggedColumn.name)
         // Add to filter fields (avoid duplicates)
         const currentFields = kpiConfig.bigqueryData?.filterFields || []
-        const fieldExists = currentFields.some(f => f.name === field.name)
+        const fieldExists = currentFields.some(f => f.name === draggedColumn.name)
         
         if (!fieldExists) {
-          const newFields = [...currentFields, field]
+          const newFields = [...currentFields, draggedColumn]
           onKPIConfigChange('bigqueryData.filterFields', newFields)
-          console.log('🎯 Filter field added successfully:', field.name)
+          console.log('🎯 Filter field added successfully:', draggedColumn.name)
           
           // Update query
           updateQuery(kpiConfig.bigqueryData?.kpiValueFields || [], newFields)
         } else {
-          console.log('🎯 Field already exists in filters:', field.name)
+          console.log('🎯 Field already exists in filters:', draggedColumn.name)
         }
       } else {
         console.log('🎯 Unknown drop zone:', over.id)
