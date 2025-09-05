@@ -4,7 +4,6 @@ import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import { isKPIWidget } from '@/types/apps/kpiWidgets'
 import type { KPIConfig } from '@/types/apps/kpiWidgets'
 import { Slider } from '@/components/ui/slider'
-import KPIDataSourceEditor from './KPIDataSourceEditor'
 
 interface KPIConfigEditorProps {
   selectedWidget: DroppedWidget
@@ -27,16 +26,6 @@ export default function KPIConfigEditor({
       <h4 className="text-sm font-medium text-gray-700 mb-4">📊 KPI Configuration</h4>
       
       <div className="space-y-6">
-        {/* Data Source */}
-        <div>
-          <h5 className="text-sm font-medium text-gray-700 mb-3">📊 Data Source</h5>
-          <KPIDataSourceEditor 
-            selectedWidget={selectedWidget}
-            kpiConfig={kpiConfig}
-            onKPIConfigChange={onKPIConfigChange}
-          />
-        </div>
-
         {/* Data & Values */}
         <div>
           <h5 className="text-sm font-medium text-gray-700 mb-3">📈 Data & Values</h5>
