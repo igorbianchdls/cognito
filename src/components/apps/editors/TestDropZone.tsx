@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useDroppable } from '@dnd-kit/core'
 import type { BigQueryField } from '../builder/TablesExplorer'
 import type { KPIConfig } from '@/types/apps/kpiWidgets'
 
@@ -15,6 +16,11 @@ export default function TestDropZone({
 }: TestDropZoneProps) {
   // Estado local igual ao que funciona no datasets
   const [localKpiFields, setLocalKpiFields] = useState<BigQueryField[]>([])
+
+  // Hook para drag & drop
+  const { isOver, setNodeRef } = useDroppable({
+    id: 'test-kpi-value-drop-zone'
+  })
 
   // Sincronizar com kpiConfig inicial
   useEffect(() => {
@@ -31,13 +37,27 @@ export default function TestDropZone({
     setLocalKpiFields(prev => {
       const newFields = prev.filter(f => f.name !== fieldName)
       console.log('🧪 TestDropZone local state updated:', newFields.length)
+      
+      // Também atualizar o store global com os campos restantes
+      onKPIConfigChange('bigqueryData.kpiValueFields', newFields)
+      
       return newFields
     })
     
-    // Também atualizar o store global
-    onKPIConfigChange('bigqueryData.kpiValueFields', [])
-    
     console.log('🧪 TestDropZone remove completed')
+  }
+
+  // Handler para adicionar campo quando arrastado
+  const handleAddField = (field: BigQueryField) => {
+    console.log('🧪 TestDropZone adding dragged field:', field.name)
+    
+    // Para KPI Value, só permitir um campo (como no original)
+    const newFields = [field]
+    setLocalKpiFields(newFields)
+    
+    // Atualizar estado global também
+    onKPIConfigChange('bigqueryData.kpiValueFields', newFields)
+    console.log('🧪 TestDropZone field added via drag & drop:', field.name)
   }
 
   // Handler para adicionar campo (para teste)
@@ -49,13 +69,20 @@ export default function TestDropZone({
     }
     
     console.log('🧪 TestDropZone adding test field:', testField.name)
-    setLocalKpiFields(prev => [...prev, testField])
+    handleAddField(testField)
   }
 
   return (
     <div className="space-y-3">
       {/* Custom DropZone HTML - NÃO usa o componente DropZone bugado */}
-      <div className="border-2 border-dashed border-purple-300 p-4 rounded-lg bg-purple-50">
+      <div 
+        ref={setNodeRef}
+        className={`border-2 border-dashed p-4 rounded-lg transition-colors ${
+          isOver 
+            ? 'border-purple-500 bg-purple-100' 
+            : 'border-purple-300 bg-purple-50'
+        }`}
+      >
         <div className="mb-2">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-purple-600">🎯</span>

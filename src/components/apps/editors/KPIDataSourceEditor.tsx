@@ -213,6 +213,14 @@ export default function KPIDataSourceEditor({
         
         // Update query
         updateQuery([field], kpiConfig.bigqueryData?.filterFields || [])
+      } else if (over.id === 'test-kpi-value-drop-zone') {
+        console.log('🧪 Adding field to TEST KPI Value zone:', field.name)
+        // Add to KPI Value fields (only allow one field for KPI)
+        onKPIConfigChange('bigqueryData.kpiValueFields', [field])
+        console.log('🧪 TEST KPI Value field added successfully:', field.name)
+        
+        // Update query
+        updateQuery([field], kpiConfig.bigqueryData?.filterFields || [])
       } else if (over.id === 'filters-drop-zone') {
         console.log('🎯 Adding field to Filters zone:', field.name)
         // Add to filter fields (avoid duplicates)
