@@ -4,22 +4,26 @@ import { useMemo } from 'react'
 import { useStore } from '@nanostores/react'
 import { $selectedKPI, kpiActions } from '@/stores/apps/kpiStore'
 import { $selectedTable, tableActions } from '@/stores/apps/tableStore'
+import { $selectedBarChart, barChartActions } from '@/stores/apps/barChartStore'
 import { isKPIWidget } from '@/types/apps/kpiWidgets'
 import { isTableWidget } from '@/types/apps/tableWidgets'
 import type { KPIConfig } from '@/types/apps/kpiWidgets'
 import type { TableConfig } from '@/types/apps/tableWidgets'
+import type { BarChartConfig } from '@/stores/apps/barChartStore'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import KPIConfigEditor from '../editors/KPIConfigEditor'
 import TableConfigEditor from '../editors/TableConfigEditor'
+import BarChartEditor from '../editors/BarChartEditor'
 
 export default function WidgetEditorNew() {
   // Get selected widgets from stores
   const selectedKPI = useStore($selectedKPI)
   const selectedTable = useStore($selectedTable)
+  const selectedBarChart = useStore($selectedBarChart)
   
   // Determine which widget is currently selected
-  const selectedWidget = selectedKPI || selectedTable
-  const widgetType = selectedKPI ? 'kpi' : selectedTable ? 'table' : null
+  const selectedWidget = selectedKPI || selectedTable || selectedBarChart
+  const widgetType = selectedKPI ? 'kpi' : selectedTable ? 'table' : selectedBarChart ? 'chart' : null
 
   // Adapt Widget to DroppedWidget format  
   const adaptedWidget = useMemo((): DroppedWidget | null => {
@@ -45,8 +49,19 @@ export default function WidgetEditorNew() {
       } as DroppedWidget
     }
     
+    if (selectedBarChart) {
+      return {
+        ...selectedBarChart,
+        type: 'chart' as const,
+        barChartConfig: selectedBarChart,
+        config: {
+          barChartConfig: selectedBarChart
+        }
+      } as DroppedWidget
+    }
+    
     return null
-  }, [selectedKPI, selectedTable])
+  }, [selectedKPI, selectedTable, selectedBarChart])
 
   // Computed configs for each widget type
   const kpiConfig = useMemo((): KPIConfig => {
@@ -64,6 +79,14 @@ export default function WidgetEditorNew() {
     console.log('📋 WidgetEditorNew computed tableConfig:', config)
     return config
   }, [selectedTable])
+
+  const chartConfig = useMemo((): BarChartConfig => {
+    if (!selectedBarChart) return {} as BarChartConfig
+    
+    const config = selectedBarChart
+    console.log('📊 WidgetEditorNew computed chartConfig:', config)
+    return config
+  }, [selectedBarChart])
 
   // Config Handlers for each widget type
   const handleKPIConfigChange = (field: string, value: unknown) => {
@@ -108,12 +131,33 @@ export default function WidgetEditorNew() {
     }
   }
 
+  const handleChartConfigChange = (field: string, value: unknown) => {
+    console.log('📊 WidgetEditorNew handleChartConfigChange:', { 
+      field, 
+      value, 
+      selectedBarChartId: selectedBarChart?.id,
+      timestamp: Date.now()
+    })
+    
+    if (selectedBarChart) {
+      console.log('📊 WidgetEditorNew calling barChartActions.updateBarChart:', {
+        chartId: selectedBarChart.id,
+        configUpdate: { [field]: value },
+        timestamp: Date.now()
+      })
+      barChartActions.updateBarChart(selectedBarChart.id, { [field]: value })
+      console.log('📊 WidgetEditorNew Chart store update completed for:', selectedBarChart.id, field)
+    } else {
+      console.warn('⚠️ WidgetEditorNew: No Chart selected, cannot update config')
+    }
+  }
+
   // Early return if no widget selected
   if (!selectedWidget || !adaptedWidget) {
     return (
       <div className="text-center py-8 text-gray-500">
         <p>Selecione um widget para editar suas configurações</p>
-        <p className="text-xs text-gray-400 mt-2">KPI ou Table</p>
+        <p className="text-xs text-gray-400 mt-2">KPI, Table ou Chart</p>
       </div>
     )
   }
@@ -152,6 +196,24 @@ export default function WidgetEditorNew() {
                 selectedWidget={adaptedWidget}
                 tableConfig={tableConfig}
                 onTableConfigChange={handleTableConfigChange}
+              />
+            </div>
+          </div>
+        )
+      
+      case 'chart':
+        return (
+          <div>
+            <h2 className="text-lg font-semibold mb-2">📊 Configurações do Gráfico de Barras</h2>
+            <p className="text-sm text-gray-600">
+              Chart: {selectedBarChart!.name} (ID: {selectedBarChart!.id})
+            </p>
+            <div className="mt-4">
+              <h3 className="text-md font-medium mb-3">Editor de Configuração</h3>
+              <BarChartEditor
+                selectedWidget={adaptedWidget}
+                chartConfig={chartConfig}
+                onChartConfigChange={handleChartConfigChange}
               />
             </div>
           </div>

@@ -51,6 +51,15 @@ const initialBarChartState: BarChartStore = {
 
 export const $barChartStore = atom<BarChartStore>(initialBarChartState)
 
+// Selection management for bar charts
+export const $selectedBarChartId = atom<string | null>(null)
+
+// Computed store for selected bar chart
+export const $selectedBarChart = computed([$barChartStore, $selectedBarChartId], (store, selectedId) => {
+  if (!selectedId) return null
+  return store.barCharts.find(chart => chart.id === selectedId) || null
+})
+
 // Computed store that converts BarChartConfig to DroppedWidget format
 export const $barChartsAsDropped = computed([$barChartStore], (store) => {
   return store.barCharts.map(barChart => ({
@@ -102,6 +111,15 @@ export const barChartActions = {
       ...currentState,
       barCharts: currentState.barCharts.filter(chart => chart.id !== chartId)
     })
+    
+    // Clear selection if the removed chart was selected
+    if ($selectedBarChartId.get() === chartId) {
+      $selectedBarChartId.set(null)
+    }
+  },
+
+  selectBarChart: (chartId: string) => {
+    $selectedBarChartId.set(chartId)
   },
 
   updateBigQueryData: (chartId: string, bigqueryData: Partial<BarChartBigQueryData>) => {
