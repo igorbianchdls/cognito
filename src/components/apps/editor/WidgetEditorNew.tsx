@@ -150,12 +150,32 @@ export default function WidgetEditorNew() {
     })
     
     if (selectedBarChart) {
+      let configUpdate: Partial<BarChartConfig>
+      
+      // Handle nested fields (e.g., 'styling.title' -> { styling: { title: value } })
+      if (field.includes('.')) {
+        const [parent, child] = field.split('.')
+        console.log('📊 WidgetEditorNew processing nested field:', { parent, child, value })
+        
+        // Get current parent object to merge with new value
+        const currentParent = (selectedBarChart as any)[parent] || {}
+        configUpdate = {
+          [parent]: {
+            ...currentParent,
+            [child]: value
+          }
+        } as Partial<BarChartConfig>
+      } else {
+        // Handle flat fields
+        configUpdate = { [field]: value } as Partial<BarChartConfig>
+      }
+      
       console.log('📊 WidgetEditorNew calling barChartActions.updateBarChart:', {
         chartId: selectedBarChart.id,
-        configUpdate: { [field]: value },
+        configUpdate,
         timestamp: Date.now()
       })
-      barChartActions.updateBarChart(selectedBarChart.id, { [field]: value })
+      barChartActions.updateBarChart(selectedBarChart.id, configUpdate)
       console.log('📊 WidgetEditorNew Chart store update completed for:', selectedBarChart.id, field)
     } else {
       console.warn('⚠️ WidgetEditorNew: No Chart selected, cannot update config')
