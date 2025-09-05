@@ -67,7 +67,7 @@ export const authors: Author[] = [
 export const mockApps: AppData[] = [
   {
     id: '1',
-    title: 'Cyberpunk Dashboard Design',
+    title: 'Cyberpunk a Dashboard Design',
     description: 'A futuristic dashboard with dark theme and neon accents, featuring real-time data visualization and interactive charts.',
     category: 'Dashboards',
     tags: ['dashboard', 'dark-theme', 'charts', 'cyberpunk', 'analytics'],
