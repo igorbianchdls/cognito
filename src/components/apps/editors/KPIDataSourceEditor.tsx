@@ -462,4 +462,5 @@ export default function KPIDataSourceEditor({
         )}
       </div>
     </DndContext>
+  )
 }
