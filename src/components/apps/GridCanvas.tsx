@@ -6,6 +6,7 @@ import { useDroppable } from '@dnd-kit/core'
 import { Responsive, WidthProvider } from 'react-grid-layout'
 import DroppedWidget from './DroppedWidget'
 import { $selectedKPI, kpiActions } from '@/stores/apps/kpiStore'
+import { $selectedTable, tableActions } from '@/stores/apps/tableStore'
 import { $canvasConfig } from '@/stores/apps/canvasStore' // Canvas customization store
 import { WebPreview, WebPreviewNavigation, WebPreviewUrl, WebPreviewNavigationButton } from '@/components/ai-elements/web-preview'
 import { savedDashboardActions } from '@/stores/apps/savedDashboardStore'
@@ -33,6 +34,7 @@ export default function GridCanvas({
   noBorder = false
 }: GridCanvasProps) {
   const selectedKPI = useStore($selectedKPI)
+  const selectedTable = useStore($selectedTable)
   const canvasConfig = useStore($canvasConfig)
   const { setNodeRef, isOver } = useDroppable({
     id: 'canvas-droppable'
@@ -51,11 +53,17 @@ export default function GridCanvas({
     const widget = widgets.find(w => w.i === widgetId)
     
     if (widget?.type === 'kpi') {
-      // Use kpiStore for KPI selection
+      // Clear table selection and select KPI
       console.log('🎯 Selecting KPI:', widgetId)
+      tableActions.selectTable(null)
       kpiActions.selectKPI(widgetId)
+    } else if (widget?.type === 'table') {
+      // Clear KPI selection and select table
+      console.log('📋 Selecting Table:', widgetId)
+      kpiActions.selectKPI(null)
+      tableActions.selectTable(widgetId)
     }
-    // Note: Only KPIs are supported now, other widget types removed
+    // Support for KPIs and Tables - unified selection
   }
 
   // Navigation button handlers

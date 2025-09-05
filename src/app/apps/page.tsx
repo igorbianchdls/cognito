@@ -24,7 +24,7 @@ import GridCanvas from '@/components/apps/GridCanvas'
 // import { $pieChartsAsDropped } from '@/stores/apps/pieChartStore'
 // import { $areaChartsAsDropped } from '@/stores/apps/areaChartStore'
 import { $kpisAsDropped, kpiActions } from '@/stores/apps/kpiStore'
-// import { $tablesAsDropped } from '@/stores/apps/tableStore'
+import { $tablesAsDropped } from '@/stores/apps/tableStore'
 // import { $activeTab, multiCanvasActions } from '@/stores/apps/multiCanvasStore' // REMOVED: Simplified to single canvas
 // import { isNavigationWidget } from '@/types/apps/droppedWidget' // REMOVED: No navigation widgets in KPI-only mode
 import type { Widget, LayoutItem, DroppedWidget } from '@/types/apps/droppedWidget'
@@ -39,12 +39,13 @@ export default function AppsPage() {
   // const pieCharts = useStore($pieChartsAsDropped)
   // const areaCharts = useStore($areaChartsAsDropped)
   const kpis = useStore($kpisAsDropped)
-  // const tables = useStore($tablesAsDropped)
+  const tables = useStore($tablesAsDropped)
   
-  // Only KPIs supported now - no more combining from multiple stores
+  // KPIs and Tables supported - combine from both stores
   const allWidgets = useMemo(() => {
     const combined = [
-      ...kpis
+      ...kpis,
+      ...tables
     ]
     
     // Diagnóstico: Verificar duplicatas
@@ -59,11 +60,15 @@ export default function AppsPage() {
         kpiIds: kpis.map(k => k.i)
       })
     } else {
-      console.log('✅ All widget IDs are unique:', { total: ids.length, kpisCount: kpis.length })
+      console.log('✅ All widget IDs are unique:', { 
+        total: ids.length, 
+        kpisCount: kpis.length,
+        tablesCount: tables.length 
+      })
     }
     
     return combined
-  }, [kpis])
+  }, [kpis, tables])
   const [activeWidget, setActiveWidget] = useState<Widget | null>(null)
   const [activeTab, setActiveTab] = useState<'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved' | 'datasets'>('chat')
 
