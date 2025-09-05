@@ -5,23 +5,27 @@ import { useStore } from '@nanostores/react'
 import { $selectedKPI, kpiActions } from '@/stores/apps/kpiStore'
 import { $selectedTable, tableActions } from '@/stores/apps/tableStore'
 import { $selectedBarChart, barChartActions } from '@/stores/apps/barChartStore'
+import { $selectedLineChart, lineChartActions } from '@/stores/apps/lineChartStore'
 import type { KPIConfig } from '@/types/apps/kpiWidgets'
 import type { TableConfig } from '@/types/apps/tableWidgets'
 import type { BarChartConfig } from '@/stores/apps/barChartStore'
+import type { LineChartConfig } from '@/stores/apps/lineChartStore'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import KPIConfigEditor from '../editors/KPIConfigEditor'
 import TableConfigEditor from '../editors/TableConfigEditor'
 import BarChartEditor from '../editors/BarChartEditor'
+import LineChartEditor from '../editors/LineChartEditor'
 
 export default function WidgetEditorNew() {
   // Get selected widgets from stores
   const selectedKPI = useStore($selectedKPI)
   const selectedTable = useStore($selectedTable)
   const selectedBarChart = useStore($selectedBarChart)
+  const selectedLineChart = useStore($selectedLineChart)
   
   // Determine which widget is currently selected
-  const selectedWidget = selectedKPI || selectedTable || selectedBarChart
-  const widgetType = selectedKPI ? 'kpi' : selectedTable ? 'table' : selectedBarChart ? 'chart-bar' : null
+  const selectedWidget = selectedKPI || selectedTable || selectedBarChart || selectedLineChart
+  const widgetType = selectedKPI ? 'kpi' : selectedTable ? 'table' : selectedBarChart ? 'chart-bar' : selectedLineChart ? 'chart-line' : null
 
   // Adapt Widget to DroppedWidget format  
   const adaptedWidget = useMemo((): DroppedWidget | null => {
@@ -68,8 +72,29 @@ export default function WidgetEditorNew() {
       } as DroppedWidget
     }
     
+    if (selectedLineChart) {
+      return {
+        i: selectedLineChart.id,
+        id: selectedLineChart.id,
+        type: 'chart-line' as const,
+        name: selectedLineChart.name,
+        icon: '📈',
+        description: `Line chart from ${selectedLineChart.bigqueryData.selectedTable}`,
+        defaultWidth: 4,
+        defaultHeight: 3,
+        x: selectedLineChart.position.x,
+        y: selectedLineChart.position.y,
+        w: selectedLineChart.position.w,
+        h: selectedLineChart.position.h,
+        lineChartConfig: selectedLineChart,
+        config: {
+          lineChartConfig: selectedLineChart
+        }
+      } as DroppedWidget
+    }
+    
     return null
-  }, [selectedKPI, selectedTable, selectedBarChart])
+  }, [selectedKPI, selectedTable, selectedBarChart, selectedLineChart])
 
   // Computed configs for each widget type
   const kpiConfig = useMemo((): KPIConfig => {
@@ -95,6 +120,14 @@ export default function WidgetEditorNew() {
     console.log('📊 WidgetEditorNew computed chartConfig:', config)
     return config
   }, [selectedBarChart])
+
+  const lineChartConfig = useMemo((): LineChartConfig => {
+    if (!selectedLineChart) return {} as LineChartConfig
+    
+    const config = selectedLineChart
+    console.log('📈 WidgetEditorNew computed lineChartConfig:', config)
+    return config
+  }, [selectedLineChart])
 
   // Config Handlers for each widget type
   const handleKPIConfigChange = (field: string, value: unknown) => {
@@ -180,6 +213,47 @@ export default function WidgetEditorNew() {
     }
   }
 
+  const handleLineChartConfigChange = (field: string, value: unknown) => {
+    console.log('📈 WidgetEditorNew handleLineChartConfigChange:', { 
+      field, 
+      value, 
+      selectedLineChartId: selectedLineChart?.id,
+      timestamp: Date.now()
+    })
+    
+    if (selectedLineChart) {
+      let configUpdate: Partial<LineChartConfig>
+      
+      // Handle nested fields (e.g., 'styling.title' -> { styling: { title: value } })
+      if (field.includes('.')) {
+        const [parent, child] = field.split('.')
+        console.log('📈 WidgetEditorNew processing nested field:', { parent, child, value })
+        
+        // Get current parent object to merge with new value
+        const currentParent = (selectedLineChart as unknown as Record<string, unknown>)[parent] || {}
+        configUpdate = {
+          [parent]: {
+            ...currentParent,
+            [child]: value
+          }
+        } as Partial<LineChartConfig>
+      } else {
+        // Handle flat fields
+        configUpdate = { [field]: value } as Partial<LineChartConfig>
+      }
+      
+      console.log('📈 WidgetEditorNew calling lineChartActions.updateLineChart:', {
+        chartId: selectedLineChart.id,
+        configUpdate,
+        timestamp: Date.now()
+      })
+      lineChartActions.updateLineChart(selectedLineChart.id, configUpdate)
+      console.log('📈 WidgetEditorNew LineChart store update completed for:', selectedLineChart.id, field)
+    } else {
+      console.warn('⚠️ WidgetEditorNew: No LineChart selected, cannot update config')
+    }
+  }
+
   // Early return if no widget selected
   if (!selectedWidget || !adaptedWidget) {
     return (
@@ -242,6 +316,24 @@ export default function WidgetEditorNew() {
                 selectedWidget={adaptedWidget}
                 chartConfig={chartConfig}
                 onChartConfigChange={handleChartConfigChange}
+              />
+            </div>
+          </div>
+        )
+      
+      case 'chart-line':
+        return (
+          <div>
+            <h2 className="text-lg font-semibold mb-2">📈 Configurações do Gráfico de Linhas</h2>
+            <p className="text-sm text-gray-600">
+              LineChart: {selectedLineChart!.name} (ID: {selectedLineChart!.id})
+            </p>
+            <div className="mt-4">
+              <h3 className="text-md font-medium mb-3">Editor de Configuração</h3>
+              <LineChartEditor
+                selectedWidget={adaptedWidget}
+                chartConfig={lineChartConfig}
+                onChartConfigChange={handleLineChartConfigChange}
               />
             </div>
           </div>

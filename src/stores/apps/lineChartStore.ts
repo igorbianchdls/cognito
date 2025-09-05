@@ -32,6 +32,9 @@ export interface LineChartConfig {
     showLegend: boolean
     showGrid: boolean
     title?: string
+    style?: string
+    xAxisTitle?: string
+    yAxisTitle?: string
   }
   position: {
     x: number
@@ -50,6 +53,15 @@ const initialLineChartState: LineChartStore = {
 }
 
 export const $lineChartStore = atom<LineChartStore>(initialLineChartState)
+
+// Selection management for line charts
+export const $selectedLineChartId = atom<string | null>(null)
+
+// Computed store for selected line chart
+export const $selectedLineChart = computed([$lineChartStore, $selectedLineChartId], (store, selectedId) => {
+  if (!selectedId) return null
+  return store.lineCharts.find(chart => chart.id === selectedId) || null
+})
 
 // Computed store that converts LineChartConfig to DroppedWidget format
 export const $lineChartsAsDropped = computed([$lineChartStore], (store) => {
@@ -102,6 +114,15 @@ export const lineChartActions = {
       ...currentState,
       lineCharts: currentState.lineCharts.filter(chart => chart.id !== chartId)
     })
+    
+    // Clear selection if the removed chart was selected
+    if ($selectedLineChartId.get() === chartId) {
+      $selectedLineChartId.set(null)
+    }
+  },
+
+  selectLineChart: (chartId: string | null) => {
+    $selectedLineChartId.set(chartId)
   },
 
   updateBigQueryData: (chartId: string, bigqueryData: Partial<LineChartBigQueryData>) => {

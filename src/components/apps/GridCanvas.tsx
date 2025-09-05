@@ -8,6 +8,7 @@ import DroppedWidget from './DroppedWidget'
 import { $selectedKPI, kpiActions } from '@/stores/apps/kpiStore'
 import { $selectedTable, tableActions } from '@/stores/apps/tableStore'
 import { $selectedBarChart, barChartActions } from '@/stores/apps/barChartStore'
+import { $selectedLineChart, lineChartActions } from '@/stores/apps/lineChartStore'
 import { $canvasConfig } from '@/stores/apps/canvasStore' // Canvas customization store
 import { WebPreview, WebPreviewNavigation, WebPreviewUrl, WebPreviewNavigationButton } from '@/components/ai-elements/web-preview'
 import { savedDashboardActions } from '@/stores/apps/savedDashboardStore'
@@ -37,6 +38,7 @@ export default function GridCanvas({
   const selectedKPI = useStore($selectedKPI)
   const selectedTable = useStore($selectedTable)
   const selectedBarChart = useStore($selectedBarChart)
+  const selectedLineChart = useStore($selectedLineChart)
   const canvasConfig = useStore($canvasConfig)
   const { setNodeRef, isOver } = useDroppable({
     id: 'canvas-droppable'
@@ -59,19 +61,29 @@ export default function GridCanvas({
       console.log('🎯 Selecting KPI:', widgetId)
       tableActions.selectTable(null)
       barChartActions.selectBarChart(null)
+      lineChartActions.selectLineChart(null)
       kpiActions.selectKPI(widgetId)
     } else if (widget?.type === 'table') {
       // Clear other selections and select table
       console.log('📋 Selecting Table:', widgetId)
       kpiActions.selectKPI(null)
       barChartActions.selectBarChart(null)
+      lineChartActions.selectLineChart(null)
       tableActions.selectTable(widgetId)
     } else if (widget?.type === 'chart-bar') {
       // Clear other selections and select bar chart
       console.log('📊 Selecting BarChart:', widgetId)
       kpiActions.selectKPI(null)
       tableActions.selectTable(null)
+      lineChartActions.selectLineChart(null)
       barChartActions.selectBarChart(widgetId)
+    } else if (widget?.type === 'chart-line') {
+      // Clear other selections and select line chart
+      console.log('📈 Selecting LineChart:', widgetId)
+      kpiActions.selectKPI(null)
+      tableActions.selectTable(null)
+      barChartActions.selectBarChart(null)
+      lineChartActions.selectLineChart(widgetId)
     }
     // Support for KPIs, Tables, and Charts - unified selection
   }
@@ -319,7 +331,8 @@ export default function GridCanvas({
                 className={`cursor-pointer transition-all ${
                   (widget.type === 'kpi' && selectedKPI?.i === widget.i) ||
                   (widget.type === 'table' && selectedTable?.i === widget.i) ||
-                  (widget.type === 'chart-bar' && selectedBarChart?.id === widget.i)
+                  (widget.type === 'chart-bar' && selectedBarChart?.id === widget.i) ||
+                  (widget.type === 'chart-line' && selectedLineChart?.id === widget.i)
                     ? 'ring-2 ring-blue-500 ring-opacity-50' 
                     : ''
                 }`}
@@ -331,7 +344,8 @@ export default function GridCanvas({
                   isSelected={
                     (widget.type === 'kpi' && selectedKPI?.i === widget.i) ||
                     (widget.type === 'table' && selectedTable?.i === widget.i) ||
-                    (widget.type === 'chart-bar' && selectedBarChart?.id === widget.i)
+                    (widget.type === 'chart-bar' && selectedBarChart?.id === widget.i) ||
+                    (widget.type === 'chart-line' && selectedLineChart?.id === widget.i)
                   }
                 />
               </div>
