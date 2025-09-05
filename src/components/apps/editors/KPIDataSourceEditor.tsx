@@ -8,6 +8,7 @@ import { RefreshCw, Database, Play, TrendingUp, Activity, AlertCircle } from 'lu
 import { DndContext, DragEndEvent, useDraggable } from '@dnd-kit/core'
 import { kpiActions } from '@/stores/apps/kpiStore'
 import DropZone from '@/components/apps/builder/DropZone'
+import TestDropZone from './TestDropZone'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import type { KPIConfig, BigQueryField } from '@/types/apps/kpiWidgets'
 
@@ -428,6 +429,15 @@ export default function KPIDataSourceEditor({
                 />
               </div>
             )}
+
+            {/* Test DropZone para comparação */}
+            <div className="border-2 border-dashed border-yellow-300 p-4 rounded-lg bg-yellow-50">
+              <div className="text-sm font-medium text-yellow-800 mb-2">🧪 TESTE - DropZone com Estado Local</div>
+              <TestDropZone 
+                kpiConfig={kpiConfig}
+                onKPIConfigChange={onKPIConfigChange}
+              />
+            </div>
 
             {/* Collapsible SQL Query Preview */}
             {kpiConfig.bigqueryData?.query && (
