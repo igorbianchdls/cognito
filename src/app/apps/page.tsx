@@ -17,10 +17,10 @@ import {
 import SplitSidebarPanel from '@/components/apps/builder/SplitSidebarPanel'
 import GridCanvas from '@/components/apps/GridCanvas'
 // import MultiGridCanvas from '@/components/apps/MultiGridCanvas' // REMOVED: Simplified to single canvas
-// REMOVED: Only KPIs supported now
-// import { $widgets, widgetActions } from '@/stores/apps/widgetStore'
-// import { $barChartsAsDropped } from '@/stores/apps/barChartStore'
-// import { $lineChartsAsDropped } from '@/stores/apps/lineChartStore'
+// Chart stores - needed for charts to appear in canvas
+import { $barChartsAsDropped } from '@/stores/apps/barChartStore'
+import { $lineChartsAsDropped } from '@/stores/apps/lineChartStore'
+// TODO: Add these when needed
 // import { $pieChartsAsDropped } from '@/stores/apps/pieChartStore'
 // import { $areaChartsAsDropped } from '@/stores/apps/areaChartStore'
 import { $kpisAsDropped, kpiActions } from '@/stores/apps/kpiStore'
@@ -32,20 +32,22 @@ import { Button } from '@/components/ui/button'
 import { Settings, Share, Github, BarChart3, MessageSquare, Code, Cpu, Archive, Database } from 'lucide-react'
 
 export default function AppsPage() {
-  // REMOVED: Only KPIs supported now
-  // const droppedWidgets = useStore($widgets)
-  // const barCharts = useStore($barChartsAsDropped)
-  // const lineCharts = useStore($lineChartsAsDropped)
-  // const pieCharts = useStore($pieChartsAsDropped)
-  // const areaCharts = useStore($areaChartsAsDropped)
+  // Widget stores - KPIs, Tables, and Charts
   const kpis = useStore($kpisAsDropped)
   const tables = useStore($tablesAsDropped)
+  const barCharts = useStore($barChartsAsDropped)
+  const lineCharts = useStore($lineChartsAsDropped)
+  // TODO: Add when needed
+  // const pieCharts = useStore($pieChartsAsDropped)
+  // const areaCharts = useStore($areaChartsAsDropped)
   
-  // KPIs and Tables supported - combine from both stores
+  // KPIs, Tables, and Charts supported - combine from all stores
   const allWidgets = useMemo(() => {
     const combined = [
       ...kpis,
-      ...tables
+      ...tables,
+      ...barCharts,
+      ...lineCharts
     ]
     
     // Diagnóstico: Verificar duplicatas
@@ -63,12 +65,14 @@ export default function AppsPage() {
       console.log('✅ All widget IDs are unique:', { 
         total: ids.length, 
         kpisCount: kpis.length,
-        tablesCount: tables.length 
+        tablesCount: tables.length,
+        barChartsCount: barCharts.length,
+        lineChartsCount: lineCharts.length
       })
     }
     
     return combined
-  }, [kpis, tables])
+  }, [kpis, tables, barCharts, lineCharts])
   const [activeWidget, setActiveWidget] = useState<Widget | null>(null)
   const [activeTab, setActiveTab] = useState<'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved' | 'datasets'>('chat')
 
