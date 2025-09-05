@@ -235,33 +235,6 @@ export default function BarChartEditor({
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Data Source</label>
-              <input
-                type="text"
-                value="BigQuery"
-                disabled
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm bg-gray-50 text-gray-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Fields Info</label>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">X-Axis Fields</label>
-                  <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded border">
-                    {chartConfig.bigqueryData?.columns?.xAxis?.map(field => field.name).join(', ') || 'No fields'}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Y-Axis Fields</label>
-                  <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded border">
-                    {chartConfig.bigqueryData?.columns?.yAxis?.map(field => `${field.name} (${field.aggregation || 'SUM'})`).join(', ') || 'No fields'}
-                  </div>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
