@@ -32,7 +32,14 @@ export interface AreaChartConfig {
     showLegend: boolean
     showGrid: boolean
     title?: string
+    style?: string
     areaOpacity?: number
+    fillOpacity?: number
+    strokeWidth?: number
+    curved?: boolean
+    gradient?: boolean
+    xAxisTitle?: string
+    yAxisTitle?: string
   }
   position: {
     x: number
@@ -51,6 +58,14 @@ const initialAreaChartState: AreaChartStore = {
 }
 
 export const $areaChartStore = atom<AreaChartStore>(initialAreaChartState)
+
+// Selection management - following BarChart/LineChart/PieChart pattern
+export const $selectedAreaChartId = atom<string | null>(null)
+
+export const $selectedAreaChart = computed([$areaChartStore, $selectedAreaChartId], (store, selectedId) => {
+  if (!selectedId) return null
+  return store.areaCharts.find(chart => chart.id === selectedId) || null
+})
 
 // Computed store that converts AreaChartConfig to DroppedWidget format
 export const $areaChartsAsDropped = computed([$areaChartStore], (store) => {
@@ -72,6 +87,10 @@ export const $areaChartsAsDropped = computed([$areaChartStore], (store) => {
 })
 
 export const areaChartActions = {
+  selectAreaChart: (chartId: string | null) => {
+    $selectedAreaChartId.set(chartId)
+  },
+
   addAreaChart: (config: Omit<AreaChartConfig, 'id'>) => {
     const newChart: AreaChartConfig = {
       ...config,

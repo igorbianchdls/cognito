@@ -10,6 +10,7 @@ import { $selectedTable, tableActions } from '@/stores/apps/tableStore'
 import { $selectedBarChart, barChartActions } from '@/stores/apps/barChartStore'
 import { $selectedLineChart, lineChartActions } from '@/stores/apps/lineChartStore'
 import { $selectedPieChart, pieChartActions } from '@/stores/apps/pieChartStore'
+import { $selectedAreaChart, areaChartActions } from '@/stores/apps/areaChartStore'
 import { $canvasConfig } from '@/stores/apps/canvasStore' // Canvas customization store
 import { WebPreview, WebPreviewNavigation, WebPreviewUrl, WebPreviewNavigationButton } from '@/components/ai-elements/web-preview'
 import { savedDashboardActions } from '@/stores/apps/savedDashboardStore'
@@ -41,6 +42,7 @@ export default function GridCanvas({
   const selectedBarChart = useStore($selectedBarChart)
   const selectedLineChart = useStore($selectedLineChart)
   const selectedPieChart = useStore($selectedPieChart)
+  const selectedAreaChart = useStore($selectedAreaChart)
   const canvasConfig = useStore($canvasConfig)
   const { setNodeRef, isOver } = useDroppable({
     id: 'canvas-droppable'
@@ -65,6 +67,7 @@ export default function GridCanvas({
       barChartActions.selectBarChart(null)
       lineChartActions.selectLineChart(null)
       pieChartActions.selectPieChart(null)
+      areaChartActions.selectAreaChart(null)
       kpiActions.selectKPI(widgetId)
     } else if (widget?.type === 'table') {
       // Clear other selections and select table
@@ -73,6 +76,7 @@ export default function GridCanvas({
       barChartActions.selectBarChart(null)
       lineChartActions.selectLineChart(null)
       pieChartActions.selectPieChart(null)
+      areaChartActions.selectAreaChart(null)
       tableActions.selectTable(widgetId)
     } else if (widget?.type === 'chart-bar') {
       // Clear other selections and select bar chart
@@ -81,6 +85,7 @@ export default function GridCanvas({
       tableActions.selectTable(null)
       lineChartActions.selectLineChart(null)
       pieChartActions.selectPieChart(null)
+      areaChartActions.selectAreaChart(null)
       barChartActions.selectBarChart(widgetId)
     } else if (widget?.type === 'chart-line') {
       // Clear other selections and select line chart
@@ -89,6 +94,7 @@ export default function GridCanvas({
       tableActions.selectTable(null)
       barChartActions.selectBarChart(null)
       pieChartActions.selectPieChart(null)
+      areaChartActions.selectAreaChart(null)
       lineChartActions.selectLineChart(widgetId)
     } else if (widget?.type === 'chart-pie') {
       // Clear other selections and select pie chart
@@ -97,7 +103,17 @@ export default function GridCanvas({
       tableActions.selectTable(null)
       barChartActions.selectBarChart(null)
       lineChartActions.selectLineChart(null)
+      areaChartActions.selectAreaChart(null)
       pieChartActions.selectPieChart(widgetId)
+    } else if (widget?.type === 'chart-area') {
+      // Clear other selections and select area chart
+      console.log('📊 Selecting AreaChart:', widgetId)
+      kpiActions.selectKPI(null)
+      tableActions.selectTable(null)
+      barChartActions.selectBarChart(null)
+      lineChartActions.selectLineChart(null)
+      pieChartActions.selectPieChart(null)
+      areaChartActions.selectAreaChart(widgetId)
     }
     // Support for KPIs, Tables, and Charts - unified selection
   }
@@ -347,7 +363,8 @@ export default function GridCanvas({
                   (widget.type === 'table' && selectedTable?.i === widget.i) ||
                   (widget.type === 'chart-bar' && selectedBarChart?.id === widget.i) ||
                   (widget.type === 'chart-line' && selectedLineChart?.id === widget.i) ||
-                  (widget.type === 'chart-pie' && selectedPieChart?.id === widget.i)
+                  (widget.type === 'chart-pie' && selectedPieChart?.id === widget.i) ||
+                  (widget.type === 'chart-area' && selectedAreaChart?.id === widget.i)
                     ? 'ring-2 ring-blue-500 ring-opacity-50' 
                     : ''
                 }`}
@@ -361,7 +378,8 @@ export default function GridCanvas({
                     (widget.type === 'table' && selectedTable?.i === widget.i) ||
                     (widget.type === 'chart-bar' && selectedBarChart?.id === widget.i) ||
                     (widget.type === 'chart-line' && selectedLineChart?.id === widget.i) ||
-                    (widget.type === 'chart-pie' && selectedPieChart?.id === widget.i)
+                    (widget.type === 'chart-pie' && selectedPieChart?.id === widget.i) ||
+                    (widget.type === 'chart-area' && selectedAreaChart?.id === widget.i)
                   }
                 />
               </div>

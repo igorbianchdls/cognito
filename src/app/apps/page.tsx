@@ -21,8 +21,7 @@ import GridCanvas from '@/components/apps/GridCanvas'
 import { $barChartsAsDropped } from '@/stores/apps/barChartStore'
 import { $lineChartsAsDropped } from '@/stores/apps/lineChartStore'
 import { $pieChartsAsDropped } from '@/stores/apps/pieChartStore'
-// TODO: Add these when needed
-// import { $areaChartsAsDropped } from '@/stores/apps/areaChartStore'
+import { $areaChartsAsDropped } from '@/stores/apps/areaChartStore'
 import { $kpisAsDropped, kpiActions } from '@/stores/apps/kpiStore'
 import { $tablesAsDropped } from '@/stores/apps/tableStore'
 // import { $activeTab, multiCanvasActions } from '@/stores/apps/multiCanvasStore' // REMOVED: Simplified to single canvas
@@ -38,8 +37,7 @@ export default function AppsPage() {
   const barCharts = useStore($barChartsAsDropped)
   const lineCharts = useStore($lineChartsAsDropped)
   const pieCharts = useStore($pieChartsAsDropped)
-  // TODO: Add when needed
-  // const areaCharts = useStore($areaChartsAsDropped)
+  const areaCharts = useStore($areaChartsAsDropped)
   
   // KPIs, Tables, and Charts supported - combine from all stores
   const allWidgets = useMemo(() => {
@@ -48,7 +46,8 @@ export default function AppsPage() {
       ...tables,
       ...barCharts,
       ...lineCharts,
-      ...pieCharts
+      ...pieCharts,
+      ...areaCharts
     ]
     
     // Diagnóstico: Verificar duplicatas
@@ -69,12 +68,13 @@ export default function AppsPage() {
         tablesCount: tables.length,
         barChartsCount: barCharts.length,
         lineChartsCount: lineCharts.length,
-        pieChartsCount: pieCharts.length
+        pieChartsCount: pieCharts.length,
+        areaChartsCount: areaCharts.length
       })
     }
     
     return combined
-  }, [kpis, tables, barCharts, lineCharts, pieCharts])
+  }, [kpis, tables, barCharts, lineCharts, pieCharts, areaCharts])
   const [activeWidget, setActiveWidget] = useState<Widget | null>(null)
   const [activeTab, setActiveTab] = useState<'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved' | 'datasets'>('chat')
 

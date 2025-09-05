@@ -7,17 +7,20 @@ import { $selectedTable, tableActions } from '@/stores/apps/tableStore'
 import { $selectedBarChart, barChartActions } from '@/stores/apps/barChartStore'
 import { $selectedLineChart, lineChartActions } from '@/stores/apps/lineChartStore'
 import { $selectedPieChart, pieChartActions } from '@/stores/apps/pieChartStore'
+import { $selectedAreaChart, areaChartActions } from '@/stores/apps/areaChartStore'
 import type { KPIConfig } from '@/types/apps/kpiWidgets'
 import type { TableConfig } from '@/types/apps/tableWidgets'
 import type { BarChartConfig } from '@/stores/apps/barChartStore'
 import type { LineChartConfig } from '@/stores/apps/lineChartStore'
 import type { PieChartConfig } from '@/stores/apps/pieChartStore'
+import type { AreaChartConfig } from '@/stores/apps/areaChartStore'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import KPIConfigEditor from '../editors/KPIConfigEditor'
 import TableConfigEditor from '../editors/TableConfigEditor'
 import BarChartEditor from '../editors/BarChartEditor'
 import LineChartEditor from '../editors/LineChartEditor'
 import PieChartEditor from '../editors/PieChartEditor'
+import AreaChartEditor from '../editors/AreaChartEditor'
 
 export default function WidgetEditorNew() {
   // Get selected widgets from stores
@@ -26,10 +29,11 @@ export default function WidgetEditorNew() {
   const selectedBarChart = useStore($selectedBarChart)
   const selectedLineChart = useStore($selectedLineChart)
   const selectedPieChart = useStore($selectedPieChart)
+  const selectedAreaChart = useStore($selectedAreaChart)
   
   // Determine which widget is currently selected
-  const selectedWidget = selectedKPI || selectedTable || selectedBarChart || selectedLineChart || selectedPieChart
-  const widgetType = selectedKPI ? 'kpi' : selectedTable ? 'table' : selectedBarChart ? 'chart-bar' : selectedLineChart ? 'chart-line' : selectedPieChart ? 'chart-pie' : null
+  const selectedWidget = selectedKPI || selectedTable || selectedBarChart || selectedLineChart || selectedPieChart || selectedAreaChart
+  const widgetType = selectedKPI ? 'kpi' : selectedTable ? 'table' : selectedBarChart ? 'chart-bar' : selectedLineChart ? 'chart-line' : selectedPieChart ? 'chart-pie' : selectedAreaChart ? 'chart-area' : null
 
   // Adapt Widget to DroppedWidget format  
   const adaptedWidget = useMemo((): DroppedWidget | null => {
@@ -118,8 +122,29 @@ export default function WidgetEditorNew() {
       } as DroppedWidget
     }
     
+    if (selectedAreaChart) {
+      return {
+        i: selectedAreaChart.id,
+        id: selectedAreaChart.id,
+        type: 'chart-area' as const,
+        name: selectedAreaChart.name,
+        icon: '📊',
+        description: `Area chart from ${selectedAreaChart.bigqueryData.selectedTable}`,
+        defaultWidth: 4,
+        defaultHeight: 3,
+        x: selectedAreaChart.position.x,
+        y: selectedAreaChart.position.y,
+        w: selectedAreaChart.position.w,
+        h: selectedAreaChart.position.h,
+        areaChartConfig: selectedAreaChart,
+        config: {
+          areaChartConfig: selectedAreaChart
+        }
+      } as DroppedWidget
+    }
+    
     return null
-  }, [selectedKPI, selectedTable, selectedBarChart, selectedLineChart, selectedPieChart])
+  }, [selectedKPI, selectedTable, selectedBarChart, selectedLineChart, selectedPieChart, selectedAreaChart])
 
   // Computed configs for each widget type
   const kpiConfig = useMemo((): KPIConfig => {
@@ -161,6 +186,14 @@ export default function WidgetEditorNew() {
     console.log('🥧 WidgetEditorNew computed pieChartConfig:', config)
     return config
   }, [selectedPieChart])
+
+  const areaChartConfig = useMemo((): AreaChartConfig => {
+    if (!selectedAreaChart) return {} as AreaChartConfig
+    
+    const config = selectedAreaChart
+    console.log('📊 WidgetEditorNew computed areaChartConfig:', config)
+    return config
+  }, [selectedAreaChart])
 
   // Config Handlers for each widget type
   const handleKPIConfigChange = (field: string, value: unknown) => {
@@ -328,6 +361,47 @@ export default function WidgetEditorNew() {
     }
   }
 
+  const handleAreaChartConfigChange = (field: string, value: unknown) => {
+    console.log('📊 WidgetEditorNew handleAreaChartConfigChange:', { 
+      field, 
+      value, 
+      selectedAreaChartId: selectedAreaChart?.id,
+      timestamp: Date.now()
+    })
+    
+    if (selectedAreaChart) {
+      let configUpdate: Partial<AreaChartConfig>
+      
+      // Handle nested fields (e.g., 'styling.title' -> { styling: { title: value } })
+      if (field.includes('.')) {
+        const [parent, child] = field.split('.')
+        console.log('📊 WidgetEditorNew processing nested field:', { parent, child, value })
+        
+        // Get current parent object to merge with new value
+        const currentParent = (selectedAreaChart as unknown as Record<string, unknown>)[parent] || {}
+        configUpdate = {
+          [parent]: {
+            ...currentParent,
+            [child]: value
+          }
+        } as Partial<AreaChartConfig>
+      } else {
+        // Handle flat fields
+        configUpdate = { [field]: value } as Partial<AreaChartConfig>
+      }
+      
+      console.log('📊 WidgetEditorNew calling areaChartActions.updateAreaChart:', {
+        chartId: selectedAreaChart.id,
+        configUpdate,
+        timestamp: Date.now()
+      })
+      areaChartActions.updateAreaChart(selectedAreaChart.id, configUpdate)
+      console.log('📊 WidgetEditorNew AreaChart store update completed for:', selectedAreaChart.id, field)
+    } else {
+      console.warn('⚠️ WidgetEditorNew: No AreaChart selected, cannot update config')
+    }
+  }
+
   // Early return if no widget selected
   if (!selectedWidget || !adaptedWidget) {
     return (
@@ -426,6 +500,24 @@ export default function WidgetEditorNew() {
                 selectedWidget={adaptedWidget}
                 chartConfig={pieChartConfig}
                 onChartConfigChange={handlePieChartConfigChange}
+              />
+            </div>
+          </div>
+        )
+      
+      case 'chart-area':
+        return (
+          <div>
+            <h2 className="text-lg font-semibold mb-2">📊 Configurações do Gráfico de Área</h2>
+            <p className="text-sm text-gray-600">
+              AreaChart: {selectedAreaChart!.name} (ID: {selectedAreaChart!.id})
+            </p>
+            <div className="mt-4">
+              <h3 className="text-md font-medium mb-3">Editor de Configuração</h3>
+              <AreaChartEditor
+                selectedWidget={adaptedWidget}
+                chartConfig={areaChartConfig}
+                onChartConfigChange={handleAreaChartConfigChange}
               />
             </div>
           </div>
