@@ -253,6 +253,7 @@ export interface WidgetConfig {
   imageConfig?: ImageConfig  // For image widgets
   navigationConfig?: NavigationConfig  // For navigation widgets
   barChartConfig?: { bigqueryData: import('../../stores/apps/barChartStore').BarChartBigQueryData, styling: import('../../stores/apps/barChartStore').BarChartConfig['styling'] }  // For bar chart widgets
+  horizontalBarChartConfig?: { bigqueryData: import('../../stores/apps/horizontalBarChartStore').HorizontalBarChartBigQueryData, styling: import('../../stores/apps/horizontalBarChartStore').HorizontalBarChartConfig['styling'] }  // For horizontal bar chart widgets
   lineChartConfig?: { bigqueryData: import('../../stores/apps/lineChartStore').LineChartBigQueryData, styling: import('../../stores/apps/lineChartStore').LineChartConfig['styling'] }  // For line chart widgets
   pieChartConfig?: { bigqueryData: import('../../stores/apps/pieChartStore').PieChartBigQueryData, styling: import('../../stores/apps/pieChartStore').PieChartConfig['styling'] }  // For pie chart widgets
   areaChartConfig?: { bigqueryData: import('../../stores/apps/areaChartStore').AreaChartBigQueryData, styling: import('../../stores/apps/areaChartStore').AreaChartConfig['styling'] }  // For area chart widgets
@@ -269,6 +270,7 @@ export interface DroppedWidget extends Widget {
   config?: WidgetConfig       // New unified configuration
   chartConfig?: ChartConfig   // Deprecated: kept for backward compatibility
   barChartConfig?: import('../../stores/apps/barChartStore').BarChartConfig  // Direct access for bar charts
+  horizontalBarChartConfig?: import('../../stores/apps/horizontalBarChartStore').HorizontalBarChartConfig  // Direct access for horizontal bar charts
   lineChartConfig?: import('../../stores/apps/lineChartStore').LineChartConfig  // Direct access for line charts
   pieChartConfig?: import('../../stores/apps/pieChartStore').PieChartConfig  // Direct access for pie charts
   areaChartConfig?: import('../../stores/apps/areaChartStore').AreaChartConfig  // Direct access for area charts

@@ -15,7 +15,7 @@ export interface ChartData {
 }
 
 interface ChartPreviewProps {
-  chartType: 'bar' | 'line' | 'pie' | 'area'
+  chartType: 'bar' | 'line' | 'pie' | 'area' | 'horizontal-bar'
   xAxis: BigQueryField[]
   yAxis: BigQueryField[]
   filters: BigQueryField[]
@@ -164,6 +164,7 @@ export default function ChartPreview({
   const getChartIcon = () => {
     switch (chartType) {
       case 'bar': return <BarChart3 className="w-4 h-4" />
+      case 'horizontal-bar': return <BarChart3 className="w-4 h-4 rotate-90" />
       case 'line': return <TrendingUp className="w-4 h-4" />
       case 'pie': return <PieChart className="w-4 h-4" />
       case 'area': return <Activity className="w-4 h-4" />
@@ -175,6 +176,7 @@ export default function ChartPreview({
   const getChartTitle = () => {
     switch (chartType) {
       case 'bar': return 'Bar Chart Preview'
+      case 'horizontal-bar': return 'Horizontal Bar Chart Preview'
       case 'line': return 'Line Chart Preview'
       case 'pie': return 'Pie Chart Preview'
       case 'area': return 'Area Chart Preview'
@@ -198,6 +200,15 @@ export default function ChartPreview({
             {...commonProps}
             enableGridX={false}
             enableGridY={true}
+          />
+        )
+      case 'horizontal-bar':
+        return (
+          <BarChart 
+            {...commonProps}
+            layout="horizontal"
+            enableGridX={true}
+            enableGridY={false}
           />
         )
       case 'line':

@@ -187,6 +187,25 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             legends={areaChartLegendConfig}
           />
         )
+      case 'chart-horizontal-bar':
+        // Criar configuração de legend se showLegend estiver ativo
+        const horizontalBarChartLegendConfig = widget.horizontalBarChartConfig?.styling?.showLegend ? {
+          anchor: widget.horizontalBarChartConfig?.styling?.legendPosition ?? 'bottom',
+          direction: widget.horizontalBarChartConfig?.styling?.legendDirection ?? 'row',
+          itemsSpacing: widget.horizontalBarChartConfig?.styling?.legendSpacing ?? 20,
+          symbolSize: widget.horizontalBarChartConfig?.styling?.legendSymbolSize ?? 12,
+          symbolShape: widget.horizontalBarChartConfig?.styling?.legendSymbolShape ?? 'circle'
+        } : undefined
+
+        return (
+          <BarChart 
+            {...commonProps}
+            layout="horizontal"
+            enableGridX={widget.horizontalBarChartConfig?.styling?.enableGridX ?? showGrid}
+            enableGridY={widget.horizontalBarChartConfig?.styling?.enableGridY ?? false}
+            legends={horizontalBarChartLegendConfig}
+          />
+        )
       default:
         // Default to bar chart
         return (

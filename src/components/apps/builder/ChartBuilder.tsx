@@ -9,7 +9,7 @@ interface ChartBuilderData {
   xAxis: BigQueryField[]
   yAxis: BigQueryField[]
   filters: BigQueryField[]
-  chartType: 'bar' | 'line' | 'pie' | 'area'
+  chartType: 'bar' | 'line' | 'pie' | 'area' | 'horizontal-bar'
   selectedTable: string | null
 }
 
@@ -30,6 +30,7 @@ export default function ChartBuilder({
   // Chart type options
   const chartTypes = [
     { id: 'bar', label: 'Bar Chart', icon: <BarChart3 className="w-6 h-6" />, description: 'Compare categories' },
+    { id: 'horizontal-bar', label: 'Horizontal Bar', icon: <BarChart3 className="w-6 h-6 rotate-90" />, description: 'Horizontal comparison' },
     { id: 'line', label: 'Line Chart', icon: <TrendingUp className="w-6 h-6" />, description: 'Show trends over time' },
     { id: 'pie', label: 'Pie Chart', icon: <PieChart className="w-6 h-6" />, description: 'Show proportions' },
     { id: 'area', label: 'Area Chart', icon: <Activity className="w-6 h-6" />, description: 'Filled line chart' }
@@ -86,7 +87,7 @@ export default function ChartBuilder({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             {chartTypes.map((type) => (
               <div
                 key={type.id}

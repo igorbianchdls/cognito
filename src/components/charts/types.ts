@@ -128,4 +128,4 @@ export interface ChartMetadata {
   dataSource?: string;
 }
 
-export type ChartType = 'bar' | 'line' | 'pie' | 'scatter' | 'area' | 'heatmap' | 'radar' | 'funnel' | 'treemap' | 'stream';
+export type ChartType = 'bar' | 'horizontal-bar' | 'line' | 'pie' | 'scatter' | 'area' | 'heatmap' | 'radar' | 'funnel' | 'treemap' | 'stream';
