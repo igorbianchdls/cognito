@@ -1,13 +1,9 @@
 'use client';
 
-import { TrendingDown, TrendingUp, Minus, BarChart3 } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
 import {
   Card,
-  CardAction,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -147,53 +143,6 @@ export function KPICard({
     return unit === '$' ? `${unit}${formattedNumber}` : `${formattedNumber} ${unit}`;
   };
 
-  const getTrendIcon = () => {
-    switch (trend) {
-      case 'increasing':
-        return <TrendingUp className="size-4" />;
-      case 'decreasing':
-        return <TrendingDown className="size-4" />;
-      case 'stable':
-        return <Minus className="size-4" />;
-      default:
-        return <BarChart3 className="size-4" />;
-    }
-  };
-
-  const getTrendVariant = (): "outline" | "default" | "secondary" | "destructive" => {
-    if (change === undefined) return "outline";
-    return change >= 0 ? "default" : "destructive";
-  };
-
-  const getBadgeClassName = () => {
-    switch (status) {
-      case 'on-target':
-        return 'text-green-600 border-green-200 bg-green-50';
-      case 'above-target':
-        return 'text-blue-600 border-blue-200 bg-blue-50';
-      case 'below-target':
-        return 'text-orange-600 border-orange-200 bg-orange-50';
-      case 'critical':
-        return 'text-red-600 border-red-200 bg-red-50';
-      default:
-        return 'text-gray-600 border-gray-200 bg-gray-50';
-    }
-  };
-
-  const getStatusMessage = () => {
-    switch (status) {
-      case 'on-target':
-        return 'Meta atingida';
-      case 'above-target':
-        return 'Acima da meta';
-      case 'below-target':
-        return 'Abaixo da meta';
-      case 'critical':
-        return 'Situação crítica';
-      default:
-        return timeRange || 'Período atual';
-    }
-  };
 
   return (
     <div style={{ width: '100%', height: '100%', minWidth: 0 }}>
@@ -229,42 +178,7 @@ export function KPICard({
           >
             {formatValue(currentValue, unit || '')}
           </CardTitle>
-          <CardAction>
-            {change !== undefined && (
-              <Badge 
-                variant={getTrendVariant()} 
-                className={getBadgeClassName()}
-                style={{
-                  color: changeColor || undefined,
-                  textAlign: textAlign || 'left'
-                }}
-              >
-                {getTrendIcon()}
-                {change >= 0 ? '+' : ''}{change?.toFixed(1)}%
-              </Badge>
-            )}
-          </CardAction>
         </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            {getStatusMessage()} {getTrendIcon()}
-          </div>
-          <div 
-            className="text-muted-foreground"
-            style={{
-              color: targetColor || undefined,
-              textAlign: textAlign || 'left'
-            }}
-          >
-            {target && `Meta: ${formatValue(target, unit || '')}`}
-            {calculation && ` • ${calculation}`}
-          </div>
-          {metadata?.dataSource && (
-            <div className="text-xs text-gray-400">
-              {metadata.dataSource}
-            </div>
-          )}
-        </CardFooter>
       </Card>
     </div>
   );
