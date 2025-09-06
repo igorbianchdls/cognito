@@ -21,6 +21,7 @@ import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import { kpiActions, $selectedKPI } from '@/stores/apps/kpiStore'
 import { tableActions } from '@/stores/apps/tableStore'
 import { barChartActions } from '@/stores/apps/barChartStore'
+import { horizontalBarChartActions } from '@/stores/apps/horizontalBarChartStore'
 import { lineChartActions } from '@/stores/apps/lineChartStore'
 import { pieChartActions } from '@/stores/apps/pieChartStore'
 import { areaChartActions } from '@/stores/apps/areaChartStore'
@@ -35,7 +36,7 @@ interface UniversalBuilderData {
   // Chart fields
   xAxis: BigQueryField[]
   yAxis: BigQueryField[]
-  chartType: 'bar' | 'line' | 'pie' | 'area'
+  chartType: 'bar' | 'line' | 'pie' | 'area' | 'horizontal-bar'
   
   // Table fields  
   columns: BigQueryField[]
@@ -426,6 +427,54 @@ export default function UniversalBuilder({
           showGrid: true,
           title: `${data.xAxis[0]?.name} por ${data.yAxis[0]?.name}`,
           areaOpacity: 0.4
+        },
+        position: {
+          x: widgetConfig.x,
+          y: widgetConfig.y,
+          w: widgetConfig.w,
+          h: widgetConfig.h
+        }
+      })
+    } else if (data.selectedType === 'chart' && data.chartType === 'horizontal-bar') {
+      // Convert to HorizontalBarChart format and use horizontalBarChartActions
+      const query = horizontalBarChartActions.generateHorizontalBarChartQuery(
+        data.xAxis.map(field => ({ ...field, mode: field.mode || 'NULLABLE' })), 
+        data.yAxis.map(field => ({ ...field, mode: field.mode || 'NULLABLE' })), 
+        data.filters.map(field => ({ ...field, mode: field.mode || 'NULLABLE' })), 
+        data.selectedTable
+      )
+      
+      console.log('🐛 DEBUG - UniversalBuilder addHorizontalBarChart:', {
+        hasPreviewData: !!previewData,
+        previewDataLength: Array.isArray(previewData) ? previewData.length : 'not array',
+        previewDataSample: previewData,
+        query,
+        selectedTable: data.selectedTable,
+        xAxisFields: data.xAxis.map(f => f.name),
+        yAxisFields: data.yAxis.map(f => f.name)
+      })
+      
+      horizontalBarChartActions.addHorizontalBarChart({
+        name: widgetConfig.name,
+        bigqueryData: {
+          query,
+          selectedTable: data.selectedTable,
+          columns: {
+            xAxis: data.xAxis,
+            yAxis: data.yAxis,
+            filters: data.filters
+          },
+          data: previewData,
+          lastExecuted: new Date(),
+          isLoading: false,
+          error: null
+        },
+        chartType: 'horizontal-bar',
+        styling: {
+          colors: ['#10b981'],
+          showLegend: true,
+          showGrid: true,
+          title: `${data.xAxis[0]?.name} por ${data.yAxis[0]?.name}`
         },
         position: {
           x: widgetConfig.x,
