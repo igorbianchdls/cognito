@@ -134,6 +134,41 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
     const enablePointLabels = widget.lineChartConfig?.styling?.enablePointLabels ?? 
                              widget.areaChartConfig?.styling?.enablePointLabels ?? 
                              false
+
+    // Margin properties
+    const marginTop = widget.barChartConfig?.styling?.marginTop ??
+                     widget.horizontalBarChartConfig?.styling?.marginTop ??
+                     widget.lineChartConfig?.styling?.marginTop ??
+                     widget.pieChartConfig?.styling?.marginTop ??
+                     widget.areaChartConfig?.styling?.marginTop ??
+                     12
+
+    const marginRight = widget.barChartConfig?.styling?.marginRight ??
+                       widget.horizontalBarChartConfig?.styling?.marginRight ??
+                       widget.lineChartConfig?.styling?.marginRight ??
+                       widget.pieChartConfig?.styling?.marginRight ??
+                       widget.areaChartConfig?.styling?.marginRight ??
+                       12
+
+    const marginBottom = widget.barChartConfig?.styling?.marginBottom ??
+                        widget.horizontalBarChartConfig?.styling?.marginBottom ??
+                        widget.lineChartConfig?.styling?.marginBottom ??
+                        widget.pieChartConfig?.styling?.marginBottom ??
+                        widget.areaChartConfig?.styling?.marginBottom ??
+                        60
+
+    const marginLeft = widget.barChartConfig?.styling?.marginLeft ??
+                      widget.horizontalBarChartConfig?.styling?.marginLeft ??
+                      widget.lineChartConfig?.styling?.marginLeft ??
+                      widget.pieChartConfig?.styling?.marginLeft ??
+                      widget.areaChartConfig?.styling?.marginLeft ??
+                      50
+
+    // Pie chart specific margin defaults
+    const pieMarginTop = widget.pieChartConfig?.styling?.marginTop ?? 20
+    const pieMarginRight = widget.pieChartConfig?.styling?.marginRight ?? 20
+    const pieMarginBottom = widget.pieChartConfig?.styling?.marginBottom ?? 80
+    const pieMarginLeft = widget.pieChartConfig?.styling?.marginLeft ?? 20
                     
     const title = widget.barChartConfig?.styling?.title || 
                  widget.horizontalBarChartConfig?.styling?.title ||
@@ -145,7 +180,7 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
       data,
       colors,
       title,
-      margin: { top: 12, right: 12, bottom: 60, left: 50 },
+      margin: { top: marginTop, right: marginRight, bottom: marginBottom, left: marginLeft },
       animate: false
     }
 
@@ -211,7 +246,11 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
 
         return (
           <PieChart 
-            {...commonProps}
+            data={data}
+            colors={colors}
+            title={title}
+            margin={{ top: pieMarginTop, right: pieMarginRight, bottom: pieMarginBottom, left: pieMarginLeft }}
+            animate={false}
             innerRadius={(widget.pieChartConfig?.styling?.innerRadius ?? 0) / 100}
             padAngle={1}
             cornerRadius={2}

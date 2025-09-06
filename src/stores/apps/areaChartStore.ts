@@ -52,6 +52,10 @@ export interface AreaChartConfig {
     borderColor?: string
     enablePointLabels?: boolean
     pointLabelTextColor?: string
+    marginTop?: number
+    marginRight?: number
+    marginBottom?: number
+    marginLeft?: number
   }
   position: {
     x: number

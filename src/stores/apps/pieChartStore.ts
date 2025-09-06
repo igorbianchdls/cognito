@@ -53,6 +53,10 @@ export interface PieChartConfig {
     arcLabelsTextColor?: string
     arcLinkLabelsSkipAngle?: number
     arcLinkLabelsTextColor?: string
+    marginTop?: number
+    marginRight?: number
+    marginBottom?: number
+    marginLeft?: number
   }
   position: {
     x: number

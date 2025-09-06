@@ -52,6 +52,10 @@ export interface HorizontalBarChartConfig {
     labelTextColor?: string
     labelFormat?: string
     labelOffset?: number
+    marginTop?: number
+    marginRight?: number
+    marginBottom?: number
+    marginLeft?: number
   }
   position: {
     x: number

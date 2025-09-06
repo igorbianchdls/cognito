@@ -24,7 +24,7 @@ export interface BarChartProps extends BaseChartProps {
   // Container & Dimensions
   width?: number;
   height?: number;
-  margin?: { top: number; right: number; bottom: number; left: number };
+  margin?: { top?: number; right?: number; bottom?: number; left?: number };
   rowHeight?: number;
   gridHeight?: number;
   minHeight?: number;
