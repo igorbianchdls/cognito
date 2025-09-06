@@ -201,7 +201,7 @@ export function DataTable<TData extends TableData>({
       return 'Deve ser um número válido'
     }
     
-    if (rule.type === 'email' && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+    if (rule.type === 'email' && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value))) {
       return 'Deve ser um email válido'
     }
     
