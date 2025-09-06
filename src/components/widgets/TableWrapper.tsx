@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { DataTable, createSortableHeader, createEditableCell, type TableData } from '@/components/widgets/Table'
+import { DataTable, createSortableHeader, type TableData } from '@/components/widgets/Table'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import type { TableConfig } from '@/types/apps/tableWidgets'
@@ -34,13 +34,13 @@ export default function TableWrapper({ widget }: TableWidgetProps) {
   }
   
   // Handle individual cell edits
-  const handleCellEdit = (rowIndex: number, columnKey: string, newValue: any) => {
+  const handleCellEdit = (rowIndex: number, columnKey: string, newValue: string | number | boolean | null | undefined) => {
     console.log('📝 TableWidget cell edited:', { rowIndex, columnKey, newValue })
     // You can add specific business logic here like API calls
   }
   
   // Handle row operations
-  const handleRowAdd = (newRow: Record<string, any>) => {
+  const handleRowAdd = (newRow: Record<string, string | number | boolean | null | undefined>) => {
     console.log('➕ TableWidget row added:', newRow)
     // You can add specific business logic here like API calls
   }
