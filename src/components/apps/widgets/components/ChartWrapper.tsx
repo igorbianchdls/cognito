@@ -127,11 +127,21 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
           />
         )
       case 'chart-line':
+        // Criar configuração de legend se showLegend estiver ativo
+        const lineChartLegendConfig = widget.lineChartConfig?.styling?.showLegend ? {
+          anchor: widget.lineChartConfig?.styling?.legendPosition ?? 'bottom',
+          direction: widget.lineChartConfig?.styling?.legendDirection ?? 'row',
+          itemsSpacing: widget.lineChartConfig?.styling?.legendSpacing ?? 20,
+          symbolSize: widget.lineChartConfig?.styling?.legendSymbolSize ?? 12,
+          symbolShape: widget.lineChartConfig?.styling?.legendSymbolShape ?? 'circle'
+        } : undefined
+
         return (
           <LineChart 
             {...commonProps}
-            enableGridX={false}
-            enableGridY={showGrid}
+            enableGridX={widget.lineChartConfig?.styling?.enableGridX ?? false}
+            enableGridY={widget.lineChartConfig?.styling?.enableGridY ?? showGrid}
+            legends={lineChartLegendConfig}
           />
         )
       case 'chart-pie':
