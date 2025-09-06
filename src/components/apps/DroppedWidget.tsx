@@ -73,6 +73,7 @@ export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = f
       case 'chart':
         return <ChartWidget widget={widget} />
       case 'chart-bar':
+      case 'chart-horizontal-bar':
       case 'chart-line':
       case 'chart-pie':
       case 'chart-area':
