@@ -23,6 +23,9 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
     if (widget.type === 'chart-bar' && widget.barChartConfig) {
       chartConfig = widget.barChartConfig
       chartType = 'bar'
+    } else if (widget.type === 'chart-horizontal-bar' && widget.horizontalBarChartConfig) {
+      chartConfig = widget.horizontalBarChartConfig
+      chartType = 'horizontal-bar'
     } else if (widget.type === 'chart-line' && widget.lineChartConfig) {
       chartConfig = widget.lineChartConfig
       chartType = 'line'
@@ -34,7 +37,7 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
       chartType = 'area'
     } else {
       // Fallback: try to detect from available configs or use bar as default
-      chartConfig = widget.barChartConfig || widget.lineChartConfig || widget.pieChartConfig || widget.areaChartConfig
+      chartConfig = widget.barChartConfig || widget.horizontalBarChartConfig || widget.lineChartConfig || widget.pieChartConfig || widget.areaChartConfig
       chartType = 'bar' // Default to bar chart
     }
     
@@ -78,23 +81,26 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
       setData([])
       console.log(`📊 ChartWrapper (${chartType}): Nenhum dado disponível`)
     }
-  }, [widget.barChartConfig, widget.lineChartConfig, widget.pieChartConfig, widget.areaChartConfig, widget.type])
+  }, [widget.barChartConfig, widget.horizontalBarChartConfig, widget.lineChartConfig, widget.pieChartConfig, widget.areaChartConfig, widget.type])
 
   // Render the appropriate chart based on widget type
   const renderChart = () => {
     const colors = widget.barChartConfig?.styling?.colors || 
+                  widget.horizontalBarChartConfig?.styling?.colors ||
                   widget.lineChartConfig?.styling?.colors || 
                   widget.pieChartConfig?.styling?.colors || 
                   widget.areaChartConfig?.styling?.colors || 
                   ['#2563eb']
                   
     const showGrid = widget.barChartConfig?.styling?.showGrid ?? 
+                    widget.horizontalBarChartConfig?.styling?.showGrid ??
                     widget.lineChartConfig?.styling?.showGrid ?? 
                     widget.pieChartConfig?.styling?.showGrid ?? 
                     widget.areaChartConfig?.styling?.showGrid ?? 
                     true
                     
     const title = widget.barChartConfig?.styling?.title || 
+                 widget.horizontalBarChartConfig?.styling?.title ||
                  widget.lineChartConfig?.styling?.title ||
                  widget.pieChartConfig?.styling?.title ||
                  widget.areaChartConfig?.styling?.title

@@ -19,6 +19,7 @@ import GridCanvas from '@/components/apps/GridCanvas'
 // import MultiGridCanvas from '@/components/apps/MultiGridCanvas' // REMOVED: Simplified to single canvas
 // Chart stores - needed for charts to appear in canvas
 import { $barChartsAsDropped } from '@/stores/apps/barChartStore'
+import { $horizontalBarChartsAsDropped } from '@/stores/apps/horizontalBarChartStore'
 import { $lineChartsAsDropped } from '@/stores/apps/lineChartStore'
 import { $pieChartsAsDropped } from '@/stores/apps/pieChartStore'
 import { $areaChartsAsDropped } from '@/stores/apps/areaChartStore'
@@ -35,6 +36,7 @@ export default function AppsPage() {
   const kpis = useStore($kpisAsDropped)
   const tables = useStore($tablesAsDropped)
   const barCharts = useStore($barChartsAsDropped)
+  const horizontalBarCharts = useStore($horizontalBarChartsAsDropped)
   const lineCharts = useStore($lineChartsAsDropped)
   const pieCharts = useStore($pieChartsAsDropped)
   const areaCharts = useStore($areaChartsAsDropped)
@@ -45,6 +47,7 @@ export default function AppsPage() {
       ...kpis,
       ...tables,
       ...barCharts,
+      ...horizontalBarCharts,
       ...lineCharts,
       ...pieCharts,
       ...areaCharts
@@ -67,6 +70,7 @@ export default function AppsPage() {
         kpisCount: kpis.length,
         tablesCount: tables.length,
         barChartsCount: barCharts.length,
+        horizontalBarChartsCount: horizontalBarCharts.length,
         lineChartsCount: lineCharts.length,
         pieChartsCount: pieCharts.length,
         areaChartsCount: areaCharts.length
@@ -74,7 +78,7 @@ export default function AppsPage() {
     }
     
     return combined
-  }, [kpis, tables, barCharts, lineCharts, pieCharts, areaCharts])
+  }, [kpis, tables, barCharts, horizontalBarCharts, lineCharts, pieCharts, areaCharts])
   const [activeWidget, setActiveWidget] = useState<Widget | null>(null)
   const [activeTab, setActiveTab] = useState<'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved' | 'datasets'>('chat')
 
