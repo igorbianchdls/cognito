@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/accordion"
 import LegendAccordion from './LegendAccordion'
 import GridAccordion from './GridAccordion'
+import ColorsAccordion from './ColorsAccordion'
 
 interface BarChartEditorProps {
   selectedWidget: DroppedWidget
@@ -74,81 +75,6 @@ export default function BarChartEditor({
           </div>
         </div>
 
-        {/* Colors & Styling */}
-        <div>
-          <h5 className="text-lg font-bold text-gray-700 mb-3 mt-2">🎨 Colors & Styling</h5>
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-2">Primary Color</label>
-              <input
-                type="color"
-                value={chartConfig.styling?.colors?.[0] || '#2563eb'}
-                onChange={(e) => {
-                  console.log('📊 BarChartEditor: Primary color changed to:', e.target.value)
-                  const newColors = [...(chartConfig.styling?.colors || ['#2563eb'])]
-                  newColors[0] = e.target.value
-                  onChartConfigChange('styling.colors', newColors)
-                }}
-                className="w-full h-12 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-2">Color Palette</label>
-              <div className="flex gap-2">
-                {[
-                  { colors: ['#2563eb', '#3b82f6', '#60a5fa'], name: 'Blue' },
-                  { colors: ['#dc2626', '#ef4444', '#f87171'], name: 'Red' },
-                  { colors: ['#16a34a', '#22c55e', '#4ade80'], name: 'Green' },
-                  { colors: ['#ca8a04', '#eab308', '#facc15'], name: 'Yellow' },
-                  { colors: ['#9333ea', '#a855f7', '#c084fc'], name: 'Purple' }
-                ].map((palette) => (
-                  <button
-                    key={palette.name}
-                    onClick={() => {
-                      console.log('📊 BarChartEditor: Color palette changed to:', palette.name)
-                      onChartConfigChange('styling.colors', palette.colors)
-                    }}
-                    className={`px-3 py-2 text-xs border rounded-md transition-colors ${
-                      JSON.stringify(chartConfig.styling?.colors) === JSON.stringify(palette.colors)
-                        ? 'bg-blue-900 border-blue-300 text-blue-300'
-                        : 'bg-[#333333] border-gray-700 text-[#888888] hover:bg-gray-700'
-                    }`}
-                  >
-                    <div className="flex gap-1 mb-1">
-                      {palette.colors.slice(0, 3).map((color, i) => (
-                        <div key={i} className="w-3 h-3 rounded-sm" style={{ backgroundColor: color }}></div>
-                      ))}
-                    </div>
-                    {palette.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-gray-600 mb-2">Additional Colors</label>
-              <div className="grid grid-cols-4 gap-2">
-                {(chartConfig.styling?.colors || ['#2563eb']).slice(1, 5).map((color, index) => (
-                  <div key={index}>
-                    <label className="block text-xs text-gray-500 mb-1">Color {index + 2}</label>
-                    <input
-                      type="color"
-                      value={color || '#2563eb'}
-                      onChange={(e) => {
-                        console.log(`📊 BarChartEditor: Color ${index + 2} changed to:`, e.target.value)
-                        const newColors = [...(chartConfig.styling?.colors || ['#2563eb'])]
-                        newColors[index + 1] = e.target.value
-                        onChartConfigChange('styling.colors', newColors)
-                      }}
-                      className="w-full h-8 border border-gray-300 rounded"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Display Options */}
         <div>
@@ -238,6 +164,11 @@ export default function BarChartEditor({
         <div className="mt-6">
           <h6 className="text-sm font-medium text-gray-700 mb-3">⚙️ Advanced Options</h6>
           <Accordion type="multiple" className="w-full space-y-2">
+            
+            <ColorsAccordion 
+              styling={chartConfig.styling} 
+              onConfigChange={onChartConfigChange} 
+            />
             
             <LegendAccordion 
               styling={chartConfig.styling} 
