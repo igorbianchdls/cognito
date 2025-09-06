@@ -19,7 +19,7 @@ interface UniversalBuilderData {
   selectedType: 'chart' | 'kpi' | 'table'
   xAxis: BigQueryField[]
   yAxis: BigQueryField[]
-  chartType: 'bar' | 'line' | 'pie' | 'area'
+  chartType: 'bar' | 'line' | 'pie' | 'area' | 'horizontal-bar'
   filters: BigQueryField[]
   columns: BigQueryField[]
   kpiValue: BigQueryField[]
