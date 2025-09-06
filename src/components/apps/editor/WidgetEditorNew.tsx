@@ -5,12 +5,14 @@ import { useStore } from '@nanostores/react'
 import { $selectedKPI, kpiActions } from '@/stores/apps/kpiStore'
 import { $selectedTable, tableActions } from '@/stores/apps/tableStore'
 import { $selectedBarChart, barChartActions } from '@/stores/apps/barChartStore'
+import { $selectedHorizontalBarChart, horizontalBarChartActions } from '@/stores/apps/horizontalBarChartStore'
 import { $selectedLineChart, lineChartActions } from '@/stores/apps/lineChartStore'
 import { $selectedPieChart, pieChartActions } from '@/stores/apps/pieChartStore'
 import { $selectedAreaChart, areaChartActions } from '@/stores/apps/areaChartStore'
 import type { KPIConfig } from '@/types/apps/kpiWidgets'
 import type { TableConfig } from '@/types/apps/tableWidgets'
 import type { BarChartConfig } from '@/stores/apps/barChartStore'
+import type { HorizontalBarChartConfig } from '@/stores/apps/horizontalBarChartStore'
 import type { LineChartConfig } from '@/stores/apps/lineChartStore'
 import type { PieChartConfig } from '@/stores/apps/pieChartStore'
 import type { AreaChartConfig } from '@/stores/apps/areaChartStore'
@@ -18,6 +20,7 @@ import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import KPIConfigEditor from '../editors/KPIConfigEditor'
 import TableConfigEditor from '../editors/TableConfigEditor'
 import BarChartEditor from '../editors/BarChartEditor'
+import HorizontalBarChartEditor from '../editors/HorizontalBarChartEditor'
 import LineChartEditor from '../editors/LineChartEditor'
 import PieChartEditor from '../editors/PieChartEditor'
 import AreaChartEditor from '../editors/AreaChartEditor'
@@ -27,13 +30,14 @@ export default function WidgetEditorNew() {
   const selectedKPI = useStore($selectedKPI)
   const selectedTable = useStore($selectedTable)
   const selectedBarChart = useStore($selectedBarChart)
+  const selectedHorizontalBarChart = useStore($selectedHorizontalBarChart)
   const selectedLineChart = useStore($selectedLineChart)
   const selectedPieChart = useStore($selectedPieChart)
   const selectedAreaChart = useStore($selectedAreaChart)
   
   // Determine which widget is currently selected
-  const selectedWidget = selectedKPI || selectedTable || selectedBarChart || selectedLineChart || selectedPieChart || selectedAreaChart
-  const widgetType = selectedKPI ? 'kpi' : selectedTable ? 'table' : selectedBarChart ? 'chart-bar' : selectedLineChart ? 'chart-line' : selectedPieChart ? 'chart-pie' : selectedAreaChart ? 'chart-area' : null
+  const selectedWidget = selectedKPI || selectedTable || selectedBarChart || selectedHorizontalBarChart || selectedLineChart || selectedPieChart || selectedAreaChart
+  const widgetType = selectedKPI ? 'kpi' : selectedTable ? 'table' : selectedBarChart ? 'chart-bar' : selectedHorizontalBarChart ? 'chart-horizontal-bar' : selectedLineChart ? 'chart-line' : selectedPieChart ? 'chart-pie' : selectedAreaChart ? 'chart-area' : null
 
   // Adapt Widget to DroppedWidget format  
   const adaptedWidget = useMemo((): DroppedWidget | null => {
@@ -76,6 +80,27 @@ export default function WidgetEditorNew() {
         barChartConfig: selectedBarChart,
         config: {
           barChartConfig: selectedBarChart
+        }
+      } as DroppedWidget
+    }
+    
+    if (selectedHorizontalBarChart) {
+      return {
+        i: selectedHorizontalBarChart.id,
+        id: selectedHorizontalBarChart.id,
+        type: 'chart-horizontal-bar' as const,
+        name: selectedHorizontalBarChart.name,
+        icon: '📊',
+        description: `Horizontal bar chart from ${selectedHorizontalBarChart.bigqueryData.selectedTable}`,
+        defaultWidth: 4,
+        defaultHeight: 3,
+        x: selectedHorizontalBarChart.position.x,
+        y: selectedHorizontalBarChart.position.y,
+        w: selectedHorizontalBarChart.position.w,
+        h: selectedHorizontalBarChart.position.h,
+        horizontalBarChartConfig: selectedHorizontalBarChart,
+        config: {
+          horizontalBarChartConfig: selectedHorizontalBarChart
         }
       } as DroppedWidget
     }
@@ -144,7 +169,7 @@ export default function WidgetEditorNew() {
     }
     
     return null
-  }, [selectedKPI, selectedTable, selectedBarChart, selectedLineChart, selectedPieChart, selectedAreaChart])
+  }, [selectedKPI, selectedTable, selectedBarChart, selectedHorizontalBarChart, selectedLineChart, selectedPieChart, selectedAreaChart])
 
   // Computed configs for each widget type
   const kpiConfig = (() => {
@@ -178,6 +203,14 @@ export default function WidgetEditorNew() {
     console.log('📊 WidgetEditorNew computed chartConfig:', config)
     return config
   }, [selectedBarChart])
+
+  const horizontalBarChartConfig = useMemo((): HorizontalBarChartConfig => {
+    if (!selectedHorizontalBarChart) return {} as HorizontalBarChartConfig
+    
+    const config = selectedHorizontalBarChart
+    console.log('📊 WidgetEditorNew computed horizontalBarChartConfig:', config)
+    return config
+  }, [selectedHorizontalBarChart])
 
   const lineChartConfig = useMemo((): LineChartConfig => {
     if (!selectedLineChart) return {} as LineChartConfig
@@ -287,6 +320,47 @@ export default function WidgetEditorNew() {
       console.log('📊 WidgetEditorNew Chart store update completed for:', selectedBarChart.id, field)
     } else {
       console.warn('⚠️ WidgetEditorNew: No Chart selected, cannot update config')
+    }
+  }
+
+  const handleHorizontalBarChartConfigChange = (field: string, value: unknown) => {
+    console.log('📊 WidgetEditorNew handleHorizontalBarChartConfigChange:', { 
+      field, 
+      value, 
+      selectedHorizontalBarChartId: selectedHorizontalBarChart?.id,
+      timestamp: Date.now()
+    })
+    
+    if (selectedHorizontalBarChart) {
+      let configUpdate: Partial<HorizontalBarChartConfig>
+      
+      // Handle nested fields (e.g., 'styling.title' -> { styling: { title: value } })
+      if (field.includes('.')) {
+        const [parent, child] = field.split('.')
+        console.log('📊 WidgetEditorNew processing nested field:', { parent, child, value })
+        
+        // Get current parent object to merge with new value
+        const currentParent = (selectedHorizontalBarChart as unknown as Record<string, unknown>)[parent] || {}
+        configUpdate = {
+          [parent]: {
+            ...currentParent,
+            [child]: value
+          }
+        } as Partial<HorizontalBarChartConfig>
+      } else {
+        // Handle flat fields
+        configUpdate = { [field]: value } as Partial<HorizontalBarChartConfig>
+      }
+      
+      console.log('📊 WidgetEditorNew calling horizontalBarChartActions.updateHorizontalBarChart:', {
+        chartId: selectedHorizontalBarChart.id,
+        configUpdate,
+        timestamp: Date.now()
+      })
+      horizontalBarChartActions.updateHorizontalBarChart(selectedHorizontalBarChart.id, configUpdate)
+      console.log('📊 WidgetEditorNew HorizontalBarChart store update completed for:', selectedHorizontalBarChart.id, field)
+    } else {
+      console.warn('⚠️ WidgetEditorNew: No HorizontalBarChart selected, cannot update config')
     }
   }
 
@@ -475,6 +549,24 @@ export default function WidgetEditorNew() {
                 selectedWidget={adaptedWidget}
                 chartConfig={chartConfig}
                 onChartConfigChange={handleChartConfigChange}
+              />
+            </div>
+          </div>
+        )
+      
+      case 'chart-horizontal-bar':
+        return (
+          <div>
+            <h2 className="text-lg font-semibold mb-2">📊 Configurações do Gráfico de Barras Horizontais</h2>
+            <p className="text-sm text-gray-600">
+              HorizontalBarChart: {selectedHorizontalBarChart!.name} (ID: {selectedHorizontalBarChart!.id})
+            </p>
+            <div className="mt-4">
+              <h3 className="text-md font-medium mb-3">Editor de Configuração</h3>
+              <HorizontalBarChartEditor
+                selectedWidget={adaptedWidget}
+                chartConfig={horizontalBarChartConfig}
+                onChartConfigChange={handleHorizontalBarChartConfigChange}
               />
             </div>
           </div>
