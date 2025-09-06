@@ -11,6 +11,7 @@ import {
 import LegendAccordion from './LegendAccordion'
 import GridAccordion from './GridAccordion'
 import ColorsAccordion from './ColorsAccordion'
+import LabelsAccordion from './LabelsAccordion'
 import ChartInfoAccordion from './ChartInfoAccordion'
 
 interface BarChartEditorProps {
@@ -52,6 +53,12 @@ export default function BarChartEditor({
             <ColorsAccordion 
               styling={chartConfig.styling} 
               onConfigChange={onChartConfigChange} 
+            />
+
+            <LabelsAccordion
+              styling={chartConfig.styling}
+              onConfigChange={onChartConfigChange}
+              chartType="bar"
             />
             
             <LegendAccordion 

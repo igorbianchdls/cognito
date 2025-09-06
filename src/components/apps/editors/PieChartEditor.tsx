@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/accordion"
 import LegendAccordion from './LegendAccordion'
 import ColorsAccordion from './ColorsAccordion'
+import LabelsAccordion from './LabelsAccordion'
 import PieChartInfoAccordion from './PieChartInfoAccordion'
 
 interface PieChartEditorProps {
@@ -48,6 +49,12 @@ export default function PieChartEditor({
             <ColorsAccordion 
               styling={chartConfig.styling} 
               onConfigChange={onChartConfigChange} 
+            />
+
+            <LabelsAccordion
+              styling={chartConfig.styling}
+              onConfigChange={onChartConfigChange}
+              chartType="pie"
             />
             
             <LegendAccordion 

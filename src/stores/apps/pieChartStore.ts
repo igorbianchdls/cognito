@@ -47,6 +47,12 @@ export interface PieChartConfig {
     borderRadius?: number
     borderWidth?: number
     borderColor?: string
+    enableArcLabels?: boolean
+    enableArcLinkLabels?: boolean
+    arcLabelsSkipAngle?: number
+    arcLabelsTextColor?: string
+    arcLinkLabelsSkipAngle?: number
+    arcLinkLabelsTextColor?: string
   }
   position: {
     x: number

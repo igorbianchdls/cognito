@@ -98,6 +98,42 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
                     widget.pieChartConfig?.styling?.showGrid ?? 
                     widget.areaChartConfig?.styling?.showGrid ?? 
                     true
+
+    // Labels properties
+    const enableLabel = widget.barChartConfig?.styling?.enableLabel ?? 
+                       widget.horizontalBarChartConfig?.styling?.enableLabel ?? 
+                       false
+
+    const labelPosition = widget.barChartConfig?.styling?.labelPosition ?? 
+                         widget.horizontalBarChartConfig?.styling?.labelPosition ?? 
+                         'middle'
+
+    const labelSkipWidth = widget.barChartConfig?.styling?.labelSkipWidth ?? 
+                          widget.horizontalBarChartConfig?.styling?.labelSkipWidth ?? 
+                          0
+
+    const labelSkipHeight = widget.barChartConfig?.styling?.labelSkipHeight ?? 
+                           widget.horizontalBarChartConfig?.styling?.labelSkipHeight ?? 
+                           0
+
+    const labelTextColor = widget.barChartConfig?.styling?.labelTextColor ?? 
+                          widget.horizontalBarChartConfig?.styling?.labelTextColor ?? 
+                          widget.lineChartConfig?.styling?.pointLabelTextColor ??
+                          widget.areaChartConfig?.styling?.pointLabelTextColor ??
+                          '#374151'
+
+    // Pie chart labels
+    const enableArcLabels = widget.pieChartConfig?.styling?.enableArcLabels ?? true
+    const enableArcLinkLabels = widget.pieChartConfig?.styling?.enableArcLinkLabels ?? false
+    const arcLabelsSkipAngle = widget.pieChartConfig?.styling?.arcLabelsSkipAngle ?? 15
+    const arcLabelsTextColor = widget.pieChartConfig?.styling?.arcLabelsTextColor
+    const arcLinkLabelsSkipAngle = widget.pieChartConfig?.styling?.arcLinkLabelsSkipAngle ?? 10
+    const arcLinkLabelsTextColor = widget.pieChartConfig?.styling?.arcLinkLabelsTextColor
+
+    // Point labels for line/area charts
+    const enablePointLabels = widget.lineChartConfig?.styling?.enablePointLabels ?? 
+                             widget.areaChartConfig?.styling?.enablePointLabels ?? 
+                             false
                     
     const title = widget.barChartConfig?.styling?.title || 
                  widget.horizontalBarChartConfig?.styling?.title ||
@@ -132,6 +168,11 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             borderRadius={widget.barChartConfig?.styling?.borderRadius}
             borderWidth={widget.barChartConfig?.styling?.borderWidth}
             borderColor={widget.barChartConfig?.styling?.borderColor}
+            enableLabel={enableLabel}
+            labelPosition={labelPosition}
+            labelSkipWidth={labelSkipWidth}
+            labelSkipHeight={labelSkipHeight}
+            labelTextColor={labelTextColor}
             legends={legendConfig}
           />
         )
@@ -153,6 +194,8 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             borderRadius={widget.lineChartConfig?.styling?.borderRadius}
             borderWidth={widget.lineChartConfig?.styling?.borderWidth}
             borderColor={widget.lineChartConfig?.styling?.borderColor}
+            enablePointLabels={enablePointLabels}
+            pointLabelTextColor={labelTextColor}
             legends={lineChartLegendConfig}
           />
         )
@@ -175,8 +218,12 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             activeOuterRadiusOffset={4}
             borderWidth={widget.pieChartConfig?.styling?.borderWidth}
             borderColor={widget.pieChartConfig?.styling?.borderColor}
-            enableArcLinkLabels={widget.pieChartConfig?.styling?.enableLabels !== false}
-            arcLabelsSkipAngle={15}
+            enableArcLabels={enableArcLabels}
+            enableArcLinkLabels={enableArcLinkLabels}
+            arcLabelsSkipAngle={arcLabelsSkipAngle}
+            arcLabelsTextColor={arcLabelsTextColor}
+            arcLinkLabelsSkipAngle={arcLinkLabelsSkipAngle}
+            arcLinkLabelsTextColor={arcLinkLabelsTextColor}
             legends={pieChartLegendConfig}
           />
         )
@@ -201,6 +248,8 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             borderColor={widget.areaChartConfig?.styling?.borderColor}
             curve="cardinal"
             enableArea={true}
+            enablePointLabels={enablePointLabels}
+            pointLabelTextColor={labelTextColor}
             legends={areaChartLegendConfig}
           />
         )
@@ -223,6 +272,11 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             borderRadius={widget.horizontalBarChartConfig?.styling?.borderRadius}
             borderWidth={widget.horizontalBarChartConfig?.styling?.borderWidth}
             borderColor={widget.horizontalBarChartConfig?.styling?.borderColor}
+            enableLabel={enableLabel}
+            labelPosition={labelPosition}
+            labelSkipWidth={labelSkipWidth}
+            labelSkipHeight={labelSkipHeight}
+            labelTextColor={labelTextColor}
             legends={horizontalBarChartLegendConfig}
           />
         )

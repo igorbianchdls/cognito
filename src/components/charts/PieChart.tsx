@@ -16,8 +16,12 @@ interface PieChartProps extends BaseChartProps {
   activeOuterRadiusOffset?: number
   borderWidth?: number
   borderColor?: string
+  enableArcLabels?: boolean
   enableArcLinkLabels?: boolean
   arcLabelsSkipAngle?: number
+  arcLabelsTextColor?: string
+  arcLinkLabelsSkipAngle?: number
+  arcLinkLabelsTextColor?: string
   animate?: boolean
   motionConfig?: 'default' | 'gentle' | 'wobbly' | 'stiff' | 'slow'
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
@@ -42,8 +46,12 @@ export function PieChart({
   activeOuterRadiusOffset,
   borderWidth,
   borderColor,
+  enableArcLabels,
   enableArcLinkLabels,
   arcLabelsSkipAngle,
+  arcLabelsTextColor,
+  arcLinkLabelsSkipAngle,
+  arcLinkLabelsTextColor,
   animate,
   motionConfig,
   margin,
@@ -143,9 +151,14 @@ export function PieChart({
         borderColor={borderColor || '#ffffff'}
         
         // Labels configuráveis
-        enableArcLinkLabels={enableArcLinkLabels ?? false}
+        enableArcLabels={enableArcLabels ?? true}
         arcLabelsSkipAngle={arcLabelsSkipAngle ?? 15}
-        arcLabelsTextColor={{ from: 'color', modifiers: [['darker', 1.8]] }}
+        arcLabelsTextColor={arcLabelsTextColor ? { from: 'color', modifiers: [] } : { from: 'color', modifiers: [['darker', 1.8]] }}
+        
+        // Link Labels configuráveis
+        enableArcLinkLabels={enableArcLinkLabels ?? false}
+        arcLinkLabelsSkipAngle={arcLinkLabelsSkipAngle ?? 10}
+        arcLinkLabelsTextColor={arcLinkLabelsTextColor || '#374151'}
         
         animate={animate ?? false}
         motionConfig={motionConfig || "gentle"}

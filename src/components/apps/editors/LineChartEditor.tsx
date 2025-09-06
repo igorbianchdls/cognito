@@ -11,6 +11,7 @@ import {
 import LegendAccordion from './LegendAccordion'
 import GridAccordion from './GridAccordion'
 import ColorsAccordion from './ColorsAccordion'
+import LabelsAccordion from './LabelsAccordion'
 import LineChartInfoAccordion from './LineChartInfoAccordion'
 
 interface LineChartEditorProps {
@@ -49,6 +50,12 @@ export default function LineChartEditor({
             <ColorsAccordion 
               styling={chartConfig.styling} 
               onConfigChange={onChartConfigChange} 
+            />
+
+            <LabelsAccordion
+              styling={chartConfig.styling}
+              onConfigChange={onChartConfigChange}
+              chartType="line"
             />
             
             <LegendAccordion 

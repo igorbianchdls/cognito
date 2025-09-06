@@ -45,6 +45,13 @@ export interface HorizontalBarChartConfig {
     borderRadius?: number
     borderWidth?: number
     borderColor?: string
+    enableLabel?: boolean
+    labelPosition?: 'start' | 'middle' | 'end'
+    labelSkipWidth?: number
+    labelSkipHeight?: number
+    labelTextColor?: string
+    labelFormat?: string
+    labelOffset?: number
   }
   position: {
     x: number

@@ -50,6 +50,8 @@ export interface AreaChartConfig {
     borderRadius?: number
     borderWidth?: number
     borderColor?: string
+    enablePointLabels?: boolean
+    pointLabelTextColor?: string
   }
   position: {
     x: number

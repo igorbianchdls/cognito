@@ -39,6 +39,8 @@ export function BarChart(props: BarChartProps) {
     labelSkipWidth,
     labelSkipHeight,
     labelTextColor,
+    labelFormat,
+    labelOffset,
     animate,
     motionConfig,
     axisBottom,

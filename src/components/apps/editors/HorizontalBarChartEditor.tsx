@@ -11,6 +11,7 @@ import {
 import LegendAccordion from './LegendAccordion'
 import GridAccordion from './GridAccordion'
 import ColorsAccordion from './ColorsAccordion'
+import LabelsAccordion from './LabelsAccordion'
 import HorizontalBarChartInfoAccordion from './HorizontalBarChartInfoAccordion'
 
 interface HorizontalBarChartEditorProps {
@@ -49,6 +50,12 @@ export default function HorizontalBarChartEditor({
             <ColorsAccordion 
               styling={chartConfig.styling} 
               onConfigChange={onChartConfigChange} 
+            />
+
+            <LabelsAccordion
+              styling={chartConfig.styling}
+              onConfigChange={onChartConfigChange}
+              chartType="horizontal-bar"
             />
             
             <LegendAccordion 

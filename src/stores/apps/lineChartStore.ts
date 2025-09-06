@@ -45,6 +45,8 @@ export interface LineChartConfig {
     borderRadius?: number
     borderWidth?: number
     borderColor?: string
+    enablePointLabels?: boolean
+    pointLabelTextColor?: string
   }
   position: {
     x: number

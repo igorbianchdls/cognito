@@ -37,6 +37,8 @@ interface LineChartProps extends BaseChartProps {
     tickPadding?: number
   }
   legends?: LegendConfig | Record<string, unknown>[]
+  enablePointLabels?: boolean
+  pointLabelTextColor?: string
 }
 
 export function LineChart({ 
@@ -59,7 +61,9 @@ export function LineChart({
   margin,
   axisBottom,
   axisLeft,
-  legends
+  legends,
+  enablePointLabels,
+  pointLabelTextColor
 }: LineChartProps) {
   if (!data || data.length === 0) {
     return <EmptyState />;
@@ -130,6 +134,13 @@ export function LineChart({
         pointColor={{ from: 'color' }}
         pointBorderWidth={borderWidth ?? 1}
         pointBorderColor={borderColor || { from: 'serieColor' }}
+        
+        // Labels nos pontos
+        enablePointLabel={enablePointLabels ?? false}
+        pointLabelYOffset={-12}
+        // @ts-expect-error - Nivo library type incompatibility
+        pointLabel={(point) => point.data.y}
+        pointLabelColor={pointLabelTextColor || '#374151'}
         
         // Eixos configuráveis
         axisTop={null}

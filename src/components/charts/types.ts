@@ -88,7 +88,7 @@ export interface BarChartProps extends BaseChartProps {
   labelTextColor?: string | { from: string; modifiers: Array<[string, number]> };
   labelSkipWidth?: number;
   labelSkipHeight?: number;
-  labelFormat?: (value: number) => string;
+  labelFormat?: string | ((value: number) => string);
   labelPosition?: 'start' | 'middle' | 'end';
   labelOffset?: number;
   

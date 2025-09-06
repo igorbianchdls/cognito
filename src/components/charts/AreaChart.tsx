@@ -43,6 +43,8 @@ interface AreaChartProps extends BaseChartProps {
   subtitleFontSize?: number
   subtitleFontWeight?: string | number
   subtitleColor?: string
+  enablePointLabels?: boolean
+  pointLabelTextColor?: string
 }
 
 export function AreaChart({ 
@@ -76,7 +78,9 @@ export function AreaChart({
   titleColor = '#222',
   subtitleFontSize = 14,
   subtitleFontWeight = 400,
-  subtitleColor = '#6b7280'
+  subtitleColor = '#6b7280',
+  enablePointLabels,
+  pointLabelTextColor
 }: AreaChartProps) {
   if (!data || data.length === 0) {
     return <EmptyState />;
@@ -169,6 +173,13 @@ export function AreaChart({
         pointColor={{ from: 'color' }}
         pointBorderWidth={borderWidth ?? 1}
         pointBorderColor={borderColor || { from: 'serieColor' }}
+        
+        // Labels nos pontos
+        enablePointLabel={enablePointLabels ?? false}
+        pointLabelYOffset={-12}
+        // @ts-expect-error - Nivo library type incompatibility
+        pointLabel={(point) => point.data.y}
+        pointLabelColor={pointLabelTextColor || '#374151'}
         
         // Eixos limpos (sem linhas)
         axisTop={null}

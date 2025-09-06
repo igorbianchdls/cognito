@@ -11,6 +11,7 @@ import {
 import LegendAccordion from './LegendAccordion'
 import GridAccordion from './GridAccordion'
 import ColorsAccordion from './ColorsAccordion'
+import LabelsAccordion from './LabelsAccordion'
 import AreaChartInfoAccordion from './AreaChartInfoAccordion'
 
 interface AreaChartEditorProps {
@@ -49,6 +50,12 @@ export default function AreaChartEditor({
             <ColorsAccordion 
               styling={chartConfig.styling} 
               onConfigChange={onChartConfigChange} 
+            />
+
+            <LabelsAccordion
+              styling={chartConfig.styling}
+              onConfigChange={onChartConfigChange}
+              chartType="area"
             />
             
             <LegendAccordion 
