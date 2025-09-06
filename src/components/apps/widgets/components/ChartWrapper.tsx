@@ -169,6 +169,71 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
     const pieMarginRight = widget.pieChartConfig?.styling?.marginRight ?? 20
     const pieMarginBottom = widget.pieChartConfig?.styling?.marginBottom ?? 80
     const pieMarginLeft = widget.pieChartConfig?.styling?.marginLeft ?? 20
+
+    // Axes properties
+    const xAxisLegend = widget.barChartConfig?.styling?.xAxisLegend ??
+                      widget.horizontalBarChartConfig?.styling?.xAxisLegend ??
+                      widget.lineChartConfig?.styling?.xAxisLegend ??
+                      widget.areaChartConfig?.styling?.xAxisLegend
+
+    const xAxisLegendPosition = widget.barChartConfig?.styling?.xAxisLegendPosition ??
+                              widget.horizontalBarChartConfig?.styling?.xAxisLegendPosition ??
+                              widget.lineChartConfig?.styling?.xAxisLegendPosition ??
+                              widget.areaChartConfig?.styling?.xAxisLegendPosition ??
+                              'middle'
+
+    const xAxisLegendOffset = widget.barChartConfig?.styling?.xAxisLegendOffset ??
+                            widget.horizontalBarChartConfig?.styling?.xAxisLegendOffset ??
+                            widget.lineChartConfig?.styling?.xAxisLegendOffset ??
+                            widget.areaChartConfig?.styling?.xAxisLegendOffset ??
+                            46
+
+    const xAxisTickRotation = widget.barChartConfig?.styling?.xAxisTickRotation ??
+                            widget.horizontalBarChartConfig?.styling?.xAxisTickRotation ??
+                            widget.lineChartConfig?.styling?.xAxisTickRotation ??
+                            widget.areaChartConfig?.styling?.xAxisTickRotation ??
+                            0
+
+    const xAxisTickSize = widget.barChartConfig?.styling?.xAxisTickSize ??
+                        widget.horizontalBarChartConfig?.styling?.xAxisTickSize ??
+                        widget.lineChartConfig?.styling?.xAxisTickSize ??
+                        widget.areaChartConfig?.styling?.xAxisTickSize ??
+                        0
+
+    const xAxisTickPadding = widget.barChartConfig?.styling?.xAxisTickPadding ??
+                           widget.horizontalBarChartConfig?.styling?.xAxisTickPadding ??
+                           widget.lineChartConfig?.styling?.xAxisTickPadding ??
+                           widget.areaChartConfig?.styling?.xAxisTickPadding ??
+                           8
+
+    const yAxisLegend = widget.barChartConfig?.styling?.yAxisLegend ??
+                      widget.horizontalBarChartConfig?.styling?.yAxisLegend ??
+                      widget.lineChartConfig?.styling?.yAxisLegend ??
+                      widget.areaChartConfig?.styling?.yAxisLegend
+
+    const yAxisLegendOffset = widget.barChartConfig?.styling?.yAxisLegendOffset ??
+                            widget.horizontalBarChartConfig?.styling?.yAxisLegendOffset ??
+                            widget.lineChartConfig?.styling?.yAxisLegendOffset ??
+                            widget.areaChartConfig?.styling?.yAxisLegendOffset ??
+                            -40
+
+    const yAxisTickRotation = widget.barChartConfig?.styling?.yAxisTickRotation ??
+                            widget.horizontalBarChartConfig?.styling?.yAxisTickRotation ??
+                            widget.lineChartConfig?.styling?.yAxisTickRotation ??
+                            widget.areaChartConfig?.styling?.yAxisTickRotation ??
+                            0
+
+    const yAxisTickSize = widget.barChartConfig?.styling?.yAxisTickSize ??
+                        widget.horizontalBarChartConfig?.styling?.yAxisTickSize ??
+                        widget.lineChartConfig?.styling?.yAxisTickSize ??
+                        widget.areaChartConfig?.styling?.yAxisTickSize ??
+                        0
+
+    const yAxisTickPadding = widget.barChartConfig?.styling?.yAxisTickPadding ??
+                           widget.horizontalBarChartConfig?.styling?.yAxisTickPadding ??
+                           widget.lineChartConfig?.styling?.yAxisTickPadding ??
+                           widget.areaChartConfig?.styling?.yAxisTickPadding ??
+                           8
                     
     const title = widget.barChartConfig?.styling?.title || 
                  widget.horizontalBarChartConfig?.styling?.title ||
@@ -208,6 +273,21 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             labelSkipWidth={labelSkipWidth}
             labelSkipHeight={labelSkipHeight}
             labelTextColor={labelTextColor}
+            axisBottom={xAxisLegend || xAxisTickRotation !== 0 || xAxisTickSize !== 0 || xAxisTickPadding !== 8 ? {
+              legend: xAxisLegend,
+              legendPosition: xAxisLegendPosition,
+              legendOffset: xAxisLegendOffset,
+              tickRotation: xAxisTickRotation,
+              tickSize: xAxisTickSize,
+              tickPadding: xAxisTickPadding
+            } : undefined}
+            axisLeft={yAxisLegend || yAxisTickRotation !== 0 || yAxisTickSize !== 0 || yAxisTickPadding !== 8 ? {
+              legend: yAxisLegend,
+              legendOffset: yAxisLegendOffset,
+              tickRotation: yAxisTickRotation,
+              tickSize: yAxisTickSize,
+              tickPadding: yAxisTickPadding
+            } : undefined}
             legends={legendConfig}
           />
         )
@@ -231,6 +311,21 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             borderColor={widget.lineChartConfig?.styling?.borderColor}
             enablePointLabels={enablePointLabels}
             pointLabelTextColor={labelTextColor}
+            axisBottom={xAxisLegend || xAxisTickRotation !== 0 || xAxisTickSize !== 0 || xAxisTickPadding !== 8 ? {
+              legend: xAxisLegend,
+              legendPosition: xAxisLegendPosition,
+              legendOffset: xAxisLegendOffset,
+              tickRotation: xAxisTickRotation,
+              tickSize: xAxisTickSize,
+              tickPadding: xAxisTickPadding
+            } : undefined}
+            axisLeft={yAxisLegend || yAxisTickRotation !== 0 || yAxisTickSize !== 0 || yAxisTickPadding !== 8 ? {
+              legend: yAxisLegend,
+              legendOffset: yAxisLegendOffset,
+              tickRotation: yAxisTickRotation,
+              tickSize: yAxisTickSize,
+              tickPadding: yAxisTickPadding
+            } : undefined}
             legends={lineChartLegendConfig}
           />
         )
@@ -289,6 +384,21 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             enableArea={true}
             enablePointLabels={enablePointLabels}
             pointLabelTextColor={labelTextColor}
+            axisBottom={xAxisLegend || xAxisTickRotation !== 0 || xAxisTickSize !== 0 || xAxisTickPadding !== 8 ? {
+              legend: xAxisLegend,
+              legendPosition: xAxisLegendPosition,
+              legendOffset: xAxisLegendOffset,
+              tickRotation: xAxisTickRotation,
+              tickSize: xAxisTickSize,
+              tickPadding: xAxisTickPadding
+            } : undefined}
+            axisLeft={yAxisLegend || yAxisTickRotation !== 0 || yAxisTickSize !== 0 || yAxisTickPadding !== 8 ? {
+              legend: yAxisLegend,
+              legendOffset: yAxisLegendOffset,
+              tickRotation: yAxisTickRotation,
+              tickSize: yAxisTickSize,
+              tickPadding: yAxisTickPadding
+            } : undefined}
             legends={areaChartLegendConfig}
           />
         )
@@ -316,6 +426,21 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             labelSkipWidth={labelSkipWidth}
             labelSkipHeight={labelSkipHeight}
             labelTextColor={labelTextColor}
+            axisBottom={xAxisLegend || xAxisTickRotation !== 0 || xAxisTickSize !== 0 || xAxisTickPadding !== 8 ? {
+              legend: xAxisLegend,
+              legendPosition: xAxisLegendPosition,
+              legendOffset: xAxisLegendOffset,
+              tickRotation: xAxisTickRotation,
+              tickSize: xAxisTickSize,
+              tickPadding: xAxisTickPadding
+            } : undefined}
+            axisLeft={yAxisLegend || yAxisTickRotation !== 0 || yAxisTickSize !== 0 || yAxisTickPadding !== 8 ? {
+              legend: yAxisLegend,
+              legendOffset: yAxisLegendOffset,
+              tickRotation: yAxisTickRotation,
+              tickSize: yAxisTickSize,
+              tickPadding: yAxisTickPadding
+            } : undefined}
             legends={horizontalBarChartLegendConfig}
           />
         )

@@ -26,12 +26,15 @@ interface LineChartProps extends BaseChartProps {
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
   axisBottom?: {
     legend?: string
+    legendPosition?: 'start' | 'middle' | 'end'
+    legendOffset?: number
     tickRotation?: number
     tickSize?: number
     tickPadding?: number
   }
   axisLeft?: {
     legend?: string
+    legendOffset?: number
     tickRotation?: number
     tickSize?: number
     tickPadding?: number
@@ -150,6 +153,8 @@ export function LineChart({
           tickPadding: axisBottom.tickPadding ?? 8,
           tickRotation: axisBottom.tickRotation ?? 0,
           legend: axisBottom.legend,
+          legendPosition: axisBottom.legendPosition ?? 'middle',
+          legendOffset: axisBottom.legendOffset ?? 46,
           format: (value) => value.toString().slice(0, 8)
         } : {
           tickSize: 0,
@@ -162,6 +167,7 @@ export function LineChart({
           tickPadding: axisLeft.tickPadding ?? 8,
           tickRotation: axisLeft.tickRotation ?? 0,
           legend: axisLeft.legend,
+          legendOffset: axisLeft.legendOffset ?? -40,
           format: (value) => formatValue(Number(value))
         } : {
           tickSize: 0,

@@ -13,6 +13,7 @@ import GridAccordion from './GridAccordion'
 import ColorsAccordion from './ColorsAccordion'
 import LabelsAccordion from './LabelsAccordion'
 import DimensionsAccordion from './DimensionsAccordion'
+import AxesAccordion from './AxesAccordion'
 import ChartInfoAccordion from './ChartInfoAccordion'
 
 interface BarChartEditorProps {
@@ -65,6 +66,12 @@ export default function BarChartEditor({
             <DimensionsAccordion
               styling={chartConfig.styling}
               onConfigChange={onChartConfigChange}
+            />
+
+            <AxesAccordion
+              styling={chartConfig.styling}
+              onConfigChange={onChartConfigChange}
+              chartType="bar"
             />
             
             <LegendAccordion 

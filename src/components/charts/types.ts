@@ -57,6 +57,7 @@ export interface BarChartProps extends BaseChartProps {
     legend?: string;
     legendPosition?: 'start' | 'middle' | 'end';
     legendOffset?: number;
+    format?: (value: any) => string;
   } | null;
   axisLeft?: {
     tickSize?: number;
@@ -64,7 +65,7 @@ export interface BarChartProps extends BaseChartProps {
     tickRotation?: number;
     legend?: string;
     legendOffset?: number;
-    format?: (value: number) => string;
+    format?: (value: any) => string;
   } | null;
   axisTop?: {
     tickSize?: number;

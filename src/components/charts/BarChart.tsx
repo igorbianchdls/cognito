@@ -145,13 +145,28 @@ export function BarChart(props: BarChartProps) {
           // Eixos configuráveis
           axisTop={null}
           axisRight={null}
-          axisBottom={axisBottom || {
+          axisBottom={axisBottom ? {
+            tickSize: axisBottom.tickSize ?? 0,
+            tickPadding: axisBottom.tickPadding ?? 8,
+            tickRotation: axisBottom.tickRotation ?? 0,
+            legend: axisBottom.legend,
+            legendPosition: axisBottom.legendPosition ?? 'middle',
+            legendOffset: axisBottom.legendOffset ?? 46,
+            format: axisBottom.format || ((value) => value.toString().slice(0, 10))
+          } : {
             tickSize: 0,
             tickPadding: 8,
             tickRotation: 0,
             format: (value) => value.toString().slice(0, 10)
           }}
-          axisLeft={axisLeft || {
+          axisLeft={axisLeft ? {
+            tickSize: axisLeft.tickSize ?? 0,
+            tickPadding: axisLeft.tickPadding ?? 8,
+            tickRotation: axisLeft.tickRotation ?? 0,
+            legend: axisLeft.legend,
+            legendOffset: axisLeft.legendOffset ?? -40,
+            format: axisLeft.format || ((value) => formatValue(Number(value)))
+          } : {
             tickSize: 0,
             tickPadding: 8,
             tickRotation: 0,

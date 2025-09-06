@@ -56,6 +56,17 @@ export interface HorizontalBarChartConfig {
     marginRight?: number
     marginBottom?: number
     marginLeft?: number
+    xAxisLegend?: string
+    xAxisLegendPosition?: 'start' | 'middle' | 'end'
+    xAxisLegendOffset?: number
+    xAxisTickRotation?: number
+    xAxisTickSize?: number
+    xAxisTickPadding?: number
+    yAxisLegend?: string
+    yAxisLegendOffset?: number
+    yAxisTickRotation?: number
+    yAxisTickSize?: number
+    yAxisTickPadding?: number
   }
   position: {
     x: number
