@@ -559,12 +559,12 @@ export function DataTable<TData extends TableData>({
                           }}
                           onClick={(e) => {
                             if (editTrigger === 'click' && !isEditing) {
-                              startEditing(rowIndex, columnKey, cell.getValue())
+                              startEditing(rowIndex, columnKey, cell.getValue() as string | number | boolean | null | undefined)
                             }
                           }}
                           onDoubleClick={(e) => {
                             if (editTrigger === 'doubleClick' && !isEditing) {
-                              startEditing(rowIndex, columnKey, cell.getValue())
+                              startEditing(rowIndex, columnKey, cell.getValue() as string | number | boolean | null | undefined)
                             }
                           }}
                         >
