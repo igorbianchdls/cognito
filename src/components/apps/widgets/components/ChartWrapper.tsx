@@ -209,6 +209,9 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             layout="horizontal"
             enableGridX={widget.horizontalBarChartConfig?.styling?.enableGridX ?? showGrid}
             enableGridY={widget.horizontalBarChartConfig?.styling?.enableGridY ?? false}
+            borderRadius={widget.horizontalBarChartConfig?.styling?.borderRadius}
+            borderWidth={widget.horizontalBarChartConfig?.styling?.borderWidth}
+            borderColor={widget.horizontalBarChartConfig?.styling?.borderColor}
             legends={horizontalBarChartLegendConfig}
           />
         )

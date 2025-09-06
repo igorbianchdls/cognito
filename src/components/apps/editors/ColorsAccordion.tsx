@@ -8,6 +8,9 @@ import {
 
 interface ColorsStyling {
   colors?: string[]
+  borderRadius?: number
+  borderWidth?: number
+  borderColor?: string
 }
 
 interface ColorsAccordionProps {
@@ -105,6 +108,67 @@ export default function ColorsAccordion({
                   />
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* Border Settings */}
+          <div className="border-t border-gray-200 pt-4 mt-4">
+            <label className="block text-xs font-medium text-gray-600 mb-3">Border Settings</label>
+            
+            <div className="space-y-3">
+              {/* Border Radius */}
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Border Radius</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="range"
+                    min="0"
+                    max="20"
+                    value={styling?.borderRadius ?? 4}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value)
+                      console.log('🎨 ColorsAccordion: Border radius changed to:', value)
+                      onConfigChange(getFieldPath('borderRadius'), value)
+                    }}
+                    className="flex-1"
+                  />
+                  <span className="text-xs text-gray-500 w-8">{styling?.borderRadius ?? 4}px</span>
+                </div>
+              </div>
+
+              {/* Border Width */}
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Border Width</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="range"
+                    min="0"
+                    max="5"
+                    value={styling?.borderWidth ?? 0}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value)
+                      console.log('🎨 ColorsAccordion: Border width changed to:', value)
+                      onConfigChange(getFieldPath('borderWidth'), value)
+                    }}
+                    className="flex-1"
+                  />
+                  <span className="text-xs text-gray-500 w-8">{styling?.borderWidth ?? 0}px</span>
+                </div>
+              </div>
+
+              {/* Border Color */}
+              <div>
+                <label className="block text-xs text-gray-500 mb-1">Border Color</label>
+                <input
+                  type="color"
+                  value={styling?.borderColor || '#000000'}
+                  onChange={(e) => {
+                    console.log('🎨 ColorsAccordion: Border color changed to:', e.target.value)
+                    onConfigChange(getFieldPath('borderColor'), e.target.value)
+                  }}
+                  className="w-full h-8 border border-gray-300 rounded"
+                />
+              </div>
             </div>
           </div>
 

@@ -42,6 +42,9 @@ export interface HorizontalBarChartConfig {
     style?: string
     xAxisTitle?: string
     yAxisTitle?: string
+    borderRadius?: number
+    borderWidth?: number
+    borderColor?: string
   }
   position: {
     x: number
