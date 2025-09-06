@@ -118,8 +118,8 @@ export interface TableConfig {
   stackOnMobile?: boolean
   
   // Callback functions
-  onCellEdit?: (rowIndex: number, columnKey: string, newValue: any) => void
-  onRowAdd?: (newRow: Record<string, any>) => void
+  onCellEdit?: (rowIndex: number, columnKey: string, newValue: string | number | boolean | null | undefined) => void
+  onRowAdd?: (newRow: Record<string, string | number | boolean | null | undefined>) => void
   onRowDelete?: (rowIndex: number) => void
   onRowDuplicate?: (rowIndex: number) => void
 }
@@ -192,7 +192,7 @@ export const COLUMN_TYPES = {
 } as const
 
 // Default table configuration
-export const DEFAULT_TABLE_CONFIG: Required<Omit<TableConfig, 'data' | 'columns' | 'dataSource' | 'refreshRate' | 'defaultSortColumn' | 'exportFormats' | 'headerFontFamily' | 'headerFontWeight' | 'cellFontFamily' | 'cellFontWeight'>> = {
+export const DEFAULT_TABLE_CONFIG: Required<Omit<TableConfig, 'data' | 'columns' | 'dataSource' | 'refreshRate' | 'defaultSortColumn' | 'exportFormats' | 'headerFontFamily' | 'headerFontWeight' | 'cellFontFamily' | 'cellFontWeight' | 'validationRules' | 'onCellEdit' | 'onRowAdd' | 'onRowDelete' | 'onRowDuplicate'>> = {
   searchPlaceholder: 'Search...',
   showColumnToggle: true,
   showPagination: true,
@@ -204,17 +204,59 @@ export const DEFAULT_TABLE_CONFIG: Required<Omit<TableConfig, 'data' | 'columns'
   borderColor: '#e5e7eb',
   fontSize: 14,
   padding: 12,
+  borderWidth: 1,
+  borderRadius: 6,
   // Header typography defaults
   headerFontSize: 14,
   // Cell typography defaults  
   cellFontSize: 14,
   cellTextColor: '#1f2937',
+  lineHeight: 1.4,
+  letterSpacing: 0,
+  defaultTextAlign: 'left',
   defaultSortDirection: 'asc',
   enableSearch: true,
   enableFiltering: false,
+  enableSorting: true,
+  enableMultiSort: false,
   enableRowSelection: false,
   selectionMode: 'single',
-  enableExport: false
+  enableExport: false,
+  exportSelectedOnly: false,
+  exportWithHeaders: true,
+  exportFilteredData: false,
+  exportButtonPosition: 'top-right',
+  csvSeparator: ',',
+  csvEncoding: 'utf-8',
+  pdfOrientation: 'landscape',
+  pdfPageSize: 'a4',
+  pdfIncludeTitle: true,
+  exportFilePrefix: 'table_export',
+  exportIncludeTimestamp: true,
+  // Editing defaults
+  editableMode: false,
+  editableCells: 'none',
+  editableRowActions: {
+    allowAdd: false,
+    allowDelete: false,
+    allowDuplicate: false
+  },
+  enableValidation: false,
+  showValidationErrors: false,
+  saveBehavior: 'onBlur',
+  editTrigger: 'doubleClick',
+  editingCellColor: '#fef3c7',
+  validationErrorColor: '#fef2f2',
+  modifiedCellColor: '#f0f9ff',
+  newRowColor: '#f0fdf4',
+  // Performance defaults
+  searchDebounce: 300,
+  enableVirtualization: false,
+  enableAutoRefresh: false,
+  autoRefreshInterval: 30,
+  // Responsive defaults
+  enableResponsive: true,
+  stackOnMobile: false
 }
 
 // Sample table data generator

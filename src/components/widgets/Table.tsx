@@ -13,7 +13,7 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table"
-import { ArrowUpDown, ChevronDown, MoreHorizontal, Plus, Trash2, Copy, Save, X, Check } from "lucide-react"
+import { ArrowUpDown, ChevronDown, MoreHorizontal, Plus, Trash2, Copy, X, Check } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -101,8 +101,8 @@ interface DataTableProps<TData extends TableData> {
   modifiedCellColor?: string
   newRowColor?: string
   // Callbacks
-  onCellEdit?: (rowIndex: number, columnKey: string, newValue: any) => void
-  onRowAdd?: (newRow: Record<string, any>) => void
+  onCellEdit?: (rowIndex: number, columnKey: string, newValue: string | number | boolean | null | undefined) => void
+  onRowAdd?: (newRow: Record<string, string | number | boolean | null | undefined>) => void
   onRowDelete?: (rowIndex: number) => void
   onRowDuplicate?: (rowIndex: number) => void
   onDataChange?: (data: TData[]) => void
@@ -133,7 +133,6 @@ export function DataTable<TData extends TableData>({
   cellTextColor = '#1f2937',
   // Search & filtering props with defaults
   enableSearch = true,
-  enableFiltering = false,
   // Row selection props with defaults
   enableRowSelection = false,
   selectionMode = 'single',
@@ -189,7 +188,7 @@ export function DataTable<TData extends TableData>({
     return Array.isArray(editableCells) && editableCells.includes(columnKey)
   }
   
-  const validateCell = (columnKey: string, value: any): string | null => {
+  const validateCell = (columnKey: string, value: string | number | boolean | null | undefined): string | null => {
     if (!enableValidation || !validationRules[columnKey]) return null
     
     const rule = validationRules[columnKey]
@@ -221,7 +220,7 @@ export function DataTable<TData extends TableData>({
     return null
   }
   
-  const handleCellEdit = (rowIndex: number, columnKey: string, newValue: any) => {
+  const handleCellEdit = (rowIndex: number, columnKey: string, newValue: string | number | boolean | null | undefined) => {
     const newData = [...tableData]
     newData[rowIndex] = { ...newData[rowIndex], [columnKey]: newValue }
     setTableData(newData)
@@ -244,7 +243,7 @@ export function DataTable<TData extends TableData>({
     onDataChange?.(newData)
   }
   
-  const startEditing = (rowIndex: number, columnKey: string, currentValue: any) => {
+  const startEditing = (rowIndex: number, columnKey: string, currentValue: string | number | boolean | null | undefined) => {
     if (!isCellEditable(columnKey)) return
     
     setEditingCell({ rowIndex, columnKey })
@@ -265,12 +264,12 @@ export function DataTable<TData extends TableData>({
     setEditingValue('')
   }
   
-  const addNewRow = () => {
+  const addNewRow = React.useCallback(() => {
     if (!editableRowActions?.allowAdd) return
     
     const newRow = columns.reduce((acc, col) => {
       if (col.id && col.id !== 'select' && col.id !== 'actions') {
-        acc[col.id as keyof TData] = '' as any
+        ;(acc as Record<string, string | number | boolean | null | undefined>)[col.id] = ''
       }
       return acc
     }, {} as TData)
@@ -279,11 +278,11 @@ export function DataTable<TData extends TableData>({
     setTableData(newData)
     setNewRows(prev => new Set([...prev, newData.length - 1]))
     
-    onRowAdd?.(newRow as Record<string, any>)
+    onRowAdd?.(newRow as Record<string, string | number | boolean | null | undefined>)
     onDataChange?.(newData)
-  }
+  }, [editableRowActions?.allowAdd, columns, tableData, onRowAdd, onDataChange])
   
-  const deleteRow = (rowIndex: number) => {
+  const deleteRow = React.useCallback((rowIndex: number) => {
     if (!editableRowActions?.allowDelete) return
     
     const newData = tableData.filter((_, index) => index !== rowIndex)
@@ -291,8 +290,8 @@ export function DataTable<TData extends TableData>({
     
     // Clean up tracking sets
     setNewRows(prev => {
-      const newSet = new Set()
-      prev.forEach(index => {
+      const newSet = new Set<number>()
+      Array.from(prev).forEach(index => {
         if (index < rowIndex) newSet.add(index)
         else if (index > rowIndex) newSet.add(index - 1)
       })
@@ -301,9 +300,9 @@ export function DataTable<TData extends TableData>({
     
     onRowDelete?.(rowIndex)
     onDataChange?.(newData)
-  }
+  }, [editableRowActions?.allowDelete, tableData, onRowDelete, onDataChange])
   
-  const duplicateRow = (rowIndex: number) => {
+  const duplicateRow = React.useCallback((rowIndex: number) => {
     if (!editableRowActions?.allowDuplicate) return
     
     const rowToDuplicate = { ...tableData[rowIndex] }
@@ -313,7 +312,7 @@ export function DataTable<TData extends TableData>({
     
     onRowDuplicate?.(rowIndex)
     onDataChange?.(newData)
-  }
+  }, [editableRowActions?.allowDuplicate, tableData, onRowDuplicate, onDataChange])
 
   // Prepare columns with conditional selection column and actions
   const tableColumns = React.useMemo(() => {
@@ -333,7 +332,7 @@ export function DataTable<TData extends TableData>({
     }
     
     return cols
-  }, [columns, enableRowSelection, editableMode, editableRowActions])
+  }, [columns, enableRowSelection, editableMode, editableRowActions, deleteRow, duplicateRow])
 
   const table = useReactTable({
     data: tableData,
@@ -813,13 +812,13 @@ export function createEditableCell<TData>(
   accessorKey: string,
   options?: {
     type?: 'text' | 'number' | 'email' | 'date'
-    formatter?: (value: any) => string
+    formatter?: (value: string | number | boolean | null | undefined) => string
   }
 ): ColumnDef<TData> {
   return {
     accessorKey,
     cell: ({ getValue }) => {
-      const value = getValue()
+      const value = getValue() as string | number | boolean | null | undefined
       if (options?.formatter) {
         return options.formatter(value)
       }
