@@ -34,6 +34,8 @@ export interface TableConfig {
   rowHoverColor?: string
   borderColor?: string
   padding?: number
+  borderWidth?: number
+  borderRadius?: number
   
   // Header typography
   headerFontSize?: number
@@ -46,12 +48,17 @@ export interface TableConfig {
   cellFontFamily?: string
   cellFontWeight?: string
   cellTextColor?: string
+  lineHeight?: number
+  letterSpacing?: number
+  defaultTextAlign?: 'left' | 'center' | 'right' | 'justify'
   
   // Sorting and filtering
   defaultSortColumn?: string
   defaultSortDirection?: 'asc' | 'desc'
   enableSearch?: boolean
   enableFiltering?: boolean
+  enableSorting?: boolean
+  enableMultiSort?: boolean
   
   // Row selection
   enableRowSelection?: boolean
@@ -60,6 +67,61 @@ export interface TableConfig {
   // Export options
   enableExport?: boolean
   exportFormats?: ('csv' | 'excel' | 'pdf')[]
+  exportSelectedOnly?: boolean
+  exportWithHeaders?: boolean
+  exportFilteredData?: boolean
+  exportButtonPosition?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'custom'
+  csvSeparator?: string
+  csvEncoding?: string
+  pdfOrientation?: 'portrait' | 'landscape'
+  pdfPageSize?: string
+  pdfIncludeTitle?: boolean
+  exportFilePrefix?: string
+  exportIncludeTimestamp?: boolean
+  
+  // Editing options
+  editableMode?: boolean
+  editableCells?: string[] | 'all' | 'none'
+  editableRowActions?: {
+    allowAdd?: boolean
+    allowDelete?: boolean
+    allowDuplicate?: boolean
+  }
+  validationRules?: {
+    [columnKey: string]: {
+      required?: boolean
+      type?: 'text' | 'number' | 'email' | 'date'
+      min?: number
+      max?: number
+      pattern?: RegExp
+    }
+  }
+  enableValidation?: boolean
+  showValidationErrors?: boolean
+  saveBehavior?: 'auto' | 'manual' | 'onBlur'
+  editTrigger?: 'click' | 'doubleClick' | 'focus'
+  
+  // Editing colors
+  editingCellColor?: string
+  validationErrorColor?: string
+  modifiedCellColor?: string
+  newRowColor?: string
+  
+  // Performance options
+  searchDebounce?: number
+  enableVirtualization?: boolean
+  enableAutoRefresh?: boolean
+  autoRefreshInterval?: number
+  
+  // Responsive options
+  enableResponsive?: boolean
+  stackOnMobile?: boolean
+  
+  // Callback functions
+  onCellEdit?: (rowIndex: number, columnKey: string, newValue: any) => void
+  onRowAdd?: (newRow: Record<string, any>) => void
+  onRowDelete?: (rowIndex: number) => void
+  onRowDuplicate?: (rowIndex: number) => void
 }
 
 // Table Widget interface

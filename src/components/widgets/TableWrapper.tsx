@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { DataTable, createSortableHeader, type TableData } from '@/components/widgets/Table'
+import { DataTable, createSortableHeader, createEditableCell, type TableData } from '@/components/widgets/Table'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import type { TableConfig } from '@/types/apps/tableWidgets'
@@ -26,6 +26,34 @@ export default function TableWrapper({ widget }: TableWidgetProps) {
   }, [widget.tableConfig, widget.config?.tableConfig, widget.i])
 
   const [data, setData] = useState<TableData[]>([])
+  
+  // Handle data changes from editing
+  const handleDataChange = (newData: TableData[]) => {
+    setData(newData)
+    console.log('📝 TableWidget data changed:', newData)
+  }
+  
+  // Handle individual cell edits
+  const handleCellEdit = (rowIndex: number, columnKey: string, newValue: any) => {
+    console.log('📝 TableWidget cell edited:', { rowIndex, columnKey, newValue })
+    // You can add specific business logic here like API calls
+  }
+  
+  // Handle row operations
+  const handleRowAdd = (newRow: Record<string, any>) => {
+    console.log('➕ TableWidget row added:', newRow)
+    // You can add specific business logic here like API calls
+  }
+  
+  const handleRowDelete = (rowIndex: number) => {
+    console.log('🗑️ TableWidget row deleted:', rowIndex)
+    // You can add specific business logic here like API calls
+  }
+  
+  const handleRowDuplicate = (rowIndex: number) => {
+    console.log('📋 TableWidget row duplicated:', rowIndex)
+    // You can add specific business logic here like API calls
+  }
 
   // Initialize data - SIMPLE like KPI pattern
   useEffect(() => {
@@ -199,6 +227,30 @@ export default function TableWrapper({ widget }: TableWidgetProps) {
     selectionMode: tableConfig.selectionMode || 'single',
     defaultSortColumn: tableConfig.defaultSortColumn,
     defaultSortDirection: tableConfig.defaultSortDirection || 'asc',
+    // Pass editing props
+    editableMode: tableConfig.editableMode ?? false,
+    editableCells: tableConfig.editableCells ?? 'none',
+    editableRowActions: tableConfig.editableRowActions ?? {
+      allowAdd: false,
+      allowDelete: false,
+      allowDuplicate: false
+    },
+    validationRules: tableConfig.validationRules ?? {},
+    enableValidation: tableConfig.enableValidation ?? false,
+    showValidationErrors: tableConfig.showValidationErrors ?? false,
+    saveBehavior: tableConfig.saveBehavior ?? 'onBlur',
+    editTrigger: tableConfig.editTrigger ?? 'doubleClick',
+    // Pass editing colors
+    editingCellColor: tableConfig.editingCellColor ?? '#fef3c7',
+    validationErrorColor: tableConfig.validationErrorColor ?? '#fef2f2',
+    modifiedCellColor: tableConfig.modifiedCellColor ?? '#f0f9ff',
+    newRowColor: tableConfig.newRowColor ?? '#f0fdf4',
+    // Pass callbacks
+    onCellEdit: handleCellEdit,
+    onRowAdd: handleRowAdd,
+    onRowDelete: handleRowDelete,
+    onRowDuplicate: handleRowDuplicate,
+    onDataChange: handleDataChange,
   }
 
   return (

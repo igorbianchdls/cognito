@@ -13,7 +13,7 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table"
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { ArrowUpDown, ChevronDown, MoreHorizontal, Plus, Trash2, Copy, Save, X, Check } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -27,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 import {
   Table,
   TableBody,
@@ -73,6 +74,38 @@ interface DataTableProps<TData extends TableData> {
   // Sorting props
   defaultSortColumn?: string
   defaultSortDirection?: 'asc' | 'desc'
+  // Editing props
+  editableMode?: boolean
+  editableCells?: string[] | 'all' | 'none'
+  editableRowActions?: {
+    allowAdd?: boolean
+    allowDelete?: boolean
+    allowDuplicate?: boolean
+  }
+  validationRules?: {
+    [columnKey: string]: {
+      required?: boolean
+      type?: 'text' | 'number' | 'email' | 'date'
+      min?: number
+      max?: number
+      pattern?: RegExp
+    }
+  }
+  enableValidation?: boolean
+  showValidationErrors?: boolean
+  saveBehavior?: 'auto' | 'manual' | 'onBlur'
+  editTrigger?: 'click' | 'doubleClick' | 'focus'
+  // Editing colors
+  editingCellColor?: string
+  validationErrorColor?: string
+  modifiedCellColor?: string
+  newRowColor?: string
+  // Callbacks
+  onCellEdit?: (rowIndex: number, columnKey: string, newValue: any) => void
+  onRowAdd?: (newRow: Record<string, any>) => void
+  onRowDelete?: (rowIndex: number) => void
+  onRowDuplicate?: (rowIndex: number) => void
+  onDataChange?: (data: TData[]) => void
 }
 
 export function DataTable<TData extends TableData>({
@@ -107,6 +140,25 @@ export function DataTable<TData extends TableData>({
   // Sorting props with defaults
   defaultSortColumn,
   defaultSortDirection = 'asc',
+  // Editing props with defaults
+  editableMode = false,
+  editableCells = 'none',
+  editableRowActions = { allowAdd: false, allowDelete: false, allowDuplicate: false },
+  validationRules = {},
+  enableValidation = false,
+  showValidationErrors = false,
+  saveBehavior = 'onBlur',
+  editTrigger = 'doubleClick',
+  editingCellColor = '#fef3c7',
+  validationErrorColor = '#fef2f2',
+  modifiedCellColor = '#f0f9ff',
+  newRowColor = '#f0fdf4',
+  // Callbacks
+  onCellEdit,
+  onRowAdd,
+  onRowDelete,
+  onRowDuplicate,
+  onDataChange,
 }: DataTableProps<TData>) {
   const [sorting, setSorting] = React.useState<SortingState>(
     defaultSortColumn ? [{ id: defaultSortColumn, desc: defaultSortDirection === 'desc' }] : []
@@ -115,17 +167,176 @@ export function DataTable<TData extends TableData>({
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnSizing, setColumnSizing] = React.useState({})
+  
+  // Editing state
+  const [editingCell, setEditingCell] = React.useState<{ rowIndex: number; columnKey: string } | null>(null)
+  const [editingValue, setEditingValue] = React.useState<string>('')
+  const [validationErrors, setValidationErrors] = React.useState<Record<string, string>>({})
+  const [modifiedCells, setModifiedCells] = React.useState<Set<string>>(new Set())
+  const [tableData, setTableData] = React.useState<TData[]>(data)
+  const [newRows, setNewRows] = React.useState<Set<number>>(new Set())
+  
+  // Update table data when external data changes
+  React.useEffect(() => {
+    setTableData(data)
+  }, [data])
 
-  // Prepare columns with conditional selection column
-  const tableColumns = React.useMemo(() => {
-    if (enableRowSelection) {
-      return [createSelectionColumn<TData>(), ...columns]
+  // Helper functions for editing
+  const isCellEditable = (columnKey: string): boolean => {
+    if (!editableMode) return false
+    if (editableCells === 'all') return true
+    if (editableCells === 'none') return false
+    return Array.isArray(editableCells) && editableCells.includes(columnKey)
+  }
+  
+  const validateCell = (columnKey: string, value: any): string | null => {
+    if (!enableValidation || !validationRules[columnKey]) return null
+    
+    const rule = validationRules[columnKey]
+    
+    if (rule.required && (!value || value === '')) {
+      return 'Este campo é obrigatório'
     }
-    return columns
-  }, [columns, enableRowSelection])
+    
+    if (rule.type === 'number' && value && isNaN(Number(value))) {
+      return 'Deve ser um número válido'
+    }
+    
+    if (rule.type === 'email' && value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      return 'Deve ser um email válido'
+    }
+    
+    if (rule.min !== undefined && value && String(value).length < rule.min) {
+      return `Mínimo de ${rule.min} caracteres`
+    }
+    
+    if (rule.max !== undefined && value && String(value).length > rule.max) {
+      return `Máximo de ${rule.max} caracteres`
+    }
+    
+    if (rule.pattern && value && !rule.pattern.test(String(value))) {
+      return 'Formato inválido'
+    }
+    
+    return null
+  }
+  
+  const handleCellEdit = (rowIndex: number, columnKey: string, newValue: any) => {
+    const newData = [...tableData]
+    newData[rowIndex] = { ...newData[rowIndex], [columnKey]: newValue }
+    setTableData(newData)
+    
+    // Mark cell as modified
+    const cellId = `${rowIndex}-${columnKey}`
+    setModifiedCells(prev => new Set([...prev, cellId]))
+    
+    // Validate
+    if (enableValidation) {
+      const error = validateCell(columnKey, newValue)
+      setValidationErrors(prev => ({
+        ...prev,
+        [cellId]: error || ''
+      }))
+    }
+    
+    // Call callback
+    onCellEdit?.(rowIndex, columnKey, newValue)
+    onDataChange?.(newData)
+  }
+  
+  const startEditing = (rowIndex: number, columnKey: string, currentValue: any) => {
+    if (!isCellEditable(columnKey)) return
+    
+    setEditingCell({ rowIndex, columnKey })
+    setEditingValue(String(currentValue || ''))
+  }
+  
+  const saveEdit = () => {
+    if (!editingCell) return
+    
+    const { rowIndex, columnKey } = editingCell
+    handleCellEdit(rowIndex, columnKey, editingValue)
+    setEditingCell(null)
+    setEditingValue('')
+  }
+  
+  const cancelEdit = () => {
+    setEditingCell(null)
+    setEditingValue('')
+  }
+  
+  const addNewRow = () => {
+    if (!editableRowActions?.allowAdd) return
+    
+    const newRow = columns.reduce((acc, col) => {
+      if (col.id && col.id !== 'select' && col.id !== 'actions') {
+        acc[col.id as keyof TData] = '' as any
+      }
+      return acc
+    }, {} as TData)
+    
+    const newData = [...tableData, newRow]
+    setTableData(newData)
+    setNewRows(prev => new Set([...prev, newData.length - 1]))
+    
+    onRowAdd?.(newRow as Record<string, any>)
+    onDataChange?.(newData)
+  }
+  
+  const deleteRow = (rowIndex: number) => {
+    if (!editableRowActions?.allowDelete) return
+    
+    const newData = tableData.filter((_, index) => index !== rowIndex)
+    setTableData(newData)
+    
+    // Clean up tracking sets
+    setNewRows(prev => {
+      const newSet = new Set()
+      prev.forEach(index => {
+        if (index < rowIndex) newSet.add(index)
+        else if (index > rowIndex) newSet.add(index - 1)
+      })
+      return newSet
+    })
+    
+    onRowDelete?.(rowIndex)
+    onDataChange?.(newData)
+  }
+  
+  const duplicateRow = (rowIndex: number) => {
+    if (!editableRowActions?.allowDuplicate) return
+    
+    const rowToDuplicate = { ...tableData[rowIndex] }
+    const newData = [...tableData]
+    newData.splice(rowIndex + 1, 0, rowToDuplicate)
+    setTableData(newData)
+    
+    onRowDuplicate?.(rowIndex)
+    onDataChange?.(newData)
+  }
+
+  // Prepare columns with conditional selection column and actions
+  const tableColumns = React.useMemo(() => {
+    let cols = [...columns]
+    
+    if (enableRowSelection) {
+      cols = [createSelectionColumn<TData>(), ...cols]
+    }
+    
+    if (editableMode && (editableRowActions?.allowDelete || editableRowActions?.allowDuplicate)) {
+      cols = [...cols, createEditActionsColumn<TData>({
+        allowDelete: editableRowActions.allowDelete,
+        allowDuplicate: editableRowActions.allowDuplicate,
+        onDelete: deleteRow,
+        onDuplicate: duplicateRow
+      })]
+    }
+    
+    return cols
+  }, [columns, enableRowSelection, editableMode, editableRowActions])
 
   const table = useReactTable({
-    data,
+    data: tableData,
     columns: tableColumns,
     initialState: {
       pagination: {
@@ -157,12 +368,25 @@ export function DataTable<TData extends TableData>({
   })
 
   const globalFilter = table.getState().globalFilter
+  
+  // Handle keyboard events for editing
+  const handleKeyDown = React.useCallback((e: React.KeyboardEvent) => {
+    if (!editingCell) return
+    
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      saveEdit()
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      cancelEdit()
+    }
+  }, [editingCell, editingValue])
 
   return (
     <div className="w-full h-full" style={{ minWidth: 0 }}>
       <div className="w-full h-full flex flex-col">
-        {/* Header/Search - flex-shrink-0 */}
-        {(enableSearch || showColumnToggle) && (
+        {/* Header/Search/Actions - flex-shrink-0 */}
+        {(enableSearch || showColumnToggle || (editableMode && editableRowActions?.allowAdd)) && (
           <div className="flex-shrink-0 flex items-center py-4">
             {enableSearch && (
               <Input
@@ -172,34 +396,49 @@ export function DataTable<TData extends TableData>({
                 className="max-w-sm"
               />
             )}
-            {showColumnToggle && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className={enableSearch ? "ml-auto" : ""}>
-                    Colunas <ChevronDown className="ml-2 h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  {table
-                    .getAllColumns()
-                    .filter((column) => column.getCanHide())
-                    .map((column) => {
-                      return (
-                        <DropdownMenuCheckboxItem
-                          key={column.id}
-                          className="capitalize"
-                          checked={column.getIsVisible()}
-                          onCheckedChange={(value) =>
-                            column.toggleVisibility(!!value)
-                          }
-                        >
-                          {column.id}
-                        </DropdownMenuCheckboxItem>
-                      )
-                    })}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
+            
+            <div className="flex items-center ml-auto space-x-2">
+              {editableMode && editableRowActions?.allowAdd && (
+                <Button
+                  onClick={addNewRow}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Adicionar Linha
+                </Button>
+              )}
+              
+              {showColumnToggle && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline">
+                      Colunas <ChevronDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {table
+                      .getAllColumns()
+                      .filter((column) => column.getCanHide())
+                      .map((column) => {
+                        return (
+                          <DropdownMenuCheckboxItem
+                            key={column.id}
+                            className="capitalize"
+                            checked={column.getIsVisible()}
+                            onCheckedChange={(value) =>
+                              column.toggleVisibility(!!value)
+                            }
+                          >
+                            {column.id}
+                          </DropdownMenuCheckboxItem>
+                        )
+                      })}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
           </div>
         )}
 
@@ -269,32 +508,115 @@ export function DataTable<TData extends TableData>({
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && "selected"}
-                    className="hover:bg-gray-50 transition-colors"
+                    className={cn(
+                      "hover:bg-gray-50 transition-colors",
+                      newRows.has(row.index) && "bg-green-50"
+                    )}
                     style={{ 
                       '--hover-color': rowHoverColor 
                     } as React.CSSProperties & { '--hover-color': string }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.backgroundColor = rowHoverColor
+                      if (!newRows.has(row.index)) {
+                        e.currentTarget.style.backgroundColor = rowHoverColor
+                      }
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = ''
+                      if (!newRows.has(row.index)) {
+                        e.currentTarget.style.backgroundColor = ''
+                      }
                     }}
                   >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell 
-                        key={cell.id}
-                        style={{ 
-                          padding: `${padding}px`,
-                          borderColor,
-                          fontSize: `${cellFontSize || fontSize}px`,
-                          fontFamily: cellFontFamily !== 'inherit' ? cellFontFamily : undefined,
-                          fontWeight: cellFontWeight !== 'normal' ? cellFontWeight : undefined,
-                          color: cellTextColor,
-                        }}
-                      >
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
+                    {row.getVisibleCells().map((cell) => {
+                      const rowIndex = row.index
+                      const columnKey = cell.column.id
+                      const cellId = `${rowIndex}-${columnKey}`
+                      const isEditing = editingCell?.rowIndex === rowIndex && editingCell?.columnKey === columnKey
+                      const isModified = modifiedCells.has(cellId)
+                      const hasError = enableValidation && validationErrors[cellId]
+                      const isNewRow = newRows.has(rowIndex)
+                      
+                      let backgroundColor = ''
+                      if (isEditing) backgroundColor = editingCellColor
+                      else if (hasError) backgroundColor = validationErrorColor
+                      else if (isModified) backgroundColor = modifiedCellColor
+                      else if (isNewRow) backgroundColor = newRowColor
+                      
+                      return (
+                        <TableCell 
+                          key={cell.id}
+                          className={cn(
+                            isCellEditable(columnKey) && "cursor-pointer hover:bg-gray-50",
+                            hasError && showValidationErrors && "border-red-300"
+                          )}
+                          style={{ 
+                            padding: `${padding}px`,
+                            borderColor,
+                            fontSize: `${cellFontSize || fontSize}px`,
+                            fontFamily: cellFontFamily !== 'inherit' ? cellFontFamily : undefined,
+                            fontWeight: cellFontWeight !== 'normal' ? cellFontWeight : undefined,
+                            color: cellTextColor,
+                            backgroundColor,
+                            position: 'relative'
+                          }}
+                          onClick={(e) => {
+                            if (editTrigger === 'click' && !isEditing) {
+                              startEditing(rowIndex, columnKey, cell.getValue())
+                            }
+                          }}
+                          onDoubleClick={(e) => {
+                            if (editTrigger === 'doubleClick' && !isEditing) {
+                              startEditing(rowIndex, columnKey, cell.getValue())
+                            }
+                          }}
+                        >
+                          {isEditing ? (
+                            <div className="flex items-center gap-1">
+                              <Input
+                                value={editingValue}
+                                onChange={(e) => setEditingValue(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                onBlur={() => {
+                                  if (saveBehavior === 'onBlur') {
+                                    saveEdit()
+                                  }
+                                }}
+                                className="h-6 text-xs border-0 p-0 focus:ring-0"
+                                autoFocus
+                              />
+                              {saveBehavior === 'manual' && (
+                                <div className="flex gap-1">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 w-6 p-0"
+                                    onClick={saveEdit}
+                                  >
+                                    <Check className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    className="h-6 w-6 p-0"
+                                    onClick={cancelEdit}
+                                  >
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <>
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                              {hasError && showValidationErrors && (
+                                <div className="absolute -bottom-1 left-0 text-xs text-red-600 bg-white px-1 rounded shadow">
+                                  {validationErrors[cellId]}
+                                </div>
+                              )}
+                            </>
+                          )}
+                        </TableCell>
+                      )
+                    })}
                   </TableRow>
                 ))
               ) : (
@@ -441,4 +763,67 @@ export function createActionsColumn<TData>(
   }
 }
 
+// Helper function to create edit actions column
+export function createEditActionsColumn<TData>(options: {
+  allowDelete?: boolean
+  allowDuplicate?: boolean
+  onDelete: (rowIndex: number) => void
+  onDuplicate: (rowIndex: number) => void
+}): ColumnDef<TData> {
+  return {
+    id: "edit-actions",
+    header: "Ações",
+    enableHiding: false,
+    size: 80,
+    cell: ({ row }) => {
+      return (
+        <div className="flex items-center gap-1">
+          {options.allowDuplicate && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+              onClick={() => options.onDuplicate(row.index)}
+              title="Duplicar linha"
+            >
+              <Copy className="h-3 w-3" />
+            </Button>
+          )}
+          {options.allowDelete && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+              onClick={() => options.onDelete(row.index)}
+              title="Excluir linha"
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+      )
+    },
+  }
+}
+
 export default DataTable
+
+// Helper function to create editable cell
+export function createEditableCell<TData>(
+  accessorKey: string,
+  options?: {
+    type?: 'text' | 'number' | 'email' | 'date'
+    formatter?: (value: any) => string
+  }
+): ColumnDef<TData> {
+  return {
+    accessorKey,
+    cell: ({ getValue }) => {
+      const value = getValue()
+      if (options?.formatter) {
+        return options.formatter(value)
+      }
+      return String(value || '')
+    },
+  }
+}
