@@ -15,6 +15,7 @@ interface PieChartProps extends BaseChartProps {
   cornerRadius?: number
   activeOuterRadiusOffset?: number
   borderWidth?: number
+  borderColor?: string
   enableArcLinkLabels?: boolean
   arcLabelsSkipAngle?: number
   animate?: boolean
@@ -40,6 +41,7 @@ export function PieChart({
   cornerRadius,
   activeOuterRadiusOffset,
   borderWidth,
+  borderColor,
   enableArcLinkLabels,
   arcLabelsSkipAngle,
   animate,
@@ -138,6 +140,7 @@ export function PieChart({
         
         // Bordas configuráveis
         borderWidth={borderWidth ?? 0}
+        borderColor={borderColor || '#ffffff'}
         
         // Labels configuráveis
         enableArcLinkLabels={enableArcLinkLabels ?? false}

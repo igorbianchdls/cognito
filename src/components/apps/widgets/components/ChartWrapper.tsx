@@ -129,6 +129,9 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             {...commonProps}
             enableGridX={widget.barChartConfig?.styling?.enableGridX ?? false}
             enableGridY={widget.barChartConfig?.styling?.enableGridY ?? showGrid}
+            borderRadius={widget.barChartConfig?.styling?.borderRadius}
+            borderWidth={widget.barChartConfig?.styling?.borderWidth}
+            borderColor={widget.barChartConfig?.styling?.borderColor}
             legends={legendConfig}
           />
         )
@@ -147,6 +150,9 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             {...commonProps}
             enableGridX={widget.lineChartConfig?.styling?.enableGridX ?? false}
             enableGridY={widget.lineChartConfig?.styling?.enableGridY ?? showGrid}
+            borderRadius={widget.lineChartConfig?.styling?.borderRadius}
+            borderWidth={widget.lineChartConfig?.styling?.borderWidth}
+            borderColor={widget.lineChartConfig?.styling?.borderColor}
             legends={lineChartLegendConfig}
           />
         )
@@ -167,6 +173,8 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             padAngle={1}
             cornerRadius={2}
             activeOuterRadiusOffset={4}
+            borderWidth={widget.pieChartConfig?.styling?.borderWidth}
+            borderColor={widget.pieChartConfig?.styling?.borderColor}
             enableArcLinkLabels={widget.pieChartConfig?.styling?.enableLabels !== false}
             arcLabelsSkipAngle={15}
             legends={pieChartLegendConfig}
@@ -188,6 +196,9 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             enableGridX={widget.areaChartConfig?.styling?.enableGridX ?? false}
             enableGridY={widget.areaChartConfig?.styling?.enableGridY ?? showGrid}
             areaOpacity={widget.areaChartConfig?.styling?.areaOpacity ?? 0.4}
+            borderRadius={widget.areaChartConfig?.styling?.borderRadius}
+            borderWidth={widget.areaChartConfig?.styling?.borderWidth}
+            borderColor={widget.areaChartConfig?.styling?.borderColor}
             curve="cardinal"
             enableArea={true}
             legends={areaChartLegendConfig}

@@ -47,6 +47,9 @@ export interface AreaChartConfig {
     gradient?: boolean
     xAxisTitle?: string
     yAxisTitle?: string
+    borderRadius?: number
+    borderWidth?: number
+    borderColor?: string
   }
   position: {
     x: number

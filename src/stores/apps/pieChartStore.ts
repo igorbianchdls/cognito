@@ -44,6 +44,9 @@ export interface PieChartConfig {
     outerRadius?: number
     enableLabels?: boolean
     labelFormat?: 'percentage' | 'value' | 'both'
+    borderRadius?: number
+    borderWidth?: number
+    borderColor?: string
   }
   position: {
     x: number

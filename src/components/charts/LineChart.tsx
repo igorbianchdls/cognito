@@ -10,6 +10,9 @@ import type { LegendConfig } from '@/types/apps/chartWidgets';
 interface LineChartProps extends BaseChartProps {
   colors?: string[]
   backgroundColor?: string
+  borderRadius?: number
+  borderWidth?: number
+  borderColor?: string
   enableGridX?: boolean
   enableGridY?: boolean
   enablePoints?: boolean
@@ -40,6 +43,9 @@ export function LineChart({
   data, 
   colors,
   backgroundColor,
+  borderRadius,
+  borderWidth,
+  borderColor,
   enableGridX,
   enableGridY,
   enablePoints,
@@ -122,8 +128,8 @@ export function LineChart({
         enablePoints={enablePoints ?? true}
         pointSize={pointSize ?? 4}
         pointColor={{ from: 'color' }}
-        pointBorderWidth={1}
-        pointBorderColor={{ from: 'serieColor' }}
+        pointBorderWidth={borderWidth ?? 1}
+        pointBorderColor={borderColor || { from: 'serieColor' }}
         
         // Eixos configuráveis
         axisTop={null}

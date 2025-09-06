@@ -10,6 +10,9 @@ import type { LegendConfig } from '@/types/apps/chartWidgets';
 interface AreaChartProps extends BaseChartProps {
   colors?: string[]
   backgroundColor?: string
+  borderRadius?: number
+  borderWidth?: number
+  borderColor?: string
   enableGridX?: boolean
   enableGridY?: boolean
   enableArea?: boolean
@@ -49,6 +52,9 @@ export function AreaChart({
   isFullscreen,
   colors,
   backgroundColor,
+  borderRadius,
+  borderWidth,
+  borderColor,
   enableGridX,
   enableGridY,
   enableArea,
@@ -161,8 +167,8 @@ export function AreaChart({
         enablePoints={enablePoints ?? false}
         pointSize={pointSize ?? 4}
         pointColor={{ from: 'color' }}
-        pointBorderWidth={1}
-        pointBorderColor={{ from: 'serieColor' }}
+        pointBorderWidth={borderWidth ?? 1}
+        pointBorderColor={borderColor || { from: 'serieColor' }}
         
         // Eixos limpos (sem linhas)
         axisTop={null}
