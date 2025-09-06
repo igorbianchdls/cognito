@@ -145,15 +145,25 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
           />
         )
       case 'chart-pie':
+        // Criar configuração de legend se showLegend estiver ativo
+        const pieChartLegendConfig = widget.pieChartConfig?.styling?.showLegend ? {
+          anchor: widget.pieChartConfig?.styling?.legendPosition ?? 'bottom',
+          direction: widget.pieChartConfig?.styling?.legendDirection ?? 'row',
+          itemsSpacing: widget.pieChartConfig?.styling?.legendSpacing ?? 20,
+          symbolSize: widget.pieChartConfig?.styling?.legendSymbolSize ?? 12,
+          symbolShape: widget.pieChartConfig?.styling?.legendSymbolShape ?? 'circle'
+        } : undefined
+
         return (
           <PieChart 
             {...commonProps}
-            innerRadius={0.5}
+            innerRadius={(widget.pieChartConfig?.styling?.innerRadius ?? 0) / 100}
             padAngle={1}
             cornerRadius={2}
             activeOuterRadiusOffset={4}
-            enableArcLinkLabels={false}
+            enableArcLinkLabels={widget.pieChartConfig?.styling?.enableLabels !== false}
             arcLabelsSkipAngle={15}
+            legends={pieChartLegendConfig}
           />
         )
       case 'chart-area':
