@@ -15,6 +15,7 @@ import LabelsAccordion from './LabelsAccordion'
 import DimensionsAccordion from './DimensionsAccordion'
 import AxesAccordion from './AxesAccordion'
 import HorizontalBarChartInfoAccordion from './HorizontalBarChartInfoAccordion'
+import ChartSpecificAccordion from './ChartSpecificAccordion'
 
 interface HorizontalBarChartEditorProps {
   selectedWidget: DroppedWidget
@@ -47,6 +48,12 @@ export default function HorizontalBarChartEditor({
               selectedWidget={selectedWidget}
               chartConfig={chartConfig}
               onChartConfigChange={onChartConfigChange}
+            />
+
+            <ChartSpecificAccordion 
+              chartType="horizontal-bar"
+              styling={chartConfig.styling} 
+              onConfigChange={onChartConfigChange} 
             />
             
             <ColorsAccordion 

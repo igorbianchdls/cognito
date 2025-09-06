@@ -57,6 +57,10 @@ export interface PieChartConfig {
     marginRight?: number
     marginBottom?: number
     marginLeft?: number
+    // Pie Chart Specific Properties
+    padAngle?: number
+    cornerRadius?: number
+    activeOuterRadiusOffset?: number
   }
   position: {
     x: number

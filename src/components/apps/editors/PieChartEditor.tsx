@@ -13,6 +13,7 @@ import ColorsAccordion from './ColorsAccordion'
 import LabelsAccordion from './LabelsAccordion'
 import DimensionsAccordion from './DimensionsAccordion'
 import PieChartInfoAccordion from './PieChartInfoAccordion'
+import ChartSpecificAccordion from './ChartSpecificAccordion'
 
 interface PieChartEditorProps {
   selectedWidget: DroppedWidget
@@ -45,6 +46,12 @@ export default function PieChartEditor({
               selectedWidget={selectedWidget}
               chartConfig={chartConfig}
               onChartConfigChange={onChartConfigChange}
+            />
+
+            <ChartSpecificAccordion 
+              chartType="pie"
+              styling={chartConfig.styling} 
+              onConfigChange={onChartConfigChange} 
             />
             
             <ColorsAccordion 

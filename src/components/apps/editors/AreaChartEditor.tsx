@@ -15,6 +15,7 @@ import LabelsAccordion from './LabelsAccordion'
 import DimensionsAccordion from './DimensionsAccordion'
 import AxesAccordion from './AxesAccordion'
 import AreaChartInfoAccordion from './AreaChartInfoAccordion'
+import ChartSpecificAccordion from './ChartSpecificAccordion'
 
 interface AreaChartEditorProps {
   selectedWidget: DroppedWidget
@@ -47,6 +48,12 @@ export default function AreaChartEditor({
               selectedWidget={selectedWidget}
               chartConfig={chartConfig}
               onChartConfigChange={onChartConfigChange}
+            />
+
+            <ChartSpecificAccordion 
+              chartType="area"
+              styling={chartConfig.styling} 
+              onConfigChange={onChartConfigChange} 
             />
             
             <ColorsAccordion 

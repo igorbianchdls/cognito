@@ -273,6 +273,10 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             labelSkipWidth={labelSkipWidth}
             labelSkipHeight={labelSkipHeight}
             labelTextColor={labelTextColor}
+            groupMode={widget.barChartConfig?.styling?.groupMode}
+            layout={widget.barChartConfig?.styling?.layout}
+            padding={widget.barChartConfig?.styling?.padding}
+            innerPadding={widget.barChartConfig?.styling?.innerPadding}
             axisBottom={xAxisLegend || xAxisTickRotation !== 0 || xAxisTickSize !== 0 || xAxisTickPadding !== 8 ? {
               legend: xAxisLegend,
               legendPosition: xAxisLegendPosition,
@@ -311,6 +315,12 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             borderColor={widget.lineChartConfig?.styling?.borderColor}
             enablePointLabels={enablePointLabels}
             pointLabelTextColor={labelTextColor}
+            lineWidth={widget.lineChartConfig?.styling?.lineWidth}
+            enablePoints={widget.lineChartConfig?.styling?.enablePoints}
+            pointSize={widget.lineChartConfig?.styling?.pointSize}
+            curve={widget.lineChartConfig?.styling?.curve}
+            enableArea={widget.lineChartConfig?.styling?.enableArea}
+            areaOpacity={widget.lineChartConfig?.styling?.areaOpacity}
             axisBottom={xAxisLegend || xAxisTickRotation !== 0 || xAxisTickSize !== 0 || xAxisTickPadding !== 8 ? {
               legend: xAxisLegend,
               legendPosition: xAxisLegendPosition,
@@ -346,10 +356,10 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             title={title}
             margin={{ top: pieMarginTop, right: pieMarginRight, bottom: pieMarginBottom, left: pieMarginLeft }}
             animate={false}
-            innerRadius={(widget.pieChartConfig?.styling?.innerRadius ?? 0) / 100}
-            padAngle={1}
-            cornerRadius={2}
-            activeOuterRadiusOffset={4}
+            innerRadius={widget.pieChartConfig?.styling?.innerRadius ?? 0.5}
+            padAngle={widget.pieChartConfig?.styling?.padAngle ?? 1}
+            cornerRadius={widget.pieChartConfig?.styling?.cornerRadius ?? 2}
+            activeOuterRadiusOffset={widget.pieChartConfig?.styling?.activeOuterRadiusOffset ?? 4}
             borderWidth={widget.pieChartConfig?.styling?.borderWidth}
             borderColor={widget.pieChartConfig?.styling?.borderColor}
             enableArcLabels={enableArcLabels}
@@ -376,11 +386,14 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             {...commonProps}
             enableGridX={widget.areaChartConfig?.styling?.enableGridX ?? false}
             enableGridY={widget.areaChartConfig?.styling?.enableGridY ?? showGrid}
-            areaOpacity={widget.areaChartConfig?.styling?.areaOpacity ?? 0.4}
+            areaOpacity={widget.areaChartConfig?.styling?.areaOpacity ?? 0.15}
             borderRadius={widget.areaChartConfig?.styling?.borderRadius}
             borderWidth={widget.areaChartConfig?.styling?.borderWidth}
             borderColor={widget.areaChartConfig?.styling?.borderColor}
-            curve="cardinal"
+            lineWidth={widget.areaChartConfig?.styling?.lineWidth}
+            enablePoints={widget.areaChartConfig?.styling?.enablePoints}
+            pointSize={widget.areaChartConfig?.styling?.pointSize}
+            curve={widget.areaChartConfig?.styling?.curve ?? "cardinal"}
             enableArea={true}
             enablePointLabels={enablePointLabels}
             pointLabelTextColor={labelTextColor}
@@ -415,7 +428,7 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
         return (
           <BarChart 
             {...commonProps}
-            layout="horizontal"
+            layout={widget.horizontalBarChartConfig?.styling?.layout ?? "horizontal"}
             enableGridX={widget.horizontalBarChartConfig?.styling?.enableGridX ?? showGrid}
             enableGridY={widget.horizontalBarChartConfig?.styling?.enableGridY ?? false}
             borderRadius={widget.horizontalBarChartConfig?.styling?.borderRadius}
@@ -426,6 +439,9 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             labelSkipWidth={labelSkipWidth}
             labelSkipHeight={labelSkipHeight}
             labelTextColor={labelTextColor}
+            groupMode={widget.horizontalBarChartConfig?.styling?.groupMode}
+            padding={widget.horizontalBarChartConfig?.styling?.padding}
+            innerPadding={widget.horizontalBarChartConfig?.styling?.innerPadding}
             axisBottom={xAxisLegend || xAxisTickRotation !== 0 || xAxisTickSize !== 0 || xAxisTickPadding !== 8 ? {
               legend: xAxisLegend,
               legendPosition: xAxisLegendPosition,

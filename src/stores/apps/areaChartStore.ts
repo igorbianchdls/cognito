@@ -67,6 +67,11 @@ export interface AreaChartConfig {
     yAxisTickRotation?: number
     yAxisTickSize?: number
     yAxisTickPadding?: number
+    // Area Chart Specific Properties
+    lineWidth?: number
+    enablePoints?: boolean
+    pointSize?: number
+    curve?: 'linear' | 'cardinal' | 'catmullRom' | 'monotoneX'
   }
   position: {
     x: number

@@ -62,6 +62,13 @@ export interface LineChartConfig {
     yAxisTickRotation?: number
     yAxisTickSize?: number
     yAxisTickPadding?: number
+    // Line Chart Specific Properties
+    lineWidth?: number
+    enablePoints?: boolean
+    pointSize?: number
+    curve?: 'linear' | 'cardinal' | 'catmullRom' | 'monotoneX'
+    enableArea?: boolean
+    areaOpacity?: number
   }
   position: {
     x: number

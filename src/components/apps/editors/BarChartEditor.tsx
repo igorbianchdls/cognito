@@ -15,6 +15,7 @@ import LabelsAccordion from './LabelsAccordion'
 import DimensionsAccordion from './DimensionsAccordion'
 import AxesAccordion from './AxesAccordion'
 import ChartInfoAccordion from './ChartInfoAccordion'
+import ChartSpecificAccordion from './ChartSpecificAccordion'
 
 interface BarChartEditorProps {
   selectedWidget: DroppedWidget
@@ -50,6 +51,12 @@ export default function BarChartEditor({
               selectedWidget={selectedWidget}
               chartConfig={chartConfig}
               onChartConfigChange={onChartConfigChange}
+            />
+
+            <ChartSpecificAccordion 
+              chartType="bar"
+              styling={chartConfig.styling} 
+              onConfigChange={onChartConfigChange} 
             />
             
             <ColorsAccordion 

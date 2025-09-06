@@ -67,6 +67,11 @@ export interface HorizontalBarChartConfig {
     yAxisTickRotation?: number
     yAxisTickSize?: number
     yAxisTickPadding?: number
+    // Horizontal Bar Chart Specific Properties  
+    groupMode?: 'grouped' | 'stacked'
+    layout?: 'horizontal' | 'vertical'
+    padding?: number
+    innerPadding?: number
   }
   position: {
     x: number

@@ -15,6 +15,7 @@ import LabelsAccordion from './LabelsAccordion'
 import DimensionsAccordion from './DimensionsAccordion'
 import AxesAccordion from './AxesAccordion'
 import LineChartInfoAccordion from './LineChartInfoAccordion'
+import ChartSpecificAccordion from './ChartSpecificAccordion'
 
 interface LineChartEditorProps {
   selectedWidget: DroppedWidget
@@ -47,6 +48,12 @@ export default function LineChartEditor({
               selectedWidget={selectedWidget}
               chartConfig={chartConfig}
               onChartConfigChange={onChartConfigChange}
+            />
+
+            <ChartSpecificAccordion 
+              chartType="line"
+              styling={chartConfig.styling} 
+              onConfigChange={onChartConfigChange} 
             />
             
             <ColorsAccordion 
