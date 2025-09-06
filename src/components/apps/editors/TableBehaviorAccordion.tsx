@@ -26,6 +26,12 @@ export default function TableBehaviorAccordion({
   onConfigChange 
 }: TableBehaviorAccordionProps) {
 
+  // Verificação de segurança para evitar erros de client-side
+  if (!onConfigChange) {
+    console.warn('TableBehaviorAccordion: onConfigChange callback is missing')
+    return null
+  }
+
   return (
     <AccordionItem value="table-behavior" className="border rounded-lg px-3">
       <AccordionTrigger className="text-xs font-medium hover:no-underline">
@@ -40,7 +46,7 @@ export default function TableBehaviorAccordion({
           <div className="grid grid-cols-2 gap-3">
             <label className="flex items-center gap-2 text-xs">
               <Switch
-                checked={styling?.showPagination !== false}
+                checked={styling?.showPagination ?? true}
                 onCheckedChange={(checked) => onConfigChange('showPagination', checked)}
               />
               <span className="text-gray-600">Mostrar Paginação</span>
@@ -48,7 +54,7 @@ export default function TableBehaviorAccordion({
             
             <label className="flex items-center gap-2 text-xs">
               <Switch
-                checked={styling?.enableSearch !== false}
+                checked={styling?.enableSearch ?? true}
                 onCheckedChange={(checked) => onConfigChange('enableSearch', checked)}
               />
               <span className="text-gray-600">Habilitar Busca</span>
@@ -58,7 +64,7 @@ export default function TableBehaviorAccordion({
           <div className="grid grid-cols-2 gap-3">
             <label className="flex items-center gap-2 text-xs">
               <Switch
-                checked={styling?.showColumnToggle !== false}
+                checked={styling?.showColumnToggle ?? true}
                 onCheckedChange={(checked) => onConfigChange('showColumnToggle', checked)}
               />
               <span className="text-gray-600">Toggle de Colunas</span>
@@ -66,7 +72,7 @@ export default function TableBehaviorAccordion({
             
             <label className="flex items-center gap-2 text-xs">
               <Switch
-                checked={styling?.enableFiltering !== false}
+                checked={styling?.enableFiltering ?? false}
                 onCheckedChange={(checked) => onConfigChange('enableFiltering', checked)}
               />
               <span className="text-gray-600">Habilitar Filtros</span>
@@ -80,13 +86,13 @@ export default function TableBehaviorAccordion({
           
           <label className="flex items-center gap-2 text-xs">
             <Switch
-              checked={styling?.enableRowSelection !== false}
+              checked={styling?.enableRowSelection ?? false}
               onCheckedChange={(checked) => onConfigChange('enableRowSelection', checked)}
             />
             <span className="text-gray-600">Habilitar Seleção de Linhas</span>
           </label>
           
-          {styling?.enableRowSelection !== false && (
+          {(styling?.enableRowSelection ?? false) && (
             <div className="space-y-2">
               <div className="text-xs text-gray-500">Modo de Seleção</div>
               <Select
@@ -111,20 +117,20 @@ export default function TableBehaviorAccordion({
           
           <label className="flex items-center gap-2 text-xs">
             <Switch
-              checked={styling?.enableSorting !== false}
+              checked={styling?.enableSorting ?? true}
               onCheckedChange={(checked) => onConfigChange('enableSorting', checked)}
             />
             <span className="text-gray-600">Habilitar Ordenação</span>
           </label>
           
-          {styling?.enableSorting !== false && (
+          {(styling?.enableSorting ?? true) && (
             <>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <div className="text-xs text-gray-500 mb-1">Coluna Padrão</div>
                   <Select
-                    value={styling?.defaultSortColumn || ''}
-                    onValueChange={(value) => onConfigChange('defaultSortColumn', value || undefined)}
+                    value={styling?.defaultSortColumn ?? ''}
+                    onValueChange={(value) => onConfigChange('defaultSortColumn', value === '' ? undefined : value)}
                   >
                     <SelectTrigger className="h-8">
                       <SelectValue placeholder="Nenhuma" />
@@ -143,7 +149,7 @@ export default function TableBehaviorAccordion({
                 <div>
                   <div className="text-xs text-gray-500 mb-1">Direção Padrão</div>
                   <Select
-                    value={styling?.defaultSortDirection || 'asc'}
+                    value={styling?.defaultSortDirection ?? 'asc'}
                     onValueChange={(value) => onConfigChange('defaultSortDirection', value)}
                   >
                     <SelectTrigger className="h-8">
@@ -159,7 +165,7 @@ export default function TableBehaviorAccordion({
               
               <label className="flex items-center gap-2 text-xs">
                 <Switch
-                  checked={styling?.enableMultiSort !== false}
+                  checked={styling?.enableMultiSort ?? false}
                   onCheckedChange={(checked) => onConfigChange('enableMultiSort', checked)}
                 />
                 <span className="text-gray-600">Permitir ordenação múltipla</span>
@@ -188,7 +194,7 @@ export default function TableBehaviorAccordion({
           
           <label className="flex items-center gap-2 text-xs">
             <Switch
-              checked={styling?.enableVirtualization !== false}
+              checked={styling?.enableVirtualization ?? false}
               onCheckedChange={(checked) => onConfigChange('enableVirtualization', checked)}
             />
             <span className="text-gray-600">Virtualização (grandes datasets)</span>
@@ -201,13 +207,13 @@ export default function TableBehaviorAccordion({
           
           <label className="flex items-center gap-2 text-xs">
             <Switch
-              checked={styling?.enableAutoRefresh !== false}
+              checked={styling?.enableAutoRefresh ?? false}
               onCheckedChange={(checked) => onConfigChange('enableAutoRefresh', checked)}
             />
             <span className="text-gray-600">Habilitar auto-refresh</span>
           </label>
           
-          {styling?.enableAutoRefresh !== false && (
+          {(styling?.enableAutoRefresh ?? false) && (
             <div className="space-y-2">
               <div className="text-xs text-gray-500 mb-1">
                 Intervalo: {styling?.autoRefreshInterval || 30}s
@@ -230,7 +236,7 @@ export default function TableBehaviorAccordion({
           
           <label className="flex items-center gap-2 text-xs">
             <Switch
-              checked={styling?.enableResponsive !== false}
+              checked={styling?.enableResponsive ?? true}
               onCheckedChange={(checked) => onConfigChange('enableResponsive', checked)}
             />
             <span className="text-gray-600">Layout responsivo</span>
@@ -238,7 +244,7 @@ export default function TableBehaviorAccordion({
           
           <label className="flex items-center gap-2 text-xs">
             <Switch
-              checked={styling?.stackOnMobile !== false}
+              checked={styling?.stackOnMobile ?? false}
               onCheckedChange={(checked) => onConfigChange('stackOnMobile', checked)}
             />
             <span className="text-gray-600">Empilhar colunas no mobile</span>
