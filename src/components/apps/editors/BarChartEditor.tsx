@@ -36,27 +36,6 @@ export default function BarChartEditor({
       <div className="space-y-6">
 
 
-        {/* Display Options */}
-        <div>
-          <h5 className="text-sm font-medium text-gray-700 mb-3">👁️ Display Options</h5>
-          <div className="space-y-3">
-            <div className="grid grid-cols-1 gap-3">
-              <label className="flex items-center gap-2 text-xs">
-                <input
-                  type="checkbox"
-                  checked={chartConfig.styling?.showLegend !== false}
-                  onChange={(e) => {
-                    console.log('📊 BarChartEditor: Show legend changed to:', e.target.checked)
-                    onChartConfigChange('styling.showLegend', e.target.checked)
-                  }}
-                  className="rounded"
-                />
-                <span className="font-medium text-gray-600">Show Legend</span>
-              </label>
-            </div>
-
-          </div>
-        </div>
 
 
         {/* Advanced Options - Accordions */}

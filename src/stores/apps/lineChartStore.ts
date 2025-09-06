@@ -31,6 +31,13 @@ export interface LineChartConfig {
     colors: string[]
     showLegend: boolean
     showGrid: boolean
+    enableGridX?: boolean
+    enableGridY?: boolean
+    legendPosition?: 'top' | 'top-right' | 'right' | 'bottom-right' | 'bottom' | 'bottom-left' | 'left' | 'top-left'
+    legendDirection?: 'row' | 'column'
+    legendSpacing?: number
+    legendSymbolSize?: number
+    legendSymbolShape?: 'circle' | 'square' | 'triangle'
     title?: string
     style?: string
     xAxisTitle?: string
