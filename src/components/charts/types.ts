@@ -16,6 +16,8 @@ export interface BaseChartProps {
   xColumn?: string;
   yColumn?: string;
   isFullscreen?: boolean;
+  title?: string;
+  subtitle?: string;
 }
 
 export interface BarChartProps extends BaseChartProps {
