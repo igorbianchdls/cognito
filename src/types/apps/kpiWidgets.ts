@@ -61,9 +61,11 @@ export interface KPIConfig {
   valueFontSize?: number
   valueColor?: string
   valueFontWeight?: number
+  valueFontFamily?: string
   nameFontSize?: number
   nameColor?: string
   nameFontWeight?: number
+  nameFontFamily?: string
   backgroundColor?: string
   backgroundOpacity?: number
   borderColor?: string
@@ -75,6 +77,20 @@ export interface KPIConfig {
   shadow?: boolean
   changeColor?: string
   targetColor?: string
+  
+  // Title-specific properties
+  titleAlign?: 'left' | 'center' | 'right'
+  titleMarginTop?: number
+  titleMarginBottom?: number
+  titleLetterSpacing?: number
+  titleLineHeight?: number
+  
+  // Subtitle-specific properties
+  subtitleAlign?: 'left' | 'center' | 'right'
+  subtitleMarginTop?: number
+  subtitleMarginBottom?: number
+  subtitleLetterSpacing?: number
+  subtitleLineHeight?: number
 }
 
 // KPI Widget interface
@@ -160,7 +176,7 @@ export const KPI_COLOR_SCHEMES = {
 } as const
 
 // Default KPI configuration
-export const DEFAULT_KPI_CONFIG: Required<Omit<KPIConfig, 'name' | 'value' | 'unit' | 'target' | 'change' | 'trend' | 'status' | 'metric' | 'calculation' | 'timeRange' | 'dataSource' | 'refreshRate' | 'simulationRange' | 'bigqueryData' | 'dataSourceType' | 'autoRefresh' | 'refreshInterval'>> = {
+export const DEFAULT_KPI_CONFIG: Required<Omit<KPIConfig, 'name' | 'value' | 'unit' | 'target' | 'change' | 'trend' | 'status' | 'metric' | 'calculation' | 'timeRange' | 'dataSource' | 'refreshRate' | 'simulationRange' | 'bigqueryData' | 'dataSourceType' | 'autoRefresh' | 'refreshInterval' | 'valueFontFamily' | 'nameFontFamily' | 'titleAlign' | 'titleMarginTop' | 'titleMarginBottom' | 'titleLetterSpacing' | 'titleLineHeight' | 'subtitleAlign' | 'subtitleMarginTop' | 'subtitleMarginBottom' | 'subtitleLetterSpacing' | 'subtitleLineHeight'>> = {
   enableSimulation: true,
   showTarget: true,
   showTrend: true,

@@ -75,8 +75,22 @@ interface KPICardProps {
   nameFontSize?: number;
   nameColor?: string;
   nameFontWeight?: number;
+  nameFontFamily?: string;
   changeColor?: string;
   targetColor?: string;
+  valueFontFamily?: string;
+  // Title-specific properties
+  titleAlign?: 'left' | 'center' | 'right';
+  titleMarginTop?: number;
+  titleMarginBottom?: number;
+  titleLetterSpacing?: number;
+  titleLineHeight?: number;
+  // Subtitle-specific properties
+  subtitleAlign?: 'left' | 'center' | 'right';
+  subtitleMarginTop?: number;
+  subtitleMarginBottom?: number;
+  subtitleLetterSpacing?: number;
+  subtitleLineHeight?: number;
 }
 
 export function KPICard({
@@ -118,8 +132,22 @@ export function KPICard({
   nameFontSize,
   nameColor,
   nameFontWeight,
+  nameFontFamily,
   changeColor,
-  targetColor
+  targetColor,
+  valueFontFamily,
+  // Title-specific properties
+  titleAlign,
+  titleMarginTop,
+  titleMarginBottom,
+  titleLetterSpacing,
+  titleLineHeight,
+  // Subtitle-specific properties
+  subtitleAlign,
+  subtitleMarginTop,
+  subtitleMarginBottom,
+  subtitleLetterSpacing,
+  subtitleLineHeight
 }: KPICardProps) {
   if (error || !success) {
     return (
@@ -158,22 +186,34 @@ export function KPICard({
           boxShadow: shadow ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : undefined,
         }}
       >
-        <CardHeader>
-          <CardDescription style={{
-            color: nameColor || undefined,
-            fontSize: nameFontSize ? `${nameFontSize}px` : undefined,
-            fontWeight: nameFontWeight || undefined,
-            textAlign: textAlign || 'left'
-          }}>
+        <CardHeader className="!text-left !items-start">
+          <CardDescription 
+            className="!text-left !justify-start"
+            style={{
+              color: nameColor || undefined,
+              fontSize: nameFontSize ? `${nameFontSize}px` : undefined,
+              fontWeight: nameFontWeight || undefined,
+              fontFamily: nameFontFamily !== 'inherit' ? nameFontFamily : undefined,
+              textAlign: subtitleAlign || textAlign || 'left',
+              marginTop: subtitleMarginTop ? `${subtitleMarginTop}px` : undefined,
+              marginBottom: subtitleMarginBottom ? `${subtitleMarginBottom}px` : undefined,
+              letterSpacing: subtitleLetterSpacing ? `${subtitleLetterSpacing}px` : undefined,
+              lineHeight: subtitleLineHeight || undefined
+            }}>
             {name || 'KPI'}
           </CardDescription>
           <CardTitle 
-            className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl"
+            className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl !text-left"
             style={{
               color: valueColor || undefined,
               fontSize: valueFontSize ? `${valueFontSize}px` : undefined,
               fontWeight: valueFontWeight || undefined,
-              textAlign: textAlign || 'left'
+              fontFamily: valueFontFamily !== 'inherit' ? valueFontFamily : undefined,
+              textAlign: titleAlign || textAlign || 'left',
+              marginTop: titleMarginTop ? `${titleMarginTop}px` : undefined,
+              marginBottom: titleMarginBottom ? `${titleMarginBottom}px` : undefined,
+              letterSpacing: titleLetterSpacing ? `${titleLetterSpacing}px` : undefined,
+              lineHeight: titleLineHeight || undefined
             }}
           >
             {formatValue(currentValue, unit || '')}
