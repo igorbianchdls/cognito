@@ -15,10 +15,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import type { AreaChartConfig } from '@/stores/apps/areaChartStore'
+import type { LineChartConfig } from '@/stores/apps/lineChartStore'
+import type { PieChartConfig } from '@/stores/apps/pieChartStore'
+import type { BarChartConfig } from '@/stores/apps/barChartStore'
+import type { HorizontalBarChartConfig } from '@/stores/apps/horizontalBarChartStore'
+
+type ChartStyling = 
+  | AreaChartConfig['styling']
+  | LineChartConfig['styling'] 
+  | PieChartConfig['styling']
+  | BarChartConfig['styling']
+  | HorizontalBarChartConfig['styling']
 
 interface ChartSpecificAccordionProps {
   chartType: 'bar' | 'horizontal-bar' | 'line' | 'pie' | 'area'
-  styling: any
+  styling: ChartStyling
   onConfigChange: (field: string, value: unknown) => void
 }
 
