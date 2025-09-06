@@ -167,14 +167,24 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
           />
         )
       case 'chart-area':
+        // Criar configuração de legend se showLegend estiver ativo
+        const areaChartLegendConfig = widget.areaChartConfig?.styling?.showLegend ? {
+          anchor: widget.areaChartConfig?.styling?.legendPosition ?? 'bottom',
+          direction: widget.areaChartConfig?.styling?.legendDirection ?? 'row',
+          itemsSpacing: widget.areaChartConfig?.styling?.legendSpacing ?? 20,
+          symbolSize: widget.areaChartConfig?.styling?.legendSymbolSize ?? 12,
+          symbolShape: widget.areaChartConfig?.styling?.legendSymbolShape ?? 'circle'
+        } : undefined
+
         return (
           <AreaChart 
             {...commonProps}
-            enableGridX={false}
-            enableGridY={showGrid}
+            enableGridX={widget.areaChartConfig?.styling?.enableGridX ?? false}
+            enableGridY={widget.areaChartConfig?.styling?.enableGridY ?? showGrid}
             areaOpacity={widget.areaChartConfig?.styling?.areaOpacity ?? 0.4}
             curve="cardinal"
             enableArea={true}
+            legends={areaChartLegendConfig}
           />
         )
       default:

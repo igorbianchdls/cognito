@@ -34,6 +34,12 @@ interface AreaChartProps extends BaseChartProps {
     tickPadding?: number
   }
   legends?: LegendConfig | Record<string, unknown>[]
+  titleFontSize?: number
+  titleFontWeight?: string | number
+  titleColor?: string
+  subtitleFontSize?: number
+  subtitleFontWeight?: string | number
+  subtitleColor?: string
 }
 
 export function AreaChart({ 
@@ -56,7 +62,15 @@ export function AreaChart({
   margin,
   axisBottom,
   axisLeft,
-  legends
+  legends,
+  title,
+  subtitle,
+  titleFontSize = 18,
+  titleFontWeight = 700,
+  titleColor = '#222',
+  subtitleFontSize = 14,
+  subtitleFontWeight = 400,
+  subtitleColor = '#6b7280'
 }: AreaChartProps) {
   if (!data || data.length === 0) {
     return <EmptyState />;
@@ -94,6 +108,28 @@ export function AreaChart({
         minWidth: 0,
       }}
     >
+      {title && (
+        <div style={{ 
+          textAlign: 'center', 
+          marginBottom: '8px',
+          fontSize: `${titleFontSize}px`, 
+          fontWeight: titleFontWeight, 
+          color: titleColor
+        }}>
+          {title}
+        </div>
+      )}
+      {subtitle && (
+        <div style={{ 
+          textAlign: 'center', 
+          marginBottom: '16px',
+          fontSize: `${subtitleFontSize}px`, 
+          color: subtitleColor,
+          fontWeight: subtitleFontWeight
+        }}>
+          {subtitle}
+        </div>
+      )}
       <ResponsiveLine
         data={[
           {
@@ -184,18 +220,18 @@ export function AreaChart({
             return legends as Record<string, unknown>[];
           }
           
-          // Se legends é LegendConfig, converter para LineLegendProps[]
-          if (legends && typeof legends === 'object' && 'enabled' in legends) {
-            return legends.enabled !== false ? [
+          // Se legends é um objeto com configurações (vindo do ChartWrapper)
+          if (legends && typeof legends === 'object') {
+            return [
               {
                 anchor: legends.anchor || 'bottom',
                 direction: legends.direction || 'row',
                 justify: false,
-                translateX: legends.translateX || 0,
-                translateY: legends.translateY || 70,
+                translateX: 0,
+                translateY: 70,
                 itemsSpacing: legends.itemsSpacing || 20,
-                itemWidth: legends.itemWidth || 80,
-                itemHeight: legends.itemHeight || 18,
+                itemWidth: 80,
+                itemHeight: 18,
                 itemDirection: 'left-to-right',
                 itemOpacity: 0.8,
                 symbolSize: legends.symbolSize || 12,
@@ -209,34 +245,11 @@ export function AreaChart({
                   }
                 ]
               }
-            ] : [];
+            ];
           }
           
-          // Configuração padrão se legends não especificado
-          return [
-            {
-              anchor: 'bottom',
-              direction: 'row',
-              justify: false,
-              translateX: 0,
-              translateY: 70,
-              itemsSpacing: 20,
-              itemWidth: 80,
-              itemHeight: 18,
-              itemDirection: 'left-to-right',
-              itemOpacity: 0.8,
-              symbolSize: 12,
-              symbolShape: 'circle',
-              effects: [
-                {
-                  on: 'hover',
-                  style: {
-                    itemOpacity: 1
-                  }
-                }
-              ]
-            }
-          ];
+          // Se legends for undefined, não mostrar legend
+          return [];
         })()}
       />
     </div>
