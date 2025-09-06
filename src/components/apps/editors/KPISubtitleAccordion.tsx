@@ -120,7 +120,7 @@ export default function KPISubtitleAccordion({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <div className="text-xs text-gray-500 mb-1">
-                Margin Top: {(styling as Record<string, unknown>)?.subtitleMarginTop ?? 0}px
+                Margin Top: {((styling as Record<string, unknown>)?.subtitleMarginTop as number) ?? 0}px
               </div>
               <Slider
                 value={[((styling as Record<string, unknown>)?.subtitleMarginTop as number) ?? 0]}
@@ -134,7 +134,7 @@ export default function KPISubtitleAccordion({
             
             <div>
               <div className="text-xs text-gray-500 mb-1">
-                Margin Bottom: {(styling as Record<string, unknown>)?.subtitleMarginBottom ?? 0}px
+                Margin Bottom: {((styling as Record<string, unknown>)?.subtitleMarginBottom as number) ?? 0}px
               </div>
               <Slider
                 value={[((styling as Record<string, unknown>)?.subtitleMarginBottom as number) ?? 0]}
@@ -155,7 +155,7 @@ export default function KPISubtitleAccordion({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <div className="text-xs text-gray-500 mb-1">
-                Espaçamento das Letras: {(styling as Record<string, unknown>)?.subtitleLetterSpacing ?? 0}px
+                Espaçamento das Letras: {((styling as Record<string, unknown>)?.subtitleLetterSpacing as number) ?? 0}px
               </div>
               <Slider
                 value={[((styling as Record<string, unknown>)?.subtitleLetterSpacing as number) ?? 0]}
@@ -169,7 +169,7 @@ export default function KPISubtitleAccordion({
             
             <div>
               <div className="text-xs text-gray-500 mb-1">
-                Altura da Linha: {(styling as Record<string, unknown>)?.subtitleLineHeight ?? 1.4}
+                Altura da Linha: {((styling as Record<string, unknown>)?.subtitleLineHeight as number) ?? 1.4}
               </div>
               <Slider
                 value={[((styling as Record<string, unknown>)?.subtitleLineHeight as number) ?? 1.4]}

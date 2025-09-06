@@ -121,7 +121,7 @@ export default function KPITitleAccordion({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <div className="text-xs text-gray-500 mb-1">
-                Margin Top: {(styling as Record<string, unknown>)?.titleMarginTop ?? 0}px
+                Margin Top: {((styling as Record<string, unknown>)?.titleMarginTop as number) ?? 0}px
               </div>
               <Slider
                 value={[((styling as Record<string, unknown>)?.titleMarginTop as number) ?? 0]}
@@ -135,7 +135,7 @@ export default function KPITitleAccordion({
             
             <div>
               <div className="text-xs text-gray-500 mb-1">
-                Margin Bottom: {(styling as Record<string, unknown>)?.titleMarginBottom ?? 0}px
+                Margin Bottom: {((styling as Record<string, unknown>)?.titleMarginBottom as number) ?? 0}px
               </div>
               <Slider
                 value={[((styling as Record<string, unknown>)?.titleMarginBottom as number) ?? 0]}
@@ -156,7 +156,7 @@ export default function KPITitleAccordion({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <div className="text-xs text-gray-500 mb-1">
-                Espaçamento das Letras: {(styling as Record<string, unknown>)?.titleLetterSpacing ?? 0}px
+                Espaçamento das Letras: {((styling as Record<string, unknown>)?.titleLetterSpacing as number) ?? 0}px
               </div>
               <Slider
                 value={[((styling as Record<string, unknown>)?.titleLetterSpacing as number) ?? 0]}
@@ -170,7 +170,7 @@ export default function KPITitleAccordion({
             
             <div>
               <div className="text-xs text-gray-500 mb-1">
-                Altura da Linha: {(styling as Record<string, unknown>)?.titleLineHeight ?? 1.2}
+                Altura da Linha: {((styling as Record<string, unknown>)?.titleLineHeight as number) ?? 1.2}
               </div>
               <Slider
                 value={[((styling as Record<string, unknown>)?.titleLineHeight as number) ?? 1.2]}
