@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import TiptapEditor from '@/components/docs/TiptapEditor'
+import { SimpleEditor } from '@/components/tiptap-templates/simple/simple-editor'
 import DocsList from '@/components/docs/DocsList'
 import { 
   Doc, 
@@ -147,11 +147,7 @@ export default function DocsPage() {
 
                 {/* Editor */}
                 <div className="flex-1 p-6">
-                  <TiptapEditor
-                    content={formData.content}
-                    onChange={handleContentChange}
-                    placeholder="Comece a escrever seu documento..."
-                  />
+                  <SimpleEditor />
                 </div>
               </>
             ) : (
