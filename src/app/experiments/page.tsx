@@ -146,7 +146,7 @@ export default function ExperimentsPage() {
 
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-[400px] grid-cols-2">
+              <TabsList className="grid grid-cols-2 w-fit">
                 <TabsTrigger value="overview">Visão Geral</TabsTrigger>
                 <TabsTrigger value="exclusion-groups">Grupos de Exclusão</TabsTrigger>
               </TabsList>
