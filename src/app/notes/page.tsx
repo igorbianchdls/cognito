@@ -7,7 +7,6 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb"
-import App from '@/components/PlateEditor'
 
 export default function NotesPage() {
   return (
@@ -37,8 +36,8 @@ export default function NotesPage() {
         </header>
 
         <div className="flex flex-1 bg-white">
-          <div className="flex-1">
-            <App />
+          <div className="flex-1 p-6">
+            
           </div>
         </div>
       </SidebarInset>
