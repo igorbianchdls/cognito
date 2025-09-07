@@ -688,7 +688,7 @@ export default function UniversalBuilder({
                   className={`p-2 rounded-lg cursor-pointer transition-all ${
                     data.selectedType === type.id
                       ? 'bg-accent border border-primary/30'
-                      : 'bg-secondary hover:bg-muted/30 border border-transparent hover:border-primary/20'
+                      : 'bg-gray-100 hover:bg-muted/30 border border-gray-300 hover:border-primary/20'
                   }`}
                   onClick={() => onTypeChange(type.id)}
                 >
