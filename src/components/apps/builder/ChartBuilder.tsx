@@ -45,7 +45,7 @@ export default function ChartBuilder({
           id="x-axis-drop-zone"
           label="Eixo X"
           description="Categorias para eixo horizontal (strings, datas)"
-          icon={<ArrowRight className="w-4 h-4 text-green-600" />}
+          icon={<ArrowRight className="w-4 h-4 text-emerald-500" />}
           fields={data.xAxis}
           acceptedTypes={['string', 'date', 'numeric']}
           onRemoveField={(fieldName) => onRemoveField('xAxis', fieldName)}
@@ -56,7 +56,7 @@ export default function ChartBuilder({
           id="y-axis-drop-zone"
           label="Eixo Y"
           description="Valores numéricos para eixo vertical (agregação)"
-          icon={<ArrowUp className="w-4 h-4 text-blue-600" />}
+          icon={<ArrowUp className="w-4 h-4 text-primary" />}
           fields={data.yAxis}
           acceptedTypes={['numeric']}
           onRemoveField={(fieldName) => onRemoveField('yAxis', fieldName)}
@@ -68,7 +68,7 @@ export default function ChartBuilder({
           id="filters-drop-zone"
           label="Filters"
           description="Drag fields here to filter data"
-          icon={<Activity className="w-4 h-4 text-orange-600" />}
+          icon={<Activity className="w-4 h-4 text-orange-500" />}
           fields={data.filters}
           acceptedTypes={['string', 'date', 'numeric', 'boolean']}
           onRemoveField={(fieldName) => onRemoveField('filters', fieldName)}

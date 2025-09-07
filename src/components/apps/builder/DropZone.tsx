@@ -107,9 +107,9 @@ export default function DropZone({
       <div className="mb-2">
         <div className="flex items-center gap-2 mb-1">
           {icon}
-          <h3 className="text-sm font-medium text-gray-900">{label}</h3>
+          <h3 className="text-sm font-medium text-foreground">{label}</h3>
         </div>
-        <p className="text-xs text-gray-600">{description}</p>
+        <p className="text-xs text-muted-foreground">{description}</p>
       </div>
 
       {/* Drop Area */}
@@ -118,16 +118,16 @@ export default function DropZone({
         className={`
           min-h-[80px] p-3 border-2 border-dashed rounded-lg transition-all
           ${isOver 
-            ? 'border-blue-400 bg-blue-50' 
+            ? 'border-primary/50 bg-primary/10' 
             : fields.length > 0
-              ? 'border-gray-300 bg-gray-50'
-              : 'border-gray-300 bg-white hover:border-gray-400'
+              ? 'border-border bg-muted/30'
+              : 'border-border bg-background hover:border-primary/30'
           }
         `}
       >
         {fields.length === 0 ? (
           /* Empty State */
-          <div className="flex flex-col items-center justify-center h-full text-gray-500">
+          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
             <Plus className="w-6 h-6 mb-1 opacity-50" />
             <p className="text-xs text-center">
               {isOver ? 'Drop here' : `Drag ${label.toLowerCase()} here`}
@@ -143,15 +143,15 @@ export default function DropZone({
               const getZoneColor = () => {
                 switch(id) {
                   case 'x-axis-drop-zone':
-                    return 'bg-blue-500 text-white'
+                    return 'bg-primary text-primary-foreground'
                   case 'y-axis-drop-zone':
-                    return 'bg-green-500 text-white'
+                    return 'bg-emerald-500 text-white'
                   case 'filters-drop-zone':
                     return 'bg-orange-500 text-white'
                   case 'kpi-value-drop-zone':
                     return 'bg-purple-500 text-white'
                   default:
-                    return typeAccepted ? 'bg-gray-500 text-white' : 'bg-red-500 text-white'
+                    return typeAccepted ? 'bg-secondary text-secondary-foreground' : 'bg-destructive text-destructive-foreground'
                 }
               }
               
@@ -197,7 +197,7 @@ export default function DropZone({
       {/* Type Hints */}
       {acceptedTypes && acceptedTypes.length > 0 && (
         <div className="mt-2">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             Accepts: {acceptedTypes.join(', ')} types
           </p>
         </div>

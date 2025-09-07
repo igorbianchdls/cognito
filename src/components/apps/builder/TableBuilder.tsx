@@ -27,7 +27,7 @@ export default function TableBuilder({
         id="columns-drop-zone"
         label="Colunas"
         description="Arraste campos para criar colunas da tabela"
-        icon={<Table className="w-4 h-4 text-blue-600" />}
+        icon={<Table className="w-4 h-4 text-primary" />}
         fields={data.columns}
         acceptedTypes={['string', 'date', 'numeric', 'boolean']}
         onRemoveField={(fieldName) => onRemoveField('columns', fieldName)}
@@ -38,7 +38,7 @@ export default function TableBuilder({
         id="filters-drop-zone"
         label="Filtros"
         description="Campos para filtrar os dados da tabela"
-        icon={<Table className="w-4 h-4 text-orange-600" />}
+        icon={<Table className="w-4 h-4 text-orange-500" />}
         fields={data.filters}
         acceptedTypes={['string', 'date', 'numeric', 'boolean']}
         onRemoveField={(fieldName) => onRemoveField('filters', fieldName)}

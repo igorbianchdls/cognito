@@ -29,7 +29,7 @@ export default function KPIBuilder({
         id="kpi-value-drop-zone"
         label="Valor KPI"
         description="Campo numérico para calcular o KPI"
-        icon={<TrendingUp className="w-4 h-4 text-purple-600" />}
+        icon={<TrendingUp className="w-4 h-4 text-purple-500" />}
         fields={data.kpiValue}
         acceptedTypes={['numeric']}
         onRemoveField={(fieldName) => onRemoveField('kpiValue', fieldName)}
@@ -41,7 +41,7 @@ export default function KPIBuilder({
         id="filters-drop-zone"
         label="Filtros"
         description="Campos para filtrar os dados do KPI"
-        icon={<Activity className="w-4 h-4 text-orange-600" />}
+        icon={<Activity className="w-4 h-4 text-orange-500" />}
         fields={data.filters}
         acceptedTypes={['string', 'date', 'numeric', 'boolean']}
         onRemoveField={(fieldName) => onRemoveField('filters', fieldName)}

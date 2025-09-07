@@ -218,7 +218,7 @@ export default function SplitSidebarPanel({
       {activeTab === 'chat' && <ChatPanel droppedWidgets={droppedWidgets} onEditWidget={onEditWidget} />}
       {activeTab === 'editor' && <WidgetEditor />}
       {activeTab === 'code' && (
-        <div className="p-4 text-center text-gray-500">
+        <div className="p-4 text-center text-muted-foreground">
           <p>Code Editor was removed</p>
         </div>
       )}

@@ -217,7 +217,7 @@ export default function TablesExplorer({
     <div className={`h-full flex flex-col relative overflow-hidden max-w-full ${className}`}>
       {/* Header - Conditional */}
       {showHeader && (
-        <div className="flex items-center justify-between px-3 py-2 border-b border-gray-300/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
           <div className="flex items-center gap-2">
             <Database className="w-3 h-3 text-primary" />
             <h2 className={`font-semibold ${compact ? 'text-sm' : 'text-base'}`}>Tables</h2>
@@ -327,8 +327,8 @@ export default function TablesExplorer({
                                 ) : (
                                   <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                                 )}
-                                <BarChart3 className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                                <span className="text-sm font-medium text-gray-900 flex-1 truncate">Dimensões</span>
+                                <BarChart3 className="w-4 h-4 text-primary flex-shrink-0" />
+                                <span className="text-sm font-medium text-foreground flex-1 truncate">Dimensões</span>
                                 <Badge variant="outline" className="text-xs flex-shrink-0 ml-1">
                                   {schema.length}
                                 </Badge>
@@ -361,7 +361,7 @@ export default function TablesExplorer({
                                   <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                                 )}
                                 <BarChart3 className="w-4 h-4 text-green-600 flex-shrink-0" />
-                                <span className="text-sm font-medium text-gray-900 flex-1 truncate">Medidas</span>
+                                <span className="text-sm font-medium text-foreground flex-1 truncate">Medidas</span>
                                 <Badge variant="outline" className="text-xs flex-shrink-0 ml-1">
                                   {tableMeasures.length}
                                 </Badge>

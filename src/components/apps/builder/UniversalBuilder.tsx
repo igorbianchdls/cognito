@@ -654,7 +654,7 @@ export default function UniversalBuilder({
   return (
     <div className="h-full flex flex-col relative overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-gray-300/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
         <div className="flex items-center gap-2">
           <BarChart3 className="w-3 h-3 text-primary" />
           <h2 className="text-base font-semibold">Universal Builder</h2>
