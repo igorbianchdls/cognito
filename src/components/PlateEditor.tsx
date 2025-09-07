@@ -12,7 +12,7 @@ import {
   ItalicPlugin,
   UnderlinePlugin,
 } from '@platejs/basic-nodes/react';
-import { SelectionPlugin } from '@platejs/selection/react';
+import { BlockSelectionPlugin } from '@platejs/selection/react';
 import {
   Plate,
   usePlateEditor,
@@ -48,7 +48,7 @@ const initialValue: Value = [
 export default function App() {
   const editor = usePlateEditor({
     plugins: [
-      SelectionPlugin,
+      BlockSelectionPlugin,
       BoldPlugin,
       ItalicPlugin,
       UnderlinePlugin,
