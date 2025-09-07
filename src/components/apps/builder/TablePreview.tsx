@@ -232,7 +232,7 @@ LIMIT 100
         </div>
         
         {/* Table Body */}
-        <div className="bg-gray-100 border border-gray-300">
+        <div className="bg-gray-50 border border-gray-300">
           {displayData.map((row, rowIndex) => (
             <div 
               key={rowIndex}
