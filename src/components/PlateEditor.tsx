@@ -6,10 +6,14 @@ import type { Value } from 'platejs';
 import {
   BlockquotePlugin,
   BoldPlugin,
+  CodePlugin,
   H1Plugin,
   H2Plugin,
   H3Plugin,
+  HighlightPlugin,
+  HrPlugin,
   ItalicPlugin,
+  KbdPlugin,
   UnderlinePlugin,
 } from '@platejs/basic-nodes/react';
 import { BlockSelectionPlugin } from '@platejs/selection/react';
@@ -24,15 +28,20 @@ import {
 } from '@platejs/combobox';
 
 import { BlockquoteElement } from '@/components/ui/blockquote-node';
+import { CodeElement } from '@/components/ui/code-node';
 import { Editor, EditorContainer } from '@/components/ui/editor';
 import { FixedToolbar } from '@/components/ui/fixed-toolbar';
 import { FloatingToolbar } from '@/components/ui/floating-toolbar';
 import { H1Element, H2Element, H3Element } from '@/components/ui/heading-node';
+import { HighlightElement } from '@/components/ui/highlight-node';
+import { HrElement } from '@/components/ui/hr-node';
+import { KbdElement } from '@/components/ui/kbd-node';
 import { MarkToolbarButton } from '@/components/ui/mark-toolbar-button';
 import { ToolbarButton } from '@/components/ui/toolbar';
 import { SlashKit } from '@/components/slash-kit';
 import { MentionKit } from '@/components/mention-kit';
 import { DndKit } from '@/components/dnd-kit';
+import { ListKit } from '@/components/list-kit';
 
 const initialValue: Value = [
   {
@@ -75,10 +84,15 @@ export default function App() {
       ...SlashKit,
       ...MentionKit,
       ...DndKit,
+      ...ListKit,
       TagPlugin,
       BoldPlugin,
       ItalicPlugin,
       UnderlinePlugin,
+      CodePlugin.withComponent(CodeElement),
+      HighlightPlugin.withComponent(HighlightElement),
+      KbdPlugin.withComponent(KbdElement),
+      HrPlugin.withComponent(HrElement),
       H1Plugin.withComponent(H1Element),
       H2Plugin.withComponent(H2Element),
       H3Plugin.withComponent(H3Element),
@@ -107,9 +121,15 @@ export default function App() {
         <ToolbarButton onClick={() => editor.tf.h2.toggle()}>H2</ToolbarButton>
         <ToolbarButton onClick={() => editor.tf.h3.toggle()}>H3</ToolbarButton>
         <ToolbarButton onClick={() => editor.tf.blockquote.toggle()}>Quote</ToolbarButton>
+        <ToolbarButton onClick={() => editor.tf.hr.insert()}>HR</ToolbarButton>
+        <ToolbarButton onClick={() => editor.tf.list.toggle({ type: 'ul' })}>• List</ToolbarButton>
+        <ToolbarButton onClick={() => editor.tf.list.toggle({ type: 'ol' })}>1. List</ToolbarButton>
         <MarkToolbarButton nodeType="bold" tooltip="Bold (⌘+B)">B</MarkToolbarButton>
         <MarkToolbarButton nodeType="italic" tooltip="Italic (⌘+I)">I</MarkToolbarButton>
         <MarkToolbarButton nodeType="underline" tooltip="Underline (⌘+U)">U</MarkToolbarButton>
+        <MarkToolbarButton nodeType="code" tooltip="Code (⌘+E)">Code</MarkToolbarButton>
+        <MarkToolbarButton nodeType="highlight" tooltip="Highlight">Highlight</MarkToolbarButton>
+        <MarkToolbarButton nodeType="kbd" tooltip="Keyboard">Kbd</MarkToolbarButton>
         <div className="flex-1" />
         <ToolbarButton
           className="px-2"
@@ -125,10 +145,15 @@ export default function App() {
           <MarkToolbarButton nodeType="bold" tooltip="Bold (⌘+B)">B</MarkToolbarButton>
           <MarkToolbarButton nodeType="italic" tooltip="Italic (⌘+I)">I</MarkToolbarButton>
           <MarkToolbarButton nodeType="underline" tooltip="Underline (⌘+U)">U</MarkToolbarButton>
+          <MarkToolbarButton nodeType="code" tooltip="Code (⌘+E)">Code</MarkToolbarButton>
+          <MarkToolbarButton nodeType="highlight" tooltip="Highlight">Highlight</MarkToolbarButton>
+          <MarkToolbarButton nodeType="kbd" tooltip="Keyboard">Kbd</MarkToolbarButton>
           <ToolbarButton onClick={() => editor.tf.h1.toggle()}>H1</ToolbarButton>
           <ToolbarButton onClick={() => editor.tf.h2.toggle()}>H2</ToolbarButton>
           <ToolbarButton onClick={() => editor.tf.h3.toggle()}>H3</ToolbarButton>
           <ToolbarButton onClick={() => editor.tf.blockquote.toggle()}>Quote</ToolbarButton>
+          <ToolbarButton onClick={() => editor.tf.list.toggle({ type: 'ul' })}>• List</ToolbarButton>
+          <ToolbarButton onClick={() => editor.tf.list.toggle({ type: 'ol' })}>1. List</ToolbarButton>
         </FloatingToolbar>
       </EditorContainer>
     </Plate>
