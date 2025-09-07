@@ -6,7 +6,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { DndPlugin } from '@platejs/dnd';
 import { PlaceholderPlugin } from '@platejs/media/react';
 
-import { BlockDraggable } from '@/components/block-draggable';
+import { BlockDraggable } from '@/components/ui/block-draggable';
 
 export const DndKit = [
   DndPlugin.configure({
