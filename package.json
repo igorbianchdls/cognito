@@ -41,6 +41,7 @@
     "@platejs/floating": "^49.0.0",
     "@platejs/layout": "^49.2.1",
     "@platejs/link": "^49.1.1",
+    "@platejs/list": "^49.2.17",
     "@platejs/math": "^49.0.0",
     "@platejs/media": "^49.0.0",
     "@platejs/mention": "^49.0.0",
