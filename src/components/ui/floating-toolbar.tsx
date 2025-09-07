@@ -9,7 +9,7 @@ import {
   useFloatingToolbar,
   useFloatingToolbarState,
 } from '@platejs/floating';
-import { useComposedRef } from '@udecode/cn';
+import { useComposedRef } from '@/hooks/use-composed-ref';
 import { KEYS } from 'platejs';
 import {
   useEditorId,
