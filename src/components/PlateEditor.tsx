@@ -17,11 +17,12 @@ import {
   UnderlinePlugin,
 } from '@platejs/basic-nodes/react';
 import { BlockSelectionPlugin } from '@platejs/selection/react';
+import { List, ListOrdered, Square } from 'lucide-react';
 import {
   Plate,
   usePlateEditor,
 } from 'platejs/react';
-import { createTSlatePlugin, type PluginConfig } from 'platejs';
+import { createTSlatePlugin, type PluginConfig, KEYS } from 'platejs';
 import { 
   type TriggerComboboxPluginOptions, 
   withTriggerCombobox 
@@ -122,8 +123,15 @@ export default function App() {
         <ToolbarButton onClick={() => editor.tf.h3.toggle()}>H3</ToolbarButton>
         <ToolbarButton onClick={() => editor.tf.blockquote.toggle()}>Quote</ToolbarButton>
         <ToolbarButton onClick={() => editor.tf.hr.toggle()}>HR</ToolbarButton>
-        <ToolbarButton onClick={() => editor.tf.list.toggle({ type: 'ul' })}>• List</ToolbarButton>
-        <ToolbarButton onClick={() => editor.tf.list.toggle({ type: 'ol' })}>1. List</ToolbarButton>
+        <ToolbarButton onClick={() => editor.tf.toggleBlock(KEYS.ul)}>
+          <List className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => editor.tf.toggleBlock(KEYS.ol)}>
+          <ListOrdered className="h-4 w-4" />
+        </ToolbarButton>
+        <ToolbarButton onClick={() => editor.tf.toggleBlock(KEYS.listTodo)}>
+          <Square className="h-4 w-4" />
+        </ToolbarButton>
         <MarkToolbarButton nodeType="bold" tooltip="Bold (⌘+B)">B</MarkToolbarButton>
         <MarkToolbarButton nodeType="italic" tooltip="Italic (⌘+I)">I</MarkToolbarButton>
         <MarkToolbarButton nodeType="underline" tooltip="Underline (⌘+U)">U</MarkToolbarButton>
@@ -152,8 +160,15 @@ export default function App() {
           <ToolbarButton onClick={() => editor.tf.h2.toggle()}>H2</ToolbarButton>
           <ToolbarButton onClick={() => editor.tf.h3.toggle()}>H3</ToolbarButton>
           <ToolbarButton onClick={() => editor.tf.blockquote.toggle()}>Quote</ToolbarButton>
-          <ToolbarButton onClick={() => editor.tf.list.toggle({ type: 'ul' })}>• List</ToolbarButton>
-          <ToolbarButton onClick={() => editor.tf.list.toggle({ type: 'ol' })}>1. List</ToolbarButton>
+          <ToolbarButton onClick={() => editor.tf.toggleBlock(KEYS.ul)}>
+            <List className="h-4 w-4" />
+          </ToolbarButton>
+          <ToolbarButton onClick={() => editor.tf.toggleBlock(KEYS.ol)}>
+            <ListOrdered className="h-4 w-4" />
+          </ToolbarButton>
+          <ToolbarButton onClick={() => editor.tf.toggleBlock(KEYS.listTodo)}>
+            <Square className="h-4 w-4" />
+          </ToolbarButton>
         </FloatingToolbar>
       </EditorContainer>
     </Plate>
