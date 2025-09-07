@@ -55,8 +55,11 @@ export default function App() {
       BlockquotePlugin.withComponent(BlockquoteElement),
     ],
     value: () => {
-      const savedValue = localStorage.getItem('installation-react-demo');
-      return savedValue ? JSON.parse(savedValue) : initialValue;
+      if (typeof window !== 'undefined') {
+        const savedValue = localStorage.getItem('installation-react-demo');
+        return savedValue ? JSON.parse(savedValue) : initialValue;
+      }
+      return initialValue;
     },
   });
 
@@ -64,7 +67,9 @@ export default function App() {
     <Plate
       editor={editor}
       onChange={({ value }) => {
-        localStorage.setItem('installation-react-demo', JSON.stringify(value));
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('installation-react-demo', JSON.stringify(value));
+        }
       }}
     >
       <FixedToolbar className="flex justify-start gap-1 rounded-t-lg">
