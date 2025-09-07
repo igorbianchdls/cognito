@@ -12,8 +12,7 @@ import {
   Heading3,
   Quote,
   List,
-  ListOrdered,
-  Palette
+  ListOrdered
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -68,7 +67,7 @@ export function DragContextMenu({ editor }: DragContextMenuProps) {
 
   if (!editor || !showHandle) return null
 
-  const transformTo = (type: string, attrs?: any) => {
+  const transformTo = (type: string, attrs?: { level: number }) => {
     const { from, to } = editor.state.selection
     
     switch (type) {
