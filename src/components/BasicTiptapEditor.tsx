@@ -42,7 +42,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { DragContextMenu } from '@/components/DragContextMenu'
+import { DragContextMenu } from '@/components/tiptap-ui/drag-context-menu'
+import '@/components/tiptap-node/paragraph-node/paragraph-node.scss'
 
 interface BasicTiptapEditorProps {
   content?: string

@@ -47,3 +47,7 @@ credentials/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+
+# Authentication tokens
+.npmrc
