@@ -44,17 +44,17 @@ interface MetricSection {
 const metricsData: MetricSection[] = [
   {
     id: 'purchases',
-    name: 'Purchases',
+    name: 'Compras',
     icon: <Clock className="w-4 h-4" />,
     isPrimary: true,
     columns: {
-      users: 'Users',
-      metricValue: 'Purchase',
-      metricPerUser: 'Purchase / User'
+      users: 'Usuários',
+      metricValue: 'Compras',
+      metricPerUser: 'Compras / Usuário'
     },
     data: [
       {
-        variation: 'Variation 1',
+        variation: 'Variação 1',
         users: 23489,
         metricValue: 1619,
         metricPerUser: '0.0689',
@@ -62,11 +62,11 @@ const metricsData: MetricSection[] = [
         probability: 55
       },
       {
-        variation: 'Control Group',
+        variation: 'Grupo de Controle',
         users: 212968,
         metricValue: 14618,
         metricPerUser: '0.0686',
-        uplift: 'Baseline',
+        uplift: 'Base',
         probability: 45,
         isBaseline: true
       }
@@ -74,16 +74,16 @@ const metricsData: MetricSection[] = [
   },
   {
     id: 'revenue',
-    name: 'Revenue',
+    name: 'Receita',
     icon: <DollarSign className="w-4 h-4" />,
     columns: {
-      users: 'Users',
-      metricValue: 'Revenue',
-      metricPerUser: 'Revenue / User'
+      users: 'Usuários',
+      metricValue: 'Receita',
+      metricPerUser: 'Receita / Usuário'
     },
     data: [
       {
-        variation: 'Variation 1',
+        variation: 'Variação 1',
         users: 23489,
         metricValue: '$115,373',
         metricPerUser: '$4.91',
@@ -91,11 +91,11 @@ const metricsData: MetricSection[] = [
         probability: 35
       },
       {
-        variation: 'Control Group',
+        variation: 'Grupo de Controle',
         users: 212968,
         metricValue: '$1.05M',
         metricPerUser: '$4.95',
-        uplift: 'Baseline',
+        uplift: 'Base',
         probability: 65,
         isBaseline: true
       }
@@ -103,16 +103,16 @@ const metricsData: MetricSection[] = [
   },
   {
     id: 'add-to-cart',
-    name: 'Add to Cart',
+    name: 'Adicionar ao Carrinho',
     icon: <ShoppingCart className="w-4 h-4" />,
     columns: {
-      users: 'Users',
-      metricValue: 'Add to Cart',
-      metricPerUser: 'Add to Cart / Users'
+      users: 'Usuários',
+      metricValue: 'Adicionar ao Carrinho',
+      metricPerUser: 'Adicionar ao Carrinho / Usuários'
     },
     data: [
       {
-        variation: 'Variation 1',
+        variation: 'Variação 1',
         users: 23489,
         metricValue: 10077,
         metricPerUser: '0.429',
@@ -120,11 +120,11 @@ const metricsData: MetricSection[] = [
         probability: 62
       },
       {
-        variation: 'Control Group',
+        variation: 'Grupo de Controle',
         users: 212968,
         metricValue: 9140,
         metricPerUser: '0.428',
-        uplift: 'Baseline',
+        uplift: 'Base',
         probability: 38,
         isBaseline: true
       }
@@ -135,13 +135,13 @@ const metricsData: MetricSection[] = [
     name: 'AOV',
     icon: <TrendingUp className="w-4 h-4" />,
     columns: {
-      users: 'Users',
-      metricValue: 'Revenue',
-      metricPerUser: 'AOV'
+      users: 'Usuários',
+      metricValue: 'Receita',
+      metricPerUser: 'Ticket Médio'
     },
     data: [
       {
-        variation: 'Variation 1',
+        variation: 'Variação 1',
         users: 23489,
         metricValue: '$115,373',
         metricPerUser: '$71.26',
@@ -149,11 +149,11 @@ const metricsData: MetricSection[] = [
         probability: 24
       },
       {
-        variation: 'Control Group',
+        variation: 'Grupo de Controle',
         users: 212968,
         metricValue: '$1.05M',
         metricPerUser: '$72.15',
-        uplift: 'Baseline',
+        uplift: 'Base',
         probability: 76,
         isBaseline: true
       }
@@ -181,7 +181,7 @@ export default async function ExperimentResultsPage({ params }: ExperimentResult
   }
 
   const getUpliftColor = (uplift: string) => {
-    if (uplift === 'Baseline') return 'text-muted-foreground'
+    if (uplift === 'Base') return 'text-muted-foreground'
     if (uplift.startsWith('+')) return 'text-green-600'
     if (uplift.startsWith('-')) return 'text-red-600'
     return 'text-muted-foreground'
@@ -204,19 +204,19 @@ export default async function ExperimentResultsPage({ params }: ExperimentResult
                 <BreadcrumbList>
                   <BreadcrumbItem>
                     <BreadcrumbLink href="/experiments" className="text-sidebar-foreground">
-                      Experiments
+                      Experimentos
                     </BreadcrumbLink>
                   </BreadcrumbItem>
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
                     <BreadcrumbLink href={`/experiments/${id}`} className="text-sidebar-foreground">
-                      Landing page improvements
+                      Melhorias na página inicial
                     </BreadcrumbLink>
                   </BreadcrumbItem>
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
                     <BreadcrumbPage className="text-sidebar-foreground">
-                      Results
+                      Resultados
                     </BreadcrumbPage>
                   </BreadcrumbItem>
                 </BreadcrumbList>
@@ -229,28 +229,28 @@ export default async function ExperimentResultsPage({ params }: ExperimentResult
           <div className="space-y-6">
             {/* Header with Controls */}
             <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-foreground">Variation Performance</h1>
+              <h1 className="text-2xl font-bold text-foreground">Performance das Variações</h1>
               
               <div className="flex items-center gap-4">
                 <Select defaultValue="all-metrics">
                   <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="Choose Metrics" />
+                    <SelectValue placeholder="Escolher Métricas" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all-metrics">Choose Metrics</SelectItem>
-                    <SelectItem value="purchases">Purchases</SelectItem>
-                    <SelectItem value="revenue">Revenue</SelectItem>
-                    <SelectItem value="add-to-cart">Add to Cart</SelectItem>
+                    <SelectItem value="all-metrics">Escolher Métricas</SelectItem>
+                    <SelectItem value="purchases">Compras</SelectItem>
+                    <SelectItem value="revenue">Receita</SelectItem>
+                    <SelectItem value="add-to-cart">Adicionar ao Carrinho</SelectItem>
                     <SelectItem value="aov">AOV</SelectItem>
                   </SelectContent>
                 </Select>
 
                 <Select defaultValue="all-audience">
                   <SelectTrigger className="w-[160px]">
-                    <SelectValue placeholder="Audience Breakdown" />
+                    <SelectValue placeholder="Segmentação de Audiência" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all-audience">Audience Breakdown</SelectItem>
+                    <SelectItem value="all-audience">Segmentação de Audiência</SelectItem>
                     <SelectItem value="desktop">Desktop</SelectItem>
                     <SelectItem value="mobile">Mobile</SelectItem>
                     <SelectItem value="tablet">Tablet</SelectItem>
@@ -259,11 +259,11 @@ export default async function ExperimentResultsPage({ params }: ExperimentResult
 
                 <Select defaultValue="excluded">
                   <SelectTrigger className="w-[140px]">
-                    <SelectValue placeholder="Outliers Excluded" />
+                    <SelectValue placeholder="Outliers Excluídos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="excluded">Outliers Excluded</SelectItem>
-                    <SelectItem value="included">Outliers Included</SelectItem>
+                    <SelectItem value="excluded">Outliers Excluídos</SelectItem>
+                    <SelectItem value="included">Outliers Incluídos</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -281,7 +281,7 @@ export default async function ExperimentResultsPage({ params }: ExperimentResult
                         <h2 className="text-lg font-semibold text-foreground">{metric.name}</h2>
                         {metric.isPrimary && (
                           <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-100">
-                            Primary Metric
+                            Métrica Principal
                           </Badge>
                         )}
                       </div>
@@ -291,12 +291,12 @@ export default async function ExperimentResultsPage({ params }: ExperimentResult
                         <Table>
                           <TableHeader>
                             <TableRow>
-                              <TableHead className="font-medium">Variation ↑</TableHead>
+                              <TableHead className="font-medium">Variação ↑</TableHead>
                               <TableHead className="font-medium">{metric.columns.users}</TableHead>
                               <TableHead className="font-medium">{metric.columns.metricValue}</TableHead>
                               <TableHead className="font-medium">{metric.columns.metricPerUser}</TableHead>
-                              <TableHead className="font-medium">Uplift</TableHead>
-                              <TableHead className="font-medium">Probability to Be Best</TableHead>
+                              <TableHead className="font-medium">Aumento</TableHead>
+                              <TableHead className="font-medium">Probabilidade de ser Melhor</TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>

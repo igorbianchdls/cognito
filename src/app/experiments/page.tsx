@@ -28,40 +28,40 @@ const experimentsData = [
     id: '1',
     name: 'Copy of Landing page improvements',
     type: 'A/B Test',
-    status: 'Not Started',
-    modified: 'Aug 15, 2024',
+    status: 'Não Iniciado',
+    modified: '15 Ago, 2024',
     description: 'Landing page experiment for Adler Bragon Insurance, testing a discounted rate to see if a visitor buys two policies at the same time.'
   },
   {
     id: '2', 
     name: 'Landing page improvements',
     type: 'A/B Test',
-    status: 'Not Started',
-    modified: 'Aug 14, 2024',
+    status: 'Não Iniciado',
+    modified: '14 Ago, 2024',
     description: 'Landing page experiment for Adler Bragon Insurance, testing a discounted rate to see if a visitor buys two policies at the same time.'
   },
   {
     id: '3',
     name: "Trisha's Personalization Campaign", 
     type: 'Personalization Campaign',
-    status: 'Not Started',
-    modified: 'Aug 12, 2024',
+    status: 'Não Iniciado',
+    modified: '12 Ago, 2024',
     description: 'Personalization campaign targeting different user segments.'
   },
   {
     id: '4',
     name: 'Product page experiment',
     type: 'A/B Test', 
-    status: 'Not Started',
-    modified: 'Apr 15, 2024',
+    status: 'Não Iniciado',
+    modified: '15 Abr, 2024',
     description: 'Testing different product page layouts and CTAs.'
   },
   {
     id: '5',
     name: 'Hello, world!',
     type: 'A/B Test',
-    status: 'Paused', 
-    modified: 'Apr 12, 2022',
+    status: 'Pausado', 
+    modified: '12 Abr, 2022',
     description: 'A simple experiment to target the new page - Attic and Button Home Page'
   }
 ]
@@ -73,11 +73,11 @@ export default function ExperimentsPage() {
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'Not Started':
+      case 'Não Iniciado':
         return 'secondary'
-      case 'Paused':
+      case 'Pausado':
         return 'outline'
-      case 'Running':
+      case 'Executando':
         return 'default'
       default:
         return 'secondary'
@@ -87,26 +87,26 @@ export default function ExperimentsPage() {
   const experimentTypes = [
     {
       id: 'ab-test',
-      name: 'A/B Test', 
-      description: 'Test multiple variations against each other to find the best experience.',
+      name: 'Teste A/B', 
+      description: 'Teste múltiplas variações umas contra as outras para encontrar a melhor experiência.',
       icon: <TestTube className="w-5 h-5 text-blue-600" />
     },
     {
       id: 'multivariate',
-      name: 'Multivariate Test',
-      description: 'Test multiple sections of a page at once.',
+      name: 'Teste Multivariado',
+      description: 'Teste múltiplas seções de uma página ao mesmo tempo.',
       icon: <BarChart3 className="w-5 h-5 text-green-600" />  
     },
     {
       id: 'personalization',
-      name: 'Personalization Campaign',
-      description: 'Target multiple audiences with different personalized experiences.',
+      name: 'Campanha de Personalização',
+      description: 'Segmente múltiplas audiências com diferentes experiências personalizadas.',
       icon: <Users className="w-5 h-5 text-purple-600" />
     },
     {
       id: 'bandit',
-      name: 'Multi-Armed Bandit',
-      description: 'Use machine learning to dynamically allocate traffic to the best-performing variation.',
+      name: 'Bandit Multi-Braços',
+      description: 'Use aprendizado de máquina para alocar dinamicamente o tráfego para a variação de melhor desempenho.'
       icon: <Zap className="w-5 h-5 text-orange-600" />
     }
   ]
@@ -141,14 +141,14 @@ export default function ExperimentsPage() {
           <div className="space-y-6">
             {/* Header */}
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Experiments</h1>
+              <h1 className="text-2xl font-bold text-foreground">Experimentos</h1>
             </div>
 
             {/* Tabs */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-[400px] grid-cols-2">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="exclusion-groups">Exclusion Groups</TabsTrigger>
+                <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+                <TabsTrigger value="exclusion-groups">Grupos de Exclusão</TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview" className="space-y-6">
@@ -158,7 +158,7 @@ export default function ExperimentsPage() {
                     <div className="relative flex-1 max-w-md">
                       <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
-                        placeholder="Filter by name, key, or description"
+                        placeholder="Filtrar por nome, chave ou descrição"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
@@ -172,10 +172,10 @@ export default function ExperimentsPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Active">Active</SelectItem>
-                          <SelectItem value="All">All</SelectItem>
-                          <SelectItem value="Paused">Paused</SelectItem>
-                          <SelectItem value="Completed">Completed</SelectItem>
+                          <SelectItem value="Active">Ativo</SelectItem>
+                          <SelectItem value="All">Todos</SelectItem>
+                          <SelectItem value="Paused">Pausado</SelectItem>
+                          <SelectItem value="Completed">Concluído</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -185,7 +185,7 @@ export default function ExperimentsPage() {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button className="gap-2">
-                        Create New Experiment...
+                        Criar Novo Experimento...
                         <ChevronDown className="w-4 h-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -212,10 +212,10 @@ export default function ExperimentsPage() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Type</TableHead>
+                        <TableHead>Nome</TableHead>
+                        <TableHead>Tipo</TableHead>
                         <TableHead>Status</TableHead>
-                        <TableHead>Modified</TableHead>
+                        <TableHead>Modificado</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -256,7 +256,7 @@ export default function ExperimentsPage() {
 
               <TabsContent value="exclusion-groups">
                 <div className="flex items-center justify-center h-32">
-                  <p className="text-muted-foreground">Exclusion Groups content will be implemented here.</p>
+                  <p className="text-muted-foreground">Conteúdo dos Grupos de Exclusão será implementado aqui.</p>
                 </div>
               </TabsContent>
             </Tabs>
