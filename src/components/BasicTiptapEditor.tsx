@@ -1,7 +1,6 @@
 'use client'
 
 import { useEditor, EditorContent, EditorContext } from '@tiptap/react'
-import DragHandleReact from '@tiptap/extension-drag-handle-react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import Highlight from '@tiptap/extension-highlight'
@@ -77,10 +76,6 @@ export default function BasicTiptapEditor({
       Subscript,
       Image,
       HorizontalRule,
-      DragHandleReact.configure({
-        dragHandleWidth: 20,
-        scrollTreshold: 100,
-      }),
     ],
     content: content || `<p>${placeholder}</p>`,
     onUpdate: ({ editor }) => {
