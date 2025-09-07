@@ -112,10 +112,10 @@ export default function ExperimentsPage() {
   ]
 
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider defaultOpen={true}>
       <SidebarShadcn />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b border-border" style={{backgroundColor: 'hsl(0 0% 98%)'}}>
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b border-border bg-white">
           <div className="flex items-center justify-between w-full px-4">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="-ml-1" />
@@ -137,7 +137,7 @@ export default function ExperimentsPage() {
           </div>
         </header>
 
-        <div className="flex flex-1 flex-col p-6" style={{backgroundColor: 'hsl(0 0% 98%)'}}>
+        <div className="flex flex-1 flex-col p-6 bg-white">
           <div className="space-y-6">
             {/* Header */}
             <div>
