@@ -94,7 +94,7 @@ export default function ChartBuilder({
                 className={`p-3 rounded-lg cursor-pointer transition-all border ${
                   data.chartType === type.id
                     ? 'bg-accent border-primary/50 shadow-sm'
-                    : 'bg-background hover:bg-muted/30 border-border hover:border-primary/30'
+                    : 'bg-secondary hover:bg-muted/30 border-border hover:border-primary/30'
                 }`}
                 onClick={() => onChartTypeChange(type.id)}
               >
