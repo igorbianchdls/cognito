@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { formatDate } from '@/lib/docs'
-import { FileText, Trash2, Edit } from 'lucide-react'
+import { FileText, Trash2 } from 'lucide-react'
 
 interface DocsListProps {
   docs: Doc[]
@@ -39,7 +39,7 @@ export default function DocsList({
           <div className="text-center py-8 text-muted-foreground">
             <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
             <p className="text-sm">Nenhum documento criado</p>
-            <p className="text-xs">Clique em "Novo Doc" para começar</p>
+            <p className="text-xs">Clique em &ldquo;Novo Doc&rdquo; para começar</p>
           </div>
         ) : (
           docs.map((doc) => (
