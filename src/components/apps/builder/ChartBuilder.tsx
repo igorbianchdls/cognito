@@ -76,7 +76,7 @@ export default function ChartBuilder({
       </div>
 
       {/* Chart Type Selection */}
-      <Card className="bg-transparent border-transparent">
+      <Card className="bg-transparent border-transparent shadow-none">
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
             <PieChart className="w-4 h-4" />
@@ -94,7 +94,7 @@ export default function ChartBuilder({
                 className={`p-3 rounded-lg cursor-pointer transition-all border ${
                   data.chartType === type.id
                     ? 'bg-accent border-primary/50 shadow-sm'
-                    : 'bg-gray-50 hover:bg-muted/30 border border-gray-300 hover:border-primary/30'
+                    : 'bg-transparent hover:bg-muted/30 border border-gray-300 hover:border-primary/30'
                 }`}
                 onClick={() => onChartTypeChange(type.id)}
               >
