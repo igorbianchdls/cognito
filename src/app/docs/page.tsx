@@ -7,7 +7,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb"
-import { DocsSimpleEditor } from '@/components/DocsSimpleEditor'
+import { MyEditor } from '@/components/PlateEditor'
 
 export default function DocsPage() {
   return (
@@ -27,7 +27,7 @@ export default function DocsPage() {
                 <BreadcrumbList>
                   <BreadcrumbItem>
                     <BreadcrumbPage className="text-sidebar-foreground">
-                      Editor de Documentos
+                      Documentos
                     </BreadcrumbPage>
                   </BreadcrumbItem>
                 </BreadcrumbList>
@@ -36,9 +36,9 @@ export default function DocsPage() {
           </div>
         </header>
 
-        <div className="flex flex-1 bg-white overflow-hidden">
-          <div className="flex-1 relative">
-            <DocsSimpleEditor />
+        <div className="flex flex-1 bg-white">
+          <div className="flex-1">
+            <MyEditor />
           </div>
         </div>
       </SidebarInset>
