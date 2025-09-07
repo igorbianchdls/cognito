@@ -11,6 +11,7 @@ import {
   GalleryVerticalEnd,
   Plug,
   MessagesSquare,
+  FileText,
 } from "lucide-react"
 
 import MetaIcon from "@/components/icons/MetaIcon"
@@ -63,6 +64,11 @@ const navigationData = {
       title: "Apps", 
       url: "/apps",
       icon: LayoutGrid,
+    },
+    {
+      title: "Docs",
+      url: "/docs",
+      icon: FileText,
     },
     {
       title: "Multi Agentes",
