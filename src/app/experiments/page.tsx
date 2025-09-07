@@ -106,7 +106,7 @@ export default function ExperimentsPage() {
     {
       id: 'bandit',
       name: 'Bandit Multi-Braços',
-      description: 'Use aprendizado de máquina para alocar dinamicamente o tráfego para a variação de melhor desempenho.'
+      description: 'Use aprendizado de máquina para alocar dinamicamente o tráfego para a variação de melhor desempenho.',
       icon: <Zap className="w-5 h-5 text-orange-600" />
     }
   ]
