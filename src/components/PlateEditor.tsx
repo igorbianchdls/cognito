@@ -31,6 +31,7 @@ import { H1Element, H2Element, H3Element } from '@/components/ui/heading-node';
 import { MarkToolbarButton } from '@/components/ui/mark-toolbar-button';
 import { ToolbarButton } from '@/components/ui/toolbar';
 import { SlashKit } from '@/components/slash-kit';
+import { MentionKit } from '@/components/mention-kit';
 
 const initialValue: Value = [
   {
@@ -71,6 +72,7 @@ export default function App() {
     plugins: [
       BlockSelectionPlugin,
       ...SlashKit,
+      ...MentionKit,
       TagPlugin,
       BoldPlugin,
       ItalicPlugin,
