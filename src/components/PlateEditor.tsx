@@ -121,7 +121,7 @@ export default function App() {
         <ToolbarButton onClick={() => editor.tf.h2.toggle()}>H2</ToolbarButton>
         <ToolbarButton onClick={() => editor.tf.h3.toggle()}>H3</ToolbarButton>
         <ToolbarButton onClick={() => editor.tf.blockquote.toggle()}>Quote</ToolbarButton>
-        <ToolbarButton onClick={() => editor.tf.hr.insert()}>HR</ToolbarButton>
+        <ToolbarButton onClick={() => editor.tf.hr.toggle()}>HR</ToolbarButton>
         <ToolbarButton onClick={() => editor.tf.list.toggle({ type: 'ul' })}>• List</ToolbarButton>
         <ToolbarButton onClick={() => editor.tf.list.toggle({ type: 'ol' })}>1. List</ToolbarButton>
         <MarkToolbarButton nodeType="bold" tooltip="Bold (⌘+B)">B</MarkToolbarButton>
