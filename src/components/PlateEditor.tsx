@@ -1,3 +1,5 @@
+'use client';
+
 import { Plate, usePlateEditor } from 'platejs/react';
 
 import { Editor, EditorContainer } from '@/components/ui/editor';
