@@ -28,14 +28,14 @@ import {
 } from '@platejs/combobox';
 
 import { BlockquoteElement } from '@/components/ui/blockquote-node';
-import { CodeElement } from '@/components/ui/code-node';
+import { CodeLeaf } from '@/components/ui/code-node';
 import { Editor, EditorContainer } from '@/components/ui/editor';
 import { FixedToolbar } from '@/components/ui/fixed-toolbar';
 import { FloatingToolbar } from '@/components/ui/floating-toolbar';
 import { H1Element, H2Element, H3Element } from '@/components/ui/heading-node';
-import { HighlightElement } from '@/components/ui/highlight-node';
+import { HighlightLeaf } from '@/components/ui/highlight-node';
 import { HrElement } from '@/components/ui/hr-node';
-import { KbdElement } from '@/components/ui/kbd-node';
+import { KbdLeaf } from '@/components/ui/kbd-node';
 import { MarkToolbarButton } from '@/components/ui/mark-toolbar-button';
 import { ToolbarButton } from '@/components/ui/toolbar';
 import { SlashKit } from '@/components/slash-kit';
@@ -89,9 +89,9 @@ export default function App() {
       BoldPlugin,
       ItalicPlugin,
       UnderlinePlugin,
-      CodePlugin.withComponent(CodeElement),
-      HighlightPlugin.withComponent(HighlightElement),
-      KbdPlugin.withComponent(KbdElement),
+      CodePlugin.withComponent(CodeLeaf),
+      HighlightPlugin.withComponent(HighlightLeaf),
+      KbdPlugin.withComponent(KbdLeaf),
       HorizontalRulePlugin.withComponent(HrElement),
       H1Plugin.withComponent(H1Element),
       H2Plugin.withComponent(H2Element),
