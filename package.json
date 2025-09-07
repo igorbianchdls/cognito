@@ -44,6 +44,7 @@
     "@platejs/media": "^49.0.0",
     "@platejs/selection": "^49.2.4",
     "@platejs/slash-command": "^49.0.0",
+    "@platejs/suggestion": "^49.0.0",
     "@platejs/table": "^49.1.13",
     "@platejs/toc": "^49.0.0",
     "@radix-ui/react-accordion": "^1.2.12",
