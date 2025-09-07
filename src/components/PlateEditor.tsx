@@ -41,7 +41,7 @@ import { ToolbarButton } from '@/components/ui/toolbar';
 import { SlashKit } from '@/components/slash-kit';
 import { MentionKit } from '@/components/mention-kit';
 import { DndKit } from '@/components/dnd-kit';
-import { ListKit } from '@/components/list-kit';
+import { ListKit } from '@/components/editor/plugins/list-kit';
 
 const initialValue: Value = [
   {
