@@ -30,6 +30,7 @@ import { FloatingToolbar } from '@/components/ui/floating-toolbar';
 import { H1Element, H2Element, H3Element } from '@/components/ui/heading-node';
 import { MarkToolbarButton } from '@/components/ui/mark-toolbar-button';
 import { ToolbarButton } from '@/components/ui/toolbar';
+import { SlashKit } from '@/components/slash-kit';
 
 const initialValue: Value = [
   {
@@ -69,6 +70,7 @@ export default function App() {
   const editor = usePlateEditor({
     plugins: [
       BlockSelectionPlugin,
+      ...SlashKit,
       TagPlugin,
       BoldPlugin,
       ItalicPlugin,
