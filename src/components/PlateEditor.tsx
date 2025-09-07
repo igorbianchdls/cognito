@@ -17,6 +17,11 @@ import {
   Plate,
   usePlateEditor,
 } from 'platejs/react';
+import { createTSlatePlugin, type PluginConfig } from 'platejs';
+import { 
+  type TriggerComboboxPluginOptions, 
+  withTriggerCombobox 
+} from '@platejs/combobox';
 
 import { BlockquoteElement } from '@/components/ui/blockquote-node';
 import { Editor, EditorContainer } from '@/components/ui/editor';
@@ -45,10 +50,26 @@ const initialValue: Value = [
   },
 ];
 
+type TagConfig = PluginConfig<'tag', TriggerComboboxPluginOptions>;
+
+const TagPlugin = createTSlatePlugin<TagConfig>({
+  key: 'tag',
+  node: { isElement: true, isInline: true, isVoid: true },
+  options: {
+    trigger: '#',
+    triggerPreviousCharPattern: /^\s?$/,
+    createComboboxInput: () => ({
+      children: [{ text: '' }],
+      type: 'tag_input',
+    }),
+  },
+}).overrideEditor(withTriggerCombobox);
+
 export default function App() {
   const editor = usePlateEditor({
     plugins: [
       BlockSelectionPlugin,
+      TagPlugin,
       BoldPlugin,
       ItalicPlugin,
       UnderlinePlugin,

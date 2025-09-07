@@ -33,6 +33,7 @@
     "@nivo/treemap": "^0.99.0",
     "@platejs/ai": "^49.2.15",
     "@platejs/basic-nodes": "^49.0.0",
+    "@platejs/combobox": "^49.0.0",
     "@platejs/floating": "^49.0.0",
     "@platejs/selection": "^49.2.4",
     "@radix-ui/react-accordion": "^1.2.12",
