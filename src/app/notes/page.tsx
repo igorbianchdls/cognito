@@ -1,3 +1,5 @@
+'use client';
+
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from "@/components/ui/separator"
@@ -7,6 +9,37 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb"
+import { EditorContent, EditorContext, useEditor } from '@tiptap/react'
+import { StarterKit } from '@tiptap/starter-kit'
+import { BlockquoteButton } from '@/components/tiptap-ui/blockquote-button'
+
+import '@/components/tiptap-node/paragraph-node/paragraph-node.scss'
+
+function MyEditor() {
+  const editor = useEditor({
+    immediatelyRender: false,
+    extensions: [StarterKit],
+    content: `
+        <blockquote>
+            <p>"The best way to predict the future is to invent it."</p><p>— Alan Kay</p>
+        </blockquote>
+        `,
+  })
+
+  return (
+    <EditorContext.Provider value={{ editor }}>
+      <BlockquoteButton
+        editor={editor}
+        text="Quote"
+        hideWhenUnavailable={true}
+        showShortcut={true}
+        onToggled={() => console.log('Blockquote toggled!')}
+      />
+
+      <EditorContent editor={editor} role="presentation" />
+    </EditorContext.Provider>
+  )
+}
 
 export default function NotesPage() {
   return (
@@ -37,7 +70,7 @@ export default function NotesPage() {
 
         <div className="flex flex-1 bg-white">
           <div className="flex-1 p-6">
-            
+            <MyEditor />
           </div>
         </div>
       </SidebarInset>
