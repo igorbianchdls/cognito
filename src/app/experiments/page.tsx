@@ -216,6 +216,7 @@ export default function ExperimentsPage() {
                         <TableHead>Tipo</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Modificado</TableHead>
+                        <TableHead>Resultados</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -223,14 +224,9 @@ export default function ExperimentsPage() {
                         <TableRow key={experiment.id}>
                           <TableCell>
                             <div className="space-y-1">
-                              <Link href={`/experiments/${experiment.id}/results`}>
-                                <Button 
-                                  variant="link" 
-                                  className="p-0 h-auto text-blue-600 hover:text-blue-800 font-medium text-left justify-start"
-                                >
-                                  {experiment.name}
-                                </Button>
-                              </Link>
+                              <div className="font-medium text-foreground">
+                                {experiment.name}
+                              </div>
                               <p className="text-xs text-muted-foreground leading-relaxed">
                                 {experiment.description}
                               </p>
@@ -246,6 +242,16 @@ export default function ExperimentsPage() {
                           </TableCell>
                           <TableCell className="text-muted-foreground">
                             {experiment.modified}
+                          </TableCell>
+                          <TableCell>
+                            <Link href={`/experiments/${experiment.id}/results`}>
+                              <Button 
+                                variant="link" 
+                                className="p-0 h-auto text-blue-600 hover:text-blue-800 font-medium"
+                              >
+                                Resultados
+                              </Button>
+                            </Link>
                           </TableCell>
                         </TableRow>
                       ))}
