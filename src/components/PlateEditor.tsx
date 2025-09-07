@@ -17,7 +17,7 @@ import {
   UnderlinePlugin,
 } from '@platejs/basic-nodes/react';
 import { BlockSelectionPlugin } from '@platejs/selection/react';
-import { List, ListOrdered, Square } from 'lucide-react';
+import { List, ListOrdered, Square, Type, Palette } from 'lucide-react';
 import {
   Plate,
   usePlateEditor,
@@ -39,10 +39,13 @@ import { HrElement } from '@/components/ui/hr-node';
 import { KbdLeaf } from '@/components/ui/kbd-node';
 import { MarkToolbarButton } from '@/components/ui/mark-toolbar-button';
 import { ToolbarButton } from '@/components/ui/toolbar';
+import { FontSizeToolbarButton } from '@/components/ui/font-size-toolbar-button';
+import { FontColorToolbarButton } from '@/components/ui/font-color-toolbar-button';
 import { SlashKit } from '@/components/slash-kit';
 import { MentionKit } from '@/components/mention-kit';
 import { DndKit } from '@/components/dnd-kit';
 import { ListKit } from '@/components/editor/plugins/list-kit';
+import { FontKit } from '@/components/editor/plugins/font-kit';
 
 const initialValue: Value = [
   {
@@ -86,6 +89,7 @@ export default function App() {
       ...MentionKit,
       ...DndKit,
       ...ListKit,
+      ...FontKit,
       TagPlugin,
       BoldPlugin,
       ItalicPlugin,
@@ -139,6 +143,13 @@ export default function App() {
         <MarkToolbarButton nodeType="highlight" tooltip="Highlight">Highlight</MarkToolbarButton>
         <MarkToolbarButton nodeType="kbd" tooltip="Keyboard">Kbd</MarkToolbarButton>
         <div className="flex-1" />
+        <FontSizeToolbarButton />
+        <FontColorToolbarButton nodeType="color" tooltip="Text Color">
+          <Type className="h-4 w-4" />
+        </FontColorToolbarButton>
+        <FontColorToolbarButton nodeType="backgroundColor" tooltip="Background Color">
+          <Palette className="h-4 w-4" />
+        </FontColorToolbarButton>
         <ToolbarButton
           className="px-2"
           onClick={() => editor.tf.setValue(initialValue)}
@@ -169,6 +180,13 @@ export default function App() {
           <ToolbarButton onClick={() => editor.tf.toggleBlock(KEYS.listTodo)}>
             <Square className="h-4 w-4" />
           </ToolbarButton>
+          <FontSizeToolbarButton />
+          <FontColorToolbarButton nodeType="color" tooltip="Text Color">
+            <Type className="h-4 w-4" />
+          </FontColorToolbarButton>
+          <FontColorToolbarButton nodeType="backgroundColor" tooltip="Background Color">
+            <Palette className="h-4 w-4" />
+          </FontColorToolbarButton>
         </FloatingToolbar>
       </EditorContainer>
     </Plate>
