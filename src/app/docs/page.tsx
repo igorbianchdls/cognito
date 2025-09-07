@@ -7,7 +7,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb"
-import { MyEditor } from '@/components/PlateEditor'
+import App from '@/components/PlateEditor'
 
 export default function DocsPage() {
   return (
@@ -38,7 +38,7 @@ export default function DocsPage() {
 
         <div className="flex flex-1 bg-white">
           <div className="flex-1">
-            <MyEditor />
+            <App />
           </div>
         </div>
       </SidebarInset>

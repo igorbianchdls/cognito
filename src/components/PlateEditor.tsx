@@ -1,17 +1,15 @@
-import { Plate } from "platejs/react";
-import { FixedToolbar } from "@/components/ui/fixed-toolbar";
-import { MarkToolbarButton } from "@/components/ui/mark-toolbar-button";
-// ... other imports
+import { Plate, usePlateEditor } from 'platejs/react';
 
-export function MyEditor() {
-  // ... editor setup
+import { Editor, EditorContainer } from '@/components/ui/editor';
+
+export default function App() {
+  const editor = usePlateEditor(); // Initializes the editor instance
+
   return (
-    <Plate editor={editor}>
-      <FixedToolbar>
-        <MarkToolbarButton nodeType="bold" tooltip="Bold">B</MarkToolbarButton>
-        {/* ... other toolbar buttons ... */}
-      </FixedToolbar>
-      {/* ... Editor component ... */}
+    <Plate editor={editor}>      {/* Provides editor context */}
+      <EditorContainer>         {/* Styles the editor area */}
+        <Editor placeholder="Type your amazing content here..." />
+      </EditorContainer>
     </Plate>
   );
 }
