@@ -28,7 +28,7 @@ const experimentsData = [
     id: '1',
     name: 'Copy of Landing page improvements',
     type: 'A/B Test',
-    status: 'Não Iniciado',
+    status: 'Executando',
     modified: '15 Ago, 2024',
     description: 'Landing page experiment for Adler Bragon Insurance, testing a discounted rate to see if a visitor buys two policies at the same time.'
   },
@@ -36,7 +36,7 @@ const experimentsData = [
     id: '2', 
     name: 'Landing page improvements',
     type: 'A/B Test',
-    status: 'Não Iniciado',
+    status: 'Concluído',
     modified: '14 Ago, 2024',
     description: 'Landing page experiment for Adler Bragon Insurance, testing a discounted rate to see if a visitor buys two policies at the same time.'
   },
@@ -52,7 +52,7 @@ const experimentsData = [
     id: '4',
     name: 'Product page experiment',
     type: 'A/B Test', 
-    status: 'Não Iniciado',
+    status: 'Cancelado',
     modified: '15 Abr, 2024',
     description: 'Testing different product page layouts and CTAs.'
   },
@@ -71,16 +71,20 @@ export default function ExperimentsPage() {
   const [statusFilter, setStatusFilter] = useState('Active')
   const [activeTab, setActiveTab] = useState('overview')
 
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadgeStyles = (status: string) => {
     switch (status) {
       case 'Não Iniciado':
-        return 'secondary'
+        return 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-100'
       case 'Pausado':
-        return 'outline'
+        return 'bg-yellow-100 text-yellow-700 border-yellow-200 hover:bg-yellow-100'
       case 'Executando':
-        return 'default'
+        return 'bg-green-100 text-green-700 border-green-200 hover:bg-green-100'
+      case 'Concluído':
+        return 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-100'
+      case 'Cancelado':
+        return 'bg-red-100 text-red-700 border-red-200 hover:bg-red-100'
       default:
-        return 'secondary'
+        return 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-100'
     }
   }
 
@@ -236,7 +240,7 @@ export default function ExperimentsPage() {
                             <Badge variant="outline">{experiment.type}</Badge>
                           </TableCell>
                           <TableCell>
-                            <Badge variant={getStatusBadgeVariant(experiment.status)}>
+                            <Badge className={getStatusBadgeStyles(experiment.status)}>
                               {experiment.status}
                             </Badge>
                           </TableCell>
