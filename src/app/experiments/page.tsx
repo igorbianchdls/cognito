@@ -68,6 +68,7 @@ const experimentsData = [
 export default function ExperimentsPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('Active')
+  const [activeTab, setActiveTab] = useState('overview')
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -143,7 +144,7 @@ export default function ExperimentsPage() {
             </div>
 
             {/* Tabs */}
-            <Tabs defaultValue="overview" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-[400px] grid-cols-2">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="exclusion-groups">Exclusion Groups</TabsTrigger>
