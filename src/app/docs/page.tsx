@@ -7,6 +7,7 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
 } from "@/components/ui/breadcrumb"
+import { DocsSimpleEditor } from '@/components/DocsSimpleEditor'
 
 export default function DocsPage() {
   return (
@@ -26,7 +27,7 @@ export default function DocsPage() {
                 <BreadcrumbList>
                   <BreadcrumbItem>
                     <BreadcrumbPage className="text-sidebar-foreground">
-                      Documentos
+                      Editor de Documentos
                     </BreadcrumbPage>
                   </BreadcrumbItem>
                 </BreadcrumbList>
@@ -35,16 +36,9 @@ export default function DocsPage() {
           </div>
         </header>
 
-        <div className="flex flex-1 bg-white">
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Página de Documentos
-              </h3>
-              <p className="text-gray-500">
-                Conteúdo removido conforme solicitado.
-              </p>
-            </div>
+        <div className="flex flex-1 bg-white overflow-hidden">
+          <div className="flex-1 relative">
+            <DocsSimpleEditor />
           </div>
         </div>
       </SidebarInset>
