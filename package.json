@@ -50,6 +50,7 @@
     "@tanstack/react-table": "^8.21.3",
     "@tiptap/extension-bold": "^3.4.1",
     "@tiptap/extension-bullet-list": "^3.4.1",
+    "@tiptap/extension-drag-handle-react": "^3.4.1",
     "@tiptap/extension-heading": "^3.4.1",
     "@tiptap/extension-highlight": "^3.4.1",
     "@tiptap/extension-horizontal-rule": "^3.4.1",

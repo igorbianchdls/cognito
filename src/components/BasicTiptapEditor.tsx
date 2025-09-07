@@ -1,6 +1,7 @@
 'use client'
 
-import { useEditor, EditorContent } from '@tiptap/react'
+import { useEditor, EditorContent, EditorContext } from '@tiptap/react'
+import DragHandleReact from '@tiptap/extension-drag-handle-react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import Highlight from '@tiptap/extension-highlight'
@@ -42,6 +43,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { DragContextMenu } from '@/components/DragContextMenu'
 
 interface BasicTiptapEditorProps {
   content?: string
@@ -75,6 +77,10 @@ export default function BasicTiptapEditor({
       Subscript,
       Image,
       HorizontalRule,
+      DragHandleReact.configure({
+        dragHandleWidth: 20,
+        scrollTreshold: 100,
+      }),
     ],
     content: content || `<p>${placeholder}</p>`,
     onUpdate: ({ editor }) => {
@@ -93,26 +99,27 @@ export default function BasicTiptapEditor({
   }
 
   return (
-    <div className="border rounded-lg bg-white">
-      {/* Toolbar */}
-      <div className="border-b p-2 flex gap-1 flex-wrap">
-        {/* Headings */}
-        <Select
-          value={
-            editor.isActive('heading', { level: 1 }) ? 'h1' :
-            editor.isActive('heading', { level: 2 }) ? 'h2' :
-            editor.isActive('heading', { level: 3 }) ? 'h3' :
-            editor.isActive('paragraph') ? 'p' : 'p'
-          }
-          onValueChange={(value) => {
-            if (value === 'p') {
-              editor.chain().focus().setParagraph().run()
-            } else {
-              const level = parseInt(value.replace('h', '')) as 1 | 2 | 3 | 4 | 5 | 6
-              editor.chain().focus().toggleHeading({ level }).run()
+    <EditorContext.Provider value={{ editor }}>
+      <div className="border rounded-lg bg-white relative">
+        {/* Toolbar */}
+        <div className="border-b p-2 flex gap-1 flex-wrap">
+          {/* Headings */}
+          <Select
+            value={
+              editor.isActive('heading', { level: 1 }) ? 'h1' :
+              editor.isActive('heading', { level: 2 }) ? 'h2' :
+              editor.isActive('heading', { level: 3 }) ? 'h3' :
+              editor.isActive('paragraph') ? 'p' : 'p'
             }
-          }}
-        >
+            onValueChange={(value) => {
+              if (value === 'p') {
+                editor.chain().focus().setParagraph().run()
+              } else {
+                const level = parseInt(value.replace('h', '')) as 1 | 2 | 3 | 4 | 5 | 6
+                editor.chain().focus().toggleHeading({ level }).run()
+              }
+            }}
+          >
           <SelectTrigger className="w-20 h-8">
             <SelectValue />
           </SelectTrigger>
@@ -321,11 +328,15 @@ export default function BasicTiptapEditor({
         </Button>
       </div>
 
-      {/* Editor */}
-      <EditorContent 
-        editor={editor} 
-        className="min-h-[300px]"
-      />
-    </div>
+        {/* Editor */}
+        <EditorContent 
+          editor={editor} 
+          className="min-h-[300px]"
+        />
+        
+        {/* Drag Context Menu */}
+        <DragContextMenu editor={editor} />
+      </div>
+    </EditorContext.Provider>
   )
 }
