@@ -64,7 +64,14 @@ export function FloatingToolbar({
     ref: floatingRef,
   } = useFloatingToolbar(floatingToolbarState);
 
-  const ref = useComposedRef<HTMLDivElement>(floatingRef, props.ref);
+  const internalRef = React.useRef<HTMLDivElement | null>(null);
+  const ref = useComposedRef<HTMLDivElement>(internalRef, props.ref);
+
+  React.useEffect(() => {
+    if (internalRef.current) {
+      floatingRef(internalRef.current);
+    }
+  }, [floatingRef]);
 
   if (hidden) return null;
 
