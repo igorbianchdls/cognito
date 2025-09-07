@@ -73,7 +73,24 @@ import { handleImageUpload, MAX_FILE_SIZE } from "@/lib/tiptap-utils"
 // --- Styles ---
 import "@/components/tiptap-templates/simple/simple-editor.scss"
 
-import content from "@/components/tiptap-templates/simple/data/content.json"
+// Initial content for the editor
+const content = {
+  type: "doc",
+  content: [
+    {
+      type: "heading",
+      attrs: { level: 1 },
+      content: [{ type: "text", text: "Start writing here..." }]
+    },
+    {
+      type: "paragraph",
+      attrs: { textAlign: null },
+      content: [
+        { type: "text", text: "This is a rich text editor powered by Tiptap. You can format text, add images, create lists, and much more!" }
+      ]
+    }
+  ]
+}
 
 const MainToolbarContent = ({
   onHighlighterClick,
