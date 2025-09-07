@@ -157,14 +157,14 @@ export default function DatasetsPanel() {
       <div className="p-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Table2 className="w-5 h-5 text-blue-600" />
-            <h2 className="text-lg font-semibold text-gray-900">Tabelas BigQuery</h2>
-            <span className="text-sm text-gray-500">({tables.length})</span>
+            <Table2 className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-semibold text-foreground">Tabelas BigQuery</h2>
+            <span className="text-sm text-muted-foreground">({tables.length})</span>
           </div>
           <button
             onClick={loadTables}
             disabled={loading}
-            className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
@@ -176,21 +176,21 @@ export default function DatasetsPanel() {
       <div className="flex-1 overflow-y-auto">
         {loading && tables.length === 0 ? (
           <div className="flex items-center justify-center h-32">
-            <div className="flex items-center gap-2 text-gray-500">
+            <div className="flex items-center gap-2 text-muted-foreground">
               <RefreshCw className="w-4 h-4 animate-spin" />
               <span>Carregando tabelas...</span>
             </div>
           </div>
         ) : error ? (
           <div className="p-4">
-            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
+            <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive">
               <AlertCircle className="w-4 h-4" />
               <span className="text-sm">{error}</span>
             </div>
           </div>
         ) : tables.length === 0 ? (
           <div className="flex items-center justify-center h-32">
-            <div className="text-center text-gray-500">
+            <div className="text-center text-muted-foreground">
               <Table2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
               <p className="text-sm">Nenhuma tabela encontrada</p>
             </div>
@@ -220,39 +220,39 @@ export default function DatasetsPanel() {
                       <div className="flex items-center gap-2">
                         <div className="flex items-center gap-1">
                           {isExpanded ? (
-                            <ChevronDown className="w-4 h-4 text-gray-400" />
+                            <ChevronDown className="w-4 h-4 text-muted-foreground" />
                           ) : (
-                            <ChevronRight className="w-4 h-4 text-gray-400" />
+                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
                           )}
-                          <Table2 className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                          <Table2 className="w-4 h-4 text-primary flex-shrink-0" />
                         </div>
                         <div>
-                          <h3 className="font-medium text-gray-900">
+                          <h3 className="font-medium text-foreground">
                             {tableId}
                           </h3>
-                          <p className="text-xs text-gray-500 font-mono">biquery_data.{tableId}</p>
+                          <p className="text-xs text-muted-foreground font-mono">biquery_data.{tableId}</p>
                         </div>
                       </div>
                       {isLoadingThisSchema && (
-                        <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
+                        <RefreshCw className="w-4 h-4 animate-spin text-primary" />
                       )}
                     </div>
 
                     {/* Table Description */}
                     {table.description && (
-                      <p className="text-sm text-gray-600 mb-3">{table.description}</p>
+                      <p className="text-sm text-muted-foreground mb-3">{table.description}</p>
                     )}
 
                     {/* Table Stats */}
                     <div className="flex items-center gap-4 mb-3">
                       {numRows && (
-                        <div className="flex items-center gap-1 text-sm text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                        <div className="flex items-center gap-1 text-sm text-primary bg-primary/10 px-2 py-1 rounded">
                           <Hash className="w-3 h-3" />
                           <span>{formatRowCount(numRows)}</span>
                         </div>
                       )}
                       {numBytes && (
-                        <div className="flex items-center gap-1 text-sm text-green-600 bg-green-50 px-2 py-1 rounded">
+                        <div className="flex items-center gap-1 text-sm text-emerald-600 bg-emerald-50 px-2 py-1 rounded">
                           <HardDrive className="w-3 h-3" />
                           <span>{formatFileSize(numBytes)}</span>
                         </div>
@@ -260,7 +260,7 @@ export default function DatasetsPanel() {
                     </div>
 
                     {/* Table Metadata */}
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       {table.creationTime && (
                         <div className="flex items-center gap-1">
                           <Calendar className="w-3 h-3" />
@@ -280,18 +280,18 @@ export default function DatasetsPanel() {
                   {isExpanded && (
                     <div className="border-t border-gray-100 bg-gray-50">
                       <div className="p-4">
-                        <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                        <h4 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
                           <Type className="w-4 h-4" />
                           Colunas ({schema ? schema.length : '...'})
                         </h4>
                         
                         {isLoadingThisSchema ? (
-                          <div className="flex items-center gap-2 text-gray-500 py-4">
+                          <div className="flex items-center gap-2 text-muted-foreground py-4">
                             <RefreshCw className="w-4 h-4 animate-spin" />
                             <span className="text-sm">Carregando schema...</span>
                           </div>
                         ) : schemaError ? (
-                          <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                          <div className="flex items-center gap-2 p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive">
                             <AlertCircle className="w-4 h-4" />
                             <span className="text-sm">{schemaError}</span>
                           </div>
@@ -303,26 +303,26 @@ export default function DatasetsPanel() {
                                 className="flex items-center justify-between p-2 bg-white rounded border border-gray-100"
                               >
                                 <div className="flex items-center gap-2">
-                                  <span className="text-gray-500">
+                                  <span className="text-muted-foreground">
                                     {getFieldIcon(field.type)}
                                   </span>
                                   <div>
-                                    <span className="text-sm font-medium text-gray-900">
+                                    <span className="text-sm font-medium text-foreground">
                                       {field.name}
                                     </span>
                                     {field.description && (
-                                      <p className="text-xs text-gray-500 mt-0.5">
+                                      <p className="text-xs text-muted-foreground mt-0.5">
                                         {field.description}
                                       </p>
                                     )}
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-2 text-xs">
-                                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded font-mono">
+                                  <span className="px-2 py-1 bg-primary/10 text-primary rounded font-mono">
                                     {field.type}
                                   </span>
                                   {field.mode && field.mode !== 'NULLABLE' && (
-                                    <span className="px-2 py-1 bg-red-100 text-red-800 rounded">
+                                    <span className="px-2 py-1 bg-destructive/10 text-destructive rounded">
                                       {field.mode}
                                     </span>
                                   )}
@@ -331,7 +331,7 @@ export default function DatasetsPanel() {
                             ))}
                           </div>
                         ) : (
-                          <p className="text-sm text-gray-500 py-4">
+                          <p className="text-sm text-muted-foreground py-4">
                             Clique para carregar o schema desta tabela
                           </p>
                         )}
