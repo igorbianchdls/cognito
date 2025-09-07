@@ -20,6 +20,7 @@ import {
 import { BlockquoteElement } from '@/components/ui/blockquote-node';
 import { Editor, EditorContainer } from '@/components/ui/editor';
 import { FixedToolbar } from '@/components/ui/fixed-toolbar';
+import { FloatingToolbar } from '@/components/ui/floating-toolbar';
 import { H1Element, H2Element, H3Element } from '@/components/ui/heading-node';
 import { MarkToolbarButton } from '@/components/ui/mark-toolbar-button';
 import { ToolbarButton } from '@/components/ui/toolbar';
@@ -90,6 +91,16 @@ export default function App() {
       </FixedToolbar>
       <EditorContainer>
         <Editor placeholder="Type your amazing content here..." />
+        
+        <FloatingToolbar>
+          <MarkToolbarButton nodeType="bold" tooltip="Bold (⌘+B)">B</MarkToolbarButton>
+          <MarkToolbarButton nodeType="italic" tooltip="Italic (⌘+I)">I</MarkToolbarButton>
+          <MarkToolbarButton nodeType="underline" tooltip="Underline (⌘+U)">U</MarkToolbarButton>
+          <ToolbarButton onClick={() => editor.tf.h1.toggle()}>H1</ToolbarButton>
+          <ToolbarButton onClick={() => editor.tf.h2.toggle()}>H2</ToolbarButton>
+          <ToolbarButton onClick={() => editor.tf.h3.toggle()}>H3</ToolbarButton>
+          <ToolbarButton onClick={() => editor.tf.blockquote.toggle()}>Quote</ToolbarButton>
+        </FloatingToolbar>
       </EditorContainer>
     </Plate>
   );
