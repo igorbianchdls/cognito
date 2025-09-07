@@ -20,6 +20,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Search, ChevronDown, TestTube, BarChart3, Users, Zap } from 'lucide-react'
+import Link from 'next/link'
 
 // Mock data para os experimentos
 const experimentsData = [
@@ -222,12 +223,14 @@ export default function ExperimentsPage() {
                         <TableRow key={experiment.id}>
                           <TableCell>
                             <div className="space-y-1">
-                              <Button 
-                                variant="link" 
-                                className="p-0 h-auto text-blue-600 hover:text-blue-800 font-medium text-left justify-start"
-                              >
-                                {experiment.name}
-                              </Button>
+                              <Link href={`/experiments/${experiment.id}/results`}>
+                                <Button 
+                                  variant="link" 
+                                  className="p-0 h-auto text-blue-600 hover:text-blue-800 font-medium text-left justify-start"
+                                >
+                                  {experiment.name}
+                                </Button>
+                              </Link>
                               <p className="text-xs text-muted-foreground leading-relaxed">
                                 {experiment.description}
                               </p>
