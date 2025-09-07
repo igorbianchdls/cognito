@@ -32,6 +32,7 @@ import { MarkToolbarButton } from '@/components/ui/mark-toolbar-button';
 import { ToolbarButton } from '@/components/ui/toolbar';
 import { SlashKit } from '@/components/slash-kit';
 import { MentionKit } from '@/components/mention-kit';
+import { DndKit } from '@/components/dnd-kit';
 
 const initialValue: Value = [
   {
@@ -73,6 +74,7 @@ export default function App() {
       BlockSelectionPlugin,
       ...SlashKit,
       ...MentionKit,
+      ...DndKit,
       TagPlugin,
       BoldPlugin,
       ItalicPlugin,
