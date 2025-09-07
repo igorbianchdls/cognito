@@ -76,7 +76,7 @@ export default function ChartBuilder({
       </div>
 
       {/* Chart Type Selection */}
-      <Card>
+      <Card className="bg-transparent border-transparent">
         <CardHeader>
           <CardTitle className="text-sm flex items-center gap-2">
             <PieChart className="w-4 h-4" />
