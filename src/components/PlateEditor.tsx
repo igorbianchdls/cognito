@@ -17,7 +17,8 @@ import {
   UnderlinePlugin,
 } from '@platejs/basic-nodes/react';
 import { BlockSelectionPlugin } from '@platejs/selection/react';
-import { List, ListOrdered, Square, Type, Palette } from 'lucide-react';
+import { TextAlignPlugin } from '@platejs/basic-styles/react';
+import { List, ListOrdered, Square, Type, Palette, Bot } from 'lucide-react';
 import {
   Plate,
   usePlateEditor,
@@ -41,6 +42,8 @@ import { MarkToolbarButton } from '@/components/ui/mark-toolbar-button';
 import { ToolbarButton } from '@/components/ui/toolbar';
 import { FontSizeToolbarButton } from '@/components/ui/font-size-toolbar-button';
 import { FontColorToolbarButton } from '@/components/ui/font-color-toolbar-button';
+import { AIToolbarButton } from '@/components/ui/ai-toolbar-button';
+import { AlignToolbarButton } from '@/components/ui/align-toolbar-button';
 import { SlashKit } from '@/components/slash-kit';
 import { MentionKit } from '@/components/mention-kit';
 import { DndKit } from '@/components/dnd-kit';
@@ -90,6 +93,7 @@ export default function App() {
       ...DndKit,
       ...ListKit,
       ...FontKit,
+      TextAlignPlugin,
       TagPlugin,
       BoldPlugin,
       ItalicPlugin,
@@ -150,6 +154,10 @@ export default function App() {
         <FontColorToolbarButton nodeType="backgroundColor" tooltip="Background Color">
           <Palette className="h-4 w-4" />
         </FontColorToolbarButton>
+        <AIToolbarButton tooltip="Ask AI">
+          <Bot className="h-4 w-4" />
+        </AIToolbarButton>
+        <AlignToolbarButton />
         <ToolbarButton
           className="px-2"
           onClick={() => editor.tf.setValue(initialValue)}
@@ -187,6 +195,10 @@ export default function App() {
           <FontColorToolbarButton nodeType="backgroundColor" tooltip="Background Color">
             <Palette className="h-4 w-4" />
           </FontColorToolbarButton>
+          <AIToolbarButton tooltip="Ask AI">
+            <Bot className="h-4 w-4" />
+          </AIToolbarButton>
+          <AlignToolbarButton />
         </FloatingToolbar>
       </EditorContainer>
     </Plate>
