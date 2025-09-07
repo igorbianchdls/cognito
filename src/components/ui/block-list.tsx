@@ -34,7 +34,7 @@ const config: Record<
 export const BlockList: RenderNodeWrapper = (props) => {
   if (!props.element.listStyleType) return;
 
-  const BlockListComponent = (props) => <List {...props} />;
+  const BlockListComponent = (props: PlateElementProps) => <List {...props} />;
   BlockListComponent.displayName = 'BlockListComponent';
   return BlockListComponent;
 };
