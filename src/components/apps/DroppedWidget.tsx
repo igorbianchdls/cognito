@@ -49,6 +49,7 @@ interface DroppedWidgetProps {
 
 export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = false, onClick, isEmbedMode = false }: DroppedWidgetProps) {
   const [isHovered, setIsHovered] = useState(false)
+  const [isCopied, setIsCopied] = useState(false)
 
   // Get container configuration with defaults
   const containerConfig = widget.config?.containerConfig || DEFAULT_CONTAINER_CONFIG
@@ -144,13 +145,29 @@ export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = f
             e.stopPropagation()
             const embedUrl = `${window.location.origin}/embed/widget/${widget.i}`
             navigator.clipboard.writeText(embedUrl)
+            
+            // Show feedback
+            setIsCopied(true)
+            setTimeout(() => {
+              setIsCopied(false)
+            }, 2000)
           }}
-          className="widget-button w-6 h-6 bg-green-500 hover:bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-medium shadow-sm transition-colors duration-200"
-          title="Copy embed link"
+          className={`widget-button w-6 h-6 ${
+            isCopied 
+              ? 'bg-blue-500 hover:bg-blue-600' 
+              : 'bg-green-500 hover:bg-green-600'
+          } text-white rounded-full flex items-center justify-center text-xs font-medium shadow-sm transition-colors duration-200`}
+          title={isCopied ? "Copied!" : "Copy embed link"}
         >
-          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-          </svg>
+          {isCopied ? (
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          ) : (
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
+          )}
         </button>
         
         {/* Remove button */}
