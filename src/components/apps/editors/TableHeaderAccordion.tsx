@@ -14,7 +14,7 @@ interface TableHeaderAccordionProps {
   headerTextColor?: string
   headerBackground?: string
   padding?: number
-  onConfigChange: (key: string, value: any) => void
+  onConfigChange: (key: string, value: string | number) => void
 }
 
 export default function TableHeaderAccordion({
