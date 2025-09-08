@@ -384,62 +384,6 @@ export function DataTable<TData extends TableData>({
   return (
     <div className="w-full h-full" style={{ minWidth: 0 }}>
       <div className="w-full h-full flex flex-col">
-        {/* Header/Search/Actions - flex-shrink-0 */}
-        {(enableSearch || showColumnToggle || (editableMode && editableRowActions?.allowAdd)) && (
-          <div className="flex-shrink-0 flex items-center py-4">
-            {enableSearch && (
-              <Input
-                placeholder={searchPlaceholder}
-                value={globalFilter ?? ""}
-                onChange={(event) => table.setGlobalFilter(event.target.value)}
-                className="max-w-sm"
-              />
-            )}
-            
-            <div className="flex items-center ml-auto space-x-2">
-              {editableMode && editableRowActions?.allowAdd && (
-                <Button
-                  onClick={addNewRow}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  Adicionar Linha
-                </Button>
-              )}
-              
-              {showColumnToggle && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline">
-                      Colunas <ChevronDown className="ml-2 h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    {table
-                      .getAllColumns()
-                      .filter((column) => column.getCanHide())
-                      .map((column) => {
-                        return (
-                          <DropdownMenuCheckboxItem
-                            key={column.id}
-                            className="capitalize"
-                            checked={column.getIsVisible()}
-                            onCheckedChange={(value) =>
-                              column.toggleVisibility(!!value)
-                            }
-                          >
-                            {column.id}
-                          </DropdownMenuCheckboxItem>
-                        )
-                      })}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Table Content - flex-1 overflow-auto */}
         <div 
@@ -643,10 +587,6 @@ export function DataTable<TData extends TableData>({
         {/* Pagination - flex-shrink-0 */}
         {showPagination && (
           <div className="flex-shrink-0 flex items-center justify-end space-x-2 py-4">
-            <div className="flex-1 text-sm text-muted-foreground">
-              {table.getFilteredSelectedRowModel().rows.length} de{" "}
-              {table.getFilteredRowModel().rows.length} linha(s) selecionada(s).
-            </div>
             <div className="space-x-2">
               <Button
                 variant="outline"
