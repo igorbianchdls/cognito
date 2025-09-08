@@ -1,7 +1,7 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import { DataTable, createSortableHeader, TableData } from '@/components/widgets/Table';
+import { DataTable, TableData } from '@/components/widgets/Table';
 
 interface SchemaColumn extends TableData {
   column_name: string;
@@ -21,14 +21,14 @@ interface TableSchemaProps {
 const schemaColumns: ColumnDef<SchemaColumn>[] = [
   {
     accessorKey: 'column_name',
-    header: createSortableHeader('Nome da Coluna'),
+    header: 'Nome da Coluna',
     cell: ({ row }) => (
       <span className="font-medium text-gray-900">{row.getValue('column_name')}</span>
     ),
   },
   {
     accessorKey: 'data_type',
-    header: createSortableHeader('Tipo de Dados'),
+    header: 'Tipo de Dados',
     cell: ({ row }) => {
       const dataType = row.getValue('data_type') as string;
       return (

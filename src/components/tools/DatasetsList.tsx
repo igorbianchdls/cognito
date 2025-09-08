@@ -1,7 +1,7 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import { DataTable, createSortableHeader, TableData } from '@/components/widgets/Table';
+import { DataTable, TableData } from '@/components/widgets/Table';
 
 interface Dataset extends TableData {
   id: string;
@@ -21,19 +21,19 @@ interface DatasetsListProps {
 const columns: ColumnDef<Dataset>[] = [
   {
     accessorKey: 'id',
-    header: createSortableHeader('ID do Dataset'),
+    header: 'ID do Dataset',
     cell: ({ row }) => (
       <span className="font-medium text-gray-900">{row.getValue('id')}</span>
     ),
   },
   {
     accessorKey: 'friendlyName',
-    header: createSortableHeader('Nome'),
+    header: 'Nome',
     cell: ({ row }) => row.getValue('friendlyName') || '-',
   },
   {
     accessorKey: 'description',
-    header: createSortableHeader('Descrição'),
+    header: 'Descrição',
     cell: ({ row }) => {
       const description = row.getValue('description') as string;
       return (
@@ -45,12 +45,12 @@ const columns: ColumnDef<Dataset>[] = [
   },
   {
     accessorKey: 'location',
-    header: createSortableHeader('Localização'),
+    header: 'Localização',
     cell: ({ row }) => row.getValue('location') || '-',
   },
   {
     accessorKey: 'creationTime',
-    header: createSortableHeader('Criado em'),
+    header: 'Criado em',
     cell: ({ row }) => {
       const creationTime = row.getValue('creationTime') as string;
       return creationTime ? new Date(creationTime).toLocaleDateString('pt-BR') : '-';

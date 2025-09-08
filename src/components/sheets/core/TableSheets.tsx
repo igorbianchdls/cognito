@@ -445,23 +445,5 @@ export function TableSheets<TData extends TableData>({
   )
 }
 
-// Helper function to create sortable header for sheets
-export function createSortableHeader(title: string) {
-  const SortableHeader = ({ column }: { column: { toggleSorting: (desc?: boolean) => void; getIsSorted: () => false | "asc" | "desc" } }) => {
-    return (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        className="h-8 p-1 text-xs font-semibold"
-      >
-        {title}
-        <ArrowUpDown className="ml-1 h-3 w-3" />
-      </Button>
-    )
-  }
-  
-  SortableHeader.displayName = `SortableHeader-${title}`
-  return SortableHeader
-}
 
 export default TableSheets

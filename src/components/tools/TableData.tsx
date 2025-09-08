@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { DataTable, createSortableHeader, type TableData as TableDataType } from '@/components/widgets/Table';
+import { DataTable, type TableData as TableDataType } from '@/components/widgets/Table';
 
 interface Schema {
   name: string;
@@ -116,7 +116,7 @@ export default function TableData({
     if (schema && schema.length > 0) {
       return schema.map((col) => ({
         accessorKey: col.name,
-        header: createSortableHeader(col.name),
+        header: col.name,
         cell: ({ row }) => {
           const value = row.getValue(col.name);
           return (
@@ -130,7 +130,7 @@ export default function TableData({
       const keys = Object.keys(actualData[0]);
       return keys.map((key) => ({
         accessorKey: key,
-        header: createSortableHeader(key),
+        header: key,
         cell: ({ row }) => {
           const value = row.getValue(key);
           return (

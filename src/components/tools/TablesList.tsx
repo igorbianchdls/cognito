@@ -1,7 +1,7 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import { DataTable, createSortableHeader, TableData } from '@/components/widgets/Table';
+import { DataTable, TableData } from '@/components/widgets/Table';
 
 interface Table extends TableData {
   tableId: string;
@@ -32,14 +32,14 @@ function formatBytes(bytes: number): string {
 const columns: ColumnDef<Table>[] = [
   {
     accessorKey: 'tableId',
-    header: createSortableHeader('Nome da Tabela'),
+    header: 'Nome da Tabela',
     cell: ({ row }) => (
       <span className="font-medium text-gray-900">{row.getValue('tableId')}</span>
     ),
   },
   {
     accessorKey: 'description',
-    header: createSortableHeader('Descrição'),
+    header: 'Descrição',
     cell: ({ row }) => {
       const description = row.getValue('description') as string;
       return (
@@ -51,7 +51,7 @@ const columns: ColumnDef<Table>[] = [
   },
   {
     accessorKey: 'numRows',
-    header: createSortableHeader('Linhas'),
+    header: 'Linhas',
     cell: ({ row }) => {
       const numRows = row.getValue('numRows') as number;
       return numRows ? formatNumber(numRows) : '-';
@@ -59,7 +59,7 @@ const columns: ColumnDef<Table>[] = [
   },
   {
     accessorKey: 'numBytes',
-    header: createSortableHeader('Tamanho'),
+    header: 'Tamanho',
     cell: ({ row }) => {
       const numBytes = row.getValue('numBytes') as number;
       return numBytes ? formatBytes(numBytes) : '-';
@@ -67,7 +67,7 @@ const columns: ColumnDef<Table>[] = [
   },
   {
     accessorKey: 'creationTime',
-    header: createSortableHeader('Criado em'),
+    header: 'Criado em',
     cell: ({ row }) => {
       const creationTime = row.getValue('creationTime') as string;
       return creationTime ? new Date(creationTime).toLocaleDateString('pt-BR') : '-';

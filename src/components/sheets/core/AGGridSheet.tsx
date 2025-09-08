@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useStore } from '@nanostores/react';
 import { ColumnDef } from '@tanstack/react-table';
-import { TableSheets, createSortableHeader, type TableData } from './TableSheets';
+import { TableSheets, type TableData } from './TableSheets';
 import { 
   activeDatasetStore, 
   initializeDefaultDataset
@@ -65,7 +65,7 @@ export default function AGGridSheet({ filters = [], sorting = [] }: AGGridSheetP
     
     return activeDataset.columnDefs.map((colDef) => ({
       accessorKey: colDef.field || '',
-      header: createSortableHeader(colDef.headerName || colDef.field || ''),
+      header: colDef.headerName || colDef.field || '',
       cell: ({ row }) => {
         const value = row.getValue(colDef.field || '');
         const isNumberField = colDef.enableValue || 

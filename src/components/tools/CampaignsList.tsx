@@ -1,7 +1,7 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import { DataTable, createSortableHeader, TableData } from '@/components/widgets/Table';
+import { DataTable, TableData } from '@/components/widgets/Table';
 
 interface Campaign extends TableData {
   campaign_id: string;
@@ -49,7 +49,7 @@ const formatNumber = (value: number) => {
 const campaignColumns: ColumnDef<Campaign>[] = [
   {
     accessorKey: 'campaign_name',
-    header: createSortableHeader('Nome da Campanha'),
+    header: 'Nome da Campanha',
     cell: ({ row }) => (
       <div className="max-w-xs">
         <div className="font-medium text-gray-900 truncate" title={row.getValue('campaign_name')}>
@@ -63,7 +63,7 @@ const campaignColumns: ColumnDef<Campaign>[] = [
   },
   {
     accessorKey: 'total_impressions',
-    header: createSortableHeader('Impressões'),
+    header: 'Impressões',
     cell: ({ row }) => (
       <span className="font-medium text-blue-600">
         {formatNumber(row.getValue('total_impressions'))}
@@ -72,7 +72,7 @@ const campaignColumns: ColumnDef<Campaign>[] = [
   },
   {
     accessorKey: 'total_clicks',
-    header: createSortableHeader('Cliques'),
+    header: 'Cliques',
     cell: ({ row }) => (
       <span className="font-medium text-green-600">
         {formatNumber(row.getValue('total_clicks'))}
@@ -81,7 +81,7 @@ const campaignColumns: ColumnDef<Campaign>[] = [
   },
   {
     accessorKey: 'total_spend',
-    header: createSortableHeader('Gasto'),
+    header: 'Gasto',
     cell: ({ row }) => (
       <span className="font-medium text-red-600">
         {formatCurrency(row.getValue('total_spend'))}
@@ -90,7 +90,7 @@ const campaignColumns: ColumnDef<Campaign>[] = [
   },
   {
     accessorKey: 'ctr',
-    header: createSortableHeader('CTR'),
+    header: 'CTR',
     cell: ({ row }) => (
       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
         {row.getValue('ctr')}%
@@ -99,7 +99,7 @@ const campaignColumns: ColumnDef<Campaign>[] = [
   },
   {
     accessorKey: 'cpc',
-    header: createSortableHeader('CPC'),
+    header: 'CPC',
     cell: ({ row }) => (
       <span className="font-medium text-orange-600">
         {formatCurrency(row.getValue('cpc'))}
@@ -108,7 +108,7 @@ const campaignColumns: ColumnDef<Campaign>[] = [
   },
   {
     accessorKey: 'days_active',
-    header: createSortableHeader('Dias Ativos'),
+    header: 'Dias Ativos',
     cell: ({ row }) => (
       <span className="text-gray-600">
         {row.getValue('days_active')} dias
