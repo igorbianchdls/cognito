@@ -12,6 +12,7 @@ import {
 import TableEditingAccordion from './TableEditingAccordion'
 import TableAppearanceAccordion from './TableAppearanceAccordion'
 import TableTypographyAccordion from './TableTypographyAccordion'
+import TableHeaderAccordion from './TableHeaderAccordion'
 import TableBehaviorAccordion from './TableBehaviorAccordion'
 import TableExportAccordion from './TableExportAccordion'
 
@@ -101,6 +102,16 @@ export default function TableConfigEditor({
 
             <TableTypographyAccordion
               styling={tableConfig}
+              onConfigChange={onTableConfigChange}
+            />
+
+            <TableHeaderAccordion
+              headerFontSize={tableConfig.headerFontSize}
+              headerFontFamily={tableConfig.headerFontFamily}
+              headerFontWeight={tableConfig.headerFontWeight}
+              headerTextColor={tableConfig.headerTextColor}
+              headerBackground={tableConfig.headerBackground}
+              padding={tableConfig.padding}
               onConfigChange={onTableConfigChange}
             />
 
