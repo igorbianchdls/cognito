@@ -44,9 +44,10 @@ interface DroppedWidgetProps {
   onEdit?: () => void
   isSelected?: boolean
   onClick?: () => void
+  isEmbedMode?: boolean
 }
 
-export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = false, onClick }: DroppedWidgetProps) {
+export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = false, onClick, isEmbedMode = false }: DroppedWidgetProps) {
   const [isHovered, setIsHovered] = useState(false)
 
   // Get container configuration with defaults
@@ -118,8 +119,9 @@ export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = f
         borderStyle: 'solid'
       }}
     >
-      {/* Header with edit, embed and remove buttons */}
-      <div className={`absolute top-2 right-2 z-10 flex gap-1 transition-opacity duration-200 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
+      {/* Header with edit, embed and remove buttons - Hidden in embed mode */}
+      {!isEmbedMode && (
+        <div className={`absolute top-2 right-2 z-10 flex gap-1 transition-opacity duration-200 ${isHovered ? 'opacity-100' : 'opacity-0'}`}>
         {/* Edit button */}
         {onEdit && (
           <button
@@ -162,7 +164,8 @@ export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = f
         >
           ×
         </button>
-      </div>
+        </div>
+      )}
 
       {/* Widget content */}
       <div 
