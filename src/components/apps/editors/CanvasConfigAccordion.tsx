@@ -210,6 +210,20 @@ export default function CanvasConfigAccordion({
                 <span className="text-xs text-gray-500">Y</span>
               </div>
             </div>
+
+            {/* Max Rows */}
+            <div className="grid grid-cols-2 gap-2 items-center">
+              <label className="text-xs font-medium text-gray-600">Máximo de Linhas</label>
+              <Input
+                type="number"
+                value={canvasConfig.maxRows}
+                onChange={(e) => onConfigChange('maxRows', parseInt(e.target.value))}
+                className="h-7 text-xs"
+                min="10"
+                max="100"
+                step="5"
+              />
+            </div>
           </div>
 
           {/* Grid Columns (Breakpoints) Section */}

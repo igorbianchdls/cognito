@@ -385,7 +385,7 @@ export default function GridCanvas({
             preventCollision={true}
             allowOverlap={false}
             autoSize={false}
-            maxRows={12}
+            maxRows={canvasConfig.maxRows || 40}
             draggableCancel=".widget-button, button, .table-resizer, .table-interactive, [data-draggable=false]"
             onDragStart={() => {
               console.log('🎯 GridCanvas: Drag started')

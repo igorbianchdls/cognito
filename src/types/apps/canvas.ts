@@ -41,6 +41,9 @@ export interface CanvasConfig {
   // Responsive height control
   responsiveHeight: number | 'auto' | 'viewport'
   responsiveHeightValue: number
+  
+  // Grid layout control
+  maxRows: number
 }
 
 // Default configuration with sensible values for a dashboard canvas
@@ -76,5 +79,7 @@ export const defaultCanvasConfig: CanvasConfig = {
   maintain16by9: false,
   
   responsiveHeight: 800,
-  responsiveHeightValue: 800
+  responsiveHeightValue: 800,
+  
+  maxRows: 40
 }
