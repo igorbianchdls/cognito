@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { ChevronDown, ChevronUp, Type, Palette, Spacing } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
 
@@ -58,7 +57,7 @@ export default function TableHeaderAccordion({
             
             {/* Font Size */}
             <div className="grid grid-cols-2 gap-2 items-center">
-              <Label htmlFor="header-font-size" className="text-xs">Tamanho da Fonte</Label>
+              <label htmlFor="header-font-size" className="text-xs font-medium text-gray-600">Tamanho da Fonte</label>
               <div className="flex items-center gap-1">
                 <Input
                   id="header-font-size"
@@ -75,7 +74,7 @@ export default function TableHeaderAccordion({
 
             {/* Font Family */}
             <div className="grid grid-cols-2 gap-2 items-center">
-              <Label htmlFor="header-font-family" className="text-xs">Fonte</Label>
+              <label htmlFor="header-font-family" className="text-xs font-medium text-gray-600">Fonte</label>
               <Select
                 value={headerFontFamily}
                 onValueChange={(value) => onConfigChange('headerFontFamily', value)}
@@ -97,7 +96,7 @@ export default function TableHeaderAccordion({
 
             {/* Font Weight */}
             <div className="grid grid-cols-2 gap-2 items-center">
-              <Label htmlFor="header-font-weight" className="text-xs">Peso da Fonte</Label>
+              <label htmlFor="header-font-weight" className="text-xs font-medium text-gray-600">Peso da Fonte</label>
               <Select
                 value={headerFontWeight}
                 onValueChange={(value) => onConfigChange('headerFontWeight', value)}
@@ -116,7 +115,7 @@ export default function TableHeaderAccordion({
 
             {/* Text Color */}
             <div className="grid grid-cols-2 gap-2 items-center">
-              <Label htmlFor="header-text-color" className="text-xs">Cor do Texto</Label>
+              <label htmlFor="header-text-color" className="text-xs font-medium text-gray-600">Cor do Texto</label>
               <div className="flex items-center gap-1">
                 <Input
                   id="header-text-color"
@@ -145,7 +144,7 @@ export default function TableHeaderAccordion({
             
             {/* Background Color */}
             <div className="grid grid-cols-2 gap-2 items-center">
-              <Label htmlFor="header-background" className="text-xs">Cor de Fundo</Label>
+              <label htmlFor="header-background" className="text-xs font-medium text-gray-600">Cor de Fundo</label>
               <div className="flex items-center gap-1">
                 <Input
                   id="header-background"
@@ -175,7 +174,7 @@ export default function TableHeaderAccordion({
             {/* Padding */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="header-padding" className="text-xs">Padding</Label>
+                <label htmlFor="header-padding" className="text-xs font-medium text-gray-600">Padding</label>
                 <span className="text-xs text-gray-500">{padding}px</span>
               </div>
               <Slider
@@ -196,7 +195,7 @@ export default function TableHeaderAccordion({
 
           {/* Preview Section */}
           <div className="space-y-2">
-            <Label className="text-xs font-medium text-gray-700">Preview</Label>
+            <label className="text-xs font-medium text-gray-700">Preview</label>
             <div 
               className="border border-gray-200 rounded p-2 text-center"
               style={{
