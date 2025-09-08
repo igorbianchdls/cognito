@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { ChevronDown, ChevronUp, Type, Palette, Spacing } from 'lucide-react'
+import { ChevronDown, ChevronUp, Type, Palette, Move } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -167,7 +167,7 @@ export default function TableHeaderAccordion({
           {/* Spacing Section */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <Spacing className="w-3 h-3" />
+              <Move className="w-3 h-3" />
               <span>Espaçamento</span>
             </div>
             
