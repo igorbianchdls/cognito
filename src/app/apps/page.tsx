@@ -18,13 +18,13 @@ import SplitSidebarPanel from '@/components/apps/builder/SplitSidebarPanel'
 import GridCanvas from '@/components/apps/GridCanvas'
 // import MultiGridCanvas from '@/components/apps/MultiGridCanvas' // REMOVED: Simplified to single canvas
 // Chart stores - needed for charts to appear in canvas
-import { $barChartsAsDropped } from '@/stores/apps/barChartStore'
-import { $horizontalBarChartsAsDropped } from '@/stores/apps/horizontalBarChartStore'
-import { $lineChartsAsDropped } from '@/stores/apps/lineChartStore'
-import { $pieChartsAsDropped } from '@/stores/apps/pieChartStore'
-import { $areaChartsAsDropped } from '@/stores/apps/areaChartStore'
+import { $barChartsAsDropped, barChartActions } from '@/stores/apps/barChartStore'
+import { $horizontalBarChartsAsDropped, horizontalBarChartActions } from '@/stores/apps/horizontalBarChartStore'
+import { $lineChartsAsDropped, lineChartActions } from '@/stores/apps/lineChartStore'
+import { $pieChartsAsDropped, pieChartActions } from '@/stores/apps/pieChartStore'
+import { $areaChartsAsDropped, areaChartActions } from '@/stores/apps/areaChartStore'
 import { $kpisAsDropped, kpiActions } from '@/stores/apps/kpiStore'
-import { $tablesAsDropped } from '@/stores/apps/tableStore'
+import { $tablesAsDropped, tableActions } from '@/stores/apps/tableStore'
 // import { $activeTab, multiCanvasActions } from '@/stores/apps/multiCanvasStore' // REMOVED: Simplified to single canvas
 // import { isNavigationWidget } from '@/types/apps/droppedWidget' // REMOVED: No navigation widgets in KPI-only mode
 import type { Widget, LayoutItem, DroppedWidget } from '@/types/apps/droppedWidget'
@@ -149,10 +149,32 @@ export default function AppsPage() {
   const handleRemoveWidget = (widgetId: string) => {
     // Find widget type and use appropriate store
     const widget = allWidgets.find(w => w.i === widgetId)
-    if (widget?.type === 'kpi') {
-      kpiActions.removeKPI(widgetId)
+    
+    switch (widget?.type) {
+      case 'kpi':
+        kpiActions.removeKPI(widgetId)
+        break
+      case 'table':
+        tableActions.removeTable(widgetId)
+        break
+      case 'chart-bar':
+        barChartActions.removeBarChart(widgetId)
+        break
+      case 'chart-horizontal-bar':
+        horizontalBarChartActions.removeHorizontalBarChart(widgetId)
+        break
+      case 'chart-line':
+        lineChartActions.removeLineChart(widgetId)
+        break
+      case 'chart-pie':
+        pieChartActions.removePieChart(widgetId)
+        break
+      case 'chart-area':
+        areaChartActions.removeAreaChart(widgetId)
+        break
+      default:
+        console.warn('Remove not implemented for widget type:', widget?.type)
     }
-    // Note: Only KPIs supported now
   }
 
   const handleEditWidget = useCallback((widgetId: string, changes: Partial<DroppedWidget>) => {
