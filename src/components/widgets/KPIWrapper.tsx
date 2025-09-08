@@ -243,6 +243,18 @@ export default function KPIWrapper({ widget }: KPIWidgetProps) {
         nameFontWeight={kpiConfig.nameFontWeight}
         changeColor={kpiConfig.changeColor}
         targetColor={kpiConfig.targetColor}
+        nameFontFamily={kpiConfig.nameFontFamily}
+        valueFontFamily={kpiConfig.valueFontFamily}
+        titleAlign={kpiConfig.titleAlign}
+        titleMarginTop={kpiConfig.titleMarginTop}
+        titleMarginBottom={kpiConfig.titleMarginBottom}
+        titleLetterSpacing={kpiConfig.titleLetterSpacing}
+        titleLineHeight={kpiConfig.titleLineHeight}
+        subtitleAlign={kpiConfig.subtitleAlign}
+        subtitleMarginTop={kpiConfig.subtitleMarginTop}
+        subtitleMarginBottom={kpiConfig.subtitleMarginBottom}
+        subtitleLetterSpacing={kpiConfig.subtitleLetterSpacing}
+        subtitleLineHeight={kpiConfig.subtitleLineHeight}
       />
     </div>
   )
