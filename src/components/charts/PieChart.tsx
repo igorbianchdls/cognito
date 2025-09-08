@@ -2,7 +2,7 @@
 
 import { ResponsivePie } from '@nivo/pie';
 import { BaseChartProps } from './types';
-import { nivoTheme } from './theme';
+import { elegantTheme } from './theme';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
 import type { LegendConfig } from '@/types/apps/chartWidgets';
@@ -76,16 +76,6 @@ export function PieChart({
     value: item.y || item.value || 0
   }));
 
-  // Tema elegante inspirado no shadcn/ui
-  const elegantTheme = {
-    ...nivoTheme,
-    labels: {
-      text: { fontSize: 12, fill: '#374151', fontFamily: 'Geist, sans-serif', fontWeight: 500 }
-    },
-    legends: {
-      text: { fontSize: 12, fill: '#6b7280', fontFamily: 'Geist, sans-serif' }
-    }
-  };
 
   // Cores elegantes
   const elegantColors = ['#2563eb', '#dc2626', '#16a34a', '#ca8a04', '#9333ea', '#c2410c'];

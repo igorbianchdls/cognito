@@ -97,6 +97,30 @@ export interface BaseChartConfig {
   labelSkipHeight?: number
   labelFormat?: string
   
+  // Typography - Axis
+  axisFontFamily?: string
+  axisFontSize?: number
+  axisFontWeight?: number
+  axisTextColor?: string
+  axisLegendFontSize?: number
+  axisLegendFontWeight?: number
+  
+  // Typography - Labels  
+  labelsFontFamily?: string
+  labelsFontSize?: number
+  labelsFontWeight?: number
+  labelsTextColor?: string
+  
+  // Typography - Legends
+  legendsFontFamily?: string
+  legendsFontSize?: number
+  legendsFontWeight?: number
+  legendsTextColor?: string
+  
+  // Typography - Tooltip
+  tooltipFontSize?: number
+  tooltipFontFamily?: string
+  
   // Title & Description
   title?: string
   subtitle?: string

@@ -16,6 +16,7 @@ import DimensionsAccordion from './DimensionsAccordion'
 import AxesAccordion from './AxesAccordion'
 import ChartInfoAccordion from './ChartInfoAccordion'
 import ChartSpecificAccordion from './ChartSpecificAccordion'
+import ChartTypographyAccordion from './ChartTypographyAccordion'
 
 interface BarChartEditorProps {
   selectedWidget: DroppedWidget
@@ -57,6 +58,26 @@ export default function BarChartEditor({
               chartType="bar"
               styling={chartConfig.styling} 
               onConfigChange={onChartConfigChange} 
+            />
+
+            <ChartTypographyAccordion
+              axisFontFamily={chartConfig.styling?.axisFontFamily}
+              axisFontSize={chartConfig.styling?.axisFontSize}
+              axisFontWeight={chartConfig.styling?.axisFontWeight}
+              axisTextColor={chartConfig.styling?.axisTextColor}
+              axisLegendFontSize={chartConfig.styling?.axisLegendFontSize}
+              axisLegendFontWeight={chartConfig.styling?.axisLegendFontWeight}
+              labelsFontFamily={chartConfig.styling?.labelsFontFamily}
+              labelsFontSize={chartConfig.styling?.labelsFontSize}
+              labelsFontWeight={chartConfig.styling?.labelsFontWeight}
+              labelsTextColor={chartConfig.styling?.labelsTextColor}
+              legendsFontFamily={chartConfig.styling?.legendsFontFamily}
+              legendsFontSize={chartConfig.styling?.legendsFontSize}
+              legendsFontWeight={chartConfig.styling?.legendsFontWeight}
+              legendsTextColor={chartConfig.styling?.legendsTextColor}
+              tooltipFontSize={chartConfig.styling?.tooltipFontSize}
+              tooltipFontFamily={chartConfig.styling?.tooltipFontFamily}
+              onConfigChange={onChartConfigChange}
             />
             
             <ColorsAccordion 

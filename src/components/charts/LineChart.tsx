@@ -2,7 +2,7 @@
 
 import { ResponsiveLine } from '@nivo/line';
 import { BaseChartProps } from './types';
-import { nivoTheme } from './theme';
+import { elegantTheme } from './theme';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
 import type { LegendConfig } from '@/types/apps/chartWidgets';
@@ -72,23 +72,6 @@ export function LineChart({
     return <EmptyState />;
   }
 
-  // Tema elegante inspirado no shadcn/ui
-  const elegantTheme = {
-    ...nivoTheme,
-    axis: {
-      ticks: {
-        line: { stroke: 'transparent' }, // Remove tick lines
-        text: { fontSize: 12, fill: '#6b7280', fontFamily: 'Geist, sans-serif' }
-      },
-      domain: { line: { stroke: 'transparent' } } // Remove axis lines
-    },
-    grid: {
-      line: { stroke: '#f1f5f9', strokeWidth: 1 } // Grid sutil
-    },
-    legends: {
-      text: { fontSize: 12, fill: '#6b7280', fontFamily: 'Geist, sans-serif' }
-    }
-  };
 
   return (
     <div

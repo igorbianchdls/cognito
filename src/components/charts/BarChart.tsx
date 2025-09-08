@@ -4,7 +4,7 @@ import { ResponsiveBar } from '@nivo/bar';
 import { BarChartProps } from './types';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
-import { nivoTheme } from './theme';
+import { createElegantTheme } from './theme';
 
 // Valores padrão robustos e flexíveis
 const DEFAULT_MARGIN = { top: 40, right: 40, bottom: 64, left: 64 };
@@ -45,7 +45,24 @@ export function BarChart(props: BarChartProps) {
     motionConfig,
     axisBottom,
     axisLeft,
-    legends
+    legends,
+    // Typography props
+    axisFontFamily,
+    axisFontSize,
+    axisFontWeight,
+    axisTextColor,
+    axisLegendFontSize,
+    axisLegendFontWeight,
+    labelsFontFamily,
+    labelsFontSize,
+    labelsFontWeight,
+    labelsTextColor,
+    legendsFontFamily,
+    legendsFontSize,
+    legendsFontWeight,
+    legendsTextColor,
+    tooltipFontSize,
+    tooltipFontFamily
   } = props;
 
   if (!data || data.length === 0) {
@@ -59,23 +76,26 @@ export function BarChart(props: BarChartProps) {
     label: item.x || item.label || 'Unknown'
   }));
 
-  // Tema elegante inspirado no shadcn/ui
-  const elegantTheme = {
-    ...nivoTheme,
-    axis: {
-      ticks: {
-        line: { stroke: 'transparent' }, // Remove tick lines
-        text: { fontSize: 12, fill: '#6b7280', fontFamily: 'Geist, sans-serif' }
-      },
-      domain: { line: { stroke: 'transparent' } } // Remove axis lines
-    },
-    grid: {
-      line: { stroke: '#f1f5f9', strokeWidth: 1 } // Grid sutil
-    },
-    legends: {
-      text: { fontSize: 12, fill: '#6b7280', fontFamily: 'Geist, sans-serif' }
-    }
-  };
+  // Create theme with custom typography
+  const customTheme = createElegantTheme({
+    axisFontFamily,
+    axisFontSize,
+    axisFontWeight,
+    axisTextColor,
+    axisLegendFontSize,
+    axisLegendFontWeight,
+    labelsFontFamily,
+    labelsFontSize,
+    labelsFontWeight,
+    labelsTextColor,
+    legendsFontFamily,
+    legendsFontSize,
+    legendsFontWeight,
+    legendsTextColor,
+    tooltipFontSize,
+    tooltipFontFamily
+  });
+
 
 
   return (
@@ -187,7 +207,7 @@ export function BarChart(props: BarChartProps) {
           
           animate={animate ?? false}
           motionConfig={motionConfig || "gentle"}
-          theme={elegantTheme}
+          theme={customTheme}
           
           // Tooltip elegante
           tooltip={({ id, value }) => (
