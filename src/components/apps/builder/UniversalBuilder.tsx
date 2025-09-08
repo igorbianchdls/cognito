@@ -524,7 +524,7 @@ export default function UniversalBuilder({
     
     const lowerType = fieldType.toLowerCase()
     if (lowerType.includes('string') || lowerType.includes('text')) {
-      return 'items'
+      return '' // Don't auto-assign items for string fields
     }
     if (lowerType.includes('price') || lowerType.includes('cost') || lowerType.includes('value')) {
       return '$'
