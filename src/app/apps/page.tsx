@@ -178,7 +178,7 @@ export default function AppsPage() {
         areaChartActions.removeAreaChart(widgetId)
         break
       default:
-        console.warn('Remove not implemented for widget type:', widget.type)
+        console.warn('Remove not implemented for widget type:', (widget as any).type)
     }
   }
 
