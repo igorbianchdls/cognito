@@ -164,11 +164,17 @@ export default function App() {
           onClick={() => {
             const embedUrl = prompt('Cole o link embed do widget:')
             if (embedUrl && embedUrl.includes('/embed/widget/')) {
+              const widthInput = prompt('Largura em % (25, 50, 75, 100):', '100')
+              const heightInput = prompt('Altura em px (deixe vazio para automático):', '')
+              
+              const width = widthInput ? `${widthInput}%` : '100%'
+              const height = heightInput ? `${heightInput}px` : 'auto'
+              
               editor.tf.insertNodes({
                 type: 'embed',
                 embedUrl: embedUrl,
-                width: 600,
-                height: 400,
+                width: width,
+                height: height,
                 children: [{ text: '' }]
               })
             } else if (embedUrl) {

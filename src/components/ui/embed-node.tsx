@@ -7,8 +7,8 @@ import { cn } from '@/lib/utils';
 
 interface EmbedElement {
   embedUrl?: string;
-  width?: number;
-  height?: number;
+  width?: string | number;
+  height?: string | number;
 }
 
 export function EmbedElement(props: PlateElementProps) {
@@ -18,7 +18,7 @@ export function EmbedElement(props: PlateElementProps) {
   const focused = useFocused();
 
   const embedElement = element as EmbedElement;
-  const { embedUrl, width = 600, height = 400 } = embedElement;
+  const { embedUrl, width = '100%', height = 'auto' } = embedElement;
 
   if (!embedUrl) {
     return (
@@ -59,12 +59,16 @@ export function EmbedElement(props: PlateElementProps) {
             selected && focused && 'ring-2 ring-blue-500 ring-opacity-50',
             !readOnly && 'cursor-pointer'
           )}
-          style={{ width: '100%', maxWidth: `${width}px` }}
+          style={{ 
+            width: typeof width === 'string' && width.includes('%') ? width : 
+                   typeof width === 'number' ? `${width}px` : width,
+            maxWidth: '100%'
+          }}
         >
           <iframe
             src={embedUrl}
             width="100%"
-            height={height}
+            height={height === 'auto' ? '400' : typeof height === 'number' ? height : height.replace('px', '')}
             frameBorder="0"
             sandbox="allow-scripts allow-same-origin"
             className="w-full"
