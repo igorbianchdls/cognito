@@ -353,7 +353,7 @@ export default function GridCanvas({
         {/* Canvas direto dentro do WebPreview, sem iframe */}
         <div 
           ref={setNodeRef}
-          style={{...canvasStyles, height: '880px'}}
+          style={canvasStyles}
           className={`relative transition-colors p-0 bg-white ${
             (canvasConfig.canvasMode === 'fixed' || containerWidth > 768) ? '' : ''
           }`}

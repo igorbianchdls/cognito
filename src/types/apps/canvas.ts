@@ -53,11 +53,11 @@ export const defaultCanvasConfig: CanvasConfig = {
   
   canvasMode: 'responsive',
   width: 'auto',
-  height: 'auto',
+  height: 880,
   minHeight: 800,
   maxWidth: undefined,
   
-  rowHeight: 60,
+  rowHeight: 20,
   containerPadding: [20, 20],
   margin: [10, 10],
   

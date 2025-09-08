@@ -94,6 +94,23 @@ export default function CanvasConfigAccordion({
               </Select>
             </div>
 
+            {/* Height */}
+            <div className="grid grid-cols-2 gap-2 items-center">
+              <label htmlFor="canvas-height" className="text-xs font-medium text-gray-600">Altura</label>
+              <div className="flex items-center gap-1">
+                <Input
+                  id="canvas-height"
+                  type="number"
+                  value={typeof canvasConfig.height === 'number' ? canvasConfig.height : 880}
+                  onChange={(e) => onConfigChange('height', parseInt(e.target.value))}
+                  className="h-7 text-xs"
+                  min="400"
+                  max="3000"
+                />
+                <span className="text-xs text-gray-500">px</span>
+              </div>
+            </div>
+
             {/* Min Height */}
             <div className="grid grid-cols-2 gap-2 items-center">
               <label htmlFor="min-height" className="text-xs font-medium text-gray-600">Altura Mínima</label>
