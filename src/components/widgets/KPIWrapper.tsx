@@ -243,18 +243,18 @@ export default function KPIWrapper({ widget }: KPIWidgetProps) {
         nameFontWeight={kpiConfig.nameFontWeight}
         changeColor={kpiConfig.changeColor}
         targetColor={kpiConfig.targetColor}
-        nameFontFamily={kpiConfig.nameFontFamily}
-        valueFontFamily={kpiConfig.valueFontFamily}
-        titleAlign={kpiConfig.titleAlign}
-        titleMarginTop={kpiConfig.titleMarginTop}
-        titleMarginBottom={kpiConfig.titleMarginBottom}
-        titleLetterSpacing={kpiConfig.titleLetterSpacing}
-        titleLineHeight={kpiConfig.titleLineHeight}
-        subtitleAlign={kpiConfig.subtitleAlign}
-        subtitleMarginTop={kpiConfig.subtitleMarginTop}
-        subtitleMarginBottom={kpiConfig.subtitleMarginBottom}
-        subtitleLetterSpacing={kpiConfig.subtitleLetterSpacing}
-        subtitleLineHeight={kpiConfig.subtitleLineHeight}
+        nameFontFamily={(kpiConfig as Record<string, unknown>).nameFontFamily as string}
+        valueFontFamily={(kpiConfig as Record<string, unknown>).valueFontFamily as string}
+        titleAlign={(kpiConfig as Record<string, unknown>).titleAlign as 'left' | 'center' | 'right'}
+        titleMarginTop={(kpiConfig as Record<string, unknown>).titleMarginTop as number}
+        titleMarginBottom={(kpiConfig as Record<string, unknown>).titleMarginBottom as number}
+        titleLetterSpacing={(kpiConfig as Record<string, unknown>).titleLetterSpacing as number}
+        titleLineHeight={(kpiConfig as Record<string, unknown>).titleLineHeight as number}
+        subtitleAlign={(kpiConfig as Record<string, unknown>).subtitleAlign as 'left' | 'center' | 'right'}
+        subtitleMarginTop={(kpiConfig as Record<string, unknown>).subtitleMarginTop as number}
+        subtitleMarginBottom={(kpiConfig as Record<string, unknown>).subtitleMarginBottom as number}
+        subtitleLetterSpacing={(kpiConfig as Record<string, unknown>).subtitleLetterSpacing as number}
+        subtitleLineHeight={(kpiConfig as Record<string, unknown>).subtitleLineHeight as number}
       />
     </div>
   )
