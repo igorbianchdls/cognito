@@ -56,22 +56,22 @@ const fontWeightOptions = [
 ]
 
 export default function ChartTypographyAccordion({
-  axisFontFamily = 'Geist, sans-serif',
-  axisFontSize = 12,
-  axisFontWeight = 400,
-  axisTextColor = '#6b7280',
-  axisLegendFontSize = 14,
-  axisLegendFontWeight = 500,
-  labelsFontFamily = 'Geist, sans-serif',
-  labelsFontSize = 11,
-  labelsFontWeight = 500,
-  labelsTextColor = '#1f2937',
-  legendsFontFamily = 'Geist, sans-serif',
-  legendsFontSize = 12,
-  legendsFontWeight = 400,
-  legendsTextColor = '#6b7280',
-  tooltipFontSize = 12,
-  tooltipFontFamily = 'Geist, sans-serif',
+  axisFontFamily,
+  axisFontSize,
+  axisFontWeight,
+  axisTextColor,
+  axisLegendFontSize,
+  axisLegendFontWeight,
+  labelsFontFamily,
+  labelsFontSize,
+  labelsFontWeight,
+  labelsTextColor,
+  legendsFontFamily,
+  legendsFontSize,
+  legendsFontWeight,
+  legendsTextColor,
+  tooltipFontSize,
+  tooltipFontFamily,
   onConfigChange
 }: ChartTypographyAccordionProps) {
   const [isOpen, setIsOpen] = useState(false)
@@ -105,11 +105,11 @@ export default function ChartTypographyAccordion({
               <div className="space-y-2">
                 <label className="text-xs font-medium text-gray-600">Fonte dos Ticks</label>
                 <Select
-                  value={axisFontFamily}
+                  value={axisFontFamily || 'Geist, sans-serif'}
                   onValueChange={(value) => onConfigChange('axisFontFamily', value)}
                 >
                   <SelectTrigger className="h-7 text-xs">
-                    <SelectValue />
+                    <SelectValue placeholder="Selecione uma fonte" />
                   </SelectTrigger>
                   <SelectContent>
                     {fontFamilyOptions.map((font) => (
@@ -124,11 +124,11 @@ export default function ChartTypographyAccordion({
               <div className="space-y-2">
                 <label className="text-xs font-medium text-gray-600">Peso dos Ticks</label>
                 <Select
-                  value={axisFontWeight.toString()}
+                  value={(axisFontWeight || 400).toString()}
                   onValueChange={(value) => onConfigChange('axisFontWeight', parseInt(value))}
                 >
                   <SelectTrigger className="h-7 text-xs">
-                    <SelectValue />
+                    <SelectValue placeholder="Selecione o peso" />
                   </SelectTrigger>
                   <SelectContent>
                     {fontWeightOptions.map((weight) => (
@@ -144,10 +144,10 @@ export default function ChartTypographyAccordion({
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
                 <label className="text-xs font-medium text-gray-600">
-                  Tamanho dos Ticks ({axisFontSize}px)
+                  Tamanho dos Ticks ({axisFontSize || 12}px)
                 </label>
                 <Slider
-                  value={[axisFontSize]}
+                  value={[axisFontSize || 12]}
                   onValueChange={(value) => onConfigChange('axisFontSize', value[0])}
                   min={8}
                   max={20}
@@ -158,10 +158,10 @@ export default function ChartTypographyAccordion({
 
               <div className="space-y-2">
                 <label className="text-xs font-medium text-gray-600">
-                  Tamanho das Legendas ({axisLegendFontSize}px)
+                  Tamanho das Legendas ({axisLegendFontSize || 14}px)
                 </label>
                 <Slider
-                  value={[axisLegendFontSize]}
+                  value={[axisLegendFontSize || 14]}
                   onValueChange={(value) => onConfigChange('axisLegendFontSize', value[0])}
                   min={10}
                   max={24}
@@ -175,13 +175,13 @@ export default function ChartTypographyAccordion({
                 <div className="flex items-center gap-2">
                   <Input
                     type="color"
-                    value={axisTextColor}
+                    value={axisTextColor || '#6b7280'}
                     onChange={(e) => onConfigChange('axisTextColor', e.target.value)}
                     className="h-7 w-14 p-1 border rounded"
                   />
                   <Input
                     type="text"
-                    value={axisTextColor}
+                    value={axisTextColor || ''}
                     onChange={(e) => onConfigChange('axisTextColor', e.target.value)}
                     className="h-7 text-xs flex-1"
                     placeholder="#6b7280"
@@ -199,11 +199,11 @@ export default function ChartTypographyAccordion({
               <div className="space-y-2">
                 <label className="text-xs font-medium text-gray-600">Fonte</label>
                 <Select
-                  value={labelsFontFamily}
+                  value={labelsFontFamily || 'Geist, sans-serif'}
                   onValueChange={(value) => onConfigChange('labelsFontFamily', value)}
                 >
                   <SelectTrigger className="h-7 text-xs">
-                    <SelectValue />
+                    <SelectValue placeholder="Selecione uma fonte" />
                   </SelectTrigger>
                   <SelectContent>
                     {fontFamilyOptions.map((font) => (
@@ -218,11 +218,11 @@ export default function ChartTypographyAccordion({
               <div className="space-y-2">
                 <label className="text-xs font-medium text-gray-600">Peso</label>
                 <Select
-                  value={labelsFontWeight.toString()}
+                  value={(labelsFontWeight || 500).toString()}
                   onValueChange={(value) => onConfigChange('labelsFontWeight', parseInt(value))}
                 >
                   <SelectTrigger className="h-7 text-xs">
-                    <SelectValue />
+                    <SelectValue placeholder="Selecione o peso" />
                   </SelectTrigger>
                   <SelectContent>
                     {fontWeightOptions.map((weight) => (
@@ -238,10 +238,10 @@ export default function ChartTypographyAccordion({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-xs font-medium text-gray-600">
-                  Tamanho ({labelsFontSize}px)
+                  Tamanho ({labelsFontSize || 11}px)
                 </label>
                 <Slider
-                  value={[labelsFontSize]}
+                  value={[labelsFontSize || 11]}
                   onValueChange={(value) => onConfigChange('labelsFontSize', value[0])}
                   min={8}
                   max={18}
@@ -255,13 +255,13 @@ export default function ChartTypographyAccordion({
                 <div className="flex items-center gap-2">
                   <Input
                     type="color"
-                    value={labelsTextColor}
+                    value={labelsTextColor || '#1f2937'}
                     onChange={(e) => onConfigChange('labelsTextColor', e.target.value)}
                     className="h-7 w-14 p-1 border rounded"
                   />
                   <Input
                     type="text"
-                    value={labelsTextColor}
+                    value={labelsTextColor || ''}
                     onChange={(e) => onConfigChange('labelsTextColor', e.target.value)}
                     className="h-7 text-xs flex-1"
                     placeholder="#1f2937"
@@ -279,11 +279,11 @@ export default function ChartTypographyAccordion({
               <div className="space-y-2">
                 <label className="text-xs font-medium text-gray-600">Fonte</label>
                 <Select
-                  value={legendsFontFamily}
+                  value={legendsFontFamily || 'Geist, sans-serif'}
                   onValueChange={(value) => onConfigChange('legendsFontFamily', value)}
                 >
                   <SelectTrigger className="h-7 text-xs">
-                    <SelectValue />
+                    <SelectValue placeholder="Selecione uma fonte" />
                   </SelectTrigger>
                   <SelectContent>
                     {fontFamilyOptions.map((font) => (
@@ -298,11 +298,11 @@ export default function ChartTypographyAccordion({
               <div className="space-y-2">
                 <label className="text-xs font-medium text-gray-600">Peso</label>
                 <Select
-                  value={legendsFontWeight.toString()}
+                  value={(legendsFontWeight || 400).toString()}
                   onValueChange={(value) => onConfigChange('legendsFontWeight', parseInt(value))}
                 >
                   <SelectTrigger className="h-7 text-xs">
-                    <SelectValue />
+                    <SelectValue placeholder="Selecione o peso" />
                   </SelectTrigger>
                   <SelectContent>
                     {fontWeightOptions.map((weight) => (
@@ -318,10 +318,10 @@ export default function ChartTypographyAccordion({
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-xs font-medium text-gray-600">
-                  Tamanho ({legendsFontSize}px)
+                  Tamanho ({legendsFontSize || 12}px)
                 </label>
                 <Slider
-                  value={[legendsFontSize]}
+                  value={[legendsFontSize || 12]}
                   onValueChange={(value) => onConfigChange('legendsFontSize', value[0])}
                   min={8}
                   max={18}
@@ -335,13 +335,13 @@ export default function ChartTypographyAccordion({
                 <div className="flex items-center gap-2">
                   <Input
                     type="color"
-                    value={legendsTextColor}
+                    value={legendsTextColor || '#6b7280'}
                     onChange={(e) => onConfigChange('legendsTextColor', e.target.value)}
                     className="h-7 w-14 p-1 border rounded"
                   />
                   <Input
                     type="text"
-                    value={legendsTextColor}
+                    value={legendsTextColor || ''}
                     onChange={(e) => onConfigChange('legendsTextColor', e.target.value)}
                     className="h-7 text-xs flex-1"
                     placeholder="#6b7280"
@@ -359,11 +359,11 @@ export default function ChartTypographyAccordion({
               <div className="space-y-2">
                 <label className="text-xs font-medium text-gray-600">Fonte</label>
                 <Select
-                  value={tooltipFontFamily}
+                  value={tooltipFontFamily || 'Geist, sans-serif'}
                   onValueChange={(value) => onConfigChange('tooltipFontFamily', value)}
                 >
                   <SelectTrigger className="h-7 text-xs">
-                    <SelectValue />
+                    <SelectValue placeholder="Selecione uma fonte" />
                   </SelectTrigger>
                   <SelectContent>
                     {fontFamilyOptions.map((font) => (
@@ -377,10 +377,10 @@ export default function ChartTypographyAccordion({
 
               <div className="space-y-2">
                 <label className="text-xs font-medium text-gray-600">
-                  Tamanho ({tooltipFontSize}px)
+                  Tamanho ({tooltipFontSize || 12}px)
                 </label>
                 <Slider
-                  value={[tooltipFontSize]}
+                  value={[tooltipFontSize || 12]}
                   onValueChange={(value) => onConfigChange('tooltipFontSize', value[0])}
                   min={10}
                   max={16}
@@ -398,10 +398,10 @@ export default function ChartTypographyAccordion({
               <div 
                 className="text-sm"
                 style={{ 
-                  fontFamily: axisFontFamily,
-                  fontSize: `${axisFontSize}px`,
-                  fontWeight: axisFontWeight,
-                  color: axisTextColor 
+                  fontFamily: axisFontFamily || 'Geist, sans-serif',
+                  fontSize: `${axisFontSize || 12}px`,
+                  fontWeight: axisFontWeight || 400,
+                  color: axisTextColor || '#6b7280'
                 }}
               >
                 📊 Texto dos Eixos (Axis Ticks)
@@ -409,10 +409,10 @@ export default function ChartTypographyAccordion({
               <div 
                 className="text-sm"
                 style={{ 
-                  fontFamily: labelsFontFamily,
-                  fontSize: `${labelsFontSize}px`,
-                  fontWeight: labelsFontWeight,
-                  color: labelsTextColor 
+                  fontFamily: labelsFontFamily || 'Geist, sans-serif',
+                  fontSize: `${labelsFontSize || 11}px`,
+                  fontWeight: labelsFontWeight || 500,
+                  color: labelsTextColor || '#1f2937'
                 }}
               >
                 🏷️ Labels do Gráfico
@@ -420,10 +420,10 @@ export default function ChartTypographyAccordion({
               <div 
                 className="text-sm"
                 style={{ 
-                  fontFamily: legendsFontFamily,
-                  fontSize: `${legendsFontSize}px`,
-                  fontWeight: legendsFontWeight,
-                  color: legendsTextColor 
+                  fontFamily: legendsFontFamily || 'Geist, sans-serif',
+                  fontSize: `${legendsFontSize || 12}px`,
+                  fontWeight: legendsFontWeight || 400,
+                  color: legendsTextColor || '#6b7280'
                 }}
               >
                 📝 Legendas do Gráfico
@@ -431,8 +431,8 @@ export default function ChartTypographyAccordion({
               <div 
                 className="text-sm bg-white px-2 py-1 rounded border inline-block"
                 style={{ 
-                  fontFamily: tooltipFontFamily,
-                  fontSize: `${tooltipFontSize}px`
+                  fontFamily: tooltipFontFamily || 'Geist, sans-serif',
+                  fontSize: `${tooltipFontSize || 12}px`
                 }}
               >
                 💬 Tooltip do Gráfico
