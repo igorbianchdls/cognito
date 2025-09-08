@@ -241,6 +241,96 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
                  widget.pieChartConfig?.styling?.title ||
                  widget.areaChartConfig?.styling?.title
 
+    // Typography props - Axis
+    const axisFontFamily = widget.barChartConfig?.styling?.axisFontFamily ??
+                          widget.horizontalBarChartConfig?.styling?.axisFontFamily ??
+                          widget.lineChartConfig?.styling?.axisFontFamily ??
+                          widget.areaChartConfig?.styling?.axisFontFamily
+
+    const axisFontSize = widget.barChartConfig?.styling?.axisFontSize ??
+                        widget.horizontalBarChartConfig?.styling?.axisFontSize ??
+                        widget.lineChartConfig?.styling?.axisFontSize ??
+                        widget.areaChartConfig?.styling?.axisFontSize
+
+    const axisFontWeight = widget.barChartConfig?.styling?.axisFontWeight ??
+                          widget.horizontalBarChartConfig?.styling?.axisFontWeight ??
+                          widget.lineChartConfig?.styling?.axisFontWeight ??
+                          widget.areaChartConfig?.styling?.axisFontWeight
+
+    const axisTextColor = widget.barChartConfig?.styling?.axisTextColor ??
+                         widget.horizontalBarChartConfig?.styling?.axisTextColor ??
+                         widget.lineChartConfig?.styling?.axisTextColor ??
+                         widget.areaChartConfig?.styling?.axisTextColor
+
+    const axisLegendFontSize = widget.barChartConfig?.styling?.axisLegendFontSize ??
+                              widget.horizontalBarChartConfig?.styling?.axisLegendFontSize ??
+                              widget.lineChartConfig?.styling?.axisLegendFontSize ??
+                              widget.areaChartConfig?.styling?.axisLegendFontSize
+
+    const axisLegendFontWeight = widget.barChartConfig?.styling?.axisLegendFontWeight ??
+                                widget.horizontalBarChartConfig?.styling?.axisLegendFontWeight ??
+                                widget.lineChartConfig?.styling?.axisLegendFontWeight ??
+                                widget.areaChartConfig?.styling?.axisLegendFontWeight
+
+    // Typography props - Labels  
+    const labelsFontFamily = widget.barChartConfig?.styling?.labelsFontFamily ??
+                            widget.horizontalBarChartConfig?.styling?.labelsFontFamily ??
+                            widget.lineChartConfig?.styling?.labelsFontFamily ??
+                            widget.areaChartConfig?.styling?.labelsFontFamily
+
+    const labelsFontSize = widget.barChartConfig?.styling?.labelsFontSize ??
+                          widget.horizontalBarChartConfig?.styling?.labelsFontSize ??
+                          widget.lineChartConfig?.styling?.labelsFontSize ??
+                          widget.areaChartConfig?.styling?.labelsFontSize
+
+    const labelsFontWeight = widget.barChartConfig?.styling?.labelsFontWeight ??
+                            widget.horizontalBarChartConfig?.styling?.labelsFontWeight ??
+                            widget.lineChartConfig?.styling?.labelsFontWeight ??
+                            widget.areaChartConfig?.styling?.labelsFontWeight
+
+    const labelsTextColor = widget.barChartConfig?.styling?.labelsTextColor ??
+                           widget.horizontalBarChartConfig?.styling?.labelsTextColor ??
+                           widget.lineChartConfig?.styling?.labelsTextColor ??
+                           widget.areaChartConfig?.styling?.labelsTextColor
+
+    // Typography props - Legends
+    const legendsFontFamily = widget.barChartConfig?.styling?.legendsFontFamily ??
+                             widget.horizontalBarChartConfig?.styling?.legendsFontFamily ??
+                             widget.lineChartConfig?.styling?.legendsFontFamily ??
+                             widget.pieChartConfig?.styling?.legendsFontFamily ??
+                             widget.areaChartConfig?.styling?.legendsFontFamily
+
+    const legendsFontSize = widget.barChartConfig?.styling?.legendsFontSize ??
+                           widget.horizontalBarChartConfig?.styling?.legendsFontSize ??
+                           widget.lineChartConfig?.styling?.legendsFontSize ??
+                           widget.pieChartConfig?.styling?.legendsFontSize ??
+                           widget.areaChartConfig?.styling?.legendsFontSize
+
+    const legendsFontWeight = widget.barChartConfig?.styling?.legendsFontWeight ??
+                             widget.horizontalBarChartConfig?.styling?.legendsFontWeight ??
+                             widget.lineChartConfig?.styling?.legendsFontWeight ??
+                             widget.pieChartConfig?.styling?.legendsFontWeight ??
+                             widget.areaChartConfig?.styling?.legendsFontWeight
+
+    const legendsTextColor = widget.barChartConfig?.styling?.legendsTextColor ??
+                            widget.horizontalBarChartConfig?.styling?.legendsTextColor ??
+                            widget.lineChartConfig?.styling?.legendsTextColor ??
+                            widget.pieChartConfig?.styling?.legendsTextColor ??
+                            widget.areaChartConfig?.styling?.legendsTextColor
+
+    // Typography props - Tooltip
+    const tooltipFontSize = widget.barChartConfig?.styling?.tooltipFontSize ??
+                           widget.horizontalBarChartConfig?.styling?.tooltipFontSize ??
+                           widget.lineChartConfig?.styling?.tooltipFontSize ??
+                           widget.pieChartConfig?.styling?.tooltipFontSize ??
+                           widget.areaChartConfig?.styling?.tooltipFontSize
+
+    const tooltipFontFamily = widget.barChartConfig?.styling?.tooltipFontFamily ??
+                             widget.horizontalBarChartConfig?.styling?.tooltipFontFamily ??
+                             widget.lineChartConfig?.styling?.tooltipFontFamily ??
+                             widget.pieChartConfig?.styling?.tooltipFontFamily ??
+                             widget.areaChartConfig?.styling?.tooltipFontFamily
+
     const commonProps = {
       data,
       colors,
@@ -293,6 +383,23 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
               tickPadding: yAxisTickPadding
             } : undefined}
             legends={legendConfig}
+            // Typography props
+            axisFontFamily={axisFontFamily}
+            axisFontSize={axisFontSize}
+            axisFontWeight={axisFontWeight}
+            axisTextColor={axisTextColor}
+            axisLegendFontSize={axisLegendFontSize}
+            axisLegendFontWeight={axisLegendFontWeight}
+            labelsFontFamily={labelsFontFamily}
+            labelsFontSize={labelsFontSize}
+            labelsFontWeight={labelsFontWeight}
+            labelsTextColor={labelsTextColor}
+            legendsFontFamily={legendsFontFamily}
+            legendsFontSize={legendsFontSize}
+            legendsFontWeight={legendsFontWeight}
+            legendsTextColor={legendsTextColor}
+            tooltipFontSize={tooltipFontSize}
+            tooltipFontFamily={tooltipFontFamily}
           />
         )
       case 'chart-line':
