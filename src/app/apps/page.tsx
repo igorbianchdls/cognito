@@ -150,7 +150,12 @@ export default function AppsPage() {
     // Find widget type and use appropriate store
     const widget = allWidgets.find(w => w.i === widgetId)
     
-    switch (widget?.type) {
+    if (!widget) {
+      console.warn('Widget not found:', widgetId)
+      return
+    }
+    
+    switch (widget.type) {
       case 'kpi':
         kpiActions.removeKPI(widgetId)
         break
@@ -173,7 +178,7 @@ export default function AppsPage() {
         areaChartActions.removeAreaChart(widgetId)
         break
       default:
-        console.warn('Remove not implemented for widget type:', widget?.type)
+        console.warn('Remove not implemented for widget type:', widget.type)
     }
   }
 
