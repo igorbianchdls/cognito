@@ -5,21 +5,13 @@ import type { PlateElementProps } from 'platejs/react';
 import { PlateElement, useFocused, useReadOnly, useSelected } from 'platejs/react';
 import { cn } from '@/lib/utils';
 
-interface EmbedElementProps extends PlateElementProps {
-  element: {
-    type: string;
-    embedUrl?: string;
-    width?: number;
-    height?: number;
-  } & PlateElementProps['element'];
-}
-
-export function EmbedElement({ element, ...props }: EmbedElementProps) {
+export function EmbedElement(props: PlateElementProps) {
+  const { element } = props;
   const readOnly = useReadOnly();
   const selected = useSelected();
   const focused = useFocused();
 
-  const { embedUrl, width = 600, height = 400 } = element;
+  const { embedUrl, width = 600, height = 400 } = element as any;
 
   if (!embedUrl) {
     return (
