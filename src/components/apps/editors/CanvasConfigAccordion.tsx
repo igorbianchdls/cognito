@@ -204,7 +204,7 @@ export default function CanvasConfigAccordion({
             
             {/* LG */}
             <div className="grid grid-cols-2 gap-2 items-center">
-              <label className="text-xs font-medium text-gray-600">LG (>1200px)</label>
+              <label className="text-xs font-medium text-gray-600">LG {`(>1200px)`}</label>
               <Input
                 type="number"
                 value={canvasConfig.breakpoints.lg}
@@ -256,7 +256,7 @@ export default function CanvasConfigAccordion({
 
             {/* XXS */}
             <div className="grid grid-cols-2 gap-2 items-center">
-              <label className="text-xs font-medium text-gray-600">XXS (<480px)</label>
+              <label className="text-xs font-medium text-gray-600">XXS {`(<480px)`}</label>
               <Input
                 type="number"
                 value={canvasConfig.breakpoints.xxs}
