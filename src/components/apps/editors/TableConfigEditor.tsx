@@ -13,6 +13,7 @@ import TableEditingAccordion from './TableEditingAccordion'
 import TableAppearanceAccordion from './TableAppearanceAccordion'
 import TableTypographyAccordion from './TableTypographyAccordion'
 import TableHeaderAccordion from './TableHeaderAccordion'
+import TableCellAccordion from './TableCellAccordion'
 import TableBehaviorAccordion from './TableBehaviorAccordion'
 import TableExportAccordion from './TableExportAccordion'
 
@@ -112,6 +113,25 @@ export default function TableConfigEditor({
               headerTextColor={tableConfig.headerTextColor}
               headerBackground={tableConfig.headerBackground}
               padding={tableConfig.padding}
+              onConfigChange={onTableConfigChange}
+            />
+
+            <TableCellAccordion
+              cellFontSize={tableConfig.cellFontSize}
+              fontSize={tableConfig.fontSize}
+              cellFontFamily={tableConfig.cellFontFamily}
+              cellFontWeight={tableConfig.cellFontWeight}
+              cellTextColor={tableConfig.cellTextColor}
+              lineHeight={tableConfig.lineHeight}
+              letterSpacing={tableConfig.letterSpacing}
+              defaultTextAlign={tableConfig.defaultTextAlign}
+              padding={tableConfig.padding}
+              rowHoverColor={tableConfig.rowHoverColor}
+              editingCellColor={tableConfig.editingCellColor}
+              validationErrorColor={tableConfig.validationErrorColor}
+              modifiedCellColor={tableConfig.modifiedCellColor}
+              newRowColor={tableConfig.newRowColor}
+              borderColor={tableConfig.borderColor}
               onConfigChange={onTableConfigChange}
             />
 
