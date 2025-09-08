@@ -74,11 +74,25 @@ export interface PieChartStore {
   pieCharts: PieChartConfig[]
 }
 
-const initialPieChartState: PieChartStore = {
-  pieCharts: []
+// Load pie charts from localStorage on initialization
+const loadPieChartsFromStorage = (): PieChartStore => {
+  if (typeof window === 'undefined') return { pieCharts: [] }
+  try {
+    const stored = localStorage.getItem('cognito-pie-charts')
+    return stored ? JSON.parse(stored) : { pieCharts: [] }
+  } catch {
+    return { pieCharts: [] }
+  }
 }
 
-export const $pieChartStore = atom<PieChartStore>(initialPieChartState)
+export const $pieChartStore = atom<PieChartStore>(loadPieChartsFromStorage())
+
+// Auto-save to localStorage whenever pie charts change
+if (typeof window !== 'undefined') {
+  $pieChartStore.subscribe(store => {
+    localStorage.setItem('cognito-pie-charts', JSON.stringify(store))
+  })
+}
 
 // Selection management - following BarChart/LineChart pattern
 export const $selectedPieChartId = atom<string | null>(null)

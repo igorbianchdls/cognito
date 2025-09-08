@@ -85,11 +85,25 @@ export interface AreaChartStore {
   areaCharts: AreaChartConfig[]
 }
 
-const initialAreaChartState: AreaChartStore = {
-  areaCharts: []
+// Load area charts from localStorage on initialization
+const loadAreaChartsFromStorage = (): AreaChartStore => {
+  if (typeof window === 'undefined') return { areaCharts: [] }
+  try {
+    const stored = localStorage.getItem('cognito-area-charts')
+    return stored ? JSON.parse(stored) : { areaCharts: [] }
+  } catch {
+    return { areaCharts: [] }
+  }
 }
 
-export const $areaChartStore = atom<AreaChartStore>(initialAreaChartState)
+export const $areaChartStore = atom<AreaChartStore>(loadAreaChartsFromStorage())
+
+// Auto-save to localStorage whenever area charts change
+if (typeof window !== 'undefined') {
+  $areaChartStore.subscribe(store => {
+    localStorage.setItem('cognito-area-charts', JSON.stringify(store))
+  })
+}
 
 // Selection management - following BarChart/LineChart/PieChart pattern
 export const $selectedAreaChartId = atom<string | null>(null)

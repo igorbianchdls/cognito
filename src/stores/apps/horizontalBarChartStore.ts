@@ -85,11 +85,25 @@ export interface HorizontalBarChartStore {
   horizontalBarCharts: HorizontalBarChartConfig[]
 }
 
-const initialHorizontalBarChartState: HorizontalBarChartStore = {
-  horizontalBarCharts: []
+// Load horizontal bar charts from localStorage on initialization
+const loadHorizontalBarChartsFromStorage = (): HorizontalBarChartStore => {
+  if (typeof window === 'undefined') return { horizontalBarCharts: [] }
+  try {
+    const stored = localStorage.getItem('cognito-horizontal-bar-charts')
+    return stored ? JSON.parse(stored) : { horizontalBarCharts: [] }
+  } catch {
+    return { horizontalBarCharts: [] }
+  }
 }
 
-export const $horizontalBarChartStore = atom<HorizontalBarChartStore>(initialHorizontalBarChartState)
+export const $horizontalBarChartStore = atom<HorizontalBarChartStore>(loadHorizontalBarChartsFromStorage())
+
+// Auto-save to localStorage whenever horizontal bar charts change
+if (typeof window !== 'undefined') {
+  $horizontalBarChartStore.subscribe(store => {
+    localStorage.setItem('cognito-horizontal-bar-charts', JSON.stringify(store))
+  })
+}
 
 // Selection management - following other chart patterns
 export const $selectedHorizontalBarChartId = atom<string | null>(null)

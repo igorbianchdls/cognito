@@ -12,8 +12,26 @@ import {
 } from '@/types/apps/tableWidgets'
 import type { LayoutItem } from '@/types/apps/baseWidget'
 
-// Main tables atom
-export const $tableWidgets = atom<TableWidget[]>([])
+// Load tables from localStorage on initialization
+const loadTablesFromStorage = (): TableWidget[] => {
+  if (typeof window === 'undefined') return []
+  try {
+    const stored = localStorage.getItem('cognito-tables')
+    return stored ? JSON.parse(stored) : []
+  } catch {
+    return []
+  }
+}
+
+// Main tables atom with localStorage persistence
+export const $tableWidgets = atom<TableWidget[]>(loadTablesFromStorage())
+
+// Auto-save to localStorage whenever tables change
+if (typeof window !== 'undefined') {
+  $tableWidgets.subscribe(tables => {
+    localStorage.setItem('cognito-tables', JSON.stringify(tables))
+  })
+}
 
 // Convert Tables to DroppedWidget format for direct consumption
 export const $tablesAsDropped = computed([$tableWidgets], (tables) => {

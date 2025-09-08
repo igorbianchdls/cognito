@@ -82,11 +82,25 @@ export interface LineChartStore {
   lineCharts: LineChartConfig[]
 }
 
-const initialLineChartState: LineChartStore = {
-  lineCharts: []
+// Load line charts from localStorage on initialization
+const loadLineChartsFromStorage = (): LineChartStore => {
+  if (typeof window === 'undefined') return { lineCharts: [] }
+  try {
+    const stored = localStorage.getItem('cognito-line-charts')
+    return stored ? JSON.parse(stored) : { lineCharts: [] }
+  } catch {
+    return { lineCharts: [] }
+  }
 }
 
-export const $lineChartStore = atom<LineChartStore>(initialLineChartState)
+export const $lineChartStore = atom<LineChartStore>(loadLineChartsFromStorage())
+
+// Auto-save to localStorage whenever line charts change
+if (typeof window !== 'undefined') {
+  $lineChartStore.subscribe(store => {
+    localStorage.setItem('cognito-line-charts', JSON.stringify(store))
+  })
+}
 
 // Selection management for line charts
 export const $selectedLineChartId = atom<string | null>(null)

@@ -85,11 +85,25 @@ export interface BarChartStore {
   barCharts: BarChartConfig[]
 }
 
-const initialBarChartState: BarChartStore = {
-  barCharts: []
+// Load bar charts from localStorage on initialization
+const loadBarChartsFromStorage = (): BarChartStore => {
+  if (typeof window === 'undefined') return { barCharts: [] }
+  try {
+    const stored = localStorage.getItem('cognito-bar-charts')
+    return stored ? JSON.parse(stored) : { barCharts: [] }
+  } catch {
+    return { barCharts: [] }
+  }
 }
 
-export const $barChartStore = atom<BarChartStore>(initialBarChartState)
+export const $barChartStore = atom<BarChartStore>(loadBarChartsFromStorage())
+
+// Auto-save to localStorage whenever bar charts change
+if (typeof window !== 'undefined') {
+  $barChartStore.subscribe(store => {
+    localStorage.setItem('cognito-bar-charts', JSON.stringify(store))
+  })
+}
 
 // Selection management for bar charts
 export const $selectedBarChartId = atom<string | null>(null)
