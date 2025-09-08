@@ -175,7 +175,7 @@ export function KPICard({
   return (
     <div style={{ width: '100%', height: '100%', minWidth: 0 }}>
       <Card 
-        className="@container/card h-full"
+        className="@container/card h-full border-0 p-0"
         style={{
           backgroundColor: backgroundColor ? hexToRgba(backgroundColor, backgroundOpacity ?? 1) : 'white',
           borderColor: borderColor ? hexToRgba(borderColor, borderOpacity ?? 1) : '#e5e7eb',
