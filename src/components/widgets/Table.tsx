@@ -393,13 +393,13 @@ export function DataTable<TData extends TableData>({
       <div className="w-full h-full flex flex-col">
 
         {/* Table Content - flex-1 overflow-auto */}
-        <div 
-          className="flex-1 overflow-auto rounded-md border"
-          style={{ 
-            borderColor,
-          }}
-        >
-          <Table>
+        <div className="flex-1 overflow-auto rounded-md">
+          <Table 
+            className="border"
+            style={{ 
+              borderColor,
+            }}
+          >
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow 
