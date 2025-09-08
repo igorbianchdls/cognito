@@ -13,7 +13,7 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table"
-import { ChevronDown, MoreHorizontal, Plus, Trash2, Copy, X, Check } from "lucide-react"
+import { ChevronDown, ChevronLeft, ChevronRight, MoreHorizontal, Plus, Trash2, Copy, X, Check } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -26,6 +26,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 import {
@@ -586,23 +593,52 @@ export function DataTable<TData extends TableData>({
 
         {/* Pagination - flex-shrink-0 */}
         {showPagination && (
-          <div className="flex-shrink-0 flex items-center justify-end space-x-2 py-4">
-            <div className="space-x-2">
+          <div className="flex-shrink-0 flex items-center justify-between py-4 px-2">
+            {/* Page Info - Left */}
+            <div className="text-sm text-gray-600">
+              Página {table.getState().pagination.pageIndex + 1} de {table.getPageCount()}
+            </div>
+
+            {/* Rows per page - Center */}
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-600">Rows per page</span>
+              <Select
+                value={table.getState().pagination.pageSize.toString()}
+                onValueChange={(value) => {
+                  table.setPageSize(Number(value))
+                }}
+              >
+                <SelectTrigger className="w-16 h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="15">15</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Navigation Arrows - Right */}
+            <div className="flex items-center space-x-1">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => table.previousPage()}
                 disabled={!table.getCanPreviousPage()}
+                className="h-8 w-8 p-0"
               >
-                Anterior
+                <ChevronLeft className="h-4 w-4" />
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => table.nextPage()}
                 disabled={!table.getCanNextPage()}
+                className="h-8 w-8 p-0"
               >
-                Próximo
+                <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
           </div>
