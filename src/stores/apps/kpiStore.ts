@@ -13,8 +13,26 @@ import {
 } from '@/types/apps/kpiWidgets'
 import type { LayoutItem } from '@/types/apps/baseWidget'
 
-// Main KPIs atom
-export const $kpiWidgets = atom<KPIWidget[]>([])
+// Load KPIs from localStorage on initialization
+const loadKPIsFromStorage = (): KPIWidget[] => {
+  if (typeof window === 'undefined') return []
+  try {
+    const stored = localStorage.getItem('cognito-kpis')
+    return stored ? JSON.parse(stored) : []
+  } catch {
+    return []
+  }
+}
+
+// Main KPIs atom with localStorage persistence
+export const $kpiWidgets = atom<KPIWidget[]>(loadKPIsFromStorage())
+
+// Auto-save to localStorage whenever KPIs change
+if (typeof window !== 'undefined') {
+  $kpiWidgets.subscribe(kpis => {
+    localStorage.setItem('cognito-kpis', JSON.stringify(kpis))
+  })
+}
 
 // Convert KPIs to DroppedWidget format for direct consumption
 export const $kpisAsDropped = computed([$kpiWidgets], (kpis) => {
