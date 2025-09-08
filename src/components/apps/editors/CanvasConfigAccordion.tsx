@@ -94,15 +94,15 @@ export default function CanvasConfigAccordion({
               </Select>
             </div>
 
-            {/* Height */}
+            {/* Responsive Height */}
             <div className="grid grid-cols-2 gap-2 items-center">
-              <label htmlFor="canvas-height" className="text-xs font-medium text-gray-600">Altura</label>
+              <label htmlFor="responsive-height" className="text-xs font-medium text-gray-600">Altura Responsiva</label>
               <div className="flex items-center gap-1">
                 <Input
-                  id="canvas-height"
+                  id="responsive-height"
                   type="number"
-                  value={typeof canvasConfig.height === 'number' ? canvasConfig.height : 880}
-                  onChange={(e) => onConfigChange('height', parseInt(e.target.value))}
+                  value={typeof canvasConfig.responsiveHeight === 'number' ? canvasConfig.responsiveHeight : 800}
+                  onChange={(e) => onConfigChange('responsiveHeight', parseInt(e.target.value))}
                   className="h-7 text-xs"
                   min="400"
                   max="3000"
