@@ -58,82 +58,115 @@ export default function GridCanvas({
   const [isDragging, setIsDragging] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
 
+  // Helper function to clear all selections
+  const clearAllSelections = () => {
+    kpiActions.selectKPI(null)
+    tableActions.selectTable(null)
+    barChartActions.selectBarChart(null)
+    horizontalBarChartActions.selectHorizontalBarChart(null)
+    lineChartActions.selectLineChart(null)
+    pieChartActions.selectPieChart(null)
+    areaChartActions.selectAreaChart(null)
+  }
+
   const handleWidgetClick = (widgetId: string) => {
     // Find the widget to determine its type
     const widget = widgets.find(w => w.i === widgetId)
     
     if (widget?.type === 'kpi') {
+      // Check if KPI is already selected - if so, deselect it
+      if (selectedKPI?.i === widgetId) {
+        console.log('🎯 Deselecting KPI:', widgetId)
+        kpiActions.selectKPI(null)
+        return
+      }
+      
       // Clear other selections and select KPI
       console.log('🎯 Selecting KPI:', widgetId)
-      tableActions.selectTable(null)
-      barChartActions.selectBarChart(null)
-      horizontalBarChartActions.selectHorizontalBarChart(null)
-      lineChartActions.selectLineChart(null)
-      pieChartActions.selectPieChart(null)
-      areaChartActions.selectAreaChart(null)
+      clearAllSelections()
       kpiActions.selectKPI(widgetId)
     } else if (widget?.type === 'table') {
+      // Check if table is already selected - if so, deselect it
+      if (selectedTable?.i === widgetId) {
+        console.log('📋 Deselecting Table:', widgetId)
+        tableActions.selectTable(null)
+        return
+      }
+      
       // Clear other selections and select table
       console.log('📋 Selecting Table:', widgetId)
-      kpiActions.selectKPI(null)
-      barChartActions.selectBarChart(null)
-      horizontalBarChartActions.selectHorizontalBarChart(null)
-      lineChartActions.selectLineChart(null)
-      pieChartActions.selectPieChart(null)
-      areaChartActions.selectAreaChart(null)
+      clearAllSelections()
       tableActions.selectTable(widgetId)
     } else if (widget?.type === 'chart-bar') {
+      // Check if bar chart is already selected - if so, deselect it
+      if (selectedBarChart?.id === widgetId) {
+        console.log('📊 Deselecting BarChart:', widgetId)
+        barChartActions.selectBarChart(null)
+        return
+      }
+      
       // Clear other selections and select bar chart
       console.log('📊 Selecting BarChart:', widgetId)
-      kpiActions.selectKPI(null)
-      tableActions.selectTable(null)
-      horizontalBarChartActions.selectHorizontalBarChart(null)
-      lineChartActions.selectLineChart(null)
-      pieChartActions.selectPieChart(null)
-      areaChartActions.selectAreaChart(null)
+      clearAllSelections()
       barChartActions.selectBarChart(widgetId)
     } else if (widget?.type === 'chart-horizontal-bar') {
+      // Check if horizontal bar chart is already selected - if so, deselect it
+      if (selectedHorizontalBarChart?.id === widgetId) {
+        console.log('📊 Deselecting HorizontalBarChart:', widgetId)
+        horizontalBarChartActions.selectHorizontalBarChart(null)
+        return
+      }
+      
       // Clear other selections and select horizontal bar chart
       console.log('📊 Selecting HorizontalBarChart:', widgetId)
-      kpiActions.selectKPI(null)
-      tableActions.selectTable(null)
-      barChartActions.selectBarChart(null)
-      lineChartActions.selectLineChart(null)
-      pieChartActions.selectPieChart(null)
-      areaChartActions.selectAreaChart(null)
+      clearAllSelections()
       horizontalBarChartActions.selectHorizontalBarChart(widgetId)
     } else if (widget?.type === 'chart-line') {
+      // Check if line chart is already selected - if so, deselect it
+      if (selectedLineChart?.id === widgetId) {
+        console.log('📈 Deselecting LineChart:', widgetId)
+        lineChartActions.selectLineChart(null)
+        return
+      }
+      
       // Clear other selections and select line chart
       console.log('📈 Selecting LineChart:', widgetId)
-      kpiActions.selectKPI(null)
-      tableActions.selectTable(null)
-      barChartActions.selectBarChart(null)
-      horizontalBarChartActions.selectHorizontalBarChart(null)
-      pieChartActions.selectPieChart(null)
-      areaChartActions.selectAreaChart(null)
+      clearAllSelections()
       lineChartActions.selectLineChart(widgetId)
     } else if (widget?.type === 'chart-pie') {
+      // Check if pie chart is already selected - if so, deselect it
+      if (selectedPieChart?.id === widgetId) {
+        console.log('🥧 Deselecting PieChart:', widgetId)
+        pieChartActions.selectPieChart(null)
+        return
+      }
+      
       // Clear other selections and select pie chart
       console.log('🥧 Selecting PieChart:', widgetId)
-      kpiActions.selectKPI(null)
-      tableActions.selectTable(null)
-      barChartActions.selectBarChart(null)
-      horizontalBarChartActions.selectHorizontalBarChart(null)
-      lineChartActions.selectLineChart(null)
-      areaChartActions.selectAreaChart(null)
+      clearAllSelections()
       pieChartActions.selectPieChart(widgetId)
     } else if (widget?.type === 'chart-area') {
+      // Check if area chart is already selected - if so, deselect it
+      if (selectedAreaChart?.id === widgetId) {
+        console.log('📊 Deselecting AreaChart:', widgetId)
+        areaChartActions.selectAreaChart(null)
+        return
+      }
+      
       // Clear other selections and select area chart
       console.log('📊 Selecting AreaChart:', widgetId)
-      kpiActions.selectKPI(null)
-      tableActions.selectTable(null)
-      barChartActions.selectBarChart(null)
-      horizontalBarChartActions.selectHorizontalBarChart(null)
-      lineChartActions.selectLineChart(null)
-      pieChartActions.selectPieChart(null)
+      clearAllSelections()
       areaChartActions.selectAreaChart(widgetId)
     }
-    // Support for KPIs, Tables, and Charts - unified selection
+  }
+
+  // Handle clicks on empty canvas area to deselect all widgets
+  const handleCanvasClick = (e: React.MouseEvent) => {
+    // Only deselect if clicking directly on the canvas, not on child elements
+    if (e.target === e.currentTarget) {
+      console.log('🎯 Canvas clicked - deselecting all widgets')
+      clearAllSelections()
+    }
   }
 
   // Navigation button handlers
@@ -324,6 +357,7 @@ export default function GridCanvas({
           className={`relative transition-colors p-0 bg-white ${
             (canvasConfig.canvasMode === 'fixed' || containerWidth > 768) ? '' : ''
           }`}
+          onClick={handleCanvasClick}
         >
           {widgets.length === 0 ? (
             <div className="absolute inset-0 flex items-center justify-center text-gray-400">
@@ -375,7 +409,10 @@ export default function GridCanvas({
             {widgets.map((widget) => (
               <div 
                 key={widget.i}
-                onClick={() => handleWidgetClick(widget.i)}
+                onClick={(e) => {
+                  e.stopPropagation() // Prevent event from bubbling to canvas
+                  handleWidgetClick(widget.i)
+                }}
                 className={`cursor-pointer transition-all ${
                   (widget.type === 'kpi' && selectedKPI?.i === widget.i) ||
                   (widget.type === 'table' && selectedTable?.i === widget.i) ||
