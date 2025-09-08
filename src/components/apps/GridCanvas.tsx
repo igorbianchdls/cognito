@@ -12,7 +12,7 @@ import { $selectedHorizontalBarChart, horizontalBarChartActions } from '@/stores
 import { $selectedLineChart, lineChartActions } from '@/stores/apps/lineChartStore'
 import { $selectedPieChart, pieChartActions } from '@/stores/apps/pieChartStore'
 import { $selectedAreaChart, areaChartActions } from '@/stores/apps/areaChartStore'
-import { $canvasConfig } from '@/stores/apps/canvasStore' // Canvas customization store
+import { $canvasConfig, canvasActions } from '@/stores/apps/canvasStore' // Canvas customization store
 import { WebPreview, WebPreviewNavigation, WebPreviewUrl, WebPreviewNavigationButton } from '@/components/ai-elements/web-preview'
 import { savedDashboardActions } from '@/stores/apps/savedDashboardStore'
 import { Eye, Save, Download, Settings, Share, Github } from 'lucide-react'
@@ -207,9 +207,9 @@ export default function GridCanvas({
   }
 
   const handleSettings = () => {
-    // TODO: Open canvas settings panel/modal
-    console.log('Open canvas settings - this could open a settings modal')
-    alert('Canvas Settings - This feature will be implemented with a settings modal')
+    // Open canvas settings in the editor
+    console.log('🎨 Opening canvas settings')
+    canvasActions.openCanvasSettings()
   }
 
   // Effect to measure container width for 16:9 calculation

@@ -7,6 +7,9 @@ import { defaultCanvasConfig } from '@/types/apps/canvas'
 // Canvas configuration store
 export const $canvasConfig = atom<CanvasConfig>(defaultCanvasConfig)
 
+// Canvas selection state - for showing canvas settings in editor
+export const $isCanvasSettingsOpen = atom<boolean>(false)
+
 // Canvas actions
 export const canvasActions = {
   // Update entire canvas config
@@ -131,5 +134,22 @@ export const canvasActions = {
     console.log('🔄 Resetting canvas to defaults')
     console.log('📋 All canvas settings restored to initial values')
     $canvasConfig.set(defaultCanvasConfig)
+  },
+
+  // Canvas settings panel actions
+  openCanvasSettings: () => {
+    console.log('🎨 Opening canvas settings')
+    $isCanvasSettingsOpen.set(true)
+  },
+
+  closeCanvasSettings: () => {
+    console.log('🎨 Closing canvas settings')
+    $isCanvasSettingsOpen.set(false)
+  },
+
+  toggleCanvasSettings: () => {
+    const isOpen = $isCanvasSettingsOpen.get()
+    console.log('🎨 Toggling canvas settings:', !isOpen)
+    $isCanvasSettingsOpen.set(!isOpen)
   }
 }

@@ -9,6 +9,7 @@ import { $selectedHorizontalBarChart, horizontalBarChartActions } from '@/stores
 import { $selectedLineChart, lineChartActions } from '@/stores/apps/lineChartStore'
 import { $selectedPieChart, pieChartActions } from '@/stores/apps/pieChartStore'
 import { $selectedAreaChart, areaChartActions } from '@/stores/apps/areaChartStore'
+import { $canvasConfig, $isCanvasSettingsOpen, canvasActions } from '@/stores/apps/canvasStore'
 import type { KPIConfig } from '@/types/apps/kpiWidgets'
 import type { TableConfig } from '@/types/apps/tableWidgets'
 import type { BarChartConfig } from '@/stores/apps/barChartStore'
@@ -24,6 +25,7 @@ import HorizontalBarChartEditor from '../editors/HorizontalBarChartEditor'
 import LineChartEditor from '../editors/LineChartEditor'
 import PieChartEditor from '../editors/PieChartEditor'
 import AreaChartEditor from '../editors/AreaChartEditor'
+import CanvasConfigAccordion from '../editors/CanvasConfigAccordion'
 
 export default function WidgetEditorNew() {
   // Get selected widgets from stores
@@ -34,6 +36,10 @@ export default function WidgetEditorNew() {
   const selectedLineChart = useStore($selectedLineChart)
   const selectedPieChart = useStore($selectedPieChart)
   const selectedAreaChart = useStore($selectedAreaChart)
+  
+  // Canvas configuration state
+  const canvasConfig = useStore($canvasConfig)
+  const isCanvasSettingsOpen = useStore($isCanvasSettingsOpen)
   
   // Determine which widget is currently selected
   const selectedWidget = selectedKPI || selectedTable || selectedBarChart || selectedHorizontalBarChart || selectedLineChart || selectedPieChart || selectedAreaChart
@@ -487,12 +493,53 @@ export default function WidgetEditorNew() {
     }
   }
 
+  // Canvas config handler
+  const handleCanvasConfigChange = (field: string, value: string | number | boolean | [number, number] | Partial<typeof canvasConfig.breakpoints>) => {
+    console.log('🎨 WidgetEditorNew handleCanvasConfigChange:', { 
+      field, 
+      value,
+      timestamp: Date.now()
+    })
+    
+    if (field === 'breakpoints') {
+      canvasActions.setBreakpoints(value as Partial<typeof canvasConfig.breakpoints>)
+    } else if (field === 'containerPadding' || field === 'margin') {
+      canvasActions.updateConfig({ [field]: value })
+    } else {
+      canvasActions.updateConfig({ [field]: value })
+    }
+  }
+
+  // Show canvas settings if open, otherwise show widget editor
+  if (isCanvasSettingsOpen) {
+    return (
+      <div className="p-4 space-y-6 h-full overflow-y-auto">
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">Configurações do Canvas</h2>
+            <button
+              onClick={() => canvasActions.closeCanvasSettings()}
+              className="text-gray-500 hover:text-gray-700 text-sm"
+            >
+              ✕ Fechar
+            </button>
+          </div>
+          <CanvasConfigAccordion 
+            canvasConfig={canvasConfig}
+            onConfigChange={handleCanvasConfigChange}
+          />
+        </div>
+      </div>
+    )
+  }
+
   // Early return if no widget selected
   if (!selectedWidget || !adaptedWidget) {
     return (
       <div className="text-center py-8 text-gray-500">
         <p>Selecione um widget para editar suas configurações</p>
         <p className="text-xs text-gray-400 mt-2">KPI, Table ou Chart</p>
+        <p className="text-xs text-gray-400 mt-2">Ou clique em ⚙️ Canvas Settings para configurar o layout</p>
       </div>
     )
   }
