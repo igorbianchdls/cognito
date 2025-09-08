@@ -44,7 +44,7 @@ export default function EmbedWidgetPage() {
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-800 mb-2">Widget não encontrado</h1>
-          <p className="text-gray-600">O widget com ID "{widgetId}" não existe.</p>
+          <p className="text-gray-600">O widget com ID &quot;{widgetId}&quot; não existe.</p>
         </div>
       </div>
     )
