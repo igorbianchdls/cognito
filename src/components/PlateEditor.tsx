@@ -18,7 +18,7 @@ import {
 } from '@platejs/basic-nodes/react';
 import { BlockSelectionPlugin } from '@platejs/selection/react';
 import { TextAlignPlugin } from '@platejs/basic-styles/react';
-import { List, ListOrdered, Square, Type, Palette, Bot } from 'lucide-react';
+import { List, ListOrdered, Square, Type, Palette, Bot, Link } from 'lucide-react';
 import {
   Plate,
   usePlateEditor,
@@ -49,6 +49,7 @@ import { MentionKit } from '@/components/mention-kit';
 import { DndKit } from '@/components/dnd-kit';
 import { ListKit } from '@/components/editor/plugins/list-kit';
 import { FontKit } from '@/components/editor/plugins/font-kit';
+import { EmbedPlugin } from '@/components/plate-plugins/EmbedPlugin';
 
 const initialValue: Value = [
   {
@@ -95,6 +96,7 @@ export default function App() {
       ...FontKit,
       TextAlignPlugin,
       TagPlugin,
+      EmbedPlugin,
       BoldPlugin,
       ItalicPlugin,
       UnderlinePlugin,
@@ -157,6 +159,26 @@ export default function App() {
           <Bot className="h-4 w-4" />
         </AIToolbarButton>
         <AlignToolbarButton />
+        <ToolbarButton
+          className="px-2"
+          onClick={() => {
+            const embedUrl = prompt('Cole o link embed do widget:')
+            if (embedUrl && embedUrl.includes('/embed/widget/')) {
+              editor.tf.insertNodes({
+                type: 'embed',
+                embedUrl: embedUrl,
+                width: 600,
+                height: 400,
+                children: [{ text: '' }]
+              })
+            } else if (embedUrl) {
+              alert('URL inválida. Deve conter /embed/widget/')
+            }
+          }}
+          title="Insert Embed Widget"
+        >
+          <Link className="h-4 w-4" />
+        </ToolbarButton>
         <ToolbarButton
           className="px-2"
           onClick={() => editor.tf.setValue(initialValue)}
