@@ -140,6 +140,14 @@ export default function TableWrapper({ widget }: TableWidgetProps) {
     accessorKey: col.accessorKey,
     header: col.header,
     size: typeof col.width === 'number' ? col.width : undefined,
+    cell: ({ row }) => {
+      const value = row.getValue(col.accessorKey)
+      return (
+        <div style={{ color: col.textColor || 'inherit' }}>
+          {String(value)}
+        </div>
+      )
+    },
   })) || []
 
   // Generate columns from BigQuery data if no config columns
@@ -149,31 +157,40 @@ export default function TableWrapper({ widget }: TableWidgetProps) {
     const firstRow = data[0]
     return Object.keys(firstRow)
       .filter(key => key !== 'id') // Skip the auto-generated id
-      .map(key => ({
-        accessorKey: key,
-        header: key.charAt(0).toUpperCase() + key.slice(1),
-        cell: ({ row }) => {
-          const value = row.getValue(key)
-          // Format based on value type
-          if (typeof value === 'number') {
-            return <div className="text-right">{value}</div>
-          }
-          if (key === 'status' || key === 'estado' || key === 'situacao') {
-            return (
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                String(value).toLowerCase().includes('ativo') || String(value).toLowerCase().includes('active')
-                  ? 'bg-green-100 text-green-800'
-                  : String(value).toLowerCase().includes('inativo') || String(value).toLowerCase().includes('inactive')
-                  ? 'bg-red-100 text-red-800'
-                  : 'bg-yellow-100 text-yellow-800'
-              }`}>
-                {String(value)}
-              </span>
-            )
-          }
-          return String(value)
-        },
-      }))
+      .map(key => {
+        // Find column config for this key to get textColor
+        const columnConfig = tableConfig.columns?.find(col => col.accessorKey === key)
+        
+        return {
+          accessorKey: key,
+          header: key.charAt(0).toUpperCase() + key.slice(1),
+          cell: ({ row }) => {
+            const value = row.getValue(key)
+            
+            // Apply column text color if configured
+            const textColor = columnConfig?.textColor || 'inherit'
+            
+            // Format based on value type
+            if (typeof value === 'number') {
+              return <div className="text-right" style={{ color: textColor }}>{value}</div>
+            }
+            if (key === 'status' || key === 'estado' || key === 'situacao') {
+              return (
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                  String(value).toLowerCase().includes('ativo') || String(value).toLowerCase().includes('active')
+                    ? 'bg-green-100 text-green-800'
+                    : String(value).toLowerCase().includes('inativo') || String(value).toLowerCase().includes('inactive')
+                    ? 'bg-red-100 text-red-800'
+                    : 'bg-yellow-100 text-yellow-800'
+                }`}>
+                  {String(value)}
+                </span>
+              )
+            }
+            return <div style={{ color: textColor }}>{String(value)}</div>
+          },
+        }
+      })
   }
 
   // Prepare props for DataTable (following chart pattern)

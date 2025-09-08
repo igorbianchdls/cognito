@@ -9,6 +9,7 @@ export interface TableColumn {
   width?: number | string
   type?: 'text' | 'number' | 'boolean' | 'date'
   formatter?: (value: string | number | boolean | null | undefined) => string
+  textColor?: string
 }
 
 // Table-specific configuration

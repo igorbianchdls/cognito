@@ -16,6 +16,7 @@ import TableHeaderAccordion from './TableHeaderAccordion'
 import TableCellAccordion from './TableCellAccordion'
 import TableBehaviorAccordion from './TableBehaviorAccordion'
 import TableExportAccordion from './TableExportAccordion'
+import TableColumnColorsAccordion from './TableColumnColorsAccordion'
 
 interface TableConfigEditorProps {
   selectedWidget: DroppedWidget
@@ -31,6 +32,27 @@ export default function TableConfigEditor({
   
   if (!selectedWidget || !isTableWidget(selectedWidget)) {
     return null
+  }
+
+  // Generate columns array from data if it doesn't exist
+  const columns = tableConfig.columns || (tableConfig.data && tableConfig.data.length > 0 
+    ? Object.keys(tableConfig.data[0])
+        .filter(key => key !== 'id')
+        .map(key => ({
+          id: key,
+          header: key.charAt(0).toUpperCase() + key.slice(1),
+          accessorKey: key,
+          type: 'text' as const
+        }))
+    : [])
+
+  // Handle column updates for colors
+  const handleColumnUpdate = (columnId: string, updates: Partial<import('@/types/apps/tableWidgets').TableColumn>) => {
+    const currentColumns = tableConfig.columns || columns
+    const updatedColumns = currentColumns.map(col => 
+      col.id === columnId ? { ...col, ...updates } : col
+    )
+    onTableConfigChange('columns', updatedColumns)
   }
 
   return (
@@ -143,6 +165,11 @@ export default function TableConfigEditor({
             <TableExportAccordion 
               styling={tableConfig} 
               onConfigChange={onTableConfigChange} 
+            />
+
+            <TableColumnColorsAccordion
+              columns={columns}
+              onColumnUpdate={handleColumnUpdate}
             />
 
           </Accordion>
