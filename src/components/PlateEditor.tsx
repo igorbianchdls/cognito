@@ -125,7 +125,7 @@ export default function App() {
         }
       }}
     >
-      <FixedToolbar className="flex justify-start gap-1 rounded-t-lg">
+      <FixedToolbar className="flex justify-center gap-1 rounded-t-lg">
         <ToolbarButton onClick={() => editor.tf.h1.toggle()}>H1</ToolbarButton>
         <ToolbarButton onClick={() => editor.tf.h2.toggle()}>H2</ToolbarButton>
         <ToolbarButton onClick={() => editor.tf.h3.toggle()}>H3</ToolbarButton>
@@ -146,7 +146,6 @@ export default function App() {
         <MarkToolbarButton nodeType="code" tooltip="Code (⌘+E)">Code</MarkToolbarButton>
         <MarkToolbarButton nodeType="highlight" tooltip="Highlight">Highlight</MarkToolbarButton>
         <MarkToolbarButton nodeType="kbd" tooltip="Keyboard">Kbd</MarkToolbarButton>
-        <div className="flex-1" />
         <FontSizeToolbarButton />
         <FontColorToolbarButton nodeType="color" tooltip="Text Color">
           <Type className="h-4 w-4" />
