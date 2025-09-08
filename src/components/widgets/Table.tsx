@@ -13,7 +13,7 @@ import {
   useReactTable,
   VisibilityState,
 } from "@tanstack/react-table"
-import { ArrowUpDown, ChevronDown, MoreHorizontal, Plus, Trash2, Copy, X, Check } from "lucide-react"
+import { ChevronDown, MoreHorizontal, Plus, Trash2, Copy, X, Check } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -612,32 +612,6 @@ export function DataTable<TData extends TableData>({
   )
 }
 
-// Helper function to create sortable header
-export function createSortableHeader(title: string, typographyProps?: {
-  fontSize?: number
-  fontFamily?: string
-  fontWeight?: string
-}) {
-  const SortableHeader = ({ column }: { column: { toggleSorting: (desc?: boolean) => void; getIsSorted: () => false | "asc" | "desc" } }) => {
-    return (
-      <Button
-        variant="ghost"
-        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        style={{
-          fontSize: typographyProps?.fontSize ? `${typographyProps.fontSize}px !important` : undefined,
-          fontFamily: typographyProps?.fontFamily && typographyProps.fontFamily !== 'inherit' ? `${typographyProps.fontFamily} !important` : undefined,
-          fontWeight: typographyProps?.fontWeight && typographyProps.fontWeight !== 'normal' ? `${typographyProps.fontWeight} !important` : undefined,
-        } as React.CSSProperties}
-      >
-        {title}
-        <ArrowUpDown className="ml-2 h-4 w-4" />
-      </Button>
-    )
-  }
-  
-  SortableHeader.displayName = `SortableHeader-${title}`
-  return SortableHeader
-}
 
 // Helper function to create selection column
 export function createSelectionColumn<TData>(): ColumnDef<TData> {

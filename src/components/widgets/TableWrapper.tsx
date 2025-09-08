@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { DataTable, createSortableHeader, type TableData } from '@/components/widgets/Table'
+import { DataTable, type TableData } from '@/components/widgets/Table'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import type { TableConfig } from '@/types/apps/tableWidgets'
@@ -102,19 +102,11 @@ export default function TableWrapper({ widget }: TableWidgetProps) {
   const defaultColumns: ColumnDef<TableData>[] = [
     {
       accessorKey: 'name',
-      header: createSortableHeader('Nome', {
-        fontSize: tableConfig.headerFontSize,
-        fontFamily: tableConfig.headerFontFamily,
-        fontWeight: tableConfig.headerFontWeight
-      }),
+      header: 'Nome',
     },
     {
       accessorKey: 'email',
-      header: createSortableHeader('Email', {
-        fontSize: tableConfig.headerFontSize,
-        fontFamily: tableConfig.headerFontFamily,
-        fontWeight: tableConfig.headerFontWeight
-      }),
+      header: 'Email',
     },
     {
       accessorKey: 'status',
@@ -133,11 +125,7 @@ export default function TableWrapper({ widget }: TableWidgetProps) {
     },
     {
       accessorKey: 'score',
-      header: createSortableHeader('Pontuação', {
-        fontSize: tableConfig.headerFontSize,
-        fontFamily: tableConfig.headerFontFamily,
-        fontWeight: tableConfig.headerFontWeight
-      }),
+      header: 'Pontuação',
       cell: ({ row }) => (
         <div className="text-right">
           {row.getValue('score')}
@@ -150,11 +138,7 @@ export default function TableWrapper({ widget }: TableWidgetProps) {
   // Convert config columns to ColumnDef format
   const configColumns: ColumnDef<TableData>[] = tableConfig.columns?.map(col => ({
     accessorKey: col.accessorKey,
-    header: col.sortable !== false ? createSortableHeader(col.header, {
-      fontSize: tableConfig.headerFontSize,
-      fontFamily: tableConfig.headerFontFamily,
-      fontWeight: tableConfig.headerFontWeight
-    }) : col.header,
+    header: col.header,
     size: typeof col.width === 'number' ? col.width : undefined,
   })) || []
 
@@ -167,11 +151,7 @@ export default function TableWrapper({ widget }: TableWidgetProps) {
       .filter(key => key !== 'id') // Skip the auto-generated id
       .map(key => ({
         accessorKey: key,
-        header: createSortableHeader(key.charAt(0).toUpperCase() + key.slice(1), {
-          fontSize: tableConfig.headerFontSize,
-          fontFamily: tableConfig.headerFontFamily,
-          fontWeight: tableConfig.headerFontWeight
-        }),
+        header: key.charAt(0).toUpperCase() + key.slice(1),
         cell: ({ row }) => {
           const value = row.getValue(key)
           // Format based on value type
