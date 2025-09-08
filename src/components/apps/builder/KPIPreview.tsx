@@ -231,7 +231,7 @@ ${whereClause}
           value: kpiDataValue.current_value,
           metric: kpiField?.name,
           calculation: getAggregationFunction(kpiField),
-          unit: kpiField?.type.toLowerCase().includes('string') ? 'items' : '',
+          unit: '',
           showTarget: false,
           showTrend: false,
           visualizationType: 'card' as 'card' | 'display' | 'gauge',
