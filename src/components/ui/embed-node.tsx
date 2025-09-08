@@ -52,10 +52,10 @@ export function EmbedElement(props: PlateElementProps) {
 
   return (
     <PlateElement {...props}>
-      <div className="py-4" contentEditable={false}>
+      <div contentEditable={false}>
         <div 
           className={cn(
-            'border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm',
+            'overflow-hidden bg-white',
             selected && focused && 'ring-2 ring-blue-500 ring-opacity-50',
             !readOnly && 'cursor-pointer'
           )}
