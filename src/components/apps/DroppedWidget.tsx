@@ -188,7 +188,7 @@ export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = f
 
       {/* Widget content */}
       <div 
-        className="h-full p-1"
+        className="h-full p-0.5"
       >
         {renderWidget()}
       </div>
