@@ -100,14 +100,16 @@ export function LineChart({
     return result ? result.map(h => parseInt(h, 16)).join(', ') : '0, 0, 0';
   };
 
-  // Create box shadow style - apply if any shadow property is defined
-  const boxShadow = (containerShadowColor || containerShadowOpacity !== undefined || 
-                    containerShadowBlur !== undefined || containerShadowOffsetX !== undefined || 
-                    containerShadowOffsetY !== undefined)
+  // Create box shadow style - apply custom shadow or default KPI shadow
+  const hasCustomShadow = containerShadowColor || containerShadowOpacity !== undefined || 
+                         containerShadowBlur !== undefined || containerShadowOffsetX !== undefined || 
+                         containerShadowOffsetY !== undefined;
+  
+  const boxShadow = hasCustomShadow
     ? `${containerShadowOffsetX || 0}px ${containerShadowOffsetY || 2}px ${containerShadowBlur || 4}px rgba(${
         hexToRgb(containerShadowColor || '#000000')
       }, ${containerShadowOpacity || 0.1})`
-    : undefined;
+    : '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
 
   // Debug log
   console.log('🖼️ LineChart Shadow Debug:', {
@@ -125,13 +127,13 @@ export function LineChart({
         width: '100%',
         height: '100%',
         background: backgroundColor,
-        padding: containerPadding ? `${containerPadding}px` : 0,
+        padding: `${containerPadding || 16}px`,
         margin: '0 auto',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'stretch',
         minWidth: 0,
-        border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#ccc'}` : undefined,
+        border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb',
         borderRadius: containerBorderRadius ? `${containerBorderRadius}px` : undefined,
         boxShadow,
       }}
