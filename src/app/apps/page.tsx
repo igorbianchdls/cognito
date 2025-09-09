@@ -240,9 +240,31 @@ export default function AppsPage() {
   const handleEditWidgetClick = useCallback((widgetId: string) => {
     // Find widget type and use appropriate store for selection
     const widget = allWidgets.find(w => w.i === widgetId)
-    if (widget?.type === 'kpi') {
-      kpiActions.selectKPI(widgetId)
+    
+    switch (widget?.type) {
+      case 'kpi':
+        kpiActions.selectKPI(widgetId)
+        break
+      case 'table':
+        tableActions.selectTable(widgetId)
+        break
+      case 'chart-bar':
+        barChartActions.selectBarChart(widgetId)
+        break
+      case 'chart-line':
+        lineChartActions.selectLineChart(widgetId)
+        break
+      case 'chart-pie':
+        pieChartActions.selectPieChart(widgetId)
+        break
+      case 'chart-area':
+        areaChartActions.selectAreaChart(widgetId)
+        break
+      case 'chart-horizontal-bar':
+        horizontalBarChartActions.selectHorizontalBarChart(widgetId)
+        break
     }
+    
     setActiveTab('editor')
   }, [allWidgets])
 
