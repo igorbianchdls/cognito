@@ -34,6 +34,17 @@ interface PieChartProps extends BaseChartProps {
   subtitleFontSize?: number
   subtitleFontWeight?: string | number
   subtitleColor?: string
+  // Container Border props
+  containerBorderWidth?: number
+  containerBorderColor?: string
+  containerBorderRadius?: number
+  containerPadding?: number
+  // Container Shadow props
+  containerShadowColor?: string
+  containerShadowOpacity?: number
+  containerShadowBlur?: number
+  containerShadowOffsetX?: number
+  containerShadowOffsetY?: number
 }
 
 export function PieChart({ 
@@ -63,7 +74,18 @@ export function PieChart({
   titleColor = '#222',
   subtitleFontSize = 14,
   subtitleFontWeight = 400,
-  subtitleColor = '#6b7280'
+  subtitleColor = '#6b7280',
+  // Container Border props
+  containerBorderWidth,
+  containerBorderColor,
+  containerBorderRadius,
+  containerPadding,
+  // Container Shadow props
+  containerShadowColor,
+  containerShadowOpacity,
+  containerShadowBlur,
+  containerShadowOffsetX,
+  containerShadowOffsetY
 }: PieChartProps) {
   if (!data || data.length === 0) {
     return <EmptyState />;
@@ -76,6 +98,30 @@ export function PieChart({
     value: item.y || item.value || 0
   }));
 
+  // Helper function to convert hex to RGB
+  const hexToRgb = (hex: string) => {
+    const result = hex.replace('#', '').match(/.{2}/g);
+    return result ? result.map(h => parseInt(h, 16)).join(', ') : '0, 0, 0';
+  };
+
+  // Create box shadow style - apply if any shadow property is defined
+  const boxShadow = (containerShadowColor || containerShadowOpacity !== undefined || 
+                    containerShadowBlur !== undefined || containerShadowOffsetX !== undefined || 
+                    containerShadowOffsetY !== undefined)
+    ? `${containerShadowOffsetX || 0}px ${containerShadowOffsetY || 4}px ${containerShadowBlur || 8}px rgba(${
+        hexToRgb(containerShadowColor || '#000000')
+      }, ${containerShadowOpacity || 0.2})`
+    : undefined;
+
+  // Debug log
+  console.log('🖼️ PieChart Shadow Debug:', {
+    containerShadowColor,
+    containerShadowOpacity,
+    containerShadowBlur,
+    containerShadowOffsetX,
+    containerShadowOffsetY,
+    boxShadow
+  });
 
   // Cores elegantes
   const elegantColors = ['#2563eb', '#dc2626', '#16a34a', '#ca8a04', '#9333ea', '#c2410c'];
@@ -86,12 +132,15 @@ export function PieChart({
         width: '100%',
         height: '100%',
         background: backgroundColor,
-        padding: 0,
+        padding: containerPadding ? `${containerPadding}px` : 0,
         margin: '0 auto',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'stretch',
         minWidth: 0,
+        border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#ccc'}` : undefined,
+        borderRadius: containerBorderRadius ? `${containerBorderRadius}px` : undefined,
+        boxShadow,
       }}
     >
       {title && (

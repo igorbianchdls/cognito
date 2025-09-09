@@ -14,6 +14,7 @@ import LabelsAccordion from './LabelsAccordion'
 import DimensionsAccordion from './DimensionsAccordion'
 import PieChartInfoAccordion from './PieChartInfoAccordion'
 import ChartSpecificAccordion from './ChartSpecificAccordion'
+import ContainerBorderAccordion from './ContainerBorderAccordion'
 
 interface PieChartEditorProps {
   selectedWidget: DroppedWidget
@@ -66,6 +67,11 @@ export default function PieChartEditor({
             />
 
             <DimensionsAccordion
+              styling={chartConfig.styling}
+              onConfigChange={onChartConfigChange}
+            />
+
+            <ContainerBorderAccordion
               styling={chartConfig.styling}
               onConfigChange={onChartConfigChange}
             />

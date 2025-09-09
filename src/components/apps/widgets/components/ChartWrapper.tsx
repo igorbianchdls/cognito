@@ -331,34 +331,43 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
                              widget.pieChartConfig?.styling?.tooltipFontFamily ??
                              widget.areaChartConfig?.styling?.tooltipFontFamily
 
-    // Container Border props (bar chart and line chart)
+    // Container Border props (bar chart, line chart and pie chart)
     const containerBorderWidth = widget.barChartConfig?.styling?.containerBorderWidth ??
-                                widget.lineChartConfig?.styling?.containerBorderWidth
+                                widget.lineChartConfig?.styling?.containerBorderWidth ??
+                                widget.pieChartConfig?.styling?.containerBorderWidth
     
     const containerBorderColor = widget.barChartConfig?.styling?.containerBorderColor ??
-                                widget.lineChartConfig?.styling?.containerBorderColor
+                                widget.lineChartConfig?.styling?.containerBorderColor ??
+                                widget.pieChartConfig?.styling?.containerBorderColor
     
     const containerBorderRadius = widget.barChartConfig?.styling?.containerBorderRadius ??
-                                 widget.lineChartConfig?.styling?.containerBorderRadius
+                                 widget.lineChartConfig?.styling?.containerBorderRadius ??
+                                 widget.pieChartConfig?.styling?.containerBorderRadius
 
     const containerPadding = widget.barChartConfig?.styling?.containerPadding ??
-                            widget.lineChartConfig?.styling?.containerPadding
+                            widget.lineChartConfig?.styling?.containerPadding ??
+                            widget.pieChartConfig?.styling?.containerPadding
 
-    // Container Shadow props (bar chart and line chart)
+    // Container Shadow props (bar chart, line chart and pie chart)
     const containerShadowColor = widget.barChartConfig?.styling?.containerShadowColor ??
-                                widget.lineChartConfig?.styling?.containerShadowColor
+                                widget.lineChartConfig?.styling?.containerShadowColor ??
+                                widget.pieChartConfig?.styling?.containerShadowColor
     
     const containerShadowOpacity = widget.barChartConfig?.styling?.containerShadowOpacity ??
-                                  widget.lineChartConfig?.styling?.containerShadowOpacity
+                                  widget.lineChartConfig?.styling?.containerShadowOpacity ??
+                                  widget.pieChartConfig?.styling?.containerShadowOpacity
     
     const containerShadowBlur = widget.barChartConfig?.styling?.containerShadowBlur ??
-                               widget.lineChartConfig?.styling?.containerShadowBlur
+                               widget.lineChartConfig?.styling?.containerShadowBlur ??
+                               widget.pieChartConfig?.styling?.containerShadowBlur
     
     const containerShadowOffsetX = widget.barChartConfig?.styling?.containerShadowOffsetX ??
-                                  widget.lineChartConfig?.styling?.containerShadowOffsetX
+                                  widget.lineChartConfig?.styling?.containerShadowOffsetX ??
+                                  widget.pieChartConfig?.styling?.containerShadowOffsetX
     
     const containerShadowOffsetY = widget.barChartConfig?.styling?.containerShadowOffsetY ??
-                                  widget.lineChartConfig?.styling?.containerShadowOffsetY
+                                  widget.lineChartConfig?.styling?.containerShadowOffsetY ??
+                                  widget.pieChartConfig?.styling?.containerShadowOffsetY
 
     const commonProps = {
       data,
@@ -523,6 +532,15 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             arcLinkLabelsSkipAngle={arcLinkLabelsSkipAngle}
             arcLinkLabelsTextColor={arcLinkLabelsTextColor}
             legends={pieChartLegendConfig}
+            containerBorderWidth={containerBorderWidth}
+            containerBorderColor={containerBorderColor}
+            containerBorderRadius={containerBorderRadius}
+            containerPadding={containerPadding}
+            containerShadowColor={containerShadowColor}
+            containerShadowOpacity={containerShadowOpacity}
+            containerShadowBlur={containerShadowBlur}
+            containerShadowOffsetX={containerShadowOffsetX}
+            containerShadowOffsetY={containerShadowOffsetY}
           />
         )
       case 'chart-area':
