@@ -26,6 +26,7 @@ import { $pieChartsAsDropped, pieChartActions } from '@/stores/apps/pieChartStor
 import { $areaChartsAsDropped, areaChartActions } from '@/stores/apps/areaChartStore'
 import { $kpisAsDropped, kpiActions } from '@/stores/apps/kpiStore'
 import { $tablesAsDropped, tableActions } from '@/stores/apps/tableStore'
+import { canvasActions } from '@/stores/apps/canvasStore'
 // import { $activeTab, multiCanvasActions } from '@/stores/apps/multiCanvasStore' // REMOVED: Simplified to single canvas
 // import { isNavigationWidget } from '@/types/apps/droppedWidget' // REMOVED: No navigation widgets in KPI-only mode
 import type { Widget, LayoutItem, DroppedWidget } from '@/types/apps/droppedWidget'
@@ -342,7 +343,7 @@ export default function AppsPage() {
                   onCheckedChange={setSidebarHidden}
                 />
               </div>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" onClick={() => canvasActions.openCanvasSettings()}>
                 <Settings className="h-4 w-4 text-sidebar-foreground" />
               </Button>
               <Button variant="ghost" size="sm">

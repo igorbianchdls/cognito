@@ -12,10 +12,10 @@ import { $selectedHorizontalBarChart, horizontalBarChartActions } from '@/stores
 import { $selectedLineChart, lineChartActions } from '@/stores/apps/lineChartStore'
 import { $selectedPieChart, pieChartActions } from '@/stores/apps/pieChartStore'
 import { $selectedAreaChart, areaChartActions } from '@/stores/apps/areaChartStore'
-import { $canvasConfig, canvasActions } from '@/stores/apps/canvasStore' // Canvas customization store
+import { $canvasConfig } from '@/stores/apps/canvasStore' // Canvas customization store
 import { WebPreview, WebPreviewNavigation, WebPreviewUrl, WebPreviewNavigationButton } from '@/components/ai-elements/web-preview'
 import { savedDashboardActions } from '@/stores/apps/savedDashboardStore'
-import { Eye, Save, Download, Settings, Share, Github } from 'lucide-react'
+import { Eye, Save, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { DroppedWidget as DroppedWidgetType, LayoutItem } from '@/types/apps/droppedWidget'
 
@@ -206,11 +206,6 @@ export default function GridCanvas({
     console.log('Dashboard exported as JSON file')
   }
 
-  const handleSettings = () => {
-    // Open canvas settings in the editor
-    console.log('🎨 Opening canvas settings')
-    canvasActions.openCanvasSettings()
-  }
 
   // Effect to measure container width for 16:9 calculation
   useEffect(() => {
@@ -345,9 +340,6 @@ export default function GridCanvas({
             <Download className="h-6 w-6" />
           </WebPreviewNavigationButton>
           
-          <WebPreviewNavigationButton tooltip="Canvas Settings" onClick={handleSettings}>
-            <Settings className="h-6 w-6" />
-          </WebPreviewNavigationButton>
         </WebPreviewNavigation>
         
         {/* Canvas direto dentro do WebPreview, sem iframe */}
