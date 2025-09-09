@@ -6,6 +6,7 @@ import { DndContext, DragEndEvent, DragOverlay, DragStartEvent } from '@dnd-kit/
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from "@/components/ui/separator"
+import { Switch } from "@/components/ui/switch"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -81,6 +82,7 @@ export default function AppsPage() {
   }, [kpis, tables, barCharts, horizontalBarCharts, lineCharts, pieCharts, areaCharts])
   const [activeWidget, setActiveWidget] = useState<Widget | null>(null)
   const [activeTab, setActiveTab] = useState<'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved' | 'datasets'>('chat')
+  const [sidebarHidden, setSidebarHidden] = useState(false)
 
   // Tab configuration with icons and labels
   const tabs = [
@@ -334,6 +336,13 @@ export default function AppsPage() {
             
             {/* Botões na extrema direita */}
             <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 mr-2">
+                <label className="text-xs text-sidebar-foreground">Hide Panel</label>
+                <Switch
+                  checked={sidebarHidden}
+                  onCheckedChange={setSidebarHidden}
+                />
+              </div>
               <Button variant="ghost" size="sm">
                 <Settings className="h-4 w-4 text-sidebar-foreground" />
               </Button>
@@ -350,17 +359,19 @@ export default function AppsPage() {
         </header>
         <div className="flex flex-1 flex-col" style={{backgroundColor: 'hsl(0 0% 98%)'}}>
           {/* Sistema de Apps aninhado */}
-          <div className="grid grid-cols-[auto_1fr] flex-1 overflow-hidden" style={{backgroundColor: 'hsl(0 0% 98%)'}}>
+          <div className={`grid ${sidebarHidden ? 'grid-cols-1' : 'grid-cols-[auto_1fr]'} flex-1 overflow-hidden`} style={{backgroundColor: 'hsl(0 0% 98%)'}}>
               
             <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
               {/* SplitSidebarPanel */}
-              <div className="relative z-10">
-                <SplitSidebarPanel 
-                  activeTab={activeTab}
-                  droppedWidgets={allWidgets}
-                  onEditWidget={handleEditWidget}
-                />
-              </div>
+              {!sidebarHidden && (
+                <div className="relative z-10">
+                  <SplitSidebarPanel 
+                    activeTab={activeTab}
+                    droppedWidgets={allWidgets}
+                    onEditWidget={handleEditWidget}
+                  />
+                </div>
+              )}
             
               {/* Canvas - Simplified to single GridCanvas */}
               <div className="relative z-0 py-1 px-3 h-[calc(100vh-4rem)] overflow-auto min-w-0">
