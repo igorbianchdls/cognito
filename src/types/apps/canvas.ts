@@ -60,7 +60,7 @@ export const defaultCanvasConfig: CanvasConfig = {
   minHeight: 800,
   maxWidth: undefined,
   
-  rowHeight: 5,
+  rowHeight: 2,
   containerPadding: [20, 20],
   margin: [10, 10],
   
@@ -78,8 +78,8 @@ export const defaultCanvasConfig: CanvasConfig = {
   
   maintain16by9: false,
   
-  responsiveHeight: 800,
-  responsiveHeightValue: 800,
+  responsiveHeight: 900,
+  responsiveHeightValue: 900,
   
   maxRows: 120
 }
