@@ -19,12 +19,12 @@ import type { BigQueryField } from './TablesExplorer'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 // import { widgetActions, kpiActions, tableActions } from '@/stores/apps/widgetStore' // REMOVED: Only KPIs supported now
 import { kpiActions, $selectedKPI } from '@/stores/apps/kpiStore'
-import { tableActions } from '@/stores/apps/tableStore'
-import { barChartActions } from '@/stores/apps/barChartStore'
-import { horizontalBarChartActions } from '@/stores/apps/horizontalBarChartStore'
-import { lineChartActions } from '@/stores/apps/lineChartStore'
-import { pieChartActions } from '@/stores/apps/pieChartStore'
-import { areaChartActions } from '@/stores/apps/areaChartStore'
+import { barChartActions, $selectedBarChart } from '@/stores/apps/barChartStore'
+import { lineChartActions, $selectedLineChart } from '@/stores/apps/lineChartStore'
+import { pieChartActions, $selectedPieChart } from '@/stores/apps/pieChartStore'
+import { areaChartActions, $selectedAreaChart } from '@/stores/apps/areaChartStore'
+import { horizontalBarChartActions, $selectedHorizontalBarChart } from '@/stores/apps/horizontalBarChartStore'
+import { tableActions, $selectedTable } from '@/stores/apps/tableStore'
 
 // Widget Types
 type WidgetType = 'chart' | 'kpi' | 'table'
@@ -70,6 +70,12 @@ export default function UniversalBuilder({
   onEditWidget
 }: UniversalBuilderProps) {
   const selectedKPI = useStore($selectedKPI)
+  const selectedBarChart = useStore($selectedBarChart)
+  const selectedLineChart = useStore($selectedLineChart)
+  const selectedPieChart = useStore($selectedPieChart)
+  const selectedAreaChart = useStore($selectedAreaChart)
+  const selectedHorizontalBarChart = useStore($selectedHorizontalBarChart)
+  const selectedTable = useStore($selectedTable)
   const [previewData, setPreviewData] = useState<Array<{ x: string; y: number; label: string; value: number }> | TableData[] | KPIData[] | ChartData[]>([])
   const [previewQuery, setPreviewQuery] = useState<string>('')
 
@@ -103,6 +109,39 @@ export default function UniversalBuilder({
     return 'SUM' // Default for numeric fields
   }
 
+  // Helper to determine if there's a selected widget of current type
+  const getSelectedWidget = () => {
+    if (data.selectedType === 'kpi') return selectedKPI
+    if (data.selectedType === 'table') return selectedTable
+    if (data.selectedType === 'chart') {
+      switch (data.chartType) {
+        case 'bar': return selectedBarChart
+        case 'horizontal-bar': return selectedHorizontalBarChart
+        case 'line': return selectedLineChart
+        case 'pie': return selectedPieChart
+        case 'area': return selectedAreaChart
+        default: return null
+      }
+    }
+    return null
+  }
+
+  // Helper to get update button text based on widget type
+  const getUpdateButtonText = () => {
+    if (data.selectedType === 'kpi') return 'Update KPI'
+    if (data.selectedType === 'table') return 'Update Table'
+    if (data.selectedType === 'chart') {
+      switch (data.chartType) {
+        case 'bar': return 'Update Bar Chart'
+        case 'horizontal-bar': return 'Update Horizontal Bar Chart'
+        case 'line': return 'Update Line Chart'
+        case 'pie': return 'Update Pie Chart'
+        case 'area': return 'Update Area Chart'
+        default: return 'Update Chart'
+      }
+    }
+    return 'Update Widget'
+  }
 
   // Handle adding widget to dashboard
   const handleAddToDashboard = () => {
@@ -227,22 +266,38 @@ export default function UniversalBuilder({
         })
       }
     } else if (data.selectedType === 'table') {
-      // Convert to TableWidget format and use tableActions
-      const tableConfig = widgetConfig.config?.tableConfig || {}
-      tableActions.addTable({
-        name: widgetConfig.name,
-        icon: widgetConfig.icon,
-        description: widgetConfig.description,
-        position: { x: widgetConfig.x, y: widgetConfig.y },
-        size: { w: widgetConfig.w, h: widgetConfig.h },
-        config: {
-          ...tableConfig,
-          // Add BigQuery data to table config
-          ...(widgetConfig.bigqueryData ? {
-            dataSource: 'BigQuery'
-          } : {})
-        }
-      })
+      if (selectedTable) {
+        // Update existing table
+        console.log('📊 Updating existing Table:', selectedTable.i)
+        
+        tableActions.updateTableConfig(selectedTable.i, {
+          name: widgetConfig.name,
+          config: {
+            columns: data.columns,
+            dataSource: 'BigQuery',
+            bigqueryData: widgetConfig.bigqueryData
+          }
+        })
+      } else {
+        // Create new table
+        console.log('📊 Creating new Table')
+        
+        const tableConfig = widgetConfig.config?.tableConfig || {}
+        tableActions.addTable({
+          name: widgetConfig.name,
+          icon: widgetConfig.icon,
+          description: widgetConfig.description,
+          position: { x: widgetConfig.x, y: widgetConfig.y },
+          size: { w: widgetConfig.w, h: widgetConfig.h },
+          config: {
+            ...tableConfig,
+            // Add BigQuery data to table config
+            ...(widgetConfig.bigqueryData ? {
+              dataSource: 'BigQuery'
+            } : {})
+          }
+        })
+      }
     } else if (data.selectedType === 'chart' && data.chartType === 'bar') {
       // Convert to BarChart format and use barChartActions
       const query = barChartActions.generateBarChartQuery(
@@ -252,17 +307,31 @@ export default function UniversalBuilder({
         data.selectedTable
       )
       
-      console.log('🐛 DEBUG - UniversalBuilder addBarChart:', {
-        hasPreviewData: !!previewData,
-        previewDataLength: Array.isArray(previewData) ? previewData.length : 'not array',
-        previewDataSample: previewData,
-        query,
-        selectedTable: data.selectedTable,
-        xAxisFields: data.xAxis.map(f => f.name),
-        yAxisFields: data.yAxis.map(f => f.name)
-      })
-      
-      barChartActions.addBarChart({
+      if (selectedBarChart) {
+        // Update existing bar chart
+        console.log('📊 Updating existing Bar Chart:', selectedBarChart.id)
+        
+        barChartActions.updateBarChart(selectedBarChart.id, {
+          name: widgetConfig.name,
+          bigqueryData: {
+            query,
+            selectedTable: data.selectedTable,
+            columns: {
+              xAxis: data.xAxis,
+              yAxis: data.yAxis,
+              filters: data.filters
+            },
+            data: previewData,
+            lastExecuted: new Date(),
+            isLoading: false,
+            error: null
+          }
+        })
+      } else {
+        // Create new bar chart
+        console.log('📊 Creating new Bar Chart')
+        
+        barChartActions.addBarChart({
         name: widgetConfig.name,
         bigqueryData: {
           query,
@@ -290,7 +359,8 @@ export default function UniversalBuilder({
           w: widgetConfig.w,
           h: widgetConfig.h
         }
-      })
+        })
+      }
     } else if (data.selectedType === 'chart' && data.chartType === 'line') {
       // Convert to LineChart format and use lineChartActions
       const query = lineChartActions.generateLineChartQuery(
@@ -300,17 +370,31 @@ export default function UniversalBuilder({
         data.selectedTable
       )
       
-      console.log('🐛 DEBUG - UniversalBuilder addLineChart:', {
-        hasPreviewData: !!previewData,
-        previewDataLength: Array.isArray(previewData) ? previewData.length : 'not array',
-        previewDataSample: previewData,
-        query,
-        selectedTable: data.selectedTable,
-        xAxisFields: data.xAxis.map(f => f.name),
-        yAxisFields: data.yAxis.map(f => f.name)
-      })
-      
-      lineChartActions.addLineChart({
+      if (selectedLineChart) {
+        // Update existing line chart
+        console.log('📊 Updating existing Line Chart:', selectedLineChart.id)
+        
+        lineChartActions.updateLineChart(selectedLineChart.id, {
+          name: widgetConfig.name,
+          bigqueryData: {
+            query,
+            selectedTable: data.selectedTable,
+            columns: {
+              xAxis: data.xAxis,
+              yAxis: data.yAxis,
+              filters: data.filters
+            },
+            data: previewData,
+            lastExecuted: new Date(),
+            isLoading: false,
+            error: null
+          }
+        })
+      } else {
+        // Create new line chart
+        console.log('📊 Creating new Line Chart')
+        
+        lineChartActions.addLineChart({
         name: widgetConfig.name,
         bigqueryData: {
           query,
@@ -338,7 +422,8 @@ export default function UniversalBuilder({
           w: widgetConfig.w,
           h: widgetConfig.h
         }
-      })
+        })
+      }
     } else if (data.selectedType === 'chart' && data.chartType === 'pie') {
       // Convert to PieChart format and use pieChartActions
       const query = pieChartActions.generatePieChartQuery(
@@ -348,17 +433,31 @@ export default function UniversalBuilder({
         data.selectedTable
       )
       
-      console.log('🐛 DEBUG - UniversalBuilder addPieChart:', {
-        hasPreviewData: !!previewData,
-        previewDataLength: Array.isArray(previewData) ? previewData.length : 'not array',
-        previewDataSample: previewData,
-        query,
-        selectedTable: data.selectedTable,
-        xAxisFields: data.xAxis.map(f => f.name),
-        yAxisFields: data.yAxis.map(f => f.name)
-      })
-      
-      pieChartActions.addPieChart({
+      if (selectedPieChart) {
+        // Update existing pie chart
+        console.log('📊 Updating existing Pie Chart:', selectedPieChart.id)
+        
+        pieChartActions.updatePieChart(selectedPieChart.id, {
+          name: widgetConfig.name,
+          bigqueryData: {
+            query,
+            selectedTable: data.selectedTable,
+            columns: {
+              xAxis: data.xAxis,
+              yAxis: data.yAxis,
+              filters: data.filters
+            },
+            data: previewData,
+            lastExecuted: new Date(),
+            isLoading: false,
+            error: null
+          }
+        })
+      } else {
+        // Create new pie chart
+        console.log('📊 Creating new Pie Chart')
+        
+        pieChartActions.addPieChart({
         name: widgetConfig.name,
         bigqueryData: {
           query,
@@ -386,7 +485,8 @@ export default function UniversalBuilder({
           w: widgetConfig.w,
           h: widgetConfig.h
         }
-      })
+        })
+      }
     } else if (data.selectedType === 'chart' && data.chartType === 'area') {
       // Convert to AreaChart format and use areaChartActions
       const query = areaChartActions.generateAreaChartQuery(
@@ -396,17 +496,31 @@ export default function UniversalBuilder({
         data.selectedTable
       )
       
-      console.log('🐛 DEBUG - UniversalBuilder addAreaChart:', {
-        hasPreviewData: !!previewData,
-        previewDataLength: Array.isArray(previewData) ? previewData.length : 'not array',
-        previewDataSample: previewData,
-        query,
-        selectedTable: data.selectedTable,
-        xAxisFields: data.xAxis.map(f => f.name),
-        yAxisFields: data.yAxis.map(f => f.name)
-      })
-      
-      areaChartActions.addAreaChart({
+      if (selectedAreaChart) {
+        // Update existing area chart
+        console.log('📊 Updating existing Area Chart:', selectedAreaChart.id)
+        
+        areaChartActions.updateAreaChart(selectedAreaChart.id, {
+          name: widgetConfig.name,
+          bigqueryData: {
+            query,
+            selectedTable: data.selectedTable,
+            columns: {
+              xAxis: data.xAxis,
+              yAxis: data.yAxis,
+              filters: data.filters
+            },
+            data: previewData,
+            lastExecuted: new Date(),
+            isLoading: false,
+            error: null
+          }
+        })
+      } else {
+        // Create new area chart
+        console.log('📊 Creating new Area Chart')
+        
+        areaChartActions.addAreaChart({
         name: widgetConfig.name,
         bigqueryData: {
           query,
@@ -435,7 +549,8 @@ export default function UniversalBuilder({
           w: widgetConfig.w,
           h: widgetConfig.h
         }
-      })
+        })
+      }
     } else if (data.selectedType === 'chart' && data.chartType === 'horizontal-bar') {
       // Convert to HorizontalBarChart format and use horizontalBarChartActions
       const query = horizontalBarChartActions.generateHorizontalBarChartQuery(
@@ -445,17 +560,31 @@ export default function UniversalBuilder({
         data.selectedTable
       )
       
-      console.log('🐛 DEBUG - UniversalBuilder addHorizontalBarChart:', {
-        hasPreviewData: !!previewData,
-        previewDataLength: Array.isArray(previewData) ? previewData.length : 'not array',
-        previewDataSample: previewData,
-        query,
-        selectedTable: data.selectedTable,
-        xAxisFields: data.xAxis.map(f => f.name),
-        yAxisFields: data.yAxis.map(f => f.name)
-      })
-      
-      horizontalBarChartActions.addHorizontalBarChart({
+      if (selectedHorizontalBarChart) {
+        // Update existing horizontal bar chart
+        console.log('📊 Updating existing Horizontal Bar Chart:', selectedHorizontalBarChart.id)
+        
+        horizontalBarChartActions.updateHorizontalBarChart(selectedHorizontalBarChart.id, {
+          name: widgetConfig.name,
+          bigqueryData: {
+            query,
+            selectedTable: data.selectedTable,
+            columns: {
+              xAxis: data.xAxis,
+              yAxis: data.yAxis,
+              filters: data.filters
+            },
+            data: previewData,
+            lastExecuted: new Date(),
+            isLoading: false,
+            error: null
+          }
+        })
+      } else {
+        // Create new horizontal bar chart
+        console.log('📊 Creating new Horizontal Bar Chart')
+        
+        horizontalBarChartActions.addHorizontalBarChart({
         name: widgetConfig.name,
         bigqueryData: {
           query,
@@ -483,7 +612,8 @@ export default function UniversalBuilder({
           w: widgetConfig.w,
           h: widgetConfig.h
         }
-      })
+        })
+      }
     }
     // Note: Only chart, KPI, and table builders supported - other widget types removed
     
@@ -762,8 +892,8 @@ export default function UniversalBuilder({
 
           {/* Actions Section */}
           <div className="space-y-4 px-2">
-            {selectedKPI && data.selectedType === 'kpi' ? (
-              // Update existing KPI
+            {getSelectedWidget() ? (
+              // Update existing widget
               <Button
                 onClick={handleAddToDashboard}
                 disabled={!isConfigValid}
@@ -771,7 +901,7 @@ export default function UniversalBuilder({
                 size="lg"
               >
                 <RefreshCw className="w-4 h-4" />
-                Update KPI
+                {getUpdateButtonText()}
               </Button>
             ) : (
               // Add new widget to dashboard
