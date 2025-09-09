@@ -270,7 +270,7 @@ export default function UniversalBuilder({
         // Update existing table
         console.log('📊 Updating existing Table:', selectedTable.i)
         
-        tableActions.updateTableConfig(selectedTable.i, {
+        tableActions.editTable(selectedTable.i, {
           name: widgetConfig.name,
           config: {
             columns: data.columns,
