@@ -32,6 +32,9 @@ export default function ContainerBorderAccordion({
   
   const getFieldPath = (field: string) => `${fieldPrefix}.${field}`
 
+  // Debug log for styling values
+  console.log('🖼️ ContainerBorderAccordion Debug:', styling)
+
   return (
     <AccordionItem value="container-border" className="border border-gray-200 rounded-lg">
       <AccordionTrigger className="px-4 py-3 hover:bg-gray-50">
@@ -185,14 +188,14 @@ export default function ContainerBorderAccordion({
                   min="0"
                   max="1"
                   step="0.1"
-                  value={styling?.containerShadowOpacity ?? 0.1}
+                  value={styling?.containerShadowOpacity ?? 0.2}
                   onChange={(e) => {
                     const value = parseFloat(e.target.value) || 0
                     console.log('🖼️ ContainerBorderAccordion: Shadow opacity changed to:', value)
                     onConfigChange(getFieldPath('containerShadowOpacity'), value)
                   }}
                   className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded"
-                  placeholder="0.1"
+                  placeholder="0.2"
                 />
                 <span className="text-xs text-gray-500 w-8">α</span>
               </div>
@@ -207,14 +210,14 @@ export default function ContainerBorderAccordion({
                   min="0"
                   max="20"
                   step="1"
-                  value={styling?.containerShadowBlur ?? 4}
+                  value={styling?.containerShadowBlur ?? 8}
                   onChange={(e) => {
                     const value = parseInt(e.target.value) || 0
                     console.log('🖼️ ContainerBorderAccordion: Shadow blur changed to:', value)
                     onConfigChange(getFieldPath('containerShadowBlur'), value)
                   }}
                   className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded"
-                  placeholder="4"
+                  placeholder="8"
                 />
                 <span className="text-xs text-gray-500 w-8">px</span>
               </div>
@@ -251,14 +254,14 @@ export default function ContainerBorderAccordion({
                     min="-20"
                     max="20"
                     step="1"
-                    value={styling?.containerShadowOffsetY ?? 2}
+                    value={styling?.containerShadowOffsetY ?? 4}
                     onChange={(e) => {
                       const value = parseInt(e.target.value) || 0
                       console.log('🖼️ ContainerBorderAccordion: Shadow offset Y changed to:', value)
                       onConfigChange(getFieldPath('containerShadowOffsetY'), value)
                     }}
                     className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded"
-                    placeholder="2"
+                    placeholder="4"
                   />
                   <span className="text-xs text-gray-500 w-8">px</span>
                 </div>

@@ -94,14 +94,30 @@ export function LineChart({
     return <EmptyState />;
   }
 
-  // Create box shadow style
-  const boxShadow = containerShadowColor && containerShadowOpacity && containerShadowBlur !== undefined && 
-                   containerShadowOffsetX !== undefined && containerShadowOffsetY !== undefined
-    ? `${containerShadowOffsetX || 0}px ${containerShadowOffsetY || 0}px ${containerShadowBlur || 0}px rgba(${
-        // Convert hex to RGB
-        containerShadowColor.replace('#', '').match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(', ') || '0, 0, 0'
-      }, ${containerShadowOpacity || 0})`
+  // Helper function to convert hex to RGB
+  const hexToRgb = (hex: string) => {
+    const result = hex.replace('#', '').match(/.{2}/g);
+    return result ? result.map(h => parseInt(h, 16)).join(', ') : '0, 0, 0';
+  };
+
+  // Create box shadow style - apply if any shadow property is defined
+  const boxShadow = (containerShadowColor || containerShadowOpacity !== undefined || 
+                    containerShadowBlur !== undefined || containerShadowOffsetX !== undefined || 
+                    containerShadowOffsetY !== undefined)
+    ? `${containerShadowOffsetX || 0}px ${containerShadowOffsetY || 2}px ${containerShadowBlur || 4}px rgba(${
+        hexToRgb(containerShadowColor || '#000000')
+      }, ${containerShadowOpacity || 0.1})`
     : undefined;
+
+  // Debug log
+  console.log('🖼️ LineChart Shadow Debug:', {
+    containerShadowColor,
+    containerShadowOpacity,
+    containerShadowBlur,
+    containerShadowOffsetX,
+    containerShadowOffsetY,
+    boxShadow
+  });
 
   return (
     <div
