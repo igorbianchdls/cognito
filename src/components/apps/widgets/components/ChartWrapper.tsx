@@ -331,43 +331,52 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
                              widget.pieChartConfig?.styling?.tooltipFontFamily ??
                              widget.areaChartConfig?.styling?.tooltipFontFamily
 
-    // Container Border props (bar chart, line chart and pie chart)
+    // Container Border props (bar chart, line chart, pie chart and area chart)
     const containerBorderWidth = widget.barChartConfig?.styling?.containerBorderWidth ??
                                 widget.lineChartConfig?.styling?.containerBorderWidth ??
-                                widget.pieChartConfig?.styling?.containerBorderWidth
+                                widget.pieChartConfig?.styling?.containerBorderWidth ??
+                                widget.areaChartConfig?.styling?.containerBorderWidth
     
     const containerBorderColor = widget.barChartConfig?.styling?.containerBorderColor ??
                                 widget.lineChartConfig?.styling?.containerBorderColor ??
-                                widget.pieChartConfig?.styling?.containerBorderColor
+                                widget.pieChartConfig?.styling?.containerBorderColor ??
+                                widget.areaChartConfig?.styling?.containerBorderColor
     
     const containerBorderRadius = widget.barChartConfig?.styling?.containerBorderRadius ??
                                  widget.lineChartConfig?.styling?.containerBorderRadius ??
-                                 widget.pieChartConfig?.styling?.containerBorderRadius
+                                 widget.pieChartConfig?.styling?.containerBorderRadius ??
+                                 widget.areaChartConfig?.styling?.containerBorderRadius
 
     const containerPadding = widget.barChartConfig?.styling?.containerPadding ??
                             widget.lineChartConfig?.styling?.containerPadding ??
-                            widget.pieChartConfig?.styling?.containerPadding
+                            widget.pieChartConfig?.styling?.containerPadding ??
+                            widget.areaChartConfig?.styling?.containerPadding
 
-    // Container Shadow props (bar chart, line chart and pie chart)
+    // Container Shadow props (bar chart, line chart, pie chart and area chart)
     const containerShadowColor = widget.barChartConfig?.styling?.containerShadowColor ??
                                 widget.lineChartConfig?.styling?.containerShadowColor ??
-                                widget.pieChartConfig?.styling?.containerShadowColor
+                                widget.pieChartConfig?.styling?.containerShadowColor ??
+                                widget.areaChartConfig?.styling?.containerShadowColor
     
     const containerShadowOpacity = widget.barChartConfig?.styling?.containerShadowOpacity ??
                                   widget.lineChartConfig?.styling?.containerShadowOpacity ??
-                                  widget.pieChartConfig?.styling?.containerShadowOpacity
+                                  widget.pieChartConfig?.styling?.containerShadowOpacity ??
+                                  widget.areaChartConfig?.styling?.containerShadowOpacity
     
     const containerShadowBlur = widget.barChartConfig?.styling?.containerShadowBlur ??
                                widget.lineChartConfig?.styling?.containerShadowBlur ??
-                               widget.pieChartConfig?.styling?.containerShadowBlur
+                               widget.pieChartConfig?.styling?.containerShadowBlur ??
+                               widget.areaChartConfig?.styling?.containerShadowBlur
     
     const containerShadowOffsetX = widget.barChartConfig?.styling?.containerShadowOffsetX ??
                                   widget.lineChartConfig?.styling?.containerShadowOffsetX ??
-                                  widget.pieChartConfig?.styling?.containerShadowOffsetX
+                                  widget.pieChartConfig?.styling?.containerShadowOffsetX ??
+                                  widget.areaChartConfig?.styling?.containerShadowOffsetX
     
     const containerShadowOffsetY = widget.barChartConfig?.styling?.containerShadowOffsetY ??
                                   widget.lineChartConfig?.styling?.containerShadowOffsetY ??
-                                  widget.pieChartConfig?.styling?.containerShadowOffsetY
+                                  widget.pieChartConfig?.styling?.containerShadowOffsetY ??
+                                  widget.areaChartConfig?.styling?.containerShadowOffsetY
 
     const commonProps = {
       data,
@@ -585,6 +594,15 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
               tickPadding: yAxisTickPadding
             } : undefined}
             legends={areaChartLegendConfig}
+            containerBorderWidth={containerBorderWidth}
+            containerBorderColor={containerBorderColor}
+            containerBorderRadius={containerBorderRadius}
+            containerPadding={containerPadding}
+            containerShadowColor={containerShadowColor}
+            containerShadowOpacity={containerShadowOpacity}
+            containerShadowBlur={containerShadowBlur}
+            containerShadowOffsetX={containerShadowOffsetX}
+            containerShadowOffsetY={containerShadowOffsetY}
           />
         )
       case 'chart-horizontal-bar':

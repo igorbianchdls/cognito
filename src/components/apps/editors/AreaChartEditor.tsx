@@ -16,6 +16,7 @@ import DimensionsAccordion from './DimensionsAccordion'
 import AxesAccordion from './AxesAccordion'
 import AreaChartInfoAccordion from './AreaChartInfoAccordion'
 import ChartSpecificAccordion from './ChartSpecificAccordion'
+import ContainerBorderAccordion from './ContainerBorderAccordion'
 
 interface AreaChartEditorProps {
   selectedWidget: DroppedWidget
@@ -68,6 +69,11 @@ export default function AreaChartEditor({
             />
 
             <DimensionsAccordion
+              styling={chartConfig.styling}
+              onConfigChange={onChartConfigChange}
+            />
+
+            <ContainerBorderAccordion
               styling={chartConfig.styling}
               onConfigChange={onChartConfigChange}
             />
