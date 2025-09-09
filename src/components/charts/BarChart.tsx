@@ -110,6 +110,8 @@ export function BarChart(props: BarChartProps) {
         flexDirection: 'column',
         alignItems: 'stretch',
         minWidth: 0,
+        border: '0.5px solid #ccc',
+        borderRadius: '8px',
       }}
     >
       {title && (
