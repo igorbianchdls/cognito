@@ -300,7 +300,7 @@ export default function AppsPage() {
               
               {/* Tabs com UI de breadcrumb */}
               <Breadcrumb>
-                <BreadcrumbList>
+                <BreadcrumbList className="sm:gap-5">
                   {tabs.map((tab, index) => (
                     <div key={tab.id} className="flex items-center">
                       <BreadcrumbItem>
