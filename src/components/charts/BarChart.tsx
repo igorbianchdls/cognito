@@ -62,7 +62,11 @@ export function BarChart(props: BarChartProps) {
     legendsFontWeight,
     legendsTextColor,
     tooltipFontSize,
-    tooltipFontFamily
+    tooltipFontFamily,
+    // Container Border props
+    containerBorderWidth,
+    containerBorderColor,
+    containerBorderRadius
   } = props;
 
   if (!data || data.length === 0) {
@@ -110,8 +114,8 @@ export function BarChart(props: BarChartProps) {
         flexDirection: 'column',
         alignItems: 'stretch',
         minWidth: 0,
-        border: '0.5px solid #ccc',
-        borderRadius: '8px',
+        border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#ccc'}` : '0.5px solid #ccc',
+        borderRadius: `${containerBorderRadius || 8}px`,
       }}
     >
       {title && (

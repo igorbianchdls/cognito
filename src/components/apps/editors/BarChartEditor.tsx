@@ -17,6 +17,7 @@ import AxesAccordion from './AxesAccordion'
 import ChartInfoAccordion from './ChartInfoAccordion'
 import ChartSpecificAccordion from './ChartSpecificAccordion'
 import ChartTypographyAccordion from './ChartTypographyAccordion'
+import ContainerBorderAccordion from './ContainerBorderAccordion'
 
 interface BarChartEditorProps {
   selectedWidget: DroppedWidget
@@ -92,6 +93,11 @@ export default function BarChartEditor({
             />
 
             <DimensionsAccordion
+              styling={chartConfig.styling}
+              onConfigChange={onChartConfigChange}
+            />
+
+            <ContainerBorderAccordion
               styling={chartConfig.styling}
               onConfigChange={onChartConfigChange}
             />

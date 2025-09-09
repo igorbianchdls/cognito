@@ -139,6 +139,11 @@ export interface BarChartProps extends BaseChartProps {
   tooltipFontSize?: number;
   tooltipFontFamily?: string;
   
+  // Container Border
+  containerBorderWidth?: number;
+  containerBorderColor?: string;
+  containerBorderRadius?: number;
+  
   // Advanced
   theme?: object;
   tooltip?: (data: { id: string; value: number }) => React.ReactNode;

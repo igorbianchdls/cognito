@@ -96,6 +96,11 @@ export interface BarChartConfig {
     // Typography - Tooltip
     tooltipFontSize?: number
     tooltipFontFamily?: string
+    
+    // Container Border
+    containerBorderWidth?: number
+    containerBorderColor?: string
+    containerBorderRadius?: number
   }
   position: {
     x: number
