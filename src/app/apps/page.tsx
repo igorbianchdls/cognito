@@ -327,7 +327,6 @@ export default function AppsPage() {
                           </BreadcrumbLink>
                         )}
                       </BreadcrumbItem>
-                      {index < tabs.length - 1 && <BreadcrumbSeparator />}
                     </div>
                   ))}
                 </BreadcrumbList>
