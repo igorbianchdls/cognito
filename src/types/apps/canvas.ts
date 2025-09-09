@@ -78,8 +78,8 @@ export const defaultCanvasConfig: CanvasConfig = {
   
   maintain16by9: false,
   
-  responsiveHeight: 900,
-  responsiveHeightValue: 900,
+  responsiveHeight: 1000,
+  responsiveHeightValue: 1000,
   
-  maxRows: 120
+  maxRows: 82
 }
