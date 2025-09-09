@@ -27,11 +27,12 @@ import { $areaChartsAsDropped, areaChartActions } from '@/stores/apps/areaChartS
 import { $kpisAsDropped, kpiActions } from '@/stores/apps/kpiStore'
 import { $tablesAsDropped, tableActions } from '@/stores/apps/tableStore'
 import { canvasActions } from '@/stores/apps/canvasStore'
+import { savedDashboardActions } from '@/stores/apps/savedDashboardStore'
 // import { $activeTab, multiCanvasActions } from '@/stores/apps/multiCanvasStore' // REMOVED: Simplified to single canvas
 // import { isNavigationWidget } from '@/types/apps/droppedWidget' // REMOVED: No navigation widgets in KPI-only mode
 import type { Widget, LayoutItem, DroppedWidget } from '@/types/apps/droppedWidget'
 import { Button } from '@/components/ui/button'
-import { Settings, Share, Github, BarChart3, MessageSquare, Code, Cpu, Archive, Database } from 'lucide-react'
+import { Settings, Share, Github, BarChart3, MessageSquare, Code, Cpu, Archive, Database, Save } from 'lucide-react'
 
 export default function AppsPage() {
   // Widget stores - KPIs, Tables, and Charts
@@ -346,8 +347,8 @@ export default function AppsPage() {
               <Button variant="ghost" size="sm" onClick={() => canvasActions.openCanvasSettings()}>
                 <Settings className="h-4 w-4 text-sidebar-foreground" />
               </Button>
-              <Button variant="ghost" size="sm">
-                <Share className="h-4 w-4 text-sidebar-foreground" />
+              <Button variant="ghost" size="sm" onClick={savedDashboardActions.promptAndSave}>
+                <Save className="h-4 w-4 text-sidebar-foreground" />
               </Button>
               <Button variant="ghost" size="sm">
                 <Github className="h-4 w-4 text-sidebar-foreground" />

@@ -14,8 +14,7 @@ import { $selectedPieChart, pieChartActions } from '@/stores/apps/pieChartStore'
 import { $selectedAreaChart, areaChartActions } from '@/stores/apps/areaChartStore'
 import { $canvasConfig } from '@/stores/apps/canvasStore' // Canvas customization store
 import { WebPreview, WebPreviewNavigation, WebPreviewUrl, WebPreviewNavigationButton } from '@/components/ai-elements/web-preview'
-import { savedDashboardActions } from '@/stores/apps/savedDashboardStore'
-import { Eye, Save, Download } from 'lucide-react'
+import { Eye, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { DroppedWidget as DroppedWidgetType, LayoutItem } from '@/types/apps/droppedWidget'
 
@@ -179,10 +178,6 @@ export default function GridCanvas({
     console.log('Preview dashboard - entering fullscreen')
   }
 
-  const handleSave = () => {
-    // Use the same save functionality as the header button
-    savedDashboardActions.promptAndSave()
-  }
 
   const handleExport = () => {
     // Export dashboard as JSON file
@@ -326,9 +321,6 @@ export default function GridCanvas({
             <Eye className="h-6 w-6" />
           </WebPreviewNavigationButton>
           
-          <WebPreviewNavigationButton tooltip="Save Dashboard" onClick={handleSave}>
-            <Save className="h-6 w-6" />
-          </WebPreviewNavigationButton>
           
           <WebPreviewUrl 
             value="https://dashboard.app/canvas/my-dashboard" 
