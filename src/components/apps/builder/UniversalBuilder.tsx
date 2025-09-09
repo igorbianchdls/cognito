@@ -273,9 +273,8 @@ export default function UniversalBuilder({
         tableActions.editTable(selectedTable.i, {
           name: widgetConfig.name,
           config: {
-            columns: data.columns,
-            dataSource: 'BigQuery',
-            bigqueryData: widgetConfig.bigqueryData
+            data: previewData,
+            dataSource: 'BigQuery'
           }
         })
       } else {
