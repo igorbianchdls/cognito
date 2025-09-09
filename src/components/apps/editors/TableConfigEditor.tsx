@@ -22,12 +22,14 @@ interface TableConfigEditorProps {
   selectedWidget: DroppedWidget
   tableConfig: TableConfig
   onTableConfigChange: (field: string, value: unknown) => void
+  onWidgetChange?: (field: string, value: unknown) => void
 }
 
 export default function TableConfigEditor({ 
   selectedWidget, 
   tableConfig, 
-  onTableConfigChange 
+  onTableConfigChange,
+  onWidgetChange
 }: TableConfigEditorProps) {
   
   if (!selectedWidget || !isTableWidget(selectedWidget)) {
@@ -106,6 +108,77 @@ export default function TableConfigEditor({
               />
             </div>
           </div>
+
+          {/* Grid Position & Size */}
+          {onWidgetChange && (
+            <div>
+              <h5 className="text-sm font-medium text-gray-700 mb-3">📐 Grid Position & Size</h5>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">X Position</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={selectedWidget.x ?? 0}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 0
+                        console.log('📋 TableEditor: X position changed to:', value)
+                        onWidgetChange('x', value)
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Y Position</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={selectedWidget.y ?? 0}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 0
+                        console.log('📋 TableEditor: Y position changed to:', value)
+                        onWidgetChange('y', value)
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Width (grid units)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="12"
+                      value={selectedWidget.w ?? 6}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 1
+                        console.log('📋 TableEditor: Width changed to:', value)
+                        onWidgetChange('w', value)
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Height (grid units)</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="12"
+                      value={selectedWidget.h ?? 4}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value) || 1
+                        console.log('📋 TableEditor: Height changed to:', value)
+                        onWidgetChange('h', value)
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Advanced Options - Accordions */}

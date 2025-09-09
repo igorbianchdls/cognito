@@ -288,6 +288,27 @@ export default function WidgetEditorNew() {
     }
   }
 
+  const handleTableWidgetChange = (field: string, value: unknown) => {
+    console.log('📋 WidgetEditorNew handleTableWidgetChange:', { 
+      field, 
+      value, 
+      selectedTableId: selectedTable?.i,
+      timestamp: Date.now()
+    })
+    
+    if (selectedTable) {
+      console.log('📋 WidgetEditorNew calling tableActions.editTable:', {
+        tableId: selectedTable.i,
+        widgetUpdate: { [field]: value },
+        timestamp: Date.now()
+      })
+      tableActions.editTable(selectedTable.i, { [field]: value })
+      console.log('📋 WidgetEditorNew Table widget update completed for:', selectedTable.i, field)
+    } else {
+      console.warn('⚠️ WidgetEditorNew: No Table selected, cannot update widget')
+    }
+  }
+
   const handleChartConfigChange = (field: string, value: unknown) => {
     console.log('📊 WidgetEditorNew handleChartConfigChange:', { 
       field, 
@@ -578,6 +599,7 @@ export default function WidgetEditorNew() {
                 selectedWidget={adaptedWidget}
                 tableConfig={tableConfig}
                 onTableConfigChange={handleTableConfigChange}
+                onWidgetChange={handleTableWidgetChange}
               />
             </div>
           </div>
