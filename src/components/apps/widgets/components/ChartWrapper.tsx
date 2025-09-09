@@ -331,15 +331,12 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
                              widget.pieChartConfig?.styling?.tooltipFontFamily ??
                              widget.areaChartConfig?.styling?.tooltipFontFamily
 
-    // Container Border props
-    const containerBorderWidth = widget.barChartConfig?.styling?.containerBorderWidth ??
-                                widget.horizontalBarChartConfig?.styling?.containerBorderWidth
+    // Container Border props (only for bar chart)
+    const containerBorderWidth = widget.barChartConfig?.styling?.containerBorderWidth
     
-    const containerBorderColor = widget.barChartConfig?.styling?.containerBorderColor ??
-                                widget.horizontalBarChartConfig?.styling?.containerBorderColor
+    const containerBorderColor = widget.barChartConfig?.styling?.containerBorderColor
     
-    const containerBorderRadius = widget.barChartConfig?.styling?.containerBorderRadius ??
-                                 widget.horizontalBarChartConfig?.styling?.containerBorderRadius
+    const containerBorderRadius = widget.barChartConfig?.styling?.containerBorderRadius
 
     const commonProps = {
       data,
@@ -578,9 +575,6 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
               tickPadding: yAxisTickPadding
             } : undefined}
             legends={horizontalBarChartLegendConfig}
-            containerBorderWidth={containerBorderWidth}
-            containerBorderColor={containerBorderColor}
-            containerBorderRadius={containerBorderRadius}
           />
         )
       default:
