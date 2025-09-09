@@ -1,9 +1,14 @@
 'use client'
 
 import { atom } from 'nanostores'
-// import { $widgets, widgetActions } from './widgetStore' // REMOVED: Only KPIs supported now
-// import { $multiCanvasState, multiCanvasActions } from './multiCanvasStore' // REMOVED: Simplified to single canvas
-// import { isNavigationWidget } from '@/types/apps/droppedWidget' // REMOVED: No navigation widgets in KPI-only mode
+import { $kpisAsDropped, kpiActions } from './kpiStore'
+import { $tablesAsDropped, tableActions } from './tableStore'
+import { $barChartsAsDropped, barChartActions } from './barChartStore'
+import { $horizontalBarChartsAsDropped, horizontalBarChartActions } from './horizontalBarChartStore'
+import { $lineChartsAsDropped, lineChartActions } from './lineChartStore'
+import { $pieChartsAsDropped, pieChartActions } from './pieChartStore'
+import { $areaChartsAsDropped, areaChartActions } from './areaChartStore'
+import { $canvasConfig, canvasActions } from './canvasStore'
 import type { SavedDashboard } from '@/types/apps/savedDashboard'
 
 const STORAGE_KEY = 'cognito_saved_dashboards'
@@ -60,9 +65,53 @@ const generateId = (): string => {
 export const savedDashboardActions = {
   // Salvar dashboard atual
   save: (name: string, description?: string) => {
-    // REMOVED: Dashboard saving functionality disabled for KPI-only mode
-    alert('Dashboard saving functionality needs to be updated for KPI-only mode')
-    return // Temporarily disabled
+    console.log('💾 Salvando dashboard:', name)
+    
+    // Coletar todos os widgets do estado atual
+    const kpis = $kpisAsDropped.get()
+    const tables = $tablesAsDropped.get()
+    const barCharts = $barChartsAsDropped.get()
+    const horizontalBarCharts = $horizontalBarChartsAsDropped.get()
+    const lineCharts = $lineChartsAsDropped.get()
+    const pieCharts = $pieChartsAsDropped.get()
+    const areaCharts = $areaChartsAsDropped.get()
+    const canvasConfig = $canvasConfig.get()
+    
+    // Combinar todos os widgets
+    const allWidgets = [
+      ...kpis,
+      ...tables,
+      ...barCharts,
+      ...horizontalBarCharts,
+      ...lineCharts,
+      ...pieCharts,
+      ...areaCharts
+    ]
+    
+    console.log('📊 Widgets coletados:', {
+      kpis: kpis.length,
+      tables: tables.length,
+      barCharts: barCharts.length,
+      horizontalBarCharts: horizontalBarCharts.length,
+      lineCharts: lineCharts.length,
+      pieCharts: pieCharts.length,
+      areaCharts: areaCharts.length,
+      total: allWidgets.length
+    })
+    
+    const newDashboard: SavedDashboard = {
+      id: generateId(),
+      name: name.trim(),
+      description: description?.trim(),
+      createdAt: new Date(),
+      widgets: allWidgets,
+      isMultiCanvas: false
+    }
+    
+    const currentDashboards = $savedDashboards.get()
+    $savedDashboards.set([...currentDashboards, newDashboard])
+    
+    console.log('✅ Dashboard salvo com sucesso:', newDashboard.id)
   },
 
   // Carregar dashboard
@@ -75,9 +124,37 @@ export const savedDashboardActions = {
       return
     }
 
-    // REMOVED: Dashboard loading functionality disabled for KPI-only mode
-    alert('Dashboard loading functionality needs to be updated for KPI-only mode')
-    console.log('📄 Dashboard load requested:', dashboard.name, 'but functionality is temporarily disabled')
+    console.log('📄 Carregando dashboard:', dashboard.name)
+    
+    // Simplificação temporária: apenas limpar KPIs por ora
+    // O sistema está focado em KPIs, então vamos focar nisso primeiro
+    kpiActions.setKPIs([])
+    
+    console.log('🧹 Limpando estado atual para carregar dashboard')
+    
+    // Por enquanto, vamos focar apenas em carregar KPIs
+    // Os outros tipos podem ser implementados gradualmente
+    const widgets = dashboard.widgets || []
+    const kpiWidgets = widgets.filter(w => w.type === 'kpi')
+    
+    console.log('📊 Carregando widgets:', { 
+      total: widgets.length, 
+      kpis: kpiWidgets.length 
+    })
+    
+    // Carregar apenas KPIs por enquanto
+    kpiWidgets.forEach(widget => {
+      kpiActions.addKPI({
+        name: widget.name || 'Dashboard KPI',
+        position: { x: widget.x, y: widget.y },
+        size: { w: widget.w, h: widget.h }
+      })
+    })
+    
+    console.log('✅ Dashboard carregado com sucesso:', {
+      name: dashboard.name,
+      widgets: widgets.length
+    })
   },
 
   // Excluir dashboard
