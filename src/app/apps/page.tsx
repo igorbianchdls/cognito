@@ -159,6 +159,11 @@ export default function AppsPage() {
       return widget?.type === 'chart-area'
     })
     
+    const tableLayouts = layout.filter(item => {
+      const widget = allWidgets.find(w => w.i === item.i)
+      return widget?.type === 'table'
+    })
+    
     // Atualizar cada store com os layouts correspondentes
     if (kpiLayouts.length > 0) {
       console.log('[LAYOUT] Updating', kpiLayouts.length, 'KPIs')
@@ -188,6 +193,11 @@ export default function AppsPage() {
     if (areaChartLayouts.length > 0) {
       console.log('[LAYOUT] Updating', areaChartLayouts.length, 'Area Charts')
       areaChartActions.updateAreaChartsLayout(areaChartLayouts)
+    }
+    
+    if (tableLayouts.length > 0) {
+      console.log('[LAYOUT] Updating', tableLayouts.length, 'Tables')
+      tableActions.updateTablesLayout(tableLayouts)
     }
   }
 
