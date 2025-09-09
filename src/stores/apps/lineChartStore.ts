@@ -99,6 +99,13 @@ export interface LineChartConfig {
     containerBorderColor?: string
     containerBorderRadius?: number
     containerPadding?: number
+    
+    // Container Shadow
+    containerShadowColor?: string
+    containerShadowOpacity?: number
+    containerShadowBlur?: number
+    containerShadowOffsetX?: number
+    containerShadowOffsetY?: number
   }
   position: {
     x: number

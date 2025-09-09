@@ -67,7 +67,13 @@ export function BarChart(props: BarChartProps) {
     containerBorderWidth,
     containerBorderColor,
     containerBorderRadius,
-    containerPadding
+    containerPadding,
+    // Container Shadow props
+    containerShadowColor,
+    containerShadowOpacity,
+    containerShadowBlur,
+    containerShadowOffsetX,
+    containerShadowOffsetY
   } = props;
 
   if (!data || data.length === 0) {
@@ -80,6 +86,15 @@ export function BarChart(props: BarChartProps) {
     value: item.y || item.value || 0,
     label: item.x || item.label || 'Unknown'
   }));
+
+  // Create box shadow style
+  const boxShadow = containerShadowColor && containerShadowOpacity && containerShadowBlur !== undefined && 
+                   containerShadowOffsetX !== undefined && containerShadowOffsetY !== undefined
+    ? `${containerShadowOffsetX || 0}px ${containerShadowOffsetY || 0}px ${containerShadowBlur || 0}px rgba(${
+        // Convert hex to RGB
+        containerShadowColor.replace('#', '').match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(', ') || '0, 0, 0'
+      }, ${containerShadowOpacity || 0})`
+    : undefined;
 
   // Create theme with custom typography
   const customTheme = createElegantTheme({
@@ -117,6 +132,7 @@ export function BarChart(props: BarChartProps) {
         minWidth: 0,
         border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#ccc'}` : '0.5px solid #ccc',
         borderRadius: `${containerBorderRadius || 8}px`,
+        boxShadow,
       }}
     >
       {title && (

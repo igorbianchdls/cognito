@@ -47,6 +47,12 @@ interface LineChartProps extends BaseChartProps {
   containerBorderColor?: string
   containerBorderRadius?: number
   containerPadding?: number
+  // Container Shadow props
+  containerShadowColor?: string
+  containerShadowOpacity?: number
+  containerShadowBlur?: number
+  containerShadowOffsetX?: number
+  containerShadowOffsetY?: number
 }
 
 export function LineChart({ 
@@ -76,12 +82,26 @@ export function LineChart({
   containerBorderWidth,
   containerBorderColor,
   containerBorderRadius,
-  containerPadding
+  containerPadding,
+  // Container Shadow props
+  containerShadowColor,
+  containerShadowOpacity,
+  containerShadowBlur,
+  containerShadowOffsetX,
+  containerShadowOffsetY
 }: LineChartProps) {
   if (!data || data.length === 0) {
     return <EmptyState />;
   }
 
+  // Create box shadow style
+  const boxShadow = containerShadowColor && containerShadowOpacity && containerShadowBlur !== undefined && 
+                   containerShadowOffsetX !== undefined && containerShadowOffsetY !== undefined
+    ? `${containerShadowOffsetX || 0}px ${containerShadowOffsetY || 0}px ${containerShadowBlur || 0}px rgba(${
+        // Convert hex to RGB
+        containerShadowColor.replace('#', '').match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(', ') || '0, 0, 0'
+      }, ${containerShadowOpacity || 0})`
+    : undefined;
 
   return (
     <div
@@ -97,6 +117,7 @@ export function LineChart({
         minWidth: 0,
         border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#ccc'}` : undefined,
         borderRadius: containerBorderRadius ? `${containerBorderRadius}px` : undefined,
+        boxShadow,
       }}
     >
       <ResponsiveLine

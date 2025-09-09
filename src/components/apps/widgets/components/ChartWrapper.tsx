@@ -344,6 +344,22 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
     const containerPadding = widget.barChartConfig?.styling?.containerPadding ??
                             widget.lineChartConfig?.styling?.containerPadding
 
+    // Container Shadow props (bar chart and line chart)
+    const containerShadowColor = widget.barChartConfig?.styling?.containerShadowColor ??
+                                widget.lineChartConfig?.styling?.containerShadowColor
+    
+    const containerShadowOpacity = widget.barChartConfig?.styling?.containerShadowOpacity ??
+                                  widget.lineChartConfig?.styling?.containerShadowOpacity
+    
+    const containerShadowBlur = widget.barChartConfig?.styling?.containerShadowBlur ??
+                               widget.lineChartConfig?.styling?.containerShadowBlur
+    
+    const containerShadowOffsetX = widget.barChartConfig?.styling?.containerShadowOffsetX ??
+                                  widget.lineChartConfig?.styling?.containerShadowOffsetX
+    
+    const containerShadowOffsetY = widget.barChartConfig?.styling?.containerShadowOffsetY ??
+                                  widget.lineChartConfig?.styling?.containerShadowOffsetY
+
     const commonProps = {
       data,
       colors,
@@ -417,6 +433,11 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}
             containerPadding={containerPadding}
+            containerShadowColor={containerShadowColor}
+            containerShadowOpacity={containerShadowOpacity}
+            containerShadowBlur={containerShadowBlur}
+            containerShadowOffsetX={containerShadowOffsetX}
+            containerShadowOffsetY={containerShadowOffsetY}
           />
         )
       case 'chart-line':
@@ -465,6 +486,11 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}
             containerPadding={containerPadding}
+            containerShadowColor={containerShadowColor}
+            containerShadowOpacity={containerShadowOpacity}
+            containerShadowBlur={containerShadowBlur}
+            containerShadowOffsetX={containerShadowOffsetX}
+            containerShadowOffsetY={containerShadowOffsetY}
           />
         )
       case 'chart-pie':

@@ -145,6 +145,13 @@ export interface BarChartProps extends BaseChartProps {
   containerBorderRadius?: number;
   containerPadding?: number;
   
+  // Container Shadow
+  containerShadowColor?: string;
+  containerShadowOpacity?: number;
+  containerShadowBlur?: number;
+  containerShadowOffsetX?: number;
+  containerShadowOffsetY?: number;
+  
   // Advanced
   theme?: object;
   tooltip?: (data: { id: string; value: number }) => React.ReactNode;
