@@ -283,7 +283,7 @@ export function AreaChart({
                 direction: legends.direction || 'row',
                 justify: false,
                 translateX: 0,
-                translateY: 70,
+                translateY: 50,
                 itemsSpacing: legends.itemsSpacing || 20,
                 itemWidth: 80,
                 itemHeight: 18,
