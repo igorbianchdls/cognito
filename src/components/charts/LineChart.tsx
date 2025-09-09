@@ -42,6 +42,10 @@ interface LineChartProps extends BaseChartProps {
   legends?: LegendConfig | Record<string, unknown>[]
   enablePointLabels?: boolean
   pointLabelTextColor?: string
+  // Container Border props
+  containerBorderWidth?: number
+  containerBorderColor?: string
+  containerBorderRadius?: number
 }
 
 export function LineChart({ 
@@ -66,7 +70,11 @@ export function LineChart({
   axisLeft,
   legends,
   enablePointLabels,
-  pointLabelTextColor
+  pointLabelTextColor,
+  // Container Border props
+  containerBorderWidth,
+  containerBorderColor,
+  containerBorderRadius
 }: LineChartProps) {
   if (!data || data.length === 0) {
     return <EmptyState />;
@@ -85,6 +93,8 @@ export function LineChart({
         flexDirection: 'column',
         alignItems: 'stretch',
         minWidth: 0,
+        border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#ccc'}` : undefined,
+        borderRadius: containerBorderRadius ? `${containerBorderRadius}px` : undefined,
       }}
     >
       <ResponsiveLine

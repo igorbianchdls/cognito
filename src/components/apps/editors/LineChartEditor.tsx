@@ -16,6 +16,7 @@ import DimensionsAccordion from './DimensionsAccordion'
 import AxesAccordion from './AxesAccordion'
 import LineChartInfoAccordion from './LineChartInfoAccordion'
 import ChartSpecificAccordion from './ChartSpecificAccordion'
+import ContainerBorderAccordion from './ContainerBorderAccordion'
 
 interface LineChartEditorProps {
   selectedWidget: DroppedWidget
@@ -68,6 +69,11 @@ export default function LineChartEditor({
             />
 
             <DimensionsAccordion
+              styling={chartConfig.styling}
+              onConfigChange={onChartConfigChange}
+            />
+
+            <ContainerBorderAccordion
               styling={chartConfig.styling}
               onConfigChange={onChartConfigChange}
             />
