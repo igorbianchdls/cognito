@@ -98,6 +98,7 @@ export interface LineChartConfig {
     containerBorderWidth?: number
     containerBorderColor?: string
     containerBorderRadius?: number
+    containerPadding?: number
   }
   position: {
     x: number

@@ -66,7 +66,8 @@ export function BarChart(props: BarChartProps) {
     // Container Border props
     containerBorderWidth,
     containerBorderColor,
-    containerBorderRadius
+    containerBorderRadius,
+    containerPadding
   } = props;
 
   if (!data || data.length === 0) {
@@ -108,7 +109,7 @@ export function BarChart(props: BarChartProps) {
         width: '100%',
         height: '100%',
         background: backgroundColor,
-        padding: 0,
+        padding: containerPadding ? `${containerPadding}px` : 0,
         margin: '0 auto',
         display: 'flex',
         flexDirection: 'column',

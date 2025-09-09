@@ -10,6 +10,7 @@ interface ContainerBorderStyling {
   containerBorderWidth?: number
   containerBorderColor?: string
   containerBorderRadius?: number
+  containerPadding?: number
 }
 
 interface ContainerBorderAccordionProps {
@@ -116,6 +117,28 @@ export default function ContainerBorderAccordion({
             </div>
           </div>
 
+          {/* Container Padding */}
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Container Padding</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min="0"
+                max="20"
+                step="1"
+                value={styling?.containerPadding ?? 0}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value) || 0
+                  console.log('🖼️ ContainerBorderAccordion: Container padding changed to:', value)
+                  onConfigChange(getFieldPath('containerPadding'), value)
+                }}
+                className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded"
+                placeholder="0"
+              />
+              <span className="text-xs text-gray-500 w-8">px</span>
+            </div>
+          </div>
+
           {/* Visual Hint */}
           <div className="mt-4 p-3 bg-gray-50 rounded-md">
             <div className="flex items-start gap-2">
@@ -124,6 +147,7 @@ export default function ContainerBorderAccordion({
                 <div><strong>Width:</strong> Thickness of the border (0-5px)</div>
                 <div><strong>Color:</strong> Color of the border line</div>
                 <div><strong>Radius:</strong> How rounded the corners are (0-20px)</div>
+                <div><strong>Padding:</strong> Space between border and content (0-20px)</div>
               </div>
             </div>
           </div>

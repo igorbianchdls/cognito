@@ -341,6 +341,9 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
     const containerBorderRadius = widget.barChartConfig?.styling?.containerBorderRadius ??
                                  widget.lineChartConfig?.styling?.containerBorderRadius
 
+    const containerPadding = widget.barChartConfig?.styling?.containerPadding ??
+                            widget.lineChartConfig?.styling?.containerPadding
+
     const commonProps = {
       data,
       colors,
@@ -413,6 +416,7 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             containerBorderWidth={containerBorderWidth}
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}
+            containerPadding={containerPadding}
           />
         )
       case 'chart-line':
@@ -460,6 +464,7 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             containerBorderWidth={containerBorderWidth}
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}
+            containerPadding={containerPadding}
           />
         )
       case 'chart-pie':
