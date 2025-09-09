@@ -290,5 +290,32 @@ export const pieChartActions = {
 
   refreshPieChart: async (chartId: string) => {
     await pieChartActions.executePieChartQuery(chartId)
+  },
+
+  // Update layout (for react-grid-layout)
+  updatePieChartsLayout: (layout: import('@/types/apps/droppedWidget').LayoutItem[]) => {
+    console.log('📐 Updating PieCharts layout for', layout.length, 'items')
+    const currentState = $pieChartStore.get()
+    
+    const updatedCharts = currentState.pieCharts.map(chart => {
+      const layoutItem = layout.find(l => l.i === chart.id)
+      if (layoutItem) {
+        return { 
+          ...chart, 
+          position: { 
+            x: layoutItem.x, 
+            y: layoutItem.y, 
+            w: layoutItem.w, 
+            h: layoutItem.h 
+          }
+        }
+      }
+      return chart
+    })
+    
+    $pieChartStore.set({
+      ...currentState,
+      pieCharts: updatedCharts
+    })
   }
 }

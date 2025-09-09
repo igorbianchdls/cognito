@@ -307,5 +307,32 @@ export const barChartActions = {
 
   refreshBarChart: async (chartId: string) => {
     await barChartActions.executeBarChartQuery(chartId)
+  },
+
+  // Update layout (for react-grid-layout)
+  updateBarChartsLayout: (layout: import('@/types/apps/droppedWidget').LayoutItem[]) => {
+    console.log('📐 Updating BarCharts layout for', layout.length, 'items')
+    const currentState = $barChartStore.get()
+    
+    const updatedCharts = currentState.barCharts.map(chart => {
+      const layoutItem = layout.find(l => l.i === chart.id)
+      if (layoutItem) {
+        return { 
+          ...chart, 
+          position: { 
+            x: layoutItem.x, 
+            y: layoutItem.y, 
+            w: layoutItem.w, 
+            h: layoutItem.h 
+          }
+        }
+      }
+      return chart
+    })
+    
+    $barChartStore.set({
+      ...currentState,
+      barCharts: updatedCharts
+    })
   }
 }

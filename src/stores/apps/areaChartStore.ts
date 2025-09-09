@@ -301,5 +301,32 @@ export const areaChartActions = {
 
   refreshAreaChart: async (chartId: string) => {
     await areaChartActions.executeAreaChartQuery(chartId)
+  },
+
+  // Update layout (for react-grid-layout)
+  updateAreaChartsLayout: (layout: import('@/types/apps/droppedWidget').LayoutItem[]) => {
+    console.log('📐 Updating AreaCharts layout for', layout.length, 'items')
+    const currentState = $areaChartStore.get()
+    
+    const updatedCharts = currentState.areaCharts.map(chart => {
+      const layoutItem = layout.find(l => l.i === chart.id)
+      if (layoutItem) {
+        return { 
+          ...chart, 
+          position: { 
+            x: layoutItem.x, 
+            y: layoutItem.y, 
+            w: layoutItem.w, 
+            h: layoutItem.h 
+          }
+        }
+      }
+      return chart
+    })
+    
+    $areaChartStore.set({
+      ...currentState,
+      areaCharts: updatedCharts
+    })
   }
 }

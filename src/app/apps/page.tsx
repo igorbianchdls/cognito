@@ -128,22 +128,67 @@ export default function AppsPage() {
   const handleLayoutChange = (layout: LayoutItem[]) => {
     console.log('[LAYOUT] Mudança detectada:', layout.map(l => ({ id: l.i, x: l.x, y: l.y, w: l.w, h: l.h })))
     
-    // Diagnóstico: Separar KPIs do layout
+    // Separar widgets por tipo para atualizar stores apropriadas
     const kpiLayouts = layout.filter(item => {
       const widget = allWidgets.find(w => w.i === item.i)
       return widget?.type === 'kpi'
     })
     
-    console.log('[LAYOUT] KPI layouts:', kpiLayouts.map(l => ({ 
-      id: l.i, 
-      x: l.x, 
-      y: l.y, 
-      w: l.w, 
-      h: l.h 
-    })))
+    const barChartLayouts = layout.filter(item => {
+      const widget = allWidgets.find(w => w.i === item.i)
+      return widget?.type === 'chart-bar'
+    })
     
-    // Update KPI layouts using kpiStore
-    kpiActions.updateKPIsLayout(kpiLayouts)
+    const horizontalBarChartLayouts = layout.filter(item => {
+      const widget = allWidgets.find(w => w.i === item.i)
+      return widget?.type === 'chart-horizontal-bar'
+    })
+    
+    const lineChartLayouts = layout.filter(item => {
+      const widget = allWidgets.find(w => w.i === item.i)
+      return widget?.type === 'chart-line'
+    })
+    
+    const pieChartLayouts = layout.filter(item => {
+      const widget = allWidgets.find(w => w.i === item.i)
+      return widget?.type === 'chart-pie'
+    })
+    
+    const areaChartLayouts = layout.filter(item => {
+      const widget = allWidgets.find(w => w.i === item.i)
+      return widget?.type === 'chart-area'
+    })
+    
+    // Atualizar cada store com os layouts correspondentes
+    if (kpiLayouts.length > 0) {
+      console.log('[LAYOUT] Updating', kpiLayouts.length, 'KPIs')
+      kpiActions.updateKPIsLayout(kpiLayouts)
+    }
+    
+    if (barChartLayouts.length > 0) {
+      console.log('[LAYOUT] Updating', barChartLayouts.length, 'Bar Charts')
+      barChartActions.updateBarChartsLayout(barChartLayouts)
+    }
+    
+    if (horizontalBarChartLayouts.length > 0) {
+      console.log('[LAYOUT] Updating', horizontalBarChartLayouts.length, 'Horizontal Bar Charts')
+      horizontalBarChartActions.updateHorizontalBarChartsLayout(horizontalBarChartLayouts)
+    }
+    
+    if (lineChartLayouts.length > 0) {
+      console.log('[LAYOUT] Updating', lineChartLayouts.length, 'Line Charts')
+      lineChartActions.updateLineChartsLayout(lineChartLayouts)
+    }
+    
+    if (pieChartLayouts.length > 0) {
+      console.log('[LAYOUT] Updating', pieChartLayouts.length, 'Pie Charts')
+      pieChartActions.updatePieChartsLayout(pieChartLayouts)
+    }
+    
+    if (areaChartLayouts.length > 0) {
+      console.log('[LAYOUT] Updating', areaChartLayouts.length, 'Area Charts')
+      areaChartActions.updateAreaChartsLayout(areaChartLayouts)
+    }
   }
 
   const handleRemoveWidget = (widgetId: string) => {

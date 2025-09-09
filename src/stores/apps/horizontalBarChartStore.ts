@@ -301,5 +301,32 @@ export const horizontalBarChartActions = {
 
   refreshHorizontalBarChart: async (chartId: string) => {
     await horizontalBarChartActions.executeHorizontalBarChartQuery(chartId)
+  },
+
+  // Update layout (for react-grid-layout)
+  updateHorizontalBarChartsLayout: (layout: import('@/types/apps/droppedWidget').LayoutItem[]) => {
+    console.log('📐 Updating HorizontalBarCharts layout for', layout.length, 'items')
+    const currentState = $horizontalBarChartStore.get()
+    
+    const updatedCharts = currentState.horizontalBarCharts.map(chart => {
+      const layoutItem = layout.find(l => l.i === chart.id)
+      if (layoutItem) {
+        return { 
+          ...chart, 
+          position: { 
+            x: layoutItem.x, 
+            y: layoutItem.y, 
+            w: layoutItem.w, 
+            h: layoutItem.h 
+          }
+        }
+      }
+      return chart
+    })
+    
+    $horizontalBarChartStore.set({
+      ...currentState,
+      horizontalBarCharts: updatedCharts
+    })
   }
 }

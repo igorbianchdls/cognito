@@ -304,5 +304,32 @@ export const lineChartActions = {
 
   refreshLineChart: async (chartId: string) => {
     await lineChartActions.executeLineChartQuery(chartId)
+  },
+
+  // Update layout (for react-grid-layout)
+  updateLineChartsLayout: (layout: import('@/types/apps/droppedWidget').LayoutItem[]) => {
+    console.log('📐 Updating LineCharts layout for', layout.length, 'items')
+    const currentState = $lineChartStore.get()
+    
+    const updatedCharts = currentState.lineCharts.map(chart => {
+      const layoutItem = layout.find(l => l.i === chart.id)
+      if (layoutItem) {
+        return { 
+          ...chart, 
+          position: { 
+            x: layoutItem.x, 
+            y: layoutItem.y, 
+            w: layoutItem.w, 
+            h: layoutItem.h 
+          }
+        }
+      }
+      return chart
+    })
+    
+    $lineChartStore.set({
+      ...currentState,
+      lineCharts: updatedCharts
+    })
   }
 }
