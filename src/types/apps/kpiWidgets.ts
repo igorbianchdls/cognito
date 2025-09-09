@@ -6,7 +6,7 @@ export interface BigQueryField {
   type: string
   mode?: string
   description?: string
-  aggregation?: 'SUM' | 'AVG' | 'COUNT' | 'MIN' | 'MAX'
+  aggregation?: 'SUM' | 'AVG' | 'COUNT' | 'MIN' | 'MAX' | 'COUNT_DISTINCT'
 }
 
 // KPI BigQuery data interface
