@@ -13,8 +13,7 @@ import { $selectedLineChart, lineChartActions } from '@/stores/apps/lineChartSto
 import { $selectedPieChart, pieChartActions } from '@/stores/apps/pieChartStore'
 import { $selectedAreaChart, areaChartActions } from '@/stores/apps/areaChartStore'
 import { $canvasConfig } from '@/stores/apps/canvasStore' // Canvas customization store
-import { WebPreview, WebPreviewNavigation, WebPreviewUrl, WebPreviewNavigationButton } from '@/components/ai-elements/web-preview'
-import { Eye, Download } from 'lucide-react'
+import { WebPreview } from '@/components/ai-elements/web-preview'
 import { Button } from '@/components/ui/button'
 import type { DroppedWidget as DroppedWidgetType, LayoutItem } from '@/types/apps/droppedWidget'
 
@@ -168,38 +167,6 @@ export default function GridCanvas({
     }
   }
 
-  // Navigation button handlers
-  const handlePreview = () => {
-    // Enter fullscreen preview mode
-    const canvasElement = containerRef.current
-    if (canvasElement && canvasElement.requestFullscreen) {
-      canvasElement.requestFullscreen()
-    }
-    console.log('Preview dashboard - entering fullscreen')
-  }
-
-
-  const handleExport = () => {
-    // Export dashboard as JSON file
-    const dashboardData = {
-      widgets,
-      canvasConfig,
-      exportDate: new Date().toISOString(),
-      title: 'My Dashboard Export'
-    }
-    
-    const dataStr = JSON.stringify(dashboardData, null, 2)
-    const dataBlob = new Blob([dataStr], { type: 'application/json' })
-    
-    const link = document.createElement('a')
-    link.href = URL.createObjectURL(dataBlob)
-    link.download = `dashboard-export-${new Date().toISOString().split('T')[0]}.json`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    
-    console.log('Dashboard exported as JSON file')
-  }
 
 
   // Effect to measure container width for 16:9 calculation
@@ -316,23 +283,6 @@ export default function GridCanvas({
           isOver ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
         }`}
       >
-        <WebPreviewNavigation>
-          <WebPreviewNavigationButton tooltip="Preview Dashboard" onClick={handlePreview}>
-            <Eye className="h-6 w-6" />
-          </WebPreviewNavigationButton>
-          
-          
-          <WebPreviewUrl 
-            value="https://dashboard.app/canvas/my-dashboard" 
-            readOnly
-            className="text-sm bg-gray-50"
-          />
-          
-          <WebPreviewNavigationButton tooltip="Export Dashboard" onClick={handleExport}>
-            <Download className="h-6 w-6" />
-          </WebPreviewNavigationButton>
-          
-        </WebPreviewNavigation>
         
         {/* Canvas direto dentro do WebPreview, sem iframe */}
         <div 
