@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useStore } from '@nanostores/react'
-import { BarChart3, TrendingUp, PieChart, Activity, Trash2, Plus, Table } from 'lucide-react'
+import { BarChart3, TrendingUp, PieChart, Activity, Trash2, Plus, Table, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import DropZone from './DropZone'
@@ -101,6 +101,51 @@ export default function UniversalBuilder({
       return 'COUNT'
     }
     return 'SUM' // Default for numeric fields
+  }
+
+  // Handle updating existing KPI
+  const handleUpdateKPI = () => {
+    if (!selectedKPI) {
+      alert('No KPI selected for update')
+      return
+    }
+
+    if (!data.selectedTable) {
+      alert('Please select a table first')
+      return
+    }
+
+    if (data.kpiValue.length === 0) {
+      alert('Please configure KPI value field first')
+      return
+    }
+
+    console.log('📊 Updating existing KPI:', selectedKPI.i)
+    
+    const kpiField = data.kpiValue[0] // Main KPI field
+    const kpiPreviewData = previewData as KPIData[]
+    
+    // Update KPI configuration
+    kpiActions.updateKPIConfig(selectedKPI.i, {
+      // Apply data from preview and builder
+      name: kpiField?.name || selectedKPI.config.name,
+      value: kpiPreviewData.length > 0 ? kpiPreviewData[0].current_value : selectedKPI.config.value,
+      metric: kpiField?.name,
+      calculation: kpiField ? getAggregationFunction(kpiField) : selectedKPI.config.calculation,
+      unit: getUnitFromFieldType(kpiField?.type),
+      bigqueryData: {
+        selectedTable: data.selectedTable,
+        kpiValueFields: data.kpiValue,
+        filterFields: data.filters,
+        query: previewQuery,
+        data: previewData,
+        lastExecuted: new Date(),
+        isLoading: false,
+        error: null
+      }
+    })
+
+    alert('KPI updated successfully!')
   }
 
   // Handle adding widget to dashboard
@@ -761,15 +806,29 @@ export default function UniversalBuilder({
 
           {/* Actions Section */}
           <div className="space-y-4 px-2">
-            <Button
-              onClick={handleAddToDashboard}
-              disabled={!isConfigValid}
-              className="w-full gap-2"
-              size="lg"
-            >
-              <Plus className="w-4 h-4" />
-              Add to Dashboard
-            </Button>
+            {selectedKPI && data.selectedType === 'kpi' ? (
+              // Update existing KPI
+              <Button
+                onClick={handleUpdateKPI}
+                disabled={!isConfigValid}
+                className="w-full gap-2 bg-orange-600 hover:bg-orange-700"
+                size="lg"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Update KPI
+              </Button>
+            ) : (
+              // Add new widget to dashboard
+              <Button
+                onClick={handleAddToDashboard}
+                disabled={!isConfigValid}
+                className="w-full gap-2"
+                size="lg"
+              >
+                <Plus className="w-4 h-4" />
+                Add to Dashboard
+              </Button>
+            )}
           </div>
 
 
