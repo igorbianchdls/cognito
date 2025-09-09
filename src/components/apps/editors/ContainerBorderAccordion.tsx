@@ -49,19 +49,20 @@ export default function ContainerBorderAccordion({
             <label className="block text-xs text-gray-500 mb-1">Border Width</label>
             <div className="flex items-center gap-2">
               <input
-                type="range"
+                type="number"
                 min="0"
-                max="5"
-                step="0.5"
+                max="10"
+                step="0.1"
                 value={styling?.containerBorderWidth ?? 0.5}
                 onChange={(e) => {
-                  const value = parseFloat(e.target.value)
+                  const value = parseFloat(e.target.value) || 0
                   console.log('🖼️ ContainerBorderAccordion: Border width changed to:', value)
                   onConfigChange(getFieldPath('containerBorderWidth'), value)
                 }}
-                className="flex-1"
+                className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded"
+                placeholder="0.5"
               />
-              <span className="text-xs text-gray-500 w-12">{styling?.containerBorderWidth ?? 0.5}px</span>
+              <span className="text-xs text-gray-500 w-8">px</span>
             </div>
           </div>
 
@@ -98,18 +99,20 @@ export default function ContainerBorderAccordion({
             <label className="block text-xs text-gray-500 mb-1">Border Radius</label>
             <div className="flex items-center gap-2">
               <input
-                type="range"
+                type="number"
                 min="0"
-                max="20"
+                max="50"
+                step="1"
                 value={styling?.containerBorderRadius ?? 8}
                 onChange={(e) => {
-                  const value = parseInt(e.target.value)
+                  const value = parseInt(e.target.value) || 0
                   console.log('🖼️ ContainerBorderAccordion: Border radius changed to:', value)
                   onConfigChange(getFieldPath('containerBorderRadius'), value)
                 }}
-                className="flex-1"
+                className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded"
+                placeholder="8"
               />
-              <span className="text-xs text-gray-500 w-12">{styling?.containerBorderRadius ?? 8}px</span>
+              <span className="text-xs text-gray-500 w-8">px</span>
             </div>
           </div>
 
