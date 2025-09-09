@@ -142,7 +142,7 @@ export function BarChart(props: BarChartProps) {
         width: '100%',
         height: '100%',
         background: backgroundColor,
-        padding: containerPadding ? `${containerPadding}px` : 0,
+        padding: `${containerPadding || 16}px`,
         margin: '0 auto',
         display: 'flex',
         flexDirection: 'column',
