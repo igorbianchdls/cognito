@@ -4,6 +4,12 @@ import { useState, useEffect } from 'react'
 import { DndContext, DragEndEvent } from '@dnd-kit/core'
 import { useStore } from '@nanostores/react'
 import { $selectedKPI } from '@/stores/apps/kpiStore'
+import { $selectedBarChart } from '@/stores/apps/barChartStore'
+import { $selectedLineChart } from '@/stores/apps/lineChartStore'
+import { $selectedPieChart } from '@/stores/apps/pieChartStore'
+import { $selectedAreaChart } from '@/stores/apps/areaChartStore'
+import { $selectedHorizontalBarChart } from '@/stores/apps/horizontalBarChartStore'
+import { $selectedTable } from '@/stores/apps/tableStore'
 import TablesExplorer from './TablesExplorer'
 import UniversalBuilder from './UniversalBuilder'
 import WidgetsPanel from '../widgets/WidgetsPanel'
@@ -40,6 +46,12 @@ export default function SplitSidebarPanel({
   onEditWidget
 }: SplitSidebarPanelProps) {
   const selectedKPI = useStore($selectedKPI)
+  const selectedBarChart = useStore($selectedBarChart)
+  const selectedLineChart = useStore($selectedLineChart)
+  const selectedPieChart = useStore($selectedPieChart)
+  const selectedAreaChart = useStore($selectedAreaChart)
+  const selectedHorizontalBarChart = useStore($selectedHorizontalBarChart)
+  const selectedTable = useStore($selectedTable)
   const [universalBuilderData, setUniversalBuilderData] = useState<UniversalBuilderData>({
     selectedType: 'chart',
     xAxis: [],
@@ -51,22 +63,109 @@ export default function SplitSidebarPanel({
     selectedTable: null
   })
 
-  // Load selected KPI data into builder when switching to datasets tab
+  // Load selected widget data into builder when switching to datasets tab
   useEffect(() => {
-    if (selectedKPI && activeTab === 'datasets') {
-      console.log('📊 Loading selected KPI into builder:', selectedKPI.i)
-      setUniversalBuilderData({
-        selectedType: 'kpi',
-        xAxis: [],
-        yAxis: [],
-        chartType: 'bar',
-        filters: selectedKPI.config.bigqueryData?.filterFields || [],
-        columns: [],
-        kpiValue: selectedKPI.config.bigqueryData?.kpiValueFields || [],
-        selectedTable: selectedKPI.config.bigqueryData?.selectedTable || null
-      })
+    if (activeTab === 'datasets') {
+      // Load KPI data
+      if (selectedKPI) {
+        console.log('📊 Loading selected KPI into builder:', selectedKPI.i)
+        setUniversalBuilderData({
+          selectedType: 'kpi',
+          xAxis: [],
+          yAxis: [],
+          chartType: 'bar',
+          filters: selectedKPI.config.bigqueryData?.filterFields || [],
+          columns: [],
+          kpiValue: selectedKPI.config.bigqueryData?.kpiValueFields || [],
+          selectedTable: selectedKPI.config.bigqueryData?.selectedTable || null
+        })
+      }
+      // Load Bar Chart data
+      else if (selectedBarChart) {
+        console.log('📊 Loading selected Bar Chart into builder:', selectedBarChart.id)
+        setUniversalBuilderData({
+          selectedType: 'chart',
+          chartType: 'bar',
+          xAxis: selectedBarChart.bigqueryData.columns.xAxis || [],
+          yAxis: selectedBarChart.bigqueryData.columns.yAxis || [],
+          filters: selectedBarChart.bigqueryData.columns.filters || [],
+          columns: [],
+          kpiValue: [],
+          selectedTable: selectedBarChart.bigqueryData.selectedTable || null
+        })
+      }
+      // Load Line Chart data
+      else if (selectedLineChart) {
+        console.log('📊 Loading selected Line Chart into builder:', selectedLineChart.id)
+        setUniversalBuilderData({
+          selectedType: 'chart',
+          chartType: 'line',
+          xAxis: selectedLineChart.bigqueryData.columns.xAxis || [],
+          yAxis: selectedLineChart.bigqueryData.columns.yAxis || [],
+          filters: selectedLineChart.bigqueryData.columns.filters || [],
+          columns: [],
+          kpiValue: [],
+          selectedTable: selectedLineChart.bigqueryData.selectedTable || null
+        })
+      }
+      // Load Pie Chart data
+      else if (selectedPieChart) {
+        console.log('📊 Loading selected Pie Chart into builder:', selectedPieChart.id)
+        setUniversalBuilderData({
+          selectedType: 'chart',
+          chartType: 'pie',
+          xAxis: selectedPieChart.bigqueryData.columns.xAxis || [],
+          yAxis: selectedPieChart.bigqueryData.columns.yAxis || [],
+          filters: selectedPieChart.bigqueryData.columns.filters || [],
+          columns: [],
+          kpiValue: [],
+          selectedTable: selectedPieChart.bigqueryData.selectedTable || null
+        })
+      }
+      // Load Area Chart data
+      else if (selectedAreaChart) {
+        console.log('📊 Loading selected Area Chart into builder:', selectedAreaChart.id)
+        setUniversalBuilderData({
+          selectedType: 'chart',
+          chartType: 'area',
+          xAxis: selectedAreaChart.bigqueryData.columns.xAxis || [],
+          yAxis: selectedAreaChart.bigqueryData.columns.yAxis || [],
+          filters: selectedAreaChart.bigqueryData.columns.filters || [],
+          columns: [],
+          kpiValue: [],
+          selectedTable: selectedAreaChart.bigqueryData.selectedTable || null
+        })
+      }
+      // Load Horizontal Bar Chart data
+      else if (selectedHorizontalBarChart) {
+        console.log('📊 Loading selected Horizontal Bar Chart into builder:', selectedHorizontalBarChart.id)
+        setUniversalBuilderData({
+          selectedType: 'chart',
+          chartType: 'horizontal-bar',
+          xAxis: selectedHorizontalBarChart.bigqueryData.columns.xAxis || [],
+          yAxis: selectedHorizontalBarChart.bigqueryData.columns.yAxis || [],
+          filters: selectedHorizontalBarChart.bigqueryData.columns.filters || [],
+          columns: [],
+          kpiValue: [],
+          selectedTable: selectedHorizontalBarChart.bigqueryData.selectedTable || null
+        })
+      }
+      // Load Table data
+      else if (selectedTable && selectedTable.config.dataSource === 'BigQuery') {
+        console.log('📊 Loading selected Table into builder:', selectedTable.i)
+        setUniversalBuilderData({
+          selectedType: 'table',
+          xAxis: [],
+          yAxis: [],
+          chartType: 'bar',
+          filters: [],
+          columns: [], // Table starts empty - user drags fields
+          kpiValue: [],
+          selectedTable: null // Table doesn't store selectedTable info
+        })
+      }
     }
-  }, [selectedKPI, activeTab])
+  }, [selectedKPI, selectedBarChart, selectedLineChart, selectedPieChart, selectedAreaChart, selectedHorizontalBarChart, selectedTable, activeTab])
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
