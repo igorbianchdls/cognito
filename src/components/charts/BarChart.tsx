@@ -93,14 +93,16 @@ export function BarChart(props: BarChartProps) {
     return result ? result.map(h => parseInt(h, 16)).join(', ') : '0, 0, 0';
   };
 
-  // Create box shadow style - apply if any shadow property is defined
-  const boxShadow = (containerShadowColor || containerShadowOpacity !== undefined || 
-                    containerShadowBlur !== undefined || containerShadowOffsetX !== undefined || 
-                    containerShadowOffsetY !== undefined)
+  // Create box shadow style - apply custom shadow or default KPI shadow
+  const hasCustomShadow = containerShadowColor || containerShadowOpacity !== undefined || 
+                         containerShadowBlur !== undefined || containerShadowOffsetX !== undefined || 
+                         containerShadowOffsetY !== undefined;
+  
+  const boxShadow = hasCustomShadow
     ? `${containerShadowOffsetX || 0}px ${containerShadowOffsetY || 2}px ${containerShadowBlur || 4}px rgba(${
         hexToRgb(containerShadowColor || '#000000')
       }, ${containerShadowOpacity || 0.1})`
-    : undefined;
+    : '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
 
   // Debug log
   console.log('🖼️ BarChart Shadow Debug:', {
@@ -146,7 +148,7 @@ export function BarChart(props: BarChartProps) {
         flexDirection: 'column',
         alignItems: 'stretch',
         minWidth: 0,
-        border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#ccc'}` : '0.5px solid #ccc',
+        border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb',
         borderRadius: `${containerBorderRadius || 8}px`,
         boxShadow,
       }}
