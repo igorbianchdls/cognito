@@ -16,6 +16,7 @@ import DimensionsAccordion from './DimensionsAccordion'
 import AxesAccordion from './AxesAccordion'
 import HorizontalBarChartInfoAccordion from './HorizontalBarChartInfoAccordion'
 import ChartSpecificAccordion from './ChartSpecificAccordion'
+import ContainerBorderAccordion from './ContainerBorderAccordion'
 
 interface HorizontalBarChartEditorProps {
   selectedWidget: DroppedWidget
@@ -68,6 +69,11 @@ export default function HorizontalBarChartEditor({
             />
 
             <DimensionsAccordion
+              styling={chartConfig.styling}
+              onConfigChange={onChartConfigChange}
+            />
+
+            <ContainerBorderAccordion
               styling={chartConfig.styling}
               onConfigChange={onChartConfigChange}
             />
