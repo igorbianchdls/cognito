@@ -4,8 +4,45 @@ import { atom } from 'nanostores'
 import type { CanvasConfig } from '@/types/apps/canvas'
 import { defaultCanvasConfig } from '@/types/apps/canvas'
 
-// Canvas configuration store
-export const $canvasConfig = atom<CanvasConfig>(defaultCanvasConfig)
+const CANVAS_STORAGE_KEY = 'cognito-canvas-config'
+
+// Load canvas config from localStorage on initialization
+const loadCanvasFromStorage = (): CanvasConfig => {
+  if (typeof window === 'undefined') return defaultCanvasConfig
+  try {
+    const stored = localStorage.getItem(CANVAS_STORAGE_KEY)
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      // Merge with default config to ensure all properties exist
+      return { ...defaultCanvasConfig, ...parsed }
+    }
+    return defaultCanvasConfig
+  } catch (error) {
+    console.error('Error loading canvas config from localStorage:', error)
+    return defaultCanvasConfig
+  }
+}
+
+// Save canvas config to localStorage
+const saveCanvasToStorage = (config: CanvasConfig) => {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(CANVAS_STORAGE_KEY, JSON.stringify(config))
+  } catch (error) {
+    console.error('Error saving canvas config to localStorage:', error)
+  }
+}
+
+// Canvas configuration store with localStorage persistence
+export const $canvasConfig = atom<CanvasConfig>(loadCanvasFromStorage())
+
+// Auto-save to localStorage whenever canvas config changes
+if (typeof window !== 'undefined') {
+  $canvasConfig.subscribe(config => {
+    saveCanvasToStorage(config)
+    console.log('🎨 Canvas config auto-saved to localStorage')
+  })
+}
 
 // Canvas selection state - for showing canvas settings in editor
 export const $isCanvasSettingsOpen = atom<boolean>(false)
