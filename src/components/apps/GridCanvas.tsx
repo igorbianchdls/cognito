@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { useStore } from '@nanostores/react'
 import { useDroppable } from '@dnd-kit/core'
-import { Responsive, WidthProvider } from 'react-grid-layout'
+import { Responsive } from 'react-grid-layout'
 import DroppedWidget from './DroppedWidget'
 import { $selectedKPI, kpiActions } from '@/stores/apps/kpiStore'
 import { $selectedTable, tableActions } from '@/stores/apps/tableStore'
@@ -17,7 +17,7 @@ import { WebPreview } from '@/components/ai-elements/web-preview'
 import { Button } from '@/components/ui/button'
 import type { DroppedWidget as DroppedWidgetType, LayoutItem } from '@/types/apps/droppedWidget'
 
-const ResponsiveGridLayout = WidthProvider(Responsive)
+const ResponsiveGridLayout = Responsive
 
 interface GridCanvasProps {
   widgets: DroppedWidgetType[]
@@ -309,6 +309,7 @@ export default function GridCanvas({
             breakpoints={responsiveBreakpoints}
             cols={responsiveCols}
             rowHeight={canvasConfig.rowHeight}
+            width={containerWidth}
             onLayoutChange={onLayoutChange}
             isDraggable={!readOnly}
             isResizable={!readOnly}
