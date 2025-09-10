@@ -211,7 +211,7 @@ export default function GridCanvas({
     const styles: React.CSSProperties = {
       backgroundColor: canvasConfig.backgroundColor,
       borderRadius: `${canvasConfig.borderRadius}px`,
-      overflow: canvasConfig.overflow,
+      overflow: 'hidden',
     }
 
     // Background image
