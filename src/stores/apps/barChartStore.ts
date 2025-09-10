@@ -334,5 +334,14 @@ export const barChartActions = {
       ...currentState,
       barCharts: updatedCharts
     })
+  },
+
+  // Clear all bar charts
+  clearAll: () => {
+    console.log('🗑️ Clearing all bar charts')
+    $barChartStore.set({
+      barCharts: [],
+      selectedBarChartId: null
+    })
   }
 }

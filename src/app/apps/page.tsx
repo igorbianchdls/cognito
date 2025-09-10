@@ -34,7 +34,7 @@ import { savedDashboardActions } from '@/stores/apps/savedDashboardStore'
 // import { isNavigationWidget } from '@/types/apps/droppedWidget' // REMOVED: No navigation widgets in KPI-only mode
 import type { Widget, LayoutItem, DroppedWidget } from '@/types/apps/droppedWidget'
 import { Button } from '@/components/ui/button'
-import { Settings, Share, Github, BarChart3, MessageSquare, Code, Cpu, Archive, Database, Save } from 'lucide-react'
+import { Settings, Share, Github, BarChart3, MessageSquare, Code, Cpu, Archive, Database, Save, Plus } from 'lucide-react'
 
 export default function AppsPage() {
   // Widget stores - KPIs, Tables, and Charts
@@ -303,6 +303,28 @@ export default function AppsPage() {
     setActiveTab('editor')
   }, [allWidgets])
 
+  // Função para criar novo dashboard limpo
+  const handleCreateNewDashboard = useCallback(() => {
+    const hasWidgets = allWidgets.length > 0
+    
+    if (hasWidgets) {
+      const confirmed = confirm('Criar novo dashboard? O dashboard atual será limpo (não salvo).')
+      if (!confirmed) return
+    }
+    
+    // Limpar todos os stores
+    kpiActions.clearAll()
+    tableActions.clearAll() 
+    barChartActions.clearAll()
+    horizontalBarChartActions.clearAll()
+    lineChartActions.clearAll()
+    pieChartActions.clearAll()
+    areaChartActions.clearAll()
+    canvasActions.resetToDefaults()
+    
+    console.log('🆕 Novo dashboard criado - todos os widgets removidos')
+  }, [allWidgets.length])
+
   // REMOVED: No navigation widgets in KPI-only mode - always use single canvas
   // const hasNavigationWidget = useMemo(() => {
   //   return allWidgets.some(widget => isNavigationWidget(widget))
@@ -367,6 +389,14 @@ export default function AppsPage() {
               </div>
               <Button variant="ghost" size="sm" onClick={() => canvasActions.openCanvasSettings()}>
                 <Settings className="h-4 w-4 text-sidebar-foreground" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleCreateNewDashboard}
+                title="Criar novo dashboard limpo"
+              >
+                <Plus className="h-4 w-4 text-green-600" />
               </Button>
               <Button variant="ghost" size="sm" onClick={savedDashboardActions.promptAndSave}>
                 <Save className="h-4 w-4 text-sidebar-foreground" />

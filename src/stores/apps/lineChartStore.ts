@@ -331,5 +331,14 @@ export const lineChartActions = {
       ...currentState,
       lineCharts: updatedCharts
     })
+  },
+
+  // Clear all line charts
+  clearAll: () => {
+    console.log('🗑️ Clearing all line charts')
+    $lineChartStore.set({
+      lineCharts: [],
+      selectedLineChartId: null
+    })
   }
 }

@@ -401,5 +401,12 @@ export const tableActions = {
     
     console.log('✅ CSV export successful:', { rows: rows.length })
     return csvContent
+  },
+
+  // Clear all tables
+  clearAll: () => {
+    console.log('🗑️ Clearing all tables')
+    $tableWidgets.set([])
+    $selectedTableId.set(null)
   }
 }

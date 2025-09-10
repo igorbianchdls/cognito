@@ -485,5 +485,12 @@ export const kpiActions = {
   refreshKPIData: async (kpiId: string) => {
     console.log('🔄 Refreshing KPI data:', kpiId)
     await kpiActions.executeKPIQuery(kpiId)
+  },
+
+  // Clear all KPIs
+  clearAll: () => {
+    console.log('🗑️ Clearing all KPIs')
+    $kpiWidgets.set([])
+    $selectedKPIId.set(null)
   }
 }

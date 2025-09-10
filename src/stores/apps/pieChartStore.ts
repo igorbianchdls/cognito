@@ -317,5 +317,14 @@ export const pieChartActions = {
       ...currentState,
       pieCharts: updatedCharts
     })
+  },
+
+  // Clear all pie charts
+  clearAll: () => {
+    console.log('🗑️ Clearing all pie charts')
+    $pieChartStore.set({
+      pieCharts: [],
+      selectedPieChartId: null
+    })
   }
 }
