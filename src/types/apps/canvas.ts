@@ -66,7 +66,7 @@ export const defaultCanvasConfig: CanvasConfig = {
   
   breakpoints: {
     lg: 240,
-    md: 10,
+    md: 240,
     sm: 6,
     xs: 4,
     xxs: 2
