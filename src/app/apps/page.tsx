@@ -402,6 +402,12 @@ export default function AppsPage() {
                   backgroundColor: canvasConfig.backgroundColor || '#ffffff',
                   borderRadius: `${canvasConfig.borderRadius || 8}px`,
                   border: '0.5px solid #d1d5db',
+                  ...(canvasConfig.backgroundImage && {
+                    backgroundImage: `url(${canvasConfig.backgroundImage})`,
+                    backgroundSize: canvasConfig.backgroundSize,
+                    backgroundPosition: canvasConfig.backgroundPosition,
+                    backgroundRepeat: canvasConfig.backgroundRepeat
+                  }),
                   ...(canvasConfig.boxShadow && {
                     boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'
                   })
