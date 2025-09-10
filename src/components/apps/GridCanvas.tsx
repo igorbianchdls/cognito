@@ -269,7 +269,7 @@ export default function GridCanvas({
     <div className="flex flex-col">
       <WebPreview 
         defaultUrl="dashboard-canvas"
-        className={`${noBorder ? 'border-0' : ''} ${
+        className={`border-0 ${
           isOver ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
         }`}
       >
