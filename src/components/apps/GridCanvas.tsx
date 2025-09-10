@@ -173,7 +173,9 @@ export default function GridCanvas({
   useEffect(() => {
     const updateWidth = () => {
       if (containerRef.current) {
-        setContainerWidth(containerRef.current.offsetWidth)
+        const width = containerRef.current.offsetWidth
+        console.log('📏 Container width:', width)
+        setContainerWidth(width)
       }
     }
     
