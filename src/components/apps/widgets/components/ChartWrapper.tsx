@@ -162,7 +162,7 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
                       widget.lineChartConfig?.styling?.marginLeft ??
                       widget.pieChartConfig?.styling?.marginLeft ??
                       widget.areaChartConfig?.styling?.marginLeft ??
-                      50
+                      75
 
     // Pie chart specific margin defaults
     const pieMarginTop = widget.pieChartConfig?.styling?.marginTop ?? 20
