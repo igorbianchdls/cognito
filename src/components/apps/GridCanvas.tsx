@@ -13,7 +13,6 @@ import { $selectedLineChart, lineChartActions } from '@/stores/apps/lineChartSto
 import { $selectedPieChart, pieChartActions } from '@/stores/apps/pieChartStore'
 import { $selectedAreaChart, areaChartActions } from '@/stores/apps/areaChartStore'
 import { $canvasConfig } from '@/stores/apps/canvasStore' // Canvas customization store
-import { WebPreview } from '@/components/ai-elements/web-preview'
 import { Button } from '@/components/ui/button'
 import type { DroppedWidget as DroppedWidgetType, LayoutItem } from '@/types/apps/droppedWidget'
 
@@ -280,20 +279,19 @@ export default function GridCanvas({
 
   return (
     <div className="flex flex-col">
-      <WebPreview 
-        defaultUrl="dashboard-canvas"
-        className={`${noBorder ? 'border-0' : ''} ${
+      {/* Container branco visual */}
+      <div 
+        style={canvasStyles}
+        className={`bg-white border border-gray-200 rounded-lg shadow p-3 ${
+          noBorder ? 'border-0' : ''
+        } ${
           isOver ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
         }`}
       >
-        
-        {/* Canvas direto dentro do WebPreview, sem iframe */}
+        {/* Container dedicado do grid */}
         <div 
           ref={containerRef}
-          style={canvasStyles}
-          className={`relative transition-colors p-0 bg-white ${
-            (canvasConfig.canvasMode === 'fixed' || containerWidth > 768) ? '' : ''
-          }`}
+          className="w-full h-full relative"
           onClick={handleCanvasClick}
         >
           <div ref={setNodeRef} className="w-full h-full">
@@ -383,7 +381,7 @@ export default function GridCanvas({
           </ResponsiveGridLayout>
           </div>
         </div>
-      </WebPreview>
+      </div>
     </div>
   )
 }
