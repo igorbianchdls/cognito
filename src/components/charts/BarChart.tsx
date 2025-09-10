@@ -213,12 +213,17 @@ export function BarChart(props: BarChartProps) {
             legend: axisBottom.legend,
             legendPosition: axisBottom.legendPosition ?? 'middle',
             legendOffset: axisBottom.legendOffset ?? 46,
-            format: axisBottom.format || ((value) => value.toString().slice(0, 10))
+            format: axisBottom.format || (layout === 'horizontal' 
+              ? (value) => formatValue(Number(value))  // Numbers for horizontal
+              : (value) => value.toString().slice(0, 10) // Strings for vertical
+            )
           } : {
             tickSize: 0,
             tickPadding: 8,
             tickRotation: 0,
-            format: (value) => value.toString().slice(0, 10)
+            format: layout === 'horizontal' 
+              ? (value) => formatValue(Number(value))
+              : (value) => value.toString().slice(0, 10)
           }}
           axisLeft={axisLeft ? {
             tickSize: axisLeft.tickSize ?? 0,
@@ -226,12 +231,17 @@ export function BarChart(props: BarChartProps) {
             tickRotation: axisLeft.tickRotation ?? 0,
             legend: axisLeft.legend,
             legendOffset: axisLeft.legendOffset ?? -40,
-            format: axisLeft.format || ((value) => formatValue(Number(value)))
+            format: axisLeft.format || (layout === 'horizontal'
+              ? (value) => value.toString().slice(0, 10) // Strings for horizontal  
+              : (value) => formatValue(Number(value)) // Numbers for vertical
+            )
           } : {
             tickSize: 0,
             tickPadding: 8,
             tickRotation: 0,
-            format: (value) => formatValue(Number(value))
+            format: layout === 'horizontal'
+              ? (value) => value.toString().slice(0, 10)
+              : (value) => formatValue(Number(value))
           }}
           
           // Grid configurável
