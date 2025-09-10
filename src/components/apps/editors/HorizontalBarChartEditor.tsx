@@ -17,17 +17,20 @@ import AxesAccordion from './AxesAccordion'
 import HorizontalBarChartInfoAccordion from './HorizontalBarChartInfoAccordion'
 import ChartSpecificAccordion from './ChartSpecificAccordion'
 import ContainerBorderAccordion from './ContainerBorderAccordion'
+import PositionAccordion from './PositionAccordion'
 
 interface HorizontalBarChartEditorProps {
   selectedWidget: DroppedWidget
   chartConfig: HorizontalBarChartConfig
   onChartConfigChange: (field: string, value: unknown) => void
+  onLayoutChange?: (layoutChanges: {x?: number, y?: number, w?: number, h?: number}) => void
 }
 
 export default function HorizontalBarChartEditor({ 
   selectedWidget, 
   chartConfig, 
-  onChartConfigChange 
+  onChartConfigChange,
+  onLayoutChange 
 }: HorizontalBarChartEditorProps) {
   
   if (!selectedWidget || selectedWidget.type !== 'chart-horizontal-bar') {
@@ -93,6 +96,13 @@ export default function HorizontalBarChartEditor({
               styling={chartConfig.styling} 
               onConfigChange={onChartConfigChange} 
             />
+
+            {onLayoutChange && (
+              <PositionAccordion
+                selectedWidget={selectedWidget}
+                onLayoutChange={onLayoutChange}
+              />
+            )}
 
           </Accordion>
         </div>

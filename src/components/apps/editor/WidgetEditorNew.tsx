@@ -340,6 +340,106 @@ export default function WidgetEditorNew() {
     }
   }
 
+  const handleBarChartLayoutChange = (layoutChanges: {x?: number, y?: number, w?: number, h?: number}) => {
+    console.log('📐 WidgetEditorNew handleBarChartLayoutChange:', { 
+      layoutChanges, 
+      selectedBarChartId: selectedBarChart?.id,
+      timestamp: Date.now()
+    })
+    
+    if (selectedBarChart) {
+      console.log('📐 WidgetEditorNew calling barChartActions.updateLayout:', {
+        chartId: selectedBarChart.id,
+        layoutChanges,
+        timestamp: Date.now()
+      })
+      barChartActions.updateLayout(selectedBarChart.id, layoutChanges)
+      console.log('📐 WidgetEditorNew BarChart layout update completed for:', selectedBarChart.id)
+    } else {
+      console.warn('⚠️ WidgetEditorNew: No BarChart selected, cannot update layout')
+    }
+  }
+
+  const handleLineChartLayoutChange = (layoutChanges: {x?: number, y?: number, w?: number, h?: number}) => {
+    console.log('📐 WidgetEditorNew handleLineChartLayoutChange:', { 
+      layoutChanges, 
+      selectedLineChartId: selectedLineChart?.id,
+      timestamp: Date.now()
+    })
+    
+    if (selectedLineChart) {
+      console.log('📐 WidgetEditorNew calling lineChartActions.updateLayout:', {
+        chartId: selectedLineChart.id,
+        layoutChanges,
+        timestamp: Date.now()
+      })
+      lineChartActions.updateLayout(selectedLineChart.id, layoutChanges)
+      console.log('📐 WidgetEditorNew LineChart layout update completed for:', selectedLineChart.id)
+    } else {
+      console.warn('⚠️ WidgetEditorNew: No LineChart selected, cannot update layout')
+    }
+  }
+
+  const handlePieChartLayoutChange = (layoutChanges: {x?: number, y?: number, w?: number, h?: number}) => {
+    console.log('📐 WidgetEditorNew handlePieChartLayoutChange:', { 
+      layoutChanges, 
+      selectedPieChartId: selectedPieChart?.id,
+      timestamp: Date.now()
+    })
+    
+    if (selectedPieChart) {
+      console.log('📐 WidgetEditorNew calling pieChartActions.updateLayout:', {
+        chartId: selectedPieChart.id,
+        layoutChanges,
+        timestamp: Date.now()
+      })
+      pieChartActions.updateLayout(selectedPieChart.id, layoutChanges)
+      console.log('📐 WidgetEditorNew PieChart layout update completed for:', selectedPieChart.id)
+    } else {
+      console.warn('⚠️ WidgetEditorNew: No PieChart selected, cannot update layout')
+    }
+  }
+
+  const handleAreaChartLayoutChange = (layoutChanges: {x?: number, y?: number, w?: number, h?: number}) => {
+    console.log('📐 WidgetEditorNew handleAreaChartLayoutChange:', { 
+      layoutChanges, 
+      selectedAreaChartId: selectedAreaChart?.id,
+      timestamp: Date.now()
+    })
+    
+    if (selectedAreaChart) {
+      console.log('📐 WidgetEditorNew calling areaChartActions.updateLayout:', {
+        chartId: selectedAreaChart.id,
+        layoutChanges,
+        timestamp: Date.now()
+      })
+      areaChartActions.updateLayout(selectedAreaChart.id, layoutChanges)
+      console.log('📐 WidgetEditorNew AreaChart layout update completed for:', selectedAreaChart.id)
+    } else {
+      console.warn('⚠️ WidgetEditorNew: No AreaChart selected, cannot update layout')
+    }
+  }
+
+  const handleHorizontalBarChartLayoutChange = (layoutChanges: {x?: number, y?: number, w?: number, h?: number}) => {
+    console.log('📐 WidgetEditorNew handleHorizontalBarChartLayoutChange:', { 
+      layoutChanges, 
+      selectedHorizontalBarChartId: selectedHorizontalBarChart?.id,
+      timestamp: Date.now()
+    })
+    
+    if (selectedHorizontalBarChart) {
+      console.log('📐 WidgetEditorNew calling horizontalBarChartActions.updateLayout:', {
+        chartId: selectedHorizontalBarChart.id,
+        layoutChanges,
+        timestamp: Date.now()
+      })
+      horizontalBarChartActions.updateLayout(selectedHorizontalBarChart.id, layoutChanges)
+      console.log('📐 WidgetEditorNew HorizontalBarChart layout update completed for:', selectedHorizontalBarChart.id)
+    } else {
+      console.warn('⚠️ WidgetEditorNew: No HorizontalBarChart selected, cannot update layout')
+    }
+  }
+
   const handleTableWidgetChange = (field: string, value: unknown) => {
     console.log('📋 WidgetEditorNew handleTableWidgetChange:', { 
       field, 
@@ -672,6 +772,7 @@ export default function WidgetEditorNew() {
                 selectedWidget={adaptedWidget}
                 chartConfig={chartConfig}
                 onChartConfigChange={handleChartConfigChange}
+                onLayoutChange={handleBarChartLayoutChange}
               />
             </div>
           </div>
@@ -690,6 +791,7 @@ export default function WidgetEditorNew() {
                 selectedWidget={adaptedWidget}
                 chartConfig={horizontalBarChartConfig}
                 onChartConfigChange={handleHorizontalBarChartConfigChange}
+                onLayoutChange={handleHorizontalBarChartLayoutChange}
               />
             </div>
           </div>
@@ -708,6 +810,7 @@ export default function WidgetEditorNew() {
                 selectedWidget={adaptedWidget}
                 chartConfig={lineChartConfig}
                 onChartConfigChange={handleLineChartConfigChange}
+                onLayoutChange={handleLineChartLayoutChange}
               />
             </div>
           </div>
@@ -726,6 +829,7 @@ export default function WidgetEditorNew() {
                 selectedWidget={adaptedWidget}
                 chartConfig={pieChartConfig}
                 onChartConfigChange={handlePieChartConfigChange}
+                onLayoutChange={handlePieChartLayoutChange}
               />
             </div>
           </div>
@@ -744,6 +848,7 @@ export default function WidgetEditorNew() {
                 selectedWidget={adaptedWidget}
                 chartConfig={areaChartConfig}
                 onChartConfigChange={handleAreaChartConfigChange}
+                onLayoutChange={handleAreaChartLayoutChange}
               />
             </div>
           </div>

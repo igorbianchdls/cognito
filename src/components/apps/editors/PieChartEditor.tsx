@@ -15,17 +15,20 @@ import DimensionsAccordion from './DimensionsAccordion'
 import PieChartInfoAccordion from './PieChartInfoAccordion'
 import ChartSpecificAccordion from './ChartSpecificAccordion'
 import ContainerBorderAccordion from './ContainerBorderAccordion'
+import PositionAccordion from './PositionAccordion'
 
 interface PieChartEditorProps {
   selectedWidget: DroppedWidget
   chartConfig: PieChartConfig
   onChartConfigChange: (field: string, value: unknown) => void
+  onLayoutChange?: (layoutChanges: {x?: number, y?: number, w?: number, h?: number}) => void
 }
 
 export default function PieChartEditor({ 
   selectedWidget, 
   chartConfig, 
-  onChartConfigChange 
+  onChartConfigChange,
+  onLayoutChange 
 }: PieChartEditorProps) {
   
   if (!selectedWidget || selectedWidget.type !== 'chart-pie') {
@@ -80,6 +83,13 @@ export default function PieChartEditor({
               styling={chartConfig.styling} 
               onConfigChange={onChartConfigChange} 
             />
+
+            {onLayoutChange && (
+              <PositionAccordion
+                selectedWidget={selectedWidget}
+                onLayoutChange={onLayoutChange}
+              />
+            )}
 
           </Accordion>
         </div>

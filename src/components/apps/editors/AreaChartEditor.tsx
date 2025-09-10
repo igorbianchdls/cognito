@@ -17,17 +17,20 @@ import AxesAccordion from './AxesAccordion'
 import AreaChartInfoAccordion from './AreaChartInfoAccordion'
 import ChartSpecificAccordion from './ChartSpecificAccordion'
 import ContainerBorderAccordion from './ContainerBorderAccordion'
+import PositionAccordion from './PositionAccordion'
 
 interface AreaChartEditorProps {
   selectedWidget: DroppedWidget
   chartConfig: AreaChartConfig
   onChartConfigChange: (field: string, value: unknown) => void
+  onLayoutChange?: (layoutChanges: {x?: number, y?: number, w?: number, h?: number}) => void
 }
 
 export default function AreaChartEditor({ 
   selectedWidget, 
   chartConfig, 
-  onChartConfigChange 
+  onChartConfigChange,
+  onLayoutChange 
 }: AreaChartEditorProps) {
   
   if (!selectedWidget || selectedWidget.type !== 'chart-area') {
@@ -94,11 +97,15 @@ export default function AreaChartEditor({
               onConfigChange={onChartConfigChange} 
             />
 
+            {onLayoutChange && (
+              <PositionAccordion
+                selectedWidget={selectedWidget}
+                onLayoutChange={onLayoutChange}
+              />
+            )}
+
           </Accordion>
         </div>
-
-
-
 
       </div>
     </div>

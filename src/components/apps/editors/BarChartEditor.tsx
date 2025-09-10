@@ -18,17 +18,20 @@ import ChartInfoAccordion from './ChartInfoAccordion'
 import ChartSpecificAccordion from './ChartSpecificAccordion'
 import ChartTypographyAccordion from './ChartTypographyAccordion'
 import ContainerBorderAccordion from './ContainerBorderAccordion'
+import PositionAccordion from './PositionAccordion'
 
 interface BarChartEditorProps {
   selectedWidget: DroppedWidget
   chartConfig: BarChartConfig
   onChartConfigChange: (field: string, value: unknown) => void
+  onLayoutChange?: (layoutChanges: {x?: number, y?: number, w?: number, h?: number}) => void
 }
 
 export default function BarChartEditor({ 
   selectedWidget, 
   chartConfig, 
-  onChartConfigChange 
+  onChartConfigChange,
+  onLayoutChange 
 }: BarChartEditorProps) {
   
   if (!selectedWidget || selectedWidget.type !== 'chart-bar') {
@@ -117,6 +120,13 @@ export default function BarChartEditor({
               styling={chartConfig.styling} 
               onConfigChange={onChartConfigChange} 
             />
+
+            {onLayoutChange && (
+              <PositionAccordion
+                selectedWidget={selectedWidget}
+                onLayoutChange={onLayoutChange}
+              />
+            )}
 
           </Accordion>
         </div>

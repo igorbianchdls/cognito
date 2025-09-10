@@ -17,17 +17,20 @@ import AxesAccordion from './AxesAccordion'
 import LineChartInfoAccordion from './LineChartInfoAccordion'
 import ChartSpecificAccordion from './ChartSpecificAccordion'
 import ContainerBorderAccordion from './ContainerBorderAccordion'
+import PositionAccordion from './PositionAccordion'
 
 interface LineChartEditorProps {
   selectedWidget: DroppedWidget
   chartConfig: LineChartConfig
   onChartConfigChange: (field: string, value: unknown) => void
+  onLayoutChange?: (layoutChanges: {x?: number, y?: number, w?: number, h?: number}) => void
 }
 
 export default function LineChartEditor({ 
   selectedWidget, 
   chartConfig, 
-  onChartConfigChange 
+  onChartConfigChange,
+  onLayoutChange 
 }: LineChartEditorProps) {
   
   if (!selectedWidget || selectedWidget.type !== 'chart-line') {
@@ -93,6 +96,13 @@ export default function LineChartEditor({
               styling={chartConfig.styling} 
               onConfigChange={onChartConfigChange} 
             />
+
+            {onLayoutChange && (
+              <PositionAccordion
+                selectedWidget={selectedWidget}
+                onLayoutChange={onLayoutChange}
+              />
+            )}
 
           </Accordion>
         </div>
