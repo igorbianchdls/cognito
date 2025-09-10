@@ -62,7 +62,7 @@ export default function SavedPanel() {
             </div>
             <h3 className="text-lg font-semibold text-gray-700 mb-2">Nenhum dashboard salvo</h3>
             <p className="text-gray-500 text-sm max-w-sm mx-auto">
-              Crie um dashboard e clique em "Salvar Atual" para começar a construir sua coleção.
+              Crie um dashboard e clique em &quot;Salvar Atual&quot; para começar a construir sua coleção.
             </p>
           </div>
         ) : (
