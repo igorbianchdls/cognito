@@ -697,7 +697,7 @@ export default function WidgetEditorNew() {
   }
 
   // Canvas config handler
-  const handleCanvasConfigChange = (field: string, value: string | number | boolean | [number, number] | Partial<typeof canvasConfig.breakpoints>) => {
+  const handleCanvasConfigChange = (field: string, value: string | number | boolean | [number, number] | string[] | number[] | Partial<typeof canvasConfig.breakpoints>) => {
     console.log('🎨 WidgetEditorNew handleCanvasConfigChange:', { 
       field, 
       value,
@@ -707,6 +707,9 @@ export default function WidgetEditorNew() {
     if (field === 'breakpoints') {
       canvasActions.setBreakpoints(value as Partial<typeof canvasConfig.breakpoints>)
     } else if (field === 'containerPadding' || field === 'margin') {
+      canvasActions.updateConfig({ [field]: value })
+    } else if (field === 'gradientColors' || field === 'gradientStops') {
+      // Handle array types for gradients
       canvasActions.updateConfig({ [field]: value })
     } else {
       canvasActions.updateConfig({ [field]: value })

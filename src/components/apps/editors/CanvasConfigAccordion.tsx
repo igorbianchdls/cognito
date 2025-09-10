@@ -13,7 +13,7 @@ import { canvasHistoryActions } from '@/stores/apps/canvasHistoryStore'
 
 interface CanvasConfigAccordionProps {
   canvasConfig: CanvasConfig
-  onConfigChange: (key: string, value: string | number | boolean | [number, number] | Partial<CanvasConfig['breakpoints']>) => void
+  onConfigChange: (key: string, value: string | number | boolean | [number, number] | string[] | number[] | Partial<CanvasConfig['breakpoints']>) => void
   onCanvasConfigSet: (config: CanvasConfig) => void
 }
 
