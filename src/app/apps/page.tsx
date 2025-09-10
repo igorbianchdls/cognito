@@ -85,6 +85,8 @@ export default function AppsPage() {
   const [activeWidget, setActiveWidget] = useState<Widget | null>(null)
   const [activeTab, setActiveTab] = useState<'widgets' | 'chat' | 'editor' | 'code' | 'automations' | 'saved' | 'datasets'>('chat')
   const [sidebarHidden, setSidebarHidden] = useState(false)
+  const [containerWidth, setContainerWidth] = useState(0)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   // Tab configuration with icons and labels
   const tabs = [
@@ -96,6 +98,21 @@ export default function AppsPage() {
     { id: 'saved', label: 'Salvos', icon: Archive },
     { id: 'datasets', label: 'Datasets', icon: Database },
   ] as const
+
+  // Effect to measure container width
+  useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        const width = containerRef.current.offsetWidth
+        console.log('📏 Container width:', width)
+        setContainerWidth(width)
+      }
+    }
+    
+    updateWidth()
+    window.addEventListener('resize', updateWidth)
+    return () => window.removeEventListener('resize', updateWidth)
+  }, [sidebarHidden]) // Re-run when sidebar changes
 
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -376,12 +393,13 @@ export default function AppsPage() {
               )}
             
               {/* Canvas - Simplified to single GridCanvas */}
-              <div className="relative z-0 py-1 px-3 h-[calc(100vh-4rem)] overflow-auto min-w-0">
+              <div ref={containerRef} className="relative z-0 py-1 px-3 h-[calc(100vh-4rem)] overflow-auto min-w-0">
                 <GridCanvas 
                   widgets={allWidgets}
                   onLayoutChange={handleLayoutChange}
                   onRemoveWidget={handleRemoveWidget}
                   onEditWidget={handleEditWidgetClick}
+                  containerWidth={containerWidth}
                 />
               </div>
               

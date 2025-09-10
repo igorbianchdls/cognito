@@ -14,6 +14,7 @@ import { $selectedPieChart, pieChartActions } from '@/stores/apps/pieChartStore'
 import { $selectedAreaChart, areaChartActions } from '@/stores/apps/areaChartStore'
 import { $canvasConfig } from '@/stores/apps/canvasStore' // Canvas customization store
 import { Button } from '@/components/ui/button'
+import { WebPreview } from '@/components/ai-elements/web-preview'
 import type { DroppedWidget as DroppedWidgetType, LayoutItem } from '@/types/apps/droppedWidget'
 
 const ResponsiveGridLayout = Responsive
@@ -25,6 +26,7 @@ interface GridCanvasProps {
   onEditWidget?: (widgetId: string) => void
   readOnly?: boolean
   noBorder?: boolean
+  containerWidth?: number
 }
 
 export default function GridCanvas({ 
@@ -33,7 +35,8 @@ export default function GridCanvas({
   onRemoveWidget,
   onEditWidget,
   readOnly = false,
-  noBorder = false
+  noBorder = false,
+  containerWidth: externalContainerWidth
 }: GridCanvasProps) {
   const selectedKPI = useStore($selectedKPI)
   const selectedTable = useStore($selectedTable)
@@ -47,9 +50,9 @@ export default function GridCanvas({
     id: 'canvas-droppable'
   })
 
-  // State for container width measurement
-  const [containerWidth, setContainerWidth] = useState(0)
-  const containerRef = useRef<HTMLDivElement>(null)
+  // Use external container width and subtract padding
+  // Container branco has p-0, so no padding to subtract
+  const containerWidth = externalContainerWidth || 0
   
   // States to control drag/resize interactions
   const [isDragging, setIsDragging] = useState(false)
@@ -157,20 +160,6 @@ export default function GridCanvas({
     }
   }
 
-  // Effect to measure WebPreview width
-  useEffect(() => {
-    const updateWidth = () => {
-      if (containerRef.current) {
-        const width = containerRef.current.offsetWidth
-        console.log('📏 WebPreview width:', width)
-        setContainerWidth(width)
-      }
-    }
-    
-    updateWidth()
-    window.addEventListener('resize', updateWidth)
-    return () => window.removeEventListener('resize', updateWidth)
-  }, [])
 
   // Handle clicks on empty canvas area to deselect all widgets
   const handleCanvasClick = (e: React.MouseEvent) => {
@@ -279,19 +268,19 @@ export default function GridCanvas({
 
   return (
     <div className="flex flex-col">
-      {/* Container branco visual */}
-      <div 
-        style={canvasStyles}
-        className={`bg-white border border-gray-200 rounded-lg shadow p-3 ${
-          noBorder ? 'border-0' : ''
-        } ${
+      <WebPreview 
+        defaultUrl="dashboard-canvas"
+        className={`${noBorder ? 'border-0' : ''} ${
           isOver ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
         }`}
       >
-        {/* Container dedicado do grid */}
+        
+        {/* Canvas direto dentro do WebPreview, sem iframe */}
         <div 
-          ref={containerRef}
-          className="w-full h-full relative"
+          style={canvasStyles}
+          className={`relative transition-colors p-0 bg-white ${
+            (canvasConfig.canvasMode === 'fixed' || containerWidth > 768) ? '' : ''
+          }`}
           onClick={handleCanvasClick}
         >
           <div ref={setNodeRef} className="w-full h-full">
@@ -381,7 +370,7 @@ export default function GridCanvas({
           </ResponsiveGridLayout>
           </div>
         </div>
-      </div>
+      </WebPreview>
     </div>
   )
 }
