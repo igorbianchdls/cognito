@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/breadcrumb"
 import SplitSidebarPanel from '@/components/apps/builder/SplitSidebarPanel'
 import GridCanvas from '@/components/apps/GridCanvas'
+import { $canvasConfig } from '@/stores/apps/canvasStore'
 // import MultiGridCanvas from '@/components/apps/MultiGridCanvas' // REMOVED: Simplified to single canvas
 // Chart stores - needed for charts to appear in canvas
 import { $barChartsAsDropped, barChartActions } from '@/stores/apps/barChartStore'
@@ -87,6 +88,7 @@ export default function AppsPage() {
   const [sidebarHidden, setSidebarHidden] = useState(false)
   const [containerWidth, setContainerWidth] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
+  const canvasConfig = useStore($canvasConfig)
 
   // Tab configuration with icons and labels
   const tabs = [
@@ -393,7 +395,18 @@ export default function AppsPage() {
               )}
             
               {/* Canvas - Simplified to single GridCanvas */}
-              <div ref={containerRef} className="relative z-0 py-1 px-0 w-[95%] h-[calc(100vh-6rem)] min-w-0 bg-white overflow-hidden mx-auto my-auto" style={{border: '0.5px solid #d1d5db'}}>
+              <div 
+                ref={containerRef} 
+                className="relative z-0 py-1 px-0 w-[95%] h-[calc(100vh-6rem)] min-w-0 overflow-hidden mx-auto my-auto" 
+                style={{
+                  backgroundColor: canvasConfig.backgroundColor || '#ffffff',
+                  borderRadius: `${canvasConfig.borderRadius || 8}px`,
+                  border: '0.5px solid #d1d5db',
+                  ...(canvasConfig.boxShadow && {
+                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'
+                  })
+                }}
+              >
                 <GridCanvas 
                   widgets={allWidgets}
                   onLayoutChange={handleLayoutChange}

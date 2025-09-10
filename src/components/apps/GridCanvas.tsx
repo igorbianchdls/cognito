@@ -277,7 +277,6 @@ export default function GridCanvas({
         {/* Canvas direto dentro do WebPreview, sem iframe */}
         <div 
           className="relative transition-colors p-0 w-full h-full"
-          style={canvasStyles}
           onClick={handleCanvasClick}
         >
           <div ref={setNodeRef} className="w-full h-full">
