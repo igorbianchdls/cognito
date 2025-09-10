@@ -141,6 +141,76 @@ export default function CanvasConfigAccordion({
                 </div>
               </>
             )}
+
+            {/* Background Effects */}
+            <div className="space-y-3 border-t border-gray-100 pt-3">
+              <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
+                <span>Efeitos de Fundo</span>
+              </div>
+              
+              {/* Effect Type */}
+              <div className="grid grid-cols-2 gap-2 items-center">
+                <label className="text-xs font-medium text-gray-600">Efeito</label>
+                <Select
+                  value={canvasConfig.backgroundEffect || 'none'}
+                  onValueChange={(value) => onConfigChange('backgroundEffect', value)}
+                >
+                  <SelectTrigger className="h-7 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Nenhum</SelectItem>
+                    <SelectItem value="noise">Ruído</SelectItem>
+                    <SelectItem value="grain">Granulado</SelectItem>
+                    <SelectItem value="dots">Pontos</SelectItem>
+                    <SelectItem value="subtle-texture">Textura Sutil</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Conditional fields - only show if effect is not 'none' */}
+              {canvasConfig.backgroundEffect && canvasConfig.backgroundEffect !== 'none' && (
+                <>
+                  {/* Effect Opacity */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-medium text-gray-600">Opacidade</label>
+                      <span className="text-xs text-gray-500">{canvasConfig.backgroundEffectOpacity || 10}%</span>
+                    </div>
+                    <Slider
+                      value={[canvasConfig.backgroundEffectOpacity || 10]}
+                      onValueChange={(value) => onConfigChange('backgroundEffectOpacity', value[0])}
+                      min={1}
+                      max={50}
+                      step={1}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-xs text-gray-400">
+                      <span>1%</span>
+                      <span>50%</span>
+                    </div>
+                  </div>
+
+                  {/* Effect Size */}
+                  <div className="grid grid-cols-2 gap-2 items-center">
+                    <label className="text-xs font-medium text-gray-600">Tamanho</label>
+                    <Select
+                      value={canvasConfig.backgroundEffectSize || 'medium'}
+                      onValueChange={(value) => onConfigChange('backgroundEffectSize', value)}
+                    >
+                      <SelectTrigger className="h-7 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="small">Pequeno</SelectItem>
+                        <SelectItem value="medium">Médio</SelectItem>
+                        <SelectItem value="large">Grande</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
           {/* Canvas Dimensions Section */}

@@ -18,6 +18,7 @@ import {
 import SplitSidebarPanel from '@/components/apps/builder/SplitSidebarPanel'
 import GridCanvas from '@/components/apps/GridCanvas'
 import { $canvasConfig } from '@/stores/apps/canvasStore'
+import { generateEffectPattern } from '@/utils/backgroundEffects'
 // import MultiGridCanvas from '@/components/apps/MultiGridCanvas' // REMOVED: Simplified to single canvas
 // Chart stores - needed for charts to appear in canvas
 import { $barChartsAsDropped, barChartActions } from '@/stores/apps/barChartStore'
@@ -413,6 +414,18 @@ export default function AppsPage() {
                   })
                 }}
               >
+                {/* Background Effect Overlay */}
+                {canvasConfig.backgroundEffect && canvasConfig.backgroundEffect !== 'none' && (
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      backgroundImage: `url("${generateEffectPattern(canvasConfig.backgroundEffect, canvasConfig.backgroundEffectSize || 'medium')}")`,
+                      backgroundRepeat: 'repeat',
+                      opacity: (canvasConfig.backgroundEffectOpacity || 10) / 100,
+                      borderRadius: `${canvasConfig.borderRadius || 8}px`
+                    }}
+                  />
+                )}
                 <GridCanvas 
                   widgets={allWidgets}
                   onLayoutChange={handleLayoutChange}

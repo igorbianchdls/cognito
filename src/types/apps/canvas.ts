@@ -9,6 +9,11 @@ export interface CanvasConfig {
   backgroundPosition: 'center' | 'top' | 'bottom' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'
   backgroundRepeat: 'no-repeat' | 'repeat' | 'repeat-x' | 'repeat-y'
   
+  // Background effects
+  backgroundEffect?: 'none' | 'noise' | 'grain' | 'dots' | 'subtle-texture'
+  backgroundEffectOpacity?: number // 0-100
+  backgroundEffectSize?: 'small' | 'medium' | 'large'
+  
   // Canvas dimensions
   canvasMode: 'responsive' | 'fixed'
   width: number | 'auto' | '100%'
@@ -53,6 +58,10 @@ export const defaultCanvasConfig: CanvasConfig = {
   backgroundSize: 'cover',
   backgroundPosition: 'center',
   backgroundRepeat: 'no-repeat',
+  
+  backgroundEffect: 'none',
+  backgroundEffectOpacity: 10,
+  backgroundEffectSize: 'medium',
   
   canvasMode: 'responsive',
   width: 'auto',
