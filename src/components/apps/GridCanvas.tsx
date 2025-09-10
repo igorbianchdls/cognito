@@ -26,7 +26,6 @@ interface GridCanvasProps {
   onEditWidget?: (widgetId: string) => void
   readOnly?: boolean
   noBorder?: boolean
-  containerWidth?: number
 }
 
 export default function GridCanvas({ 
@@ -35,8 +34,7 @@ export default function GridCanvas({
   onRemoveWidget,
   onEditWidget,
   readOnly = false,
-  noBorder = false,
-  containerWidth: externalContainerWidth
+  noBorder = false
 }: GridCanvasProps) {
   const selectedKPI = useStore($selectedKPI)
   const selectedTable = useStore($selectedTable)
@@ -50,8 +48,9 @@ export default function GridCanvas({
     id: 'canvas-droppable'
   })
 
-  // Use external container width
-  const containerWidth = externalContainerWidth || 0
+  // State for container width measurement
+  const [containerWidth, setContainerWidth] = useState(0)
+  const containerRef = useRef<HTMLDivElement>(null)
   
   // States to control drag/resize interactions
   const [isDragging, setIsDragging] = useState(false)
@@ -158,6 +157,21 @@ export default function GridCanvas({
       areaChartActions.selectAreaChart(widgetId)
     }
   }
+
+  // Effect to measure WebPreview width
+  useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        const width = containerRef.current.offsetWidth
+        console.log('📏 WebPreview width:', width)
+        setContainerWidth(width)
+      }
+    }
+    
+    updateWidth()
+    window.addEventListener('resize', updateWidth)
+    return () => window.removeEventListener('resize', updateWidth)
+  }, [])
 
   // Handle clicks on empty canvas area to deselect all widgets
   const handleCanvasClick = (e: React.MouseEvent) => {
@@ -267,6 +281,7 @@ export default function GridCanvas({
   return (
     <div className="flex flex-col">
       <WebPreview 
+        ref={containerRef}
         defaultUrl="dashboard-canvas"
         className={`${noBorder ? 'border-0' : ''} ${
           isOver ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
