@@ -89,8 +89,8 @@ const widgetCategories: Record<string, ExtendedWidget[]> = {
         </svg>
       ),
       description: 'Show key performance metrics',
-      defaultWidth: 2,
-      defaultHeight: 1,
+      defaultWidth: 10,
+      defaultHeight: 10,
     },
   ],
   Components: [
