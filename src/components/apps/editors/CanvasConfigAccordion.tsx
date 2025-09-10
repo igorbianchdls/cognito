@@ -146,13 +146,13 @@ export default function CanvasConfigAccordion({
                 id="row-height"
                 value={[canvasConfig.rowHeight]}
                 onValueChange={(value) => onConfigChange('rowHeight', value[0])}
-                min={30}
+                min={1}
                 max={150}
                 step={5}
                 className="w-full"
               />
               <div className="flex justify-between text-xs text-gray-400">
-                <span>30px</span>
+                <span>1px</span>
                 <span>150px</span>
               </div>
             </div>
