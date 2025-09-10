@@ -393,7 +393,7 @@ export default function AppsPage() {
               )}
             
               {/* Canvas - Simplified to single GridCanvas */}
-              <div ref={containerRef} className="relative z-0 py-1 px-0 w-[95%] h-[calc(100vh-10rem)] overflow-auto min-w-0 border-2 border-red-500">
+              <div ref={containerRef} className="relative z-0 py-1 px-0 w-[95%] h-[calc(100vh-10rem)] min-w-0 border border-gray-300 bg-white">
                 <GridCanvas 
                   widgets={allWidgets}
                   onLayoutChange={handleLayoutChange}
