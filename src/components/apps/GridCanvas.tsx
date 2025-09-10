@@ -276,7 +276,7 @@ export default function GridCanvas({
   }), [canvasConfig.breakpoints])
 
   return (
-    <div ref={containerRef} className="flex flex-col">
+    <div className="flex flex-col">
       <WebPreview 
         defaultUrl="dashboard-canvas"
         className={`${noBorder ? 'border-0' : ''} ${
@@ -286,13 +286,14 @@ export default function GridCanvas({
         
         {/* Canvas direto dentro do WebPreview, sem iframe */}
         <div 
-          ref={setNodeRef}
+          ref={containerRef}
           style={canvasStyles}
           className={`relative transition-colors p-0 bg-white ${
             (canvasConfig.canvasMode === 'fixed' || containerWidth > 768) ? '' : ''
           }`}
           onClick={handleCanvasClick}
         >
+          <div ref={setNodeRef} className="w-full h-full">
           {widgets.length === 0 ? (
             <div className="absolute inset-0 flex items-center justify-center text-gray-400">
               <div className="text-center">
@@ -377,6 +378,7 @@ export default function GridCanvas({
               </div>
             ))}
           </ResponsiveGridLayout>
+          </div>
         </div>
       </WebPreview>
     </div>
