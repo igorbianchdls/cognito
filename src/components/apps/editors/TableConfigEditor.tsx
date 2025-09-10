@@ -17,19 +17,22 @@ import TableCellAccordion from './TableCellAccordion'
 import TableBehaviorAccordion from './TableBehaviorAccordion'
 import TableExportAccordion from './TableExportAccordion'
 import TableColumnColorsAccordion from './TableColumnColorsAccordion'
+import PositionAccordion from './PositionAccordion'
 
 interface TableConfigEditorProps {
   selectedWidget: DroppedWidget
   tableConfig: TableConfig
   onTableConfigChange: (field: string, value: unknown) => void
   onWidgetChange?: (field: string, value: unknown) => void
+  onLayoutChange?: (layoutChanges: {x?: number, y?: number, w?: number, h?: number}) => void
 }
 
 export default function TableConfigEditor({ 
   selectedWidget, 
   tableConfig, 
   onTableConfigChange,
-  onWidgetChange
+  onWidgetChange,
+  onLayoutChange
 }: TableConfigEditorProps) {
   
   if (!selectedWidget || !isTableWidget(selectedWidget)) {
@@ -244,6 +247,13 @@ export default function TableConfigEditor({
               columns={columns}
               onColumnUpdate={handleColumnUpdate}
             />
+
+            {onLayoutChange && (
+              <PositionAccordion
+                selectedWidget={selectedWidget}
+                onLayoutChange={onLayoutChange}
+              />
+            )}
 
           </Accordion>
         </div>

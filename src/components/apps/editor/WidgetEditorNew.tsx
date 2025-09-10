@@ -314,6 +314,32 @@ export default function WidgetEditorNew() {
     }
   }
 
+  const handleTableLayoutChange = (layoutChanges: {x?: number, y?: number, w?: number, h?: number}) => {
+    console.log('📐 WidgetEditorNew handleTableLayoutChange:', { 
+      layoutChanges, 
+      selectedTableId: selectedTable?.i,
+      timestamp: Date.now()
+    })
+    
+    if (selectedTable) {
+      console.log('📐 WidgetEditorNew calling tableActions.updateTablesLayout:', {
+        tableId: selectedTable.i,
+        layoutChanges,
+        timestamp: Date.now()
+      })
+      tableActions.updateTablesLayout([{
+        i: selectedTable.i,
+        x: layoutChanges.x ?? selectedTable.x,
+        y: layoutChanges.y ?? selectedTable.y,
+        w: layoutChanges.w ?? selectedTable.w,
+        h: layoutChanges.h ?? selectedTable.h
+      }])
+      console.log('📐 WidgetEditorNew Table layout update completed for:', selectedTable.i)
+    } else {
+      console.warn('⚠️ WidgetEditorNew: No Table selected, cannot update layout')
+    }
+  }
+
   const handleTableWidgetChange = (field: string, value: unknown) => {
     console.log('📋 WidgetEditorNew handleTableWidgetChange:', { 
       field, 
@@ -627,6 +653,7 @@ export default function WidgetEditorNew() {
                 tableConfig={tableConfig}
                 onTableConfigChange={handleTableConfigChange}
                 onWidgetChange={handleTableWidgetChange}
+                onLayoutChange={handleTableLayoutChange}
               />
             </div>
           </div>
