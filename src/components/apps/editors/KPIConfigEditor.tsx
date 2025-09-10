@@ -12,17 +12,20 @@ import {
 import KPICardAccordion from './KPICardAccordion'
 import KPITitleAccordion from './KPITitleAccordion'
 import KPISubtitleAccordion from './KPISubtitleAccordion'
+import PositionAccordion from './PositionAccordion'
 
 interface KPIConfigEditorProps {
   selectedWidget: DroppedWidget
   kpiConfig: KPIConfig
   onKPIConfigChange: (field: string, value: unknown) => void
+  onLayoutChange?: (layoutChanges: {x?: number, y?: number, w?: number, h?: number}) => void
 }
 
 export default function KPIConfigEditor({ 
   selectedWidget, 
   kpiConfig, 
-  onKPIConfigChange 
+  onKPIConfigChange,
+  onLayoutChange
 }: KPIConfigEditorProps) {
   
   if (!selectedWidget || !isKPIWidget(selectedWidget)) {
@@ -111,6 +114,13 @@ export default function KPIConfigEditor({
             styling={kpiConfig}
             onConfigChange={onKPIConfigChange}
           />
+
+          {onLayoutChange && (
+            <PositionAccordion
+              selectedWidget={selectedWidget}
+              onLayoutChange={onLayoutChange}
+            />
+          )}
 
         </Accordion>
       </div>

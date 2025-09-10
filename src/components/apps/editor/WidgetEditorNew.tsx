@@ -267,6 +267,32 @@ export default function WidgetEditorNew() {
     }
   }
 
+  const handleKPILayoutChange = (layoutChanges: {x?: number, y?: number, w?: number, h?: number}) => {
+    console.log('📐 WidgetEditorNew handleKPILayoutChange:', { 
+      layoutChanges, 
+      selectedKPIId: selectedKPI?.i,
+      timestamp: Date.now()
+    })
+    
+    if (selectedKPI) {
+      console.log('📐 WidgetEditorNew calling kpiActions.updateKPIsLayout:', {
+        kpiId: selectedKPI.i,
+        layoutChanges,
+        timestamp: Date.now()
+      })
+      kpiActions.updateKPIsLayout([{
+        i: selectedKPI.i,
+        x: layoutChanges.x ?? selectedKPI.x,
+        y: layoutChanges.y ?? selectedKPI.y,
+        w: layoutChanges.w ?? selectedKPI.w,
+        h: layoutChanges.h ?? selectedKPI.h
+      }])
+      console.log('📐 WidgetEditorNew KPI layout update completed for:', selectedKPI.i)
+    } else {
+      console.warn('⚠️ WidgetEditorNew: No KPI selected, cannot update layout')
+    }
+  }
+
   const handleTableConfigChange = (field: string, value: unknown) => {
     console.log('📋 WidgetEditorNew handleTableConfigChange:', { 
       field, 
@@ -581,6 +607,7 @@ export default function WidgetEditorNew() {
                 selectedWidget={adaptedWidget}
                 kpiConfig={kpiConfig}
                 onKPIConfigChange={handleKPIConfigChange}
+                onLayoutChange={handleKPILayoutChange}
               />
             </div>
           </div>
