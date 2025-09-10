@@ -26,6 +26,7 @@ interface GridCanvasProps {
   onEditWidget?: (widgetId: string) => void
   readOnly?: boolean
   noBorder?: boolean
+  containerWidth?: number
 }
 
 export default function GridCanvas({ 
@@ -34,7 +35,8 @@ export default function GridCanvas({
   onRemoveWidget,
   onEditWidget,
   readOnly = false,
-  noBorder = false
+  noBorder = false,
+  containerWidth: externalContainerWidth
 }: GridCanvasProps) {
   const selectedKPI = useStore($selectedKPI)
   const selectedTable = useStore($selectedTable)
@@ -48,9 +50,8 @@ export default function GridCanvas({
     id: 'canvas-droppable'
   })
 
-  // State for container width measurement
-  const [containerWidth, setContainerWidth] = useState(0)
-  const containerRef = useRef<HTMLDivElement>(null)
+  // Use external container width
+  const containerWidth = externalContainerWidth || 0
   
   // States to control drag/resize interactions
   const [isDragging, setIsDragging] = useState(false)
@@ -169,20 +170,6 @@ export default function GridCanvas({
 
 
 
-  // Effect to measure container width for 16:9 calculation
-  useEffect(() => {
-    const updateWidth = () => {
-      if (containerRef.current) {
-        const width = containerRef.current.offsetWidth
-        console.log('📏 Container width:', width)
-        setContainerWidth(width)
-      }
-    }
-    
-    updateWidth()
-    window.addEventListener('resize', updateWidth)
-    return () => window.removeEventListener('resize', updateWidth)
-  }, [])
 
   // Calculate height for responsive mode in desktop
   const calculateResponsiveHeight = useMemo(() => {
@@ -288,7 +275,6 @@ export default function GridCanvas({
         
         {/* Canvas direto dentro do WebPreview, sem iframe */}
         <div 
-          ref={containerRef}
           style={canvasStyles}
           className={`relative transition-colors p-0 bg-white ${
             (canvasConfig.canvasMode === 'fixed' || containerWidth > 768) ? '' : ''
