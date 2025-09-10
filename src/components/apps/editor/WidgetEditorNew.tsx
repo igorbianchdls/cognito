@@ -348,12 +348,18 @@ export default function WidgetEditorNew() {
     })
     
     if (selectedBarChart) {
-      console.log('📐 WidgetEditorNew calling barChartActions.updateLayout:', {
+      console.log('📐 WidgetEditorNew calling barChartActions.updateBarChartsLayout:', {
         chartId: selectedBarChart.id,
         layoutChanges,
         timestamp: Date.now()
       })
-      barChartActions.updateLayout(selectedBarChart.id, layoutChanges)
+      barChartActions.updateBarChartsLayout([{
+        i: selectedBarChart.id,
+        x: layoutChanges.x ?? selectedBarChart.position.x,
+        y: layoutChanges.y ?? selectedBarChart.position.y,
+        w: layoutChanges.w ?? selectedBarChart.position.w,
+        h: layoutChanges.h ?? selectedBarChart.position.h
+      }])
       console.log('📐 WidgetEditorNew BarChart layout update completed for:', selectedBarChart.id)
     } else {
       console.warn('⚠️ WidgetEditorNew: No BarChart selected, cannot update layout')
@@ -368,12 +374,18 @@ export default function WidgetEditorNew() {
     })
     
     if (selectedLineChart) {
-      console.log('📐 WidgetEditorNew calling lineChartActions.updateLayout:', {
+      console.log('📐 WidgetEditorNew calling lineChartActions.updateLineChartsLayout:', {
         chartId: selectedLineChart.id,
         layoutChanges,
         timestamp: Date.now()
       })
-      lineChartActions.updateLayout(selectedLineChart.id, layoutChanges)
+      lineChartActions.updateLineChartsLayout([{
+        i: selectedLineChart.id,
+        x: layoutChanges.x ?? selectedLineChart.position.x,
+        y: layoutChanges.y ?? selectedLineChart.position.y,
+        w: layoutChanges.w ?? selectedLineChart.position.w,
+        h: layoutChanges.h ?? selectedLineChart.position.h
+      }])
       console.log('📐 WidgetEditorNew LineChart layout update completed for:', selectedLineChart.id)
     } else {
       console.warn('⚠️ WidgetEditorNew: No LineChart selected, cannot update layout')
@@ -388,12 +400,18 @@ export default function WidgetEditorNew() {
     })
     
     if (selectedPieChart) {
-      console.log('📐 WidgetEditorNew calling pieChartActions.updateLayout:', {
+      console.log('📐 WidgetEditorNew calling pieChartActions.updatePieChartsLayout:', {
         chartId: selectedPieChart.id,
         layoutChanges,
         timestamp: Date.now()
       })
-      pieChartActions.updateLayout(selectedPieChart.id, layoutChanges)
+      pieChartActions.updatePieChartsLayout([{
+        i: selectedPieChart.id,
+        x: layoutChanges.x ?? selectedPieChart.position.x,
+        y: layoutChanges.y ?? selectedPieChart.position.y,
+        w: layoutChanges.w ?? selectedPieChart.position.w,
+        h: layoutChanges.h ?? selectedPieChart.position.h
+      }])
       console.log('📐 WidgetEditorNew PieChart layout update completed for:', selectedPieChart.id)
     } else {
       console.warn('⚠️ WidgetEditorNew: No PieChart selected, cannot update layout')
@@ -408,12 +426,18 @@ export default function WidgetEditorNew() {
     })
     
     if (selectedAreaChart) {
-      console.log('📐 WidgetEditorNew calling areaChartActions.updateLayout:', {
+      console.log('📐 WidgetEditorNew calling areaChartActions.updateAreaChartsLayout:', {
         chartId: selectedAreaChart.id,
         layoutChanges,
         timestamp: Date.now()
       })
-      areaChartActions.updateLayout(selectedAreaChart.id, layoutChanges)
+      areaChartActions.updateAreaChartsLayout([{
+        i: selectedAreaChart.id,
+        x: layoutChanges.x ?? selectedAreaChart.position.x,
+        y: layoutChanges.y ?? selectedAreaChart.position.y,
+        w: layoutChanges.w ?? selectedAreaChart.position.w,
+        h: layoutChanges.h ?? selectedAreaChart.position.h
+      }])
       console.log('📐 WidgetEditorNew AreaChart layout update completed for:', selectedAreaChart.id)
     } else {
       console.warn('⚠️ WidgetEditorNew: No AreaChart selected, cannot update layout')
@@ -428,12 +452,18 @@ export default function WidgetEditorNew() {
     })
     
     if (selectedHorizontalBarChart) {
-      console.log('📐 WidgetEditorNew calling horizontalBarChartActions.updateLayout:', {
+      console.log('📐 WidgetEditorNew calling horizontalBarChartActions.updateHorizontalBarChartsLayout:', {
         chartId: selectedHorizontalBarChart.id,
         layoutChanges,
         timestamp: Date.now()
       })
-      horizontalBarChartActions.updateLayout(selectedHorizontalBarChart.id, layoutChanges)
+      horizontalBarChartActions.updateHorizontalBarChartsLayout([{
+        i: selectedHorizontalBarChart.id,
+        x: layoutChanges.x ?? selectedHorizontalBarChart.position.x,
+        y: layoutChanges.y ?? selectedHorizontalBarChart.position.y,
+        w: layoutChanges.w ?? selectedHorizontalBarChart.position.w,
+        h: layoutChanges.h ?? selectedHorizontalBarChart.position.h
+      }])
       console.log('📐 WidgetEditorNew HorizontalBarChart layout update completed for:', selectedHorizontalBarChart.id)
     } else {
       console.warn('⚠️ WidgetEditorNew: No HorizontalBarChart selected, cannot update layout')

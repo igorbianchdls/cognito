@@ -101,7 +101,7 @@ export default function CanvasConfigAccordion({
                 <Input
                   id="responsive-height"
                   type="number"
-                  value={typeof canvasConfig.responsiveHeight === 'number' ? canvasConfig.responsiveHeight : 800}
+                  value={typeof canvasConfig.responsiveHeight === 'number' ? canvasConfig.responsiveHeight : 900}
                   onChange={(e) => onConfigChange('responsiveHeight', parseInt(e.target.value))}
                   className="h-7 text-xs"
                   min="400"
