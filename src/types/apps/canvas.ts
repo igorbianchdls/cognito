@@ -61,8 +61,8 @@ export const defaultCanvasConfig: CanvasConfig = {
   maxWidth: undefined,
   
   rowHeight: 2,
-  containerPadding: [20, 20],
-  margin: [10, 10],
+  containerPadding: [0, 0],
+  margin: [0, 0],
   
   breakpoints: {
     lg: 12,

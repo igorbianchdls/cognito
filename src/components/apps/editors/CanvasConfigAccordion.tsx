@@ -224,6 +224,19 @@ export default function CanvasConfigAccordion({
                 step="5"
               />
             </div>
+
+            {/* Number of Columns */}
+            <div className="grid grid-cols-2 gap-2 items-center">
+              <label className="text-xs font-medium text-gray-600">Número de Colunas</label>
+              <Input
+                type="number"
+                value={canvasConfig.breakpoints.lg}
+                onChange={(e) => onConfigChange('breakpoints', { lg: parseInt(e.target.value) })}
+                className="h-7 text-xs"
+                min="1"
+                max="24"
+              />
+            </div>
           </div>
 
           {/* Grid Columns (Breakpoints) Section */}
