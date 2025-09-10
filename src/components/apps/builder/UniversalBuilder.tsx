@@ -634,17 +634,17 @@ export default function UniversalBuilder({
 
   const getDefaultWidth = (widgetType: string) => {
     switch(widgetType) {
-      case 'kpi': return 2
-      case 'table': return 6
-      default: return 4
+      case 'kpi': return 48
+      case 'table': return 72
+      default: return 60
     }
   }
 
   const getDefaultHeight = (widgetType: string) => {
     switch(widgetType) {
-      case 'kpi': return 2
-      case 'table': return 4
-      default: return 3
+      case 'kpi': return 100
+      case 'table': return 200
+      default: return 150
     }
   }
 
