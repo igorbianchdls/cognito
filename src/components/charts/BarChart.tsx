@@ -87,6 +87,9 @@ export function BarChart(props: BarChartProps) {
     label: item.x || item.label || 'Unknown'
   }));
 
+  // Inverter dados automaticamente para layout horizontal (maior valor no topo)
+  const finalData = layout === 'horizontal' ? [...chartData].reverse() : chartData;
+
   // Helper function to convert hex to RGB
   const hexToRgb = (hex: string) => {
     const result = hex.replace('#', '').match(/.{2}/g);
@@ -182,7 +185,7 @@ export function BarChart(props: BarChartProps) {
       >
         <div style={{ height: '100%', width: '100%', overflow: 'hidden' }}>
           <ResponsiveBar
-          data={chartData}
+          data={finalData}
           keys={['value']}
           indexBy="id"
           
