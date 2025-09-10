@@ -68,6 +68,79 @@ export default function CanvasConfigAccordion({
                 />
               </div>
             </div>
+
+            {/* Background Image */}
+            <div className="grid grid-cols-2 gap-2 items-center">
+              <label htmlFor="bg-image" className="text-xs font-medium text-gray-600">Imagem de Fundo</label>
+              <Input
+                id="bg-image"
+                type="url"
+                value={canvasConfig.backgroundImage || ''}
+                onChange={(e) => onConfigChange('backgroundImage', e.target.value)}
+                className="h-7 text-xs"
+                placeholder="https://example.com/image.jpg"
+              />
+            </div>
+
+            {/* Background Size - só aparece se tiver imagem */}
+            {canvasConfig.backgroundImage && (
+              <>
+                <div className="grid grid-cols-2 gap-2 items-center">
+                  <label className="text-xs font-medium text-gray-600">Tamanho</label>
+                  <Select
+                    value={canvasConfig.backgroundSize}
+                    onValueChange={(value) => onConfigChange('backgroundSize', value)}
+                  >
+                    <SelectTrigger className="h-7 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cover">Cobrir</SelectItem>
+                      <SelectItem value="contain">Conter</SelectItem>
+                      <SelectItem value="auto">Auto</SelectItem>
+                      <SelectItem value="stretch">Esticar</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 items-center">
+                  <label className="text-xs font-medium text-gray-600">Posição</label>
+                  <Select
+                    value={canvasConfig.backgroundPosition}
+                    onValueChange={(value) => onConfigChange('backgroundPosition', value)}
+                  >
+                    <SelectTrigger className="h-7 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="center">Centro</SelectItem>
+                      <SelectItem value="top">Topo</SelectItem>
+                      <SelectItem value="bottom">Baixo</SelectItem>
+                      <SelectItem value="left">Esquerda</SelectItem>
+                      <SelectItem value="right">Direita</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2 items-center">
+                  <label className="text-xs font-medium text-gray-600">Repetição</label>
+                  <Select
+                    value={canvasConfig.backgroundRepeat}
+                    onValueChange={(value) => onConfigChange('backgroundRepeat', value)}
+                  >
+                    <SelectTrigger className="h-7 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="no-repeat">Não repetir</SelectItem>
+                      <SelectItem value="repeat">Repetir</SelectItem>
+                      <SelectItem value="repeat-x">Repetir X</SelectItem>
+                      <SelectItem value="repeat-y">Repetir Y</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Canvas Dimensions Section */}
