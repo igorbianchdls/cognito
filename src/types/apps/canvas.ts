@@ -65,7 +65,7 @@ export const defaultCanvasConfig: CanvasConfig = {
   margin: [0, 0],
   
   breakpoints: {
-    lg: 12,
+    lg: 240,
     md: 10,
     sm: 6,
     xs: 4,
