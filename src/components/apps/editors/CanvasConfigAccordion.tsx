@@ -1,24 +1,69 @@
 'use client'
 
-import { useState } from 'react'
-import { ChevronDown, ChevronUp, Palette, Monitor, Grid, Settings } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { ChevronDown, ChevronUp, Palette, Monitor, Grid, Settings, Undo, Redo } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
 import type { CanvasConfig } from '@/types/apps/canvas'
+import { getBlendModeDisplayName } from '@/utils/backgroundEffects'
+import { canvasHistoryActions } from '@/stores/apps/canvasHistoryStore'
 
 interface CanvasConfigAccordionProps {
   canvasConfig: CanvasConfig
   onConfigChange: (key: string, value: string | number | boolean | [number, number] | Partial<CanvasConfig['breakpoints']>) => void
+  onCanvasConfigSet: (config: CanvasConfig) => void
 }
 
 export default function CanvasConfigAccordion({
   canvasConfig,
-  onConfigChange
+  onConfigChange,
+  onCanvasConfigSet
 }: CanvasConfigAccordionProps) {
   const [isOpen, setIsOpen] = useState(false)
+
+  const handleUndo = () => {
+    const previousConfig = canvasHistoryActions.undo()
+    if (previousConfig) {
+      onCanvasConfigSet(previousConfig)
+    }
+  }
+
+  const handleRedo = () => {
+    const nextConfig = canvasHistoryActions.redo()
+    if (nextConfig) {
+      onCanvasConfigSet(nextConfig)
+    }
+  }
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Only handle keyboard shortcuts when Canvas Config accordion is open
+      if (!isOpen) return
+
+      // Ctrl+Z for undo
+      if (event.ctrlKey && event.key === 'z' && !event.shiftKey) {
+        event.preventDefault()
+        handleUndo()
+      }
+      
+      // Ctrl+Y or Ctrl+Shift+Z for redo
+      if ((event.ctrlKey && event.key === 'y') || 
+          (event.ctrlKey && event.shiftKey && event.key === 'z')) {
+        event.preventDefault()
+        handleRedo()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen]) // Re-add listener when accordion opens/closes
 
   return (
     <div className="border border-gray-200 rounded-lg">
@@ -30,6 +75,28 @@ export default function CanvasConfigAccordion({
         <div className="flex items-center gap-2">
           <Settings className="w-4 h-4 text-blue-500" />
           <span className="font-medium">Configurações do Canvas</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleUndo}
+            disabled={!canvasHistoryActions.canUndo()}
+            className="h-7 w-7 p-0"
+            title="Desfazer (Ctrl+Z)"
+          >
+            <Undo className="w-3 h-3" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleRedo}
+            disabled={!canvasHistoryActions.canRedo()}
+            className="h-7 w-7 p-0"
+            title="Refazer (Ctrl+Y)"
+          >
+            <Redo className="w-3 h-3" />
+          </Button>
         </div>
         {isOpen ? (
           <ChevronUp className="w-4 h-4" />
@@ -210,6 +277,220 @@ export default function CanvasConfigAccordion({
                   </div>
                 </>
               )}
+            </div>
+
+            {/* Blend Modes */}
+            <div className="space-y-3 border-t border-gray-100 pt-3">
+              <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
+                <span>Modo de Mistura</span>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2 items-center">
+                <label className="text-xs font-medium text-gray-600">Blend Mode</label>
+                <Select
+                  value={canvasConfig.backgroundBlendMode || 'normal'}
+                  onValueChange={(value) => onConfigChange('backgroundBlendMode', value)}
+                >
+                  <SelectTrigger className="h-7 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="multiply">Multiplicar</SelectItem>
+                    <SelectItem value="screen">Clarear</SelectItem>
+                    <SelectItem value="overlay">Sobrepor</SelectItem>
+                    <SelectItem value="soft-light">Luz Suave</SelectItem>
+                    <SelectItem value="hard-light">Luz Forte</SelectItem>
+                    <SelectItem value="color-dodge">Subexposição</SelectItem>
+                    <SelectItem value="color-burn">Superexposição</SelectItem>
+                    <SelectItem value="darken">Escurecer</SelectItem>
+                    <SelectItem value="lighten">Clarear</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Gradientes */}
+            <div className="space-y-3 border-t border-gray-100 pt-3">
+              <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
+                <span>Gradientes</span>
+              </div>
+              
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-gray-600">Habilitar Gradiente</label>
+                <Switch
+                  checked={canvasConfig.gradientEnabled || false}
+                  onCheckedChange={(checked) => onConfigChange('gradientEnabled', checked)}
+                />
+              </div>
+
+              {canvasConfig.gradientEnabled && (
+                <>
+                  <div className="grid grid-cols-2 gap-2 items-center">
+                    <label className="text-xs font-medium text-gray-600">Tipo</label>
+                    <Select
+                      value={canvasConfig.gradientType || 'linear'}
+                      onValueChange={(value) => onConfigChange('gradientType', value)}
+                    >
+                      <SelectTrigger className="h-7 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="linear">Linear</SelectItem>
+                        <SelectItem value="radial">Radial</SelectItem>
+                        <SelectItem value="conic">Cônico</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-medium text-gray-600">Direção</label>
+                      <span className="text-xs text-gray-500">{canvasConfig.gradientDirection || 45}°</span>
+                    </div>
+                    <Slider
+                      value={[canvasConfig.gradientDirection || 45]}
+                      onValueChange={(value) => onConfigChange('gradientDirection', value[0])}
+                      min={0}
+                      max={360}
+                      step={5}
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="text-xs font-medium text-gray-600">Cor 1</label>
+                      <Input
+                        type="color"
+                        value={canvasConfig.gradientColors?.[0] || '#3b82f6'}
+                        onChange={(e) => {
+                          const newColors = [...(canvasConfig.gradientColors || ['#3b82f6', '#8b5cf6'])]
+                          newColors[0] = e.target.value
+                          onConfigChange('gradientColors', newColors)
+                        }}
+                        className="h-7 w-full p-1 border rounded"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-600">Cor 2</label>
+                      <Input
+                        type="color"
+                        value={canvasConfig.gradientColors?.[1] || '#8b5cf6'}
+                        onChange={(e) => {
+                          const newColors = [...(canvasConfig.gradientColors || ['#3b82f6', '#8b5cf6'])]
+                          newColors[1] = e.target.value
+                          onConfigChange('gradientColors', newColors)
+                        }}
+                        className="h-7 w-full p-1 border rounded"
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Filtros CSS */}
+            <div className="space-y-3 border-t border-gray-100 pt-3">
+              <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
+                <span>Filtros CSS</span>
+              </div>
+              
+              {/* Blur */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-medium text-gray-600">Desfoque</label>
+                  <span className="text-xs text-gray-500">{canvasConfig.blur || 0}px</span>
+                </div>
+                <Slider
+                  value={[canvasConfig.blur || 0]}
+                  onValueChange={(value) => onConfigChange('blur', value[0])}
+                  min={0}
+                  max={10}
+                  step={0.5}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Brightness */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-medium text-gray-600">Brilho</label>
+                  <span className="text-xs text-gray-500">{canvasConfig.brightness || 100}%</span>
+                </div>
+                <Slider
+                  value={[canvasConfig.brightness || 100]}
+                  onValueChange={(value) => onConfigChange('brightness', value[0])}
+                  min={50}
+                  max={200}
+                  step={5}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Contrast */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-medium text-gray-600">Contraste</label>
+                  <span className="text-xs text-gray-500">{canvasConfig.contrast || 100}%</span>
+                </div>
+                <Slider
+                  value={[canvasConfig.contrast || 100]}
+                  onValueChange={(value) => onConfigChange('contrast', value[0])}
+                  min={50}
+                  max={200}
+                  step={5}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Saturate */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-medium text-gray-600">Saturação</label>
+                  <span className="text-xs text-gray-500">{canvasConfig.saturate || 100}%</span>
+                </div>
+                <Slider
+                  value={[canvasConfig.saturate || 100]}
+                  onValueChange={(value) => onConfigChange('saturate', value[0])}
+                  min={0}
+                  max={200}
+                  step={5}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Hue Rotate */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-medium text-gray-600">Matiz</label>
+                  <span className="text-xs text-gray-500">{canvasConfig.hueRotate || 0}°</span>
+                </div>
+                <Slider
+                  value={[canvasConfig.hueRotate || 0]}
+                  onValueChange={(value) => onConfigChange('hueRotate', value[0])}
+                  min={0}
+                  max={360}
+                  step={5}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Sepia */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-medium text-gray-600">Sépia</label>
+                  <span className="text-xs text-gray-500">{canvasConfig.sepia || 0}%</span>
+                </div>
+                <Slider
+                  value={[canvasConfig.sepia || 0]}
+                  onValueChange={(value) => onConfigChange('sepia', value[0])}
+                  min={0}
+                  max={100}
+                  step={5}
+                  className="w-full"
+                />
+              </div>
             </div>
           </div>
 

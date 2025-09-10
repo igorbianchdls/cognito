@@ -1,8 +1,10 @@
 // Background effects utility functions
-// Generates SVG patterns for canvas background effects
+// Generates SVG patterns, gradients, and CSS filters for canvas background effects
 
 export type BackgroundEffect = 'none' | 'noise' | 'grain' | 'dots' | 'subtle-texture'
 export type EffectSize = 'small' | 'medium' | 'large'
+export type GradientType = 'linear' | 'radial' | 'conic'
+export type BlendMode = 'normal' | 'multiply' | 'screen' | 'overlay' | 'soft-light' | 'hard-light' | 'color-dodge' | 'color-burn' | 'darken' | 'lighten'
 
 /**
  * Generate SVG pattern for background effects
@@ -112,4 +114,92 @@ function generateSubtleTexturePattern(scale: number, density: number): string {
     </svg>
   `
   return `data:image/svg+xml;base64,${btoa(svg)}`
+}
+
+/**
+ * Generate CSS gradient string
+ */
+export function generateGradient(
+  type: GradientType,
+  colors: string[],
+  direction: number = 45,
+  stops: number[] = []
+): string {
+  if (colors.length < 2) return ''
+  
+  // Ensure we have stops for each color
+  const colorStops = colors.map((color, index) => {
+    const stop = stops[index] !== undefined ? stops[index] : (index / (colors.length - 1)) * 100
+    return `${color} ${stop}%`
+  })
+  
+  switch (type) {
+    case 'linear':
+      return `linear-gradient(${direction}deg, ${colorStops.join(', ')})`
+    case 'radial':
+      return `radial-gradient(circle, ${colorStops.join(', ')})`
+    case 'conic':
+      return `conic-gradient(from ${direction}deg, ${colorStops.join(', ')})`
+    default:
+      return ''
+  }
+}
+
+/**
+ * Generate CSS filter string
+ */
+export function generateCSSFilters(filters: {
+  blur?: number
+  brightness?: number
+  contrast?: number
+  saturate?: number
+  hueRotate?: number
+  sepia?: number
+}): string {
+  const filterParts: string[] = []
+  
+  if (filters.blur && filters.blur > 0) {
+    filterParts.push(`blur(${filters.blur}px)`)
+  }
+  
+  if (filters.brightness && filters.brightness !== 100) {
+    filterParts.push(`brightness(${filters.brightness}%)`)
+  }
+  
+  if (filters.contrast && filters.contrast !== 100) {
+    filterParts.push(`contrast(${filters.contrast}%)`)
+  }
+  
+  if (filters.saturate && filters.saturate !== 100) {
+    filterParts.push(`saturate(${filters.saturate}%)`)
+  }
+  
+  if (filters.hueRotate && filters.hueRotate !== 0) {
+    filterParts.push(`hue-rotate(${filters.hueRotate}deg)`)
+  }
+  
+  if (filters.sepia && filters.sepia > 0) {
+    filterParts.push(`sepia(${filters.sepia}%)`)
+  }
+  
+  return filterParts.length > 0 ? filterParts.join(' ') : 'none'
+}
+
+/**
+ * Get blend mode display name
+ */
+export function getBlendModeDisplayName(mode: BlendMode): string {
+  const names: Record<BlendMode, string> = {
+    'normal': 'Normal',
+    'multiply': 'Multiplicar',
+    'screen': 'Clarear',
+    'overlay': 'Sobrepor',
+    'soft-light': 'Luz Suave',
+    'hard-light': 'Luz Forte',
+    'color-dodge': 'Subexposição',
+    'color-burn': 'Superexposição',
+    'darken': 'Escurecer',
+    'lighten': 'Clarear'
+  }
+  return names[mode] || mode
 }

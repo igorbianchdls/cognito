@@ -713,6 +713,15 @@ export default function WidgetEditorNew() {
     }
   }
 
+  // Canvas config set handler (for undo/redo)
+  const handleCanvasConfigSet = (config: typeof canvasConfig) => {
+    console.log('🔄 WidgetEditorNew handleCanvasConfigSet:', { 
+      config,
+      timestamp: Date.now()
+    })
+    canvasActions.setConfig(config, true) // fromHistory = true
+  }
+
   // Show canvas settings if open, otherwise show widget editor
   if (isCanvasSettingsOpen) {
     return (
@@ -730,6 +739,7 @@ export default function WidgetEditorNew() {
           <CanvasConfigAccordion 
             canvasConfig={canvasConfig}
             onConfigChange={handleCanvasConfigChange}
+            onCanvasConfigSet={handleCanvasConfigSet}
           />
         </div>
       </div>

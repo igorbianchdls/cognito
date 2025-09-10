@@ -18,7 +18,7 @@ import {
 import SplitSidebarPanel from '@/components/apps/builder/SplitSidebarPanel'
 import GridCanvas from '@/components/apps/GridCanvas'
 import { $canvasConfig } from '@/stores/apps/canvasStore'
-import { generateEffectPattern } from '@/utils/backgroundEffects'
+import { generateEffectPattern, generateGradient, generateCSSFilters } from '@/utils/backgroundEffects'
 // import MultiGridCanvas from '@/components/apps/MultiGridCanvas' // REMOVED: Simplified to single canvas
 // Chart stores - needed for charts to appear in canvas
 import { $barChartsAsDropped, barChartActions } from '@/stores/apps/barChartStore'
@@ -400,15 +400,50 @@ export default function AppsPage() {
                 ref={containerRef} 
                 className="relative z-0 py-1 px-0 w-[95%] h-[calc(100vh-6rem)] min-w-0 overflow-hidden mx-auto my-auto" 
                 style={{
-                  backgroundColor: canvasConfig.backgroundColor || '#ffffff',
+                  // Base background
+                  backgroundColor: canvasConfig.gradientEnabled 
+                    ? 'transparent' 
+                    : canvasConfig.backgroundColor || '#ffffff',
                   borderRadius: `${canvasConfig.borderRadius || 8}px`,
                   border: '0.5px solid #d1d5db',
+                  
+                  // Gradient background
+                  ...(canvasConfig.gradientEnabled && {
+                    backgroundImage: generateGradient(
+                      canvasConfig.gradientType || 'linear',
+                      canvasConfig.gradientColors || ['#3b82f6', '#8b5cf6'],
+                      canvasConfig.gradientDirection || 45,
+                      canvasConfig.gradientStops || [0, 100]
+                    )
+                  }),
+                  
+                  // Image background
                   ...(canvasConfig.backgroundImage && {
-                    backgroundImage: `url(${canvasConfig.backgroundImage})`,
+                    backgroundImage: canvasConfig.gradientEnabled 
+                      ? `${generateGradient(
+                          canvasConfig.gradientType || 'linear',
+                          canvasConfig.gradientColors || ['#3b82f6', '#8b5cf6'],
+                          canvasConfig.gradientDirection || 45,
+                          canvasConfig.gradientStops || [0, 100]
+                        )}, url(${canvasConfig.backgroundImage})`
+                      : `url(${canvasConfig.backgroundImage})`,
                     backgroundSize: canvasConfig.backgroundSize,
                     backgroundPosition: canvasConfig.backgroundPosition,
-                    backgroundRepeat: canvasConfig.backgroundRepeat
+                    backgroundRepeat: canvasConfig.backgroundRepeat,
+                    backgroundBlendMode: canvasConfig.backgroundBlendMode || 'normal'
                   }),
+                  
+                  // CSS Filters
+                  filter: generateCSSFilters({
+                    blur: canvasConfig.blur,
+                    brightness: canvasConfig.brightness,
+                    contrast: canvasConfig.contrast,
+                    saturate: canvasConfig.saturate,
+                    hueRotate: canvasConfig.hueRotate,
+                    sepia: canvasConfig.sepia
+                  }),
+                  
+                  // Box shadow
                   ...(canvasConfig.boxShadow && {
                     boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'
                   })
@@ -422,7 +457,8 @@ export default function AppsPage() {
                       backgroundImage: `url("${generateEffectPattern(canvasConfig.backgroundEffect, canvasConfig.backgroundEffectSize || 'medium')}")`,
                       backgroundRepeat: 'repeat',
                       opacity: (canvasConfig.backgroundEffectOpacity || 10) / 100,
-                      borderRadius: `${canvasConfig.borderRadius || 8}px`
+                      borderRadius: `${canvasConfig.borderRadius || 8}px`,
+                      mixBlendMode: canvasConfig.backgroundBlendMode || 'normal'
                     }}
                   />
                 )}

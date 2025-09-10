@@ -14,6 +14,24 @@ export interface CanvasConfig {
   backgroundEffectOpacity?: number // 0-100
   backgroundEffectSize?: 'small' | 'medium' | 'large'
   
+  // Blend modes
+  backgroundBlendMode?: 'normal' | 'multiply' | 'screen' | 'overlay' | 'soft-light' | 'hard-light' | 'color-dodge' | 'color-burn' | 'darken' | 'lighten'
+  
+  // Gradientes
+  gradientEnabled?: boolean
+  gradientType?: 'linear' | 'radial' | 'conic'
+  gradientColors?: string[] // ['#ff0000', '#00ff00']
+  gradientDirection?: number // 0-360 graus
+  gradientStops?: number[] // [0, 100] posições das cores
+  
+  // Filtros CSS
+  blur?: number // 0-10px
+  brightness?: number // 50-200%
+  contrast?: number // 50-200%
+  saturate?: number // 0-200%
+  hueRotate?: number // 0-360 graus
+  sepia?: number // 0-100%
+  
   // Canvas dimensions
   canvasMode: 'responsive' | 'fixed'
   width: number | 'auto' | '100%'
@@ -62,6 +80,21 @@ export const defaultCanvasConfig: CanvasConfig = {
   backgroundEffect: 'none',
   backgroundEffectOpacity: 10,
   backgroundEffectSize: 'medium',
+  
+  backgroundBlendMode: 'normal',
+  
+  gradientEnabled: false,
+  gradientType: 'linear',
+  gradientColors: ['#3b82f6', '#8b5cf6'],
+  gradientDirection: 45,
+  gradientStops: [0, 100],
+  
+  blur: 0,
+  brightness: 100,
+  contrast: 100,
+  saturate: 100,
+  hueRotate: 0,
+  sepia: 0,
   
   canvasMode: 'responsive',
   width: 'auto',

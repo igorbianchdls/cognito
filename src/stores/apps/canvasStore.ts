@@ -3,6 +3,7 @@
 import { atom } from 'nanostores'
 import type { CanvasConfig } from '@/types/apps/canvas'
 import { defaultCanvasConfig } from '@/types/apps/canvas'
+import { canvasHistoryActions } from './canvasHistoryStore'
 
 const CANVAS_STORAGE_KEY = 'cognito-canvas-config'
 
@@ -36,11 +37,27 @@ const saveCanvasToStorage = (config: CanvasConfig) => {
 // Canvas configuration store with localStorage persistence
 export const $canvasConfig = atom<CanvasConfig>(loadCanvasFromStorage())
 
-// Auto-save to localStorage whenever canvas config changes
+// Flag to prevent adding to history during undo/redo operations
+let skipHistoryAdd = false
+
+// Add initial config to history
+if (typeof window !== 'undefined') {
+  // Wait for stores to initialize then add initial state
+  setTimeout(() => {
+    canvasHistoryActions.addToHistory($canvasConfig.get())
+  }, 100)
+}
+
+// Auto-save to localStorage and add to history whenever canvas config changes
 if (typeof window !== 'undefined') {
   $canvasConfig.subscribe(config => {
     saveCanvasToStorage(config)
     console.log('🎨 Canvas config auto-saved to localStorage')
+    
+    // Add to history for undo/redo functionality (unless we're in undo/redo mode)
+    if (!skipHistoryAdd) {
+      canvasHistoryActions.addToHistory(config)
+    }
   })
 }
 
@@ -50,9 +67,16 @@ export const $isCanvasSettingsOpen = atom<boolean>(false)
 // Canvas actions
 export const canvasActions = {
   // Update entire canvas config
-  setConfig: (config: CanvasConfig) => {
-    console.log('🎨 Setting canvas config:', config)
-    $canvasConfig.set(config)
+  setConfig: (config: CanvasConfig, fromHistory = false) => {
+    console.log('🎨 Setting canvas config:', config, fromHistory ? '(from history)' : '')
+    
+    if (fromHistory) {
+      skipHistoryAdd = true
+      $canvasConfig.set(config)
+      skipHistoryAdd = false
+    } else {
+      $canvasConfig.set(config)
+    }
   },
 
   // Update specific canvas property
