@@ -18,6 +18,7 @@ import HorizontalBarChartInfoAccordion from './HorizontalBarChartInfoAccordion'
 import ChartSpecificAccordion from './ChartSpecificAccordion'
 import ContainerBorderAccordion from './ContainerBorderAccordion'
 import PositionAccordion from './PositionAccordion'
+import StyleClipboardAccordion from './StyleClipboardAccordion'
 
 interface HorizontalBarChartEditorProps {
   selectedWidget: DroppedWidget
@@ -95,6 +96,11 @@ export default function HorizontalBarChartEditor({
             <GridAccordion 
               styling={chartConfig.styling} 
               onConfigChange={onChartConfigChange} 
+            />
+
+            <StyleClipboardAccordion
+              currentWidgetType="chart-horizontal-bar"
+              currentWidgetId={selectedWidget.i}
             />
 
             {onLayoutChange && (

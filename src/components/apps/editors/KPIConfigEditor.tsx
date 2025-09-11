@@ -13,6 +13,7 @@ import KPICardAccordion from './KPICardAccordion'
 import KPITitleAccordion from './KPITitleAccordion'
 import KPISubtitleAccordion from './KPISubtitleAccordion'
 import PositionAccordion from './PositionAccordion'
+import StyleClipboardAccordion from './StyleClipboardAccordion'
 
 interface KPIConfigEditorProps {
   selectedWidget: DroppedWidget
@@ -113,6 +114,11 @@ export default function KPIConfigEditor({
           <KPISubtitleAccordion
             styling={kpiConfig}
             onConfigChange={onKPIConfigChange}
+          />
+
+          <StyleClipboardAccordion
+            currentWidgetType="kpi"
+            currentWidgetId={selectedWidget.i}
           />
 
           {onLayoutChange && (

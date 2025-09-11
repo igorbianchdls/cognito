@@ -18,6 +18,7 @@ import LineChartInfoAccordion from './LineChartInfoAccordion'
 import ChartSpecificAccordion from './ChartSpecificAccordion'
 import ContainerBorderAccordion from './ContainerBorderAccordion'
 import PositionAccordion from './PositionAccordion'
+import StyleClipboardAccordion from './StyleClipboardAccordion'
 
 interface LineChartEditorProps {
   selectedWidget: DroppedWidget
@@ -95,6 +96,11 @@ export default function LineChartEditor({
             <GridAccordion 
               styling={chartConfig.styling} 
               onConfigChange={onChartConfigChange} 
+            />
+
+            <StyleClipboardAccordion
+              currentWidgetType="chart-line"
+              currentWidgetId={selectedWidget.i}
             />
 
             {onLayoutChange && (
