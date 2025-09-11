@@ -1,4 +1,4 @@
-import { StoreUpdatePhase } from './phases/StoreUpdatePhase'
+import StoreUpdatePhase from './phases/StoreUpdatePhase'
 
 export default function CodeEditor() {
   // TODO: implementar depois
