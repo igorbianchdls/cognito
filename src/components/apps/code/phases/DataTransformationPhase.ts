@@ -23,7 +23,7 @@ export class DataTransformationPhase {
   /**
    * Transform Table data (copied from CodeEditor - data is already in correct format)
    */
-  static transformTableData(rawData: Record<string, unknown>[]): Record<string, unknown>[] {
-    return rawData // Already in correct format
+  static transformTableData(rawData: Record<string, unknown>[]): { [key: string]: string | number | boolean | null | undefined }[] {
+    return rawData as { [key: string]: string | number | boolean | null | undefined }[]
   }
 }
