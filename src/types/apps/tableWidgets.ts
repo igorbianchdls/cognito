@@ -218,7 +218,7 @@ export const COLUMN_TYPES = {
 } as const
 
 // Default table configuration
-export const DEFAULT_TABLE_CONFIG: Required<Omit<TableConfig, 'data' | 'columns' | 'dataSource' | 'refreshRate' | 'defaultSortColumn' | 'exportFormats' | 'headerFontFamily' | 'headerFontWeight' | 'cellFontFamily' | 'cellFontWeight' | 'validationRules' | 'onCellEdit' | 'onRowAdd' | 'onRowDelete' | 'onRowDuplicate'>> = {
+export const DEFAULT_TABLE_CONFIG: Required<Omit<TableConfig, 'data' | 'columns' | 'dataSource' | 'refreshRate' | 'defaultSortColumn' | 'exportFormats' | 'headerFontFamily' | 'headerFontWeight' | 'cellFontFamily' | 'cellFontWeight' | 'validationRules' | 'onCellEdit' | 'onRowAdd' | 'onRowDelete' | 'onRowDuplicate' | 'bigqueryData' | 'dataSourceType'>> = {
   searchPlaceholder: 'Search...',
   showColumnToggle: true,
   showPagination: true,
