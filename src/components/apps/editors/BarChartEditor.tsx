@@ -19,6 +19,7 @@ import ChartSpecificAccordion from './ChartSpecificAccordion'
 import ChartTypographyAccordion from './ChartTypographyAccordion'
 import ContainerBorderAccordion from './ContainerBorderAccordion'
 import PositionAccordion from './PositionAccordion'
+import ChartStyleClipboardAccordion from './ChartStyleClipboardAccordion'
 
 interface BarChartEditorProps {
   selectedWidget: DroppedWidget
@@ -119,6 +120,11 @@ export default function BarChartEditor({
             <GridAccordion 
               styling={chartConfig.styling} 
               onConfigChange={onChartConfigChange} 
+            />
+
+            <ChartStyleClipboardAccordion
+              currentWidgetType="chart-bar"
+              currentWidgetId={selectedWidget.i}
             />
 
             {onLayoutChange && (

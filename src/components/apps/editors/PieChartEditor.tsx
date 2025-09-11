@@ -16,6 +16,7 @@ import PieChartInfoAccordion from './PieChartInfoAccordion'
 import ChartSpecificAccordion from './ChartSpecificAccordion'
 import ContainerBorderAccordion from './ContainerBorderAccordion'
 import PositionAccordion from './PositionAccordion'
+import ChartStyleClipboardAccordion from './ChartStyleClipboardAccordion'
 
 interface PieChartEditorProps {
   selectedWidget: DroppedWidget
@@ -82,6 +83,11 @@ export default function PieChartEditor({
             <LegendAccordion 
               styling={chartConfig.styling} 
               onConfigChange={onChartConfigChange} 
+            />
+
+            <ChartStyleClipboardAccordion
+              currentWidgetType="chart-pie"
+              currentWidgetId={selectedWidget.i}
             />
 
             {onLayoutChange && (
