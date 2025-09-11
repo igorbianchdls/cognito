@@ -12,6 +12,7 @@ import CodeEditorInterface from './ui/CodeEditorInterface'
 import { QueryConstructionPhase } from './phases/QueryConstructionPhase'
 import { WidgetLookupPhase } from './phases/WidgetLookupPhase'
 import { LoggingPhase } from './phases/LoggingPhase'
+import { BigQueryExecutionPhase } from './phases/BigQueryExecutionPhase'
 
 export default function CodeEditor() {
   const [code, setCode] = useState('')
@@ -85,21 +86,7 @@ console.log('Widgets criados!')
       
       log(`Executing: ${query}`)
 
-      const response = await fetch('/api/bigquery', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          action: 'execute',
-          query: query 
-        })
-      })
-
-      if (!response.ok) {
-        const responseText = await response.text()
-        throw new Error(`Query failed: ${response.statusText} - ${responseText}`)
-      }
-
-      const result = await response.json()
+      const result = await BigQueryExecutionPhase.executeQuery(query)
       
       if (result.success && result.data?.data && Array.isArray(result.data.data)) {
         const data = result.data.data
@@ -174,21 +161,7 @@ console.log('Widgets criados!')
       
       log(`Executing: ${query}`)
 
-      const response = await fetch('/api/bigquery', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          action: 'execute',
-          query: query 
-        })
-      })
-
-      if (!response.ok) {
-        const responseText = await response.text()
-        throw new Error(`Query failed: ${response.statusText} - ${responseText}`)
-      }
-
-      const result = await response.json()
+      const result = await BigQueryExecutionPhase.executeQuery(query)
       
       if (result.success && result.data?.data && Array.isArray(result.data.data)) {
         const data = result.data.data
@@ -248,21 +221,7 @@ console.log('Widgets criados!')
       log(`Executing: ${query}`)
 
       // Execute BigQuery (same as Datasets)
-      const response = await fetch('/api/bigquery', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          action: 'execute',
-          query: query 
-        })
-      })
-
-      if (!response.ok) {
-        const responseText = await response.text()
-        throw new Error(`Query failed: ${response.statusText} - ${responseText}`)
-      }
-
-      const result = await response.json()
+      const result = await BigQueryExecutionPhase.executeQuery(query)
       
       if (result.success && result.data?.data && Array.isArray(result.data.data)) {
         const data = result.data.data
@@ -396,21 +355,7 @@ console.log('Widgets criados!')
       
       log(`Executing: ${query}`)
 
-      const response = await fetch('/api/bigquery', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          action: 'execute',
-          query: query 
-        })
-      })
-
-      if (!response.ok) {
-        const responseText = await response.text()
-        throw new Error(`Query failed: ${response.statusText} - ${responseText}`)
-      }
-
-      const result = await response.json()
+      const result = await BigQueryExecutionPhase.executeQuery(query)
       
       if (result.success && result.data?.data && Array.isArray(result.data.data)) {
         const data = result.data.data
@@ -453,21 +398,7 @@ console.log('Widgets criados!')
       log(`Executing: ${query}`)
 
       // Execute BigQuery (same as Datasets)
-      const response = await fetch('/api/bigquery', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          action: 'execute',
-          query: query 
-        })
-      })
-
-      if (!response.ok) {
-        const responseText = await response.text()
-        throw new Error(`Query failed: ${response.statusText} - ${responseText}`)
-      }
-
-      const result = await response.json()
+      const result = await BigQueryExecutionPhase.executeQuery(query)
       
       if (result.success && result.data?.data && Array.isArray(result.data.data)) {
         const data = result.data.data
@@ -514,21 +445,7 @@ console.log('Widgets criados!')
       log(`Executing: ${query}`)
 
       // Execute BigQuery (same as Datasets)
-      const response = await fetch('/api/bigquery', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          action: 'execute',
-          query: query 
-        })
-      })
-
-      if (!response.ok) {
-        const responseText = await response.text()
-        throw new Error(`Query failed: ${response.statusText} - ${responseText}`)
-      }
-
-      const result = await response.json()
+      const result = await BigQueryExecutionPhase.executeQuery(query)
       
       if (result.success && result.data?.data && Array.isArray(result.data.data)) {
         const data = result.data.data
