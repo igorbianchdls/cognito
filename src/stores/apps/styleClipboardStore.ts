@@ -113,17 +113,17 @@ function extractTableStyles(tableId: string): CommonStyles | null {
   if (!table || !table.config) return null
   
   return {
-    backgroundColor: table.config.backgroundColor,
+    backgroundColor: undefined, // Tables don't have backgroundColor
     borderColor: table.config.borderColor,
     borderRadius: table.config.borderRadius,
     borderWidth: table.config.borderWidth,
     padding: table.config.padding,
-    shadow: table.config.shadow,
-    titleColor: table.config.titleColor,
-    titleFontSize: table.config.titleFontSize,
-    titleFontWeight: table.config.titleFontWeight,
-    titleFontFamily: table.config.titleFontFamily,
-    textAlign: table.config.textAlign
+    shadow: undefined, // Tables don't have shadow
+    titleColor: table.config.headerTextColor,
+    titleFontSize: table.config.cellFontSize,
+    titleFontWeight: table.config.cellFontWeight as number,
+    titleFontFamily: table.config.cellFontFamily,
+    textAlign: table.config.defaultTextAlign
   }
 }
 
@@ -186,17 +186,16 @@ function applyChartStyles(chartId: string, chartType: 'bar' | 'line' | 'pie' | '
 function applyTableStyles(tableId: string, styles: CommonStyles): void {
   const updates: Record<string, unknown> = {}
   
-  if (styles.backgroundColor !== undefined) updates.backgroundColor = styles.backgroundColor
+  // Note: Tables don't have backgroundColor or shadow, skip those
   if (styles.borderColor !== undefined) updates.borderColor = styles.borderColor
   if (styles.borderRadius !== undefined) updates.borderRadius = styles.borderRadius
   if (styles.borderWidth !== undefined) updates.borderWidth = styles.borderWidth
   if (styles.padding !== undefined) updates.padding = styles.padding
-  if (styles.shadow !== undefined) updates.shadow = styles.shadow
-  if (styles.titleColor !== undefined) updates.titleColor = styles.titleColor
-  if (styles.titleFontSize !== undefined) updates.titleFontSize = styles.titleFontSize
-  if (styles.titleFontWeight !== undefined) updates.titleFontWeight = styles.titleFontWeight
-  if (styles.titleFontFamily !== undefined) updates.titleFontFamily = styles.titleFontFamily
-  if (styles.textAlign !== undefined) updates.textAlign = styles.textAlign
+  if (styles.titleColor !== undefined) updates.headerTextColor = styles.titleColor
+  if (styles.titleFontSize !== undefined) updates.cellFontSize = styles.titleFontSize
+  if (styles.titleFontWeight !== undefined) updates.cellFontWeight = styles.titleFontWeight
+  if (styles.titleFontFamily !== undefined) updates.cellFontFamily = styles.titleFontFamily
+  if (styles.textAlign !== undefined) updates.defaultTextAlign = styles.textAlign
   
   Object.keys(updates).forEach(key => {
     tableActions.updateTableConfig(tableId, { [key]: updates[key] })
