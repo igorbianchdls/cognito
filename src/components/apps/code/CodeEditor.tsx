@@ -13,6 +13,7 @@ import { QueryConstructionPhase } from './phases/QueryConstructionPhase'
 import { WidgetLookupPhase } from './phases/WidgetLookupPhase'
 import { LoggingPhase } from './phases/LoggingPhase'
 import { BigQueryExecutionPhase } from './phases/BigQueryExecutionPhase'
+import { DataTransformationPhase } from './phases/DataTransformationPhase'
 
 export default function CodeEditor() {
   const [code, setCode] = useState('')
@@ -90,7 +91,7 @@ console.log('Widgets criados!')
       
       if (result.success && result.data?.data && Array.isArray(result.data.data)) {
         const data = result.data.data
-        const newValue = data[0]?.value || 0
+        const newValue = DataTransformationPhase.transformKPIData(data)
         
         // 5. Update KPI config (same as Datasets update flow)
         kpiActions.updateKPIConfig(existingKPI.i, {
@@ -164,7 +165,7 @@ console.log('Widgets criados!')
       const result = await BigQueryExecutionPhase.executeQuery(query)
       
       if (result.success && result.data?.data && Array.isArray(result.data.data)) {
-        const data = result.data.data
+        const data = DataTransformationPhase.transformChartData(result.data.data)
         
         // 5. Update Chart using specific action (same as Datasets update flow)
         const updateData = {
@@ -224,7 +225,7 @@ console.log('Widgets criados!')
       const result = await BigQueryExecutionPhase.executeQuery(query)
       
       if (result.success && result.data?.data && Array.isArray(result.data.data)) {
-        const data = result.data.data
+        const data = DataTransformationPhase.transformChartData(result.data.data)
         
         // Base chart configuration
         const baseChartConfig = {
@@ -358,7 +359,7 @@ console.log('Widgets criados!')
       const result = await BigQueryExecutionPhase.executeQuery(query)
       
       if (result.success && result.data?.data && Array.isArray(result.data.data)) {
-        const data = result.data.data
+        const data = DataTransformationPhase.transformTableData(result.data.data)
         
         // 5. Update Table (same as Datasets update flow)
         tableActions.editTable(existingTable.i, {
@@ -401,7 +402,7 @@ console.log('Widgets criados!')
       const result = await BigQueryExecutionPhase.executeQuery(query)
       
       if (result.success && result.data?.data && Array.isArray(result.data.data)) {
-        const data = result.data.data
+        const data = DataTransformationPhase.transformTableData(result.data.data)
         
         // Create Table using the same action as Datasets
         tableActions.addTable({
@@ -449,7 +450,7 @@ console.log('Widgets criados!')
       
       if (result.success && result.data?.data && Array.isArray(result.data.data)) {
         const data = result.data.data
-        const value = data[0]?.value || 0
+        const value = DataTransformationPhase.transformKPIData(data)
         
         // Create KPI using the same action as Datasets
         kpiActions.addKPI({
