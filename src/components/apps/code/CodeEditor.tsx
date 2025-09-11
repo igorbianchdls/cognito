@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { kpiActions, $kpiWidgets } from '@/stores/apps/kpiStore'
-import { tableActions } from '@/stores/apps/tableStore'
+import { tableActions, $tableWidgets } from '@/stores/apps/tableStore'
 import { barChartActions } from '@/stores/apps/barChartStore'
 import { lineChartActions } from '@/stores/apps/lineChartStore'
 import { pieChartActions } from '@/stores/apps/pieChartStore'
@@ -29,8 +29,9 @@ createKPI('vendas_2024', 'valor_total', 'SUM', 'Vendas Totais')
 // Exemplo: Atualizar KPI existente (parâmetros opcionais)
 // updateKPI('Total de Registros', 'nova_tabela', 'novo_campo', 'AVG', 'Novo Título')
 
-// Exemplo: Criar Table
+// Exemplo: Criar e Atualizar Table
 createTable('ecommerce', ['id', 'nome', 'email', 'categoria'], 'Dados de E-commerce')
+// updateTable('Dados de E-commerce', 'nova_tabela', ['col1', 'col2'], 'Novo Título')
 
 // Exemplo: Charts
 createChart('bar', 'vendas_2024', 'categoria', 'valor_total', 'SUM', 'Vendas por Categoria')
@@ -283,6 +284,86 @@ console.log('Widgets criados!')
     }
   }
 
+  // Update Table function (follows Datasets pattern)
+  const updateTable = async (tableName: string, newBqTable?: string, newColumns?: string[], newTitle?: string) => {
+    try {
+      // 1. Find existing Table by name (same as Datasets selection)
+      const currentTables = $tableWidgets.get()
+      const existingTable = currentTables.find(table => table.name === tableName)
+      
+      if (!existingTable) {
+        throw new Error(`Table "${tableName}" not found`)
+      }
+      
+      log(`Found Table to update: ${tableName} (ID: ${existingTable.i})`)
+      
+      // 2. Get current data (Table doesn't store much - user reconfigures everything)
+      const currentColumns = existingTable.config.columns?.map(col => col.id) || []
+      
+      // 3. Apply changes (use new values or keep current ones)
+      const updatedBqTable = newBqTable // No fallback - table doesn't store BigQuery table name
+      const updatedColumns = newColumns || currentColumns
+      const updatedTitle = newTitle || existingTable.name
+      
+      if (!updatedBqTable || !updatedColumns.length) {
+        throw new Error('BigQuery table and columns are required for table update')
+      }
+      
+      log(`Updating Table: ${updatedBqTable} with columns [${updatedColumns.join(', ')}]`)
+      
+      // 4. Generate and execute new query (same as createTable)
+      const query = `SELECT ${updatedColumns.join(', ')} FROM \`creatto-463117.biquery_data.${updatedBqTable}\` LIMIT 100`
+      
+      log(`Executing: ${query}`)
+
+      const response = await fetch('/api/bigquery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'execute',
+          query: query 
+        })
+      })
+
+      if (!response.ok) {
+        const responseText = await response.text()
+        throw new Error(`Query failed: ${response.statusText} - ${responseText}`)
+      }
+
+      const result = await response.json()
+      
+      if (result.success && result.data?.data && Array.isArray(result.data.data)) {
+        const data = result.data.data
+        
+        // 5. Update Table (same as Datasets update flow)
+        tableActions.editTable(existingTable.i, {
+          name: updatedTitle,
+          config: {
+            data: data, // Real BigQuery data
+            columns: updatedColumns.map(col => ({
+              id: col,
+              header: col,
+              accessorKey: col,
+              sortable: true,
+              type: 'text' as const // simplified - could be enhanced to detect types
+            })),
+            showPagination: true,
+            showColumnToggle: true,
+            pageSize: 10,
+            searchPlaceholder: 'Buscar...',
+            dataSource: 'BigQuery'
+          }
+        })
+
+        log(`✅ Table "${updatedTitle}" updated successfully with ${data.length} rows`)
+      } else {
+        throw new Error(result.error || 'No data returned')
+      }
+    } catch (error) {
+      log(`❌ Failed to update table: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
   // Simple Table creation function
   const createTable = async (table: string, columns: string[], title?: string) => {
     try {
@@ -434,6 +515,7 @@ console.log('Widgets criados!')
         createKPI,
         updateKPI,
         createTable,
+        updateTable,
         createChart,
         console: { log }
       }
@@ -442,7 +524,7 @@ console.log('Widgets criados!')
       const asyncFunction = new Function(
         'context',
         `
-        const { createKPI, updateKPI, createTable, createChart, console } = context;
+        const { createKPI, updateKPI, createTable, updateTable, createChart, console } = context;
         return (async () => {
           ${code}
         })();
@@ -473,7 +555,7 @@ console.log('Widgets criados!')
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
         <div className="flex items-center gap-2">
           <Terminal className="w-4 h-4 text-primary" />
-          <h2 className="text-base font-semibold">Code Editor - KPI (CRUD), Table & Chart</h2>
+          <h2 className="text-base font-semibold">Code Editor - KPI & Table (CRUD), Chart</h2>
         </div>
         <div className="flex items-center gap-2">
           <Button
