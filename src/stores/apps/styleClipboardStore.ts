@@ -61,9 +61,7 @@ function applyKPIStyles(kpiId: string, styles: CommonStyles): void {
   if (styles.titleFontSize !== undefined) updates.nameFontSize = styles.titleFontSize
   if (styles.titleFontWeight !== undefined) updates.nameFontWeight = styles.titleFontWeight
   
-  Object.keys(updates).forEach(key => {
-    kpiActions.updateKPIConfig(kpiId, key, updates[key])
-  })
+  kpiActions.updateKPIConfig(kpiId, updates)
 }
 
 // Main actions - KPI only
