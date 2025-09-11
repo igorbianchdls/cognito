@@ -503,26 +503,26 @@ async function updateChartFromParams(widgetName: string, params: UpdateParams) {
     const areaCharts = $areaChartStore.get().areaCharts
     const horizontalBarCharts = $horizontalBarChartStore.get().horizontalBarCharts
     
-    existingChart = barCharts.find(chart => chart.name === widgetName)
+    existingChart = barCharts.find(chart => chart.name === widgetName) || null
     if (existingChart) chartType = 'bar'
     
     if (!existingChart) {
-      existingChart = lineCharts.find(chart => chart.name === widgetName)
+      existingChart = lineCharts.find(chart => chart.name === widgetName) || null
       if (existingChart) chartType = 'line'
     }
     
     if (!existingChart) {
-      existingChart = pieCharts.find(chart => chart.name === widgetName)
+      existingChart = pieCharts.find(chart => chart.name === widgetName) || null
       if (existingChart) chartType = 'pie'
     }
     
     if (!existingChart) {
-      existingChart = areaCharts.find(chart => chart.name === widgetName)
+      existingChart = areaCharts.find(chart => chart.name === widgetName) || null
       if (existingChart) chartType = 'area'
     }
     
     if (!existingChart) {
-      existingChart = horizontalBarCharts.find(chart => chart.name === widgetName)
+      existingChart = horizontalBarCharts.find(chart => chart.name === widgetName) || null
       if (existingChart) chartType = 'horizontal-bar'
     }
     
