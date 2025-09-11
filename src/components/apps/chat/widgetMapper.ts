@@ -129,14 +129,18 @@ async function handleUpdateOperation(operation: WidgetOperation) {
 
 // Handler for delete operations
 async function handleDeleteOperation(operation: WidgetOperation) {
-  console.log('🗑️ Deleting widget:', operation.params.widgetName)
+  console.log('🗑️ Deleting widget:', operation.widgetName)
   
-  const widgetType = detectWidgetType(operation.params.widgetName)
+  if (!operation.widgetName) {
+    console.warn('⚠️ No widget name provided for delete operation')
+    return
+  }
+  const widgetType = detectWidgetType(operation.widgetName)
   
   switch (widgetType) {
     case 'kpi':
       const kpis = $kpiWidgets.get()
-      const kpi = kpis.find(k => k.config.name === operation.params.widgetName)
+      const kpi = kpis.find(k => k.config.name === operation.widgetName)
       if (kpi) {
         kpiActions.removeKPI(kpi.i)
         console.log('✅ KPI deleted successfully')
@@ -145,7 +149,7 @@ async function handleDeleteOperation(operation: WidgetOperation) {
     case 'chart':
       // Find and delete chart from appropriate store
       const barCharts = $barChartStore.get().barCharts
-      const barChart = barCharts.find(c => c.name === operation.params.widgetName)
+      const barChart = barCharts.find(c => c.name === operation.widgetName)
       if (barChart) {
         barChartActions.removeBarChart(barChart.id)
         console.log('✅ Chart deleted successfully')
@@ -154,7 +158,7 @@ async function handleDeleteOperation(operation: WidgetOperation) {
       break
     case 'table':
       const tables = $tableWidgets.get()
-      const table = tables.find(t => t.name === operation.params.widgetName)
+      const table = tables.find(t => t.name === operation.widgetName)
       if (table) {
         tableActions.removeTable(table.i)
         console.log('✅ Table deleted successfully')
