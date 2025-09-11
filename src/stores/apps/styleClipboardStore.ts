@@ -1,18 +1,37 @@
 import { atom, computed } from 'nanostores'
 import { $kpiWidgets, kpiActions } from './kpiStore'
 
-// Simple styles interface - only KPI visual properties
+// Comprehensive styles interface - all KPI visual properties (excluding alignment)
 export interface CommonStyles {
-  // Container styles
+  // Card styles
   backgroundColor?: string
+  backgroundOpacity?: number
   borderColor?: string
-  borderRadius?: number
+  borderOpacity?: number
   borderWidth?: number
+  borderRadius?: number
+  shadow?: boolean
+  padding?: number
   
-  // Typography styles (KPI title)
-  titleColor?: string      // maps to nameColor
-  titleFontSize?: number   // maps to nameFontSize
-  titleFontWeight?: number // maps to nameFontWeight
+  // Value/Título (Valor Principal) styles
+  valueFontSize?: number
+  valueFontWeight?: number
+  valueFontFamily?: string
+  valueColor?: string
+  titleMarginTop?: number
+  titleMarginBottom?: number
+  titleLetterSpacing?: number
+  titleLineHeight?: number
+  
+  // Name/Subtítulo (Nome/Label) styles
+  nameFontSize?: number
+  nameFontWeight?: number
+  nameFontFamily?: string
+  nameColor?: string
+  subtitleMarginTop?: number
+  subtitleMarginBottom?: number
+  subtitleLetterSpacing?: number
+  subtitleLineHeight?: number
 }
 
 // Style clipboard interface - KPI only
@@ -39,13 +58,35 @@ function extractKPIStyles(kpiId: string): CommonStyles | null {
   if (!kpi || !kpi.config) return null
   
   return {
+    // Card styles
     backgroundColor: kpi.config.backgroundColor,
+    backgroundOpacity: kpi.config.backgroundOpacity,
     borderColor: kpi.config.borderColor,
-    borderRadius: kpi.config.borderRadius,
+    borderOpacity: kpi.config.borderOpacity,
     borderWidth: kpi.config.borderWidth,
-    titleColor: kpi.config.nameColor,
-    titleFontSize: kpi.config.nameFontSize,
-    titleFontWeight: kpi.config.nameFontWeight
+    borderRadius: kpi.config.borderRadius,
+    shadow: kpi.config.shadow,
+    padding: kpi.config.padding,
+    
+    // Value/Título styles
+    valueFontSize: kpi.config.valueFontSize,
+    valueFontWeight: kpi.config.valueFontWeight,
+    valueFontFamily: kpi.config.valueFontFamily,
+    valueColor: kpi.config.valueColor,
+    titleMarginTop: kpi.config.titleMarginTop,
+    titleMarginBottom: kpi.config.titleMarginBottom,
+    titleLetterSpacing: kpi.config.titleLetterSpacing,
+    titleLineHeight: kpi.config.titleLineHeight,
+    
+    // Name/Subtítulo styles
+    nameFontSize: kpi.config.nameFontSize,
+    nameFontWeight: kpi.config.nameFontWeight,
+    nameFontFamily: kpi.config.nameFontFamily,
+    nameColor: kpi.config.nameColor,
+    subtitleMarginTop: kpi.config.subtitleMarginTop,
+    subtitleMarginBottom: kpi.config.subtitleMarginBottom,
+    subtitleLetterSpacing: kpi.config.subtitleLetterSpacing,
+    subtitleLineHeight: kpi.config.subtitleLineHeight
   }
 }
 
@@ -53,13 +94,35 @@ function extractKPIStyles(kpiId: string): CommonStyles | null {
 function applyKPIStyles(kpiId: string, styles: CommonStyles): void {
   const updates: Record<string, unknown> = {}
   
+  // Card styles
   if (styles.backgroundColor !== undefined) updates.backgroundColor = styles.backgroundColor
+  if (styles.backgroundOpacity !== undefined) updates.backgroundOpacity = styles.backgroundOpacity
   if (styles.borderColor !== undefined) updates.borderColor = styles.borderColor
-  if (styles.borderRadius !== undefined) updates.borderRadius = styles.borderRadius
+  if (styles.borderOpacity !== undefined) updates.borderOpacity = styles.borderOpacity
   if (styles.borderWidth !== undefined) updates.borderWidth = styles.borderWidth
-  if (styles.titleColor !== undefined) updates.nameColor = styles.titleColor
-  if (styles.titleFontSize !== undefined) updates.nameFontSize = styles.titleFontSize
-  if (styles.titleFontWeight !== undefined) updates.nameFontWeight = styles.titleFontWeight
+  if (styles.borderRadius !== undefined) updates.borderRadius = styles.borderRadius
+  if (styles.shadow !== undefined) updates.shadow = styles.shadow
+  if (styles.padding !== undefined) updates.padding = styles.padding
+  
+  // Value/Título styles
+  if (styles.valueFontSize !== undefined) updates.valueFontSize = styles.valueFontSize
+  if (styles.valueFontWeight !== undefined) updates.valueFontWeight = styles.valueFontWeight
+  if (styles.valueFontFamily !== undefined) updates.valueFontFamily = styles.valueFontFamily
+  if (styles.valueColor !== undefined) updates.valueColor = styles.valueColor
+  if (styles.titleMarginTop !== undefined) updates.titleMarginTop = styles.titleMarginTop
+  if (styles.titleMarginBottom !== undefined) updates.titleMarginBottom = styles.titleMarginBottom
+  if (styles.titleLetterSpacing !== undefined) updates.titleLetterSpacing = styles.titleLetterSpacing
+  if (styles.titleLineHeight !== undefined) updates.titleLineHeight = styles.titleLineHeight
+  
+  // Name/Subtítulo styles
+  if (styles.nameFontSize !== undefined) updates.nameFontSize = styles.nameFontSize
+  if (styles.nameFontWeight !== undefined) updates.nameFontWeight = styles.nameFontWeight
+  if (styles.nameFontFamily !== undefined) updates.nameFontFamily = styles.nameFontFamily
+  if (styles.nameColor !== undefined) updates.nameColor = styles.nameColor
+  if (styles.subtitleMarginTop !== undefined) updates.subtitleMarginTop = styles.subtitleMarginTop
+  if (styles.subtitleMarginBottom !== undefined) updates.subtitleMarginBottom = styles.subtitleMarginBottom
+  if (styles.subtitleLetterSpacing !== undefined) updates.subtitleLetterSpacing = styles.subtitleLetterSpacing
+  if (styles.subtitleLineHeight !== undefined) updates.subtitleLineHeight = styles.subtitleLineHeight
   
   kpiActions.updateKPIConfig(kpiId, updates)
 }

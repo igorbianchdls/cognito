@@ -64,7 +64,7 @@ export default function StyleClipboardAccordion({
               📋 Copy from {formatWidgetType(currentWidgetType)}
             </Button>
             <p className="text-xs text-gray-500 mt-1">
-              Copies background, borders, and title typography
+              Copies card styles, value/title typography, and subtitle/name typography
             </p>
           </div>
 
@@ -101,6 +101,7 @@ export default function StyleClipboardAccordion({
                 <div className="mt-2 text-xs text-gray-600">
                   <p className="font-medium mb-1">Styles available:</p>
                   <div className="flex flex-wrap gap-1">
+                    {/* Card styles */}
                     {clipboard.commonStyles.backgroundColor && (
                       <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
                         Background
@@ -111,24 +112,53 @@ export default function StyleClipboardAccordion({
                         Border
                       </span>
                     )}
-                    {clipboard.commonStyles.titleColor && (
-                      <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
-                        Title Color
-                      </span>
-                    )}
-                    {clipboard.commonStyles.titleFontSize && (
-                      <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
-                        Font Size
-                      </span>
-                    )}
                     {clipboard.commonStyles.borderRadius && (
                       <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
                         Radius
                       </span>
                     )}
-                    {clipboard.commonStyles.titleFontWeight && (
+                    {clipboard.commonStyles.shadow && (
                       <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
-                        Font Weight
+                        Shadow
+                      </span>
+                    )}
+                    {clipboard.commonStyles.padding && (
+                      <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
+                        Padding
+                      </span>
+                    )}
+                    
+                    {/* Value/Title styles */}
+                    {clipboard.commonStyles.valueColor && (
+                      <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
+                        Value Color
+                      </span>
+                    )}
+                    {clipboard.commonStyles.valueFontSize && (
+                      <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
+                        Value Size
+                      </span>
+                    )}
+                    {clipboard.commonStyles.valueFontWeight && (
+                      <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
+                        Value Weight
+                      </span>
+                    )}
+                    
+                    {/* Name/Subtitle styles */}
+                    {clipboard.commonStyles.nameColor && (
+                      <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
+                        Name Color
+                      </span>
+                    )}
+                    {clipboard.commonStyles.nameFontSize && (
+                      <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
+                        Name Size
+                      </span>
+                    )}
+                    {clipboard.commonStyles.nameFontWeight && (
+                      <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
+                        Name Weight
                       </span>
                     )}
                   </div>
