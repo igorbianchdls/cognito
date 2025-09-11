@@ -11,6 +11,7 @@ import { horizontalBarChartActions, $horizontalBarChartStore } from '@/stores/ap
 import CodeEditorInterface from './ui/CodeEditorInterface'
 import { QueryConstructionPhase } from './phases/QueryConstructionPhase'
 import { WidgetLookupPhase } from './phases/WidgetLookupPhase'
+import { LoggingPhase } from './phases/LoggingPhase'
 
 export default function CodeEditor() {
   const [code, setCode] = useState('')
@@ -45,10 +46,7 @@ console.log('Widgets criados!')
 
   // Log function for output
   const log = (...args: unknown[]) => {
-    const message = args.map(arg => 
-      typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-    ).join(' ')
-    setOutput(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`])
+    LoggingPhase.log(setOutput, ...args)
   }
 
 
