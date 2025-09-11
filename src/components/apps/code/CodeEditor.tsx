@@ -8,11 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { kpiActions, $kpiWidgets } from '@/stores/apps/kpiStore'
 import { tableActions, $tableWidgets } from '@/stores/apps/tableStore'
-import { barChartActions } from '@/stores/apps/barChartStore'
-import { lineChartActions } from '@/stores/apps/lineChartStore'
-import { pieChartActions } from '@/stores/apps/pieChartStore'
-import { areaChartActions } from '@/stores/apps/areaChartStore'
-import { horizontalBarChartActions } from '@/stores/apps/horizontalBarChartStore'
+import { barChartActions, $barChartStore } from '@/stores/apps/barChartStore'
+import { lineChartActions, $lineChartStore } from '@/stores/apps/lineChartStore'
+import { pieChartActions, $pieChartStore } from '@/stores/apps/pieChartStore'
+import { areaChartActions, $areaChartStore } from '@/stores/apps/areaChartStore'
+import { horizontalBarChartActions, $horizontalBarChartStore } from '@/stores/apps/horizontalBarChartStore'
 
 export default function CodeEditor() {
   const [code, setCode] = useState('')
@@ -33,9 +33,10 @@ createKPI('vendas_2024', 'valor_total', 'SUM', 'Vendas Totais')
 createTable('ecommerce', ['id', 'nome', 'email', 'categoria'], 'Dados de E-commerce')
 // updateTable('Dados de E-commerce', 'nova_tabela', ['col1', 'col2'], 'Novo Título')
 
-// Exemplo: Charts
+// Exemplo: Criar e Atualizar Charts
 createChart('bar', 'vendas_2024', 'categoria', 'valor_total', 'SUM', 'Vendas por Categoria')
 createChart('pie', 'vendas_2024', 'regiao', 'valor_total', 'SUM', 'Vendas por Região')
+// updateChart('Vendas por Categoria', 'nova_tabela', 'novo_x', 'novo_y', 'AVG', 'Novo Título')
 
 console.log('Widgets criados!')
 `
@@ -155,6 +156,139 @@ console.log('Widgets criados!')
       }
     } catch (error) {
       log(`❌ Failed to update KPI: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
+  }
+
+  // Update Chart function (follows Datasets pattern)
+  const updateChart = async (chartName: string, newTable?: string, newXField?: string, newYField?: string, newAggregation?: string, newTitle?: string) => {
+    try {
+      // 1. Find existing Chart by name (search all chart types)
+      let existingChart: any = null
+      let chartType: 'bar' | 'line' | 'pie' | 'area' | 'horizontal-bar' | null = null
+      
+      // Search in all chart stores
+      const barCharts = $barChartStore.get().barCharts
+      const lineCharts = $lineChartStore.get().lineCharts
+      const pieCharts = $pieChartStore.get().pieCharts
+      const areaCharts = $areaChartStore.get().areaCharts
+      const horizontalBarCharts = $horizontalBarChartStore.get().horizontalBarCharts
+      
+      existingChart = barCharts.find(chart => chart.name === chartName)
+      if (existingChart) chartType = 'bar'
+      
+      if (!existingChart) {
+        existingChart = lineCharts.find(chart => chart.name === chartName)
+        if (existingChart) chartType = 'line'
+      }
+      
+      if (!existingChart) {
+        existingChart = pieCharts.find(chart => chart.name === chartName)
+        if (existingChart) chartType = 'pie'
+      }
+      
+      if (!existingChart) {
+        existingChart = areaCharts.find(chart => chart.name === chartName)
+        if (existingChart) chartType = 'area'
+      }
+      
+      if (!existingChart) {
+        existingChart = horizontalBarCharts.find(chart => chart.name === chartName)
+        if (existingChart) chartType = 'horizontal-bar'
+      }
+      
+      if (!existingChart || !chartType) {
+        throw new Error(`Chart "${chartName}" not found`)
+      }
+      
+      log(`Found ${chartType} chart to update: ${chartName} (ID: ${existingChart.id})`)
+      
+      // 2. Get current data (same as Datasets loads into builder)
+      const currentData = existingChart.bigqueryData
+      const currentTable = currentData?.selectedTable
+      const currentXField = currentData?.columns?.xAxis?.[0]?.name
+      const currentYField = currentData?.columns?.yAxis?.[0]?.name
+      const currentAggregation = currentData?.columns?.yAxis?.[0]?.aggregation
+      
+      // 3. Apply changes (use new values or keep current ones)
+      const updatedTable = newTable || currentTable
+      const updatedXField = newXField || currentXField
+      const updatedYField = newYField || currentYField
+      const updatedAggregation = newAggregation || currentAggregation
+      const updatedTitle = newTitle || existingChart.name
+      
+      if (!updatedTable || !updatedXField || !updatedYField || !updatedAggregation) {
+        throw new Error('Missing required chart parameters')
+      }
+      
+      log(`Updating ${chartType} chart: ${updatedTable}.${updatedXField} x ${updatedYField} (${updatedAggregation})`)
+      
+      // 4. Generate and execute new query (same as createChart)
+      const query = `SELECT ${updatedXField}, ${updatedAggregation}(${updatedYField}) as ${updatedYField} FROM \`creatto-463117.biquery_data.${updatedTable}\` GROUP BY ${updatedXField} ORDER BY ${updatedYField} DESC LIMIT 20`
+      
+      log(`Executing: ${query}`)
+
+      const response = await fetch('/api/bigquery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'execute',
+          query: query 
+        })
+      })
+
+      if (!response.ok) {
+        const responseText = await response.text()
+        throw new Error(`Query failed: ${response.statusText} - ${responseText}`)
+      }
+
+      const result = await response.json()
+      
+      if (result.success && result.data?.data && Array.isArray(result.data.data)) {
+        const data = result.data.data
+        
+        // 5. Update Chart using specific action (same as Datasets update flow)
+        const updateData = {
+          name: updatedTitle,
+          bigqueryData: {
+            query,
+            selectedTable: updatedTable,
+            columns: {
+              xAxis: [{ name: updatedXField, type: 'STRING', mode: 'NULLABLE' }],
+              yAxis: [{ name: updatedYField, type: 'NUMERIC', mode: 'NULLABLE', aggregation: updatedAggregation as 'SUM' | 'COUNT' | 'AVG' | 'MIN' | 'MAX' | 'COUNT_DISTINCT' }],
+              filters: currentData?.columns?.filters || []
+            },
+            data: data,
+            lastExecuted: new Date(),
+            isLoading: false,
+            error: null
+          }
+        }
+
+        // Route to appropriate update action based on detected type
+        switch (chartType) {
+          case 'bar':
+            barChartActions.updateBarChart(existingChart.id, updateData)
+            break
+          case 'line':
+            lineChartActions.updateLineChart(existingChart.id, updateData)
+            break
+          case 'pie':
+            pieChartActions.updatePieChart(existingChart.id, updateData)
+            break
+          case 'area':
+            areaChartActions.updateAreaChart(existingChart.id, updateData)
+            break
+          case 'horizontal-bar':
+            horizontalBarChartActions.updateHorizontalBarChart(existingChart.id, updateData)
+            break
+        }
+
+        log(`✅ ${chartType} chart "${updatedTitle}" updated successfully with ${data.length} rows`)
+      } else {
+        throw new Error(result.error || 'No data returned')
+      }
+    } catch (error) {
+      log(`❌ Failed to update chart: ${error instanceof Error ? error.message : 'Unknown error'}`)
     }
   }
 
@@ -517,6 +651,7 @@ console.log('Widgets criados!')
         createTable,
         updateTable,
         createChart,
+        updateChart,
         console: { log }
       }
 
@@ -524,7 +659,7 @@ console.log('Widgets criados!')
       const asyncFunction = new Function(
         'context',
         `
-        const { createKPI, updateKPI, createTable, updateTable, createChart, console } = context;
+        const { createKPI, updateKPI, createTable, updateTable, createChart, updateChart, console } = context;
         return (async () => {
           ${code}
         })();
@@ -555,7 +690,7 @@ console.log('Widgets criados!')
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
         <div className="flex items-center gap-2">
           <Terminal className="w-4 h-4 text-primary" />
-          <h2 className="text-base font-semibold">Code Editor - KPI & Table (CRUD), Chart</h2>
+          <h2 className="text-base font-semibold">Code Editor - Full CRUD (KPI, Table, Chart)</h2>
         </div>
         <div className="flex items-center gap-2">
           <Button
