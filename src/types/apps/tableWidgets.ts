@@ -1,5 +1,26 @@
 import { BaseWidget } from './baseWidget'
 
+// BigQuery field interface for table data source
+export interface BigQueryField {
+  name: string
+  type: string
+  mode?: string
+  description?: string
+  aggregation?: 'SUM' | 'AVG' | 'COUNT' | 'MIN' | 'MAX' | 'COUNT_DISTINCT'
+}
+
+// Table BigQuery data interface
+export interface TableBigQueryData {
+  query: string
+  selectedTable: string | null
+  selectedColumns: BigQueryField[]
+  filters: BigQueryField[]
+  data: Record<string, unknown>[] | null
+  lastExecuted: Date | null
+  isLoading: boolean
+  error: string | null
+}
+
 // Table column configuration
 export interface TableColumn {
   id: string
@@ -17,6 +38,10 @@ export interface TableConfig {
   // Data properties
   data?: Array<{ [key: string]: string | number | boolean | null | undefined }>
   columns?: TableColumn[]
+  
+  // BigQuery data source properties
+  bigqueryData?: TableBigQueryData
+  dataSourceType?: 'manual' | 'bigquery'
   
   // Display options (matching DataTable props)
   searchPlaceholder?: string

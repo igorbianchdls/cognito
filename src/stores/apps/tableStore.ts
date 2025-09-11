@@ -4,7 +4,9 @@ import type {
   CreateTableWidgetProps, 
   TableConfig,
   TableColumn,
-  TableRow
+  TableRow,
+  BigQueryField,
+  TableBigQueryData
 } from '@/types/apps/tableWidgets'
 import { 
   DEFAULT_TABLE_CONFIG,
