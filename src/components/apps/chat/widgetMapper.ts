@@ -84,9 +84,9 @@ export async function handleWidgetOperations(operations: WidgetOperation[]) {
 
 // Handler for create operations
 async function handleCreateOperation(operation: WidgetOperation) {
-  console.log('➕ Creating widget:', operation.widgetType)
+  console.log('➕ Creating widget:', operation.type)
   
-  switch (operation.widgetType) {
+  switch (operation.type) {
     case 'kpi':
       await createKPIFromParams(operation.params)
       break
