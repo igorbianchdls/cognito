@@ -8,12 +8,12 @@ import { lineChartActions, $lineChartStore } from '@/stores/apps/lineChartStore'
 import { pieChartActions, $pieChartStore } from '@/stores/apps/pieChartStore'
 import { areaChartActions, $areaChartStore } from '@/stores/apps/areaChartStore'
 import { horizontalBarChartActions, $horizontalBarChartStore } from '@/stores/apps/horizontalBarChartStore'
-import CodeEditorInterface from './ui/CodeEditorInterface'
-import { QueryConstructionPhase } from './phases/QueryConstructionPhase'
-import { WidgetLookupPhase } from './phases/WidgetLookupPhase'
-import { LoggingPhase } from './phases/LoggingPhase'
-import { BigQueryExecutionPhase } from './phases/BigQueryExecutionPhase'
-import { DataTransformationPhase } from './phases/DataTransformationPhase'
+import CodeEditorInterface from '../ui/CodeEditorInterface'
+import { QueryConstructionPhase } from './QueryConstructionPhase'
+import { WidgetLookupPhase } from './WidgetLookupPhase'
+import { LoggingPhase } from './LoggingPhase'
+import { BigQueryExecutionPhase } from './BigQueryExecutionPhase'
+import { DataTransformationPhase } from './DataTransformationPhase'
 
 export default function CodeEditor() {
   const [code, setCode] = useState('')
