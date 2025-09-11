@@ -9,6 +9,7 @@ import { pieChartActions, $pieChartStore } from '@/stores/apps/pieChartStore'
 import { areaChartActions, $areaChartStore } from '@/stores/apps/areaChartStore'
 import { horizontalBarChartActions, $horizontalBarChartStore } from '@/stores/apps/horizontalBarChartStore'
 import CodeEditorInterface from './ui/CodeEditorInterface'
+import { QueryConstructionPhase } from './phases/QueryConstructionPhase'
 
 export default function CodeEditor() {
   const [code, setCode] = useState('')
@@ -82,7 +83,7 @@ console.log('Widgets criados!')
       log(`Updating KPI: ${updatedTable}.${updatedField} (${updatedCalculation})`)
       
       // 4. Generate and execute new query (same as createKPI)
-      const query = `SELECT ${updatedCalculation}(${updatedField}) as value FROM \`creatto-463117.biquery_data.${updatedTable}\``
+      const query = QueryConstructionPhase.buildKPIQuery(updatedTable, updatedField, updatedCalculation)
       
       log(`Executing: ${query}`)
 
@@ -202,7 +203,7 @@ console.log('Widgets criados!')
       log(`Updating ${chartType} chart: ${updatedTable}.${updatedXField} x ${updatedYField} (${updatedAggregation})`)
       
       // 4. Generate and execute new query (same as createChart)
-      const query = `SELECT ${updatedXField}, ${updatedAggregation}(${updatedYField}) as ${updatedYField} FROM \`creatto-463117.biquery_data.${updatedTable}\` GROUP BY ${updatedXField} ORDER BY ${updatedYField} DESC LIMIT 20`
+      const query = QueryConstructionPhase.buildChartQuery(updatedTable, updatedXField, updatedYField, updatedAggregation)
       
       log(`Executing: ${query}`)
 
@@ -275,7 +276,7 @@ console.log('Widgets criados!')
   const createChart = async (type: 'bar' | 'line' | 'pie' | 'area' | 'horizontal-bar', table: string, xField: string, yField: string, aggregation: string, title?: string) => {
     try {
       // Generate SQL query (same as ChartPreview)
-      const query = `SELECT ${xField}, ${aggregation}(${yField}) as ${yField} FROM \`creatto-463117.biquery_data.${table}\` GROUP BY ${xField} ORDER BY ${yField} DESC LIMIT 20`
+      const query = QueryConstructionPhase.buildChartQuery(table, xField, yField, aggregation)
       
       log(`Executing: ${query}`)
 
@@ -425,7 +426,7 @@ console.log('Widgets criados!')
       log(`Updating Table: ${updatedBqTable} with columns [${updatedColumns.join(', ')}]`)
       
       // 4. Generate and execute new query (same as createTable)
-      const query = `SELECT ${updatedColumns.join(', ')} FROM \`creatto-463117.biquery_data.${updatedBqTable}\` LIMIT 100`
+      const query = QueryConstructionPhase.buildTableQuery(updatedBqTable, updatedColumns)
       
       log(`Executing: ${query}`)
 
@@ -481,7 +482,7 @@ console.log('Widgets criados!')
   const createTable = async (table: string, columns: string[], title?: string) => {
     try {
       // Generate SQL query (same as TablePreview)
-      const query = `SELECT ${columns.join(', ')} FROM \`creatto-463117.biquery_data.${table}\` LIMIT 100`
+      const query = QueryConstructionPhase.buildTableQuery(table, columns)
       
       log(`Executing: ${query}`)
 
@@ -542,7 +543,7 @@ console.log('Widgets criados!')
   const createKPI = async (table: string, field: string, calculation: string, title: string) => {
     try {
       // Generate SQL query automatically (same as Datasets)
-      const query = `SELECT ${calculation}(${field}) as value FROM \`creatto-463117.biquery_data.${table}\``
+      const query = QueryConstructionPhase.buildKPIQuery(table, field, calculation)
       
       log(`Executing: ${query}`)
 
