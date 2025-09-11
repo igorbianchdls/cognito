@@ -53,23 +53,6 @@ console.log('Widgets criados!')
     setOutput(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`])
   }
 
-  // Helper function to map BigQuery types to table column types
-  const getColumnType = (bigqueryType: string): 'text' | 'number' | 'boolean' | 'date' => {
-    const lowerType = bigqueryType.toLowerCase()
-    if (lowerType.includes('string') || lowerType.includes('text')) {
-      return 'text'
-    }
-    if (lowerType.includes('int') || lowerType.includes('numeric') || lowerType.includes('float') || lowerType.includes('decimal')) {
-      return 'number'
-    }
-    if (lowerType.includes('bool')) {
-      return 'boolean'
-    }
-    if (lowerType.includes('date') || lowerType.includes('timestamp')) {
-      return 'date'
-    }
-    return 'text' // default fallback
-  }
 
   // Update KPI function (follows Datasets pattern)
   const updateKPI = async (kpiName: string, newTable?: string, newField?: string, newCalculation?: string, newTitle?: string) => {
@@ -163,7 +146,7 @@ console.log('Widgets criados!')
   const updateChart = async (chartName: string, newTable?: string, newXField?: string, newYField?: string, newAggregation?: string, newTitle?: string) => {
     try {
       // 1. Find existing Chart by name (search all chart types)
-      let existingChart: any = null
+      let existingChart: { id: string; name: string; bigqueryData: any } | null = null
       let chartType: 'bar' | 'line' | 'pie' | 'area' | 'horizontal-bar' | null = null
       
       // Search in all chart stores
