@@ -322,9 +322,7 @@ export const pieChartActions = {
   // Clear all pie charts
   clearAll: () => {
     console.log('🗑️ Clearing all pie charts')
-    $pieChartStore.set({
-      pieCharts: [],
-      selectedPieChartId: null
-    })
+    $pieChartStore.set({ pieCharts: [] })
+    $selectedPieChartId.set(null)
   }
 }

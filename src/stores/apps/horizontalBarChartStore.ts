@@ -333,9 +333,7 @@ export const horizontalBarChartActions = {
   // Clear all horizontal bar charts
   clearAll: () => {
     console.log('🗑️ Clearing all horizontal bar charts')
-    $horizontalBarChartStore.set({
-      horizontalBarCharts: [],
-      selectedHorizontalBarChartId: null
-    })
+    $horizontalBarChartStore.set({ horizontalBarCharts: [] })
+    $selectedHorizontalBarChartId.set(null)
   }
 }

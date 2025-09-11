@@ -336,9 +336,7 @@ export const lineChartActions = {
   // Clear all line charts
   clearAll: () => {
     console.log('🗑️ Clearing all line charts')
-    $lineChartStore.set({
-      lineCharts: [],
-      selectedLineChartId: null
-    })
+    $lineChartStore.set({ lineCharts: [] })
+    $selectedLineChartId.set(null)
   }
 }
