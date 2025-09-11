@@ -6,7 +6,7 @@ import { Play, RotateCcw, Terminal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { kpiActions } from '@/stores/apps/kpiStore'
+import { kpiActions, $kpiWidgets } from '@/stores/apps/kpiStore'
 import { tableActions } from '@/stores/apps/tableStore'
 import { barChartActions } from '@/stores/apps/barChartStore'
 import { lineChartActions } from '@/stores/apps/lineChartStore'
@@ -20,21 +20,21 @@ export default function CodeEditor() {
   const [isExecuting, setIsExecuting] = useState(false)
 
   // Default example code
-  const defaultCode = `// Criar KPIs, Tables e Charts programaticamente
+  const defaultCode = `// Criar e atualizar KPIs, Tables e Charts programaticamente
 
-// Exemplo: COUNT de IDs
+// Exemplo: Criar KPIs
 createKPI('ecommerce', 'id', 'COUNT', 'Total de Registros')
-
-// Exemplo: SUM de valores
 createKPI('vendas_2024', 'valor_total', 'SUM', 'Vendas Totais')
 
-// Exemplo: Criar Table com colunas específicas
+// Exemplo: Atualizar KPI existente (parâmetros opcionais)
+// updateKPI('Total de Registros', 'nova_tabela', 'novo_campo', 'AVG', 'Novo Título')
+
+// Exemplo: Criar Table
 createTable('ecommerce', ['id', 'nome', 'email', 'categoria'], 'Dados de E-commerce')
 
 // Exemplo: Charts
 createChart('bar', 'vendas_2024', 'categoria', 'valor_total', 'SUM', 'Vendas por Categoria')
 createChart('pie', 'vendas_2024', 'regiao', 'valor_total', 'SUM', 'Vendas por Região')
-createChart('line', 'vendas_2024', 'mes', 'valor_total', 'SUM', 'Tendência Mensal')
 
 console.log('Widgets criados!')
 `
@@ -67,6 +67,94 @@ console.log('Widgets criados!')
       return 'date'
     }
     return 'text' // default fallback
+  }
+
+  // Update KPI function (follows Datasets pattern)
+  const updateKPI = async (kpiName: string, newTable?: string, newField?: string, newCalculation?: string, newTitle?: string) => {
+    try {
+      // 1. Find existing KPI by name (same as Datasets selection)
+      const currentKPIs = $kpiWidgets.get()
+      const existingKPI = currentKPIs.find(kpi => kpi.config.name === kpiName)
+      
+      if (!existingKPI) {
+        throw new Error(`KPI "${kpiName}" not found`)
+      }
+      
+      log(`Found KPI to update: ${kpiName} (ID: ${existingKPI.i})`)
+      
+      // 2. Get current data (same as Datasets loads into builder)
+      const currentData = existingKPI.config.bigqueryData
+      const currentTable = currentData?.selectedTable
+      const currentField = currentData?.kpiValueFields?.[0]
+      const currentCalculation = existingKPI.config.calculation
+      
+      // 3. Apply changes (use new values or keep current ones)
+      const updatedTable = newTable || currentTable
+      const updatedField = newField || currentField?.name
+      const updatedCalculation = newCalculation || currentCalculation
+      const updatedTitle = newTitle || existingKPI.config.name
+      
+      if (!updatedTable || !updatedField || !updatedCalculation) {
+        throw new Error('Missing required KPI parameters')
+      }
+      
+      log(`Updating KPI: ${updatedTable}.${updatedField} (${updatedCalculation})`)
+      
+      // 4. Generate and execute new query (same as createKPI)
+      const query = `SELECT ${updatedCalculation}(${updatedField}) as value FROM \`creatto-463117.biquery_data.${updatedTable}\``
+      
+      log(`Executing: ${query}`)
+
+      const response = await fetch('/api/bigquery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'execute',
+          query: query 
+        })
+      })
+
+      if (!response.ok) {
+        const responseText = await response.text()
+        throw new Error(`Query failed: ${response.statusText} - ${responseText}`)
+      }
+
+      const result = await response.json()
+      
+      if (result.success && result.data?.data && Array.isArray(result.data.data)) {
+        const data = result.data.data
+        const newValue = data[0]?.value || 0
+        
+        // 5. Update KPI config (same as Datasets update flow)
+        kpiActions.updateKPIConfig(existingKPI.i, {
+          name: updatedTitle,
+          value: newValue,
+          metric: updatedField,
+          calculation: updatedCalculation as 'SUM' | 'COUNT' | 'AVG' | 'MIN' | 'MAX' | 'COUNT_DISTINCT',
+          dataSourceType: 'bigquery',
+          bigqueryData: {
+            selectedTable: updatedTable,
+            kpiValueFields: [{ 
+              name: updatedField, 
+              type: 'NUMERIC', 
+              mode: 'NULLABLE',
+              aggregation: updatedCalculation as 'SUM' | 'COUNT' | 'AVG' | 'MIN' | 'MAX' | 'COUNT_DISTINCT'
+            }],
+            filterFields: currentData?.filterFields || [],
+            query: query,
+            lastExecuted: new Date(),
+            isLoading: false,
+            error: null
+          }
+        })
+
+        log(`✅ KPI "${updatedTitle}" updated successfully with value: ${newValue}`)
+      } else {
+        throw new Error(result.error || 'No data returned')
+      }
+    } catch (error) {
+      log(`❌ Failed to update KPI: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
   }
 
   // Simple Chart creation function
@@ -344,6 +432,7 @@ console.log('Widgets criados!')
       // Create execution context
       const context = {
         createKPI,
+        updateKPI,
         createTable,
         createChart,
         console: { log }
@@ -353,7 +442,7 @@ console.log('Widgets criados!')
       const asyncFunction = new Function(
         'context',
         `
-        const { createKPI, createTable, createChart, console } = context;
+        const { createKPI, updateKPI, createTable, createChart, console } = context;
         return (async () => {
           ${code}
         })();
@@ -384,7 +473,7 @@ console.log('Widgets criados!')
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
         <div className="flex items-center gap-2">
           <Terminal className="w-4 h-4 text-primary" />
-          <h2 className="text-base font-semibold">Code Editor - KPI, Table & Chart</h2>
+          <h2 className="text-base font-semibold">Code Editor - KPI (CRUD), Table & Chart</h2>
         </div>
         <div className="flex items-center gap-2">
           <Button
