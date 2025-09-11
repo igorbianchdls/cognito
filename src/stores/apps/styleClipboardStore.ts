@@ -10,6 +10,30 @@ import { $tableWidgets, tableActions } from './tableStore'
 // Union type for all chart configurations
 type ChartConfig = BarChartConfig | LineChartConfig | PieChartConfig | AreaChartConfig | HorizontalBarChartConfig
 
+// Helper function to convert string font weight to number
+function parseStringFontWeight(weight: string | undefined): number | undefined {
+  if (!weight) return undefined
+  
+  // Se já é um número em string
+  const numWeight = parseInt(weight)
+  if (!isNaN(numWeight)) return numWeight
+  
+  // Converter palavras-chave comuns
+  switch (weight.toLowerCase()) {
+    case 'normal': return 400
+    case 'bold': return 700
+    case 'lighter': return 300
+    case 'bolder': return 600
+    case 'thin': return 100
+    case 'light': return 300
+    case 'medium': return 500
+    case 'semibold': return 600
+    case 'extrabold': return 800
+    case 'black': return 900
+    default: return undefined
+  }
+}
+
 // Common styles interface - only visual properties shared across all widgets
 export interface CommonStyles {
   // Container styles
@@ -121,7 +145,7 @@ function extractTableStyles(tableId: string): CommonStyles | null {
     shadow: undefined, // Tables don't have shadow
     titleColor: table.config.headerTextColor,
     titleFontSize: table.config.cellFontSize,
-    titleFontWeight: table.config.cellFontWeight as number,
+    titleFontWeight: parseStringFontWeight(table.config.cellFontWeight),
     titleFontFamily: table.config.cellFontFamily,
     textAlign: table.config.defaultTextAlign
   }
