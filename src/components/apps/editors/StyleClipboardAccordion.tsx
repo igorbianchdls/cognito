@@ -15,7 +15,7 @@ import {
 } from '@/stores/apps/styleClipboardStore'
 
 interface StyleClipboardAccordionProps {
-  currentWidgetType: StyleClipboard['sourceWidgetType']
+  currentWidgetType: 'kpi'
   currentWidgetId: string
 }
 
@@ -38,18 +38,9 @@ export default function StyleClipboardAccordion({
     styleClipboardActions.clearClipboard()
   }
 
-  // Format widget type for display
+  // Format widget type for display - KPI only
   const formatWidgetType = (type: string) => {
-    switch (type) {
-      case 'kpi': return 'KPI'
-      case 'chart-bar': return 'Bar Chart'
-      case 'chart-line': return 'Line Chart'
-      case 'chart-pie': return 'Pie Chart'
-      case 'chart-area': return 'Area Chart'
-      case 'chart-horizontal-bar': return 'Horizontal Bar Chart'
-      case 'table': return 'Table'
-      default: return type
-    }
+    return 'KPI'
   }
 
   return (
@@ -73,7 +64,7 @@ export default function StyleClipboardAccordion({
               📋 Copy from {formatWidgetType(currentWidgetType)}
             </Button>
             <p className="text-xs text-gray-500 mt-1">
-              Copies background, borders, typography, and alignment
+              Copies background, borders, and title typography
             </p>
           </div>
 

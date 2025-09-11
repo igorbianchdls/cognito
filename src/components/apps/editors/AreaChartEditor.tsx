@@ -18,7 +18,6 @@ import AreaChartInfoAccordion from './AreaChartInfoAccordion'
 import ChartSpecificAccordion from './ChartSpecificAccordion'
 import ContainerBorderAccordion from './ContainerBorderAccordion'
 import PositionAccordion from './PositionAccordion'
-import StyleClipboardAccordion from './StyleClipboardAccordion'
 
 interface AreaChartEditorProps {
   selectedWidget: DroppedWidget
@@ -96,11 +95,6 @@ export default function AreaChartEditor({
             <GridAccordion 
               styling={chartConfig.styling} 
               onConfigChange={onChartConfigChange} 
-            />
-
-            <StyleClipboardAccordion
-              currentWidgetType="chart-area"
-              currentWidgetId={selectedWidget.i}
             />
 
             {onLayoutChange && (
