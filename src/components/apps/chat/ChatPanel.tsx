@@ -67,7 +67,7 @@ const parseAndApplyJson = (text: string) => {
   const jsonRegex = /<json>([\s\S]*?)<\/json>/g
   const matches = [...text.matchAll(jsonRegex)]
   
-  matches.forEach((match, matchIndex) => {
+  matches.forEach((match) => {
     try {
       const jsonString = match[1].trim()
       const parsed = JSON.parse(jsonString)
@@ -80,7 +80,7 @@ const parseAndApplyJson = (text: string) => {
       else if (parsed && parsed.widgets && Array.isArray(parsed.widgets)) {
         handleLegacyFormat(parsed)
       }
-    } catch (error) {
+    } catch {
       // JSON parsing failed - ignore
     }
   })
@@ -89,16 +89,16 @@ const parseAndApplyJson = (text: string) => {
 // Handle new action-based format
 const handleActionFormat = (parsed: ActionFormat) => {
   if (parsed.actions && Array.isArray(parsed.actions)) {
-    parsed.actions.forEach((actionData: ActionData, index: number) => {
-      executeAction(actionData, index)
+    parsed.actions.forEach((actionData: ActionData) => {
+      executeAction(actionData)
     })
   } else if (parsed.action) {
-    executeAction(parsed as ActionData, 0)
+    executeAction(parsed as ActionData)
   }
 }
 
 // Execute a single action
-const executeAction = (actionData: ActionData, index: number) => {
+const executeAction = (actionData: ActionData) => {
   const { action, widgetId, changes } = actionData
   
   // Map property names for backward compatibility
@@ -166,7 +166,7 @@ const executeAction = (actionData: ActionData, index: number) => {
 // Handle legacy format (complete widgets array)
 const handleLegacyFormat = (parsed: LegacyFormat) => {
   // Transform JSON widgets to DroppedWidget format
-  const newWidgets: DroppedWidget[] = parsed.widgets.map((widget: JsonWidget, index: number) => {
+  parsed.widgets.map((widget: JsonWidget, index: number) => {
     const transformedWidget = {
       id: widget.id || widget.i,
       i: widget.i || `widget-${Date.now()}-${index}`,
@@ -198,13 +198,13 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
     }),
     onFinish: ({ message }) => {
       // Parse JSON immediately when message is finished
-      message.parts?.forEach((part, index) => {
+      message.parts?.forEach((part) => {
         if (part.type === 'text') {
           parseAndApplyJson(part.text)
         }
       })
     },
-    onError: (error) => {
+    onError: () => {
       // Chat error occurred
     }
   })
@@ -217,7 +217,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
       try {
         sendMessage({ text: input })
         setInput('')
-      } catch (error) {
+      } catch {
         // Message sending failed
       }
     }
@@ -292,7 +292,12 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                       state: string
                       output: {
                         success: boolean
-                        operations: Array<any>
+                        operations: Array<{
+                          action: 'create' | 'update'
+                          type?: 'kpi' | 'chart' | 'table'
+                          widgetName?: string
+                          params: Record<string, unknown>
+                        }>
                         message: string
                       }
                     }
@@ -300,7 +305,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                       // Execute widget operations using mapper
                       handleWidgetOperations(createTool.output.operations)
                         .then(() => console.log('✅ Widget operations completed'))
-                        .catch(error => console.error('❌ Widget operations failed:', error))
+                        .catch((error: unknown) => console.error('❌ Widget operations failed:', error))
                       
                       return (
                         <div key={index} className="mt-2 p-3 bg-green-50 border-[0.5px] border-green-200 rounded-lg text-sm text-green-700">
@@ -323,7 +328,12 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                       state: string
                       output: {
                         success: boolean
-                        operations: Array<any>
+                        operations: Array<{
+                          action: 'create' | 'update'
+                          type?: 'kpi' | 'chart' | 'table'
+                          widgetName?: string
+                          params: Record<string, unknown>
+                        }>
                         message: string
                       }
                     }

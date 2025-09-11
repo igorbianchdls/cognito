@@ -10,10 +10,48 @@ import { areaChartActions, $areaChartStore } from '@/stores/apps/areaChartStore'
 import { horizontalBarChartActions, $horizontalBarChartStore } from '@/stores/apps/horizontalBarChartStore'
 
 // Types for operations
+interface CreateKPIParams {
+  type: 'kpi'
+  table: string
+  field: string
+  calculation: 'SUM' | 'COUNT' | 'AVG' | 'MIN' | 'MAX'
+  title: string
+}
+
+interface CreateChartParams {
+  type: 'chart'
+  chartType: 'bar' | 'line' | 'pie' | 'area' | 'horizontal-bar'
+  table: string
+  xField: string
+  yField: string
+  aggregation: 'SUM' | 'COUNT' | 'AVG' | 'MIN' | 'MAX'
+  title: string
+}
+
+interface CreateTableParams {
+  type: 'table'
+  table: string
+  columns: string[]
+  title?: string
+}
+
+interface UpdateParams {
+  newTitle?: string
+  newTable?: string
+  newField?: string
+  newCalculation?: 'SUM' | 'COUNT' | 'AVG' | 'MIN' | 'MAX'
+  newXField?: string
+  newYField?: string
+  newChartType?: 'bar' | 'line' | 'pie' | 'area' | 'horizontal-bar'
+  newAggregation?: 'SUM' | 'COUNT' | 'AVG' | 'MIN' | 'MAX'
+  newColumns?: string[]
+}
+
 interface WidgetOperation {
   action: 'create' | 'update' | 'delete'
-  widgetType?: 'kpi' | 'chart' | 'table'
-  params: any
+  type?: 'kpi' | 'chart' | 'table'
+  widgetName?: string
+  params: CreateKPIParams | CreateChartParams | CreateTableParams | UpdateParams
 }
 
 // Main handler - processes array of operations
@@ -123,7 +161,7 @@ async function handleDeleteOperation(operation: WidgetOperation) {
 
 // CREATE FUNCTIONS - Based on CodeEditor logic
 
-async function createKPIFromParams(params: any) {
+async function createKPIFromParams(params: CreateKPIParams) {
   console.log('🎯 Creating KPI with params:', params)
   
   try {
@@ -185,7 +223,7 @@ async function createKPIFromParams(params: any) {
   }
 }
 
-async function createChartFromParams(params: any) {
+async function createChartFromParams(params: CreateChartParams) {
   console.log('📊 Creating chart with params:', params)
   
   try {
@@ -304,7 +342,7 @@ async function createChartFromParams(params: any) {
   }
 }
 
-async function createTableFromParams(params: any) {
+async function createTableFromParams(params: CreateTableParams) {
   console.log('📋 Creating table with params:', params)
   
   try {
@@ -366,7 +404,7 @@ async function createTableFromParams(params: any) {
 
 // UPDATE FUNCTIONS - Based on CodeEditor logic
 
-async function updateKPIFromParams(params: any) {
+async function updateKPIFromParams(params: UpdateParams) {
   console.log('🔄 Updating KPI:', params.kpiName)
   
   try {
@@ -443,7 +481,7 @@ async function updateKPIFromParams(params: any) {
   }
 }
 
-async function updateChartFromParams(params: any) {
+async function updateChartFromParams(params: UpdateParams) {
   console.log('🔄 Updating chart:', params.widgetName)
   
   try {
@@ -556,7 +594,7 @@ async function updateChartFromParams(params: any) {
   }
 }
 
-async function updateTableFromParams(params: any) {
+async function updateTableFromParams(params: UpdateParams) {
   console.log('🔄 Updating table:', params.widgetName)
   
   try {
