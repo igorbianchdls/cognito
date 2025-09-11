@@ -106,6 +106,10 @@ async function handleUpdateOperation(operation: WidgetOperation) {
   console.log('🔄 Updating widget:', operation.widgetName)
   
   // Detect widget type by name
+  if (!operation.widgetName) {
+    console.warn('⚠️ No widget name provided for update operation')
+    return
+  }
   const widgetType = detectWidgetType(operation.widgetName)
   
   switch (widgetType) {
