@@ -251,7 +251,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                   
                   if (part.type === 'tool-getCanvasWidgets') {
                     const widgetTool = part as {
-                      state: string
+                      state: 'input-streaming' | 'input-available' | 'output-available' | 'output-error'
                       input?: Record<string, unknown>
                       output: {
                         widgets: Array<{
@@ -303,7 +303,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                   // Handle createWidget tool calls
                   if (part.type === 'tool-createWidget') {
                     const createTool = part as {
-                      state: string
+                      state: 'input-streaming' | 'input-available' | 'output-available' | 'output-error'
                       input?: Record<string, unknown>
                       output: {
                         success: boolean
@@ -345,7 +345,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                   // Handle updateWidget tool calls
                   if (part.type === 'tool-updateWidget') {
                     const updateTool = part as {
-                      state: string
+                      state: 'input-streaming' | 'input-available' | 'output-available' | 'output-error'
                       input?: Record<string, unknown>
                       output: {
                         success: boolean
