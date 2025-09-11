@@ -2,6 +2,7 @@ import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage, tool } from 'ai';
 import { z } from 'zod';
 import type { DroppedWidget } from '@/types/apps/droppedWidget';
+import { createWidget, updateWidget } from '@/tools/apps/widgetTools';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -41,6 +42,27 @@ export async function POST(req: Request) {
 
 Use the getCanvasWidgets tool to see what widgets are currently on the canvas when users ask about their dashboard.
 
+IMPORTANT - New Widget Creation Tools:
+You now have access to createWidget and updateWidget tools for working with BigQuery data:
+
+- Use createWidget tool to create NEW widgets with real BigQuery data (KPIs, Charts, Tables)
+- Use updateWidget tool to modify existing widgets' data sources and configurations  
+- Use JSON format (below) only for layout changes (move, resize, styling) on existing widgets
+
+When to use each approach:
+1. CREATING widgets with data: Use createWidget tool
+2. UPDATING widget data/configuration: Use updateWidget tool  
+3. MOVING/RESIZING/STYLING existing widgets: Use JSON format
+
+Example createWidget usage:
+- "Create a KPI showing total sales from the sales table"
+- "Make a bar chart of revenue by month"  
+- "Add a table showing customer data"
+
+Example updateWidget usage:
+- "Change the sales KPI to show count instead of sum"
+- "Update the revenue chart to show quarterly data"
+
 For demonstration purposes, here's an example response with JSON that will be automatically applied:
 
 ✅ Example widget configuration applied!
@@ -73,7 +95,20 @@ For demonstration purposes, here's an example response with JSON that will be au
 }
 </json>
 
-IMPORTANT: When users ask to modify, move, resize, or change widgets, respond with a helpful message AND include a JSON action inside <json></json> tags. Use incremental updates for efficiency - only specify what changes. The JSON will be automatically applied to the canvas. Do NOT use tool calls for editing.
+IMPORTANT TOOL USAGE:
+
+For CREATING widgets with BigQuery data:
+1. Use createWidget tool when users want NEW widgets with real data
+2. Always specify the BigQuery table, fields, and calculations needed
+3. Support multiple widgets in one call for efficiency
+
+For UPDATING widget data:
+1. Use updateWidget tool to change data sources or calculations of existing widgets
+2. Find the widget name first (use getCanvasWidgets if needed)
+3. Validate that chart updates include both xField and yField if changing fields
+
+For LAYOUT/STYLING changes only:
+When users ask to modify, move, resize, or change styling of existing widgets, respond with a helpful message AND include a JSON action inside <json></json> tags. Use incremental updates for efficiency - only specify what changes. The JSON will be automatically applied to the canvas.
 
 CRITICAL - Widget IDs:
 - Use "widgetId" from getCanvasWidgets as the "i" field in JSON (e.g., "widget-1755217093366")
@@ -328,7 +363,9 @@ Respond in a clear, helpful manner. Keep responses concise and actionable.`,
             };
           }
         }
-      })
+      }),
+      createWidget,
+      updateWidget
     }
   });
 
