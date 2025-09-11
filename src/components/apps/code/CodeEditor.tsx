@@ -146,7 +146,7 @@ console.log('Widgets criados!')
   const updateChart = async (chartName: string, newTable?: string, newXField?: string, newYField?: string, newAggregation?: string, newTitle?: string) => {
     try {
       // 1. Find existing Chart by name (search all chart types)
-      let existingChart: { id: string; name: string; bigqueryData: { selectedTable: string | null; columns: { xAxis: { name: string }[]; yAxis: { name: string; aggregation?: string }[] } } } | null = null
+      let existingChart: { id: string; name: string; bigqueryData: { selectedTable: string | null; columns: { xAxis: { name: string }[]; yAxis: { name: string; aggregation?: string }[] } } } | undefined = undefined
       let chartType: 'bar' | 'line' | 'pie' | 'area' | 'horizontal-bar' | null = null
       
       // Search in all chart stores
