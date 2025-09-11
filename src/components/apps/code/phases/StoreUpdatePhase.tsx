@@ -15,7 +15,7 @@ import { LoggingPhase } from './LoggingPhase'
 import { BigQueryExecutionPhase } from './BigQueryExecutionPhase'
 import { DataTransformationPhase } from './DataTransformationPhase'
 
-export default function CodeEditor() {
+export default function StoreUpdatePhase() {
   const [code, setCode] = useState('')
   const [output, setOutput] = useState<string[]>([])
   const [isExecuting, setIsExecuting] = useState(false)
