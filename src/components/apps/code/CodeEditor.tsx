@@ -8,6 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { kpiActions } from '@/stores/apps/kpiStore'
 import { tableActions } from '@/stores/apps/tableStore'
+import { barChartActions } from '@/stores/apps/barChartStore'
+import { lineChartActions } from '@/stores/apps/lineChartStore'
+import { pieChartActions } from '@/stores/apps/pieChartStore'
+import { areaChartActions } from '@/stores/apps/areaChartStore'
+import { horizontalBarChartActions } from '@/stores/apps/horizontalBarChartStore'
 
 export default function CodeEditor() {
   const [code, setCode] = useState('')
@@ -15,7 +20,7 @@ export default function CodeEditor() {
   const [isExecuting, setIsExecuting] = useState(false)
 
   // Default example code
-  const defaultCode = `// Criar KPIs e Tables programaticamente
+  const defaultCode = `// Criar KPIs, Tables e Charts programaticamente
 
 // Exemplo: COUNT de IDs
 createKPI('ecommerce', 'id', 'COUNT', 'Total de Registros')
@@ -26,8 +31,10 @@ createKPI('vendas_2024', 'valor_total', 'SUM', 'Vendas Totais')
 // Exemplo: Criar Table com colunas específicas
 createTable('ecommerce', ['id', 'nome', 'email', 'categoria'], 'Dados de E-commerce')
 
-// Exemplo: Table menor
-createTable('produtos', ['nome', 'preco'], 'Lista de Produtos')
+// Exemplo: Charts
+createChart('bar', 'vendas_2024', 'categoria', 'valor_total', 'SUM', 'Vendas por Categoria')
+createChart('pie', 'vendas_2024', 'regiao', 'valor_total', 'SUM', 'Vendas por Região')
+createChart('line', 'vendas_2024', 'mes', 'valor_total', 'SUM', 'Tendência Mensal')
 
 console.log('Widgets criados!')
 `
@@ -60,6 +67,132 @@ console.log('Widgets criados!')
       return 'date'
     }
     return 'text' // default fallback
+  }
+
+  // Simple Chart creation function
+  const createChart = async (type: 'bar' | 'line' | 'pie' | 'area' | 'horizontal-bar', table: string, xField: string, yField: string, aggregation: string, title?: string) => {
+    try {
+      // Generate SQL query (same as ChartPreview)
+      const query = `SELECT ${xField}, ${aggregation}(${yField}) as ${yField} FROM \`creatto-463117.biquery_data.${table}\` GROUP BY ${xField} ORDER BY ${yField} DESC LIMIT 20`
+      
+      log(`Executing: ${query}`)
+
+      // Execute BigQuery (same as Datasets)
+      const response = await fetch('/api/bigquery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'execute',
+          query: query 
+        })
+      })
+
+      if (!response.ok) {
+        const responseText = await response.text()
+        throw new Error(`Query failed: ${response.statusText} - ${responseText}`)
+      }
+
+      const result = await response.json()
+      
+      if (result.success && result.data?.data && Array.isArray(result.data.data)) {
+        const data = result.data.data
+        
+        // Base chart configuration
+        const baseChartConfig = {
+          name: title || `${xField} por ${yField}`,
+          bigqueryData: {
+            query,
+            selectedTable: table,
+            columns: {
+              xAxis: [{ name: xField, type: 'STRING', mode: 'NULLABLE' }],
+              yAxis: [{ name: yField, type: 'NUMERIC', mode: 'NULLABLE', aggregation: aggregation as 'SUM' | 'COUNT' | 'AVG' | 'MIN' | 'MAX' | 'COUNT_DISTINCT' }],
+              filters: []
+            },
+            data: data,
+            lastExecuted: new Date(),
+            isLoading: false,
+            error: null
+          },
+          position: {
+            x: 0,
+            y: 0,
+            w: 60,
+            h: 150
+          }
+        }
+
+        // Route to appropriate chart action based on type (same as UniversalBuilder)
+        switch (type) {
+          case 'bar':
+            barChartActions.addBarChart({
+              ...baseChartConfig,
+              chartType: 'bar',
+              styling: {
+                colors: ['#2563eb'],
+                showLegend: true,
+                showGrid: true,
+                title: title || `${xField} por ${yField}`
+              }
+            })
+            break
+          case 'line':
+            lineChartActions.addLineChart({
+              ...baseChartConfig,
+              chartType: 'line',
+              styling: {
+                colors: ['#10b981'],
+                showLegend: true,
+                showGrid: true,
+                title: title || `${xField} por ${yField}`
+              }
+            })
+            break
+          case 'pie':
+            pieChartActions.addPieChart({
+              ...baseChartConfig,
+              chartType: 'pie',
+              styling: {
+                colors: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4'],
+                showLegend: true,
+                showGrid: false,
+                title: title || `${xField} por ${yField}`
+              }
+            })
+            break
+          case 'area':
+            areaChartActions.addAreaChart({
+              ...baseChartConfig,
+              chartType: 'area',
+              styling: {
+                colors: ['#8b5cf6'],
+                showLegend: true,
+                showGrid: true,
+                title: title || `${xField} por ${yField}`,
+                areaOpacity: 0.4
+              }
+            })
+            break
+          case 'horizontal-bar':
+            horizontalBarChartActions.addHorizontalBarChart({
+              ...baseChartConfig,
+              chartType: 'horizontal-bar',
+              styling: {
+                colors: ['#10b981'],
+                showLegend: true,
+                showGrid: true,
+                title: title || `${xField} por ${yField}`
+              }
+            })
+            break
+        }
+
+        log(`✅ ${type} chart "${baseChartConfig.name}" created with ${data.length} rows`)
+      } else {
+        throw new Error(result.error || 'No data returned')
+      }
+    } catch (error) {
+      log(`❌ Failed to create ${type} chart: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
   }
 
   // Simple Table creation function
@@ -212,6 +345,7 @@ console.log('Widgets criados!')
       const context = {
         createKPI,
         createTable,
+        createChart,
         console: { log }
       }
 
@@ -219,7 +353,7 @@ console.log('Widgets criados!')
       const asyncFunction = new Function(
         'context',
         `
-        const { createKPI, createTable, console } = context;
+        const { createKPI, createTable, createChart, console } = context;
         return (async () => {
           ${code}
         })();
@@ -250,7 +384,7 @@ console.log('Widgets criados!')
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
         <div className="flex items-center gap-2">
           <Terminal className="w-4 h-4 text-primary" />
-          <h2 className="text-base font-semibold">Code Editor - KPI & Table</h2>
+          <h2 className="text-base font-semibold">Code Editor - KPI, Table & Chart</h2>
         </div>
         <div className="flex items-center gap-2">
           <Button
