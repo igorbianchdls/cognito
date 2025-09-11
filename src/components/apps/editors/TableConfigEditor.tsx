@@ -18,6 +18,7 @@ import TableBehaviorAccordion from './TableBehaviorAccordion'
 import TableExportAccordion from './TableExportAccordion'
 import TableColumnColorsAccordion from './TableColumnColorsAccordion'
 import PositionAccordion from './PositionAccordion'
+import TableStyleClipboardAccordion from './TableStyleClipboardAccordion'
 
 interface TableConfigEditorProps {
   selectedWidget: DroppedWidget
@@ -246,6 +247,11 @@ export default function TableConfigEditor({
             <TableColumnColorsAccordion
               columns={columns}
               onColumnUpdate={handleColumnUpdate}
+            />
+
+            <TableStyleClipboardAccordion
+              currentWidgetType="table"
+              currentWidgetId={selectedWidget.i}
             />
 
             {onLayoutChange && (
