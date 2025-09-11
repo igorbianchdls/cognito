@@ -103,10 +103,10 @@ async function handleCreateOperation(operation: WidgetOperation) {
 
 // Handler for update operations
 async function handleUpdateOperation(operation: WidgetOperation) {
-  console.log('🔄 Updating widget:', operation.params.widgetName || operation.params.kpiName)
+  console.log('🔄 Updating widget:', operation.widgetName)
   
   // Detect widget type by name
-  const widgetType = detectWidgetType(operation.params.widgetName || operation.params.kpiName)
+  const widgetType = detectWidgetType(operation.widgetName)
   
   switch (widgetType) {
     case 'kpi':
