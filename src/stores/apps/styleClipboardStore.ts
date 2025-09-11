@@ -92,7 +92,7 @@ function extractChartStyles(chartId: string, chartType: 'bar' | 'line' | 'pie' |
   if (!chart || !chart.styling) return null
   
   return {
-    backgroundColor: chart.styling.backgroundColor,
+    backgroundColor: undefined, // Charts don't have direct backgroundColor
     borderColor: chart.styling.containerBorderColor,
     borderRadius: chart.styling.containerBorderRadius,
     borderWidth: chart.styling.containerBorderWidth,
@@ -151,7 +151,7 @@ function applyKPIStyles(kpiId: string, styles: CommonStyles): void {
 function applyChartStyles(chartId: string, chartType: 'bar' | 'line' | 'pie' | 'area' | 'horizontal-bar', styles: CommonStyles): void {
   const stylingUpdates: Record<string, unknown> = {}
   
-  if (styles.backgroundColor !== undefined) stylingUpdates.backgroundColor = styles.backgroundColor
+  // Note: Charts don't have backgroundColor, only container properties
   if (styles.borderColor !== undefined) stylingUpdates.containerBorderColor = styles.borderColor
   if (styles.borderRadius !== undefined) stylingUpdates.containerBorderRadius = styles.borderRadius
   if (styles.borderWidth !== undefined) stylingUpdates.containerBorderWidth = styles.borderWidth
