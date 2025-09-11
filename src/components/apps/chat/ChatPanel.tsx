@@ -5,6 +5,7 @@ import { DefaultChatTransport } from 'ai'
 import { useState, FormEvent } from 'react'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import CanvasWidgets from './tools/CanvasWidgets'
+import AICodeExecutor from './AICodeExecutor'
 // import { widgetActions } from '@/stores/apps/widgetStore' // REMOVED: Only KPIs supported now
 import { kpiActions } from '@/stores/apps/kpiStore'
 import { handleWidgetOperations } from './widgetMapper'
@@ -302,15 +303,11 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                       }
                     }
                     if (createTool.state === 'output-available' && createTool.output.success && createTool.output.operations) {
-                      // Execute widget operations using mapper
-                      handleWidgetOperations(createTool.output.operations)
-                        .then(() => console.log('✅ Widget operations completed'))
-                        .catch((error: unknown) => console.error('❌ Widget operations failed:', error))
-                      
                       return (
-                        <div key={index} className="mt-2 p-3 bg-green-50 border-[0.5px] border-green-200 rounded-lg text-sm text-green-700">
-                          ✅ {createTool.output.message}
-                        </div>
+                        <AICodeExecutor 
+                          key={index}
+                          operations={createTool.output.operations}
+                        />
                       )
                     }
                     if (createTool.state === 'input-available') {
@@ -338,15 +335,11 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                       }
                     }
                     if (updateTool.state === 'output-available' && updateTool.output.success && updateTool.output.operations) {
-                      // Execute widget operations using mapper
-                      handleWidgetOperations(updateTool.output.operations)
-                        .then(() => console.log('✅ Widget update operations completed'))
-                        .catch(error => console.error('❌ Widget update operations failed:', error))
-                      
                       return (
-                        <div key={index} className="mt-2 p-3 bg-green-50 border-[0.5px] border-green-200 rounded-lg text-sm text-green-700">
-                          ✅ {updateTool.output.message}
-                        </div>
+                        <AICodeExecutor 
+                          key={index}
+                          operations={updateTool.output.operations}
+                        />
                       )
                     }
                     if (updateTool.state === 'input-available') {
