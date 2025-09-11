@@ -6,6 +6,7 @@ import { useState, FormEvent } from 'react'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import CanvasWidgets from './tools/CanvasWidgets'
 import AICodeExecutor from './AICodeExecutor'
+import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
 // import { widgetActions } from '@/stores/apps/widgetStore' // REMOVED: Only KPIs supported now
 import { kpiActions } from '@/stores/apps/kpiStore'
 import { handleWidgetOperations } from './widgetMapper'
@@ -251,6 +252,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                   if (part.type === 'tool-getCanvasWidgets') {
                     const widgetTool = part as {
                       state: string
+                      input?: Record<string, unknown>
                       output: {
                         widgets: Array<{
                           id: string
@@ -266,31 +268,43 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                         summary: string
                         success: boolean
                       }
+                      errorText?: string
                     }
-                    if (widgetTool.state === 'output-available') {
-                      return (
-                        <CanvasWidgets
-                          key={index}
-                          widgets={widgetTool.output.widgets}
-                          totalWidgets={widgetTool.output.totalWidgets}
-                          summary={widgetTool.output.summary}
-                          success={widgetTool.output.success}
-                        />
-                      )
-                    }
-                    if (widgetTool.state === 'input-available') {
-                      return (
-                        <div key={index} className="mt-2 p-3 bg-white border-[0.5px] border-gray-200 rounded-lg text-sm text-gray-600">
-                          🔍 Checking canvas widgets...
-                        </div>
-                      )
-                    }
+                    const shouldBeOpen = widgetTool.state === 'output-available' || widgetTool.state === 'output-error'
+                    
+                    return (
+                      <div key={index}>
+                        <Tool defaultOpen={shouldBeOpen}>
+                          <ToolHeader type="tool-getCanvasWidgets" state={widgetTool.state} />
+                          <ToolContent>
+                            {widgetTool.input && (
+                              <ToolInput input={widgetTool.input} />
+                            )}
+                            {widgetTool.state === 'output-error' && (
+                              <ToolOutput 
+                                output={null}
+                                errorText={widgetTool.errorText}
+                              />
+                            )}
+                          </ToolContent>
+                        </Tool>
+                        {widgetTool.state === 'output-available' && (
+                          <CanvasWidgets
+                            widgets={widgetTool.output.widgets}
+                            totalWidgets={widgetTool.output.totalWidgets}
+                            summary={widgetTool.output.summary}
+                            success={widgetTool.output.success}
+                          />
+                        )}
+                      </div>
+                    )
                   }
 
                   // Handle createWidget tool calls
                   if (part.type === 'tool-createWidget') {
                     const createTool = part as {
                       state: string
+                      input?: Record<string, unknown>
                       output: {
                         success: boolean
                         operations: Array<{
@@ -301,28 +315,38 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                         }>
                         message: string
                       }
+                      errorText?: string
                     }
-                    if (createTool.state === 'output-available' && createTool.output.success && createTool.output.operations) {
-                      return (
-                        <AICodeExecutor 
-                          key={index}
-                          operations={createTool.output.operations}
-                        />
-                      )
-                    }
-                    if (createTool.state === 'input-available') {
-                      return (
-                        <div key={index} className="mt-2 p-3 bg-blue-50 border-[0.5px] border-blue-200 rounded-lg text-sm text-blue-600">
-                          🔧 Creating widgets...
-                        </div>
-                      )
-                    }
+                    const shouldBeOpen = createTool.state === 'output-available' || createTool.state === 'output-error'
+                    
+                    return (
+                      <div key={index}>
+                        <Tool defaultOpen={shouldBeOpen}>
+                          <ToolHeader type="tool-createWidget" state={createTool.state} />
+                          <ToolContent>
+                            {createTool.input && (
+                              <ToolInput input={createTool.input} />
+                            )}
+                            {createTool.state === 'output-error' && (
+                              <ToolOutput 
+                                output={null}
+                                errorText={createTool.errorText}
+                              />
+                            )}
+                          </ToolContent>
+                        </Tool>
+                        {createTool.state === 'output-available' && createTool.output.success && createTool.output.operations && (
+                          <AICodeExecutor operations={createTool.output.operations} />
+                        )}
+                      </div>
+                    )
                   }
 
                   // Handle updateWidget tool calls
                   if (part.type === 'tool-updateWidget') {
                     const updateTool = part as {
                       state: string
+                      input?: Record<string, unknown>
                       output: {
                         success: boolean
                         operations: Array<{
@@ -333,22 +357,31 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                         }>
                         message: string
                       }
+                      errorText?: string
                     }
-                    if (updateTool.state === 'output-available' && updateTool.output.success && updateTool.output.operations) {
-                      return (
-                        <AICodeExecutor 
-                          key={index}
-                          operations={updateTool.output.operations}
-                        />
-                      )
-                    }
-                    if (updateTool.state === 'input-available') {
-                      return (
-                        <div key={index} className="mt-2 p-3 bg-blue-50 border-[0.5px] border-blue-200 rounded-lg text-sm text-blue-600">
-                          🔄 Updating widgets...
-                        </div>
-                      )
-                    }
+                    const shouldBeOpen = updateTool.state === 'output-available' || updateTool.state === 'output-error'
+                    
+                    return (
+                      <div key={index}>
+                        <Tool defaultOpen={shouldBeOpen}>
+                          <ToolHeader type="tool-updateWidget" state={updateTool.state} />
+                          <ToolContent>
+                            {updateTool.input && (
+                              <ToolInput input={updateTool.input} />
+                            )}
+                            {updateTool.state === 'output-error' && (
+                              <ToolOutput 
+                                output={null}
+                                errorText={updateTool.errorText}
+                              />
+                            )}
+                          </ToolContent>
+                        </Tool>
+                        {updateTool.state === 'output-available' && updateTool.output.success && updateTool.output.operations && (
+                          <AICodeExecutor operations={updateTool.output.operations} />
+                        )}
+                      </div>
+                    )
                   }
                   
                   return null
