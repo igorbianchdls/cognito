@@ -3,11 +3,11 @@
 
 import { kpiActions, $kpiWidgets } from '@/stores/apps/kpiStore'
 import { tableActions, $tableWidgets } from '@/stores/apps/tableStore'
-import { barChartActions, $barChartStore } from '@/stores/apps/barChartStore'
-import { lineChartActions, $lineChartStore } from '@/stores/apps/lineChartStore'
-import { pieChartActions, $pieChartStore } from '@/stores/apps/pieChartStore'
-import { areaChartActions, $areaChartStore } from '@/stores/apps/areaChartStore'
-import { horizontalBarChartActions, $horizontalBarChartStore } from '@/stores/apps/horizontalBarChartStore'
+import { barChartActions, $barChartStore, type BarChartConfig } from '@/stores/apps/barChartStore'
+import { lineChartActions, $lineChartStore, type LineChartConfig } from '@/stores/apps/lineChartStore'
+import { pieChartActions, $pieChartStore, type PieChartConfig } from '@/stores/apps/pieChartStore'
+import { areaChartActions, $areaChartStore, type AreaChartConfig } from '@/stores/apps/areaChartStore'
+import { horizontalBarChartActions, $horizontalBarChartStore, type HorizontalBarChartConfig } from '@/stores/apps/horizontalBarChartStore'
 
 // Types for operations
 interface CreateKPIParams {
@@ -486,7 +486,7 @@ async function updateChartFromParams(params: UpdateParams) {
   
   try {
     // 1. Find existing Chart by name (search all chart types)
-    let existingChart: any = null
+    let existingChart: BarChartConfig | LineChartConfig | PieChartConfig | AreaChartConfig | HorizontalBarChartConfig | null = null
     let chartType: 'bar' | 'line' | 'pie' | 'area' | 'horizontal-bar' | null = null
     
     const barCharts = $barChartStore.get().barCharts
