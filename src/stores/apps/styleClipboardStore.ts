@@ -1,11 +1,14 @@
 import { atom, computed } from 'nanostores'
 import { $kpiWidgets, kpiActions } from './kpiStore'
-import { $barChartStore, barChartActions } from './barChartStore'
-import { $lineChartStore, lineChartActions } from './lineChartStore'
-import { $pieChartStore, pieChartActions } from './pieChartStore'
-import { $areaChartStore, areaChartActions } from './areaChartStore'
-import { $horizontalBarChartStore, horizontalBarChartActions } from './horizontalBarChartStore'
+import { $barChartStore, barChartActions, type BarChartConfig } from './barChartStore'
+import { $lineChartStore, lineChartActions, type LineChartConfig } from './lineChartStore'
+import { $pieChartStore, pieChartActions, type PieChartConfig } from './pieChartStore'
+import { $areaChartStore, areaChartActions, type AreaChartConfig } from './areaChartStore'
+import { $horizontalBarChartStore, horizontalBarChartActions, type HorizontalBarChartConfig } from './horizontalBarChartStore'
 import { $tableWidgets, tableActions } from './tableStore'
+
+// Union type for all chart configurations
+type ChartConfig = BarChartConfig | LineChartConfig | PieChartConfig | AreaChartConfig | HorizontalBarChartConfig
 
 // Common styles interface - only visual properties shared across all widgets
 export interface CommonStyles {
@@ -66,7 +69,7 @@ function extractKPIStyles(kpiId: string): CommonStyles | null {
 }
 
 function extractChartStyles(chartId: string, chartType: 'bar' | 'line' | 'pie' | 'area' | 'horizontal-bar'): CommonStyles | null {
-  let chart: any = null
+  let chart: ChartConfig | null = null
   
   switch (chartType) {
     case 'bar':
@@ -126,7 +129,7 @@ function extractTableStyles(tableId: string): CommonStyles | null {
 
 // Style application functions for each widget type
 function applyKPIStyles(kpiId: string, styles: CommonStyles): void {
-  const updates: Record<string, any> = {}
+  const updates: Record<string, unknown> = {}
   
   if (styles.backgroundColor !== undefined) updates.backgroundColor = styles.backgroundColor
   if (styles.borderColor !== undefined) updates.borderColor = styles.borderColor
@@ -146,7 +149,7 @@ function applyKPIStyles(kpiId: string, styles: CommonStyles): void {
 }
 
 function applyChartStyles(chartId: string, chartType: 'bar' | 'line' | 'pie' | 'area' | 'horizontal-bar', styles: CommonStyles): void {
-  const stylingUpdates: Record<string, any> = {}
+  const stylingUpdates: Record<string, unknown> = {}
   
   if (styles.backgroundColor !== undefined) stylingUpdates.backgroundColor = styles.backgroundColor
   if (styles.borderColor !== undefined) stylingUpdates.containerBorderColor = styles.borderColor
@@ -181,7 +184,7 @@ function applyChartStyles(chartId: string, chartType: 'bar' | 'line' | 'pie' | '
 }
 
 function applyTableStyles(tableId: string, styles: CommonStyles): void {
-  const updates: Record<string, any> = {}
+  const updates: Record<string, unknown> = {}
   
   if (styles.backgroundColor !== undefined) updates.backgroundColor = styles.backgroundColor
   if (styles.borderColor !== undefined) updates.borderColor = styles.borderColor
