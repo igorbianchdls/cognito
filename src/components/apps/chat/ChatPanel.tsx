@@ -7,6 +7,7 @@ import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import CanvasWidgets from './tools/CanvasWidgets'
 // import { widgetActions } from '@/stores/apps/widgetStore' // REMOVED: Only KPIs supported now
 import { kpiActions } from '@/stores/apps/kpiStore'
+import { handleWidgetOperations } from './widgetMapper'
 import {
   PromptInput,
   PromptInputButton,
@@ -280,6 +281,68 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                       return (
                         <div key={index} className="mt-2 p-3 bg-white border-[0.5px] border-gray-200 rounded-lg text-sm text-gray-600">
                           🔍 Checking canvas widgets...
+                        </div>
+                      )
+                    }
+                  }
+
+                  // Handle createWidget tool calls
+                  if (part.type === 'tool-createWidget') {
+                    const createTool = part as {
+                      state: string
+                      output: {
+                        success: boolean
+                        operations: Array<any>
+                        message: string
+                      }
+                    }
+                    if (createTool.state === 'output-available' && createTool.output.success && createTool.output.operations) {
+                      // Execute widget operations using mapper
+                      handleWidgetOperations(createTool.output.operations)
+                        .then(() => console.log('✅ Widget operations completed'))
+                        .catch(error => console.error('❌ Widget operations failed:', error))
+                      
+                      return (
+                        <div key={index} className="mt-2 p-3 bg-green-50 border-[0.5px] border-green-200 rounded-lg text-sm text-green-700">
+                          ✅ {createTool.output.message}
+                        </div>
+                      )
+                    }
+                    if (createTool.state === 'input-available') {
+                      return (
+                        <div key={index} className="mt-2 p-3 bg-blue-50 border-[0.5px] border-blue-200 rounded-lg text-sm text-blue-600">
+                          🔧 Creating widgets...
+                        </div>
+                      )
+                    }
+                  }
+
+                  // Handle updateWidget tool calls
+                  if (part.type === 'tool-updateWidget') {
+                    const updateTool = part as {
+                      state: string
+                      output: {
+                        success: boolean
+                        operations: Array<any>
+                        message: string
+                      }
+                    }
+                    if (updateTool.state === 'output-available' && updateTool.output.success && updateTool.output.operations) {
+                      // Execute widget operations using mapper
+                      handleWidgetOperations(updateTool.output.operations)
+                        .then(() => console.log('✅ Widget update operations completed'))
+                        .catch(error => console.error('❌ Widget update operations failed:', error))
+                      
+                      return (
+                        <div key={index} className="mt-2 p-3 bg-green-50 border-[0.5px] border-green-200 rounded-lg text-sm text-green-700">
+                          ✅ {updateTool.output.message}
+                        </div>
+                      )
+                    }
+                    if (updateTool.state === 'input-available') {
+                      return (
+                        <div key={index} className="mt-2 p-3 bg-blue-50 border-[0.5px] border-blue-200 rounded-lg text-sm text-blue-600">
+                          🔄 Updating widgets...
                         </div>
                       )
                     }

@@ -36,20 +36,24 @@ export const createWidget = tool({
     console.log('🎯 createWidget tool executed with:', widgets.length, 'widgets');
     
     try {
-      // TODO: Implementar lógica de criação de widgets
-      // Por enquanto, retorna sucesso para teste
+      const operations = widgets.map(widget => ({
+        action: 'create' as const,
+        type: widget.type,
+        params: widget
+      }));
       
       return {
         success: true,
         totalWidgets: widgets.length,
         created: widgets.length,
         failed: 0,
-        message: `Tool criada com sucesso. ${widgets.length} widget(s) prontos para implementação.`,
+        message: `${widgets.length} widget(s) prontos para criação.`,
+        operations,
         results: widgets.map((widget, index) => ({
           type: widget.type,
           success: true,
           name: widget.title || `Widget ${index + 1}`,
-          message: 'Aguardando implementação'
+          message: 'Pronto para execução'
         }))
       };
     } catch (error) {
@@ -59,7 +63,8 @@ export const createWidget = tool({
         totalWidgets: widgets.length,
         created: 0,
         failed: widgets.length,
-        error: error instanceof Error ? error.message : 'Unknown error occurred'
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        operations: []
       };
     }
   }
@@ -92,19 +97,23 @@ export const updateWidget = tool({
     console.log('🔄 updateWidget tool executed with:', updates.length, 'updates');
     
     try {
-      // TODO: Implementar lógica de atualização de widgets
-      // Por enquanto, retorna sucesso para teste
+      const operations = updates.map(update => ({
+        action: 'update' as const,
+        widgetName: update.widgetName,
+        params: update.changes
+      }));
       
       return {
         success: true,
         totalUpdates: updates.length,
         successful: updates.length,
         failed: 0,
-        message: `Tool criada com sucesso. ${updates.length} update(s) prontos para implementação.`,
+        message: `${updates.length} update(s) prontos para execução.`,
+        operations,
         results: updates.map(update => ({
           widgetName: update.widgetName,
           success: true,
-          message: 'Aguardando implementação'
+          message: 'Pronto para execução'
         }))
       };
     } catch (error) {
@@ -114,7 +123,8 @@ export const updateWidget = tool({
         totalUpdates: updates.length,
         successful: 0,
         failed: updates.length,
-        error: error instanceof Error ? error.message : 'Unknown error occurred'
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+        operations: []
       };
     }
   }
