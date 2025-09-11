@@ -126,9 +126,9 @@ export default function StyleClipboardAccordion({
                         Radius
                       </span>
                     )}
-                    {clipboard.commonStyles.padding && (
+                    {clipboard.commonStyles.titleFontWeight && (
                       <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
-                        Padding
+                        Font Weight
                       </span>
                     )}
                   </div>
