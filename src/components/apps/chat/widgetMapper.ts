@@ -114,13 +114,13 @@ async function handleUpdateOperation(operation: WidgetOperation) {
   
   switch (widgetType) {
     case 'kpi':
-      await updateKPIFromParams(operation.params as UpdateParams)
+      await updateKPIFromParams(operation.widgetName, operation.params as UpdateParams)
       break
     case 'chart':
-      await updateChartFromParams(operation.params as UpdateParams)
+      await updateChartFromParams(operation.widgetName, operation.params as UpdateParams)
       break
     case 'table':
-      await updateTableFromParams(operation.params as UpdateParams)
+      await updateTableFromParams(operation.widgetName, operation.params as UpdateParams)
       break
     default:
       console.warn('⚠️ Could not determine widget type for:', operation.widgetName)
@@ -412,8 +412,8 @@ async function createTableFromParams(params: CreateTableParams) {
 
 // UPDATE FUNCTIONS - Based on CodeEditor logic
 
-async function updateKPIFromParams(params: UpdateParams) {
-  console.log('🔄 Updating KPI:', params.kpiName)
+async function updateKPIFromParams(widgetName: string, params: UpdateParams) {
+  console.log('🔄 Updating KPI:', widgetName)
   
   try {
     // 1. Find existing KPI by name (same as CodeEditor)
@@ -489,8 +489,8 @@ async function updateKPIFromParams(params: UpdateParams) {
   }
 }
 
-async function updateChartFromParams(params: UpdateParams) {
-  console.log('🔄 Updating chart:', params.widgetName)
+async function updateChartFromParams(widgetName: string, params: UpdateParams) {
+  console.log('🔄 Updating chart:', widgetName)
   
   try {
     // 1. Find existing Chart by name (search all chart types)
@@ -503,34 +503,34 @@ async function updateChartFromParams(params: UpdateParams) {
     const areaCharts = $areaChartStore.get().areaCharts
     const horizontalBarCharts = $horizontalBarChartStore.get().horizontalBarCharts
     
-    existingChart = barCharts.find(chart => chart.name === params.widgetName)
+    existingChart = barCharts.find(chart => chart.name === widgetName)
     if (existingChart) chartType = 'bar'
     
     if (!existingChart) {
-      existingChart = lineCharts.find(chart => chart.name === params.widgetName)
+      existingChart = lineCharts.find(chart => chart.name === widgetName)
       if (existingChart) chartType = 'line'
     }
     
     if (!existingChart) {
-      existingChart = pieCharts.find(chart => chart.name === params.widgetName)
+      existingChart = pieCharts.find(chart => chart.name === widgetName)
       if (existingChart) chartType = 'pie'
     }
     
     if (!existingChart) {
-      existingChart = areaCharts.find(chart => chart.name === params.widgetName)
+      existingChart = areaCharts.find(chart => chart.name === widgetName)
       if (existingChart) chartType = 'area'
     }
     
     if (!existingChart) {
-      existingChart = horizontalBarCharts.find(chart => chart.name === params.widgetName)
+      existingChart = horizontalBarCharts.find(chart => chart.name === widgetName)
       if (existingChart) chartType = 'horizontal-bar'
     }
     
     if (!existingChart) {
-      throw new Error(`Chart "${params.widgetName}" not found`)
+      throw new Error(`Chart "${widgetName}" not found`)
     }
     
-    console.log('Found', chartType, 'chart:', params.widgetName)
+    console.log('Found', chartType, 'chart:', widgetName)
     
     // 2. Use existing parameters or new ones
     const updatedTable = params.newTable || existingChart.bigqueryData.selectedTable
@@ -602,19 +602,19 @@ async function updateChartFromParams(params: UpdateParams) {
   }
 }
 
-async function updateTableFromParams(params: UpdateParams) {
-  console.log('🔄 Updating table:', params.widgetName)
+async function updateTableFromParams(widgetName: string, params: UpdateParams) {
+  console.log('🔄 Updating table:', widgetName)
   
   try {
     // 1. Find existing Table by name
     const currentTables = $tableWidgets.get()
-    const existingTable = currentTables.find(table => table.name === params.widgetName)
+    const existingTable = currentTables.find(table => table.name === widgetName)
     
     if (!existingTable) {
-      throw new Error(`Table "${params.widgetName}" not found`)
+      throw new Error(`Table "${widgetName}" not found`)
     }
     
-    console.log('Found Table to update:', params.widgetName, '(ID:', existingTable.i, ')')
+    console.log('Found Table to update:', widgetName, '(ID:', existingTable.i, ')')
     
     // 2. Get current data
     const currentColumns = existingTable.config.columns?.map(col => col.id) || []
