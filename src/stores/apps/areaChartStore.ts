@@ -333,9 +333,7 @@ export const areaChartActions = {
   // Clear all area charts
   clearAll: () => {
     console.log('🗑️ Clearing all area charts')
-    $areaChartStore.set({
-      areaCharts: [],
-      selectedAreaChartId: null
-    })
+    $areaChartStore.set({ areaCharts: [] })
+    $selectedAreaChartId.set(null)
   }
 }
