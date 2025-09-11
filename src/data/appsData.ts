@@ -27,7 +27,7 @@ export interface AppData {
 export const categories = [
   'All',
   'Forms',
-  'Dashboard', 
+  'Dashboa', 
   'Landing Pages',
   'Apps & Games',
   'Components',
