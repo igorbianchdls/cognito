@@ -1,6 +1,6 @@
 import { atom, computed } from 'nanostores'
-import { $tableWidgets, tableActions, type TableWidget } from './tableStore'
-import type { TableConfig } from '@/types/apps/tableWidgets'
+import { $tableWidgets, tableActions } from './tableStore'
+import type { TableConfig, TableWidget } from '@/types/apps/tableWidgets'
 
 // Union type for table widget types
 type TableStyleClipboard = {
