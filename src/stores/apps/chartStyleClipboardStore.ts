@@ -187,23 +187,44 @@ function applyChartStyles(chartId: string, chartType: 'bar' | 'line' | 'pie' | '
   if (styles.borderWidth !== undefined) stylingUpdates.borderWidth = styles.borderWidth
   if (styles.borderColor !== undefined) stylingUpdates.borderColor = styles.borderColor
   
-  const updates = { styling: stylingUpdates }
+  // Get existing chart config and merge styling updates
+  let existingChart: ChartConfig | undefined
   
   switch (chartType) {
     case 'bar':
-      barChartActions.updateBarChart(chartId, updates)
+      existingChart = $barChartStore.get().barCharts.find(chart => chart.id === chartId)
+      if (existingChart) {
+        const updatedStyling = { ...existingChart.styling, ...stylingUpdates }
+        barChartActions.updateBarChart(chartId, { styling: updatedStyling })
+      }
       break
     case 'line':
-      lineChartActions.updateLineChart(chartId, updates)
+      existingChart = $lineChartStore.get().lineCharts.find(chart => chart.id === chartId)
+      if (existingChart) {
+        const updatedStyling = { ...existingChart.styling, ...stylingUpdates }
+        lineChartActions.updateLineChart(chartId, { styling: updatedStyling })
+      }
       break
     case 'pie':
-      pieChartActions.updatePieChart(chartId, updates)
+      existingChart = $pieChartStore.get().pieCharts.find(chart => chart.id === chartId)
+      if (existingChart) {
+        const updatedStyling = { ...existingChart.styling, ...stylingUpdates }
+        pieChartActions.updatePieChart(chartId, { styling: updatedStyling })
+      }
       break
     case 'area':
-      areaChartActions.updateAreaChart(chartId, updates)
+      existingChart = $areaChartStore.get().areaCharts.find(chart => chart.id === chartId)
+      if (existingChart) {
+        const updatedStyling = { ...existingChart.styling, ...stylingUpdates }
+        areaChartActions.updateAreaChart(chartId, { styling: updatedStyling })
+      }
       break
     case 'horizontal-bar':
-      horizontalBarChartActions.updateHorizontalBarChart(chartId, updates)
+      existingChart = $horizontalBarChartStore.get().horizontalBarCharts.find(chart => chart.id === chartId)
+      if (existingChart) {
+        const updatedStyling = { ...existingChart.styling, ...stylingUpdates }
+        horizontalBarChartActions.updateHorizontalBarChart(chartId, { styling: updatedStyling })
+      }
       break
   }
 }
