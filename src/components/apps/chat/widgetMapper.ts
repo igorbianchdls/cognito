@@ -88,16 +88,16 @@ async function handleCreateOperation(operation: WidgetOperation) {
   
   switch (operation.type) {
     case 'kpi':
-      await createKPIFromParams(operation.params)
+      await createKPIFromParams(operation.params as CreateKPIParams)
       break
     case 'chart':
-      await createChartFromParams(operation.params)
+      await createChartFromParams(operation.params as CreateChartParams)
       break
     case 'table':
-      await createTableFromParams(operation.params)
+      await createTableFromParams(operation.params as CreateTableParams)
       break
     default:
-      console.warn('⚠️ Unknown widget type:', operation.widgetType)
+      console.warn('⚠️ Unknown widget type:', operation.type)
   }
 }
 
@@ -110,16 +110,16 @@ async function handleUpdateOperation(operation: WidgetOperation) {
   
   switch (widgetType) {
     case 'kpi':
-      await updateKPIFromParams(operation.params)
+      await updateKPIFromParams(operation.params as UpdateParams)
       break
     case 'chart':
-      await updateChartFromParams(operation.params)
+      await updateChartFromParams(operation.params as UpdateParams)
       break
     case 'table':
-      await updateTableFromParams(operation.params)
+      await updateTableFromParams(operation.params as UpdateParams)
       break
     default:
-      console.warn('⚠️ Could not determine widget type for:', operation.params.widgetName)
+      console.warn('⚠️ Could not determine widget type for:', operation.widgetName)
   }
 }
 
