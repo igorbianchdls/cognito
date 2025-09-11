@@ -13,6 +13,7 @@ import { lineChartActions, $lineChartStore } from '@/stores/apps/lineChartStore'
 import { pieChartActions, $pieChartStore } from '@/stores/apps/pieChartStore'
 import { areaChartActions, $areaChartStore } from '@/stores/apps/areaChartStore'
 import { horizontalBarChartActions, $horizontalBarChartStore } from '@/stores/apps/horizontalBarChartStore'
+import type { BigQueryField } from '../builder/TablesExplorer'
 
 export default function CodeEditor() {
   const [code, setCode] = useState('')
