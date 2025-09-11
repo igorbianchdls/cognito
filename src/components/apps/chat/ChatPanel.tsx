@@ -5,6 +5,7 @@ import { DefaultChatTransport } from 'ai'
 import { useState, FormEvent } from 'react'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import CanvasWidgets from './tools/CanvasWidgets'
+import WidgetsTable from './tools/WidgetsTable'
 import AICodeExecutor from './AICodeExecutor'
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
 // import { widgetActions } from '@/stores/apps/widgetStore' // REMOVED: Only KPIs supported now
@@ -289,7 +290,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                           </ToolContent>
                         </Tool>
                         {widgetTool.state === 'output-available' && (
-                          <CanvasWidgets
+                          <WidgetsTable
                             widgets={widgetTool.output.widgets}
                             totalWidgets={widgetTool.output.totalWidgets}
                             summary={widgetTool.output.summary}
