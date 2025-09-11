@@ -10,6 +10,7 @@ import { areaChartActions, $areaChartStore } from '@/stores/apps/areaChartStore'
 import { horizontalBarChartActions, $horizontalBarChartStore } from '@/stores/apps/horizontalBarChartStore'
 import CodeEditorInterface from './ui/CodeEditorInterface'
 import { QueryConstructionPhase } from './phases/QueryConstructionPhase'
+import { WidgetLookupPhase } from './phases/WidgetLookupPhase'
 
 export default function CodeEditor() {
   const [code, setCode] = useState('')
@@ -55,8 +56,7 @@ console.log('Widgets criados!')
   const updateKPI = async (kpiName: string, newTable?: string, newField?: string, newCalculation?: string, newTitle?: string) => {
     try {
       // 1. Find existing KPI by name (same as Datasets selection)
-      const currentKPIs = $kpiWidgets.get()
-      const existingKPI = currentKPIs.find(kpi => kpi.config.name === kpiName)
+      const existingKPI = WidgetLookupPhase.findExistingKPI(kpiName)
       
       if (!existingKPI) {
         throw new Error(`KPI "${kpiName}" not found`)
@@ -143,38 +143,7 @@ console.log('Widgets criados!')
   const updateChart = async (chartName: string, newTable?: string, newXField?: string, newYField?: string, newAggregation?: string, newTitle?: string) => {
     try {
       // 1. Find existing Chart by name (search all chart types)
-      let existingChart: { id: string; name: string; bigqueryData: { selectedTable: string | null; columns: { xAxis: { name: string; type: string }[]; yAxis: { name: string; type: string; aggregation?: string }[]; filters: { name: string; type: string }[] } } } | undefined = undefined
-      let chartType: 'bar' | 'line' | 'pie' | 'area' | 'horizontal-bar' | null = null
-      
-      // Search in all chart stores
-      const barCharts = $barChartStore.get().barCharts
-      const lineCharts = $lineChartStore.get().lineCharts
-      const pieCharts = $pieChartStore.get().pieCharts
-      const areaCharts = $areaChartStore.get().areaCharts
-      const horizontalBarCharts = $horizontalBarChartStore.get().horizontalBarCharts
-      
-      existingChart = barCharts.find(chart => chart.name === chartName)
-      if (existingChart) chartType = 'bar'
-      
-      if (!existingChart) {
-        existingChart = lineCharts.find(chart => chart.name === chartName)
-        if (existingChart) chartType = 'line'
-      }
-      
-      if (!existingChart) {
-        existingChart = pieCharts.find(chart => chart.name === chartName)
-        if (existingChart) chartType = 'pie'
-      }
-      
-      if (!existingChart) {
-        existingChart = areaCharts.find(chart => chart.name === chartName)
-        if (existingChart) chartType = 'area'
-      }
-      
-      if (!existingChart) {
-        existingChart = horizontalBarCharts.find(chart => chart.name === chartName)
-        if (existingChart) chartType = 'horizontal-bar'
-      }
+      const { existingChart, chartType } = WidgetLookupPhase.findExistingChart(chartName)
       
       if (!existingChart || !chartType) {
         throw new Error(`Chart "${chartName}" not found`)
@@ -402,8 +371,7 @@ console.log('Widgets criados!')
   const updateTable = async (tableName: string, newBqTable?: string, newColumns?: string[], newTitle?: string) => {
     try {
       // 1. Find existing Table by name (same as Datasets selection)
-      const currentTables = $tableWidgets.get()
-      const existingTable = currentTables.find(table => table.name === tableName)
+      const existingTable = WidgetLookupPhase.findExistingTable(tableName)
       
       if (!existingTable) {
         throw new Error(`Table "${tableName}" not found`)
