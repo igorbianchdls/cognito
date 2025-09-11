@@ -73,19 +73,19 @@ function extractChartStyles(chartId: string, chartType: 'bar' | 'line' | 'pie' |
   
   switch (chartType) {
     case 'bar':
-      chart = $barChartStore.get().barCharts.find(c => c.id === chartId)
+      chart = $barChartStore.get().barCharts.find(c => c.id === chartId) ?? null
       break
     case 'line':
-      chart = $lineChartStore.get().lineCharts.find(c => c.id === chartId)
+      chart = $lineChartStore.get().lineCharts.find(c => c.id === chartId) ?? null
       break
     case 'pie':
-      chart = $pieChartStore.get().pieCharts.find(c => c.id === chartId)
+      chart = $pieChartStore.get().pieCharts.find(c => c.id === chartId) ?? null
       break
     case 'area':
-      chart = $areaChartStore.get().areaCharts.find(c => c.id === chartId)
+      chart = $areaChartStore.get().areaCharts.find(c => c.id === chartId) ?? null
       break
     case 'horizontal-bar':
-      chart = $horizontalBarChartStore.get().horizontalBarCharts.find(c => c.id === chartId)
+      chart = $horizontalBarChartStore.get().horizontalBarCharts.find(c => c.id === chartId) ?? null
       break
   }
   
