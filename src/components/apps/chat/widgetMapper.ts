@@ -418,13 +418,13 @@ async function updateKPIFromParams(widgetName: string, params: UpdateParams) {
   try {
     // 1. Find existing KPI by name (same as CodeEditor)
     const currentKPIs = $kpiWidgets.get()
-    const existingKPI = currentKPIs.find(kpi => kpi.config.name === params.kpiName)
+    const existingKPI = currentKPIs.find(kpi => kpi.config.name === widgetName)
     
     if (!existingKPI) {
-      throw new Error(`KPI "${params.kpiName}" not found`)
+      throw new Error(`KPI "${widgetName}" not found`)
     }
     
-    console.log('Found KPI to update:', params.kpiName, '(ID:', existingKPI.i, ')')
+    console.log('Found KPI to update:', widgetName, '(ID:', existingKPI.i, ')')
     
     // 2. Get current data
     const currentData = existingKPI.config.bigqueryData
