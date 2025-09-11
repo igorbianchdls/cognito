@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { kpiActions } from '@/stores/apps/kpiStore'
+import { tableActions } from '@/stores/apps/tableStore'
 
 export default function CodeEditor() {
   const [code, setCode] = useState('')
@@ -14,7 +15,7 @@ export default function CodeEditor() {
   const [isExecuting, setIsExecuting] = useState(false)
 
   // Default example code
-  const defaultCode = `// Criar KPIs programaticamente
+  const defaultCode = `// Criar KPIs e Tables programaticamente
 
 // Exemplo: COUNT de IDs
 createKPI('ecommerce', 'id', 'COUNT', 'Total de Registros')
@@ -22,10 +23,13 @@ createKPI('ecommerce', 'id', 'COUNT', 'Total de Registros')
 // Exemplo: SUM de valores
 createKPI('vendas_2024', 'valor_total', 'SUM', 'Vendas Totais')
 
-// Exemplo: AVG de preços
-createKPI('produtos', 'preco', 'AVG', 'Preço Médio')
+// Exemplo: Criar Table com colunas específicas
+createTable('ecommerce', ['id', 'nome', 'email', 'categoria'], 'Dados de E-commerce')
 
-console.log('KPIs criados!')
+// Exemplo: Table menor
+createTable('produtos', ['nome', 'preco'], 'Lista de Produtos')
+
+console.log('Widgets criados!')
 `
 
   useEffect(() => {
@@ -38,6 +42,85 @@ console.log('KPIs criados!')
       typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
     ).join(' ')
     setOutput(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`])
+  }
+
+  // Helper function to map BigQuery types to table column types
+  const getColumnType = (bigqueryType: string): 'text' | 'number' | 'boolean' | 'date' => {
+    const lowerType = bigqueryType.toLowerCase()
+    if (lowerType.includes('string') || lowerType.includes('text')) {
+      return 'text'
+    }
+    if (lowerType.includes('int') || lowerType.includes('numeric') || lowerType.includes('float') || lowerType.includes('decimal')) {
+      return 'number'
+    }
+    if (lowerType.includes('bool')) {
+      return 'boolean'
+    }
+    if (lowerType.includes('date') || lowerType.includes('timestamp')) {
+      return 'date'
+    }
+    return 'text' // default fallback
+  }
+
+  // Simple Table creation function
+  const createTable = async (table: string, columns: string[], title?: string) => {
+    try {
+      // Generate SQL query (same as TablePreview)
+      const query = `SELECT ${columns.join(', ')} FROM \`creatto-463117.biquery_data.${table}\` LIMIT 100`
+      
+      log(`Executing: ${query}`)
+
+      // Execute BigQuery (same as Datasets)
+      const response = await fetch('/api/bigquery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          action: 'execute',
+          query: query 
+        })
+      })
+
+      if (!response.ok) {
+        const responseText = await response.text()
+        throw new Error(`Query failed: ${response.statusText} - ${responseText}`)
+      }
+
+      const result = await response.json()
+      
+      if (result.success && result.data?.data && Array.isArray(result.data.data)) {
+        const data = result.data.data
+        
+        // Create Table using the same action as Datasets
+        tableActions.addTable({
+          name: title || `${table} - Table`,
+          icon: '📋',
+          description: `Table from ${table}`,
+          position: { x: 0, y: 0 },
+          size: { w: 72, h: 200 },
+          config: {
+            data: data, // Real BigQuery data
+            columns: columns.map(col => ({
+              id: col,
+              header: col,
+              accessorKey: col,
+              sortable: true,
+              type: 'text' as const // simplified - could be enhanced to detect types
+            })),
+            showPagination: true,
+            showColumnToggle: true,
+            pageSize: 10,
+            searchPlaceholder: 'Buscar...',
+            dataSource: 'BigQuery'
+          }
+        })
+
+        log(`✅ Table "${title || table}" created with ${data.length} rows`)
+      } else {
+        throw new Error(result.error || 'No data returned')
+      }
+    } catch (error) {
+      log(`❌ Failed to create table: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
   }
 
   // Simple KPI creation function
@@ -128,6 +211,7 @@ console.log('KPIs criados!')
       // Create execution context
       const context = {
         createKPI,
+        createTable,
         console: { log }
       }
 
@@ -135,7 +219,7 @@ console.log('KPIs criados!')
       const asyncFunction = new Function(
         'context',
         `
-        const { createKPI, console } = context;
+        const { createKPI, createTable, console } = context;
         return (async () => {
           ${code}
         })();
@@ -166,7 +250,7 @@ console.log('KPIs criados!')
       <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
         <div className="flex items-center gap-2">
           <Terminal className="w-4 h-4 text-primary" />
-          <h2 className="text-base font-semibold">Code Editor - KPI</h2>
+          <h2 className="text-base font-semibold">Code Editor - KPI & Table</h2>
         </div>
         <div className="flex items-center gap-2">
           <Button
