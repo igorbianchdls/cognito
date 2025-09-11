@@ -12,7 +12,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { Button } from "@/components/ui/button"
-import { Copy, Paste, Clipboard, X } from "lucide-react"
 
 interface TableStyleClipboardAccordionProps {
   currentWidgetType: 'table'
@@ -42,8 +41,7 @@ export default function TableStyleClipboardAccordion({
     <AccordionItem value="table-style-clipboard">
       <AccordionTrigger className="text-sm py-3">
         <div className="flex items-center gap-2">
-          <Clipboard className="h-4 w-4" />
-          <span>Style Clipboard</span>
+          <span>🎨 Table Style Clipboard</span>
           {hasStyles && (
             <div className="w-2 h-2 bg-green-500 rounded-full" title="Has copied styles" />
           )}
@@ -61,8 +59,7 @@ export default function TableStyleClipboardAccordion({
               size="sm"
               className="w-full flex items-center gap-2"
             >
-              <Copy className="h-4 w-4" />
-              Copy Table Styles
+              📋 Copy Table Styles
             </Button>
             <p className="text-xs text-gray-500 mt-1">
               Copy visual styles from this table
@@ -78,8 +75,7 @@ export default function TableStyleClipboardAccordion({
               size="sm"
               className="w-full flex items-center gap-2"
             >
-              <Paste className="h-4 w-4" />
-              Paste Table Styles
+              ✨ Paste Table Styles
             </Button>
             <p className="text-xs text-gray-500 mt-1">
               Apply copied styles to this table
@@ -96,8 +92,9 @@ export default function TableStyleClipboardAccordion({
                   variant="ghost"
                   size="sm"
                   className="h-6 w-6 p-0"
+                  title="Clear clipboard"
                 >
-                  <X className="h-3 w-3" />
+                  🗑️
                 </Button>
               </div>
               
@@ -210,9 +207,9 @@ export default function TableStyleClipboardAccordion({
             <div className="text-xs text-gray-500 bg-gray-50 rounded-md p-3 border">
               <p><strong>How to use:</strong></p>
               <ol className="list-decimal list-inside space-y-1 mt-2">
-                <li>Click "Copy Table Styles" on a table with your desired styling</li>
+                <li>Click &ldquo;Copy Table Styles&rdquo; on a table with your desired styling</li>
                 <li>Select another table you want to apply the styles to</li>
-                <li>Click "Paste Table Styles" to apply the copied styles</li>
+                <li>Click &ldquo;Paste Table Styles&rdquo; to apply the copied styles</li>
               </ol>
             </div>
           )}
