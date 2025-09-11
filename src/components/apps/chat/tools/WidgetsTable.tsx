@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Edit, MapPin, Resize } from 'lucide-react'
+import { Edit, MapPin, Maximize2 } from 'lucide-react'
 
 interface WidgetData {
   id: string
@@ -179,7 +179,7 @@ export default function WidgetsTable({ widgets, totalWidgets, summary, success }
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1 text-sm">
-                    <Resize className="w-3 h-3" />
+                    <Maximize2 className="w-3 h-3" />
                     {widget.size.width}×{widget.size.height}
                   </div>
                 </TableCell>
