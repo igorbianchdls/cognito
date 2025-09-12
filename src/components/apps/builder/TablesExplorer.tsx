@@ -217,10 +217,10 @@ export default function TablesExplorer({
     <div className={`h-full flex flex-col relative overflow-hidden max-w-full ${className}`}>
       {/* Header - Conditional */}
       {showHeader && (
-        <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 flex-shrink-0">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-transparent flex-shrink-0">
           <div className="flex items-center gap-2">
-            <Database className="w-3 h-3 text-primary" />
-            <h2 className={`font-semibold ${compact ? 'text-sm' : 'text-base'}`}>Tables</h2>
+            <Database className="w-3 h-3" style={{ color: 'rgb(94, 94, 94)' }} />
+            <h2 className={`font-semibold ${compact ? 'text-sm' : 'text-base'}`} style={{ color: 'rgb(94, 94, 94)' }}>Tables</h2>
           </div>
           <Button
             variant="ghost"
@@ -228,8 +228,9 @@ export default function TablesExplorer({
             onClick={loadTables}
             disabled={loading}
             className="gap-2"
+            style={{ color: 'rgb(94, 94, 94)' }}
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} style={{ color: 'rgb(94, 94, 94)' }} />
             Refresh
           </Button>
         </div>
