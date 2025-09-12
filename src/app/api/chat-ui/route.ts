@@ -18,6 +18,16 @@ export async function POST(req: Request) {
     
     messages: convertToModelMessages(messages),
     
+    // Enable Claude reasoning/thinking
+    providerOptions: {
+      anthropic: {
+        thinking: { 
+          type: 'enabled', 
+          budgetTokens: 12000 
+        }
+      }
+    },
+    
     // PrepareStep: Define comportamento para cada um dos 6 steps
     prepareStep: ({ stepNumber, steps }) => {
       console.log(`📊 NEXUS PREPARE STEP ${stepNumber}: Configurando comportamento`);
