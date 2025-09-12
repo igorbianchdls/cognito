@@ -276,7 +276,7 @@ export default function TablesExplorer({
                     {/* Table Header - Clickable */}
                     <div
                       onClick={() => handleTableClick(tableId)}
-                      className={`flex items-center gap-2 ${compact ? 'px-1 py-1' : 'px-2 py-2'} rounded-md cursor-pointer transition-colors overflow-hidden ${
+                      className={`flex items-center gap-2 ${compact ? 'px-1 py-0.5' : 'px-2 py-1'} rounded-md cursor-pointer transition-colors overflow-hidden ${
                         isExpanded ? 'bg-muted/50' : 'hover:bg-muted/30'
                       }`}
                     >
@@ -285,16 +285,11 @@ export default function TablesExplorer({
                       ) : (
                         <ChevronRight className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} text-muted-foreground flex-shrink-0`} />
                       )}
-                      <Table2 className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} text-primary flex-shrink-0`} />
+                      <Table2 className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} text-gray-700 flex-shrink-0`} />
                       <div className="flex-1 min-w-0">
-                        <div className={`${compact ? 'text-xs' : 'text-sm'} font-medium truncate`}>
+                        <div className={`${compact ? 'text-xs' : 'text-sm'} font-medium truncate text-gray-700`}>
                           {tableId}
                         </div>
-                        {showMetadata && numRows && (
-                          <div className="text-xs text-muted-foreground truncate">
-                            {formatRowCount(numRows)}
-                          </div>
-                        )}
                       </div>
                       {isLoadingThisSchema && (
                         <RefreshCw className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} animate-spin text-primary flex-shrink-0`} />
