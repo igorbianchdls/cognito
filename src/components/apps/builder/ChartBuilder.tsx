@@ -100,7 +100,7 @@ export default function ChartBuilder({
               <div className="flex flex-col items-center gap-2">
                 {type.icon}
                 <div className="text-center">
-                  <p className="font-medium text-sm">{type.label}</p>
+                  <p className="font-medium text-sm" style={{ color: 'var(--cinzaDark)' }}>{type.label}</p>
                   <p className="text-xs text-muted-foreground">{type.description}</p>
                 </div>
               </div>

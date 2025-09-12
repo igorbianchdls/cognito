@@ -768,9 +768,9 @@ export default function UniversalBuilder({
 
   // Widget type options (2x3 grid)
   const widgetTypes = [
-    { id: 'chart' as const, label: 'Chart', icon: <BarChart3 className="w-6 h-6" />, description: 'Bar, line, pie charts' },
-    { id: 'kpi' as const, label: 'KPI', icon: <TrendingUp className="w-6 h-6" />, description: 'Key performance indicators' },
-    { id: 'table' as const, label: 'Table', icon: <Table className="w-6 h-6" />, description: 'Data tables' }
+    { id: 'chart' as const, label: 'Chart', icon: <BarChart3 className="w-6 h-6" style={{ color: 'var(--cinzaDark)' }} />, description: 'Bar, line, pie charts' },
+    { id: 'kpi' as const, label: 'KPI', icon: <TrendingUp className="w-6 h-6" style={{ color: 'var(--cinzaDark)' }} />, description: 'Key performance indicators' },
+    { id: 'table' as const, label: 'Table', icon: <Table className="w-6 h-6" style={{ color: 'var(--cinzaDark)' }} />, description: 'Data tables' }
   ]
 
 
@@ -809,8 +809,8 @@ export default function UniversalBuilder({
           {/* Widget Type Selection */}
           <div className="space-y-3">
             <div className="flex items-center gap-2 px-2">
-              <Activity className="w-4 h-4 text-muted-foreground" />
-              <h3 className="text-sm font-medium">Widget Type</h3>
+              <Activity className="w-4 h-4" style={{ color: 'var(--cinzaDark)' }} />
+              <h3 className="text-sm font-medium" style={{ color: 'var(--cinzaDark)' }}>Widget Type</h3>
             </div>
             <div className="grid grid-cols-3 gap-2 px-2">
               {widgetTypes.map((type) => (
@@ -825,7 +825,7 @@ export default function UniversalBuilder({
                 >
                   <div className="flex flex-col items-center gap-2">
                     {type.icon}
-                    <span className="font-medium text-sm text-center">{type.label}</span>
+                    <span className="font-medium text-sm text-center" style={{ color: 'var(--cinzaDark)' }}>{type.label}</span>
                   </div>
                 </div>
               ))}
