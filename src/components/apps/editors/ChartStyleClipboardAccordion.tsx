@@ -269,35 +269,35 @@ export default function ChartStyleClipboardAccordion({
                     )}
                     
                     {/* Line Chart Specific */}
-                    {clipboard.commonStyles.enableDots !== undefined && (
+                    {clipboard.commonStyles.enablePoints !== undefined && (
                       <span className={`px-1.5 py-0.5 rounded text-xs border ${
                         currentWidgetType === 'chart-line'
                           ? 'bg-green-50 border-green-200 text-green-700'
                           : 'bg-gray-50 border-gray-200 text-gray-400'
                       }`}>
-                        Enable Dots {currentWidgetType !== 'chart-line' && '(ignored)'}
+                        Enable Points {currentWidgetType !== 'chart-line' && '(ignored)'}
+                      </span>
+                    )}
+                    {clipboard.commonStyles.pointSize !== undefined && (
+                      <span className={`px-1.5 py-0.5 rounded text-xs border ${
+                        currentWidgetType === 'chart-line'
+                          ? 'bg-green-50 border-green-200 text-green-700'
+                          : 'bg-gray-50 border-gray-200 text-gray-400'
+                      }`}>
+                        Point Size {currentWidgetType !== 'chart-line' && '(ignored)'}
                       </span>
                     )}
                     {clipboard.commonStyles.lineWidth !== undefined && (
                       <span className={`px-1.5 py-0.5 rounded text-xs border ${
-                        currentWidgetType === 'chart-line'
+                        (currentWidgetType === 'chart-line' || currentWidgetType === 'chart-area')
                           ? 'bg-green-50 border-green-200 text-green-700'
                           : 'bg-gray-50 border-gray-200 text-gray-400'
                       }`}>
-                        Line Width {currentWidgetType !== 'chart-line' && '(ignored)'}
+                        Line Width {(currentWidgetType !== 'chart-line' && currentWidgetType !== 'chart-area') && '(ignored)'}
                       </span>
                     )}
                     
-                    {/* Area Chart Specific */}
-                    {clipboard.commonStyles.enableStacking !== undefined && (
-                      <span className={`px-1.5 py-0.5 rounded text-xs border ${
-                        currentWidgetType === 'chart-area'
-                          ? 'bg-green-50 border-green-200 text-green-700'
-                          : 'bg-gray-50 border-gray-200 text-gray-400'
-                      }`}>
-                        Enable Stacking {currentWidgetType !== 'chart-area' && '(ignored)'}
-                      </span>
-                    )}
+                    {/* Area Chart Specific - shares properties with line charts */}
                   </div>
                 </div>
               </div>

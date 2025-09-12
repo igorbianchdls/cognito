@@ -110,16 +110,14 @@ export interface CommonChartStyles {
   arcLinkLabelsTextColor?: string
   
   // Line Chart Specific Properties
-  enableDots?: boolean
-  dotSize?: number
+  enablePoints?: boolean
+  pointSize?: number
   enableArea?: boolean
   areaOpacity?: number
   lineWidth?: number
-  enableSlices?: boolean
   
   // Area Chart Specific Properties
-  areaBaselineValue?: number
-  enableStacking?: boolean
+  // Area charts share same base properties as line charts
 }
 
 // Chart style clipboard interface
@@ -270,18 +268,19 @@ function extractChartStyles(chartId: string, chartType: 'bar' | 'line' | 'pie' |
   
   if (chartType === 'line') {
     const lineChart = chart as LineChartConfig
-    styles.enableDots = lineChart.styling.enableDots
-    styles.dotSize = lineChart.styling.dotSize
+    styles.enablePoints = lineChart.styling.enablePoints
+    styles.pointSize = lineChart.styling.pointSize
     styles.enableArea = lineChart.styling.enableArea
     styles.areaOpacity = lineChart.styling.areaOpacity
     styles.lineWidth = lineChart.styling.lineWidth
-    styles.enableSlices = lineChart.styling.enableSlices
   }
   
   if (chartType === 'area') {
     const areaChart = chart as AreaChartConfig
-    styles.enableStacking = areaChart.styling.enableStacking
-    styles.areaBaselineValue = areaChart.styling.areaBaselineValue
+    // Area charts share same base properties as line charts
+    styles.enablePoints = areaChart.styling.enablePoints
+    styles.pointSize = areaChart.styling.pointSize
+    styles.lineWidth = areaChart.styling.lineWidth
   }
   
   return styles
@@ -395,17 +394,18 @@ function applyChartStyles(chartId: string, chartType: 'bar' | 'line' | 'pie' | '
   }
   
   if (chartType === 'line') {
-    if (styles.enableDots !== undefined) stylingUpdates.enableDots = styles.enableDots
-    if (styles.dotSize !== undefined) stylingUpdates.dotSize = styles.dotSize
+    if (styles.enablePoints !== undefined) stylingUpdates.enablePoints = styles.enablePoints
+    if (styles.pointSize !== undefined) stylingUpdates.pointSize = styles.pointSize
     if (styles.enableArea !== undefined) stylingUpdates.enableArea = styles.enableArea
     if (styles.areaOpacity !== undefined) stylingUpdates.areaOpacity = styles.areaOpacity
     if (styles.lineWidth !== undefined) stylingUpdates.lineWidth = styles.lineWidth
-    if (styles.enableSlices !== undefined) stylingUpdates.enableSlices = styles.enableSlices
   }
   
   if (chartType === 'area') {
-    if (styles.enableStacking !== undefined) stylingUpdates.enableStacking = styles.enableStacking
-    if (styles.areaBaselineValue !== undefined) stylingUpdates.areaBaselineValue = styles.areaBaselineValue
+    // Area charts share same base properties as line charts
+    if (styles.enablePoints !== undefined) stylingUpdates.enablePoints = styles.enablePoints
+    if (styles.pointSize !== undefined) stylingUpdates.pointSize = styles.pointSize
+    if (styles.lineWidth !== undefined) stylingUpdates.lineWidth = styles.lineWidth
   }
   
   // Get existing chart config and merge styling updates
@@ -505,12 +505,12 @@ export function getChartCompatibilityInfo(sourceType: ChartStyleClipboard['sourc
         
         // Line chart specific properties
         const lineProperties = [
-          'enableDots', 'dotSize', 'enableArea', 'areaOpacity', 'lineWidth', 'enableSlices'
+          'enablePoints', 'pointSize', 'enableArea', 'areaOpacity', 'lineWidth'
         ]
         
-        // Area chart specific properties
+        // Area chart specific properties (shares same properties as line charts)
         const areaProperties = [
-          'enableStacking', 'areaBaselineValue'
+          'enablePoints', 'pointSize', 'lineWidth'
         ]
         
         // Check compatibility
