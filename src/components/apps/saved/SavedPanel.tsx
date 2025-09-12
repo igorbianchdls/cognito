@@ -2,10 +2,13 @@
 
 import { useStore } from '@nanostores/react'
 import { $savedDashboards, savedDashboardActions } from '@/stores/apps/savedDashboardStore'
-import { Eye, Calendar, BarChart3, FileText, Play, Trash2 } from 'lucide-react'
+import { $dashboardClipboard, $hasDashboardInClipboard, dashboardClipboardActions } from '@/stores/apps/dashboardClipboardStore'
+import { Eye, Calendar, BarChart3, FileText, Play, Trash2, Copy, Clipboard, X } from 'lucide-react'
 
 export default function SavedPanel() {
   const savedDashboards = useStore($savedDashboards)
+  const clipboard = useStore($dashboardClipboard)
+  const hasClipboard = useStore($hasDashboardInClipboard)
 
   const handleLoad = (id: string) => {
     if (confirm('Carregar este dashboard? O dashboard atual será substituído.')) {
@@ -21,6 +24,29 @@ export default function SavedPanel() {
 
   const handlePreview = (id: string) => {
     window.open(`/apps/preview?id=${id}`, '_blank')
+  }
+
+  const handleCopyDashboard = () => {
+    dashboardClipboardActions.copy()
+    // Could add toast notification here if available
+    console.log('Dashboard copiado para clipboard!')
+  }
+
+  const handlePasteDashboard = () => {
+    if (!hasClipboard) return
+    
+    if (confirm('Colar dashboard do clipboard? O dashboard atual será substituído.')) {
+      const success = dashboardClipboardActions.paste()
+      if (success) {
+        // Could add toast notification here if available
+        console.log('Dashboard colado com sucesso!')
+      }
+    }
+  }
+
+  const handleClearClipboard = () => {
+    dashboardClipboardActions.clear()
+    console.log('Clipboard limpo!')
   }
 
   const formatDate = (date: Date) => {
@@ -51,6 +77,65 @@ export default function SavedPanel() {
         <p className="text-sm text-gray-600 mt-1">
           {savedDashboards.length} dashboard{savedDashboards.length !== 1 ? 's' : ''} salvo{savedDashboards.length !== 1 ? 's' : ''}
         </p>
+      </div>
+
+      {/* Dashboard Clipboard Section */}
+      <div className="p-4 border-b border-[0.5px] border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="flex items-center gap-2 mb-3">
+          <Clipboard className="w-4 h-4 text-blue-600" />
+          <h3 className="text-sm font-semibold text-gray-700">Dashboard Clipboard</h3>
+        </div>
+        
+        {/* Clipboard Actions */}
+        <div className="flex items-center gap-2 mb-2">
+          <button
+            onClick={handleCopyDashboard}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors duration-200"
+            title="Copiar dashboard atual"
+          >
+            <Copy className="w-3 h-3" />
+            Copiar
+          </button>
+          <button
+            onClick={handlePasteDashboard}
+            disabled={!hasClipboard}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors duration-200 ${
+              hasClipboard 
+                ? 'bg-green-600 hover:bg-green-700 text-white' 
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+            }`}
+            title="Colar dashboard do clipboard"
+          >
+            <Clipboard className="w-3 h-3" />
+            Colar
+          </button>
+          {hasClipboard && (
+            <button
+              onClick={handleClearClipboard}
+              className="flex items-center justify-center p-1.5 bg-gray-200 hover:bg-red-100 text-gray-600 hover:text-red-600 rounded-lg transition-colors duration-200"
+              title="Limpar clipboard"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          )}
+        </div>
+        
+        {/* Clipboard Status */}
+        <div className="text-xs text-gray-600">
+          {hasClipboard && clipboard ? (
+            <div className="flex items-center gap-4">
+              <span>⏰ {dashboardClipboardActions.getClipboardInfo()?.timeAgo}</span>
+              <span>📊 {clipboard.metadata.totalWidgets} widgets</span>
+              <span className="text-gray-500">
+                ({Object.entries(clipboard.metadata.widgetCounts)
+                  .map(([type, count]) => `${count} ${type}`)
+                  .join(', ')})
+              </span>
+            </div>
+          ) : (
+            <span className="text-gray-500">Clipboard vazio - copie um dashboard para começar</span>
+          )}
+        </div>
       </div>
 
       {/* Content */}
