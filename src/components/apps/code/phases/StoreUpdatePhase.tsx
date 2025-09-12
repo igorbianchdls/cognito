@@ -24,27 +24,25 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
   const [output, setOutput] = useState<string[]>([])
   const [isExecuting, setIsExecuting] = useState(false)
 
-  // Default example code
-  const defaultCode = `// Criar e atualizar KPIs, Tables e Charts programaticamente
-
-// Exemplo: Criar KPIs
-createKPI('ecommerce', 'id', 'COUNT', 'Total de Registros')
-createKPI('vendas_2024', 'valor_total', 'SUM', 'Vendas Totais')
-
-// Exemplo: Atualizar KPI existente (parâmetros opcionais)
-// updateKPI('Total de Registros', 'nova_tabela', 'novo_campo', 'AVG', 'Novo Título')
-
-// Exemplo: Criar e Atualizar Table
-createTable('ecommerce', ['id', 'nome', 'email', 'categoria'], 'Dados de E-commerce')
-// updateTable('Dados de E-commerce', 'nova_tabela', ['col1', 'col2'], 'Novo Título')
-
-// Exemplo: Criar e Atualizar Charts
-createChart('bar', 'vendas_2024', 'categoria', 'valor_total', 'SUM', 'Vendas por Categoria')
-createChart('pie', 'vendas_2024', 'regiao', 'valor_total', 'SUM', 'Vendas por Região')
-// updateChart('Vendas por Categoria', 'nova_tabela', 'novo_x', 'novo_y', 'AVG', 'Novo Título')
-
-console.log('Widgets criados!')
-`
+  // Default example JSON
+  const defaultCode = `[
+  {
+    "action": "create",
+    "type": "kpi",
+    "table": "ecommerce",
+    "field": "id",
+    "calculation": "COUNT",
+    "title": "Total de Registros"
+  },
+  {
+    "action": "create",
+    "type": "kpi", 
+    "table": "ecommerce",
+    "field": "event_name",
+    "calculation": "COUNT_DISTINCT",
+    "title": "Eventos Únicos"
+  }
+]`
 
   useEffect(() => {
     setCode(initialCode || defaultCode)
@@ -500,44 +498,48 @@ console.log('Widgets criados!')
     }
   }
 
-  // Execute the code
-  const executeCode = async () => {
+  // Execute JSON configuration
+  const executeJSON = async () => {
     if (!code.trim()) {
-      log('❌ No code to execute')
+      log('❌ No JSON to execute')
       return
     }
 
     setIsExecuting(true)
     setOutput([])
-    log('🚀 Executing code...')
+    log('🚀 Executing JSON...')
 
     try {
-      // Create execution context
-      const context = {
-        createKPI,
-        updateKPI,
-        createTable,
-        updateTable,
-        createChart,
-        updateChart,
-        console: { log }
+      // Parse JSON
+      const jsonData = JSON.parse(code)
+      
+      // Handle both single object and array of objects
+      const items = Array.isArray(jsonData) ? jsonData : [jsonData]
+      
+      log(`📋 Processing ${items.length} item(s)`)
+
+      // Process each item
+      for (const item of items) {
+        if (item.action === 'create' && item.type === 'kpi') {
+          if (!item.table || !item.field || !item.calculation || !item.title) {
+            log('❌ Missing required KPI fields: table, field, calculation, title')
+            continue
+          }
+          
+          log(`➕ Creating KPI: ${item.title}`)
+          await createKPI(item.table, item.field, item.calculation, item.title)
+        } else {
+          log(`⚠️ Unsupported action: ${item.action} ${item.type} (only "create kpi" supported for now)`)
+        }
       }
-
-      // Execute code
-      const asyncFunction = new Function(
-        'context',
-        `
-        const { createKPI, updateKPI, createTable, updateTable, createChart, updateChart, console } = context;
-        return (async () => {
-          ${code}
-        })();
-        `
-      )
-
-      await asyncFunction(context)
-      log('✅ Code executed successfully')
+      
+      log('✅ JSON executed successfully')
     } catch (error) {
-      log('❌ Execution failed:', error instanceof Error ? error.message : 'Unknown error')
+      if (error instanceof SyntaxError) {
+        log('❌ Invalid JSON format:', error.message)
+      } else {
+        log('❌ Execution failed:', error instanceof Error ? error.message : 'Unknown error')
+      }
     } finally {
       setIsExecuting(false)
     }
@@ -558,7 +560,7 @@ console.log('Widgets criados!')
       output={output}
       isExecuting={isExecuting}
       onCodeChange={setCode}
-      onExecute={executeCode}
+      onExecute={executeJSON}
       onReset={resetCode}
       onClearOutput={clearOutput}
     />
