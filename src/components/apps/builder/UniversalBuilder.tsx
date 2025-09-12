@@ -786,8 +786,8 @@ export default function UniversalBuilder({
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-transparent flex-shrink-0">
         <div className="flex items-center gap-2">
-          <BarChart3 className="w-3 h-3" style={{ color: 'rgb(94, 94, 94)' }} />
-          <h2 className="text-base font-semibold" style={{ color: 'rgb(94, 94, 94)' }}>Universal Builder</h2>
+          <BarChart3 className="w-3 h-3" style={{ color: 'var(--cinzaDark)' }} />
+          <h2 className="text-base font-semibold" style={{ color: 'var(--cinzaDark)' }}>Universal Builder</h2>
         </div>
         <Button
           variant="ghost"
@@ -795,9 +795,9 @@ export default function UniversalBuilder({
           onClick={onClear}
           disabled={!isConfigValid}
           className="gap-2"
-          style={{ color: 'rgb(94, 94, 94)' }}
+          style={{ color: 'var(--cinzaDark)' }}
         >
-          <Trash2 className="w-4 h-4" style={{ color: 'rgb(94, 94, 94)' }} />
+          <Trash2 className="w-4 h-4" style={{ color: 'var(--cinzaDark)' }} />
           Clear
         </Button>
       </div>

@@ -29,11 +29,11 @@ export default function ChartBuilder({
 
   // Chart type options
   const chartTypes = [
-    { id: 'bar', label: 'Bar Chart', icon: <BarChart3 className="w-6 h-6" style={{ color: 'rgb(94, 94, 94)' }} />, description: 'Compare categories' },
-    { id: 'horizontal-bar', label: 'Horizontal Bar', icon: <BarChart3 className="w-6 h-6 rotate-90" style={{ color: 'rgb(94, 94, 94)' }} />, description: 'Horizontal comparison' },
-    { id: 'line', label: 'Line Chart', icon: <TrendingUp className="w-6 h-6" style={{ color: 'rgb(94, 94, 94)' }} />, description: 'Show trends over time' },
-    { id: 'pie', label: 'Pie Chart', icon: <PieChart className="w-6 h-6" style={{ color: 'rgb(94, 94, 94)' }} />, description: 'Show proportions' },
-    { id: 'area', label: 'Area Chart', icon: <Activity className="w-6 h-6" style={{ color: 'rgb(94, 94, 94)' }} />, description: 'Filled line chart' }
+    { id: 'bar', label: 'Bar Chart', icon: <BarChart3 className="w-6 h-6" style={{ color: 'var(--cinzaDark)' }} />, description: 'Compare categories' },
+    { id: 'horizontal-bar', label: 'Horizontal Bar', icon: <BarChart3 className="w-6 h-6 rotate-90" style={{ color: 'var(--cinzaDark)' }} />, description: 'Horizontal comparison' },
+    { id: 'line', label: 'Line Chart', icon: <TrendingUp className="w-6 h-6" style={{ color: 'var(--cinzaDark)' }} />, description: 'Show trends over time' },
+    { id: 'pie', label: 'Pie Chart', icon: <PieChart className="w-6 h-6" style={{ color: 'var(--cinzaDark)' }} />, description: 'Show proportions' },
+    { id: 'area', label: 'Area Chart', icon: <Activity className="w-6 h-6" style={{ color: 'var(--cinzaDark)' }} />, description: 'Filled line chart' }
   ] as const
 
   return (
@@ -45,7 +45,7 @@ export default function ChartBuilder({
           id="x-axis-drop-zone"
           label="Eixo X"
           description="Categorias para eixo horizontal (strings, datas)"
-          icon={<ArrowRight className="w-4 h-4" style={{ color: 'rgb(94, 94, 94)' }} />}
+          icon={<ArrowRight className="w-4 h-4" style={{ color: 'var(--cinzaDark)' }} />}
           fields={data.xAxis}
           acceptedTypes={['string', 'date', 'numeric']}
           onRemoveField={(fieldName) => onRemoveField('xAxis', fieldName)}
@@ -56,7 +56,7 @@ export default function ChartBuilder({
           id="y-axis-drop-zone"
           label="Eixo Y"
           description="Valores numéricos para eixo vertical (agregação)"
-          icon={<ArrowUp className="w-4 h-4" style={{ color: 'rgb(94, 94, 94)' }} />}
+          icon={<ArrowUp className="w-4 h-4" style={{ color: 'var(--cinzaDark)' }} />}
           fields={data.yAxis}
           acceptedTypes={['numeric']}
           onRemoveField={(fieldName) => onRemoveField('yAxis', fieldName)}
@@ -68,7 +68,7 @@ export default function ChartBuilder({
           id="filters-drop-zone"
           label="Filters"
           description="Drag fields here to filter data"
-          icon={<Activity className="w-4 h-4" style={{ color: 'rgb(94, 94, 94)' }} />}
+          icon={<Activity className="w-4 h-4" style={{ color: 'var(--cinzaDark)' }} />}
           fields={data.filters}
           acceptedTypes={['string', 'date', 'numeric', 'boolean']}
           onRemoveField={(fieldName) => onRemoveField('filters', fieldName)}
@@ -78,8 +78,8 @@ export default function ChartBuilder({
       {/* Chart Type Selection */}
       <div>
         <div className="mb-3">
-          <div className="text-sm font-medium flex items-center gap-2 mb-1" style={{ color: 'rgb(94, 94, 94)' }}>
-            <PieChart className="w-4 h-4" style={{ color: 'rgb(94, 94, 94)' }} />
+          <div className="text-sm font-medium flex items-center gap-2 mb-1" style={{ color: 'var(--cinzaDark)' }}>
+            <PieChart className="w-4 h-4" style={{ color: 'var(--cinzaDark)' }} />
             Tipo de Gráfico
           </div>
           <p className="text-xs text-muted-foreground">

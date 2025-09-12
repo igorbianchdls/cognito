@@ -219,8 +219,8 @@ export default function TablesExplorer({
       {showHeader && (
         <div className="flex items-center justify-between px-3 py-2 border-b border-border bg-transparent flex-shrink-0">
           <div className="flex items-center gap-2">
-            <Database className="w-3 h-3" style={{ color: 'rgb(94, 94, 94)' }} />
-            <h2 className={`font-semibold ${compact ? 'text-sm' : 'text-base'}`} style={{ color: 'rgb(94, 94, 94)' }}>Tables</h2>
+            <Database className="w-3 h-3" style={{ color: 'var(--cinzaDark)' }} />
+            <h2 className={`font-semibold ${compact ? 'text-sm' : 'text-base'}`} style={{ color: 'var(--cinzaDark)' }}>Tables</h2>
           </div>
           <Button
             variant="ghost"
@@ -228,9 +228,9 @@ export default function TablesExplorer({
             onClick={loadTables}
             disabled={loading}
             className="gap-2"
-            style={{ color: 'rgb(94, 94, 94)' }}
+            style={{ color: 'var(--cinzaDark)' }}
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} style={{ color: 'rgb(94, 94, 94)' }} />
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} style={{ color: 'var(--cinzaDark)' }} />
             Refresh
           </Button>
         </div>
@@ -288,12 +288,12 @@ export default function TablesExplorer({
                       )}
                       <Table2 
                         className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} flex-shrink-0`} 
-                        style={{ color: 'rgb(94, 94, 94)' }}
+                        style={{ color: 'var(--cinzaDark)' }}
                       />
                       <div className="flex-1 min-w-0">
                         <div 
                           className={`${compact ? 'text-xs' : 'text-sm'} font-medium truncate`}
-                          style={{ color: 'rgb(94, 94, 94)' }}
+                          style={{ color: 'var(--cinzaDark)' }}
                         >
                           {tableId}
                         </div>

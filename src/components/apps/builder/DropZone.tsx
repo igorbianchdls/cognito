@@ -107,7 +107,7 @@ export default function DropZone({
       <div className="mb-2">
         <div className="flex items-center gap-2 mb-1">
           {icon}
-          <h3 className="text-sm font-medium" style={{ color: 'rgb(94, 94, 94)' }}>{label}</h3>
+          <h3 className="text-sm font-medium" style={{ color: 'var(--cinzaDark)' }}>{label}</h3>
         </div>
         <p className="text-xs text-muted-foreground">{description}</p>
       </div>
