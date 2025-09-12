@@ -222,62 +222,66 @@ function extractChartStyles(chartId: string, chartType: 'bar' | 'line' | 'pie' |
     marginLeft: chart.styling.marginLeft
   }
   
-  // Add type-specific properties with IFs
+  // Add type-specific properties with IFs and type assertions
   if (chartType === 'bar' || chartType === 'horizontal-bar') {
-    styles.groupMode = chart.styling.groupMode
-    styles.layout = chart.styling.layout
-    styles.padding = chart.styling.padding
-    styles.innerPadding = chart.styling.innerPadding
-    styles.xAxisTitle = chart.styling.xAxisTitle
-    styles.yAxisTitle = chart.styling.yAxisTitle
-    styles.enableLabel = chart.styling.enableLabel
-    styles.labelPosition = chart.styling.labelPosition
-    styles.labelSkipWidth = chart.styling.labelSkipWidth
-    styles.labelSkipHeight = chart.styling.labelSkipHeight
-    styles.labelTextColor = chart.styling.labelTextColor
-    styles.barLabelFormat = chart.styling.labelFormat
-    styles.labelOffset = chart.styling.labelOffset
-    styles.xAxisLegend = chart.styling.xAxisLegend
-    styles.xAxisLegendPosition = chart.styling.xAxisLegendPosition
-    styles.xAxisLegendOffset = chart.styling.xAxisLegendOffset
-    styles.xAxisTickRotation = chart.styling.xAxisTickRotation
-    styles.xAxisTickSize = chart.styling.xAxisTickSize
-    styles.xAxisTickPadding = chart.styling.xAxisTickPadding
-    styles.yAxisLegend = chart.styling.yAxisLegend
-    styles.yAxisLegendOffset = chart.styling.yAxisLegendOffset
-    styles.yAxisTickRotation = chart.styling.yAxisTickRotation
-    styles.yAxisTickSize = chart.styling.yAxisTickSize
-    styles.yAxisTickPadding = chart.styling.yAxisTickPadding
+    const barChart = chart as BarChartConfig | HorizontalBarChartConfig
+    styles.groupMode = barChart.styling.groupMode
+    styles.layout = barChart.styling.layout
+    styles.padding = barChart.styling.padding
+    styles.innerPadding = barChart.styling.innerPadding
+    styles.xAxisTitle = barChart.styling.xAxisTitle
+    styles.yAxisTitle = barChart.styling.yAxisTitle
+    styles.enableLabel = barChart.styling.enableLabel
+    styles.labelPosition = barChart.styling.labelPosition
+    styles.labelSkipWidth = barChart.styling.labelSkipWidth
+    styles.labelSkipHeight = barChart.styling.labelSkipHeight
+    styles.labelTextColor = barChart.styling.labelTextColor
+    styles.barLabelFormat = barChart.styling.labelFormat
+    styles.labelOffset = barChart.styling.labelOffset
+    styles.xAxisLegend = barChart.styling.xAxisLegend
+    styles.xAxisLegendPosition = barChart.styling.xAxisLegendPosition
+    styles.xAxisLegendOffset = barChart.styling.xAxisLegendOffset
+    styles.xAxisTickRotation = barChart.styling.xAxisTickRotation
+    styles.xAxisTickSize = barChart.styling.xAxisTickSize
+    styles.xAxisTickPadding = barChart.styling.xAxisTickPadding
+    styles.yAxisLegend = barChart.styling.yAxisLegend
+    styles.yAxisLegendOffset = barChart.styling.yAxisLegendOffset
+    styles.yAxisTickRotation = barChart.styling.yAxisTickRotation
+    styles.yAxisTickSize = barChart.styling.yAxisTickSize
+    styles.yAxisTickPadding = barChart.styling.yAxisTickPadding
   }
   
   if (chartType === 'pie') {
-    styles.innerRadius = chart.styling.innerRadius
-    styles.outerRadius = chart.styling.outerRadius
-    styles.padAngle = chart.styling.padAngle
-    styles.cornerRadius = chart.styling.cornerRadius
-    styles.activeOuterRadiusOffset = chart.styling.activeOuterRadiusOffset
-    styles.enableLabels = chart.styling.enableLabels
-    styles.pieLabelFormat = chart.styling.labelFormat
-    styles.enableArcLabels = chart.styling.enableArcLabels
-    styles.enableArcLinkLabels = chart.styling.enableArcLinkLabels
-    styles.arcLabelsSkipAngle = chart.styling.arcLabelsSkipAngle
-    styles.arcLabelsTextColor = chart.styling.arcLabelsTextColor
-    styles.arcLinkLabelsSkipAngle = chart.styling.arcLinkLabelsSkipAngle
-    styles.arcLinkLabelsTextColor = chart.styling.arcLinkLabelsTextColor
+    const pieChart = chart as PieChartConfig
+    styles.innerRadius = pieChart.styling.innerRadius
+    styles.outerRadius = pieChart.styling.outerRadius
+    styles.padAngle = pieChart.styling.padAngle
+    styles.cornerRadius = pieChart.styling.cornerRadius
+    styles.activeOuterRadiusOffset = pieChart.styling.activeOuterRadiusOffset
+    styles.enableLabels = pieChart.styling.enableLabels
+    styles.pieLabelFormat = pieChart.styling.labelFormat
+    styles.enableArcLabels = pieChart.styling.enableArcLabels
+    styles.enableArcLinkLabels = pieChart.styling.enableArcLinkLabels
+    styles.arcLabelsSkipAngle = pieChart.styling.arcLabelsSkipAngle
+    styles.arcLabelsTextColor = pieChart.styling.arcLabelsTextColor
+    styles.arcLinkLabelsSkipAngle = pieChart.styling.arcLinkLabelsSkipAngle
+    styles.arcLinkLabelsTextColor = pieChart.styling.arcLinkLabelsTextColor
   }
   
   if (chartType === 'line') {
-    styles.enableDots = chart.styling.enableDots
-    styles.dotSize = chart.styling.dotSize
-    styles.enableArea = chart.styling.enableArea
-    styles.areaOpacity = chart.styling.areaOpacity
-    styles.lineWidth = chart.styling.lineWidth
-    styles.enableSlices = chart.styling.enableSlices
+    const lineChart = chart as LineChartConfig
+    styles.enableDots = lineChart.styling.enableDots
+    styles.dotSize = lineChart.styling.dotSize
+    styles.enableArea = lineChart.styling.enableArea
+    styles.areaOpacity = lineChart.styling.areaOpacity
+    styles.lineWidth = lineChart.styling.lineWidth
+    styles.enableSlices = lineChart.styling.enableSlices
   }
   
   if (chartType === 'area') {
-    styles.enableStacking = chart.styling.enableStacking
-    styles.areaBaselineValue = chart.styling.areaBaselineValue
+    const areaChart = chart as AreaChartConfig
+    styles.enableStacking = areaChart.styling.enableStacking
+    styles.areaBaselineValue = areaChart.styling.areaBaselineValue
   }
   
   return styles
