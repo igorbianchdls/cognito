@@ -237,10 +237,10 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
             className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[80%] rounded-lg p-3 text-sm ${
+              className={`w-full p-3 text-sm ${
                 message.role === 'user'
                   ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 border-[0.5px] border-gray-200'
+                  : 'bg-transparent text-gray-700'
               }`}
             >
               <div>
@@ -394,7 +394,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
         
         {status !== 'ready' && (
           <div className="flex justify-start">
-            <div className="bg-white border-[0.5px] border-gray-200 rounded-lg p-3 text-sm text-gray-600">
+            <div className="bg-transparent p-3 text-sm text-gray-600">
               <div className="flex items-center gap-1">
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
