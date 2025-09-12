@@ -80,7 +80,7 @@ export interface CommonChartStyles {
   labelSkipWidth?: number
   labelSkipHeight?: number
   labelTextColor?: string
-  labelFormat?: string
+  barLabelFormat?: string
   labelOffset?: number
   xAxisLegend?: string
   xAxisLegendPosition?: 'start' | 'middle' | 'end'
@@ -101,7 +101,7 @@ export interface CommonChartStyles {
   cornerRadius?: number
   activeOuterRadiusOffset?: number
   enableLabels?: boolean
-  labelFormat?: 'percentage' | 'value' | 'both'
+  pieLabelFormat?: 'percentage' | 'value' | 'both'
   enableArcLabels?: boolean
   enableArcLinkLabels?: boolean
   arcLabelsSkipAngle?: number
@@ -235,7 +235,7 @@ function extractChartStyles(chartId: string, chartType: 'bar' | 'line' | 'pie' |
     styles.labelSkipWidth = chart.styling.labelSkipWidth
     styles.labelSkipHeight = chart.styling.labelSkipHeight
     styles.labelTextColor = chart.styling.labelTextColor
-    styles.labelFormat = chart.styling.labelFormat
+    styles.barLabelFormat = chart.styling.labelFormat
     styles.labelOffset = chart.styling.labelOffset
     styles.xAxisLegend = chart.styling.xAxisLegend
     styles.xAxisLegendPosition = chart.styling.xAxisLegendPosition
@@ -257,6 +257,7 @@ function extractChartStyles(chartId: string, chartType: 'bar' | 'line' | 'pie' |
     styles.cornerRadius = chart.styling.cornerRadius
     styles.activeOuterRadiusOffset = chart.styling.activeOuterRadiusOffset
     styles.enableLabels = chart.styling.enableLabels
+    styles.pieLabelFormat = chart.styling.labelFormat
     styles.enableArcLabels = chart.styling.enableArcLabels
     styles.enableArcLinkLabels = chart.styling.enableArcLinkLabels
     styles.arcLabelsSkipAngle = chart.styling.arcLabelsSkipAngle
@@ -358,7 +359,7 @@ function applyChartStyles(chartId: string, chartType: 'bar' | 'line' | 'pie' | '
     if (styles.labelSkipWidth !== undefined) stylingUpdates.labelSkipWidth = styles.labelSkipWidth
     if (styles.labelSkipHeight !== undefined) stylingUpdates.labelSkipHeight = styles.labelSkipHeight
     if (styles.labelTextColor !== undefined) stylingUpdates.labelTextColor = styles.labelTextColor
-    if (styles.labelFormat !== undefined) stylingUpdates.labelFormat = styles.labelFormat
+    if (styles.barLabelFormat !== undefined) stylingUpdates.labelFormat = styles.barLabelFormat
     if (styles.labelOffset !== undefined) stylingUpdates.labelOffset = styles.labelOffset
     if (styles.xAxisLegend !== undefined) stylingUpdates.xAxisLegend = styles.xAxisLegend
     if (styles.xAxisLegendPosition !== undefined) stylingUpdates.xAxisLegendPosition = styles.xAxisLegendPosition
@@ -380,6 +381,7 @@ function applyChartStyles(chartId: string, chartType: 'bar' | 'line' | 'pie' | '
     if (styles.cornerRadius !== undefined) stylingUpdates.cornerRadius = styles.cornerRadius
     if (styles.activeOuterRadiusOffset !== undefined) stylingUpdates.activeOuterRadiusOffset = styles.activeOuterRadiusOffset
     if (styles.enableLabels !== undefined) stylingUpdates.enableLabels = styles.enableLabels
+    if (styles.pieLabelFormat !== undefined) stylingUpdates.labelFormat = styles.pieLabelFormat
     if (styles.enableArcLabels !== undefined) stylingUpdates.enableArcLabels = styles.enableArcLabels
     if (styles.enableArcLinkLabels !== undefined) stylingUpdates.enableArcLinkLabels = styles.enableArcLinkLabels
     if (styles.arcLabelsSkipAngle !== undefined) stylingUpdates.arcLabelsSkipAngle = styles.arcLabelsSkipAngle
@@ -485,7 +487,7 @@ export function getChartCompatibilityInfo(sourceType: ChartStyleClipboard['sourc
         const barProperties = [
           'groupMode', 'layout', 'padding', 'innerPadding', 'xAxisTitle', 'yAxisTitle',
           'enableLabel', 'labelPosition', 'labelSkipWidth', 'labelSkipHeight', 'labelTextColor',
-          'labelFormat', 'labelOffset', 'xAxisLegend', 'xAxisLegendPosition', 'xAxisLegendOffset',
+          'barLabelFormat', 'labelOffset', 'xAxisLegend', 'xAxisLegendPosition', 'xAxisLegendOffset',
           'xAxisTickRotation', 'xAxisTickSize', 'xAxisTickPadding', 'yAxisLegend', 'yAxisLegendOffset',
           'yAxisTickRotation', 'yAxisTickSize', 'yAxisTickPadding'
         ]
@@ -493,7 +495,7 @@ export function getChartCompatibilityInfo(sourceType: ChartStyleClipboard['sourc
         // Pie chart specific properties
         const pieProperties = [
           'innerRadius', 'outerRadius', 'padAngle', 'cornerRadius', 'activeOuterRadiusOffset',
-          'enableLabels', 'enableArcLabels', 'enableArcLinkLabels', 'arcLabelsSkipAngle',
+          'enableLabels', 'pieLabelFormat', 'enableArcLabels', 'enableArcLinkLabels', 'arcLabelsSkipAngle',
           'arcLabelsTextColor', 'arcLinkLabelsSkipAngle', 'arcLinkLabelsTextColor'
         ]
         
