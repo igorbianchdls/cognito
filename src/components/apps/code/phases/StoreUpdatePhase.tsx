@@ -15,7 +15,11 @@ import { LoggingPhase } from './LoggingPhase'
 import { BigQueryExecutionPhase } from './BigQueryExecutionPhase'
 import { DataTransformationPhase } from './DataTransformationPhase'
 
-export default function StoreUpdatePhase() {
+interface StoreUpdatePhaseProps {
+  initialCode?: string
+}
+
+export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps = {}) {
   const [code, setCode] = useState('')
   const [output, setOutput] = useState<string[]>([])
   const [isExecuting, setIsExecuting] = useState(false)
@@ -43,8 +47,8 @@ console.log('Widgets criados!')
 `
 
   useEffect(() => {
-    setCode(defaultCode)
-  }, [defaultCode])
+    setCode(initialCode || defaultCode)
+  }, [initialCode, defaultCode])
 
   // Log function for output
   const log = (...args: unknown[]) => {

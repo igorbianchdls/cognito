@@ -46,7 +46,7 @@ export default function AICodeExecutor({ operations }: AICodeExecutorProps) {
       </div>
       
       <div className="bg-white h-full">
-        <StoreUpdatePhase />
+        <StoreUpdatePhase initialCode={JSON.stringify(operations, null, 2)} />
       </div>
     </div>
   )
