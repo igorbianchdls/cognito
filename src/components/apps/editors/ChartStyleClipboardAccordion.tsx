@@ -11,6 +11,7 @@ import {
   $chartStyleClipboard, 
   $hasChartStylesInClipboard, 
   chartStyleClipboardActions,
+  getChartCompatibilityInfo,
   type ChartStyleClipboard
 } from '@/stores/apps/chartStyleClipboardStore'
 
@@ -49,6 +50,13 @@ export default function ChartStyleClipboardAccordion({
       default: return 'Chart'
     }
   }
+
+  // Get compatibility info when clipboard has styles
+  const compatibilityInfo = clipboard ? getChartCompatibilityInfo(
+    clipboard.sourceWidgetType,
+    currentWidgetType,
+    clipboard.commonStyles
+  ) : null
 
   return (
     <AccordionItem value="chart-style-clipboard">
@@ -103,10 +111,51 @@ export default function ChartStyleClipboardAccordion({
                     🗑️
                   </Button>
                 </div>
+
+                {/* Compatibility Info */}
+                {compatibilityInfo && (
+                  <div className="mt-3 pt-2 border-t border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-xs font-medium text-gray-700">Compatibility</p>
+                      <div className={`text-xs px-2 py-1 rounded ${
+                        compatibilityInfo.isFullyCompatible 
+                          ? 'bg-green-100 text-green-700' 
+                          : compatibilityInfo.compatibilityPercentage >= 70
+                            ? 'bg-yellow-100 text-yellow-700'
+                            : 'bg-orange-100 text-orange-700'
+                      }`}>
+                        {compatibilityInfo.compatibilityPercentage}%
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-1 text-xs text-gray-600">
+                      <div className="flex justify-between">
+                        <span>Total properties:</span>
+                        <span>{compatibilityInfo.totalProps}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Will be applied:</span>
+                        <span className="text-green-600">{compatibilityInfo.totalCompatible}</span>
+                      </div>
+                      {compatibilityInfo.specificProps > 0 && !compatibilityInfo.isFullyCompatible && (
+                        <div className="flex justify-between">
+                          <span>Specific (ignored):</span>
+                          <span className="text-gray-400">{compatibilityInfo.specificProps - compatibilityInfo.compatibleSpecificProps}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {compatibilityInfo.isFullyCompatible ? (
+                      <p className="text-xs text-green-600 mt-2">✅ Same chart type - All properties will be applied</p>
+                    ) : (
+                      <p className="text-xs text-orange-600 mt-2">⚠️ Cross-type paste - Only compatible properties will be applied</p>
+                    )}
+                  </div>
+                )}
                 
-                {/* Preview of copied styles */}
+                {/* Preview of copied styles with compatibility indicators */}
                 <div className="mt-2 text-xs text-gray-600">
-                  <p className="font-medium mb-1">Styles available:</p>
+                  <p className="font-medium mb-1">Properties to apply:</p>
                   <div className="flex flex-wrap gap-1">
                     {/* Typography styles */}
                     {clipboard.commonStyles.axisTextColor && (
@@ -177,6 +226,78 @@ export default function ChartStyleClipboardAccordion({
                         Colors ({clipboard.commonStyles.colors.length})
                       </span>
                     )}
+                    
+                    {/* Specific Properties with compatibility indicators */}
+                    {/* Bar Chart Specific */}
+                    {clipboard.commonStyles.groupMode && (
+                      <span className={`px-1.5 py-0.5 rounded text-xs border ${
+                        (currentWidgetType === 'chart-bar' || currentWidgetType === 'chart-horizontal-bar')
+                          ? 'bg-green-50 border-green-200 text-green-700'
+                          : 'bg-gray-50 border-gray-200 text-gray-400'
+                      }`}>
+                        Group Mode {(currentWidgetType !== 'chart-bar' && currentWidgetType !== 'chart-horizontal-bar') && '(ignored)'}
+                      </span>
+                    )}
+                    {clipboard.commonStyles.layout && (
+                      <span className={`px-1.5 py-0.5 rounded text-xs border ${
+                        (currentWidgetType === 'chart-bar' || currentWidgetType === 'chart-horizontal-bar')
+                          ? 'bg-green-50 border-green-200 text-green-700'
+                          : 'bg-gray-50 border-gray-200 text-gray-400'
+                      }`}>
+                        Layout {(currentWidgetType !== 'chart-bar' && currentWidgetType !== 'chart-horizontal-bar') && '(ignored)'}
+                      </span>
+                    )}
+                    
+                    {/* Pie Chart Specific */}
+                    {clipboard.commonStyles.innerRadius !== undefined && (
+                      <span className={`px-1.5 py-0.5 rounded text-xs border ${
+                        currentWidgetType === 'chart-pie'
+                          ? 'bg-green-50 border-green-200 text-green-700'
+                          : 'bg-gray-50 border-gray-200 text-gray-400'
+                      }`}>
+                        Inner Radius {currentWidgetType !== 'chart-pie' && '(ignored)'}
+                      </span>
+                    )}
+                    {clipboard.commonStyles.padAngle !== undefined && (
+                      <span className={`px-1.5 py-0.5 rounded text-xs border ${
+                        currentWidgetType === 'chart-pie'
+                          ? 'bg-green-50 border-green-200 text-green-700'
+                          : 'bg-gray-50 border-gray-200 text-gray-400'
+                      }`}>
+                        Pad Angle {currentWidgetType !== 'chart-pie' && '(ignored)'}
+                      </span>
+                    )}
+                    
+                    {/* Line Chart Specific */}
+                    {clipboard.commonStyles.enableDots !== undefined && (
+                      <span className={`px-1.5 py-0.5 rounded text-xs border ${
+                        currentWidgetType === 'chart-line'
+                          ? 'bg-green-50 border-green-200 text-green-700'
+                          : 'bg-gray-50 border-gray-200 text-gray-400'
+                      }`}>
+                        Enable Dots {currentWidgetType !== 'chart-line' && '(ignored)'}
+                      </span>
+                    )}
+                    {clipboard.commonStyles.lineWidth !== undefined && (
+                      <span className={`px-1.5 py-0.5 rounded text-xs border ${
+                        currentWidgetType === 'chart-line'
+                          ? 'bg-green-50 border-green-200 text-green-700'
+                          : 'bg-gray-50 border-gray-200 text-gray-400'
+                      }`}>
+                        Line Width {currentWidgetType !== 'chart-line' && '(ignored)'}
+                      </span>
+                    )}
+                    
+                    {/* Area Chart Specific */}
+                    {clipboard.commonStyles.enableStacking !== undefined && (
+                      <span className={`px-1.5 py-0.5 rounded text-xs border ${
+                        currentWidgetType === 'chart-area'
+                          ? 'bg-green-50 border-green-200 text-green-700'
+                          : 'bg-gray-50 border-gray-200 text-gray-400'
+                      }`}>
+                        Enable Stacking {currentWidgetType !== 'chart-area' && '(ignored)'}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -192,7 +313,10 @@ export default function ChartStyleClipboardAccordion({
               </div>
               
               <p className="text-xs text-gray-500 mt-1">
-                Only compatible styles will be applied between chart types
+                {compatibilityInfo?.isFullyCompatible 
+                  ? 'All properties including specific ones will be applied'
+                  : 'Common properties will be applied, specific ones only if compatible'
+                }
               </p>
             </div>
           )}
