@@ -8,34 +8,34 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import { 
-  $styleClipboard, 
-  $hasStylesInClipboard, 
-  styleClipboardActions,
-  type StyleClipboard
-} from '@/stores/apps/styleClipboardStore'
+  $kpiStyleClipboard, 
+  $hasKPIStylesInClipboard, 
+  kpiStyleClipboardActions,
+  type KPIStyleClipboard
+} from '@/stores/apps/kpiStyleClipboardStore'
 
-interface StyleClipboardAccordionProps {
+interface KPIStyleClipboardAccordionProps {
   currentWidgetType: 'kpi'
   currentWidgetId: string
 }
 
-export default function StyleClipboardAccordion({ 
+export default function KPIStyleClipboardAccordion({ 
   currentWidgetType, 
   currentWidgetId 
-}: StyleClipboardAccordionProps) {
-  const clipboard = useStore($styleClipboard)
-  const hasStyles = useStore($hasStylesInClipboard)
+}: KPIStyleClipboardAccordionProps) {
+  const clipboard = useStore($kpiStyleClipboard)
+  const hasStyles = useStore($hasKPIStylesInClipboard)
 
   const handleCopyStyles = () => {
-    styleClipboardActions.copyStyles(currentWidgetId, currentWidgetType)
+    kpiStyleClipboardActions.copyStyles(currentWidgetId, currentWidgetType)
   }
 
   const handlePasteStyles = () => {
-    styleClipboardActions.pasteStyles(currentWidgetId, currentWidgetType)
+    kpiStyleClipboardActions.pasteStyles(currentWidgetId, currentWidgetType)
   }
 
   const handleClearClipboard = () => {
-    styleClipboardActions.clearClipboard()
+    kpiStyleClipboardActions.clearClipboard()
   }
 
   // Format widget type for display - KPI only
@@ -44,9 +44,9 @@ export default function StyleClipboardAccordion({
   }
 
   return (
-    <AccordionItem value="style-clipboard">
+    <AccordionItem value="kpi-style-clipboard">
       <AccordionTrigger className="text-sm font-medium">
-        🎨 Style Clipboard
+        🎨 KPI Style Clipboard
       </AccordionTrigger>
       <AccordionContent>
         <div className="space-y-4">
@@ -185,7 +185,7 @@ export default function StyleClipboardAccordion({
           {!hasStyles && (
             <div className="text-center py-2">
               <p className="text-xs text-gray-500">
-                No styles copied yet
+                No KPI styles copied yet
               </p>
             </div>
           )}

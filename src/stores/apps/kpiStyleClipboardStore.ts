@@ -2,7 +2,7 @@ import { atom, computed } from 'nanostores'
 import { $kpiWidgets, kpiActions } from './kpiStore'
 
 // Comprehensive styles interface - all KPI visual properties (excluding alignment)
-export interface CommonStyles {
+export interface CommonKPIStyles {
   // Card styles
   backgroundColor?: string
   backgroundOpacity?: number
@@ -35,23 +35,23 @@ export interface CommonStyles {
 }
 
 // Style clipboard interface - KPI only
-export interface StyleClipboard {
+export interface KPIStyleClipboard {
   sourceWidgetId: string
   sourceWidgetType: 'kpi'
-  commonStyles: CommonStyles
+  commonStyles: CommonKPIStyles
   timestamp: number
 }
 
 // Main clipboard atom
-export const $styleClipboard = atom<StyleClipboard | null>(null)
+export const $kpiStyleClipboard = atom<KPIStyleClipboard | null>(null)
 
 // Computed for checking if clipboard has styles
-export const $hasStylesInClipboard = computed([$styleClipboard], (clipboard) => {
+export const $hasKPIStylesInClipboard = computed([$kpiStyleClipboard], (clipboard) => {
   return clipboard !== null
 })
 
 // Extract styles from KPI
-function extractKPIStyles(kpiId: string): CommonStyles | null {
+function extractKPIStyles(kpiId: string): CommonKPIStyles | null {
   const kpis = $kpiWidgets.get()
   const kpi = kpis.find(k => k.i === kpiId)
   
@@ -91,7 +91,7 @@ function extractKPIStyles(kpiId: string): CommonStyles | null {
 }
 
 // Apply styles to KPI
-function applyKPIStyles(kpiId: string, styles: CommonStyles): void {
+function applyKPIStyles(kpiId: string, styles: CommonKPIStyles): void {
   const updates: Record<string, unknown> = {}
   
   // Card styles
@@ -128,14 +128,14 @@ function applyKPIStyles(kpiId: string, styles: CommonStyles): void {
 }
 
 // Main actions - KPI only
-export const styleClipboardActions = {
+export const kpiStyleClipboardActions = {
   copyStyles: (widgetId: string, widgetType: 'kpi') => {
     console.log('🎨 Copying KPI styles from:', widgetId)
     
     const commonStyles = extractKPIStyles(widgetId)
     
     if (commonStyles) {
-      $styleClipboard.set({
+      $kpiStyleClipboard.set({
         sourceWidgetId: widgetId,
         sourceWidgetType: 'kpi',
         commonStyles,
@@ -148,7 +148,7 @@ export const styleClipboardActions = {
   },
 
   pasteStyles: (targetWidgetId: string, targetWidgetType: 'kpi') => {
-    const clipboard = $styleClipboard.get()
+    const clipboard = $kpiStyleClipboard.get()
     
     if (!clipboard) {
       console.warn('⚠️ No styles in clipboard')
@@ -161,7 +161,7 @@ export const styleClipboardActions = {
   },
 
   clearClipboard: () => {
-    console.log('🗑️ Clearing style clipboard')
-    $styleClipboard.set(null)
+    console.log('🗑️ Clearing KPI style clipboard')
+    $kpiStyleClipboard.set(null)
   }
 }
