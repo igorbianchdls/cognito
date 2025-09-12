@@ -107,20 +107,11 @@ export default function DroppedWidget({ widget, onRemove, onEdit, isSelected = f
       className={`h-full relative overflow-hidden transition-all duration-200 ${
         isSelected 
           ? 'ring-2 ring-blue-500 ring-opacity-75 shadow-lg' 
-          : 'hover:shadow-md'
+          : ''
       }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={onClick}
-      style={{
-        backgroundColor: hexToRgba(containerConfig.backgroundColor || '#ffffff', containerConfig.backgroundOpacity ?? 1),
-        borderColor: isHovered 
-          ? hexToRgba(containerConfig.borderColor || '#e5e7eb', containerConfig.borderOpacity ?? 1)
-          : 'transparent',
-        borderWidth: `${containerConfig.borderWidth ?? 1}px`,
-        borderRadius: `${containerConfig.borderRadius ?? 8}px`,
-        borderStyle: 'solid'
-      }}
     >
       {/* Header with edit, embed and remove buttons - Hidden in embed mode */}
       {!isEmbedMode && (
