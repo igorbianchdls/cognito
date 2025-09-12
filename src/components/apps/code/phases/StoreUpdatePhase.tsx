@@ -41,6 +41,26 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
     "field": "event_name",
     "calculation": "COUNT_DISTINCT",
     "title": "Eventos Únicos"
+  },
+  {
+    "action": "create",
+    "type": "chart",
+    "chartType": "bar",
+    "table": "ecommerce",
+    "xField": "event_name",
+    "yField": "id",
+    "aggregation": "COUNT",
+    "title": "Eventos por Quantidade"
+  },
+  {
+    "action": "create",
+    "type": "chart",
+    "chartType": "pie",
+    "table": "ecommerce",
+    "xField": "event_name", 
+    "yField": "id",
+    "aggregation": "COUNT",
+    "title": "Distribuição de Eventos"
   }
 ]`
 
@@ -528,8 +548,22 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
           
           log(`➕ Creating KPI: ${item.title}`)
           await createKPI(item.table, item.field, item.calculation, item.title)
+        } else if (item.action === 'create' && item.type === 'chart') {
+          if (!item.chartType || !item.table || !item.xField || !item.yField || !item.aggregation || !item.title) {
+            log('❌ Missing required Chart fields: chartType, table, xField, yField, aggregation, title')
+            continue
+          }
+          
+          const validChartTypes = ['bar', 'line', 'pie', 'area', 'horizontal-bar']
+          if (!validChartTypes.includes(item.chartType)) {
+            log(`❌ Invalid chart type: ${item.chartType}. Valid types: ${validChartTypes.join(', ')}`)
+            continue
+          }
+          
+          log(`➕ Creating ${item.chartType} chart: ${item.title}`)
+          await createChart(item.chartType, item.table, item.xField, item.yField, item.aggregation, item.title)
         } else {
-          log(`⚠️ Unsupported action: ${item.action} ${item.type} (only "create kpi" supported for now)`)
+          log(`⚠️ Unsupported action: ${item.action} ${item.type} (supported: "create kpi", "create chart")`)
         }
       }
       
