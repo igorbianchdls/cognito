@@ -76,40 +76,38 @@ export default function ChartBuilder({
       </div>
 
       {/* Chart Type Selection */}
-      <Card className="bg-transparent border-transparent shadow-none">
-        <CardHeader>
-          <CardTitle className="text-sm flex items-center gap-2">
-            <PieChart className="w-4 h-4" />
+      <div>
+        <div className="mb-3">
+          <div className="text-sm font-medium flex items-center gap-2 mb-1" style={{ color: 'rgb(120, 120, 120)' }}>
+            <PieChart className="w-4 h-4" style={{ color: 'rgb(120, 120, 120)' }} />
             Tipo de Gráfico
-          </CardTitle>
-          <CardDescription className="text-xs">
+          </div>
+          <p className="text-xs text-muted-foreground">
             Selecione o tipo de visualização
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-3 gap-3">
-            {chartTypes.map((type) => (
-              <div
-                key={type.id}
-                className={`p-3 rounded-lg cursor-pointer transition-all border ${
-                  data.chartType === type.id
-                    ? 'bg-accent border-primary/50 shadow-sm'
-                    : 'bg-transparent hover:bg-muted/30 border border-gray-300 hover:border-primary/30'
-                }`}
-                onClick={() => onChartTypeChange(type.id)}
-              >
-                <div className="flex flex-col items-center gap-2">
-                  {type.icon}
-                  <div className="text-center">
-                    <p className="font-medium text-sm">{type.label}</p>
-                    <p className="text-xs text-muted-foreground">{type.description}</p>
-                  </div>
+          </p>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          {chartTypes.map((type) => (
+            <div
+              key={type.id}
+              className={`p-3 rounded-lg cursor-pointer transition-all border ${
+                data.chartType === type.id
+                  ? 'bg-accent border-primary/50 shadow-sm'
+                  : 'bg-transparent hover:bg-muted/30 border border-gray-300 hover:border-primary/30'
+              }`}
+              onClick={() => onChartTypeChange(type.id)}
+            >
+              <div className="flex flex-col items-center gap-2">
+                {type.icon}
+                <div className="text-center">
+                  <p className="font-medium text-sm">{type.label}</p>
+                  <p className="text-xs text-muted-foreground">{type.description}</p>
                 </div>
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

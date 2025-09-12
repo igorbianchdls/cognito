@@ -287,12 +287,12 @@ export default function TablesExplorer({
                       )}
                       <Table2 
                         className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} flex-shrink-0`} 
-                        style={{ color: 'rgb(135, 135, 135)' }}
+                        style={{ color: 'rgb(120, 120, 120)' }}
                       />
                       <div className="flex-1 min-w-0">
                         <div 
                           className={`${compact ? 'text-xs' : 'text-sm'} font-medium truncate`}
-                          style={{ color: 'rgb(135, 135, 135)' }}
+                          style={{ color: 'rgb(120, 120, 120)' }}
                         >
                           {tableId}
                         </div>
