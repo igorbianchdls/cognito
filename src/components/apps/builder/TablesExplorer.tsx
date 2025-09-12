@@ -285,9 +285,15 @@ export default function TablesExplorer({
                       ) : (
                         <ChevronRight className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} text-muted-foreground flex-shrink-0`} />
                       )}
-                      <Table2 className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} text-gray-700 flex-shrink-0`} />
+                      <Table2 
+                        className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} flex-shrink-0`} 
+                        style={{ color: 'rgb(135, 135, 135)' }}
+                      />
                       <div className="flex-1 min-w-0">
-                        <div className={`${compact ? 'text-xs' : 'text-sm'} font-medium truncate text-gray-700`}>
+                        <div 
+                          className={`${compact ? 'text-xs' : 'text-sm'} font-medium truncate`}
+                          style={{ color: 'rgb(135, 135, 135)' }}
+                        >
                           {tableId}
                         </div>
                       </div>
