@@ -14,6 +14,10 @@ interface AICodeExecutorProps {
 }
 
 export default function AICodeExecutor({ operations }: AICodeExecutorProps) {
+  console.log('🤖 AICodeExecutor received operations:', operations)
+  console.log('🤖 Operations count:', operations.length)
+  console.log('🤖 Operations data:', JSON.stringify(operations, null, 2))
+  
   return (
     <div className="mt-3 border border-blue-200 rounded-lg overflow-hidden h-[700px]">
       <div className="bg-blue-50 p-3 border-b border-blue-200">
@@ -27,6 +31,18 @@ export default function AICodeExecutor({ operations }: AICodeExecutorProps) {
         <p className="text-blue-700 text-sm mt-1">
           Use o editor abaixo para executar as operações sugeridas pela IA
         </p>
+        
+        {/* Debug Panel */}
+        <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-xs">
+          <details>
+            <summary className="cursor-pointer text-yellow-800 font-medium">
+              🔍 DEBUG: Operations Data ({operations.length} operations)
+            </summary>
+            <pre className="mt-2 text-yellow-900 overflow-auto max-h-32 whitespace-pre-wrap">
+              {JSON.stringify(operations, null, 2)}
+            </pre>
+          </details>
+        </div>
       </div>
       
       <div className="bg-white h-full">
