@@ -1,6 +1,6 @@
 'use client'
 
-import CodeEditor from '../code/CodeEditor'
+import StoreUpdatePhase from '../code/phases/StoreUpdatePhase'
 
 interface WidgetOperation {
   action: 'create' | 'update'
@@ -15,7 +15,7 @@ interface AICodeExecutorProps {
 
 export default function AICodeExecutor({ operations }: AICodeExecutorProps) {
   return (
-    <div className="mt-3 border border-blue-200 rounded-lg overflow-hidden">
+    <div className="mt-3 border border-blue-200 rounded-lg overflow-hidden h-96">
       <div className="bg-blue-50 p-3 border-b border-blue-200">
         <div className="flex items-center gap-2">
           <span className="text-blue-600">🤖</span>
@@ -29,8 +29,8 @@ export default function AICodeExecutor({ operations }: AICodeExecutorProps) {
         </p>
       </div>
       
-      <div className="bg-white">
-        <CodeEditor />
+      <div className="bg-white h-full">
+        <StoreUpdatePhase />
       </div>
     </div>
   )
