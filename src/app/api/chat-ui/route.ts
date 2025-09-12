@@ -1,3 +1,4 @@
+import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
 import * as analyticsTools from '@/tools/apps/analytics';
@@ -10,7 +11,7 @@ export async function POST(req: Request) {
   const { messages }: { messages: UIMessage[] } = await req.json();
 
   const result = streamText({
-    model: 'xai/grok-3',
+    model: anthropic('claude-sonnet-4-20250514'),
     
     // Sistema inicial básico
     system: `You are a helpful assistant with access to BigQuery data exploration, analysis, visualization, and management tools, plus weather information.`,
