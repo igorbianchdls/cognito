@@ -64,7 +64,7 @@ HOW IT WORKS:
 
 TOOL USAGE:
 - Use \`createWidget\` tool for NEW widgets - just specify the parameters
-- Use \`updateWidget\` tool for modifying EXISTING widgets - provide widget name and changes
+- Use \`updateWidget\` tool for modifying EXISTING widgets - can update multiple widgets in single call by passing array of widgets
 - Use \`getCanvasWidgets\` tool to see current widgets when needed
 - DO NOT write code yourself - the system generates all executable code
 

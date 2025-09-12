@@ -71,47 +71,50 @@ export const createWidget = tool({
 });
 
 export const updateWidget = tool({
-  description: 'Update existing widgets on the dashboard',
+  description: 'Update one or multiple widgets in a single call',
   inputSchema: z.object({
-    updates: z.array(z.object({
-      widgetName: z.string().describe('Name of widget to update'),
-      changes: z.object({
-        newTitle: z.string().optional(),
-        newTable: z.string().optional(),
-        newField: z.string().optional(),
-        newCalculation: z.enum(['SUM', 'COUNT', 'AVG', 'MIN', 'MAX']).optional(),
-        newXField: z.string().optional(),
-        newYField: z.string().optional(),
-        newChartType: z.enum(['bar', 'line', 'pie', 'area', 'horizontal-bar']).optional(),
-        newAggregation: z.enum(['SUM', 'COUNT', 'AVG', 'MIN', 'MAX']).optional(),
-        newColumns: z.array(z.string()).optional()
-      }).refine(data => {
-        if (data.newXField || data.newYField) {
-          return data.newXField && data.newYField;
-        }
-        return true;
-      }, "Chart updates require both xField and yField")
+    widgets: z.array(z.object({
+      name: z.string().describe('Name of widget to update'),
+      field: z.string().optional().describe('New field for KPI'),
+      calculation: z.enum(['SUM', 'COUNT', 'AVG', 'MIN', 'MAX']).optional().describe('New calculation for KPI'),
+      table: z.string().optional().describe('New BigQuery table'),
+      title: z.string().optional().describe('New widget title'),
+      xField: z.string().optional().describe('New X-axis field for chart'),
+      yField: z.string().optional().describe('New Y-axis field for chart'),
+      chartType: z.enum(['bar', 'line', 'pie', 'area', 'horizontal-bar']).optional().describe('New chart type'),
+      aggregation: z.enum(['SUM', 'COUNT', 'AVG', 'MIN', 'MAX']).optional().describe('New aggregation for chart'),
+      columns: z.array(z.string()).optional().describe('New columns for table')
     }))
   }),
-  execute: async ({ updates }) => {
-    console.log('🔄 updateWidget tool executed with:', updates.length, 'updates');
+  execute: async ({ widgets }) => {
+    console.log('🔄 updateWidget tool executed with:', widgets.length, 'widgets');
     
     try {
-      const operations = updates.map(update => ({
+      const operations = widgets.map(widget => ({
         action: 'update' as const,
-        widgetName: update.widgetName,
-        params: update.changes
+        widgetName: widget.name,
+        params: {
+          newField: widget.field,
+          newCalculation: widget.calculation,
+          newTable: widget.table,
+          newTitle: widget.title,
+          newXField: widget.xField,
+          newYField: widget.yField,
+          newChartType: widget.chartType,
+          newAggregation: widget.aggregation,
+          newColumns: widget.columns
+        }
       }));
       
       return {
         success: true,
-        totalUpdates: updates.length,
-        successful: updates.length,
+        totalUpdates: widgets.length,
+        successful: widgets.length,
         failed: 0,
-        message: `${updates.length} update(s) prontos para execução.`,
+        message: `${widgets.length} widget(s) prontos para atualização.`,
         operations,
-        results: updates.map(update => ({
-          widgetName: update.widgetName,
+        results: widgets.map(widget => ({
+          widgetName: widget.name,
           success: true,
           message: 'Pronto para execução'
         }))
@@ -120,9 +123,9 @@ export const updateWidget = tool({
       console.error('❌ Error in updateWidget tool:', error);
       return {
         success: false,
-        totalUpdates: updates.length,
+        totalUpdates: widgets.length,
         successful: 0,
-        failed: updates.length,
+        failed: widgets.length,
         error: error instanceof Error ? error.message : 'Unknown error occurred',
         operations: []
       };
