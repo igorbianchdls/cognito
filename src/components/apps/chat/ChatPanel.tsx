@@ -237,10 +237,10 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
             className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`w-full p-3 text-sm ${
+              className={`p-3 text-sm ${
                 message.role === 'user'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-transparent text-gray-700'
+                  ? 'max-w-[80%] border border-gray-300 rounded-lg text-black'
+                  : 'w-full bg-transparent text-gray-700'
               }`}
             >
               <div>
