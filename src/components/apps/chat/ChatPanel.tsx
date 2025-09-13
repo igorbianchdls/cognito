@@ -351,7 +351,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                       input?: Record<string, unknown>
                       output: {
                         tables: Array<{
-                          id: string
+                          tableId: string
                           type: string
                           numRows: string
                           numBytes: string
@@ -386,7 +386,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                         {tablesTool.state === 'output-available' && (
                           <TablesListCustom
                             tables={tablesTool.output.tables?.map(table => ({
-                              tableId: table.id,
+                              tableId: table.tableId,
                               numBytes: parseInt(table.numBytes) || 0
                             }))}
                             datasetId={tablesTool.output.datasetId}
