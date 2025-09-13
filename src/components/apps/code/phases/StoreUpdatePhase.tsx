@@ -575,7 +575,7 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
       labelSkipWidth?: number,
       labelSkipHeight?: number,
       labelTextColor?: string,
-      labelFormat?: string,
+      barLabelFormat?: string,
       labelOffset?: number,
 
       // ========== PIE ESPECÍFICAS ==========
@@ -814,7 +814,7 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
       labelSkipWidth?: number,
       labelSkipHeight?: number,
       labelTextColor?: string,
-      labelFormat?: string,
+      barLabelFormat?: string,
       labelOffset?: number,
 
       // ========== PIE ESPECÍFICAS ==========
