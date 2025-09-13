@@ -36,7 +36,7 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
     "styling": {
       "unit": "registros",
       "showTarget": true,
-      "targetValue": 1000,
+      "target": 1000,
       "icon": "📊",
       "backgroundColor": "#f0f9ff",
       "borderColor": "#0ea5e9",
@@ -568,7 +568,7 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
       // Data display properties
       unit?: string,
       showTarget?: boolean,
-      targetValue?: number,
+      target?: number,
       showTrend?: boolean,
       visualizationType?: 'card',
       icon?: string,
@@ -649,7 +649,7 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
             unit: styling?.unit || '',
             showTarget: styling?.showTarget || false,
             showTrend: styling?.showTrend || false,
-            targetValue: styling?.targetValue || 0,
+            target: styling?.target || 0,
             visualizationType: styling?.visualizationType || 'card' as const,
             enableSimulation: false,
             dataSourceType: 'bigquery' as const,
