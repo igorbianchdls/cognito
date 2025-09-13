@@ -582,7 +582,6 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
     }
 
     setIsExecuting(true)
-    setOutput([])
     log('🚀 Executing JSON...')
 
     try {
