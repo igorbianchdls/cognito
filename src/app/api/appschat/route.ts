@@ -3,6 +3,7 @@ import { convertToModelMessages, streamText, UIMessage, tool } from 'ai';
 import { z } from 'zod';
 import type { DroppedWidget } from '@/types/apps/droppedWidget';
 import { createWidget, updateWidget } from '@/tools/apps/widgetTools';
+import { getTables, getTableSchema } from '@/tools/apps/bigquery';
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30;
@@ -66,6 +67,8 @@ TOOL USAGE:
 - Use \`createWidget\` tool for NEW widgets - just specify the parameters
 - Use \`updateWidget\` tool for modifying EXISTING widgets - can update multiple widgets in single call by passing array of widgets
 - Use \`getCanvasWidgets\` tool to see current widgets when needed
+- Use \`getTables\` tool to explore available tables in BigQuery datasets
+- Use \`getTableSchema\` tool to see columns and data types of specific tables
 - DO NOT write code yourself - the system generates all executable code
 
 BIGQUERY INTEGRATION:
@@ -149,7 +152,9 @@ Keep responses focused on widget creation. Ask clarifying questions about data s
         }
       }),
       createWidget,
-      updateWidget
+      updateWidget,
+      getTables,
+      getTableSchema
     }
   });
 

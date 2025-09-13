@@ -343,6 +343,129 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                     )
                   }
 
+                  // Handle getTables tool calls
+                  if (part.type === 'tool-getTables') {
+                    const tablesTool = part as {
+                      state: 'input-streaming' | 'input-available' | 'output-available' | 'output-error'
+                      input?: Record<string, unknown>
+                      output: {
+                        tables: Array<{
+                          id: string
+                          type: string
+                          numRows: string
+                          numBytes: string
+                          creationTime: string
+                          lastModifiedTime: string
+                        }>
+                        datasetId: string
+                        success: boolean
+                      }
+                      errorText?: string
+                    }
+                    const shouldBeOpen = tablesTool.state === 'output-available' || tablesTool.state === 'output-error'
+
+                    return (
+                      <div key={index}>
+                        <Tool defaultOpen={shouldBeOpen}>
+                          <ToolHeader type="tool-getTables" state={tablesTool.state} />
+                          <ToolContent>
+                            {tablesTool.input && (
+                              <ToolInput input={tablesTool.input} />
+                            )}
+                            {tablesTool.state === 'output-error' && (
+                              <ToolOutput
+                                output={null}
+                                errorText={tablesTool.errorText}
+                              />
+                            )}
+                            {tablesTool.state === 'output-available' && tablesTool.output.success && (
+                              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                <div className="p-3 bg-gray-50 border-b">
+                                  <h4 className="font-medium text-sm">Tables in dataset: {tablesTool.output.datasetId}</h4>
+                                  <p className="text-xs text-gray-600">{tablesTool.output.tables.length} tables found</p>
+                                </div>
+                                <div className="max-h-60 overflow-y-auto">
+                                  {tablesTool.output.tables.map((table, idx) => (
+                                    <div key={idx} className="p-3 border-b border-gray-100 last:border-b-0">
+                                      <div className="flex items-center justify-between">
+                                        <span className="font-medium text-sm">{table.id}</span>
+                                        <span className="text-xs text-gray-500">{table.type}</span>
+                                      </div>
+                                      <div className="flex gap-4 mt-1 text-xs text-gray-600">
+                                        <span>Rows: {table.numRows}</span>
+                                        <span>Size: {table.numBytes}</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </ToolContent>
+                        </Tool>
+                      </div>
+                    )
+                  }
+
+                  // Handle getTableSchema tool calls
+                  if (part.type === 'tool-getTableSchema') {
+                    const schemaTool = part as {
+                      state: 'input-streaming' | 'input-available' | 'output-available' | 'output-error'
+                      input?: Record<string, unknown>
+                      output: {
+                        columns: Array<{
+                          column_name: string
+                          data_type: string
+                        }>
+                        success: boolean
+                        tableName: string
+                        datasetId: string
+                        projectId: string
+                        totalColumns: number
+                      }
+                      errorText?: string
+                    }
+                    const shouldBeOpen = schemaTool.state === 'output-available' || schemaTool.state === 'output-error'
+
+                    return (
+                      <div key={index}>
+                        <Tool defaultOpen={shouldBeOpen}>
+                          <ToolHeader type="tool-getTableSchema" state={schemaTool.state} />
+                          <ToolContent>
+                            {schemaTool.input && (
+                              <ToolInput input={schemaTool.input} />
+                            )}
+                            {schemaTool.state === 'output-error' && (
+                              <ToolOutput
+                                output={null}
+                                errorText={schemaTool.errorText}
+                              />
+                            )}
+                            {schemaTool.state === 'output-available' && schemaTool.output.success && (
+                              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                                <div className="p-3 bg-gray-50 border-b">
+                                  <h4 className="font-medium text-sm">Schema: {schemaTool.output.tableName}</h4>
+                                  <p className="text-xs text-gray-600">{schemaTool.output.totalColumns} columns</p>
+                                </div>
+                                <div className="max-h-60 overflow-y-auto">
+                                  {schemaTool.output.columns.map((column, idx) => (
+                                    <div key={idx} className="p-3 border-b border-gray-100 last:border-b-0">
+                                      <div className="flex items-center justify-between">
+                                        <span className="font-medium text-sm">{column.column_name}</span>
+                                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                          {column.data_type}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </ToolContent>
+                        </Tool>
+                      </div>
+                    )
+                  }
+
                   // Handle updateWidget tool calls
                   if (part.type === 'tool-updateWidget') {
                     const updateTool = part as {
