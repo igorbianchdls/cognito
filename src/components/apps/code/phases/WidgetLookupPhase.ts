@@ -34,7 +34,7 @@ export class WidgetLookupPhase {
     const areaCharts = $areaChartStore.get().areaCharts
     const horizontalBarCharts = $horizontalBarChartStore.get().horizontalBarCharts
 
-    let existingChart: { id: string; name: string; bigqueryData: { selectedTable: string | null; columns: { xAxis: { name: string; type: string }[]; yAxis: { name: string; type: string; aggregation?: string }[]; filters: { name: string; type: string }[] } }; styling?: any; position?: { x: number; y: number; w: number; h: number } } | undefined = undefined
+    let existingChart: { id: string; name: string; bigqueryData: { selectedTable: string | null; columns: { xAxis: { name: string; type: string }[]; yAxis: { name: string; type: string; aggregation?: string }[]; filters: { name: string; type: string }[] } }; styling?: Record<string, unknown>; position?: { x: number; y: number; w: number; h: number } } | undefined = undefined
     let chartType: 'bar' | 'line' | 'pie' | 'area' | 'horizontal-bar' | null = null
     
     existingChart = barCharts.find(chart => chart.name === chartName)
