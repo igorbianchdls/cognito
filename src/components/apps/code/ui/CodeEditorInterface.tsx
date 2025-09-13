@@ -1,7 +1,8 @@
 'use client'
 
+import { useState } from 'react'
 import { Editor } from '@monaco-editor/react'
-import { Play, RotateCcw, Terminal } from 'lucide-react'
+import { Play, RotateCcw, Terminal, ChevronUp, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -25,6 +26,7 @@ export default function CodeEditorInterface({
   onReset,
   onClearOutput
 }: CodeEditorInterfaceProps) {
+  const [isConsoleExpanded, setIsConsoleExpanded] = useState(true)
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
@@ -77,39 +79,54 @@ export default function CodeEditorInterface({
           />
         </div>
 
+        {/* Divider Line */}
+        <div className="border-t border-border bg-border/20" />
+
         {/* Output Console */}
-        <Card className="m-4 mt-0 border-t-0 rounded-t-none">
-          <CardHeader className="py-2">
+        <Card className="m-4 mt-0 border-t-0 rounded-t-none transition-all duration-200 ease-in-out">
+          <CardHeader className="py-2 cursor-pointer" onClick={() => setIsConsoleExpanded(!isConsoleExpanded)}>
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2">
                 <Terminal className="w-3 h-3" />
                 Console Output
+                {isConsoleExpanded ? (
+                  <ChevronDown className="w-3 h-3 text-muted-foreground" />
+                ) : (
+                  <ChevronUp className="w-3 h-3 text-muted-foreground" />
+                )}
               </CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClearOutput}
-                className="h-6 px-2 text-xs"
-              >
-                Clear
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onClearOutput()
+                  }}
+                  className="h-6 px-2 text-xs"
+                >
+                  Clear
+                </Button>
+              </div>
             </div>
           </CardHeader>
-          <CardContent className="py-2">
-            <ScrollArea className="h-24 w-full">
-              <div className="space-y-1">
-                {output.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">No output yet. Execute some code to see results.</p>
-                ) : (
-                  output.map((line, index) => (
-                    <p key={index} className="text-xs font-mono text-foreground whitespace-pre-wrap">
-                      {line}
-                    </p>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
-          </CardContent>
+          {isConsoleExpanded && (
+            <CardContent className="py-2">
+              <ScrollArea className="h-24 w-full">
+                <div className="space-y-1">
+                  {output.length === 0 ? (
+                    <p className="text-xs text-muted-foreground">No output yet. Execute some code to see results.</p>
+                  ) : (
+                    output.map((line, index) => (
+                      <p key={index} className="text-xs font-mono text-foreground whitespace-pre-wrap">
+                        {line}
+                      </p>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          )}
         </Card>
       </div>
     </div>
