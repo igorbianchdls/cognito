@@ -44,11 +44,10 @@ export const getDatasets = tool({
 });
 
 export const getTables = tool({
-  description: 'Get list of tables in a specific BigQuery dataset',
-  inputSchema: z.object({
-    datasetId: z.string().describe('The dataset ID to get tables from'),
-  }),
-  execute: async ({ datasetId }) => {
+  description: 'Get list of tables in the biquery_data BigQuery dataset',
+  inputSchema: z.object({}),
+  execute: async () => {
+    const datasetId = "biquery_data";
     console.log('📋 BigQuery tables tool executed for nexus, dataset:', datasetId);
     try {
       // Initialize BigQuery service if not already done
