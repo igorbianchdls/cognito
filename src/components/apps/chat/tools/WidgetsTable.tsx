@@ -128,19 +128,8 @@ export default function WidgetsTable({ widgets, totalWidgets, summary, success }
   }
 
   return (
-    <div className="mt-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-      <div className="flex items-center gap-2 mb-4">
-        <span className="text-2xl">📊</span>
-        <span className="font-medium text-blue-800">Canvas Widgets</span>
-        <Badge variant="secondary" className="bg-blue-200 text-blue-800">
-          {totalWidgets} widget{totalWidgets !== 1 ? 's' : ''}
-        </Badge>
-      </div>
-      
-      <p className="text-blue-700 mb-4">{summary}</p>
-
-      <div className="bg-white rounded-lg border border-blue-200 overflow-hidden">
-        <Table>
+    <div className="bg-white rounded-lg border border-blue-200 overflow-hidden">
+      <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="w-[200px]">Widget</TableHead>
@@ -192,7 +181,6 @@ export default function WidgetsTable({ widgets, totalWidgets, summary, success }
             ))}
           </TableBody>
         </Table>
-      </div>
     </div>
   )
 }
