@@ -7,6 +7,7 @@ import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import CanvasWidgets from './tools/CanvasWidgets'
 import WidgetsTable from './tools/WidgetsTable'
 import AICodeExecutor from './AICodeExecutor'
+import TablesList from '@/components/tools/TablesList'
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
 // import { widgetActions } from '@/stores/apps/widgetStore' // REMOVED: Only KPIs supported now
 import { kpiActions } from '@/stores/apps/kpiStore'
@@ -356,9 +357,11 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                           numBytes: string
                           creationTime: string
                           lastModifiedTime: string
+                          description?: string
                         }>
                         datasetId: string
                         success: boolean
+                        error?: string
                       }
                       errorText?: string
                     }
@@ -378,27 +381,19 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                                 errorText={tablesTool.errorText}
                               />
                             )}
-                            {tablesTool.state === 'output-available' && tablesTool.output.success && (
-                              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                                <div className="p-3 bg-gray-50 border-b">
-                                  <h4 className="font-medium text-sm">Tables in dataset: {tablesTool.output.datasetId}</h4>
-                                  <p className="text-xs text-gray-600">{tablesTool.output.tables.length} tables found</p>
-                                </div>
-                                <div className="max-h-60 overflow-y-auto">
-                                  {tablesTool.output.tables.map((table, idx) => (
-                                    <div key={idx} className="p-3 border-b border-gray-100 last:border-b-0">
-                                      <div className="flex items-center justify-between">
-                                        <span className="font-medium text-sm">{table.id}</span>
-                                        <span className="text-xs text-gray-500">{table.type}</span>
-                                      </div>
-                                      <div className="flex gap-4 mt-1 text-xs text-gray-600">
-                                        <span>Rows: {table.numRows}</span>
-                                        <span>Size: {table.numBytes}</span>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
+                            {tablesTool.state === 'output-available' && (
+                              <TablesList
+                                tables={tablesTool.output.tables?.map(table => ({
+                                  tableId: table.id,
+                                  description: table.description,
+                                  numRows: parseInt(table.numRows) || 0,
+                                  numBytes: parseInt(table.numBytes) || 0,
+                                  creationTime: table.creationTime
+                                }))}
+                                datasetId={tablesTool.output.datasetId}
+                                success={tablesTool.output.success}
+                                error={tablesTool.output.error}
+                              />
                             )}
                           </ToolContent>
                         </Tool>
