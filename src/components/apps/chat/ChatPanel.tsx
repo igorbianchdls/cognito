@@ -4,7 +4,6 @@ import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import { useState, FormEvent } from 'react'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
-import CanvasWidgets from './tools/CanvasWidgets'
 import WidgetsTable from './tools/WidgetsTable'
 import AICodeExecutor from './AICodeExecutor'
 import TablesListCustom from './tools/TablesListCustom'
@@ -12,7 +11,6 @@ import TableSchemaCustom from './tools/TableSchemaCustom'
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
 // import { widgetActions } from '@/stores/apps/widgetStore' // REMOVED: Only KPIs supported now
 import { kpiActions } from '@/stores/apps/kpiStore'
-import { handleWidgetOperations } from './widgetMapper'
 import {
   PromptInput,
   PromptInputButton,
@@ -313,7 +311,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                         operations: Array<{
                           action: 'create' | 'update'
                           type?: 'kpi' | 'chart' | 'table'
-                          [key: string]: any
+                          [key: string]: unknown
                         }>
                         message: string
                         totalOperations: number
