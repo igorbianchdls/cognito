@@ -2,7 +2,7 @@ import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage, tool } from 'ai';
 import { z } from 'zod';
 import type { DroppedWidget } from '@/types/apps/droppedWidget';
-import { createWidget, updateWidget } from '@/tools/apps/widgetTools';
+import { manageWidgets } from '@/tools/apps/widgetTools';
 import { getTables, getTableSchema } from '@/tools/apps/bigquery';
 
 // Allow streaming responses up to 30 seconds
@@ -76,8 +76,7 @@ HOW IT WORKS:
 TOOL USAGE:
 - ALWAYS start with \`getTables\` to see available tables (no parameters needed)
 - Use \`getTableSchema\` with tableName to explore columns before widget creation
-- Use \`createWidget\` with REAL table/column names from exploration
-- Use \`updateWidget\` with REAL table/column names from exploration
+- Use \`manageWidgets\` with REAL table/column names from exploration for all widget operations
 - Use \`getCanvasWidgets\` to see current dashboard state
 - DO NOT guess table or column names - always explore first
 - DO NOT write code yourself - the system generates all executable code
@@ -100,10 +99,19 @@ CORRECT WORKFLOW EXAMPLE:
 User: "Create a sales KPI"
 AI: 1. Call getTables() to see available tables
     2. Call getTableSchema(tableName: "sales_data") to see columns
-    3. Call createWidget(type: "kpi", table: "sales_data", field: "total_revenue", calculation: "SUM", title: "Total Sales")
+    3. Call manageWidgets(operations: [{"action": "create", "type": "kpi", "table": "sales_data", "field": "total_revenue", "calculation": "SUM", "title": "Total Sales"}])
+
+MANAGEWIDGETS TOOL FORMAT:
+Use flat JSON format exactly like code editor:
+{
+  "operations": [
+    {"action": "create", "type": "kpi", "table": "sales", "field": "revenue", "calculation": "SUM", "title": "Total Sales"},
+    {"action": "update", "name": "Total Sales", "field": "profit", "calculation": "AVG", "title": "Average Profit"}
+  ]
+}
 
 WRONG APPROACH:
-AI: Call createWidget(table: "sales", field: "revenue") // ❌ Guessing names without exploration
+AI: Call manageWidgets(table: "sales", field: "revenue") // ❌ Guessing names without exploration
 
 Keep responses focused on widget creation. Ask clarifying questions about data sources, calculations, or visualizations when needed.`,
     messages: convertToModelMessages(messages),
@@ -171,8 +179,7 @@ Keep responses focused on widget creation. Ask clarifying questions about data s
           }
         }
       }),
-      createWidget,
-      updateWidget,
+      manageWidgets,
       getTables,
       getTableSchema
     }

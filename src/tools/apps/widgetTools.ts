@@ -1,68 +1,82 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 
-export const createWidget = tool({
-  description: 'Create new widgets on the dashboard with BigQuery integration',
+export const manageWidgets = tool({
+  description: 'Create or update dashboard widgets using code editor format',
   inputSchema: z.object({
-    widgets: z.array(z.discriminatedUnion('type', [
-      // KPI
-      z.object({
-        type: z.literal('kpi'),
-        table: z.string().describe('BigQuery table name'),
-        field: z.string().describe('Field to calculate KPI from'),
-        calculation: z.enum(['SUM', 'COUNT', 'AVG', 'MIN', 'MAX']),
-        title: z.string().describe('KPI title/name')
-      }),
-      // Chart
-      z.object({
-        type: z.literal('chart'),
-        chartType: z.enum(['bar', 'line', 'pie', 'area', 'horizontal-bar']),
-        table: z.string().describe('BigQuery table name'),
-        xField: z.string().describe('X-axis field'),
-        yField: z.string().describe('Y-axis field'),
-        aggregation: z.enum(['SUM', 'COUNT', 'AVG', 'MIN', 'MAX']),
-        title: z.string().describe('Chart title')
-      }),
-      // Table
-      z.object({
-        type: z.literal('table'),
-        table: z.string().describe('BigQuery table name'),
-        columns: z.array(z.string()).min(1),
-        title: z.string().optional()
-      })
-    ]))
+    operations: z.array(z.object({
+      action: z.enum(['create', 'update']),
+      type: z.enum(['kpi', 'chart', 'table']).optional(),
+
+      // Common fields
+      table: z.string().optional().describe('BigQuery table name'),
+      title: z.string().optional().describe('Widget title'),
+
+      // For updates - widget identification
+      name: z.string().optional().describe('Name of widget to update (required for updates)'),
+
+      // KPI fields
+      field: z.string().optional().describe('Field to calculate KPI from'),
+      calculation: z.enum(['SUM', 'COUNT', 'AVG', 'MIN', 'MAX']).optional().describe('Calculation method'),
+
+      // Chart fields
+      chartType: z.enum(['bar', 'line', 'pie', 'area', 'horizontal-bar']).optional().describe('Chart type'),
+      xField: z.string().optional().describe('X-axis field'),
+      yField: z.string().optional().describe('Y-axis field'),
+      aggregation: z.enum(['SUM', 'COUNT', 'AVG', 'MIN', 'MAX']).optional().describe('Chart aggregation method'),
+
+      // Table fields
+      columns: z.array(z.string()).optional().describe('Table columns to display')
+    }))
   }),
-  execute: async ({ widgets }) => {
-    console.log('🎯 createWidget tool executed with:', widgets.length, 'widgets');
-    
+  execute: async ({ operations }) => {
+    console.log('🎯 manageWidgets tool executed with:', operations.length, 'operations');
+
     try {
-      const operations = widgets.map(widget => ({
-        action: 'create' as const,
-        type: widget.type,
-        params: widget
-      }));
-      
+      // Validate operations
+      const createOps = operations.filter(op => op.action === 'create');
+      const updateOps = operations.filter(op => op.action === 'update');
+
+      console.log(`📊 Operations breakdown: ${createOps.length} creates, ${updateOps.length} updates`);
+
+      // Validate required fields for create operations
+      for (const op of createOps) {
+        if (!op.type) {
+          throw new Error(`Create operation missing required 'type' field`);
+        }
+        if (op.type === 'kpi' && (!op.field || !op.calculation)) {
+          throw new Error(`KPI create operation missing required 'field' or 'calculation'`);
+        }
+        if (op.type === 'chart' && (!op.xField || !op.yField || !op.chartType || !op.aggregation)) {
+          throw new Error(`Chart create operation missing required fields`);
+        }
+        if (op.type === 'table' && !op.columns) {
+          throw new Error(`Table create operation missing required 'columns'`);
+        }
+      }
+
+      // Validate required fields for update operations
+      for (const op of updateOps) {
+        if (!op.name) {
+          throw new Error(`Update operation missing required 'name' field`);
+        }
+      }
+
       return {
         success: true,
-        totalWidgets: widgets.length,
-        created: widgets.length,
-        failed: 0,
-        message: `${widgets.length} widget(s) prontos para criação.`,
-        operations,
-        results: widgets.map((widget, index) => ({
-          type: widget.type,
-          success: true,
-          name: widget.title || `Widget ${index + 1}`,
-          message: 'Pronto para execução'
-        }))
+        totalOperations: operations.length,
+        created: createOps.length,
+        updated: updateOps.length,
+        message: `${operations.length} widget operation(s) ready for execution.`,
+        operations: operations // Return operations in flat format for code editor
       };
     } catch (error) {
-      console.error('❌ Error in createWidget tool:', error);
+      console.error('❌ Error in manageWidgets tool:', error);
       return {
         success: false,
-        totalWidgets: widgets.length,
+        totalOperations: operations.length,
         created: 0,
-        failed: widgets.length,
+        updated: 0,
         error: error instanceof Error ? error.message : 'Unknown error occurred',
         operations: []
       };
@@ -70,65 +84,6 @@ export const createWidget = tool({
   }
 });
 
-export const updateWidget = tool({
-  description: 'Update one or multiple widgets in a single call',
-  inputSchema: z.object({
-    widgets: z.array(z.object({
-      name: z.string().describe('Name of widget to update'),
-      field: z.string().optional().describe('New field for KPI'),
-      calculation: z.enum(['SUM', 'COUNT', 'AVG', 'MIN', 'MAX']).optional().describe('New calculation for KPI'),
-      table: z.string().optional().describe('New BigQuery table'),
-      title: z.string().optional().describe('New widget title'),
-      xField: z.string().optional().describe('New X-axis field for chart'),
-      yField: z.string().optional().describe('New Y-axis field for chart'),
-      chartType: z.enum(['bar', 'line', 'pie', 'area', 'horizontal-bar']).optional().describe('New chart type'),
-      aggregation: z.enum(['SUM', 'COUNT', 'AVG', 'MIN', 'MAX']).optional().describe('New aggregation for chart'),
-      columns: z.array(z.string()).optional().describe('New columns for table')
-    }))
-  }),
-  execute: async ({ widgets }) => {
-    console.log('🔄 updateWidget tool executed with:', widgets.length, 'widgets');
-    
-    try {
-      const operations = widgets.map(widget => ({
-        action: 'update' as const,
-        widgetName: widget.name,
-        params: {
-          newField: widget.field,
-          newCalculation: widget.calculation,
-          newTable: widget.table,
-          newTitle: widget.title,
-          newXField: widget.xField,
-          newYField: widget.yField,
-          newChartType: widget.chartType,
-          newAggregation: widget.aggregation,
-          newColumns: widget.columns
-        }
-      }));
-      
-      return {
-        success: true,
-        totalUpdates: widgets.length,
-        successful: widgets.length,
-        failed: 0,
-        message: `${widgets.length} widget(s) prontos para atualização.`,
-        operations,
-        results: widgets.map(widget => ({
-          widgetName: widget.name,
-          success: true,
-          message: 'Pronto para execução'
-        }))
-      };
-    } catch (error) {
-      console.error('❌ Error in updateWidget tool:', error);
-      return {
-        success: false,
-        totalUpdates: widgets.length,
-        successful: 0,
-        failed: widgets.length,
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-        operations: []
-      };
-    }
-  }
-});
+// Export legacy tools as deprecated (for backwards compatibility during transition)
+export const createWidget = manageWidgets;
+export const updateWidget = manageWidgets;

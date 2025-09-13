@@ -303,9 +303,9 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                     )
                   }
 
-                  // Handle createWidget tool calls
-                  if (part.type === 'tool-createWidget') {
-                    const createTool = part as {
+                  // Handle manageWidgets tool calls
+                  if (part.type === 'tool-manageWidgets') {
+                    const manageTool = part as {
                       state: 'input-streaming' | 'input-available' | 'output-available' | 'output-error'
                       input?: Record<string, unknown>
                       output: {
@@ -313,33 +313,35 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                         operations: Array<{
                           action: 'create' | 'update'
                           type?: 'kpi' | 'chart' | 'table'
-                          widgetName?: string
-                          params: Record<string, unknown>
+                          [key: string]: any
                         }>
                         message: string
+                        totalOperations: number
+                        created: number
+                        updated: number
                       }
                       errorText?: string
                     }
-                    const shouldBeOpen = createTool.state === 'output-available' || createTool.state === 'output-error'
-                    
+                    const shouldBeOpen = manageTool.state === 'output-available' || manageTool.state === 'output-error'
+
                     return (
                       <div key={index}>
                         <Tool defaultOpen={shouldBeOpen}>
-                          <ToolHeader type="tool-createWidget" state={createTool.state} />
+                          <ToolHeader type="tool-manageWidgets" state={manageTool.state} />
                           <ToolContent>
-                            {createTool.input && (
-                              <ToolInput input={createTool.input} />
+                            {manageTool.input && (
+                              <ToolInput input={manageTool.input} />
                             )}
-                            {createTool.state === 'output-error' && (
-                              <ToolOutput 
+                            {manageTool.state === 'output-error' && (
+                              <ToolOutput
                                 output={null}
-                                errorText={createTool.errorText}
+                                errorText={manageTool.errorText}
                               />
                             )}
                           </ToolContent>
                         </Tool>
-                        {createTool.state === 'output-available' && createTool.output.success && createTool.output.operations && (
-                          <AICodeExecutor operations={createTool.output.operations} />
+                        {manageTool.state === 'output-available' && manageTool.output.success && manageTool.output.operations && (
+                          <AICodeExecutor operations={manageTool.output.operations} />
                         )}
                       </div>
                     )
@@ -449,47 +451,6 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                     )
                   }
 
-                  // Handle updateWidget tool calls
-                  if (part.type === 'tool-updateWidget') {
-                    const updateTool = part as {
-                      state: 'input-streaming' | 'input-available' | 'output-available' | 'output-error'
-                      input?: Record<string, unknown>
-                      output: {
-                        success: boolean
-                        operations: Array<{
-                          action: 'create' | 'update'
-                          type?: 'kpi' | 'chart' | 'table'
-                          widgetName?: string
-                          params: Record<string, unknown>
-                        }>
-                        message: string
-                      }
-                      errorText?: string
-                    }
-                    const shouldBeOpen = updateTool.state === 'output-available' || updateTool.state === 'output-error'
-                    
-                    return (
-                      <div key={index}>
-                        <Tool defaultOpen={shouldBeOpen}>
-                          <ToolHeader type="tool-updateWidget" state={updateTool.state} />
-                          <ToolContent>
-                            {updateTool.input && (
-                              <ToolInput input={updateTool.input} />
-                            )}
-                            {updateTool.state === 'output-error' && (
-                              <ToolOutput 
-                                output={null}
-                                errorText={updateTool.errorText}
-                              />
-                            )}
-                          </ToolContent>
-                        </Tool>
-                        {updateTool.state === 'output-available' && updateTool.output.success && updateTool.output.operations && (
-                          <AICodeExecutor operations={updateTool.output.operations} />
-                        )}
-                      </div>
-                    )
-                  }
                   
                   return null
                 })}
