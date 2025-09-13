@@ -85,6 +85,14 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
     "yField": "event_name",
     "aggregation": "COUNT_DISTINCT",
     "title": "Usuários por Evento"
+  },
+  {
+    "action": "update",
+    "type": "table",
+    "name": "Dados E-commerce",
+    "table": "ecommerce",
+    "columns": ["id", "event_name", "user_pseudo_id", "event_timestamp"],
+    "title": "Dados Completos E-commerce"
   }
 ]`
 
@@ -646,8 +654,27 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
           
           log(`🔄 Updating chart: ${item.name}`)
           await updateChart(item.name, item.table, item.xField, item.yField, item.aggregation, item.title)
+        } else if (item.action === 'update' && item.type === 'table') {
+          if (!item.name) {
+            log('❌ Missing required field: name (table name to update)')
+            continue
+          }
+          
+          if (!item.table) {
+            log('❌ Missing required field: table (BigQuery table is required for table updates)')
+            continue
+          }
+          
+          // Check if at least one optional field is provided
+          if (!item.columns && !item.title) {
+            log('❌ No fields to update. Provide at least one: columns, title')
+            continue
+          }
+          
+          log(`🔄 Updating table: ${item.name}`)
+          await updateTable(item.name, item.table, item.columns, item.title)
         } else {
-          log(`⚠️ Unsupported action: ${item.action} ${item.type} (supported: "create kpi", "create chart", "create table", "update kpi", "update chart")`)
+          log(`⚠️ Unsupported action: ${item.action} ${item.type} (supported: "create kpi", "create chart", "create table", "update kpi", "update chart", "update table")`)
         }
       }
       
