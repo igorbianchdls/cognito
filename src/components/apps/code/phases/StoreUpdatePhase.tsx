@@ -110,7 +110,25 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
     "type": "table",
     "table": "ecommerce",
     "columns": ["id", "event_name", "user_pseudo_id"],
-    "title": "Dados E-commerce"
+    "title": "Dados E-commerce",
+    "styling": {
+      "headerBackground": "#f8fafc",
+      "headerTextColor": "#1e293b",
+      "borderColor": "#e2e8f0",
+      "borderRadius": 8,
+      "pageSize": 15,
+      "enableExport": true,
+      "exportFormats": ["csv", "excel"],
+      "headerFontWeight": "600",
+      "cellFontSize": 13,
+      "icon": "📊"
+    },
+    "position": {
+      "x": 0,
+      "y": 220,
+      "w": 100,
+      "h": 250
+    }
   },
   {
     "action": "update",
@@ -153,7 +171,28 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
     "name": "Dados E-commerce",
     "table": "ecommerce",
     "columns": ["id", "event_name", "user_pseudo_id", "event_timestamp"],
-    "title": "Dados Completos E-commerce"
+    "title": "Dados Completos E-commerce",
+    "styling": {
+      "headerBackground": "#ecfdf5",
+      "headerTextColor": "#065f46",
+      "rowHoverColor": "#f0fdf4",
+      "borderColor": "#10b981",
+      "borderWidth": 2,
+      "borderRadius": 12,
+      "pageSize": 20,
+      "enableSearch": true,
+      "enableFiltering": true,
+      "cellFontSize": 12,
+      "headerFontSize": 14,
+      "cellTextColor": "#374151",
+      "icon": "📋"
+    },
+    "position": {
+      "x": 0,
+      "y": 480,
+      "w": 120,
+      "h": 300
+    }
   }
 ]`
 
@@ -593,7 +632,82 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
   }
 
   // Update Table function (follows Datasets pattern)
-  const updateTable = async (tableName: string, newBqTable?: string, newColumns?: string[], newTitle?: string) => {
+  const updateTable = async (
+    tableName: string,
+    newBqTable?: string,
+    newColumns?: string[],
+    newTitle?: string,
+    styling?: {
+      // Display options
+      searchPlaceholder?: string,
+      showColumnToggle?: boolean,
+      showPagination?: boolean,
+      pageSize?: number,
+
+      // Visual styling
+      headerBackground?: string,
+      headerTextColor?: string,
+      rowHoverColor?: string,
+      borderColor?: string,
+      borderRadius?: number,
+      borderWidth?: number,
+      padding?: number,
+
+      // Typography - Header
+      headerFontSize?: number,
+      headerFontFamily?: string,
+      headerFontWeight?: string,
+
+      // Typography - Cell
+      cellFontSize?: number,
+      cellFontFamily?: string,
+      cellFontWeight?: string,
+      cellTextColor?: string,
+      lineHeight?: number,
+      letterSpacing?: number,
+      defaultTextAlign?: 'left' | 'center' | 'right' | 'justify',
+
+      // Functionality
+      enableSearch?: boolean,
+      enableSorting?: boolean,
+      enableExport?: boolean,
+      exportFormats?: ('csv' | 'excel' | 'pdf')[],
+      enableFiltering?: boolean,
+      enableMultiSort?: boolean,
+
+      // Row selection
+      enableRowSelection?: boolean,
+      selectionMode?: 'single' | 'multiple',
+
+      // Editing
+      editableMode?: boolean,
+      editableCells?: string[] | 'all' | 'none',
+      editingCellColor?: string,
+      validationErrorColor?: string,
+      modifiedCellColor?: string,
+
+      // Performance
+      searchDebounce?: number,
+      enableVirtualization?: boolean,
+      enableAutoRefresh?: boolean,
+      autoRefreshInterval?: number,
+
+      // Export options
+      exportButtonPosition?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right',
+      csvSeparator?: string,
+      exportFilePrefix?: string,
+      exportIncludeTimestamp?: boolean,
+
+      // Icon
+      icon?: string
+    },
+    position?: {
+      x?: number,
+      y?: number,
+      w?: number,
+      h?: number
+    }
+  ) => {
     try {
       // 1. Find existing Table by name (same as Datasets selection)
       const existingTable = WidgetLookupPhase.findExistingTable(tableName)
@@ -637,16 +751,91 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
               id: col,
               header: col,
               accessorKey: col,
-              sortable: true,
+              sortable: styling?.enableSorting !== undefined ? styling.enableSorting : (existingTable.config.enableSorting !== undefined ? existingTable.config.enableSorting : true),
               type: 'text' as const // simplified - could be enhanced to detect types
             })),
-            showPagination: true,
-            showColumnToggle: true,
-            pageSize: 10,
-            searchPlaceholder: 'Buscar...',
+
+            // Display options (merge with existing or use new values)
+            searchPlaceholder: styling?.searchPlaceholder !== undefined ? styling.searchPlaceholder : (existingTable.config.searchPlaceholder || 'Buscar...'),
+            showColumnToggle: styling?.showColumnToggle !== undefined ? styling.showColumnToggle : (existingTable.config.showColumnToggle !== undefined ? existingTable.config.showColumnToggle : true),
+            showPagination: styling?.showPagination !== undefined ? styling.showPagination : (existingTable.config.showPagination !== undefined ? existingTable.config.showPagination : true),
+            pageSize: styling?.pageSize !== undefined ? styling.pageSize : (existingTable.config.pageSize || 10),
+
+            // Visual styling
+            headerBackground: styling?.headerBackground !== undefined ? styling.headerBackground : existingTable.config.headerBackground,
+            headerTextColor: styling?.headerTextColor !== undefined ? styling.headerTextColor : existingTable.config.headerTextColor,
+            rowHoverColor: styling?.rowHoverColor !== undefined ? styling.rowHoverColor : existingTable.config.rowHoverColor,
+            borderColor: styling?.borderColor !== undefined ? styling.borderColor : existingTable.config.borderColor,
+            borderRadius: styling?.borderRadius !== undefined ? styling.borderRadius : existingTable.config.borderRadius,
+            borderWidth: styling?.borderWidth !== undefined ? styling.borderWidth : existingTable.config.borderWidth,
+            padding: styling?.padding !== undefined ? styling.padding : existingTable.config.padding,
+
+            // Typography - Header
+            headerFontSize: styling?.headerFontSize !== undefined ? styling.headerFontSize : existingTable.config.headerFontSize,
+            headerFontFamily: styling?.headerFontFamily !== undefined ? styling.headerFontFamily : existingTable.config.headerFontFamily,
+            headerFontWeight: styling?.headerFontWeight !== undefined ? styling.headerFontWeight : existingTable.config.headerFontWeight,
+
+            // Typography - Cell
+            cellFontSize: styling?.cellFontSize !== undefined ? styling.cellFontSize : existingTable.config.cellFontSize,
+            cellFontFamily: styling?.cellFontFamily !== undefined ? styling.cellFontFamily : existingTable.config.cellFontFamily,
+            cellFontWeight: styling?.cellFontWeight !== undefined ? styling.cellFontWeight : existingTable.config.cellFontWeight,
+            cellTextColor: styling?.cellTextColor !== undefined ? styling.cellTextColor : existingTable.config.cellTextColor,
+            lineHeight: styling?.lineHeight !== undefined ? styling.lineHeight : existingTable.config.lineHeight,
+            letterSpacing: styling?.letterSpacing !== undefined ? styling.letterSpacing : existingTable.config.letterSpacing,
+            defaultTextAlign: styling?.defaultTextAlign !== undefined ? styling.defaultTextAlign : existingTable.config.defaultTextAlign,
+
+            // Functionality
+            enableSearch: styling?.enableSearch !== undefined ? styling.enableSearch : (existingTable.config.enableSearch !== undefined ? existingTable.config.enableSearch : true),
+            enableSorting: styling?.enableSorting !== undefined ? styling.enableSorting : (existingTable.config.enableSorting !== undefined ? existingTable.config.enableSorting : true),
+            enableExport: styling?.enableExport !== undefined ? styling.enableExport : existingTable.config.enableExport,
+            exportFormats: styling?.exportFormats !== undefined ? styling.exportFormats : existingTable.config.exportFormats,
+            enableFiltering: styling?.enableFiltering !== undefined ? styling.enableFiltering : existingTable.config.enableFiltering,
+            enableMultiSort: styling?.enableMultiSort !== undefined ? styling.enableMultiSort : existingTable.config.enableMultiSort,
+
+            // Row selection
+            enableRowSelection: styling?.enableRowSelection !== undefined ? styling.enableRowSelection : existingTable.config.enableRowSelection,
+            selectionMode: styling?.selectionMode !== undefined ? styling.selectionMode : existingTable.config.selectionMode,
+
+            // Editing
+            editableMode: styling?.editableMode !== undefined ? styling.editableMode : existingTable.config.editableMode,
+            editableCells: styling?.editableCells !== undefined ? styling.editableCells : existingTable.config.editableCells,
+            editingCellColor: styling?.editingCellColor !== undefined ? styling.editingCellColor : existingTable.config.editingCellColor,
+            validationErrorColor: styling?.validationErrorColor !== undefined ? styling.validationErrorColor : existingTable.config.validationErrorColor,
+            modifiedCellColor: styling?.modifiedCellColor !== undefined ? styling.modifiedCellColor : existingTable.config.modifiedCellColor,
+
+            // Performance
+            searchDebounce: styling?.searchDebounce !== undefined ? styling.searchDebounce : existingTable.config.searchDebounce,
+            enableVirtualization: styling?.enableVirtualization !== undefined ? styling.enableVirtualization : existingTable.config.enableVirtualization,
+            enableAutoRefresh: styling?.enableAutoRefresh !== undefined ? styling.enableAutoRefresh : existingTable.config.enableAutoRefresh,
+            autoRefreshInterval: styling?.autoRefreshInterval !== undefined ? styling.autoRefreshInterval : existingTable.config.autoRefreshInterval,
+
+            // Export options
+            exportButtonPosition: styling?.exportButtonPosition !== undefined ? styling.exportButtonPosition : existingTable.config.exportButtonPosition,
+            csvSeparator: styling?.csvSeparator !== undefined ? styling.csvSeparator : existingTable.config.csvSeparator,
+            exportFilePrefix: styling?.exportFilePrefix !== undefined ? styling.exportFilePrefix : existingTable.config.exportFilePrefix,
+            exportIncludeTimestamp: styling?.exportIncludeTimestamp !== undefined ? styling.exportIncludeTimestamp : existingTable.config.exportIncludeTimestamp,
+
+            // Data source
             dataSource: 'BigQuery'
           }
         })
+
+        // Update position and size if provided
+        if (position && (position.x !== undefined || position.y !== undefined || position.w !== undefined || position.h !== undefined)) {
+          tableActions.editTable(existingTable.i, {
+            x: position.x !== undefined ? position.x : existingTable.x,
+            y: position.y !== undefined ? position.y : existingTable.y,
+            w: position.w !== undefined ? position.w : existingTable.w,
+            h: position.h !== undefined ? position.h : existingTable.h
+          })
+        }
+
+        // Update icon if provided
+        if (styling?.icon !== undefined) {
+          tableActions.editTable(existingTable.i, {
+            icon: styling.icon
+          })
+        }
 
         log(`✅ Table "${updatedTitle}" updated successfully with ${data.length} rows`)
       } else {
@@ -658,7 +847,81 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
   }
 
   // Simple Table creation function
-  const createTable = async (table: string, columns: string[], title?: string) => {
+  const createTable = async (
+    table: string,
+    columns: string[],
+    title?: string,
+    styling?: {
+      // Display options
+      searchPlaceholder?: string,
+      showColumnToggle?: boolean,
+      showPagination?: boolean,
+      pageSize?: number,
+
+      // Visual styling
+      headerBackground?: string,
+      headerTextColor?: string,
+      rowHoverColor?: string,
+      borderColor?: string,
+      borderRadius?: number,
+      borderWidth?: number,
+      padding?: number,
+
+      // Typography - Header
+      headerFontSize?: number,
+      headerFontFamily?: string,
+      headerFontWeight?: string,
+
+      // Typography - Cell
+      cellFontSize?: number,
+      cellFontFamily?: string,
+      cellFontWeight?: string,
+      cellTextColor?: string,
+      lineHeight?: number,
+      letterSpacing?: number,
+      defaultTextAlign?: 'left' | 'center' | 'right' | 'justify',
+
+      // Functionality
+      enableSearch?: boolean,
+      enableSorting?: boolean,
+      enableExport?: boolean,
+      exportFormats?: ('csv' | 'excel' | 'pdf')[],
+      enableFiltering?: boolean,
+      enableMultiSort?: boolean,
+
+      // Row selection
+      enableRowSelection?: boolean,
+      selectionMode?: 'single' | 'multiple',
+
+      // Editing
+      editableMode?: boolean,
+      editableCells?: string[] | 'all' | 'none',
+      editingCellColor?: string,
+      validationErrorColor?: string,
+      modifiedCellColor?: string,
+
+      // Performance
+      searchDebounce?: number,
+      enableVirtualization?: boolean,
+      enableAutoRefresh?: boolean,
+      autoRefreshInterval?: number,
+
+      // Export options
+      exportButtonPosition?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right',
+      csvSeparator?: string,
+      exportFilePrefix?: string,
+      exportIncludeTimestamp?: boolean,
+
+      // Icon
+      icon?: string
+    },
+    position?: {
+      x?: number,
+      y?: number,
+      w?: number,
+      h?: number
+    }
+  ) => {
     try {
       // Generate SQL query (same as TablePreview)
       const query = QueryConstructionPhase.buildTableQuery(table, columns)
@@ -674,23 +937,81 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
         // Create Table using the same action as Datasets
         tableActions.addTable({
           name: title || `${table} - Table`,
-          icon: '📋',
+          icon: styling?.icon || '📋',
           description: `Table from ${table}`,
-          position: { x: 0, y: 0 },
-          size: { w: 72, h: 200 },
+          position: { x: position?.x || 0, y: position?.y || 0 },
+          size: { w: position?.w || 72, h: position?.h || 200 },
           config: {
             data: data, // Real BigQuery data
             columns: columns.map(col => ({
               id: col,
               header: col,
               accessorKey: col,
-              sortable: true,
+              sortable: styling?.enableSorting !== undefined ? styling.enableSorting : true,
               type: 'text' as const // simplified - could be enhanced to detect types
             })),
-            showPagination: true,
-            showColumnToggle: true,
-            pageSize: 10,
-            searchPlaceholder: 'Buscar...',
+
+            // Display options
+            searchPlaceholder: styling?.searchPlaceholder || 'Buscar...',
+            showColumnToggle: styling?.showColumnToggle !== undefined ? styling.showColumnToggle : true,
+            showPagination: styling?.showPagination !== undefined ? styling.showPagination : true,
+            pageSize: styling?.pageSize || 10,
+
+            // Visual styling
+            headerBackground: styling?.headerBackground,
+            headerTextColor: styling?.headerTextColor,
+            rowHoverColor: styling?.rowHoverColor,
+            borderColor: styling?.borderColor,
+            borderRadius: styling?.borderRadius,
+            borderWidth: styling?.borderWidth,
+            padding: styling?.padding,
+
+            // Typography - Header
+            headerFontSize: styling?.headerFontSize,
+            headerFontFamily: styling?.headerFontFamily,
+            headerFontWeight: styling?.headerFontWeight,
+
+            // Typography - Cell
+            cellFontSize: styling?.cellFontSize,
+            cellFontFamily: styling?.cellFontFamily,
+            cellFontWeight: styling?.cellFontWeight,
+            cellTextColor: styling?.cellTextColor,
+            lineHeight: styling?.lineHeight,
+            letterSpacing: styling?.letterSpacing,
+            defaultTextAlign: styling?.defaultTextAlign,
+
+            // Functionality
+            enableSearch: styling?.enableSearch !== undefined ? styling.enableSearch : true,
+            enableSorting: styling?.enableSorting !== undefined ? styling.enableSorting : true,
+            enableExport: styling?.enableExport,
+            exportFormats: styling?.exportFormats,
+            enableFiltering: styling?.enableFiltering,
+            enableMultiSort: styling?.enableMultiSort,
+
+            // Row selection
+            enableRowSelection: styling?.enableRowSelection,
+            selectionMode: styling?.selectionMode,
+
+            // Editing
+            editableMode: styling?.editableMode,
+            editableCells: styling?.editableCells,
+            editingCellColor: styling?.editingCellColor,
+            validationErrorColor: styling?.validationErrorColor,
+            modifiedCellColor: styling?.modifiedCellColor,
+
+            // Performance
+            searchDebounce: styling?.searchDebounce,
+            enableVirtualization: styling?.enableVirtualization,
+            enableAutoRefresh: styling?.enableAutoRefresh,
+            autoRefreshInterval: styling?.autoRefreshInterval,
+
+            // Export options
+            exportButtonPosition: styling?.exportButtonPosition,
+            csvSeparator: styling?.csvSeparator,
+            exportFilePrefix: styling?.exportFilePrefix,
+            exportIncludeTimestamp: styling?.exportIncludeTimestamp,
+
+            // Data source
             dataSource: 'BigQuery'
           }
         })
@@ -916,7 +1237,7 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
           }
           
           log(`➕ Creating table: ${item.title}`)
-          await createTable(item.table, item.columns, item.title)
+          await createTable(item.table, item.columns, item.title, item.styling, item.position)
         } else if (item.action === 'update' && item.type === 'kpi') {
           if (!item.name) {
             log('❌ Missing required field: name (KPI name to update)')
@@ -963,7 +1284,7 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
           }
           
           log(`🔄 Updating table: ${item.name}`)
-          await updateTable(item.name, item.table, item.columns, item.title)
+          await updateTable(item.name, item.table, item.columns, item.title, item.styling, item.position)
         } else {
           log(`⚠️ Unsupported action: ${item.action} ${item.type} (supported: "create kpi", "create chart", "create table", "update kpi", "update chart", "update table")`)
         }
