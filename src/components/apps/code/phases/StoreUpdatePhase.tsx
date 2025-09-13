@@ -676,7 +676,7 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
         // Merge styling properties with existing styling (similar to updateKPI)
         let stylingUpdate = {}
         if (styling && Object.keys(styling).length > 0) {
-          stylingUpdate = { styling: { ...existingChart.styling, ...styling } }
+          stylingUpdate = { styling: { ...(existingChart.styling || {}), ...styling } }
         }
 
         // Merge position properties with existing position
@@ -684,7 +684,7 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
         if (position && Object.keys(position).length > 0) {
           positionUpdate = {
             position: {
-              ...existingChart.position,
+              ...(existingChart.position || {}),
               ...(position.x !== undefined && { x: position.x }),
               ...(position.y !== undefined && { y: position.y }),
               ...(position.w !== undefined && { w: position.w }),
