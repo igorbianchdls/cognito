@@ -8,6 +8,7 @@ import CanvasWidgets from './tools/CanvasWidgets'
 import WidgetsTable from './tools/WidgetsTable'
 import AICodeExecutor from './AICodeExecutor'
 import TablesListCustom from './tools/TablesListCustom'
+import TableSchemaCustom from './tools/TableSchemaCustom'
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
 // import { widgetActions } from '@/stores/apps/widgetStore' // REMOVED: Only KPIs supported now
 import { kpiActions } from '@/stores/apps/kpiStore'
@@ -413,6 +414,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                         datasetId: string
                         projectId: string
                         totalColumns: number
+                        error?: string
                       }
                       errorText?: string
                     }
@@ -432,28 +434,17 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                                 errorText={schemaTool.errorText}
                               />
                             )}
-                            {schemaTool.state === 'output-available' && schemaTool.output.success && (
-                              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-                                <div className="p-3 bg-gray-50 border-b">
-                                  <h4 className="font-medium text-sm">Schema: {schemaTool.output.tableName}</h4>
-                                  <p className="text-xs text-gray-600">{schemaTool.output.totalColumns} columns</p>
-                                </div>
-                                <div className="max-h-60 overflow-y-auto">
-                                  {schemaTool.output.columns.map((column, idx) => (
-                                    <div key={idx} className="p-3 border-b border-gray-100 last:border-b-0">
-                                      <div className="flex items-center justify-between">
-                                        <span className="font-medium text-sm">{column.column_name}</span>
-                                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                                          {column.data_type}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
                           </ToolContent>
                         </Tool>
+                        {schemaTool.state === 'output-available' && (
+                          <TableSchemaCustom
+                            columns={schemaTool.output.columns}
+                            tableName={schemaTool.output.tableName}
+                            success={schemaTool.output.success}
+                            error={schemaTool.output.error}
+                            totalColumns={schemaTool.output.totalColumns}
+                          />
+                        )}
                       </div>
                     )
                   }
