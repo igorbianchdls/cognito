@@ -249,7 +249,7 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
       if (result.success && result.data?.data && Array.isArray(result.data.data)) {
         const data = DataTransformationPhase.transformChartData(result.data.data)
         
-        // Base chart configuration
+        // Base chart configuration (without position - it goes in each chart type)
         const baseChartConfig = {
           name: title || `${xField} por ${yField}`,
           bigqueryData: {
@@ -264,12 +264,6 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
             lastExecuted: new Date(),
             isLoading: false,
             error: null
-          },
-          position: {
-            x: 0,
-            y: 0,
-            w: 60,
-            h: 150
           }
         }
 
@@ -279,6 +273,12 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
             barChartActions.addBarChart({
               ...baseChartConfig,
               chartType: 'bar',
+              position: {
+                x: 0,
+                y: 0,
+                w: 60,
+                h: 150
+              },
               styling: {
                 colors: ['#2563eb'],
                 showLegend: true,
@@ -291,6 +291,12 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
             lineChartActions.addLineChart({
               ...baseChartConfig,
               chartType: 'line',
+              position: {
+                x: 0,
+                y: 0,
+                w: 60,
+                h: 150
+              },
               styling: {
                 colors: ['#10b981'],
                 showLegend: true,
@@ -303,6 +309,12 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
             pieChartActions.addPieChart({
               ...baseChartConfig,
               chartType: 'pie',
+              position: {
+                x: 0,
+                y: 0,
+                w: 60,
+                h: 150
+              },
               styling: {
                 colors: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4'],
                 showLegend: true,
@@ -315,6 +327,12 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
             areaChartActions.addAreaChart({
               ...baseChartConfig,
               chartType: 'area',
+              position: {
+                x: 0,
+                y: 0,
+                w: 60,
+                h: 150
+              },
               styling: {
                 colors: ['#8b5cf6'],
                 showLegend: true,
@@ -328,6 +346,12 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
             horizontalBarChartActions.addHorizontalBarChart({
               ...baseChartConfig,
               chartType: 'horizontal-bar',
+              position: {
+                x: 0,
+                y: 0,
+                w: 60,
+                h: 150
+              },
               styling: {
                 colors: ['#10b981'],
                 showLegend: true,
