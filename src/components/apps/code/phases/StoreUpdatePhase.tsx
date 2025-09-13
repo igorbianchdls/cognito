@@ -93,17 +93,71 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
     "xField": "event_name",
     "yField": "id",
     "aggregation": "COUNT",
-    "title": "Eventos por Quantidade"
+    "title": "Eventos por Quantidade",
+    "styling": {
+      "colors": ["#3b82f6", "#06b6d4", "#10b981"],
+      "showLegend": true,
+      "legendPosition": "top",
+      "showGrid": true,
+      "enableGridY": true,
+      "borderRadius": 4,
+      "marginTop": 20,
+      "marginBottom": 60,
+      "xAxisTitle": "Eventos",
+      "yAxisTitle": "Quantidade",
+      "groupMode": "grouped",
+      "enableLabel": true,
+      "labelPosition": "end",
+      "axisFontSize": 12,
+      "axisFontWeight": 600,
+      "axisTextColor": "#374151",
+      "labelsFontSize": 11,
+      "labelsTextColor": "#6b7280",
+      "containerBorderRadius": 8,
+      "containerPadding": 16
+    },
+    "position": {
+      "x": 0,
+      "y": 110,
+      "w": 60,
+      "h": 200
+    }
   },
   {
     "action": "create",
     "type": "chart",
     "chartType": "pie",
     "table": "ecommerce",
-    "xField": "event_name", 
+    "xField": "event_name",
     "yField": "id",
     "aggregation": "COUNT",
-    "title": "Distribuição de Eventos"
+    "title": "Distribuição de Eventos",
+    "styling": {
+      "colors": ["#ef4444", "#f97316", "#eab308", "#22c55e", "#06b6d4", "#8b5cf6"],
+      "showLegend": true,
+      "legendPosition": "right",
+      "innerRadius": 60,
+      "padAngle": 2,
+      "cornerRadius": 3,
+      "enableArcLabels": true,
+      "enableArcLinkLabels": true,
+      "arcLabelsSkipAngle": 10,
+      "labelFormat": "percentage",
+      "marginTop": 20,
+      "marginRight": 120,
+      "marginBottom": 20,
+      "marginLeft": 20,
+      "legendsFontSize": 12,
+      "legendsTextColor": "#374151",
+      "containerBorderRadius": 8,
+      "containerPadding": 16
+    },
+    "position": {
+      "x": 65,
+      "y": 110,
+      "w": 50,
+      "h": 200
+    }
   },
   {
     "action": "create",
@@ -163,7 +217,31 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
     "xField": "user_pseudo_id",
     "yField": "event_name",
     "aggregation": "COUNT_DISTINCT",
-    "title": "Usuários por Evento"
+    "title": "Usuários por Evento",
+    "styling": {
+      "colors": ["#10b981", "#06b6d4", "#3b82f6"],
+      "showLegend": false,
+      "showGrid": true,
+      "enableGridX": true,
+      "borderRadius": 6,
+      "xAxisTitle": "Usuários",
+      "yAxisTitle": "Eventos",
+      "groupMode": "stacked",
+      "enableLabel": true,
+      "labelPosition": "middle",
+      "labelTextColor": "#ffffff",
+      "axisFontSize": 11,
+      "axisTextColor": "#6b7280",
+      "containerBorderWidth": 1,
+      "containerBorderColor": "#e5e7eb",
+      "containerBorderRadius": 12
+    },
+    "position": {
+      "x": 0,
+      "y": 320,
+      "w": 100,
+      "h": 180
+    }
   },
   {
     "action": "update",
@@ -408,7 +486,135 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
   }
 
   // Update Chart function (follows Datasets pattern)
-  const updateChart = async (chartName: string, newTable?: string, newXField?: string, newYField?: string, newAggregation?: string, newTitle?: string) => {
+  const updateChart = async (
+    chartName: string,
+    newTable?: string,
+    newXField?: string,
+    newYField?: string,
+    newAggregation?: string,
+    newTitle?: string,
+    styling?: {
+      // ========== COMPARTILHADAS ==========
+      colors?: string[],
+      showLegend?: boolean,
+      showGrid?: boolean,
+      enableGridX?: boolean,
+      enableGridY?: boolean,
+      title?: string,
+      style?: string,
+      legendPosition?: 'top' | 'top-right' | 'right' | 'bottom-right' | 'bottom' | 'bottom-left' | 'left' | 'top-left',
+      legendDirection?: 'row' | 'column',
+      legendSpacing?: number,
+      legendSymbolSize?: number,
+      legendSymbolShape?: 'circle' | 'square' | 'triangle',
+      borderRadius?: number,
+      borderWidth?: number,
+      borderColor?: string,
+      marginTop?: number,
+      marginRight?: number,
+      marginBottom?: number,
+      marginLeft?: number,
+      xAxisTitle?: string,
+      yAxisTitle?: string,
+      xAxisLegend?: string,
+      xAxisLegendPosition?: 'start' | 'middle' | 'end',
+      xAxisLegendOffset?: number,
+      xAxisTickRotation?: number,
+      xAxisTickSize?: number,
+      xAxisTickPadding?: number,
+      yAxisLegend?: string,
+      yAxisLegendOffset?: number,
+      yAxisTickRotation?: number,
+      yAxisTickSize?: number,
+      yAxisTickPadding?: number,
+
+      // Typography - Axis
+      axisFontFamily?: string,
+      axisFontSize?: number,
+      axisFontWeight?: number,
+      axisTextColor?: string,
+      axisLegendFontSize?: number,
+      axisLegendFontWeight?: number,
+
+      // Typography - Labels
+      labelsFontFamily?: string,
+      labelsFontSize?: number,
+      labelsFontWeight?: number,
+      labelsTextColor?: string,
+
+      // Typography - Legends
+      legendsFontFamily?: string,
+      legendsFontSize?: number,
+      legendsFontWeight?: number,
+      legendsTextColor?: string,
+
+      // Typography - Tooltip
+      tooltipFontSize?: number,
+      tooltipFontFamily?: string,
+
+      // Container Border
+      containerBorderWidth?: number,
+      containerBorderColor?: string,
+      containerBorderRadius?: number,
+      containerPadding?: number,
+
+      // Container Shadow
+      containerShadowColor?: string,
+      containerShadowOpacity?: number,
+      containerShadowBlur?: number,
+      containerShadowOffsetX?: number,
+      containerShadowOffsetY?: number,
+
+      // ========== BAR ESPECÍFICAS ==========
+      groupMode?: 'grouped' | 'stacked',
+      layout?: 'horizontal' | 'vertical',
+      padding?: number,
+      innerPadding?: number,
+      enableLabel?: boolean,
+      labelPosition?: 'start' | 'middle' | 'end',
+      labelSkipWidth?: number,
+      labelSkipHeight?: number,
+      labelTextColor?: string,
+      labelFormat?: string,
+      labelOffset?: number,
+
+      // ========== PIE ESPECÍFICAS ==========
+      innerRadius?: number,
+      outerRadius?: number,
+      padAngle?: number,
+      cornerRadius?: number,
+      activeOuterRadiusOffset?: number,
+      enableLabels?: boolean,
+      labelFormat?: 'percentage' | 'value' | 'both',
+      enableArcLabels?: boolean,
+      enableArcLinkLabels?: boolean,
+      arcLabelsSkipAngle?: number,
+      arcLabelsTextColor?: string,
+      arcLinkLabelsSkipAngle?: number,
+      arcLinkLabelsTextColor?: string,
+
+      // ========== LINE ESPECÍFICAS ==========
+      lineWidth?: number,
+      enablePoints?: boolean,
+      pointSize?: number,
+      curve?: 'linear' | 'cardinal' | 'catmullRom' | 'monotoneX',
+      enableArea?: boolean,
+      enablePointLabels?: boolean,
+      pointLabelTextColor?: string,
+
+      // ========== AREA ESPECÍFICAS ==========
+      areaOpacity?: number,
+
+      // ========== GERAL ==========
+      icon?: string
+    },
+    position?: {
+      x?: number,
+      y?: number,
+      w?: number,
+      h?: number
+    }
+  ) => {
     try {
       // 1. Find existing Chart by name (search all chart types)
       const { existingChart, chartType } = WidgetLookupPhase.findExistingChart(chartName)
@@ -467,22 +673,45 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
           }
         }
 
+        // Merge styling properties with existing styling (similar to updateKPI)
+        let stylingUpdate = {}
+        if (styling && Object.keys(styling).length > 0) {
+          stylingUpdate = { styling: { ...existingChart.styling, ...styling } }
+        }
+
+        // Merge position properties with existing position
+        let positionUpdate = {}
+        if (position && Object.keys(position).length > 0) {
+          positionUpdate = {
+            position: {
+              ...existingChart.position,
+              ...(position.x !== undefined && { x: position.x }),
+              ...(position.y !== undefined && { y: position.y }),
+              ...(position.w !== undefined && { w: position.w }),
+              ...(position.h !== undefined && { h: position.h })
+            }
+          }
+        }
+
+        // Combine all updates
+        const finalUpdateData = { ...updateData, ...stylingUpdate, ...positionUpdate }
+
         // Route to appropriate update action based on detected type
         switch (chartType) {
           case 'bar':
-            barChartActions.updateBarChart(existingChart.id, updateData)
+            barChartActions.updateBarChart(existingChart.id, finalUpdateData)
             break
           case 'line':
-            lineChartActions.updateLineChart(existingChart.id, updateData)
+            lineChartActions.updateLineChart(existingChart.id, finalUpdateData)
             break
           case 'pie':
-            pieChartActions.updatePieChart(existingChart.id, updateData)
+            pieChartActions.updatePieChart(existingChart.id, finalUpdateData)
             break
           case 'area':
-            areaChartActions.updateAreaChart(existingChart.id, updateData)
+            areaChartActions.updateAreaChart(existingChart.id, finalUpdateData)
             break
           case 'horizontal-bar':
-            horizontalBarChartActions.updateHorizontalBarChart(existingChart.id, updateData)
+            horizontalBarChartActions.updateHorizontalBarChart(existingChart.id, finalUpdateData)
             break
         }
 
@@ -496,7 +725,135 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
   }
 
   // Simple Chart creation function
-  const createChart = async (type: 'bar' | 'line' | 'pie' | 'area' | 'horizontal-bar', table: string, xField: string, yField: string, aggregation: string, title?: string) => {
+  const createChart = async (
+    type: 'bar' | 'line' | 'pie' | 'area' | 'horizontal-bar',
+    table: string,
+    xField: string,
+    yField: string,
+    aggregation: string,
+    title?: string,
+    styling?: {
+      // ========== COMPARTILHADAS ==========
+      colors?: string[],
+      showLegend?: boolean,
+      showGrid?: boolean,
+      enableGridX?: boolean,
+      enableGridY?: boolean,
+      title?: string,
+      style?: string,
+      legendPosition?: 'top' | 'top-right' | 'right' | 'bottom-right' | 'bottom' | 'bottom-left' | 'left' | 'top-left',
+      legendDirection?: 'row' | 'column',
+      legendSpacing?: number,
+      legendSymbolSize?: number,
+      legendSymbolShape?: 'circle' | 'square' | 'triangle',
+      borderRadius?: number,
+      borderWidth?: number,
+      borderColor?: string,
+      marginTop?: number,
+      marginRight?: number,
+      marginBottom?: number,
+      marginLeft?: number,
+      xAxisTitle?: string,
+      yAxisTitle?: string,
+      xAxisLegend?: string,
+      xAxisLegendPosition?: 'start' | 'middle' | 'end',
+      xAxisLegendOffset?: number,
+      xAxisTickRotation?: number,
+      xAxisTickSize?: number,
+      xAxisTickPadding?: number,
+      yAxisLegend?: string,
+      yAxisLegendOffset?: number,
+      yAxisTickRotation?: number,
+      yAxisTickSize?: number,
+      yAxisTickPadding?: number,
+
+      // Typography - Axis
+      axisFontFamily?: string,
+      axisFontSize?: number,
+      axisFontWeight?: number,
+      axisTextColor?: string,
+      axisLegendFontSize?: number,
+      axisLegendFontWeight?: number,
+
+      // Typography - Labels
+      labelsFontFamily?: string,
+      labelsFontSize?: number,
+      labelsFontWeight?: number,
+      labelsTextColor?: string,
+
+      // Typography - Legends
+      legendsFontFamily?: string,
+      legendsFontSize?: number,
+      legendsFontWeight?: number,
+      legendsTextColor?: string,
+
+      // Typography - Tooltip
+      tooltipFontSize?: number,
+      tooltipFontFamily?: string,
+
+      // Container Border
+      containerBorderWidth?: number,
+      containerBorderColor?: string,
+      containerBorderRadius?: number,
+      containerPadding?: number,
+
+      // Container Shadow
+      containerShadowColor?: string,
+      containerShadowOpacity?: number,
+      containerShadowBlur?: number,
+      containerShadowOffsetX?: number,
+      containerShadowOffsetY?: number,
+
+      // ========== BAR ESPECÍFICAS ==========
+      groupMode?: 'grouped' | 'stacked',
+      layout?: 'horizontal' | 'vertical',
+      padding?: number,
+      innerPadding?: number,
+      enableLabel?: boolean,
+      labelPosition?: 'start' | 'middle' | 'end',
+      labelSkipWidth?: number,
+      labelSkipHeight?: number,
+      labelTextColor?: string,
+      labelFormat?: string,
+      labelOffset?: number,
+
+      // ========== PIE ESPECÍFICAS ==========
+      innerRadius?: number,
+      outerRadius?: number,
+      padAngle?: number,
+      cornerRadius?: number,
+      activeOuterRadiusOffset?: number,
+      enableLabels?: boolean,
+      labelFormat?: 'percentage' | 'value' | 'both',
+      enableArcLabels?: boolean,
+      enableArcLinkLabels?: boolean,
+      arcLabelsSkipAngle?: number,
+      arcLabelsTextColor?: string,
+      arcLinkLabelsSkipAngle?: number,
+      arcLinkLabelsTextColor?: string,
+
+      // ========== LINE ESPECÍFICAS ==========
+      lineWidth?: number,
+      enablePoints?: boolean,
+      pointSize?: number,
+      curve?: 'linear' | 'cardinal' | 'catmullRom' | 'monotoneX',
+      enableArea?: boolean,
+      enablePointLabels?: boolean,
+      pointLabelTextColor?: string,
+
+      // ========== AREA ESPECÍFICAS ==========
+      areaOpacity?: number,
+
+      // ========== GERAL ==========
+      icon?: string
+    },
+    position?: {
+      x?: number,
+      y?: number,
+      w?: number,
+      h?: number
+    }
+  ) => {
     try {
       // Generate SQL query (same as ChartPreview)
       const query = QueryConstructionPhase.buildChartQuery(table, xField, yField, aggregation)
@@ -534,16 +891,18 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
               ...baseChartConfig,
               chartType: 'bar',
               position: {
-                x: 0,
-                y: 0,
-                w: 60,
-                h: 150
+                x: position?.x || 0,
+                y: position?.y || 0,
+                w: position?.w || 60,
+                h: position?.h || 150
               },
               styling: {
-                colors: ['#2563eb'],
-                showLegend: true,
-                showGrid: true,
-                title: title || `${xField} por ${yField}`
+                // Apply styling directly - barChart will use what it recognizes and ignore the rest
+                colors: styling?.colors || ['#2563eb'],
+                showLegend: styling?.showLegend !== undefined ? styling.showLegend : true,
+                showGrid: styling?.showGrid !== undefined ? styling.showGrid : true,
+                title: styling?.title || title || `${xField} por ${yField}`,
+                ...styling // Pass all styling props - store will filter what it needs
               }
             })
             break
@@ -552,16 +911,18 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
               ...baseChartConfig,
               chartType: 'line',
               position: {
-                x: 0,
-                y: 0,
-                w: 60,
-                h: 150
+                x: position?.x || 0,
+                y: position?.y || 0,
+                w: position?.w || 60,
+                h: position?.h || 150
               },
               styling: {
-                colors: ['#10b981'],
-                showLegend: true,
-                showGrid: true,
-                title: title || `${xField} por ${yField}`
+                // Apply styling directly - lineChart will use what it recognizes and ignore the rest
+                colors: styling?.colors || ['#10b981'],
+                showLegend: styling?.showLegend !== undefined ? styling.showLegend : true,
+                showGrid: styling?.showGrid !== undefined ? styling.showGrid : true,
+                title: styling?.title || title || `${xField} por ${yField}`,
+                ...styling // Pass all styling props - store will filter what it needs
               }
             })
             break
@@ -570,16 +931,18 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
               ...baseChartConfig,
               chartType: 'pie',
               position: {
-                x: 0,
-                y: 0,
-                w: 60,
-                h: 150
+                x: position?.x || 0,
+                y: position?.y || 0,
+                w: position?.w || 60,
+                h: position?.h || 150
               },
               styling: {
-                colors: ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4'],
-                showLegend: true,
-                showGrid: false,
-                title: title || `${xField} por ${yField}`
+                // Apply styling directly - pieChart will use what it recognizes and ignore the rest
+                colors: styling?.colors || ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#06b6d4'],
+                showLegend: styling?.showLegend !== undefined ? styling.showLegend : true,
+                showGrid: styling?.showGrid !== undefined ? styling.showGrid : false,
+                title: styling?.title || title || `${xField} por ${yField}`,
+                ...styling // Pass all styling props - store will filter what it needs
               }
             })
             break
@@ -588,17 +951,19 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
               ...baseChartConfig,
               chartType: 'area',
               position: {
-                x: 0,
-                y: 0,
-                w: 60,
-                h: 150
+                x: position?.x || 0,
+                y: position?.y || 0,
+                w: position?.w || 60,
+                h: position?.h || 150
               },
               styling: {
-                colors: ['#8b5cf6'],
-                showLegend: true,
-                showGrid: true,
-                title: title || `${xField} por ${yField}`,
-                areaOpacity: 0.4
+                // Apply styling directly - areaChart will use what it recognizes and ignore the rest
+                colors: styling?.colors || ['#8b5cf6'],
+                showLegend: styling?.showLegend !== undefined ? styling.showLegend : true,
+                showGrid: styling?.showGrid !== undefined ? styling.showGrid : true,
+                title: styling?.title || title || `${xField} por ${yField}`,
+                areaOpacity: styling?.areaOpacity !== undefined ? styling.areaOpacity : 0.4,
+                ...styling // Pass all styling props - store will filter what it needs
               }
             })
             break
@@ -607,16 +972,18 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
               ...baseChartConfig,
               chartType: 'horizontal-bar',
               position: {
-                x: 0,
-                y: 0,
-                w: 60,
-                h: 150
+                x: position?.x || 0,
+                y: position?.y || 0,
+                w: position?.w || 60,
+                h: position?.h || 150
               },
               styling: {
-                colors: ['#10b981'],
-                showLegend: true,
-                showGrid: true,
-                title: title || `${xField} por ${yField}`
+                // Apply styling directly - horizontalBarChart will use what it recognizes and ignore the rest
+                colors: styling?.colors || ['#10b981'],
+                showLegend: styling?.showLegend !== undefined ? styling.showLegend : true,
+                showGrid: styling?.showGrid !== undefined ? styling.showGrid : true,
+                title: styling?.title || title || `${xField} por ${yField}`,
+                ...styling // Pass all styling props - store will filter what it needs
               }
             })
             break
@@ -1229,7 +1596,7 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
           }
           
           log(`➕ Creating ${item.chartType} chart: ${item.title}`)
-          await createChart(item.chartType, item.table, item.xField, item.yField, item.aggregation, item.title)
+          await createChart(item.chartType, item.table, item.xField, item.yField, item.aggregation, item.title, item.styling, item.position)
         } else if (item.action === 'create' && item.type === 'table') {
           if (!item.table || !item.columns || !Array.isArray(item.columns) || item.columns.length === 0 || !item.title) {
             log('❌ Missing required Table fields: table, columns (array), title')
@@ -1265,7 +1632,7 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
           }
           
           log(`🔄 Updating chart: ${item.name}`)
-          await updateChart(item.name, item.table, item.xField, item.yField, item.aggregation, item.title)
+          await updateChart(item.name, item.table, item.xField, item.yField, item.aggregation, item.title, item.styling, item.position)
         } else if (item.action === 'update' && item.type === 'table') {
           if (!item.name) {
             log('❌ Missing required field: name (table name to update)')
