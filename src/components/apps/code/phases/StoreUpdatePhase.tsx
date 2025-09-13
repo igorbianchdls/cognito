@@ -61,6 +61,13 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
     "yField": "id",
     "aggregation": "COUNT",
     "title": "Distribuição de Eventos"
+  },
+  {
+    "action": "create",
+    "type": "table",
+    "table": "ecommerce",
+    "columns": ["id", "event_name", "user_pseudo_id"],
+    "title": "Dados E-commerce"
   }
 ]`
 
@@ -586,8 +593,16 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
           
           log(`➕ Creating ${item.chartType} chart: ${item.title}`)
           await createChart(item.chartType, item.table, item.xField, item.yField, item.aggregation, item.title)
+        } else if (item.action === 'create' && item.type === 'table') {
+          if (!item.table || !item.columns || !Array.isArray(item.columns) || item.columns.length === 0 || !item.title) {
+            log('❌ Missing required Table fields: table, columns (array), title')
+            continue
+          }
+          
+          log(`➕ Creating table: ${item.title}`)
+          await createTable(item.table, item.columns, item.title)
         } else {
-          log(`⚠️ Unsupported action: ${item.action} ${item.type} (supported: "create kpi", "create chart")`)
+          log(`⚠️ Unsupported action: ${item.action} ${item.type} (supported: "create kpi", "create chart", "create table")`)
         }
       }
       
