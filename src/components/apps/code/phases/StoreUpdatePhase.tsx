@@ -68,6 +68,14 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
     "table": "ecommerce",
     "columns": ["id", "event_name", "user_pseudo_id"],
     "title": "Dados E-commerce"
+  },
+  {
+    "action": "update",
+    "type": "kpi",
+    "name": "Total de Registros",
+    "field": "user_pseudo_id",
+    "calculation": "COUNT_DISTINCT", 
+    "title": "Usuários Únicos"
   }
 ]`
 
@@ -601,8 +609,22 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
           
           log(`➕ Creating table: ${item.title}`)
           await createTable(item.table, item.columns, item.title)
+        } else if (item.action === 'update' && item.type === 'kpi') {
+          if (!item.name) {
+            log('❌ Missing required field: name (KPI name to update)')
+            continue
+          }
+          
+          // Check if at least one field to update is provided
+          if (!item.table && !item.field && !item.calculation && !item.title) {
+            log('❌ No fields to update. Provide at least one: table, field, calculation, title')
+            continue
+          }
+          
+          log(`🔄 Updating KPI: ${item.name}`)
+          await updateKPI(item.name, item.table, item.field, item.calculation, item.title)
         } else {
-          log(`⚠️ Unsupported action: ${item.action} ${item.type} (supported: "create kpi", "create chart", "create table")`)
+          log(`⚠️ Unsupported action: ${item.action} ${item.type} (supported: "create kpi", "create chart", "create table", "update kpi")`)
         }
       }
       
