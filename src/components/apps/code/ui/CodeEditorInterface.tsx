@@ -83,7 +83,7 @@ export default function CodeEditorInterface({
         <div className="border-t border-border bg-border/20" />
 
         {/* Output Console */}
-        <Card className="m-4 mt-0 border-t-0 rounded-t-none transition-all duration-200 ease-in-out">
+        <Card className="mt-0 border-t-0 rounded-none transition-all duration-200 ease-in-out">
           <CardHeader className="py-2 cursor-pointer" onClick={() => setIsConsoleExpanded(!isConsoleExpanded)}>
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm flex items-center gap-2">
