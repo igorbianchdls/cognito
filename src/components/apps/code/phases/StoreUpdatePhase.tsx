@@ -32,15 +32,58 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
     "table": "ecommerce",
     "field": "id",
     "calculation": "COUNT",
-    "title": "Total de Registros"
+    "title": "Total de Registros",
+    "styling": {
+      "unit": "registros",
+      "showTarget": true,
+      "targetValue": 1000,
+      "icon": "📊",
+      "backgroundColor": "#f0f9ff",
+      "borderColor": "#0ea5e9",
+      "borderWidth": 2,
+      "borderRadius": 16,
+      "padding": 20,
+      "shadow": true,
+      "valueFontSize": 36,
+      "valueColor": "#0f172a",
+      "valueFontWeight": 700,
+      "titleAlign": "center"
+    },
+    "position": {
+      "x": 0,
+      "y": 0,
+      "w": 48,
+      "h": 100
+    }
   },
   {
     "action": "create",
-    "type": "kpi", 
+    "type": "kpi",
     "table": "ecommerce",
     "field": "event_name",
     "calculation": "COUNT_DISTINCT",
-    "title": "Eventos Únicos"
+    "title": "Eventos Únicos",
+    "styling": {
+      "unit": "eventos",
+      "showTrend": true,
+      "icon": "🎯",
+      "backgroundColor": "#fefce8",
+      "borderColor": "#eab308",
+      "borderWidth": 1,
+      "borderRadius": 12,
+      "padding": 16,
+      "valueFontSize": 32,
+      "valueColor": "#854d0e",
+      "nameFontSize": 12,
+      "nameColor": "#a16207",
+      "titleAlign": "left"
+    },
+    "position": {
+      "x": 50,
+      "y": 0,
+      "w": 48,
+      "h": 100
+    }
   },
   {
     "action": "create",
@@ -516,7 +559,68 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
   }
 
   // Simple KPI creation function
-  const createKPI = async (table: string, field: string, calculation: string, title: string) => {
+  const createKPI = async (
+    table: string,
+    field: string,
+    calculation: string,
+    title: string,
+    styling?: {
+      // Data display properties
+      unit?: string,
+      showTarget?: boolean,
+      targetValue?: number,
+      showTrend?: boolean,
+      visualizationType?: 'card',
+      icon?: string,
+
+      // Layout & Appearance properties (from KPICard)
+      backgroundColor?: string,
+      backgroundOpacity?: number,
+      borderColor?: string,
+      borderOpacity?: number,
+      borderWidth?: number,
+      borderRadius?: number,
+      padding?: number,
+      textAlign?: 'left' | 'center' | 'right',
+      shadow?: boolean,
+
+      // Typography - Value properties
+      valueFontSize?: number,
+      valueColor?: string,
+      valueFontWeight?: number,
+      valueFontFamily?: string,
+
+      // Typography - Name properties
+      nameFontSize?: number,
+      nameColor?: string,
+      nameFontWeight?: number,
+      nameFontFamily?: string,
+
+      // Color properties
+      changeColor?: string,
+      targetColor?: string,
+
+      // Title-specific properties
+      titleAlign?: 'left' | 'center' | 'right',
+      titleMarginTop?: number,
+      titleMarginBottom?: number,
+      titleLetterSpacing?: number,
+      titleLineHeight?: number,
+
+      // Subtitle-specific properties
+      subtitleAlign?: 'left' | 'center' | 'right',
+      subtitleMarginTop?: number,
+      subtitleMarginBottom?: number,
+      subtitleLetterSpacing?: number,
+      subtitleLineHeight?: number
+    },
+    position?: {
+      x?: number,
+      y?: number,
+      w?: number,
+      h?: number
+    }
+  ) => {
     try {
       // Generate SQL query automatically (same as Datasets)
       const query = QueryConstructionPhase.buildKPIQuery(table, field, calculation)
@@ -533,21 +637,63 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
         // Create KPI using the same action as Datasets
         kpiActions.addKPI({
           name: title,
-          icon: '📈',
+          icon: styling?.icon || '📈',
           description: `KPI from ${table}`,
-          position: { x: 0, y: 0 },
-          size: { w: 48, h: 100 },
+          position: { x: position?.x || 0, y: position?.y || 0 },
+          size: { w: position?.w || 48, h: position?.h || 100 },
           config: {
             name: title,
             value: value,
             metric: field,
             calculation: calculation,
-            unit: '',
-            showTarget: false,
-            showTrend: false,
-            visualizationType: 'card' as const,
+            unit: styling?.unit || '',
+            showTarget: styling?.showTarget || false,
+            showTrend: styling?.showTrend || false,
+            targetValue: styling?.targetValue || 0,
+            visualizationType: styling?.visualizationType || 'card' as const,
             enableSimulation: false,
             dataSourceType: 'bigquery' as const,
+
+            // Layout & Appearance properties (from KPICard)
+            backgroundColor: styling?.backgroundColor,
+            backgroundOpacity: styling?.backgroundOpacity,
+            borderColor: styling?.borderColor,
+            borderOpacity: styling?.borderOpacity,
+            borderWidth: styling?.borderWidth,
+            borderRadius: styling?.borderRadius,
+            padding: styling?.padding,
+            textAlign: styling?.textAlign,
+            shadow: styling?.shadow,
+
+            // Typography - Value properties
+            valueFontSize: styling?.valueFontSize,
+            valueColor: styling?.valueColor,
+            valueFontWeight: styling?.valueFontWeight,
+            valueFontFamily: styling?.valueFontFamily,
+
+            // Typography - Name properties
+            nameFontSize: styling?.nameFontSize,
+            nameColor: styling?.nameColor,
+            nameFontWeight: styling?.nameFontWeight,
+            nameFontFamily: styling?.nameFontFamily,
+
+            // Color properties
+            changeColor: styling?.changeColor,
+            targetColor: styling?.targetColor,
+
+            // Title-specific properties
+            titleAlign: styling?.titleAlign,
+            titleMarginTop: styling?.titleMarginTop,
+            titleMarginBottom: styling?.titleMarginBottom,
+            titleLetterSpacing: styling?.titleLetterSpacing,
+            titleLineHeight: styling?.titleLineHeight,
+
+            // Subtitle-specific properties
+            subtitleAlign: styling?.subtitleAlign,
+            subtitleMarginTop: styling?.subtitleMarginTop,
+            subtitleMarginBottom: styling?.subtitleMarginBottom,
+            subtitleLetterSpacing: styling?.subtitleLetterSpacing,
+            subtitleLineHeight: styling?.subtitleLineHeight,
             bigqueryData: {
               selectedTable: table,
               kpiValueFields: [{ 
@@ -602,7 +748,7 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
           }
           
           log(`➕ Creating KPI: ${item.title}`)
-          await createKPI(item.table, item.field, item.calculation, item.title)
+          await createKPI(item.table, item.field, item.calculation, item.title, item.styling, item.position)
         } else if (item.action === 'create' && item.type === 'chart') {
           if (!item.chartType || !item.table || !item.xField || !item.yField || !item.aggregation || !item.title) {
             log('❌ Missing required Chart fields: chartType, table, xField, yField, aggregation, title')
