@@ -5,8 +5,8 @@ import StoreUpdatePhase from '../code/phases/StoreUpdatePhase'
 interface WidgetOperation {
   action: 'create' | 'update'
   type?: 'kpi' | 'chart' | 'table'
-  widgetName?: string
-  params: Record<string, unknown>
+  name?: string // For updates
+  [key: string]: unknown // Flat format - accepts all fields directly
 }
 
 interface AICodeExecutorProps {
