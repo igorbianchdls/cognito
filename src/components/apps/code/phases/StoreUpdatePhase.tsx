@@ -76,6 +76,15 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
     "field": "user_pseudo_id",
     "calculation": "COUNT_DISTINCT", 
     "title": "Usuários Únicos"
+  },
+  {
+    "action": "update",
+    "type": "chart",
+    "name": "Eventos por Quantidade",
+    "xField": "user_pseudo_id",
+    "yField": "event_name",
+    "aggregation": "COUNT_DISTINCT",
+    "title": "Usuários por Evento"
   }
 ]`
 
@@ -623,8 +632,22 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
           
           log(`🔄 Updating KPI: ${item.name}`)
           await updateKPI(item.name, item.table, item.field, item.calculation, item.title)
+        } else if (item.action === 'update' && item.type === 'chart') {
+          if (!item.name) {
+            log('❌ Missing required field: name (chart name to update)')
+            continue
+          }
+          
+          // Check if at least one field to update is provided
+          if (!item.table && !item.xField && !item.yField && !item.aggregation && !item.title) {
+            log('❌ No fields to update. Provide at least one: table, xField, yField, aggregation, title')
+            continue
+          }
+          
+          log(`🔄 Updating chart: ${item.name}`)
+          await updateChart(item.name, item.table, item.xField, item.yField, item.aggregation, item.title)
         } else {
-          log(`⚠️ Unsupported action: ${item.action} ${item.type} (supported: "create kpi", "create chart", "create table", "update kpi")`)
+          log(`⚠️ Unsupported action: ${item.action} ${item.type} (supported: "create kpi", "create chart", "create table", "update kpi", "update chart")`)
         }
       }
       
