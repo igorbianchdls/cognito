@@ -7,7 +7,7 @@ import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import CanvasWidgets from './tools/CanvasWidgets'
 import WidgetsTable from './tools/WidgetsTable'
 import AICodeExecutor from './AICodeExecutor'
-import TablesList from '@/components/tools/TablesList'
+import TablesListCustom from './tools/TablesListCustom'
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
 // import { widgetActions } from '@/stores/apps/widgetStore' // REMOVED: Only KPIs supported now
 import { kpiActions } from '@/stores/apps/kpiStore'
@@ -381,22 +381,19 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                                 errorText={tablesTool.errorText}
                               />
                             )}
-                            {tablesTool.state === 'output-available' && (
-                              <TablesList
-                                tables={tablesTool.output.tables?.map(table => ({
-                                  tableId: table.id,
-                                  description: table.description,
-                                  numRows: parseInt(table.numRows) || 0,
-                                  numBytes: parseInt(table.numBytes) || 0,
-                                  creationTime: table.creationTime
-                                }))}
-                                datasetId={tablesTool.output.datasetId}
-                                success={tablesTool.output.success}
-                                error={tablesTool.output.error}
-                              />
-                            )}
                           </ToolContent>
                         </Tool>
+                        {tablesTool.state === 'output-available' && (
+                          <TablesListCustom
+                            tables={tablesTool.output.tables?.map(table => ({
+                              tableId: table.id,
+                              numBytes: parseInt(table.numBytes) || 0
+                            }))}
+                            datasetId={tablesTool.output.datasetId}
+                            success={tablesTool.output.success}
+                            error={tablesTool.output.error}
+                          />
+                        )}
                       </div>
                     )
                   }
