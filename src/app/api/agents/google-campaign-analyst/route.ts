@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   console.log('📘 GOOGLE ADS ANALYST API: Messages:', messages?.length);
 
   const result = streamText({
-    model: 'deepseek/deepseek-v3.1-thinking',
+    model: anthropic('claude-sonnet-4-20250514'),
     
     // Sistema estratégico completo
     system: `# Google Ads Campaign Analyst - System Core
@@ -503,14 +503,6 @@ Consolide TODOS os insights Google Ads dos steps anteriores em síntese executiv
     
     // StopWhen inteligente baseado na classificação de complexidade
     stopWhen: stepCountIs(10),
-    providerOptions: {
-      anthropic: {
-        thinking: { type: 'enabled', budgetTokens: 15000 }
-      }
-    },
-    headers: {
-      'anthropic-beta': 'interleaved-thinking-2025-05-14'
-    },
     tools: {
       // Apenas tools específicas necessárias
       executarSQL: bigqueryTools.executarSQL,

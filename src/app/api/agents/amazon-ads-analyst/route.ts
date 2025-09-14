@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   console.log('🛒 AMAZON ADS ANALYST API: Messages:', messages?.length);
 
   const result = streamText({
-    model: 'deepseek/deepseek-v3.1-thinking',
+    model: anthropic('claude-sonnet-4-20250514'),
     
     // Sistema estratégico completo
     system: `# Amazon Ads Performance Analyst - System Core
@@ -521,14 +521,6 @@ Consolide todos os dados e insights das Query Tasks executadas em resumo estrat�
     
     // StopWhen inteligente baseado na classificação de complexidade
     stopWhen: stepCountIs(10),
-    providerOptions: {
-      anthropic: {
-        thinking: { type: 'enabled', budgetTokens: 15000 }
-      }
-    },
-    headers: {
-      'anthropic-beta': 'interleaved-thinking-2025-05-14'
-    },
     tools: {
       // Restricted tools for query programming system
       executarSQL: bigqueryTools.executarSQL,

@@ -13,7 +13,7 @@ export async function POST(req: Request) {
   console.log('🛍️ SHOPEE SELLER ANALYST API: Messages:', messages?.length);
 
   const result = streamText({
-    model: 'deepseek/deepseek-v3.1-thinking',
+    model: anthropic('claude-sonnet-4-20250514'),
     
     // Sistema estratégico completo
     system: `# Shopee Seller Performance Analyst - System Core
@@ -461,14 +461,6 @@ Consolide TODOS os insights de Shopee dos steps anteriores em síntese executiva
     
     // StopWhen inteligente baseado na classificação de complexidade
     stopWhen: stepCountIs(10),
-    providerOptions: {
-      anthropic: {
-        thinking: { type: 'enabled', budgetTokens: 15000 }
-      }
-    },
-    headers: {
-      'anthropic-beta': 'interleaved-thinking-2025-05-14'
-    },
     tools: {
       // BigQuery tools
       ...bigqueryTools,

@@ -1,12 +1,5 @@
-import { createOpenAI } from '@ai-sdk/openai';
 import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
-
-const openai = createOpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  headers: {
-    'User-Agent': 'MetaAnalyst-Agent'
-  }
-});
+import { anthropic } from '@ai-sdk/anthropic';
 import * as bigqueryTools from '@/tools/apps/bigquery';
 import * as analyticsTools from '@/tools/apps/analytics';
 import * as utilitiesTools from '@/tools/utilities';
@@ -20,22 +13,14 @@ export async function POST(req: Request) {
     const { messages }: { messages: UIMessage[] } = await req.json();
     console.log('🔍 METAANALYST API: Messages:', messages?.length);
 
-    console.log('🔍 METAANALYST API: Iniciando Agent SDK OpenAI...');
+    console.log('🔍 METAANALYST API: Iniciando Agent SDK Anthropic...');
     const result = streamText({
-      model: openai('o3'),
+      model: anthropic('claude-sonnet-4-20250514'),
     
     // Sistema inicial básico
     system: `You are MetaAnalyst AI, a specialized assistant for analyzing metadata, data structures, and providing insights about data organization and patterns.`,
     
     messages: convertToModelMessages(messages),
-    
-    // GPT-5 optimized configuration
-    providerOptions: {
-      openai: {
-        textVerbosity: 'medium',
-        reasoningEffort: 'medium'
-      }
-    },
     
     // PrepareStep: Define comportamento para cada um dos 5 steps
     prepareStep: ({ stepNumber, steps }) => {
