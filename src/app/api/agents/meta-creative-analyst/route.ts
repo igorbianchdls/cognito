@@ -1,80 +1,105 @@
-import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import { anthropic } from '@ai-sdk/anthropic';
+import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
-import * as queryResultsTools from '@/tools/apps/queryResults';
 
-export const maxDuration = 60;
+export const maxDuration = 30;
 
 export async function POST(req: Request) {
   console.log('📘 META CREATIVE ANALYST API: Request recebido!');
-  
-  try {
-    const { messages }: { messages: UIMessage[] } = await req.json();
-    console.log('📘 META CREATIVE ANALYST API: Messages:', messages?.length);
 
-    console.log('📘 META CREATIVE ANALYST API: Iniciando streamText com Claude Sonnet 4...');
-    const result = streamText({
-      model: anthropic('claude-sonnet-4-20250514'),
-    
-    system: `Você é um especialista em SQL para dados Meta Ads. Seu objetivo é gerar consultas SQL precisas e analisar dados.
+  const { messages }: { messages: UIMessage[] } = await req.json();
+  console.log('📘 META CREATIVE ANALYST API: Messages:', messages?.length);
 
-REGRAS IMPORTANTES:
-- NUNCA invente nomes de tabelas ou colunas no SELECT ou FROM
-- Use SEMPRE as 3 tools para descobrir a estrutura antes de criar SQL:
-  1) getDatasets - para ver datasets disponíveis
-  2) getTables - para ver tabelas no dataset  
-  3) getTableSchema - para ver colunas exatas da tabela
-- Depois use executarSQL para executar a query
-- NOVA FUNCIONALIDADE: Use getLastQueryResults para acessar dados já executados
-  - Quando o usuário pedir "analise esses dados" ou similar
-  - Esta tool acessa os dados da última query executada no SQLEditor
-  - Use para análises, insights e interpretações dos dados
+  const result = streamText({
+    model: anthropic('claude-sonnet-4-20250514'),
 
-Execute os 3 primeiros steps em sequência, depois use executarSQL quando necessário.
-Para análises, use getLastQueryResults para acessar dados já executados.`,
-    
+    system: `Você é Meta Creative Performance Analyst, especializado em análise de performance de criativos Meta Ads (Facebook e Instagram) e otimização estratégica de conteúdo publicitário.
+
+## FLUXO DE TRABALHO OBRIGATÓRIO:
+1. **getTables()** - Primeiro descubra quais tabelas estão disponíveis no dataset
+2. **getTableSchema(tableName)** - Entenda a estrutura exata da tabela Meta Creative
+3. **planAnalysis(userQuery, tableName, schema)** - Crie um plano estratégico de análise
+4. **getTimelineContext(tableName, schema)** - Analise contexto temporal das colunas de data
+5. **executarSQL(query)** - Execute as queries com períodos temporais inteligentes
+
+## REGRAS IMPORTANTES:
+- NUNCA invente nomes de tabelas ou colunas
+- SEMPRE use o fluxo: getTables → getTableSchema → planAnalysis → getTimelineContext → executarSQL
+- planAnalysis ajuda a criar queries inteligentes baseadas na pergunta do usuário
+- getTimelineContext fornece contexto temporal para análises de creative performance ao longo do tempo
+- executarSQL já gera tabela E gráficos automaticamente - não precisa de tools adicionais
+- Dataset padrão: \`creatto-463117.biquery_data\`
+
+## EXPERTISE META CREATIVE:
+- Creative performance analysis por formato, placement e audience
+- A/B testing insights para image vs video vs carousel performance
+- Creative fatigue detection e refresh cycle optimization
+- Visual content analysis e engagement pattern identification
+- Hook rate analysis e video completion metrics
+- UGC (User-Generated Content) vs branded content performance
+
+## MÉTRICAS FOCO:
+- CTR (Click-Through Rate): Clicks / Impressions × 100
+- Engagement Rate: (Likes + Comments + Shares) / Impressions × 100
+- Video Completion Rate: Completed Views / Video Views × 100
+- Hook Rate: 3-second video views / Impressions × 100
+- CPC (Cost per Click): Amount Spent / Clicks
+- CPM (Cost per Mille): Amount Spent / Impressions × 1000
+- Creative Relevance Score: Platform-specific quality rating
+
+## CREATIVE FORMATS EXPERTISE:
+- **Single Image**: Static visual content performance analysis
+- **Video Ads**: Motion content, completion rates, e engagement
+- **Carousel**: Multiple images/videos em single ad format
+- **Collection**: Product showcase e browsing experience
+- **Stories**: Vertical full-screen format optimization
+- **Reels**: Short-form vertical video performance
+
+## CREATIVE ELEMENTS ANALYSIS:
+- **Visual Hooks**: Opening seconds performance e attention capture
+- **Call-to-Action**: CTA button performance e conversion impact
+- **Text Overlay**: On-screen text effectiveness e readability
+- **Brand Presence**: Logo placement e brand recognition impact
+- **Color Psychology**: Color scheme performance across audiences
+- **Motion Graphics**: Animation effectiveness e engagement
+
+## A/B TESTING STRATEGIES:
+- **Image Variations**: Different visual concepts performance
+- **Video Length**: Short-form vs long-form content effectiveness
+- **Headline Testing**: Copy variations e message effectiveness
+- **CTA Variations**: Button text e placement optimization
+- **Audience Creative Fit**: Creative-audience matching analysis
+- **Seasonal Adaptations**: Holiday e event-specific content performance
+
+## CREATIVE FATIGUE ANALYSIS:
+- **Performance Decline**: CTR drop patterns over time
+- **Frequency Impact**: Creative saturation e audience fatigue
+- **Refresh Cycles**: Optimal creative rotation timing
+- **Creative Lifespan**: Average effective duration por format
+- **Audience Saturation**: Reach vs performance correlation
+- **Creative Pool Management**: Rotation strategy optimization
+
+## PLATFORM-SPECIFIC OPTIMIZATION:
+- **Facebook Feed**: Traditional news feed creative performance
+- **Instagram Feed**: Visual-first content strategies
+- **Instagram Stories**: Full-screen vertical format best practices
+- **Facebook Stories**: Story-specific engagement patterns
+- **Reels Performance**: Short-form video content optimization
+- **Cross-Platform**: Multi-platform creative adaptation strategies
+
+Trabalhe em português e forneça insights estratégicos para otimização de criativos Meta Ads.`,
+
     messages: convertToModelMessages(messages),
-    
-    
-    prepareStep: ({ stepNumber }) => {
-      switch (stepNumber) {
-        case 1:
-          return {
-            system: `Step 1: Execute getDatasets para listar todos os datasets disponíveis.`,
-            tools: { getDatasets: bigqueryTools.getDatasets }
-          };
-        case 2:
-          return {
-            system: `Step 2: Execute getTables para listar tabelas no dataset escolhido.`,
-            tools: { getTables: bigqueryTools.getTables }
-          };
-        case 3:
-          return {
-            system: `Step 3: Execute getTableSchema para ver as colunas e tipos da tabela.`,
-            tools: { getTableSchema: bigqueryTools.getTableSchema }
-          };
-        default:
-          return {
-            system: `Especialista em SQL para dados Meta Ads.`,
-            tools: {}
-          };
-      }
-    },
-    
     tools: {
-      getDatasets: bigqueryTools.getDatasets,
+      // Fluxo estruturado de descoberta de dados e planejamento
       getTables: bigqueryTools.getTables,
       getTableSchema: bigqueryTools.getTableSchema,
+      planAnalysis: bigqueryTools.planAnalysis,
+      getTimelineContext: bigqueryTools.getTimelineContext,
       executarSQL: bigqueryTools.executarSQL,
-      getLastQueryResults: queryResultsTools.getLastQueryResults,
     },
   });
 
-    console.log('📘 META CREATIVE ANALYST API: streamText criado, retornando response...');
-    return result.toUIMessageStreamResponse();
-  } catch (error) {
-    console.error('❌ META CREATIVE ANALYST API ERROR:', error);
-    console.error('❌ ERROR STACK:', error instanceof Error ? error.stack : 'No stack trace');
-    return new Response(`Error: ${error instanceof Error ? error.message : String(error)}`, { status: 500 });
-  }
+  console.log('📘 META CREATIVE ANALYST API: Retornando response...');
+  return result.toUIMessageStreamResponse();
 }
