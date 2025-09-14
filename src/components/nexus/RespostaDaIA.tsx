@@ -24,6 +24,7 @@ import TableCreation from '../tools/TableCreation';
 import { KPICard } from '../widgets/KPICard';
 import WebPreviewCard from '../tools/WebPreviewCard';
 import PlanAnalysis from '../tools/PlanAnalysis';
+import TimelineContext from '../tools/TimelineContext';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -410,6 +411,76 @@ type PlanAnalysisToolOutput = {
   nextStep?: string;
 };
 
+type TimelineContextToolInput = {
+  tableName: string;
+  schema: Array<{
+    column_name: string;
+    data_type: string;
+  }>;
+  datasetId?: string;
+  projectId?: string;
+};
+
+type TimelineContextToolOutput = {
+  success?: boolean;
+  error?: string;
+  tableName?: string;
+  datasetId?: string;
+  projectId?: string;
+  primaryDateColumn?: string;
+  executionTime?: number;
+  detectedDateColumns?: Array<{
+    column_name: string;
+    data_type: string;
+  }>;
+  timelineOverview?: {
+    oldestRecord: string;
+    newestRecord: string;
+    totalDays: number;
+    totalRecords: number;
+    uniqueDays: number;
+    dataQuality: number;
+    coverageDays: string;
+  };
+  suggestedPeriods?: {
+    last7Days: {
+      label: string;
+      start: string;
+      end: string;
+      recordCount: number;
+      sqlCondition: string;
+      recommended: boolean;
+    };
+    last30Days: {
+      label: string;
+      start: string;
+      end: string;
+      recordCount: number;
+      sqlCondition: string;
+      recommended: boolean;
+    };
+    last90Days: {
+      label: string;
+      start: string;
+      end: string;
+      recordCount: number;
+      sqlCondition: string;
+      recommended: boolean;
+    };
+  };
+  recommendations?: {
+    bestPeriod: string;
+    dataFreshness: string;
+    analysisReadiness: string;
+    suggestedAnalysis: string;
+  };
+  sqlExamples?: {
+    recentData: string;
+    dailyAggregation: string;
+    fullTimelineOverview: string;
+  };
+};
+
 type NexusToolUIPart = ToolUIPart<{
   displayWeather: {
     input: WeatherToolInput;
@@ -466,6 +537,10 @@ type NexusToolUIPart = ToolUIPart<{
   planAnalysis: {
     input: PlanAnalysisToolInput;
     output: PlanAnalysisToolOutput;
+  };
+  getTimelineContext: {
+    input: TimelineContextToolInput;
+    output: TimelineContextToolOutput;
   };
 }>;
 
@@ -1102,6 +1177,45 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   keyColumns={(planTool.output as PlanAnalysisToolOutput).keyColumns}
                   detectedCapabilities={(planTool.output as PlanAnalysisToolOutput).detectedCapabilities}
                   nextStep={(planTool.output as PlanAnalysisToolOutput).nextStep}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getTimelineContext') {
+          const timelineTool = part as NexusToolUIPart;
+          const callId = timelineTool.toolCallId;
+          const shouldBeOpen = timelineTool.state === 'output-available' || timelineTool.state === 'output-error';
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getTimelineContext" state={timelineTool.state} />
+                <ToolContent>
+                  {timelineTool.input && (
+                    <ToolInput input={timelineTool.input} />
+                  )}
+                  {timelineTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={timelineTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {timelineTool.state === 'output-available' && (
+                <TimelineContext
+                  success={(timelineTool.output as TimelineContextToolOutput).success}
+                  error={(timelineTool.output as TimelineContextToolOutput).error}
+                  tableName={(timelineTool.output as TimelineContextToolOutput).tableName}
+                  datasetId={(timelineTool.output as TimelineContextToolOutput).datasetId}
+                  primaryDateColumn={(timelineTool.output as TimelineContextToolOutput).primaryDateColumn}
+                  executionTime={(timelineTool.output as TimelineContextToolOutput).executionTime}
+                  detectedDateColumns={(timelineTool.output as TimelineContextToolOutput).detectedDateColumns}
+                  timelineOverview={(timelineTool.output as TimelineContextToolOutput).timelineOverview}
+                  suggestedPeriods={(timelineTool.output as TimelineContextToolOutput).suggestedPeriods}
+                  recommendations={(timelineTool.output as TimelineContextToolOutput).recommendations}
+                  sqlExamples={(timelineTool.output as TimelineContextToolOutput).sqlExamples}
                 />
               )}
             </div>

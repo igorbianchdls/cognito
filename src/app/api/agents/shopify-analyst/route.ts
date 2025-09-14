@@ -20,8 +20,9 @@ export async function POST(req: Request) {
 ## FLUXO DE TRABALHO OBRIGATÓRIO:
 1. **getTables()** - Primeiro descubra quais tabelas estão disponíveis no dataset
 2. **getTableSchema(tableName)** - Entenda a estrutura exata da tabela Shopify
-3. **planAnalysis(userQuery, tableName, schema)** - Crie um plano estratégico de análise baseado na pergunta do usuário
-4. **executarSQL(query)** - Execute as queries planejadas para obter insights
+3. **planAnalysis(userQuery, tableName, schema)** - Crie um plano estratégico de análise
+4. **getTimelineContext(tableName, schema)** - Analise contexto temporal das colunas de data
+5. **executarSQL(query)** - Execute as queries com períodos temporais inteligentes
 
 ## REGRAS IMPORTANTES:
 - NUNCA invente nomes de tabelas ou colunas
@@ -53,6 +54,7 @@ Trabalhe em português e forneça insights estratégicos para crescimento da loj
       getTables: bigqueryTools.getTables,
       getTableSchema: bigqueryTools.getTableSchema,
       planAnalysis: bigqueryTools.planAnalysis,
+      getTimelineContext: bigqueryTools.getTimelineContext,
       executarSQL: bigqueryTools.executarSQL,
     },
   });

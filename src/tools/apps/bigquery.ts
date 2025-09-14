@@ -486,3 +486,157 @@ export const planAnalysis = tool({
     }
   }
 });
+
+export const getTimelineContext = tool({
+  description: 'Get intelligent timeline context using table schema to identify date ranges and periods',
+  inputSchema: z.object({
+    tableName: z.string().describe('Table name to analyze'),
+    schema: z.array(z.object({
+      column_name: z.string(),
+      data_type: z.string()
+    })).describe('Table schema from getTableSchema'),
+    datasetId: z.string().optional().describe('Dataset ID (default: biquery_data)'),
+    projectId: z.string().optional().describe('Project ID (default: creatto-463117)')
+  }),
+  execute: async ({ tableName, schema, datasetId = 'biquery_data', projectId = 'creatto-463117' }) => {
+    console.log('⏰ Getting timeline context for table:', tableName);
+
+    try {
+      // STEP 1: Usar schema para encontrar colunas de data
+      const dateColumns = schema.filter(col =>
+        col.data_type.includes('DATE') ||
+        col.data_type.includes('TIMESTAMP') ||
+        col.column_name.toLowerCase().includes('date') ||
+        col.column_name.toLowerCase().includes('time') ||
+        col.column_name.toLowerCase().includes('created') ||
+        col.column_name.toLowerCase().includes('updated')
+      );
+
+      if (dateColumns.length === 0) {
+        return {
+          success: false,
+          error: 'Nenhuma coluna de data encontrada no schema',
+          tableName,
+          dateColumns: []
+        };
+      }
+
+      // Initialize BigQuery service if not already done
+      if (!bigQueryService['client']) {
+        console.log('⚡ Initializing BigQuery service...');
+        await bigQueryService.initialize();
+      }
+
+      // STEP 2: Escolher coluna de data principal (primeira encontrada)
+      const primaryDateColumn = dateColumns[0].column_name;
+
+      // STEP 3: UMA query para analisar timeline completa
+      const timelineQuery = `
+        SELECT
+          -- Range de datas
+          MIN(DATE(${primaryDateColumn})) as oldest_date,
+          MAX(DATE(${primaryDateColumn})) as newest_date,
+          DATE_DIFF(MAX(DATE(${primaryDateColumn})), MIN(DATE(${primaryDateColumn})), DAY) as total_days,
+          COUNT(*) as total_records,
+          COUNT(DISTINCT DATE(${primaryDateColumn})) as unique_days,
+
+          -- Períodos inteligentes baseados nos dados reais
+          MAX(DATE(${primaryDateColumn})) as latest_date,
+          DATE_SUB(MAX(DATE(${primaryDateColumn})), INTERVAL 7 DAY) as last_7_days_start,
+          DATE_SUB(MAX(DATE(${primaryDateColumn})), INTERVAL 30 DAY) as last_30_days_start,
+          DATE_SUB(MAX(DATE(${primaryDateColumn})), INTERVAL 90 DAY) as last_90_days_start,
+
+          -- Contagem de dados por período
+          COUNTIF(DATE(${primaryDateColumn}) >= DATE_SUB(MAX(DATE(${primaryDateColumn})), INTERVAL 7 DAY)) as records_last_7d,
+          COUNTIF(DATE(${primaryDateColumn}) >= DATE_SUB(MAX(DATE(${primaryDateColumn})), INTERVAL 30 DAY)) as records_last_30d,
+          COUNTIF(DATE(${primaryDateColumn}) >= DATE_SUB(MAX(DATE(${primaryDateColumn})), INTERVAL 90 DAY)) as records_last_90d
+
+        FROM \`${projectId}.${datasetId}.${tableName}\`
+        WHERE ${primaryDateColumn} IS NOT NULL
+      `;
+
+      console.log('🔍 Executing timeline analysis query:', timelineQuery);
+      const startTime = Date.now();
+
+      // STEP 4: Executar query via BigQuery service
+      const result = await bigQueryService.executeQuery({ query: timelineQuery });
+      const data = (result as unknown as Record<string, unknown>[])[0]; // Primeira linha tem todos os dados
+
+      const executionTime = Date.now() - startTime;
+      console.log('✅ Timeline analysis completed in', executionTime, 'ms');
+
+      // STEP 5: Processar e retornar contexto inteligente
+      const dataQuality = data.total_days > 0 ? (data.unique_days / data.total_days) : 0;
+
+      return {
+        success: true,
+        tableName,
+        datasetId,
+        projectId,
+        primaryDateColumn,
+        executionTime,
+
+        detectedDateColumns: dateColumns,
+
+        timelineOverview: {
+          oldestRecord: data.oldest_date,
+          newestRecord: data.newest_date,
+          totalDays: data.total_days,
+          totalRecords: data.total_records,
+          uniqueDays: data.unique_days,
+          dataQuality: Math.round(dataQuality * 100), // % de dias com dados
+          coverageDays: `${data.unique_days} de ${data.total_days} dias com dados`
+        },
+
+        suggestedPeriods: {
+          last7Days: {
+            label: 'Últimos 7 dias',
+            start: data.last_7_days_start,
+            end: data.latest_date,
+            recordCount: data.records_last_7d,
+            sqlCondition: `${primaryDateColumn} >= '${data.last_7_days_start}'`,
+            recommended: data.records_last_7d > 10
+          },
+          last30Days: {
+            label: 'Últimos 30 dias',
+            start: data.last_30_days_start,
+            end: data.latest_date,
+            recordCount: data.records_last_30d,
+            sqlCondition: `${primaryDateColumn} >= '${data.last_30_days_start}'`,
+            recommended: data.records_last_30d > 50
+          },
+          last90Days: {
+            label: 'Últimos 90 dias',
+            start: data.last_90_days_start,
+            end: data.latest_date,
+            recordCount: data.records_last_90d,
+            sqlCondition: `${primaryDateColumn} >= '${data.last_90_days_start}'`,
+            recommended: data.records_last_90d > 100
+          }
+        },
+
+        recommendations: {
+          bestPeriod: data.records_last_30d > 50 ? 'last30Days' : data.records_last_90d > 100 ? 'last90Days' : 'fullRange',
+          dataFreshness: data.records_last_7d > 0 ? 'fresh' : 'stale',
+          analysisReadiness: data.total_records > 100 ? 'ready' : 'limited',
+          suggestedAnalysis: data.records_last_30d > 50 ? 'Dados suficientes para análise dos últimos 30 dias' : 'Recomendado análise de período maior (90+ dias)'
+        },
+
+        sqlExamples: {
+          recentData: `SELECT * FROM \`${projectId}.${datasetId}.${tableName}\` WHERE ${primaryDateColumn} >= '${data.last_30_days_start}' ORDER BY ${primaryDateColumn} DESC`,
+          dailyAggregation: `SELECT DATE(${primaryDateColumn}) as date, COUNT(*) as records FROM \`${projectId}.${datasetId}.${tableName}\` WHERE ${primaryDateColumn} >= '${data.last_30_days_start}' GROUP BY DATE(${primaryDateColumn}) ORDER BY date`,
+          fullTimelineOverview: `SELECT DATE(${primaryDateColumn}) as date, COUNT(*) as records FROM \`${projectId}.${datasetId}.${tableName}\` GROUP BY DATE(${primaryDateColumn}) ORDER BY date`
+        }
+      };
+
+    } catch (error) {
+      console.error('❌ Error getting timeline context:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to get timeline context',
+        tableName,
+        dateColumns: []
+      };
+    }
+  }
+});
