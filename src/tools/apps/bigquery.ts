@@ -376,3 +376,113 @@ export const getCampaigns = tool({
     }
   }
 });
+
+export const planAnalysis = tool({
+  description: 'Create simple analysis plan based on user query and table schema',
+  inputSchema: z.object({
+    userQuery: z.string().describe('User question or analysis request'),
+    tableName: z.string().describe('Table name to analyze'),
+    schema: z.array(z.object({
+      column_name: z.string(),
+      data_type: z.string()
+    })).describe('Table schema from getTableSchema')
+  }),
+  execute: async ({ userQuery, tableName, schema }) => {
+    console.log('🎯 Planning analysis for query:', userQuery);
+
+    try {
+      // Detectar tipo de análise baseado na query do usuário
+      let analysisType = 'overview';
+      const queryLower = userQuery.toLowerCase();
+
+      if (queryLower.includes('produto') || queryLower.includes('product')) analysisType = 'products';
+      if (queryLower.includes('cliente') || queryLower.includes('customer')) analysisType = 'customers';
+      if (queryLower.includes('tempo') || queryLower.includes('período') || queryLower.includes('data')) analysisType = 'temporal';
+      if (queryLower.includes('performance') || queryLower.includes('análise')) analysisType = 'performance';
+
+      // Encontrar colunas importantes no schema
+      const dateColumns = schema.filter(col =>
+        col.data_type.includes('DATE') || col.data_type.includes('TIMESTAMP') ||
+        col.column_name.toLowerCase().includes('date') || col.column_name.toLowerCase().includes('time')
+      );
+
+      const numericColumns = schema.filter(col =>
+        col.data_type.includes('INT') || col.data_type.includes('FLOAT') ||
+        col.data_type.includes('NUMERIC') || col.data_type.includes('DECIMAL')
+      );
+
+      const textColumns = schema.filter(col =>
+        col.data_type.includes('STRING') || col.data_type.includes('TEXT')
+      );
+
+      // Encontrar colunas específicas
+      const dateColumn = dateColumns[0]?.column_name;
+      const revenueColumn = numericColumns.find(col =>
+        col.column_name.toLowerCase().includes('revenue') ||
+        col.column_name.toLowerCase().includes('value') ||
+        col.column_name.toLowerCase().includes('amount')
+      )?.column_name;
+
+      const productColumn = textColumns.find(col =>
+        col.column_name.toLowerCase().includes('product') ||
+        col.column_name.toLowerCase().includes('item')
+      )?.column_name;
+
+      // Gerar queries recomendadas
+      const queries = [];
+
+      // Query principal baseada no tipo de análise
+      if (analysisType === 'products' && productColumn) {
+        queries.push({
+          purpose: 'Top Produtos',
+          description: `Análise dos produtos mais performáticos`,
+          suggestedSQL: `SELECT ${productColumn}, COUNT(*) as total_records${revenueColumn ? `, SUM(${revenueColumn}) as total_revenue` : ''} FROM ${tableName} GROUP BY ${productColumn} ORDER BY total_records DESC LIMIT 10`
+        });
+      } else if (analysisType === 'temporal' && dateColumn) {
+        queries.push({
+          purpose: 'Análise Temporal',
+          description: 'Performance ao longo do tempo',
+          suggestedSQL: `SELECT DATE(${dateColumn}) as date, COUNT(*) as daily_count${revenueColumn ? `, SUM(${revenueColumn}) as daily_revenue` : ''} FROM ${tableName} WHERE ${dateColumn} >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY) GROUP BY DATE(${dateColumn}) ORDER BY date DESC`
+        });
+      } else {
+        // Overview padrão
+        queries.push({
+          purpose: 'Dados Gerais',
+          description: `Visão geral da tabela ${tableName}`,
+          suggestedSQL: `SELECT COUNT(*) as total_records${dateColumn ? `, MIN(${dateColumn}) as oldest_date, MAX(${dateColumn}) as newest_date` : ''}${revenueColumn ? `, SUM(${revenueColumn}) as total_revenue, AVG(${revenueColumn}) as avg_revenue` : ''} FROM ${tableName}`
+        });
+      }
+
+      return {
+        success: true,
+        analysisType,
+        tableName,
+        totalColumns: schema.length,
+        recommendedQueries: queries,
+        keyColumns: {
+          dateColumn,
+          revenueColumn,
+          productColumn
+        },
+        detectedCapabilities: {
+          hasDateData: dateColumns.length > 0,
+          hasNumericData: numericColumns.length > 0,
+          hasTextData: textColumns.length > 0,
+          canAnalyzeProducts: !!productColumn,
+          canAnalyzeTemporal: !!dateColumn
+        },
+        nextStep: 'Execute as queries sugeridas para obter insights'
+      };
+
+    } catch (error) {
+      console.error('❌ Error planning analysis:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to plan analysis',
+        analysisType: 'error',
+        recommendedQueries: [],
+        keyColumns: {}
+      };
+    }
+  }
+});

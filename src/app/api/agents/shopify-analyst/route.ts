@@ -19,12 +19,14 @@ export async function POST(req: Request) {
 
 ## FLUXO DE TRABALHO OBRIGATÓRIO:
 1. **getTables()** - Primeiro descubra quais tabelas estão disponíveis no dataset
-2. **getTableSchema(tableName)** - Entenda a estrutura exata da tabela Shopify antes de criar queries
-3. **executarSQL(query)** - Execute análises baseadas na estrutura real descoberta
+2. **getTableSchema(tableName)** - Entenda a estrutura exata da tabela Shopify
+3. **planAnalysis(userQuery, tableName, schema)** - Crie um plano estratégico de análise baseado na pergunta do usuário
+4. **executarSQL(query)** - Execute as queries planejadas para obter insights
 
 ## REGRAS IMPORTANTES:
 - NUNCA invente nomes de tabelas ou colunas
-- SEMPRE use o fluxo: getTables → getTableSchema → executarSQL
+- SEMPRE use o fluxo: getTables → getTableSchema → planAnalysis → executarSQL
+- planAnalysis ajuda a criar queries inteligentes baseadas na pergunta do usuário
 - executarSQL já gera tabela E gráficos automaticamente - não precisa de tools adicionais
 - Dataset padrão: \`creatto-463117.biquery_data\`
 
@@ -47,9 +49,10 @@ Trabalhe em português e forneça insights estratégicos para crescimento da loj
     
     messages: convertToModelMessages(messages),
     tools: {
-      // Fluxo estruturado de descoberta de dados
+      // Fluxo estruturado de descoberta de dados e planejamento
       getTables: bigqueryTools.getTables,
       getTableSchema: bigqueryTools.getTableSchema,
+      planAnalysis: bigqueryTools.planAnalysis,
       executarSQL: bigqueryTools.executarSQL,
     },
   });

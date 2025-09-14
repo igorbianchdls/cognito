@@ -23,6 +23,7 @@ import SQLExecution from '../tools/SQLExecution';
 import TableCreation from '../tools/TableCreation';
 import { KPICard } from '../widgets/KPICard';
 import WebPreviewCard from '../tools/WebPreviewCard';
+import PlanAnalysis from '../tools/PlanAnalysis';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -374,6 +375,41 @@ type WebPreviewToolOutput = {
   error?: string;
 };
 
+type PlanAnalysisToolInput = {
+  userQuery: string;
+  tableName: string;
+  schema: Array<{
+    column_name: string;
+    data_type: string;
+  }>;
+};
+
+type PlanAnalysisToolOutput = {
+  success?: boolean;
+  error?: string;
+  analysisType?: string;
+  tableName?: string;
+  totalColumns?: number;
+  recommendedQueries?: Array<{
+    purpose: string;
+    description: string;
+    suggestedSQL: string;
+  }>;
+  keyColumns?: {
+    dateColumn?: string;
+    revenueColumn?: string;
+    productColumn?: string;
+  };
+  detectedCapabilities?: {
+    hasDateData?: boolean;
+    hasNumericData?: boolean;
+    hasTextData?: boolean;
+    canAnalyzeProducts?: boolean;
+    canAnalyzeTemporal?: boolean;
+  };
+  nextStep?: string;
+};
+
 type NexusToolUIPart = ToolUIPart<{
   displayWeather: {
     input: WeatherToolInput;
@@ -426,6 +462,10 @@ type NexusToolUIPart = ToolUIPart<{
   webPreview: {
     input: WebPreviewToolInput;
     output: WebPreviewToolOutput;
+  };
+  planAnalysis: {
+    input: PlanAnalysisToolInput;
+    output: PlanAnalysisToolOutput;
   };
 }>;
 
@@ -1024,6 +1064,44 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   generatedAt={(webPreviewTool.output as WebPreviewToolOutput).generatedAt}
                   success={(webPreviewTool.output as WebPreviewToolOutput).success}
                   error={(webPreviewTool.output as WebPreviewToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-planAnalysis') {
+          const planTool = part as NexusToolUIPart;
+          const callId = planTool.toolCallId;
+          const shouldBeOpen = planTool.state === 'output-available' || planTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-planAnalysis" state={planTool.state} />
+                <ToolContent>
+                  {planTool.input && (
+                    <ToolInput input={planTool.input} />
+                  )}
+                  {planTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={planTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {planTool.state === 'output-available' && (
+                <PlanAnalysis
+                  success={(planTool.output as PlanAnalysisToolOutput).success}
+                  error={(planTool.output as PlanAnalysisToolOutput).error}
+                  analysisType={(planTool.output as PlanAnalysisToolOutput).analysisType}
+                  tableName={(planTool.output as PlanAnalysisToolOutput).tableName}
+                  totalColumns={(planTool.output as PlanAnalysisToolOutput).totalColumns}
+                  recommendedQueries={(planTool.output as PlanAnalysisToolOutput).recommendedQueries}
+                  keyColumns={(planTool.output as PlanAnalysisToolOutput).keyColumns}
+                  detectedCapabilities={(planTool.output as PlanAnalysisToolOutput).detectedCapabilities}
+                  nextStep={(planTool.output as PlanAnalysisToolOutput).nextStep}
                 />
               )}
             </div>
