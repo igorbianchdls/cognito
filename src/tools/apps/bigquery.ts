@@ -2,6 +2,21 @@ import { tool } from 'ai';
 import { z } from 'zod';
 import { bigQueryService } from '@/services/bigquery';
 
+interface TimelineData {
+  total_days: number;
+  unique_days: number;
+  total_records: number;
+  oldest_date: string;
+  newest_date: string;
+  latest_date: string;
+  last_7_days_start: string;
+  last_30_days_start: string;
+  last_90_days_start: string;
+  records_last_7d: number;
+  records_last_30d: number;
+  records_last_90d: number;
+}
+
 export const getDatasets = tool({
   description: 'Get list of BigQuery datasets available in a project',
   inputSchema: z.object({
@@ -560,7 +575,7 @@ export const getTimelineContext = tool({
 
       // STEP 4: Executar query via BigQuery service
       const result = await bigQueryService.executeQuery({ query: timelineQuery });
-      const data = (result as unknown as Record<string, unknown>[])[0]; // Primeira linha tem todos os dados
+      const data = (result as unknown as TimelineData[])[0]; // Primeira linha tem todos os dados
 
       const executionTime = Date.now() - startTime;
       console.log('✅ Timeline analysis completed in', executionTime, 'ms');
