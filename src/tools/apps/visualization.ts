@@ -1,7 +1,9 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { bigQueryService } from '@/services/bigquery';
-import { GenerativeChart } from '@/components/tools/GenerativeChart';
+
+// Tipo para dados retornados do BigQuery
+type BigQueryRowData = Record<string, unknown>;
 
 // Função para gerar SQL automaticamente baseado no tipo de gráfico
 const generateSQL = (tipo: string, x: string, y: string, tabela: string): string => {
@@ -17,7 +19,7 @@ const generateSQL = (tipo: string, x: string, y: string, tabela: string): string
 };
 
 // Função para processar dados BigQuery para formato dos charts
-const processDataForChart = (data: any[], x: string, y: string, tipo: string) => {
+const processDataForChart = (data: BigQueryRowData[], x: string, y: string, tipo: string) => {
   return data.map(row => ({
     x: String(row[x] || 'N/A'),
     y: Number(row[y] || row.count || 0),
