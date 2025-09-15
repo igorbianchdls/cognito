@@ -98,7 +98,7 @@ Trabalhe em português e forneça insights estratégicos para otimização da ex
       // Visualização de dados específica para Google Analytics
       gerarGrafico: visualizationTools.gerarGrafico,
       // Code execution para análises avançadas Google Analytics
-      code_execution: anthropic.tools.codeExecution_20250522(),
+      code_execution: anthropic.tools.codeExecution_20250522() as any,
     },
   });
 

@@ -128,7 +128,7 @@ Trabalhe em português e forneça insights estratégicos para otimização de pa
       // Visualização de dados específica para Keywords
       gerarGrafico: visualizationTools.gerarGrafico,
       // Code execution para análises avançadas Keywords
-      code_execution: anthropic.tools.codeExecution_20250522(),
+      code_execution: anthropic.tools.codeExecution_20250522() as any,
     },
   });
 
