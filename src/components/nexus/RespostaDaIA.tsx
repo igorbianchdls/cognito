@@ -26,6 +26,7 @@ import WebPreviewCard from '../tools/WebPreviewCard';
 import PlanAnalysis from '../tools/PlanAnalysis';
 import TimelineContext from '../tools/TimelineContext';
 import { GenerativeChart } from '../tools/GenerativeChart';
+import CodeExecutionResult from '../tools/CodeExecutionResult';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -1286,6 +1287,36 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   yColumn={(graficoTool.output as GerarGraficoToolOutput).yColumn}
                   sqlQuery={(graficoTool.output as GerarGraficoToolOutput).sqlQuery}
                   totalRecords={(graficoTool.output as GerarGraficoToolOutput).totalRecords}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-code_execution') {
+          const codeExecutionTool = part as any;
+          const callId = codeExecutionTool.toolCallId;
+          const shouldBeOpen = codeExecutionTool.state === 'output-available' || codeExecutionTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-code_execution" state={codeExecutionTool.state} />
+                <ToolContent>
+                  {codeExecutionTool.input && (
+                    <ToolInput input={codeExecutionTool.input} />
+                  )}
+                  {codeExecutionTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={codeExecutionTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {codeExecutionTool.state === 'output-available' && (
+                <CodeExecutionResult
+                  result={codeExecutionTool.output}
                 />
               )}
             </div>
