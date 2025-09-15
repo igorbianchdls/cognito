@@ -5,7 +5,6 @@ import { Actions, Action } from '@/components/ai-elements/actions';
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool';
 import { CopyIcon, ThumbsUpIcon, ThumbsDownIcon } from 'lucide-react';
 import MetaIcon from '@/components/icons/MetaIcon';
-import GoogleIcon from '@/components/icons/GoogleIcon';
 import GoogleAnalyticsIcon from '@/components/icons/GoogleAnalyticsIcon';
 import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon';
 import ShopifyIcon from '@/components/icons/ShopifyIcon';
@@ -512,6 +511,29 @@ type GerarGraficoToolOutput = {
   fallbackMode?: boolean;
 };
 
+type CodeExecutionToolInput = {
+  code: string;
+};
+
+type CodeExecutionToolOutput = {
+  stdout?: string;
+  stderr?: string;
+  files?: Array<{
+    name: string;
+    url?: string;
+    type: string;
+    size?: number;
+  }>;
+  images?: Array<{
+    data: string;
+    format: string;
+    name?: string;
+  }>;
+  executedCode?: string;
+  success: boolean;
+  executionTime?: number;
+};
+
 type NexusToolUIPart = ToolUIPart<{
   displayWeather: {
     input: WeatherToolInput;
@@ -576,6 +598,10 @@ type NexusToolUIPart = ToolUIPart<{
   gerarGrafico: {
     input: GerarGraficoToolInput;
     output: GerarGraficoToolOutput;
+  };
+  code_execution: {
+    input: CodeExecutionToolInput;
+    output: CodeExecutionToolOutput;
   };
 }>;
 
@@ -1294,7 +1320,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
         }
 
         if (part.type === 'tool-code_execution') {
-          const codeExecutionTool = part as any;
+          const codeExecutionTool = part as NexusToolUIPart;
           const callId = codeExecutionTool.toolCallId;
           const shouldBeOpen = codeExecutionTool.state === 'output-available' || codeExecutionTool.state === 'output-error';
 
@@ -1316,7 +1342,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {codeExecutionTool.state === 'output-available' && (
                 <CodeExecutionResult
-                  result={codeExecutionTool.output}
+                  result={codeExecutionTool.output as CodeExecutionToolOutput}
                 />
               )}
             </div>
