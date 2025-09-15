@@ -3,6 +3,7 @@ import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
 import * as analyticsTools from '@/tools/apps/analytics';
 import * as utilitiesTools from '@/tools/utilities';
+import * as visualizationTools from '@/tools/apps/visualization';
 
 export const maxDuration = 30;
 
@@ -39,7 +40,14 @@ export async function POST(req: Request) {
 - SEMPRE use o fluxo: getTables → getTableSchema → planAnalysis → executarSQL
 - planAnalysis ajuda a criar queries inteligentes baseadas na pergunta do usuário
 - executarSQL já gera tabela E gráficos automaticamente - não precisa de tools adicionais
+- **gerarGrafico()** - Use para criar visualizações específicas de métricas Shopify com gráficos interativos
 - Dataset padrão: \`creatto-463117.biquery_data\`
+
+## VISUALIZAÇÕES SHOPIFY:
+- Use **gerarGrafico()** para criar gráficos de conversion rate, AOV, CLV por período ou produto
+- Gráficos de barra para comparação de performance entre produtos ou categorias
+- Gráficos de linha para trends de vendas e conversion rate ao longo do tempo
+- Gráficos de pizza para distribuição de vendas por canal de aquisição ou produto
 
 ## EXPERTISE SHOPIFY:
 - Conversion rate optimization e AOV analysis
@@ -66,6 +74,8 @@ Trabalhe em português e forneça insights estratégicos para crescimento da loj
       planAnalysis: bigqueryTools.planAnalysis,
       getTimelineContext: bigqueryTools.getTimelineContext,
       executarSQL: bigqueryTools.executarSQL,
+      // Visualização de dados específica para Shopify
+      gerarGrafico: visualizationTools.gerarGrafico,
     },
   });
 

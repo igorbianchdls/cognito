@@ -1,6 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
+import * as visualizationTools from '@/tools/apps/visualization';
 
 export const maxDuration = 30;
 
@@ -38,7 +39,14 @@ export async function POST(req: Request) {
 - planAnalysis ajuda a criar queries inteligentes baseadas na pergunta do usuário
 - getTimelineContext fornece contexto temporal para análises de creative performance ao longo do tempo
 - executarSQL já gera tabela E gráficos automaticamente - não precisa de tools adicionais
+- **gerarGrafico()** - Use para criar visualizações específicas de creative performance com gráficos interativos
 - Dataset padrão: \`creatto-463117.biquery_data\`
+
+## VISUALIZAÇÕES META CREATIVE:
+- Use **gerarGrafico()** para criar gráficos de CTR, engagement rate, video completion por período ou creative format
+- Gráficos de barra para comparação de performance entre creative types ou placements
+- Gráficos de linha para trends de creative fatigue e performance decay ao longo do tempo
+- Gráficos de pizza para distribuição de engagement por creative format ou audience segment
 
 ## EXPERTISE META CREATIVE:
 - Creative performance analysis por formato, placement e audience
@@ -107,6 +115,8 @@ Trabalhe em português e forneça insights estratégicos para otimização de cr
       planAnalysis: bigqueryTools.planAnalysis,
       getTimelineContext: bigqueryTools.getTimelineContext,
       executarSQL: bigqueryTools.executarSQL,
+      // Visualização de dados específica para Meta Creative
+      gerarGrafico: visualizationTools.gerarGrafico,
     },
   });
 

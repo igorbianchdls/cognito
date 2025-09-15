@@ -1,6 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
+import * as visualizationTools from '@/tools/apps/visualization';
 
 export const maxDuration = 30;
 
@@ -38,7 +39,14 @@ export async function POST(req: Request) {
 - planAnalysis ajuda a criar queries inteligentes baseadas na pergunta do usuário
 - getTimelineContext fornece contexto temporal para análises de performance ao longo do tempo
 - executarSQL já gera tabela E gráficos automaticamente - não precisa de tools adicionais
+- **gerarGrafico()** - Use para criar visualizações específicas de métricas Meta Ads com gráficos interativos
 - Dataset padrão: \`creatto-463117.biquery_data\`
+
+## VISUALIZAÇÕES META ADS:
+- Use **gerarGrafico()** para criar gráficos de ROAS, CPM, CTR, CPC por período, campanha, ou placement
+- Gráficos de barra para comparação de performance entre campanhas ou ad sets
+- Gráficos de linha para trends de ROAS e spend ao longo do tempo
+- Gráficos de pizza para distribuição de budget por placement ou objective
 
 ## EXPERTISE META ADS:
 - ROAS optimization e CPM analysis por placement e audience
@@ -98,6 +106,8 @@ Trabalhe em português e forneça insights estratégicos para otimização de ca
       planAnalysis: bigqueryTools.planAnalysis,
       getTimelineContext: bigqueryTools.getTimelineContext,
       executarSQL: bigqueryTools.executarSQL,
+      // Visualização de dados específica para Meta Ads
+      gerarGrafico: visualizationTools.gerarGrafico,
     },
   });
 

@@ -1,6 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
+import * as visualizationTools from '@/tools/apps/visualization';
 
 export const maxDuration = 30;
 
@@ -38,7 +39,14 @@ export async function POST(req: Request) {
 - planAnalysis ajuda a criar queries inteligentes baseadas na pergunta do usuário
 - getTimelineContext fornece contexto temporal para análises de keyword performance ao longo do tempo
 - executarSQL já gera tabela E gráficos automaticamente - não precisa de tools adicionais
+- **gerarGrafico()** - Use para criar visualizações específicas de keyword performance com gráficos interativos
 - Dataset padrão: \`creatto-463117.biquery_data\`
+
+## VISUALIZAÇÕES KEYWORD:
+- Use **gerarGrafico()** para criar gráficos de search volume, CTR, position por período ou keyword
+- Gráficos de barra para comparação de performance entre keywords ou intent types
+- Gráficos de linha para trends de rankings e traffic ao longo do tempo
+- Gráficos de pizza para distribuição de traffic por keyword category ou device type
 
 ## EXPERTISE KEYWORD:
 - Search volume analysis e keyword opportunity identification
@@ -107,6 +115,8 @@ Trabalhe em português e forneça insights estratégicos para otimização de pa
       planAnalysis: bigqueryTools.planAnalysis,
       getTimelineContext: bigqueryTools.getTimelineContext,
       executarSQL: bigqueryTools.executarSQL,
+      // Visualização de dados específica para Keywords
+      gerarGrafico: visualizationTools.gerarGrafico,
     },
   });
 
