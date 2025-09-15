@@ -13,8 +13,18 @@ export async function POST(req: Request) {
   console.log('📦 INVENTORY ANALYST API: Messages:', messages?.length);
 
   const result = streamText({
-    model: 'deepseek/deepseek-v3.1-thinking',
-    
+    model: anthropic('claude-sonnet-4-20250514'),
+
+    // Enable Claude reasoning/thinking
+    providerOptions: {
+      anthropic: {
+        thinking: {
+          type: 'enabled',
+          budgetTokens: 12000
+        }
+      }
+    },
+
     // Sistema estratégico completo
     system: `# Inventory Performance Analyst - System Core
 

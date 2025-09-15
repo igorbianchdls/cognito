@@ -13,6 +13,16 @@ export async function POST(req: Request) {
   const result = streamText({
     model: anthropic('claude-sonnet-4-20250514'),
 
+    // Enable Claude reasoning/thinking
+    providerOptions: {
+      anthropic: {
+        thinking: {
+          type: 'enabled',
+          budgetTokens: 12000
+        }
+      }
+    },
+
     system: `Você é Amazon Ads Performance Analyst, especializado em análise de performance de anúncios Amazon e otimização estratégica de campanhas publicitárias no marketplace.
 
 ## FLUXO DE TRABALHO OBRIGATÓRIO:
