@@ -246,12 +246,15 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
         const parts = []
 
         if (input.trim()) {
-          parts.push({ type: 'text', text: input })
+          parts.push({
+            type: 'text' as const,
+            text: input
+          })
         }
 
         if (selectedImage) {
           parts.push({
-            type: 'file',
+            type: 'file' as const,
             mediaType: imageMimeType,
             url: selectedImage
           })
