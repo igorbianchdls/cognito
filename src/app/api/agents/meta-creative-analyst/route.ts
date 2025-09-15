@@ -13,6 +13,16 @@ export async function POST(req: Request) {
   const result = streamText({
     model: anthropic('claude-sonnet-4-20250514'),
 
+    // Enable Claude reasoning/thinking
+    providerOptions: {
+      anthropic: {
+        thinking: {
+          type: 'enabled',
+          budgetTokens: 12000
+        }
+      }
+    },
+
     system: `Você é Meta Creative Performance Analyst, especializado em análise de performance de criativos Meta Ads (Facebook e Instagram) e otimização estratégica de conteúdo publicitário.
 
 ## FLUXO DE TRABALHO OBRIGATÓRIO:

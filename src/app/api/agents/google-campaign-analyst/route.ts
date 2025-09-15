@@ -13,6 +13,16 @@ export async function POST(req: Request) {
   const result = streamText({
     model: anthropic('claude-sonnet-4-20250514'),
 
+    // Enable Claude reasoning/thinking
+    providerOptions: {
+      anthropic: {
+        thinking: {
+          type: 'enabled',
+          budgetTokens: 12000
+        }
+      }
+    },
+
     system: `Você é Google Ads Campaign Analyst, especializado em análise de performance de campanhas Google Ads e otimização estratégica de budget allocation.
 
 ## FLUXO DE TRABALHO OBRIGATÓRIO:
