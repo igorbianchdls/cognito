@@ -8,6 +8,7 @@ import WidgetsTable from './tools/WidgetsTable'
 import AICodeExecutor from './AICodeExecutor'
 import TablesListCustom from './tools/TablesListCustom'
 import TableSchemaCustom from './tools/TableSchemaCustom'
+import DashboardPlanView from './tools/DashboardPlanView'
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
 import { Response } from '@/components/ai-elements/response'
 import { Reasoning, ReasoningTrigger, ReasoningContent } from '@/components/ai-elements/reasoning'
@@ -491,7 +492,52 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                     )
                   }
 
-                  
+                  // Handle planDashboard tool calls
+                  if (part.type === 'tool-planDashboard') {
+                    const planTool = part as {
+                      state: 'input-streaming' | 'input-available' | 'output-available' | 'output-error'
+                      input?: Record<string, unknown>
+                      output?: {
+                        success: boolean
+                        plan: any
+                        summary?: string
+                        next_steps?: string[]
+                        error?: string
+                      }
+                      errorText?: string
+                    }
+                    const shouldBeOpen = planTool.state === 'output-available' || planTool.state === 'output-error'
+
+                    return (
+                      <div key={index}>
+                        <Tool defaultOpen={shouldBeOpen}>
+                          <ToolHeader type="tool-planDashboard" state={planTool.state} />
+                          <ToolContent>
+                            {planTool.input && (
+                              <ToolInput input={planTool.input} />
+                            )}
+                            {planTool.state === 'output-error' && (
+                              <ToolOutput
+                                output={null}
+                                errorText={planTool.errorText}
+                              />
+                            )}
+                          </ToolContent>
+                        </Tool>
+                        {planTool.state === 'output-available' && planTool.output && (
+                          <DashboardPlanView
+                            plan={planTool.output.plan}
+                            success={planTool.output.success}
+                            error={planTool.output.error}
+                            summary={planTool.output.summary}
+                            next_steps={planTool.output.next_steps}
+                          />
+                        )}
+                      </div>
+                    )
+                  }
+
+
                   return null
                 })}
               </div>
