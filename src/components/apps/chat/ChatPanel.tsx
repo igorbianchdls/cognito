@@ -2,7 +2,7 @@
 
 import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
-import { useState, FormEvent } from 'react'
+import { useState, FormEvent, useRef, ChangeEvent } from 'react'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import WidgetsTable from './tools/WidgetsTable'
 import AICodeExecutor from './AICodeExecutor'
@@ -21,7 +21,7 @@ import {
   PromptInputToolbar,
   PromptInputTools,
 } from '@/components/ai-elements/prompt-input'
-import { MicIcon, GlobeIcon } from 'lucide-react'
+import { MicIcon, GlobeIcon, PaperclipIcon } from 'lucide-react'
 
 interface ChatPanelProps {
   droppedWidgets: DroppedWidget[]
@@ -222,13 +222,45 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
   })
 
   const [input, setInput] = useState('')
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [imageMimeType, setImageMimeType] = useState<string>('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const base64 = e.target?.result as string
+        setSelectedImage(base64)
+        setImageMimeType(file.type)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
-    if (input.trim()) {
+    if (input.trim() || selectedImage) {
       try {
-        sendMessage({ text: input })
+        const content = []
+
+        if (input.trim()) {
+          content.push({ type: 'text', text: input })
+        }
+
+        if (selectedImage) {
+          content.push({
+            type: 'file',
+            data: selectedImage,
+            mimeType: imageMimeType
+          })
+        }
+
+        sendMessage({ content })
         setInput('')
+        setSelectedImage(null)
+        setImageMimeType('')
       } catch {
         // Message sending failed
       }
@@ -494,14 +526,37 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
       {/* Input */}
       <div className="p-4 flex-shrink-0" style={{backgroundColor: 'hsl(0 0% 98%)'}}>
         <PromptInput onSubmit={handleSubmit}>
+          {selectedImage && (
+            <div className="flex items-center gap-2 p-2 bg-gray-100 rounded mb-2">
+              <img src={selectedImage} alt="Preview" className="w-12 h-12 object-cover rounded" />
+              <span className="text-sm text-gray-600">Imagem anexada</span>
+              <button
+                type="button"
+                onClick={() => setSelectedImage(null)}
+                className="ml-auto text-gray-500 hover:text-gray-700 text-lg leading-none"
+              >
+                ×
+              </button>
+            </div>
+          )}
           <PromptInputTextarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
             disabled={status !== 'ready'}
           />
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleImageUpload}
+          />
           <PromptInputToolbar>
             <PromptInputTools>
+              <PromptInputButton onClick={() => fileInputRef.current?.click()}>
+                <PaperclipIcon size={16} />
+              </PromptInputButton>
               <PromptInputButton>
                 <MicIcon size={16} />
               </PromptInputButton>
@@ -511,7 +566,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
               </PromptInputButton>
             </PromptInputTools>
             <PromptInputSubmit
-              disabled={!input.trim() || status !== 'ready'}
+              disabled={(!input.trim() && !selectedImage) || status !== 'ready'}
               status={status}
               onStop={stop}
             />
