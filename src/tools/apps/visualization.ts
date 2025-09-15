@@ -59,18 +59,21 @@ export const gerarGrafico = tool({
       // Processar dados para formato dos charts
       const processedData = processDataForChart(data, x, y, tipo);
 
-      // Retornar componente JSX (generative UI)
-      return (
-        <GenerativeChart
-          data={processedData}
-          chartType={tipo as 'bar' | 'line' | 'pie'}
-          title={`${y} por ${x}`}
-          xColumn={x}
-          yColumn={y}
-          sqlQuery={sqlQuery}
-          totalRecords={data.length}
-        />
-      );
+      // Retornar objeto JSON (generative UI será renderizada no RespostaDaIA.tsx)
+      return {
+        success: true,
+        chartData: processedData,
+        chartType: tipo,
+        title: `${y} por ${x}`,
+        xColumn: x,
+        yColumn: y,
+        sqlQuery,
+        totalRecords: data.length,
+        metadata: {
+          generatedAt: new Date().toISOString(),
+          dataSource: 'bigquery-sql'
+        }
+      };
     } catch (error) {
       console.error('❌ Erro na geração do gráfico:', error);
 

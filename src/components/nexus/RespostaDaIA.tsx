@@ -25,6 +25,7 @@ import { KPICard } from '../widgets/KPICard';
 import WebPreviewCard from '../tools/WebPreviewCard';
 import PlanAnalysis from '../tools/PlanAnalysis';
 import TimelineContext from '../tools/TimelineContext';
+import { GenerativeChart } from '../tools/GenerativeChart';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -481,6 +482,35 @@ type TimelineContextToolOutput = {
   };
 };
 
+type GerarGraficoToolInput = {
+  tipo: 'bar' | 'line' | 'pie';
+  x: string;
+  y: string;
+  tabela: string;
+};
+
+type GerarGraficoToolOutput = {
+  success: boolean;
+  chartData: Array<{
+    x: string;
+    y: number;
+    label: string;
+    value: number;
+  }>;
+  chartType: 'bar' | 'line' | 'pie';
+  title: string;
+  xColumn: string;
+  yColumn: string;
+  sqlQuery: string;
+  totalRecords: number;
+  metadata: {
+    generatedAt: string;
+    dataSource: string;
+  };
+  error?: string;
+  fallbackMode?: boolean;
+};
+
 type NexusToolUIPart = ToolUIPart<{
   displayWeather: {
     input: WeatherToolInput;
@@ -541,6 +571,10 @@ type NexusToolUIPart = ToolUIPart<{
   getTimelineContext: {
     input: TimelineContextToolInput;
     output: TimelineContextToolOutput;
+  };
+  gerarGrafico: {
+    input: GerarGraficoToolInput;
+    output: GerarGraficoToolOutput;
   };
 }>;
 
@@ -1216,6 +1250,42 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   suggestedPeriods={(timelineTool.output as TimelineContextToolOutput).suggestedPeriods}
                   recommendations={(timelineTool.output as TimelineContextToolOutput).recommendations}
                   sqlExamples={(timelineTool.output as TimelineContextToolOutput).sqlExamples}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-gerarGrafico') {
+          const graficoTool = part as NexusToolUIPart;
+          const callId = graficoTool.toolCallId;
+          const shouldBeOpen = graficoTool.state === 'output-available' || graficoTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-gerarGrafico" state={graficoTool.state} />
+                <ToolContent>
+                  {graficoTool.input && (
+                    <ToolInput input={graficoTool.input} />
+                  )}
+                  {graficoTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={graficoTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {graficoTool.state === 'output-available' && (
+                <GenerativeChart
+                  data={(graficoTool.output as GerarGraficoToolOutput).chartData}
+                  chartType={(graficoTool.output as GerarGraficoToolOutput).chartType}
+                  title={(graficoTool.output as GerarGraficoToolOutput).title}
+                  xColumn={(graficoTool.output as GerarGraficoToolOutput).xColumn}
+                  yColumn={(graficoTool.output as GerarGraficoToolOutput).yColumn}
+                  sqlQuery={(graficoTool.output as GerarGraficoToolOutput).sqlQuery}
+                  totalRecords={(graficoTool.output as GerarGraficoToolOutput).totalRecords}
                 />
               )}
             </div>
