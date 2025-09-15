@@ -126,45 +126,7 @@ Keep responses focused on widget creation. Ask clarifying questions about data s
           
           return {
             success: true,
-            widgets: widgets.map(w => {
-              // Extract BigQuery info based on widget type
-              let bigqueryInfo = {}
-              
-              if (w.type === 'kpi' && w.kpiConfig) {
-                bigqueryInfo = {
-                  table: w.kpiConfig.bigqueryData?.selectedTable,
-                  field: w.kpiConfig.bigqueryData?.kpiValueFields?.[0]?.name,
-                  calculation: w.kpiConfig.bigqueryData?.kpiValueFields?.[0]?.aggregation
-                }
-              } else if (w.type?.startsWith('chart-') && w.barChartConfig) {
-                bigqueryInfo = {
-                  table: w.barChartConfig.bigqueryData?.selectedTable,
-                  xField: w.barChartConfig.bigqueryData?.columns?.xAxis?.[0]?.name,
-                  yField: w.barChartConfig.bigqueryData?.columns?.yAxis?.[0]?.name,
-                  aggregation: w.barChartConfig.bigqueryData?.columns?.yAxis?.[0]?.aggregation,
-                  chartType: w.type.replace('chart-', '')
-                }
-              } else if (w.type === 'table' && w.tableConfig) {
-                bigqueryInfo = {
-                  table: w.tableConfig.bigqueryData?.selectedTable,
-                  columns: w.tableConfig.bigqueryData?.selectedColumns?.map(col => col.name)
-                }
-              }
-              
-              return {
-                id: w.id,
-                widgetId: w.i,
-                name: w.name,
-                type: w.type,
-                position: { x: w.x, y: w.y },
-                size: { width: w.w, height: w.h },
-                description: w.description,
-                icon: w.icon,
-                bigqueryInfo: Object.keys(bigqueryInfo).length > 0 ? bigqueryInfo : undefined
-              }
-            }),
-            totalWidgets: widgets.length,
-            summary: widgets.length === 0 
+            summary: widgets.length === 0
               ? 'No widgets on canvas'
               : `${widgets.length} widget(s) on canvas: ${widgets.map(w => w.name).join(', ')}`
           };
@@ -172,8 +134,6 @@ Keep responses focused on widget creation. Ask clarifying questions about data s
             console.error('❌ Erro na tool getCanvasWidgets:', error);
             return {
               success: false,
-              widgets: [],
-              totalWidgets: 0,
               summary: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`
             };
           }

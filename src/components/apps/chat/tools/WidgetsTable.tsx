@@ -11,31 +11,16 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Edit, MapPin, Maximize2 } from 'lucide-react'
-
-interface WidgetData {
-  id: string
-  widgetId: string
-  name: string
-  type: string
-  position: { x: number; y: number }
-  size: { width: number; height: number }
-  description: string
-  icon: string
-  bigqueryInfo?: {
-    table?: string
-    field?: string
-    calculation?: string
-    xField?: string
-    yField?: string
-    aggregation?: string
-    chartType?: string
-    columns?: string[]
-  }
-}
+import { useStore } from '@nanostores/react'
+import { $kpisAsDropped } from '@/stores/apps/kpiStore'
+import { $tablesAsDropped } from '@/stores/apps/tableStore'
+import { $barChartsAsDropped } from '@/stores/apps/barChartStore'
+import { $horizontalBarChartsAsDropped } from '@/stores/apps/horizontalBarChartStore'
+import { $lineChartsAsDropped } from '@/stores/apps/lineChartStore'
+import { $pieChartsAsDropped } from '@/stores/apps/pieChartStore'
+import { $areaChartsAsDropped } from '@/stores/apps/areaChartStore'
 
 interface WidgetsTableProps {
-  widgets: WidgetData[]
-  totalWidgets: number
   summary: string
   success: boolean
 }
@@ -57,53 +42,88 @@ const getTypeName = (type: string) => {
   return type
 }
 
-const renderBigQueryInfo = (bigqueryInfo?: WidgetData['bigqueryInfo']) => {
-  if (!bigqueryInfo) return <span className="text-gray-400">No data source</span>
-
-  const { table, field, calculation, xField, yField, aggregation, columns } = bigqueryInfo
-
-  if (field && calculation) {
-    // KPI format
-    return (
-      <div className="space-y-1">
-        <div className="text-sm font-medium">{table}</div>
-        <div className="text-xs text-gray-600">
-          {calculation}({field})
+const renderBigQueryInfo = (widget: any) => {
+  // Handle KPI widgets
+  if (widget.type === 'kpi' && widget.kpiConfig?.bigqueryData) {
+    const { selectedTable, query } = widget.kpiConfig.bigqueryData
+    if (selectedTable) {
+      return (
+        <div className="space-y-1">
+          <div className="text-sm font-medium">{selectedTable}</div>
+          <div className="text-xs text-gray-600">KPI Query</div>
         </div>
-      </div>
-    )
+      )
+    }
   }
 
-  if (xField && yField) {
-    // Chart format
-    return (
-      <div className="space-y-1">
-        <div className="text-sm font-medium">{table}</div>
-        <div className="text-xs text-gray-600">
-          {xField} × {aggregation}({yField})
+  // Handle Chart widgets
+  if (widget.type.startsWith('chart-')) {
+    let bigqueryData = null
+    if (widget.barChartConfig?.bigqueryData) bigqueryData = widget.barChartConfig.bigqueryData
+    else if (widget.horizontalBarChartConfig?.bigqueryData) bigqueryData = widget.horizontalBarChartConfig.bigqueryData
+    else if (widget.lineChartConfig?.bigqueryData) bigqueryData = widget.lineChartConfig.bigqueryData
+    else if (widget.pieChartConfig?.bigqueryData) bigqueryData = widget.pieChartConfig.bigqueryData
+    else if (widget.areaChartConfig?.bigqueryData) bigqueryData = widget.areaChartConfig.bigqueryData
+
+    if (bigqueryData?.selectedTable) {
+      const xField = bigqueryData.columns?.xAxis?.[0]?.name
+      const yField = bigqueryData.columns?.yAxis?.[0]?.name
+      const aggregation = bigqueryData.columns?.yAxis?.[0]?.aggregation
+
+      return (
+        <div className="space-y-1">
+          <div className="text-sm font-medium">{bigqueryData.selectedTable}</div>
+          {xField && yField && (
+            <div className="text-xs text-gray-600">
+              {xField} × {aggregation}({yField})
+            </div>
+          )}
         </div>
-      </div>
-    )
+      )
+    }
   }
 
-  if (columns && columns.length > 0) {
-    // Table format
-    return (
-      <div className="space-y-1">
-        <div className="text-sm font-medium">{table}</div>
-        <div className="text-xs text-gray-600">
-          {columns.length} columns
+  // Handle Table widgets
+  if (widget.type === 'table' && widget.tableConfig?.bigqueryData) {
+    const { selectedTable, columns } = widget.tableConfig.bigqueryData
+    if (selectedTable) {
+      return (
+        <div className="space-y-1">
+          <div className="text-sm font-medium">{selectedTable}</div>
+          <div className="text-xs text-gray-600">
+            {columns?.selected?.length || 0} columns
+          </div>
         </div>
-      </div>
-    )
+      )
+    }
   }
 
-  return (
-    <div className="text-sm font-medium">{table || 'Unknown source'}</div>
-  )
+  return <span className="text-gray-400">No data source</span>
 }
 
-export default function WidgetsTable({ widgets, totalWidgets, summary, success }: WidgetsTableProps) {
+export default function WidgetsTable({ summary, success }: WidgetsTableProps) {
+  // Get current widget data from stores
+  const kpis = useStore($kpisAsDropped)
+  const tables = useStore($tablesAsDropped)
+  const barCharts = useStore($barChartsAsDropped)
+  const horizontalBarCharts = useStore($horizontalBarChartsAsDropped)
+  const lineCharts = useStore($lineChartsAsDropped)
+  const pieCharts = useStore($pieChartsAsDropped)
+  const areaCharts = useStore($areaChartsAsDropped)
+
+  // Combine all widgets
+  const allWidgets = [
+    ...kpis,
+    ...tables,
+    ...barCharts,
+    ...horizontalBarCharts,
+    ...lineCharts,
+    ...pieCharts,
+    ...areaCharts
+  ]
+
+  const totalWidgets = allWidgets.length
+
   if (!success) {
     return (
       <div className="mt-3 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -141,14 +161,14 @@ export default function WidgetsTable({ widgets, totalWidgets, summary, success }
             </TableRow>
           </TableHeader>
           <TableBody>
-            {widgets.map((widget) => (
+            {allWidgets.map((widget) => (
               <TableRow key={widget.id}>
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{widget.icon}</span>
                     <div>
                       <div className="font-medium">{widget.name}</div>
-                      <div className="text-xs text-gray-500">ID: {widget.widgetId}</div>
+                      <div className="text-xs text-gray-500">ID: {widget.i}</div>
                     </div>
                   </div>
                 </TableCell>
@@ -158,18 +178,18 @@ export default function WidgetsTable({ widgets, totalWidgets, summary, success }
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  {renderBigQueryInfo(widget.bigqueryInfo)}
+                  {renderBigQueryInfo(widget)}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1 text-sm">
                     <MapPin className="w-3 h-3" />
-                    ({widget.position.x}, {widget.position.y})
+                    ({widget.x}, {widget.y})
                   </div>
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1 text-sm">
                     <Maximize2 className="w-3 h-3" />
-                    {widget.size.width}×{widget.size.height}
+                    {widget.w}×{widget.h}
                   </div>
                 </TableCell>
                 <TableCell>
