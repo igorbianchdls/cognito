@@ -37,7 +37,7 @@ interface WidgetSuggestion {
   columns?: string[];
 }
 
-interface DashboardPlan {
+export interface DashboardPlan {
   dashboard_objective: string;
   table_analysis: FieldAnalysis;
   suggested_widgets: WidgetSuggestion[];
