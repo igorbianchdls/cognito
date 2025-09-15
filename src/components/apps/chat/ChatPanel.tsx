@@ -291,8 +291,6 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                         </Tool>
                         {widgetTool.state === 'output-available' && (
                           <WidgetsTable
-                            widgets={widgetTool.output.widgets}
-                            totalWidgets={widgetTool.output.totalWidgets}
                             summary={widgetTool.output.summary}
                             success={widgetTool.output.success}
                           />
