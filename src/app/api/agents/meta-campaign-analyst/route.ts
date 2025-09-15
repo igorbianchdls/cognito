@@ -124,6 +124,7 @@ Trabalhe em português e forneça insights estratégicos para otimização de ca
       // Visualização de dados específica para Meta Campaign
       gerarGrafico: visualizationTools.gerarGrafico,
       // Code execution para análises avançadas Meta Campaign
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       code_execution: anthropic.tools.codeExecution_20250522() as any,
     },
   });
