@@ -243,21 +243,21 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
     e.preventDefault()
     if (input.trim() || selectedImage) {
       try {
-        const content = []
+        const parts = []
 
         if (input.trim()) {
-          content.push({ type: 'text', text: input })
+          parts.push({ type: 'text', text: input })
         }
 
         if (selectedImage) {
-          content.push({
+          parts.push({
             type: 'file',
-            data: selectedImage,
-            mimeType: imageMimeType
+            mediaType: imageMimeType,
+            url: selectedImage
           })
         }
 
-        sendMessage({ content })
+        sendMessage({ role: 'user', parts })
         setInput('')
         setSelectedImage(null)
         setImageMimeType('')
