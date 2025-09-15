@@ -4,8 +4,15 @@ import { BarChart } from '@/components/charts/BarChart';
 import { LineChart } from '@/components/charts/LineChart';
 import { PieChart } from '@/components/charts/PieChart';
 
+interface ChartDataPoint {
+  x: string;
+  y: number;
+  label: string;
+  value: number;
+}
+
 interface GenerativeChartProps {
-  data: any[];
+  data: ChartDataPoint[];
   chartType: 'bar' | 'line' | 'pie';
   title: string;
   xColumn: string;
