@@ -2,6 +2,7 @@ import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
 import * as analyticsTools from '@/tools/apps/analytics';
+import * as visualizationTools from '@/tools/apps/visualization';
 import * as utilitiesTools from '@/tools/utilities';
 
 // Allow streaming responses up to 30 seconds
@@ -192,8 +193,10 @@ Provide final recommendations and conclusions based on the complete analysis and
     tools: {
       // BigQuery tools
       ...bigqueryTools,
-      // Analytics tools  
+      // Analytics tools
       ...analyticsTools,
+      // Visualization tools
+      ...visualizationTools,
       // Utilities tools
       ...utilitiesTools,
     },
