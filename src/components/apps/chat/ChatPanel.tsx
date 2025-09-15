@@ -203,7 +203,7 @@ const handleLegacyFormat = (parsed: LegacyFormat) => {
 }
 
 export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelProps) {
-  const { messages, sendMessage, status } = useChat({
+  const { messages, sendMessage, status, stop } = useChat({
     transport: new DefaultChatTransport({
       api: '/api/appschat',
       body: { widgets: droppedWidgets, onEditWidget }
@@ -513,6 +513,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
             <PromptInputSubmit
               disabled={!input.trim() || status !== 'ready'}
               status={status}
+              onStop={stop}
             />
           </PromptInputToolbar>
         </PromptInput>

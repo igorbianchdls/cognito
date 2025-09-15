@@ -198,6 +198,7 @@ export const PromptInputButton = ({
 
 export type PromptInputSubmitProps = ComponentProps<typeof Button> & {
   status?: ChatStatus;
+  onStop?: () => void;
 };
 
 export const PromptInputSubmit = ({
@@ -205,7 +206,9 @@ export const PromptInputSubmit = ({
   variant = 'default',
   size = 'icon',
   status,
+  onStop,
   children,
+  onClick,
   ...props
 }: PromptInputSubmitProps) => {
   let Icon = <SendIcon className="size-4" />;
@@ -218,12 +221,21 @@ export const PromptInputSubmit = ({
     Icon = <XIcon className="size-4" />;
   }
 
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (status === 'streaming' && onStop) {
+      onStop();
+    } else if (onClick) {
+      onClick(e);
+    }
+  };
+
   return (
     <Button
       className={cn('gap-1.5 rounded-lg', className)}
       size={size}
       type="submit"
       variant={variant}
+      onClick={handleClick}
       {...props}
     >
       {children ?? Icon}
