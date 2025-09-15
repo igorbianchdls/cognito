@@ -1,6 +1,7 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import { bigQueryService } from '@/services/bigquery';
+import { GenerativeChart } from '@/components/tools/GenerativeChart';
 
 // Função para gerar SQL automaticamente baseado no tipo de gráfico
 const generateSQL = (tipo: string, x: string, y: string, tabela: string): string => {
@@ -13,6 +14,16 @@ const generateSQL = (tipo: string, x: string, y: string, tabela: string): string
     default:
       return `SELECT ${x}, ${y} FROM ${tabela} LIMIT 50`;
   }
+};
+
+// Função para processar dados BigQuery para formato dos charts
+const processDataForChart = (data: any[], x: string, y: string, tipo: string) => {
+  return data.map(row => ({
+    x: String(row[x] || 'N/A'),
+    y: Number(row[y] || row.count || 0),
+    label: String(row[x] || 'N/A'),
+    value: Number(row[y] || row.count || 0)
+  }));
 };
 
 export const gerarGrafico = tool({
@@ -45,17 +56,21 @@ export const gerarGrafico = tool({
       const data = result.data || [];
       console.log(`✅ Query executada com sucesso: ${data.length} registros`);
 
-      return {
-        success: true,
-        message: `✅ Gráfico ${tipo} criado: ${y} por ${x} da tabela ${tabela} (${data.length} registros)`,
-        sqlQuery,
-        data: data.slice(0, 10), // Mostrar apenas primeiros 10 registros
-        totalRecords: data.length,
-        chartType: tipo,
-        xColumn: x,
-        yColumn: y,
-        table: tabela
-      };
+      // Processar dados para formato dos charts
+      const processedData = processDataForChart(data, x, y, tipo);
+
+      // Retornar componente JSX (generative UI)
+      return (
+        <GenerativeChart
+          data={processedData}
+          chartType={tipo as 'bar' | 'line' | 'pie'}
+          title={`${y} por ${x}`}
+          xColumn={x}
+          yColumn={y}
+          sqlQuery={sqlQuery}
+          totalRecords={data.length}
+        />
+      );
     } catch (error) {
       console.error('❌ Erro na geração do gráfico:', error);
 
