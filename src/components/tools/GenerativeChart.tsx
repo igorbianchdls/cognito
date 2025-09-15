@@ -3,6 +3,16 @@
 import { BarChart } from '@/components/charts/BarChart';
 import { LineChart } from '@/components/charts/LineChart';
 import { PieChart } from '@/components/charts/PieChart';
+import {
+  Artifact,
+  ArtifactHeader,
+  ArtifactTitle,
+  ArtifactDescription,
+  ArtifactActions,
+  ArtifactAction,
+  ArtifactContent
+} from '@/components/ai-elements/artifact';
+import { CopyIcon, DownloadIcon, DatabaseIcon } from 'lucide-react';
 
 interface ChartDataPoint {
   x: string;
@@ -46,21 +56,64 @@ export function GenerativeChart({
     }
   };
 
+  // Handler para copiar dados do gráfico
+  const handleCopyData = async () => {
+    try {
+      const dataText = JSON.stringify(data, null, 2);
+      await navigator.clipboard.writeText(dataText);
+      console.log('Dados copiados para clipboard');
+    } catch (error) {
+      console.error('Erro ao copiar dados:', error);
+    }
+  };
+
+  // Handler para download como CSV
+  const handleDownload = () => {
+    const headers = ['x', 'y', 'label', 'value'];
+    const csvContent = [
+      headers.join(','),
+      ...data.map(row => `"${row.x}",${row.y},"${row.label}",${row.value}`)
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `chart-data-${Date.now()}.csv`;
+    link.click();
+  };
+
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4 max-w-2xl shadow-sm">
-      {/* Título do gráfico */}
-      <h3 className="font-semibold text-lg text-gray-800 mb-3">{title}</h3>
+    <Artifact>
+      <ArtifactHeader>
+        <div className="flex-1 min-w-0">
+          <ArtifactTitle>{title}</ArtifactTitle>
+          <ArtifactDescription>
+            📊 {totalRecords} registros • 🔍 {sqlQuery.length > 60 ? sqlQuery.substring(0, 60) + '...' : sqlQuery}
+          </ArtifactDescription>
+        </div>
+        <ArtifactActions>
+          <ArtifactAction
+            icon={CopyIcon}
+            tooltip="Copiar dados do gráfico"
+            onClick={handleCopyData}
+          />
+          <ArtifactAction
+            icon={DownloadIcon}
+            tooltip="Download como CSV"
+            onClick={handleDownload}
+          />
+          <ArtifactAction
+            icon={DatabaseIcon}
+            tooltip={`Tipo: ${chartType} • Colunas: ${xColumn} x ${yColumn}`}
+          />
+        </ArtifactActions>
+      </ArtifactHeader>
 
-      {/* Container do gráfico */}
-      <div className="h-64 mb-3">
-        {renderChart()}
-      </div>
-
-      {/* Informações adicionais */}
-      <div className="text-xs text-gray-500 space-y-1 border-t pt-2">
-        <p>📊 {totalRecords} registros encontrados</p>
-        <p className="font-mono text-gray-400 truncate">🔍 {sqlQuery}</p>
-      </div>
-    </div>
+      <ArtifactContent>
+        <div className="h-64">
+          {renderChart()}
+        </div>
+      </ArtifactContent>
+    </Artifact>
   );
 }
