@@ -86,13 +86,13 @@ const renderBigQueryInfo = (widget: DroppedWidget) => {
 
   // Handle Table widgets
   if (widget.type === 'table' && widget.tableConfig?.bigqueryData) {
-    const { selectedTable, columns } = widget.tableConfig.bigqueryData
+    const { selectedTable, selectedColumns } = widget.tableConfig.bigqueryData
     if (selectedTable) {
       return (
         <div className="space-y-1">
           <div className="text-sm font-medium">{selectedTable}</div>
           <div className="text-xs text-gray-600">
-            {columns?.selected?.length || 0} columns
+            {selectedColumns?.length || 0} columns
           </div>
         </div>
       )
