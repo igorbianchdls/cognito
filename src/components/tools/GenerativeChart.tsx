@@ -9,6 +9,7 @@ interface ChartDataPoint {
   y: number;
   label: string;
   value: number;
+  [key: string]: string | number | undefined;
 }
 
 interface GenerativeChartProps {
