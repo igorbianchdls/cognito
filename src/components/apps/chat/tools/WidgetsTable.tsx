@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Edit, MapPin, Maximize2 } from 'lucide-react'
+import { Maximize2 } from 'lucide-react'
 import { useStore } from '@nanostores/react'
 import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import { $kpisAsDropped } from '@/stores/apps/kpiStore'
@@ -149,16 +149,14 @@ export default function WidgetsTable({ summary, success }: WidgetsTableProps) {
   }
 
   return (
-    <div className="bg-white rounded-lg border border-blue-200 overflow-hidden">
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
       <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[200px]">Widget</TableHead>
-              <TableHead className="w-[120px]">Type</TableHead>
-              <TableHead className="w-[200px]">BigQuery Data</TableHead>
-              <TableHead className="w-[100px]">Position</TableHead>
-              <TableHead className="w-[100px]">Size</TableHead>
-              <TableHead className="w-[100px]">Actions</TableHead>
+              <TableHead className="w-[250px]">Widget</TableHead>
+              <TableHead className="w-[150px]">Type</TableHead>
+              <TableHead className="w-[250px]">BigQuery Data</TableHead>
+              <TableHead className="w-[120px]">Size</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -183,20 +181,9 @@ export default function WidgetsTable({ summary, success }: WidgetsTableProps) {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-1 text-sm">
-                    <MapPin className="w-3 h-3" />
-                    ({widget.x}, {widget.y})
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1 text-sm">
                     <Maximize2 className="w-3 h-3" />
                     {widget.w}×{widget.h}
                   </div>
-                </TableCell>
-                <TableCell>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <Edit className="w-3 h-3" />
-                  </Button>
                 </TableCell>
               </TableRow>
             ))}
