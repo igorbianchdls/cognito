@@ -9,6 +9,7 @@ import AICodeExecutor from './AICodeExecutor'
 import TablesListCustom from './tools/TablesListCustom'
 import TableSchemaCustom from './tools/TableSchemaCustom'
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
+import { Response } from '@/components/ai-elements/response'
 // import { widgetActions } from '@/stores/apps/widgetStore' // REMOVED: Only KPIs supported now
 import { kpiActions } from '@/stores/apps/kpiStore'
 import {
@@ -239,7 +240,7 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
             <div
               className={`p-3 text-sm ${
                 message.role === 'user'
-                  ? 'max-w-[80%] border border-gray-300 rounded-lg text-black'
+                  ? 'max-w-[80%] bg-black rounded-lg text-white'
                   : 'w-full bg-transparent text-gray-700'
               }`}
             >
@@ -247,7 +248,11 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                 {message.parts?.map((part, index) => {
                   if (part.type === 'text') {
                     const cleanText = removeJsonTags(part.text)
-                    return <span key={index}>{cleanText}</span>
+                    return (
+                      <Response key={index}>
+                        {cleanText}
+                      </Response>
+                    )
                   }
                   
                   if (part.type === 'tool-getCanvasWidgets') {
