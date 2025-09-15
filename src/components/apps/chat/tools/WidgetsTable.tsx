@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/table'
 import { Edit, MapPin, Maximize2 } from 'lucide-react'
 import { useStore } from '@nanostores/react'
+import type { DroppedWidget } from '@/types/apps/droppedWidget'
 import { $kpisAsDropped } from '@/stores/apps/kpiStore'
 import { $tablesAsDropped } from '@/stores/apps/tableStore'
 import { $barChartsAsDropped } from '@/stores/apps/barChartStore'
@@ -42,7 +43,7 @@ const getTypeName = (type: string) => {
   return type
 }
 
-const renderBigQueryInfo = (widget: any) => {
+const renderBigQueryInfo = (widget: DroppedWidget) => {
   // Handle KPI widgets
   if (widget.type === 'kpi' && widget.kpiConfig?.bigqueryData) {
     const { selectedTable, query } = widget.kpiConfig.bigqueryData
