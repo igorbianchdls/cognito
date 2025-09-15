@@ -35,6 +35,17 @@ export async function POST(req: Request) {
 
   const result = streamText({
     model: anthropic('claude-sonnet-4-20250514'),
+
+    // Enable Claude reasoning/thinking
+    providerOptions: {
+      anthropic: {
+        thinking: {
+          type: 'enabled',
+          budgetTokens: 12000
+        }
+      }
+    },
+
     system: `Você é um assistente de IA especializado em criar e atualizar widgets de dashboard com integração BigQuery.
 
 PROPÓSITO PRINCIPAL:

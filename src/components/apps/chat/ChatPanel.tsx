@@ -10,6 +10,7 @@ import TablesListCustom from './tools/TablesListCustom'
 import TableSchemaCustom from './tools/TableSchemaCustom'
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
 import { Response } from '@/components/ai-elements/response'
+import { Reasoning, ReasoningTrigger, ReasoningContent } from '@/components/ai-elements/reasoning'
 // import { widgetActions } from '@/stores/apps/widgetStore' // REMOVED: Only KPIs supported now
 import { kpiActions } from '@/stores/apps/kpiStore'
 import {
@@ -25,6 +26,13 @@ import { MicIcon, GlobeIcon } from 'lucide-react'
 interface ChatPanelProps {
   droppedWidgets: DroppedWidget[]
   onEditWidget: (widgetId: string, changes: Partial<DroppedWidget>) => void
+}
+
+interface ReasoningPart {
+  type: 'reasoning';
+  state: 'streaming' | 'complete';
+  content?: string;
+  text?: string;
 }
 
 interface JsonWidget {
@@ -253,6 +261,16 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                         {cleanText}
                       </Response>
                     )
+                  }
+
+                  if (part.type === 'reasoning') {
+                    const reasoningText = (part as ReasoningPart).content || (part as ReasoningPart).text || '';
+                    return (
+                      <Reasoning key={index} isStreaming={part.state === 'streaming'}>
+                        <ReasoningTrigger />
+                        <ReasoningContent>{reasoningText}</ReasoningContent>
+                      </Reasoning>
+                    );
                   }
                   
                   if (part.type === 'tool-getCanvasWidgets') {
