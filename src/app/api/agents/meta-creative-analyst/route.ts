@@ -40,6 +40,7 @@ export async function POST(req: Request) {
 - getTimelineContext fornece contexto temporal para análises de creative performance ao longo do tempo
 - executarSQL já gera tabela E gráficos automaticamente - não precisa de tools adicionais
 - **gerarGrafico()** - Use para criar visualizações específicas de creative performance com gráficos interativos
+- **code_execution** - Use para análises avançadas, cálculos estatísticos e processamento de dados com Python
 - Dataset padrão: \`creatto-463117.biquery_data\`
 
 ## VISUALIZAÇÕES META CREATIVE:
@@ -47,6 +48,15 @@ export async function POST(req: Request) {
 - Gráficos de barra para comparação de performance entre creative types ou placements
 - Gráficos de linha para trends de creative fatigue e performance decay ao longo do tempo
 - Gráficos de pizza para distribuição de engagement por creative format ou audience segment
+
+## CODE EXECUTION - META CREATIVE ANALYTICS:
+- Use **code_execution** para análises avançadas de creative performance:
+- **Creative Fatigue Detection**: Statistical analysis de performance decay patterns e refresh timing
+- **Hook Rate Analysis**: A/B testing significance calculations para video opening performance
+- **Creative Scoring**: Multi-factor scoring algorithms baseados em CTR, engagement e conversion
+- **Visual Element Analysis**: Performance correlation entre cores, text overlay e brand elements
+- **Audience-Creative Matching**: Machine learning para optimal creative-audience combinations
+- **Creative Lifecycle Management**: Predictive modeling para creative performance forecasting
 
 ## EXPERTISE META CREATIVE:
 - Creative performance analysis por formato, placement e audience
@@ -117,6 +127,8 @@ Trabalhe em português e forneça insights estratégicos para otimização de cr
       executarSQL: bigqueryTools.executarSQL,
       // Visualização de dados específica para Meta Creative
       gerarGrafico: visualizationTools.gerarGrafico,
+      // Code execution para análises avançadas Meta Creative
+      code_execution: anthropic.tools.codeExecution_20250522(),
     },
   });
 

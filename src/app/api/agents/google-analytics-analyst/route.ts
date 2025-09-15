@@ -1,6 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
+import * as visualizationTools from '@/tools/apps/visualization';
 
 export const maxDuration = 30;
 
@@ -28,7 +29,24 @@ export async function POST(req: Request) {
 - planAnalysis ajuda a criar queries inteligentes baseadas na pergunta do usuário
 - getTimelineContext fornece contexto temporal para análises de comportamento ao longo do tempo
 - executarSQL já gera tabela E gráficos automaticamente - não precisa de tools adicionais
+- **gerarGrafico()** - Use para criar visualizações específicas de métricas Google Analytics com gráficos interativos
+- **code_execution** - Use para análises avançadas, cálculos estatísticos e processamento de dados com Python
 - Dataset padrão: \`creatto-463117.biquery_data\`
+
+## VISUALIZAÇÕES GOOGLE ANALYTICS:
+- Use **gerarGrafico()** para criar gráficos de sessions, users, engagement rate por período ou source
+- Gráficos de barra para comparação de performance entre traffic sources ou pages
+- Gráficos de linha para trends de traffic e conversions ao longo do tempo
+- Gráficos de pizza para distribuição de traffic por channel ou device
+
+## CODE EXECUTION - GOOGLE ANALYTICS:
+- Use **code_execution** para análises avançadas de user behavior:
+- **Customer Journey Analysis**: Path analysis e touchpoint mapping com network analysis
+- **Cohort Analysis**: Advanced retention calculations e lifetime value modeling
+- **Attribution Modeling**: Multi-touch attribution algorithms e channel effectiveness
+- **Predictive Analytics**: User lifetime value prediction e churn probability modeling
+- **Statistical Testing**: A/B test significance e conversion rate optimization analysis
+- **Behavioral Segmentation**: Machine learning clustering para user segmentation
 
 ## EXPERTISE GOOGLE ANALYTICS:
 - Customer journey e user behavior patterns analysis
@@ -77,6 +95,10 @@ Trabalhe em português e forneça insights estratégicos para otimização da ex
       planAnalysis: bigqueryTools.planAnalysis,
       getTimelineContext: bigqueryTools.getTimelineContext,
       executarSQL: bigqueryTools.executarSQL,
+      // Visualização de dados específica para Google Analytics
+      gerarGrafico: visualizationTools.gerarGrafico,
+      // Code execution para análises avançadas Google Analytics
+      code_execution: anthropic.tools.codeExecution_20250522(),
     },
   });
 

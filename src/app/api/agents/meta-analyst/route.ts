@@ -40,6 +40,7 @@ export async function POST(req: Request) {
 - getTimelineContext fornece contexto temporal para análises de performance ao longo do tempo
 - executarSQL já gera tabela E gráficos automaticamente - não precisa de tools adicionais
 - **gerarGrafico()** - Use para criar visualizações específicas de métricas Meta Ads com gráficos interativos
+- **code_execution** - Use para análises avançadas, cálculos estatísticos e processamento de dados com Python
 - Dataset padrão: \`creatto-463117.biquery_data\`
 
 ## VISUALIZAÇÕES META ADS:
@@ -47,6 +48,15 @@ export async function POST(req: Request) {
 - Gráficos de barra para comparação de performance entre campanhas ou ad sets
 - Gráficos de linha para trends de ROAS e spend ao longo do tempo
 - Gráficos de pizza para distribuição de budget por placement ou objective
+
+## CODE EXECUTION - META ADS ANALYTICS:
+- Use **code_execution** para análises avançadas de performance Meta Ads:
+- **ROAS Optimization**: Calcular ROAS otimizado por audience segment com pandas
+- **Statistical Analysis**: Correlações entre spend, frequency e conversion rates
+- **Predictive Analytics**: Forecasting de performance baseado em historical data
+- **Custom KPIs**: Métricas personalizadas como efficiency ratios e scaling indicators
+- **A/B Testing**: Análise estatística de significance em creative/audience tests
+- **Budget Allocation**: Algoritmos de otimização de budget distribution
 
 ## EXPERTISE META ADS:
 - ROAS optimization e CPM analysis por placement e audience
@@ -108,6 +118,8 @@ Trabalhe em português e forneça insights estratégicos para otimização de ca
       executarSQL: bigqueryTools.executarSQL,
       // Visualização de dados específica para Meta Ads
       gerarGrafico: visualizationTools.gerarGrafico,
+      // Code execution para análises avançadas Meta Ads
+      code_execution: anthropic.tools.codeExecution_20250522(),
     },
   });
 

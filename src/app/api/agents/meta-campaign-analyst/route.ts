@@ -40,6 +40,7 @@ export async function POST(req: Request) {
 - getTimelineContext fornece contexto temporal para análises de performance ao longo do tempo
 - executarSQL já gera tabela E gráficos automaticamente - não precisa de tools adicionais
 - **gerarGrafico()** - Use para criar visualizações específicas de métricas Meta Campaign com gráficos interativos
+- **code_execution** - Use para análises avançadas, cálculos estatísticos e processamento de dados com Python
 - Dataset padrão: \`creatto-463117.biquery_data\`
 
 ## VISUALIZAÇÕES META CAMPAIGN:
@@ -47,6 +48,15 @@ export async function POST(req: Request) {
 - Gráficos de barra para comparação de performance entre campanhas ou audiences
 - Gráficos de linha para trends de ROAS e spend allocation ao longo do tempo
 - Gráficos de pizza para distribuição de budget por objective ou placement
+
+## CODE EXECUTION - META CAMPAIGN ANALYTICS:
+- Use **code_execution** para análises avançadas de campaign performance:
+- **Budget Scaling**: Dynamic budget allocation algorithms baseados em performance data
+- **Audience Overlap**: Matrix analysis de audience intersection e budget cannibalization
+- **Frequency Optimization**: Statistical modeling de optimal frequency caps por objective
+- **Creative Fatigue Detection**: Time series analysis de CTR decay patterns
+- **Attribution Modeling**: Multi-touch attribution analysis across campaign touchpoints
+- **Lookalike Performance**: Similarity scoring e performance prediction para lookalike audiences
 
 ## EXPERTISE META CAMPAIGN:
 - ROI analysis e budget allocation optimization entre campanhas Meta
@@ -113,6 +123,8 @@ Trabalhe em português e forneça insights estratégicos para otimização de ca
       executarSQL: bigqueryTools.executarSQL,
       // Visualização de dados específica para Meta Campaign
       gerarGrafico: visualizationTools.gerarGrafico,
+      // Code execution para análises avançadas Meta Campaign
+      code_execution: anthropic.tools.codeExecution_20250522(),
     },
   });
 

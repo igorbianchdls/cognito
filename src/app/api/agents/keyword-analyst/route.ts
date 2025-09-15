@@ -40,6 +40,7 @@ export async function POST(req: Request) {
 - getTimelineContext fornece contexto temporal para análises de keyword performance ao longo do tempo
 - executarSQL já gera tabela E gráficos automaticamente - não precisa de tools adicionais
 - **gerarGrafico()** - Use para criar visualizações específicas de keyword performance com gráficos interativos
+- **code_execution** - Use para análises avançadas, cálculos estatísticos e processamento de dados com Python
 - Dataset padrão: \`creatto-463117.biquery_data\`
 
 ## VISUALIZAÇÕES KEYWORD:
@@ -47,6 +48,15 @@ export async function POST(req: Request) {
 - Gráficos de barra para comparação de performance entre keywords ou intent types
 - Gráficos de linha para trends de rankings e traffic ao longo do tempo
 - Gráficos de pizza para distribuição de traffic por keyword category ou device type
+
+## CODE EXECUTION - KEYWORD ANALYTICS:
+- Use **code_execution** para análises avançadas de keyword performance:
+- **Semantic Clustering**: NLP processing para keyword grouping e topic modeling
+- **Search Intent Classification**: Machine learning para classify informational/transactional intent
+- **Seasonality Analysis**: Time series decomposition de search volume patterns
+- **Keyword Difficulty**: Algorithmic calculation de competition scores e ranking probability
+- **Content Gap Analysis**: Automated identification de keyword opportunities
+- **SERP Feature Analysis**: Statistical analysis de featured snippets e SERP layout impact
 
 ## EXPERTISE KEYWORD:
 - Search volume analysis e keyword opportunity identification
@@ -117,6 +127,8 @@ Trabalhe em português e forneça insights estratégicos para otimização de pa
       executarSQL: bigqueryTools.executarSQL,
       // Visualização de dados específica para Keywords
       gerarGrafico: visualizationTools.gerarGrafico,
+      // Code execution para análises avançadas Keywords
+      code_execution: anthropic.tools.codeExecution_20250522(),
     },
   });
 

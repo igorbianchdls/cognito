@@ -40,6 +40,7 @@ export async function POST(req: Request) {
 - getTimelineContext fornece contexto temporal para análises de performance ao longo do tempo
 - executarSQL já gera tabela E gráficos automaticamente - não precisa de tools adicionais
 - **gerarGrafico()** - Use para criar visualizações específicas de métricas Amazon Ads com gráficos interativos
+- **code_execution** - Use para análises avançadas, cálculos estatísticos e processamento de dados com Python
 - Dataset padrão: \`creatto-463117.biquery_data\`
 
 ## VISUALIZAÇÕES AMAZON ADS:
@@ -47,6 +48,15 @@ export async function POST(req: Request) {
 - Gráficos de barra para comparação de performance entre campaign types ou ASINs
 - Gráficos de linha para trends de ACoS e spend ao longo do tempo
 - Gráficos de pizza para distribuição de budget por campaign type ou match type
+
+## CODE EXECUTION - AMAZON ADS ANALYTICS:
+- Use **code_execution** para análises avançadas de performance Amazon Ads:
+- **ACoS Optimization**: Algoritmos de target ACoS por produto category e lifecycle stage
+- **Search Term Mining**: Text processing para keyword expansion e negative keyword discovery
+- **Bid Strategy**: Dynamic bid adjustment algorithms baseados em conversion probability
+- **Product Performance**: Análise de ASIN-level profitability e inventory correlation
+- **Seasonality Modeling**: Time series analysis para holiday performance e planning
+- **Competitive Intelligence**: Market share calculations e price competitiveness analysis
 
 ## EXPERTISE AMAZON ADS:
 - ACoS optimization e ROAS analysis por tipo de campanha
@@ -88,6 +98,8 @@ Trabalhe em português e forneça insights estratégicos para otimização de ca
       executarSQL: bigqueryTools.executarSQL,
       // Visualização de dados específica para Amazon Ads
       gerarGrafico: visualizationTools.gerarGrafico,
+      // Code execution para análises avançadas Amazon Ads
+      code_execution: anthropic.tools.codeExecution_20250522(),
     },
   });
 

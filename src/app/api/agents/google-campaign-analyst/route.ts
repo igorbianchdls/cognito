@@ -40,6 +40,7 @@ export async function POST(req: Request) {
 - getTimelineContext fornece contexto temporal para análises de performance ao longo do tempo
 - executarSQL já gera tabela E gráficos automaticamente - não precisa de tools adicionais
 - **gerarGrafico()** - Use para criar visualizações específicas de métricas Google Ads com gráficos interativos
+- **code_execution** - Use para análises avançadas, cálculos estatísticos e processamento de dados com Python
 - Dataset padrão: \`creatto-463117.biquery_data\`
 
 ## VISUALIZAÇÕES GOOGLE ADS:
@@ -47,6 +48,15 @@ export async function POST(req: Request) {
 - Gráficos de barra para comparação de performance entre campaign types ou ad groups
 - Gráficos de linha para trends de ROAS e spend ao longo do tempo
 - Gráficos de pizza para distribuição de budget por campaign type ou device
+
+## CODE EXECUTION - GOOGLE ADS ANALYTICS:
+- Use **code_execution** para análises avançadas de performance Google Ads:
+- **Bid Optimization**: Algoritmos de otimização de lances baseados em historical performance
+- **Quality Score Analysis**: Correlações entre Quality Score, CTR e CPC optimization
+- **Attribution Modeling**: Análises cross-campaign e customer journey mapping
+- **Keyword Performance**: Statistical analysis de long-tail vs broad match performance
+- **Budget Forecasting**: Predições de spend e conversions baseadas em seasonality
+- **Auction Insights**: Competitive analysis e market share calculations
 
 ## EXPERTISE GOOGLE ADS:
 - ROAS analysis e budget allocation optimization por tipo de campanha
@@ -99,6 +109,8 @@ Trabalhe em português e forneça insights estratégicos para otimização de ca
       executarSQL: bigqueryTools.executarSQL,
       // Visualização de dados específica para Google Ads
       gerarGrafico: visualizationTools.gerarGrafico,
+      // Code execution para análises avançadas Google Ads
+      code_execution: anthropic.tools.codeExecution_20250522(),
     },
   });
 

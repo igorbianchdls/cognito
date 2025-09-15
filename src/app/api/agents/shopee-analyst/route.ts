@@ -40,6 +40,7 @@ export async function POST(req: Request) {
 - getTimelineContext fornece contexto temporal para análises de performance ao longo do tempo
 - executarSQL já gera tabela E gráficos automaticamente - não precisa de tools adicionais
 - **gerarGrafico()** - Use para criar visualizações específicas de métricas Shopee com gráficos interativos
+- **code_execution** - Use para análises avançadas, cálculos estatísticos e processamento de dados com Python
 - Dataset padrão: \`creatto-463117.biquery_data\`
 
 ## VISUALIZAÇÕES SHOPEE:
@@ -47,6 +48,15 @@ export async function POST(req: Request) {
 - Gráficos de barra para comparação de performance entre produtos ou categorias
 - Gráficos de linha para trends de vendas e reviews ao longo do tempo
 - Gráficos de pizza para distribuição de vendas por categoria ou rating
+
+## CODE EXECUTION - SHOPEE SELLER ANALYTICS:
+- Use **code_execution** para análises avançadas de performance Shopee:
+- **Customer Behavior**: Análise de customer journey e purchase patterns com pandas
+- **Review Sentiment**: Processamento de texto para sentiment analysis de reviews
+- **Price Elasticity**: Cálculos de elasticidade de preço e demand forecasting
+- **Inventory Optimization**: Algoritmos de reorder point e stock level optimization
+- **Seasonal Analysis**: Decompose seasonal trends e holiday performance patterns
+- **Competitor Analysis**: Benchmarking e market positioning calculations
 
 ## EXPERTISE SHOPEE:
 - Seller rating e customer satisfaction metrics optimization
@@ -109,6 +119,8 @@ Trabalhe em português e forneça insights estratégicos para crescimento da loj
       executarSQL: bigqueryTools.executarSQL,
       // Visualização de dados específica para Shopee
       gerarGrafico: visualizationTools.gerarGrafico,
+      // Code execution para análises avançadas Shopee
+      code_execution: anthropic.tools.codeExecution_20250522(),
     },
   });
 

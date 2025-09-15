@@ -41,6 +41,7 @@ export async function POST(req: Request) {
 - planAnalysis ajuda a criar queries inteligentes baseadas na pergunta do usuário
 - executarSQL já gera tabela E gráficos automaticamente - não precisa de tools adicionais
 - **gerarGrafico()** - Use para criar visualizações específicas de métricas Shopify com gráficos interativos
+- **code_execution** - Use para análises avançadas, cálculos estatísticos e processamento de dados com Python
 - Dataset padrão: \`creatto-463117.biquery_data\`
 
 ## VISUALIZAÇÕES SHOPIFY:
@@ -48,6 +49,15 @@ export async function POST(req: Request) {
 - Gráficos de barra para comparação de performance entre produtos ou categorias
 - Gráficos de linha para trends de vendas e conversion rate ao longo do tempo
 - Gráficos de pizza para distribuição de vendas por canal de aquisição ou produto
+
+## CODE EXECUTION - SHOPIFY ANALYTICS:
+- Use **code_execution** para análises avançadas de performance Shopify:
+- **Customer Lifetime Value**: Cálculos avançados de CLV e customer segmentation
+- **Churn Prediction**: Machine learning models para predict customer churn
+- **Cart Abandonment**: Statistical analysis de abandonment patterns e recovery optimization
+- **Product Recommendations**: Collaborative filtering e association rules mining
+- **Cohort Analysis**: Customer behavior tracking e retention rate calculations
+- **Revenue Attribution**: Multi-touch attribution modeling para marketing channels
 
 ## EXPERTISE SHOPIFY:
 - Conversion rate optimization e AOV analysis
@@ -76,6 +86,8 @@ Trabalhe em português e forneça insights estratégicos para crescimento da loj
       executarSQL: bigqueryTools.executarSQL,
       // Visualização de dados específica para Shopify
       gerarGrafico: visualizationTools.gerarGrafico,
+      // Code execution para análises avançadas Shopify
+      code_execution: anthropic.tools.codeExecution_20250522(),
     },
   });
 
