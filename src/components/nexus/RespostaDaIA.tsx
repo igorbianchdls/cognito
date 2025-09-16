@@ -266,6 +266,7 @@ type ExecutarSQLToolInput = {
 
 type ExecutarSQLToolOutput = {
   sqlQuery: string;
+  explicacao?: string;
   datasetId: string;
   queryType: string;
   dryRun: boolean;
@@ -573,6 +574,7 @@ type ExecutarMultiplasSQLToolOutput = {
     executionTime?: number;
     sqlQuery: string;
     descricao?: string;
+    explicacao?: string;
     error?: string;
   }>;
   summary: {
@@ -1143,6 +1145,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               {sqlTool.state === 'output-available' && (
                 <SQLExecution
                   sqlQuery={(sqlTool.output as ExecutarSQLToolOutput).sqlQuery}
+                  explicacao={(sqlTool.output as ExecutarSQLToolOutput).explicacao}
                   datasetId={(sqlTool.output as ExecutarSQLToolOutput).datasetId}
                   queryType={(sqlTool.output as ExecutarSQLToolOutput).queryType}
                   dryRun={(sqlTool.output as ExecutarSQLToolOutput).dryRun}

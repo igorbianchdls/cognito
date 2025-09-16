@@ -23,6 +23,7 @@ interface QueryResult {
   executionTime?: number;
   sqlQuery: string;
   descricao?: string;
+  explicacao?: string;
   error?: string;
 }
 
@@ -88,6 +89,15 @@ function QueryCard({ result, index }: { result: QueryResult; index: number }) {
         </span>
         <h3 className="font-semibold text-gray-900">{result.nome}</h3>
       </div>
+
+      {/* Explicação */}
+      {result.explicacao && (
+        <div className="mb-3 p-2 bg-blue-50 border-l-4 border-blue-400 rounded">
+          <p className="text-blue-800 text-sm">
+            📊 {result.explicacao}
+          </p>
+        </div>
+      )}
 
       {/* Description */}
       {result.descricao && (

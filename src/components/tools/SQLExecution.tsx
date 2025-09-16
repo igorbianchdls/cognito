@@ -8,6 +8,7 @@ import { $lastQueryData } from '@/stores/apps/queryStore';
 
 interface SQLExecutionProps {
   sqlQuery?: string;
+  explicacao?: string;
   datasetId?: string;
   queryType?: string;
   dryRun?: boolean;
@@ -30,6 +31,7 @@ interface SQLExecutionProps {
 
 export default function SQLExecution({
   sqlQuery,
+  explicacao,
   datasetId,
   queryType,
   dryRun,
@@ -139,6 +141,14 @@ export default function SQLExecution({
 
   return (
     <div className="space-y-4">
+      {/* Explicação acima do SQL */}
+      {explicacao && (
+        <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
+          <p className="text-blue-800 text-sm">
+            📊 {explicacao}
+          </p>
+        </div>
+      )}
 
       {/* Validation Errors */}
       {validationErrors && validationErrors.length > 0 && (

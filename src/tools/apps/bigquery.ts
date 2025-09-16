@@ -154,10 +154,11 @@ export const executarSQL = tool({
   description: 'Execute custom SQL queries on BigQuery datasets with syntax validation',
   inputSchema: z.object({
     sqlQuery: z.string().describe('The SQL query to execute'),
+    explicacao: z.string().optional().describe('Explicação do que esta query vai analisar'),
     datasetId: z.string().optional().describe('Dataset ID to execute query against'),
     dryRun: z.boolean().optional().describe('Run query validation without executing')
   }),
-  execute: async ({ sqlQuery, datasetId, dryRun = false }) => {
+  execute: async ({ sqlQuery, explicacao, datasetId, dryRun = false }) => {
     console.log('📋 BigQuery executarSQL tool executed:', { sqlQuery, datasetId, dryRun });
     
     try {
@@ -182,6 +183,7 @@ export const executarSQL = tool({
           
           return {
             sqlQuery,
+            explicacao: explicacao,
             datasetId: datasetId || 'validation',
             queryType: queryType.toUpperCase(),
             dryRun: true,
@@ -199,6 +201,7 @@ export const executarSQL = tool({
         } catch (error) {
           return {
             sqlQuery,
+            explicacao: explicacao,
             datasetId: datasetId || 'validation',
             queryType: queryType.toUpperCase(),
             dryRun: true,
@@ -222,6 +225,7 @@ export const executarSQL = tool({
 
       return {
         sqlQuery,
+        explicacao: explicacao,
         datasetId: datasetId || 'default-dataset',
         queryType: queryType.toUpperCase(),
         dryRun: false,
@@ -241,6 +245,7 @@ export const executarSQL = tool({
       console.error('❌ Error executing SQL query:', error);
       return {
         sqlQuery,
+        explicacao: explicacao,
         datasetId: datasetId || 'default-dataset',
         queryType: sqlQuery.trim().toLowerCase().split(' ')[0].toUpperCase(),
         dryRun,
@@ -315,7 +320,8 @@ export const executarMultiplasSQL = tool({
     queries: z.array(z.object({
       nome: z.string().describe('Nome identificador da query'),
       sqlQuery: z.string().describe('Query SQL a executar'),
-      descricao: z.string().optional().describe('Descrição da análise')
+      descricao: z.string().optional().describe('Descrição da análise'),
+      explicacao: z.string().optional().describe('Explicação do que esta query vai analisar')
     })).describe('Array de queries SQL a executar'),
     datasetId: z.string().optional().describe('Dataset ID (padrão: biquery_data)')
   }),
@@ -351,6 +357,7 @@ export const executarMultiplasSQL = tool({
             success: true,
             sqlQuery: query.sqlQuery,
             descricao: query.descricao,
+            explicacao: query.explicacao,
             data: result.data || [],
             schema: result.schema || [],
             totalRows: result.data?.length || 0,
@@ -369,6 +376,7 @@ export const executarMultiplasSQL = tool({
             success: false,
             sqlQuery: query.sqlQuery,
             descricao: query.descricao,
+            explicacao: query.explicacao,
             data: [],
             schema: [],
             totalRows: 0,
