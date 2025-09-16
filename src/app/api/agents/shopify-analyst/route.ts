@@ -31,14 +31,11 @@ export async function POST(req: Request) {
 ## FLUXO DE TRABALHO OBRIGATÓRIO:
 1. **getTables()** - Primeiro descubra quais tabelas estão disponíveis no dataset
 2. **getTableSchema(tableName)** - Entenda a estrutura exata da tabela Shopify
-3. **planAnalysis(userQuery, tableName, schema)** - Crie um plano estratégico de análise
-4. **getTimelineContext(tableName, schema)** - Analise contexto temporal das colunas de data
-5. **executarSQL(query)** - Execute as queries com períodos temporais inteligentes
+3. **executarSQL(query)** - Execute as queries com períodos temporais inteligentes
 
 ## REGRAS IMPORTANTES:
 - NUNCA invente nomes de tabelas ou colunas
-- SEMPRE use o fluxo: getTables → getTableSchema → planAnalysis → executarSQL
-- planAnalysis ajuda a criar queries inteligentes baseadas na pergunta do usuário
+- SEMPRE use o fluxo: getTables → getTableSchema → executarSQL
 - executarSQL já gera tabela E gráficos automaticamente - não precisa de tools adicionais
 - **gerarGrafico()** - Use para criar visualizações específicas de métricas Shopify com gráficos interativos
 - **code_execution** - Use para análises avançadas, cálculos estatísticos e processamento de dados com Python
