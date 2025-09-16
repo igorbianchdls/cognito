@@ -82,24 +82,53 @@ export const planDashboard = tool({
         tableName
       );
 
-      const plan: DashboardPlan = {
-        dashboard_objective: objective,
-        table_analysis: fieldAnalysis,
-        suggested_widgets: suggestions,
-        layout_recommendations: layoutRecommendations,
-        implementation_notes: implementationNotes
+      // Generate overview for Task component
+      const overview = {
+        title: `IA Analisando Dados de ${tableName}`,
+        items: [
+          `Analisando tabela ${tableName}: ${fieldAnalysis.numeric_fields.length + fieldAnalysis.categorical_fields.length + fieldAnalysis.date_fields.length + fieldAnalysis.text_fields.length} colunas`,
+          `Campos identificados: ${fieldAnalysis.numeric_fields.slice(0,2).join(', ')} (numéricos), ${fieldAnalysis.categorical_fields.slice(0,2).join(', ')} (categóricos)`,
+          `Sugerindo ${suggestions.length} widgets baseados na estrutura de dados`,
+          `Queries otimizadas para performance`
+        ]
       };
+
+      // Convert suggestions to Task-compatible widgets with queries
+      const widgets = suggestions.map(widget => {
+        let title = '';
+        let query = '';
+
+        if (widget.type === 'kpi') {
+          title = `KPI: ${widget.title} para Monitorar Performance`;
+          query = `SELECT ${widget.calculation}(${widget.field}) as ${widget.field}_${widget.calculation?.toLowerCase()} FROM ${tableName}`;
+        } else if (widget.type === 'chart') {
+          if (widget.chartType === 'bar') {
+            title = `Bar Chart: ${widget.title} para Comparar Performance`;
+            query = `SELECT ${widget.xField}, ${widget.aggregation}(${widget.yField}) as total_${widget.yField}\nFROM ${tableName}\nGROUP BY ${widget.xField}\nORDER BY total_${widget.yField} DESC\nLIMIT 10`;
+          } else if (widget.chartType === 'line') {
+            title = `Line Chart: ${widget.title} para Analisar Tendências`;
+            query = `SELECT DATE_TRUNC(${widget.xField}, MONTH) as mes, ${widget.aggregation}(${widget.yField}) as total_${widget.yField}\nFROM ${tableName}\nGROUP BY mes\nORDER BY mes`;
+          } else if (widget.chartType === 'pie') {
+            title = `Pie Chart: ${widget.title} para Visualizar Distribuição`;
+            query = `SELECT ${widget.xField}, ${widget.aggregation}(${widget.yField}) as total_${widget.yField},\nROUND(${widget.aggregation}(${widget.yField}) * 100.0 / (SELECT ${widget.aggregation}(${widget.yField}) FROM ${tableName}), 2) as percentual\nFROM ${tableName}\nGROUP BY ${widget.xField}`;
+          }
+        } else if (widget.type === 'table') {
+          title = `Table: ${widget.title} para Análise Detalhada`;
+          query = `SELECT ${widget.columns?.join(', ')}\nFROM ${tableName}\nORDER BY ${widget.columns?.[0]} DESC\nLIMIT 50`;
+        }
+
+        return {
+          title,
+          query,
+          description: widget.reasoning
+        };
+      });
 
       return {
         success: true,
-        plan,
-        summary: `Dashboard plan created for ${tableName}: ${suggestions.length} widgets suggested (${suggestions.filter(s => s.priority === 'high').length} high priority)`,
-        next_steps: [
-          "1. Review suggested widgets and priorities",
-          "2. Use getTables to confirm table availability",
-          "3. Use getTableSchema to validate field names",
-          "4. Use manageWidgets to implement selected widgets"
-        ]
+        overview,
+        widgets,
+        summary: `Dashboard plan created for ${tableName}: ${suggestions.length} widgets suggested`
       };
 
     } catch (error) {
