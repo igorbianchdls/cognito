@@ -109,8 +109,6 @@ export default function ChecklistJira() {
                 </span>
               </div>
 
-              {getTaskIcon(analysis.title)}
-
               {getStatusBadge(analysis.status)}
 
               {/* Expansion Indicator */}
