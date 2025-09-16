@@ -26,6 +26,7 @@ interface GenerativeChartProps {
   data: ChartDataPoint[];
   chartType: 'bar' | 'line' | 'pie';
   title: string;
+  description?: string;
   xColumn: string;
   yColumn: string;
   sqlQuery: string;
@@ -36,6 +37,7 @@ export function GenerativeChart({
   data,
   chartType,
   title,
+  description,
   xColumn,
   yColumn,
   sqlQuery,
@@ -88,7 +90,7 @@ export function GenerativeChart({
         <div className="flex-1 min-w-0">
           <ArtifactTitle>{title}</ArtifactTitle>
           <ArtifactDescription>
-            📊 {totalRecords} registros • 🔍 {sqlQuery.length > 60 ? sqlQuery.substring(0, 60) + '...' : sqlQuery}
+            {description || `📊 ${totalRecords} registros • 🔍 ${sqlQuery.length > 60 ? sqlQuery.substring(0, 60) + '...' : sqlQuery}`}
           </ArtifactDescription>
         </div>
         <ArtifactActions>
