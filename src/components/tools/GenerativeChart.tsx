@@ -112,7 +112,7 @@ export function GenerativeChart({
       </ArtifactHeader>
 
       <ArtifactContent className="p-0">
-        <div style={{ height: '100%', minHeight: '400px' }}>
+        <div>
           {renderChart()}
         </div>
       </ArtifactContent>

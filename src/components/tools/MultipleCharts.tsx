@@ -105,7 +105,7 @@ export function MultipleCharts({
           </ArtifactHeader>
 
           <ArtifactContent className="p-0">
-            <div style={{ height: '100%', minHeight: '400px', padding: '16px' }}>
+            <div style={{ padding: '16px' }}>
               {renderChart(chart)}
 
               {/* Chart Metadata Footer */}
