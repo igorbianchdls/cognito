@@ -101,7 +101,7 @@ export function MultipleCharts({
   const failedCharts = charts.filter(chart => !chart.success);
 
   // Handler para copiar dados do gráfico
-  const handleCopyData = async (chartData: any[]) => {
+  const handleCopyData = async (chartData: Array<{x: string; y: number; label: string; value: number}>) => {
     try {
       const dataText = JSON.stringify(chartData, null, 2);
       await navigator.clipboard.writeText(dataText);
@@ -112,7 +112,7 @@ export function MultipleCharts({
   };
 
   // Handler para download como CSV
-  const handleDownload = (chartData: any[], title: string) => {
+  const handleDownload = (chartData: Array<{x: string; y: number; label: string; value: number}>, title: string) => {
     const headers = ['x', 'y', 'label', 'value'];
     const csvContent = [
       headers.join(','),
