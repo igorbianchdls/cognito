@@ -76,11 +76,23 @@ const renderChart = (chart: ChartData) => {
 
   switch (chart.chartType) {
     case 'bar':
-      return <BarChart data={chart.chartData} />;
+      return (
+        <div style={{ height: '400px', width: '100%' }}>
+          <BarChart data={chart.chartData} />
+        </div>
+      );
     case 'line':
-      return <LineChart data={chart.chartData} />;
+      return (
+        <div style={{ height: '400px', width: '100%' }}>
+          <LineChart data={chart.chartData} />
+        </div>
+      );
     case 'pie':
-      return <PieChart data={chart.chartData} />;
+      return (
+        <div style={{ height: '400px', width: '100%' }}>
+          <PieChart data={chart.chartData} />
+        </div>
+      );
     default:
       console.log('❌ TIPO INVÁLIDO:', chart.chartType);
       return <div style={{ padding: '20px', color: 'red' }}>ERRO: Tipo inválido {chart.chartType}</div>;
