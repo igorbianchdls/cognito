@@ -22,6 +22,7 @@ interface ChartData {
   chartType: 'bar' | 'line' | 'pie';
   title: string;
   description?: string;
+  explicacao?: string;
   xColumn?: string;
   yColumn?: string;
   aggregation?: string;
@@ -128,15 +129,26 @@ export function MultipleCharts({
 
       {/* Successful Charts - Multiple Independent Artifacts */}
       {successfulCharts.map((chart, index) => (
-        <Artifact key={index}>
-          <ArtifactHeader>
-            <div className="flex-1 min-w-0">
-              <ArtifactTitle>{chart.title}</ArtifactTitle>
-              {chart.description && (
-                <ArtifactDescription>{chart.description}</ArtifactDescription>
-              )}
+        <div key={index}>
+          {/* Explicação acima do Artifact */}
+          {chart.explicacao && (
+            <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
+              <p className="text-blue-800 text-sm">
+                📊 {chart.explicacao}
+              </p>
             </div>
-          </ArtifactHeader>
+          )}
+
+          {/* Artifact com gráfico */}
+          <Artifact>
+            <ArtifactHeader>
+              <div className="flex-1 min-w-0">
+                <ArtifactTitle>{chart.title}</ArtifactTitle>
+                {chart.description && (
+                  <ArtifactDescription>{chart.description}</ArtifactDescription>
+                )}
+              </div>
+            </ArtifactHeader>
 
           <ArtifactContent className="p-0">
             <div style={{ padding: '16px' }}>

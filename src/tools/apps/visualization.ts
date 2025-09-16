@@ -138,7 +138,8 @@ export const gerarMultiplosGraficos = tool({
       y: z.string().describe('Coluna Y'),
       agregacao: z.enum(['SUM', 'COUNT', 'AVG', 'MAX', 'MIN']).optional().describe('Função de agregação'),
       titulo: z.string().describe('Título do gráfico'),
-      descricao: z.string().optional().describe('Descrição do gráfico')
+      descricao: z.string().optional().describe('Descrição do gráfico'),
+      explicacao: z.string().optional().describe('Explicação do que este gráfico vai analisar')
     })).describe('Array de configurações de gráficos')
   }),
   execute: async ({ tabela, graficos }) => {
@@ -187,6 +188,7 @@ export const gerarMultiplosGraficos = tool({
             chartType: grafico.tipo,
             title: grafico.titulo,
             description: grafico.descricao,
+            explicacao: grafico.explicacao,
             xColumn: grafico.x,
             yColumn: grafico.y,
             aggregation: grafico.agregacao || (grafico.tipo === 'pie' ? 'COUNT' : 'SUM'),

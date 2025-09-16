@@ -523,6 +523,7 @@ type GerarMultiplosGraficosToolOutput = {
     chartType: 'bar' | 'line' | 'pie';
     title: string;
     description?: string;
+    explicacao?: string;
     xColumn?: string;
     yColumn?: string;
     aggregation?: string;
