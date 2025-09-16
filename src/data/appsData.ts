@@ -28,7 +28,7 @@ export const categories = [
   'All',
   'Fors',
   'Dasa', 
-  'Landing Pas',
+  'Landing Ps',
   'Apps & Games',
   'Components',
   'Login & Sign Up',
