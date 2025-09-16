@@ -8,7 +8,7 @@ import WidgetsTable from './tools/WidgetsTable'
 import AICodeExecutor from './AICodeExecutor'
 import TablesListCustom from './tools/TablesListCustom'
 import TableSchemaCustom from './tools/TableSchemaCustom'
-import DashboardPlanView, { DashboardPlan } from './tools/DashboardPlanView'
+import DashboardPlanView, { DashboardPlan, TaskOverview, TaskWidget } from './tools/DashboardPlanView'
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
 import { Response } from '@/components/ai-elements/response'
 import { Reasoning, ReasoningTrigger, ReasoningContent } from '@/components/ai-elements/reasoning'
@@ -499,9 +499,9 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                       input?: Record<string, unknown>
                       output?: {
                         success: boolean
-                        plan: DashboardPlan
+                        overview?: TaskOverview
+                        widgets?: TaskWidget[]
                         summary?: string
-                        next_steps?: string[]
                         error?: string
                       }
                       errorText?: string
