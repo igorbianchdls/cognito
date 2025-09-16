@@ -274,7 +274,17 @@ export default function UniversalBuilder({
           name: widgetConfig.name,
           config: {
             data: previewData,
-            dataSource: 'BigQuery'
+            dataSource: 'BigQuery',
+            bigqueryData: {
+              selectedTable: data.selectedTable,
+              selectedColumns: data.columns,
+              filters: data.filters,
+              query: `SELECT * FROM \`${data.selectedTable}\` LIMIT 1000`,
+              lastExecuted: new Date(),
+              isLoading: false,
+              error: null,
+              data: previewData
+            }
           }
         })
       } else {

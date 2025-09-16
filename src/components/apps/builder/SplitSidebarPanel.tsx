@@ -159,7 +159,12 @@ export default function SplitSidebarPanel({
           yAxis: [],
           chartType: 'bar',
           filters: selectedTable.config.bigqueryData?.filters || [],
-          columns: selectedTable.config.bigqueryData?.selectedColumns || [],
+          columns: selectedTable.config.bigqueryData?.selectedColumns ||
+                   selectedTable.config.columns?.map(col => ({
+                     name: col.accessorKey,
+                     type: col.type || 'string',
+                     mode: 'NULLABLE'
+                   })) || [],
           kpiValue: [],
           selectedTable: selectedTable.config.bigqueryData?.selectedTable || null
         })
