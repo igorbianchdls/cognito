@@ -137,7 +137,7 @@ export default function ChecklistJira() {
                     <span className="text-gray-800 font-medium">SQL Query:</span>
                     <div className="mt-1 text-gray-600">
                       SELECT * FROM analysis_{analysis.title.toLowerCase().replace(/\s+/g, '_')}
-                      WHERE date_range = "last_30_days"
+                      WHERE date_range = last_30_days
                       ORDER BY relevance DESC;
                     </div>
                   </div>
