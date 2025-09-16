@@ -1,6 +1,6 @@
 'use client';
 
-import { mockAnalyses } from './mockData';
+import { mockAnalyses, MockAnalysis } from './mockData';
 
 export default function ChecklistTerminal() {
   const getStatusSymbol = (status: string) => {
@@ -25,7 +25,7 @@ export default function ChecklistTerminal() {
     }
   };
 
-  const getOutput = (analysis: any) => {
+  const getOutput = (analysis: MockAnalysis) => {
     if (analysis.status === 'completed') {
       return `${analysis.rows} rows processed`;
     }
@@ -35,7 +35,7 @@ export default function ChecklistTerminal() {
     return 'depends_on: previous_task';
   };
 
-  const getEta = (analysis: any) => {
+  const getEta = (analysis: MockAnalysis) => {
     if (analysis.status === 'completed') {
       return `(${analysis.duration})`;
     }

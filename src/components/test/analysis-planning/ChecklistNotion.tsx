@@ -1,6 +1,6 @@
 'use client';
 
-import { mockAnalyses } from './mockData';
+import { mockAnalyses, MockAnalysis } from './mockData';
 
 export default function ChecklistNotion() {
   const getStatusIcon = (status: string) => {
@@ -12,7 +12,7 @@ export default function ChecklistNotion() {
     }
   };
 
-  const getStatusBadge = (analysis: any) => {
+  const getStatusBadge = (analysis: MockAnalysis) => {
     if (analysis.status === 'completed') {
       return <span className="text-xs text-green-600">✨ Concluído em {analysis.duration}</span>;
     }

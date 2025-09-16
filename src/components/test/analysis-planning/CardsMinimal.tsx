@@ -1,6 +1,6 @@
 'use client';
 
-import { mockAnalyses } from './mockData';
+import { mockAnalyses, MockAnalysis } from './mockData';
 
 export default function CardsMinimal() {
   const getStatusDots = (status: string, progress?: number) => {
@@ -21,7 +21,7 @@ export default function CardsMinimal() {
     }
   };
 
-  const getStatusValue = (analysis: any) => {
+  const getStatusValue = (analysis: MockAnalysis) => {
     if (analysis.status === 'completed') return `${(analysis.rows / 1000).toFixed(1)}k`;
     if (analysis.status === 'running') return `${analysis.progress}%`;
     return 'queue';
