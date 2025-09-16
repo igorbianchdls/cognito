@@ -1,6 +1,9 @@
 'use client'
 
 import { Table } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useStore } from '@nanostores/react'
+import { $selectedTable } from '@/stores/apps/tableStore'
 import DropZone from './DropZone'
 import type { BigQueryField } from './TablesExplorer'
 
@@ -13,13 +16,18 @@ interface TableBuilderData {
 interface TableBuilderProps {
   data: TableBuilderData
   onRemoveField: (dropZoneType: 'columns' | 'filters', fieldName: string) => void
+  onCreateOrUpdate?: () => void
+  showActionButton?: boolean
 }
 
 export default function TableBuilder({
   data,
-  onRemoveField
+  onRemoveField,
+  onCreateOrUpdate,
+  showActionButton = false
 }: TableBuilderProps) {
-  
+  const selectedTable = useStore($selectedTable)
+
   return (
     <div className="space-y-3">
       {/* Columns Drop Zone */}
@@ -43,6 +51,16 @@ export default function TableBuilder({
         acceptedTypes={['string', 'date', 'numeric', 'boolean']}
         onRemoveField={(fieldName) => onRemoveField('filters', fieldName)}
       />
+
+      {/* Action Button */}
+      {showActionButton && onCreateOrUpdate && (
+        <Button
+          onClick={onCreateOrUpdate}
+          className="w-full"
+        >
+          {selectedTable ? 'Update Table' : 'Create Table'}
+        </Button>
+      )}
     </div>
   )
 }

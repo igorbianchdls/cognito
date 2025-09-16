@@ -143,6 +143,91 @@ export default function UniversalBuilder({
     return 'Update Widget'
   }
 
+  // Handle table create/update
+  const handleTableCreateOrUpdate = () => {
+    if (!data.selectedTable) {
+      alert('Please select a table first')
+      return
+    }
+
+    if (data.columns.length === 0) {
+      alert('Please configure the required fields first')
+      return
+    }
+
+    // Generate widget configuration
+    const widgetConfig = {
+      id: `table-${Date.now()}`,
+      name: `${data.selectedTable} - table`,
+      type: 'table',
+      icon: getWidgetIcon('table'),
+      description: `table from ${data.selectedTable}`,
+      defaultWidth: getDefaultWidth('table'),
+      defaultHeight: getDefaultHeight('table'),
+      i: `widget-${Date.now()}`,
+      x: 0,
+      y: 0,
+      w: getDefaultWidth('table'),
+      h: getDefaultHeight('table'),
+      config: generateWidgetConfig(),
+      bigqueryData: (() => {
+        const relevantFields = getRelevantFields()
+        return {
+          chartType: relevantFields.chartType,
+          data: previewData,
+          xColumn: relevantFields.xColumn,
+          yColumn: relevantFields.yColumn,
+          query: previewQuery,
+          source: 'bigquery',
+          table: data.selectedTable,
+          lastUpdated: new Date().toISOString()
+        }
+      })()
+    }
+
+    if (selectedTable) {
+      // Update existing table
+      console.log('📊 Updating existing Table:', selectedTable.i)
+
+      tableActions.editTable(selectedTable.i, {
+        name: widgetConfig.name,
+        config: {
+          data: previewData,
+          dataSource: 'BigQuery',
+          bigqueryData: {
+            selectedTable: data.selectedTable,
+            selectedColumns: data.columns,
+            filters: data.filters,
+            query: `SELECT * FROM \`${data.selectedTable}\` LIMIT 1000`,
+            lastExecuted: new Date(),
+            isLoading: false,
+            error: null,
+            data: previewData
+          }
+        }
+      })
+    } else {
+      // Create new table
+      console.log('📊 Creating new Table')
+
+      const tableConfig = widgetConfig.config?.tableConfig || {}
+      tableActions.addTable({
+        name: widgetConfig.name,
+        icon: widgetConfig.icon,
+        description: widgetConfig.description,
+        position: { x: widgetConfig.x, y: widgetConfig.y },
+        size: { w: widgetConfig.w, h: widgetConfig.h },
+        config: {
+          ...tableConfig,
+          // Add BigQuery data to table config
+          ...(widgetConfig.bigqueryData ? {
+            dataSource: 'BigQuery'
+          } : {})
+        }
+      })
+    }
+  }
+
   // Handle adding widget to dashboard
   const handleAddToDashboard = () => {
     if (!data.selectedTable) {
@@ -266,47 +351,8 @@ export default function UniversalBuilder({
         })
       }
     } else if (data.selectedType === 'table') {
-      if (selectedTable) {
-        // Update existing table
-        console.log('📊 Updating existing Table:', selectedTable.i)
-        
-        tableActions.editTable(selectedTable.i, {
-          name: widgetConfig.name,
-          config: {
-            data: previewData,
-            dataSource: 'BigQuery',
-            bigqueryData: {
-              selectedTable: data.selectedTable,
-              selectedColumns: data.columns,
-              filters: data.filters,
-              query: `SELECT * FROM \`${data.selectedTable}\` LIMIT 1000`,
-              lastExecuted: new Date(),
-              isLoading: false,
-              error: null,
-              data: previewData
-            }
-          }
-        })
-      } else {
-        // Create new table
-        console.log('📊 Creating new Table')
-        
-        const tableConfig = widgetConfig.config?.tableConfig || {}
-        tableActions.addTable({
-          name: widgetConfig.name,
-          icon: widgetConfig.icon,
-          description: widgetConfig.description,
-          position: { x: widgetConfig.x, y: widgetConfig.y },
-          size: { w: widgetConfig.w, h: widgetConfig.h },
-          config: {
-            ...tableConfig,
-            // Add BigQuery data to table config
-            ...(widgetConfig.bigqueryData ? {
-              dataSource: 'BigQuery'
-            } : {})
-          }
-        })
-      }
+      // Table logic moved to handleTableCreateOrUpdate
+      handleTableCreateOrUpdate()
     } else if (data.selectedType === 'chart' && data.chartType === 'bar') {
       // Convert to BarChart format and use barChartActions
       const query = barChartActions.generateBarChartQuery(
@@ -870,6 +916,8 @@ export default function UniversalBuilder({
                   selectedTable: data.selectedTable
                 }}
                 onRemoveField={handleRemoveField}
+                onCreateOrUpdate={handleTableCreateOrUpdate}
+                showActionButton={true}
               />
             )}
 
