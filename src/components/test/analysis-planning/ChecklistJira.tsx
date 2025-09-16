@@ -1,7 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDownIcon, ChevronRightIcon } from 'lucide-react';
+import {
+  ChevronDownIcon,
+  ChevronRightIcon,
+  CheckCircle,
+  Clock,
+  Square,
+  BarChart3,
+  ShoppingBag,
+  Users,
+  TrendingUp,
+  Database,
+  DollarSign,
+  Activity
+} from 'lucide-react';
 import { mockAnalyses } from './mockData';
 
 export default function ChecklistJira() {
@@ -36,20 +49,20 @@ export default function ChecklistJira() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'completed': return '✅';
-      case 'running': return '🔄';
-      case 'pending': return '📋';
-      default: return '⭕';
+      case 'completed': return <CheckCircle className="w-5 h-5 text-green-600" />;
+      case 'running': return <Clock className="w-5 h-5 text-orange-500" />;
+      case 'pending': return <Square className="w-5 h-5 text-gray-400" />;
+      default: return <Square className="w-5 h-5 text-gray-400" />;
     }
   };
 
   const getTaskIcon = (title: string) => {
-    if (title.includes('Receita')) return '📊';
-    if (title.includes('Produto')) return '🛍️';
-    if (title.includes('Cliente')) return '👥';
-    if (title.includes('Retenção')) return '📈';
-    if (title.includes('Dashboard')) return '📊';
-    return '📋';
+    if (title.includes('Receita')) return <DollarSign className="w-5 h-5 text-green-600" />;
+    if (title.includes('Produto')) return <ShoppingBag className="w-5 h-5 text-blue-600" />;
+    if (title.includes('Cliente')) return <Users className="w-5 h-5 text-purple-600" />;
+    if (title.includes('Retenção')) return <TrendingUp className="w-5 h-5 text-orange-600" />;
+    if (title.includes('Dashboard')) return <BarChart3 className="w-5 h-5 text-indigo-600" />;
+    return <Database className="w-5 h-5 text-gray-600" />;
   };
 
   const completedTasks = mockAnalyses.filter(a => a.status === 'completed').length;
@@ -60,7 +73,8 @@ export default function ChecklistJira() {
     <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-2 flex items-center gap-2">
-          🎯 <span>SPRINT: Análise de Vendas Q4</span>
+          <BarChart3 className="w-5 h-5 text-blue-600" />
+          <span>SPRINT: Análise de Vendas Q4</span>
         </h3>
         <div className="flex items-center gap-4">
           <div className="flex-1 bg-gray-200 rounded-full h-3">
@@ -83,10 +97,10 @@ export default function ChecklistJira() {
               className="flex items-center gap-4 p-3 hover:bg-gray-50 transition-colors cursor-pointer"
               onClick={() => toggleExpanded(analysis.id)}
             >
-              <span className="text-lg">{getStatusIcon(analysis.status)}</span>
+              {getStatusIcon(analysis.status)}
 
-              <span className="font-mono text-sm text-gray-600 w-16">
-                AN-{String(index + 1).padStart(3, '0')}
+              <span className="font-mono text-sm text-gray-600 w-8 text-center">
+                {String(index + 1).padStart(2, '0')}
               </span>
 
               <div className="flex-1 min-w-0">
@@ -95,7 +109,7 @@ export default function ChecklistJira() {
                 </span>
               </div>
 
-              <span className="text-lg">{getTaskIcon(analysis.title)}</span>
+              {getTaskIcon(analysis.title)}
 
               {getStatusBadge(analysis.status)}
 
@@ -120,16 +134,28 @@ export default function ChecklistJira() {
 
                   <div className="flex gap-4 text-xs text-gray-600">
                     {analysis.duration && (
-                      <span>⏱️ Executado em: {analysis.duration}</span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        Executado em: {analysis.duration}
+                      </span>
                     )}
                     {analysis.estimation && (
-                      <span>⏱️ Tempo estimado: {analysis.estimation}</span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        Tempo estimado: {analysis.estimation}
+                      </span>
                     )}
                     {analysis.rows && (
-                      <span>📊 Registros: {analysis.rows.toLocaleString()}</span>
+                      <span className="flex items-center gap-1">
+                        <Database className="w-3 h-3" />
+                        Registros: {analysis.rows.toLocaleString()}
+                      </span>
                     )}
                     {analysis.progress && (
-                      <span>📈 Progresso: {analysis.progress}%</span>
+                      <span className="flex items-center gap-1">
+                        <Activity className="w-3 h-3" />
+                        Progresso: {analysis.progress}%
+                      </span>
                     )}
                   </div>
 
@@ -151,10 +177,12 @@ export default function ChecklistJira() {
       <div className="mt-6 p-4 bg-blue-50 rounded-lg">
         <div className="flex items-center justify-between text-sm">
           <span className="flex items-center gap-2">
-            🎉 <span className="font-medium">Burndown:</span> On track
+            <TrendingUp className="w-4 h-4 text-green-600" />
+            <span className="font-medium">Burndown:</span> On track
           </span>
           <span className="flex items-center gap-2">
-            ⚡ <span className="font-medium">Velocity:</span> 2.1/day
+            <Activity className="w-4 h-4 text-blue-600" />
+            <span className="font-medium">Velocity:</span> 2.1/day
           </span>
         </div>
       </div>
