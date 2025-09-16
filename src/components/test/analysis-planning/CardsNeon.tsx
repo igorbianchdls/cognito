@@ -65,12 +65,12 @@ export default function CardsNeon() {
               <div className="mb-2">
                 <div className="flex justify-between text-xs font-mono text-orange-300 mb-1">
                   <span>PROGRESS</span>
-                  <span>{analysis.progress}%</span>
+                  <span>{analysis.progress || 0}%</span>
                 </div>
                 <div className="w-full bg-black/50 border border-orange-400/50 rounded h-2">
                   <div
                     className="bg-gradient-to-r from-orange-500 to-yellow-400 h-full rounded transition-all duration-500"
-                    style={{ width: `${analysis.progress}%` }}
+                    style={{ width: `${analysis.progress || 0}%` }}
                   />
                 </div>
               </div>
@@ -78,8 +78,8 @@ export default function CardsNeon() {
 
             <div className="text-center">
               <span className="font-mono text-xs font-bold text-cyan-200">
-                {analysis.status === 'completed' && `>> ${analysis.rows}k <<`}
-                {analysis.status === 'running' && `>> ${analysis.progress}% <<`}
+                {analysis.status === 'completed' && `>> ${analysis.rows || 0}k <<`}
+                {analysis.status === 'running' && `>> ${analysis.progress || 0}% <<`}
                 {analysis.status === 'pending' && '>> WAIT <<'}
               </span>
             </div>

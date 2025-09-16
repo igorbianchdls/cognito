@@ -22,8 +22,8 @@ export default function CardsMinimal() {
   };
 
   const getStatusValue = (analysis: MockAnalysis) => {
-    if (analysis.status === 'completed') return `${(analysis.rows / 1000).toFixed(1)}k`;
-    if (analysis.status === 'running') return `${analysis.progress}%`;
+    if (analysis.status === 'completed') return `${((analysis.rows || 0) / 1000).toFixed(1)}k`;
+    if (analysis.status === 'running') return `${analysis.progress || 0}%`;
     return 'queue';
   };
 

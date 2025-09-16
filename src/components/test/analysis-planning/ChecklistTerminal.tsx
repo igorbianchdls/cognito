@@ -27,10 +27,10 @@ export default function ChecklistTerminal() {
 
   const getOutput = (analysis: MockAnalysis) => {
     if (analysis.status === 'completed') {
-      return `${analysis.rows} rows processed`;
+      return `${analysis.rows || 0} rows processed`;
     }
     if (analysis.status === 'running') {
-      return `${analysis.progress}% complete`;
+      return `${analysis.progress || 0}% complete`;
     }
     return 'depends_on: previous_task';
   };
@@ -92,10 +92,10 @@ export default function ChecklistTerminal() {
                 <div className="flex gap-2">
                   <span className="text-gray-400">└── progress:</span>
                   <span className="text-yellow-400">
-                    {'█'.repeat(Math.floor(analysis.progress! / 10))}
-                    {'░'.repeat(10 - Math.floor(analysis.progress! / 10))}
+                    {'█'.repeat(Math.floor((analysis.progress || 0) / 10))}
+                    {'░'.repeat(10 - Math.floor((analysis.progress || 0) / 10))}
                     {' '}
-                    {analysis.progress}%
+                    {analysis.progress || 0}%
                   </span>
                 </div>
               )}

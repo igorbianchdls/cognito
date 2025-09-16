@@ -61,14 +61,14 @@ export default function CardsMaterial() {
                 <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
                   <div
                     className="bg-orange-500 h-2 rounded-full transition-all duration-500"
-                    style={{ width: `${analysis.progress}%` }}
+                    style={{ width: `${analysis.progress || 0}%` }}
                   />
                 </div>
               )}
 
               <div className="text-xs font-medium text-gray-700">
-                {analysis.status === 'completed' && `${analysis.rows} linhas`}
-                {analysis.status === 'running' && `${analysis.progress}% feito`}
+                {analysis.status === 'completed' && `${analysis.rows || 0} linhas`}
+                {analysis.status === 'running' && `${analysis.progress || 0}% feito`}
                 {analysis.status === 'pending' && 'Na fila'}
               </div>
             </div>

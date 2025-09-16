@@ -17,7 +17,7 @@ export default function ChecklistNotion() {
       return <span className="text-xs text-green-600">✨ Concluído em {analysis.duration}</span>;
     }
     if (analysis.status === 'running') {
-      return <span className="text-xs text-orange-600">⚡ Executando... {analysis.progress}% completo</span>;
+      return <span className="text-xs text-orange-600">⚡ Executando... {analysis.progress || 0}% completo</span>;
     }
     return <span className="text-xs text-gray-500">⏳ Aguardando análise anterior</span>;
   };
@@ -53,7 +53,7 @@ export default function ChecklistNotion() {
                     <div className="mt-2 w-full bg-gray-200 rounded-full h-1.5">
                       <div
                         className="bg-blue-500 h-1.5 rounded-full transition-all duration-500"
-                        style={{ width: `${analysis.progress}%` }}
+                        style={{ width: `${analysis.progress || 0}%` }}
                       />
                     </div>
                   )}
