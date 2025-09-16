@@ -526,11 +526,11 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                         </Tool>
                         {planTool.state === 'output-available' && planTool.output && (
                           <DashboardPlanView
-                            plan={planTool.output.plan}
+                            overview={planTool.output.overview}
+                            widgets={planTool.output.widgets}
                             success={planTool.output.success}
                             error={planTool.output.error}
                             summary={planTool.output.summary}
-                            next_steps={planTool.output.next_steps}
                           />
                         )}
                       </div>
