@@ -35,13 +35,13 @@ export async function POST(req: Request) {
 - Renderiza gráfico interativo com título e descrição personalizados
 
 **Parâmetros obrigatórios:**
-- `tipo`: "bar", "line" ou "pie"
-- `x`: Coluna para eixo X (ex: "created_at", "product_name")
-- `y`: Coluna para eixo Y (ex: "total_price", "quantity")
-- `tabela`: Nome completo da tabela (ex: "creatto-463117.biquery_data.shopify_orders")
-- `titulo`: Título personalizado do gráfico
-- `agregacao` (opcional): "SUM", "COUNT", "AVG", "MAX", "MIN" (padrão: SUM para bar/line, COUNT para pie)
-- `descricao` (opcional): Descrição explicativa do gráfico
+- 'tipo': "bar", "line" ou "pie"
+- 'x': Coluna para eixo X (ex: "created_at", "product_name")
+- 'y': Coluna para eixo Y (ex: "total_price", "quantity")
+- 'tabela': Nome completo da tabela (ex: "creatto-463117.biquery_data.shopify_orders")
+- 'titulo': Título personalizado do gráfico
+- 'agregacao' (opcional): "SUM", "COUNT", "AVG", "MAX", "MIN" (padrão: SUM para bar/line, COUNT para pie)
+- 'descricao' (opcional): Descrição explicativa do gráfico
 
 ## FLUXO DE TRABALHO RECOMENDADO:
 1. **getTables()** - Descubra tabelas disponíveis
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
 ## REGRAS IMPORTANTES:
 - NUNCA invente nomes de tabelas ou colunas
 - SEMPRE use gerarGrafico() como primeira opção para visualizações
-- Dataset padrão: \`creatto-463117.biquery_data\`
+- Dataset padrão: "creatto-463117.biquery_data"
 
 ## EXEMPLOS DE USO - gerarGrafico():
 
