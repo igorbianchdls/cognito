@@ -8,8 +8,11 @@ import {
   ArtifactHeader,
   ArtifactTitle,
   ArtifactDescription,
+  ArtifactActions,
+  ArtifactAction,
   ArtifactContent
 } from '@/components/ai-elements/artifact';
+import { CopyIcon, DownloadIcon, DatabaseIcon } from 'lucide-react';
 
 interface ChartData {
   success: boolean;
@@ -77,23 +80,11 @@ const renderChart = (chart: ChartData) => {
 
   switch (chart.chartType) {
     case 'bar':
-      return (
-        <div style={{ height: '400px', width: '100%' }}>
-          <BarChart data={chart.chartData} />
-        </div>
-      );
+      return <BarChart data={chart.chartData} />;
     case 'line':
-      return (
-        <div style={{ height: '400px', width: '100%' }}>
-          <LineChart data={chart.chartData} />
-        </div>
-      );
+      return <LineChart data={chart.chartData} />;
     case 'pie':
-      return (
-        <div style={{ height: '400px', width: '100%' }}>
-          <PieChart data={chart.chartData} />
-        </div>
-      );
+      return <PieChart data={chart.chartData} />;
     default:
       console.log('❌ TIPO INVÁLIDO:', chart.chartType);
       return <div style={{ padding: '20px', color: 'red' }}>ERRO: Tipo inválido {chart.chartType}</div>;
@@ -108,6 +99,32 @@ export function MultipleCharts({
 }: MultipleChartsProps) {
   const successfulCharts = charts.filter(chart => chart.success && chart.chartData);
   const failedCharts = charts.filter(chart => !chart.success);
+
+  // Handler para copiar dados do gráfico
+  const handleCopyData = async (chartData: any[]) => {
+    try {
+      const dataText = JSON.stringify(chartData, null, 2);
+      await navigator.clipboard.writeText(dataText);
+      console.log('Dados copiados para clipboard');
+    } catch (error) {
+      console.error('Erro ao copiar dados:', error);
+    }
+  };
+
+  // Handler para download como CSV
+  const handleDownload = (chartData: any[], title: string) => {
+    const headers = ['x', 'y', 'label', 'value'];
+    const csvContent = [
+      headers.join(','),
+      ...chartData.map(row => `"${row.x}",${row.y},"${row.label}",${row.value}`)
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${title.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.csv`;
+    link.click();
+  };
 
   return (
     <div className="space-y-6">
@@ -144,24 +161,31 @@ export function MultipleCharts({
             <ArtifactHeader>
               <div className="flex-1 min-w-0">
                 <ArtifactTitle>{chart.title}</ArtifactTitle>
-                {chart.description && (
-                  <ArtifactDescription>{chart.description}</ArtifactDescription>
-                )}
+                <ArtifactDescription>
+                  {chart.description || `📊 ${chart.totalRecords || 0} registros • 🔍 ${chart.sqlQuery && chart.sqlQuery.length > 60 ? chart.sqlQuery.substring(0, 60) + '...' : chart.sqlQuery || 'Query executada'}`}
+                </ArtifactDescription>
               </div>
+              <ArtifactActions>
+                <ArtifactAction
+                  icon={CopyIcon}
+                  tooltip="Copiar dados do gráfico"
+                  onClick={() => chart.chartData && handleCopyData(chart.chartData)}
+                />
+                <ArtifactAction
+                  icon={DownloadIcon}
+                  tooltip="Download como CSV"
+                  onClick={() => chart.chartData && handleDownload(chart.chartData, chart.title)}
+                />
+                <ArtifactAction
+                  icon={DatabaseIcon}
+                  tooltip={`Tipo: ${chart.chartType} • Colunas: ${chart.xColumn || 'x'} x ${chart.yColumn || 'y'}`}
+                />
+              </ArtifactActions>
             </ArtifactHeader>
 
             <ArtifactContent className="p-0">
-              <div style={{ padding: '16px' }}>
+              <div style={{ height: '400px', width: '100%' }}>
                 {renderChart(chart)}
-
-                {/* Chart Metadata Footer */}
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <div className="flex justify-between items-center text-xs text-gray-500">
-                    <span>Registros: {chart.totalRecords || 0}</span>
-                    <span>Tipo: {chart.chartType}</span>
-                    <span>Agregação: {chart.aggregation}</span>
-                  </div>
-                </div>
               </div>
             </ArtifactContent>
           </Artifact>
