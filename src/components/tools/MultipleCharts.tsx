@@ -1,6 +1,8 @@
 'use client';
 
-import { GenerativeChart } from './GenerativeChart';
+import { BarChart } from '@/components/charts/BarChart';
+import { LineChart } from '@/components/charts/LineChart';
+import { PieChart } from '@/components/charts/PieChart';
 import {
   Artifact,
   ArtifactHeader,
@@ -47,22 +49,19 @@ interface MultipleChartsProps {
   };
 }
 
-// Function to determine optimal grid layout based on chart count
-const getGridLayout = (count: number): string => {
-  switch (count) {
-    case 1:
-      return 'grid-cols-1';
-    case 2:
-      return 'grid-cols-1 lg:grid-cols-2';
-    case 3:
-      return 'grid-cols-1 lg:grid-cols-3';
-    case 4:
-      return 'grid-cols-1 md:grid-cols-2';
-    case 5:
-    case 6:
-      return 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3';
+// Render chart component based on type
+const renderChart = (chart: ChartData) => {
+  if (!chart.chartData) return null;
+
+  switch (chart.chartType) {
+    case 'bar':
+      return <BarChart data={chart.chartData} />;
+    case 'line':
+      return <LineChart data={chart.chartData} />;
+    case 'pie':
+      return <PieChart data={chart.chartData} />;
     default:
-      return 'grid-cols-1 md:grid-cols-2 xl:grid-cols-3';
+      return null;
   }
 };
 
@@ -75,79 +74,84 @@ export function MultipleCharts({
   const successfulCharts = charts.filter(chart => chart.success && chart.chartData);
   const failedCharts = charts.filter(chart => !chart.success);
 
-  const gridLayout = getGridLayout(successfulCharts.length);
-
   return (
-    <Artifact>
-      <ArtifactHeader>
-        <div className="flex-1 min-w-0">
-          <ArtifactTitle>{dashboardTitle}</ArtifactTitle>
-          <ArtifactDescription>
-            📊 {summary.successful} de {summary.total} gráficos • 📅 {new Date(metadata.generatedAt).toLocaleString('pt-BR')}
-          </ArtifactDescription>
+    <div className="space-y-6">
+      {/* Success Summary */}
+      {summary.successful > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center gap-2">
+            <span className="text-blue-600">📊</span>
+            <span className="font-medium text-blue-800">
+              {dashboardTitle}
+            </span>
+          </div>
+          <div className="text-blue-700 text-sm mt-1">
+            {summary.successful} de {summary.total} gráficos gerados • 📅 {new Date(metadata.generatedAt).toLocaleString('pt-BR')}
+            {summary.failed > 0 && ` • ${summary.failed} erro${summary.failed !== 1 ? 's' : ''}`}
+          </div>
         </div>
-      </ArtifactHeader>
+      )}
 
-      <ArtifactContent className="p-0">
-        <div style={{ minHeight: '600px', padding: '16px' }}>
-          {/* Success Summary */}
-          {summary.successful > 0 && (
-            <div className="mb-6">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-center gap-2">
-                  <span className="text-green-600">✅</span>
-                  <span className="font-medium text-green-800">
-                    Dashboard gerado com sucesso
-                  </span>
-                </div>
-                <div className="text-green-700 text-sm mt-1">
-                  {summary.successful} gráfico{summary.successful !== 1 ? 's' : ''} de análise Shopify
-                  {summary.failed > 0 && ` • ${summary.failed} erro${summary.failed !== 1 ? 's' : ''}`}
+      {/* Successful Charts - Multiple Independent Artifacts */}
+      {successfulCharts.map((chart, index) => (
+        <Artifact key={index}>
+          <ArtifactHeader>
+            <div className="flex-1 min-w-0">
+              <ArtifactTitle>{chart.title}</ArtifactTitle>
+              {chart.description && (
+                <ArtifactDescription>{chart.description}</ArtifactDescription>
+              )}
+            </div>
+          </ArtifactHeader>
+
+          <ArtifactContent className="p-0">
+            <div style={{ minHeight: '400px', padding: '16px' }}>
+              {renderChart(chart)}
+
+              {/* Chart Metadata Footer */}
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="flex justify-between items-center text-xs text-gray-500">
+                  <span>Registros: {chart.totalRecords || 0}</span>
+                  <span>Tipo: {chart.chartType}</span>
+                  <span>Agregação: {chart.aggregation}</span>
                 </div>
               </div>
             </div>
-          )}
+          </ArtifactContent>
+        </Artifact>
+      ))}
 
-          {/* Charts Grid */}
-          {successfulCharts.length > 0 && (
-            <div className={`grid ${gridLayout} gap-6 mb-6`}>
-              {successfulCharts.map((chart, index) => (
-                <div key={index} className="min-h-[400px]">
-                  <GenerativeChart
-                    data={chart.chartData!}
-                    chartType={chart.chartType}
-                    title={chart.title}
-                    description={chart.description}
-                    xColumn={chart.xColumn || ''}
-                    yColumn={chart.yColumn || ''}
-                    sqlQuery={chart.sqlQuery || ''}
-                    totalRecords={chart.totalRecords || 0}
-                  />
-                </div>
-              ))}
+      {/* Failed Charts */}
+      {failedCharts.map((chart, index) => (
+        <Artifact key={`error-${index}`}>
+          <ArtifactHeader>
+            <div className="flex-1 min-w-0">
+              <ArtifactTitle>{chart.title}</ArtifactTitle>
+              <ArtifactDescription>Erro na geração do gráfico</ArtifactDescription>
             </div>
-          )}
+          </ArtifactHeader>
 
-          {/* Failed Charts */}
-          {failedCharts.length > 0 && (
-            <div className="space-y-3">
-              <h4 className="text-sm font-medium text-gray-900 mb-3">
-                Gráficos com erro ({failedCharts.length}):
-              </h4>
-              {failedCharts.map((chart, index) => (
-                <div key={`error-${index}`} className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <div className="flex items-center gap-2">
-                    <span className="text-red-500">⚠️</span>
-                    <span className="font-medium text-red-800">{chart.title}</span>
-                  </div>
-                  <p className="text-red-700 text-sm mt-1">{chart.error}</p>
-                </div>
-              ))}
+          <ArtifactContent>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <div className="flex items-center gap-2">
+                <span className="text-red-500">⚠️</span>
+                <span className="font-medium text-red-800">Falha na execução</span>
+              </div>
+              <p className="text-red-700 text-sm mt-1">{chart.error}</p>
             </div>
-          )}
+          </ArtifactContent>
+        </Artifact>
+      ))}
 
-          {/* No Charts Available */}
-          {successfulCharts.length === 0 && failedCharts.length === 0 && (
+      {/* No Charts Available */}
+      {successfulCharts.length === 0 && failedCharts.length === 0 && (
+        <Artifact>
+          <ArtifactHeader>
+            <ArtifactTitle>Dashboard Shopify</ArtifactTitle>
+            <ArtifactDescription>Nenhum gráfico disponível</ArtifactDescription>
+          </ArtifactHeader>
+
+          <ArtifactContent>
             <div className="text-center py-12">
               <div className="text-gray-400 text-6xl mb-4">📊</div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -157,17 +161,17 @@ export function MultipleCharts({
                 Não foi possível gerar gráficos para este dashboard.
               </p>
             </div>
-          )}
+          </ArtifactContent>
+        </Artifact>
+      )}
 
-          {/* Metadata Footer */}
-          <div className="mt-8 pt-4 border-t border-gray-200">
-            <div className="flex justify-between items-center text-xs text-gray-500">
-              <span>Tabela: {summary.table}</span>
-              <span>Fonte: {metadata.dataSource}</span>
-            </div>
-          </div>
+      {/* Global Metadata Footer */}
+      <div className="text-center text-xs text-gray-500 pt-4 border-t border-gray-200">
+        <div className="flex justify-between items-center">
+          <span>Tabela: {summary.table}</span>
+          <span>Fonte: {metadata.dataSource}</span>
         </div>
-      </ArtifactContent>
-    </Artifact>
+      </div>
+    </div>
   );
 }
