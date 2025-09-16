@@ -23,6 +23,7 @@ import TableCreation from '../tools/TableCreation';
 import { KPICard } from '../widgets/KPICard';
 import WebPreviewCard from '../tools/WebPreviewCard';
 import PlanAnalysis from '../tools/PlanAnalysis';
+import { TaskOverview, TaskWidget } from '../apps/chat/tools/DashboardPlanView';
 import TimelineContext from '../tools/TimelineContext';
 import { GenerativeChart } from '../tools/GenerativeChart';
 import CodeExecutionResult from '../tools/CodeExecutionResult';
@@ -387,29 +388,11 @@ type PlanAnalysisToolInput = {
 };
 
 type PlanAnalysisToolOutput = {
-  success?: boolean;
+  success: boolean;
+  overview?: TaskOverview;
+  widgets?: TaskWidget[];
   error?: string;
-  analysisType?: string;
-  tableName?: string;
-  totalColumns?: number;
-  recommendedQueries?: Array<{
-    purpose: string;
-    description: string;
-    suggestedSQL: string;
-  }>;
-  keyColumns?: {
-    dateColumn?: string;
-    revenueColumn?: string;
-    productColumn?: string;
-  };
-  detectedCapabilities?: {
-    hasDateData?: boolean;
-    hasNumericData?: boolean;
-    hasTextData?: boolean;
-    canAnalyzeProducts?: boolean;
-    canAnalyzeTemporal?: boolean;
-  };
-  nextStep?: string;
+  summary?: string;
 };
 
 type TimelineContextToolInput = {
@@ -1229,15 +1212,11 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {planTool.state === 'output-available' && (
                 <PlanAnalysis
+                  overview={(planTool.output as PlanAnalysisToolOutput).overview}
+                  widgets={(planTool.output as PlanAnalysisToolOutput).widgets}
                   success={(planTool.output as PlanAnalysisToolOutput).success}
                   error={(planTool.output as PlanAnalysisToolOutput).error}
-                  analysisType={(planTool.output as PlanAnalysisToolOutput).analysisType}
-                  tableName={(planTool.output as PlanAnalysisToolOutput).tableName}
-                  totalColumns={(planTool.output as PlanAnalysisToolOutput).totalColumns}
-                  recommendedQueries={(planTool.output as PlanAnalysisToolOutput).recommendedQueries}
-                  keyColumns={(planTool.output as PlanAnalysisToolOutput).keyColumns}
-                  detectedCapabilities={(planTool.output as PlanAnalysisToolOutput).detectedCapabilities}
-                  nextStep={(planTool.output as PlanAnalysisToolOutput).nextStep}
+                  summary={(planTool.output as PlanAnalysisToolOutput).summary}
                 />
               )}
             </div>
