@@ -27,6 +27,7 @@ import { TaskOverview, TaskWidget } from '../apps/chat/tools/DashboardPlanView';
 import TimelineContext from '../tools/TimelineContext';
 import { GenerativeChart } from '../tools/GenerativeChart';
 import { MultipleCharts } from '../tools/MultipleCharts';
+import { MultipleSQL } from '../tools/MultipleSQL';
 import CodeExecutionResult from '../tools/CodeExecutionResult';
 
 interface ReasoningPart {
@@ -1182,57 +1183,12 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {multiSqlTool.state === 'output-available' && (
-                <div className="space-y-4 mt-4">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h4 className="font-medium text-blue-800">Múltiplas Análises SQL</h4>
-                    <p className="text-blue-600 text-sm">
-                      {(multiSqlTool.output as ExecutarMultiplasSQLToolOutput).summary.successful} de {(multiSqlTool.output as ExecutarMultiplasSQLToolOutput).summary.total} queries executadas com sucesso
-                    </p>
-                  </div>
-                  {(multiSqlTool.output as ExecutarMultiplasSQLToolOutput).results.map((result, index) => (
-                    <div key={index} className={`border rounded-lg p-4 ${result.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className={result.success ? 'text-green-600' : 'text-red-600'}>
-                          {result.success ? '✅' : '❌'}
-                        </span>
-                        <h5 className="font-medium">{result.nome}</h5>
-                      </div>
-                      {result.descricao && (
-                        <p className="text-sm text-gray-600 mb-3">{result.descricao}</p>
-                      )}
-                      {result.success && result.data && (
-                        <div className="text-sm">
-                          <p className="text-gray-500 mb-2">
-                            {result.rowsReturned} registros • {result.executionTime}ms
-                          </p>
-                          <div className="overflow-x-auto max-h-60">
-                            <table className="min-w-full text-xs">
-                              <thead>
-                                <tr className="bg-gray-100">
-                                  {result.schema?.map(col => (
-                                    <th key={col.name} className="px-2 py-1 text-left">{col.name}</th>
-                                  ))}
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {result.data.slice(0, 10).map((row, idx) => (
-                                  <tr key={idx} className="border-t">
-                                    {result.schema?.map(col => (
-                                      <td key={col.name} className="px-2 py-1">{String(row[col.name] || '')}</td>
-                                    ))}
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      )}
-                      {result.error && (
-                        <p className="text-red-600 text-sm">{result.error}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                <MultipleSQL
+                  title="Múltiplas Análises SQL"
+                  results={(multiSqlTool.output as ExecutarMultiplasSQLToolOutput).results}
+                  summary={(multiSqlTool.output as ExecutarMultiplasSQLToolOutput).summary}
+                  metadata={(multiSqlTool.output as ExecutarMultiplasSQLToolOutput).metadata}
+                />
               )}
             </div>
           );
