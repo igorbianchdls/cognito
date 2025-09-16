@@ -137,19 +137,19 @@ export default function BigQueryTestPage() {
 
               {/* Overview Task */}
               <Task>
-                <TaskTrigger title="🤖 IA Analisando Dados de Vendas e Sugerindo Widgets" />
+                <TaskTrigger title="IA Analisando Dados de Vendas e Sugerindo Widgets" />
                 <TaskContent>
-                  <TaskItem>📊 Analisando tabela vendas_2024: 15 colunas, 1.2M registros</TaskItem>
-                  <TaskItem>🔍 Campos identificados: receita (numérico), produto (categórico), data_venda (temporal)</TaskItem>
-                  <TaskItem>💡 Sugerindo 6 widgets baseados na estrutura de dados</TaskItem>
-                  <TaskItem>⚡ Queries otimizadas para performance</TaskItem>
+                  <TaskItem>Analisando tabela vendas_2024: 15 colunas, 1.2M registros</TaskItem>
+                  <TaskItem>Campos identificados: receita (numérico), produto (categórico), data_venda (temporal)</TaskItem>
+                  <TaskItem>Sugerindo 6 widgets baseados na estrutura de dados</TaskItem>
+                  <TaskItem>Queries otimizadas para performance</TaskItem>
                 </TaskContent>
               </Task>
 
               {/* Individual Widget Tasks - Question Style */}
               <div className="mt-4 space-y-2">
                 <Task defaultOpen={false}>
-                  <TaskTrigger title="📊 KPI: Qual o Faturamento Total do Período?" />
+                  <TaskTrigger title="KPI: Receita Total para Monitorar Performance Geral" />
                   <TaskContent>
                     <TaskItem><strong>Métrica:</strong> SUM de receita</TaskItem>
                     <TaskItem>
@@ -161,7 +161,7 @@ export default function BigQueryTestPage() {
                 </Task>
 
                 <Task defaultOpen={false}>
-                  <TaskTrigger title="📈 Bar Chart: Quais Produtos Geram Mais Receita?" />
+                  <TaskTrigger title="Bar Chart: Receita por Produto para Entender Qual Gera Mais Valor" />
                   <TaskContent>
                     <TaskItem><strong>Eixos:</strong> x = produto, y = receita (SUM)</TaskItem>
                     <TaskItem>
@@ -177,7 +177,7 @@ export default function BigQueryTestPage() {
                 </Task>
 
                 <Task defaultOpen={false}>
-                  <TaskTrigger title="📅 Line Chart: Como as Vendas Evoluem Mês a Mês?" />
+                  <TaskTrigger title="Line Chart: Analisar Evolução Temporal para Detectar Tendências e Sazonalidade" />
                   <TaskContent>
                     <TaskItem><strong>Eixos:</strong> x = data_venda (por mês), y = receita (SUM)</TaskItem>
                     <TaskItem>
@@ -194,7 +194,7 @@ export default function BigQueryTestPage() {
                 </Task>
 
                 <Task defaultOpen={false}>
-                  <TaskTrigger title="📊 KPI: Qual o Ticket Médio de Vendas?" />
+                  <TaskTrigger title="KPI: Ticket Médio de Vendas para Acompanhar Meta de Valor por Transação" />
                   <TaskContent>
                     <TaskItem><strong>Métrica:</strong> AVG de receita</TaskItem>
                     <TaskItem>
@@ -206,7 +206,7 @@ export default function BigQueryTestPage() {
                 </Task>
 
                 <Task defaultOpen={false}>
-                  <TaskTrigger title="🥧 Pie Chart: Como se Distribui a Receita por Categoria?" />
+                  <TaskTrigger title="Pie Chart: Como se Distribui a Receita por Categoria?" />
                   <TaskContent>
                     <TaskItem><strong>Distribuição:</strong> categoria vs receita (percentual)</TaskItem>
                     <TaskItem>
@@ -223,7 +223,7 @@ export default function BigQueryTestPage() {
                 </Task>
 
                 <Task defaultOpen={false}>
-                  <TaskTrigger title="🔍 Table: Quais São as Maiores Transações?" />
+                  <TaskTrigger title="Table: Quais São as Maiores Transações?" />
                   <TaskContent>
                     <TaskItem><strong>Colunas:</strong> produto, receita, data_venda, categoria</TaskItem>
                     <TaskItem>
