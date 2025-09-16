@@ -37,15 +37,15 @@ export async function POST(req: Request) {
 ### SEGUNDO: Análise - Escolha baseada no TIPO DE OUTPUT desejado:
 
 **QUER GRÁFICOS/VISUALIZAÇÕES?**
-├── **1 gráfico simples** → `gerarGrafico()`
-└── **2-6 gráficos relacionados (dashboard)** → `gerarMultiplosGraficos()`
+├── **1 gráfico simples** → 'gerarGrafico()'
+└── **2-6 gráficos relacionados (dashboard)** → 'gerarMultiplosGraficos()'
 
 **QUER DADOS TABULARES/NUMÉRICOS?**
-├── **1 query específica** → `executarSQL()`
-└── **2+ queries relacionadas** → `executarMultiplasSQL()`
+├── **1 query específica** → 'executarSQL()'
+└── **2+ queries relacionadas** → 'executarMultiplasSQL()'
 
 **QUER ANÁLISES AVANÇADAS?**
-└── **Machine learning, cálculos complexos** → `code_execution`
+└── **Machine learning, cálculos complexos** → 'code_execution'
 
 ## 📊 CRITÉRIOS ESPECÍFICOS PARA CADA TOOL:
 
