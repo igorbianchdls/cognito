@@ -51,7 +51,28 @@ interface MultipleChartsProps {
 
 // Render chart component based on type
 const renderChart = (chart: ChartData) => {
-  if (!chart.chartData) return null;
+  // Debug: Log completo do que chega no renderChart
+  console.log('📊 RENDER CHART:', {
+    title: chart.title,
+    type: chart.chartType,
+    hasChartData: !!chart.chartData,
+    dataLength: chart.chartData?.length || 0,
+    firstDataPoint: chart.chartData?.[0],
+    totalRecords: chart.totalRecords,
+    success: chart.success
+  });
+
+  if (!chart.chartData) {
+    console.log('❌ SEM CHARTDATA para:', chart.title);
+    return <div style={{ padding: '20px', color: 'red' }}>ERRO: Sem chartData para {chart.title}</div>;
+  }
+
+  if (chart.chartData.length === 0) {
+    console.log('❌ CHARTDATA VAZIO para:', chart.title);
+    return <div style={{ padding: '20px', color: 'orange' }}>ERRO: chartData vazio para {chart.title}</div>;
+  }
+
+  console.log('✅ RENDERIZANDO CHART:', chart.chartType, 'com', chart.chartData.length, 'pontos');
 
   switch (chart.chartType) {
     case 'bar':
@@ -61,7 +82,8 @@ const renderChart = (chart: ChartData) => {
     case 'pie':
       return <PieChart data={chart.chartData} />;
     default:
-      return null;
+      console.log('❌ TIPO INVÁLIDO:', chart.chartType);
+      return <div style={{ padding: '20px', color: 'red' }}>ERRO: Tipo inválido {chart.chartType}</div>;
   }
 };
 

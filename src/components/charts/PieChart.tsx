@@ -87,7 +87,17 @@ export function PieChart({
   containerShadowOffsetX,
   containerShadowOffsetY
 }: PieChartProps) {
+  // Debug: Log do que PieChart recebe
+  console.log('📊 PIE CHART recebeu:', {
+    componentType: 'PieChart',
+    hasData: !!data,
+    dataLength: data?.length || 0,
+    firstItem: data?.[0],
+    props: { title, subtitle }
+  });
+
   if (!data || data.length === 0) {
+    console.log('📊 PIE CHART: Retornando EmptyState');
     return <EmptyState />;
   }
 
@@ -97,6 +107,14 @@ export function PieChart({
     label: item.x || item.label || 'Unknown',
     value: item.y || item.value || 0
   }));
+
+  // Debug: Log dos dados transformados
+  console.log('📊 PIE CHART dados transformados:', {
+    originalLength: data.length,
+    transformedLength: chartData.length,
+    firstTransformed: chartData[0],
+    allTransformed: chartData.slice(0, 3)
+  });
 
   // Helper function to convert hex to RGB
   const hexToRgb = (hex: string) => {

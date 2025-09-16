@@ -71,8 +71,23 @@ export const gerarGrafico = tool({
       const data = result.data || [];
       console.log(`✅ Query executada com sucesso: ${data.length} registros`);
 
+      // Debug: Dados brutos do BigQuery
+      console.log('🔍 DADOS BRUTOS BigQuery:', {
+        sqlQuery,
+        rawDataLength: data.length,
+        firstRawRow: data[0],
+        allRawData: data.slice(0, 3)
+      });
+
       // Processar dados para formato dos charts
       const processedData = processDataForChart(data, x, y, tipo);
+
+      // Debug: Dados processados
+      console.log('🔍 DADOS PROCESSADOS:', {
+        processedLength: processedData.length,
+        firstProcessed: processedData[0],
+        allProcessed: processedData.slice(0, 3)
+      });
 
       // Retornar objeto JSON (generative UI será renderizada no RespostaDaIA.tsx)
       return {
@@ -148,7 +163,23 @@ export const gerarMultiplosGraficos = tool({
           });
 
           const data = result.data || [];
+
+          // Debug: Dados do gráfico individual
+          console.log(`🔍 GRÁFICO ${index + 1} - Dados BigQuery:`, {
+            titulo: grafico.titulo,
+            rawLength: data.length,
+            firstRaw: data[0],
+            sqlQuery
+          });
+
           const processedData = processDataForChart(data, grafico.x, grafico.y, grafico.tipo);
+
+          // Debug: Dados processados do gráfico individual
+          console.log(`🔍 GRÁFICO ${index + 1} - Dados Processados:`, {
+            titulo: grafico.titulo,
+            processedLength: processedData.length,
+            firstProcessed: processedData[0]
+          });
 
           return {
             success: true,

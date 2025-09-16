@@ -76,7 +76,17 @@ export function BarChart(props: BarChartProps) {
     containerShadowOffsetY
   } = props;
 
+  // Debug: Log do que BarChart recebe
+  console.log('📊 BAR CHART recebeu:', {
+    componentType: 'BarChart',
+    hasData: !!data,
+    dataLength: data?.length || 0,
+    firstItem: data?.[0],
+    props: { title, subtitle }
+  });
+
   if (!data || data.length === 0) {
+    console.log('📊 BAR CHART: Retornando EmptyState');
     return <EmptyState />;
   }
 
@@ -86,6 +96,14 @@ export function BarChart(props: BarChartProps) {
     value: item.y || item.value || 0,
     label: item.x || item.label || 'Unknown'
   }));
+
+  // Debug: Log dos dados transformados
+  console.log('📊 BAR CHART dados transformados:', {
+    originalLength: data.length,
+    transformedLength: chartData.length,
+    firstTransformed: chartData[0],
+    allTransformed: chartData.slice(0, 3)
+  });
 
   // Inverter dados automaticamente para layout horizontal (maior valor no topo)
   const finalData = layout === 'horizontal' ? [...chartData].reverse() : chartData;
