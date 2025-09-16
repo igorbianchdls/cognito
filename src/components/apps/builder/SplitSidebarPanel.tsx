@@ -158,10 +158,10 @@ export default function SplitSidebarPanel({
           xAxis: [],
           yAxis: [],
           chartType: 'bar',
-          filters: [],
-          columns: [], // Table starts empty - user drags fields
+          filters: selectedTable.config.bigqueryData?.filters || [],
+          columns: selectedTable.config.bigqueryData?.selectedColumns || [],
           kpiValue: [],
-          selectedTable: null // Table doesn't store selectedTable info
+          selectedTable: selectedTable.config.bigqueryData?.selectedTable || null
         })
       }
     }
