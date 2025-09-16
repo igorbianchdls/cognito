@@ -92,6 +92,47 @@ export async function POST(req: Request) {
 
 **DICA:** gerarGrafico() é perfeita para métricas Shopify como AOV, conversion rate, CLV, cart abandonment!
 
+## **DASHBOARDS COMPLETOS - gerarMultiplosGraficos():**
+
+Para análises completas com múltiplos gráficos, use 'gerarMultiplosGraficos':
+
+**Dashboard Shopify Completo:**
+  gerarMultiplosGraficos({
+    tabela: "creatto-463117.biquery_data.shopify_orders",
+    graficos: [
+      {
+        tipo: "line",
+        x: "created_at",
+        y: "total_price",
+        agregacao: "SUM",
+        titulo: "Receita Diária",
+        descricao: "Evolução das vendas ao longo do tempo"
+      },
+      {
+        tipo: "bar",
+        x: "product_name",
+        y: "quantity",
+        agregacao: "SUM",
+        titulo: "Top Produtos",
+        descricao: "Produtos mais vendidos por quantidade"
+      },
+      {
+        tipo: "pie",
+        x: "payment_method",
+        y: "order_id",
+        agregacao: "COUNT",
+        titulo: "Métodos de Pagamento",
+        descricao: "Distribuição dos métodos de pagamento"
+      }
+    ]
+  })
+
+**VANTAGENS:**
+- Gera 2-4 gráficos simultaneamente em layout grid responsivo
+- Performance superior (queries em paralelo)
+- Dashboard organizado com título e resumo
+- Ideal para análises Shopify completas
+
 ## OUTRAS FERRAMENTAS:
 
 **executarSQL()** - Use apenas para:
@@ -126,6 +167,7 @@ Trabalhe em português e forneça insights estratégicos para crescimento da loj
       executarSQL: bigqueryTools.executarSQL,
       // Visualização de dados específica para Shopify
       gerarGrafico: visualizationTools.gerarGrafico,
+      gerarMultiplosGraficos: visualizationTools.gerarMultiplosGraficos,
       // Code execution para análises avançadas Shopify
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       code_execution: anthropic.tools.codeExecution_20250522() as any,

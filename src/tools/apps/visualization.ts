@@ -112,3 +112,107 @@ export const gerarGrafico = tool({
     }
   }
 });
+
+export const gerarMultiplosGraficos = tool({
+  description: 'Gera múltiplos gráficos em um dashboard para análises Shopify completas',
+  inputSchema: z.object({
+    tabela: z.string().describe('Nome da tabela (ex: creatto-463117.biquery_data.shopify_orders)'),
+    graficos: z.array(z.object({
+      tipo: z.enum(['bar', 'line', 'pie']).describe('Tipo do gráfico'),
+      x: z.string().describe('Coluna X'),
+      y: z.string().describe('Coluna Y'),
+      agregacao: z.enum(['SUM', 'COUNT', 'AVG', 'MAX', 'MIN']).optional().describe('Função de agregação'),
+      titulo: z.string().describe('Título do gráfico'),
+      descricao: z.string().optional().describe('Descrição do gráfico')
+    })).describe('Array de configurações de gráficos')
+  }),
+  execute: async ({ tabela, graficos }) => {
+    console.log('📊 Gerando múltiplos gráficos:', { tabela, quantidadeGraficos: graficos.length });
+
+    try {
+      // Initialize BigQuery service if needed
+      if (!bigQueryService['client']) {
+        console.log('⚡ Inicializando BigQuery service...');
+        await bigQueryService.initialize();
+      }
+
+      // Execute all queries in parallel
+      const chartPromises = graficos.map(async (grafico, index) => {
+        try {
+          const sqlQuery = generateSQL(grafico.tipo, grafico.x, grafico.y, tabela, grafico.agregacao);
+          console.log(`🔍 SQL gerado para gráfico ${index + 1}:`, sqlQuery);
+
+          const result = await bigQueryService.executeQuery({
+            query: sqlQuery,
+            jobTimeoutMs: 30000
+          });
+
+          const data = result.data || [];
+          const processedData = processDataForChart(data, grafico.x, grafico.y, grafico.tipo);
+
+          return {
+            success: true,
+            chartData: processedData,
+            chartType: grafico.tipo,
+            title: grafico.titulo,
+            description: grafico.descricao,
+            xColumn: grafico.x,
+            yColumn: grafico.y,
+            aggregation: grafico.agregacao || (grafico.tipo === 'pie' ? 'COUNT' : 'SUM'),
+            sqlQuery,
+            totalRecords: data.length,
+            metadata: {
+              generatedAt: new Date().toISOString(),
+              dataSource: 'bigquery-sql'
+            }
+          };
+        } catch (error) {
+          console.error(`❌ Erro no gráfico ${index + 1}:`, error);
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Erro desconhecido',
+            title: grafico.titulo,
+            chartType: grafico.tipo
+          };
+        }
+      });
+
+      // Wait for all charts to complete
+      const chartResults = await Promise.all(chartPromises);
+      const successfulCharts = chartResults.filter(chart => chart.success);
+      const failedCharts = chartResults.filter(chart => !chart.success);
+
+      console.log(`✅ Dashboard gerado: ${successfulCharts.length}/${graficos.length} gráficos`);
+
+      return {
+        success: true,
+        dashboardTitle: `Dashboard Shopify - ${successfulCharts.length} Gráficos`,
+        charts: chartResults,
+        summary: {
+          total: graficos.length,
+          successful: successfulCharts.length,
+          failed: failedCharts.length,
+          table: tabela
+        },
+        metadata: {
+          generatedAt: new Date().toISOString(),
+          dataSource: 'bigquery-sql-multiple'
+        }
+      };
+
+    } catch (error) {
+      console.error('❌ Erro geral no dashboard:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao gerar dashboard',
+        charts: [],
+        summary: {
+          total: graficos.length,
+          successful: 0,
+          failed: graficos.length,
+          table: tabela
+        }
+      };
+    }
+  }
+});

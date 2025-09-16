@@ -495,6 +495,56 @@ type GerarGraficoToolOutput = {
   fallbackMode?: boolean;
 };
 
+type GerarMultiplosGraficosToolInput = {
+  tabela: string;
+  graficos: Array<{
+    tipo: 'bar' | 'line' | 'pie';
+    x: string;
+    y: string;
+    agregacao?: 'SUM' | 'COUNT' | 'AVG' | 'MAX' | 'MIN';
+    titulo: string;
+    descricao?: string;
+  }>;
+};
+
+type GerarMultiplosGraficosToolOutput = {
+  success: boolean;
+  dashboardTitle: string;
+  charts: Array<{
+    success: boolean;
+    chartData?: Array<{
+      x: string;
+      y: number;
+      label: string;
+      value: number;
+    }>;
+    chartType: 'bar' | 'line' | 'pie';
+    title: string;
+    description?: string;
+    xColumn?: string;
+    yColumn?: string;
+    aggregation?: string;
+    sqlQuery?: string;
+    totalRecords?: number;
+    metadata?: {
+      generatedAt: string;
+      dataSource: string;
+    };
+    error?: string;
+  }>;
+  summary: {
+    total: number;
+    successful: number;
+    failed: number;
+    table: string;
+  };
+  metadata: {
+    generatedAt: string;
+    dataSource: string;
+  };
+  error?: string;
+};
+
 type CodeExecutionToolInput = {
   code: string;
 };
@@ -582,6 +632,10 @@ type NexusToolUIPart = ToolUIPart<{
   gerarGrafico: {
     input: GerarGraficoToolInput;
     output: GerarGraficoToolOutput;
+  };
+  gerarMultiplosGraficos: {
+    input: GerarMultiplosGraficosToolInput;
+    output: GerarMultiplosGraficosToolOutput;
   };
   code_execution: {
     input: CodeExecutionToolInput;
@@ -1295,6 +1349,76 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   sqlQuery={(graficoTool.output as GerarGraficoToolOutput).sqlQuery}
                   totalRecords={(graficoTool.output as GerarGraficoToolOutput).totalRecords}
                 />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-gerarMultiplosGraficos') {
+          const dashboardTool = part as NexusToolUIPart;
+          const callId = dashboardTool.toolCallId;
+          const shouldBeOpen = dashboardTool.state === 'output-available' || dashboardTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-gerarMultiplosGraficos" state={dashboardTool.state} />
+                <ToolContent>
+                  {dashboardTool.input && (
+                    <ToolInput input={dashboardTool.input} />
+                  )}
+                  {dashboardTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={dashboardTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {dashboardTool.state === 'output-available' && (
+                <div className="space-y-4">
+                  {/* Dashboard Title */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h3 className="text-lg font-medium text-blue-900">
+                      {(dashboardTool.output as GerarMultiplosGraficosToolOutput).dashboardTitle}
+                    </h3>
+                    <div className="text-sm text-blue-700 mt-1">
+                      {(dashboardTool.output as GerarMultiplosGraficosToolOutput).summary.successful} de {(dashboardTool.output as GerarMultiplosGraficosToolOutput).summary.total} gráficos gerados com sucesso
+                    </div>
+                  </div>
+
+                  {/* Charts Grid - Temporary Simple Layout */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {(dashboardTool.output as GerarMultiplosGraficosToolOutput).charts
+                      .filter(chart => chart.success && chart.chartData)
+                      .map((chart, index) => (
+                        <GenerativeChart
+                          key={index}
+                          data={chart.chartData!}
+                          chartType={chart.chartType}
+                          title={chart.title}
+                          description={chart.description}
+                          xColumn={chart.xColumn || ''}
+                          yColumn={chart.yColumn || ''}
+                          sqlQuery={chart.sqlQuery || ''}
+                          totalRecords={chart.totalRecords || 0}
+                        />
+                      ))}
+                  </div>
+
+                  {/* Failed Charts */}
+                  {(dashboardTool.output as GerarMultiplosGraficosToolOutput).charts
+                    .filter(chart => !chart.success)
+                    .map((chart, index) => (
+                      <div key={`error-${index}`} className="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-red-500">⚠️</span>
+                          <span className="font-medium text-red-800">Erro: {chart.title}</span>
+                        </div>
+                        <p className="text-red-700 text-sm mt-1">{chart.error}</p>
+                      </div>
+                    ))}
+                </div>
               )}
             </div>
           );
