@@ -26,6 +26,7 @@ import PlanAnalysis from '../tools/PlanAnalysis';
 import { TaskOverview, TaskWidget } from '../apps/chat/tools/DashboardPlanView';
 import TimelineContext from '../tools/TimelineContext';
 import { GenerativeChart } from '../tools/GenerativeChart';
+import { MultipleCharts } from '../tools/MultipleCharts';
 import CodeExecutionResult from '../tools/CodeExecutionResult';
 
 interface ReasoningPart {
@@ -1376,49 +1377,12 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {dashboardTool.state === 'output-available' && (
-                <div className="space-y-4">
-                  {/* Dashboard Title */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h3 className="text-lg font-medium text-blue-900">
-                      {(dashboardTool.output as GerarMultiplosGraficosToolOutput).dashboardTitle}
-                    </h3>
-                    <div className="text-sm text-blue-700 mt-1">
-                      {(dashboardTool.output as GerarMultiplosGraficosToolOutput).summary.successful} de {(dashboardTool.output as GerarMultiplosGraficosToolOutput).summary.total} gráficos gerados com sucesso
-                    </div>
-                  </div>
-
-                  {/* Charts Grid - Temporary Simple Layout */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {(dashboardTool.output as GerarMultiplosGraficosToolOutput).charts
-                      .filter(chart => chart.success && chart.chartData)
-                      .map((chart, index) => (
-                        <GenerativeChart
-                          key={index}
-                          data={chart.chartData!}
-                          chartType={chart.chartType}
-                          title={chart.title}
-                          description={chart.description}
-                          xColumn={chart.xColumn || ''}
-                          yColumn={chart.yColumn || ''}
-                          sqlQuery={chart.sqlQuery || ''}
-                          totalRecords={chart.totalRecords || 0}
-                        />
-                      ))}
-                  </div>
-
-                  {/* Failed Charts */}
-                  {(dashboardTool.output as GerarMultiplosGraficosToolOutput).charts
-                    .filter(chart => !chart.success)
-                    .map((chart, index) => (
-                      <div key={`error-${index}`} className="bg-red-50 border border-red-200 rounded-lg p-4">
-                        <div className="flex items-center gap-2">
-                          <span className="text-red-500">⚠️</span>
-                          <span className="font-medium text-red-800">Erro: {chart.title}</span>
-                        </div>
-                        <p className="text-red-700 text-sm mt-1">{chart.error}</p>
-                      </div>
-                    ))}
-                </div>
+                <MultipleCharts
+                  dashboardTitle={(dashboardTool.output as GerarMultiplosGraficosToolOutput).dashboardTitle}
+                  charts={(dashboardTool.output as GerarMultiplosGraficosToolOutput).charts}
+                  summary={(dashboardTool.output as GerarMultiplosGraficosToolOutput).summary}
+                  metadata={(dashboardTool.output as GerarMultiplosGraficosToolOutput).metadata}
+                />
               )}
             </div>
           );
