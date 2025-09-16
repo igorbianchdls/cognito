@@ -150,21 +150,22 @@ export function MultipleCharts({
               </div>
             </ArtifactHeader>
 
-          <ArtifactContent className="p-0">
-            <div style={{ padding: '16px' }}>
-              {renderChart(chart)}
+            <ArtifactContent className="p-0">
+              <div style={{ padding: '16px' }}>
+                {renderChart(chart)}
 
-              {/* Chart Metadata Footer */}
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <div className="flex justify-between items-center text-xs text-gray-500">
-                  <span>Registros: {chart.totalRecords || 0}</span>
-                  <span>Tipo: {chart.chartType}</span>
-                  <span>Agregação: {chart.aggregation}</span>
+                {/* Chart Metadata Footer */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex justify-between items-center text-xs text-gray-500">
+                    <span>Registros: {chart.totalRecords || 0}</span>
+                    <span>Tipo: {chart.chartType}</span>
+                    <span>Agregação: {chart.aggregation}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </ArtifactContent>
-        </Artifact>
+            </ArtifactContent>
+          </Artifact>
+        </div>
       ))}
 
       {/* Failed Charts */}
