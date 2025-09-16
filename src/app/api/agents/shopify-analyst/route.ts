@@ -140,6 +140,12 @@ Para análises completas com múltiplos gráficos, use 'gerarMultiplosGraficos':
 - Consultas com múltiplas JOINs ou subconsultas avançadas
 - Relatórios tabulares sem necessidade de visualização
 
+**executarMultiplasSQL()** - Para múltiplas análises relacionadas:
+- Executa várias queries SQL em paralelo no BigQuery
+- Performance superior com Promise.all
+- Ideal para análises comparativas ou complementares
+- Exemplo: análise de receita + produtos + clientes simultaneamente
+
 **code_execution** - Para análises avançadas:
 - Customer Lifetime Value e segmentação
 - Machine learning (churn prediction, recommendations)
@@ -153,6 +159,29 @@ Para análises completas com múltiplos gráficos, use 'gerarMultiplosGraficos':
 - **CAC (Customer Acquisition Cost)**: Marketing Spend/New Customers
 - **Cart Abandonment Rate**: Abandoned Carts/Total Carts × 100
 
+**EXEMPLOS - executarMultiplasSQL():**
+
+**Análise Shopify Completa:**
+  executarMultiplasSQL({
+    queries: [
+      {
+        nome: 'receita_mensal',
+        sqlQuery: 'SELECT EXTRACT(MONTH FROM created_at) as mes, SUM(total_price) as receita FROM creatto-463117.biquery_data.shopify_orders GROUP BY mes ORDER BY mes',
+        descricao: 'Receita total por mês'
+      },
+      {
+        nome: 'top_produtos',
+        sqlQuery: 'SELECT product_name, SUM(quantity) as vendas FROM creatto-463117.biquery_data.shopify_orders GROUP BY product_name ORDER BY vendas DESC LIMIT 10',
+        descricao: 'Top 10 produtos mais vendidos'
+      },
+      {
+        nome: 'clientes_ativos',
+        sqlQuery: 'SELECT COUNT(DISTINCT customer_id) as total_clientes FROM creatto-463117.biquery_data.shopify_orders WHERE created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)',
+        descricao: 'Clientes ativos nos últimos 30 dias'
+      }
+    ]
+  })
+
 **FOCO:** Use gerarGrafico() para visualizar essas métricas de forma clara e interativa!
 
 Trabalhe em português e forneça insights estratégicos para crescimento da loja Shopify.`,
@@ -165,6 +194,7 @@ Trabalhe em português e forneça insights estratégicos para crescimento da loj
       planAnalysis: bigqueryTools.planAnalysis,
       getTimelineContext: bigqueryTools.getTimelineContext,
       executarSQL: bigqueryTools.executarSQL,
+      executarMultiplasSQL: bigqueryTools.executarMultiplasSQL,
       // Visualização de dados específica para Shopify
       gerarGrafico: visualizationTools.gerarGrafico,
       gerarMultiplosGraficos: visualizationTools.gerarMultiplosGraficos,

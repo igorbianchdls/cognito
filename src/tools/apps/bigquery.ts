@@ -309,6 +309,130 @@ export const getTableSchema = tool({
   }
 });
 
+export const executarMultiplasSQL = tool({
+  description: 'Executa múltiplas queries SQL em paralelo no BigQuery para análises relacionadas',
+  inputSchema: z.object({
+    queries: z.array(z.object({
+      nome: z.string().describe('Nome identificador da query'),
+      sqlQuery: z.string().describe('Query SQL a executar'),
+      descricao: z.string().optional().describe('Descrição da análise')
+    })).describe('Array de queries SQL a executar'),
+    datasetId: z.string().optional().describe('Dataset ID (padrão: biquery_data)')
+  }),
+  execute: async ({ queries, datasetId = 'biquery_data' }) => {
+    console.log('📋 Executando múltiplas SQL queries:', { totalQueries: queries.length, datasetId });
+
+    try {
+      // Initialize BigQuery service if needed
+      if (!bigQueryService['client']) {
+        console.log('⚡ Inicializando BigQuery service...');
+        await bigQueryService.initialize();
+      }
+
+      const startTime = Date.now();
+
+      // Execute all queries in parallel
+      const queryPromises = queries.map(async (query, index) => {
+        const queryStartTime = Date.now();
+
+        try {
+          console.log(`🔍 Executando query ${index + 1}: ${query.nome}`);
+
+          const result = await bigQueryService.executeQuery({
+            query: query.sqlQuery,
+            jobTimeoutMs: 60000 // 60 seconds timeout
+          });
+
+          const queryExecutionTime = Date.now() - queryStartTime;
+          console.log(`✅ Query ${index + 1} concluída: ${result.data?.length || 0} registros em ${queryExecutionTime}ms`);
+
+          return {
+            nome: query.nome,
+            success: true,
+            sqlQuery: query.sqlQuery,
+            descricao: query.descricao,
+            data: result.data || [],
+            schema: result.schema || [],
+            totalRows: result.data?.length || 0,
+            executionTime: queryExecutionTime,
+            queryType: query.sqlQuery.trim().toLowerCase().split(' ')[0].toUpperCase(),
+            metadata: {
+              generatedAt: new Date().toISOString(),
+              dataSource: 'bigquery-sql',
+              datasetId: datasetId
+            }
+          };
+        } catch (error) {
+          console.error(`❌ Erro na query ${index + 1} (${query.nome}):`, error);
+          return {
+            nome: query.nome,
+            success: false,
+            sqlQuery: query.sqlQuery,
+            descricao: query.descricao,
+            data: [],
+            schema: [],
+            totalRows: 0,
+            executionTime: Date.now() - queryStartTime,
+            queryType: query.sqlQuery.trim().toLowerCase().split(' ')[0].toUpperCase(),
+            error: error instanceof Error ? error.message : 'Erro desconhecido',
+            metadata: {
+              generatedAt: new Date().toISOString(),
+              dataSource: 'bigquery-sql-error',
+              datasetId: datasetId
+            }
+          };
+        }
+      });
+
+      // Wait for all queries to complete
+      const queryResults = await Promise.all(queryPromises);
+      const successfulQueries = queryResults.filter(result => result.success);
+      const failedQueries = queryResults.filter(result => !result.success);
+
+      const totalExecutionTime = Date.now() - startTime;
+      console.log(`🏁 Múltiplas queries concluídas: ${successfulQueries.length}/${queries.length} sucessos em ${totalExecutionTime}ms`);
+
+      return {
+        success: true,
+        totalQueries: queries.length,
+        successfulQueries: successfulQueries.length,
+        failedQueries: failedQueries.length,
+        results: queryResults,
+        summary: {
+          total: queries.length,
+          successful: successfulQueries.length,
+          failed: failedQueries.length,
+          datasetId: datasetId,
+          totalExecutionTime: totalExecutionTime
+        },
+        metadata: {
+          generatedAt: new Date().toISOString(),
+          dataSource: 'bigquery-sql-multiple',
+          executionMode: 'parallel'
+        }
+      };
+
+    } catch (error) {
+      console.error('❌ Erro geral na execução de múltiplas queries:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro ao executar múltiplas queries',
+        totalQueries: queries.length,
+        successfulQueries: 0,
+        failedQueries: queries.length,
+        results: [],
+        summary: {
+          total: queries.length,
+          successful: 0,
+          failed: queries.length,
+          datasetId: datasetId,
+          totalExecutionTime: 0
+        }
+      };
+    }
+  }
+});
+
 export const getCampaigns = tool({
   description: 'Get campaigns from Meta Ads table with aggregated metrics',
   inputSchema: z.object({

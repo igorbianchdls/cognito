@@ -546,6 +546,47 @@ type GerarMultiplosGraficosToolOutput = {
   error?: string;
 };
 
+type ExecutarMultiplasSQLToolInput = {
+  queries: Array<{
+    nome: string;
+    sqlQuery: string;
+    descricao?: string;
+  }>;
+  datasetId?: string;
+};
+
+type ExecutarMultiplasSQLToolOutput = {
+  success: boolean;
+  results: Array<{
+    nome: string;
+    success: boolean;
+    data?: Array<Record<string, unknown>>;
+    schema?: Array<{
+      name: string;
+      type: string;
+      mode: string;
+    }>;
+    rowsReturned?: number;
+    executionTime?: number;
+    sqlQuery: string;
+    descricao?: string;
+    error?: string;
+  }>;
+  summary: {
+    total: number;
+    successful: number;
+    failed: number;
+    totalRows: number;
+    totalExecutionTime: number;
+  };
+  metadata: {
+    generatedAt: string;
+    dataSource: string;
+    datasetId: string;
+  };
+  error?: string;
+};
+
 type CodeExecutionToolInput = {
   code: string;
 };
@@ -637,6 +678,10 @@ type NexusToolUIPart = ToolUIPart<{
   gerarMultiplosGraficos: {
     input: GerarMultiplosGraficosToolInput;
     output: GerarMultiplosGraficosToolOutput;
+  };
+  executarMultiplasSQL: {
+    input: ExecutarMultiplasSQLToolInput;
+    output: ExecutarMultiplasSQLToolOutput;
   };
   code_execution: {
     input: CodeExecutionToolInput;
@@ -1075,7 +1120,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           const sqlTool = part as NexusToolUIPart;
           const callId = sqlTool.toolCallId;
           const shouldBeOpen = sqlTool.state === 'output-available' || sqlTool.state === 'output-error';
-          
+
           return (
             <div key={callId}>
               <Tool defaultOpen={shouldBeOpen}>
@@ -1085,7 +1130,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                     <ToolInput input={sqlTool.input} />
                   )}
                   {sqlTool.state === 'output-error' && (
-                    <ToolOutput 
+                    <ToolOutput
                       output={null}
                       errorText={sqlTool.errorText}
                     />
@@ -1093,7 +1138,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {sqlTool.state === 'output-available' && (
-                <SQLExecution 
+                <SQLExecution
                   sqlQuery={(sqlTool.output as ExecutarSQLToolOutput).sqlQuery}
                   datasetId={(sqlTool.output as ExecutarSQLToolOutput).datasetId}
                   queryType={(sqlTool.output as ExecutarSQLToolOutput).queryType}
@@ -1110,6 +1155,84 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   error={(sqlTool.output as ExecutarSQLToolOutput).error}
                   onAnalyzeWithAI={handleAnalyzeWithAI}
                 />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-executarMultiplasSQL') {
+          const multiSqlTool = part as NexusToolUIPart;
+          const callId = multiSqlTool.toolCallId;
+          const shouldBeOpen = multiSqlTool.state === 'output-available' || multiSqlTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-executarMultiplasSQL" state={multiSqlTool.state} />
+                <ToolContent>
+                  {multiSqlTool.input && (
+                    <ToolInput input={multiSqlTool.input} />
+                  )}
+                  {multiSqlTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={multiSqlTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {multiSqlTool.state === 'output-available' && (
+                <div className="space-y-4 mt-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 className="font-medium text-blue-800">Múltiplas Análises SQL</h4>
+                    <p className="text-blue-600 text-sm">
+                      {(multiSqlTool.output as ExecutarMultiplasSQLToolOutput).summary.successful} de {(multiSqlTool.output as ExecutarMultiplasSQLToolOutput).summary.total} queries executadas com sucesso
+                    </p>
+                  </div>
+                  {(multiSqlTool.output as ExecutarMultiplasSQLToolOutput).results.map((result, index) => (
+                    <div key={index} className={`border rounded-lg p-4 ${result.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className={result.success ? 'text-green-600' : 'text-red-600'}>
+                          {result.success ? '✅' : '❌'}
+                        </span>
+                        <h5 className="font-medium">{result.nome}</h5>
+                      </div>
+                      {result.descricao && (
+                        <p className="text-sm text-gray-600 mb-3">{result.descricao}</p>
+                      )}
+                      {result.success && result.data && (
+                        <div className="text-sm">
+                          <p className="text-gray-500 mb-2">
+                            {result.rowsReturned} registros • {result.executionTime}ms
+                          </p>
+                          <div className="overflow-x-auto max-h-60">
+                            <table className="min-w-full text-xs">
+                              <thead>
+                                <tr className="bg-gray-100">
+                                  {result.schema?.map(col => (
+                                    <th key={col.name} className="px-2 py-1 text-left">{col.name}</th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {result.data.slice(0, 10).map((row, idx) => (
+                                  <tr key={idx} className="border-t">
+                                    {result.schema?.map(col => (
+                                      <td key={col.name} className="px-2 py-1">{String(row[col.name] || '')}</td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+                      {result.error && (
+                        <p className="text-red-600 text-sm">{result.error}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           );
