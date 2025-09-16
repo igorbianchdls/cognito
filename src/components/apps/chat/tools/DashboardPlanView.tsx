@@ -41,12 +41,12 @@ export interface DashboardPlan {
   implementation_notes: string[];
 }
 
-interface TaskOverview {
+export interface TaskOverview {
   title: string;
   items: string[];
 }
 
-interface TaskWidget {
+export interface TaskWidget {
   title: string;
   query: string;
   description: string;
