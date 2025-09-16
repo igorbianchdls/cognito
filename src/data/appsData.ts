@@ -29,7 +29,7 @@ export const categories = [
   'Fors',
   'Dasa', 
   'Landing Ps',
-  'Apps & Games',
+  'Apps & Gaes',
   'Components',
   'Login & Sign Up',
   'Blog & Portfolio',
