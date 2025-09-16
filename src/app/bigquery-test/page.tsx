@@ -130,6 +130,114 @@ export default function BigQueryTestPage() {
                 </Task>
               </div>
             </Card>
+
+            {/* Example 6: Dashboard Planning */}
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold mb-4">6. Dashboard Planning - IA Sugerindo Widgets</h3>
+
+              {/* Overview Task */}
+              <Task>
+                <TaskTrigger title="🤖 IA Analisando Dados de Vendas e Sugerindo Widgets" />
+                <TaskContent>
+                  <TaskItem>📊 Analisando tabela vendas_2024: 15 colunas, 1.2M registros</TaskItem>
+                  <TaskItem>🔍 Campos identificados: receita (numérico), produto (categórico), data_venda (temporal)</TaskItem>
+                  <TaskItem>💡 Sugerindo 6 widgets baseados na estrutura de dados</TaskItem>
+                  <TaskItem>⚡ Queries otimizadas para performance</TaskItem>
+                </TaskContent>
+              </Task>
+
+              {/* Individual Widget Tasks - Question Style */}
+              <div className="mt-4 space-y-2">
+                <Task defaultOpen={false}>
+                  <TaskTrigger title="📊 KPI: Qual o Faturamento Total do Período?" />
+                  <TaskContent>
+                    <TaskItem><strong>Métrica:</strong> SUM de receita</TaskItem>
+                    <TaskItem>
+                      <code className="text-xs bg-gray-100 px-2 py-1 rounded block mt-1">
+                        SELECT SUM(receita) as total_faturamento FROM vendas_2024
+                      </code>
+                    </TaskItem>
+                  </TaskContent>
+                </Task>
+
+                <Task defaultOpen={false}>
+                  <TaskTrigger title="📈 Bar Chart: Quais Produtos Geram Mais Receita?" />
+                  <TaskContent>
+                    <TaskItem><strong>Eixos:</strong> x = produto, y = receita (SUM)</TaskItem>
+                    <TaskItem>
+                      <code className="text-xs bg-gray-100 px-2 py-1 rounded block mt-1">
+                        SELECT produto, SUM(receita) as receita_total
+                        FROM vendas_2024
+                        GROUP BY produto
+                        ORDER BY receita_total DESC
+                        LIMIT 10
+                      </code>
+                    </TaskItem>
+                  </TaskContent>
+                </Task>
+
+                <Task defaultOpen={false}>
+                  <TaskTrigger title="📅 Line Chart: Como as Vendas Evoluem Mês a Mês?" />
+                  <TaskContent>
+                    <TaskItem><strong>Eixos:</strong> x = data_venda (por mês), y = receita (SUM)</TaskItem>
+                    <TaskItem>
+                      <code className="text-xs bg-gray-100 px-2 py-1 rounded block mt-1">
+                        SELECT
+                        &nbsp;&nbsp;DATE_TRUNC(data_venda, MONTH) as mes,
+                        &nbsp;&nbsp;SUM(receita) as receita_mensal
+                        FROM vendas_2024
+                        GROUP BY mes
+                        ORDER BY mes
+                      </code>
+                    </TaskItem>
+                  </TaskContent>
+                </Task>
+
+                <Task defaultOpen={false}>
+                  <TaskTrigger title="📊 KPI: Qual o Ticket Médio de Vendas?" />
+                  <TaskContent>
+                    <TaskItem><strong>Métrica:</strong> AVG de receita</TaskItem>
+                    <TaskItem>
+                      <code className="text-xs bg-gray-100 px-2 py-1 rounded block mt-1">
+                        SELECT AVG(receita) as ticket_medio FROM vendas_2024
+                      </code>
+                    </TaskItem>
+                  </TaskContent>
+                </Task>
+
+                <Task defaultOpen={false}>
+                  <TaskTrigger title="🥧 Pie Chart: Como se Distribui a Receita por Categoria?" />
+                  <TaskContent>
+                    <TaskItem><strong>Distribuição:</strong> categoria vs receita (percentual)</TaskItem>
+                    <TaskItem>
+                      <code className="text-xs bg-gray-100 px-2 py-1 rounded block mt-1">
+                        SELECT
+                        &nbsp;&nbsp;categoria,
+                        &nbsp;&nbsp;SUM(receita) as receita_categoria,
+                        &nbsp;&nbsp;ROUND(SUM(receita) * 100.0 / (SELECT SUM(receita) FROM vendas_2024), 2) as percentual
+                        FROM vendas_2024
+                        GROUP BY categoria
+                      </code>
+                    </TaskItem>
+                  </TaskContent>
+                </Task>
+
+                <Task defaultOpen={false}>
+                  <TaskTrigger title="🔍 Table: Quais São as Maiores Transações?" />
+                  <TaskContent>
+                    <TaskItem><strong>Colunas:</strong> produto, receita, data_venda, categoria</TaskItem>
+                    <TaskItem>
+                      <code className="text-xs bg-gray-100 px-2 py-1 rounded block mt-1">
+                        SELECT produto, receita, data_venda, categoria
+                        FROM vendas_2024
+                        ORDER BY receita DESC
+                        LIMIT 50
+                      </code>
+                    </TaskItem>
+                  </TaskContent>
+                </Task>
+              </div>
+            </Card>
           </div>
         </div>
       </div>
