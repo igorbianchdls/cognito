@@ -468,25 +468,45 @@ export const planAnalysis = tool({
         });
       }
 
+      // Generate overview for Task component
+      const overview = {
+        title: `IA Analisando ${tableName} para Visualização de Dados`,
+        items: [
+          `Analisando tabela ${tableName}: ${schema.length} colunas`,
+          `Tipo de análise: ${analysisType}`,
+          `Campos identificados: ${dateColumn ? 'temporal' : ''} ${revenueColumn ? 'numérico' : ''} ${productColumn ? 'categórico' : ''}`.trim(),
+          `Sugerindo ${queries.length} visualizações baseadas nos dados`
+        ]
+      };
+
+      // Convert queries to Task-compatible widgets with visualization focus
+      const widgets = queries.map(query => {
+        let title = '';
+        let description = '';
+
+        if (analysisType === 'products' && productColumn) {
+          title = `Bar Chart: Performance de Produtos para Comparar ${revenueColumn ? 'Receita' : 'Volume'}`;
+          description = `Gráfico de barras ideal para comparar ${revenueColumn ? 'receita' : 'volume'} entre produtos - permite identificar rapidamente os top performers`;
+        } else if (analysisType === 'temporal' && dateColumn) {
+          title = `Line Chart: Evolução Temporal para Detectar Tendências`;
+          description = `Gráfico de linha perfeito para analisar tendências ${revenueColumn ? 'de receita' : 'de dados'} ao longo do tempo - revela sazonalidades e padrões`;
+        } else {
+          title = `Overview Chart: Análise Geral dos Dados`;
+          description = `Visualização geral dos dados da tabela - fornece insights básicos sobre a estrutura e volume`;
+        }
+
+        return {
+          title,
+          query: query.suggestedSQL,
+          description
+        };
+      });
+
       return {
         success: true,
-        analysisType,
-        tableName,
-        totalColumns: schema.length,
-        recommendedQueries: queries,
-        keyColumns: {
-          dateColumn,
-          revenueColumn,
-          productColumn
-        },
-        detectedCapabilities: {
-          hasDateData: dateColumns.length > 0,
-          hasNumericData: numericColumns.length > 0,
-          hasTextData: textColumns.length > 0,
-          canAnalyzeProducts: !!productColumn,
-          canAnalyzeTemporal: !!dateColumn
-        },
-        nextStep: 'Execute as queries sugeridas para obter insights'
+        overview,
+        widgets,
+        summary: `Visualization plan created for ${tableName}: ${queries.length} charts suggested`
       };
 
     } catch (error) {
