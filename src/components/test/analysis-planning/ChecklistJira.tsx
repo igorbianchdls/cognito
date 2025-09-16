@@ -1,8 +1,26 @@
 'use client';
 
+import { useState } from 'react';
+import { ChevronDownIcon, ChevronRightIcon } from 'lucide-react';
 import { mockAnalyses } from './mockData';
 
 export default function ChecklistJira() {
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+
+  const toggleExpanded = (analysisId: string) => {
+    setExpandedItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(analysisId)) {
+        newSet.delete(analysisId);
+      } else {
+        newSet.add(analysisId);
+      }
+      return newSet;
+    });
+  };
+
+  const isExpanded = (analysisId: string) => expandedItems.has(analysisId);
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed':
@@ -59,22 +77,73 @@ export default function ChecklistJira() {
 
       <div className="space-y-2">
         {mockAnalyses.map((analysis, index) => (
-          <div key={analysis.id} className="flex items-center gap-4 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-            <span className="text-lg">{getStatusIcon(analysis.status)}</span>
+          <div key={analysis.id} className="border border-gray-200 rounded-lg overflow-hidden">
+            {/* Clickable Header */}
+            <div
+              className="flex items-center gap-4 p-3 hover:bg-gray-50 transition-colors cursor-pointer"
+              onClick={() => toggleExpanded(analysis.id)}
+            >
+              <span className="text-lg">{getStatusIcon(analysis.status)}</span>
 
-            <span className="font-mono text-sm text-gray-600 w-16">
-              AN-{String(index + 1).padStart(3, '0')}
-            </span>
-
-            <div className="flex-1 min-w-0">
-              <span className="text-sm font-medium text-gray-900">
-                {analysis.title}
+              <span className="font-mono text-sm text-gray-600 w-16">
+                AN-{String(index + 1).padStart(3, '0')}
               </span>
+
+              <div className="flex-1 min-w-0">
+                <span className="text-sm font-medium text-gray-900">
+                  {analysis.title}
+                </span>
+              </div>
+
+              <span className="text-lg">{getTaskIcon(analysis.title)}</span>
+
+              {getStatusBadge(analysis.status)}
+
+              {/* Expansion Indicator */}
+              <div className="text-gray-400 transition-transform duration-200">
+                {isExpanded(analysis.id) ? (
+                  <ChevronDownIcon className="w-4 h-4 transform rotate-0 transition-transform duration-200" />
+                ) : (
+                  <ChevronRightIcon className="w-4 h-4 transform transition-transform duration-200" />
+                )}
+              </div>
             </div>
 
-            <span className="text-lg">{getTaskIcon(analysis.title)}</span>
+            {/* Expandable Content */}
+            {isExpanded(analysis.id) && (
+              <div className="px-3 pb-3 border-t border-gray-100 bg-gray-50/50 animate-in slide-in-from-top-2 duration-200">
+                <div className="pt-3 space-y-2">
+                  <div className="text-sm text-gray-700">
+                    <span className="font-medium text-gray-900">Descrição:</span>
+                    <p className="mt-1">{analysis.description}</p>
+                  </div>
 
-            {getStatusBadge(analysis.status)}
+                  <div className="flex gap-4 text-xs text-gray-600">
+                    {analysis.duration && (
+                      <span>⏱️ Executado em: {analysis.duration}</span>
+                    )}
+                    {analysis.estimation && (
+                      <span>⏱️ Tempo estimado: {analysis.estimation}</span>
+                    )}
+                    {analysis.rows && (
+                      <span>📊 Registros: {analysis.rows.toLocaleString()}</span>
+                    )}
+                    {analysis.progress && (
+                      <span>📈 Progresso: {analysis.progress}%</span>
+                    )}
+                  </div>
+
+                  <div className="mt-2 p-2 bg-white rounded border text-xs font-mono text-gray-600">
+                    <span className="text-gray-800 font-medium">SQL Query:</span>
+                    <div className="mt-1 text-gray-600">
+                      SELECT * FROM analysis_{analysis.title.toLowerCase().replace(/\s+/g, '_')}
+                      WHERE date_range = 'last_30_days'
+                      ORDER BY relevance DESC;
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>
