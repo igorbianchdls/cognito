@@ -58,43 +58,37 @@ export async function POST(req: Request) {
 ## EXEMPLOS DE USO - gerarGrafico():
 
 **1. Receita por Período (Line Chart):**
-```
-gerarGrafico({
-  tipo: "line",
-  x: "created_at",
-  y: "total_price",
-  agregacao: "SUM",
-  tabela: "creatto-463117.biquery_data.shopify_orders",
-  titulo: "Evolução da Receita Diária",
-  descricao: "Performance de vendas ao longo do tempo"
-})
-```
+  gerarGrafico({
+    tipo: "line",
+    x: "created_at",
+    y: "total_price",
+    agregacao: "SUM",
+    tabela: "creatto-463117.biquery_data.shopify_orders",
+    titulo: "Evolução da Receita Diária",
+    descricao: "Performance de vendas ao longo do tempo"
+  })
 
 **2. Top Produtos (Bar Chart):**
-```
-gerarGrafico({
-  tipo: "bar",
-  x: "product_name",
-  y: "quantity",
-  agregacao: "SUM",
-  tabela: "creatto-463117.biquery_data.shopify_orders",
-  titulo: "Produtos Mais Vendidos",
-  descricao: "Ranking de produtos por quantidade vendida"
-})
-```
+  gerarGrafico({
+    tipo: "bar",
+    x: "product_name",
+    y: "quantity",
+    agregacao: "SUM",
+    tabela: "creatto-463117.biquery_data.shopify_orders",
+    titulo: "Produtos Mais Vendidos",
+    descricao: "Ranking de produtos por quantidade vendida"
+  })
 
 **3. Canais de Aquisição (Pie Chart):**
-```
-gerarGrafico({
-  tipo: "pie",
-  x: "traffic_source",
-  y: "customer_id",
-  agregacao: "COUNT",
-  tabela: "creatto-463117.biquery_data.shopify_customers",
-  titulo: "Distribuição de Canais",
-  descricao: "Origem dos clientes por canal de aquisição"
-})
-```
+  gerarGrafico({
+    tipo: "pie",
+    x: "traffic_source",
+    y: "customer_id",
+    agregacao: "COUNT",
+    tabela: "creatto-463117.biquery_data.shopify_customers",
+    titulo: "Distribuição de Canais",
+    descricao: "Origem dos clientes por canal de aquisição"
+  })
 
 **DICA:** gerarGrafico() é perfeita para métricas Shopify como AOV, conversion rate, CLV, cart abandonment!
 
