@@ -485,6 +485,7 @@ type GerarGraficoToolOutput = {
   chartType: 'bar' | 'line' | 'pie';
   title: string;
   description?: string;
+  explicacao?: string;
   xColumn: string;
   yColumn: string;
   sqlQuery: string;
@@ -1425,6 +1426,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   chartType={(graficoTool.output as GerarGraficoToolOutput).chartType}
                   title={(graficoTool.output as GerarGraficoToolOutput).title}
                   description={(graficoTool.output as GerarGraficoToolOutput).description}
+                  explicacao={(graficoTool.output as GerarGraficoToolOutput).explicacao}
                   xColumn={(graficoTool.output as GerarGraficoToolOutput).xColumn}
                   yColumn={(graficoTool.output as GerarGraficoToolOutput).yColumn}
                   sqlQuery={(graficoTool.output as GerarGraficoToolOutput).sqlQuery}

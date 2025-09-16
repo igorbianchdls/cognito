@@ -27,6 +27,7 @@ interface GenerativeChartProps {
   chartType: 'bar' | 'line' | 'pie';
   title: string;
   description?: string;
+  explicacao?: string;
   xColumn: string;
   yColumn: string;
   sqlQuery: string;
@@ -38,6 +39,7 @@ export function GenerativeChart({
   chartType,
   title,
   description,
+  explicacao,
   xColumn,
   yColumn,
   sqlQuery,
@@ -85,37 +87,49 @@ export function GenerativeChart({
   };
 
   return (
-    <Artifact>
-      <ArtifactHeader>
-        <div className="flex-1 min-w-0">
-          <ArtifactTitle>{title}</ArtifactTitle>
-          <ArtifactDescription>
-            {description || `📊 ${totalRecords} registros • 🔍 ${sqlQuery.length > 60 ? sqlQuery.substring(0, 60) + '...' : sqlQuery}`}
-          </ArtifactDescription>
+    <div>
+      {/* Explicação acima do Artifact */}
+      {explicacao && (
+        <div className="mb-4 p-3 bg-blue-50 border-l-4 border-blue-400 rounded">
+          <p className="text-blue-800 text-sm">
+            📊 {explicacao}
+          </p>
         </div>
-        <ArtifactActions>
-          <ArtifactAction
-            icon={CopyIcon}
-            tooltip="Copiar dados do gráfico"
-            onClick={handleCopyData}
-          />
-          <ArtifactAction
-            icon={DownloadIcon}
-            tooltip="Download como CSV"
-            onClick={handleDownload}
-          />
-          <ArtifactAction
-            icon={DatabaseIcon}
-            tooltip={`Tipo: ${chartType} • Colunas: ${xColumn} x ${yColumn}`}
-          />
-        </ArtifactActions>
-      </ArtifactHeader>
+      )}
 
-      <ArtifactContent className="p-0">
-        <div style={{ height: '400px', width: '100%' }}>
-          {renderChart()}
-        </div>
-      </ArtifactContent>
-    </Artifact>
+      {/* Artifact com gráfico */}
+      <Artifact>
+        <ArtifactHeader>
+          <div className="flex-1 min-w-0">
+            <ArtifactTitle>{title}</ArtifactTitle>
+            <ArtifactDescription>
+              {description || `📊 ${totalRecords} registros • 🔍 ${sqlQuery.length > 60 ? sqlQuery.substring(0, 60) + '...' : sqlQuery}`}
+            </ArtifactDescription>
+          </div>
+          <ArtifactActions>
+            <ArtifactAction
+              icon={CopyIcon}
+              tooltip="Copiar dados do gráfico"
+              onClick={handleCopyData}
+            />
+            <ArtifactAction
+              icon={DownloadIcon}
+              tooltip="Download como CSV"
+              onClick={handleDownload}
+            />
+            <ArtifactAction
+              icon={DatabaseIcon}
+              tooltip={`Tipo: ${chartType} • Colunas: ${xColumn} x ${yColumn}`}
+            />
+          </ArtifactActions>
+        </ArtifactHeader>
+
+        <ArtifactContent className="p-0">
+          <div style={{ height: '400px', width: '100%' }}>
+            {renderChart()}
+          </div>
+        </ArtifactContent>
+      </Artifact>
+    </div>
   );
 }

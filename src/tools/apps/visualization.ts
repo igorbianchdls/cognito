@@ -47,9 +47,10 @@ export const gerarGrafico = tool({
     tabela: z.string().describe('Nome da tabela (ex: dataset.tabela)'),
     agregacao: z.enum(['SUM', 'COUNT', 'AVG', 'MAX', 'MIN']).optional().describe('Função de agregação (padrão: SUM para bar/line, COUNT para pie)'),
     titulo: z.string().describe('Título do gráfico'),
-    descricao: z.string().optional().describe('Descrição do gráfico')
+    descricao: z.string().optional().describe('Descrição do gráfico'),
+    explicacao: z.string().optional().describe('Explicação do que este gráfico vai analisar')
   }),
-  execute: async ({ tipo, x, y, tabela, agregacao, titulo, descricao }) => {
+  execute: async ({ tipo, x, y, tabela, agregacao, titulo, descricao, explicacao }) => {
     try {
       // 1. Gerar SQL automaticamente
       const sqlQuery = generateSQL(tipo, x, y, tabela, agregacao);
@@ -96,6 +97,7 @@ export const gerarGrafico = tool({
         chartType: tipo,
         title: titulo,
         description: descricao,
+        explicacao: explicacao,
         xColumn: x,
         yColumn: y,
         aggregation: agregacao || (tipo === 'pie' ? 'COUNT' : 'SUM'),
