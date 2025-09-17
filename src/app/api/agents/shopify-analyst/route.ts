@@ -61,6 +61,7 @@ export async function POST(req: Request) {
 ✅ Quer apresentar as análises antes de executar
 ✅ Precisa mostrar estrutura/sequência das análises
 ✅ Análise complexa que merece planejamento antes da execução
+✅ Descreva em linguagem natural: dimensão, medida, agregação, filtros e tipo de gráfico
 
 ### gerarGrafico() - USE QUANDO:
 ✅ Quer exatamente 1 gráfico (bar/line/pie)
@@ -134,21 +135,21 @@ planAnalysis({
   analises: [
     {
       titulo: "Análise de Performance de Vendas - Últimos 3 Meses",
-      query: "SELECT DATE(created_at) as data, SUM(total_price) as receita FROM shopify_orders WHERE created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 3 MONTH) GROUP BY DATE(created_at) ORDER BY data"
+      descricao: "Escolher coluna 'created_at' como dimensão temporal, coluna 'total_price' como medida usando agregação SUM, filtrar últimos 3 meses, criar gráfico de linha para mostrar evolução da receita ao longo do tempo"
     },
     {
       titulo: "Top 10 Produtos Mais Vendidos por Quantidade",
-      query: "SELECT product_name, SUM(quantity) as total_vendido FROM shopify_orders GROUP BY product_name ORDER BY total_vendido DESC LIMIT 10"
+      descricao: "Escolher coluna 'product_name' como dimensão, coluna 'quantity' como medida usando agregação SUM, ordenar por quantidade decrescente, limitar aos top 10, criar gráfico de barras horizontais"
     },
     {
       titulo: "Análise de Conversão por Canal de Marketing",
-      query: "SELECT marketing_channel, COUNT(order_id) as pedidos, SUM(total_price) as receita FROM shopify_orders GROUP BY marketing_channel"
+      descricao: "Escolher coluna 'marketing_channel' como dimensão, usar COUNT de 'order_id' e SUM de 'total_price' como medidas, criar gráfico de pizza para mostrar distribuição dos canais"
     }
   ]
 })
 
 ### gerarGrafico() - Parâmetros:
-- 'tipo': "bar", "line" ou "pie"
+- 'tipo': "bar", "line", "pie", "horizontal-bar" ou "area"
 - 'x': Coluna eixo X (ex: "created_at", "product_name")
 - 'y': Coluna eixo Y (ex: "total_price", "quantity")
 - 'tabela': "creatto-463117.biquery_data.shopify_orders"

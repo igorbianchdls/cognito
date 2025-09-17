@@ -525,12 +525,12 @@ export const getCampaigns = tool({
 });
 
 export const planAnalysis = tool({
-  description: 'Structure and organize analysis plan with detailed titles and SQL queries',
+  description: 'Structure and organize analysis plan with detailed titles and natural language descriptions',
   inputSchema: z.object({
     analises: z.array(z.object({
       titulo: z.string().describe('Título detalhado da análise específica'),
-      query: z.string().describe('Query SQL para executar a análise')
-    })).describe('Array de análises a executar com títulos detalhados e queries SQL')
+      descricao: z.string().describe('Descrição em linguagem natural especificando: dimensão (coluna X), medida (coluna Y), agregação (SUM/COUNT/AVG), filtros opcionais, e tipo de gráfico sugerido')
+    })).describe('Array de análises a executar com títulos detalhados e descrições em linguagem natural')
   }),
   execute: async ({ analises }) => {
     console.log('🎯 Estruturando plano de análise com', analises.length, 'análises');
@@ -539,9 +539,9 @@ export const planAnalysis = tool({
     const planoEstruturado = analises.map((analise, index) => ({
       numero: index + 1,
       titulo: analise.titulo,
-      query: analise.query,
+      descricao: analise.descricao,
       status: 'planejado',
-      queryType: analise.query.trim().toLowerCase().split(' ')[0].toUpperCase()
+      tipo: 'analysis-description'
     }));
 
     return {
