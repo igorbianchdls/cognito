@@ -116,7 +116,12 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
       "labelsFontSize": 11,
       "labelsTextColor": "#6b7280",
       "containerBorderRadius": 8,
-      "containerPadding": 16
+      "containerPadding": 16,
+      "backgroundColor": "#f8fafc",
+      "backgroundOpacity": 0.9,
+      "titleFontSize": 16,
+      "titleColor": "#1e293b",
+      "titleClassName": "font-bold text-center"
     },
     "position": {
       "x": 0,
@@ -152,7 +157,18 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
       "legendsFontSize": 12,
       "legendsTextColor": "#374151",
       "containerBorderRadius": 8,
-      "containerPadding": 16
+      "containerPadding": 16,
+      "backgroundGradient": {
+        "enabled": true,
+        "type": "linear",
+        "direction": "45deg",
+        "startColor": "#fef3f2",
+        "endColor": "#fefce8"
+      },
+      "subtitleFontSize": 12,
+      "subtitleColor": "#6b7280",
+      "containerShadowColor": "#f59e0b",
+      "containerShadowOpacity": 0.2
     },
     "position": {
       "x": 65,

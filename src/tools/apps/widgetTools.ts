@@ -26,7 +26,64 @@ export const manageWidgets = tool({
       aggregation: z.enum(['SUM', 'COUNT', 'AVG', 'MIN', 'MAX']).optional().describe('Chart aggregation method'),
 
       // Table fields
-      columns: z.array(z.string()).optional().describe('Table columns to display')
+      columns: z.array(z.string()).optional().describe('Table columns to display'),
+
+      // Background Advanced
+      backgroundColor: z.string().optional().describe('Background color'),
+      backgroundOpacity: z.number().min(0).max(1).optional().describe('Background opacity (0-1)'),
+      backgroundGradient: z.object({
+        enabled: z.boolean(),
+        type: z.enum(['linear', 'radial', 'conic']),
+        direction: z.string(),
+        startColor: z.string(),
+        endColor: z.string()
+      }).optional().describe('Background gradient configuration'),
+      backdropFilter: z.object({
+        enabled: z.boolean(),
+        blur: z.number()
+      }).optional().describe('Backdrop filter configuration'),
+
+      // Typography - Title/Subtitle
+      titleFontSize: z.number().optional().describe('Title font size'),
+      titleFontWeight: z.number().optional().describe('Title font weight'),
+      titleColor: z.string().optional().describe('Title color'),
+      subtitleFontSize: z.number().optional().describe('Subtitle font size'),
+      subtitleFontWeight: z.number().optional().describe('Subtitle font weight'),
+      subtitleColor: z.string().optional().describe('Subtitle color'),
+
+      // Spacing - Title/Subtitle
+      titleMarginTop: z.number().optional().describe('Title margin top'),
+      titleMarginRight: z.number().optional().describe('Title margin right'),
+      titleMarginBottom: z.number().optional().describe('Title margin bottom'),
+      titleMarginLeft: z.number().optional().describe('Title margin left'),
+      titlePaddingTop: z.number().optional().describe('Title padding top'),
+      titlePaddingRight: z.number().optional().describe('Title padding right'),
+      titlePaddingBottom: z.number().optional().describe('Title padding bottom'),
+      titlePaddingLeft: z.number().optional().describe('Title padding left'),
+      subtitleMarginTop: z.number().optional().describe('Subtitle margin top'),
+      subtitleMarginRight: z.number().optional().describe('Subtitle margin right'),
+      subtitleMarginBottom: z.number().optional().describe('Subtitle margin bottom'),
+      subtitleMarginLeft: z.number().optional().describe('Subtitle margin left'),
+      subtitlePaddingTop: z.number().optional().describe('Subtitle padding top'),
+      subtitlePaddingRight: z.number().optional().describe('Subtitle padding right'),
+      subtitlePaddingBottom: z.number().optional().describe('Subtitle padding bottom'),
+      subtitlePaddingLeft: z.number().optional().describe('Subtitle padding left'),
+
+      // Tailwind Classes - Title/Subtitle
+      titleClassName: z.string().optional().describe('Title CSS class name'),
+      subtitleClassName: z.string().optional().describe('Subtitle CSS class name'),
+      containerClassName: z.string().optional().describe('Container CSS class name'),
+
+      // Container Border & Shadow
+      containerBorderWidth: z.number().optional().describe('Container border width'),
+      containerBorderColor: z.string().optional().describe('Container border color'),
+      containerBorderRadius: z.number().optional().describe('Container border radius'),
+      containerPadding: z.number().optional().describe('Container padding'),
+      containerShadowColor: z.string().optional().describe('Container shadow color'),
+      containerShadowOpacity: z.number().min(0).max(1).optional().describe('Container shadow opacity'),
+      containerShadowBlur: z.number().optional().describe('Container shadow blur'),
+      containerShadowOffsetX: z.number().optional().describe('Container shadow offset X'),
+      containerShadowOffsetY: z.number().optional().describe('Container shadow offset Y')
     }))
   }),
   execute: async ({ operations }) => {

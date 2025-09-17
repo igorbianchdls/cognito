@@ -285,6 +285,52 @@ export class WidgetUpdate {
       containerShadowOffsetX?: number,
       containerShadowOffsetY?: number,
 
+      // Background Advanced
+      backgroundColor?: string,
+      backgroundOpacity?: number,
+      backgroundGradient?: {
+        enabled: boolean,
+        type: 'linear' | 'radial' | 'conic',
+        direction: string,
+        startColor: string,
+        endColor: string
+      },
+      backdropFilter?: {
+        enabled: boolean,
+        blur: number
+      },
+
+      // Typography - Title/Subtitle
+      titleFontSize?: number,
+      titleFontWeight?: number,
+      titleColor?: string,
+      subtitleFontSize?: number,
+      subtitleFontWeight?: number,
+      subtitleColor?: string,
+
+      // Spacing - Title/Subtitle
+      titleMarginTop?: number,
+      titleMarginRight?: number,
+      titleMarginBottom?: number,
+      titleMarginLeft?: number,
+      titlePaddingTop?: number,
+      titlePaddingRight?: number,
+      titlePaddingBottom?: number,
+      titlePaddingLeft?: number,
+      subtitleMarginTop?: number,
+      subtitleMarginRight?: number,
+      subtitleMarginBottom?: number,
+      subtitleMarginLeft?: number,
+      subtitlePaddingTop?: number,
+      subtitlePaddingRight?: number,
+      subtitlePaddingBottom?: number,
+      subtitlePaddingLeft?: number,
+
+      // Tailwind Classes - Title/Subtitle
+      titleClassName?: string,
+      subtitleClassName?: string,
+      containerClassName?: string,
+
       // ========== BAR ESPECÍFICAS ==========
       groupMode?: 'grouped' | 'stacked',
       layout?: 'horizontal' | 'vertical',
