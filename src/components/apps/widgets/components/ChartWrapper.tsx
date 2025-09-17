@@ -446,6 +446,13 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
                              widget.pieChartConfig?.styling?.tooltipFontFamily ??
                              widget.areaChartConfig?.styling?.tooltipFontFamily
 
+    // Container Background
+    const backgroundColor = widget.barChartConfig?.styling?.backgroundColor ??
+                           widget.lineChartConfig?.styling?.backgroundColor ??
+                           widget.pieChartConfig?.styling?.backgroundColor ??
+                           widget.areaChartConfig?.styling?.backgroundColor ??
+                           widget.horizontalBarChartConfig?.styling?.backgroundColor
+
     // Container Border props (bar chart, line chart, pie chart, area chart and horizontal bar chart)
     const containerBorderWidth = widget.barChartConfig?.styling?.containerBorderWidth ??
                                 widget.lineChartConfig?.styling?.containerBorderWidth ??
@@ -591,6 +598,7 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             titleClassName={titleClassName}
             subtitleClassName={subtitleClassName}
             containerClassName={containerClassName}
+            backgroundColor={backgroundColor}
             containerBorderWidth={containerBorderWidth}
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}
@@ -664,6 +672,7 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             titleClassName={titleClassName}
             subtitleClassName={subtitleClassName}
             containerClassName={containerClassName}
+            backgroundColor={backgroundColor}
             containerBorderWidth={containerBorderWidth}
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}
@@ -725,6 +734,7 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             titleClassName={titleClassName}
             subtitleClassName={subtitleClassName}
             containerClassName={containerClassName}
+            backgroundColor={backgroundColor}
             containerBorderWidth={containerBorderWidth}
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}
@@ -798,6 +808,7 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             titleClassName={titleClassName}
             subtitleClassName={subtitleClassName}
             containerClassName={containerClassName}
+            backgroundColor={backgroundColor}
             containerBorderWidth={containerBorderWidth}
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}
@@ -872,6 +883,7 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             titleClassName={titleClassName}
             subtitleClassName={subtitleClassName}
             containerClassName={containerClassName}
+            backgroundColor={backgroundColor}
             containerBorderWidth={containerBorderWidth}
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}
