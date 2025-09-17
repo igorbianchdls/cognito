@@ -214,5 +214,9 @@ export const DEFAULT_KPI_CONFIG: Required<Omit<KPIConfig, 'name' | 'value' | 'un
 
   // Special colors
   changeColor: '#16a34a',
-  targetColor: '#9ca3af'
+  targetColor: '#9ca3af',
+
+  // Tailwind Classes defaults
+  kpiNameClassName: '',
+  kpiValueClassName: ''
 }
