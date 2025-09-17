@@ -1,7 +1,9 @@
 'use client';
 
-import { AlertCircleIcon, CheckCircleIcon, ClockIcon } from 'lucide-react';
+import { AlertCircleIcon, CheckCircleIcon, ClockIcon, ChevronDownIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import { useState } from 'react';
 
 interface PlanAnalysisProps {
   plano: Array<{
@@ -24,6 +26,15 @@ export default function PlanAnalysis({
   success,
   error
 }: PlanAnalysisProps) {
+  const [openCards, setOpenCards] = useState<Record<number, boolean>>({});
+
+  const toggleCard = (index: number) => {
+    setOpenCards(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+
   if (error || !success) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -95,39 +106,61 @@ export default function PlanAnalysis({
 
       {/* Analysis Cards */}
       <div className="space-y-3">
-        {plano.map((analise, index) => (
-          <div key={index} className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-sm transition-shadow">
-            {/* Header with number and title */}
-            <div className="flex items-start gap-3 mb-3">
-              <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                <span className="text-sm font-semibold text-gray-700">{analise.numero}</span>
-              </div>
-              <div className="flex-1">
-                <h4 className="font-medium text-gray-900 leading-tight">{analise.titulo}</h4>
-              </div>
-            </div>
+        {plano.map((analise, index) => {
+          const isOpen = openCards[index] || false;
 
-            {/* Query block */}
-            <div className="mb-3">
-              <pre className="text-xs bg-gray-50 border rounded-md p-3 overflow-x-auto whitespace-pre-wrap font-mono text-gray-800">
-                {analise.query}
-              </pre>
-            </div>
+          return (
+            <Collapsible key={index} open={isOpen} onOpenChange={() => toggleCard(index)}>
+              <div className="border border-gray-200 rounded-lg bg-white hover:shadow-sm transition-shadow">
+                {/* Header with number and title */}
+                <div className="p-4">
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-semibold text-gray-700">{analise.numero}</span>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900 leading-tight">{analise.titulo}</h4>
+                    </div>
+                  </div>
 
-            {/* Status and badges */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1">
-                {getStatusIcon(analise.status)}
-                <Badge variant="secondary" className={getStatusColor(analise.status)}>
-                  {analise.status}
-                </Badge>
+                  {/* Status and badges */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
+                        {getStatusIcon(analise.status)}
+                        <Badge variant="secondary" className={getStatusColor(analise.status)}>
+                          {analise.status}
+                        </Badge>
+                      </div>
+                      <Badge variant="outline" className={getQueryTypeColor(analise.queryType)}>
+                        {analise.queryType}
+                      </Badge>
+                    </div>
+
+                    {/* Collapsible trigger */}
+                    <CollapsibleTrigger className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 px-2 py-1 rounded transition-all duration-200">
+                      <span>{isOpen ? 'Ocultar Query' : 'Ver Query'}</span>
+                      <ChevronDownIcon
+                        className={`w-4 h-4 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180' : 'rotate-0'
+                        }`}
+                      />
+                    </CollapsibleTrigger>
+                  </div>
+                </div>
+
+                {/* Collapsible Query block */}
+                <CollapsibleContent className="px-4 pb-4">
+                  <div className="border-t border-gray-100 pt-3">
+                    <pre className="text-xs bg-gray-50 border rounded-md p-3 overflow-x-auto whitespace-pre-wrap font-mono text-gray-800">
+                      {analise.query}
+                    </pre>
+                  </div>
+                </CollapsibleContent>
               </div>
-              <Badge variant="outline" className={getQueryTypeColor(analise.queryType)}>
-                {analise.queryType}
-              </Badge>
-            </div>
-          </div>
-        ))}
+            </Collapsible>
+          );
+        })}
       </div>
     </div>
   );
