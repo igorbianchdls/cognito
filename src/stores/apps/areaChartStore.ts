@@ -68,6 +68,10 @@ export interface AreaChartConfig {
     subtitlePaddingBottom?: number
     subtitlePaddingLeft?: number
 
+    // Tailwind Classes - Title/Subtitle (precedence over individual props)
+    titleClassName?: string
+    subtitleClassName?: string
+
     areaOpacity?: number
     fillOpacity?: number
     strokeWidth?: number

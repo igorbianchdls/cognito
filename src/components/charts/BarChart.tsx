@@ -80,6 +80,9 @@ export function BarChart(props: BarChartProps) {
     subtitlePaddingRight,
     subtitlePaddingBottom,
     subtitlePaddingLeft,
+    // Tailwind Classes - Title/Subtitle
+    titleClassName = "",
+    subtitleClassName = "",
     // Container Border props
     containerBorderWidth,
     containerBorderColor,
@@ -192,24 +195,30 @@ export function BarChart(props: BarChartProps) {
       }}
     >
       {title && (
-        <h3 style={{
-          margin: `${titleMarginTop ?? 0}px ${titleMarginRight ?? 0}px ${titleMarginBottom ?? 4}px ${titleMarginLeft ?? 0}px`,
-          padding: `${titlePaddingTop ?? 0}px ${titlePaddingRight ?? 0}px ${titlePaddingBottom ?? 0}px ${titlePaddingLeft ?? 0}px`,
-          fontSize: `${titleFontSize}px`,
-          fontWeight: titleFontWeight,
-          color: titleColor
-        }}>
+        <h3
+          className={titleClassName || undefined}
+          style={titleClassName ? {} : {
+            margin: `${titleMarginTop ?? 0}px ${titleMarginRight ?? 0}px ${titleMarginBottom ?? 4}px ${titleMarginLeft ?? 0}px`,
+            padding: `${titlePaddingTop ?? 0}px ${titlePaddingRight ?? 0}px ${titlePaddingBottom ?? 0}px ${titlePaddingLeft ?? 0}px`,
+            fontSize: `${titleFontSize ?? 18}px`,
+            fontWeight: titleFontWeight ?? 700,
+            color: titleColor ?? '#222'
+          }}
+        >
           {title}
         </h3>
       )}
       {subtitle && (
-        <div style={{
-          margin: `${subtitleMarginTop ?? 0}px ${subtitleMarginRight ?? 0}px ${subtitleMarginBottom ?? 16}px ${subtitleMarginLeft ?? 0}px`,
-          padding: `${subtitlePaddingTop ?? 0}px ${subtitlePaddingRight ?? 0}px ${subtitlePaddingBottom ?? 0}px ${subtitlePaddingLeft ?? 0}px`,
-          fontSize: `${subtitleFontSize}px`,
-          color: subtitleColor,
-          fontWeight: subtitleFontWeight
-        }}>
+        <div
+          className={subtitleClassName || undefined}
+          style={subtitleClassName ? {} : {
+            margin: `${subtitleMarginTop ?? 0}px ${subtitleMarginRight ?? 0}px ${subtitleMarginBottom ?? 16}px ${subtitleMarginLeft ?? 0}px`,
+            padding: `${subtitlePaddingTop ?? 0}px ${subtitlePaddingRight ?? 0}px ${subtitlePaddingBottom ?? 0}px ${subtitlePaddingLeft ?? 0}px`,
+            fontSize: `${subtitleFontSize ?? 14}px`,
+            color: subtitleColor ?? '#6b7280',
+            fontWeight: subtitleFontWeight ?? 400
+          }}
+        >
           {subtitle}
         </div>
       )}

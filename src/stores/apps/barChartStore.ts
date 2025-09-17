@@ -68,6 +68,10 @@ export interface BarChartConfig {
     subtitlePaddingBottom?: number
     subtitlePaddingLeft?: number
 
+    // Tailwind Classes - Title/Subtitle (precedence over individual props)
+    titleClassName?: string
+    subtitleClassName?: string
+
     xAxisTitle?: string
     yAxisTitle?: string
     borderRadius?: number
