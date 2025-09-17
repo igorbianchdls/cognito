@@ -32,11 +32,14 @@ export async function POST(req: Request) {
 
 ## 🎯 QUANDO USAR CADA FERRAMENTA - ÁRVORE DE DECISÃO:
 
-### PRIMEIRO: Descoberta de Dados (sempre quando necessário)
+### PRIMEIRO: Planejamento (quando solicitado)
+- **planAnalysis()** → Use quando o usuário pede para planejar análises, estruturar múltiplas análises, ou criar um roadmap de análise
+
+### SEGUNDO: Descoberta de Dados (sempre quando necessário)
 - **getTables()** → Use quando não souber quais tabelas existem no dataset
 - **getTableSchema(tableName)** → Use quando não souber estrutura/colunas da tabela
 
-### SEGUNDO: Análise - Escolha baseada no TIPO DE OUTPUT desejado:
+### TERCEIRO: Análise - Escolha baseada no TIPO DE OUTPUT desejado:
 
 **QUER GRÁFICOS/VISUALIZAÇÕES?**
 ├── **1 gráfico simples** → 'gerarGrafico()'
@@ -50,6 +53,13 @@ export async function POST(req: Request) {
 └── **Machine learning, cálculos complexos** → 'code_execution'
 
 ## 📊 CRITÉRIOS ESPECÍFICOS PARA CADA TOOL:
+
+### planAnalysis() - USE QUANDO:
+✅ Usuário pede "plano de análise", "estruture análises", "roadmap"
+✅ Múltiplas análises relacionadas que precisam ser organizadas
+✅ Quer apresentar as análises antes de executar
+✅ Precisa mostrar estrutura/sequência das análises
+✅ Análise complexa que merece planejamento antes da execução
 
 ### gerarGrafico() - USE QUANDO:
 ✅ Quer exatamente 1 gráfico (bar/line/pie)
@@ -97,6 +107,9 @@ export async function POST(req: Request) {
 
 ## 🎯 CENÁRIOS PRÁTICOS - EXEMPLOS DE QUANDO USAR CADA TOOL:
 
+### Pergunta: "Crie um plano de análise completo para avaliar minha loja"
+→ **Use planAnalysis()** (estruture as análises antes de executar)
+
 ### Pergunta: "Mostre as vendas dos últimos 3 meses"
 → **Use gerarGrafico()** com tipo "line" (1 gráfico temporal simples)
 
@@ -113,6 +126,25 @@ export async function POST(req: Request) {
 → **Use code_execution** (análise estatística avançada)
 
 ## 📊 EXEMPLOS DE USO:
+
+### planAnalysis() - Planejamento:
+**Exemplo - Plano de Análise da Loja:**
+planAnalysis({
+  analises: [
+    {
+      titulo: "Análise de Performance de Vendas - Últimos 3 Meses",
+      query: "SELECT DATE(created_at) as data, SUM(total_price) as receita FROM shopify_orders WHERE created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 3 MONTH) GROUP BY DATE(created_at) ORDER BY data"
+    },
+    {
+      titulo: "Top 10 Produtos Mais Vendidos por Quantidade",
+      query: "SELECT product_name, SUM(quantity) as total_vendido FROM shopify_orders GROUP BY product_name ORDER BY total_vendido DESC LIMIT 10"
+    },
+    {
+      titulo: "Análise de Conversão por Canal de Marketing",
+      query: "SELECT marketing_channel, COUNT(order_id) as pedidos, SUM(total_price) as receita FROM shopify_orders GROUP BY marketing_channel"
+    }
+  ]
+})
 
 ### gerarGrafico() - Parâmetros:
 - 'tipo': "bar", "line" ou "pie"
