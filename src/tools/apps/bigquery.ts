@@ -525,14 +525,34 @@ export const getCampaigns = tool({
 });
 
 export const planAnalysis = tool({
-  description: 'Trigger AI to create intelligent analysis plan based on conversation context',
-  inputSchema: z.object({}), // Sem parâmetros - IA usa contexto da conversa
-  execute: async () => {
-    console.log('🎯 IA Planning analysis using conversation context');
+  description: 'Structure and organize analysis plan with detailed titles and SQL queries',
+  inputSchema: z.object({
+    analises: z.array(z.object({
+      titulo: z.string().describe('Título detalhado da análise específica'),
+      query: z.string().describe('Query SQL para executar a análise')
+    })).describe('Array de análises a executar com títulos detalhados e queries SQL')
+  }),
+  execute: async ({ analises }) => {
+    console.log('🎯 Estruturando plano de análise com', analises.length, 'análises');
+
+    // Apenas organizar e estruturar, sem executar
+    const planoEstruturado = analises.map((analise, index) => ({
+      numero: index + 1,
+      titulo: analise.titulo,
+      query: analise.query,
+      status: 'planejado',
+      queryType: analise.query.trim().toLowerCase().split(' ')[0].toUpperCase()
+    }));
 
     return {
       success: true,
-      message: 'IA deve analisar o contexto da conversa e criar plano de análise personalizado com formato: {numeroAnalises, analises: [{analise, query, visualizacao}]}'
+      totalAnalises: analises.length,
+      plano: planoEstruturado,
+      message: `Plano de análise criado com ${analises.length} análises estruturadas`,
+      metadata: {
+        generatedAt: new Date().toISOString(),
+        planType: 'analysis-structure'
+      }
     };
   }
 });
