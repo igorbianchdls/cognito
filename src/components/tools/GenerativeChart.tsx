@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { BarChart } from '@/components/charts/BarChart';
 import { LineChart } from '@/components/charts/LineChart';
 import { PieChart } from '@/components/charts/PieChart';
@@ -12,7 +13,7 @@ import {
   ArtifactAction,
   ArtifactContent
 } from '@/components/ai-elements/artifact';
-import { CopyIcon, DownloadIcon, DatabaseIcon } from 'lucide-react';
+import { CopyIcon, DownloadIcon, DatabaseIcon, BarChart3, LineChart as LineChartIcon, PieChart as PieChartIcon } from 'lucide-react';
 
 interface ChartDataPoint {
   x: string;
@@ -45,10 +46,34 @@ export function GenerativeChart({
   sqlQuery,
   totalRecords
 }: GenerativeChartProps) {
+  const [currentChartType, setCurrentChartType] = useState<'bar' | 'line' | 'pie'>(chartType);
+  const [showChartSelector, setShowChartSelector] = useState(false);
 
-  // Renderização condicional baseada no tipo de gráfico
+  // Função para obter ícone baseado no tipo de gráfico
+  const getChartIcon = (type: 'bar' | 'line' | 'pie') => {
+    switch (type) {
+      case 'bar': return BarChart3;
+      case 'line': return LineChartIcon;
+      case 'pie': return PieChartIcon;
+      default: return BarChart3;
+    }
+  };
+
+  // Fechar dropdown quando clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showChartSelector) {
+        setShowChartSelector(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showChartSelector]);
+
+  // Renderização condicional baseada no tipo de gráfico atual
   const renderChart = () => {
-    switch (chartType) {
+    switch (currentChartType) {
       case 'bar':
         return <BarChart data={data} />;
       case 'line':
@@ -107,6 +132,37 @@ export function GenerativeChart({
             </ArtifactDescription>
           </div>
           <ArtifactActions>
+            <div className="relative">
+              <ArtifactAction
+                icon={getChartIcon(currentChartType)}
+                tooltip="Alterar tipo de gráfico"
+                onClick={() => setShowChartSelector(!showChartSelector)}
+              />
+              {/* Dropdown para seleção de chart */}
+              {showChartSelector && (
+                <div className="absolute bottom-full mb-2 right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50 min-w-[120px]">
+                  {[
+                    { type: 'bar' as const, label: 'Bar Chart', icon: BarChart3 },
+                    { type: 'line' as const, label: 'Line Chart', icon: LineChartIcon },
+                    { type: 'pie' as const, label: 'Pie Chart', icon: PieChartIcon }
+                  ].map(({ type, label, icon: Icon }) => (
+                    <button
+                      key={type}
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 transition-colors ${
+                        currentChartType === type ? 'bg-blue-50 text-blue-600' : 'text-gray-700'
+                      }`}
+                      onClick={() => {
+                        setCurrentChartType(type);
+                        setShowChartSelector(false);
+                      }}
+                    >
+                      <Icon className="w-4 h-4" />
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <ArtifactAction
               icon={CopyIcon}
               tooltip="Copiar dados do gráfico"
@@ -119,7 +175,7 @@ export function GenerativeChart({
             />
             <ArtifactAction
               icon={DatabaseIcon}
-              tooltip={`Tipo: ${chartType} • Colunas: ${xColumn} x ${yColumn}`}
+              tooltip={`Tipo: ${currentChartType} • Colunas: ${xColumn} x ${yColumn}`}
             />
           </ArtifactActions>
         </ArtifactHeader>
