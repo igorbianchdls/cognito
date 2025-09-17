@@ -177,7 +177,7 @@ export function GenerativeChart({
               />
               {/* Dropdown para seleção de chart */}
               {showChartSelector && (
-                <div className="absolute bottom-full mb-2 right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50 min-w-[120px]">
+                <div className="absolute top-full mt-2 right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50 min-w-[120px]">
                   {[
                     { type: 'bar' as const, label: 'Bar Chart', icon: BarChart3 },
                     { type: 'line' as const, label: 'Line Chart', icon: LineChartIcon },
