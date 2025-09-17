@@ -128,14 +128,16 @@ export default function ContainerBorderAccordion({
                   type="checkbox"
                   checked={styling?.backgroundGradient?.enabled ?? false}
                   onChange={(e) => {
-                    const currentGradient = styling?.backgroundGradient || {}
+                    const currentGradient = styling?.backgroundGradient || {
+                      enabled: false,
+                      type: 'linear' as const,
+                      direction: '90deg',
+                      startColor: '#3b82f6',
+                      endColor: '#8b5cf6'
+                    }
                     onConfigChange(getFieldPath('backgroundGradient'), {
                       ...currentGradient,
-                      enabled: e.target.checked,
-                      type: currentGradient.type || 'linear',
-                      direction: currentGradient.direction || '90deg',
-                      startColor: currentGradient.startColor || '#3b82f6',
-                      endColor: currentGradient.endColor || '#8b5cf6'
+                      enabled: e.target.checked
                     })
                   }}
                   className="w-4 h-4"
@@ -151,7 +153,13 @@ export default function ContainerBorderAccordion({
                     <Select
                       value={styling?.backgroundGradient?.type || 'linear'}
                       onValueChange={(value) => {
-                        const currentGradient = styling?.backgroundGradient || {}
+                        const currentGradient = styling?.backgroundGradient || {
+                          enabled: false,
+                          type: 'linear' as const,
+                          direction: '90deg',
+                          startColor: '#3b82f6',
+                          endColor: '#8b5cf6'
+                        }
                         onConfigChange(getFieldPath('backgroundGradient'), {
                           ...currentGradient,
                           type: value as 'linear' | 'radial' | 'conic'
@@ -176,7 +184,13 @@ export default function ContainerBorderAccordion({
                       type="text"
                       value={styling?.backgroundGradient?.direction || '90deg'}
                       onChange={(e) => {
-                        const currentGradient = styling?.backgroundGradient || {}
+                        const currentGradient = styling?.backgroundGradient || {
+                          enabled: false,
+                          type: 'linear' as const,
+                          direction: '90deg',
+                          startColor: '#3b82f6',
+                          endColor: '#8b5cf6'
+                        }
                         onConfigChange(getFieldPath('backgroundGradient'), {
                           ...currentGradient,
                           direction: e.target.value
@@ -196,7 +210,13 @@ export default function ContainerBorderAccordion({
                           type="color"
                           value={styling?.backgroundGradient?.startColor || '#3b82f6'}
                           onChange={(e) => {
-                            const currentGradient = styling?.backgroundGradient || {}
+                            const currentGradient = styling?.backgroundGradient || {
+                              enabled: false,
+                              type: 'linear' as const,
+                              direction: '90deg',
+                              startColor: '#3b82f6',
+                              endColor: '#8b5cf6'
+                            }
                             onConfigChange(getFieldPath('backgroundGradient'), {
                               ...currentGradient,
                               startColor: e.target.value
@@ -208,7 +228,13 @@ export default function ContainerBorderAccordion({
                           type="text"
                           value={styling?.backgroundGradient?.startColor || '#3b82f6'}
                           onChange={(e) => {
-                            const currentGradient = styling?.backgroundGradient || {}
+                            const currentGradient = styling?.backgroundGradient || {
+                              enabled: false,
+                              type: 'linear' as const,
+                              direction: '90deg',
+                              startColor: '#3b82f6',
+                              endColor: '#8b5cf6'
+                            }
                             onConfigChange(getFieldPath('backgroundGradient'), {
                               ...currentGradient,
                               startColor: e.target.value
@@ -227,7 +253,13 @@ export default function ContainerBorderAccordion({
                           type="color"
                           value={styling?.backgroundGradient?.endColor || '#8b5cf6'}
                           onChange={(e) => {
-                            const currentGradient = styling?.backgroundGradient || {}
+                            const currentGradient = styling?.backgroundGradient || {
+                              enabled: false,
+                              type: 'linear' as const,
+                              direction: '90deg',
+                              startColor: '#3b82f6',
+                              endColor: '#8b5cf6'
+                            }
                             onConfigChange(getFieldPath('backgroundGradient'), {
                               ...currentGradient,
                               endColor: e.target.value
@@ -239,7 +271,13 @@ export default function ContainerBorderAccordion({
                           type="text"
                           value={styling?.backgroundGradient?.endColor || '#8b5cf6'}
                           onChange={(e) => {
-                            const currentGradient = styling?.backgroundGradient || {}
+                            const currentGradient = styling?.backgroundGradient || {
+                              enabled: false,
+                              type: 'linear' as const,
+                              direction: '90deg',
+                              startColor: '#3b82f6',
+                              endColor: '#8b5cf6'
+                            }
                             onConfigChange(getFieldPath('backgroundGradient'), {
                               ...currentGradient,
                               endColor: e.target.value
@@ -262,11 +300,13 @@ export default function ContainerBorderAccordion({
                   type="checkbox"
                   checked={styling?.backdropFilter?.enabled ?? false}
                   onChange={(e) => {
-                    const currentBackdrop = styling?.backdropFilter || {}
+                    const currentBackdrop = styling?.backdropFilter || {
+                      enabled: false,
+                      blur: 10
+                    }
                     onConfigChange(getFieldPath('backdropFilter'), {
                       ...currentBackdrop,
-                      enabled: e.target.checked,
-                      blur: currentBackdrop.blur || 10
+                      enabled: e.target.checked
                     })
                   }}
                   className="w-4 h-4"
@@ -282,7 +322,10 @@ export default function ContainerBorderAccordion({
                   <Slider
                     value={[styling?.backdropFilter?.blur ?? 10]}
                     onValueChange={(value) => {
-                      const currentBackdrop = styling?.backdropFilter || {}
+                      const currentBackdrop = styling?.backdropFilter || {
+                        enabled: false,
+                        blur: 10
+                      }
                       onConfigChange(getFieldPath('backdropFilter'), {
                         ...currentBackdrop,
                         blur: value[0]
