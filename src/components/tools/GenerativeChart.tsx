@@ -13,7 +13,8 @@ import {
   ArtifactAction,
   ArtifactContent
 } from '@/components/ai-elements/artifact';
-import { CopyIcon, DownloadIcon, DatabaseIcon, BarChart3, LineChart as LineChartIcon, PieChart as PieChartIcon } from 'lucide-react';
+import { CopyIcon, DownloadIcon, DatabaseIcon, BarChart3, LineChart as LineChartIcon, PieChart as PieChartIcon, Table as TableIcon } from 'lucide-react';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
 interface ChartDataPoint {
   x: string;
@@ -48,6 +49,7 @@ export function GenerativeChart({
 }: GenerativeChartProps) {
   const [currentChartType, setCurrentChartType] = useState<'bar' | 'line' | 'pie'>(chartType);
   const [showChartSelector, setShowChartSelector] = useState(false);
+  const [showTable, setShowTable] = useState(false);
 
   // Função para obter ícone baseado no tipo de gráfico
   const getChartIcon = (type: 'bar' | 'line' | 'pie') => {
@@ -70,6 +72,34 @@ export function GenerativeChart({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showChartSelector]);
+
+  // Renderização de tabela com dados do gráfico
+  const renderTable = () => {
+    return (
+      <div className="h-full overflow-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>X ({xColumn})</TableHead>
+              <TableHead>Y ({yColumn})</TableHead>
+              <TableHead>Label</TableHead>
+              <TableHead>Value</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((row, index) => (
+              <TableRow key={index}>
+                <TableCell>{row.x}</TableCell>
+                <TableCell>{row.y}</TableCell>
+                <TableCell>{row.label}</TableCell>
+                <TableCell>{row.value}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  };
 
   // Renderização condicional baseada no tipo de gráfico atual
   const renderChart = () => {
@@ -164,6 +194,11 @@ export function GenerativeChart({
               )}
             </div>
             <ArtifactAction
+              icon={TableIcon}
+              tooltip={showTable ? "Visualizar como gráfico" : "Visualizar como tabela"}
+              onClick={() => setShowTable(!showTable)}
+            />
+            <ArtifactAction
               icon={CopyIcon}
               tooltip="Copiar dados do gráfico"
               onClick={handleCopyData}
@@ -182,7 +217,7 @@ export function GenerativeChart({
 
         <ArtifactContent className="p-0">
           <div style={{ height: '400px', width: '100%' }}>
-            {renderChart()}
+            {showTable ? renderTable() : renderChart()}
           </div>
         </ArtifactContent>
       </Artifact>

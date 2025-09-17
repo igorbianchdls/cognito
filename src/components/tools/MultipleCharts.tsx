@@ -13,7 +13,8 @@ import {
   ArtifactAction,
   ArtifactContent
 } from '@/components/ai-elements/artifact';
-import { CopyIcon, DownloadIcon, DatabaseIcon, BarChart3, LineChart as LineChartIcon, PieChart as PieChartIcon } from 'lucide-react';
+import { CopyIcon, DownloadIcon, DatabaseIcon, BarChart3, LineChart as LineChartIcon, PieChart as PieChartIcon, Table as TableIcon } from 'lucide-react';
+import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
 interface ChartData {
   success: boolean;
@@ -73,6 +74,37 @@ export function MultipleCharts({
   });
 
   const [openDropdowns, setOpenDropdowns] = useState<Record<number, boolean>>({});
+  const [showTableStates, setShowTableStates] = useState<Record<number, boolean>>({});
+
+  // Renderização de tabela com dados do gráfico
+  const renderTable = (chart: ChartData) => {
+    if (!chart.chartData) return null;
+
+    return (
+      <div className="h-full overflow-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>X ({chart.xColumn || 'x'})</TableHead>
+              <TableHead>Y ({chart.yColumn || 'y'})</TableHead>
+              <TableHead>Label</TableHead>
+              <TableHead>Value</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {chart.chartData.map((row, rowIndex) => (
+              <TableRow key={rowIndex}>
+                <TableCell>{row.x}</TableCell>
+                <TableCell>{row.y}</TableCell>
+                <TableCell>{row.label}</TableCell>
+                <TableCell>{row.value}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  };
 
   // Render chart component based on type and current state
   const renderChart = (chart: ChartData, index: number) => {
@@ -236,6 +268,14 @@ export function MultipleCharts({
                   )}
                 </div>
                 <ArtifactAction
+                  icon={TableIcon}
+                  tooltip={showTableStates[index] ? "Visualizar como gráfico" : "Visualizar como tabela"}
+                  onClick={() => setShowTableStates(prev => ({
+                    ...prev,
+                    [index]: !prev[index]
+                  }))}
+                />
+                <ArtifactAction
                   icon={CopyIcon}
                   tooltip="Copiar dados do gráfico"
                   onClick={() => chart.chartData && handleCopyData(chart.chartData)}
@@ -254,7 +294,7 @@ export function MultipleCharts({
 
             <ArtifactContent className="p-0">
               <div style={{ height: '400px', width: '100%' }}>
-                {renderChart(chart, index)}
+                {showTableStates[index] ? renderTable(chart) : renderChart(chart, index)}
               </div>
             </ArtifactContent>
           </Artifact>
