@@ -75,6 +75,20 @@ interface LineChartProps extends BaseChartProps {
   subtitleClassName?: string
   containerClassName?: string
 
+  // Background Advanced
+  backgroundOpacity?: number
+  backgroundGradient?: {
+    enabled: boolean
+    type: 'linear' | 'radial' | 'conic'
+    direction: string
+    startColor: string
+    endColor: string
+  }
+  backdropFilter?: {
+    enabled: boolean
+    blur: number
+  }
+
   // Container Border props
   containerBorderWidth?: number
   containerBorderColor?: string

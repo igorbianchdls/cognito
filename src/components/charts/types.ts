@@ -114,6 +114,18 @@ export interface BarChartProps extends BaseChartProps {
   subtitleFontWeight?: string | number;
   subtitleColor?: string;
   backgroundColor?: string;
+  backgroundOpacity?: number;
+  backgroundGradient?: {
+    enabled: boolean
+    type: 'linear' | 'radial' | 'conic'
+    direction: string
+    startColor: string
+    endColor: string
+  }
+  backdropFilter?: {
+    enabled: boolean
+    blur: number
+  }
 
   // Spacing - Title/Subtitle
   titleMarginTop?: number;
