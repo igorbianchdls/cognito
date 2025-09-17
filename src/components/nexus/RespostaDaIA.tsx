@@ -1358,17 +1358,11 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 <ToolHeader type="tool-planAnalysis" state={planTool.state} />
                 <ToolContent>
                   {planTool.state === 'input-streaming' && (
-                    <>
-                      <ToolInputStreaming
-                        input={planTool.input}
-                        isStreaming={true}
-                        streamingData={planTool.input}
-                      />
-                      <PlanAnalysisStreaming
-                        analises={planTool.input && typeof planTool.input === 'object' && 'analises' in planTool.input ? (planTool.input as PlanAnalysisToolInput).analises || [] : []}
-                        isStreaming={true}
-                      />
-                    </>
+                    <ToolInputStreaming
+                      input={planTool.input}
+                      isStreaming={true}
+                      streamingData={planTool.input}
+                    />
                   )}
                   {planTool.state === 'input-available' && (
                     <ToolInput input={planTool.input} />
@@ -1381,6 +1375,12 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   )}
                 </ToolContent>
               </Tool>
+              {planTool.state === 'input-streaming' && (
+                <PlanAnalysisStreaming
+                  analises={planTool.input && typeof planTool.input === 'object' && 'analises' in planTool.input ? (planTool.input as PlanAnalysisToolInput).analises || [] : []}
+                  isStreaming={true}
+                />
+              )}
               {planTool.state === 'output-available' && (
                 <PlanAnalysis
                   plano={(planTool.output as PlanAnalysisToolOutput).plano}
