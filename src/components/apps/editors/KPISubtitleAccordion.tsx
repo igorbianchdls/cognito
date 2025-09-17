@@ -186,7 +186,7 @@ export default function KPISubtitleAccordion({
         {/* Alignment */}
         <div className="space-y-3">
           <div className="text-xs font-medium text-gray-700">Alinhamento do Subtítulo</div>
-          
+
           <div className="flex gap-1">
             {[
               { value: 'left', icon: '⬅️', label: 'Esquerda' },
@@ -206,6 +206,27 @@ export default function KPISubtitleAccordion({
                 {align.label}
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* Tailwind CSS */}
+        <div className="space-y-3">
+          <div className="text-xs font-medium text-gray-700">🎨 Tailwind CSS (Precedência Total)</div>
+
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">
+              Classes Tailwind para o Subtítulo/Nome
+            </label>
+            <input
+              type="text"
+              value={((styling as Record<string, unknown>)?.kpiNameClassName as string) || ''}
+              onChange={(e) => onConfigChange('kpiNameClassName', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="text-sm font-medium text-gray-600 mb-2"
+            />
+            <div className="text-xs text-gray-400 mt-1">
+              Se preenchido, sobrescreve todas as configurações acima
+            </div>
           </div>
         </div>
 

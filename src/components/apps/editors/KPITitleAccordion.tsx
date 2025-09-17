@@ -210,6 +210,62 @@ export default function KPITitleAccordion({
           </div>
         </div>
 
+        {/* Espaçamento */}
+        <div className="space-y-3">
+          <div className="text-xs font-medium text-gray-700">Espaçamento</div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <div className="text-xs text-gray-500 mb-1">
+                Margem Superior: {((styling as Record<string, unknown>)?.kpiValueMarginTop as number) ?? 0}px
+              </div>
+              <Slider
+                value={[((styling as Record<string, unknown>)?.kpiValueMarginTop as number) ?? 0]}
+                onValueChange={(value) => onConfigChange('kpiValueMarginTop', value[0])}
+                max={50}
+                min={0}
+                step={1}
+                className="w-full"
+              />
+            </div>
+
+            <div>
+              <div className="text-xs text-gray-500 mb-1">
+                Margem Inferior: {((styling as Record<string, unknown>)?.kpiValueMarginBottom as number) ?? 0}px
+              </div>
+              <Slider
+                value={[((styling as Record<string, unknown>)?.kpiValueMarginBottom as number) ?? 0]}
+                onValueChange={(value) => onConfigChange('kpiValueMarginBottom', value[0])}
+                max={50}
+                min={0}
+                step={1}
+                className="w-full"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Tailwind CSS */}
+        <div className="space-y-3">
+          <div className="text-xs font-medium text-gray-700">🎨 Tailwind CSS (Precedência Total)</div>
+
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">
+              Classes Tailwind para o Valor Principal
+            </label>
+            <input
+              type="text"
+              value={((styling as Record<string, unknown>)?.kpiValueClassName as string) || ''}
+              onChange={(e) => onConfigChange('kpiValueClassName', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="text-4xl font-bold text-blue-600 mb-4"
+            />
+            <div className="text-xs text-gray-400 mt-1">
+              Se preenchido, sobrescreve todas as configurações acima
+            </div>
+          </div>
+        </div>
+
       </AccordionContent>
     </AccordionItem>
   )
