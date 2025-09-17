@@ -72,19 +72,22 @@ export default function KPIWrapper({ widget }: KPIWidgetProps) {
         metric: widget.chartConfig.kpiMetric,
         calculation: widget.chartConfig.kpiCalculation,
         timeRange: widget.chartConfig.kpiTimeRange,
-        valueFontSize: widget.chartConfig.kpiValueFontSize,
-        valueColor: widget.chartConfig.kpiValueColor,
-        valueFontWeight: widget.chartConfig.kpiValueFontWeight,
-        nameFontSize: widget.chartConfig.kpiNameFontSize,
-        nameColor: widget.chartConfig.kpiNameColor,
-        nameFontWeight: widget.chartConfig.kpiNameFontWeight,
-        backgroundColor: widget.chartConfig.kpiBackgroundColor,
-        borderColor: widget.chartConfig.kpiBorderColor,
-        borderWidth: widget.chartConfig.kpiBorderWidth,
-        borderRadius: widget.chartConfig.kpiBorderRadius,
-        padding: widget.chartConfig.kpiPadding,
-        textAlign: widget.chartConfig.kpiTextAlign,
-        shadow: widget.chartConfig.kpiShadow,
+        // KPI Value styling (mapped to new props)
+        kpiValueFontSize: widget.chartConfig.kpiValueFontSize,
+        kpiValueColor: widget.chartConfig.kpiValueColor,
+        kpiValueFontWeight: widget.chartConfig.kpiValueFontWeight,
+        // KPI Name styling (mapped to new props)
+        kpiNameFontSize: widget.chartConfig.kpiNameFontSize,
+        kpiNameColor: widget.chartConfig.kpiNameColor,
+        kpiNameFontWeight: widget.chartConfig.kpiNameFontWeight,
+        // Container styling (mapped to new props)
+        kpiContainerBackgroundColor: widget.chartConfig.kpiBackgroundColor,
+        kpiContainerBorderColor: widget.chartConfig.kpiBorderColor,
+        kpiContainerBorderWidth: widget.chartConfig.kpiBorderWidth,
+        kpiContainerBorderRadius: widget.chartConfig.kpiBorderRadius,
+        kpiContainerPadding: widget.chartConfig.kpiPadding,
+        kpiContainerTextAlign: widget.chartConfig.kpiTextAlign,
+        kpiContainerShadow: widget.chartConfig.kpiShadow,
         changeColor: widget.chartConfig.kpiChangeColor,
         targetColor: widget.chartConfig.kpiTargetColor,
       } : {}) || {}
@@ -224,37 +227,9 @@ export default function KPIWrapper({ widget }: KPIWidgetProps) {
 
   return (
     <div className="h-full w-full">
-      <KPICard 
+      <KPICard
         {...kpiProps}
-        kpiContainerBackgroundColor={kpiConfig.kpiContainerBackgroundColor}
-        kpiContainerBackgroundOpacity={(kpiConfig as Record<string, unknown>).kpiContainerBackgroundOpacity as number}
-        kpiContainerBorderColor={kpiConfig.kpiContainerBorderColor}
-        kpiContainerBorderOpacity={(kpiConfig as Record<string, unknown>).kpiContainerBorderOpacity as number}
-        kpiContainerBorderWidth={kpiConfig.kpiContainerBorderWidth}
-        kpiContainerBorderRadius={kpiConfig.kpiContainerBorderRadius}
-        kpiContainerPadding={kpiConfig.kpiContainerPadding}
-        kpiContainerTextAlign={kpiConfig.kpiContainerTextAlign}
-        kpiContainerShadow={kpiConfig.kpiContainerShadow}
-        kpiValueFontSize={kpiConfig.kpiValueFontSize}
-        kpiValueColor={kpiConfig.kpiValueColor}
-        kpiValueFontWeight={kpiConfig.kpiValueFontWeight}
-        kpiNameFontSize={kpiConfig.kpiNameFontSize}
-        kpiNameColor={kpiConfig.kpiNameColor}
-        kpiNameFontWeight={kpiConfig.kpiNameFontWeight}
-        changeColor={kpiConfig.changeColor}
-        targetColor={kpiConfig.targetColor}
-        kpiNameFontFamily={(kpiConfig as Record<string, unknown>).kpiNameFontFamily as string}
-        kpiValueFontFamily={(kpiConfig as Record<string, unknown>).kpiValueFontFamily as string}
-        kpiValueAlign={(kpiConfig as Record<string, unknown>).kpiValueAlign as 'left' | 'center' | 'right'}
-        kpiValueMarginTop={(kpiConfig as Record<string, unknown>).kpiValueMarginTop as number}
-        kpiValueMarginBottom={(kpiConfig as Record<string, unknown>).kpiValueMarginBottom as number}
-        kpiValueLetterSpacing={(kpiConfig as Record<string, unknown>).kpiValueLetterSpacing as number}
-        kpiValueLineHeight={(kpiConfig as Record<string, unknown>).kpiValueLineHeight as number}
-        kpiNameAlign={(kpiConfig as Record<string, unknown>).kpiNameAlign as 'left' | 'center' | 'right'}
-        kpiNameMarginTop={(kpiConfig as Record<string, unknown>).kpiNameMarginTop as number}
-        kpiNameMarginBottom={(kpiConfig as Record<string, unknown>).kpiNameMarginBottom as number}
-        kpiNameLetterSpacing={(kpiConfig as Record<string, unknown>).kpiNameLetterSpacing as number}
-        kpiNameLineHeight={(kpiConfig as Record<string, unknown>).kpiNameLineHeight as number}
+        {...kpiConfig}
       />
     </div>
   )
