@@ -25,7 +25,6 @@ import { KPICard } from '../widgets/KPICard';
 import WebPreviewCard from '../tools/WebPreviewCard';
 import PlanAnalysis from '../tools/PlanAnalysis';
 import PlanAnalysisStreaming from '../tools/PlanAnalysisStreaming';
-import { TaskOverview, TaskWidget } from '../apps/chat/tools/DashboardPlanView';
 import TimelineContext from '../tools/TimelineContext';
 import { GenerativeChart } from '../tools/GenerativeChart';
 import { MultipleCharts } from '../tools/MultipleCharts';
