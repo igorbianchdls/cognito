@@ -57,40 +57,42 @@ interface KPICardProps {
   success?: boolean;
   error?: string;
 
-  // Customization props (igual ao padrão do Table)
-  backgroundColor?: string;
-  backgroundOpacity?: number;
-  borderColor?: string;
-  borderOpacity?: number;
-  borderWidth?: number;
-  borderRadius?: number;
-  padding?: number;
-  textAlign?: 'left' | 'center' | 'right';
-  shadow?: boolean;
-  
-  // Typography props
-  valueFontSize?: number;
-  valueColor?: string;
-  valueFontWeight?: number;
-  nameFontSize?: number;
-  nameColor?: string;
-  nameFontWeight?: number;
-  nameFontFamily?: string;
+  // Container styling props
+  kpiContainerBackgroundColor?: string;
+  kpiContainerBackgroundOpacity?: number;
+  kpiContainerBorderColor?: string;
+  kpiContainerBorderOpacity?: number;
+  kpiContainerBorderWidth?: number;
+  kpiContainerBorderRadius?: number;
+  kpiContainerPadding?: number;
+  kpiContainerTextAlign?: 'left' | 'center' | 'right';
+  kpiContainerShadow?: boolean;
+
+  // KPI Value styling props (number display)
+  kpiValueColor?: string;
+  kpiValueFontSize?: number;
+  kpiValueFontWeight?: number;
+  kpiValueFontFamily?: string;
+  kpiValueAlign?: 'left' | 'center' | 'right';
+  kpiValueMarginTop?: number;
+  kpiValueMarginBottom?: number;
+  kpiValueLetterSpacing?: number;
+  kpiValueLineHeight?: number;
+
+  // KPI Name styling props (label display)
+  kpiNameColor?: string;
+  kpiNameFontSize?: number;
+  kpiNameFontWeight?: number;
+  kpiNameFontFamily?: string;
+  kpiNameAlign?: 'left' | 'center' | 'right';
+  kpiNameMarginTop?: number;
+  kpiNameMarginBottom?: number;
+  kpiNameLetterSpacing?: number;
+  kpiNameLineHeight?: number;
+
+  // Special color props
   changeColor?: string;
   targetColor?: string;
-  valueFontFamily?: string;
-  // Title-specific properties
-  titleAlign?: 'left' | 'center' | 'right';
-  titleMarginTop?: number;
-  titleMarginBottom?: number;
-  titleLetterSpacing?: number;
-  titleLineHeight?: number;
-  // Subtitle-specific properties
-  subtitleAlign?: 'left' | 'center' | 'right';
-  subtitleMarginTop?: number;
-  subtitleMarginBottom?: number;
-  subtitleLetterSpacing?: number;
-  subtitleLineHeight?: number;
 }
 
 export function KPICard({
@@ -114,40 +116,42 @@ export function KPICard({
   success,
   error,
 
-  // Customization props
-  backgroundColor,
-  backgroundOpacity,
-  borderColor,
-  borderOpacity,
-  borderWidth,
-  borderRadius,
-  padding,
-  textAlign,
-  shadow,
-  
-  // Typography props
-  valueFontSize,
-  valueColor,
-  valueFontWeight,
-  nameFontSize,
-  nameColor,
-  nameFontWeight,
-  nameFontFamily,
+  // Container styling props
+  kpiContainerBackgroundColor,
+  kpiContainerBackgroundOpacity,
+  kpiContainerBorderColor,
+  kpiContainerBorderOpacity,
+  kpiContainerBorderWidth,
+  kpiContainerBorderRadius,
+  kpiContainerPadding,
+  kpiContainerTextAlign,
+  kpiContainerShadow,
+
+  // KPI Value styling props (number display)
+  kpiValueColor,
+  kpiValueFontSize,
+  kpiValueFontWeight,
+  kpiValueFontFamily,
+  kpiValueAlign,
+  kpiValueMarginTop,
+  kpiValueMarginBottom,
+  kpiValueLetterSpacing,
+  kpiValueLineHeight,
+
+  // KPI Name styling props (label display)
+  kpiNameColor,
+  kpiNameFontSize,
+  kpiNameFontWeight,
+  kpiNameFontFamily,
+  kpiNameAlign,
+  kpiNameMarginTop,
+  kpiNameMarginBottom,
+  kpiNameLetterSpacing,
+  kpiNameLineHeight,
+
+  // Special color props
   changeColor,
-  targetColor,
-  valueFontFamily,
-  // Title-specific properties
-  titleAlign,
-  titleMarginTop,
-  titleMarginBottom,
-  titleLetterSpacing,
-  titleLineHeight,
-  // Subtitle-specific properties
-  subtitleAlign,
-  subtitleMarginTop,
-  subtitleMarginBottom,
-  subtitleLetterSpacing,
-  subtitleLineHeight
+  targetColor
 }: KPICardProps) {
   if (error || !success) {
     return (
@@ -177,43 +181,43 @@ export function KPICard({
       <Card 
         className="@container/card h-full border-0 p-0"
         style={{
-          backgroundColor: backgroundColor ? hexToRgba(backgroundColor, backgroundOpacity ?? 1) : 'white',
-          borderColor: borderColor ? hexToRgba(borderColor, borderOpacity ?? 1) : '#e5e7eb',
-          borderWidth: borderWidth ? `${borderWidth}px` : undefined,
-          borderRadius: borderRadius ? `${borderRadius}px` : undefined,
-          padding: padding ? `${padding}px` : undefined,
-          textAlign: textAlign || 'left',
-          boxShadow: shadow ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : undefined,
+          backgroundColor: kpiContainerBackgroundColor ? hexToRgba(kpiContainerBackgroundColor, kpiContainerBackgroundOpacity ?? 1) : 'white',
+          borderColor: kpiContainerBorderColor ? hexToRgba(kpiContainerBorderColor, kpiContainerBorderOpacity ?? 1) : '#e5e7eb',
+          borderWidth: kpiContainerBorderWidth ? `${kpiContainerBorderWidth}px` : undefined,
+          borderRadius: kpiContainerBorderRadius ? `${kpiContainerBorderRadius}px` : undefined,
+          padding: kpiContainerPadding ? `${kpiContainerPadding}px` : undefined,
+          textAlign: kpiContainerTextAlign || 'left',
+          boxShadow: kpiContainerShadow ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : undefined,
         }}
       >
         <CardHeader className="!text-left !items-start">
           <CardDescription 
             className="!text-left !justify-start"
             style={{
-              color: nameColor || undefined,
-              fontSize: nameFontSize ? `${nameFontSize}px` : undefined,
-              fontWeight: nameFontWeight || undefined,
-              fontFamily: nameFontFamily !== 'inherit' ? nameFontFamily : undefined,
-              textAlign: subtitleAlign || textAlign || 'left',
-              marginTop: subtitleMarginTop ? `${subtitleMarginTop}px` : undefined,
-              marginBottom: subtitleMarginBottom ? `${subtitleMarginBottom}px` : undefined,
-              letterSpacing: subtitleLetterSpacing ? `${subtitleLetterSpacing}px` : undefined,
-              lineHeight: subtitleLineHeight || undefined
+              color: kpiNameColor || undefined,
+              fontSize: kpiNameFontSize ? `${kpiNameFontSize}px` : undefined,
+              fontWeight: kpiNameFontWeight || undefined,
+              fontFamily: kpiNameFontFamily !== 'inherit' ? kpiNameFontFamily : undefined,
+              textAlign: kpiNameAlign || kpiContainerTextAlign || 'left',
+              marginTop: kpiNameMarginTop ? `${kpiNameMarginTop}px` : undefined,
+              marginBottom: kpiNameMarginBottom ? `${kpiNameMarginBottom}px` : undefined,
+              letterSpacing: kpiNameLetterSpacing ? `${kpiNameLetterSpacing}px` : undefined,
+              lineHeight: kpiNameLineHeight || undefined
             }}>
             {name || 'KPI'}
           </CardDescription>
           <CardTitle 
             className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl !text-left"
             style={{
-              color: valueColor || undefined,
-              fontSize: valueFontSize ? `${valueFontSize}px` : undefined,
-              fontWeight: valueFontWeight || undefined,
-              fontFamily: valueFontFamily !== 'inherit' ? valueFontFamily : undefined,
-              textAlign: titleAlign || textAlign || 'left',
-              marginTop: titleMarginTop ? `${titleMarginTop}px` : undefined,
-              marginBottom: titleMarginBottom ? `${titleMarginBottom}px` : undefined,
-              letterSpacing: titleLetterSpacing ? `${titleLetterSpacing}px` : undefined,
-              lineHeight: titleLineHeight || undefined
+              color: kpiValueColor || undefined,
+              fontSize: kpiValueFontSize ? `${kpiValueFontSize}px` : undefined,
+              fontWeight: kpiValueFontWeight || undefined,
+              fontFamily: kpiValueFontFamily !== 'inherit' ? kpiValueFontFamily : undefined,
+              textAlign: kpiValueAlign || kpiContainerTextAlign || 'left',
+              marginTop: kpiValueMarginTop ? `${kpiValueMarginTop}px` : undefined,
+              marginBottom: kpiValueMarginBottom ? `${kpiValueMarginBottom}px` : undefined,
+              letterSpacing: kpiValueLetterSpacing ? `${kpiValueLetterSpacing}px` : undefined,
+              lineHeight: kpiValueLineHeight || undefined
             }}
           >
             {formatValue(currentValue, unit || '')}

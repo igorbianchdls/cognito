@@ -3,35 +3,35 @@ import { $kpiWidgets, kpiActions } from './kpiStore'
 
 // Comprehensive styles interface - all KPI visual properties (excluding alignment)
 export interface CommonKPIStyles {
-  // Card styles
-  backgroundColor?: string
-  backgroundOpacity?: number
-  borderColor?: string
-  borderOpacity?: number
-  borderWidth?: number
-  borderRadius?: number
-  shadow?: boolean
-  padding?: number
-  
-  // Value/Título (Valor Principal) styles
-  valueFontSize?: number
-  valueFontWeight?: number
-  valueFontFamily?: string
-  valueColor?: string
-  titleMarginTop?: number
-  titleMarginBottom?: number
-  titleLetterSpacing?: number
-  titleLineHeight?: number
-  
-  // Name/Subtítulo (Nome/Label) styles
-  nameFontSize?: number
-  nameFontWeight?: number
-  nameFontFamily?: string
-  nameColor?: string
-  subtitleMarginTop?: number
-  subtitleMarginBottom?: number
-  subtitleLetterSpacing?: number
-  subtitleLineHeight?: number
+  // Container styles
+  kpiContainerBackgroundColor?: string
+  kpiContainerBackgroundOpacity?: number
+  kpiContainerBorderColor?: string
+  kpiContainerBorderOpacity?: number
+  kpiContainerBorderWidth?: number
+  kpiContainerBorderRadius?: number
+  kpiContainerShadow?: boolean
+  kpiContainerPadding?: number
+
+  // KPI Value (number display) styles
+  kpiValueFontSize?: number
+  kpiValueFontWeight?: number
+  kpiValueFontFamily?: string
+  kpiValueColor?: string
+  kpiValueMarginTop?: number
+  kpiValueMarginBottom?: number
+  kpiValueLetterSpacing?: number
+  kpiValueLineHeight?: number
+
+  // KPI Name (label display) styles
+  kpiNameFontSize?: number
+  kpiNameFontWeight?: number
+  kpiNameFontFamily?: string
+  kpiNameColor?: string
+  kpiNameMarginTop?: number
+  kpiNameMarginBottom?: number
+  kpiNameLetterSpacing?: number
+  kpiNameLineHeight?: number
 }
 
 // Style clipboard interface - KPI only
@@ -58,35 +58,35 @@ function extractKPIStyles(kpiId: string): CommonKPIStyles | null {
   if (!kpi || !kpi.config) return null
   
   return {
-    // Card styles
-    backgroundColor: kpi.config.backgroundColor,
-    backgroundOpacity: kpi.config.backgroundOpacity,
-    borderColor: kpi.config.borderColor,
-    borderOpacity: kpi.config.borderOpacity,
-    borderWidth: kpi.config.borderWidth,
-    borderRadius: kpi.config.borderRadius,
-    shadow: kpi.config.shadow,
-    padding: kpi.config.padding,
-    
-    // Value/Título styles
-    valueFontSize: kpi.config.valueFontSize,
-    valueFontWeight: kpi.config.valueFontWeight,
-    valueFontFamily: kpi.config.valueFontFamily,
-    valueColor: kpi.config.valueColor,
-    titleMarginTop: kpi.config.titleMarginTop,
-    titleMarginBottom: kpi.config.titleMarginBottom,
-    titleLetterSpacing: kpi.config.titleLetterSpacing,
-    titleLineHeight: kpi.config.titleLineHeight,
-    
-    // Name/Subtítulo styles
-    nameFontSize: kpi.config.nameFontSize,
-    nameFontWeight: kpi.config.nameFontWeight,
-    nameFontFamily: kpi.config.nameFontFamily,
-    nameColor: kpi.config.nameColor,
-    subtitleMarginTop: kpi.config.subtitleMarginTop,
-    subtitleMarginBottom: kpi.config.subtitleMarginBottom,
-    subtitleLetterSpacing: kpi.config.subtitleLetterSpacing,
-    subtitleLineHeight: kpi.config.subtitleLineHeight
+    // Container styles
+    kpiContainerBackgroundColor: kpi.config.kpiContainerBackgroundColor,
+    kpiContainerBackgroundOpacity: kpi.config.kpiContainerBackgroundOpacity,
+    kpiContainerBorderColor: kpi.config.kpiContainerBorderColor,
+    kpiContainerBorderOpacity: kpi.config.kpiContainerBorderOpacity,
+    kpiContainerBorderWidth: kpi.config.kpiContainerBorderWidth,
+    kpiContainerBorderRadius: kpi.config.kpiContainerBorderRadius,
+    kpiContainerShadow: kpi.config.kpiContainerShadow,
+    kpiContainerPadding: kpi.config.kpiContainerPadding,
+
+    // KPI Value styles
+    kpiValueFontSize: kpi.config.kpiValueFontSize,
+    kpiValueFontWeight: kpi.config.kpiValueFontWeight,
+    kpiValueFontFamily: kpi.config.kpiValueFontFamily,
+    kpiValueColor: kpi.config.kpiValueColor,
+    kpiValueMarginTop: kpi.config.kpiValueMarginTop,
+    kpiValueMarginBottom: kpi.config.kpiValueMarginBottom,
+    kpiValueLetterSpacing: kpi.config.kpiValueLetterSpacing,
+    kpiValueLineHeight: kpi.config.kpiValueLineHeight,
+
+    // KPI Name styles
+    kpiNameFontSize: kpi.config.kpiNameFontSize,
+    kpiNameFontWeight: kpi.config.kpiNameFontWeight,
+    kpiNameFontFamily: kpi.config.kpiNameFontFamily,
+    kpiNameColor: kpi.config.kpiNameColor,
+    kpiNameMarginTop: kpi.config.kpiNameMarginTop,
+    kpiNameMarginBottom: kpi.config.kpiNameMarginBottom,
+    kpiNameLetterSpacing: kpi.config.kpiNameLetterSpacing,
+    kpiNameLineHeight: kpi.config.kpiNameLineHeight
   }
 }
 
@@ -94,35 +94,35 @@ function extractKPIStyles(kpiId: string): CommonKPIStyles | null {
 function applyKPIStyles(kpiId: string, styles: CommonKPIStyles): void {
   const updates: Record<string, unknown> = {}
   
-  // Card styles
-  if (styles.backgroundColor !== undefined) updates.backgroundColor = styles.backgroundColor
-  if (styles.backgroundOpacity !== undefined) updates.backgroundOpacity = styles.backgroundOpacity
-  if (styles.borderColor !== undefined) updates.borderColor = styles.borderColor
-  if (styles.borderOpacity !== undefined) updates.borderOpacity = styles.borderOpacity
-  if (styles.borderWidth !== undefined) updates.borderWidth = styles.borderWidth
-  if (styles.borderRadius !== undefined) updates.borderRadius = styles.borderRadius
-  if (styles.shadow !== undefined) updates.shadow = styles.shadow
-  if (styles.padding !== undefined) updates.padding = styles.padding
-  
-  // Value/Título styles
-  if (styles.valueFontSize !== undefined) updates.valueFontSize = styles.valueFontSize
-  if (styles.valueFontWeight !== undefined) updates.valueFontWeight = styles.valueFontWeight
-  if (styles.valueFontFamily !== undefined) updates.valueFontFamily = styles.valueFontFamily
-  if (styles.valueColor !== undefined) updates.valueColor = styles.valueColor
-  if (styles.titleMarginTop !== undefined) updates.titleMarginTop = styles.titleMarginTop
-  if (styles.titleMarginBottom !== undefined) updates.titleMarginBottom = styles.titleMarginBottom
-  if (styles.titleLetterSpacing !== undefined) updates.titleLetterSpacing = styles.titleLetterSpacing
-  if (styles.titleLineHeight !== undefined) updates.titleLineHeight = styles.titleLineHeight
-  
-  // Name/Subtítulo styles
-  if (styles.nameFontSize !== undefined) updates.nameFontSize = styles.nameFontSize
-  if (styles.nameFontWeight !== undefined) updates.nameFontWeight = styles.nameFontWeight
-  if (styles.nameFontFamily !== undefined) updates.nameFontFamily = styles.nameFontFamily
-  if (styles.nameColor !== undefined) updates.nameColor = styles.nameColor
-  if (styles.subtitleMarginTop !== undefined) updates.subtitleMarginTop = styles.subtitleMarginTop
-  if (styles.subtitleMarginBottom !== undefined) updates.subtitleMarginBottom = styles.subtitleMarginBottom
-  if (styles.subtitleLetterSpacing !== undefined) updates.subtitleLetterSpacing = styles.subtitleLetterSpacing
-  if (styles.subtitleLineHeight !== undefined) updates.subtitleLineHeight = styles.subtitleLineHeight
+  // Container styles
+  if (styles.kpiContainerBackgroundColor !== undefined) updates.kpiContainerBackgroundColor = styles.kpiContainerBackgroundColor
+  if (styles.kpiContainerBackgroundOpacity !== undefined) updates.kpiContainerBackgroundOpacity = styles.kpiContainerBackgroundOpacity
+  if (styles.kpiContainerBorderColor !== undefined) updates.kpiContainerBorderColor = styles.kpiContainerBorderColor
+  if (styles.kpiContainerBorderOpacity !== undefined) updates.kpiContainerBorderOpacity = styles.kpiContainerBorderOpacity
+  if (styles.kpiContainerBorderWidth !== undefined) updates.kpiContainerBorderWidth = styles.kpiContainerBorderWidth
+  if (styles.kpiContainerBorderRadius !== undefined) updates.kpiContainerBorderRadius = styles.kpiContainerBorderRadius
+  if (styles.kpiContainerShadow !== undefined) updates.kpiContainerShadow = styles.kpiContainerShadow
+  if (styles.kpiContainerPadding !== undefined) updates.kpiContainerPadding = styles.kpiContainerPadding
+
+  // KPI Value styles
+  if (styles.kpiValueFontSize !== undefined) updates.kpiValueFontSize = styles.kpiValueFontSize
+  if (styles.kpiValueFontWeight !== undefined) updates.kpiValueFontWeight = styles.kpiValueFontWeight
+  if (styles.kpiValueFontFamily !== undefined) updates.kpiValueFontFamily = styles.kpiValueFontFamily
+  if (styles.kpiValueColor !== undefined) updates.kpiValueColor = styles.kpiValueColor
+  if (styles.kpiValueMarginTop !== undefined) updates.kpiValueMarginTop = styles.kpiValueMarginTop
+  if (styles.kpiValueMarginBottom !== undefined) updates.kpiValueMarginBottom = styles.kpiValueMarginBottom
+  if (styles.kpiValueLetterSpacing !== undefined) updates.kpiValueLetterSpacing = styles.kpiValueLetterSpacing
+  if (styles.kpiValueLineHeight !== undefined) updates.kpiValueLineHeight = styles.kpiValueLineHeight
+
+  // KPI Name styles
+  if (styles.kpiNameFontSize !== undefined) updates.kpiNameFontSize = styles.kpiNameFontSize
+  if (styles.kpiNameFontWeight !== undefined) updates.kpiNameFontWeight = styles.kpiNameFontWeight
+  if (styles.kpiNameFontFamily !== undefined) updates.kpiNameFontFamily = styles.kpiNameFontFamily
+  if (styles.kpiNameColor !== undefined) updates.kpiNameColor = styles.kpiNameColor
+  if (styles.kpiNameMarginTop !== undefined) updates.kpiNameMarginTop = styles.kpiNameMarginTop
+  if (styles.kpiNameMarginBottom !== undefined) updates.kpiNameMarginBottom = styles.kpiNameMarginBottom
+  if (styles.kpiNameLetterSpacing !== undefined) updates.kpiNameLetterSpacing = styles.kpiNameLetterSpacing
+  if (styles.kpiNameLineHeight !== undefined) updates.kpiNameLineHeight = styles.kpiNameLineHeight
   
   kpiActions.updateKPIConfig(kpiId, updates)
 }

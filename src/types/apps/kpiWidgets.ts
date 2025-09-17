@@ -57,40 +57,42 @@ export interface KPIConfig {
   visualizationType?: 'card' | 'display' | 'gauge'
   colorScheme?: 'green' | 'blue' | 'orange' | 'red'
   
-  // Design properties
-  valueFontSize?: number
-  valueColor?: string
-  valueFontWeight?: number
-  valueFontFamily?: string
-  nameFontSize?: number
-  nameColor?: string
-  nameFontWeight?: number
-  nameFontFamily?: string
-  backgroundColor?: string
-  backgroundOpacity?: number
-  borderColor?: string
-  borderOpacity?: number
-  borderWidth?: number
-  borderRadius?: number
-  padding?: number
-  textAlign?: 'left' | 'center' | 'right'
-  shadow?: boolean
+  // Container styling properties
+  kpiContainerBackgroundColor?: string
+  kpiContainerBackgroundOpacity?: number
+  kpiContainerBorderColor?: string
+  kpiContainerBorderOpacity?: number
+  kpiContainerBorderWidth?: number
+  kpiContainerBorderRadius?: number
+  kpiContainerPadding?: number
+  kpiContainerTextAlign?: 'left' | 'center' | 'right'
+  kpiContainerShadow?: boolean
+
+  // KPI Value styling properties (number display)
+  kpiValueColor?: string
+  kpiValueFontSize?: number
+  kpiValueFontWeight?: number
+  kpiValueFontFamily?: string
+  kpiValueAlign?: 'left' | 'center' | 'right'
+  kpiValueMarginTop?: number
+  kpiValueMarginBottom?: number
+  kpiValueLetterSpacing?: number
+  kpiValueLineHeight?: number
+
+  // KPI Name styling properties (label display)
+  kpiNameColor?: string
+  kpiNameFontSize?: number
+  kpiNameFontWeight?: number
+  kpiNameFontFamily?: string
+  kpiNameAlign?: 'left' | 'center' | 'right'
+  kpiNameMarginTop?: number
+  kpiNameMarginBottom?: number
+  kpiNameLetterSpacing?: number
+  kpiNameLineHeight?: number
+
+  // Special color properties
   changeColor?: string
   targetColor?: string
-  
-  // Title-specific properties
-  titleAlign?: 'left' | 'center' | 'right'
-  titleMarginTop?: number
-  titleMarginBottom?: number
-  titleLetterSpacing?: number
-  titleLineHeight?: number
-  
-  // Subtitle-specific properties
-  subtitleAlign?: 'left' | 'center' | 'right'
-  subtitleMarginTop?: number
-  subtitleMarginBottom?: number
-  subtitleLetterSpacing?: number
-  subtitleLineHeight?: number
 }
 
 // KPI Widget interface
@@ -176,27 +178,37 @@ export const KPI_COLOR_SCHEMES = {
 } as const
 
 // Default KPI configuration
-export const DEFAULT_KPI_CONFIG: Required<Omit<KPIConfig, 'name' | 'value' | 'unit' | 'target' | 'change' | 'trend' | 'status' | 'metric' | 'calculation' | 'timeRange' | 'dataSource' | 'refreshRate' | 'simulationRange' | 'bigqueryData' | 'dataSourceType' | 'autoRefresh' | 'refreshInterval' | 'valueFontFamily' | 'nameFontFamily' | 'titleAlign' | 'titleMarginTop' | 'titleMarginBottom' | 'titleLetterSpacing' | 'titleLineHeight' | 'subtitleAlign' | 'subtitleMarginTop' | 'subtitleMarginBottom' | 'subtitleLetterSpacing' | 'subtitleLineHeight'>> = {
+export const DEFAULT_KPI_CONFIG: Required<Omit<KPIConfig, 'name' | 'value' | 'unit' | 'target' | 'change' | 'trend' | 'status' | 'metric' | 'calculation' | 'timeRange' | 'dataSource' | 'refreshRate' | 'simulationRange' | 'bigqueryData' | 'dataSourceType' | 'autoRefresh' | 'refreshInterval' | 'kpiValueFontFamily' | 'kpiNameFontFamily' | 'kpiValueMarginTop' | 'kpiValueMarginBottom' | 'kpiValueLetterSpacing' | 'kpiValueLineHeight' | 'kpiNameMarginTop' | 'kpiNameMarginBottom' | 'kpiNameLetterSpacing' | 'kpiNameLineHeight'>> = {
   enableSimulation: true,
   showTarget: true,
   showTrend: true,
   visualizationType: 'card',
   colorScheme: 'blue',
-  valueFontSize: 36,
-  valueColor: '#1f2937',
-  valueFontWeight: 700,
-  nameFontSize: 14,
-  nameColor: '#6b7280',
-  nameFontWeight: 500,
-  backgroundColor: '#ffffff',
-  backgroundOpacity: 1,
-  borderColor: '#e5e7eb',
-  borderOpacity: 1,
-  borderWidth: 1,
-  borderRadius: 8,
-  padding: 16,
-  textAlign: 'center',
-  shadow: false,
+
+  // Container defaults
+  kpiContainerBackgroundColor: '#ffffff',
+  kpiContainerBackgroundOpacity: 1,
+  kpiContainerBorderColor: '#e5e7eb',
+  kpiContainerBorderOpacity: 1,
+  kpiContainerBorderWidth: 1,
+  kpiContainerBorderRadius: 8,
+  kpiContainerPadding: 16,
+  kpiContainerTextAlign: 'center',
+  kpiContainerShadow: false,
+
+  // KPI Value defaults
+  kpiValueColor: '#1f2937',
+  kpiValueFontSize: 36,
+  kpiValueFontWeight: 700,
+  kpiValueAlign: 'center',
+
+  // KPI Name defaults
+  kpiNameColor: '#6b7280',
+  kpiNameFontSize: 14,
+  kpiNameFontWeight: 500,
+  kpiNameAlign: 'center',
+
+  // Special colors
   changeColor: '#16a34a',
   targetColor: '#9ca3af'
 }
