@@ -102,61 +102,61 @@ export default function KPIStyleClipboardAccordion({
                   <p className="font-medium mb-1">Styles available:</p>
                   <div className="flex flex-wrap gap-1">
                     {/* Card styles */}
-                    {clipboard.commonStyles.backgroundColor && (
+                    {clipboard.commonStyles.kpiContainerBackgroundColor && (
                       <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
                         Background
                       </span>
                     )}
-                    {clipboard.commonStyles.borderColor && (
+                    {clipboard.commonStyles.kpiContainerBorderColor && (
                       <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
                         Border
                       </span>
                     )}
-                    {clipboard.commonStyles.borderRadius && (
+                    {clipboard.commonStyles.kpiContainerBorderRadius && (
                       <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
                         Radius
                       </span>
                     )}
-                    {clipboard.commonStyles.shadow && (
+                    {clipboard.commonStyles.kpiContainerShadow && (
                       <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
                         Shadow
                       </span>
                     )}
-                    {clipboard.commonStyles.padding && (
+                    {clipboard.commonStyles.kpiContainerPadding && (
                       <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
                         Padding
                       </span>
                     )}
                     
                     {/* Value/Title styles */}
-                    {clipboard.commonStyles.valueColor && (
+                    {clipboard.commonStyles.kpiValueColor && (
                       <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
                         Value Color
                       </span>
                     )}
-                    {clipboard.commonStyles.valueFontSize && (
+                    {clipboard.commonStyles.kpiValueFontSize && (
                       <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
                         Value Size
                       </span>
                     )}
-                    {clipboard.commonStyles.valueFontWeight && (
+                    {clipboard.commonStyles.kpiValueFontWeight && (
                       <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
                         Value Weight
                       </span>
                     )}
                     
                     {/* Name/Subtitle styles */}
-                    {clipboard.commonStyles.nameColor && (
+                    {clipboard.commonStyles.kpiNameColor && (
                       <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
                         Name Color
                       </span>
                     )}
-                    {clipboard.commonStyles.nameFontSize && (
+                    {clipboard.commonStyles.kpiNameFontSize && (
                       <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
                         Name Size
                       </span>
                     )}
-                    {clipboard.commonStyles.nameFontWeight && (
+                    {clipboard.commonStyles.kpiNameFontWeight && (
                       <span className="bg-white px-1.5 py-0.5 rounded text-xs border">
                         Name Weight
                       </span>
