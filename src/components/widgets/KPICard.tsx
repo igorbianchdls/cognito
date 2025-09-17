@@ -75,7 +75,13 @@ interface KPICardProps {
   kpiValueFontFamily?: string;
   kpiValueAlign?: 'left' | 'center' | 'right';
   kpiValueMarginTop?: number;
+  kpiValueMarginRight?: number;
   kpiValueMarginBottom?: number;
+  kpiValueMarginLeft?: number;
+  kpiValuePaddingTop?: number;
+  kpiValuePaddingRight?: number;
+  kpiValuePaddingBottom?: number;
+  kpiValuePaddingLeft?: number;
   kpiValueLetterSpacing?: number;
   kpiValueLineHeight?: number;
 
@@ -86,7 +92,13 @@ interface KPICardProps {
   kpiNameFontFamily?: string;
   kpiNameAlign?: 'left' | 'center' | 'right';
   kpiNameMarginTop?: number;
+  kpiNameMarginRight?: number;
   kpiNameMarginBottom?: number;
+  kpiNameMarginLeft?: number;
+  kpiNamePaddingTop?: number;
+  kpiNamePaddingRight?: number;
+  kpiNamePaddingBottom?: number;
+  kpiNamePaddingLeft?: number;
   kpiNameLetterSpacing?: number;
   kpiNameLineHeight?: number;
 
@@ -138,7 +150,13 @@ export function KPICard({
   kpiValueFontFamily,
   kpiValueAlign,
   kpiValueMarginTop,
+  kpiValueMarginRight,
   kpiValueMarginBottom,
+  kpiValueMarginLeft,
+  kpiValuePaddingTop,
+  kpiValuePaddingRight,
+  kpiValuePaddingBottom,
+  kpiValuePaddingLeft,
   kpiValueLetterSpacing,
   kpiValueLineHeight,
 
@@ -149,7 +167,13 @@ export function KPICard({
   kpiNameFontFamily,
   kpiNameAlign,
   kpiNameMarginTop,
+  kpiNameMarginRight,
   kpiNameMarginBottom,
+  kpiNameMarginLeft,
+  kpiNamePaddingTop,
+  kpiNamePaddingRight,
+  kpiNamePaddingBottom,
+  kpiNamePaddingLeft,
   kpiNameLetterSpacing,
   kpiNameLineHeight,
 
@@ -208,7 +232,13 @@ export function KPICard({
               fontFamily: kpiNameFontFamily !== 'inherit' ? kpiNameFontFamily : undefined,
               textAlign: kpiNameAlign || kpiContainerTextAlign || 'left',
               marginTop: kpiNameMarginTop ? `${kpiNameMarginTop}px` : undefined,
+              marginRight: kpiNameMarginRight ? `${kpiNameMarginRight}px` : undefined,
               marginBottom: kpiNameMarginBottom ? `${kpiNameMarginBottom}px` : undefined,
+              marginLeft: kpiNameMarginLeft ? `${kpiNameMarginLeft}px` : undefined,
+              paddingTop: kpiNamePaddingTop ? `${kpiNamePaddingTop}px` : undefined,
+              paddingRight: kpiNamePaddingRight ? `${kpiNamePaddingRight}px` : undefined,
+              paddingBottom: kpiNamePaddingBottom ? `${kpiNamePaddingBottom}px` : undefined,
+              paddingLeft: kpiNamePaddingLeft ? `${kpiNamePaddingLeft}px` : undefined,
               letterSpacing: kpiNameLetterSpacing ? `${kpiNameLetterSpacing}px` : undefined,
               lineHeight: kpiNameLineHeight || undefined
             }}>
@@ -223,7 +253,13 @@ export function KPICard({
               fontFamily: kpiValueFontFamily !== 'inherit' ? kpiValueFontFamily : undefined,
               textAlign: kpiValueAlign || kpiContainerTextAlign || 'left',
               marginTop: kpiValueMarginTop ? `${kpiValueMarginTop}px` : undefined,
+              marginRight: kpiValueMarginRight ? `${kpiValueMarginRight}px` : undefined,
               marginBottom: kpiValueMarginBottom ? `${kpiValueMarginBottom}px` : undefined,
+              marginLeft: kpiValueMarginLeft ? `${kpiValueMarginLeft}px` : undefined,
+              paddingTop: kpiValuePaddingTop ? `${kpiValuePaddingTop}px` : undefined,
+              paddingRight: kpiValuePaddingRight ? `${kpiValuePaddingRight}px` : undefined,
+              paddingBottom: kpiValuePaddingBottom ? `${kpiValuePaddingBottom}px` : undefined,
+              paddingLeft: kpiValuePaddingLeft ? `${kpiValuePaddingLeft}px` : undefined,
               letterSpacing: kpiValueLetterSpacing ? `${kpiValueLetterSpacing}px` : undefined,
               lineHeight: kpiValueLineHeight || undefined
             }}

@@ -116,34 +116,128 @@ export default function KPISubtitleAccordion({
         {/* Spacing */}
         <div className="space-y-3">
           <div className="text-xs font-medium text-gray-700">Espaçamento</div>
-          
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <div className="text-xs text-gray-500 mb-1">
-                Margin Top: {((styling as Record<string, unknown>)?.kpiNameMarginTop as number) ?? 0}px
+
+          {/* Margins */}
+          <div className="space-y-2">
+            <div className="text-xs font-medium text-gray-600">Margem</div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <div className="text-xs text-gray-500 mb-1">
+                  Top: {((styling as Record<string, unknown>)?.kpiNameMarginTop as number) ?? 0}px
+                </div>
+                <Slider
+                  value={[((styling as Record<string, unknown>)?.kpiNameMarginTop as number) ?? 0]}
+                  onValueChange={(value) => onConfigChange('kpiNameMarginTop', value[0])}
+                  max={40}
+                  min={0}
+                  step={1}
+                  className="w-full"
+                />
               </div>
-              <Slider
-                value={[((styling as Record<string, unknown>)?.kpiNameMarginTop as number) ?? 0]}
-                onValueChange={(value) => onConfigChange('kpiNameMarginTop', value[0])}
-                max={40}
-                min={0}
-                step={2}
-                className="w-full"
-              />
+
+              <div>
+                <div className="text-xs text-gray-500 mb-1">
+                  Right: {((styling as Record<string, unknown>)?.kpiNameMarginRight as number) ?? 0}px
+                </div>
+                <Slider
+                  value={[((styling as Record<string, unknown>)?.kpiNameMarginRight as number) ?? 0]}
+                  onValueChange={(value) => onConfigChange('kpiNameMarginRight', value[0])}
+                  max={40}
+                  min={0}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <div className="text-xs text-gray-500 mb-1">
+                  Bottom: {((styling as Record<string, unknown>)?.kpiNameMarginBottom as number) ?? 0}px
+                </div>
+                <Slider
+                  value={[((styling as Record<string, unknown>)?.kpiNameMarginBottom as number) ?? 0]}
+                  onValueChange={(value) => onConfigChange('kpiNameMarginBottom', value[0])}
+                  max={40}
+                  min={0}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <div className="text-xs text-gray-500 mb-1">
+                  Left: {((styling as Record<string, unknown>)?.kpiNameMarginLeft as number) ?? 0}px
+                </div>
+                <Slider
+                  value={[((styling as Record<string, unknown>)?.kpiNameMarginLeft as number) ?? 0]}
+                  onValueChange={(value) => onConfigChange('kpiNameMarginLeft', value[0])}
+                  max={40}
+                  min={0}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
             </div>
-            
-            <div>
-              <div className="text-xs text-gray-500 mb-1">
-                Margin Bottom: {((styling as Record<string, unknown>)?.kpiNameMarginBottom as number) ?? 0}px
+          </div>
+
+          {/* Paddings */}
+          <div className="space-y-2">
+            <div className="text-xs font-medium text-gray-600">Padding</div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <div className="text-xs text-gray-500 mb-1">
+                  Top: {((styling as Record<string, unknown>)?.kpiNamePaddingTop as number) ?? 0}px
+                </div>
+                <Slider
+                  value={[((styling as Record<string, unknown>)?.kpiNamePaddingTop as number) ?? 0]}
+                  onValueChange={(value) => onConfigChange('kpiNamePaddingTop', value[0])}
+                  max={20}
+                  min={0}
+                  step={1}
+                  className="w-full"
+                />
               </div>
-              <Slider
-                value={[((styling as Record<string, unknown>)?.kpiNameMarginBottom as number) ?? 0]}
-                onValueChange={(value) => onConfigChange('kpiNameMarginBottom', value[0])}
-                max={40}
-                min={0}
-                step={2}
-                className="w-full"
-              />
+
+              <div>
+                <div className="text-xs text-gray-500 mb-1">
+                  Right: {((styling as Record<string, unknown>)?.kpiNamePaddingRight as number) ?? 0}px
+                </div>
+                <Slider
+                  value={[((styling as Record<string, unknown>)?.kpiNamePaddingRight as number) ?? 0]}
+                  onValueChange={(value) => onConfigChange('kpiNamePaddingRight', value[0])}
+                  max={20}
+                  min={0}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <div className="text-xs text-gray-500 mb-1">
+                  Bottom: {((styling as Record<string, unknown>)?.kpiNamePaddingBottom as number) ?? 0}px
+                </div>
+                <Slider
+                  value={[((styling as Record<string, unknown>)?.kpiNamePaddingBottom as number) ?? 0]}
+                  onValueChange={(value) => onConfigChange('kpiNamePaddingBottom', value[0])}
+                  max={20}
+                  min={0}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <div className="text-xs text-gray-500 mb-1">
+                  Left: {((styling as Record<string, unknown>)?.kpiNamePaddingLeft as number) ?? 0}px
+                </div>
+                <Slider
+                  value={[((styling as Record<string, unknown>)?.kpiNamePaddingLeft as number) ?? 0]}
+                  onValueChange={(value) => onConfigChange('kpiNamePaddingLeft', value[0])}
+                  max={20}
+                  min={0}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
             </div>
           </div>
         </div>

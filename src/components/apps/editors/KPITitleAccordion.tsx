@@ -117,34 +117,128 @@ export default function KPITitleAccordion({
         {/* Spacing */}
         <div className="space-y-3">
           <div className="text-xs font-medium text-gray-700">Espaçamento</div>
-          
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <div className="text-xs text-gray-500 mb-1">
-                Margin Top: {((styling as Record<string, unknown>)?.kpiValueMarginTop as number) ?? 0}px
+
+          {/* Margins */}
+          <div className="space-y-2">
+            <div className="text-xs font-medium text-gray-600">Margem</div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <div className="text-xs text-gray-500 mb-1">
+                  Top: {((styling as Record<string, unknown>)?.kpiValueMarginTop as number) ?? 0}px
+                </div>
+                <Slider
+                  value={[((styling as Record<string, unknown>)?.kpiValueMarginTop as number) ?? 0]}
+                  onValueChange={(value) => onConfigChange('kpiValueMarginTop', value[0])}
+                  max={50}
+                  min={0}
+                  step={1}
+                  className="w-full"
+                />
               </div>
-              <Slider
-                value={[((styling as Record<string, unknown>)?.kpiValueMarginTop as number) ?? 0]}
-                onValueChange={(value) => onConfigChange('kpiValueMarginTop', value[0])}
-                max={40}
-                min={0}
-                step={2}
-                className="w-full"
-              />
+
+              <div>
+                <div className="text-xs text-gray-500 mb-1">
+                  Right: {((styling as Record<string, unknown>)?.kpiValueMarginRight as number) ?? 0}px
+                </div>
+                <Slider
+                  value={[((styling as Record<string, unknown>)?.kpiValueMarginRight as number) ?? 0]}
+                  onValueChange={(value) => onConfigChange('kpiValueMarginRight', value[0])}
+                  max={50}
+                  min={0}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <div className="text-xs text-gray-500 mb-1">
+                  Bottom: {((styling as Record<string, unknown>)?.kpiValueMarginBottom as number) ?? 0}px
+                </div>
+                <Slider
+                  value={[((styling as Record<string, unknown>)?.kpiValueMarginBottom as number) ?? 0]}
+                  onValueChange={(value) => onConfigChange('kpiValueMarginBottom', value[0])}
+                  max={50}
+                  min={0}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <div className="text-xs text-gray-500 mb-1">
+                  Left: {((styling as Record<string, unknown>)?.kpiValueMarginLeft as number) ?? 0}px
+                </div>
+                <Slider
+                  value={[((styling as Record<string, unknown>)?.kpiValueMarginLeft as number) ?? 0]}
+                  onValueChange={(value) => onConfigChange('kpiValueMarginLeft', value[0])}
+                  max={50}
+                  min={0}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
             </div>
-            
-            <div>
-              <div className="text-xs text-gray-500 mb-1">
-                Margin Bottom: {((styling as Record<string, unknown>)?.kpiValueMarginBottom as number) ?? 0}px
+          </div>
+
+          {/* Paddings */}
+          <div className="space-y-2">
+            <div className="text-xs font-medium text-gray-600">Padding</div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <div className="text-xs text-gray-500 mb-1">
+                  Top: {((styling as Record<string, unknown>)?.kpiValuePaddingTop as number) ?? 0}px
+                </div>
+                <Slider
+                  value={[((styling as Record<string, unknown>)?.kpiValuePaddingTop as number) ?? 0]}
+                  onValueChange={(value) => onConfigChange('kpiValuePaddingTop', value[0])}
+                  max={30}
+                  min={0}
+                  step={1}
+                  className="w-full"
+                />
               </div>
-              <Slider
-                value={[((styling as Record<string, unknown>)?.kpiValueMarginBottom as number) ?? 0]}
-                onValueChange={(value) => onConfigChange('kpiValueMarginBottom', value[0])}
-                max={40}
-                min={0}
-                step={2}
-                className="w-full"
-              />
+
+              <div>
+                <div className="text-xs text-gray-500 mb-1">
+                  Right: {((styling as Record<string, unknown>)?.kpiValuePaddingRight as number) ?? 0}px
+                </div>
+                <Slider
+                  value={[((styling as Record<string, unknown>)?.kpiValuePaddingRight as number) ?? 0]}
+                  onValueChange={(value) => onConfigChange('kpiValuePaddingRight', value[0])}
+                  max={30}
+                  min={0}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <div className="text-xs text-gray-500 mb-1">
+                  Bottom: {((styling as Record<string, unknown>)?.kpiValuePaddingBottom as number) ?? 0}px
+                </div>
+                <Slider
+                  value={[((styling as Record<string, unknown>)?.kpiValuePaddingBottom as number) ?? 0]}
+                  onValueChange={(value) => onConfigChange('kpiValuePaddingBottom', value[0])}
+                  max={30}
+                  min={0}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
+
+              <div>
+                <div className="text-xs text-gray-500 mb-1">
+                  Left: {((styling as Record<string, unknown>)?.kpiValuePaddingLeft as number) ?? 0}px
+                </div>
+                <Slider
+                  value={[((styling as Record<string, unknown>)?.kpiValuePaddingLeft as number) ?? 0]}
+                  onValueChange={(value) => onConfigChange('kpiValuePaddingLeft', value[0])}
+                  max={30}
+                  min={0}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -210,40 +304,6 @@ export default function KPITitleAccordion({
           </div>
         </div>
 
-        {/* Espaçamento */}
-        <div className="space-y-3">
-          <div className="text-xs font-medium text-gray-700">Espaçamento</div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <div className="text-xs text-gray-500 mb-1">
-                Margem Superior: {((styling as Record<string, unknown>)?.kpiValueMarginTop as number) ?? 0}px
-              </div>
-              <Slider
-                value={[((styling as Record<string, unknown>)?.kpiValueMarginTop as number) ?? 0]}
-                onValueChange={(value) => onConfigChange('kpiValueMarginTop', value[0])}
-                max={50}
-                min={0}
-                step={1}
-                className="w-full"
-              />
-            </div>
-
-            <div>
-              <div className="text-xs text-gray-500 mb-1">
-                Margem Inferior: {((styling as Record<string, unknown>)?.kpiValueMarginBottom as number) ?? 0}px
-              </div>
-              <Slider
-                value={[((styling as Record<string, unknown>)?.kpiValueMarginBottom as number) ?? 0]}
-                onValueChange={(value) => onConfigChange('kpiValueMarginBottom', value[0])}
-                max={50}
-                min={0}
-                step={1}
-                className="w-full"
-              />
-            </div>
-          </div>
-        </div>
 
         {/* Tailwind CSS */}
         <div className="space-y-3">

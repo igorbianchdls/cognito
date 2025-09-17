@@ -75,7 +75,13 @@ export interface KPIConfig {
   kpiValueFontFamily?: string
   kpiValueAlign?: 'left' | 'center' | 'right'
   kpiValueMarginTop?: number
+  kpiValueMarginRight?: number
   kpiValueMarginBottom?: number
+  kpiValueMarginLeft?: number
+  kpiValuePaddingTop?: number
+  kpiValuePaddingRight?: number
+  kpiValuePaddingBottom?: number
+  kpiValuePaddingLeft?: number
   kpiValueLetterSpacing?: number
   kpiValueLineHeight?: number
 
@@ -86,7 +92,13 @@ export interface KPIConfig {
   kpiNameFontFamily?: string
   kpiNameAlign?: 'left' | 'center' | 'right'
   kpiNameMarginTop?: number
+  kpiNameMarginRight?: number
   kpiNameMarginBottom?: number
+  kpiNameMarginLeft?: number
+  kpiNamePaddingTop?: number
+  kpiNamePaddingRight?: number
+  kpiNamePaddingBottom?: number
+  kpiNamePaddingLeft?: number
   kpiNameLetterSpacing?: number
   kpiNameLineHeight?: number
 
@@ -182,7 +194,7 @@ export const KPI_COLOR_SCHEMES = {
 } as const
 
 // Default KPI configuration
-export const DEFAULT_KPI_CONFIG: Required<Omit<KPIConfig, 'name' | 'value' | 'unit' | 'target' | 'change' | 'trend' | 'status' | 'metric' | 'calculation' | 'timeRange' | 'dataSource' | 'refreshRate' | 'simulationRange' | 'bigqueryData' | 'dataSourceType' | 'autoRefresh' | 'refreshInterval' | 'kpiValueFontFamily' | 'kpiNameFontFamily' | 'kpiValueMarginTop' | 'kpiValueMarginBottom' | 'kpiValueLetterSpacing' | 'kpiValueLineHeight' | 'kpiNameMarginTop' | 'kpiNameMarginBottom' | 'kpiNameLetterSpacing' | 'kpiNameLineHeight'>> = {
+export const DEFAULT_KPI_CONFIG: Required<Omit<KPIConfig, 'name' | 'value' | 'unit' | 'target' | 'change' | 'trend' | 'status' | 'metric' | 'calculation' | 'timeRange' | 'dataSource' | 'refreshRate' | 'simulationRange' | 'bigqueryData' | 'dataSourceType' | 'autoRefresh' | 'refreshInterval' | 'kpiValueFontFamily' | 'kpiNameFontFamily' | 'kpiValueMarginTop' | 'kpiValueMarginRight' | 'kpiValueMarginBottom' | 'kpiValueMarginLeft' | 'kpiValuePaddingTop' | 'kpiValuePaddingRight' | 'kpiValuePaddingBottom' | 'kpiValuePaddingLeft' | 'kpiValueLetterSpacing' | 'kpiValueLineHeight' | 'kpiNameMarginTop' | 'kpiNameMarginRight' | 'kpiNameMarginBottom' | 'kpiNameMarginLeft' | 'kpiNamePaddingTop' | 'kpiNamePaddingRight' | 'kpiNamePaddingBottom' | 'kpiNamePaddingLeft' | 'kpiNameLetterSpacing' | 'kpiNameLineHeight'>> = {
   enableSimulation: true,
   showTarget: true,
   showTrend: true,
