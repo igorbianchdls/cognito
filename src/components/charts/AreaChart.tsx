@@ -186,20 +186,24 @@ export function AreaChart({
 
   return (
     <div
-      className={containerClassName || undefined}
-      style={containerClassName ? {} : {
+      className={containerClassName}
+      style={{
+        // Propriedades essenciais SEMPRE aplicadas
         width: '100%',
         height: '100%',
-        background: backgroundColor,
-        padding: `${containerPadding || 16}px`,
-        margin: '0 auto',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'stretch',
         minWidth: 0,
-        border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb',
-        borderRadius: containerBorderRadius ? `${containerBorderRadius}px` : undefined,
-        boxShadow,
+        // Propriedades condicionais (só quando não há containerClassName)
+        ...(containerClassName ? {} : {
+          background: backgroundColor,
+          padding: `${containerPadding || 16}px`,
+          margin: '0 auto',
+          border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb',
+          borderRadius: containerBorderRadius ? `${containerBorderRadius}px` : undefined,
+          boxShadow,
+        })
       }}
     >
       {title && (
