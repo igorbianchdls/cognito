@@ -83,6 +83,7 @@ export function BarChart(props: BarChartProps) {
     // Tailwind Classes - Title/Subtitle
     titleClassName = "",
     subtitleClassName = "",
+    containerClassName = "",
     // Container Border props
     containerBorderWidth,
     containerBorderColor,
@@ -179,7 +180,8 @@ export function BarChart(props: BarChartProps) {
 
   return (
     <div
-      style={{
+      className={containerClassName || undefined}
+      style={containerClassName ? {} : {
         width: '100%',
         height: '100%',
         background: backgroundColor,

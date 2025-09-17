@@ -137,6 +137,7 @@ export interface BarChartProps extends BaseChartProps {
   // Tailwind Classes - Title/Subtitle (precedence over individual props)
   titleClassName?: string;
   subtitleClassName?: string;
+  containerClassName?: string;
 
   // Typography - Axis
   axisFontFamily?: string;

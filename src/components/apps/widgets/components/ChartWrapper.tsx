@@ -350,6 +350,12 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
                              widget.areaChartConfig?.styling?.subtitleClassName ||
                              widget.horizontalBarChartConfig?.styling?.subtitleClassName
 
+    const containerClassName = widget.barChartConfig?.styling?.containerClassName ||
+                               widget.lineChartConfig?.styling?.containerClassName ||
+                               widget.pieChartConfig?.styling?.containerClassName ||
+                               widget.areaChartConfig?.styling?.containerClassName ||
+                               widget.horizontalBarChartConfig?.styling?.containerClassName
+
     // Typography props - Axis
     const axisFontFamily = widget.barChartConfig?.styling?.axisFontFamily ??
                           widget.horizontalBarChartConfig?.styling?.axisFontFamily ??
@@ -584,6 +590,7 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             subtitlePaddingLeft={subtitlePaddingLeft}
             titleClassName={titleClassName}
             subtitleClassName={subtitleClassName}
+            containerClassName={containerClassName}
             containerBorderWidth={containerBorderWidth}
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}
@@ -656,6 +663,7 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             subtitlePaddingLeft={subtitlePaddingLeft}
             titleClassName={titleClassName}
             subtitleClassName={subtitleClassName}
+            containerClassName={containerClassName}
             containerBorderWidth={containerBorderWidth}
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}
@@ -716,6 +724,7 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             subtitlePaddingLeft={subtitlePaddingLeft}
             titleClassName={titleClassName}
             subtitleClassName={subtitleClassName}
+            containerClassName={containerClassName}
             containerBorderWidth={containerBorderWidth}
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}
@@ -788,6 +797,7 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             subtitlePaddingLeft={subtitlePaddingLeft}
             titleClassName={titleClassName}
             subtitleClassName={subtitleClassName}
+            containerClassName={containerClassName}
             containerBorderWidth={containerBorderWidth}
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}
@@ -861,6 +871,7 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             subtitlePaddingLeft={subtitlePaddingLeft}
             titleClassName={titleClassName}
             subtitleClassName={subtitleClassName}
+            containerClassName={containerClassName}
             containerBorderWidth={containerBorderWidth}
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}
