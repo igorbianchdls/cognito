@@ -70,6 +70,10 @@ interface LineChartProps extends BaseChartProps {
   subtitlePaddingBottom?: number
   subtitlePaddingLeft?: number
 
+  // Tailwind Classes - Title/Subtitle (precedence over individual props)
+  titleClassName?: string
+  subtitleClassName?: string
+
   // Container Border props
   containerBorderWidth?: number
   containerBorderColor?: string

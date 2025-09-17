@@ -66,6 +66,10 @@ interface AreaChartProps extends BaseChartProps {
   subtitlePaddingBottom?: number
   subtitlePaddingLeft?: number
 
+  // Tailwind Classes - Title/Subtitle (precedence over individual props)
+  titleClassName?: string
+  subtitleClassName?: string
+
   enablePointLabels?: boolean
   pointLabelTextColor?: string
   // Container Border props
