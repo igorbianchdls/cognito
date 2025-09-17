@@ -9,7 +9,9 @@ import AICodeExecutor from './AICodeExecutor'
 import TablesListCustom from './tools/TablesListCustom'
 import TableSchemaCustom from './tools/TableSchemaCustom'
 import DashboardPlanView, { DashboardPlan, TaskOverview, TaskWidget } from './tools/DashboardPlanView'
+import DashboardPlanStreaming from './tools/DashboardPlanStreaming'
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool'
+import { ToolInputStreaming } from '@/components/ai-elements/tool-input-streaming'
 import { Response } from '@/components/ai-elements/response'
 import { Reasoning, ReasoningTrigger, ReasoningContent } from '@/components/ai-elements/reasoning'
 // import { widgetActions } from '@/stores/apps/widgetStore' // REMOVED: Only KPIs supported now
@@ -499,21 +501,43 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                       input?: Record<string, unknown>
                       output?: {
                         success: boolean
-                        overview?: TaskOverview
-                        widgets?: TaskWidget[]
-                        summary?: string
+                        totalWidgets: number
+                        plano: Array<{
+                          numero: number
+                          titulo: string
+                          tipo: 'kpi' | 'chart' | 'table'
+                          query: string
+                          status: string
+                          queryType: string
+                        }>
+                        message: string
                         error?: string
                       }
                       errorText?: string
                     }
-                    const shouldBeOpen = planTool.state === 'output-available' || planTool.state === 'output-error'
+                    const shouldBeOpen = planTool.state === 'output-available' || planTool.state === 'output-error' || planTool.state === 'input-streaming'
+
+                    type DashboardPlanToolInput = {
+                      widgets: Array<{
+                        titulo: string
+                        tipo: 'kpi' | 'chart' | 'table'
+                        query: string
+                      }>
+                    }
 
                     return (
                       <div key={index}>
                         <Tool defaultOpen={shouldBeOpen}>
                           <ToolHeader type="tool-planDashboard" state={planTool.state} />
                           <ToolContent>
-                            {planTool.input && (
+                            {planTool.state === 'input-streaming' && (
+                              <ToolInputStreaming
+                                input={planTool.input}
+                                isStreaming={true}
+                                streamingData={planTool.input}
+                              />
+                            )}
+                            {planTool.state === 'input-available' && (
                               <ToolInput input={planTool.input} />
                             )}
                             {planTool.state === 'output-error' && (
@@ -524,13 +548,19 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                             )}
                           </ToolContent>
                         </Tool>
+                        {planTool.state === 'input-streaming' && (
+                          <DashboardPlanStreaming
+                            widgets={planTool.input && typeof planTool.input === 'object' && 'widgets' in planTool.input ? (planTool.input as DashboardPlanToolInput).widgets || [] : []}
+                            isStreaming={true}
+                          />
+                        )}
                         {planTool.state === 'output-available' && planTool.output && (
                           <DashboardPlanView
-                            overview={planTool.output.overview}
-                            widgets={planTool.output.widgets}
+                            plano={planTool.output.plano}
+                            totalWidgets={planTool.output.totalWidgets}
+                            message={planTool.output.message}
                             success={planTool.output.success}
                             error={planTool.output.error}
-                            summary={planTool.output.summary}
                           />
                         )}
                       </div>

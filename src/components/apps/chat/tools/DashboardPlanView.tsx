@@ -1,75 +1,41 @@
 'use client';
 
-import { AlertCircleIcon } from 'lucide-react';
-import {
-  Task,
-  TaskContent,
-  TaskItem,
-  TaskTrigger
-} from '@/components/ai-elements/task';
-
-interface FieldAnalysis {
-  numeric_fields: string[];
-  categorical_fields: string[];
-  date_fields: string[];
-  text_fields: string[];
-}
-
-interface WidgetSuggestion {
-  type: 'kpi' | 'chart' | 'table';
-  title: string;
-  reasoning: string;
-  priority: 'high' | 'medium' | 'low';
-  field?: string;
-  calculation?: 'SUM' | 'COUNT' | 'AVG' | 'MIN' | 'MAX';
-  chartType?: 'bar' | 'line' | 'pie' | 'area' | 'horizontal-bar';
-  xField?: string;
-  yField?: string;
-  aggregation?: 'SUM' | 'COUNT' | 'AVG' | 'MIN' | 'MAX';
-  columns?: string[];
-}
-
-export interface DashboardPlan {
-  dashboard_objective: string;
-  table_analysis: FieldAnalysis;
-  suggested_widgets: WidgetSuggestion[];
-  layout_recommendations: {
-    kpi_section: string[];
-    chart_section: string[];
-    detail_section: string[];
-  };
-  implementation_notes: string[];
-}
-
-export interface TaskOverview {
-  title: string;
-  items: string[];
-}
-
-export interface TaskWidget {
-  title: string;
-  query: string;
-  description: string;
-}
+import { AlertCircleIcon, ChevronDownIcon, CheckCircleIcon } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
+import { useState } from 'react';
 
 interface DashboardPlanViewProps {
-  overview?: TaskOverview;
-  widgets?: TaskWidget[];
+  plano: Array<{
+    numero: number;
+    titulo: string;
+    tipo: 'kpi' | 'chart' | 'table';
+    query: string;
+    status: string;
+    queryType: string;
+  }>;
+  totalWidgets: number;
+  message: string;
   success: boolean;
   error?: string;
-  summary?: string;
-  // Legacy support for old format
-  plan?: DashboardPlan;
 }
 
 export default function DashboardPlanView({
-  overview,
-  widgets,
+  plano,
+  totalWidgets,
+  message,
   success,
-  error,
-  summary,
-  plan
+  error
 }: DashboardPlanViewProps) {
+  const [openCards, setOpenCards] = useState<Record<number, boolean>>({});
+
+  const toggleCard = (index: number) => {
+    setOpenCards(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+
   if (error || !success) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -82,48 +48,63 @@ export default function DashboardPlanView({
     );
   }
 
-  // Use new format if available, fallback to legacy
-  if (overview && widgets) {
-    return (
-      <div className="space-y-4">
-        {/* Overview Task */}
-        <Task>
-          <TaskTrigger title={overview.title} />
-          <TaskContent>
-            {overview.items.map((item, index) => (
-              <TaskItem key={index}>{item}</TaskItem>
-            ))}
-          </TaskContent>
-        </Task>
-
-        {/* Widget Tasks */}
-        {widgets.map((widget, index) => (
-          <Task defaultOpen={false} key={index}>
-            <TaskTrigger title={widget.title} />
-            <TaskContent>
-              <TaskItem><strong>Descrição:</strong> {widget.description}</TaskItem>
-              <TaskItem>
-                <code className="text-xs bg-gray-100 px-2 py-1 rounded block mt-1 whitespace-pre-wrap">
-                  {widget.query}
-                </code>
-              </TaskItem>
-            </TaskContent>
-          </Task>
-        ))}
-
-        {summary && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
-            <p className="text-blue-800 text-sm">{summary}</p>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // Legacy support - show message for old format
   return (
-    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-      <p className="text-gray-600">Plano usando formato legado - atualize a tool planDashboard para o novo formato Task</p>
+    <div className="space-y-4">
+      {/* Header */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CheckCircleIcon className="w-5 h-5 text-blue-600" />
+            <span className="font-semibold text-blue-900">Plano de Dashboard</span>
+            <Badge variant="secondary" className="ml-2">
+              {totalWidgets} widget{totalWidgets !== 1 ? 's' : ''}
+            </Badge>
+          </div>
+        </div>
+        <p className="text-blue-800 text-sm mt-2">{message}</p>
+      </div>
+
+      {/* Widget Cards */}
+      <div className="space-y-3">
+        {plano.map((widget, index) => {
+          const isOpen = openCards[index] || false;
+
+          return (
+            <Collapsible key={index} open={isOpen} onOpenChange={() => toggleCard(index)}>
+              <div className="border border-gray-200 rounded-lg bg-white hover:shadow-sm transition-shadow">
+                {/* Header with number, title and chevron in single line */}
+                <div className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-semibold text-gray-700">{widget.numero}</span>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900 leading-tight">{widget.titulo}</h4>
+                    </div>
+                    {/* Collapsible trigger - just the icon */}
+                    <CollapsibleTrigger className="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded transition-all duration-200">
+                      <ChevronDownIcon
+                        className={`w-4 h-4 transition-transform duration-200 ${
+                          isOpen ? 'rotate-180' : 'rotate-0'
+                        }`}
+                      />
+                    </CollapsibleTrigger>
+                  </div>
+                </div>
+
+                {/* Collapsible Query block */}
+                <CollapsibleContent className="px-4 pb-4">
+                  <div className="border-t border-gray-100 pt-3">
+                    <pre className="text-xs bg-gray-50 border rounded-md p-3 overflow-x-auto whitespace-pre-wrap font-mono text-gray-800">
+                      {widget.query}
+                    </pre>
+                  </div>
+                </CollapsibleContent>
+              </div>
+            </Collapsible>
+          );
+        })}
+      </div>
     </div>
   );
 }
