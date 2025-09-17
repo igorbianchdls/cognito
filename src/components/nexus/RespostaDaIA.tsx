@@ -1367,9 +1367,9 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   )}
                 </ToolContent>
               </Tool>
-              {planTool.state === 'input-streaming' && planTool.input?.analises && (
+              {planTool.state === 'input-streaming' && planTool.input && 'analises' in planTool.input && (
                 <PlanAnalysisStreaming
-                  analises={planTool.input.analises || []}
+                  analises={(planTool.input as PlanAnalysisToolInput).analises || []}
                   isStreaming={true}
                 />
               )}

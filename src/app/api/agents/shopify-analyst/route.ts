@@ -15,6 +15,7 @@ export async function POST(req: Request) {
 
   const result = streamText({
     model: anthropic('claude-sonnet-4-20250514'),
+    // @ts-expect-error - toolCallStreaming is experimental feature
     toolCallStreaming: true,
 
     // Enable Claude reasoning/thinking

@@ -5,10 +5,14 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import type { ToolUIPart } from 'ai';
 
+interface StreamingData {
+  [key: string]: unknown;
+}
+
 export type ToolInputStreamingProps = ComponentProps<'div'> & {
   input: ToolUIPart['input'];
   isStreaming: boolean;
-  streamingData?: any;
+  streamingData?: StreamingData;
 };
 
 const TypewriterText = ({
@@ -55,10 +59,10 @@ const StreamingJsonRenderer = ({
   data,
   isStreaming
 }: {
-  data: any;
+  data: unknown;
   isStreaming: boolean;
 }) => {
-  const [displayData, setDisplayData] = useState<any>({});
+  const [displayData, setDisplayData] = useState<unknown>({});
 
   useEffect(() => {
     if (!isStreaming) {
@@ -69,7 +73,7 @@ const StreamingJsonRenderer = ({
     }
   }, [data, isStreaming]);
 
-  const renderValue = (value: any, key?: string, level = 0): React.ReactNode => {
+  const renderValue = (value: unknown, key?: string, level = 0): React.ReactNode => {
     const indent = '  '.repeat(level);
 
     if (value === null) return 'null';
@@ -78,13 +82,13 @@ const StreamingJsonRenderer = ({
     if (typeof value === 'string') {
       return (
         <span className="text-green-600">
-          "{isStreaming ? (
+          &quot;{isStreaming ? (
             <TypewriterText
               text={value}
               isStreaming={isStreaming && level > 0}
               delay={20}
             />
-          ) : value}"
+          ) : value}&quot;
         </span>
       );
     }
@@ -119,7 +123,7 @@ const StreamingJsonRenderer = ({
           <span>{'{'}</span>
           {entries.map(([k, v], index) => (
             <div key={k} className="ml-4">
-              {indent}  <span className="text-blue-800">"{k}"</span>: {renderValue(v, k, level + 1)}
+              {indent}  <span className="text-blue-800">&quot;{k}&quot;</span>: {renderValue(v, k, level + 1)}
               {index < entries.length - 1 && ','}
             </div>
           ))}
@@ -142,7 +146,6 @@ export const ToolInputStreaming = ({
   className,
   input,
   isStreaming,
-  streamingData,
   ...props
 }: ToolInputStreamingProps) => (
   <div className={cn('space-y-2 overflow-hidden p-4', className)} {...props}>
