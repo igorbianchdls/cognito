@@ -3,6 +3,7 @@ import { Response } from '@/components/ai-elements/response';
 import { Reasoning, ReasoningTrigger, ReasoningContent } from '@/components/ai-elements/reasoning';
 import { Actions, Action } from '@/components/ai-elements/actions';
 import { Tool, ToolHeader, ToolContent, ToolInput, ToolOutput } from '@/components/ai-elements/tool';
+import { ToolInputStreaming } from '@/components/ai-elements/tool-input-streaming';
 import { CopyIcon, ThumbsUpIcon, ThumbsDownIcon } from 'lucide-react';
 import MetaIcon from '@/components/icons/MetaIcon';
 import GoogleAnalyticsIcon from '@/components/icons/GoogleAnalyticsIcon';
@@ -23,6 +24,7 @@ import TableCreation from '../tools/TableCreation';
 import { KPICard } from '../widgets/KPICard';
 import WebPreviewCard from '../tools/WebPreviewCard';
 import PlanAnalysis from '../tools/PlanAnalysis';
+import PlanAnalysisStreaming from '../tools/PlanAnalysisStreaming';
 import { TaskOverview, TaskWidget } from '../apps/chat/tools/DashboardPlanView';
 import TimelineContext from '../tools/TimelineContext';
 import { GenerativeChart } from '../tools/GenerativeChart';
@@ -382,20 +384,28 @@ type WebPreviewToolOutput = {
 };
 
 type PlanAnalysisToolInput = {
-  userQuery: string;
-  tableName: string;
-  schema: Array<{
-    column_name: string;
-    data_type: string;
+  analises: Array<{
+    titulo: string;
+    query: string;
   }>;
 };
 
 type PlanAnalysisToolOutput = {
   success: boolean;
-  overview?: TaskOverview;
-  widgets?: TaskWidget[];
+  totalAnalises: number;
+  plano: Array<{
+    numero: number;
+    titulo: string;
+    query: string;
+    status: string;
+    queryType: string;
+  }>;
+  message: string;
+  metadata: {
+    generatedAt: string;
+    planType: string;
+  };
   error?: string;
-  summary?: string;
 };
 
 type TimelineContextToolInput = {
@@ -1332,14 +1342,21 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
         if (part.type === 'tool-planAnalysis') {
           const planTool = part as NexusToolUIPart;
           const callId = planTool.toolCallId;
-          const shouldBeOpen = planTool.state === 'output-available' || planTool.state === 'output-error';
+          const shouldBeOpen = planTool.state === 'output-available' || planTool.state === 'output-error' || planTool.state === 'input-streaming';
 
           return (
             <div key={callId}>
               <Tool defaultOpen={shouldBeOpen}>
                 <ToolHeader type="tool-planAnalysis" state={planTool.state} />
                 <ToolContent>
-                  {planTool.input && (
+                  {planTool.state === 'input-streaming' && (
+                    <ToolInputStreaming
+                      input={planTool.input}
+                      isStreaming={true}
+                      streamingData={planTool.input}
+                    />
+                  )}
+                  {planTool.state === 'input-available' && (
                     <ToolInput input={planTool.input} />
                   )}
                   {planTool.state === 'output-error' && (
@@ -1350,13 +1367,19 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   )}
                 </ToolContent>
               </Tool>
+              {planTool.state === 'input-streaming' && planTool.input?.analises && (
+                <PlanAnalysisStreaming
+                  analises={planTool.input.analises || []}
+                  isStreaming={true}
+                />
+              )}
               {planTool.state === 'output-available' && (
                 <PlanAnalysis
-                  overview={(planTool.output as PlanAnalysisToolOutput).overview}
-                  widgets={(planTool.output as PlanAnalysisToolOutput).widgets}
+                  plano={(planTool.output as PlanAnalysisToolOutput).plano}
+                  totalAnalises={(planTool.output as PlanAnalysisToolOutput).totalAnalises}
+                  message={(planTool.output as PlanAnalysisToolOutput).message}
                   success={(planTool.output as PlanAnalysisToolOutput).success}
                   error={(planTool.output as PlanAnalysisToolOutput).error}
-                  summary={(planTool.output as PlanAnalysisToolOutput).summary}
                 />
               )}
             </div>
