@@ -211,19 +211,18 @@ export function KPICard({
 
 
   return (
-    <div style={{ width: '100%', height: '100%', minWidth: 0 }}>
-      <Card
-        className={kpiContainerClassName || "@container/card h-full border-0 p-0"}
-        style={kpiContainerClassName ? {} : {
-          backgroundColor: kpiContainerBackgroundColor ? hexToRgba(kpiContainerBackgroundColor, kpiContainerBackgroundOpacity ?? 1) : 'white',
-          borderColor: kpiContainerBorderColor ? hexToRgba(kpiContainerBorderColor, kpiContainerBorderOpacity ?? 1) : '#e5e7eb',
-          borderWidth: kpiContainerBorderWidth ? `${kpiContainerBorderWidth}px` : undefined,
-          borderRadius: kpiContainerBorderRadius ? `${kpiContainerBorderRadius}px` : undefined,
-          padding: kpiContainerPadding ? `${kpiContainerPadding}px` : undefined,
-          textAlign: kpiContainerTextAlign || 'left',
-          boxShadow: kpiContainerShadow ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : undefined,
-        }}
-      >
+    <Card
+      className={kpiContainerClassName || "@container/card h-full w-full border-0 p-0"}
+      style={kpiContainerClassName ? {} : {
+        backgroundColor: kpiContainerBackgroundColor ? hexToRgba(kpiContainerBackgroundColor, kpiContainerBackgroundOpacity ?? 1) : 'white',
+        borderColor: kpiContainerBorderColor ? hexToRgba(kpiContainerBorderColor, kpiContainerBorderOpacity ?? 1) : '#e5e7eb',
+        borderWidth: kpiContainerBorderWidth ? `${kpiContainerBorderWidth}px` : undefined,
+        borderRadius: kpiContainerBorderRadius ? `${kpiContainerBorderRadius}px` : undefined,
+        padding: kpiContainerPadding ? `${kpiContainerPadding}px` : undefined,
+        textAlign: kpiContainerTextAlign || 'left',
+        boxShadow: kpiContainerShadow ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : undefined,
+      }}
+    >
         <CardHeader className="!text-left !items-start">
           <CardDescription
             className={kpiNameClassName || "!text-left !justify-start"}
@@ -269,8 +268,7 @@ export function KPICard({
             {formatValue(currentValue, unit || '')}
           </CardTitle>
         </CardHeader>
-      </Card>
-    </div>
+    </Card>
   );
 }
 
