@@ -63,6 +63,23 @@ export function BarChart(props: BarChartProps) {
     legendsTextColor,
     tooltipFontSize,
     tooltipFontFamily,
+    // Spacing props - Title/Subtitle
+    titleMarginTop,
+    titleMarginRight,
+    titleMarginBottom,
+    titleMarginLeft,
+    titlePaddingTop,
+    titlePaddingRight,
+    titlePaddingBottom,
+    titlePaddingLeft,
+    subtitleMarginTop,
+    subtitleMarginRight,
+    subtitleMarginBottom,
+    subtitleMarginLeft,
+    subtitlePaddingTop,
+    subtitlePaddingRight,
+    subtitlePaddingBottom,
+    subtitlePaddingLeft,
     // Container Border props
     containerBorderWidth,
     containerBorderColor,
@@ -175,19 +192,21 @@ export function BarChart(props: BarChartProps) {
       }}
     >
       {title && (
-        <h3 style={{ 
-          margin: '0 0 4px 0', 
-          fontSize: `${titleFontSize}px`, 
-          fontWeight: titleFontWeight, 
+        <h3 style={{
+          margin: `${titleMarginTop ?? 0}px ${titleMarginRight ?? 0}px ${titleMarginBottom ?? 4}px ${titleMarginLeft ?? 0}px`,
+          padding: `${titlePaddingTop ?? 0}px ${titlePaddingRight ?? 0}px ${titlePaddingBottom ?? 0}px ${titlePaddingLeft ?? 0}px`,
+          fontSize: `${titleFontSize}px`,
+          fontWeight: titleFontWeight,
           color: titleColor
         }}>
           {title}
         </h3>
       )}
       {subtitle && (
-        <div style={{ 
-          margin: '0 0 16px 0', 
-          fontSize: `${subtitleFontSize}px`, 
+        <div style={{
+          margin: `${subtitleMarginTop ?? 0}px ${subtitleMarginRight ?? 0}px ${subtitleMarginBottom ?? 16}px ${subtitleMarginLeft ?? 0}px`,
+          padding: `${subtitlePaddingTop ?? 0}px ${subtitlePaddingRight ?? 0}px ${subtitlePaddingBottom ?? 0}px ${subtitlePaddingLeft ?? 0}px`,
+          fontSize: `${subtitleFontSize}px`,
           color: subtitleColor,
           fontWeight: subtitleFontWeight
         }}>
