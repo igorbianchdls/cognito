@@ -62,7 +62,64 @@ export class WidgetUpdate {
 
       // Special color properties
       changeColor?: string,
-      targetColor?: string
+      targetColor?: string,
+
+      // Background Advanced
+      backgroundColor?: string,
+      backgroundOpacity?: number,
+      backgroundGradient?: {
+        enabled: boolean,
+        type: 'linear' | 'radial' | 'conic',
+        direction: string,
+        startColor: string,
+        endColor: string
+      },
+      backdropFilter?: {
+        enabled: boolean,
+        blur: number
+      },
+
+      // Typography - Title/Subtitle (for KPI container)
+      titleFontSize?: number,
+      titleFontWeight?: number,
+      titleColor?: string,
+      subtitleFontSize?: number,
+      subtitleFontWeight?: number,
+      subtitleColor?: string,
+
+      // Spacing - Title/Subtitle
+      titleMarginTop?: number,
+      titleMarginRight?: number,
+      titleMarginBottom?: number,
+      titleMarginLeft?: number,
+      titlePaddingTop?: number,
+      titlePaddingRight?: number,
+      titlePaddingBottom?: number,
+      titlePaddingLeft?: number,
+      subtitleMarginTop?: number,
+      subtitleMarginRight?: number,
+      subtitleMarginBottom?: number,
+      subtitleMarginLeft?: number,
+      subtitlePaddingTop?: number,
+      subtitlePaddingRight?: number,
+      subtitlePaddingBottom?: number,
+      subtitlePaddingLeft?: number,
+
+      // Tailwind Classes
+      titleClassName?: string,
+      subtitleClassName?: string,
+      containerClassName?: string,
+
+      // Container Border & Shadow (additional to existing kpi properties)
+      containerBorderWidth?: number,
+      containerBorderColor?: string,
+      containerBorderRadius?: number,
+      containerPadding?: number,
+      containerShadowColor?: string,
+      containerShadowOpacity?: number,
+      containerShadowBlur?: number,
+      containerShadowOffsetX?: number,
+      containerShadowOffsetY?: number
     },
     position?: {
       x?: number,

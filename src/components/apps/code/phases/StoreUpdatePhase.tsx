@@ -49,7 +49,17 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
       "kpiValueFontSize": 36,
       "kpiValueColor": "#0f172a",
       "kpiValueFontWeight": 700,
-      "kpiValueAlign": "center"
+      "kpiValueAlign": "center",
+      "backgroundGradient": {
+        "enabled": true,
+        "type": "linear",
+        "direction": "135deg",
+        "startColor": "#e0f2fe",
+        "endColor": "#f0f9ff"
+      },
+      "titleFontSize": 14,
+      "titleColor": "#334155",
+      "containerClassName": "shadow-lg hover:shadow-xl transition-shadow"
     },
     "position": {
       "x": 0,
@@ -78,7 +88,16 @@ export default function StoreUpdatePhase({ initialCode }: StoreUpdatePhaseProps 
       "kpiValueColor": "#854d0e",
       "kpiNameFontSize": 12,
       "kpiNameColor": "#a16207",
-      "kpiValueAlign": "left"
+      "kpiValueAlign": "left",
+      "backdropFilter": {
+        "enabled": true,
+        "blur": 8
+      },
+      "backgroundColor": "#fffbeb",
+      "backgroundOpacity": 0.8,
+      "subtitleFontSize": 10,
+      "subtitleColor": "#92400e",
+      "titleMarginBottom": 8
     },
     "position": {
       "x": 50,
