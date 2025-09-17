@@ -385,7 +385,7 @@ type WebPreviewToolOutput = {
 type PlanAnalysisToolInput = {
   analises: Array<{
     titulo: string;
-    query: string;
+    descricao: string;
   }>;
 };
 
@@ -395,9 +395,9 @@ type PlanAnalysisToolOutput = {
   plano: Array<{
     numero: number;
     titulo: string;
-    query: string;
+    descricao: string;
     status: string;
-    queryType: string;
+    tipo: string;
   }>;
   message: string;
   metadata: {

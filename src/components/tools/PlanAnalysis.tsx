@@ -9,9 +9,9 @@ interface PlanAnalysisProps {
   plano: Array<{
     numero: number;
     titulo: string;
-    query: string;
+    descricao: string;
     status: string;
-    queryType: string;
+    tipo: string;
   }>;
   totalAnalises: number;
   message: string;
@@ -92,12 +92,12 @@ export default function PlanAnalysis({
                   </div>
                 </div>
 
-                {/* Collapsible Query block */}
+                {/* Collapsible Description block */}
                 <CollapsibleContent className="px-4 pb-4">
                   <div className="border-t border-gray-100 pt-3">
-                    <pre className="text-xs bg-gray-50 border rounded-md p-3 overflow-x-auto whitespace-pre-wrap font-mono text-gray-800">
-                      {analise.query}
-                    </pre>
+                    <div className="text-sm bg-gray-50 border rounded-md p-3 text-gray-800 leading-relaxed">
+                      {analise.descricao}
+                    </div>
                   </div>
                 </CollapsibleContent>
               </div>

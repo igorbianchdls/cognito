@@ -10,7 +10,7 @@ interface DashboardPlanViewProps {
     numero: number;
     titulo: string;
     tipo: 'kpi' | 'chart' | 'table';
-    query: string;
+    descricao: string;
     status: string;
     queryType: string;
   }>;
@@ -95,9 +95,9 @@ export default function DashboardPlanView({
                 {/* Collapsible Query block */}
                 <CollapsibleContent className="px-4 pb-4">
                   <div className="border-t border-gray-100 pt-3">
-                    <pre className="text-xs bg-gray-50 border rounded-md p-3 overflow-x-auto whitespace-pre-wrap font-mono text-gray-800">
-                      {widget.query}
-                    </pre>
+                    <div className="text-sm bg-gray-50 border rounded-md p-3 text-gray-800 leading-relaxed">
+                      {widget.descricao}
+                    </div>
                   </div>
                 </CollapsibleContent>
               </div>

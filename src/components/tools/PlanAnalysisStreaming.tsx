@@ -6,9 +6,9 @@ import { CheckCircleIcon } from 'lucide-react';
 interface StreamingAnalise {
   numero?: number;
   titulo?: string;
-  query?: string;
+  descricao?: string;
   status?: string;
-  queryType?: string;
+  tipo?: string;
 }
 
 interface PlanAnalysisStreamingProps {
