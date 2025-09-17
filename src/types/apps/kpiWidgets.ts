@@ -109,6 +109,7 @@ export interface KPIConfig {
   // Tailwind Classes - KPI (precedence over individual props)
   kpiNameClassName?: string
   kpiValueClassName?: string
+  kpiContainerClassName?: string
 }
 
 // KPI Widget interface
@@ -230,5 +231,6 @@ export const DEFAULT_KPI_CONFIG: Required<Omit<KPIConfig, 'name' | 'value' | 'un
 
   // Tailwind Classes defaults
   kpiNameClassName: '',
-  kpiValueClassName: ''
+  kpiValueClassName: '',
+  kpiContainerClassName: ''
 }

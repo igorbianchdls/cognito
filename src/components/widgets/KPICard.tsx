@@ -109,6 +109,7 @@ interface KPICardProps {
   // Tailwind Classes - KPI (precedence over individual props)
   kpiNameClassName?: string;
   kpiValueClassName?: string;
+  kpiContainerClassName?: string;
 }
 
 export function KPICard({
@@ -183,7 +184,8 @@ export function KPICard({
 
   // Tailwind Classes - KPI
   kpiNameClassName = "",
-  kpiValueClassName = ""
+  kpiValueClassName = "",
+  kpiContainerClassName = ""
 }: KPICardProps) {
   if (error || !success) {
     return (
@@ -210,9 +212,9 @@ export function KPICard({
 
   return (
     <div style={{ width: '100%', height: '100%', minWidth: 0 }}>
-      <Card 
-        className="@container/card h-full border-0 p-0"
-        style={{
+      <Card
+        className={kpiContainerClassName || "@container/card h-full border-0 p-0"}
+        style={kpiContainerClassName ? {} : {
           backgroundColor: kpiContainerBackgroundColor ? hexToRgba(kpiContainerBackgroundColor, kpiContainerBackgroundOpacity ?? 1) : 'white',
           borderColor: kpiContainerBorderColor ? hexToRgba(kpiContainerBorderColor, kpiContainerBorderOpacity ?? 1) : '#e5e7eb',
           borderWidth: kpiContainerBorderWidth ? `${kpiContainerBorderWidth}px` : undefined,

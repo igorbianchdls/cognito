@@ -189,6 +189,28 @@ export default function KPICardAccordion({
           </div>
         </div>
 
+        {/* Tailwind CSS Classes */}
+        <div className="space-y-3">
+          <div className="text-xs font-medium text-gray-700">🎨 Classes Tailwind (Precedência Total)</div>
+
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">
+              Classes Tailwind para o Container
+            </label>
+            <input
+              type="text"
+              value={((styling as Record<string, unknown>)?.kpiContainerClassName as string) || ''}
+              onChange={(e) => onConfigChange('kpiContainerClassName', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="bg-white p-4 rounded-lg shadow-md border"
+            />
+          </div>
+
+          <div className="text-xs text-gray-400">
+            Se preenchido, sobrescreve todas as configurações de container acima
+          </div>
+        </div>
+
       </AccordionContent>
     </AccordionItem>
   )
