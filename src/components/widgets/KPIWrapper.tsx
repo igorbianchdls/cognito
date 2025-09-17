@@ -226,35 +226,35 @@ export default function KPIWrapper({ widget }: KPIWidgetProps) {
     <div className="h-full w-full">
       <KPICard 
         {...kpiProps}
-        backgroundColor={kpiConfig.backgroundColor}
-        backgroundOpacity={(kpiConfig as Record<string, unknown>).backgroundOpacity as number}
-        borderColor={kpiConfig.borderColor}
-        borderOpacity={(kpiConfig as Record<string, unknown>).borderOpacity as number}
-        borderWidth={kpiConfig.borderWidth}
-        borderRadius={kpiConfig.borderRadius}
-        padding={kpiConfig.padding}
-        textAlign={kpiConfig.textAlign}
-        shadow={kpiConfig.shadow}
-        valueFontSize={kpiConfig.valueFontSize}
-        valueColor={kpiConfig.valueColor}
-        valueFontWeight={kpiConfig.valueFontWeight}
-        nameFontSize={kpiConfig.nameFontSize}
-        nameColor={kpiConfig.nameColor}
-        nameFontWeight={kpiConfig.nameFontWeight}
+        kpiContainerBackgroundColor={kpiConfig.kpiContainerBackgroundColor}
+        kpiContainerBackgroundOpacity={(kpiConfig as Record<string, unknown>).kpiContainerBackgroundOpacity as number}
+        kpiContainerBorderColor={kpiConfig.kpiContainerBorderColor}
+        kpiContainerBorderOpacity={(kpiConfig as Record<string, unknown>).kpiContainerBorderOpacity as number}
+        kpiContainerBorderWidth={kpiConfig.kpiContainerBorderWidth}
+        kpiContainerBorderRadius={kpiConfig.kpiContainerBorderRadius}
+        kpiContainerPadding={kpiConfig.kpiContainerPadding}
+        kpiContainerTextAlign={kpiConfig.kpiContainerTextAlign}
+        kpiContainerShadow={kpiConfig.kpiContainerShadow}
+        kpiValueFontSize={kpiConfig.kpiValueFontSize}
+        kpiValueColor={kpiConfig.kpiValueColor}
+        kpiValueFontWeight={kpiConfig.kpiValueFontWeight}
+        kpiNameFontSize={kpiConfig.kpiNameFontSize}
+        kpiNameColor={kpiConfig.kpiNameColor}
+        kpiNameFontWeight={kpiConfig.kpiNameFontWeight}
         changeColor={kpiConfig.changeColor}
         targetColor={kpiConfig.targetColor}
-        nameFontFamily={(kpiConfig as Record<string, unknown>).nameFontFamily as string}
-        valueFontFamily={(kpiConfig as Record<string, unknown>).valueFontFamily as string}
-        titleAlign={(kpiConfig as Record<string, unknown>).titleAlign as 'left' | 'center' | 'right'}
-        titleMarginTop={(kpiConfig as Record<string, unknown>).titleMarginTop as number}
-        titleMarginBottom={(kpiConfig as Record<string, unknown>).titleMarginBottom as number}
-        titleLetterSpacing={(kpiConfig as Record<string, unknown>).titleLetterSpacing as number}
-        titleLineHeight={(kpiConfig as Record<string, unknown>).titleLineHeight as number}
-        subtitleAlign={(kpiConfig as Record<string, unknown>).subtitleAlign as 'left' | 'center' | 'right'}
-        subtitleMarginTop={(kpiConfig as Record<string, unknown>).subtitleMarginTop as number}
-        subtitleMarginBottom={(kpiConfig as Record<string, unknown>).subtitleMarginBottom as number}
-        subtitleLetterSpacing={(kpiConfig as Record<string, unknown>).subtitleLetterSpacing as number}
-        subtitleLineHeight={(kpiConfig as Record<string, unknown>).subtitleLineHeight as number}
+        kpiNameFontFamily={(kpiConfig as Record<string, unknown>).kpiNameFontFamily as string}
+        kpiValueFontFamily={(kpiConfig as Record<string, unknown>).kpiValueFontFamily as string}
+        kpiValueAlign={(kpiConfig as Record<string, unknown>).kpiValueAlign as 'left' | 'center' | 'right'}
+        kpiValueMarginTop={(kpiConfig as Record<string, unknown>).kpiValueMarginTop as number}
+        kpiValueMarginBottom={(kpiConfig as Record<string, unknown>).kpiValueMarginBottom as number}
+        kpiValueLetterSpacing={(kpiConfig as Record<string, unknown>).kpiValueLetterSpacing as number}
+        kpiValueLineHeight={(kpiConfig as Record<string, unknown>).kpiValueLineHeight as number}
+        kpiNameAlign={(kpiConfig as Record<string, unknown>).kpiNameAlign as 'left' | 'center' | 'right'}
+        kpiNameMarginTop={(kpiConfig as Record<string, unknown>).kpiNameMarginTop as number}
+        kpiNameMarginBottom={(kpiConfig as Record<string, unknown>).kpiNameMarginBottom as number}
+        kpiNameLetterSpacing={(kpiConfig as Record<string, unknown>).kpiNameLetterSpacing as number}
+        kpiNameLineHeight={(kpiConfig as Record<string, unknown>).kpiNameLineHeight as number}
       />
     </div>
   )
