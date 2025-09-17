@@ -7,7 +7,7 @@ interface StreamingWidget {
   numero?: number;
   titulo?: string;
   tipo?: 'kpi' | 'chart' | 'table';
-  query?: string;
+  descricao?: string;
   status?: string;
   queryType?: string;
 }

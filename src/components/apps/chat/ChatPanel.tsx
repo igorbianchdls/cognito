@@ -521,8 +521,23 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                       widgets: Array<{
                         titulo: string
                         tipo: 'kpi' | 'chart' | 'table'
-                        query: string
+                        descricao: string
                       }>
+                    }
+
+                    type DashboardPlanToolOutput = {
+                      success: boolean
+                      totalWidgets: number
+                      plano: Array<{
+                        numero: number
+                        titulo: string
+                        tipo: 'kpi' | 'chart' | 'table'
+                        descricao: string
+                        status: string
+                        queryType: string
+                      }>
+                      message: string
+                      error?: string
                     }
 
                     return (
@@ -556,11 +571,11 @@ export default function ChatPanel({ droppedWidgets, onEditWidget }: ChatPanelPro
                         )}
                         {planTool.state === 'output-available' && planTool.output && (
                           <DashboardPlanView
-                            plano={planTool.output.plano}
-                            totalWidgets={planTool.output.totalWidgets}
-                            message={planTool.output.message}
-                            success={planTool.output.success}
-                            error={planTool.output.error}
+                            plano={(planTool.output as unknown as DashboardPlanToolOutput).plano}
+                            totalWidgets={(planTool.output as unknown as DashboardPlanToolOutput).totalWidgets}
+                            message={(planTool.output as unknown as DashboardPlanToolOutput).message}
+                            success={(planTool.output as unknown as DashboardPlanToolOutput).success}
+                            error={(planTool.output as unknown as DashboardPlanToolOutput).error}
                           />
                         )}
                       </div>
