@@ -15,6 +15,7 @@ import LabelsAccordion from './LabelsAccordion'
 import DimensionsAccordion from './DimensionsAccordion'
 import AxesAccordion from './AxesAccordion'
 import LineChartInfoAccordion from './LineChartInfoAccordion'
+import ChartTitleSubtitleAccordion from './ChartTitleSubtitleAccordion'
 import ChartSpecificAccordion from './ChartSpecificAccordion'
 import ContainerBorderAccordion from './ContainerBorderAccordion'
 import PositionAccordion from './PositionAccordion'
@@ -49,16 +50,21 @@ export default function LineChartEditor({
           <h6 className="text-sm font-medium text-gray-700 mb-3">⚙️ Advanced Options</h6>
           <Accordion type="multiple" className="w-full space-y-2">
             
-            <LineChartInfoAccordion 
+            <LineChartInfoAccordion
               selectedWidget={selectedWidget}
               chartConfig={chartConfig}
               onChartConfigChange={onChartConfigChange}
             />
 
-            <ChartSpecificAccordion 
+            <ChartTitleSubtitleAccordion
+              styling={chartConfig.styling}
+              onConfigChange={onChartConfigChange}
+            />
+
+            <ChartSpecificAccordion
               chartType="line"
-              styling={chartConfig.styling} 
-              onConfigChange={onChartConfigChange} 
+              styling={chartConfig.styling}
+              onConfigChange={onChartConfigChange}
             />
             
             <ColorsAccordion 
