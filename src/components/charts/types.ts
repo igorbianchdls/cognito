@@ -114,7 +114,26 @@ export interface BarChartProps extends BaseChartProps {
   subtitleFontWeight?: string | number;
   subtitleColor?: string;
   backgroundColor?: string;
-  
+
+  // Spacing - Title/Subtitle
+  titleMarginTop?: number;
+  titleMarginRight?: number;
+  titleMarginBottom?: number;
+  titleMarginLeft?: number;
+  titlePaddingTop?: number;
+  titlePaddingRight?: number;
+  titlePaddingBottom?: number;
+  titlePaddingLeft?: number;
+
+  subtitleMarginTop?: number;
+  subtitleMarginRight?: number;
+  subtitleMarginBottom?: number;
+  subtitleMarginLeft?: number;
+  subtitlePaddingTop?: number;
+  subtitlePaddingRight?: number;
+  subtitlePaddingBottom?: number;
+  subtitlePaddingLeft?: number;
+
   // Typography - Axis
   axisFontFamily?: string;
   axisFontSize?: number;
