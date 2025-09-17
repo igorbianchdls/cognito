@@ -17,6 +17,7 @@ import ChartSpecificAccordion from './ChartSpecificAccordion'
 import ContainerBorderAccordion from './ContainerBorderAccordion'
 import PositionAccordion from './PositionAccordion'
 import ChartStyleClipboardAccordion from './ChartStyleClipboardAccordion'
+import ChartTitleSubtitleAccordion from './ChartTitleSubtitleAccordion'
 
 interface PieChartEditorProps {
   selectedWidget: DroppedWidget
@@ -47,10 +48,15 @@ export default function PieChartEditor({
           <h6 className="text-sm font-medium text-gray-700 mb-3">⚙️ Advanced Options</h6>
           <Accordion type="multiple" className="w-full space-y-2">
             
-            <PieChartInfoAccordion 
+            <PieChartInfoAccordion
               selectedWidget={selectedWidget}
               chartConfig={chartConfig}
               onChartConfigChange={onChartConfigChange}
+            />
+
+            <ChartTitleSubtitleAccordion
+              styling={chartConfig.styling}
+              onConfigChange={onChartConfigChange}
             />
 
             <ChartSpecificAccordion 

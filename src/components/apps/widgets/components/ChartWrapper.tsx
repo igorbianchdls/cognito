@@ -697,6 +697,25 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             arcLinkLabelsSkipAngle={arcLinkLabelsSkipAngle}
             arcLinkLabelsTextColor={arcLinkLabelsTextColor}
             legends={pieChartLegendConfig}
+            // Title/Subtitle spacing props
+            titleMarginTop={titleMarginTop}
+            titleMarginRight={titleMarginRight}
+            titleMarginBottom={titleMarginBottom}
+            titleMarginLeft={titleMarginLeft}
+            titlePaddingTop={titlePaddingTop}
+            titlePaddingRight={titlePaddingRight}
+            titlePaddingBottom={titlePaddingBottom}
+            titlePaddingLeft={titlePaddingLeft}
+            subtitleMarginTop={subtitleMarginTop}
+            subtitleMarginRight={subtitleMarginRight}
+            subtitleMarginBottom={subtitleMarginBottom}
+            subtitleMarginLeft={subtitleMarginLeft}
+            subtitlePaddingTop={subtitlePaddingTop}
+            subtitlePaddingRight={subtitlePaddingRight}
+            subtitlePaddingBottom={subtitlePaddingBottom}
+            subtitlePaddingLeft={subtitlePaddingLeft}
+            titleClassName={titleClassName}
+            subtitleClassName={subtitleClassName}
             containerBorderWidth={containerBorderWidth}
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}
@@ -750,6 +769,25 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
               tickPadding: yAxisTickPadding
             } : undefined}
             legends={areaChartLegendConfig}
+            // Title/Subtitle spacing props
+            titleMarginTop={titleMarginTop}
+            titleMarginRight={titleMarginRight}
+            titleMarginBottom={titleMarginBottom}
+            titleMarginLeft={titleMarginLeft}
+            titlePaddingTop={titlePaddingTop}
+            titlePaddingRight={titlePaddingRight}
+            titlePaddingBottom={titlePaddingBottom}
+            titlePaddingLeft={titlePaddingLeft}
+            subtitleMarginTop={subtitleMarginTop}
+            subtitleMarginRight={subtitleMarginRight}
+            subtitleMarginBottom={subtitleMarginBottom}
+            subtitleMarginLeft={subtitleMarginLeft}
+            subtitlePaddingTop={subtitlePaddingTop}
+            subtitlePaddingRight={subtitlePaddingRight}
+            subtitlePaddingBottom={subtitlePaddingBottom}
+            subtitlePaddingLeft={subtitlePaddingLeft}
+            titleClassName={titleClassName}
+            subtitleClassName={subtitleClassName}
             containerBorderWidth={containerBorderWidth}
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}
@@ -804,6 +842,34 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
               tickPadding: yAxisTickPadding
             } : undefined}
             legends={horizontalBarChartLegendConfig}
+            // Title/Subtitle spacing props
+            titleMarginTop={titleMarginTop}
+            titleMarginRight={titleMarginRight}
+            titleMarginBottom={titleMarginBottom}
+            titleMarginLeft={titleMarginLeft}
+            titlePaddingTop={titlePaddingTop}
+            titlePaddingRight={titlePaddingRight}
+            titlePaddingBottom={titlePaddingBottom}
+            titlePaddingLeft={titlePaddingLeft}
+            subtitleMarginTop={subtitleMarginTop}
+            subtitleMarginRight={subtitleMarginRight}
+            subtitleMarginBottom={subtitleMarginBottom}
+            subtitleMarginLeft={subtitleMarginLeft}
+            subtitlePaddingTop={subtitlePaddingTop}
+            subtitlePaddingRight={subtitlePaddingRight}
+            subtitlePaddingBottom={subtitlePaddingBottom}
+            subtitlePaddingLeft={subtitlePaddingLeft}
+            titleClassName={titleClassName}
+            subtitleClassName={subtitleClassName}
+            containerBorderWidth={containerBorderWidth}
+            containerBorderColor={containerBorderColor}
+            containerBorderRadius={containerBorderRadius}
+            containerPadding={containerPadding}
+            containerShadowColor={containerShadowColor}
+            containerShadowOpacity={containerShadowOpacity}
+            containerShadowBlur={containerShadowBlur}
+            containerShadowOffsetX={containerShadowOffsetX}
+            containerShadowOffsetY={containerShadowOffsetY}
           />
         )
       default:
