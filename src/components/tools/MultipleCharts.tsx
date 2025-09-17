@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { BarChart } from '@/components/charts/BarChart';
 import { LineChart } from '@/components/charts/LineChart';
 import { PieChart } from '@/components/charts/PieChart';
@@ -12,7 +13,7 @@ import {
   ArtifactAction,
   ArtifactContent
 } from '@/components/ai-elements/artifact';
-import { CopyIcon, DownloadIcon, DatabaseIcon } from 'lucide-react';
+import { CopyIcon, DownloadIcon, DatabaseIcon, BarChart3, LineChart as LineChartIcon, PieChart as PieChartIcon } from 'lucide-react';
 
 interface ChartData {
   success: boolean;
@@ -53,12 +54,15 @@ interface MultipleChartsProps {
   };
 }
 
-// Render chart component based on type
-const renderChart = (chart: ChartData) => {
+// Render chart component based on type and current state
+const renderChart = (chart: ChartData, index: number) => {
+  const currentType = chartTypes[index] || chart.chartType;
+
   // Debug: Log completo do que chega no renderChart
   console.log('📊 RENDER CHART:', {
     title: chart.title,
-    type: chart.chartType,
+    originalType: chart.chartType,
+    currentType: currentType,
     hasChartData: !!chart.chartData,
     dataLength: chart.chartData?.length || 0,
     firstDataPoint: chart.chartData?.[0],
@@ -76,9 +80,9 @@ const renderChart = (chart: ChartData) => {
     return <div style={{ padding: '20px', color: 'orange' }}>ERRO: chartData vazio para {chart.title}</div>;
   }
 
-  console.log('✅ RENDERIZANDO CHART:', chart.chartType, 'com', chart.chartData.length, 'pontos');
+  console.log('✅ RENDERIZANDO CHART:', currentType, 'com', chart.chartData.length, 'pontos');
 
-  switch (chart.chartType) {
+  switch (currentType) {
     case 'bar':
       return <BarChart data={chart.chartData} />;
     case 'line':
@@ -86,8 +90,8 @@ const renderChart = (chart: ChartData) => {
     case 'pie':
       return <PieChart data={chart.chartData} />;
     default:
-      console.log('❌ TIPO INVÁLIDO:', chart.chartType);
-      return <div style={{ padding: '20px', color: 'red' }}>ERRO: Tipo inválido {chart.chartType}</div>;
+      console.log('❌ TIPO INVÁLIDO:', currentType);
+      return <div style={{ padding: '20px', color: 'red' }}>ERRO: Tipo inválido {currentType}</div>;
   }
 };
 
@@ -99,6 +103,37 @@ export function MultipleCharts({
 }: MultipleChartsProps) {
   const successfulCharts = charts.filter(chart => chart.success && chart.chartData);
   const failedCharts = charts.filter(chart => !chart.success);
+
+  // State management para múltiplos charts
+  const [chartTypes, setChartTypes] = useState<Record<number, 'bar' | 'line' | 'pie'>>(() => {
+    const initialTypes: Record<number, 'bar' | 'line' | 'pie'> = {};
+    charts.forEach((chart, index) => {
+      initialTypes[index] = chart.chartType;
+    });
+    return initialTypes;
+  });
+
+  const [openDropdowns, setOpenDropdowns] = useState<Record<number, boolean>>({});
+
+  // Função para obter ícone baseado no tipo de gráfico
+  const getChartIcon = (type: 'bar' | 'line' | 'pie') => {
+    switch (type) {
+      case 'bar': return BarChart3;
+      case 'line': return LineChartIcon;
+      case 'pie': return PieChartIcon;
+      default: return BarChart3;
+    }
+  };
+
+  // Fechar dropdowns quando clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      setOpenDropdowns({});
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Handler para copiar dados do gráfico
   const handleCopyData = async (chartData: Array<{x: string; y: number; label: string; value: number}>) => {
@@ -166,6 +201,40 @@ export function MultipleCharts({
                 </ArtifactDescription>
               </div>
               <ArtifactActions>
+                <div className="relative">
+                  <ArtifactAction
+                    icon={getChartIcon(chartTypes[index] || chart.chartType)}
+                    tooltip="Alterar tipo de gráfico"
+                    onClick={() => setOpenDropdowns(prev => ({
+                      ...prev,
+                      [index]: !prev[index]
+                    }))}
+                  />
+                  {/* Dropdown para seleção de chart */}
+                  {openDropdowns[index] && (
+                    <div className="absolute bottom-full mb-2 right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50 min-w-[120px]">
+                      {[
+                        { type: 'bar' as const, label: 'Bar Chart', icon: BarChart3 },
+                        { type: 'line' as const, label: 'Line Chart', icon: LineChartIcon },
+                        { type: 'pie' as const, label: 'Pie Chart', icon: PieChartIcon }
+                      ].map(({ type, label, icon: Icon }) => (
+                        <button
+                          key={type}
+                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 transition-colors ${
+                            (chartTypes[index] || chart.chartType) === type ? 'bg-blue-50 text-blue-600' : 'text-gray-700'
+                          }`}
+                          onClick={() => {
+                            setChartTypes(prev => ({ ...prev, [index]: type }));
+                            setOpenDropdowns(prev => ({ ...prev, [index]: false }));
+                          }}
+                        >
+                          <Icon className="w-4 h-4" />
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <ArtifactAction
                   icon={CopyIcon}
                   tooltip="Copiar dados do gráfico"
@@ -178,14 +247,14 @@ export function MultipleCharts({
                 />
                 <ArtifactAction
                   icon={DatabaseIcon}
-                  tooltip={`Tipo: ${chart.chartType} • Colunas: ${chart.xColumn || 'x'} x ${chart.yColumn || 'y'}`}
+                  tooltip={`Tipo: ${chartTypes[index] || chart.chartType} • Colunas: ${chart.xColumn || 'x'} x ${chart.yColumn || 'y'}`}
                 />
               </ArtifactActions>
             </ArtifactHeader>
 
             <ArtifactContent className="p-0">
               <div style={{ height: '400px', width: '100%' }}>
-                {renderChart(chart)}
+                {renderChart(chart, index)}
               </div>
             </ArtifactContent>
           </Artifact>
