@@ -71,6 +71,7 @@ export interface AreaChartConfig {
     // Tailwind Classes - Title/Subtitle (precedence over individual props)
     titleClassName?: string
     subtitleClassName?: string
+    containerClassName?: string
 
     areaOpacity?: number
     fillOpacity?: number

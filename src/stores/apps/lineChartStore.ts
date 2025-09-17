@@ -71,6 +71,7 @@ export interface LineChartConfig {
     // Tailwind Classes - Title/Subtitle (precedence over individual props)
     titleClassName?: string
     subtitleClassName?: string
+    containerClassName?: string
 
     xAxisTitle?: string
     yAxisTitle?: string

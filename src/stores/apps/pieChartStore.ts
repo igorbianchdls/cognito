@@ -71,6 +71,7 @@ export interface PieChartConfig {
     // Tailwind Classes - Title/Subtitle (precedence over individual props)
     titleClassName?: string
     subtitleClassName?: string
+    containerClassName?: string
 
     innerRadius?: number
     outerRadius?: number
