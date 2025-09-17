@@ -5,8 +5,8 @@ import * as analyticsTools from '@/tools/apps/analytics';
 import * as visualizationTools from '@/tools/apps/visualization';
 import * as utilitiesTools from '@/tools/utilities';
 
-// Allow streaming responses up to 30 seconds
-export const maxDuration = 30;
+// Allow streaming responses up to 300 seconds
+export const maxDuration = 300;
 
 export async function POST(req: Request) {
   const { messages }: { messages: UIMessage[] } = await req.json();

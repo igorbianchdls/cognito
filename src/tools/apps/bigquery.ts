@@ -178,7 +178,7 @@ export const executarSQL = tool({
           // Use BigQuery dry run to validate syntax
           const result = await bigQueryService.executeQuery({ 
             query: sqlQuery,
-            jobTimeoutMs: 10000 
+            jobTimeoutMs: 60000 
           });
           
           return {
@@ -346,7 +346,7 @@ export const executarMultiplasSQL = tool({
 
           const result = await bigQueryService.executeQuery({
             query: query.sqlQuery,
-            jobTimeoutMs: 60000 // 60 seconds timeout
+            jobTimeoutMs: 180000 // 180 seconds timeout
           });
 
           const queryExecutionTime = Date.now() - queryStartTime;

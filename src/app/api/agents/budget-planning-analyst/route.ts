@@ -4,7 +4,7 @@ import * as bigqueryTools from '@/tools/apps/bigquery';
 import * as analyticsTools from '@/tools/apps/analytics';
 import * as utilitiesTools from '@/tools/utilities';
 
-export const maxDuration = 30;
+export const maxDuration = 300;
 
 export async function POST(req: Request) {
   console.log('💼 BUDGET ANALYST API: Request recebido!');

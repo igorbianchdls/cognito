@@ -2,7 +2,7 @@ import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
 
-export const maxDuration = 30;
+export const maxDuration = 300;
 
 export async function POST(req: Request) {
   console.log('🔍 ESTRATEGISTA SEO API: Request recebido!');

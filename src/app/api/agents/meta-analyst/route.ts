@@ -3,7 +3,7 @@ import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
 import * as visualizationTools from '@/tools/apps/visualization';
 
-export const maxDuration = 30;
+export const maxDuration = 300;
 
 export async function POST(req: Request) {
   console.log('📘 META ANALYST API: Request recebido!');

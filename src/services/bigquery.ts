@@ -227,7 +227,7 @@ class BigQueryService {
         query: options.query,
         location: options.location || this.config?.location || 'US',
         params: options.parameters || {},
-        jobTimeoutMs: options.jobTimeoutMs || 30000,
+        jobTimeoutMs: options.jobTimeoutMs || 180000,
       }
 
       const [job] = await this.client.createQueryJob(queryOptions)

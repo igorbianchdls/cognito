@@ -68,7 +68,7 @@ export const gerarGrafico = tool({
       console.log('📊 Executando query no BigQuery...');
       const result = await bigQueryService.executeQuery({
         query: sqlQuery,
-        jobTimeoutMs: 30000
+        jobTimeoutMs: 180000
       });
 
       const data = result.data || [];
@@ -164,7 +164,7 @@ export const gerarMultiplosGraficos = tool({
 
           const result = await bigQueryService.executeQuery({
             query: sqlQuery,
-            jobTimeoutMs: 30000
+            jobTimeoutMs: 180000
           });
 
           const data = result.data || [];

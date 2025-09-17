@@ -561,7 +561,7 @@ LIMIT 50
       
       // Execute BigQuery (like table updateTableData)
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 30000)
+      const timeoutId = setTimeout(() => controller.abort(), 180000)
       
       const response = await fetch('/api/bigquery', {
         method: 'POST',

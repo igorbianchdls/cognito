@@ -36,7 +36,7 @@ export const criarGrafico = tool({
       const startTime = Date.now();
       const queryResult = await bigQueryService.executeQuery({ 
         query: sqlQuery,
-        jobTimeoutMs: 30000 
+        jobTimeoutMs: 180000 
       });
       
       const executionTime = Date.now() - startTime;

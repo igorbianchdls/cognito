@@ -2,7 +2,7 @@ import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
 import { gateway } from '@ai-sdk/gateway';
 import * as testeTools from '@/tools/testeTools';
 
-export const maxDuration = 30;
+export const maxDuration = 300;
 
 export async function POST(req: Request) {
   console.log('🧪 TESTE API: Request recebido!');

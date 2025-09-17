@@ -5,7 +5,7 @@ import * as analyticsTools from '@/tools/apps/analytics';
 import * as utilitiesTools from '@/tools/utilities';
 import * as visualizationTools from '@/tools/apps/visualization';
 
-export const maxDuration = 30;
+export const maxDuration = 300;
 
 export async function POST(req: Request) {
   console.log('🛒 SHOPIFY STORE ANALYST API: Request recebido!');
