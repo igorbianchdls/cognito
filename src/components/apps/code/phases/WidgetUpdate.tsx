@@ -27,46 +27,42 @@ export class WidgetUpdate {
       visualizationType?: 'card',
       icon?: string,
 
-      // Layout & Appearance properties (from KPICard)
-      backgroundColor?: string,
-      backgroundOpacity?: number,
-      borderColor?: string,
-      borderOpacity?: number,
-      borderWidth?: number,
-      borderRadius?: number,
-      padding?: number,
-      textAlign?: 'left' | 'center' | 'right',
-      shadow?: boolean,
+      // Container styling properties
+      kpiContainerBackgroundColor?: string,
+      kpiContainerBackgroundOpacity?: number,
+      kpiContainerBorderColor?: string,
+      kpiContainerBorderOpacity?: number,
+      kpiContainerBorderWidth?: number,
+      kpiContainerBorderRadius?: number,
+      kpiContainerPadding?: number,
+      kpiContainerTextAlign?: 'left' | 'center' | 'right',
+      kpiContainerShadow?: boolean,
 
-      // Typography - Value properties
-      valueFontSize?: number,
-      valueColor?: string,
-      valueFontWeight?: number,
-      valueFontFamily?: string,
+      // KPI Value styling properties (number display)
+      kpiValueColor?: string,
+      kpiValueFontSize?: number,
+      kpiValueFontWeight?: number,
+      kpiValueFontFamily?: string,
+      kpiValueAlign?: 'left' | 'center' | 'right',
+      kpiValueMarginTop?: number,
+      kpiValueMarginBottom?: number,
+      kpiValueLetterSpacing?: number,
+      kpiValueLineHeight?: number,
 
-      // Typography - Name properties
-      nameFontSize?: number,
-      nameColor?: string,
-      nameFontWeight?: number,
-      nameFontFamily?: string,
+      // KPI Name styling properties (label display)
+      kpiNameColor?: string,
+      kpiNameFontSize?: number,
+      kpiNameFontWeight?: number,
+      kpiNameFontFamily?: string,
+      kpiNameAlign?: 'left' | 'center' | 'right',
+      kpiNameMarginTop?: number,
+      kpiNameMarginBottom?: number,
+      kpiNameLetterSpacing?: number,
+      kpiNameLineHeight?: number,
 
-      // Color properties
+      // Special color properties
       changeColor?: string,
-      targetColor?: string,
-
-      // Title-specific properties
-      titleAlign?: 'left' | 'center' | 'right',
-      titleMarginTop?: number,
-      titleMarginBottom?: number,
-      titleLetterSpacing?: number,
-      titleLineHeight?: number,
-
-      // Subtitle-specific properties
-      subtitleAlign?: 'left' | 'center' | 'right',
-      subtitleMarginTop?: number,
-      subtitleMarginBottom?: number,
-      subtitleLetterSpacing?: number,
-      subtitleLineHeight?: number
+      targetColor?: string
     },
     position?: {
       x?: number,
@@ -130,46 +126,42 @@ export class WidgetUpdate {
           target: styling?.target !== undefined ? styling.target : existingKPI.config.target,
           visualizationType: styling?.visualizationType !== undefined ? styling.visualizationType : existingKPI.config.visualizationType,
 
-          // Layout & Appearance properties (from KPICard)
-          backgroundColor: styling?.backgroundColor !== undefined ? styling.backgroundColor : existingKPI.config.backgroundColor,
-          backgroundOpacity: styling?.backgroundOpacity !== undefined ? styling.backgroundOpacity : existingKPI.config.backgroundOpacity,
-          borderColor: styling?.borderColor !== undefined ? styling.borderColor : existingKPI.config.borderColor,
-          borderOpacity: styling?.borderOpacity !== undefined ? styling.borderOpacity : existingKPI.config.borderOpacity,
-          borderWidth: styling?.borderWidth !== undefined ? styling.borderWidth : existingKPI.config.borderWidth,
-          borderRadius: styling?.borderRadius !== undefined ? styling.borderRadius : existingKPI.config.borderRadius,
-          padding: styling?.padding !== undefined ? styling.padding : existingKPI.config.padding,
-          textAlign: styling?.textAlign !== undefined ? styling.textAlign : existingKPI.config.textAlign,
-          shadow: styling?.shadow !== undefined ? styling.shadow : existingKPI.config.shadow,
+          // Container styling properties
+          kpiContainerBackgroundColor: styling?.kpiContainerBackgroundColor !== undefined ? styling.kpiContainerBackgroundColor : existingKPI.config.kpiContainerBackgroundColor,
+          kpiContainerBackgroundOpacity: styling?.kpiContainerBackgroundOpacity !== undefined ? styling.kpiContainerBackgroundOpacity : existingKPI.config.kpiContainerBackgroundOpacity,
+          kpiContainerBorderColor: styling?.kpiContainerBorderColor !== undefined ? styling.kpiContainerBorderColor : existingKPI.config.kpiContainerBorderColor,
+          kpiContainerBorderOpacity: styling?.kpiContainerBorderOpacity !== undefined ? styling.kpiContainerBorderOpacity : existingKPI.config.kpiContainerBorderOpacity,
+          kpiContainerBorderWidth: styling?.kpiContainerBorderWidth !== undefined ? styling.kpiContainerBorderWidth : existingKPI.config.kpiContainerBorderWidth,
+          kpiContainerBorderRadius: styling?.kpiContainerBorderRadius !== undefined ? styling.kpiContainerBorderRadius : existingKPI.config.kpiContainerBorderRadius,
+          kpiContainerPadding: styling?.kpiContainerPadding !== undefined ? styling.kpiContainerPadding : existingKPI.config.kpiContainerPadding,
+          kpiContainerTextAlign: styling?.kpiContainerTextAlign !== undefined ? styling.kpiContainerTextAlign : existingKPI.config.kpiContainerTextAlign,
+          kpiContainerShadow: styling?.kpiContainerShadow !== undefined ? styling.kpiContainerShadow : existingKPI.config.kpiContainerShadow,
 
-          // Typography - Value properties
-          valueFontSize: styling?.valueFontSize !== undefined ? styling.valueFontSize : existingKPI.config.valueFontSize,
-          valueColor: styling?.valueColor !== undefined ? styling.valueColor : existingKPI.config.valueColor,
-          valueFontWeight: styling?.valueFontWeight !== undefined ? styling.valueFontWeight : existingKPI.config.valueFontWeight,
-          valueFontFamily: styling?.valueFontFamily !== undefined ? styling.valueFontFamily : existingKPI.config.valueFontFamily,
+          // KPI Value styling properties
+          kpiValueColor: styling?.kpiValueColor !== undefined ? styling.kpiValueColor : existingKPI.config.kpiValueColor,
+          kpiValueFontSize: styling?.kpiValueFontSize !== undefined ? styling.kpiValueFontSize : existingKPI.config.kpiValueFontSize,
+          kpiValueFontWeight: styling?.kpiValueFontWeight !== undefined ? styling.kpiValueFontWeight : existingKPI.config.kpiValueFontWeight,
+          kpiValueFontFamily: styling?.kpiValueFontFamily !== undefined ? styling.kpiValueFontFamily : existingKPI.config.kpiValueFontFamily,
+          kpiValueAlign: styling?.kpiValueAlign !== undefined ? styling.kpiValueAlign : existingKPI.config.kpiValueAlign,
+          kpiValueMarginTop: styling?.kpiValueMarginTop !== undefined ? styling.kpiValueMarginTop : existingKPI.config.kpiValueMarginTop,
+          kpiValueMarginBottom: styling?.kpiValueMarginBottom !== undefined ? styling.kpiValueMarginBottom : existingKPI.config.kpiValueMarginBottom,
+          kpiValueLetterSpacing: styling?.kpiValueLetterSpacing !== undefined ? styling.kpiValueLetterSpacing : existingKPI.config.kpiValueLetterSpacing,
+          kpiValueLineHeight: styling?.kpiValueLineHeight !== undefined ? styling.kpiValueLineHeight : existingKPI.config.kpiValueLineHeight,
 
-          // Typography - Name properties
-          nameFontSize: styling?.nameFontSize !== undefined ? styling.nameFontSize : existingKPI.config.nameFontSize,
-          nameColor: styling?.nameColor !== undefined ? styling.nameColor : existingKPI.config.nameColor,
-          nameFontWeight: styling?.nameFontWeight !== undefined ? styling.nameFontWeight : existingKPI.config.nameFontWeight,
-          nameFontFamily: styling?.nameFontFamily !== undefined ? styling.nameFontFamily : existingKPI.config.nameFontFamily,
+          // KPI Name styling properties
+          kpiNameColor: styling?.kpiNameColor !== undefined ? styling.kpiNameColor : existingKPI.config.kpiNameColor,
+          kpiNameFontSize: styling?.kpiNameFontSize !== undefined ? styling.kpiNameFontSize : existingKPI.config.kpiNameFontSize,
+          kpiNameFontWeight: styling?.kpiNameFontWeight !== undefined ? styling.kpiNameFontWeight : existingKPI.config.kpiNameFontWeight,
+          kpiNameFontFamily: styling?.kpiNameFontFamily !== undefined ? styling.kpiNameFontFamily : existingKPI.config.kpiNameFontFamily,
+          kpiNameAlign: styling?.kpiNameAlign !== undefined ? styling.kpiNameAlign : existingKPI.config.kpiNameAlign,
+          kpiNameMarginTop: styling?.kpiNameMarginTop !== undefined ? styling.kpiNameMarginTop : existingKPI.config.kpiNameMarginTop,
+          kpiNameMarginBottom: styling?.kpiNameMarginBottom !== undefined ? styling.kpiNameMarginBottom : existingKPI.config.kpiNameMarginBottom,
+          kpiNameLetterSpacing: styling?.kpiNameLetterSpacing !== undefined ? styling.kpiNameLetterSpacing : existingKPI.config.kpiNameLetterSpacing,
+          kpiNameLineHeight: styling?.kpiNameLineHeight !== undefined ? styling.kpiNameLineHeight : existingKPI.config.kpiNameLineHeight,
 
-          // Color properties
+          // Special color properties
           changeColor: styling?.changeColor !== undefined ? styling.changeColor : existingKPI.config.changeColor,
           targetColor: styling?.targetColor !== undefined ? styling.targetColor : existingKPI.config.targetColor,
-
-          // Title-specific properties
-          titleAlign: styling?.titleAlign !== undefined ? styling.titleAlign : existingKPI.config.titleAlign,
-          titleMarginTop: styling?.titleMarginTop !== undefined ? styling.titleMarginTop : existingKPI.config.titleMarginTop,
-          titleMarginBottom: styling?.titleMarginBottom !== undefined ? styling.titleMarginBottom : existingKPI.config.titleMarginBottom,
-          titleLetterSpacing: styling?.titleLetterSpacing !== undefined ? styling.titleLetterSpacing : existingKPI.config.titleLetterSpacing,
-          titleLineHeight: styling?.titleLineHeight !== undefined ? styling.titleLineHeight : existingKPI.config.titleLineHeight,
-
-          // Subtitle-specific properties
-          subtitleAlign: styling?.subtitleAlign !== undefined ? styling.subtitleAlign : existingKPI.config.subtitleAlign,
-          subtitleMarginTop: styling?.subtitleMarginTop !== undefined ? styling.subtitleMarginTop : existingKPI.config.subtitleMarginTop,
-          subtitleMarginBottom: styling?.subtitleMarginBottom !== undefined ? styling.subtitleMarginBottom : existingKPI.config.subtitleMarginBottom,
-          subtitleLetterSpacing: styling?.subtitleLetterSpacing !== undefined ? styling.subtitleLetterSpacing : existingKPI.config.subtitleLetterSpacing,
-          subtitleLineHeight: styling?.subtitleLineHeight !== undefined ? styling.subtitleLineHeight : existingKPI.config.subtitleLineHeight,
 
           bigqueryData: {
             selectedTable: updatedTable,

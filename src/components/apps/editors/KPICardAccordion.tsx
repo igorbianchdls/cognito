@@ -48,19 +48,19 @@ export default function KPICardAccordion({
               <div className="text-xs text-gray-500 mb-1">Cor de Fundo</div>
               <input
                 type="color"
-                value={styling?.backgroundColor || '#ffffff'}
-                onChange={(e) => onConfigChange('backgroundColor', e.target.value)}
+                value={styling?.kpiContainerBackgroundColor || '#ffffff'}
+                onChange={(e) => onConfigChange('kpiContainerBackgroundColor', e.target.value)}
                 className="w-full h-8 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             
             <div>
               <div className="text-xs text-gray-500 mb-1">
-                Opacidade: {Math.round(((styling as Record<string, unknown>)?.backgroundOpacity as number ?? 1) * 100)}%
+                Opacidade: {Math.round(((styling as Record<string, unknown>)?.kpiContainerBackgroundOpacity as number ?? 1) * 100)}%
               </div>
               <Slider
-                value={[((styling as Record<string, unknown>)?.backgroundOpacity as number) ?? 1]}
-                onValueChange={(value) => onConfigChange('backgroundOpacity', value[0])}
+                value={[((styling as Record<string, unknown>)?.kpiContainerBackgroundOpacity as number) ?? 1]}
+                onValueChange={(value) => onConfigChange('kpiContainerBackgroundOpacity', value[0])}
                 max={1}
                 min={0}
                 step={0.1}
@@ -79,19 +79,19 @@ export default function KPICardAccordion({
               <div className="text-xs text-gray-500 mb-1">Cor da Borda</div>
               <input
                 type="color"
-                value={styling?.borderColor || '#e5e7eb'}
-                onChange={(e) => onConfigChange('borderColor', e.target.value)}
+                value={styling?.kpiContainerBorderColor || '#e5e7eb'}
+                onChange={(e) => onConfigChange('kpiContainerBorderColor', e.target.value)}
                 className="w-full h-8 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             
             <div>
               <div className="text-xs text-gray-500 mb-1">
-                Opacidade: {Math.round(((styling as Record<string, unknown>)?.borderOpacity as number ?? 1) * 100)}%
+                Opacidade: {Math.round(((styling as Record<string, unknown>)?.kpiContainerBorderOpacity as number ?? 1) * 100)}%
               </div>
               <Slider
-                value={[((styling as Record<string, unknown>)?.borderOpacity as number) ?? 1]}
-                onValueChange={(value) => onConfigChange('borderOpacity', value[0])}
+                value={[((styling as Record<string, unknown>)?.kpiContainerBorderOpacity as number) ?? 1]}
+                onValueChange={(value) => onConfigChange('kpiContainerBorderOpacity', value[0])}
                 max={1}
                 min={0}
                 step={0.1}
@@ -103,11 +103,11 @@ export default function KPICardAccordion({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <div className="text-xs text-gray-500 mb-1">
-                Largura: {styling?.borderWidth ?? 1}px
+                Largura: {styling?.kpiContainerBorderWidth ?? 1}px
               </div>
               <Slider
-                value={[styling?.borderWidth ?? 1]}
-                onValueChange={(value) => onConfigChange('borderWidth', value[0])}
+                value={[styling?.kpiContainerBorderWidth ?? 1]}
+                onValueChange={(value) => onConfigChange('kpiContainerBorderWidth', value[0])}
                 max={10}
                 min={0}
                 step={1}
@@ -117,11 +117,11 @@ export default function KPICardAccordion({
             
             <div>
               <div className="text-xs text-gray-500 mb-1">
-                Arredondamento: {styling?.borderRadius ?? 8}px
+                Arredondamento: {styling?.kpiContainerBorderRadius ?? 8}px
               </div>
               <Slider
-                value={[styling?.borderRadius ?? 8]}
-                onValueChange={(value) => onConfigChange('borderRadius', value[0])}
+                value={[styling?.kpiContainerBorderRadius ?? 8]}
+                onValueChange={(value) => onConfigChange('kpiContainerBorderRadius', value[0])}
                 max={50}
                 min={0}
                 step={1}
@@ -137,8 +137,8 @@ export default function KPICardAccordion({
           
           <label className="flex items-center gap-2 text-xs">
             <Switch
-              checked={styling?.shadow ?? false}
-              onCheckedChange={(checked) => onConfigChange('shadow', checked)}
+              checked={styling?.kpiContainerShadow ?? false}
+              onCheckedChange={(checked) => onConfigChange('kpiContainerShadow', checked)}
             />
             <span className="text-gray-600">Habilitar sombra</span>
           </label>
@@ -150,11 +150,11 @@ export default function KPICardAccordion({
           
           <div>
             <div className="text-xs text-gray-500 mb-1">
-              Padding: {styling?.padding ?? 16}px
+              Padding: {styling?.kpiContainerPadding ?? 16}px
             </div>
             <Slider
-              value={[styling?.padding ?? 16]}
-              onValueChange={(value) => onConfigChange('padding', value[0])}
+              value={[styling?.kpiContainerPadding ?? 16]}
+              onValueChange={(value) => onConfigChange('kpiContainerPadding', value[0])}
               max={50}
               min={0}
               step={2}
@@ -175,9 +175,9 @@ export default function KPICardAccordion({
             ].map((align) => (
               <button
                 key={align.value}
-                onClick={() => onConfigChange('textAlign', align.value)}
+                onClick={() => onConfigChange('kpiContainerTextAlign', align.value)}
                 className={`flex-1 px-3 py-2 text-xs border rounded-md transition-colors ${
-                  (styling?.textAlign ?? 'left') === align.value
+                  (styling?.kpiContainerTextAlign ?? 'left') === align.value
                     ? 'bg-blue-600 border-blue-400 text-white'
                     : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100'
                 }`}

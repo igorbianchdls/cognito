@@ -45,11 +45,11 @@ export default function KPISubtitleAccordion({
           <div className="grid grid-cols-3 gap-2">
             <div>
               <div className="text-xs text-gray-500 mb-1">
-                Tamanho: {styling?.nameFontSize ?? 14}px
+                Tamanho: {styling?.kpiNameFontSize ?? 14}px
               </div>
               <Slider
-                value={[styling?.nameFontSize ?? 14]}
-                onValueChange={(value) => onConfigChange('nameFontSize', value[0])}
+                value={[styling?.kpiNameFontSize ?? 14]}
+                onValueChange={(value) => onConfigChange('kpiNameFontSize', value[0])}
                 max={32}
                 min={8}
                 step={1}
@@ -60,8 +60,8 @@ export default function KPISubtitleAccordion({
             <div>
               <div className="text-xs text-gray-500 mb-1">Peso</div>
               <Select
-                value={String(styling?.nameFontWeight ?? 500)}
-                onValueChange={(value) => onConfigChange('nameFontWeight', parseInt(value))}
+                value={String(styling?.kpiNameFontWeight ?? 500)}
+                onValueChange={(value) => onConfigChange('kpiNameFontWeight', parseInt(value))}
               >
                 <SelectTrigger className="h-8">
                   <SelectValue />
@@ -78,8 +78,8 @@ export default function KPISubtitleAccordion({
             <div>
               <div className="text-xs text-gray-500 mb-1">Família</div>
               <Select
-                value={styling?.nameFontFamily ?? 'inherit'}
-                onValueChange={(value) => onConfigChange('nameFontFamily', value)}
+                value={styling?.kpiNameFontFamily ?? 'inherit'}
+                onValueChange={(value) => onConfigChange('kpiNameFontFamily', value)}
               >
                 <SelectTrigger className="h-8">
                   <SelectValue />
@@ -106,8 +106,8 @@ export default function KPISubtitleAccordion({
             <div className="text-xs text-gray-500 mb-1">Cor do Texto</div>
             <input
               type="color"
-              value={styling?.nameColor || '#6b7280'}
-              onChange={(e) => onConfigChange('nameColor', e.target.value)}
+              value={styling?.kpiNameColor || '#6b7280'}
+              onChange={(e) => onConfigChange('kpiNameColor', e.target.value)}
               className="w-full h-8 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
@@ -120,11 +120,11 @@ export default function KPISubtitleAccordion({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <div className="text-xs text-gray-500 mb-1">
-                Margin Top: {((styling as Record<string, unknown>)?.subtitleMarginTop as number) ?? 0}px
+                Margin Top: {((styling as Record<string, unknown>)?.kpiNameMarginTop as number) ?? 0}px
               </div>
               <Slider
-                value={[((styling as Record<string, unknown>)?.subtitleMarginTop as number) ?? 0]}
-                onValueChange={(value) => onConfigChange('subtitleMarginTop', value[0])}
+                value={[((styling as Record<string, unknown>)?.kpiNameMarginTop as number) ?? 0]}
+                onValueChange={(value) => onConfigChange('kpiNameMarginTop', value[0])}
                 max={40}
                 min={0}
                 step={2}
@@ -134,11 +134,11 @@ export default function KPISubtitleAccordion({
             
             <div>
               <div className="text-xs text-gray-500 mb-1">
-                Margin Bottom: {((styling as Record<string, unknown>)?.subtitleMarginBottom as number) ?? 0}px
+                Margin Bottom: {((styling as Record<string, unknown>)?.kpiNameMarginBottom as number) ?? 0}px
               </div>
               <Slider
-                value={[((styling as Record<string, unknown>)?.subtitleMarginBottom as number) ?? 0]}
-                onValueChange={(value) => onConfigChange('subtitleMarginBottom', value[0])}
+                value={[((styling as Record<string, unknown>)?.kpiNameMarginBottom as number) ?? 0]}
+                onValueChange={(value) => onConfigChange('kpiNameMarginBottom', value[0])}
                 max={40}
                 min={0}
                 step={2}
@@ -155,11 +155,11 @@ export default function KPISubtitleAccordion({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <div className="text-xs text-gray-500 mb-1">
-                Espaçamento das Letras: {((styling as Record<string, unknown>)?.subtitleLetterSpacing as number) ?? 0}px
+                Espaçamento das Letras: {((styling as Record<string, unknown>)?.kpiNameLetterSpacing as number) ?? 0}px
               </div>
               <Slider
-                value={[((styling as Record<string, unknown>)?.subtitleLetterSpacing as number) ?? 0]}
-                onValueChange={(value) => onConfigChange('subtitleLetterSpacing', value[0])}
+                value={[((styling as Record<string, unknown>)?.kpiNameLetterSpacing as number) ?? 0]}
+                onValueChange={(value) => onConfigChange('kpiNameLetterSpacing', value[0])}
                 max={3}
                 min={-1}
                 step={0.1}
@@ -169,11 +169,11 @@ export default function KPISubtitleAccordion({
             
             <div>
               <div className="text-xs text-gray-500 mb-1">
-                Altura da Linha: {((styling as Record<string, unknown>)?.subtitleLineHeight as number) ?? 1.4}
+                Altura da Linha: {((styling as Record<string, unknown>)?.kpiNameLineHeight as number) ?? 1.4}
               </div>
               <Slider
-                value={[((styling as Record<string, unknown>)?.subtitleLineHeight as number) ?? 1.4]}
-                onValueChange={(value) => onConfigChange('subtitleLineHeight', value[0])}
+                value={[((styling as Record<string, unknown>)?.kpiNameLineHeight as number) ?? 1.4]}
+                onValueChange={(value) => onConfigChange('kpiNameLineHeight', value[0])}
                 max={2}
                 min={1}
                 step={0.1}
@@ -195,9 +195,9 @@ export default function KPISubtitleAccordion({
             ].map((align) => (
               <button
                 key={align.value}
-                onClick={() => onConfigChange('subtitleAlign', align.value)}
+                onClick={() => onConfigChange('kpiNameAlign', align.value)}
                 className={`flex-1 px-3 py-2 text-xs border rounded-md transition-colors ${
-                  ((styling as Record<string, unknown>)?.subtitleAlign ?? 'left') === align.value
+                  ((styling as Record<string, unknown>)?.kpiNameAlign ?? 'left') === align.value
                     ? 'bg-blue-600 border-blue-400 text-white'
                     : 'bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100'
                 }`}

@@ -25,46 +25,42 @@ export class WidgetCreation {
       visualizationType?: 'card',
       icon?: string,
 
-      // Layout & Appearance properties (from KPICard)
-      backgroundColor?: string,
-      backgroundOpacity?: number,
-      borderColor?: string,
-      borderOpacity?: number,
-      borderWidth?: number,
-      borderRadius?: number,
-      padding?: number,
-      textAlign?: 'left' | 'center' | 'right',
-      shadow?: boolean,
+      // Container styling properties
+      kpiContainerBackgroundColor?: string,
+      kpiContainerBackgroundOpacity?: number,
+      kpiContainerBorderColor?: string,
+      kpiContainerBorderOpacity?: number,
+      kpiContainerBorderWidth?: number,
+      kpiContainerBorderRadius?: number,
+      kpiContainerPadding?: number,
+      kpiContainerTextAlign?: 'left' | 'center' | 'right',
+      kpiContainerShadow?: boolean,
 
-      // Typography - Value properties
-      valueFontSize?: number,
-      valueColor?: string,
-      valueFontWeight?: number,
-      valueFontFamily?: string,
+      // KPI Value styling properties (number display)
+      kpiValueColor?: string,
+      kpiValueFontSize?: number,
+      kpiValueFontWeight?: number,
+      kpiValueFontFamily?: string,
+      kpiValueAlign?: 'left' | 'center' | 'right',
+      kpiValueMarginTop?: number,
+      kpiValueMarginBottom?: number,
+      kpiValueLetterSpacing?: number,
+      kpiValueLineHeight?: number,
 
-      // Typography - Name properties
-      nameFontSize?: number,
-      nameColor?: string,
-      nameFontWeight?: number,
-      nameFontFamily?: string,
+      // KPI Name styling properties (label display)
+      kpiNameColor?: string,
+      kpiNameFontSize?: number,
+      kpiNameFontWeight?: number,
+      kpiNameFontFamily?: string,
+      kpiNameAlign?: 'left' | 'center' | 'right',
+      kpiNameMarginTop?: number,
+      kpiNameMarginBottom?: number,
+      kpiNameLetterSpacing?: number,
+      kpiNameLineHeight?: number,
 
-      // Color properties
+      // Special color properties
       changeColor?: string,
-      targetColor?: string,
-
-      // Title-specific properties
-      titleAlign?: 'left' | 'center' | 'right',
-      titleMarginTop?: number,
-      titleMarginBottom?: number,
-      titleLetterSpacing?: number,
-      titleLineHeight?: number,
-
-      // Subtitle-specific properties
-      subtitleAlign?: 'left' | 'center' | 'right',
-      subtitleMarginTop?: number,
-      subtitleMarginBottom?: number,
-      subtitleLetterSpacing?: number,
-      subtitleLineHeight?: number
+      targetColor?: string
     },
     position?: {
       x?: number,
@@ -107,46 +103,42 @@ export class WidgetCreation {
             enableSimulation: false,
             dataSourceType: 'bigquery' as const,
 
-            // Layout & Appearance properties (from KPICard)
-            backgroundColor: styling?.backgroundColor,
-            backgroundOpacity: styling?.backgroundOpacity,
-            borderColor: styling?.borderColor,
-            borderOpacity: styling?.borderOpacity,
-            borderWidth: styling?.borderWidth,
-            borderRadius: styling?.borderRadius,
-            padding: styling?.padding,
-            textAlign: styling?.textAlign,
-            shadow: styling?.shadow,
+            // Container styling properties
+            kpiContainerBackgroundColor: styling?.kpiContainerBackgroundColor,
+            kpiContainerBackgroundOpacity: styling?.kpiContainerBackgroundOpacity,
+            kpiContainerBorderColor: styling?.kpiContainerBorderColor,
+            kpiContainerBorderOpacity: styling?.kpiContainerBorderOpacity,
+            kpiContainerBorderWidth: styling?.kpiContainerBorderWidth,
+            kpiContainerBorderRadius: styling?.kpiContainerBorderRadius,
+            kpiContainerPadding: styling?.kpiContainerPadding,
+            kpiContainerTextAlign: styling?.kpiContainerTextAlign,
+            kpiContainerShadow: styling?.kpiContainerShadow,
 
-            // Typography - Value properties
-            valueFontSize: styling?.valueFontSize,
-            valueColor: styling?.valueColor,
-            valueFontWeight: styling?.valueFontWeight,
-            valueFontFamily: styling?.valueFontFamily,
+            // KPI Value styling properties
+            kpiValueColor: styling?.kpiValueColor,
+            kpiValueFontSize: styling?.kpiValueFontSize,
+            kpiValueFontWeight: styling?.kpiValueFontWeight,
+            kpiValueFontFamily: styling?.kpiValueFontFamily,
+            kpiValueAlign: styling?.kpiValueAlign,
+            kpiValueMarginTop: styling?.kpiValueMarginTop,
+            kpiValueMarginBottom: styling?.kpiValueMarginBottom,
+            kpiValueLetterSpacing: styling?.kpiValueLetterSpacing,
+            kpiValueLineHeight: styling?.kpiValueLineHeight,
 
-            // Typography - Name properties
-            nameFontSize: styling?.nameFontSize,
-            nameColor: styling?.nameColor,
-            nameFontWeight: styling?.nameFontWeight,
-            nameFontFamily: styling?.nameFontFamily,
+            // KPI Name styling properties
+            kpiNameColor: styling?.kpiNameColor,
+            kpiNameFontSize: styling?.kpiNameFontSize,
+            kpiNameFontWeight: styling?.kpiNameFontWeight,
+            kpiNameFontFamily: styling?.kpiNameFontFamily,
+            kpiNameAlign: styling?.kpiNameAlign,
+            kpiNameMarginTop: styling?.kpiNameMarginTop,
+            kpiNameMarginBottom: styling?.kpiNameMarginBottom,
+            kpiNameLetterSpacing: styling?.kpiNameLetterSpacing,
+            kpiNameLineHeight: styling?.kpiNameLineHeight,
 
-            // Color properties
+            // Special color properties
             changeColor: styling?.changeColor,
             targetColor: styling?.targetColor,
-
-            // Title-specific properties
-            titleAlign: styling?.titleAlign,
-            titleMarginTop: styling?.titleMarginTop,
-            titleMarginBottom: styling?.titleMarginBottom,
-            titleLetterSpacing: styling?.titleLetterSpacing,
-            titleLineHeight: styling?.titleLineHeight,
-
-            // Subtitle-specific properties
-            subtitleAlign: styling?.subtitleAlign,
-            subtitleMarginTop: styling?.subtitleMarginTop,
-            subtitleMarginBottom: styling?.subtitleMarginBottom,
-            subtitleLetterSpacing: styling?.subtitleLetterSpacing,
-            subtitleLineHeight: styling?.subtitleLineHeight,
             bigqueryData: {
               selectedTable: table,
               kpiValueFields: [{
