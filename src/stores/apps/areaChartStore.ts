@@ -40,6 +40,34 @@ export interface AreaChartConfig {
     legendSymbolShape?: 'circle' | 'square' | 'triangle'
     title?: string
     style?: string
+
+    // Typography - Title/Subtitle
+    titleFontSize?: number
+    titleFontWeight?: number
+    titleColor?: string
+    subtitleFontSize?: number
+    subtitleFontWeight?: number
+    subtitleColor?: string
+
+    // Spacing - Title/Subtitle
+    titleMarginTop?: number
+    titleMarginRight?: number
+    titleMarginBottom?: number
+    titleMarginLeft?: number
+    titlePaddingTop?: number
+    titlePaddingRight?: number
+    titlePaddingBottom?: number
+    titlePaddingLeft?: number
+
+    subtitleMarginTop?: number
+    subtitleMarginRight?: number
+    subtitleMarginBottom?: number
+    subtitleMarginLeft?: number
+    subtitlePaddingTop?: number
+    subtitlePaddingRight?: number
+    subtitlePaddingBottom?: number
+    subtitlePaddingLeft?: number
+
     areaOpacity?: number
     fillOpacity?: number
     strokeWidth?: number

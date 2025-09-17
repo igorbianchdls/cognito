@@ -46,6 +46,26 @@ interface AreaChartProps extends BaseChartProps {
   subtitleFontSize?: number
   subtitleFontWeight?: string | number
   subtitleColor?: string
+
+  // Spacing - Title/Subtitle
+  titleMarginTop?: number
+  titleMarginRight?: number
+  titleMarginBottom?: number
+  titleMarginLeft?: number
+  titlePaddingTop?: number
+  titlePaddingRight?: number
+  titlePaddingBottom?: number
+  titlePaddingLeft?: number
+
+  subtitleMarginTop?: number
+  subtitleMarginRight?: number
+  subtitleMarginBottom?: number
+  subtitleMarginLeft?: number
+  subtitlePaddingTop?: number
+  subtitlePaddingRight?: number
+  subtitlePaddingBottom?: number
+  subtitlePaddingLeft?: number
+
   enablePointLabels?: boolean
   pointLabelTextColor?: string
   // Container Border props
@@ -93,6 +113,23 @@ export function AreaChart({
   subtitleFontSize = 14,
   subtitleFontWeight = 400,
   subtitleColor = '#6b7280',
+  // Spacing - Title/Subtitle
+  titleMarginTop,
+  titleMarginRight,
+  titleMarginBottom,
+  titleMarginLeft,
+  titlePaddingTop,
+  titlePaddingRight,
+  titlePaddingBottom,
+  titlePaddingLeft,
+  subtitleMarginTop,
+  subtitleMarginRight,
+  subtitleMarginBottom,
+  subtitleMarginLeft,
+  subtitlePaddingTop,
+  subtitlePaddingRight,
+  subtitlePaddingBottom,
+  subtitlePaddingLeft,
   enablePointLabels,
   pointLabelTextColor,
   // Container Border props
@@ -156,21 +193,21 @@ export function AreaChart({
       }}
     >
       {title && (
-        <div style={{ 
-          textAlign: 'center', 
-          marginBottom: '8px',
-          fontSize: `${titleFontSize}px`, 
-          fontWeight: titleFontWeight, 
+        <h3 style={{
+          margin: `${titleMarginTop ?? 0}px ${titleMarginRight ?? 0}px ${titleMarginBottom ?? 4}px ${titleMarginLeft ?? 0}px`,
+          padding: `${titlePaddingTop ?? 0}px ${titlePaddingRight ?? 0}px ${titlePaddingBottom ?? 0}px ${titlePaddingLeft ?? 0}px`,
+          fontSize: `${titleFontSize}px`,
+          fontWeight: titleFontWeight,
           color: titleColor
         }}>
           {title}
-        </div>
+        </h3>
       )}
       {subtitle && (
-        <div style={{ 
-          textAlign: 'center', 
-          marginBottom: '16px',
-          fontSize: `${subtitleFontSize}px`, 
+        <div style={{
+          margin: `${subtitleMarginTop ?? 0}px ${subtitleMarginRight ?? 0}px ${subtitleMarginBottom ?? 16}px ${subtitleMarginLeft ?? 0}px`,
+          padding: `${subtitlePaddingTop ?? 0}px ${subtitlePaddingRight ?? 0}px ${subtitlePaddingBottom ?? 0}px ${subtitlePaddingLeft ?? 0}px`,
+          fontSize: `${subtitleFontSize}px`,
           color: subtitleColor,
           fontWeight: subtitleFontWeight
         }}>

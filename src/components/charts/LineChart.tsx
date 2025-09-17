@@ -42,6 +42,34 @@ interface LineChartProps extends BaseChartProps {
   legends?: LegendConfig | Record<string, unknown>[]
   enablePointLabels?: boolean
   pointLabelTextColor?: string
+
+  // Typography - Title/Subtitle
+  titleFontSize?: number
+  titleFontWeight?: number
+  titleColor?: string
+  subtitleFontSize?: number
+  subtitleFontWeight?: number
+  subtitleColor?: string
+
+  // Spacing - Title/Subtitle
+  titleMarginTop?: number
+  titleMarginRight?: number
+  titleMarginBottom?: number
+  titleMarginLeft?: number
+  titlePaddingTop?: number
+  titlePaddingRight?: number
+  titlePaddingBottom?: number
+  titlePaddingLeft?: number
+
+  subtitleMarginTop?: number
+  subtitleMarginRight?: number
+  subtitleMarginBottom?: number
+  subtitleMarginLeft?: number
+  subtitlePaddingTop?: number
+  subtitlePaddingRight?: number
+  subtitlePaddingBottom?: number
+  subtitlePaddingLeft?: number
+
   // Container Border props
   containerBorderWidth?: number
   containerBorderColor?: string
@@ -78,6 +106,32 @@ export function LineChart({
   legends,
   enablePointLabels,
   pointLabelTextColor,
+  // Typography - Title/Subtitle
+  title,
+  subtitle,
+  titleFontSize = 18,
+  titleFontWeight = 700,
+  titleColor = '#222',
+  subtitleFontSize = 14,
+  subtitleFontWeight = 400,
+  subtitleColor = '#6b7280',
+  // Spacing - Title/Subtitle
+  titleMarginTop,
+  titleMarginRight,
+  titleMarginBottom,
+  titleMarginLeft,
+  titlePaddingTop,
+  titlePaddingRight,
+  titlePaddingBottom,
+  titlePaddingLeft,
+  subtitleMarginTop,
+  subtitleMarginRight,
+  subtitleMarginBottom,
+  subtitleMarginLeft,
+  subtitlePaddingTop,
+  subtitlePaddingRight,
+  subtitlePaddingBottom,
+  subtitlePaddingLeft,
   // Container Border props
   containerBorderWidth,
   containerBorderColor,
@@ -138,7 +192,37 @@ export function LineChart({
         boxShadow,
       }}
     >
-      <ResponsiveLine
+      {title && (
+        <h3 style={{
+          margin: `${titleMarginTop ?? 0}px ${titleMarginRight ?? 0}px ${titleMarginBottom ?? 4}px ${titleMarginLeft ?? 0}px`,
+          padding: `${titlePaddingTop ?? 0}px ${titlePaddingRight ?? 0}px ${titlePaddingBottom ?? 0}px ${titlePaddingLeft ?? 0}px`,
+          fontSize: `${titleFontSize}px`,
+          fontWeight: titleFontWeight,
+          color: titleColor
+        }}>
+          {title}
+        </h3>
+      )}
+      {subtitle && (
+        <div style={{
+          margin: `${subtitleMarginTop ?? 0}px ${subtitleMarginRight ?? 0}px ${subtitleMarginBottom ?? 16}px ${subtitleMarginLeft ?? 0}px`,
+          padding: `${subtitlePaddingTop ?? 0}px ${subtitlePaddingRight ?? 0}px ${subtitlePaddingBottom ?? 0}px ${subtitlePaddingLeft ?? 0}px`,
+          fontSize: `${subtitleFontSize}px`,
+          color: subtitleColor,
+          fontWeight: subtitleFontWeight
+        }}>
+          {subtitle}
+        </div>
+      )}
+
+      <div
+        style={{
+          flex: 1,
+          height: '100%'
+        }}
+      >
+        <div style={{ height: '100%', width: '100%', overflow: 'hidden' }}>
+          <ResponsiveLine
         data={[
           {
             id: 'series',
@@ -292,7 +376,9 @@ export function LineChart({
             }
           ];
         })()}
-      />
+          />
+        </div>
+      </div>
     </div>
   );
 }
