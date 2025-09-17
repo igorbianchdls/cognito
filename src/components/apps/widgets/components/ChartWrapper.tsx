@@ -235,11 +235,120 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
                            widget.areaChartConfig?.styling?.yAxisTickPadding ??
                            8
                     
-    const title = widget.barChartConfig?.styling?.title || 
+    const title = widget.barChartConfig?.styling?.title ||
                  widget.horizontalBarChartConfig?.styling?.title ||
                  widget.lineChartConfig?.styling?.title ||
                  widget.pieChartConfig?.styling?.title ||
                  widget.areaChartConfig?.styling?.title
+
+    // Title/Subtitle spacing props
+    const titleMarginTop = widget.barChartConfig?.styling?.titleMarginTop ??
+                          widget.lineChartConfig?.styling?.titleMarginTop ??
+                          widget.pieChartConfig?.styling?.titleMarginTop ??
+                          widget.areaChartConfig?.styling?.titleMarginTop ??
+                          widget.horizontalBarChartConfig?.styling?.titleMarginTop
+
+    const titleMarginRight = widget.barChartConfig?.styling?.titleMarginRight ??
+                            widget.lineChartConfig?.styling?.titleMarginRight ??
+                            widget.pieChartConfig?.styling?.titleMarginRight ??
+                            widget.areaChartConfig?.styling?.titleMarginRight ??
+                            widget.horizontalBarChartConfig?.styling?.titleMarginRight
+
+    const titleMarginBottom = widget.barChartConfig?.styling?.titleMarginBottom ??
+                             widget.lineChartConfig?.styling?.titleMarginBottom ??
+                             widget.pieChartConfig?.styling?.titleMarginBottom ??
+                             widget.areaChartConfig?.styling?.titleMarginBottom ??
+                             widget.horizontalBarChartConfig?.styling?.titleMarginBottom
+
+    const titleMarginLeft = widget.barChartConfig?.styling?.titleMarginLeft ??
+                           widget.lineChartConfig?.styling?.titleMarginLeft ??
+                           widget.pieChartConfig?.styling?.titleMarginLeft ??
+                           widget.areaChartConfig?.styling?.titleMarginLeft ??
+                           widget.horizontalBarChartConfig?.styling?.titleMarginLeft
+
+    const titlePaddingTop = widget.barChartConfig?.styling?.titlePaddingTop ??
+                           widget.lineChartConfig?.styling?.titlePaddingTop ??
+                           widget.pieChartConfig?.styling?.titlePaddingTop ??
+                           widget.areaChartConfig?.styling?.titlePaddingTop ??
+                           widget.horizontalBarChartConfig?.styling?.titlePaddingTop
+
+    const titlePaddingRight = widget.barChartConfig?.styling?.titlePaddingRight ??
+                             widget.lineChartConfig?.styling?.titlePaddingRight ??
+                             widget.pieChartConfig?.styling?.titlePaddingRight ??
+                             widget.areaChartConfig?.styling?.titlePaddingRight ??
+                             widget.horizontalBarChartConfig?.styling?.titlePaddingRight
+
+    const titlePaddingBottom = widget.barChartConfig?.styling?.titlePaddingBottom ??
+                              widget.lineChartConfig?.styling?.titlePaddingBottom ??
+                              widget.pieChartConfig?.styling?.titlePaddingBottom ??
+                              widget.areaChartConfig?.styling?.titlePaddingBottom ??
+                              widget.horizontalBarChartConfig?.styling?.titlePaddingBottom
+
+    const titlePaddingLeft = widget.barChartConfig?.styling?.titlePaddingLeft ??
+                            widget.lineChartConfig?.styling?.titlePaddingLeft ??
+                            widget.pieChartConfig?.styling?.titlePaddingLeft ??
+                            widget.areaChartConfig?.styling?.titlePaddingLeft ??
+                            widget.horizontalBarChartConfig?.styling?.titlePaddingLeft
+
+    const subtitleMarginTop = widget.barChartConfig?.styling?.subtitleMarginTop ??
+                             widget.lineChartConfig?.styling?.subtitleMarginTop ??
+                             widget.pieChartConfig?.styling?.subtitleMarginTop ??
+                             widget.areaChartConfig?.styling?.subtitleMarginTop ??
+                             widget.horizontalBarChartConfig?.styling?.subtitleMarginTop
+
+    const subtitleMarginRight = widget.barChartConfig?.styling?.subtitleMarginRight ??
+                               widget.lineChartConfig?.styling?.subtitleMarginRight ??
+                               widget.pieChartConfig?.styling?.subtitleMarginRight ??
+                               widget.areaChartConfig?.styling?.subtitleMarginRight ??
+                               widget.horizontalBarChartConfig?.styling?.subtitleMarginRight
+
+    const subtitleMarginBottom = widget.barChartConfig?.styling?.subtitleMarginBottom ??
+                                widget.lineChartConfig?.styling?.subtitleMarginBottom ??
+                                widget.pieChartConfig?.styling?.subtitleMarginBottom ??
+                                widget.areaChartConfig?.styling?.subtitleMarginBottom ??
+                                widget.horizontalBarChartConfig?.styling?.subtitleMarginBottom
+
+    const subtitleMarginLeft = widget.barChartConfig?.styling?.subtitleMarginLeft ??
+                              widget.lineChartConfig?.styling?.subtitleMarginLeft ??
+                              widget.pieChartConfig?.styling?.subtitleMarginLeft ??
+                              widget.areaChartConfig?.styling?.subtitleMarginLeft ??
+                              widget.horizontalBarChartConfig?.styling?.subtitleMarginLeft
+
+    const subtitlePaddingTop = widget.barChartConfig?.styling?.subtitlePaddingTop ??
+                              widget.lineChartConfig?.styling?.subtitlePaddingTop ??
+                              widget.pieChartConfig?.styling?.subtitlePaddingTop ??
+                              widget.areaChartConfig?.styling?.subtitlePaddingTop ??
+                              widget.horizontalBarChartConfig?.styling?.subtitlePaddingTop
+
+    const subtitlePaddingRight = widget.barChartConfig?.styling?.subtitlePaddingRight ??
+                                widget.lineChartConfig?.styling?.subtitlePaddingRight ??
+                                widget.pieChartConfig?.styling?.subtitlePaddingRight ??
+                                widget.areaChartConfig?.styling?.subtitlePaddingRight ??
+                                widget.horizontalBarChartConfig?.styling?.subtitlePaddingRight
+
+    const subtitlePaddingBottom = widget.barChartConfig?.styling?.subtitlePaddingBottom ??
+                                 widget.lineChartConfig?.styling?.subtitlePaddingBottom ??
+                                 widget.pieChartConfig?.styling?.subtitlePaddingBottom ??
+                                 widget.areaChartConfig?.styling?.subtitlePaddingBottom ??
+                                 widget.horizontalBarChartConfig?.styling?.subtitlePaddingBottom
+
+    const subtitlePaddingLeft = widget.barChartConfig?.styling?.subtitlePaddingLeft ??
+                               widget.lineChartConfig?.styling?.subtitlePaddingLeft ??
+                               widget.pieChartConfig?.styling?.subtitlePaddingLeft ??
+                               widget.areaChartConfig?.styling?.subtitlePaddingLeft ??
+                               widget.horizontalBarChartConfig?.styling?.subtitlePaddingLeft
+
+    const titleClassName = widget.barChartConfig?.styling?.titleClassName ||
+                          widget.lineChartConfig?.styling?.titleClassName ||
+                          widget.pieChartConfig?.styling?.titleClassName ||
+                          widget.areaChartConfig?.styling?.titleClassName ||
+                          widget.horizontalBarChartConfig?.styling?.titleClassName
+
+    const subtitleClassName = widget.barChartConfig?.styling?.subtitleClassName ||
+                             widget.lineChartConfig?.styling?.subtitleClassName ||
+                             widget.pieChartConfig?.styling?.subtitleClassName ||
+                             widget.areaChartConfig?.styling?.subtitleClassName ||
+                             widget.horizontalBarChartConfig?.styling?.subtitleClassName
 
     // Typography props - Axis
     const axisFontFamily = widget.barChartConfig?.styling?.axisFontFamily ??
@@ -407,7 +516,7 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
         } : undefined
 
         return (
-          <BarChart 
+          <BarChart
             {...commonProps}
             enableGridX={widget.barChartConfig?.styling?.enableGridX ?? false}
             enableGridY={widget.barChartConfig?.styling?.enableGridY ?? showGrid}
@@ -456,6 +565,25 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             legendsTextColor={legendsTextColor}
             tooltipFontSize={tooltipFontSize}
             tooltipFontFamily={tooltipFontFamily}
+            // Title/Subtitle spacing props
+            titleMarginTop={titleMarginTop}
+            titleMarginRight={titleMarginRight}
+            titleMarginBottom={titleMarginBottom}
+            titleMarginLeft={titleMarginLeft}
+            titlePaddingTop={titlePaddingTop}
+            titlePaddingRight={titlePaddingRight}
+            titlePaddingBottom={titlePaddingBottom}
+            titlePaddingLeft={titlePaddingLeft}
+            subtitleMarginTop={subtitleMarginTop}
+            subtitleMarginRight={subtitleMarginRight}
+            subtitleMarginBottom={subtitleMarginBottom}
+            subtitleMarginLeft={subtitleMarginLeft}
+            subtitlePaddingTop={subtitlePaddingTop}
+            subtitlePaddingRight={subtitlePaddingRight}
+            subtitlePaddingBottom={subtitlePaddingBottom}
+            subtitlePaddingLeft={subtitlePaddingLeft}
+            titleClassName={titleClassName}
+            subtitleClassName={subtitleClassName}
             containerBorderWidth={containerBorderWidth}
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}
@@ -478,7 +606,7 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
         } : undefined
 
         return (
-          <LineChart 
+          <LineChart
             {...commonProps}
             enableGridX={widget.lineChartConfig?.styling?.enableGridX ?? false}
             enableGridY={widget.lineChartConfig?.styling?.enableGridY ?? showGrid}
@@ -509,6 +637,25 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
               tickPadding: yAxisTickPadding
             } : undefined}
             legends={lineChartLegendConfig}
+            // Title/Subtitle spacing props
+            titleMarginTop={titleMarginTop}
+            titleMarginRight={titleMarginRight}
+            titleMarginBottom={titleMarginBottom}
+            titleMarginLeft={titleMarginLeft}
+            titlePaddingTop={titlePaddingTop}
+            titlePaddingRight={titlePaddingRight}
+            titlePaddingBottom={titlePaddingBottom}
+            titlePaddingLeft={titlePaddingLeft}
+            subtitleMarginTop={subtitleMarginTop}
+            subtitleMarginRight={subtitleMarginRight}
+            subtitleMarginBottom={subtitleMarginBottom}
+            subtitleMarginLeft={subtitleMarginLeft}
+            subtitlePaddingTop={subtitlePaddingTop}
+            subtitlePaddingRight={subtitlePaddingRight}
+            subtitlePaddingBottom={subtitlePaddingBottom}
+            subtitlePaddingLeft={subtitlePaddingLeft}
+            titleClassName={titleClassName}
+            subtitleClassName={subtitleClassName}
             containerBorderWidth={containerBorderWidth}
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}

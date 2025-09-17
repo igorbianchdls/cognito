@@ -57,7 +57,7 @@ export default function ChartTitleSubtitleAccordion({
                 </div>
                 <Slider
                   value={[styling?.titleMarginTop ?? 0]}
-                  onValueChange={(value) => onConfigChange('titleMarginTop', value[0])}
+                  onValueChange={(value) => onConfigChange('styling.titleMarginTop', value[0])}
                   max={50}
                   min={0}
                   step={1}
@@ -71,7 +71,7 @@ export default function ChartTitleSubtitleAccordion({
                 </div>
                 <Slider
                   value={[styling?.titleMarginRight ?? 0]}
-                  onValueChange={(value) => onConfigChange('titleMarginRight', value[0])}
+                  onValueChange={(value) => onConfigChange('styling.titleMarginRight', value[0])}
                   max={50}
                   min={0}
                   step={1}
@@ -85,7 +85,7 @@ export default function ChartTitleSubtitleAccordion({
                 </div>
                 <Slider
                   value={[styling?.titleMarginBottom ?? 4]}
-                  onValueChange={(value) => onConfigChange('titleMarginBottom', value[0])}
+                  onValueChange={(value) => onConfigChange('styling.titleMarginBottom', value[0]))
                   max={50}
                   min={0}
                   step={1}
@@ -99,7 +99,7 @@ export default function ChartTitleSubtitleAccordion({
                 </div>
                 <Slider
                   value={[styling?.titleMarginLeft ?? 0]}
-                  onValueChange={(value) => onConfigChange('titleMarginLeft', value[0])}
+                  onValueChange={(value) => onConfigChange('styling.titleMarginLeft', value[0]))
                   max={50}
                   min={0}
                   step={1}
@@ -119,7 +119,7 @@ export default function ChartTitleSubtitleAccordion({
                 </div>
                 <Slider
                   value={[styling?.titlePaddingTop ?? 0]}
-                  onValueChange={(value) => onConfigChange('titlePaddingTop', value[0])}
+                  onValueChange={(value) => onConfigChange('styling.titlePaddingTop', value[0])}
                   max={30}
                   min={0}
                   step={1}
@@ -133,7 +133,7 @@ export default function ChartTitleSubtitleAccordion({
                 </div>
                 <Slider
                   value={[styling?.titlePaddingRight ?? 0]}
-                  onValueChange={(value) => onConfigChange('titlePaddingRight', value[0])}
+                  onValueChange={(value) => onConfigChange('styling.titlePaddingRight', value[0]))
                   max={30}
                   min={0}
                   step={1}
@@ -147,7 +147,7 @@ export default function ChartTitleSubtitleAccordion({
                 </div>
                 <Slider
                   value={[styling?.titlePaddingBottom ?? 0]}
-                  onValueChange={(value) => onConfigChange('titlePaddingBottom', value[0])}
+                  onValueChange={(value) => onConfigChange('styling.titlePaddingBottom', value[0]))
                   max={30}
                   min={0}
                   step={1}
@@ -161,7 +161,7 @@ export default function ChartTitleSubtitleAccordion({
                 </div>
                 <Slider
                   value={[styling?.titlePaddingLeft ?? 0]}
-                  onValueChange={(value) => onConfigChange('titlePaddingLeft', value[0])}
+                  onValueChange={(value) => onConfigChange('styling.titlePaddingLeft', value[0]))
                   max={30}
                   min={0}
                   step={1}
@@ -186,7 +186,7 @@ export default function ChartTitleSubtitleAccordion({
                 </div>
                 <Slider
                   value={[styling?.subtitleMarginTop ?? 0]}
-                  onValueChange={(value) => onConfigChange('subtitleMarginTop', value[0])}
+                  onValueChange={(value) => onConfigChange('styling.subtitleMarginTop', value[0])}
                   max={40}
                   min={0}
                   step={1}
@@ -200,7 +200,7 @@ export default function ChartTitleSubtitleAccordion({
                 </div>
                 <Slider
                   value={[styling?.subtitleMarginRight ?? 0]}
-                  onValueChange={(value) => onConfigChange('subtitleMarginRight', value[0])}
+                  onValueChange={(value) => onConfigChange('styling.subtitleMarginRight', value[0])}
                   max={40}
                   min={0}
                   step={1}
@@ -214,7 +214,7 @@ export default function ChartTitleSubtitleAccordion({
                 </div>
                 <Slider
                   value={[styling?.subtitleMarginBottom ?? 16]}
-                  onValueChange={(value) => onConfigChange('subtitleMarginBottom', value[0])}
+                  onValueChange={(value) => onConfigChange('styling.subtitleMarginBottom', value[0])}
                   max={40}
                   min={0}
                   step={1}
@@ -228,7 +228,7 @@ export default function ChartTitleSubtitleAccordion({
                 </div>
                 <Slider
                   value={[styling?.subtitleMarginLeft ?? 0]}
-                  onValueChange={(value) => onConfigChange('subtitleMarginLeft', value[0])}
+                  onValueChange={(value) => onConfigChange('styling.subtitleMarginLeft', value[0])}
                   max={40}
                   min={0}
                   step={1}
@@ -248,7 +248,7 @@ export default function ChartTitleSubtitleAccordion({
                 </div>
                 <Slider
                   value={[styling?.subtitlePaddingTop ?? 0]}
-                  onValueChange={(value) => onConfigChange('subtitlePaddingTop', value[0])}
+                  onValueChange={(value) => onConfigChange('styling.subtitlePaddingTop', value[0])}
                   max={20}
                   min={0}
                   step={1}
@@ -262,7 +262,7 @@ export default function ChartTitleSubtitleAccordion({
                 </div>
                 <Slider
                   value={[styling?.subtitlePaddingRight ?? 0]}
-                  onValueChange={(value) => onConfigChange('subtitlePaddingRight', value[0])}
+                  onValueChange={(value) => onConfigChange('styling.subtitlePaddingRight', value[0])}
                   max={20}
                   min={0}
                   step={1}
@@ -276,7 +276,7 @@ export default function ChartTitleSubtitleAccordion({
                 </div>
                 <Slider
                   value={[styling?.subtitlePaddingBottom ?? 0]}
-                  onValueChange={(value) => onConfigChange('subtitlePaddingBottom', value[0])}
+                  onValueChange={(value) => onConfigChange('styling.subtitlePaddingBottom', value[0]))
                   max={20}
                   min={0}
                   step={1}
@@ -290,7 +290,7 @@ export default function ChartTitleSubtitleAccordion({
                 </div>
                 <Slider
                   value={[styling?.subtitlePaddingLeft ?? 0]}
-                  onValueChange={(value) => onConfigChange('subtitlePaddingLeft', value[0])}
+                  onValueChange={(value) => onConfigChange('styling.subtitlePaddingLeft', value[0]))
                   max={20}
                   min={0}
                   step={1}
@@ -313,7 +313,7 @@ export default function ChartTitleSubtitleAccordion({
               <input
                 type="text"
                 value={styling?.titleClassName || ''}
-                onChange={(e) => onConfigChange('titleClassName', e.target.value)}
+                onChange={(e) => onConfigChange('styling.titleClassName', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="text-2xl font-bold text-blue-600 mb-4"
               />
@@ -326,7 +326,7 @@ export default function ChartTitleSubtitleAccordion({
               <input
                 type="text"
                 value={styling?.subtitleClassName || ''}
-                onChange={(e) => onConfigChange('subtitleClassName', e.target.value)}
+                onChange={(e) => onConfigChange('styling.subtitleClassName', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder="text-sm text-gray-600 mb-4"
               />
