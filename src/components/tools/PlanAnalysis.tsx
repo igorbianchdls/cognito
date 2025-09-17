@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertCircleIcon, CheckCircleIcon, ClockIcon, ChevronDownIcon } from 'lucide-react';
+import { AlertCircleIcon, ChevronDownIcon, CheckCircleIcon } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { useState } from 'react';
@@ -47,46 +47,6 @@ export default function PlanAnalysis({
     );
   }
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'planejado':
-        return <ClockIcon className="w-4 h-4 text-blue-500" />;
-      case 'executando':
-        return <ClockIcon className="w-4 h-4 text-yellow-500 animate-pulse" />;
-      case 'concluido':
-        return <CheckCircleIcon className="w-4 h-4 text-green-500" />;
-      default:
-        return <ClockIcon className="w-4 h-4 text-gray-500" />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'planejado':
-        return 'bg-blue-100 text-blue-800';
-      case 'executando':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'concluido':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getQueryTypeColor = (queryType: string) => {
-    switch (queryType) {
-      case 'SELECT':
-        return 'bg-purple-100 text-purple-800';
-      case 'INSERT':
-        return 'bg-green-100 text-green-800';
-      case 'UPDATE':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'DELETE':
-        return 'bg-red-100 text-red-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   return (
     <div className="space-y-4">
@@ -112,34 +72,17 @@ export default function PlanAnalysis({
           return (
             <Collapsible key={index} open={isOpen} onOpenChange={() => toggleCard(index)}>
               <div className="border border-gray-200 rounded-lg bg-white hover:shadow-sm transition-shadow">
-                {/* Header with number and title */}
+                {/* Header with number, title and chevron in single line */}
                 <div className="p-4">
-                  <div className="flex items-start gap-3 mb-3">
+                  <div className="flex items-center gap-3">
                     <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
                       <span className="text-sm font-semibold text-gray-700">{analise.numero}</span>
                     </div>
                     <div className="flex-1">
                       <h4 className="font-medium text-gray-900 leading-tight">{analise.titulo}</h4>
                     </div>
-                  </div>
-
-                  {/* Status and badges */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1">
-                        {getStatusIcon(analise.status)}
-                        <Badge variant="secondary" className={getStatusColor(analise.status)}>
-                          {analise.status}
-                        </Badge>
-                      </div>
-                      <Badge variant="outline" className={getQueryTypeColor(analise.queryType)}>
-                        {analise.queryType}
-                      </Badge>
-                    </div>
-
-                    {/* Collapsible trigger */}
-                    <CollapsibleTrigger className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 px-2 py-1 rounded transition-all duration-200">
-                      <span>{isOpen ? 'Ocultar Query' : 'Ver Query'}</span>
+                    {/* Collapsible trigger - just the icon */}
+                    <CollapsibleTrigger className="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded transition-all duration-200">
                       <ChevronDownIcon
                         className={`w-4 h-4 transition-transform duration-200 ${
                           isOpen ? 'rotate-180' : 'rotate-0'
