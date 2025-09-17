@@ -453,6 +453,24 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
                            widget.areaChartConfig?.styling?.backgroundColor ??
                            widget.horizontalBarChartConfig?.styling?.backgroundColor
 
+    const backgroundOpacity = widget.barChartConfig?.styling?.backgroundOpacity ??
+                              widget.lineChartConfig?.styling?.backgroundOpacity ??
+                              widget.pieChartConfig?.styling?.backgroundOpacity ??
+                              widget.areaChartConfig?.styling?.backgroundOpacity ??
+                              widget.horizontalBarChartConfig?.styling?.backgroundOpacity
+
+    const backgroundGradient = widget.barChartConfig?.styling?.backgroundGradient ??
+                               widget.lineChartConfig?.styling?.backgroundGradient ??
+                               widget.pieChartConfig?.styling?.backgroundGradient ??
+                               widget.areaChartConfig?.styling?.backgroundGradient ??
+                               widget.horizontalBarChartConfig?.styling?.backgroundGradient
+
+    const backdropFilter = widget.barChartConfig?.styling?.backdropFilter ??
+                          widget.lineChartConfig?.styling?.backdropFilter ??
+                          widget.pieChartConfig?.styling?.backdropFilter ??
+                          widget.areaChartConfig?.styling?.backdropFilter ??
+                          widget.horizontalBarChartConfig?.styling?.backdropFilter
+
     // Container Border props (bar chart, line chart, pie chart, area chart and horizontal bar chart)
     const containerBorderWidth = widget.barChartConfig?.styling?.containerBorderWidth ??
                                 widget.lineChartConfig?.styling?.containerBorderWidth ??
@@ -599,6 +617,9 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             subtitleClassName={subtitleClassName}
             containerClassName={containerClassName}
             backgroundColor={backgroundColor}
+            backgroundOpacity={backgroundOpacity}
+            backgroundGradient={backgroundGradient}
+            backdropFilter={backdropFilter}
             containerBorderWidth={containerBorderWidth}
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}
@@ -673,6 +694,9 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             subtitleClassName={subtitleClassName}
             containerClassName={containerClassName}
             backgroundColor={backgroundColor}
+            backgroundOpacity={backgroundOpacity}
+            backgroundGradient={backgroundGradient}
+            backdropFilter={backdropFilter}
             containerBorderWidth={containerBorderWidth}
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}
@@ -735,6 +759,9 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             subtitleClassName={subtitleClassName}
             containerClassName={containerClassName}
             backgroundColor={backgroundColor}
+            backgroundOpacity={backgroundOpacity}
+            backgroundGradient={backgroundGradient}
+            backdropFilter={backdropFilter}
             containerBorderWidth={containerBorderWidth}
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}
@@ -809,6 +836,9 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             subtitleClassName={subtitleClassName}
             containerClassName={containerClassName}
             backgroundColor={backgroundColor}
+            backgroundOpacity={backgroundOpacity}
+            backgroundGradient={backgroundGradient}
+            backdropFilter={backdropFilter}
             containerBorderWidth={containerBorderWidth}
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}
@@ -884,6 +914,9 @@ export default function ChartWrapper({ widget }: ChartWrapperProps) {
             subtitleClassName={subtitleClassName}
             containerClassName={containerClassName}
             backgroundColor={backgroundColor}
+            backgroundOpacity={backgroundOpacity}
+            backgroundGradient={backgroundGradient}
+            backdropFilter={backdropFilter}
             containerBorderWidth={containerBorderWidth}
             containerBorderColor={containerBorderColor}
             containerBorderRadius={containerBorderRadius}

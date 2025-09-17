@@ -76,6 +76,9 @@ export function PieChart({
   data, 
   colors,
   backgroundColor,
+  backgroundOpacity,
+  backgroundGradient,
+  backdropFilter,
   innerRadius,
   padAngle,
   cornerRadius,
@@ -179,6 +182,42 @@ export function PieChart({
       }, ${containerShadowOpacity || 0.2})`
     : '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
 
+  // Create advanced background styles
+  const getAdvancedBackground = () => {
+    // Priority: gradient > backgroundColor with opacity > backgroundColor
+    if (backgroundGradient?.enabled) {
+      const { type, direction, startColor, endColor } = backgroundGradient
+      switch (type) {
+        case 'linear':
+          return `linear-gradient(${direction}, ${startColor}, ${endColor})`
+        case 'radial':
+          return `radial-gradient(${direction}, ${startColor}, ${endColor})`
+        case 'conic':
+          return `conic-gradient(from ${direction}, ${startColor}, ${endColor})`
+        default:
+          return `linear-gradient(${direction}, ${startColor}, ${endColor})`
+      }
+    }
+
+    // Apply opacity to backgroundColor if specified
+    if (backgroundColor && backgroundOpacity !== undefined) {
+      const hex = backgroundColor.replace('#', '')
+      const r = parseInt(hex.substring(0, 2), 16)
+      const g = parseInt(hex.substring(2, 4), 16)
+      const b = parseInt(hex.substring(4, 6), 16)
+      return `rgba(${r}, ${g}, ${b}, ${backgroundOpacity})`
+    }
+
+    return backgroundColor
+  }
+
+  const getBackdropFilter = () => {
+    if (backdropFilter?.enabled && backdropFilter?.blur) {
+      return `blur(${backdropFilter.blur}px)`
+    }
+    return undefined
+  }
+
   // Debug log
   console.log('🖼️ PieChart Shadow Debug:', {
     containerShadowColor,
@@ -205,7 +244,8 @@ export function PieChart({
         minWidth: 0,
         // Propriedades condicionais (só quando não há containerClassName)
         ...(containerClassName ? {} : {
-          background: backgroundColor,
+          background: getAdvancedBackground(),
+          backdropFilter: getBackdropFilter(),
           padding: `${containerPadding || 16}px`,
           margin: '0 auto',
           border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb',

@@ -5,9 +5,29 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import { Slider } from "@/components/ui/slider"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface ContainerBorderStyling {
   backgroundColor?: string
+  backgroundOpacity?: number
+  backgroundGradient?: {
+    enabled: boolean
+    type: 'linear' | 'radial' | 'conic'
+    direction: string
+    startColor: string
+    endColor: string
+  }
+  backdropFilter?: {
+    enabled: boolean
+    blur: number
+  }
   containerBorderWidth?: number
   containerBorderColor?: string
   containerBorderRadius?: number
@@ -79,6 +99,202 @@ export default function ContainerBorderAccordion({
                 className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded"
                 placeholder="#ffffff"
               />
+            </div>
+          </div>
+
+          {/* Background Advanced */}
+          <div className="mt-6 pt-4 border-t border-gray-200">
+            <label className="block text-xs font-medium text-gray-600 mb-3">Background Advanced</label>
+
+            {/* Background Opacity */}
+            <div className="mb-4">
+              <label className="block text-xs text-gray-500 mb-1">
+                Background Opacity: {Math.round((styling?.backgroundOpacity ?? 1) * 100)}%
+              </label>
+              <Slider
+                value={[styling?.backgroundOpacity ?? 1]}
+                onValueChange={(value) => onConfigChange(getFieldPath('backgroundOpacity'), value[0])}
+                max={1}
+                min={0}
+                step={0.05}
+                className="w-full"
+              />
+            </div>
+
+            {/* Background Gradient */}
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <input
+                  type="checkbox"
+                  checked={styling?.backgroundGradient?.enabled ?? false}
+                  onChange={(e) => {
+                    const currentGradient = styling?.backgroundGradient || {}
+                    onConfigChange(getFieldPath('backgroundGradient'), {
+                      ...currentGradient,
+                      enabled: e.target.checked,
+                      type: currentGradient.type || 'linear',
+                      direction: currentGradient.direction || '90deg',
+                      startColor: currentGradient.startColor || '#3b82f6',
+                      endColor: currentGradient.endColor || '#8b5cf6'
+                    })
+                  }}
+                  className="w-4 h-4"
+                />
+                <label className="text-xs text-gray-500">Enable Gradient</label>
+              </div>
+
+              {styling?.backgroundGradient?.enabled && (
+                <div className="space-y-3 ml-6">
+                  {/* Gradient Type */}
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Type</label>
+                    <Select
+                      value={styling?.backgroundGradient?.type || 'linear'}
+                      onValueChange={(value) => {
+                        const currentGradient = styling?.backgroundGradient || {}
+                        onConfigChange(getFieldPath('backgroundGradient'), {
+                          ...currentGradient,
+                          type: value as 'linear' | 'radial' | 'conic'
+                        })
+                      }}
+                    >
+                      <SelectTrigger className="w-full h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="linear">Linear</SelectItem>
+                        <SelectItem value="radial">Radial</SelectItem>
+                        <SelectItem value="conic">Conic</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Gradient Direction */}
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">Direction</label>
+                    <input
+                      type="text"
+                      value={styling?.backgroundGradient?.direction || '90deg'}
+                      onChange={(e) => {
+                        const currentGradient = styling?.backgroundGradient || {}
+                        onConfigChange(getFieldPath('backgroundGradient'), {
+                          ...currentGradient,
+                          direction: e.target.value
+                        })
+                      }}
+                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
+                      placeholder="90deg"
+                    />
+                  </div>
+
+                  {/* Gradient Colors */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">Start Color</label>
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="color"
+                          value={styling?.backgroundGradient?.startColor || '#3b82f6'}
+                          onChange={(e) => {
+                            const currentGradient = styling?.backgroundGradient || {}
+                            onConfigChange(getFieldPath('backgroundGradient'), {
+                              ...currentGradient,
+                              startColor: e.target.value
+                            })
+                          }}
+                          className="w-6 h-6 border border-gray-300 rounded cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={styling?.backgroundGradient?.startColor || '#3b82f6'}
+                          onChange={(e) => {
+                            const currentGradient = styling?.backgroundGradient || {}
+                            onConfigChange(getFieldPath('backgroundGradient'), {
+                              ...currentGradient,
+                              startColor: e.target.value
+                            })
+                          }}
+                          className="flex-1 px-1 py-1 text-xs border border-gray-300 rounded"
+                          placeholder="#3b82f6"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-gray-500 mb-1">End Color</label>
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="color"
+                          value={styling?.backgroundGradient?.endColor || '#8b5cf6'}
+                          onChange={(e) => {
+                            const currentGradient = styling?.backgroundGradient || {}
+                            onConfigChange(getFieldPath('backgroundGradient'), {
+                              ...currentGradient,
+                              endColor: e.target.value
+                            })
+                          }}
+                          className="w-6 h-6 border border-gray-300 rounded cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={styling?.backgroundGradient?.endColor || '#8b5cf6'}
+                          onChange={(e) => {
+                            const currentGradient = styling?.backgroundGradient || {}
+                            onConfigChange(getFieldPath('backgroundGradient'), {
+                              ...currentGradient,
+                              endColor: e.target.value
+                            })
+                          }}
+                          className="flex-1 px-1 py-1 text-xs border border-gray-300 rounded"
+                          placeholder="#8b5cf6"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Backdrop Filter */}
+            <div className="mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <input
+                  type="checkbox"
+                  checked={styling?.backdropFilter?.enabled ?? false}
+                  onChange={(e) => {
+                    const currentBackdrop = styling?.backdropFilter || {}
+                    onConfigChange(getFieldPath('backdropFilter'), {
+                      ...currentBackdrop,
+                      enabled: e.target.checked,
+                      blur: currentBackdrop.blur || 10
+                    })
+                  }}
+                  className="w-4 h-4"
+                />
+                <label className="text-xs text-gray-500">Enable Backdrop Blur</label>
+              </div>
+
+              {styling?.backdropFilter?.enabled && (
+                <div className="ml-6">
+                  <label className="block text-xs text-gray-500 mb-1">
+                    Blur Intensity: {styling?.backdropFilter?.blur || 10}px
+                  </label>
+                  <Slider
+                    value={[styling?.backdropFilter?.blur ?? 10]}
+                    onValueChange={(value) => {
+                      const currentBackdrop = styling?.backdropFilter || {}
+                      onConfigChange(getFieldPath('backdropFilter'), {
+                        ...currentBackdrop,
+                        blur: value[0]
+                      })
+                    }}
+                    max={20}
+                    min={0}
+                    step={1}
+                    className="w-full"
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -303,7 +519,9 @@ export default function ContainerBorderAccordion({
             <div className="flex items-start gap-2">
               <span className="text-xs">💡</span>
               <div className="text-xs text-gray-600 space-y-1">
-                <div><strong>Background:</strong> Background color of the entire chart container</div>
+                <div><strong>Background:</strong> Color, opacity (0-100%), and gradients</div>
+                <div><strong>Gradient:</strong> Linear/radial/conic with custom colors and direction</div>
+                <div><strong>Backdrop Blur:</strong> Glassmorphism effect (0-20px blur)</div>
                 <div><strong>Border:</strong> Width, color, and radius of the border</div>
                 <div><strong>Padding:</strong> Space between border and content (0-20px)</div>
                 <div><strong>Shadow:</strong> Color, opacity (0-1), blur (0-20px), and offsets (-20 to 20px)</div>

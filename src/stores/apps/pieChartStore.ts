@@ -121,6 +121,18 @@ export interface PieChartConfig {
     
     // Container Background
     backgroundColor?: string
+    backgroundOpacity?: number
+    backgroundGradient?: {
+      enabled: boolean
+      type: 'linear' | 'radial' | 'conic'
+      direction: string
+      startColor: string
+      endColor: string
+    }
+    backdropFilter?: {
+      enabled: boolean
+      blur: number
+    }
 
     // Container Border
     containerBorderWidth?: number
