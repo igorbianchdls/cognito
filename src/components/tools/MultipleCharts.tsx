@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { BarChart } from '@/components/charts/BarChart';
 import { LineChart } from '@/components/charts/LineChart';
 import { PieChart } from '@/components/charts/PieChart';
@@ -76,6 +76,7 @@ export function MultipleCharts({
 
   const [openDropdowns, setOpenDropdowns] = useState<Record<number, boolean>>({});
   const [showTableStates, setShowTableStates] = useState<Record<number, boolean>>({});
+  const dropdownRefs = useRef<Record<number, HTMLDivElement | null>>({});
 
   // Renderização de tabela com dados do gráfico
   const renderTable = (chart: ChartData) => {
@@ -167,12 +168,31 @@ export function MultipleCharts({
   // Fechar dropdowns quando clicar fora
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      setOpenDropdowns({});
+      const target = event.target as Node;
+
+      // Verificar se o clique foi fora de qualquer dropdown aberto
+      const updatedDropdowns = { ...openDropdowns };
+      let hasChanges = false;
+
+      Object.keys(openDropdowns).forEach(indexStr => {
+        const index = parseInt(indexStr);
+        if (openDropdowns[index]) {
+          const dropdownRef = dropdownRefs.current[index];
+          if (dropdownRef && !dropdownRef.contains(target)) {
+            updatedDropdowns[index] = false;
+            hasChanges = true;
+          }
+        }
+      });
+
+      if (hasChanges) {
+        setOpenDropdowns(updatedDropdowns);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [openDropdowns]);
 
   // Handler para copiar dados do gráfico
   const handleCopyData = async (chartData: Array<{x: string; y: number; label: string; value: number}>) => {
@@ -240,7 +260,12 @@ export function MultipleCharts({
                 </ArtifactDescription>
               </div>
               <ArtifactActions>
-                <div className="relative">
+                <div
+                  className="relative"
+                  ref={(el) => {
+                    dropdownRefs.current[index] = el;
+                  }}
+                >
                   <ArtifactAction
                     icon={getChartIcon(chartTypes[index] || chart.chartType)}
                     tooltip="Alterar tipo de gráfico"
