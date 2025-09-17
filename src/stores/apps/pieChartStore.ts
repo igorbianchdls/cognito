@@ -119,6 +119,9 @@ export interface PieChartConfig {
     tooltipFontSize?: number
     tooltipFontFamily?: string
     
+    // Container Background
+    backgroundColor?: string
+
     // Container Border
     containerBorderWidth?: number
     containerBorderColor?: string

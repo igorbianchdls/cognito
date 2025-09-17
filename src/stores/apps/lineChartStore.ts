@@ -127,6 +127,9 @@ export interface LineChartConfig {
     tooltipFontSize?: number
     tooltipFontFamily?: string
     
+    // Container Background
+    backgroundColor?: string
+
     // Container Border
     containerBorderWidth?: number
     containerBorderColor?: string

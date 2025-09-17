@@ -130,6 +130,9 @@ export interface AreaChartConfig {
     tooltipFontSize?: number
     tooltipFontFamily?: string
     
+    // Container Background
+    backgroundColor?: string
+
     // Container Border
     containerBorderWidth?: number
     containerBorderColor?: string

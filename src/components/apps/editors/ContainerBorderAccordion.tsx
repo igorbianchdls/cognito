@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/accordion"
 
 interface ContainerBorderStyling {
+  backgroundColor?: string
   containerBorderWidth?: number
   containerBorderColor?: string
   containerBorderRadius?: number
@@ -51,6 +52,34 @@ export default function ContainerBorderAccordion({
             <p className="text-xs text-gray-500 mb-4">
               Customize the border around the entire chart container including title and subtitle.
             </p>
+          </div>
+
+          {/* Background Color */}
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">Background Color</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={styling?.backgroundColor ?? '#ffffff'}
+                onChange={(e) => {
+                  const value = e.target.value
+                  console.log('🖼️ ContainerBorderAccordion: Background color changed to:', value)
+                  onConfigChange(getFieldPath('backgroundColor'), value)
+                }}
+                className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+              />
+              <input
+                type="text"
+                value={styling?.backgroundColor ?? '#ffffff'}
+                onChange={(e) => {
+                  const value = e.target.value
+                  console.log('🖼️ ContainerBorderAccordion: Background color changed to:', value)
+                  onConfigChange(getFieldPath('backgroundColor'), value)
+                }}
+                className="flex-1 px-2 py-1 text-xs border border-gray-300 rounded"
+                placeholder="#ffffff"
+              />
+            </div>
           </div>
 
           {/* Border Width */}
@@ -274,6 +303,7 @@ export default function ContainerBorderAccordion({
             <div className="flex items-start gap-2">
               <span className="text-xs">💡</span>
               <div className="text-xs text-gray-600 space-y-1">
+                <div><strong>Background:</strong> Background color of the entire chart container</div>
                 <div><strong>Border:</strong> Width, color, and radius of the border</div>
                 <div><strong>Padding:</strong> Space between border and content (0-20px)</div>
                 <div><strong>Shadow:</strong> Color, opacity (0-1), blur (0-20px), and offsets (-20 to 20px)</div>
