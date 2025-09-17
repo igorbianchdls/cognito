@@ -93,6 +93,10 @@ export interface KPIConfig {
   // Special color properties
   changeColor?: string
   targetColor?: string
+
+  // Tailwind Classes - KPI (precedence over individual props)
+  kpiNameClassName?: string
+  kpiValueClassName?: string
 }
 
 // KPI Widget interface

@@ -40,6 +40,38 @@ export interface PieChartConfig {
     legendSymbolShape?: 'circle' | 'square' | 'triangle'
     title?: string
     style?: string
+
+    // Typography - Title/Subtitle
+    titleFontSize?: number
+    titleFontWeight?: number
+    titleColor?: string
+    subtitleFontSize?: number
+    subtitleFontWeight?: number
+    subtitleColor?: string
+
+    // Spacing - Title/Subtitle
+    titleMarginTop?: number
+    titleMarginRight?: number
+    titleMarginBottom?: number
+    titleMarginLeft?: number
+    titlePaddingTop?: number
+    titlePaddingRight?: number
+    titlePaddingBottom?: number
+    titlePaddingLeft?: number
+
+    subtitleMarginTop?: number
+    subtitleMarginRight?: number
+    subtitleMarginBottom?: number
+    subtitleMarginLeft?: number
+    subtitlePaddingTop?: number
+    subtitlePaddingRight?: number
+    subtitlePaddingBottom?: number
+    subtitlePaddingLeft?: number
+
+    // Tailwind Classes - Title/Subtitle (precedence over individual props)
+    titleClassName?: string
+    subtitleClassName?: string
+
     innerRadius?: number
     outerRadius?: number
     enableLabels?: boolean

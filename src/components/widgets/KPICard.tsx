@@ -93,6 +93,10 @@ interface KPICardProps {
   // Special color props
   changeColor?: string;
   targetColor?: string;
+
+  // Tailwind Classes - KPI (precedence over individual props)
+  kpiNameClassName?: string;
+  kpiValueClassName?: string;
 }
 
 export function KPICard({
@@ -151,7 +155,11 @@ export function KPICard({
 
   // Special color props
   changeColor,
-  targetColor
+  targetColor,
+
+  // Tailwind Classes - KPI
+  kpiNameClassName = "",
+  kpiValueClassName = ""
 }: KPICardProps) {
   if (error || !success) {
     return (
@@ -191,9 +199,9 @@ export function KPICard({
         }}
       >
         <CardHeader className="!text-left !items-start">
-          <CardDescription 
-            className="!text-left !justify-start"
-            style={{
+          <CardDescription
+            className={kpiNameClassName || "!text-left !justify-start"}
+            style={kpiNameClassName ? {} : {
               color: kpiNameColor || undefined,
               fontSize: kpiNameFontSize ? `${kpiNameFontSize}px` : undefined,
               fontWeight: kpiNameFontWeight || undefined,
@@ -206,9 +214,9 @@ export function KPICard({
             }}>
             {name || 'KPI'}
           </CardDescription>
-          <CardTitle 
-            className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl !text-left"
-            style={{
+          <CardTitle
+            className={kpiValueClassName || "text-2xl font-semibold tabular-nums @[250px]/card:text-3xl !text-left"}
+            style={kpiValueClassName ? {} : {
               color: kpiValueColor || undefined,
               fontSize: kpiValueFontSize ? `${kpiValueFontSize}px` : undefined,
               fontWeight: kpiValueFontWeight || undefined,
