@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { BarChart } from '@/components/charts/BarChart';
 import { LineChart } from '@/components/charts/LineChart';
 import { PieChart } from '@/components/charts/PieChart';
+import { AreaChart } from '@/components/charts/AreaChart';
 import {
   Artifact,
   ArtifactHeader,
@@ -13,7 +14,7 @@ import {
   ArtifactAction,
   ArtifactContent
 } from '@/components/ai-elements/artifact';
-import { CopyIcon, DownloadIcon, DatabaseIcon, BarChart3, LineChart as LineChartIcon, PieChart as PieChartIcon, Table as TableIcon } from 'lucide-react';
+import { CopyIcon, DownloadIcon, DatabaseIcon, BarChart3, LineChart as LineChartIcon, PieChart as PieChartIcon, BarChart2, TrendingUp, Table as TableIcon } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
 interface ChartDataPoint {
@@ -26,7 +27,7 @@ interface ChartDataPoint {
 
 interface GenerativeChartProps {
   data: ChartDataPoint[];
-  chartType: 'bar' | 'line' | 'pie';
+  chartType: 'bar' | 'line' | 'pie' | 'horizontal-bar' | 'area';
   title: string;
   description?: string;
   explicacao?: string;
@@ -47,16 +48,18 @@ export function GenerativeChart({
   sqlQuery,
   totalRecords
 }: GenerativeChartProps) {
-  const [currentChartType, setCurrentChartType] = useState<'bar' | 'line' | 'pie'>(chartType);
+  const [currentChartType, setCurrentChartType] = useState<'bar' | 'line' | 'pie' | 'horizontal-bar' | 'area'>(chartType);
   const [showChartSelector, setShowChartSelector] = useState(false);
   const [showTable, setShowTable] = useState(false);
 
   // Função para obter ícone baseado no tipo de gráfico
-  const getChartIcon = (type: 'bar' | 'line' | 'pie') => {
+  const getChartIcon = (type: 'bar' | 'line' | 'pie' | 'horizontal-bar' | 'area') => {
     switch (type) {
       case 'bar': return BarChart3;
       case 'line': return LineChartIcon;
       case 'pie': return PieChartIcon;
+      case 'horizontal-bar': return BarChart2;
+      case 'area': return TrendingUp;
       default: return BarChart3;
     }
   };
@@ -110,6 +113,10 @@ export function GenerativeChart({
         return <LineChart data={data} />;
       case 'pie':
         return <PieChart data={data} />;
+      case 'horizontal-bar':
+        return <BarChart data={data} layout="horizontal" />;
+      case 'area':
+        return <AreaChart data={data} />;
       default:
         return <BarChart data={data} />; // fallback para bar
     }
@@ -174,7 +181,9 @@ export function GenerativeChart({
                   {[
                     { type: 'bar' as const, label: 'Bar Chart', icon: BarChart3 },
                     { type: 'line' as const, label: 'Line Chart', icon: LineChartIcon },
-                    { type: 'pie' as const, label: 'Pie Chart', icon: PieChartIcon }
+                    { type: 'pie' as const, label: 'Pie Chart', icon: PieChartIcon },
+                    { type: 'horizontal-bar' as const, label: 'Horizontal Bar', icon: BarChart2 },
+                    { type: 'area' as const, label: 'Area Chart', icon: TrendingUp }
                   ].map(({ type, label, icon: Icon }) => (
                     <button
                       key={type}

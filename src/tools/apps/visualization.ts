@@ -14,6 +14,8 @@ const generateSQL = (tipo: string, x: string, y: string, tabela: string, agregac
   switch (tipo) {
     case 'bar':
     case 'line':
+    case 'horizontal-bar':
+    case 'area':
       if (funcaoAgregacao === 'COUNT') {
         return `SELECT ${x}, COUNT(*) as count FROM ${tabela} GROUP BY ${x} ORDER BY ${x} LIMIT 50`;
       }
@@ -41,7 +43,7 @@ const processDataForChart = (data: BigQueryRowData[], x: string, y: string, tipo
 export const gerarGrafico = tool({
   description: 'Gera gráfico visual com SQL automático',
   inputSchema: z.object({
-    tipo: z.enum(['bar', 'line', 'pie']).describe('Tipo do gráfico'),
+    tipo: z.enum(['bar', 'line', 'pie', 'horizontal-bar', 'area']).describe('Tipo do gráfico'),
     x: z.string().describe('Coluna X'),
     y: z.string().describe('Coluna Y'),
     tabela: z.string().describe('Nome da tabela (ex: dataset.tabela)'),
@@ -135,7 +137,7 @@ export const gerarMultiplosGraficos = tool({
   inputSchema: z.object({
     tabela: z.string().describe('Nome da tabela (ex: creatto-463117.biquery_data.shopify_orders)'),
     graficos: z.array(z.object({
-      tipo: z.enum(['bar', 'line', 'pie']).describe('Tipo do gráfico'),
+      tipo: z.enum(['bar', 'line', 'pie', 'horizontal-bar', 'area']).describe('Tipo do gráfico'),
       x: z.string().describe('Coluna X'),
       y: z.string().describe('Coluna Y'),
       agregacao: z.enum(['SUM', 'COUNT', 'AVG', 'MAX', 'MIN']).optional().describe('Função de agregação'),

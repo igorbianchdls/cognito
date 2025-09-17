@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { BarChart } from '@/components/charts/BarChart';
 import { LineChart } from '@/components/charts/LineChart';
 import { PieChart } from '@/components/charts/PieChart';
+import { AreaChart } from '@/components/charts/AreaChart';
 import {
   Artifact,
   ArtifactHeader,
@@ -13,7 +14,7 @@ import {
   ArtifactAction,
   ArtifactContent
 } from '@/components/ai-elements/artifact';
-import { CopyIcon, DownloadIcon, DatabaseIcon, BarChart3, LineChart as LineChartIcon, PieChart as PieChartIcon, Table as TableIcon } from 'lucide-react';
+import { CopyIcon, DownloadIcon, DatabaseIcon, BarChart3, LineChart as LineChartIcon, PieChart as PieChartIcon, BarChart2, TrendingUp, Table as TableIcon } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 
 interface ChartData {
@@ -24,7 +25,7 @@ interface ChartData {
     label: string;
     value: number;
   }>;
-  chartType: 'bar' | 'line' | 'pie';
+  chartType: 'bar' | 'line' | 'pie' | 'horizontal-bar' | 'area';
   title: string;
   description?: string;
   explicacao?: string;
@@ -65,8 +66,8 @@ export function MultipleCharts({
   const failedCharts = charts.filter(chart => !chart.success);
 
   // State management para múltiplos charts
-  const [chartTypes, setChartTypes] = useState<Record<number, 'bar' | 'line' | 'pie'>>(() => {
-    const initialTypes: Record<number, 'bar' | 'line' | 'pie'> = {};
+  const [chartTypes, setChartTypes] = useState<Record<number, 'bar' | 'line' | 'pie' | 'horizontal-bar' | 'area'>>(() => {
+    const initialTypes: Record<number, 'bar' | 'line' | 'pie' | 'horizontal-bar' | 'area'> = {};
     charts.forEach((chart, index) => {
       initialTypes[index] = chart.chartType;
     });
@@ -141,6 +142,10 @@ export function MultipleCharts({
         return <LineChart data={chart.chartData} />;
       case 'pie':
         return <PieChart data={chart.chartData} />;
+      case 'horizontal-bar':
+        return <BarChart data={chart.chartData} layout="horizontal" />;
+      case 'area':
+        return <AreaChart data={chart.chartData} />;
       default:
         console.log('❌ TIPO INVÁLIDO:', currentType);
         return <div style={{ padding: '20px', color: 'red' }}>ERRO: Tipo inválido {currentType}</div>;
@@ -148,11 +153,13 @@ export function MultipleCharts({
   };
 
   // Função para obter ícone baseado no tipo de gráfico
-  const getChartIcon = (type: 'bar' | 'line' | 'pie') => {
+  const getChartIcon = (type: 'bar' | 'line' | 'pie' | 'horizontal-bar' | 'area') => {
     switch (type) {
       case 'bar': return BarChart3;
       case 'line': return LineChartIcon;
       case 'pie': return PieChartIcon;
+      case 'horizontal-bar': return BarChart2;
+      case 'area': return TrendingUp;
       default: return BarChart3;
     }
   };
@@ -248,7 +255,9 @@ export function MultipleCharts({
                       {[
                         { type: 'bar' as const, label: 'Bar Chart', icon: BarChart3 },
                         { type: 'line' as const, label: 'Line Chart', icon: LineChartIcon },
-                        { type: 'pie' as const, label: 'Pie Chart', icon: PieChartIcon }
+                        { type: 'pie' as const, label: 'Pie Chart', icon: PieChartIcon },
+                        { type: 'horizontal-bar' as const, label: 'Horizontal Bar', icon: BarChart2 },
+                        { type: 'area' as const, label: 'Area Chart', icon: TrendingUp }
                       ].map(({ type, label, icon: Icon }) => (
                         <button
                           key={type}
