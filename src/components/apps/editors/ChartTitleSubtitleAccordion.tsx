@@ -332,6 +332,19 @@ export default function ChartTitleSubtitleAccordion({
               />
             </div>
 
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">
+                Classes Tailwind para o Container
+              </label>
+              <input
+                type="text"
+                value={styling?.containerClassName || ''}
+                onChange={(e) => onConfigChange('styling.containerClassName', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="w-full h-full bg-white border-2 border-gray-200 rounded-lg p-4"
+              />
+            </div>
+
             <div className="text-xs text-gray-400">
               Se preenchido, sobrescreve todas as configurações de espaçamento acima
             </div>
