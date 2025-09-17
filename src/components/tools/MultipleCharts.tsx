@@ -54,47 +54,6 @@ interface MultipleChartsProps {
   };
 }
 
-// Render chart component based on type and current state
-const renderChart = (chart: ChartData, index: number) => {
-  const currentType = chartTypes[index] || chart.chartType;
-
-  // Debug: Log completo do que chega no renderChart
-  console.log('📊 RENDER CHART:', {
-    title: chart.title,
-    originalType: chart.chartType,
-    currentType: currentType,
-    hasChartData: !!chart.chartData,
-    dataLength: chart.chartData?.length || 0,
-    firstDataPoint: chart.chartData?.[0],
-    totalRecords: chart.totalRecords,
-    success: chart.success
-  });
-
-  if (!chart.chartData) {
-    console.log('❌ SEM CHARTDATA para:', chart.title);
-    return <div style={{ padding: '20px', color: 'red' }}>ERRO: Sem chartData para {chart.title}</div>;
-  }
-
-  if (chart.chartData.length === 0) {
-    console.log('❌ CHARTDATA VAZIO para:', chart.title);
-    return <div style={{ padding: '20px', color: 'orange' }}>ERRO: chartData vazio para {chart.title}</div>;
-  }
-
-  console.log('✅ RENDERIZANDO CHART:', currentType, 'com', chart.chartData.length, 'pontos');
-
-  switch (currentType) {
-    case 'bar':
-      return <BarChart data={chart.chartData} />;
-    case 'line':
-      return <LineChart data={chart.chartData} />;
-    case 'pie':
-      return <PieChart data={chart.chartData} />;
-    default:
-      console.log('❌ TIPO INVÁLIDO:', currentType);
-      return <div style={{ padding: '20px', color: 'red' }}>ERRO: Tipo inválido {currentType}</div>;
-  }
-};
-
 export function MultipleCharts({
   dashboardTitle,
   charts,
@@ -114,6 +73,47 @@ export function MultipleCharts({
   });
 
   const [openDropdowns, setOpenDropdowns] = useState<Record<number, boolean>>({});
+
+  // Render chart component based on type and current state
+  const renderChart = (chart: ChartData, index: number) => {
+    const currentType = chartTypes[index] || chart.chartType;
+
+    // Debug: Log completo do que chega no renderChart
+    console.log('📊 RENDER CHART:', {
+      title: chart.title,
+      originalType: chart.chartType,
+      currentType: currentType,
+      hasChartData: !!chart.chartData,
+      dataLength: chart.chartData?.length || 0,
+      firstDataPoint: chart.chartData?.[0],
+      totalRecords: chart.totalRecords,
+      success: chart.success
+    });
+
+    if (!chart.chartData) {
+      console.log('❌ SEM CHARTDATA para:', chart.title);
+      return <div style={{ padding: '20px', color: 'red' }}>ERRO: Sem chartData para {chart.title}</div>;
+    }
+
+    if (chart.chartData.length === 0) {
+      console.log('❌ CHARTDATA VAZIO para:', chart.title);
+      return <div style={{ padding: '20px', color: 'orange' }}>ERRO: chartData vazio para {chart.title}</div>;
+    }
+
+    console.log('✅ RENDERIZANDO CHART:', currentType, 'com', chart.chartData.length, 'pontos');
+
+    switch (currentType) {
+      case 'bar':
+        return <BarChart data={chart.chartData} />;
+      case 'line':
+        return <LineChart data={chart.chartData} />;
+      case 'pie':
+        return <PieChart data={chart.chartData} />;
+      default:
+        console.log('❌ TIPO INVÁLIDO:', currentType);
+        return <div style={{ padding: '20px', color: 'red' }}>ERRO: Tipo inválido {currentType}</div>;
+    }
+  };
 
   // Função para obter ícone baseado no tipo de gráfico
   const getChartIcon = (type: 'bar' | 'line' | 'pie') => {
