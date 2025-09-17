@@ -73,6 +73,7 @@ interface LineChartProps extends BaseChartProps {
   // Tailwind Classes - Title/Subtitle (precedence over individual props)
   titleClassName?: string
   subtitleClassName?: string
+  containerClassName?: string
 
   // Container Border props
   containerBorderWidth?: number
@@ -139,6 +140,7 @@ export function LineChart({
   // Tailwind Classes - Title/Subtitle
   titleClassName = "",
   subtitleClassName = "",
+  containerClassName = "",
   // Container Border props
   containerBorderWidth,
   containerBorderColor,
@@ -184,7 +186,8 @@ export function LineChart({
 
   return (
     <div
-      style={{
+      className={containerClassName || undefined}
+      style={containerClassName ? {} : {
         width: '100%',
         height: '100%',
         background: backgroundColor,
