@@ -1344,17 +1344,31 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           const callId = planTool.toolCallId;
           const shouldBeOpen = planTool.state === 'output-available' || planTool.state === 'output-error' || planTool.state === 'input-streaming';
 
+          // Debug logging
+          console.log('🎯 PlanAnalysis Tool State:', {
+            state: planTool.state,
+            input: planTool.input,
+            hasAnalises: planTool.input && typeof planTool.input === 'object' && 'analises' in planTool.input,
+            analises: planTool.input && typeof planTool.input === 'object' && 'analises' in planTool.input ? (planTool.input as PlanAnalysisToolInput).analises : null
+          });
+
           return (
             <div key={callId}>
               <Tool defaultOpen={shouldBeOpen}>
                 <ToolHeader type="tool-planAnalysis" state={planTool.state} />
                 <ToolContent>
                   {planTool.state === 'input-streaming' && (
-                    <ToolInputStreaming
-                      input={planTool.input}
-                      isStreaming={true}
-                      streamingData={planTool.input}
-                    />
+                    <>
+                      <ToolInputStreaming
+                        input={planTool.input}
+                        isStreaming={true}
+                        streamingData={planTool.input}
+                      />
+                      <PlanAnalysisStreaming
+                        analises={planTool.input && typeof planTool.input === 'object' && 'analises' in planTool.input ? (planTool.input as PlanAnalysisToolInput).analises || [] : []}
+                        isStreaming={true}
+                      />
+                    </>
                   )}
                   {planTool.state === 'input-available' && (
                     <ToolInput input={planTool.input} />
@@ -1367,12 +1381,6 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   )}
                 </ToolContent>
               </Tool>
-              {planTool.state === 'input-streaming' && planTool.input && 'analises' in planTool.input && (
-                <PlanAnalysisStreaming
-                  analises={(planTool.input as PlanAnalysisToolInput).analises || []}
-                  isStreaming={true}
-                />
-              )}
               {planTool.state === 'output-available' && (
                 <PlanAnalysis
                   plano={(planTool.output as PlanAnalysisToolOutput).plano}

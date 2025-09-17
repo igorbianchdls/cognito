@@ -189,15 +189,28 @@ export default function PlanAnalysisStreaming({
 }: PlanAnalysisStreamingProps) {
   const [activeIndex, setActiveIndex] = useState(0);
 
-  useEffect(() => {
-    if (isStreaming && analises.length > 0) {
-      // Determinar qual análise está sendo "digitada" baseado no conteúdo
-      const lastCompleteIndex = analises.findIndex((analise, index) => {
-        const nextAnalise = analises[index + 1];
-        return analise.titulo && analise.query && (!nextAnalise || !nextAnalise.titulo);
-      });
+  // Debug logging
+  console.log('🎯 PlanAnalysisStreaming:', {
+    analises,
+    isStreaming,
+    analises_length: analises.length,
+    activeIndex
+  });
 
-      setActiveIndex(lastCompleteIndex >= 0 ? lastCompleteIndex + 1 : 0);
+  useEffect(() => {
+    if (isStreaming) {
+      if (analises.length === 0) {
+        // Se não há análises ainda, mostra estado de preparação
+        setActiveIndex(0);
+      } else {
+        // Determinar qual análise está sendo "digitada" baseado no conteúdo
+        const lastCompleteIndex = analises.findIndex((analise, index) => {
+          const nextAnalise = analises[index + 1];
+          return analise.titulo && analise.query && (!nextAnalise || !nextAnalise.titulo);
+        });
+
+        setActiveIndex(lastCompleteIndex >= 0 ? lastCompleteIndex + 1 : 0);
+      }
     }
   }, [analises, isStreaming]);
 
@@ -231,17 +244,34 @@ export default function PlanAnalysisStreaming({
 
       {/* Analysis Cards */}
       <div className="space-y-3">
-        {analises.map((analise, index) => (
-          <StreamingAnalysisCard
-            key={index}
-            analise={analise}
-            isActive={isStreaming && index === activeIndex}
-            isComplete={!isStreaming || index < activeIndex}
-          />
-        ))}
+        {analises.length === 0 && isStreaming ? (
+          /* Loading state when no analyses yet */
+          <div className="border border-dashed border-blue-300 rounded-lg p-4 bg-blue-50/20">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <div className="w-3 h-3 bg-blue-400 rounded-full animate-pulse" />
+              </div>
+              <div className="flex-1">
+                <div className="h-5 bg-blue-200/50 rounded animate-pulse w-3/4" />
+              </div>
+            </div>
+            <div className="mt-3 h-12 bg-blue-100/30 rounded border-dashed border border-blue-300 flex items-center justify-center">
+              <span className="text-xs text-blue-600">Preparando análises...</span>
+            </div>
+          </div>
+        ) : (
+          analises.map((analise, index) => (
+            <StreamingAnalysisCard
+              key={index}
+              analise={analise}
+              isActive={isStreaming && index === activeIndex}
+              isComplete={!isStreaming || index < activeIndex}
+            />
+          ))
+        )}
 
         {/* Placeholder for next analysis while streaming */}
-        {isStreaming && activeIndex >= analises.length && (
+        {isStreaming && analises.length > 0 && activeIndex >= analises.length && (
           <div className="border border-dashed border-blue-300 rounded-lg p-4 bg-blue-50/20">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">

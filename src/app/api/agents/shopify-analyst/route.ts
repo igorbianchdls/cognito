@@ -9,6 +9,7 @@ export const maxDuration = 30;
 
 export async function POST(req: Request) {
   console.log('🛒 SHOPIFY STORE ANALYST API: Request recebido!');
+  console.log('🛒 Tool Call Streaming enabled: true');
   
   const { messages }: { messages: UIMessage[] } = await req.json();
   console.log('🛒 SHOPIFY STORE ANALYST API: Messages:', messages?.length);
