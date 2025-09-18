@@ -41,8 +41,8 @@ export default function GridCanvas({ widgets, onLayoutChange }: GridCanvasProps)
   const containerRef = useRef<HTMLDivElement>(null);
   const { width: containerWidth, height: containerHeight } = useContainerDimensions(containerRef);
 
-  // Calculate dynamic row height based on container height
-  const dynamicRowHeight = Math.floor(containerHeight / 12); // Always 12 rows
+  // Fixed row height
+  const dynamicRowHeight = 30; // Fixed 30px per row
 
   // Generate layout for react-grid-layout
   const layout = widgets.map(widget => ({
