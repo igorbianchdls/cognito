@@ -23,7 +23,7 @@ export interface Widget {
     backgroundColor?: string;
     textColor?: string;
     fontSize?: number;
-    [key: string]: any;
+    [key: string]: string | number | boolean | string[] | undefined;
   };
 }
 
