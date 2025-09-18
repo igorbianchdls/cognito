@@ -4,7 +4,6 @@ import { z } from 'zod';
 import type { DroppedWidget } from '@/types/apps/droppedWidget';
 import { manageWidgets } from '@/tools/apps/widgetTools';
 import { getTables, getTableSchema } from '@/tools/apps/bigquery';
-import { planDashboard } from '@/tools/apps/dashboardPlanner';
 
 // Allow streaming responses up to 300 seconds
 export const maxDuration = 300;
@@ -59,11 +58,10 @@ FLUXO DE TRABALHO INTELIGENTE:
 2. **DEPOIS CRIE**: Use nomes reais de tabelas e colunas da exploração em createWidget/updateWidget
 3. **SEJA ESPECÍFICO**: Passe nomes exatos de campos da exploração do schema para garantir que widgets funcionem
 
-FLUXO EXPLORAÇÃO → PLANEJAMENTO → CRIAÇÃO:
+FLUXO EXPLORAÇÃO → CRIAÇÃO:
 - Passo 1: getTables() → Mostra todas as tabelas disponíveis no dataset biquery_data
 - Passo 2: getTableSchema(tableName: "nome_tabela") → Mostra colunas e tipos de dados de tabela específica
-- Passo 3: planDashboard(tableName: "nome_tabela", objective: "objetivo", columns: schema) → Cria plano estratégico de dashboard
-- Passo 4: manageWidgets() → Use plano e nomes exatos descobertos nos passos anteriores
+- Passo 3: manageWidgets() → Use nomes exatos descobertos nos passos anteriores
 
 VISUALIZAÇÃO E CONSULTA DE WIDGETS:
 - Use \`getCanvasWidgets\` quando usuário perguntar sobre widgets atuais, estado do dashboard ou widgets disponíveis
@@ -102,7 +100,6 @@ COMO FUNCIONA:
 USO DAS TOOLS:
 - SEMPRE comece com \`getTables\` para ver tabelas disponíveis (sem parâmetros)
 - Use \`getTableSchema\` com tableName para explorar colunas antes de criar widgets
-- Use \`planDashboard\` para criar plano estratégico baseado nos dados descobertos
 - Use \`manageWidgets\` com nomes REAIS de tabela/coluna da exploração para operações de widget
 - Use \`getCanvasWidgets\` para ver estado atual do dashboard quando perguntado
 - NÃO invente nomes de tabelas ou colunas - sempre explore primeiro
@@ -126,8 +123,7 @@ EXEMPLO DE FLUXO CORRETO:
 Usuário: "Crie um dashboard de vendas"
 IA: 1. Chame getTables() para ver tabelas disponíveis
     2. Chame getTableSchema(tableName: "dados_vendas") para ver colunas
-    3. Chame planDashboard(tableName: "dados_vendas", objective: "análise de vendas", columns: schema) para criar plano
-    4. Chame manageWidgets(operations: [...]) baseado no plano estratégico criado
+    3. Chame manageWidgets(operations: [...]) baseado nos dados descobertos
 
 FORMATO MANAGEWIDGETS TOOL:
 Use formato JSON plano exatamente como editor de código:
@@ -167,7 +163,6 @@ Mantenha respostas focadas em criação de widgets. Faça perguntas esclarecedor
           }
         }
       }),
-      planDashboard,
       manageWidgets,
       getTables,
       getTableSchema

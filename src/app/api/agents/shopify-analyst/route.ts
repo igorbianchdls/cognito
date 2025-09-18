@@ -33,14 +33,11 @@ export async function POST(req: Request) {
 
 ## 🎯 QUANDO USAR CADA FERRAMENTA - ÁRVORE DE DECISÃO:
 
-### PRIMEIRO: Planejamento (quando solicitado)
-- **planAnalysis()** → Use quando o usuário pede para planejar análises, estruturar múltiplas análises, ou criar um roadmap de análise
-
-### SEGUNDO: Descoberta de Dados (sempre quando necessário)
+### PRIMEIRO: Descoberta de Dados (sempre quando necessário)
 - **getTables()** → Use quando não souber quais tabelas existem no dataset
 - **getTableSchema(tableName)** → Use quando não souber estrutura/colunas da tabela
 
-### TERCEIRO: Análise - Escolha baseada no TIPO DE OUTPUT desejado:
+### SEGUNDO: Análise - Escolha baseada no TIPO DE OUTPUT desejado:
 
 **QUER GRÁFICOS/VISUALIZAÇÕES?**
 ├── **1 gráfico simples** → 'gerarGrafico()'
@@ -54,14 +51,6 @@ export async function POST(req: Request) {
 └── **Machine learning, cálculos complexos** → 'code_execution'
 
 ## 📊 CRITÉRIOS ESPECÍFICOS PARA CADA TOOL:
-
-### planAnalysis() - USE QUANDO:
-✅ Usuário pede "plano de análise", "estruture análises", "roadmap"
-✅ Múltiplas análises relacionadas que precisam ser organizadas
-✅ Quer apresentar as análises antes de executar
-✅ Precisa mostrar estrutura/sequência das análises
-✅ Análise complexa que merece planejamento antes da execução
-✅ Descreva em linguagem natural: dimensão, medida, agregação, filtros e tipo de gráfico
 
 ### gerarGrafico() - USE QUANDO:
 ✅ Quer exatamente 1 gráfico (bar/line/pie)
@@ -109,9 +98,6 @@ export async function POST(req: Request) {
 
 ## 🎯 CENÁRIOS PRÁTICOS - EXEMPLOS DE QUANDO USAR CADA TOOL:
 
-### Pergunta: "Crie um plano de análise completo para avaliar minha loja"
-→ **Use planAnalysis()** (estruture as análises antes de executar)
-
 ### Pergunta: "Mostre as vendas dos últimos 3 meses"
 → **Use gerarGrafico()** com tipo "line" (1 gráfico temporal simples)
 
@@ -128,25 +114,6 @@ export async function POST(req: Request) {
 → **Use code_execution** (análise estatística avançada)
 
 ## 📊 EXEMPLOS DE USO:
-
-### planAnalysis() - Planejamento:
-**Exemplo - Plano de Análise da Loja:**
-planAnalysis({
-  analises: [
-    {
-      titulo: "Análise de Performance de Vendas - Últimos 3 Meses",
-      descricao: "Escolher coluna 'created_at' como dimensão temporal, coluna 'total_price' como medida usando agregação SUM, filtrar últimos 3 meses, criar gráfico de linha para mostrar evolução da receita ao longo do tempo"
-    },
-    {
-      titulo: "Top 10 Produtos Mais Vendidos por Quantidade",
-      descricao: "Escolher coluna 'product_name' como dimensão, coluna 'quantity' como medida usando agregação SUM, ordenar por quantidade decrescente, limitar aos top 10, criar gráfico de barras horizontais"
-    },
-    {
-      titulo: "Análise de Conversão por Canal de Marketing",
-      descricao: "Escolher coluna 'marketing_channel' como dimensão, usar COUNT de 'order_id' e SUM de 'total_price' como medidas, criar gráfico de pizza para mostrar distribuição dos canais"
-    }
-  ]
-})
 
 ### gerarGrafico() - Parâmetros:
 - 'tipo': "bar", "line", "pie", "horizontal-bar" ou "area"
@@ -237,10 +204,9 @@ Trabalhe em português e forneça insights estratégicos para crescimento da loj
     
     messages: convertToModelMessages(messages),
     tools: {
-      // Fluxo estruturado de descoberta de dados e planejamento
+      // Fluxo estruturado de descoberta de dados
       getTables: bigqueryTools.getTables,
       getTableSchema: bigqueryTools.getTableSchema,
-      planAnalysis: bigqueryTools.planAnalysis,
       getTimelineContext: bigqueryTools.getTimelineContext,
       executarSQL: bigqueryTools.executarSQL,
       executarMultiplasSQL: bigqueryTools.executarMultiplasSQL,

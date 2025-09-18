@@ -4,7 +4,6 @@ import { AlertCircleIcon, ChevronDownIcon, CheckCircleIcon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
 import { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
 
 interface DashboardPlanViewProps {
   plano: Array<{
@@ -96,19 +95,8 @@ export default function DashboardPlanView({
                 {/* Collapsible Description block */}
                 <CollapsibleContent className="px-4 pb-4">
                   <div className="border-t border-gray-100 pt-3">
-                    <div className="text-sm">
-                      <ReactMarkdown
-                        components={{
-                          p: ({ children }) => <p className="mb-3 last:mb-0 text-foreground leading-relaxed">{children}</p>,
-                          code: ({ children }) => (
-                            <code className="bg-muted px-1.5 py-0.5 rounded text-sm font-mono text-foreground border">
-                              {children}
-                            </code>
-                          ),
-                        }}
-                      >
-                        {widget.descricao}
-                      </ReactMarkdown>
+                    <div className="text-sm leading-relaxed">
+                      {widget.descricao}
                     </div>
                   </div>
                 </CollapsibleContent>
