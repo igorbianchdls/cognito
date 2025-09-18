@@ -18,12 +18,13 @@ interface VisualBuilderState {
 
 const initialState: VisualBuilderState = {
   widgets: [],
-  gridConfig: { maxRows: 12, rowHeight: 30, cols: 12 },
+  gridConfig: { maxRows: 12, rowHeight: 30, cols: 12, containerHeight: 600 },
   code: `{
   "config": {
     "maxRows": 12,
     "rowHeight": 30,
-    "cols": 12
+    "cols": 12,
+    "containerHeight": 600
   },
   "widgets": [
     {

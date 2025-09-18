@@ -4,6 +4,7 @@ export interface GridConfig {
   maxRows: number;
   rowHeight: number;
   cols: number;
+  containerHeight?: number;
 }
 
 export interface Widget {
@@ -59,7 +60,8 @@ export class ConfigParser {
   private static DEFAULT_GRID_CONFIG: GridConfig = {
     maxRows: 12,
     rowHeight: 30,
-    cols: 12
+    cols: 12,
+    containerHeight: 600
   };
 
   static parse(jsonString: string): ParseResult {
@@ -78,7 +80,9 @@ export class ConfigParser {
         rowHeight: typeof rawGridConfig.rowHeight === 'number' && rawGridConfig.rowHeight > 0
           ? rawGridConfig.rowHeight : this.DEFAULT_GRID_CONFIG.rowHeight,
         cols: typeof rawGridConfig.cols === 'number' && rawGridConfig.cols > 0
-          ? rawGridConfig.cols : this.DEFAULT_GRID_CONFIG.cols
+          ? rawGridConfig.cols : this.DEFAULT_GRID_CONFIG.cols,
+        containerHeight: typeof rawGridConfig.containerHeight === 'number' && rawGridConfig.containerHeight > 0
+          ? rawGridConfig.containerHeight : this.DEFAULT_GRID_CONFIG.containerHeight
       };
 
       // Step 4: Basic filter for runtime safety only
