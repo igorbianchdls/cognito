@@ -437,9 +437,7 @@ export default function Page() {
                     onAgentChange={setCurrentAgent}
                   />
                 </Panel>
-                <PanelResizeHandle className="w-2 bg-gray-200 hover:bg-gray-300 cursor-col-resize flex items-center justify-center">
-                  <div className="w-1 h-12 bg-gray-400 rounded-full"></div>
-                </PanelResizeHandle>
+                <PanelResizeHandle className="w-1 hover:w-2 transition-all cursor-col-resize" />
                 <Panel defaultSize={50} minSize={30}>
                   <div className="h-full mb-4">
                     <DashboardChatPanel />
