@@ -95,8 +95,8 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
     return data !== null && !Array.isArray(data) && 'value' in data;
   };
 
-  // Preparar dados para charts
-  const chartData = data || generateSampleData();
+  // Separate data preparation for charts vs KPIs
+  const chartData = Array.isArray(data) ? data : generateSampleData();
   const kpiValue = widget.type === 'kpi' && isKPIData(data)
     ? data.value
     : (widget.value || 0);
