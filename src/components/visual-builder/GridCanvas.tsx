@@ -8,7 +8,7 @@ import type { Widget } from './ConfigParser';
 const ResponsiveGridLayout = Responsive;
 
 // Custom hook to measure container width
-const useContainerWidth = (ref: React.RefObject<HTMLDivElement>) => {
+const useContainerWidth = (ref: React.RefObject<HTMLDivElement | null>) => {
   const [width, setWidth] = useState(1600);
 
   useEffect(() => {
