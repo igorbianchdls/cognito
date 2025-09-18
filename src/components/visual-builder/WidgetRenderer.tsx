@@ -31,24 +31,20 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Generate sample data for fallback
-  const generateSampleData = () => {
-    return [
-      { x: 'Jan', y: 65, label: 'January', value: 65 },
-      { x: 'Feb', y: 59, label: 'February', value: 59 },
-      { x: 'Mar', y: 80, label: 'March', value: 80 },
-      { x: 'Apr', y: 81, label: 'April', value: 81 },
-      { x: 'May', y: 56, label: 'May', value: 56 },
-      { x: 'Jun', y: 55, label: 'June', value: 55 },
-    ];
-  };
+  // 🔄 Component initialization log
+  console.log('🔄 WidgetRenderer mounted:', {
+    id: widget.id,
+    type: widget.type,
+    hasDataSource: !!widget.dataSource,
+    dataSource: widget.dataSource
+  });
 
-  // Fetch real data from BigQuery via API route
+  // Fetch ONLY BigQuery data - no mock data ever
   useEffect(() => {
     const fetchData = async () => {
-      // Se não tem dataSource, usa dados mock
+      // Se não tem dataSource, não busca nada
       if (!widget.dataSource) {
-        setData(generateSampleData());
+        setError('No dataSource configured');
         return;
       }
 
@@ -58,30 +54,51 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
       try {
         console.log('📊 Fetching BigQuery data for widget:', widget.id);
 
-        // Chamar API route ao invés de BigQuery diretamente
+        // 📤 API request log
+        const requestPayload = {
+          type: widget.type,
+          dataSource: widget.dataSource
+        };
+        console.log('📤 Making API request:', {
+          url: '/api/dashboard-bigquery',
+          payload: requestPayload
+        });
+
+        // Chamar API route - SOMENTE BigQuery
         const response = await fetch('/api/dashboard-bigquery', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: widget.type,
-            dataSource: widget.dataSource
-          })
+          body: JSON.stringify(requestPayload)
         });
 
         const result = await response.json();
-        console.log('🔍 API response for widget:', widget.id, result);
+
+        // 📥 API response log
+        console.log('📥 API response received:', {
+          success: result.success,
+          dataType: typeof result.data,
+          isArray: Array.isArray(result.data),
+          dataLength: Array.isArray(result.data) ? result.data.length : 'N/A',
+          totalRecords: result.totalRecords,
+          error: result.error,
+          fullResult: result
+        });
 
         if (result.success) {
           setData(result.data);
-          console.log(`✅ Widget data fetched: ${result.totalRecords} records for`, widget.id);
+          console.log(`✅ Widget data set successfully:`, {
+            widgetId: widget.id,
+            totalRecords: result.totalRecords,
+            dataSet: result.data
+          });
         } else {
           throw new Error(result.error || 'API request failed');
         }
       } catch (err) {
         console.error('❌ Error fetching widget data:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
-        // Fallback para dados mock em caso de erro
-        setData(generateSampleData());
+        // NO FALLBACK - só dados reais
+        setData(null);
       } finally {
         setLoading(false);
       }
@@ -95,11 +112,26 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
     return data !== null && !Array.isArray(data) && 'value' in data;
   };
 
-  // Separate data preparation for charts vs KPIs
-  const chartData = Array.isArray(data) ? data : generateSampleData();
+  // Use ONLY BigQuery data - no mock fallbacks
+  const chartData = Array.isArray(data) ? data : [];
   const kpiValue = widget.type === 'kpi' && isKPIData(data)
     ? data.value
-    : (widget.value || 0);
+    : 0;
+
+  // 🔧 Data processing log
+  console.log('🔧 Data processed for widget:', widget.id, {
+    originalData: data,
+    chartData: chartData,
+    chartDataLength: chartData.length,
+    kpiValue: kpiValue,
+    isKPIData: isKPIData(data),
+    widgetType: widget.type,
+    finalState: {
+      loading,
+      error,
+      hasData: !!data
+    }
+  });
 
   const commonChartProps = {
     data: chartData,
@@ -121,9 +153,30 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
     );
   }
 
-  // Error state (but still show data with fallback)
-  if (error && widget.dataSource) {
-    console.warn(`⚠️ Widget ${widget.id} using fallback data due to error:`, error);
+  // Error state - show error, no fallback data
+  if (error) {
+    return (
+      <div className="h-full w-full p-2 flex items-center justify-center bg-red-50 rounded">
+        <div className="text-center text-red-600">
+          <div className="text-2xl mb-2">⚠️</div>
+          <div className="text-sm font-medium mb-1">BigQuery Error</div>
+          <div className="text-xs">{error}</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Empty data state
+  if (!loading && (!data || (Array.isArray(data) && data.length === 0))) {
+    return (
+      <div className="h-full w-full p-2 flex items-center justify-center bg-gray-50 rounded">
+        <div className="text-center text-gray-500">
+          <div className="text-2xl mb-2">📊</div>
+          <div className="text-sm font-medium mb-1">No Data</div>
+          <div className="text-xs">No records found in BigQuery</div>
+        </div>
+      </div>
+    );
   }
 
   switch (widget.type) {

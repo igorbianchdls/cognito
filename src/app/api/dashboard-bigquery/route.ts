@@ -62,11 +62,22 @@ export async function POST(request: NextRequest) {
     const { type, dataSource } = await request.json();
     const { table, x, y, aggregation } = dataSource;
 
-    console.log('📊 Dashboard widget request:', { type, table, x, y, aggregation });
+    // 📥 Request received log
+    console.log('📥 API /dashboard-bigquery called with:', {
+      type,
+      dataSource,
+      parsedFields: { table, x, y, aggregation }
+    });
 
     // Gerar SQL automaticamente (mesmo padrão da tool gerarGrafico)
     const sqlQuery = generateSQL(type, x, y || 'quantity', table, aggregation);
-    console.log('🔍 Generated SQL for dashboard widget:', sqlQuery);
+
+    // 🔍 SQL generation log
+    console.log('🔍 Generated SQL:', {
+      sqlQuery,
+      inputs: { type, x, y: y || 'quantity', table, aggregation },
+      defaultAggregation: type === 'pie' ? 'COUNT' : 'SUM'
+    });
 
     // Executar query no BigQuery (mesmo padrão da tool gerarGrafico)
     const result = await bigQueryService.executeQuery({
@@ -75,12 +86,28 @@ export async function POST(request: NextRequest) {
     });
 
     const rawData = result.data || [];
-    console.log(`✅ Dashboard data fetched: ${rawData.length} records`);
+
+    // 📊 BigQuery result log
+    console.log('📊 BigQuery raw result:', {
+      dataLength: rawData.length,
+      firstRow: rawData[0],
+      lastRow: rawData[rawData.length - 1],
+      allData: rawData.slice(0, 3) // First 3 rows for debugging
+    });
 
     // Processar dados para formato dos charts (mesmo padrão da tool gerarGrafico)
     const processedData = processDataForChart(rawData, x, y || 'quantity', type);
 
-    return NextResponse.json({
+    // ✅ Data processing log
+    console.log('✅ Processed data:', {
+      inputType: type,
+      outputType: typeof processedData,
+      isArray: Array.isArray(processedData),
+      processedData: processedData,
+      processingInputs: { x, y: y || 'quantity', type }
+    });
+
+    const responsePayload = {
       success: true,
       data: processedData,
       sql: sqlQuery,
@@ -89,7 +116,12 @@ export async function POST(request: NextRequest) {
         generatedAt: new Date().toISOString(),
         dataSource: 'bigquery-dashboard'
       }
-    });
+    };
+
+    // 📤 Response log
+    console.log('📤 API response:', responsePayload);
+
+    return NextResponse.json(responsePayload);
 
   } catch (error) {
     console.error('❌ Error in dashboard BigQuery API:', error);
