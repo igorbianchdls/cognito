@@ -1,7 +1,7 @@
 'use client';
 
 import { Responsive } from 'react-grid-layout';
-import WidgetPreview from './WidgetPreview';
+import WidgetRenderer from './WidgetRenderer';
 import type { Widget } from './ConfigParser';
 
 const ResponsiveGridLayout = Responsive;
@@ -81,7 +81,7 @@ export default function GridCanvas({ widgets, onLayoutChange }: GridCanvasProps)
         >
           {widgets.map((widget) => (
             <div key={widget.id} className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <WidgetPreview widget={widget} />
+              <WidgetRenderer widget={widget} />
             </div>
           ))}
         </ResponsiveGridLayout>
