@@ -18,6 +18,30 @@ export interface Widget {
   unit?: string;
 }
 
+interface ConfigInput {
+  widgets?: unknown[];
+  [key: string]: unknown;
+}
+
+interface WidgetInput {
+  id?: unknown;
+  type?: unknown;
+  position?: unknown;
+  title?: unknown;
+  data?: unknown;
+  value?: unknown;
+  unit?: unknown;
+  [key: string]: unknown;
+}
+
+interface PositionInput {
+  x?: unknown;
+  y?: unknown;
+  w?: unknown;
+  h?: unknown;
+  [key: string]: unknown;
+}
+
 export interface ParseError {
   line: number;
   column: number;
@@ -44,9 +68,9 @@ export class ConfigParser {
     };
 
     // Step 1: Parse JSON
-    let config: any;
+    let config: ConfigInput;
     try {
-      config = JSON.parse(jsonString);
+      config = JSON.parse(jsonString) as ConfigInput;
     } catch (error) {
       const syntaxError = this.extractSyntaxError(error as SyntaxError);
       result.errors.push({
@@ -84,14 +108,22 @@ export class ConfigParser {
     const usedIds = new Set<string>();
     const usedPositions = new Set<string>();
 
-    config.widgets.forEach((widget: any, index: number) => {
-      const widgetErrors = this.validateWidget(widget, index, usedIds, usedPositions);
+    config.widgets.forEach((widget: unknown, index: number) => {
+      const widgetInput = widget as WidgetInput;
+      const widgetErrors = this.validateWidget(widgetInput, index, usedIds, usedPositions);
       result.errors.push(...widgetErrors);
 
       if (widgetErrors.length === 0) {
-        validWidgets.push(widget as Widget);
-        usedIds.add(widget.id);
-        usedPositions.add(`${widget.position.x},${widget.position.y}`);
+        validWidgets.push(widgetInput as Widget);
+        if (typeof widgetInput.id === 'string') {
+          usedIds.add(widgetInput.id);
+        }
+        if (widgetInput.position && typeof widgetInput.position === 'object') {
+          const pos = widgetInput.position as PositionInput;
+          if (typeof pos.x === 'number' && typeof pos.y === 'number') {
+            usedPositions.add(`${pos.x},${pos.y}`);
+          }
+        }
       }
     });
 
@@ -102,7 +134,7 @@ export class ConfigParser {
   }
 
   private static validateWidget(
-    widget: any,
+    widget: WidgetInput,
     index: number,
     usedIds: Set<string>,
     usedPositions: Set<string>
@@ -154,11 +186,12 @@ export class ConfigParser {
         type: 'validation'
       });
     } else {
-      const pos = widget.position;
+      const pos = widget.position as PositionInput;
 
       // Check required position fields
       ['x', 'y', 'w', 'h'].forEach(field => {
-        if (typeof pos[field] !== 'number' || pos[field] < 0) {
+        const value = pos[field as keyof PositionInput];
+        if (typeof value !== 'number' || value < 0) {
           errors.push({
             line: lineBase,
             column: 1,
@@ -168,8 +201,8 @@ export class ConfigParser {
         }
       });
 
-      // Check grid boundaries
-      if (pos.x + pos.w > this.GRID_COLS) {
+      // Check grid boundaries (only if values are numbers)
+      if (typeof pos.x === 'number' && typeof pos.w === 'number' && pos.x + pos.w > this.GRID_COLS) {
         errors.push({
           line: lineBase,
           column: 1,
@@ -178,7 +211,7 @@ export class ConfigParser {
         });
       }
 
-      if (pos.y + pos.h > this.GRID_ROWS) {
+      if (typeof pos.y === 'number' && typeof pos.h === 'number' && pos.y + pos.h > this.GRID_ROWS) {
         errors.push({
           line: lineBase,
           column: 1,
@@ -188,7 +221,7 @@ export class ConfigParser {
       }
 
       // Check minimum size
-      if (pos.w < 1 || pos.h < 1) {
+      if ((typeof pos.w === 'number' && pos.w < 1) || (typeof pos.h === 'number' && pos.h < 1)) {
         errors.push({
           line: lineBase,
           column: 1,
@@ -220,13 +253,16 @@ export class ConfigParser {
     }
 
     // Size recommendations
-    if (widget.type === 'kpi' && widget.position && (widget.position.w > 4 || widget.position.h > 3)) {
-      errors.push({
-        line: lineBase,
-        column: 1,
-        message: `Widget ${index + 1}: KPI widgets work best with smaller sizes (recommended: 3x2)`,
-        type: 'warning'
-      });
+    if (widget.type === 'kpi' && widget.position && typeof widget.position === 'object') {
+      const pos = widget.position as PositionInput;
+      if ((typeof pos.w === 'number' && pos.w > 4) || (typeof pos.h === 'number' && pos.h > 3)) {
+        errors.push({
+          line: lineBase,
+          column: 1,
+          message: `Widget ${index + 1}: KPI widgets work best with smaller sizes (recommended: 3x2)`,
+          type: 'warning'
+        });
+      }
     }
 
     return errors;
