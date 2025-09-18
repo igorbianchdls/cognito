@@ -1,10 +1,31 @@
 'use client';
 
+import { useRef, useState, useEffect } from 'react';
 import { Responsive } from 'react-grid-layout';
 import WidgetRenderer from './WidgetRenderer';
 import type { Widget } from './ConfigParser';
 
 const ResponsiveGridLayout = Responsive;
+
+// Custom hook to measure container width
+const useContainerWidth = (ref: React.RefObject<HTMLDivElement>) => {
+  const [width, setWidth] = useState(1600);
+
+  useEffect(() => {
+    const updateWidth = () => {
+      if (ref.current) {
+        const containerWidth = ref.current.clientWidth - 32; // Account for padding
+        setWidth(containerWidth > 300 ? containerWidth : 300); // Min width 300px
+      }
+    };
+
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, [ref]);
+
+  return width;
+};
 
 interface GridCanvasProps {
   widgets: Widget[];
@@ -12,6 +33,8 @@ interface GridCanvasProps {
 }
 
 export default function GridCanvas({ widgets, onLayoutChange }: GridCanvasProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const containerWidth = useContainerWidth(containerRef);
 
   // Generate layout for react-grid-layout
   const layout = widgets.map(widget => ({
@@ -48,7 +71,7 @@ export default function GridCanvas({ widgets, onLayoutChange }: GridCanvasProps)
   };
 
   return (
-    <div className="relative w-full h-full bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div ref={containerRef} className="relative w-full h-full bg-white rounded-lg border border-gray-200 overflow-hidden">
       {/* Empty State */}
       {widgets.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center">
@@ -68,7 +91,7 @@ export default function GridCanvas({ widgets, onLayoutChange }: GridCanvasProps)
           breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
           cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
           rowHeight={60}
-          width={1600}
+          width={containerWidth}
           maxRows={12}
           onLayoutChange={handleLayoutChange}
           isDraggable={true}
