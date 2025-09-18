@@ -6,55 +6,7 @@ import { LineChart } from '@/components/charts/LineChart';
 import { PieChart } from '@/components/charts/PieChart';
 import { AreaChart } from '@/components/charts/AreaChart';
 import { KPICard } from '@/components/widgets/KPICard';
-import { bigQueryService } from '@/services/bigquery';
 import type { Widget } from '../visual-builder/ConfigParser';
-
-// Tipo para dados retornados do BigQuery (copiado de visualization.ts)
-type BigQueryRowData = Record<string, unknown>;
-
-// Função para gerar SQL automaticamente (copiada de visualization.ts)
-const generateSQL = (tipo: string, x: string, y: string, tabela: string, agregacao?: string): string => {
-  const defaultAgregacao = tipo === 'pie' ? 'COUNT' : 'SUM';
-  const funcaoAgregacao = agregacao || defaultAgregacao;
-
-  switch (tipo) {
-    case 'bar':
-    case 'line':
-    case 'horizontal-bar':
-    case 'area':
-      if (funcaoAgregacao === 'COUNT') {
-        return `SELECT ${x}, COUNT(*) as count FROM ${tabela} GROUP BY ${x} ORDER BY ${x} LIMIT 50`;
-      }
-      return `SELECT ${x}, ${funcaoAgregacao}(${y}) as ${y} FROM ${tabela} GROUP BY ${x} ORDER BY ${x} LIMIT 50`;
-    case 'pie':
-      if (funcaoAgregacao === 'COUNT') {
-        return `SELECT ${x}, COUNT(*) as count FROM ${tabela} GROUP BY ${x} ORDER BY count DESC LIMIT 10`;
-      }
-      return `SELECT ${x}, ${funcaoAgregacao}(${y}) as ${y} FROM ${tabela} GROUP BY ${x} ORDER BY ${funcaoAgregacao}(${y}) DESC LIMIT 10`;
-    case 'kpi':
-      if (funcaoAgregacao === 'COUNT') {
-        return `SELECT COUNT(*) as total FROM ${tabela}`;
-      }
-      return `SELECT ${funcaoAgregacao}(${y}) as total FROM ${tabela}`;
-    default:
-      return `SELECT ${x}, ${y} FROM ${tabela} LIMIT 50`;
-  }
-};
-
-// Função para processar dados BigQuery (copiada de visualization.ts)
-const processDataForChart = (data: BigQueryRowData[], x: string, y: string, tipo: string) => {
-  if (tipo === 'kpi') {
-    const total = data[0]?.total || 0;
-    return { value: Number(total) };
-  }
-
-  return data.map(row => ({
-    x: String(row[x] || 'N/A'),
-    y: Number(row[y] || row.count || 0),
-    label: String(row[x] || 'N/A'),
-    value: Number(row[y] || row.count || 0)
-  }));
-};
 
 interface WidgetRendererProps {
   widget: Widget;
@@ -77,7 +29,7 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
     ];
   };
 
-  // Fetch real data from BigQuery
+  // Fetch real data from BigQuery via API route
   useEffect(() => {
     const fetchData = async () => {
       // Se não tem dataSource, usa dados mock
@@ -90,33 +42,27 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
       setError(null);
 
       try {
-        const { table, x, y, aggregation } = widget.dataSource;
+        console.log('📊 Fetching BigQuery data for widget:', widget.id);
 
-        // Gerar SQL automaticamente (mesmo padrão da tool)
-        const sqlQuery = generateSQL(widget.type, x, y || 'quantity', table, aggregation);
-        console.log('🔍 Generated SQL for widget:', widget.id, sqlQuery);
-
-        // Inicializar BigQuery service se necessário (mesmo padrão da tool)
-        if (!bigQueryService['client']) {
-          console.log('⚡ Inicializando BigQuery service...');
-          await bigQueryService.initialize();
-        }
-
-        // Executar query no BigQuery (mesmo padrão da tool)
-        console.log('📊 Executando query no BigQuery para widget:', widget.id);
-        const result = await bigQueryService.executeQuery({
-          query: sqlQuery,
-          jobTimeoutMs: 30000
+        // Chamar API route ao invés de BigQuery diretamente
+        const response = await fetch('/api/dashboard-bigquery', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: widget.type,
+            dataSource: widget.dataSource
+          })
         });
 
-        const rawData = result.data || [];
-        console.log(`✅ Widget data fetched: ${rawData.length} records for`, widget.id);
+        const result = await response.json();
+        console.log('🔍 API response for widget:', widget.id, result);
 
-        // Processar dados para formato dos charts (mesmo padrão da tool)
-        const processedData = processDataForChart(rawData, x, y || 'quantity', widget.type);
-        console.log('🔍 Processed data for widget:', widget.id, processedData);
-
-        setData(processedData);
+        if (result.success) {
+          setData(result.data);
+          console.log(`✅ Widget data fetched: ${result.totalRecords} records for`, widget.id);
+        } else {
+          throw new Error(result.error || 'API request failed');
+        }
       } catch (err) {
         console.error('❌ Error fetching widget data:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
