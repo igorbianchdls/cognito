@@ -105,7 +105,7 @@ export default function VisualBuilderPage() {
               <h2 className="text-lg font-semibold text-gray-900">Live Dashboard</h2>
               <p className="text-sm text-gray-600">Real-time visualization with BigQuery data</p>
             </div>
-            <div className="h-[calc(100%-73px)] p-6 overflow-auto">
+            <div className="h-[800px] p-6 overflow-auto">
               <GridCanvas
                 widgets={visualBuilderState.widgets}
                 onLayoutChange={handleLayoutChange}
