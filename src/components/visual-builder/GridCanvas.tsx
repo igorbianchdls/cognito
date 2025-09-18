@@ -80,7 +80,7 @@ export default function GridCanvas({ widgets, onLayoutChange }: GridCanvasProps)
           allowOverlap={false}
         >
           {widgets.map((widget) => (
-            <div key={widget.id} className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <div key={widget.id}>
               <WidgetRenderer widget={widget} />
             </div>
           ))}
