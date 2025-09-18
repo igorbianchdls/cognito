@@ -8,6 +8,7 @@ import type { Widget, GridConfig, ParseResult } from '@/components/visual-builde
 
 export default function DashboardChatPanel() {
   const [activeTab, setActiveTab] = useState<'editor' | 'dashboard'>('editor');
+  const [previewMode, setPreviewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
 
   // Estado local para gerenciar código e widgets
   const [code, setCode] = useState(`{
@@ -76,6 +77,47 @@ export default function DashboardChatPanel() {
     setCode(newCode);
   };
 
+  // Configuração de preview modes
+  const previewSizes = {
+    desktop: { width: '100%', label: '🖥️ Desktop' },
+    tablet: { width: '768px', label: '📱 Tablet' },
+    mobile: { width: '375px', label: '📱 Mobile' }
+  };
+
+  // Configurações responsivas para gridConfig
+  const responsiveConfigs = {
+    desktop: { cols: 12, rowHeight: 30, maxRows: 12 },
+    tablet: { cols: 8, rowHeight: 40, maxRows: 10 },
+    mobile: { cols: 4, rowHeight: 50, maxRows: 8 }
+  };
+
+  // GridConfig responsivo baseado no preview mode
+  const responsiveGridConfig = {
+    ...gridConfig,
+    ...responsiveConfigs[previewMode],
+    // containerHeight calculado automaticamente: rowHeight * maxRows + padding
+    containerHeight: responsiveConfigs[previewMode].rowHeight * responsiveConfigs[previewMode].maxRows + 32
+  };
+
+  // Função para ajustar posições dos widgets baseado no número de colunas
+  const adjustWidgetPositions = (widgets: Widget[], targetCols: number, originalCols: number = 12) => {
+    if (targetCols >= originalCols) return widgets;
+
+    const scale = targetCols / originalCols;
+
+    return widgets.map(widget => ({
+      ...widget,
+      position: {
+        ...widget.position,
+        x: Math.floor(widget.position.x * scale),
+        w: Math.max(1, Math.floor(widget.position.w * scale)),
+      }
+    }));
+  };
+
+  // Widgets responsivos com posições ajustadas
+  const responsiveWidgets = adjustWidgetPositions(widgets, responsiveGridConfig.cols);
+
   // Inicializar com código padrão
   useState(() => {
     const parseResult = ConfigParser.parse(code);
@@ -128,12 +170,43 @@ export default function DashboardChatPanel() {
 
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
-          <div className="h-full bg-gray-50 p-4">
-            <GridCanvas
-              widgets={widgets}
-              gridConfig={gridConfig}
-              onLayoutChange={handleLayoutChange}
-            />
+          <div className="h-full bg-gray-50 flex flex-col">
+            {/* Preview Mode Selector */}
+            <div className="p-4 border-b border-gray-200 bg-white">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700">Preview:</span>
+                {Object.entries(previewSizes).map(([mode, config]) => (
+                  <button
+                    key={mode}
+                    onClick={() => setPreviewMode(mode as 'desktop' | 'tablet' | 'mobile')}
+                    className={`px-3 py-1 text-xs rounded-lg transition-colors ${
+                      previewMode === mode
+                        ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {config.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Dashboard Content with Preview */}
+            <div className="flex-1 p-4 overflow-auto">
+              <div
+                className="mx-auto transition-all duration-300"
+                style={{
+                  width: previewSizes[previewMode].width,
+                  maxWidth: previewSizes[previewMode].width
+                }}
+              >
+                <GridCanvas
+                  widgets={responsiveWidgets}
+                  gridConfig={responsiveGridConfig}
+                  onLayoutChange={handleLayoutChange}
+                />
+              </div>
+            </div>
           </div>
         )}
       </div>
