@@ -8,12 +8,26 @@ import { AreaChart } from '@/components/charts/AreaChart';
 import { KPICard } from '@/components/widgets/KPICard';
 import type { Widget } from '../visual-builder/ConfigParser';
 
+// Define chart data types
+type ChartDataPoint = {
+  x: string;
+  y: number;
+  label: string;
+  value: number;
+};
+
+type KPIData = {
+  value: number;
+};
+
+type WidgetData = ChartDataPoint[] | KPIData | null;
+
 interface WidgetRendererProps {
   widget: Widget;
 }
 
 export default function WidgetRenderer({ widget }: WidgetRendererProps) {
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<WidgetData>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
