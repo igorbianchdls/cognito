@@ -24,7 +24,7 @@ export default function GridCanvas({ widgets, onLayoutChange }: GridCanvasProps)
     minH: 1,
   }));
 
-  const handleLayoutChange = (newLayout: any[]) => {
+  const handleLayoutChange = (newLayout: Array<{ i: string; x: number; y: number; w: number; h: number }>) => {
     if (!onLayoutChange) return;
 
     // Update widgets with new positions
