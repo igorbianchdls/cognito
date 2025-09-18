@@ -46,11 +46,12 @@ const initialState: VisualBuilderState = {
           "enableGridY": true,
           "borderRadius": 8,
           "titleFontSize": 18,
-          "titleColor": "#1f2937",
+          "titleColor": "#1e293b",
           "marginTop": 20,
           "marginBottom": 40,
           "axisFontSize": 12,
-          "axisTextColor": "#6b7280"
+          "axisTextColor": "#64748b",
+          "backgroundColor": "#f1f5f9"
         }
       }
     },
@@ -70,9 +71,10 @@ const initialState: VisualBuilderState = {
         "showTarget": true,
         "trend": "increasing",
         "visualizationType": "card",
-        "kpiValueColor": "#10b981",
+        "kpiValueColor": "#059669",
         "kpiValueFontSize": 24,
-        "kpiContainerBackgroundColor": "#f0fdf4"
+        "kpiContainerBackgroundColor": "#ecfdf5",
+        "status": "on-target"
       }
     },
     {
@@ -99,7 +101,8 @@ const initialState: VisualBuilderState = {
           "titleFontSize": 16,
           "titleColor": "#374151",
           "axisFontSize": 11,
-          "axisTextColor": "#9ca3af"
+          "axisTextColor": "#9ca3af",
+          "backgroundColor": "#fefefe"
         }
       }
     }
