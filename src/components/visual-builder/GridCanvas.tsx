@@ -46,11 +46,17 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
   const GRID_WIDTH = 1600;
   const GRID_HEIGHT = 900;
 
-  // Calculate auto-scale to fit container while maintaining 16:9
-  const scale = Math.min(
-    containerWidth / GRID_WIDTH,
-    containerHeight / GRID_HEIGHT
-  );
+  // Calculate auto-scale based on width first to maintain 16:9
+  let scale = containerWidth / GRID_WIDTH;
+  const scaledHeight = GRID_HEIGHT * scale;
+
+  // If scaled height doesn't fit, use height as constraint
+  if (scaledHeight > containerHeight) {
+    scale = containerHeight / GRID_HEIGHT;
+  }
+
+  // Ensure minimum scale for usability
+  scale = Math.max(scale, 0.1);
 
   // Use row height from grid config
   const dynamicRowHeight = gridConfig.rowHeight;
@@ -96,17 +102,26 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
   };
 
   return (
-    <div ref={containerRef} className="w-full h-full flex items-center justify-center bg-gray-100">
-      {/* Auto-scaled grid container */}
+    <div ref={containerRef} className="w-full h-full">
+      {/* Container with forced 16:9 aspect ratio */}
       <div
-        className="relative bg-white rounded-lg border border-gray-200 overflow-hidden"
+        className="w-full bg-gray-100"
         style={{
-          width: GRID_WIDTH,
-          height: GRID_HEIGHT,
-          transform: `scale(${scale})`,
-          transformOrigin: 'center'
+          aspectRatio: '16/9',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
         }}
       >
+        {/* Auto-scaled grid container */}
+        <div
+          className="relative bg-white rounded-lg border border-gray-200 overflow-hidden"
+          style={{
+            width: GRID_WIDTH * scale,
+            height: GRID_HEIGHT * scale,
+            transformOrigin: 'center'
+          }}
+        >
         {/* Empty State */}
         {widgets.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -125,14 +140,14 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
             layouts={{ lg: layout }}
             breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
             cols={{ lg: gridConfig.cols, md: Math.floor(gridConfig.cols * 0.8), sm: Math.floor(gridConfig.cols * 0.5), xs: Math.floor(gridConfig.cols * 0.3), xxs: Math.floor(gridConfig.cols * 0.2) }}
-            rowHeight={dynamicRowHeight}
-            width={GRID_WIDTH}
+            rowHeight={dynamicRowHeight * scale}
+            width={GRID_WIDTH * scale}
             maxRows={gridConfig.maxRows}
             onLayoutChange={handleLayoutChange}
             isDraggable={true}
             isResizable={true}
-            margin={[8, 8]}
-            containerPadding={[16, 16]}
+            margin={[8 * scale, 8 * scale]}
+            containerPadding={[16 * scale, 16 * scale]}
             useCSSTransforms={true}
             compactType={null}
             preventCollision={true}
