@@ -99,6 +99,7 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
             name={widget.title}
             currentValue={widget.value || 0}
             unit={widget.unit}
+            success={true}
             kpiContainerBackgroundColor={widget.styling?.backgroundColor}
             kpiValueColor={widget.styling?.textColor}
             kpiValueFontSize={widget.styling?.fontSize}
