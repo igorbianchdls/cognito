@@ -39,12 +39,19 @@ const initialState: VisualBuilderState = {
         "aggregation": "SUM"
       },
       "barConfig": {
-        "enableGridX": true,
-        "enableGridY": true,
-        "borderRadius": 8,
-        "animate": true,
-        "motionConfig": "gentle",
-        "colors": ["#3b82f6", "#10b981", "#f59e0b"]
+        "styling": {
+          "colors": ["#3b82f6", "#10b981", "#f59e0b"],
+          "showLegend": true,
+          "enableGridX": true,
+          "enableGridY": true,
+          "borderRadius": 8,
+          "titleFontSize": 18,
+          "titleColor": "#1f2937",
+          "marginTop": 20,
+          "marginBottom": 40,
+          "axisFontSize": 12,
+          "axisTextColor": "#6b7280"
+        }
       }
     },
     {
@@ -80,13 +87,20 @@ const initialState: VisualBuilderState = {
         "aggregation": "AVG"
       },
       "lineConfig": {
-        "enableGridX": false,
-        "enableGridY": true,
-        "lineWidth": 3,
-        "enablePoints": true,
-        "pointSize": 8,
-        "curve": "monotoneX",
-        "colors": ["#8b5cf6"]
+        "styling": {
+          "colors": ["#8b5cf6"],
+          "showLegend": false,
+          "enableGridX": false,
+          "enableGridY": true,
+          "lineWidth": 3,
+          "enablePoints": true,
+          "pointSize": 8,
+          "curve": "monotoneX",
+          "titleFontSize": 16,
+          "titleColor": "#374151",
+          "axisFontSize": 11,
+          "axisTextColor": "#9ca3af"
+        }
       }
     }
   ]

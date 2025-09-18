@@ -1,10 +1,10 @@
 'use client';
 
 import type { KPIConfig } from '@/types/apps/kpiWidgets';
-import type { BarChartProps } from '@/components/charts/types';
-import type { LineChart } from '@/components/charts/LineChart';
-import type { PieChart } from '@/components/charts/PieChart';
-import type { AreaChart } from '@/components/charts/AreaChart';
+import type { BarChartConfig } from '@/stores/apps/barChartStore';
+import type { LineChartConfig } from '@/stores/apps/lineChartStore';
+import type { PieChartConfig } from '@/stores/apps/pieChartStore';
+import type { AreaChartConfig } from '@/stores/apps/areaChartStore';
 
 export interface GridConfig {
   maxRows: number;
@@ -45,10 +45,10 @@ export interface Widget {
     [key: string]: string | number | boolean | string[] | undefined;
   };
   kpiConfig?: KPIConfig;
-  barConfig?: Partial<BarChartProps>;
-  lineConfig?: Partial<React.ComponentProps<typeof LineChart>>;
-  pieConfig?: Partial<React.ComponentProps<typeof PieChart>>;
-  areaConfig?: Partial<React.ComponentProps<typeof AreaChart>>;
+  barConfig?: Partial<BarChartConfig>;
+  lineConfig?: Partial<LineChartConfig>;
+  pieConfig?: Partial<PieChartConfig>;
+  areaConfig?: Partial<AreaChartConfig>;
 }
 
 
