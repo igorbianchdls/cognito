@@ -1,69 +1,54 @@
 'use client';
 
+import { Responsive } from 'react-grid-layout';
 import WidgetPreview from './WidgetPreview';
 import type { Widget } from './ConfigParser';
 
+const ResponsiveGridLayout = Responsive;
+
 interface GridCanvasProps {
   widgets: Widget[];
+  onLayoutChange?: (widgets: Widget[]) => void;
 }
 
-export default function GridCanvas({ widgets }: GridCanvasProps) {
+export default function GridCanvas({ widgets, onLayoutChange }: GridCanvasProps) {
 
-  // Grid settings
-  const GRID_COLS = 12;
-  const GRID_ROWS = 12;
-  const CELL_SIZE = 60; // pixels
-  const GAP = 8; // pixels
+  // Generate layout for react-grid-layout
+  const layout = widgets.map(widget => ({
+    i: widget.id,
+    x: widget.position.x,
+    y: widget.position.y,
+    w: widget.position.w,
+    h: widget.position.h,
+    minW: 1,
+    minH: 1,
+  }));
+
+  const handleLayoutChange = (newLayout: any[]) => {
+    if (!onLayoutChange) return;
+
+    // Update widgets with new positions
+    const updatedWidgets = widgets.map(widget => {
+      const layoutItem = newLayout.find(item => item.i === widget.id);
+      if (layoutItem) {
+        return {
+          ...widget,
+          position: {
+            x: layoutItem.x,
+            y: layoutItem.y,
+            w: layoutItem.w,
+            h: layoutItem.h,
+          }
+        };
+      }
+      return widget;
+    });
+
+    onLayoutChange(updatedWidgets);
+  };
 
   return (
     <div className="relative w-full h-full bg-white rounded-lg border border-gray-200 overflow-hidden">
-      {/* Grid Background */}
-      <div
-        className="absolute inset-0 opacity-30"
-        style={{
-          backgroundImage: `
-            linear-gradient(to right, #e5e7eb 1px, transparent 1px),
-            linear-gradient(to bottom, #e5e7eb 1px, transparent 1px)
-          `,
-          backgroundSize: `${CELL_SIZE + GAP}px ${CELL_SIZE + GAP}px`,
-          backgroundPosition: `${GAP/2}px ${GAP/2}px`
-        }}
-      />
-
-      {/* Grid Container */}
-      <div
-        className="relative p-2"
-        style={{
-          width: GRID_COLS * (CELL_SIZE + GAP) + GAP,
-          height: GRID_ROWS * (CELL_SIZE + GAP) + GAP,
-          minWidth: '100%',
-          minHeight: '100%'
-        }}
-      >
-        {/* Widgets */}
-        {widgets.map((widget) => {
-          const style = {
-            position: 'absolute' as const,
-            left: widget.position.x * (CELL_SIZE + GAP) + GAP,
-            top: widget.position.y * (CELL_SIZE + GAP) + GAP,
-            width: widget.position.w * (CELL_SIZE + GAP) - GAP,
-            height: widget.position.h * (CELL_SIZE + GAP) - GAP,
-            zIndex: 10
-          };
-
-          return (
-            <div key={widget.id} style={style}>
-              <WidgetPreview widget={widget} />
-            </div>
-          );
-        })}
-
-        {/* Grid Info */}
-        <div className="absolute bottom-4 right-4 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg">
-          Grid: {GRID_COLS}×{GRID_ROWS} | Widgets: {widgets.length}
-        </div>
-      </div>
-
       {/* Empty State */}
       {widgets.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center">
@@ -74,6 +59,38 @@ export default function GridCanvas({ widgets }: GridCanvasProps) {
           </div>
         </div>
       )}
+
+      {/* Grid Layout */}
+      {widgets.length > 0 && (
+        <ResponsiveGridLayout
+          className="layout"
+          layouts={{ lg: layout }}
+          breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
+          cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
+          rowHeight={60}
+          width={800}
+          onLayoutChange={handleLayoutChange}
+          isDraggable={true}
+          isResizable={true}
+          margin={[8, 8]}
+          containerPadding={[16, 16]}
+          useCSSTransforms={true}
+          compactType={null}
+          preventCollision={true}
+          allowOverlap={false}
+        >
+          {widgets.map((widget) => (
+            <div key={widget.id} className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <WidgetPreview widget={widget} />
+            </div>
+          ))}
+        </ResponsiveGridLayout>
+      )}
+
+      {/* Grid Info */}
+      <div className="absolute bottom-4 right-4 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg">
+        Grid: 12×∞ | Widgets: {widgets.length}
+      </div>
     </div>
   );
 }
