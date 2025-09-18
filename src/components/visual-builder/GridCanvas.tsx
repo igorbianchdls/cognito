@@ -7,24 +7,29 @@ import type { Widget } from './ConfigParser';
 
 const ResponsiveGridLayout = Responsive;
 
-// Custom hook to measure container width
-const useContainerWidth = (ref: React.RefObject<HTMLDivElement | null>) => {
-  const [width, setWidth] = useState(1600);
+// Custom hook to measure container dimensions
+const useContainerDimensions = (ref: React.RefObject<HTMLDivElement | null>) => {
+  const [dimensions, setDimensions] = useState({ width: 1600, height: 720 });
 
   useEffect(() => {
-    const updateWidth = () => {
+    const updateDimensions = () => {
       if (ref.current) {
         const containerWidth = ref.current.clientWidth - 32; // Account for padding
-        setWidth(containerWidth > 300 ? containerWidth : 300); // Min width 300px
+        const containerHeight = ref.current.clientHeight - 32; // Account for padding
+
+        setDimensions({
+          width: containerWidth > 300 ? containerWidth : 300, // Min width 300px
+          height: containerHeight > 240 ? containerHeight : 240 // Min height 240px (12 rows × 20px)
+        });
       }
     };
 
-    updateWidth();
-    window.addEventListener('resize', updateWidth);
-    return () => window.removeEventListener('resize', updateWidth);
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
   }, [ref]);
 
-  return width;
+  return dimensions;
 };
 
 interface GridCanvasProps {
@@ -34,7 +39,10 @@ interface GridCanvasProps {
 
 export default function GridCanvas({ widgets, onLayoutChange }: GridCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const containerWidth = useContainerWidth(containerRef);
+  const { width: containerWidth, height: containerHeight } = useContainerDimensions(containerRef);
+
+  // Calculate dynamic row height based on container height
+  const dynamicRowHeight = Math.floor(containerHeight / 12); // Always 12 rows
 
   // Generate layout for react-grid-layout
   const layout = widgets.map(widget => ({
@@ -90,7 +98,7 @@ export default function GridCanvas({ widgets, onLayoutChange }: GridCanvasProps)
           layouts={{ lg: layout }}
           breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
           cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
-          rowHeight={60}
+          rowHeight={dynamicRowHeight}
           width={containerWidth}
           maxRows={12}
           onLayoutChange={handleLayoutChange}
