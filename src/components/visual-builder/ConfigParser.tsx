@@ -159,7 +159,7 @@ export class ConfigParser {
       });
     }
 
-    if (!widget.type || !this.VALID_TYPES.includes(widget.type)) {
+    if (!widget.type || typeof widget.type !== 'string' || !this.VALID_TYPES.includes(widget.type)) {
       errors.push({
         line: lineBase,
         column: 1,
