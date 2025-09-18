@@ -433,7 +433,9 @@ export default function Page() {
                 selectedAgent={selectedAgent}
                 onAgentChange={setCurrentAgent}
               />
-              <DashboardChatPanel />
+              <div className="mb-4">
+                <DashboardChatPanel />
+              </div>
             </div>
           ) : (
             // Layout original - centralizado
