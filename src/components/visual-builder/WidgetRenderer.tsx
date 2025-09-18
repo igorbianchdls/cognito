@@ -90,9 +90,16 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
     fetchData();
   }, [widget.id, widget.dataSource, widget.type]);
 
+  // Type guard function for KPI data
+  const isKPIData = (data: WidgetData): data is KPIData => {
+    return data !== null && !Array.isArray(data) && 'value' in data;
+  };
+
   // Preparar dados para charts
   const chartData = data || generateSampleData();
-  const kpiValue = widget.type === 'kpi' && data?.value ? data.value : (widget.value || 0);
+  const kpiValue = widget.type === 'kpi' && isKPIData(data)
+    ? data.value
+    : (widget.value || 0);
 
   const commonChartProps = {
     data: chartData,
