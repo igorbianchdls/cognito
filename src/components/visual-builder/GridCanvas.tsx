@@ -79,7 +79,7 @@ export default function GridCanvas({ widgets, onLayoutChange }: GridCanvasProps)
   };
 
   return (
-    <div ref={containerRef} className="relative w-full h-full bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div ref={containerRef} className="relative w-full h-[600px] bg-white rounded-lg border border-gray-200 overflow-hidden">
       {/* Empty State */}
       {widgets.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center">
