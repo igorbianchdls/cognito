@@ -96,12 +96,12 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
       return (
         <div className="h-full w-full p-2">
           <KPICard
-            title={widget.title}
-            value={widget.value || 0}
+            name={widget.title}
+            currentValue={widget.value || 0}
             unit={widget.unit}
-            backgroundColor={widget.styling?.backgroundColor}
-            textColor={widget.styling?.textColor}
-            fontSize={widget.styling?.fontSize}
+            kpiContainerBackgroundColor={widget.styling?.backgroundColor}
+            kpiValueColor={widget.styling?.textColor}
+            kpiValueFontSize={widget.styling?.fontSize}
           />
         </div>
       );
