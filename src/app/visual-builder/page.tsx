@@ -1,77 +1,26 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect } from 'react';
+import { useStore } from '@nanostores/react';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import GridCanvas from '@/components/visual-builder/GridCanvas';
-import { ConfigParser, type ParseResult } from '@/components/visual-builder/ConfigParser';
+import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
+import type { Widget } from '@/stores/visualBuilderStore';
 
 export default function VisualBuilderPage() {
-  const [code, setCode] = useState(`{
-  "widgets": [
-    {
-      "id": "chart1",
-      "type": "bar",
-      "position": { "x": 0, "y": 0, "w": 6, "h": 4 },
-      "title": "Sales by Month",
-      "data": {
-        "x": "month",
-        "y": "sales"
-      }
-    },
-    {
-      "id": "kpi1",
-      "type": "kpi",
-      "position": { "x": 6, "y": 0, "w": 3, "h": 2 },
-      "title": "Total Revenue",
-      "value": 15240,
-      "unit": "$"
-    },
-    {
-      "id": "chart2",
-      "type": "line",
-      "position": { "x": 0, "y": 4, "w": 9, "h": 4 },
-      "title": "Growth Trend",
-      "data": {
-        "x": "date",
-        "y": "growth"
-      }
-    }
-  ]
-}`);
+  const visualBuilderState = useStore($visualBuilderState);
 
-  const [parseResult, setParseResult] = useState<ParseResult>({ widgets: [], errors: [], isValid: false });
-  const [isParsingDebounced, setIsParsingDebounced] = useState(false);
-
-  // Debounced parsing function
-  const debouncedParse = useCallback(
-    (() => {
-      let timeout: NodeJS.Timeout;
-      return (newCode: string) => {
-        setIsParsingDebounced(true);
-        clearTimeout(timeout);
-        timeout = setTimeout(() => {
-          const result = ConfigParser.parse(newCode);
-          setParseResult(result);
-          setIsParsingDebounced(false);
-        }, 300);
-      };
-    })(),
-    []
-  );
-
-  // Parse on code change
+  // Initialize store on mount
   useEffect(() => {
-    debouncedParse(code);
-  }, [code, debouncedParse]);
-
-  // Initial parse
-  useEffect(() => {
-    const result = ConfigParser.parse(code);
-    setParseResult(result);
+    visualBuilderActions.initialize();
   }, []);
 
   const handleCodeChange = (newCode: string) => {
-    setCode(newCode);
+    visualBuilderActions.updateCode(newCode);
+  };
+
+  const handleLayoutChange = (updatedWidgets: Widget[]) => {
+    visualBuilderActions.updateWidgets(updatedWidgets);
   };
 
   return (
@@ -84,12 +33,10 @@ export default function VisualBuilderPage() {
             <p className="text-sm text-gray-600 mt-1">
               Create charts and KPIs with coordinates •
               <span className={`ml-2 ${
-                isParsingDebounced ? 'text-yellow-600' :
-                parseResult.isValid ? 'text-green-600' : 'text-red-600'
+                visualBuilderState.isValid ? 'text-green-600' : 'text-red-600'
               }`}>
-                {isParsingDebounced ? 'Parsing...' :
-                 parseResult.isValid ? `${parseResult.widgets.length} widgets` :
-                 `${parseResult.errors.filter(e => e.type !== 'warning').length} errors`}
+                {visualBuilderState.isValid ? `${visualBuilderState.widgets.length} widgets` :
+                 `${visualBuilderState.parseErrors.filter(e => e.type !== 'warning').length} errors`}
               </span>
             </p>
           </div>
@@ -114,10 +61,10 @@ export default function VisualBuilderPage() {
           </div>
           <div className="h-[calc(100%-73px)]">
             <MonacoEditor
-              value={code}
+              value={visualBuilderState.code}
               onChange={handleCodeChange}
               language="json"
-              errors={parseResult.errors}
+              errors={visualBuilderState.parseErrors}
             />
           </div>
         </div>
@@ -129,7 +76,10 @@ export default function VisualBuilderPage() {
             <p className="text-sm text-gray-600">Real-time visualization of your widgets</p>
           </div>
           <div className="h-[calc(100%-73px)] p-6 overflow-auto">
-            <GridCanvas widgets={parseResult.widgets} />
+            <GridCanvas
+              widgets={visualBuilderState.widgets}
+              onLayoutChange={handleLayoutChange}
+            />
           </div>
         </div>
       </div>
