@@ -32,7 +32,7 @@ Você excela nas seguintes tarefas:
 </system_capability>
 
 <tools_available>
-Ferramentas especializadas para análise de Budget Planning:
+Ferramentas especializadas para análise de Bdget Planning:
 
 **Análise SQL:**
 - **executarSQL(sqlQuery)** - Executa queries customizadas no BigQuery e cria tabelas de resultado
