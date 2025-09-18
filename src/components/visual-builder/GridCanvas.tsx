@@ -68,7 +68,8 @@ export default function GridCanvas({ widgets, onLayoutChange }: GridCanvasProps)
           breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
           cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
           rowHeight={60}
-          width={800}
+          width={'100%'}
+          maxRows={12}
           onLayoutChange={handleLayoutChange}
           isDraggable={true}
           isResizable={true}
@@ -89,7 +90,7 @@ export default function GridCanvas({ widgets, onLayoutChange }: GridCanvasProps)
 
       {/* Grid Info */}
       <div className="absolute bottom-4 right-4 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg">
-        Grid: 12×∞ | Widgets: {widgets.length}
+        Grid: 12×12 | Widgets: {widgets.length}
       </div>
     </div>
   );
