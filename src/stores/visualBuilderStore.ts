@@ -74,7 +74,6 @@ export const visualBuilderActions = {
   // Atualizar widgets (vem do GridCanvas)
   updateWidgets: (widgets: Widget[]) => {
     const currentState = $visualBuilderState.get()
-    const currentState = $visualBuilderState.get()
     const newCode = JSON.stringify({
       config: currentState.gridConfig,
       widgets
