@@ -1,22 +1,6 @@
 'use client';
 
-interface Widget {
-  id: string;
-  type: 'bar' | 'line' | 'pie' | 'area' | 'kpi';
-  position: {
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-  };
-  title: string;
-  data?: {
-    x: string;
-    y: string;
-  };
-  value?: number;
-  unit?: string;
-}
+import type { Widget } from './ConfigParser';
 
 interface WidgetPreviewProps {
   widget: Widget;

@@ -1,43 +1,13 @@
 'use client';
 
-import { useMemo } from 'react';
 import WidgetPreview from './WidgetPreview';
+import type { Widget } from './ConfigParser';
 
 interface GridCanvasProps {
-  config: string;
-}
-
-interface Widget {
-  id: string;
-  type: 'bar' | 'line' | 'pie' | 'area' | 'kpi';
-  position: {
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-  };
-  title: string;
-  data?: {
-    x: string;
-    y: string;
-  };
-  value?: number;
-  unit?: string;
-}
-
-interface Config {
   widgets: Widget[];
 }
 
-export default function GridCanvas({ config }: GridCanvasProps) {
-  const widgets = useMemo(() => {
-    try {
-      const parsed: Config = JSON.parse(config);
-      return parsed.widgets || [];
-    } catch {
-      return [];
-    }
-  }, [config]);
+export default function GridCanvas({ widgets }: GridCanvasProps) {
 
   // Grid settings
   const GRID_COLS = 12;

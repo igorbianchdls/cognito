@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import GridCanvas from '@/components/visual-builder/GridCanvas';
+import { ConfigParser, type ParseResult } from '@/components/visual-builder/ConfigParser';
 
 export default function VisualBuilderPage() {
   const [code, setCode] = useState(`{
@@ -38,6 +39,41 @@ export default function VisualBuilderPage() {
   ]
 }`);
 
+  const [parseResult, setParseResult] = useState<ParseResult>({ widgets: [], errors: [], isValid: false });
+  const [isParsingDebounced, setIsParsingDebounced] = useState(false);
+
+  // Debounced parsing function
+  const debouncedParse = useCallback(
+    (() => {
+      let timeout: NodeJS.Timeout;
+      return (newCode: string) => {
+        setIsParsingDebounced(true);
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+          const result = ConfigParser.parse(newCode);
+          setParseResult(result);
+          setIsParsingDebounced(false);
+        }, 300);
+      };
+    })(),
+    []
+  );
+
+  // Parse on code change
+  useEffect(() => {
+    debouncedParse(code);
+  }, [code, debouncedParse]);
+
+  // Initial parse
+  useEffect(() => {
+    const result = ConfigParser.parse(code);
+    setParseResult(result);
+  }, []);
+
+  const handleCodeChange = (newCode: string) => {
+    setCode(newCode);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -45,7 +81,17 @@ export default function VisualBuilderPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Visual Builder</h1>
-            <p className="text-sm text-gray-600 mt-1">Create charts and KPIs with coordinates</p>
+            <p className="text-sm text-gray-600 mt-1">
+              Create charts and KPIs with coordinates •
+              <span className={`ml-2 ${
+                isParsingDebounced ? 'text-yellow-600' :
+                parseResult.isValid ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {isParsingDebounced ? 'Parsing...' :
+                 parseResult.isValid ? `${parseResult.widgets.length} widgets` :
+                 `${parseResult.errors.filter(e => e.type !== 'warning').length} errors`}
+              </span>
+            </p>
           </div>
           <div className="flex items-center gap-3">
             <button className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
@@ -69,8 +115,9 @@ export default function VisualBuilderPage() {
           <div className="h-[calc(100%-73px)]">
             <MonacoEditor
               value={code}
-              onChange={setCode}
+              onChange={handleCodeChange}
               language="json"
+              errors={parseResult.errors}
             />
           </div>
         </div>
@@ -82,7 +129,7 @@ export default function VisualBuilderPage() {
             <p className="text-sm text-gray-600">Real-time visualization of your widgets</p>
           </div>
           <div className="h-[calc(100%-73px)] p-6 overflow-auto">
-            <GridCanvas config={code} />
+            <GridCanvas widgets={parseResult.widgets} />
           </div>
         </div>
       </div>
