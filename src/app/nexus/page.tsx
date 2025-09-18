@@ -16,17 +16,21 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import ChatContainer from '../../components/nexus/ChatContainer';
+import DashboardChatPanel from '../../components/nexus/DashboardChatPanel';
 import type { UIMessage } from 'ai';
 import { currentAgent, setCurrentAgent } from '../../stores/nexus/agentStore';
 
 export default function Page() {
   const selectedAgent = useStore(currentAgent);
-  
+
   // Array unificado que guarda TODAS as mensagens em ordem cronológica
   const [allMessages, setAllMessages] = useState<(UIMessage & { agent: string })[]>([]);
-  
+
   // State para armazenar dados pendentes de análise
   const [pendingAnalysisData, setPendingAnalysisData] = useState<string | null>(null);
+
+  // State para controlar o dashboard panel
+  const [showDashboard, setShowDashboard] = useState(false);
 
   const chats = {
     nexus: useChat({
@@ -399,19 +403,52 @@ export default function Page() {
               </BreadcrumbList>
             </Breadcrumb>
           </div>
+
+          {/* Dashboard Toggle */}
+          <div className="flex items-center gap-2 px-4">
+            <button
+              onClick={() => setShowDashboard(!showDashboard)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                showDashboard
+                  ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                  : 'bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200'
+              }`}
+            >
+              <span className="text-lg">📊</span>
+              Dashboard
+            </button>
+          </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 overflow-hidden" style={{backgroundColor: 'white'}}>
-          <div data-page="nexus" className="mx-auto w-full max-w-5xl h-[calc(100vh-4rem-2rem)]">
-            <ChatContainer
-              messages={displayedMessages}
-              input={input}
-              setInput={setInput}
-              onSubmit={handleSubmit}
-              status={status}
-              selectedAgent={selectedAgent}
-              onAgentChange={setCurrentAgent}
-            />
-          </div>
+          {/* Layout condicional baseado no toggle */}
+          {showDashboard ? (
+            // Layout com Dashboard - lado a lado
+            <div data-page="nexus" className="w-full grid grid-cols-2 gap-4 h-[calc(100vh-4rem-2rem)]">
+              <ChatContainer
+                messages={displayedMessages}
+                input={input}
+                setInput={setInput}
+                onSubmit={handleSubmit}
+                status={status}
+                selectedAgent={selectedAgent}
+                onAgentChange={setCurrentAgent}
+              />
+              <DashboardChatPanel />
+            </div>
+          ) : (
+            // Layout original - centralizado
+            <div data-page="nexus" className="mx-auto w-full max-w-5xl h-[calc(100vh-4rem-2rem)]">
+              <ChatContainer
+                messages={displayedMessages}
+                input={input}
+                setInput={setInput}
+                onSubmit={handleSubmit}
+                status={status}
+                selectedAgent={selectedAgent}
+                onAgentChange={setCurrentAgent}
+              />
+            </div>
+          )}
         </div>
       </SidebarInset>
     </SidebarProvider>
