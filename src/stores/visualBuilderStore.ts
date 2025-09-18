@@ -4,6 +4,9 @@ import { atom } from 'nanostores'
 import { ConfigParser } from '@/components/visual-builder/ConfigParser'
 import type { Widget, ParseResult } from '@/components/visual-builder/ConfigParser'
 
+// Re-export types for use in other components
+export type { Widget } from '@/components/visual-builder/ConfigParser'
+
 // Estado da store
 interface VisualBuilderState {
   widgets: Widget[]
