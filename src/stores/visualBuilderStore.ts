@@ -48,6 +48,16 @@ const initialState: VisualBuilderState = {
         "table": "ecommerce",
         "x": "event_name",
         "aggregation": "COUNT"
+      },
+      "kpiConfig": {
+        "unit": "events",
+        "target": 1000,
+        "showTarget": true,
+        "trend": "increasing",
+        "visualizationType": "card",
+        "kpiValueColor": "#10b981",
+        "kpiValueFontSize": 24,
+        "kpiContainerBackgroundColor": "#f0fdf4"
       }
     },
     {

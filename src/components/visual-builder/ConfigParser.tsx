@@ -1,5 +1,7 @@
 'use client';
 
+import type { KPIConfig } from '@/types/apps/kpiWidgets';
+
 export interface GridConfig {
   maxRows: number;
   rowHeight: number;
@@ -38,6 +40,7 @@ export interface Widget {
     fontSize?: number;
     [key: string]: string | number | boolean | string[] | undefined;
   };
+  kpiConfig?: KPIConfig;
 }
 
 

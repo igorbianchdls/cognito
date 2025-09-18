@@ -245,11 +245,13 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
           <KPICard
             name={widget.title}
             currentValue={kpiValue}
-            unit={widget.unit}
+            unit={widget.unit || widget.kpiConfig?.unit}
             success={true}
-            kpiContainerBackgroundColor={widget.styling?.backgroundColor}
-            kpiValueColor={widget.styling?.textColor}
-            kpiValueFontSize={widget.styling?.fontSize}
+            {...(widget.kpiConfig || {})}
+            // Fallback to styling props if kpiConfig not provided
+            kpiContainerBackgroundColor={widget.kpiConfig?.kpiContainerBackgroundColor || widget.styling?.backgroundColor}
+            kpiValueColor={widget.kpiConfig?.kpiValueColor || widget.styling?.textColor}
+            kpiValueFontSize={widget.kpiConfig?.kpiValueFontSize || widget.styling?.fontSize}
           />
         </div>
       );
