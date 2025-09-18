@@ -16,6 +16,12 @@ export interface Widget {
   };
   value?: number;
   unit?: string;
+  dataSource?: {
+    table: string;
+    x: string;
+    y?: string;
+    aggregation?: 'SUM' | 'COUNT' | 'AVG' | 'MAX' | 'MIN';
+  };
   styling?: {
     colors?: string[];
     showLegend?: boolean;

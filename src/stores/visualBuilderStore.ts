@@ -23,28 +23,35 @@ const initialState: VisualBuilderState = {
       "id": "chart1",
       "type": "bar",
       "position": { "x": 0, "y": 0, "w": 6, "h": 4 },
-      "title": "Sales by Month",
-      "data": {
-        "x": "month",
-        "y": "sales"
+      "title": "Events by Type",
+      "dataSource": {
+        "table": "ecommerce",
+        "x": "event_name",
+        "y": "quantity",
+        "aggregation": "SUM"
       }
     },
     {
       "id": "kpi1",
       "type": "kpi",
       "position": { "x": 6, "y": 0, "w": 3, "h": 2 },
-      "title": "Total Revenue",
-      "value": 15240,
-      "unit": "$"
+      "title": "Total Events",
+      "dataSource": {
+        "table": "ecommerce",
+        "x": "event_name",
+        "aggregation": "COUNT"
+      }
     },
     {
       "id": "chart2",
       "type": "line",
       "position": { "x": 0, "y": 4, "w": 9, "h": 4 },
-      "title": "Growth Trend",
-      "data": {
-        "x": "date",
-        "y": "growth"
+      "title": "Quantity Trend",
+      "dataSource": {
+        "table": "ecommerce",
+        "x": "event_name",
+        "y": "quantity",
+        "aggregation": "AVG"
       }
     }
   ]
