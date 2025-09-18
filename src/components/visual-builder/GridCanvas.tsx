@@ -3,7 +3,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { Responsive } from 'react-grid-layout';
 import WidgetRenderer from './WidgetRenderer';
-import type { Widget } from './ConfigParser';
+import type { Widget, GridConfig } from './ConfigParser';
 
 const ResponsiveGridLayout = Responsive;
 
@@ -34,15 +34,16 @@ const useContainerDimensions = (ref: React.RefObject<HTMLDivElement | null>) => 
 
 interface GridCanvasProps {
   widgets: Widget[];
+  gridConfig: GridConfig;
   onLayoutChange?: (widgets: Widget[]) => void;
 }
 
-export default function GridCanvas({ widgets, onLayoutChange }: GridCanvasProps) {
+export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: GridCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { width: containerWidth, height: containerHeight } = useContainerDimensions(containerRef);
 
-  // Fixed row height
-  const dynamicRowHeight = 30; // Fixed 30px per row
+  // Use row height from grid config
+  const dynamicRowHeight = gridConfig.rowHeight;
 
   // Generate layout for react-grid-layout
   const layout = widgets.map(widget => ({
@@ -97,10 +98,10 @@ export default function GridCanvas({ widgets, onLayoutChange }: GridCanvasProps)
           className="layout"
           layouts={{ lg: layout }}
           breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-          cols={{ lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 }}
+          cols={{ lg: gridConfig.cols, md: Math.floor(gridConfig.cols * 0.8), sm: Math.floor(gridConfig.cols * 0.5), xs: Math.floor(gridConfig.cols * 0.3), xxs: Math.floor(gridConfig.cols * 0.2) }}
           rowHeight={dynamicRowHeight}
           width={containerWidth}
-          maxRows={12}
+          maxRows={gridConfig.maxRows}
           onLayoutChange={handleLayoutChange}
           isDraggable={true}
           isResizable={true}
@@ -121,7 +122,7 @@ export default function GridCanvas({ widgets, onLayoutChange }: GridCanvasProps)
 
       {/* Grid Info */}
       <div className="absolute bottom-4 right-4 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg">
-        Grid: 12×12 | Widgets: {widgets.length}
+        Grid: {gridConfig.cols}×{gridConfig.maxRows} | Widgets: {widgets.length}
       </div>
     </div>
   );

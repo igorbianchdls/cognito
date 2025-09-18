@@ -2,14 +2,15 @@
 
 import { atom } from 'nanostores'
 import { ConfigParser } from '@/components/visual-builder/ConfigParser'
-import type { Widget, ParseResult } from '@/components/visual-builder/ConfigParser'
+import type { Widget, GridConfig, ParseResult } from '@/components/visual-builder/ConfigParser'
 
 // Re-export types for use in other components
-export type { Widget } from '@/components/visual-builder/ConfigParser'
+export type { Widget, GridConfig } from '@/components/visual-builder/ConfigParser'
 
 // Estado da store
 interface VisualBuilderState {
   widgets: Widget[]
+  gridConfig: GridConfig
   code: string
   parseErrors: ParseResult['errors']
   isValid: boolean
@@ -17,7 +18,13 @@ interface VisualBuilderState {
 
 const initialState: VisualBuilderState = {
   widgets: [],
+  gridConfig: { maxRows: 12, rowHeight: 30, cols: 12 },
   code: `{
+  "config": {
+    "maxRows": 12,
+    "rowHeight": 30,
+    "cols": 12
+  },
   "widgets": [
     {
       "id": "chart1",
@@ -67,7 +74,11 @@ export const visualBuilderActions = {
   // Atualizar widgets (vem do GridCanvas)
   updateWidgets: (widgets: Widget[]) => {
     const currentState = $visualBuilderState.get()
-    const newCode = JSON.stringify({ widgets }, null, 2)
+    const currentState = $visualBuilderState.get()
+    const newCode = JSON.stringify({
+      config: currentState.gridConfig,
+      widgets
+    }, null, 2)
 
     console.log('🎨 Visual Builder: Updating widgets', { count: widgets.length })
 
@@ -86,6 +97,7 @@ export const visualBuilderActions = {
 
     $visualBuilderState.set({
       widgets: parseResult.widgets,
+      gridConfig: parseResult.gridConfig,
       code,
       parseErrors: parseResult.errors,
       isValid: parseResult.isValid
@@ -98,6 +110,7 @@ export const visualBuilderActions = {
 
     $visualBuilderState.set({
       widgets: parseResult.widgets,
+      gridConfig: parseResult.gridConfig,
       code: initialState.code,
       parseErrors: parseResult.errors,
       isValid: parseResult.isValid

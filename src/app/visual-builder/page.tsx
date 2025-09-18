@@ -108,6 +108,7 @@ export default function VisualBuilderPage() {
             <div className="h-[800px] p-6 overflow-auto">
               <GridCanvas
                 widgets={visualBuilderState.widgets}
+                gridConfig={visualBuilderState.gridConfig}
                 onLayoutChange={handleLayoutChange}
               />
             </div>

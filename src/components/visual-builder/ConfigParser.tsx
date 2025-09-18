@@ -1,5 +1,11 @@
 'use client';
 
+export interface GridConfig {
+  maxRows: number;
+  rowHeight: number;
+  cols: number;
+}
+
 export interface Widget {
   id: string;
   type: 'bar' | 'line' | 'pie' | 'area' | 'kpi';
@@ -43,22 +49,39 @@ export interface ParseError {
 
 export interface ParseResult {
   widgets: Widget[];
+  gridConfig: GridConfig;
   errors: ParseError[];
   isValid: boolean;
 }
 
 export class ConfigParser {
   private static VALID_TYPES = ['bar', 'line', 'pie', 'area', 'kpi'];
+  private static DEFAULT_GRID_CONFIG: GridConfig = {
+    maxRows: 12,
+    rowHeight: 30,
+    cols: 12
+  };
 
   static parse(jsonString: string): ParseResult {
     try {
       // Step 1: Parse JSON (same as chart stores)
       const config = JSON.parse(jsonString);
 
-      // Step 2: Type assertion (same as GerarGraficoToolOutput pattern)
+      // Step 2: Extract widgets and grid config
       const widgets = (config.widgets || []) as Widget[];
+      const rawGridConfig = config.config || {};
 
-      // Step 3: Basic filter for runtime safety only
+      // Step 3: Process grid config with defaults
+      const gridConfig: GridConfig = {
+        maxRows: typeof rawGridConfig.maxRows === 'number' && rawGridConfig.maxRows > 0
+          ? rawGridConfig.maxRows : this.DEFAULT_GRID_CONFIG.maxRows,
+        rowHeight: typeof rawGridConfig.rowHeight === 'number' && rawGridConfig.rowHeight > 0
+          ? rawGridConfig.rowHeight : this.DEFAULT_GRID_CONFIG.rowHeight,
+        cols: typeof rawGridConfig.cols === 'number' && rawGridConfig.cols > 0
+          ? rawGridConfig.cols : this.DEFAULT_GRID_CONFIG.cols
+      };
+
+      // Step 4: Basic filter for runtime safety only
       const validWidgets = widgets.filter(widget => {
         return widget &&
                typeof widget.id === 'string' &&
@@ -74,12 +97,14 @@ export class ConfigParser {
 
       return {
         widgets: validWidgets,
+        gridConfig,
         errors: [],
         isValid: true
       };
     } catch (error) {
       return {
         widgets: [],
+        gridConfig: this.DEFAULT_GRID_CONFIG,
         errors: [{
           line: 1,
           column: 1,
