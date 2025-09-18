@@ -45,8 +45,8 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
   // Use row height from grid config
   const dynamicRowHeight = gridConfig.rowHeight;
 
-  // Calculate container height: use configured height or auto-calculate
-  const containerHeight = gridConfig.containerHeight || (gridConfig.maxRows * gridConfig.rowHeight + 32);
+  // Calculate target height: use configured height or auto-calculate
+  const targetHeight = gridConfig.containerHeight || (gridConfig.maxRows * gridConfig.rowHeight + 32);
 
   // Generate layout for react-grid-layout
   const layout = widgets.map(widget => ({
@@ -83,7 +83,7 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
   };
 
   return (
-    <div ref={containerRef} className="relative w-full bg-white rounded-lg border border-gray-200 overflow-hidden" style={{ height: `${containerHeight}px` }}>
+    <div ref={containerRef} className="relative w-full bg-white rounded-lg border border-gray-200 overflow-hidden" style={{ height: `${targetHeight}px` }}>
       {/* Empty State */}
       {widgets.length === 0 && (
         <div className="absolute inset-0 flex items-center justify-center">
