@@ -17,6 +17,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import ChatContainer from '../../components/nexus/ChatContainer';
 import DashboardChatPanel from '../../components/nexus/DashboardChatPanel';
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import type { UIMessage } from 'ai';
 import { currentAgent, setCurrentAgent } from '../../stores/nexus/agentStore';
 
@@ -422,20 +423,29 @@ export default function Page() {
         <div className="flex flex-1 flex-col gap-4 p-4 overflow-hidden" style={{backgroundColor: 'white'}}>
           {/* Layout condicional baseado no toggle */}
           {showDashboard ? (
-            // Layout com Dashboard - lado a lado
-            <div data-page="nexus" className="w-full grid grid-cols-2 gap-4 h-[calc(100vh-4rem-2rem)]">
-              <ChatContainer
-                messages={displayedMessages}
-                input={input}
-                setInput={setInput}
-                onSubmit={handleSubmit}
-                status={status}
-                selectedAgent={selectedAgent}
-                onAgentChange={setCurrentAgent}
-              />
-              <div className="mb-4">
-                <DashboardChatPanel />
-              </div>
+            // Layout com Dashboard - painéis redimensionáveis
+            <div data-page="nexus" className="w-full h-[calc(100vh-4rem-2rem)]">
+              <PanelGroup direction="horizontal">
+                <Panel defaultSize={50} minSize={30}>
+                  <ChatContainer
+                    messages={displayedMessages}
+                    input={input}
+                    setInput={setInput}
+                    onSubmit={handleSubmit}
+                    status={status}
+                    selectedAgent={selectedAgent}
+                    onAgentChange={setCurrentAgent}
+                  />
+                </Panel>
+                <PanelResizeHandle className="w-2 bg-gray-200 hover:bg-gray-300 cursor-col-resize flex items-center justify-center">
+                  <div className="w-1 h-12 bg-gray-400 rounded-full"></div>
+                </PanelResizeHandle>
+                <Panel defaultSize={50} minSize={30}>
+                  <div className="h-full mb-4">
+                    <DashboardChatPanel />
+                  </div>
+                </Panel>
+              </PanelGroup>
             </div>
           ) : (
             // Layout original - centralizado
