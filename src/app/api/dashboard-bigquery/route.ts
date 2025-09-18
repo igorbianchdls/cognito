@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { bigQueryService } from '@/services/bigquery'
 
+// Hardcoded project and dataset (same as other tools)
+const PROJECT_ID = 'creatto-463117';
+const DATASET_ID = 'biquery_data';
+
 // Tipo para dados retornados do BigQuery (copiado de visualization.ts)
 type BigQueryRowData = Record<string, unknown>;
 
-// Função para gerar SQL automaticamente (copiada de visualization.ts)
+// Função para gerar SQL automaticamente com qualified table names
 const generateSQL = (tipo: string, x: string, y: string, tabela: string, agregacao?: string): string => {
   const defaultAgregacao = tipo === 'pie' ? 'COUNT' : 'SUM';
   const funcaoAgregacao = agregacao || defaultAgregacao;
+
+  // Build qualified table name (same as other tools)
+  const qualifiedTable = `\`${PROJECT_ID}.${DATASET_ID}.${tabela}\``;
 
   switch (tipo) {
     case 'bar':
@@ -15,21 +22,21 @@ const generateSQL = (tipo: string, x: string, y: string, tabela: string, agregac
     case 'horizontal-bar':
     case 'area':
       if (funcaoAgregacao === 'COUNT') {
-        return `SELECT ${x}, COUNT(*) as count FROM ${tabela} GROUP BY ${x} ORDER BY ${x} LIMIT 50`;
+        return `SELECT ${x}, COUNT(*) as count FROM ${qualifiedTable} GROUP BY ${x} ORDER BY ${x} LIMIT 50`;
       }
-      return `SELECT ${x}, ${funcaoAgregacao}(${y}) as ${y} FROM ${tabela} GROUP BY ${x} ORDER BY ${x} LIMIT 50`;
+      return `SELECT ${x}, ${funcaoAgregacao}(${y}) as ${y} FROM ${qualifiedTable} GROUP BY ${x} ORDER BY ${x} LIMIT 50`;
     case 'pie':
       if (funcaoAgregacao === 'COUNT') {
-        return `SELECT ${x}, COUNT(*) as count FROM ${tabela} GROUP BY ${x} ORDER BY count DESC LIMIT 10`;
+        return `SELECT ${x}, COUNT(*) as count FROM ${qualifiedTable} GROUP BY ${x} ORDER BY count DESC LIMIT 10`;
       }
-      return `SELECT ${x}, ${funcaoAgregacao}(${y}) as ${y} FROM ${tabela} GROUP BY ${x} ORDER BY ${funcaoAgregacao}(${y}) DESC LIMIT 10`;
+      return `SELECT ${x}, ${funcaoAgregacao}(${y}) as ${y} FROM ${qualifiedTable} GROUP BY ${x} ORDER BY ${funcaoAgregacao}(${y}) DESC LIMIT 10`;
     case 'kpi':
       if (funcaoAgregacao === 'COUNT') {
-        return `SELECT COUNT(*) as total FROM ${tabela}`;
+        return `SELECT COUNT(*) as total FROM ${qualifiedTable}`;
       }
-      return `SELECT ${funcaoAgregacao}(${y}) as total FROM ${tabela}`;
+      return `SELECT ${funcaoAgregacao}(${y}) as total FROM ${qualifiedTable}`;
     default:
-      return `SELECT ${x}, ${y} FROM ${tabela} LIMIT 50`;
+      return `SELECT ${x}, ${y} FROM ${qualifiedTable} LIMIT 50`;
   }
 };
 
