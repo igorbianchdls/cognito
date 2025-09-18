@@ -185,10 +185,12 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
         <div className="h-full w-full p-2">
           <BarChart
             {...commonChartProps}
-            enableGridX={false}
-            enableGridY={true}
-            borderRadius={widget.styling?.borderRadius}
-            backgroundColor={widget.styling?.backgroundColor}
+            {...(widget.barConfig || {})}
+            // Fallback to styling props if barConfig not provided
+            enableGridX={widget.barConfig?.enableGridX ?? false}
+            enableGridY={widget.barConfig?.enableGridY ?? true}
+            borderRadius={widget.barConfig?.borderRadius ?? widget.styling?.borderRadius}
+            backgroundColor={widget.barConfig?.backgroundColor ?? widget.styling?.backgroundColor}
           />
         </div>
       );
@@ -198,13 +200,15 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
         <div className="h-full w-full p-2">
           <LineChart
             {...commonChartProps}
-            enableGridX={false}
-            enableGridY={true}
-            lineWidth={2}
-            enablePoints={true}
-            pointSize={6}
-            curve="cardinal"
-            backgroundColor={widget.styling?.backgroundColor}
+            {...(widget.lineConfig || {})}
+            // Fallback to default props if lineConfig not provided
+            enableGridX={widget.lineConfig?.enableGridX ?? false}
+            enableGridY={widget.lineConfig?.enableGridY ?? true}
+            lineWidth={widget.lineConfig?.lineWidth ?? 2}
+            enablePoints={widget.lineConfig?.enablePoints ?? true}
+            pointSize={widget.lineConfig?.pointSize ?? 6}
+            curve={widget.lineConfig?.curve ?? "cardinal"}
+            backgroundColor={widget.lineConfig?.backgroundColor ?? widget.styling?.backgroundColor}
           />
         </div>
       );
@@ -214,10 +218,12 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
         <div className="h-full w-full p-2">
           <PieChart
             {...commonChartProps}
-            innerRadius={0.5}
-            padAngle={1}
-            cornerRadius={2}
-            backgroundColor={widget.styling?.backgroundColor}
+            {...(widget.pieConfig || {})}
+            // Fallback to default props if pieConfig not provided
+            innerRadius={widget.pieConfig?.innerRadius ?? 0.5}
+            padAngle={widget.pieConfig?.padAngle ?? 1}
+            cornerRadius={widget.pieConfig?.cornerRadius ?? 2}
+            backgroundColor={widget.pieConfig?.backgroundColor ?? widget.styling?.backgroundColor}
           />
         </div>
       );
@@ -227,14 +233,16 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
         <div className="h-full w-full p-2">
           <AreaChart
             {...commonChartProps}
-            enableGridX={false}
-            enableGridY={true}
-            areaOpacity={0.15}
-            lineWidth={2}
-            enablePoints={true}
-            pointSize={6}
-            curve="cardinal"
-            backgroundColor={widget.styling?.backgroundColor}
+            {...(widget.areaConfig || {})}
+            // Fallback to default props if areaConfig not provided
+            enableGridX={widget.areaConfig?.enableGridX ?? false}
+            enableGridY={widget.areaConfig?.enableGridY ?? true}
+            areaOpacity={widget.areaConfig?.areaOpacity ?? 0.15}
+            lineWidth={widget.areaConfig?.lineWidth ?? 2}
+            enablePoints={widget.areaConfig?.enablePoints ?? true}
+            pointSize={widget.areaConfig?.pointSize ?? 6}
+            curve={widget.areaConfig?.curve ?? "cardinal"}
+            backgroundColor={widget.areaConfig?.backgroundColor ?? widget.styling?.backgroundColor}
           />
         </div>
       );

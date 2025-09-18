@@ -37,6 +37,14 @@ const initialState: VisualBuilderState = {
         "x": "event_name",
         "y": "quantity",
         "aggregation": "SUM"
+      },
+      "barConfig": {
+        "enableGridX": true,
+        "enableGridY": true,
+        "borderRadius": 8,
+        "animate": true,
+        "motionConfig": "gentle",
+        "colors": ["#3b82f6", "#10b981", "#f59e0b"]
       }
     },
     {
@@ -70,6 +78,15 @@ const initialState: VisualBuilderState = {
         "x": "event_name",
         "y": "quantity",
         "aggregation": "AVG"
+      },
+      "lineConfig": {
+        "enableGridX": false,
+        "enableGridY": true,
+        "lineWidth": 3,
+        "enablePoints": true,
+        "pointSize": 8,
+        "curve": "monotoneX",
+        "colors": ["#8b5cf6"]
       }
     }
   ]
