@@ -13,16 +13,8 @@ export interface GridConfig {
   containerHeight?: number;
 }
 
-export type Theme = 'light' | 'dark';
-
-export interface ThemeConfig {
-  light: {
-    backgroundColor: string;
-  };
-  dark: {
-    backgroundColor: string;
-  };
-}
+// Theme types are now managed by ThemeManager
+import { ThemeManager, type ThemeName } from './ThemeManager';
 
 export interface Widget {
   id: string;
@@ -85,88 +77,9 @@ export class ConfigParser {
     cols: 12
   };
 
-  private static THEME_COLORS: ThemeConfig = {
-    light: {
-      backgroundColor: '#ffffff'
-    },
-    dark: {
-      backgroundColor: '#1a1a1a'
-    }
-  };
 
-  private static applyThemeToWidgets(widgets: Widget[], theme: Theme): Widget[] {
-    const backgroundColor = this.THEME_COLORS[theme].backgroundColor;
-
-    return widgets.map(widget => {
-      const clonedWidget = { ...widget };
-
-      switch (widget.type) {
-        case 'kpi':
-          if (!clonedWidget.kpiConfig) {
-            clonedWidget.kpiConfig = {};
-          }
-          clonedWidget.kpiConfig.kpiContainerBackgroundColor = backgroundColor;
-          break;
-
-        case 'bar':
-          if (!clonedWidget.barConfig) {
-            clonedWidget.barConfig = {};
-          }
-          if (!clonedWidget.barConfig.styling) {
-            clonedWidget.barConfig.styling = {
-              colors: [],
-              showLegend: true,
-              showGrid: true
-            };
-          }
-          clonedWidget.barConfig.styling.backgroundColor = backgroundColor;
-          break;
-
-        case 'line':
-          if (!clonedWidget.lineConfig) {
-            clonedWidget.lineConfig = {};
-          }
-          if (!clonedWidget.lineConfig.styling) {
-            clonedWidget.lineConfig.styling = {
-              colors: [],
-              showLegend: true,
-              showGrid: true
-            };
-          }
-          clonedWidget.lineConfig.styling.backgroundColor = backgroundColor;
-          break;
-
-        case 'pie':
-          if (!clonedWidget.pieConfig) {
-            clonedWidget.pieConfig = {};
-          }
-          if (!clonedWidget.pieConfig.styling) {
-            clonedWidget.pieConfig.styling = {
-              colors: [],
-              showLegend: true,
-              showGrid: true
-            };
-          }
-          clonedWidget.pieConfig.styling.backgroundColor = backgroundColor;
-          break;
-
-        case 'area':
-          if (!clonedWidget.areaConfig) {
-            clonedWidget.areaConfig = {};
-          }
-          if (!clonedWidget.areaConfig.styling) {
-            clonedWidget.areaConfig.styling = {
-              colors: [],
-              showLegend: true,
-              showGrid: true
-            };
-          }
-          clonedWidget.areaConfig.styling.backgroundColor = backgroundColor;
-          break;
-      }
-
-      return clonedWidget;
-    });
+  private static applyThemeToWidgets(widgets: Widget[], theme: ThemeName): Widget[] {
+    return ThemeManager.applyThemeToWidgets(widgets, theme);
   }
 
   static parse(jsonString: string): ParseResult {
@@ -177,7 +90,7 @@ export class ConfigParser {
       // Step 2: Extract widgets, grid config, and theme
       const widgets = (config.widgets || []) as Widget[];
       const rawGridConfig = config.config || {};
-      const theme = config.theme as Theme;
+      const theme = config.theme as ThemeName;
 
       // Step 3: Process grid config with defaults
       const gridConfig: GridConfig = {
@@ -203,8 +116,10 @@ export class ConfigParser {
                typeof widget.title === 'string';
       });
 
-      // Step 5: Apply theme to widgets if theme is specified
-      const themedWidgets = theme ? this.applyThemeToWidgets(validWidgets, theme) : validWidgets;
+      // Step 5: Apply theme to widgets if theme is specified and valid
+      const themedWidgets = (theme && ThemeManager.isValidTheme(theme))
+        ? this.applyThemeToWidgets(validWidgets, theme)
+        : validWidgets;
 
       return {
         widgets: themedWidgets,
