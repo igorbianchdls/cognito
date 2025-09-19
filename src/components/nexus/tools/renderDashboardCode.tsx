@@ -7,7 +7,7 @@ interface RenderDashboardCodeProps {
   success: boolean;
 }
 
-export default function renderDashboardCode({ success }: RenderDashboardCodeProps) {
+export default function RenderDashboardCode({ success }: RenderDashboardCodeProps) {
   const visualBuilderState = useStore($visualBuilderState);
 
   if (!success) {
