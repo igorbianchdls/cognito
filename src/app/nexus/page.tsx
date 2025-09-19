@@ -43,9 +43,23 @@ export default function Page() {
   // Helper function to get API URL based on agent
   const getApiUrl = (agent: string) => {
     switch (agent) {
+      case 'nexus': return '/api/chat-ui';
+      case 'teste': return '/api/teste';
       case 'shopifyAnalyst': return '/api/agents/shopify-analyst';
       case 'metaAnalyst': return '/api/agents/meta-analyst';
       case 'googleAnalyticsAnalyst': return '/api/agents/google-analytics-analyst';
+      case 'amazonAdsAnalyst': return '/api/agents/amazon-ads-analyst';
+      case 'contaAzulAnalyst': return '/api/agents/conta-azul-analyst';
+      case 'shopeeAnalyst': return '/api/agents/shopee-analyst';
+      case 'keywordAnalyst': return '/api/agents/keyword-analyst';
+      case 'googleCampaignAnalyst': return '/api/agents/google-campaign-analyst';
+      case 'metaCampaignAnalyst': return '/api/agents/meta-campaign-analyst';
+      case 'metaCreativeAnalyst': return '/api/agents/meta-creative-analyst';
+      case 'inventoryAnalyst': return '/api/agents/inventory-analyst';
+      case 'cashFlowAnalyst': return '/api/agents/cash-flow-analyst';
+      case 'especialistaDashboard': return '/api/agents/especialista-dashboard';
+      case 'pnlAnalyst': return '/api/agents/pnl-analyst';
+      case 'budgetPlanningAnalyst': return '/api/agents/budget-planning-analyst';
       default: return '/api/agents/shopify-analyst';
     }
   };
