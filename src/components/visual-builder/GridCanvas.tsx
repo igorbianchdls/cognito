@@ -46,14 +46,9 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
   const GRID_WIDTH = 1600;
   const GRID_HEIGHT = 900;
 
-  // Calculate auto-scale based on width first to maintain 16:9
+  // Calculate auto-scale based on width to always use 100% width
   let scale = containerWidth / GRID_WIDTH;
   const scaledHeight = GRID_HEIGHT * scale;
-
-  // If scaled height doesn't fit, use height as constraint
-  if (scaledHeight > containerHeight) {
-    scale = containerHeight / GRID_HEIGHT;
-  }
 
   // Ensure minimum scale for usability
   scale = Math.max(scale, 0.1);
@@ -103,11 +98,11 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
 
   return (
     <div ref={containerRef} className="w-full h-full">
-      {/* Container with forced 16:9 aspect ratio */}
+      {/* Container with calculated height for 16:9 proportion */}
       <div
         className="w-full bg-gray-100"
         style={{
-          aspectRatio: '16/9',
+          height: scaledHeight,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center'
@@ -117,8 +112,8 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
         <div
           className="relative bg-white rounded-lg border border-gray-200 overflow-hidden"
           style={{
-            width: GRID_WIDTH * scale,
-            height: GRID_HEIGHT * scale,
+            width: containerWidth,
+            height: scaledHeight,
             transformOrigin: 'center'
           }}
         >
@@ -141,7 +136,7 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
             breakpoints={{ lg: 0 }}
             cols={{ lg: gridConfig.cols }}
             rowHeight={dynamicRowHeight * scale}
-            width={GRID_WIDTH * scale}
+            width={containerWidth}
             maxRows={gridConfig.maxRows}
             onLayoutChange={handleLayoutChange}
             isDraggable={true}
