@@ -6,6 +6,15 @@ import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import GridCanvas from '@/components/visual-builder/GridCanvas';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 import type { Widget } from '@/stores/visualBuilderStore';
+import {
+  Artifact,
+  ArtifactHeader,
+  ArtifactTitle,
+  ArtifactActions,
+  ArtifactAction,
+  ArtifactContent
+} from '@/components/ai-elements/artifact';
+import { FileText, BarChart3 } from 'lucide-react';
 
 export default function DashboardChatPanel() {
   const [activeTab, setActiveTab] = useState<'editor' | 'dashboard'>('editor');
@@ -25,35 +34,26 @@ export default function DashboardChatPanel() {
   };
 
   return (
-    <div className="h-full bg-white rounded-lg border border-gray-200 flex flex-col">
-      {/* Tab Navigation */}
-      <div className="border-b border-gray-200">
-        <div className="flex">
-          <button
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'editor'
-                ? 'border-blue-500 text-blue-600 bg-blue-50'
-                : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-            }`}
+    <Artifact className="h-full">
+      <ArtifactHeader>
+        <ArtifactTitle>Dashboard Builder</ArtifactTitle>
+        <ArtifactActions>
+          <ArtifactAction
+            icon={FileText}
             onClick={() => setActiveTab('editor')}
-          >
-            📝 Editor
-          </button>
-          <button
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'dashboard'
-                ? 'border-blue-500 text-blue-600 bg-blue-50'
-                : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-            }`}
+            tooltip="Editor"
+            variant={activeTab === 'editor' ? 'default' : 'ghost'}
+          />
+          <ArtifactAction
+            icon={BarChart3}
             onClick={() => setActiveTab('dashboard')}
-          >
-            📊 Dashboard
-          </button>
-        </div>
-      </div>
+            tooltip="Dashboard"
+            variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
+          />
+        </ArtifactActions>
+      </ArtifactHeader>
 
-      {/* Content Area */}
-      <div className="flex-1 overflow-auto">
+      <ArtifactContent className="p-0 overflow-auto">
         {/* Editor Tab */}
         {activeTab === 'editor' && (
           <div className="h-full">
@@ -76,7 +76,7 @@ export default function DashboardChatPanel() {
             />
           </div>
         )}
-      </div>
-    </div>
+      </ArtifactContent>
+    </Artifact>
   );
 }
