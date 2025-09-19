@@ -138,8 +138,8 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
           <ResponsiveGridLayout
             className="layout"
             layouts={{ lg: layout }}
-            breakpoints={{ lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 }}
-            cols={{ lg: gridConfig.cols, md: Math.floor(gridConfig.cols * 0.8), sm: Math.floor(gridConfig.cols * 0.5), xs: Math.floor(gridConfig.cols * 0.3), xxs: Math.floor(gridConfig.cols * 0.2) }}
+            breakpoints={{ lg: 0 }}
+            cols={{ lg: gridConfig.cols }}
             rowHeight={dynamicRowHeight * scale}
             width={GRID_WIDTH * scale}
             maxRows={gridConfig.maxRows}
