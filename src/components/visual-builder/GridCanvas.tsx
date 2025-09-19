@@ -48,7 +48,10 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
 
   // Calculate auto-scale based on width to always use 100% width
   let scale = containerWidth / GRID_WIDTH;
-  const scaledHeight = GRID_HEIGHT * scale;
+
+  // Calculate height based on rows configuration
+  const padding = 32; // containerPadding top + bottom
+  const scaledHeight = (gridConfig.maxRows * gridConfig.rowHeight * scale) + (padding * scale);
 
   // Ensure minimum scale for usability
   scale = Math.max(scale, 0.1);
