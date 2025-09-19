@@ -166,7 +166,18 @@ export const visualBuilderActions = {
   // Atualizar widgets (vem do GridCanvas)
   updateWidgets: (widgets: Widget[]) => {
     const currentState = $visualBuilderState.get()
+
+    // Extrair tema do código atual para preservá-lo
+    let currentTheme = null
+    try {
+      const currentConfig = JSON.parse(currentState.code)
+      currentTheme = currentConfig.theme
+    } catch (error) {
+      console.warn('Erro ao extrair tema do código atual:', error)
+    }
+
     const newCode = JSON.stringify({
+      ...(currentTheme && { theme: currentTheme }),
       config: currentState.gridConfig,
       widgets
     }, null, 2)
