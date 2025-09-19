@@ -48,6 +48,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
   'keywordAnalyst': null,
   'inventoryAnalyst': null,
   'cashFlowAnalyst': null,
+  'especialistaDashboard': null,
   'pnlAnalyst': null,
   'budgetPlanningAnalyst': null,
 };
@@ -67,6 +68,7 @@ const models = [
   { id: 'metaCreativeAnalyst', name: 'MetaCreativeAnalyst', icon: iconMap['metaCreativeAnalyst'] },
   { id: 'inventoryAnalyst', name: 'InventoryAnalyst', icon: iconMap['inventoryAnalyst'] },
   { id: 'cashFlowAnalyst', name: 'CashFlowAnalyst', icon: iconMap['cashFlowAnalyst'] },
+  { id: 'especialistaDashboard', name: 'EspecialistaDashboard', icon: iconMap['especialistaDashboard'] },
   { id: 'pnlAnalyst', name: 'P&LAnalyst', icon: iconMap['pnlAnalyst'] },
   { id: 'budgetPlanningAnalyst', name: 'BudgetPlanningAnalyst', icon: iconMap['budgetPlanningAnalyst'] },
 ];
