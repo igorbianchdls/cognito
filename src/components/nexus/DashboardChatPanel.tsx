@@ -1,88 +1,28 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useStore } from '@nanostores/react';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import GridCanvas from '@/components/visual-builder/GridCanvas';
-import { ConfigParser } from '@/components/visual-builder/ConfigParser';
-import type { Widget, GridConfig, ParseResult } from '@/components/visual-builder/ConfigParser';
+import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
+import type { Widget } from '@/stores/visualBuilderStore';
 
 export default function DashboardChatPanel() {
   const [activeTab, setActiveTab] = useState<'editor' | 'dashboard'>('editor');
+  const visualBuilderState = useStore($visualBuilderState);
 
-  // Estado local para gerenciar código e widgets
-  const [code, setCode] = useState(`{
-  "config": {
-    "maxRows": 8,
-    "rowHeight": 40,
-    "cols": 8
-  },
-  "widgets": [
-    {
-      "id": "kpi1",
-      "type": "kpi",
-      "position": { "x": 0, "y": 0, "w": 2, "h": 2 },
-      "title": "Total Revenue",
-      "dataSource": {
-        "table": "ecommerce",
-        "x": "revenue",
-        "aggregation": "SUM"
-      },
-      "kpiConfig": {
-        "unit": "USD",
-        "kpiValueColor": "#10b981",
-        "kpiContainerBackgroundColor": "#f0fdf4"
-      }
-    },
-    {
-      "id": "chart1",
-      "type": "bar",
-      "position": { "x": 2, "y": 0, "w": 6, "h": 4 },
-      "title": "Sales by Product",
-      "dataSource": {
-        "table": "ecommerce",
-        "x": "product_name",
-        "y": "quantity",
-        "aggregation": "SUM"
-      },
-      "barConfig": {
-        "styling": {
-          "colors": ["#3b82f6", "#10b981"],
-          "backgroundColor": "#fafafa"
-        }
-      }
-    }
-  ]
-}`);
-
-  const [widgets, setWidgets] = useState<Widget[]>([]);
-  const [gridConfig, setGridConfig] = useState<GridConfig>({ maxRows: 8, rowHeight: 40, cols: 8 });
-  const [parseErrors, setParseErrors] = useState<ParseResult['errors']>([]);
+  // Initialize store on mount
+  useEffect(() => {
+    visualBuilderActions.initialize();
+  }, []);
 
   const handleCodeChange = (newCode: string) => {
-    setCode(newCode);
-    const parseResult = ConfigParser.parse(newCode);
-    setWidgets(parseResult.widgets);
-    setGridConfig(parseResult.gridConfig);
-    setParseErrors(parseResult.errors);
+    visualBuilderActions.updateCode(newCode);
   };
 
   const handleLayoutChange = (updatedWidgets: Widget[]) => {
-    setWidgets(updatedWidgets);
-    const newCode = JSON.stringify({
-      config: gridConfig,
-      widgets: updatedWidgets
-    }, null, 2);
-    setCode(newCode);
+    visualBuilderActions.updateWidgets(updatedWidgets);
   };
-
-
-  // Inicializar com código padrão
-  useState(() => {
-    const parseResult = ConfigParser.parse(code);
-    setWidgets(parseResult.widgets);
-    setGridConfig(parseResult.gridConfig);
-    setParseErrors(parseResult.errors);
-  });
 
   return (
     <div className="h-full bg-white rounded-lg border border-gray-200 flex flex-col">
@@ -118,10 +58,10 @@ export default function DashboardChatPanel() {
         {activeTab === 'editor' && (
           <div className="h-full">
             <MonacoEditor
-              value={code}
+              value={visualBuilderState.code}
               onChange={handleCodeChange}
               language="json"
-              errors={parseErrors}
+              errors={visualBuilderState.parseErrors}
             />
           </div>
         )}
@@ -130,8 +70,8 @@ export default function DashboardChatPanel() {
         {activeTab === 'dashboard' && (
           <div className="h-full bg-gray-50 p-4">
             <GridCanvas
-              widgets={widgets}
-              gridConfig={gridConfig}
+              widgets={visualBuilderState.widgets}
+              gridConfig={visualBuilderState.gridConfig}
               onLayoutChange={handleLayoutChange}
             />
           </div>
