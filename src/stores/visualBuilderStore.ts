@@ -16,10 +16,7 @@ interface VisualBuilderState {
   isValid: boolean
 }
 
-const initialState: VisualBuilderState = {
-  widgets: [],
-  gridConfig: { maxRows: 12, rowHeight: 30, cols: 12 },
-  code: `{
+const initialCode = `{
   "config": {
     "maxRows": 12,
     "rowHeight": 30,
@@ -106,12 +103,62 @@ const initialState: VisualBuilderState = {
       }
     }
   ]
-}`,
-  parseErrors: [],
-  isValid: false
+}`
+
+// Parse do código inicial para ter widgets desde o início
+const initialParseResult = ConfigParser.parse(initialCode)
+
+const initialState: VisualBuilderState = {
+  widgets: initialParseResult.widgets,
+  gridConfig: initialParseResult.gridConfig,
+  code: initialCode,
+  parseErrors: initialParseResult.errors,
+  isValid: initialParseResult.isValid
 }
 
-export const $visualBuilderState = atom<VisualBuilderState>(initialState)
+const STORAGE_KEY = 'cognito_visual_builder_state'
+
+// Função para carregar do localStorage
+const loadFromStorage = (): VisualBuilderState | null => {
+  if (typeof window === 'undefined') return null
+
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY)
+    if (saved) {
+      const parsed = JSON.parse(saved)
+      console.log('💾 Visual Builder: Carregado do localStorage', {
+        widgetsCount: parsed.widgets?.length || 0
+      })
+      return parsed
+    }
+  } catch (error) {
+    console.error('❌ Error loading visual builder state:', error)
+  }
+  return null
+}
+
+// Função para salvar no localStorage
+const saveToStorage = (state: VisualBuilderState) => {
+  if (typeof window === 'undefined') return
+
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    console.log('💾 Visual Builder: Salvo no localStorage', {
+      widgetsCount: state.widgets.length
+    })
+  } catch (error) {
+    console.error('❌ Error saving visual builder state:', error)
+  }
+}
+
+// Inicializar store com dados do localStorage ou estado inicial
+const savedState = loadFromStorage()
+export const $visualBuilderState = atom<VisualBuilderState>(savedState || initialState)
+
+// Subscribe para sincronização automática com localStorage
+$visualBuilderState.subscribe((state) => {
+  saveToStorage(state)
+})
 
 // Actions
 export const visualBuilderActions = {
@@ -149,14 +196,37 @@ export const visualBuilderActions = {
 
   // Inicializar store com código padrão
   initialize: () => {
-    const parseResult = ConfigParser.parse(initialState.code)
+    // Se já há estado válido, não sobrescreve
+    const currentState = $visualBuilderState.get()
+    if (currentState.widgets.length > 0) {
+      console.log('🎨 Visual Builder: Estado já inicializado, mantendo widgets existentes')
+      return
+    }
+
+    console.log('🎨 Visual Builder: Inicializando com código padrão')
+    const parseResult = ConfigParser.parse(initialCode)
 
     $visualBuilderState.set({
       widgets: parseResult.widgets,
       gridConfig: parseResult.gridConfig,
-      code: initialState.code,
+      code: initialCode,
       parseErrors: parseResult.errors,
       isValid: parseResult.isValid
     })
+  },
+
+  // Resetar para estado inicial
+  reset: () => {
+    console.log('🔄 Visual Builder: Resetando para estado inicial')
+    $visualBuilderState.set(initialState)
+  },
+
+  // Limpar localStorage e resetar
+  clearStorage: () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(STORAGE_KEY)
+      console.log('🧹 Visual Builder: localStorage limpo')
+    }
+    visualBuilderActions.reset()
   }
 }
