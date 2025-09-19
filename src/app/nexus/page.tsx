@@ -2,7 +2,7 @@
 
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
-import { useState, FormEvent, useEffect, useMemo } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { useStore } from '@nanostores/react';
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
@@ -40,23 +40,25 @@ export default function Page() {
   // State para controlar o modo de visualização
   const [viewMode, setViewMode] = useState<'chat' | 'split' | 'dashboard'>('chat');
 
+  // Helper function to get API URL based on agent
+  const getApiUrl = (agent: string) => {
+    switch (agent) {
+      case 'shopifyAnalyst': return '/api/agents/shopify-analyst';
+      case 'metaAnalyst': return '/api/agents/meta-analyst';
+      case 'googleAnalyticsAnalyst': return '/api/agents/google-analytics-analyst';
+      default: return '/api/agents/shopify-analyst';
+    }
+  };
+
   // Dynamic useChat hook that changes API based on selectedAgent
-  const { messages, sendMessage, status } = useMemo(
-    () => useChat({
-      transport: new DefaultChatTransport({
-        api: selectedAgent === 'shopifyAnalyst' ? '/api/agents/shopify-analyst' :
-             selectedAgent === 'metaAnalyst' ? '/api/agents/meta-analyst' :
-             selectedAgent === 'googleAnalyticsAnalyst' ? '/api/agents/google-analytics-analyst' :
-             '/api/agents/shopify-analyst'
-      }),
-      id: selectedAgent,
-      onFinish: ({ message }) => {
-        console.log(`${selectedAgent.toUpperCase()} terminou:`, message);
-        setAllMessages(prev => [...prev, { ...message, agent: selectedAgent }]);
-      },
-    }),
-    [selectedAgent]
-  );
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({ api: getApiUrl(selectedAgent) }),
+    id: selectedAgent,
+    onFinish: ({ message }) => {
+      console.log(`${selectedAgent.toUpperCase()} terminou:`, message);
+      setAllMessages(prev => [...prev, { ...message, agent: selectedAgent }]);
+    },
+  });
 
   // Combinar histórico + streaming atual (sem duplicatas)
   const displayedMessages = [
