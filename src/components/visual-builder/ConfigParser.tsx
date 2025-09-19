@@ -71,8 +71,7 @@ export class ConfigParser {
   private static DEFAULT_GRID_CONFIG: GridConfig = {
     maxRows: 12,
     rowHeight: 30,
-    cols: 12,
-    containerHeight: 600
+    cols: 12
   };
 
   static parse(jsonString: string): ParseResult {
@@ -91,9 +90,7 @@ export class ConfigParser {
         rowHeight: typeof rawGridConfig.rowHeight === 'number' && rawGridConfig.rowHeight > 0
           ? rawGridConfig.rowHeight : this.DEFAULT_GRID_CONFIG.rowHeight,
         cols: typeof rawGridConfig.cols === 'number' && rawGridConfig.cols > 0
-          ? rawGridConfig.cols : this.DEFAULT_GRID_CONFIG.cols,
-        containerHeight: typeof rawGridConfig.containerHeight === 'number' && rawGridConfig.containerHeight > 0
-          ? rawGridConfig.containerHeight : this.DEFAULT_GRID_CONFIG.containerHeight
+          ? rawGridConfig.cols : this.DEFAULT_GRID_CONFIG.cols
       };
 
       // Step 4: Basic filter for runtime safety only
