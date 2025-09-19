@@ -31,6 +31,8 @@ import { MultipleCharts } from '../tools/MultipleCharts';
 import { MultipleSQL } from '../tools/MultipleSQL';
 import CodeExecutionResult from '../tools/CodeExecutionResult';
 import RenderDashboardCode from './tools/renderDashboardCode';
+import CreateDashboardResult from './tools/CreateDashboardResult';
+import UpdateDashboardResult from './tools/UpdateDashboardResult';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -631,6 +633,20 @@ type GetDashboardCodeToolOutput = {
   message?: string;
 };
 
+type CreateDashboardToolOutput = {
+  success: boolean;
+  generatedJson: string;
+  description: string;
+  message: string;
+};
+
+type UpdateDashboardToolOutput = {
+  success: boolean;
+  updateJson: string;
+  description: string;
+  message: string;
+};
+
 type NexusToolUIPart = ToolUIPart<{
   displayWeather: {
     input: WeatherToolInput;
@@ -711,6 +727,18 @@ type NexusToolUIPart = ToolUIPart<{
   getDashboardCode: {
     input: Record<string, never>;
     output: GetDashboardCodeToolOutput;
+  };
+  createDashboardTool: {
+    input: {
+      dashboardDescription: string;
+    };
+    output: CreateDashboardToolOutput;
+  };
+  updateDashboardTool: {
+    input: {
+      updateDescription: string;
+    };
+    output: UpdateDashboardToolOutput;
   };
 }>;
 
@@ -1568,6 +1596,72 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               {dashboardTool.state === 'output-available' && (
                 <RenderDashboardCode
                   success={(dashboardTool.output as GetDashboardCodeToolOutput).success}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-createDashboardTool') {
+          const createTool = part as NexusToolUIPart;
+          const callId = createTool.toolCallId;
+          const shouldBeOpen = createTool.state === 'output-available' || createTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-createDashboardTool" state={createTool.state} />
+                <ToolContent>
+                  {createTool.input && (
+                    <ToolInput input={createTool.input} />
+                  )}
+                  {createTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={createTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {createTool.state === 'output-available' && (
+                <CreateDashboardResult
+                  success={(createTool.output as CreateDashboardToolOutput).success}
+                  generatedJson={(createTool.output as CreateDashboardToolOutput).generatedJson}
+                  description={(createTool.output as CreateDashboardToolOutput).description}
+                  message={(createTool.output as CreateDashboardToolOutput).message}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-updateDashboardTool') {
+          const updateTool = part as NexusToolUIPart;
+          const callId = updateTool.toolCallId;
+          const shouldBeOpen = updateTool.state === 'output-available' || updateTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-updateDashboardTool" state={updateTool.state} />
+                <ToolContent>
+                  {updateTool.input && (
+                    <ToolInput input={updateTool.input} />
+                  )}
+                  {updateTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={updateTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {updateTool.state === 'output-available' && (
+                <UpdateDashboardResult
+                  success={(updateTool.output as UpdateDashboardToolOutput).success}
+                  updateJson={(updateTool.output as UpdateDashboardToolOutput).updateJson}
+                  description={(updateTool.output as UpdateDashboardToolOutput).description}
+                  message={(updateTool.output as UpdateDashboardToolOutput).message}
                 />
               )}
             </div>
