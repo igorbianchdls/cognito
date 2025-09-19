@@ -50,8 +50,7 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
   let scale = containerWidth / GRID_WIDTH;
 
   // Calculate height based on rows configuration
-  const padding = 32; // containerPadding top + bottom
-  const scaledHeight = (gridConfig.maxRows * gridConfig.rowHeight * scale) + (padding * scale);
+  const scaledHeight = gridConfig.maxRows * gridConfig.rowHeight;
 
   // Ensure minimum scale for usability
   scale = Math.max(scale, 0.1);
