@@ -17,6 +17,7 @@ interface VisualBuilderState {
 }
 
 const initialCode = `{
+  "theme": "dark",
   "config": {
     "maxRows": 12,
     "rowHeight": 30,

@@ -13,6 +13,17 @@ export interface GridConfig {
   containerHeight?: number;
 }
 
+export type Theme = 'light' | 'dark';
+
+export interface ThemeConfig {
+  light: {
+    backgroundColor: string;
+  };
+  dark: {
+    backgroundColor: string;
+  };
+}
+
 export interface Widget {
   id: string;
   type: 'bar' | 'line' | 'pie' | 'area' | 'kpi';
@@ -74,14 +85,83 @@ export class ConfigParser {
     cols: 12
   };
 
+  private static THEME_COLORS: ThemeConfig = {
+    light: {
+      backgroundColor: '#ffffff'
+    },
+    dark: {
+      backgroundColor: '#1a1a1a'
+    }
+  };
+
+  private static applyThemeToWidgets(widgets: Widget[], theme: Theme): Widget[] {
+    const backgroundColor = this.THEME_COLORS[theme].backgroundColor;
+
+    return widgets.map(widget => {
+      const clonedWidget = { ...widget };
+
+      switch (widget.type) {
+        case 'kpi':
+          if (!clonedWidget.kpiConfig) {
+            clonedWidget.kpiConfig = {};
+          }
+          clonedWidget.kpiConfig.kpiContainerBackgroundColor = backgroundColor;
+          break;
+
+        case 'bar':
+          if (!clonedWidget.barConfig) {
+            clonedWidget.barConfig = {};
+          }
+          if (!clonedWidget.barConfig.styling) {
+            clonedWidget.barConfig.styling = {};
+          }
+          clonedWidget.barConfig.styling.backgroundColor = backgroundColor;
+          break;
+
+        case 'line':
+          if (!clonedWidget.lineConfig) {
+            clonedWidget.lineConfig = {};
+          }
+          if (!clonedWidget.lineConfig.styling) {
+            clonedWidget.lineConfig.styling = {};
+          }
+          clonedWidget.lineConfig.styling.backgroundColor = backgroundColor;
+          break;
+
+        case 'pie':
+          if (!clonedWidget.pieConfig) {
+            clonedWidget.pieConfig = {};
+          }
+          if (!clonedWidget.pieConfig.styling) {
+            clonedWidget.pieConfig.styling = {};
+          }
+          clonedWidget.pieConfig.styling.backgroundColor = backgroundColor;
+          break;
+
+        case 'area':
+          if (!clonedWidget.areaConfig) {
+            clonedWidget.areaConfig = {};
+          }
+          if (!clonedWidget.areaConfig.styling) {
+            clonedWidget.areaConfig.styling = {};
+          }
+          clonedWidget.areaConfig.styling.backgroundColor = backgroundColor;
+          break;
+      }
+
+      return clonedWidget;
+    });
+  }
+
   static parse(jsonString: string): ParseResult {
     try {
       // Step 1: Parse JSON (same as chart stores)
       const config = JSON.parse(jsonString);
 
-      // Step 2: Extract widgets and grid config
+      // Step 2: Extract widgets, grid config, and theme
       const widgets = (config.widgets || []) as Widget[];
       const rawGridConfig = config.config || {};
+      const theme = config.theme as Theme;
 
       // Step 3: Process grid config with defaults
       const gridConfig: GridConfig = {
@@ -107,8 +187,11 @@ export class ConfigParser {
                typeof widget.title === 'string';
       });
 
+      // Step 5: Apply theme to widgets if theme is specified
+      const themedWidgets = theme ? this.applyThemeToWidgets(validWidgets, theme) : validWidgets;
+
       return {
-        widgets: validWidgets,
+        widgets: themedWidgets,
         gridConfig,
         errors: [],
         isValid: true
