@@ -53,7 +53,7 @@ export default function DashboardChatPanel() {
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-auto">
         {/* Editor Tab */}
         {activeTab === 'editor' && (
           <div className="h-full">
@@ -68,7 +68,7 @@ export default function DashboardChatPanel() {
 
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
-          <div className="h-full bg-gray-50 p-4">
+          <div className="h-full bg-gray-50 p-4 overflow-auto">
             <GridCanvas
               widgets={visualBuilderState.widgets}
               gridConfig={visualBuilderState.gridConfig}
