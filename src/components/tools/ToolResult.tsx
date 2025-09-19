@@ -32,10 +32,11 @@ export default function ToolResult({ toolCall }: ToolResultProps) {
     switch (toolCall.name) {
       case 'weather':
         return <WeatherCard data={toolCall.result as { location: string; temperature: number; condition: string; humidity: number }} />;
-      
+
       case 'calculator':
         return <CalculatorCard data={toolCall.result as { expression: string; result: number; steps?: string[] }} />;
-      
+
+
       default:
         // Generic result display for unknown tools
         return (

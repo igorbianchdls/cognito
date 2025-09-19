@@ -30,6 +30,7 @@ import { GenerativeChart } from '../tools/GenerativeChart';
 import { MultipleCharts } from '../tools/MultipleCharts';
 import { MultipleSQL } from '../tools/MultipleSQL';
 import CodeExecutionResult from '../tools/CodeExecutionResult';
+import RenderDashboardCode from './tools/renderDashboardCode';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -700,6 +701,14 @@ type NexusToolUIPart = ToolUIPart<{
   code_execution: {
     input: CodeExecutionToolInput;
     output: CodeExecutionToolOutput;
+  };
+  getDashboardCode: {
+    input: {};
+    output: {
+      success: boolean;
+      action?: string;
+      message?: string;
+    };
   };
 }>;
 
@@ -1527,6 +1536,36 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               {codeExecutionTool.state === 'output-available' && (
                 <CodeExecutionResult
                   result={codeExecutionTool.output as CodeExecutionToolOutput}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getDashboardCode') {
+          const dashboardTool = part as NexusToolUIPart;
+          const callId = dashboardTool.toolCallId;
+          const shouldBeOpen = dashboardTool.state === 'output-available' || dashboardTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getDashboardCode" state={dashboardTool.state} />
+                <ToolContent>
+                  {dashboardTool.input && (
+                    <ToolInput input={dashboardTool.input} />
+                  )}
+                  {dashboardTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={dashboardTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {dashboardTool.state === 'output-available' && (
+                <RenderDashboardCode
+                  success={dashboardTool.output?.success as boolean || true}
                 />
               )}
             </div>
