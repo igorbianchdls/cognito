@@ -113,7 +113,11 @@ export class ConfigParser {
             clonedWidget.barConfig = {};
           }
           if (!clonedWidget.barConfig.styling) {
-            clonedWidget.barConfig.styling = {};
+            clonedWidget.barConfig.styling = {
+              colors: [],
+              showLegend: true,
+              showGrid: true
+            };
           }
           clonedWidget.barConfig.styling.backgroundColor = backgroundColor;
           break;
@@ -123,7 +127,11 @@ export class ConfigParser {
             clonedWidget.lineConfig = {};
           }
           if (!clonedWidget.lineConfig.styling) {
-            clonedWidget.lineConfig.styling = {};
+            clonedWidget.lineConfig.styling = {
+              colors: [],
+              showLegend: true,
+              showGrid: true
+            };
           }
           clonedWidget.lineConfig.styling.backgroundColor = backgroundColor;
           break;
@@ -133,7 +141,11 @@ export class ConfigParser {
             clonedWidget.pieConfig = {};
           }
           if (!clonedWidget.pieConfig.styling) {
-            clonedWidget.pieConfig.styling = {};
+            clonedWidget.pieConfig.styling = {
+              colors: [],
+              showLegend: true,
+              showGrid: true
+            };
           }
           clonedWidget.pieConfig.styling.backgroundColor = backgroundColor;
           break;
@@ -143,7 +155,11 @@ export class ConfigParser {
             clonedWidget.areaConfig = {};
           }
           if (!clonedWidget.areaConfig.styling) {
-            clonedWidget.areaConfig.styling = {};
+            clonedWidget.areaConfig.styling = {
+              colors: [],
+              showLegend: true,
+              showGrid: true
+            };
           }
           clonedWidget.areaConfig.styling.backgroundColor = backgroundColor;
           break;
