@@ -635,9 +635,30 @@ type GetDashboardCodeToolOutput = {
 
 type CreateDashboardToolOutput = {
   success: boolean;
-  generatedJson: string;
   description: string;
+  totalWidgets: number;
+  dashboardConfig?: {
+    config: {
+      maxRows: number;
+      rowHeight: number;
+      cols: number;
+    };
+    widgets: Array<{
+      id: string;
+      type: string;
+      position: { x: number; y: number; w: number; h: number };
+      title: string;
+      dataSource: {
+        table: string;
+        x?: string;
+        y?: string;
+        aggregation?: string;
+      };
+    }>;
+  };
+  generatedJson?: string;
   message: string;
+  error?: string;
 };
 
 type UpdateDashboardToolOutput = {
@@ -731,6 +752,23 @@ type NexusToolUIPart = ToolUIPart<{
   createDashboardTool: {
     input: {
       dashboardDescription: string;
+      gridConfig: {
+        maxRows: number;
+        rowHeight: number;
+        cols: number;
+      };
+      widgets: Array<{
+        id: string;
+        type: 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'table';
+        position: { x: number; y: number; w: number; h: number };
+        title: string;
+        dataSource: {
+          table: string;
+          x?: string;
+          y?: string;
+          aggregation?: 'SUM' | 'COUNT' | 'AVG' | 'MIN' | 'MAX';
+        };
+      }>;
     };
     output: CreateDashboardToolOutput;
   };
@@ -1626,9 +1664,12 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               {createTool.state === 'output-available' && (
                 <CreateDashboardResult
                   success={(createTool.output as CreateDashboardToolOutput).success}
-                  generatedJson={(createTool.output as CreateDashboardToolOutput).generatedJson}
                   description={(createTool.output as CreateDashboardToolOutput).description}
+                  totalWidgets={(createTool.output as CreateDashboardToolOutput).totalWidgets}
+                  dashboardConfig={(createTool.output as CreateDashboardToolOutput).dashboardConfig}
+                  generatedJson={(createTool.output as CreateDashboardToolOutput).generatedJson}
                   message={(createTool.output as CreateDashboardToolOutput).message}
+                  error={(createTool.output as CreateDashboardToolOutput).error}
                 />
               )}
             </div>

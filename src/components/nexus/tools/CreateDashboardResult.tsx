@@ -2,16 +2,40 @@
 
 interface CreateDashboardResultProps {
   success: boolean;
-  generatedJson?: string;
   description?: string;
+  totalWidgets?: number;
+  dashboardConfig?: {
+    config: {
+      maxRows: number;
+      rowHeight: number;
+      cols: number;
+    };
+    widgets: Array<{
+      id: string;
+      type: string;
+      position: { x: number; y: number; w: number; h: number };
+      title: string;
+      dataSource: {
+        table: string;
+        x?: string;
+        y?: string;
+        aggregation?: string;
+      };
+    }>;
+  };
+  generatedJson?: string;
   message?: string;
+  error?: string;
 }
 
 export default function CreateDashboardResult({
   success,
-  generatedJson,
   description,
-  message
+  totalWidgets,
+  dashboardConfig,
+  generatedJson,
+  message,
+  error
 }: CreateDashboardResultProps) {
   if (!success) {
     return (
@@ -20,6 +44,9 @@ export default function CreateDashboardResult({
           <span className="text-red-500">❌</span>
           <span className="text-red-700 font-medium">Failed to create dashboard</span>
         </div>
+        {error && (
+          <p className="text-red-600 text-sm mt-2">{error}</p>
+        )}
       </div>
     );
   }
@@ -30,8 +57,13 @@ export default function CreateDashboardResult({
         <span className="text-2xl">🎨</span>
         <span className="font-medium text-green-800">Dashboard Created</span>
         <span className="bg-green-200 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
-          JSON Generated
+          {totalWidgets || 0} widget{(totalWidgets || 0) !== 1 ? 's' : ''}
         </span>
+        {dashboardConfig && (
+          <span className="bg-blue-200 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+            {dashboardConfig.config.cols}×{dashboardConfig.config.maxRows} Grid
+          </span>
+        )}
       </div>
 
       {description && (
@@ -42,6 +74,34 @@ export default function CreateDashboardResult({
 
       {message && (
         <p className="text-green-700 mb-3 text-sm">{message}</p>
+      )}
+
+      {/* Widget Summary */}
+      {dashboardConfig && dashboardConfig.widgets.length > 0 && (
+        <div className="mb-3">
+          <h4 className="text-sm font-medium text-green-800 mb-2">Created Widgets:</h4>
+          <div className="space-y-2">
+            {dashboardConfig.widgets.map((widget, index) => (
+              <div key={widget.id} className="bg-white p-2 rounded border border-green-200">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-sm font-medium text-gray-900">{widget.title}</span>
+                  <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs">
+                    {widget.type.toUpperCase()}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-600">
+                  <span>📊 Table: {widget.dataSource.table}</span>
+                  {widget.dataSource.x && <span> | X: {widget.dataSource.x}</span>}
+                  {widget.dataSource.y && <span> | Y: {widget.dataSource.y}</span>}
+                  {widget.dataSource.aggregation && <span> | Agg: {widget.dataSource.aggregation}</span>}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  Position: ({widget.position.x}, {widget.position.y}) | Size: {widget.position.w}×{widget.position.h}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
 
       {generatedJson && (
