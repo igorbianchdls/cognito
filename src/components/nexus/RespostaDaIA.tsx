@@ -625,6 +625,12 @@ type CodeExecutionToolOutput = {
   executionTime?: number;
 };
 
+type GetDashboardCodeToolOutput = {
+  success: boolean;
+  action?: string;
+  message?: string;
+};
+
 type NexusToolUIPart = ToolUIPart<{
   displayWeather: {
     input: WeatherToolInput;
@@ -704,11 +710,7 @@ type NexusToolUIPart = ToolUIPart<{
   };
   getDashboardCode: {
     input: Record<string, never>;
-    output: {
-      success: boolean;
-      action?: string;
-      message?: string;
-    };
+    output: GetDashboardCodeToolOutput;
   };
 }>;
 
@@ -1565,7 +1567,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {dashboardTool.state === 'output-available' && (
                 <RenderDashboardCode
-                  success={dashboardTool.output?.success as boolean || true}
+                  success={(dashboardTool.output as GetDashboardCodeToolOutput).success}
                 />
               )}
             </div>
