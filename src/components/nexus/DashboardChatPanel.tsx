@@ -46,13 +46,13 @@ export default function DashboardChatPanel() {
             icon={FileText}
             onClick={() => setActiveTab('editor')}
             tooltip="Editor"
-            variant={activeTab === 'editor' ? 'default' : 'ghost'}
+            variant={activeTab === 'editor' ? 'outline' : 'ghost'}
           />
           <ArtifactAction
             icon={BarChart3}
             onClick={() => setActiveTab('dashboard')}
             tooltip="Dashboard"
-            variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
+            variant={activeTab === 'dashboard' ? 'outline' : 'ghost'}
           />
         </ArtifactActions>
       </ArtifactHeader>
