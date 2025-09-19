@@ -15,6 +15,13 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown, MessageSquare, Layout, BarChart3 } from "lucide-react";
 import ChatContainer from '../../components/nexus/ChatContainer';
 import DashboardChatPanel from '../../components/nexus/DashboardChatPanel';
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
@@ -30,8 +37,8 @@ export default function Page() {
   // State para armazenar dados pendentes de análise
   const [pendingAnalysisData, setPendingAnalysisData] = useState<string | null>(null);
 
-  // State para controlar o dashboard panel
-  const [showDashboard, setShowDashboard] = useState(false);
+  // State para controlar o modo de visualização
+  const [viewMode, setViewMode] = useState<'chat' | 'split' | 'dashboard'>('chat');
 
   const chats = {
     nexus: useChat({
@@ -405,25 +412,53 @@ export default function Page() {
             </Breadcrumb>
           </div>
 
-          {/* Dashboard Toggle */}
+          {/* View Mode Dropdown */}
           <div className="flex items-center gap-2 px-4">
-            <button
-              onClick={() => setShowDashboard(!showDashboard)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                showDashboard
-                  ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                  : 'bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200'
-              }`}
-            >
-              <span className="text-lg">📊</span>
-              Dashboard
-            </button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 transition-colors">
+                  {viewMode === 'chat' && <><MessageSquare className="w-4 h-4" /> Chat Only</>}
+                  {viewMode === 'split' && <><Layout className="w-4 h-4" /> Chat + Dashboard</>}
+                  {viewMode === 'dashboard' && <><BarChart3 className="w-4 h-4" /> Dashboard Only</>}
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setViewMode('chat')}>
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Chat Only
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setViewMode('split')}>
+                  <Layout className="w-4 h-4 mr-2" />
+                  Chat + Dashboard
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setViewMode('dashboard')}>
+                  <BarChart3 className="w-4 h-4 mr-2" />
+                  Dashboard Only
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 overflow-hidden" style={{backgroundColor: 'white'}}>
-          {/* Layout condicional baseado no toggle */}
-          {showDashboard ? (
-            // Layout com Dashboard - painéis redimensionáveis
+          {/* Layout condicional baseado no modo de visualização */}
+          {viewMode === 'chat' && (
+            // Chat Only - layout original centralizado
+            <div data-page="nexus" className="mx-auto w-full max-w-5xl h-[calc(100vh-4rem-2rem)]">
+              <ChatContainer
+                messages={displayedMessages}
+                input={input}
+                setInput={setInput}
+                onSubmit={handleSubmit}
+                status={status}
+                selectedAgent={selectedAgent}
+                onAgentChange={setCurrentAgent}
+              />
+            </div>
+          )}
+
+          {viewMode === 'split' && (
+            // Chat + Dashboard - painéis redimensionáveis
             <div data-page="nexus" className="w-full h-[calc(100vh-4rem-2rem)]">
               <PanelGroup direction="horizontal">
                 <Panel defaultSize={50} minSize={30}>
@@ -445,18 +480,12 @@ export default function Page() {
                 </Panel>
               </PanelGroup>
             </div>
-          ) : (
-            // Layout original - centralizado
-            <div data-page="nexus" className="mx-auto w-full max-w-5xl h-[calc(100vh-4rem-2rem)]">
-              <ChatContainer
-                messages={displayedMessages}
-                input={input}
-                setInput={setInput}
-                onSubmit={handleSubmit}
-                status={status}
-                selectedAgent={selectedAgent}
-                onAgentChange={setCurrentAgent}
-              />
+          )}
+
+          {viewMode === 'dashboard' && (
+            // Dashboard Only - 100% largura
+            <div data-page="nexus" className="w-full h-[calc(100vh-4rem-2rem)]">
+              <DashboardChatPanel />
             </div>
           )}
         </div>
