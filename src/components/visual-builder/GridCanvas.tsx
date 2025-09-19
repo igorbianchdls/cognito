@@ -115,7 +115,6 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
           className="relative bg-white rounded-lg border border-gray-200 overflow-hidden"
           style={{
             width: containerWidth,
-            height: scaledHeight,
             transformOrigin: 'center'
           }}
         >
