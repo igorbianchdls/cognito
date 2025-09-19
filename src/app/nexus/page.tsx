@@ -2,7 +2,7 @@
 
 import { useChat } from '@ai-sdk/react';
 import { DefaultChatTransport } from 'ai';
-import { useState, FormEvent, useEffect } from 'react';
+import { useState, FormEvent, useEffect, useMemo } from 'react';
 import { useStore } from '@nanostores/react';
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
@@ -29,7 +29,7 @@ import type { UIMessage } from 'ai';
 import { currentAgent, setCurrentAgent } from '../../stores/nexus/agentStore';
 
 export default function Page() {
-  const selectedAgent = 'shopifyAnalyst';
+  const selectedAgent = useStore(currentAgent);
 
   // Array unificado que guarda TODAS as mensagens em ordem cronológica
   const [allMessages, setAllMessages] = useState<(UIMessage & { agent: string })[]>([]);
@@ -40,171 +40,23 @@ export default function Page() {
   // State para controlar o modo de visualização
   const [viewMode, setViewMode] = useState<'chat' | 'split' | 'dashboard'>('chat');
 
-  const chats = {
-    // nexus: useChat({
-    //   transport: new DefaultChatTransport({ api: '/api/chat-ui' }),
-    //   id: 'nexus-chat',
-    //   onFinish: ({ message }) => {
-    //     console.log('NEXUS terminou:', message);
-    //     setAllMessages(prev => [...prev, { ...message, agent: 'nexus' }]);
-    //   },
-    // }),
-    // teste: useChat({
-    //   transport: new DefaultChatTransport({ api: '/api/teste' }),
-    //   id: 'teste-chat',
-    //   onFinish: ({ message }) => {
-    //     console.log('TESTE terminou:', message);
-    //     setAllMessages(prev => [...prev, { ...message, agent: 'teste' }]);
-    //   },
-    // }),
-    // metaAnalyst: useChat({
-    //   transport: new DefaultChatTransport({ api: '/api/agents/meta-analyst' }),
-    //   id: 'meta-analyst-chat',
-    //   onFinish: ({ message }) => {
-    //     console.log('METAANALYST terminou:', message);
-    //     setAllMessages(prev => [...prev, { ...message, agent: 'metaAnalyst' }]);
-    //   },
-    // }),
-    // amazonAdsAnalyst: useChat({
-    //   transport: new DefaultChatTransport({ api: '/api/agents/amazon-ads-analyst' }),
-    //   id: 'amazon-ads-analyst-chat',
-    //   onFinish: ({ message }) => {
-    //     console.log('AMAZON ADS ANALYST terminou:', message);
-    //     setAllMessages(prev => [...prev, { ...message, agent: 'amazonAdsAnalyst' }]);
-    //   },
-    // }),
-    // googleAnalyticsAnalyst: useChat({
-    //   transport: new DefaultChatTransport({ api: '/api/agents/google-analytics-analyst' }),
-    //   id: 'google-analytics-analyst-chat',
-    //   onFinish: ({ message }) => {
-    //     console.log('GOOGLE ANALYTICS ANALYST terminou:', message);
-    //     setAllMessages(prev => [...prev, { ...message, agent: 'googleAnalyticsAnalyst' }]);
-    //   },
-    // }),
-    shopifyAnalyst: useChat({
-      transport: new DefaultChatTransport({ api: '/api/agents/shopify-analyst' }),
-      id: 'shopify-analyst-chat',
+  // Dynamic useChat hook that changes API based on selectedAgent
+  const { messages, sendMessage, status } = useMemo(
+    () => useChat({
+      transport: new DefaultChatTransport({
+        api: selectedAgent === 'shopifyAnalyst' ? '/api/agents/shopify-analyst' :
+             selectedAgent === 'metaAnalyst' ? '/api/agents/meta-analyst' :
+             selectedAgent === 'googleAnalyticsAnalyst' ? '/api/agents/google-analytics-analyst' :
+             '/api/agents/shopify-analyst'
+      }),
+      id: selectedAgent,
       onFinish: ({ message }) => {
-        console.log('SHOPIFY ANALYST terminou:', message);
-        setAllMessages(prev => [...prev, { ...message, agent: 'shopifyAnalyst' }]);
+        console.log(`${selectedAgent.toUpperCase()} terminou:`, message);
+        setAllMessages(prev => [...prev, { ...message, agent: selectedAgent }]);
       },
     }),
-    // contaAzulAnalyst: useChat({
-    //   transport: new DefaultChatTransport({ api: '/api/agents/conta-azul-analyst' }),
-    //   id: 'conta-azul-analyst-chat',
-    //   onFinish: ({ message }) => {
-    //     console.log('CONTA AZUL ANALYST terminou:', message);
-    //     setAllMessages(prev => [...prev, { ...message, agent: 'contaAzulAnalyst' }]);
-    //   },
-    // }),
-    // shopeeAnalyst: useChat({
-    //   transport: new DefaultChatTransport({ api: '/api/agents/shopee-analyst' }),
-    //   id: 'shopee-analyst-chat',
-    //   onFinish: ({ message }) => {
-    //     console.log('SHOPEE ANALYST terminou:', message);
-    //     setAllMessages(prev => [...prev, { ...message, agent: 'shopeeAnalyst' }]);
-    //   },
-    // }),
-    // keywordAnalyst: useChat({
-    //   transport: new DefaultChatTransport({ api: '/api/agents/keyword-analyst' }),
-    //   id: 'keyword-analyst-chat',
-    //   onFinish: ({ message }) => {
-    //     console.log('KEYWORD ANALYST terminou:', message);
-    //     setAllMessages(prev => [...prev, { ...message, agent: 'keywordAnalyst' }]);
-    //   },
-    // }),
-    // googleCampaignAnalyst: useChat({
-    //   transport: new DefaultChatTransport({ api: '/api/agents/google-campaign-analyst' }),
-    //   id: 'google-campaign-analyst-chat',
-    //   onFinish: ({ message }) => {
-    //     console.log('GOOGLE CAMPAIGN ANALYST terminou:', message);
-    //     setAllMessages(prev => [...prev, { ...message, agent: 'googleCampaignAnalyst' }]);
-    //   },
-    // }),
-    // metaCampaignAnalyst: useChat({
-    //   transport: new DefaultChatTransport({ api: '/api/agents/meta-campaign-analyst' }),
-    //   id: 'meta-campaign-analyst-chat',
-    //   onFinish: ({ message }) => {
-    //     console.log('META CAMPAIGN ANALYST terminou:', message);
-    //     setAllMessages(prev => [...prev, { ...message, agent: 'metaCampaignAnalyst' }]);
-    //   },
-    // }),
-    // metaCreativeAnalyst: useChat({
-    //   transport: new DefaultChatTransport({ api: '/api/agents/meta-creative-analyst' }),
-    //   id: 'meta-creative-analyst-chat',
-    //   onFinish: ({ message }) => {
-    //     console.log('META CREATIVE ANALYST terminou:', message);
-    //     setAllMessages(prev => [...prev, { ...message, agent: 'metaCreativeAnalyst' }]);
-    //   },
-    // }),
-    // inventoryAnalyst: useChat({
-    //   transport: new DefaultChatTransport({ api: '/api/agents/inventory-analyst' }),
-    //   id: 'inventory-analyst-chat',
-    //   onFinish: ({ message }) => {
-    //     console.log('INVENTORY ANALYST terminou:', message);
-    //     setAllMessages(prev => [...prev, { ...message, agent: 'inventoryAnalyst' }]);
-    //   },
-    // }),
-    // cashFlowAnalyst: useChat({
-    //   transport: new DefaultChatTransport({ api: '/api/agents/cash-flow-analyst' }),
-    //   id: 'cash-flow-analyst-chat',
-    //   onFinish: ({ message }) => {
-    //     console.log('CASH FLOW ANALYST terminou:', message);
-    //     setAllMessages(prev => [...prev, { ...message, agent: 'cashFlowAnalyst' }]);
-    //   },
-    // }),
-    // especialistaDashboard: useChat({
-    //   transport: new DefaultChatTransport({ api: '/api/agents/especialista-dashboard' }),
-    //   id: 'especialista-dashboard-chat',
-    //   onFinish: ({ message }) => {
-    //     console.log('ESPECIALISTA DASHBOARD terminou:', message);
-    //     setAllMessages(prev => [...prev, { ...message, agent: 'especialistaDashboard' }]);
-    //   },
-    // }),
-    // pnlAnalyst: useChat({
-    //   transport: new DefaultChatTransport({ api: '/api/agents/pnl-analyst' }),
-    //   id: 'pnl-analyst-chat',
-    //   onFinish: ({ message }) => {
-    //     console.log('P&L ANALYST terminou:', message);
-    //     setAllMessages(prev => [...prev, { ...message, agent: 'pnlAnalyst' }]);
-    //   },
-    // }),
-    // budgetPlanningAnalyst: useChat({
-    //   transport: new DefaultChatTransport({ api: '/api/agents/budget-planning-analyst' }),
-    //   id: 'budget-planning-analyst-chat',
-    //   onFinish: ({ message }) => {
-    //     console.log('BUDGET PLANNING ANALYST terminou:', message);
-    //     setAllMessages(prev => [...prev, { ...message, agent: 'budgetPlanningAnalyst' }]);
-    //   },
-    // }),
-    // tiktokAdsAnalyst: useChat({
-    //   transport: new DefaultChatTransport({ api: '/api/agents/tiktok-ads-analyst' }),
-    //   id: 'tiktok-ads-analyst-chat',
-    //   onFinish: ({ message }) => {
-    //     console.log('TIKTOK ADS ANALYST terminou:', message);
-    //     setAllMessages(prev => [...prev, { ...message, agent: 'tiktokAdsAnalyst' }]);
-    //   },
-    // }),
-    // customerServiceAnalyst: useChat({
-    //   transport: new DefaultChatTransport({ api: '/api/agents/customer-service-analyst' }),
-    //   id: 'customer-service-analyst-chat',
-    //   onFinish: ({ message }) => {
-    //     console.log('CUSTOMER SERVICE ANALYST terminou:', message);
-    //     setAllMessages(prev => [...prev, { ...message, agent: 'customerServiceAnalyst' }]);
-    //   },
-    // }),
-    // taxComplianceAnalyst: useChat({
-    //   transport: new DefaultChatTransport({ api: '/api/agents/tax-compliance-analyst' }),
-    //   id: 'tax-compliance-analyst-chat',
-    //   onFinish: ({ message }) => {
-    //     console.log('TAX COMPLIANCE ANALYST terminou:', message);
-    //     setAllMessages(prev => [...prev, { ...message, agent: 'taxComplianceAnalyst' }]);
-    //   },
-    // }),
-  };
-
-  // Escolhe qual hook vai enviar a próxima mensagem E pegar streaming
-  const { messages, sendMessage, status } = (chats as Record<string, ReturnType<typeof useChat>>)[selectedAgent] || chats.shopifyAnalyst;
+    [selectedAgent]
+  );
 
   // Combinar histórico + streaming atual (sem duplicatas)
   const displayedMessages = [
