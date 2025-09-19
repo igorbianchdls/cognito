@@ -6,60 +6,12 @@ import type { BarChartConfig } from '@/stores/apps/barChartStore';
 import type { LineChartConfig } from '@/stores/apps/lineChartStore';
 import type { PieChartConfig } from '@/stores/apps/pieChartStore';
 import type { AreaChartConfig } from '@/stores/apps/areaChartStore';
+import { THEME_TOKENS, type ThemeTokenName, type DesignTokens } from './DesignTokens';
 
-// Theme type definition
-export type ThemeName = 'light' | 'dark' | 'blue' | 'green' | 'corporate';
+// Re-export theme name type for compatibility
+export type ThemeName = ThemeTokenName;
 
-// Theme definition interface - expandable for future properties
-export interface ThemeDefinition {
-  backgroundColor: string;
-  textColor: string;
-  borderColor: string;
-  shadowColor: string;
-  // Future properties can be added here:
-  // gradientStart?: string;
-  // gradientEnd?: string;
-  // accentColor?: string;
-  // successColor?: string;
-  // warningColor?: string;
-  // errorColor?: string;
-}
-
-// All available themes
-export const THEMES: Record<ThemeName, ThemeDefinition> = {
-  light: {
-    backgroundColor: '#ffffff',
-    textColor: '#1e293b',
-    borderColor: '#e2e8f0',
-    shadowColor: '#00000010'
-  },
-  dark: {
-    backgroundColor: '#1a1a1a',
-    textColor: '#f1f5f9',
-    borderColor: '#374151',
-    shadowColor: '#00000040'
-  },
-  blue: {
-    backgroundColor: '#1e40af',
-    textColor: '#dbeafe',
-    borderColor: '#3b82f6',
-    shadowColor: '#1e40af20'
-  },
-  green: {
-    backgroundColor: '#166534',
-    textColor: '#dcfce7',
-    borderColor: '#22c55e',
-    shadowColor: '#16653420'
-  },
-  corporate: {
-    backgroundColor: '#f8fafc',
-    textColor: '#334155',
-    borderColor: '#cbd5e1',
-    shadowColor: '#00000008'
-  }
-};
-
-// Default chart styling values
+// Default chart styling values using design tokens
 const DEFAULT_CHART_STYLING = {
   colors: [],
   showLegend: true,
@@ -71,44 +23,45 @@ export class ThemeManager {
    * Validates if a theme name is supported
    */
   static isValidTheme(themeName: string): themeName is ThemeName {
-    return themeName in THEMES;
+    return themeName in THEME_TOKENS;
   }
 
   /**
-   * Gets theme definition by name
+   * Gets design tokens by theme name
    */
-  static getTheme(themeName: ThemeName): ThemeDefinition {
-    return THEMES[themeName];
+  static getThemeTokens(themeName: ThemeName): DesignTokens {
+    return THEME_TOKENS[themeName];
   }
 
   /**
    * Gets all available theme names
    */
   static getAvailableThemes(): ThemeName[] {
-    return Object.keys(THEMES) as ThemeName[];
+    return Object.keys(THEME_TOKENS) as ThemeName[];
   }
 
   /**
-   * Applies theme to a single KPI widget
+   * Applies design tokens to a single KPI widget
    */
-  private static applyThemeToKPI(widget: Widget, theme: ThemeDefinition): Widget {
+  private static applyThemeToKPI(widget: Widget, tokens: DesignTokens): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.kpiConfig) {
       clonedWidget.kpiConfig = {} as KPIConfig;
     }
 
-    // Apply theme properties to KPI
-    clonedWidget.kpiConfig.kpiContainerBackgroundColor = theme.backgroundColor;
-    clonedWidget.kpiConfig.kpiValueColor = theme.textColor;
+    // Apply design tokens to KPI with semantic meaning
+    clonedWidget.kpiConfig.kpiContainerBackgroundColor = tokens.colors.surface;
+    clonedWidget.kpiConfig.kpiValueColor = tokens.colors.text.primary;
+    clonedWidget.kpiConfig.kpiNameColor = tokens.colors.text.secondary;
 
     return clonedWidget;
   }
 
   /**
-   * Applies theme to a single Bar Chart widget
+   * Applies design tokens to a single Bar Chart widget
    */
-  private static applyThemeToBarChart(widget: Widget, theme: ThemeDefinition): Widget {
+  private static applyThemeToBarChart(widget: Widget, tokens: DesignTokens): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.barConfig) {
@@ -119,18 +72,34 @@ export class ThemeManager {
       clonedWidget.barConfig.styling = { ...DEFAULT_CHART_STYLING };
     }
 
-    // Apply theme properties to Bar Chart
-    clonedWidget.barConfig.styling.backgroundColor = theme.backgroundColor;
-    clonedWidget.barConfig.styling.titleColor = theme.textColor;
-    clonedWidget.barConfig.styling.axisTextColor = theme.textColor;
+    // Apply design tokens to Bar Chart with rich theming
+    clonedWidget.barConfig.styling.backgroundColor = tokens.colors.surface;
+    clonedWidget.barConfig.styling.titleColor = tokens.colors.text.primary;
+    clonedWidget.barConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
+    clonedWidget.barConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
+
+    clonedWidget.barConfig.styling.axisTextColor = tokens.colors.text.secondary;
+    clonedWidget.barConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
+
+    clonedWidget.barConfig.styling.colors = [
+      tokens.colors.chart.primary,
+      tokens.colors.chart.secondary,
+      tokens.colors.chart.tertiary,
+      tokens.colors.chart.quaternary
+    ];
+
+    clonedWidget.barConfig.styling.containerBorderColor = tokens.colors.border;
+    clonedWidget.barConfig.styling.containerBorderWidth = tokens.borders.width.thin;
+    clonedWidget.barConfig.styling.containerBorderRadius = tokens.borders.radius.md;
+    clonedWidget.barConfig.styling.containerShadowColor = tokens.shadows.medium;
 
     return clonedWidget;
   }
 
   /**
-   * Applies theme to a single Line Chart widget
+   * Applies design tokens to a single Line Chart widget
    */
-  private static applyThemeToLineChart(widget: Widget, theme: ThemeDefinition): Widget {
+  private static applyThemeToLineChart(widget: Widget, tokens: DesignTokens): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.lineConfig) {
@@ -141,18 +110,26 @@ export class ThemeManager {
       clonedWidget.lineConfig.styling = { ...DEFAULT_CHART_STYLING };
     }
 
-    // Apply theme properties to Line Chart
-    clonedWidget.lineConfig.styling.backgroundColor = theme.backgroundColor;
-    clonedWidget.lineConfig.styling.titleColor = theme.textColor;
-    clonedWidget.lineConfig.styling.axisTextColor = theme.textColor;
+    // Apply design tokens to Line Chart
+    clonedWidget.lineConfig.styling.backgroundColor = tokens.colors.surface;
+    clonedWidget.lineConfig.styling.titleColor = tokens.colors.text.primary;
+    clonedWidget.lineConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
+    clonedWidget.lineConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
+
+    clonedWidget.lineConfig.styling.axisTextColor = tokens.colors.text.secondary;
+    clonedWidget.lineConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
+
+    clonedWidget.lineConfig.styling.colors = [tokens.colors.chart.primary];
+    clonedWidget.lineConfig.styling.containerBorderColor = tokens.colors.border;
+    clonedWidget.lineConfig.styling.containerBorderRadius = tokens.borders.radius.md;
 
     return clonedWidget;
   }
 
   /**
-   * Applies theme to a single Pie Chart widget
+   * Applies design tokens to a single Pie Chart widget
    */
-  private static applyThemeToPieChart(widget: Widget, theme: ThemeDefinition): Widget {
+  private static applyThemeToPieChart(widget: Widget, tokens: DesignTokens): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.pieConfig) {
@@ -163,18 +140,29 @@ export class ThemeManager {
       clonedWidget.pieConfig.styling = { ...DEFAULT_CHART_STYLING };
     }
 
-    // Apply theme properties to Pie Chart
-    clonedWidget.pieConfig.styling.backgroundColor = theme.backgroundColor;
-    clonedWidget.pieConfig.styling.titleColor = theme.textColor;
-    clonedWidget.pieConfig.styling.axisTextColor = theme.textColor;
+    // Apply design tokens to Pie Chart
+    clonedWidget.pieConfig.styling.backgroundColor = tokens.colors.surface;
+    clonedWidget.pieConfig.styling.titleColor = tokens.colors.text.primary;
+    clonedWidget.pieConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
+    clonedWidget.pieConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
+
+    clonedWidget.pieConfig.styling.colors = [
+      tokens.colors.chart.primary,
+      tokens.colors.chart.secondary,
+      tokens.colors.chart.tertiary,
+      tokens.colors.chart.quaternary
+    ];
+
+    clonedWidget.pieConfig.styling.containerBorderColor = tokens.colors.border;
+    clonedWidget.pieConfig.styling.containerBorderRadius = tokens.borders.radius.md;
 
     return clonedWidget;
   }
 
   /**
-   * Applies theme to a single Area Chart widget
+   * Applies design tokens to a single Area Chart widget
    */
-  private static applyThemeToAreaChart(widget: Widget, theme: ThemeDefinition): Widget {
+  private static applyThemeToAreaChart(widget: Widget, tokens: DesignTokens): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.areaConfig) {
@@ -185,16 +173,24 @@ export class ThemeManager {
       clonedWidget.areaConfig.styling = { ...DEFAULT_CHART_STYLING };
     }
 
-    // Apply theme properties to Area Chart
-    clonedWidget.areaConfig.styling.backgroundColor = theme.backgroundColor;
-    clonedWidget.areaConfig.styling.titleColor = theme.textColor;
-    clonedWidget.areaConfig.styling.axisTextColor = theme.textColor;
+    // Apply design tokens to Area Chart
+    clonedWidget.areaConfig.styling.backgroundColor = tokens.colors.surface;
+    clonedWidget.areaConfig.styling.titleColor = tokens.colors.text.primary;
+    clonedWidget.areaConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
+    clonedWidget.areaConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
+
+    clonedWidget.areaConfig.styling.axisTextColor = tokens.colors.text.secondary;
+    clonedWidget.areaConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
+
+    clonedWidget.areaConfig.styling.colors = [tokens.colors.chart.primary];
+    clonedWidget.areaConfig.styling.containerBorderColor = tokens.colors.border;
+    clonedWidget.areaConfig.styling.containerBorderRadius = tokens.borders.radius.md;
 
     return clonedWidget;
   }
 
   /**
-   * Applies theme to a single widget based on its type
+   * Applies design tokens to a single widget based on its type
    */
   static applyThemeToWidget(widget: Widget, themeName: ThemeName): Widget {
     if (!this.isValidTheme(themeName)) {
@@ -202,19 +198,19 @@ export class ThemeManager {
       return widget;
     }
 
-    const theme = this.getTheme(themeName);
+    const tokens = this.getThemeTokens(themeName);
 
     switch (widget.type) {
       case 'kpi':
-        return this.applyThemeToKPI(widget, theme);
+        return this.applyThemeToKPI(widget, tokens);
       case 'bar':
-        return this.applyThemeToBarChart(widget, theme);
+        return this.applyThemeToBarChart(widget, tokens);
       case 'line':
-        return this.applyThemeToLineChart(widget, theme);
+        return this.applyThemeToLineChart(widget, tokens);
       case 'pie':
-        return this.applyThemeToPieChart(widget, theme);
+        return this.applyThemeToPieChart(widget, tokens);
       case 'area':
-        return this.applyThemeToAreaChart(widget, theme);
+        return this.applyThemeToAreaChart(widget, tokens);
       default:
         console.warn(`Unknown widget type: ${widget.type}. Skipping theme application.`);
         return widget;
@@ -222,7 +218,7 @@ export class ThemeManager {
   }
 
   /**
-   * Applies theme to multiple widgets
+   * Applies design tokens to multiple widgets
    */
   static applyThemeToWidgets(widgets: Widget[], themeName: ThemeName): Widget[] {
     return widgets.map(widget => this.applyThemeToWidget(widget, themeName));
@@ -231,20 +227,48 @@ export class ThemeManager {
   /**
    * Gets theme preview/description for UI
    */
-  static getThemePreview(themeName: ThemeName): { name: string; description: string; colors: ThemeDefinition } {
-    const theme = this.getTheme(themeName);
+  static getThemePreview(themeName: ThemeName): {
+    name: string;
+    description: string;
+    tokens: DesignTokens;
+    primaryColor: string;
+    backgroundColor: string;
+  } {
+    const tokens = this.getThemeTokens(themeName);
 
     const previews = {
       light: { name: 'Light', description: 'Clean white background with dark text' },
-      dark: { name: 'Dark', description: 'Dark background with light text' },
-      blue: { name: 'Blue', description: 'Professional blue theme' },
+      dark: { name: 'Dark', description: 'Modern dark theme with enhanced contrast' },
+      blue: { name: 'Blue', description: 'Professional blue ocean theme' },
       green: { name: 'Green', description: 'Nature-inspired green theme' },
-      corporate: { name: 'Corporate', description: 'Professional light gray theme' }
+      corporate: { name: 'Corporate', description: 'Professional business gray theme' }
     };
 
     return {
       ...previews[themeName],
-      colors: theme
+      tokens,
+      primaryColor: tokens.colors.primary,
+      backgroundColor: tokens.colors.background
+    };
+  }
+
+  /**
+   * Gets color palette for a theme (useful for UI color pickers)
+   */
+  static getThemeColorPalette(themeName: ThemeName) {
+    const tokens = this.getThemeTokens(themeName);
+    return {
+      primary: tokens.colors.primary,
+      secondary: tokens.colors.secondary,
+      accent: tokens.colors.accent,
+      surface: tokens.colors.surface,
+      background: tokens.colors.background,
+      chartColors: [
+        tokens.colors.chart.primary,
+        tokens.colors.chart.secondary,
+        tokens.colors.chart.tertiary,
+        tokens.colors.chart.quaternary
+      ]
     };
   }
 }
