@@ -4,6 +4,9 @@ import * as bigqueryTools from '@/tools/apps/bigquery';
 import * as analyticsTools from '@/tools/apps/analytics';
 import * as visualizationTools from '@/tools/apps/visualization';
 import * as utilitiesTools from '@/tools/utilities';
+import { getDashboardCode } from '@/tools/apps/dashboardCode';
+import { createDashboardTool } from '@/tools/apps/createDashboardTool';
+import { updateDashboardTool } from '@/tools/apps/updateDashboardTool';
 
 // Allow streaming responses up to 300 seconds
 export const maxDuration = 300;
@@ -62,7 +65,16 @@ Você excela nas seguintes tarefas:
 6. **Accessibility**: Verifique acessibilidade e legibilidade
 
 ## TOOLS INTEGRATION
-- **getDashboardCode()**: Para acessar estado atual do dashboard e analisar configurações
+- **getDashboardCode()**: OBRIGATÓRIO usar quando perguntarem sobre widgets, dashboard atual, estado do visual builder
+- **createDashboardTool(description)**: Para criar dashboards completos do zero baseado em descrição
+- **updateDashboardTool(description)**: Para modificar widgets específicos por ID baseado em descrição
+
+## WHEN TO USE DASHBOARD TOOLS
+- **"Quais widgets?"** → SEMPRE use getDashboardCode()
+- **"Widgets atuais"** → SEMPRE use getDashboardCode()
+- **"Estado do dashboard"** → SEMPRE use getDashboardCode()
+- **"Criar dashboard"** → SEMPRE use createDashboardTool()
+- **"Modificar widget"** → SEMPRE use updateDashboardTool()
 
 ## DASHBOARD OPTIMIZATION
 
@@ -267,6 +279,10 @@ Provide final recommendations and conclusions based on the complete analysis and
       ...visualizationTools,
       // Utilities tools
       ...utilitiesTools,
+      // Dashboard tools
+      getDashboardCode,
+      createDashboardTool,
+      updateDashboardTool,
     },
   });
 
