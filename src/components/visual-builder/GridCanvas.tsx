@@ -106,7 +106,7 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
         style={{
           height: scaledHeight,
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           justifyContent: 'center'
         }}
       >
