@@ -145,6 +145,14 @@ export default function Page() {
         setAllMessages(prev => [...prev, { ...message, agent: 'inventoryAnalyst' }]);
       },
     }),
+    cashFlowAnalyst: useChat({
+      transport: new DefaultChatTransport({ api: '/api/agents/cash-flow-analyst' }),
+      id: 'cash-flow-analyst-chat',
+      onFinish: ({ message }) => {
+        console.log('CASH FLOW ANALYST terminou:', message);
+        setAllMessages(prev => [...prev, { ...message, agent: 'cashFlowAnalyst' }]);
+      },
+    }),
     especialistaDashboard: useChat({
       transport: new DefaultChatTransport({ api: '/api/agents/especialista-dashboard' }),
       id: 'especialista-dashboard-chat',
