@@ -703,7 +703,7 @@ type NexusToolUIPart = ToolUIPart<{
     output: CodeExecutionToolOutput;
   };
   getDashboardCode: {
-    input: {};
+    input: Record<string, never>;
     output: {
       success: boolean;
       action?: string;
