@@ -85,9 +85,6 @@ Sempre estruture: estado atual → problemas identificados → recomendações d
 Foque em recomendações práticas que melhorem a experiência do usuário e a efetividade do dashboard.`,
     
     messages: convertToModelMessages(messages),
-    
-    // Sistema simplificado para análise de dashboard
-    system: `Você é um assistente especializado em análise de dashboards. Use a tool getDashboardCode para acessar o estado atual do dashboard e fornecer insights e recomendações.`,
     providerOptions: {
       anthropic: {
         thinking: { type: 'enabled', budgetTokens: 15000 }
