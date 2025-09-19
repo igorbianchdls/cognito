@@ -14,8 +14,7 @@ export default function DashboardChatPanel() {
   "config": {
     "maxRows": 8,
     "rowHeight": 40,
-    "cols": 8,
-    "containerHeight": 400
+    "cols": 8
   },
   "widgets": [
     {
@@ -56,7 +55,7 @@ export default function DashboardChatPanel() {
 }`);
 
   const [widgets, setWidgets] = useState<Widget[]>([]);
-  const [gridConfig, setGridConfig] = useState<GridConfig>({ maxRows: 8, rowHeight: 40, cols: 8, containerHeight: 400 });
+  const [gridConfig, setGridConfig] = useState<GridConfig>({ maxRows: 8, rowHeight: 40, cols: 8 });
   const [parseErrors, setParseErrors] = useState<ParseResult['errors']>([]);
 
   const handleCodeChange = (newCode: string) => {
