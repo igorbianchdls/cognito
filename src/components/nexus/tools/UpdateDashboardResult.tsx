@@ -1,5 +1,10 @@
 'use client';
 
+interface UpdateItem {
+  id: string;
+  changes: Record<string, unknown>;
+}
+
 interface UpdateDashboardResultProps {
   success: boolean;
   updateJson?: string;
@@ -25,7 +30,7 @@ export default function UpdateDashboardResult({
   }
 
   // Parse updates to show summary
-  let parsedUpdates: any[] = [];
+  let parsedUpdates: UpdateItem[] = [];
   if (updateJson) {
     try {
       const parsed = JSON.parse(updateJson);
