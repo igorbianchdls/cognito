@@ -1,6 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
 import { getDashboardCode } from '@/tools/apps/dashboardCode';
+import { createDashboardTool } from '@/tools/apps/createDashboardTool';
 
 export const maxDuration = 300;
 
@@ -95,6 +96,7 @@ Foque em recomendações práticas que melhorem a experiência do usuário e a e
     },
     tools: {
       getDashboardCode,
+      createDashboardTool,
     },
   });
 
