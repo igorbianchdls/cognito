@@ -6,6 +6,16 @@ import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, RefreshCw, Play } from 'lucide-react';
+import type { Widget } from '@/components/visual-builder/ConfigParser';
+
+interface UpdateItem {
+  id: string;
+  changes: Partial<Widget>;
+}
+
+interface UpdatesData {
+  updates: UpdateItem[];
+}
 
 interface UpdateDashboardToolProps {
   success: boolean;
@@ -27,14 +37,14 @@ export default function UpdateDashboardTool({
   const applyUpdates = () => {
     try {
       // Parse do JSON de updates
-      const updatesData = JSON.parse(editableUpdateJson);
+      const updatesData = JSON.parse(editableUpdateJson) as UpdatesData;
 
       // Parse do estado atual do dashboard
       const currentDashboard = JSON.parse(visualBuilderState.code);
 
       // Aplica updates nos widgets específicos por ID
-      const updatedWidgets = currentDashboard.widgets.map((widget: any) => {
-        const update = updatesData.updates.find((u: any) => u.id === widget.id);
+      const updatedWidgets = currentDashboard.widgets.map((widget: Widget) => {
+        const update = updatesData.updates.find((u: UpdateItem) => u.id === widget.id);
 
         if (update) {
           // Merge profundo das mudanças
