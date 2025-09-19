@@ -100,24 +100,14 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
 
   return (
     <div ref={containerRef} className="w-full h-full">
-      {/* Container with calculated height for 16:9 proportion */}
+      {/* Grid container */}
       <div
-        className="w-full bg-gray-100"
+        className="relative bg-white rounded-lg border border-gray-200 overflow-hidden"
         style={{
-          height: scaledHeight,
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'center'
+          width: containerWidth,
+          transformOrigin: 'center'
         }}
       >
-        {/* Auto-scaled grid container */}
-        <div
-          className="relative bg-white rounded-lg border border-gray-200 overflow-hidden"
-          style={{
-            width: containerWidth,
-            transformOrigin: 'center'
-          }}
-        >
         {/* Empty State */}
         {widgets.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -160,7 +150,6 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
         {/* Grid Info */}
         <div className="absolute bottom-4 right-4 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg">
           Grid: {gridConfig.cols}×{gridConfig.maxRows} | Scale: {Math.round(scale * 100)}%
-        </div>
         </div>
       </div>
     </div>
