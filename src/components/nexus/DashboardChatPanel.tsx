@@ -10,6 +10,7 @@ import {
   Artifact,
   ArtifactHeader,
   ArtifactTitle,
+  ArtifactDescription,
   ArtifactActions,
   ArtifactAction,
   ArtifactContent
@@ -35,8 +36,11 @@ export default function DashboardChatPanel() {
 
   return (
     <Artifact className="h-full">
-      <ArtifactHeader>
-        <ArtifactTitle>Dashboard Builder</ArtifactTitle>
+      <ArtifactHeader className="bg-white">
+        <div>
+          <ArtifactTitle>Dashboard Builder</ArtifactTitle>
+          <ArtifactDescription>Visual dashboard creation tool</ArtifactDescription>
+        </div>
         <ArtifactActions>
           <ArtifactAction
             icon={FileText}
