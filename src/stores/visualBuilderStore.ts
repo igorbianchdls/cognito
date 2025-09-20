@@ -167,18 +167,21 @@ export const visualBuilderActions = {
   updateWidgets: (widgets: Widget[]) => {
     const currentState = $visualBuilderState.get()
 
-    // Extrair tema do código atual para preservá-lo
+    // Extrair tema e config do código atual para preservá-los
     let currentTheme = null
+    let currentConfig = null
     try {
-      const currentConfig = JSON.parse(currentState.code)
-      currentTheme = currentConfig.theme
+      const parsedCode = JSON.parse(currentState.code)
+      currentTheme = parsedCode.theme
+      currentConfig = parsedCode.config
     } catch (error) {
-      console.warn('Erro ao extrair tema do código atual:', error)
+      console.warn('Erro ao extrair tema/config do código atual:', error)
+      currentConfig = currentState.gridConfig // fallback
     }
 
     const newCode = JSON.stringify({
       ...(currentTheme && { theme: currentTheme }),
-      config: currentState.gridConfig,
+      config: currentConfig,
       widgets
     }, null, 2)
 
