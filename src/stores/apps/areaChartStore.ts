@@ -106,12 +106,17 @@ export interface AreaChartConfig {
     enablePoints?: boolean
     pointSize?: number
     curve?: 'linear' | 'cardinal' | 'catmullRom' | 'monotoneX'
+    lineColor?: string
+    pointColor?: string
+    pointBorderColor?: string
     
     // Typography - Axis
     axisFontFamily?: string
     axisFontSize?: number
     axisFontWeight?: number
     axisTextColor?: string
+    xAxisTextColor?: string
+    yAxisTextColor?: string
     axisLegendFontSize?: number
     axisLegendFontWeight?: number
     

@@ -21,6 +21,11 @@ interface LineChartProps extends BaseChartProps {
   enableArea?: boolean
   areaOpacity?: number
   lineWidth?: number
+  lineColor?: string
+  pointColor?: string
+  pointBorderColor?: string
+  xAxisTextColor?: string
+  yAxisTextColor?: string
   animate?: boolean
   motionConfig?: 'default' | 'gentle' | 'wobbly' | 'stiff' | 'slow'
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
@@ -120,6 +125,9 @@ export function LineChart({
   enableArea,
   areaOpacity,
   lineWidth,
+  lineColor,
+  pointColor,
+  pointBorderColor,
   animate,
   motionConfig,
   margin,
@@ -128,6 +136,8 @@ export function LineChart({
   legends,
   enablePointLabels,
   pointLabelTextColor,
+  xAxisTextColor,
+  yAxisTextColor,
   // Typography - Title/Subtitle
   title,
   subtitle,
@@ -318,7 +328,7 @@ export function LineChart({
         
         // Linha configurável
         lineWidth={lineWidth ?? 2}
-        colors={colors || ['#2563eb']}
+        colors={lineColor ? [lineColor] : colors || ['#2563eb']}
         curve={curve || 'cardinal'}
         enableArea={enableArea ?? false}
         areaOpacity={areaOpacity ?? 0.2}
@@ -326,9 +336,9 @@ export function LineChart({
         // Pontos configuráveis
         enablePoints={enablePoints ?? true}
         pointSize={pointSize ?? 4}
-        pointColor={{ from: 'color' }}
+        pointColor={pointColor ? pointColor : { from: 'color' }}
         pointBorderWidth={borderWidth ?? 1}
-        pointBorderColor={borderColor || { from: 'serieColor' }}
+        pointBorderColor={pointBorderColor ? pointBorderColor : borderColor || { from: 'serieColor' }}
         
         // Labels nos pontos
         enablePointLabel={enablePointLabels ?? false}

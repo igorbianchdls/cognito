@@ -106,12 +106,15 @@ export interface BarChartConfig {
     layout?: 'horizontal' | 'vertical'
     padding?: number
     innerPadding?: number
+    barColor?: string
     
     // Typography - Axis
     axisFontFamily?: string
     axisFontSize?: number
     axisFontWeight?: number
     axisTextColor?: string
+    xAxisTextColor?: string
+    yAxisTextColor?: string
     axisLegendFontSize?: number
     axisLegendFontWeight?: number
     

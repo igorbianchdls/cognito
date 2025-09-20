@@ -101,6 +101,8 @@ export interface PieChartConfig {
     axisFontSize?: number
     axisFontWeight?: number
     axisTextColor?: string
+    xAxisTextColor?: string
+    yAxisTextColor?: string
     axisLegendFontSize?: number
     axisLegendFontWeight?: number
     

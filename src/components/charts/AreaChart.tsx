@@ -18,9 +18,14 @@ interface AreaChartProps extends BaseChartProps {
   enableArea?: boolean
   areaOpacity?: number
   lineWidth?: number
+  lineColor?: string
   pointSize?: number
+  pointColor?: string
+  pointBorderColor?: string
   enablePoints?: boolean
   curve?: 'linear' | 'cardinal' | 'catmullRom' | 'monotoneX'
+  xAxisTextColor?: string
+  yAxisTextColor?: string
   animate?: boolean
   motionConfig?: 'default' | 'gentle' | 'wobbly' | 'stiff' | 'slow'
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
@@ -118,9 +123,14 @@ export function AreaChart({
   enableArea,
   areaOpacity,
   lineWidth,
+  lineColor,
   pointSize,
+  pointColor,
+  pointBorderColor,
   enablePoints,
   curve,
+  xAxisTextColor,
+  yAxisTextColor,
   animate,
   motionConfig,
   margin,
@@ -320,15 +330,15 @@ export function AreaChart({
         enableArea={enableArea ?? true}
         areaOpacity={areaOpacity ?? 0.15}
         lineWidth={lineWidth ?? 2}
-        colors={colors || ['#2563eb']}
+        colors={lineColor ? [lineColor] : colors || ['#2563eb']}
         curve={curve || 'cardinal'}
         
         // Pontos configuráveis
         enablePoints={enablePoints ?? false}
         pointSize={pointSize ?? 4}
-        pointColor={{ from: 'color' }}
+        pointColor={pointColor ? pointColor : { from: 'color' }}
         pointBorderWidth={borderWidth ?? 1}
-        pointBorderColor={borderColor || { from: 'serieColor' }}
+        pointBorderColor={pointBorderColor ? pointBorderColor : borderColor || { from: 'serieColor' }}
         
         // Labels nos pontos
         enablePointLabel={enablePointLabels ?? false}

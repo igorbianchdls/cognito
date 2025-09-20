@@ -31,6 +31,7 @@ export function BarChart(props: BarChartProps) {
     backdropFilter,
     // Configurable props
     colors,
+    barColor,
     borderRadius,
     borderWidth,
     borderColor,
@@ -54,6 +55,8 @@ export function BarChart(props: BarChartProps) {
     axisFontSize,
     axisFontWeight,
     axisTextColor,
+    xAxisTextColor,
+    yAxisTextColor,
     axisLegendFontSize,
     axisLegendFontWeight,
     labelsFontFamily,
@@ -200,7 +203,9 @@ export function BarChart(props: BarChartProps) {
     axisFontFamily,
     axisFontSize,
     axisFontWeight,
-    axisTextColor,
+    axisTextColor: axisTextColor || xAxisTextColor || yAxisTextColor,
+    xAxisTextColor,
+    yAxisTextColor,
     axisLegendFontSize,
     axisLegendFontWeight,
     labelsFontFamily,
@@ -290,7 +295,7 @@ export function BarChart(props: BarChartProps) {
           padding={padding ?? 0.2}
           
           // Cores configuráveis
-          colors={colors || ['#2563eb']}
+          colors={barColor ? [barColor] : colors || ['#2563eb']}
           
           // Bordas configuráveis
           borderRadius={borderRadius ?? 4}

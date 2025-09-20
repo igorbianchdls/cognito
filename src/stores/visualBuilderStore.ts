@@ -55,6 +55,9 @@ const initialCode = `{
           "marginBottom": 0,
           "axisFontSize": 12,
           "axisTextColor": "#64748b",
+          "xAxisTextColor": "#64748b",
+          "yAxisTextColor": "#374151",
+          "barColor": "#3b82f6",
           "backgroundColor": "#f1f5f9"
         },
         "margin": {
@@ -116,6 +119,11 @@ const initialCode = `{
           "titleMarginLeft": 0,
           "axisFontSize": 11,
           "axisTextColor": "#9ca3af",
+          "xAxisTextColor": "#64748b",
+          "yAxisTextColor": "#374151",
+          "lineColor": "#8b5cf6",
+          "pointColor": "#8b5cf6",
+          "pointBorderColor": "#7c3aed",
           "backgroundColor": "#fefefe"
         },
         "margin": {
@@ -146,6 +154,8 @@ const initialCode = `{
           "titleMarginRight": 0,
           "titleMarginBottom": 8,
           "titleMarginLeft": 0,
+          "xAxisTextColor": "#64748b",
+          "yAxisTextColor": "#374151",
           "backgroundColor": "#fefefe"
         },
         "margin": {
@@ -177,6 +187,11 @@ const initialCode = `{
           "titleMarginRight": 0,
           "titleMarginBottom": 8,
           "titleMarginLeft": 0,
+          "xAxisTextColor": "#64748b",
+          "yAxisTextColor": "#374151",
+          "lineColor": "#8b5cf6",
+          "pointColor": "#8b5cf6",
+          "pointBorderColor": "#7c3aed",
           "backgroundColor": "#fefefe"
         },
         "margin": {

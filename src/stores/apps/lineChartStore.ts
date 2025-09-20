@@ -103,12 +103,17 @@ export interface LineChartConfig {
     curve?: 'linear' | 'cardinal' | 'catmullRom' | 'monotoneX'
     enableArea?: boolean
     areaOpacity?: number
+    lineColor?: string
+    pointColor?: string
+    pointBorderColor?: string
     
     // Typography - Axis
     axisFontFamily?: string
     axisFontSize?: number
     axisFontWeight?: number
     axisTextColor?: string
+    xAxisTextColor?: string
+    yAxisTextColor?: string
     axisLegendFontSize?: number
     axisLegendFontWeight?: number
     

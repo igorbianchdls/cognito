@@ -29,6 +29,8 @@ interface TypographyConfig {
   axisFontSize?: number
   axisFontWeight?: number
   axisTextColor?: string
+  xAxisTextColor?: string
+  yAxisTextColor?: string
   axisLegendFontSize?: number
   axisLegendFontWeight?: number
   labelsFontFamily?: string
@@ -50,6 +52,8 @@ export const createElegantTheme = (typography: TypographyConfig = {}) => {
     axisFontSize = 12,
     axisFontWeight = 400,
     axisTextColor = '#6b7280',
+    xAxisTextColor,
+    yAxisTextColor,
     axisLegendFontSize = 14,
     axisLegendFontWeight = 500,
     labelsFontFamily = 'Geist, sans-serif',
@@ -63,6 +67,10 @@ export const createElegantTheme = (typography: TypographyConfig = {}) => {
     tooltipFontSize = 12,
     tooltipFontFamily = 'Geist, sans-serif'
   } = typography
+
+  // Use specific axis colors or fallback to general axisTextColor
+  const finalXAxisColor = xAxisTextColor || axisTextColor
+  const finalYAxisColor = yAxisTextColor || axisTextColor
 
   return {
     ...nivoTheme,
