@@ -186,6 +186,9 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
           <BarChart
             {...commonChartProps}
             {...(widget.barConfig?.styling || {})}
+            // Pass margin and legends from JSON config
+            margin={widget.barConfig?.margin || commonChartProps.margin}
+            legends={widget.barConfig?.legends}
             // Fallback to styling props if barConfig not provided
             enableGridX={widget.barConfig?.styling?.enableGridX ?? false}
             enableGridY={widget.barConfig?.styling?.enableGridY ?? true}
@@ -201,6 +204,9 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
           <LineChart
             {...commonChartProps}
             {...(widget.lineConfig?.styling || {})}
+            // Pass margin and legends from JSON config
+            margin={widget.lineConfig?.margin || commonChartProps.margin}
+            legends={widget.lineConfig?.legends}
             // Fallback to default props if lineConfig not provided
             enableGridX={widget.lineConfig?.styling?.enableGridX ?? false}
             enableGridY={widget.lineConfig?.styling?.enableGridY ?? true}
@@ -219,6 +225,9 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
           <PieChart
             {...commonChartProps}
             {...(widget.pieConfig?.styling || {})}
+            // Pass margin and legends from JSON config
+            margin={widget.pieConfig?.margin || commonChartProps.margin}
+            legends={widget.pieConfig?.legends}
             // Fallback to default props if pieConfig not provided
             innerRadius={widget.pieConfig?.styling?.innerRadius ?? 0.5}
             padAngle={widget.pieConfig?.styling?.padAngle ?? 1}
@@ -234,6 +243,9 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
           <AreaChart
             {...commonChartProps}
             {...(widget.areaConfig?.styling || {})}
+            // Pass margin and legends from JSON config
+            margin={widget.areaConfig?.margin || commonChartProps.margin}
+            legends={widget.areaConfig?.legends}
             // Fallback to default props if areaConfig not provided
             enableGridX={widget.areaConfig?.styling?.enableGridX ?? false}
             enableGridY={widget.areaConfig?.styling?.enableGridY ?? true}
