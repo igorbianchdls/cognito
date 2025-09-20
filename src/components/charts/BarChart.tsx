@@ -8,8 +8,8 @@ import { createElegantTheme } from './theme';
 
 // Valores padrão robustos e flexíveis
 const DEFAULT_MARGIN = { top: 40, right: 40, bottom: 64, left: 64 };
-const DEFAULT_ENABLE_GRID_X = true;
-const DEFAULT_ENABLE_GRID_Y = true;
+const DEFAULT_ENABLE_GRID_X = false;
+const DEFAULT_ENABLE_GRID_Y = false;
 
 export function BarChart(props: BarChartProps) {
   const {

@@ -370,7 +370,7 @@ export function LineChart({
         
         // Grid configurável
         enableGridX={enableGridX ?? false}
-        enableGridY={enableGridY ?? true}
+        enableGridY={enableGridY ?? false}
         
         // Interação elegante
         useMesh={true}
