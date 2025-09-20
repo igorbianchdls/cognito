@@ -237,8 +237,8 @@ export class ThemeManager {
     
     return {
       ...gridConfig,
-      backgroundColor: tokens.colors.grid.background,
-      borderColor: tokens.colors.grid.border
+      backgroundColor: gridConfig.backgroundColor || tokens.colors.grid.background,
+      borderColor: gridConfig.borderColor || tokens.colors.grid.border
     };
   }
 
