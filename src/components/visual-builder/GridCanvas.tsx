@@ -46,16 +46,7 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
   const GRID_WIDTH = 1600;
   const GRID_HEIGHT = 800;
 
-  // Calculate auto-scale based on width to always use 100% width
-  let scale = containerWidth / GRID_WIDTH;
-
-  // Calculate height based on rows configuration
-  const scaledHeight = gridConfig.maxRows * gridConfig.rowHeight;
-
-  // Ensure minimum scale for usability
-  scale = Math.max(scale, 0.1);
-
-  // Use row height from grid config
+  // Use row height from grid config without scaling
   const dynamicRowHeight = gridConfig.rowHeight;
 
   // Use configurable height with fallback
@@ -133,14 +124,14 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
             layouts={{ lg: layout }}
             breakpoints={{ lg: 0 }}
             cols={{ lg: gridConfig.cols }}
-            rowHeight={dynamicRowHeight * scale}
+            rowHeight={dynamicRowHeight}
             width={containerWidth}
             maxRows={calculatedRows}
             onLayoutChange={handleLayoutChange}
             isDraggable={true}
             isResizable={true}
-            margin={[8 * scale, 8 * scale]}
-            containerPadding={[16 * scale, 16 * scale]}
+            margin={[8, 8]}
+            containerPadding={[16, 16]}
             useCSSTransforms={true}
             compactType={null}
             preventCollision={true}
