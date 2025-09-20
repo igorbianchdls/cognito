@@ -7,7 +7,7 @@ import { EmptyState } from './EmptyState';
 import { createElegantTheme } from './theme';
 
 // Valores padrão robustos e flexíveis
-const DEFAULT_MARGIN = { top: 40, right: 40, bottom: 64, left: 64 };
+const DEFAULT_MARGIN = { top: 40, right: 40, bottom: 64, left: 80 };
 const DEFAULT_ENABLE_GRID_X = false;
 const DEFAULT_ENABLE_GRID_Y = false;
 
@@ -404,8 +404,32 @@ export function BarChart(props: BarChartProps) {
               ];
             }
             
-            // Retorna array vazio se não há legends configurado
-            return [];
+            // Configuração padrão se legends não especificado
+            return [
+              {
+                dataFrom: 'keys' as const,
+                anchor: 'bottom',
+                direction: 'row',
+                justify: false,
+                translateX: 0,
+                translateY: 50,
+                itemsSpacing: 20,
+                itemWidth: 80,
+                itemHeight: 18,
+                itemDirection: 'left-to-right',
+                itemOpacity: 0.8,
+                symbolSize: 12,
+                symbolShape: 'circle',
+                effects: [
+                  {
+                    on: 'hover',
+                    style: {
+                      itemOpacity: 1
+                    }
+                  }
+                ]
+              }
+            ];
           })()}
           />
         </div>

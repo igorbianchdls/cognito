@@ -380,8 +380,31 @@ export function PieChart({
             ];
           }
           
-          // Se legends for undefined, não mostrar legend
-          return [];
+          // Configuração padrão se legends não especificado
+          return [
+            {
+              anchor: 'bottom',
+              direction: 'row',
+              justify: false,
+              translateX: 0,
+              translateY: 50,
+              itemsSpacing: 20,
+              itemWidth: 80,
+              itemHeight: 18,
+              itemDirection: 'left-to-right',
+              itemOpacity: 0.8,
+              symbolSize: 12,
+              symbolShape: 'square',
+              effects: [
+                {
+                  on: 'hover',
+                  style: {
+                    itemOpacity: 1
+                  }
+                }
+              ]
+            }
+          ];
         })()}
       />
     </div>
