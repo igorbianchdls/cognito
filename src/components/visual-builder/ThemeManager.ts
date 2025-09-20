@@ -241,7 +241,12 @@ export class ThemeManager {
       dark: { name: 'Dark', description: 'Modern dark theme with enhanced contrast' },
       blue: { name: 'Blue', description: 'Professional blue ocean theme' },
       green: { name: 'Green', description: 'Nature-inspired green theme' },
-      corporate: { name: 'Corporate', description: 'Professional business gray theme' }
+      corporate: { name: 'Corporate', description: 'Professional business gray theme' },
+      navy: { name: 'Navy', description: 'Executive navy blue for C-level presentations' },
+      slate: { name: 'Slate', description: 'Premium gray for financial analytics' },
+      forest: { name: 'Forest', description: 'Sustainable green for ESG dashboards' },
+      burgundy: { name: 'Burgundy', description: 'Sophisticated wine red for sales metrics' },
+      platinum: { name: 'Platinum', description: 'Elegant silver for premium reports' }
     };
 
     return {

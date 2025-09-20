@@ -333,13 +333,185 @@ export const CORPORATE_TOKENS: DesignTokens = {
   }
 };
 
+// Navy Theme Tokens - Azul Marinho Executivo
+export const NAVY_TOKENS: DesignTokens = {
+  ...DARK_TOKENS,
+  colors: {
+    ...DARK_TOKENS.colors,
+    background: '#0f172a',
+    surface: '#1e293b',
+    surfaceElevated: '#334155',
+    primary: '#1e40af',
+    secondary: '#3b82f6',
+    accent: '#60a5fa',
+    border: '#475569',
+    borderHover: '#64748b',
+    borderFocus: '#3b82f6',
+    text: {
+      primary: '#f1f5f9',
+      secondary: '#cbd5e1',
+      muted: '#94a3b8',
+      inverse: '#0f172a'
+    },
+    chart: {
+      primary: '#1e40af',
+      secondary: '#3b82f6',
+      tertiary: '#60a5fa',
+      quaternary: '#93c5fd',
+      grid: '#475569',
+      axis: '#64748b'
+    }
+  }
+};
+
+// Slate Theme Tokens - Cinza Moderno Premium
+export const SLATE_TOKENS: DesignTokens = {
+  ...DARK_TOKENS,
+  colors: {
+    ...DARK_TOKENS.colors,
+    background: '#0f172a',
+    surface: '#1e293b',
+    surfaceElevated: '#334155',
+    primary: '#475569',
+    secondary: '#64748b',
+    accent: '#94a3b8',
+    border: '#374151',
+    borderHover: '#475569',
+    borderFocus: '#64748b',
+    text: {
+      primary: '#f8fafc',
+      secondary: '#e2e8f0',
+      muted: '#cbd5e1',
+      inverse: '#0f172a'
+    },
+    chart: {
+      primary: '#475569',
+      secondary: '#64748b',
+      tertiary: '#94a3b8',
+      quaternary: '#cbd5e1',
+      grid: '#374151',
+      axis: '#64748b'
+    }
+  }
+};
+
+// Forest Theme Tokens - Verde Empresarial Sustentável
+export const FOREST_TOKENS: DesignTokens = {
+  ...DARK_TOKENS,
+  colors: {
+    ...DARK_TOKENS.colors,
+    background: '#14532d',
+    surface: '#166534',
+    surfaceElevated: '#15803d',
+    primary: '#16a34a',
+    secondary: '#22c55e',
+    accent: '#4ade80',
+    border: '#15803d',
+    borderHover: '#16a34a',
+    borderFocus: '#22c55e',
+    text: {
+      primary: '#f0fdf4',
+      secondary: '#dcfce7',
+      muted: '#bbf7d0',
+      inverse: '#14532d'
+    },
+    semantic: {
+      success: '#22c55e',
+      warning: '#eab308',
+      error: '#ef4444',
+      info: '#3b82f6'
+    },
+    chart: {
+      primary: '#16a34a',
+      secondary: '#22c55e',
+      tertiary: '#4ade80',
+      quaternary: '#86efac',
+      grid: '#15803d',
+      axis: '#22c55e'
+    }
+  }
+};
+
+// Burgundy Theme Tokens - Vermelho Vinho Sofisticado
+export const BURGUNDY_TOKENS: DesignTokens = {
+  ...DARK_TOKENS,
+  colors: {
+    ...DARK_TOKENS.colors,
+    background: '#450a0a',
+    surface: '#7f1d1d',
+    surfaceElevated: '#991b1b',
+    primary: '#dc2626',
+    secondary: '#ef4444',
+    accent: '#f87171',
+    border: '#991b1b',
+    borderHover: '#dc2626',
+    borderFocus: '#ef4444',
+    text: {
+      primary: '#fef2f2',
+      secondary: '#fee2e2',
+      muted: '#fecaca',
+      inverse: '#450a0a'
+    },
+    semantic: {
+      success: '#22c55e',
+      warning: '#eab308',
+      error: '#ef4444',
+      info: '#3b82f6'
+    },
+    chart: {
+      primary: '#dc2626',
+      secondary: '#ef4444',
+      tertiary: '#f87171',
+      quaternary: '#fca5a5',
+      grid: '#991b1b',
+      axis: '#ef4444'
+    }
+  }
+};
+
+// Platinum Theme Tokens - Prata Elegante
+export const PLATINUM_TOKENS: DesignTokens = {
+  ...DARK_TOKENS,
+  colors: {
+    ...DARK_TOKENS.colors,
+    background: '#18181b',
+    surface: '#27272a',
+    surfaceElevated: '#3f3f46',
+    primary: '#71717a',
+    secondary: '#a1a1aa',
+    accent: '#d4d4d8',
+    border: '#3f3f46',
+    borderHover: '#52525b',
+    borderFocus: '#71717a',
+    text: {
+      primary: '#fafafa',
+      secondary: '#f4f4f5',
+      muted: '#e4e4e7',
+      inverse: '#18181b'
+    },
+    chart: {
+      primary: '#71717a',
+      secondary: '#a1a1aa',
+      tertiary: '#d4d4d8',
+      quaternary: '#f4f4f5',
+      grid: '#3f3f46',
+      axis: '#a1a1aa'
+    }
+  }
+};
+
 // Theme mapping
 export const THEME_TOKENS = {
   light: LIGHT_TOKENS,
   dark: DARK_TOKENS,
   blue: BLUE_TOKENS,
   green: GREEN_TOKENS,
-  corporate: CORPORATE_TOKENS
+  corporate: CORPORATE_TOKENS,
+  navy: NAVY_TOKENS,
+  slate: SLATE_TOKENS,
+  forest: FOREST_TOKENS,
+  burgundy: BURGUNDY_TOKENS,
+  platinum: PLATINUM_TOKENS
 } as const;
 
 export type ThemeTokenName = keyof typeof THEME_TOKENS;
