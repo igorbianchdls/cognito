@@ -144,11 +144,6 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
             ))}
           </ResponsiveGridLayout>
         )}
-
-        {/* Grid Info */}
-        <div className="absolute bottom-4 right-4 bg-gray-900 text-white text-xs px-3 py-2 rounded-lg">
-          Grid: {gridConfig.cols}×{gridConfig.maxRows} | Scale: {Math.round(scale * 100)}%
-        </div>
       </div>
     </div>
   );
