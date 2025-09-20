@@ -42,9 +42,9 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
   const containerRef = useRef<HTMLDivElement>(null);
   const { width: containerWidth, height: containerHeight } = useContainerDimensions(containerRef);
 
-  // Fixed grid dimensions (16:9 aspect ratio)
+  // Fixed grid dimensions
   const GRID_WIDTH = 1600;
-  const GRID_HEIGHT = 900;
+  const GRID_HEIGHT = 800;
 
   // Calculate auto-scale based on width to always use 100% width
   let scale = containerWidth / GRID_WIDTH;
@@ -57,6 +57,9 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
 
   // Use row height from grid config
   const dynamicRowHeight = gridConfig.rowHeight;
+
+  // Calculate number of rows based on fixed height
+  const calculatedRows = Math.floor(GRID_HEIGHT / gridConfig.rowHeight);
 
   // Grid config with fixed dimensions
   const fixedGridConfig = {
@@ -105,6 +108,7 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
         className="relative bg-white rounded-lg border border-gray-200 overflow-hidden"
         style={{
           width: containerWidth,
+          height: GRID_HEIGHT,
           transformOrigin: 'center'
         }}
       >
@@ -128,7 +132,7 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
             cols={{ lg: gridConfig.cols }}
             rowHeight={dynamicRowHeight * scale}
             width={containerWidth}
-            maxRows={gridConfig.maxRows}
+            maxRows={calculatedRows}
             onLayoutChange={handleLayoutChange}
             isDraggable={true}
             isResizable={true}
