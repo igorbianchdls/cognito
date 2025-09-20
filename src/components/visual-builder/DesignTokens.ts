@@ -47,6 +47,12 @@ export interface ColorTokens {
     grid: string;
     axis: string;
   };
+
+  // Grid specific
+  grid: {
+    background: string;
+    border: string;
+  };
 }
 
 export interface SpacingTokens {
@@ -155,6 +161,12 @@ export const DARK_TOKENS: DesignTokens = {
       quaternary: '#ef4444',
       grid: '#404040',
       axis: '#6b7280'
+    },
+
+    // Grid
+    grid: {
+      background: '#171717',
+      border: '#404040'
     }
   },
 
@@ -256,6 +268,12 @@ export const LIGHT_TOKENS: DesignTokens = {
       quaternary: '#dc2626',
       grid: '#e2e8f0',
       axis: '#64748b'
+    },
+
+    // Grid
+    grid: {
+      background: '#ffffff',
+      border: '#e2e8f0'
     }
   },
 
@@ -289,6 +307,10 @@ export const BLUE_TOKENS: DesignTokens = {
       secondary: '#cbd5e1',
       muted: '#94a3b8',
       inverse: '#0f172a'
+    },
+    grid: {
+      background: '#1e293b',
+      border: '#475569'
     }
   }
 };
@@ -309,6 +331,10 @@ export const GREEN_TOKENS: DesignTokens = {
       secondary: '#d1fae5',
       muted: '#a7f3d0',
       inverse: '#064e3b'
+    },
+    grid: {
+      background: '#065f46',
+      border: '#059669'
     }
   }
 };
@@ -329,6 +355,10 @@ export const CORPORATE_TOKENS: DesignTokens = {
       secondary: '#334155',
       muted: '#64748b',
       inverse: '#ffffff'
+    },
+    grid: {
+      background: '#ffffff',
+      border: '#e2e8f0'
     }
   }
 };
@@ -360,6 +390,10 @@ export const NAVY_TOKENS: DesignTokens = {
       quaternary: '#93c5fd',
       grid: '#475569',
       axis: '#64748b'
+    },
+    grid: {
+      background: '#1e293b',
+      border: '#475569'
     }
   }
 };
@@ -391,6 +425,10 @@ export const SLATE_TOKENS: DesignTokens = {
       quaternary: '#cbd5e1',
       grid: '#374151',
       axis: '#64748b'
+    },
+    grid: {
+      background: '#1e293b',
+      border: '#374151'
     }
   }
 };
@@ -428,6 +466,10 @@ export const FOREST_TOKENS: DesignTokens = {
       quaternary: '#86efac',
       grid: '#15803d',
       axis: '#22c55e'
+    },
+    grid: {
+      background: '#166534',
+      border: '#15803d'
     }
   }
 };
@@ -465,6 +507,10 @@ export const BURGUNDY_TOKENS: DesignTokens = {
       quaternary: '#fca5a5',
       grid: '#991b1b',
       axis: '#ef4444'
+    },
+    grid: {
+      background: '#7f1d1d',
+      border: '#991b1b'
     }
   }
 };
@@ -496,6 +542,10 @@ export const PLATINUM_TOKENS: DesignTokens = {
       quaternary: '#f4f4f5',
       grid: '#3f3f46',
       axis: '#a1a1aa'
+    },
+    grid: {
+      background: '#27272a',
+      border: '#3f3f46'
     }
   }
 };

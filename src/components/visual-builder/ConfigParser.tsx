@@ -12,6 +12,8 @@ export interface GridConfig {
   cols: number;
   height?: number;
   containerHeight?: number;
+  backgroundColor?: string;
+  borderColor?: string;
 }
 
 // Theme types are now managed by ThemeManager
@@ -119,14 +121,18 @@ export class ConfigParser {
                typeof widget.title === 'string';
       });
 
-      // Step 5: Apply theme to widgets if theme is specified and valid
+      // Step 5: Apply theme to widgets and grid if theme is specified and valid
       const themedWidgets = (theme && ThemeManager.isValidTheme(theme))
         ? this.applyThemeToWidgets(validWidgets, theme)
         : validWidgets;
 
+      const themedGridConfig = (theme && ThemeManager.isValidTheme(theme))
+        ? ThemeManager.applyThemeToGrid(gridConfig, theme)
+        : gridConfig;
+
       return {
         widgets: themedWidgets,
-        gridConfig,
+        gridConfig: themedGridConfig,
         errors: [],
         isValid: true
       };

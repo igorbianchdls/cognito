@@ -39,6 +39,9 @@ interface GridCanvasProps {
 }
 
 export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: GridCanvasProps) {
+  // Extract theme colors from gridConfig
+  const backgroundColor = gridConfig.backgroundColor || '#ffffff';
+  const borderColor = gridConfig.borderColor || '#e5e7eb';
   const containerRef = useRef<HTMLDivElement>(null);
   const { width: containerWidth, height: containerHeight } = useContainerDimensions(containerRef);
 
@@ -94,11 +97,13 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
     <div ref={containerRef} className="w-full h-full">
       {/* Grid container */}
       <div
-        className="relative bg-red-500 rounded-lg border border-gray-200 overflow-hidden"
+        className="relative rounded-lg overflow-hidden"
         style={{
           width: containerWidth,
           height: configHeight,
-          transformOrigin: 'center'
+          transformOrigin: 'center',
+          backgroundColor: backgroundColor,
+          border: `1px solid ${borderColor}`
         }}
       >
         {/* Empty State */}

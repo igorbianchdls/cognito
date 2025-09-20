@@ -225,6 +225,24 @@ export class ThemeManager {
   }
 
   /**
+   * Applies design tokens to grid configuration
+   */
+  static applyThemeToGrid(gridConfig: any, themeName: ThemeName): any {
+    if (!this.isValidTheme(themeName)) {
+      console.warn(`Invalid theme: ${themeName}. Skipping grid theme application.`);
+      return gridConfig;
+    }
+
+    const tokens = this.getThemeTokens(themeName);
+    
+    return {
+      ...gridConfig,
+      backgroundColor: tokens.colors.grid.background,
+      borderColor: tokens.colors.grid.border
+    };
+  }
+
+  /**
    * Gets theme preview/description for UI
    */
   static getThemePreview(themeName: ThemeName): {

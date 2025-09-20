@@ -22,7 +22,9 @@ const initialCode = `{
     "maxRows": 20,
     "rowHeight": 30,
     "height": 800,
-    "cols": 12
+    "cols": 12,
+    "backgroundColor": "#171717",
+    "borderColor": "#404040"
   },
   "widgets": [
     {
