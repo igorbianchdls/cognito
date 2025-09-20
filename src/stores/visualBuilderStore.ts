@@ -51,8 +51,13 @@ const initialCode = `{
           "marginBottom": 0,
           "axisFontSize": 12,
           "axisTextColor": "#64748b",
-          "backgroundColor": "#f1f5f9",
-          "legendTranslateY": 0
+          "backgroundColor": "#f1f5f9"
+        },
+        "margin": {
+          "bottom": 0
+        },
+        "legends": {
+          "translateY": 0
         }
       }
     },
@@ -103,9 +108,13 @@ const initialCode = `{
           "titleColor": "#374151",
           "axisFontSize": 11,
           "axisTextColor": "#9ca3af",
-          "backgroundColor": "#fefefe",
-          "marginBottom": 0,
-          "legendTranslateY": 0
+          "backgroundColor": "#fefefe"
+        },
+        "margin": {
+          "bottom": 0
+        },
+        "legends": {
+          "translateY": 0
         }
       }
     },
@@ -125,9 +134,13 @@ const initialCode = `{
           "showLegend": true,
           "titleFontSize": 16,
           "titleColor": "#374151",
-          "backgroundColor": "#fefefe",
-          "marginBottom": 0,
-          "legendTranslateY": 0
+          "backgroundColor": "#fefefe"
+        },
+        "margin": {
+          "bottom": 0
+        },
+        "legends": {
+          "translateY": 0
         }
       }
     },
@@ -148,9 +161,13 @@ const initialCode = `{
           "showLegend": false,
           "titleFontSize": 16,
           "titleColor": "#374151",
-          "backgroundColor": "#fefefe",
-          "marginBottom": 0,
-          "legendTranslateY": 0
+          "backgroundColor": "#fefefe"
+        },
+        "margin": {
+          "bottom": 0
+        },
+        "legends": {
+          "translateY": 0
         }
       }
     }
