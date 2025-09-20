@@ -46,14 +46,11 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
   const GRID_WIDTH = 1600;
   const GRID_HEIGHT = 800;
 
-  // Use row height from grid config without scaling
-  const dynamicRowHeight = gridConfig.rowHeight;
-
   // Use configurable height with fallback
   const configHeight = gridConfig.height || GRID_HEIGHT;
 
-  // Calculate number of rows based on configurable height
-  const calculatedRows = Math.floor(configHeight / gridConfig.rowHeight);
+  // Calculate rowHeight dynamically based on height and maxRows
+  const dynamicRowHeight = configHeight / gridConfig.maxRows;
 
   // Grid config with fixed dimensions
   const fixedGridConfig = {
@@ -126,7 +123,7 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
             cols={{ lg: gridConfig.cols }}
             rowHeight={dynamicRowHeight}
             width={containerWidth}
-            maxRows={calculatedRows}
+            maxRows={gridConfig.maxRows}
             onLayoutChange={handleLayoutChange}
             isDraggable={true}
             isResizable={true}
