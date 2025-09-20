@@ -1,6 +1,6 @@
 'use client';
 
-import type { Widget } from './ConfigParser';
+import type { Widget, GridConfig } from './ConfigParser';
 import type { KPIConfig } from '@/types/apps/kpiWidgets';
 import type { BarChartConfig } from '@/stores/apps/barChartStore';
 import type { LineChartConfig } from '@/stores/apps/lineChartStore';
@@ -227,7 +227,7 @@ export class ThemeManager {
   /**
    * Applies design tokens to grid configuration
    */
-  static applyThemeToGrid(gridConfig: any, themeName: ThemeName): any {
+  static applyThemeToGrid(gridConfig: GridConfig, themeName: ThemeName): GridConfig {
     if (!this.isValidTheme(themeName)) {
       console.warn(`Invalid theme: ${themeName}. Skipping grid theme application.`);
       return gridConfig;
