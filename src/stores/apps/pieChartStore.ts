@@ -1,4 +1,5 @@
 import { atom, computed } from 'nanostores'
+import type { LegendConfig } from '@/types/apps/chartWidgets'
 
 export interface BigQueryField {
   name: string
@@ -147,6 +148,13 @@ export interface PieChartConfig {
     containerShadowOffsetX?: number
     containerShadowOffsetY?: number
   }
+  margin?: {
+    top?: number
+    right?: number
+    bottom?: number
+    left?: number
+  }
+  legends?: LegendConfig
   position: {
     x: number
     y: number
