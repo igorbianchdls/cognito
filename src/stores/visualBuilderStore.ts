@@ -20,7 +20,8 @@ const initialCode = `{
   "theme": "dark",
   "config": {
     "maxRows": 20,
-    "height": 600,
+    "rowHeight": 30,
+    "height": 800,
     "cols": 12
   },
   "widgets": [
