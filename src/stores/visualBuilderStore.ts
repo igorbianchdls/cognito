@@ -47,6 +47,10 @@ const initialCode = `{
           "borderRadius": 8,
           "titleFontSize": 18,
           "titleColor": "#1e293b",
+          "titleMarginTop": 0,
+          "titleMarginRight": 0,
+          "titleMarginBottom": 8,
+          "titleMarginLeft": 0,
           "marginTop": 20,
           "marginBottom": 0,
           "axisFontSize": 12,
@@ -106,6 +110,10 @@ const initialCode = `{
           "curve": "monotoneX",
           "titleFontSize": 16,
           "titleColor": "#374151",
+          "titleMarginTop": 0,
+          "titleMarginRight": 0,
+          "titleMarginBottom": 8,
+          "titleMarginLeft": 0,
           "axisFontSize": 11,
           "axisTextColor": "#9ca3af",
           "backgroundColor": "#fefefe"
@@ -134,6 +142,10 @@ const initialCode = `{
           "showLegend": true,
           "titleFontSize": 16,
           "titleColor": "#374151",
+          "titleMarginTop": 0,
+          "titleMarginRight": 0,
+          "titleMarginBottom": 8,
+          "titleMarginLeft": 0,
           "backgroundColor": "#fefefe"
         },
         "margin": {
@@ -161,6 +173,10 @@ const initialCode = `{
           "showLegend": false,
           "titleFontSize": 16,
           "titleColor": "#374151",
+          "titleMarginTop": 0,
+          "titleMarginRight": 0,
+          "titleMarginBottom": 8,
+          "titleMarginLeft": 0,
           "backgroundColor": "#fefefe"
         },
         "margin": {
