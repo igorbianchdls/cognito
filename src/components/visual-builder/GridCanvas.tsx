@@ -94,7 +94,7 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
     <div ref={containerRef} className="w-full h-full">
       {/* Grid container */}
       <div
-        className="relative bg-white rounded-lg border border-gray-200 overflow-hidden"
+        className="relative bg-red-500 rounded-lg border border-gray-200 overflow-hidden"
         style={{
           width: containerWidth,
           height: configHeight,
