@@ -310,7 +310,7 @@ export function AreaChart({
         margin={{
           top: margin?.top ?? 12,
           right: margin?.right ?? 12,
-          bottom: margin?.bottom ?? 30,
+          bottom: margin?.bottom ?? 0,
           left: margin?.left ?? 50
         }}
         xScale={{ type: 'point' }}
@@ -404,7 +404,7 @@ export function AreaChart({
                 direction: legends.direction || 'row',
                 justify: false,
                 translateX: 0,
-                translateY: 30,
+                translateY: 0,
                 itemsSpacing: legends.itemsSpacing || 20,
                 itemWidth: 80,
                 itemHeight: 18,

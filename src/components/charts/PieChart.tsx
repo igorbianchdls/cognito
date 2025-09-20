@@ -311,7 +311,7 @@ export function PieChart({
         margin={{
           top: margin?.top ?? 20,
           right: margin?.right ?? 20,
-          bottom: margin?.bottom ?? 30,
+          bottom: margin?.bottom ?? 0,
           left: margin?.left ?? 20
         }}
         
@@ -368,7 +368,7 @@ export function PieChart({
                 direction: legends.direction || 'row',
                 justify: false,
                 translateX: 0,
-                translateY: 30,
+                translateY: 0,
                 itemsSpacing: legends.itemsSpacing || 20,
                 itemWidth: 80,
                 itemHeight: 18,

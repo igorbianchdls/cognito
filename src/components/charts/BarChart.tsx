@@ -7,7 +7,7 @@ import { EmptyState } from './EmptyState';
 import { createElegantTheme } from './theme';
 
 // Valores padrão robustos e flexíveis
-const DEFAULT_MARGIN = { top: 40, right: 40, bottom: 30, left: 80 };
+const DEFAULT_MARGIN = { top: 40, right: 40, bottom: 0, left: 80 };
 const DEFAULT_ENABLE_GRID_X = false;
 const DEFAULT_ENABLE_GRID_Y = false;
 
@@ -384,7 +384,7 @@ export function BarChart(props: BarChartProps) {
                   direction: legendConfig.direction || 'row',
                   justify: false,
                   translateX: legendConfig.translateX || 0,
-                  translateY: legendConfig.translateY || 30,
+                  translateY: legendConfig.translateY || 0,
                   itemsSpacing: legendConfig.itemsSpacing || 20,
                   itemWidth: legendConfig.itemWidth || 80,
                   itemHeight: legendConfig.itemHeight || 18,
@@ -412,7 +412,7 @@ export function BarChart(props: BarChartProps) {
                 direction: 'row',
                 justify: false,
                 translateX: 0,
-                translateY: 30,
+                translateY: 0,
                 itemsSpacing: 20,
                 itemWidth: 80,
                 itemHeight: 18,
