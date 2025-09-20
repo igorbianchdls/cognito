@@ -104,7 +104,11 @@ export class ConfigParser {
         cols: typeof rawGridConfig.cols === 'number' && rawGridConfig.cols > 0
           ? rawGridConfig.cols : this.DEFAULT_GRID_CONFIG.cols,
         height: typeof rawGridConfig.height === 'number' && rawGridConfig.height > 0
-          ? rawGridConfig.height : undefined
+          ? rawGridConfig.height : undefined,
+        backgroundColor: typeof rawGridConfig.backgroundColor === 'string' 
+          ? rawGridConfig.backgroundColor : undefined,
+        borderColor: typeof rawGridConfig.borderColor === 'string' 
+          ? rawGridConfig.borderColor : undefined
       };
 
       // Step 4: Basic filter for runtime safety only
