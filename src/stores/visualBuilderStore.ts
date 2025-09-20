@@ -103,6 +103,48 @@ const initialCode = `{
           "backgroundColor": "#fefefe"
         }
       }
+    },
+    {
+      "id": "chart3",
+      "type": "pie",
+      "position": { "x": 9, "y": 0, "w": 3, "h": 4 },
+      "title": "Event Distribution",
+      "dataSource": {
+        "table": "ecommerce",
+        "x": "event_name",
+        "y": "quantity",
+        "aggregation": "SUM"
+      },
+      "pieConfig": {
+        "styling": {
+          "colors": ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"],
+          "showLegend": true,
+          "titleFontSize": 16,
+          "titleColor": "#374151",
+          "backgroundColor": "#fefefe"
+        }
+      }
+    },
+    {
+      "id": "chart4",
+      "type": "area",
+      "position": { "x": 9, "y": 4, "w": 3, "h": 4 },
+      "title": "Quantity Area",
+      "dataSource": {
+        "table": "ecommerce",
+        "x": "event_name",
+        "y": "quantity",
+        "aggregation": "AVG"
+      },
+      "areaConfig": {
+        "styling": {
+          "colors": ["#8b5cf6"],
+          "showLegend": false,
+          "titleFontSize": 16,
+          "titleColor": "#374151",
+          "backgroundColor": "#fefefe"
+        }
+      }
     }
   ]
 }`
