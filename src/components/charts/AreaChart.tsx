@@ -288,7 +288,15 @@ export function AreaChart({
           {subtitle}
         </div>
       )}
-      <ResponsiveLine
+      
+      <div
+        style={{
+          flex: 1,
+          height: '100%'
+        }}
+      >
+        <div style={{ height: '100%', width: '100%', overflow: 'hidden' }}>
+          <ResponsiveLine
         data={[
           {
             id: 'series',
@@ -443,6 +451,8 @@ export function AreaChart({
           ];
         })()}
       />
+        </div>
+      </div>
     </div>
   );
 }

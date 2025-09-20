@@ -296,7 +296,15 @@ export function PieChart({
           {subtitle}
         </div>
       )}
-      <ResponsivePie
+      
+      <div
+        style={{
+          flex: 1,
+          height: '100%'
+        }}
+      >
+        <div style={{ height: '100%', width: '100%', overflow: 'hidden' }}>
+          <ResponsivePie
         data={chartData}
         
         // Margins configuráveis
@@ -407,6 +415,8 @@ export function PieChart({
           ];
         })()}
       />
+        </div>
+      </div>
     </div>
   );
 }
