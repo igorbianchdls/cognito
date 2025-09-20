@@ -10,6 +10,7 @@ export interface GridConfig {
   maxRows: number;
   rowHeight: number;
   cols: number;
+  height?: number;
   containerHeight?: number;
 }
 

@@ -58,13 +58,16 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
   // Use row height from grid config
   const dynamicRowHeight = gridConfig.rowHeight;
 
-  // Calculate number of rows based on fixed height
-  const calculatedRows = Math.floor(GRID_HEIGHT / gridConfig.rowHeight);
+  // Use configurable height with fallback
+  const configHeight = gridConfig.height || GRID_HEIGHT;
+
+  // Calculate number of rows based on configurable height
+  const calculatedRows = Math.floor(configHeight / gridConfig.rowHeight);
 
   // Grid config with fixed dimensions
   const fixedGridConfig = {
     ...gridConfig,
-    containerHeight: GRID_HEIGHT
+    containerHeight: configHeight
   };
 
   // Generate layout for react-grid-layout
@@ -108,7 +111,7 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
         className="relative bg-white rounded-lg border border-gray-200 overflow-hidden"
         style={{
           width: containerWidth,
-          height: GRID_HEIGHT,
+          height: configHeight,
           transformOrigin: 'center'
         }}
       >
