@@ -112,8 +112,7 @@ const initialCode = `{
       "dataSource": {
         "table": "ecommerce",
         "x": "event_name",
-        "y": "quantity",
-        "aggregation": "SUM"
+        "y": "quantity"
       },
       "pieConfig": {
         "styling": {
