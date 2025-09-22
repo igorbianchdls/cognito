@@ -44,9 +44,11 @@ interface AreaChartProps extends BaseChartProps {
     tickPadding?: number
   }
   legends?: LegendConfig | Record<string, unknown>[]
+  titleFontFamily?: string
   titleFontSize?: number
   titleFontWeight?: string | number
   titleColor?: string
+  subtitleFontFamily?: string
   subtitleFontSize?: number
   subtitleFontWeight?: string | number
   subtitleColor?: string

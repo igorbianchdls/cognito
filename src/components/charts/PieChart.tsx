@@ -28,9 +28,11 @@ interface PieChartProps extends BaseChartProps {
   legends?: LegendConfig | Record<string, unknown>[]
   title?: string
   subtitle?: string
+  titleFontFamily?: string
   titleFontSize?: number
   titleFontWeight?: string | number
   titleColor?: string
+  subtitleFontFamily?: string
   subtitleFontSize?: number
   subtitleFontWeight?: string | number
   subtitleColor?: string
