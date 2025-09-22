@@ -48,8 +48,8 @@ export interface BarChartProps extends BaseChartProps {
   borderOpacity?: number;
   barGradient?: {
     enabled: boolean;
-    type: 'linear' | 'radial';
-    direction: string; // 'vertical', 'horizontal', '45deg', etc.
+    type: 'linear';
+    direction: string; // 'vertical', 'horizontal', 'diagonal', etc.
     startColor: string;
     endColor: string;
     startOpacity?: number;

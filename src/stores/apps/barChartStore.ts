@@ -114,7 +114,7 @@ export interface BarChartConfig {
     borderOpacity?: number
     barGradient?: {
       enabled: boolean
-      type: 'linear' | 'radial'
+      type: 'linear'
       direction: string
       startColor: string
       endColor: string

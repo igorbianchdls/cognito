@@ -1,7 +1,7 @@
 'use client';
 
 import { ResponsiveBar } from '@nivo/bar';
-import { linearGradientDef, radialGradientDef } from '@nivo/core';
+import { linearGradientDef } from '@nivo/core';
 import { BarChartProps } from './types';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
@@ -162,36 +162,27 @@ export function BarChart(props: BarChartProps) {
   const generateVisualEffectsDefs = () => {
     const defs = [];
     
-    // Gradient definition using Nivo helpers
+    // Linear gradient definition using Nivo helpers
     if (barGradient?.enabled) {
-      const { type, direction, startColor, endColor, startOpacity = 1, endOpacity = 1 } = barGradient;
+      const { direction, startColor, endColor, startOpacity = 1, endOpacity = 1 } = barGradient;
       
-      if (type === 'linear') {
-        const getRotation = (dir: string) => {
-          switch (dir) {
-            case 'vertical': return 90;
-            case 'horizontal': return 0;
-            case 'diagonal': return 45;
-            default: return 90;
-          }
-        };
-        
-        defs.push(
-          linearGradientDef('barGradient', [
-            { offset: 0, color: startColor, opacity: startOpacity },
-            { offset: 100, color: endColor, opacity: endOpacity }
-          ], {
-            gradientTransform: `rotate(${getRotation(direction)})`
-          })
-        );
-      } else if (type === 'radial') {
-        defs.push(
-          radialGradientDef('barGradient', [
-            { offset: 0, color: startColor, opacity: startOpacity },
-            { offset: 100, color: endColor, opacity: endOpacity }
-          ])
-        );
-      }
+      const getRotation = (dir: string) => {
+        switch (dir) {
+          case 'vertical': return 90;
+          case 'horizontal': return 0;
+          case 'diagonal': return 45;
+          default: return 90;
+        }
+      };
+      
+      defs.push(
+        linearGradientDef('barGradient', [
+          { offset: 0, color: startColor, opacity: startOpacity },
+          { offset: 100, color: endColor, opacity: endOpacity }
+        ], {
+          gradientTransform: `rotate(${getRotation(direction)})`
+        })
+      );
     }
     
     return defs;
@@ -244,10 +235,12 @@ export function BarChart(props: BarChartProps) {
   const finalColors = processedColors();
 
   // Debug: Log visual effects
-  console.log('🎨 BAR CHART efeitos visuais:', {
+  console.log('🎨 BAR CHART efeitos visuais (apenas linear):', {
     hasGradient: barGradient?.enabled,
+    gradientType: barGradient?.type,
     hasShadow: barShadow?.enabled,
     hasHoverEffects: hoverEffects?.enabled,
+    opacity: barOpacity,
     finalColors,
     visualEffectsDefs: visualEffectsDefs.length,
     barFillPatterns
