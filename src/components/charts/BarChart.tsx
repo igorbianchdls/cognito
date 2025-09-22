@@ -186,49 +186,8 @@ export function BarChart(props: BarChartProps) {
     : '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
 
 
-  // Process colors with opacity - type-safe version
-  const processedColors = (): string[] => {
-    // Normalize colors to string array
-    let colorArray: string[] = [];
-    
-    if (barColor) {
-      // Single bar color specified
-      colorArray = [barColor];
-    } else if (colors) {
-      // Handle different types of colors prop
-      if (Array.isArray(colors)) {
-        // colors is string[]
-        colorArray = colors;
-      } else if (typeof colors === 'string') {
-        // colors is single string
-        colorArray = [colors];
-      } else {
-        // colors is OrdinalColorScaleConfig - use fallback
-        colorArray = ['#2563eb'];
-      }
-    } else {
-      // No colors specified - use default
-      colorArray = ['#2563eb'];
-    }
-    
-    // Apply opacity if needed
-    if (barOpacity !== undefined && barOpacity < 1) {
-      return colorArray.map(color => {
-        if (typeof color === 'string' && color.startsWith('#')) {
-          const hex = color.replace('#', '');
-          const r = parseInt(hex.substring(0, 2), 16);
-          const g = parseInt(hex.substring(2, 4), 16);
-          const b = parseInt(hex.substring(4, 6), 16);
-          return `rgba(${r}, ${g}, ${b}, ${barOpacity})`;
-        }
-        return color;
-      });
-    }
-    
-    return colorArray;
-  };
-
-  const finalColors = processedColors();
+  // Simplified colors logic - consistent with other charts
+  const finalColors = barColor ? [barColor] : colors || ['#2563eb'];
   
   // Build bar CSS filters directly (no function needed)
   const barCSSFilters = [
@@ -414,7 +373,18 @@ export function BarChart(props: BarChartProps) {
           padding={padding ?? 0.2}
           
           // Cores configuráveis com efeitos visuais
-          colors={finalColors}
+          colors={barOpacity !== undefined && barOpacity < 1 ?
+            finalColors.map(color => {
+              if (typeof color === 'string' && color.startsWith('#')) {
+                const hex = color.replace('#', '');
+                const r = parseInt(hex.substring(0, 2), 16);
+                const g = parseInt(hex.substring(2, 4), 16);
+                const b = parseInt(hex.substring(4, 6), 16);
+                return `rgba(${r}, ${g}, ${b}, ${barOpacity})`;
+              }
+              return color;
+            }) : finalColors
+          }
           
           // Bordas configuráveis
           borderRadius={borderRadius ?? 4}
