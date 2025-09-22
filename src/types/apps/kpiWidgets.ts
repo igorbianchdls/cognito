@@ -106,6 +106,27 @@ export interface KPIConfig {
   changeColor?: string
   targetColor?: string
 
+  // Advanced Background Effects
+  backgroundOpacity?: number;
+  backgroundGradient?: {
+    enabled: boolean;
+    type: 'linear' | 'radial' | 'conic';
+    direction: string;
+    startColor: string;
+    endColor: string;
+  };
+  backdropFilter?: {
+    enabled: boolean;
+    blur: number;
+  };
+
+  // Advanced Shadow Effects
+  containerShadowColor?: string;
+  containerShadowOpacity?: number;
+  containerShadowBlur?: number;
+  containerShadowOffsetX?: number;
+  containerShadowOffsetY?: number;
+
   // Tailwind Classes - KPI (precedence over individual props)
   kpiNameClassName?: string
   kpiValueClassName?: string
@@ -195,7 +216,7 @@ export const KPI_COLOR_SCHEMES = {
 } as const
 
 // Default KPI configuration
-export const DEFAULT_KPI_CONFIG: Required<Omit<KPIConfig, 'name' | 'value' | 'unit' | 'target' | 'change' | 'trend' | 'status' | 'metric' | 'calculation' | 'timeRange' | 'dataSource' | 'refreshRate' | 'simulationRange' | 'bigqueryData' | 'dataSourceType' | 'autoRefresh' | 'refreshInterval' | 'kpiValueFontFamily' | 'kpiNameFontFamily' | 'kpiValueMarginTop' | 'kpiValueMarginRight' | 'kpiValueMarginBottom' | 'kpiValueMarginLeft' | 'kpiValuePaddingTop' | 'kpiValuePaddingRight' | 'kpiValuePaddingBottom' | 'kpiValuePaddingLeft' | 'kpiValueLetterSpacing' | 'kpiValueLineHeight' | 'kpiNameMarginTop' | 'kpiNameMarginRight' | 'kpiNameMarginBottom' | 'kpiNameMarginLeft' | 'kpiNamePaddingTop' | 'kpiNamePaddingRight' | 'kpiNamePaddingBottom' | 'kpiNamePaddingLeft' | 'kpiNameLetterSpacing' | 'kpiNameLineHeight'>> = {
+export const DEFAULT_KPI_CONFIG: Required<Omit<KPIConfig, 'name' | 'value' | 'unit' | 'target' | 'change' | 'trend' | 'status' | 'metric' | 'calculation' | 'timeRange' | 'dataSource' | 'refreshRate' | 'simulationRange' | 'bigqueryData' | 'dataSourceType' | 'autoRefresh' | 'refreshInterval' | 'kpiValueFontFamily' | 'kpiNameFontFamily' | 'kpiValueMarginTop' | 'kpiValueMarginRight' | 'kpiValueMarginBottom' | 'kpiValueMarginLeft' | 'kpiValuePaddingTop' | 'kpiValuePaddingRight' | 'kpiValuePaddingBottom' | 'kpiValuePaddingLeft' | 'kpiValueLetterSpacing' | 'kpiValueLineHeight' | 'kpiNameMarginTop' | 'kpiNameMarginRight' | 'kpiNameMarginBottom' | 'kpiNameMarginLeft' | 'kpiNamePaddingTop' | 'kpiNamePaddingRight' | 'kpiNamePaddingBottom' | 'kpiNamePaddingLeft' | 'kpiNameLetterSpacing' | 'kpiNameLineHeight' | 'backgroundOpacity' | 'backgroundGradient' | 'backdropFilter' | 'containerShadowColor' | 'containerShadowOpacity' | 'containerShadowBlur' | 'containerShadowOffsetX' | 'containerShadowOffsetY'>> = {
   enableSimulation: true,
   showTarget: true,
   showTrend: true,
