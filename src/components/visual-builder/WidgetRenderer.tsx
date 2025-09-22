@@ -229,9 +229,23 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
             hoverBlur={widget.barConfig?.styling?.hoverBlur}
             transitionDuration={widget.barConfig?.styling?.transitionDuration}
             transitionEasing={widget.barConfig?.styling?.transitionEasing}
-            // Typography props - Title/Subtitle
+            // Typography props - Title (TODAS)
             titleFontFamily={widget.barConfig?.styling?.titleFontFamily}
+            titleFontSize={widget.barConfig?.styling?.titleFontSize}
+            titleFontWeight={widget.barConfig?.styling?.titleFontWeight}
+            titleColor={widget.barConfig?.styling?.titleColor}
+            titleMarginTop={widget.barConfig?.styling?.titleMarginTop}
+            titleMarginLeft={widget.barConfig?.styling?.titleMarginLeft}
+            titleMarginBottom={widget.barConfig?.styling?.titleMarginBottom}
+            
+            // Typography props - Subtitle (TODAS)
             subtitleFontFamily={widget.barConfig?.styling?.subtitleFontFamily}
+            subtitleFontSize={widget.barConfig?.styling?.subtitleFontSize}
+            subtitleFontWeight={widget.barConfig?.styling?.subtitleFontWeight}
+            subtitleColor={widget.barConfig?.styling?.subtitleColor}
+            subtitleMarginTop={widget.barConfig?.styling?.subtitleMarginTop}
+            subtitleMarginLeft={widget.barConfig?.styling?.subtitleMarginLeft}
+            subtitleMarginBottom={widget.barConfig?.styling?.subtitleMarginBottom}
             // Fallback to styling props if barConfig not provided
             enableGridX={widget.barConfig?.styling?.enableGridX ?? false}
             enableGridY={widget.barConfig?.styling?.enableGridY ?? true}
