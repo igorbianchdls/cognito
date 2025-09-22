@@ -337,7 +337,7 @@ export function BarChart(props: BarChartProps) {
           margin: '0 auto',
           border: containerStyles.border || (containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb'),
           borderRadius: `${containerBorderRadius || 8}px`,
-          boxShadow: containerStyles.boxShadow || containerDropShadow || boxShadow,
+          boxShadow: containerStyles.boxShadow || boxShadow,
         })
       }}
     >
