@@ -221,8 +221,7 @@ export function BarChart(props: BarChartProps) {
     colorProcessing: {
       originalColors: colors,
       barColor,
-      finalColors: finalColors,
-      colorsLength: finalColors.length
+      finalColors: finalColors
     }
   });
 
