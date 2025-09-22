@@ -52,8 +52,26 @@ export class ThemeManager {
 
     // Apply design tokens to KPI with semantic meaning
     clonedWidget.kpiConfig.kpiContainerBackgroundColor = tokens.colors.surface;
+
+    // KPI Value styling (equivalent to title in charts)
     clonedWidget.kpiConfig.kpiValueColor = tokens.colors.text.primary;
+    clonedWidget.kpiConfig.kpiValueFontSize = tokens.typography.fontSize.xl;
+    clonedWidget.kpiConfig.kpiValueFontWeight = tokens.typography.fontWeight.bold;
+    clonedWidget.kpiConfig.kpiValueFontFamily = tokens.typography.fontFamily.primary;
+    clonedWidget.kpiConfig.kpiValueMarginTop = 0;
+    clonedWidget.kpiConfig.kpiValueMarginRight = 0;
+    clonedWidget.kpiConfig.kpiValueMarginBottom = 8;
+    clonedWidget.kpiConfig.kpiValueMarginLeft = 0;
+
+    // KPI Name styling (equivalent to subtitle in charts)
     clonedWidget.kpiConfig.kpiNameColor = tokens.colors.text.secondary;
+    clonedWidget.kpiConfig.kpiNameFontSize = tokens.typography.fontSize.base;
+    clonedWidget.kpiConfig.kpiNameFontWeight = tokens.typography.fontWeight.medium;
+    clonedWidget.kpiConfig.kpiNameFontFamily = tokens.typography.fontFamily.primary;
+    clonedWidget.kpiConfig.kpiNameMarginTop = 0;
+    clonedWidget.kpiConfig.kpiNameMarginRight = 0;
+    clonedWidget.kpiConfig.kpiNameMarginBottom = 4;
+    clonedWidget.kpiConfig.kpiNameMarginLeft = 0;
 
     return clonedWidget;
   }
@@ -74,9 +92,26 @@ export class ThemeManager {
 
     // Apply design tokens to Bar Chart with rich theming
     clonedWidget.barConfig.styling.backgroundColor = tokens.colors.surface;
+
+    // Title styling - complete props
     clonedWidget.barConfig.styling.titleColor = tokens.colors.text.primary;
     clonedWidget.barConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
     clonedWidget.barConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
+    clonedWidget.barConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary;
+    clonedWidget.barConfig.styling.titleMarginTop = 0;
+    clonedWidget.barConfig.styling.titleMarginRight = 0;
+    clonedWidget.barConfig.styling.titleMarginBottom = 8;
+    clonedWidget.barConfig.styling.titleMarginLeft = 0;
+
+    // Subtitle styling - complete props
+    clonedWidget.barConfig.styling.subtitleFontFamily = tokens.typography.fontFamily.primary;
+    clonedWidget.barConfig.styling.subtitleFontSize = tokens.typography.fontSize.sm;
+    clonedWidget.barConfig.styling.subtitleFontWeight = tokens.typography.fontWeight.normal;
+    clonedWidget.barConfig.styling.subtitleColor = tokens.colors.text.secondary;
+    clonedWidget.barConfig.styling.subtitleMarginTop = 0;
+    clonedWidget.barConfig.styling.subtitleMarginRight = 0;
+    clonedWidget.barConfig.styling.subtitleMarginBottom = 16;
+    clonedWidget.barConfig.styling.subtitleMarginLeft = 0;
 
     clonedWidget.barConfig.styling.axisTextColor = tokens.colors.text.secondary;
     clonedWidget.barConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
@@ -112,9 +147,26 @@ export class ThemeManager {
 
     // Apply design tokens to Line Chart
     clonedWidget.lineConfig.styling.backgroundColor = tokens.colors.surface;
+
+    // Title styling - complete props
     clonedWidget.lineConfig.styling.titleColor = tokens.colors.text.primary;
     clonedWidget.lineConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
     clonedWidget.lineConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
+    clonedWidget.lineConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary;
+    clonedWidget.lineConfig.styling.titleMarginTop = 0;
+    clonedWidget.lineConfig.styling.titleMarginRight = 0;
+    clonedWidget.lineConfig.styling.titleMarginBottom = 8;
+    clonedWidget.lineConfig.styling.titleMarginLeft = 0;
+
+    // Subtitle styling - complete props
+    clonedWidget.lineConfig.styling.subtitleFontFamily = tokens.typography.fontFamily.primary;
+    clonedWidget.lineConfig.styling.subtitleFontSize = tokens.typography.fontSize.sm;
+    clonedWidget.lineConfig.styling.subtitleFontWeight = tokens.typography.fontWeight.normal;
+    clonedWidget.lineConfig.styling.subtitleColor = tokens.colors.text.secondary;
+    clonedWidget.lineConfig.styling.subtitleMarginTop = 0;
+    clonedWidget.lineConfig.styling.subtitleMarginRight = 0;
+    clonedWidget.lineConfig.styling.subtitleMarginBottom = 16;
+    clonedWidget.lineConfig.styling.subtitleMarginLeft = 0;
 
     clonedWidget.lineConfig.styling.axisTextColor = tokens.colors.text.secondary;
     clonedWidget.lineConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
@@ -142,9 +194,26 @@ export class ThemeManager {
 
     // Apply design tokens to Pie Chart
     clonedWidget.pieConfig.styling.backgroundColor = tokens.colors.surface;
+
+    // Title styling - complete props
     clonedWidget.pieConfig.styling.titleColor = tokens.colors.text.primary;
     clonedWidget.pieConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
     clonedWidget.pieConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
+    clonedWidget.pieConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary;
+    clonedWidget.pieConfig.styling.titleMarginTop = 0;
+    clonedWidget.pieConfig.styling.titleMarginRight = 0;
+    clonedWidget.pieConfig.styling.titleMarginBottom = 8;
+    clonedWidget.pieConfig.styling.titleMarginLeft = 0;
+
+    // Subtitle styling - complete props
+    clonedWidget.pieConfig.styling.subtitleFontFamily = tokens.typography.fontFamily.primary;
+    clonedWidget.pieConfig.styling.subtitleFontSize = tokens.typography.fontSize.sm;
+    clonedWidget.pieConfig.styling.subtitleFontWeight = tokens.typography.fontWeight.normal;
+    clonedWidget.pieConfig.styling.subtitleColor = tokens.colors.text.secondary;
+    clonedWidget.pieConfig.styling.subtitleMarginTop = 0;
+    clonedWidget.pieConfig.styling.subtitleMarginRight = 0;
+    clonedWidget.pieConfig.styling.subtitleMarginBottom = 16;
+    clonedWidget.pieConfig.styling.subtitleMarginLeft = 0;
 
     clonedWidget.pieConfig.styling.colors = [
       tokens.colors.chart.primary,
@@ -175,9 +244,26 @@ export class ThemeManager {
 
     // Apply design tokens to Area Chart
     clonedWidget.areaConfig.styling.backgroundColor = tokens.colors.surface;
+
+    // Title styling - complete props
     clonedWidget.areaConfig.styling.titleColor = tokens.colors.text.primary;
     clonedWidget.areaConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
     clonedWidget.areaConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
+    clonedWidget.areaConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary;
+    clonedWidget.areaConfig.styling.titleMarginTop = 0;
+    clonedWidget.areaConfig.styling.titleMarginRight = 0;
+    clonedWidget.areaConfig.styling.titleMarginBottom = 8;
+    clonedWidget.areaConfig.styling.titleMarginLeft = 0;
+
+    // Subtitle styling - complete props
+    clonedWidget.areaConfig.styling.subtitleFontFamily = tokens.typography.fontFamily.primary;
+    clonedWidget.areaConfig.styling.subtitleFontSize = tokens.typography.fontSize.sm;
+    clonedWidget.areaConfig.styling.subtitleFontWeight = tokens.typography.fontWeight.normal;
+    clonedWidget.areaConfig.styling.subtitleColor = tokens.colors.text.secondary;
+    clonedWidget.areaConfig.styling.subtitleMarginTop = 0;
+    clonedWidget.areaConfig.styling.subtitleMarginRight = 0;
+    clonedWidget.areaConfig.styling.subtitleMarginBottom = 16;
+    clonedWidget.areaConfig.styling.subtitleMarginLeft = 0;
 
     clonedWidget.areaConfig.styling.axisTextColor = tokens.colors.text.secondary;
     clonedWidget.areaConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
