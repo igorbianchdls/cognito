@@ -204,7 +204,6 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
         <div className="h-full w-full p-2">
           <BarChart
             {...commonChartProps}
-            {...(widget.barConfig?.styling || {})}
             // Pass margin and legends from JSON config
             margin={widget.barConfig?.margin || commonChartProps.margin}
             legends={widget.barConfig?.legends}
