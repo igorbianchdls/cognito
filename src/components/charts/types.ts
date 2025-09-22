@@ -140,9 +140,15 @@ export interface BarChartProps extends BaseChartProps {
   // Container Styling
   title?: string;
   subtitle?: string;
+  
+  // Typography - Title
+  titleFontFamily?: string;
   titleFontSize?: number;
   titleFontWeight?: string | number;
   titleColor?: string;
+  
+  // Typography - Subtitle  
+  subtitleFontFamily?: string;
   subtitleFontSize?: number;
   subtitleFontWeight?: string | number;
   subtitleColor?: string;

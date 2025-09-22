@@ -229,6 +229,9 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
             hoverBlur={widget.barConfig?.styling?.hoverBlur}
             transitionDuration={widget.barConfig?.styling?.transitionDuration}
             transitionEasing={widget.barConfig?.styling?.transitionEasing}
+            // Typography props - Title/Subtitle
+            titleFontFamily={widget.barConfig?.styling?.titleFontFamily}
+            subtitleFontFamily={widget.barConfig?.styling?.subtitleFontFamily}
             // Fallback to styling props if barConfig not provided
             enableGridX={widget.barConfig?.styling?.enableGridX ?? false}
             enableGridY={widget.barConfig?.styling?.enableGridY ?? true}

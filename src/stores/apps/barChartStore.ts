@@ -42,10 +42,14 @@ export interface BarChartConfig {
     title?: string
     style?: string
 
-    // Typography - Title/Subtitle
+    // Typography - Title
+    titleFontFamily?: string
     titleFontSize?: number
     titleFontWeight?: number
     titleColor?: string
+    
+    // Typography - Subtitle  
+    subtitleFontFamily?: string
     subtitleFontSize?: number
     subtitleFontWeight?: number
     subtitleColor?: string
