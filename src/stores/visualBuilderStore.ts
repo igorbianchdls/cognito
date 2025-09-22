@@ -39,67 +39,9 @@ const initialCode = `{
         "aggregation": "SUM"
       },
       "barConfig": {
-        "_comment_container": "=== PROPS DO CONTAINER/FUNDO DO CHART ===",
-        "_comment_glass": "Props para glass morphism e efeitos modernos",
         "styling": {
-          "colors": ["#3b82f6", "#10b981", "#f59e0b"],
           "showLegend": true,
-          "enableGridX": true,
-          "enableGridY": true,
-          "borderRadius": 8,
-          "_comment_title": "=== CONFIGURAÇÃO DO TÍTULO ===",
-          "titleFontFamily": "Inter, Arial, sans-serif",
-          "titleFontSize": 18,
-          "titleFontWeight": 700,
-          "titleColor": "#1e293b",
-          "titleMarginTop": 0,
-          "titleMarginLeft": 0,
-          "titleMarginBottom": 8,
-          
-          "_comment_subtitle": "=== CONFIGURAÇÃO DO SUBTÍTULO ===",
-          "subtitleFontFamily": "Inter, Arial, sans-serif",
-          "subtitleFontSize": 14,
-          "subtitleFontWeight": 400,
-          "subtitleColor": "#64748b",
-          "subtitleMarginTop": 0,
-          "subtitleMarginLeft": 0,
-          "subtitleMarginBottom": 16,
-          "marginTop": 20,
-          "marginBottom": 0,
-          "axisFontSize": 12,
-          "axisTextColor": "#64748b",
-          "barColor": "#3b82f6",
-          
-          "_comment_glass_effect": "=== GLASS MORPHISM CONFIG ===",
-          "containerBackground": "rgba(255, 255, 255, 0.25)",
-          "containerOpacity": 1,
-          "containerBackdropFilter": "blur(10px) saturate(200%)",
-          "containerBoxShadow": "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
-          "containerBorder": "1px solid rgba(255, 255, 255, 0.18)",
-          
-          "_comment_modern_effects": "=== EFEITOS MODERNOS ===",
-          "containerFilter": "brightness(1.05)",
-          "containerTransform": "perspective(1000px)",
-          "containerTransition": "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-          
-          "_comment_bar_effects": "=== EFEITOS DAS BARRAS ===",
-          "barOpacity": 0.9,
-          "barHoverOpacity": 1.0,
-          "barBrightness": 1.0,
-          "barSaturate": 1.2,
-          "barContrast": 1.1,
-          "barBoxShadow": "0 2px 4px rgba(0,0,0,0.1)",
-          "hoverBrightness": 1.1,
-          "hoverSaturate": 1.3,
-          "hoverScale": 1.03,
-          "transitionDuration": "200ms",
-          "transitionEasing": "ease-in-out"
-        },
-        "margin": {
-          "bottom": 0
-        },
-        "legends": {
-          "translateY": 0
+          "showGrid": true
         }
       }
     },
@@ -119,9 +61,6 @@ const initialCode = `{
         "showTarget": true,
         "trend": "increasing",
         "visualizationType": "card",
-        "kpiValueColor": "#059669",
-        "kpiValueFontSize": 24,
-        "kpiContainerBackgroundColor": "#ecfdf5",
         "status": "on-target"
       }
     },
@@ -138,32 +77,8 @@ const initialCode = `{
       },
       "lineConfig": {
         "styling": {
-          "colors": ["#8b5cf6"],
           "showLegend": false,
-          "enableGridX": false,
-          "enableGridY": true,
-          "lineWidth": 3,
-          "enablePoints": true,
-          "pointSize": 8,
-          "curve": "monotoneX",
-          "titleFontSize": 16,
-          "titleColor": "#374151",
-          "titleMarginTop": 0,
-          "titleMarginRight": 0,
-          "titleMarginBottom": 8,
-          "titleMarginLeft": 0,
-          "axisFontSize": 11,
-          "axisTextColor": "#9ca3af",
-          "lineColor": "#8b5cf6",
-          "pointColor": "#8b5cf6",
-          "pointBorderColor": "#7c3aed",
-          "backgroundColor": "#fefefe"
-        },
-        "margin": {
-          "bottom": 0
-        },
-        "legends": {
-          "translateY": 0
+          "showGrid": true
         }
       }
     },
@@ -179,22 +94,8 @@ const initialCode = `{
       },
       "pieConfig": {
         "styling": {
-          "colors": ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"],
           "showLegend": true,
-          "titleFontSize": 16,
-          "titleColor": "#374151",
-          "titleMarginTop": 0,
-          "titleMarginRight": 0,
-          "titleMarginBottom": 8,
-          "titleMarginLeft": 0,
-          "axisTextColor": "#64748b",
-          "backgroundColor": "#fefefe"
-        },
-        "margin": {
-          "bottom": 0
-        },
-        "legends": {
-          "translateY": 0
+          "showGrid": false
         }
       }
     },
@@ -211,25 +112,8 @@ const initialCode = `{
       },
       "areaConfig": {
         "styling": {
-          "colors": ["#8b5cf6"],
           "showLegend": false,
-          "titleFontSize": 16,
-          "titleColor": "#374151",
-          "titleMarginTop": 0,
-          "titleMarginRight": 0,
-          "titleMarginBottom": 8,
-          "titleMarginLeft": 0,
-          "axisTextColor": "#64748b",
-          "lineColor": "#8b5cf6",
-          "pointColor": "#8b5cf6",
-          "pointBorderColor": "#7c3aed",
-          "backgroundColor": "#fefefe"
-        },
-        "margin": {
-          "bottom": 0
-        },
-        "legends": {
-          "translateY": 0
+          "showGrid": true
         }
       }
     }
