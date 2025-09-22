@@ -2,7 +2,7 @@
 
 import { ResponsiveLine } from '@nivo/line';
 import { BaseChartProps } from './types';
-import { elegantTheme } from './theme';
+import { elegantTheme, createElegantTheme } from './theme';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
 import type { LegendConfig } from '@/types/apps/chartWidgets';
@@ -24,8 +24,7 @@ interface AreaChartProps extends BaseChartProps {
   pointBorderColor?: string
   enablePoints?: boolean
   curve?: 'linear' | 'cardinal' | 'catmullRom' | 'monotoneX'
-  xAxisTextColor?: string
-  yAxisTextColor?: string
+  axisTextColor?: string
   animate?: boolean
   motionConfig?: 'default' | 'gentle' | 'wobbly' | 'stiff' | 'slow'
   margin?: { top?: number; right?: number; bottom?: number; left?: number }
@@ -129,8 +128,7 @@ export function AreaChart({
   pointBorderColor,
   enablePoints,
   curve,
-  xAxisTextColor,
-  yAxisTextColor,
+  axisTextColor,
   animate,
   motionConfig,
   margin,
@@ -386,7 +384,9 @@ export function AreaChart({
         useMesh={true}
         animate={animate ?? false}
         motionConfig={motionConfig || "gentle"}
-        theme={elegantTheme}
+        theme={createElegantTheme({
+          axisTextColor: axisTextColor || '#6b7280'
+        })}
         
         // Tooltip elegante
         tooltip={({ point }) => (

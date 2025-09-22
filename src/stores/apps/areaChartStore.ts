@@ -115,8 +115,6 @@ export interface AreaChartConfig {
     axisFontSize?: number
     axisFontWeight?: number
     axisTextColor?: string
-    xAxisTextColor?: string
-    yAxisTextColor?: string
     axisLegendFontSize?: number
     axisLegendFontWeight?: number
     

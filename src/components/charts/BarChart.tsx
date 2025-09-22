@@ -55,8 +55,6 @@ export function BarChart(props: BarChartProps) {
     axisFontSize,
     axisFontWeight,
     axisTextColor,
-    xAxisTextColor,
-    yAxisTextColor,
     axisLegendFontSize,
     axisLegendFontWeight,
     labelsFontFamily,
@@ -198,25 +196,27 @@ export function BarChart(props: BarChartProps) {
     return undefined
   }
 
-  // Create theme with custom typography
-  const customTheme = createElegantTheme({
-    axisFontFamily,
-    axisFontSize,
-    axisFontWeight,
-    axisTextColor: xAxisTextColor || yAxisTextColor || axisTextColor,
-    axisLegendFontSize,
-    axisLegendFontWeight,
-    labelsFontFamily,
-    labelsFontSize,
-    labelsFontWeight,
-    labelsTextColor,
-    legendsFontFamily,
-    legendsFontSize,
-    legendsFontWeight,
-    legendsTextColor,
-    tooltipFontSize,
-    tooltipFontFamily
-  });
+  // Create dynamic theme that can handle separate axis colors
+  const dynamicTheme = {
+    ...createElegantTheme({
+      axisFontFamily,
+      axisFontSize,
+      axisFontWeight,
+      axisTextColor: axisTextColor || '#6b7280',
+      axisLegendFontSize,
+      axisLegendFontWeight,
+      labelsFontFamily,
+      labelsFontSize,
+      labelsFontWeight,
+      labelsTextColor,
+      legendsFontFamily,
+      legendsFontSize,
+      legendsFontWeight,
+      legendsTextColor,
+      tooltipFontSize,
+      tooltipFontFamily
+    }),
+  };
 
 
 
@@ -356,7 +356,7 @@ export function BarChart(props: BarChartProps) {
           
           animate={animate ?? false}
           motionConfig={motionConfig || "gentle"}
-          theme={customTheme}
+          theme={dynamicTheme}
           
           // Tooltip elegante
           tooltip={({ id, value }) => (
