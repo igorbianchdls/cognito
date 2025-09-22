@@ -113,16 +113,21 @@ interface AreaChartProps extends BaseChartProps {
   containerShadowOffsetY?: number
 }
 
-export function AreaChart({ 
-  data, 
-  xColumn, 
-  yColumn, 
+export function AreaChart({
+  data,
+  xColumn,
+  yColumn,
   isFullscreen,
   colors,
   backgroundColor,
   backgroundOpacity,
   backgroundGradient,
   backdropFilter,
+  // Container Glass Effect & Modern Styles
+  containerBackground,
+  containerOpacity,
+  containerBackdropFilter,
+  containerBoxShadow,
   borderRadius,
   borderWidth,
   borderColor,
@@ -210,40 +215,19 @@ export function AreaChart({
       }, ${containerShadowOpacity || 0.2})`
     : '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
 
-  // Create advanced background styles
-  const getAdvancedBackground = () => {
-    // Priority: gradient > backgroundColor with opacity > backgroundColor
-    if (backgroundGradient?.enabled) {
-      const { type, direction, startColor, endColor } = backgroundGradient
-      switch (type) {
-        case 'linear':
-          return `linear-gradient(${direction}, ${startColor}, ${endColor})`
-        case 'radial':
-          return `radial-gradient(${direction}, ${startColor}, ${endColor})`
-        case 'conic':
-          return `conic-gradient(from ${direction}, ${startColor}, ${endColor})`
-        default:
-          return `linear-gradient(${direction}, ${startColor}, ${endColor})`
-      }
-    }
+  // Container styles with priority system (same as BarChart)
+  const containerStyles = {
+    // Background: priority to new containerBackground, fallback to old backgroundColor
+    background: containerBackground || (
+      backgroundGradient?.enabled
+        ? `linear-gradient(${backgroundGradient.direction}, ${backgroundGradient.startColor}, ${backgroundGradient.endColor})`
+        : backgroundColor
+    ),
 
-    // Apply opacity to backgroundColor if specified
-    if (backgroundColor && backgroundOpacity !== undefined) {
-      const hex = backgroundColor.replace('#', '')
-      const r = parseInt(hex.substring(0, 2), 16)
-      const g = parseInt(hex.substring(2, 4), 16)
-      const b = parseInt(hex.substring(4, 6), 16)
-      return `rgba(${r}, ${g}, ${b}, ${backgroundOpacity})`
-    }
-
-    return backgroundColor
-  }
-
-  const getBackdropFilter = () => {
-    if (backdropFilter?.enabled && backdropFilter?.blur) {
-      return `blur(${backdropFilter.blur}px)`
-    }
-    return undefined
+    // Direct CSS props - simple and predictable
+    opacity: containerOpacity !== undefined ? containerOpacity : backgroundOpacity,
+    backdropFilter: containerBackdropFilter || (backdropFilter?.enabled ? `blur(${backdropFilter.blur}px)` : undefined),
+    boxShadow: containerBoxShadow,
   }
 
   // Debug log
@@ -269,13 +253,13 @@ export function AreaChart({
         minWidth: 0,
         // Propriedades condicionais (só quando não há containerClassName)
         ...(containerClassName ? {} : {
-          background: getAdvancedBackground(),
-          backdropFilter: getBackdropFilter(),
+          ...containerStyles,
           padding: `${containerPadding || 16}px`,
           margin: '0 auto',
           border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb',
           borderRadius: containerBorderRadius ? `${containerBorderRadius}px` : undefined,
-          boxShadow,
+          // Fallback shadow if containerBoxShadow not provided
+          boxShadow: containerBoxShadow || boxShadow,
         })
       }}
     >
