@@ -303,6 +303,34 @@ export interface ShadowTokens {
   glow: string;
 }
 
+export interface EffectsTokens {
+  opacity: {
+    transparent: number;
+    subtle: number;
+    medium: number;
+    strong: number;
+    opaque: number;
+  };
+  gradient: {
+    type: 'linear' | 'radial' | 'conic';
+    direction: string;
+    startColor: string;
+    endColor: string;
+  };
+  backdrop: {
+    blur: number;
+    saturate: number;
+    brightness: number;
+  };
+  shadow: {
+    color: string;
+    opacity: number;
+    blur: number;
+    offsetX: number;
+    offsetY: number;
+  };
+}
+
 export interface BorderTokens {
   radius: {
     none: number;
@@ -348,6 +376,7 @@ export interface DesignTokens {
   shadows: ShadowTokens;
   borders: BorderTokens;
   typography: TypographyTokens;
+  effects: EffectsTokens;
 }
 
 // Dark Theme Tokens
@@ -462,7 +491,35 @@ export const DARK_TOKENS: DesignTokens = {
     }
   },
 
-  typography: TYPOGRAPHY_PRESETS.inter
+  typography: TYPOGRAPHY_PRESETS.inter,
+
+  effects: {
+    opacity: {
+      transparent: 0,
+      subtle: 0.7,
+      medium: 0.85,
+      strong: 0.95,
+      opaque: 1
+    },
+    gradient: {
+      type: 'linear',
+      direction: '135deg',
+      startColor: '#3b82f6',
+      endColor: '#1e40af'
+    },
+    backdrop: {
+      blur: 10,
+      saturate: 180,
+      brightness: 120
+    },
+    shadow: {
+      color: '#000000',
+      opacity: 0.25,
+      blur: 15,
+      offsetX: 0,
+      offsetY: 8
+    }
+  }
 };
 
 // Light Theme Tokens
@@ -554,7 +611,35 @@ export const LIGHT_TOKENS: DesignTokens = {
   },
 
   borders: DARK_TOKENS.borders, // Same border system
-  typography: TYPOGRAPHY_PRESETS.opensans
+  typography: TYPOGRAPHY_PRESETS.opensans,
+
+  effects: {
+    opacity: {
+      transparent: 0,
+      subtle: 0.8,
+      medium: 0.9,
+      strong: 0.98,
+      opaque: 1
+    },
+    gradient: {
+      type: 'radial',
+      direction: 'circle at top left',
+      startColor: '#f8fafc',
+      endColor: '#e2e8f0'
+    },
+    backdrop: {
+      blur: 8,
+      saturate: 150,
+      brightness: 110
+    },
+    shadow: {
+      color: '#64748b',
+      opacity: 0.15,
+      blur: 12,
+      offsetX: 0,
+      offsetY: 4
+    }
+  }
 };
 
 // Blue Theme Tokens
@@ -604,7 +689,35 @@ export const BLUE_TOKENS: DesignTokens = {
       border: '#475569'
     }
   },
-  typography: TYPOGRAPHY_PRESETS.roboto
+  typography: TYPOGRAPHY_PRESETS.roboto,
+
+  effects: {
+    opacity: {
+      transparent: 0,
+      subtle: 0.6,
+      medium: 0.8,
+      strong: 0.9,
+      opaque: 1
+    },
+    gradient: {
+      type: 'linear',
+      direction: '45deg',
+      startColor: '#1e3a8a',
+      endColor: '#3b82f6'
+    },
+    backdrop: {
+      blur: 12,
+      saturate: 200,
+      brightness: 130
+    },
+    shadow: {
+      color: '#1e40af',
+      opacity: 0.3,
+      blur: 20,
+      offsetX: 0,
+      offsetY: 6
+    }
+  }
 };
 
 // Green Theme Tokens
@@ -654,7 +767,35 @@ export const GREEN_TOKENS: DesignTokens = {
       border: '#059669'
     }
   },
-  typography: TYPOGRAPHY_PRESETS.lato
+  typography: TYPOGRAPHY_PRESETS.lato,
+
+  effects: {
+    opacity: {
+      transparent: 0,
+      subtle: 0.75,
+      medium: 0.85,
+      strong: 0.95,
+      opaque: 1
+    },
+    gradient: {
+      type: 'conic',
+      direction: 'from 180deg at 50% 50%',
+      startColor: '#047857',
+      endColor: '#10b981'
+    },
+    backdrop: {
+      blur: 8,
+      saturate: 160,
+      brightness: 115
+    },
+    shadow: {
+      color: '#059669',
+      opacity: 0.25,
+      blur: 16,
+      offsetX: 2,
+      offsetY: 8
+    }
+  }
 };
 
 // Corporate Theme Tokens
@@ -704,7 +845,35 @@ export const CORPORATE_TOKENS: DesignTokens = {
       border: '#e2e8f0'
     }
   },
-  typography: TYPOGRAPHY_PRESETS.arial
+  typography: TYPOGRAPHY_PRESETS.arial,
+
+  effects: {
+    opacity: {
+      transparent: 0,
+      subtle: 0.9,
+      medium: 0.95,
+      strong: 0.98,
+      opaque: 1
+    },
+    gradient: {
+      type: 'linear',
+      direction: 'to bottom right',
+      startColor: '#ffffff',
+      endColor: '#f1f5f9'
+    },
+    backdrop: {
+      blur: 4,
+      saturate: 100,
+      brightness: 100
+    },
+    shadow: {
+      color: '#475569',
+      opacity: 0.1,
+      blur: 8,
+      offsetX: 0,
+      offsetY: 2
+    }
+  }
 };
 
 // Navy Theme Tokens - Azul Marinho Executivo
@@ -770,7 +939,35 @@ export const NAVY_TOKENS: DesignTokens = {
   shadows: DARK_TOKENS.shadows,
   borders: DARK_TOKENS.borders,
 
-  typography: TYPOGRAPHY_PRESETS.georgia
+  typography: TYPOGRAPHY_PRESETS.georgia,
+
+  effects: {
+    opacity: {
+      transparent: 0,
+      subtle: 0.7,
+      medium: 0.85,
+      strong: 0.92,
+      opaque: 1
+    },
+    gradient: {
+      type: 'radial',
+      direction: 'ellipse at center',
+      startColor: '#1e3a8a',
+      endColor: '#0f172a'
+    },
+    backdrop: {
+      blur: 14,
+      saturate: 170,
+      brightness: 125
+    },
+    shadow: {
+      color: '#1e40af',
+      opacity: 0.35,
+      blur: 18,
+      offsetX: 0,
+      offsetY: 10
+    }
+  }
 };
 
 // Slate Theme Tokens - Cinza Moderno Premium
@@ -836,7 +1033,35 @@ export const SLATE_TOKENS: DesignTokens = {
   shadows: DARK_TOKENS.shadows,
   borders: DARK_TOKENS.borders,
 
-  typography: TYPOGRAPHY_PRESETS.segoe
+  typography: TYPOGRAPHY_PRESETS.segoe,
+
+  effects: {
+    opacity: {
+      transparent: 0,
+      subtle: 0.65,
+      medium: 0.8,
+      strong: 0.9,
+      opaque: 1
+    },
+    gradient: {
+      type: 'linear',
+      direction: '225deg',
+      startColor: '#334155',
+      endColor: '#1e293b'
+    },
+    backdrop: {
+      blur: 16,
+      saturate: 140,
+      brightness: 110
+    },
+    shadow: {
+      color: '#374151',
+      opacity: 0.4,
+      blur: 22,
+      offsetX: -2,
+      offsetY: 12
+    }
+  }
 };
 
 // Forest Theme Tokens - Verde Empresarial Sustentável
@@ -908,7 +1133,35 @@ export const FOREST_TOKENS: DesignTokens = {
   shadows: DARK_TOKENS.shadows,
   borders: DARK_TOKENS.borders,
 
-  typography: TYPOGRAPHY_PRESETS.montserrat
+  typography: TYPOGRAPHY_PRESETS.montserrat,
+
+  effects: {
+    opacity: {
+      transparent: 0,
+      subtle: 0.8,
+      medium: 0.9,
+      strong: 0.95,
+      opaque: 1
+    },
+    gradient: {
+      type: 'conic',
+      direction: 'from 45deg at 25% 75%',
+      startColor: '#15803d',
+      endColor: '#22c55e'
+    },
+    backdrop: {
+      blur: 6,
+      saturate: 180,
+      brightness: 120
+    },
+    shadow: {
+      color: '#16a34a',
+      opacity: 0.2,
+      blur: 14,
+      offsetX: 3,
+      offsetY: 6
+    }
+  }
 };
 
 // Burgundy Theme Tokens - Vermelho Vinho Sofisticado
@@ -980,7 +1233,35 @@ export const BURGUNDY_TOKENS: DesignTokens = {
   shadows: DARK_TOKENS.shadows,
   borders: DARK_TOKENS.borders,
 
-  typography: TYPOGRAPHY_PRESETS.playfair
+  typography: TYPOGRAPHY_PRESETS.playfair,
+
+  effects: {
+    opacity: {
+      transparent: 0,
+      subtle: 0.7,
+      medium: 0.82,
+      strong: 0.93,
+      opaque: 1
+    },
+    gradient: {
+      type: 'radial',
+      direction: 'circle at bottom right',
+      startColor: '#7f1d1d',
+      endColor: '#450a0a'
+    },
+    backdrop: {
+      blur: 18,
+      saturate: 200,
+      brightness: 140
+    },
+    shadow: {
+      color: '#dc2626',
+      opacity: 0.45,
+      blur: 24,
+      offsetX: -4,
+      offsetY: 14
+    }
+  }
 };
 
 // Platinum Theme Tokens - Prata Elegante
@@ -1046,7 +1327,35 @@ export const PLATINUM_TOKENS: DesignTokens = {
   shadows: DARK_TOKENS.shadows,
   borders: DARK_TOKENS.borders,
 
-  typography: TYPOGRAPHY_PRESETS.merriweather
+  typography: TYPOGRAPHY_PRESETS.merriweather,
+
+  effects: {
+    opacity: {
+      transparent: 0,
+      subtle: 0.85,
+      medium: 0.92,
+      strong: 0.97,
+      opaque: 1
+    },
+    gradient: {
+      type: 'linear',
+      direction: 'to top',
+      startColor: '#27272a',
+      endColor: '#52525b'
+    },
+    backdrop: {
+      blur: 10,
+      saturate: 120,
+      brightness: 105
+    },
+    shadow: {
+      color: '#71717a',
+      opacity: 0.3,
+      blur: 20,
+      offsetX: 0,
+      offsetY: 8
+    }
+  }
 };
 
 // Theme mapping

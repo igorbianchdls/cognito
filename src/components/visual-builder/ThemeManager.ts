@@ -73,6 +73,25 @@ export class ThemeManager {
     clonedWidget.kpiConfig.kpiNameMarginBottom = 4;
     clonedWidget.kpiConfig.kpiNameMarginLeft = 0;
 
+    // Apply advanced effects from tokens
+    clonedWidget.kpiConfig.backgroundOpacity = tokens.effects.opacity.medium;
+    clonedWidget.kpiConfig.backgroundGradient = {
+      enabled: true,
+      type: tokens.effects.gradient.type,
+      direction: tokens.effects.gradient.direction,
+      startColor: tokens.effects.gradient.startColor,
+      endColor: tokens.effects.gradient.endColor
+    };
+    clonedWidget.kpiConfig.backdropFilter = {
+      enabled: true,
+      blur: tokens.effects.backdrop.blur
+    };
+    clonedWidget.kpiConfig.containerShadowColor = tokens.effects.shadow.color;
+    clonedWidget.kpiConfig.containerShadowOpacity = tokens.effects.shadow.opacity;
+    clonedWidget.kpiConfig.containerShadowBlur = tokens.effects.shadow.blur;
+    clonedWidget.kpiConfig.containerShadowOffsetX = tokens.effects.shadow.offsetX;
+    clonedWidget.kpiConfig.containerShadowOffsetY = tokens.effects.shadow.offsetY;
+
     return clonedWidget;
   }
 
@@ -125,6 +144,12 @@ export class ThemeManager {
     clonedWidget.barConfig.styling.containerBorderRadius = tokens.borders.radius.md;
     clonedWidget.barConfig.styling.containerShadowColor = tokens.shadows.medium;
 
+    // Apply advanced effects from tokens
+    clonedWidget.barConfig.styling.containerOpacity = tokens.effects.opacity.medium;
+    clonedWidget.barConfig.styling.containerBackground = `${tokens.effects.gradient.type}-gradient(${tokens.effects.gradient.direction}, ${tokens.effects.gradient.startColor}, ${tokens.effects.gradient.endColor})`;
+    clonedWidget.barConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
+    clonedWidget.barConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
+
     return clonedWidget;
   }
 
@@ -173,6 +198,12 @@ export class ThemeManager {
     clonedWidget.lineConfig.styling.containerBorderRadius = tokens.borders.radius.md;
     clonedWidget.lineConfig.styling.pointColor = tokens.colors.chartElements.line.point;
     clonedWidget.lineConfig.styling.pointBorderColor = tokens.colors.chartElements.line.pointBorder;
+
+    // Apply advanced effects from tokens
+    clonedWidget.lineConfig.styling.containerOpacity = tokens.effects.opacity.medium;
+    clonedWidget.lineConfig.styling.containerBackground = `${tokens.effects.gradient.type}-gradient(${tokens.effects.gradient.direction}, ${tokens.effects.gradient.startColor}, ${tokens.effects.gradient.endColor})`;
+    clonedWidget.lineConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
+    clonedWidget.lineConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
 
     return clonedWidget;
   }
@@ -226,6 +257,12 @@ export class ThemeManager {
     clonedWidget.pieConfig.styling.arcLabelsTextColor = tokens.colors.chartElements.pie.arcLabel;
     clonedWidget.pieConfig.styling.arcLinkLabelsTextColor = tokens.colors.chartElements.pie.arcLinkLabel;
 
+    // Apply advanced effects from tokens
+    clonedWidget.pieConfig.styling.containerOpacity = tokens.effects.opacity.medium;
+    clonedWidget.pieConfig.styling.containerBackground = `${tokens.effects.gradient.type}-gradient(${tokens.effects.gradient.direction}, ${tokens.effects.gradient.startColor}, ${tokens.effects.gradient.endColor})`;
+    clonedWidget.pieConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
+    clonedWidget.pieConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
+
     return clonedWidget;
   }
 
@@ -275,6 +312,12 @@ export class ThemeManager {
     clonedWidget.areaConfig.styling.lineColor = tokens.colors.chartElements.area.stroke;
     clonedWidget.areaConfig.styling.pointColor = tokens.colors.chartElements.area.point;
     clonedWidget.areaConfig.styling.pointBorderColor = tokens.colors.chartElements.area.pointBorder;
+
+    // Apply advanced effects from tokens
+    clonedWidget.areaConfig.styling.containerOpacity = tokens.effects.opacity.medium;
+    clonedWidget.areaConfig.styling.containerBackground = `${tokens.effects.gradient.type}-gradient(${tokens.effects.gradient.direction}, ${tokens.effects.gradient.startColor}, ${tokens.effects.gradient.endColor})`;
+    clonedWidget.areaConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
+    clonedWidget.areaConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
 
     return clonedWidget;
   }

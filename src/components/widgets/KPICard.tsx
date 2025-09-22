@@ -68,6 +68,27 @@ interface KPICardProps {
   kpiContainerTextAlign?: 'left' | 'center' | 'right';
   kpiContainerShadow?: boolean;
 
+  // Advanced Background Effects
+  backgroundOpacity?: number;
+  backgroundGradient?: {
+    enabled: boolean;
+    type: 'linear' | 'radial' | 'conic';
+    direction: string;
+    startColor: string;
+    endColor: string;
+  };
+  backdropFilter?: {
+    enabled: boolean;
+    blur: number;
+  };
+
+  // Advanced Shadow Effects
+  containerShadowColor?: string;
+  containerShadowOpacity?: number;
+  containerShadowBlur?: number;
+  containerShadowOffsetX?: number;
+  containerShadowOffsetY?: number;
+
   // KPI Value styling props (number display)
   kpiValueColor?: string;
   kpiValueFontSize?: number;
@@ -144,6 +165,18 @@ export function KPICard({
   kpiContainerTextAlign,
   kpiContainerShadow,
 
+  // Advanced Background Effects
+  backgroundOpacity,
+  backgroundGradient,
+  backdropFilter,
+
+  // Advanced Shadow Effects
+  containerShadowColor,
+  containerShadowOpacity,
+  containerShadowBlur,
+  containerShadowOffsetX,
+  containerShadowOffsetY,
+
   // KPI Value styling props (number display)
   kpiValueColor,
   kpiValueFontSize,
@@ -200,13 +233,74 @@ export function KPICard({
 
   const formatValue = (value: number | undefined, unit: string = '') => {
     if (value === undefined || value === null) return 'N/A';
-    
+
     const formattedNumber = value.toLocaleString('pt-BR', {
       minimumFractionDigits: unit === '%' || unit === 'rating' ? 1 : 0,
       maximumFractionDigits: unit === '%' || unit === 'rating' ? 1 : 0,
     });
-    
+
     return unit === '$' ? `${unit}${formattedNumber}` : `${formattedNumber} ${unit}`;
+  };
+
+  // Helper function to convert hex to RGB
+  const hexToRgb = (hex: string) => {
+    const result = hex.replace('#', '').match(/.{2}/g);
+    return result ? result.map(h => parseInt(h, 16)).join(', ') : '0, 0, 0';
+  };
+
+  // Create advanced background styles
+  const getAdvancedBackground = () => {
+    // Priority: gradient > backgroundColor with opacity > backgroundColor
+    if (backgroundGradient?.enabled) {
+      const { type, direction, startColor, endColor } = backgroundGradient;
+      switch (type) {
+        case 'linear':
+          return `linear-gradient(${direction}, ${startColor}, ${endColor})`;
+        case 'radial':
+          return `radial-gradient(${direction}, ${startColor}, ${endColor})`;
+        case 'conic':
+          return `conic-gradient(from ${direction}, ${startColor}, ${endColor})`;
+        default:
+          return `linear-gradient(${direction}, ${startColor}, ${endColor})`;
+      }
+    }
+
+    // Apply opacity to backgroundColor if specified
+    if (kpiContainerBackgroundColor && backgroundOpacity !== undefined) {
+      const hex = kpiContainerBackgroundColor.replace('#', '');
+      const r = parseInt(hex.substring(0, 2), 16);
+      const g = parseInt(hex.substring(2, 4), 16);
+      const b = parseInt(hex.substring(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${backgroundOpacity})`;
+    }
+
+    return kpiContainerBackgroundColor ? hexToRgba(kpiContainerBackgroundColor, kpiContainerBackgroundOpacity ?? 1) : 'white';
+  };
+
+  const getBackdropFilter = () => {
+    if (backdropFilter?.enabled && backdropFilter?.blur) {
+      return `blur(${backdropFilter.blur}px)`;
+    }
+    return undefined;
+  };
+
+  // Create advanced shadow
+  const getAdvancedShadow = () => {
+    const hasCustomShadow = containerShadowColor || containerShadowOpacity !== undefined ||
+                           containerShadowBlur !== undefined || containerShadowOffsetX !== undefined ||
+                           containerShadowOffsetY !== undefined;
+
+    if (hasCustomShadow) {
+      return `${containerShadowOffsetX || 0}px ${containerShadowOffsetY || 4}px ${containerShadowBlur || 8}px rgba(${
+        hexToRgb(containerShadowColor || '#000000')
+      }, ${containerShadowOpacity || 0.2})`;
+    }
+
+    if (kpiContainerShadow) {
+      return '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+    }
+
+    return undefined;
   };
 
 
@@ -214,13 +308,14 @@ export function KPICard({
     <Card
       className={kpiContainerClassName || "@container/card h-full w-full border-0 p-0"}
       style={kpiContainerClassName ? {} : {
-        backgroundColor: kpiContainerBackgroundColor ? hexToRgba(kpiContainerBackgroundColor, kpiContainerBackgroundOpacity ?? 1) : 'white',
+        background: getAdvancedBackground(),
+        backdropFilter: getBackdropFilter(),
         borderColor: kpiContainerBorderColor ? hexToRgba(kpiContainerBorderColor, kpiContainerBorderOpacity ?? 1) : '#e5e7eb',
         borderWidth: kpiContainerBorderWidth ? `${kpiContainerBorderWidth}px` : undefined,
         borderRadius: kpiContainerBorderRadius ? `${kpiContainerBorderRadius}px` : undefined,
         padding: kpiContainerPadding ? `${kpiContainerPadding}px` : undefined,
         textAlign: kpiContainerTextAlign || 'left',
-        boxShadow: kpiContainerShadow ? '0 4px 6px -1px rgba(0, 0, 0, 0.1)' : undefined,
+        boxShadow: getAdvancedShadow(),
       }}
     >
         <CardHeader className="!text-left !items-start">
