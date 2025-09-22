@@ -191,7 +191,7 @@ export function BarChart(props: BarChartProps) {
   // Generate fill patterns for bars
   const generateBarFill = () => {
     if (barGradient?.enabled) {
-      return [{ match: '*', id: 'barGradient' }];
+      return [{ id: 'barGradient', match: '*' }];
     }
     return undefined;
   };
