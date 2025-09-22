@@ -133,11 +133,27 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
     }
   });
 
+  // Get colors from widget-specific config first, then fall back to generic styling
+  const getWidgetColors = () => {
+    switch (widget.type) {
+      case 'bar':
+        return widget.barConfig?.styling?.colors;
+      case 'line':
+        return widget.lineConfig?.styling?.colors;
+      case 'pie':
+        return widget.pieConfig?.styling?.colors;
+      case 'area':
+        return widget.areaConfig?.styling?.colors;
+      default:
+        return null;
+    }
+  };
+
   const commonChartProps = {
     data: chartData,
     title: widget.title,
     margin: { top: 20, right: 20, bottom: 40, left: 40 },
-    colors: widget.styling?.colors || ['#2563eb'],
+    colors: getWidgetColors() || widget.styling?.colors || ['#2563eb'],
     animate: false,
   };
 
