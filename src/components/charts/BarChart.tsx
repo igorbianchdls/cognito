@@ -1,7 +1,6 @@
 'use client';
 
 import { ResponsiveBar } from '@nivo/bar';
-import { linearGradientDef } from '@nivo/core';
 import { BarChartProps } from './types';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
@@ -36,13 +35,33 @@ export function BarChart(props: BarChartProps) {
     borderRadius,
     borderWidth,
     borderColor,
-    // Visual Effects props
+    // Visual Effects - CSS Only
     barOpacity,
     barHoverOpacity,
     borderOpacity,
-    barGradient,
-    barShadow,
-    hoverEffects,
+    
+    // Container CSS Effects
+    containerBackdropBlur,
+    containerBackgroundOpacity,
+    containerBorderOpacity,
+    containerDropShadow,
+    
+    // Bar CSS Filters
+    barBrightness,
+    barSaturate,
+    barContrast,
+    barBlur,
+    barBoxShadow,
+    
+    // Hover CSS Effects
+    hoverBrightness,
+    hoverSaturate,
+    hoverScale,
+    hoverBlur,
+    
+    // CSS Transitions
+    transitionDuration,
+    transitionEasing,
     padding,
     groupMode,
     layout,
@@ -158,43 +177,6 @@ export function BarChart(props: BarChartProps) {
       }, ${containerShadowOpacity || 0.1})`
     : '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
 
-  // Generate SVG definitions for visual effects
-  const generateVisualEffectsDefs = () => {
-    const defs = [];
-    
-    // Linear gradient definition using Nivo helpers
-    if (barGradient?.enabled) {
-      const { direction, startColor, endColor, startOpacity = 1, endOpacity = 1 } = barGradient;
-      
-      const getRotation = (dir: string) => {
-        switch (dir) {
-          case 'vertical': return 90;
-          case 'horizontal': return 0;
-          case 'diagonal': return 45;
-          default: return 90;
-        }
-      };
-      
-      defs.push(
-        linearGradientDef('barGradient', [
-          { offset: 0, color: startColor, opacity: startOpacity },
-          { offset: 100, color: endColor, opacity: endOpacity }
-        ], {
-          gradientTransform: `rotate(${getRotation(direction)})`
-        })
-      );
-    }
-    
-    return defs;
-  };
-
-  // Generate fill patterns for bars
-  const generateBarFill = () => {
-    if (barGradient?.enabled) {
-      return [{ id: 'barGradient', match: '*' }];
-    }
-    return undefined;
-  };
 
   // Process colors with opacity - type-safe version
   const processedColors = (): string[] => {
@@ -238,39 +220,46 @@ export function BarChart(props: BarChartProps) {
     return colorArray;
   };
 
-  // Generate hover styles
-  const generateHoverStyles = () => {
-    if (!hoverEffects?.enabled) return {};
-    
-    return {
-      transition: `all ${hoverEffects.transitionDuration || '200ms'} ease-in-out`,
-      '&:hover': {
-        transform: hoverEffects.scaleOnHover ? `scale(${hoverEffects.scaleOnHover})` : undefined,
-        filter: hoverEffects.brightnessOnHover ? `brightness(${hoverEffects.brightnessOnHover})` : undefined,
-        opacity: barHoverOpacity !== undefined ? barHoverOpacity : undefined
-      }
-    };
+  const finalColors = processedColors();
+  
+  // Apply CSS filters to bars
+  const getBarCSSFilters = () => {
+    const filters = [];
+    if (barBrightness !== undefined) filters.push(`brightness(${barBrightness})`);
+    if (barSaturate !== undefined) filters.push(`saturate(${barSaturate})`);
+    if (barContrast !== undefined) filters.push(`contrast(${barContrast})`);
+    if (barBlur !== undefined) filters.push(`blur(${barBlur}px)`);
+    return filters.length > 0 ? filters.join(' ') : undefined;
+  };
+  
+  // Apply CSS hover filters
+  const getHoverCSSFilters = () => {
+    const filters = [];
+    if (hoverBrightness !== undefined) filters.push(`brightness(${hoverBrightness})`);
+    if (hoverSaturate !== undefined) filters.push(`saturate(${hoverSaturate})`);
+    if (hoverBlur !== undefined) filters.push(`blur(${hoverBlur}px)`);
+    return filters.length > 0 ? filters.join(' ') : undefined;
+  };
+  
+  // Apply container CSS backdrop filter
+  const getContainerBackdropFilter = () => {
+    const filters = [];
+    if (containerBackdropBlur !== undefined) filters.push(`blur(${containerBackdropBlur}px)`);
+    return filters.length > 0 ? filters.join(' ') : undefined;
   };
 
-  const visualEffectsDefs = generateVisualEffectsDefs();
-  const barFillPatterns = generateBarFill();
-  const finalColors = processedColors();
-
-  // Debug: Log visual effects
-  console.log('🎨 BAR CHART efeitos visuais (type-safe):', {
-    hasGradient: barGradient?.enabled,
-    gradientType: barGradient?.type,
-    hasShadow: barShadow?.enabled,
-    hasHoverEffects: hoverEffects?.enabled,
+  // Debug: Log CSS effects
+  console.log('🎨 BAR CHART efeitos CSS:', {
+    barCSSFilters: getBarCSSFilters(),
+    hoverCSSFilters: getHoverCSSFilters(),
+    containerBackdropFilter: getContainerBackdropFilter(),
     opacity: barOpacity,
     colorProcessing: {
       originalColors: colors,
       barColor,
       finalColors: finalColors,
       colorsLength: finalColors.length
-    },
-    visualEffectsDefs: visualEffectsDefs.length,
-    barFillPatterns
+    }
   });
 
   // Debug log
@@ -313,8 +302,12 @@ export function BarChart(props: BarChartProps) {
   }
 
   const getBackdropFilter = () => {
+    // Check both old backdropFilter prop and new containerBackdropBlur
     if (backdropFilter?.enabled && backdropFilter?.blur) {
       return `blur(${backdropFilter.blur}px)`
+    }
+    if (containerBackdropBlur !== undefined) {
+      return `blur(${containerBackdropBlur}px)`
     }
     return undefined
   }
@@ -362,7 +355,8 @@ export function BarChart(props: BarChartProps) {
           margin: '0 auto',
           border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb',
           borderRadius: `${containerBorderRadius || 8}px`,
-          boxShadow,
+          boxShadow: containerDropShadow || boxShadow,
+          transition: transitionDuration ? `all ${transitionDuration} ${transitionEasing || 'ease-in-out'}` : undefined,
         })
       }}
     >
@@ -398,7 +392,26 @@ export function BarChart(props: BarChartProps) {
       <div
         style={{ 
           flex: 1,
-          height: '100%'
+          height: '100%',
+          filter: getBarCSSFilters(),
+          boxShadow: barBoxShadow,
+          transition: transitionDuration ? `all ${transitionDuration} ${transitionEasing || 'ease-in-out'}` : undefined,
+        }}
+        onMouseEnter={(e) => {
+          if (hoverScale !== undefined) {
+            e.currentTarget.style.transform = `scale(${hoverScale})`;
+          }
+          const hoverFilter = getHoverCSSFilters();
+          if (hoverFilter) {
+            e.currentTarget.style.filter = hoverFilter;
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (hoverScale !== undefined) {
+            e.currentTarget.style.transform = 'scale(1)';
+          }
+          const normalFilter = getBarCSSFilters();
+          e.currentTarget.style.filter = normalFilter || '';
         }}
       >
         <div style={{ height: '100%', width: '100%', overflow: 'hidden' }}>
@@ -417,10 +430,6 @@ export function BarChart(props: BarChartProps) {
           
           // Cores configuráveis com efeitos visuais
           colors={finalColors}
-          
-          // Visual Effects - SVG definitions and fills
-          defs={visualEffectsDefs}
-          fill={barFillPatterns}
           
           // Bordas configuráveis
           borderRadius={borderRadius ?? 4}

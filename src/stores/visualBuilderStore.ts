@@ -59,29 +59,18 @@ const initialCode = `{
           "backgroundColor": "#f1f5f9",
           "barOpacity": 0.9,
           "barHoverOpacity": 1.0,
-          "barGradient": {
-            "enabled": true,
-            "type": "linear",
-            "direction": "vertical",
-            "startColor": "#3b82f6",
-            "endColor": "#1d4ed8",
-            "startOpacity": 1.0,
-            "endOpacity": 0.8
-          },
-          "barShadow": {
-            "enabled": true,
-            "offsetX": 0,
-            "offsetY": 2,
-            "blur": 4,
-            "color": "#000000",
-            "opacity": 0.15
-          },
-          "hoverEffects": {
-            "enabled": true,
-            "scaleOnHover": 1.03,
-            "brightnessOnHover": 1.1,
-            "transitionDuration": "200ms"
-          }
+          "containerBackdropBlur": 8,
+          "containerBackgroundOpacity": 0.9,
+          "containerDropShadow": "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+          "barBrightness": 1.0,
+          "barSaturate": 1.2,
+          "barContrast": 1.1,
+          "barBoxShadow": "0 2px 4px rgba(0,0,0,0.1)",
+          "hoverBrightness": 1.1,
+          "hoverSaturate": 1.3,
+          "hoverScale": 1.03,
+          "transitionDuration": "200ms",
+          "transitionEasing": "ease-in-out"
         },
         "margin": {
           "bottom": 0
