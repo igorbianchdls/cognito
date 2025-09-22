@@ -186,8 +186,6 @@ export function BarChart(props: BarChartProps) {
     : '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
 
 
-  // Simplified colors logic - consistent with other charts
-  const finalColors = barColor ? [barColor] : colors || ['#2563eb'];
   
   // Build bar CSS filters directly (no function needed)
   const barCSSFilters = [
@@ -220,8 +218,7 @@ export function BarChart(props: BarChartProps) {
     hoverFilters: hoverCSSFilters,
     colorProcessing: {
       originalColors: colors,
-      barColor,
-      finalColors: finalColors
+      barColor
     }
   });
 
@@ -371,19 +368,9 @@ export function BarChart(props: BarChartProps) {
           margin={margin}
           padding={padding ?? 0.2}
           
-          // Cores configuráveis com efeitos visuais
-          colors={barOpacity !== undefined && barOpacity < 1 ?
-            finalColors.map(color => {
-              if (typeof color === 'string' && color.startsWith('#')) {
-                const hex = color.replace('#', '');
-                const r = parseInt(hex.substring(0, 2), 16);
-                const g = parseInt(hex.substring(2, 4), 16);
-                const b = parseInt(hex.substring(4, 6), 16);
-                return `rgba(${r}, ${g}, ${b}, ${barOpacity})`;
-              }
-              return color;
-            }) : finalColors
-          }
+          // Cores configuráveis
+          colors={barColor ? [barColor] : colors || ['#2563eb']}
+          fillOpacity={barOpacity}
           
           // Bordas configuráveis
           borderRadius={borderRadius ?? 4}
