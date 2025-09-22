@@ -43,6 +43,38 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
   const backgroundColor = gridConfig.backgroundColor || '#ffffff';
   const borderColor = gridConfig.borderColor || '#e5e7eb';
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Advanced container styles with priority system (same as widgets)
+  const containerStyles = {
+    // Background: priority to gradient, fallback to backgroundColor
+    background: gridConfig.backgroundGradient?.enabled
+      ? `${gridConfig.backgroundGradient.type}-gradient(${gridConfig.backgroundGradient.direction}, ${gridConfig.backgroundGradient.startColor}, ${gridConfig.backgroundGradient.endColor})`
+      : backgroundColor,
+
+    // Advanced CSS effects
+    opacity: gridConfig.backgroundOpacity,
+    backdropFilter: gridConfig.backdropFilter?.enabled
+      ? `blur(${gridConfig.backdropFilter.blur}px)`
+      : undefined,
+
+    // Border & Shadow
+    borderWidth: gridConfig.borderWidth ? `${gridConfig.borderWidth}px` : '1px',
+    borderColor: borderColor,
+    borderRadius: gridConfig.borderRadius ? `${gridConfig.borderRadius}px` : undefined,
+    boxShadow: gridConfig.containerShadowColor
+      ? `${gridConfig.containerShadowOffsetX || 0}px ${gridConfig.containerShadowOffsetY || 4}px ${gridConfig.containerShadowBlur || 8}px rgba(${hexToRgb(gridConfig.containerShadowColor)}, ${gridConfig.containerShadowOpacity || 0.1})`
+      : undefined,
+
+    // Spacing
+    padding: gridConfig.padding ? `${gridConfig.padding}px` : '16px',
+    margin: gridConfig.margin ? `${gridConfig.margin}px` : undefined,
+  };
+
+  // Helper function to convert hex to RGB
+  function hexToRgb(hex: string): string {
+    const result = hex.replace('#', '').match(/.{2}/g);
+    return result ? result.map(h => parseInt(h, 16)).join(', ') : '0, 0, 0';
+  }
   const { width: containerWidth, height: containerHeight } = useContainerDimensions(containerRef);
 
   // Fixed grid dimensions
@@ -97,13 +129,13 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
     <div ref={containerRef} className="w-full h-full">
       {/* Grid container */}
       <div
-        className="relative rounded-lg overflow-hidden"
+        className="relative overflow-hidden"
         style={{
           width: containerWidth,
           height: configHeight,
           transformOrigin: 'center',
-          backgroundColor: backgroundColor,
-          border: `1px solid ${borderColor}`
+          ...containerStyles,
+          border: `${containerStyles.borderWidth} solid ${containerStyles.borderColor}`
         }}
       >
         {/* Empty State */}

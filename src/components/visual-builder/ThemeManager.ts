@@ -367,11 +367,39 @@ export class ThemeManager {
     }
 
     const tokens = this.getThemeTokens(themeName);
-    
+
     return {
       ...gridConfig,
+      // Basic properties (existing)
       backgroundColor: gridConfig.backgroundColor || tokens.colors.grid.background,
-      borderColor: gridConfig.borderColor || tokens.colors.grid.border
+      borderColor: gridConfig.borderColor || tokens.colors.grid.border,
+
+      // Advanced effects from theme tokens (automatic)
+      backgroundOpacity: gridConfig.backgroundOpacity || tokens.effects.opacity.subtle,
+      backgroundGradient: gridConfig.backgroundGradient || {
+        enabled: true,
+        type: tokens.effects.gradient.type,
+        direction: tokens.effects.gradient.direction,
+        startColor: tokens.effects.gradient.startColor,
+        endColor: tokens.effects.gradient.endColor
+      },
+      backdropFilter: gridConfig.backdropFilter || {
+        enabled: true,
+        blur: tokens.effects.backdrop.blur
+      },
+
+      // Border & Shadow effects
+      borderWidth: gridConfig.borderWidth || tokens.borders.width.thin,
+      borderRadius: gridConfig.borderRadius || tokens.borders.radius.md,
+      containerShadowColor: gridConfig.containerShadowColor || tokens.effects.shadow.color,
+      containerShadowOpacity: gridConfig.containerShadowOpacity || tokens.effects.shadow.opacity,
+      containerShadowBlur: gridConfig.containerShadowBlur || tokens.effects.shadow.blur,
+      containerShadowOffsetX: gridConfig.containerShadowOffsetX || tokens.effects.shadow.offsetX,
+      containerShadowOffsetY: gridConfig.containerShadowOffsetY || tokens.effects.shadow.offsetY,
+
+      // Spacing
+      padding: gridConfig.padding || tokens.spacing.md,
+      margin: gridConfig.margin || tokens.spacing.sm
     };
   }
 

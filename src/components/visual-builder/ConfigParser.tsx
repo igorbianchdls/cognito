@@ -14,6 +14,33 @@ export interface GridConfig {
   containerHeight?: number;
   backgroundColor?: string;
   borderColor?: string;
+
+  // Advanced Background Effects (same as widgets)
+  backgroundOpacity?: number;
+  backgroundGradient?: {
+    enabled: boolean;
+    type: 'linear' | 'radial' | 'conic';
+    direction: string;
+    startColor: string;
+    endColor: string;
+  };
+  backdropFilter?: {
+    enabled: boolean;
+    blur: number;
+  };
+
+  // Advanced Border & Shadow Effects
+  borderWidth?: number;
+  borderRadius?: number;
+  containerShadowColor?: string;
+  containerShadowOpacity?: number;
+  containerShadowBlur?: number;
+  containerShadowOffsetX?: number;
+  containerShadowOffsetY?: number;
+
+  // Spacing
+  padding?: number;
+  margin?: number;
 }
 
 // Theme types are now managed by ThemeManager
