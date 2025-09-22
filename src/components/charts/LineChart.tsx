@@ -95,6 +95,12 @@ interface LineChartProps extends BaseChartProps {
     blur: number
   }
 
+  // Container Glass Effect & Modern Styles
+  containerBackground?: string           // background (gradients, rgba, solid colors)
+  containerOpacity?: number             // opacity (0-1)
+  containerBackdropFilter?: string      // backdrop-filter (blur, saturate, etc)
+  containerBoxShadow?: string           // box-shadow (shadows, glow effects)
+
   // Container Border props
   containerBorderWidth?: number
   containerBorderColor?: string
