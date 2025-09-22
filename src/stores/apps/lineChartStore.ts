@@ -43,9 +43,11 @@ export interface LineChartConfig {
     style?: string
 
     // Typography - Title/Subtitle
+    titleFontFamily?: string
     titleFontSize?: number
     titleFontWeight?: number
     titleColor?: string
+    subtitleFontFamily?: string
     subtitleFontSize?: number
     subtitleFontWeight?: number
     subtitleColor?: string

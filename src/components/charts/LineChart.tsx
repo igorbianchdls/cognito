@@ -139,9 +139,11 @@ export function LineChart({
   // Typography - Title/Subtitle
   title,
   subtitle,
+  titleFontFamily,
   titleFontSize = 18,
   titleFontWeight = 700,
   titleColor = '#222',
+  subtitleFontFamily,
   subtitleFontSize = 14,
   subtitleFontWeight = 400,
   subtitleColor = '#6b7280',
@@ -274,6 +276,7 @@ export function LineChart({
           style={titleClassName ? {} : {
             margin: `${titleMarginTop ?? 0}px ${titleMarginRight ?? 0}px ${titleMarginBottom ?? 4}px ${titleMarginLeft ?? 0}px`,
             padding: `${titlePaddingTop ?? 0}px ${titlePaddingRight ?? 0}px ${titlePaddingBottom ?? 0}px ${titlePaddingLeft ?? 0}px`,
+            fontFamily: titleFontFamily,
             fontSize: `${titleFontSize ?? 18}px`,
             fontWeight: titleFontWeight ?? 700,
             color: titleColor ?? '#222'
@@ -288,6 +291,7 @@ export function LineChart({
           style={subtitleClassName ? {} : {
             margin: `${subtitleMarginTop ?? 0}px ${subtitleMarginRight ?? 0}px ${subtitleMarginBottom ?? 16}px ${subtitleMarginLeft ?? 0}px`,
             padding: `${subtitlePaddingTop ?? 0}px ${subtitlePaddingRight ?? 0}px ${subtitlePaddingBottom ?? 0}px ${subtitlePaddingLeft ?? 0}px`,
+            fontFamily: subtitleFontFamily,
             fontSize: `${subtitleFontSize ?? 14}px`,
             color: subtitleColor ?? '#6b7280',
             fontWeight: subtitleFontWeight ?? 400
