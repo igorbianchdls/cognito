@@ -279,6 +279,11 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
             // Pass margin and legends from JSON config
             margin={widget.lineConfig?.margin || commonChartProps.margin}
             legends={widget.lineConfig?.legends}
+            // Container Glass Effect & Modern Styles - DIRECT PROPS
+            containerBackground={widget.lineConfig?.styling?.containerBackground}
+            containerOpacity={widget.lineConfig?.styling?.containerOpacity}
+            containerBackdropFilter={widget.lineConfig?.styling?.containerBackdropFilter}
+            containerBoxShadow={widget.lineConfig?.styling?.containerBoxShadow}
             // Fallback to default props if lineConfig not provided
             enableGridX={widget.lineConfig?.styling?.enableGridX ?? false}
             enableGridY={widget.lineConfig?.styling?.enableGridY ?? true}
@@ -300,6 +305,11 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
             // Pass margin and legends from JSON config
             margin={widget.pieConfig?.margin || commonChartProps.margin}
             legends={widget.pieConfig?.legends}
+            // Container Glass Effect & Modern Styles - DIRECT PROPS
+            containerBackground={widget.pieConfig?.styling?.containerBackground}
+            containerOpacity={widget.pieConfig?.styling?.containerOpacity}
+            containerBackdropFilter={widget.pieConfig?.styling?.containerBackdropFilter}
+            containerBoxShadow={widget.pieConfig?.styling?.containerBoxShadow}
             // Fallback to default props if pieConfig not provided
             innerRadius={widget.pieConfig?.styling?.innerRadius ?? 0.5}
             padAngle={widget.pieConfig?.styling?.padAngle ?? 1}
@@ -318,6 +328,11 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
             // Pass margin and legends from JSON config
             margin={widget.areaConfig?.margin || commonChartProps.margin}
             legends={widget.areaConfig?.legends}
+            // Container Glass Effect & Modern Styles - DIRECT PROPS
+            containerBackground={widget.areaConfig?.styling?.containerBackground}
+            containerOpacity={widget.areaConfig?.styling?.containerOpacity}
+            containerBackdropFilter={widget.areaConfig?.styling?.containerBackdropFilter}
+            containerBoxShadow={widget.areaConfig?.styling?.containerBoxShadow}
             // Fallback to default props if areaConfig not provided
             enableGridX={widget.areaConfig?.styling?.enableGridX ?? false}
             enableGridY={widget.areaConfig?.styling?.enableGridY ?? true}
