@@ -42,6 +42,34 @@ export interface BarChartProps extends BaseChartProps {
   borderColor?: string | { from: string; modifiers: Array<[string, number]> };
   borderWidth?: number;
   
+  // Visual Effects
+  barOpacity?: number;
+  barHoverOpacity?: number;
+  borderOpacity?: number;
+  barGradient?: {
+    enabled: boolean;
+    type: 'linear' | 'radial';
+    direction: string; // 'vertical', 'horizontal', '45deg', etc.
+    startColor: string;
+    endColor: string;
+    startOpacity?: number;
+    endOpacity?: number;
+  };
+  barShadow?: {
+    enabled: boolean;
+    offsetX: number;
+    offsetY: number;
+    blur: number;
+    color: string;
+    opacity: number;
+  };
+  hoverEffects?: {
+    enabled: boolean;
+    scaleOnHover?: number;
+    brightnessOnHover?: number;
+    transitionDuration?: string;
+  };
+  
   // Scales
   valueScale?: { type: 'linear' | 'symlog' };
   indexScale?: { type: 'band'; round?: boolean };

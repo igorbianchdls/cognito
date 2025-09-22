@@ -108,6 +108,34 @@ export interface BarChartConfig {
     innerPadding?: number
     barColor?: string
     
+    // Visual Effects
+    barOpacity?: number
+    barHoverOpacity?: number
+    borderOpacity?: number
+    barGradient?: {
+      enabled: boolean
+      type: 'linear' | 'radial'
+      direction: string
+      startColor: string
+      endColor: string
+      startOpacity?: number
+      endOpacity?: number
+    }
+    barShadow?: {
+      enabled: boolean
+      offsetX: number
+      offsetY: number
+      blur: number
+      color: string
+      opacity: number
+    }
+    hoverEffects?: {
+      enabled: boolean
+      scaleOnHover?: number
+      brightnessOnHover?: number
+      transitionDuration?: string
+    }
+    
     // Typography - Axis
     axisFontFamily?: string
     axisFontSize?: number

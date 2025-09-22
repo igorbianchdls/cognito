@@ -1,6 +1,7 @@
 'use client';
 
 import { ResponsiveBar } from '@nivo/bar';
+import { linearGradientDef, radialGradientDef } from '@nivo/core';
 import { BarChartProps } from './types';
 import { formatValue } from './utils';
 import { EmptyState } from './EmptyState';
@@ -35,6 +36,13 @@ export function BarChart(props: BarChartProps) {
     borderRadius,
     borderWidth,
     borderColor,
+    // Visual Effects props
+    barOpacity,
+    barHoverOpacity,
+    borderOpacity,
+    barGradient,
+    barShadow,
+    hoverEffects,
     padding,
     groupMode,
     layout,
@@ -149,6 +157,101 @@ export function BarChart(props: BarChartProps) {
         hexToRgb(containerShadowColor || '#000000')
       }, ${containerShadowOpacity || 0.1})`
     : '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+
+  // Generate SVG definitions for visual effects
+  const generateVisualEffectsDefs = () => {
+    const defs = [];
+    
+    // Gradient definition using Nivo helpers
+    if (barGradient?.enabled) {
+      const { type, direction, startColor, endColor, startOpacity = 1, endOpacity = 1 } = barGradient;
+      
+      if (type === 'linear') {
+        const getRotation = (dir: string) => {
+          switch (dir) {
+            case 'vertical': return 90;
+            case 'horizontal': return 0;
+            case 'diagonal': return 45;
+            default: return 90;
+          }
+        };
+        
+        defs.push(
+          linearGradientDef('barGradient', [
+            { offset: 0, color: startColor, opacity: startOpacity },
+            { offset: 100, color: endColor, opacity: endOpacity }
+          ], {
+            gradientTransform: `rotate(${getRotation(direction)})`
+          })
+        );
+      } else if (type === 'radial') {
+        defs.push(
+          radialGradientDef('barGradient', [
+            { offset: 0, color: startColor, opacity: startOpacity },
+            { offset: 100, color: endColor, opacity: endOpacity }
+          ])
+        );
+      }
+    }
+    
+    return defs;
+  };
+
+  // Generate fill patterns for bars
+  const generateBarFill = () => {
+    if (barGradient?.enabled) {
+      return [{ match: '*', id: 'barGradient' }];
+    }
+    return undefined;
+  };
+
+  // Process colors with opacity
+  const processedColors = () => {
+    const baseColors = barColor ? [barColor] : colors || ['#2563eb'];
+    
+    if (barOpacity !== undefined && barOpacity < 1) {
+      return baseColors.map(color => {
+        if (color.startsWith('#')) {
+          const hex = color.replace('#', '');
+          const r = parseInt(hex.substring(0, 2), 16);
+          const g = parseInt(hex.substring(2, 4), 16);
+          const b = parseInt(hex.substring(4, 6), 16);
+          return `rgba(${r}, ${g}, ${b}, ${barOpacity})`;
+        }
+        return color;
+      });
+    }
+    
+    return baseColors;
+  };
+
+  // Generate hover styles
+  const generateHoverStyles = () => {
+    if (!hoverEffects?.enabled) return {};
+    
+    return {
+      transition: `all ${hoverEffects.transitionDuration || '200ms'} ease-in-out`,
+      '&:hover': {
+        transform: hoverEffects.scaleOnHover ? `scale(${hoverEffects.scaleOnHover})` : undefined,
+        filter: hoverEffects.brightnessOnHover ? `brightness(${hoverEffects.brightnessOnHover})` : undefined,
+        opacity: barHoverOpacity !== undefined ? barHoverOpacity : undefined
+      }
+    };
+  };
+
+  const visualEffectsDefs = generateVisualEffectsDefs();
+  const barFillPatterns = generateBarFill();
+  const finalColors = processedColors();
+
+  // Debug: Log visual effects
+  console.log('🎨 BAR CHART efeitos visuais:', {
+    hasGradient: barGradient?.enabled,
+    hasShadow: barShadow?.enabled,
+    hasHoverEffects: hoverEffects?.enabled,
+    finalColors,
+    visualEffectsDefs: visualEffectsDefs.length,
+    barFillPatterns
+  });
 
   // Debug log
   console.log('🖼️ BarChart Shadow Debug:', {
@@ -292,8 +395,12 @@ export function BarChart(props: BarChartProps) {
           margin={margin}
           padding={padding ?? 0.2}
           
-          // Cores configuráveis
-          colors={barColor ? [barColor] : colors || ['#2563eb']}
+          // Cores configuráveis com efeitos visuais
+          colors={finalColors}
+          
+          // Visual Effects - SVG definitions and fills
+          defs={visualEffectsDefs}
+          fill={barFillPatterns}
           
           // Bordas configuráveis
           borderRadius={borderRadius ?? 4}

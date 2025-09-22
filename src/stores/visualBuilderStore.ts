@@ -56,7 +56,32 @@ const initialCode = `{
           "axisFontSize": 12,
           "axisTextColor": "#64748b",
           "barColor": "#3b82f6",
-          "backgroundColor": "#f1f5f9"
+          "backgroundColor": "#f1f5f9",
+          "barOpacity": 0.9,
+          "barHoverOpacity": 1.0,
+          "barGradient": {
+            "enabled": true,
+            "type": "linear",
+            "direction": "vertical",
+            "startColor": "#3b82f6",
+            "endColor": "#1d4ed8",
+            "startOpacity": 1.0,
+            "endOpacity": 0.8
+          },
+          "barShadow": {
+            "enabled": true,
+            "offsetX": 0,
+            "offsetY": 2,
+            "blur": 4,
+            "color": "#000000",
+            "opacity": 0.15
+          },
+          "hoverEffects": {
+            "enabled": true,
+            "scaleOnHover": 1.03,
+            "brightnessOnHover": 1.1,
+            "transitionDuration": "200ms"
+          }
         },
         "margin": {
           "bottom": 0
