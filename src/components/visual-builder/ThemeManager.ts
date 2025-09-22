@@ -65,7 +65,7 @@ export class ThemeManager {
 
     // KPI Name styling (equivalent to subtitle in charts)
     clonedWidget.kpiConfig.kpiNameColor = tokens.colors.text.secondary;
-    clonedWidget.kpiConfig.kpiNameFontSize = tokens.typography.fontSize.base;
+    clonedWidget.kpiConfig.kpiNameFontSize = tokens.typography.fontSize.md;
     clonedWidget.kpiConfig.kpiNameFontWeight = tokens.typography.fontWeight.medium;
     clonedWidget.kpiConfig.kpiNameFontFamily = tokens.typography.fontFamily.primary;
     clonedWidget.kpiConfig.kpiNameMarginTop = 0;
