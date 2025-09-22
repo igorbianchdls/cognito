@@ -48,6 +48,33 @@ export interface ColorTokens {
     axis: string;
   };
 
+  // Chart Elements - Specific colors for each chart type
+  chartElements: {
+    bar: {
+      fill: string;           // barColor
+      border: string;         // borderColor
+      label: string;          // labelTextColor
+    };
+    line: {
+      stroke: string;         // lineColor
+      point: string;          // pointColor
+      pointBorder: string;    // pointBorderColor
+      pointLabel: string;     // pointLabelColor
+    };
+    area: {
+      fill: string;           // area fill color
+      stroke: string;         // lineColor
+      point: string;          // pointColor
+      pointBorder: string;    // pointBorderColor
+      pointLabel: string;     // pointLabelColor
+    };
+    pie: {
+      border: string;         // borderColor
+      arcLabel: string;       // arcLabelsTextColor
+      arcLinkLabel: string;   // arcLinkLabelsTextColor
+    };
+  };
+
   // Grid specific
   grid: {
     background: string;
@@ -163,6 +190,33 @@ export const DARK_TOKENS: DesignTokens = {
       axis: '#6b7280'
     },
 
+    // Chart Elements - Dark Theme (cores vibrantes para contraste)
+    chartElements: {
+      bar: {
+        fill: '#60a5fa',        // Azul claro vibrante
+        border: '#1e40af',      // Azul escuro para borda
+        label: '#f1f5f9'        // Branco para labels
+      },
+      line: {
+        stroke: '#34d399',      // Verde claro
+        point: '#10b981',       // Verde médio
+        pointBorder: '#065f46', // Verde escuro
+        pointLabel: '#ecfdf5'   // Verde muito claro
+      },
+      area: {
+        fill: '#a78bfa',        // Roxo claro
+        stroke: '#7c3aed',      // Roxo médio
+        point: '#5b21b6',       // Roxo escuro
+        pointBorder: '#3730a3', // Roxo muito escuro
+        pointLabel: '#f3f4f6'   // Cinza claro
+      },
+      pie: {
+        border: '#374151',      // Cinza escuro
+        arcLabel: '#f9fafb',    // Branco para labels
+        arcLinkLabel: '#d1d5db' // Cinza claro para links
+      }
+    },
+
     // Grid
     grid: {
       background: '#171717',
@@ -270,6 +324,33 @@ export const LIGHT_TOKENS: DesignTokens = {
       axis: '#64748b'
     },
 
+    // Chart Elements - Light Theme (cores saturadas para contraste)
+    chartElements: {
+      bar: {
+        fill: '#1d4ed8',        // Azul saturado
+        border: '#1e3a8a',      // Azul muito escuro
+        label: '#1e293b'        // Cinza escuro para labels
+      },
+      line: {
+        stroke: '#059669',      // Verde saturado
+        point: '#047857',       // Verde escuro
+        pointBorder: '#064e3b', // Verde muito escuro
+        pointLabel: '#374151'   // Cinza escuro
+      },
+      area: {
+        fill: '#7c2d12',        // Laranja escuro
+        stroke: '#ea580c',      // Laranja médio
+        point: '#9a3412',       // Laranja saturado
+        pointBorder: '#7c2d12', // Laranja escuro
+        pointLabel: '#374151'   // Cinza escuro
+      },
+      pie: {
+        border: '#ffffff',      // Branco para separação
+        arcLabel: '#111827',    // Preto para labels
+        arcLinkLabel: '#374151' // Cinza escuro para links
+      }
+    },
+
     // Grid
     grid: {
       background: '#ffffff',
@@ -308,6 +389,31 @@ export const BLUE_TOKENS: DesignTokens = {
       muted: '#94a3b8',
       inverse: '#0f172a'
     },
+    chartElements: {
+      bar: {
+        fill: '#3b82f6',
+        border: '#1e40af',
+        label: '#e2e8f0'
+      },
+      line: {
+        stroke: '#60a5fa',
+        point: '#93c5fd',
+        pointBorder: '#1e40af',
+        pointLabel: '#dbeafe'
+      },
+      area: {
+        fill: '#1e40af',
+        stroke: '#3b82f6',
+        point: '#60a5fa',
+        pointBorder: '#1e3a8a',
+        pointLabel: '#e2e8f0'
+      },
+      pie: {
+        border: '#475569',
+        arcLabel: '#f1f5f9',
+        arcLinkLabel: '#cbd5e1'
+      }
+    },
     grid: {
       background: '#1e293b',
       border: '#475569'
@@ -332,6 +438,31 @@ export const GREEN_TOKENS: DesignTokens = {
       muted: '#a7f3d0',
       inverse: '#064e3b'
     },
+    chartElements: {
+      bar: {
+        fill: '#10b981',
+        border: '#047857',
+        label: '#ecfdf5'
+      },
+      line: {
+        stroke: '#34d399',
+        point: '#6ee7b7',
+        pointBorder: '#047857',
+        pointLabel: '#d1fae5'
+      },
+      area: {
+        fill: '#047857',
+        stroke: '#10b981',
+        point: '#34d399',
+        pointBorder: '#065f46',
+        pointLabel: '#ecfdf5'
+      },
+      pie: {
+        border: '#059669',
+        arcLabel: '#ecfdf5',
+        arcLinkLabel: '#d1fae5'
+      }
+    },
     grid: {
       background: '#065f46',
       border: '#059669'
@@ -355,6 +486,31 @@ export const CORPORATE_TOKENS: DesignTokens = {
       secondary: '#334155',
       muted: '#64748b',
       inverse: '#ffffff'
+    },
+    chartElements: {
+      bar: {
+        fill: '#475569',
+        border: '#334155',
+        label: '#0f172a'
+      },
+      line: {
+        stroke: '#64748b',
+        point: '#94a3b8',
+        pointBorder: '#475569',
+        pointLabel: '#334155'
+      },
+      area: {
+        fill: '#334155',
+        stroke: '#475569',
+        point: '#64748b',
+        pointBorder: '#1e293b',
+        pointLabel: '#0f172a'
+      },
+      pie: {
+        border: '#e2e8f0',
+        arcLabel: '#0f172a',
+        arcLinkLabel: '#334155'
+      }
     },
     grid: {
       background: '#ffffff',
@@ -391,6 +547,31 @@ export const NAVY_TOKENS: DesignTokens = {
       grid: '#475569',
       axis: '#64748b'
     },
+    chartElements: {
+      bar: {
+        fill: '#1e40af',
+        border: '#1e3a8a',
+        label: '#f1f5f9'
+      },
+      line: {
+        stroke: '#3b82f6',
+        point: '#60a5fa',
+        pointBorder: '#1e40af',
+        pointLabel: '#cbd5e1'
+      },
+      area: {
+        fill: '#1e3a8a',
+        stroke: '#1e40af',
+        point: '#3b82f6',
+        pointBorder: '#1e3a8a',
+        pointLabel: '#f1f5f9'
+      },
+      pie: {
+        border: '#475569',
+        arcLabel: '#f1f5f9',
+        arcLinkLabel: '#cbd5e1'
+      }
+    },
     grid: {
       background: '#1e293b',
       border: '#475569'
@@ -425,6 +606,31 @@ export const SLATE_TOKENS: DesignTokens = {
       quaternary: '#cbd5e1',
       grid: '#374151',
       axis: '#64748b'
+    },
+    chartElements: {
+      bar: {
+        fill: '#64748b',
+        border: '#475569',
+        label: '#f8fafc'
+      },
+      line: {
+        stroke: '#94a3b8',
+        point: '#cbd5e1',
+        pointBorder: '#64748b',
+        pointLabel: '#e2e8f0'
+      },
+      area: {
+        fill: '#475569',
+        stroke: '#64748b',
+        point: '#94a3b8',
+        pointBorder: '#374151',
+        pointLabel: '#f8fafc'
+      },
+      pie: {
+        border: '#374151',
+        arcLabel: '#f8fafc',
+        arcLinkLabel: '#e2e8f0'
+      }
     },
     grid: {
       background: '#1e293b',
@@ -467,6 +673,31 @@ export const FOREST_TOKENS: DesignTokens = {
       grid: '#15803d',
       axis: '#22c55e'
     },
+    chartElements: {
+      bar: {
+        fill: '#16a34a',
+        border: '#15803d',
+        label: '#f0fdf4'
+      },
+      line: {
+        stroke: '#22c55e',
+        point: '#4ade80',
+        pointBorder: '#16a34a',
+        pointLabel: '#dcfce7'
+      },
+      area: {
+        fill: '#15803d',
+        stroke: '#16a34a',
+        point: '#22c55e',
+        pointBorder: '#166534',
+        pointLabel: '#f0fdf4'
+      },
+      pie: {
+        border: '#15803d',
+        arcLabel: '#f0fdf4',
+        arcLinkLabel: '#dcfce7'
+      }
+    },
     grid: {
       background: '#166534',
       border: '#15803d'
@@ -508,6 +739,31 @@ export const BURGUNDY_TOKENS: DesignTokens = {
       grid: '#991b1b',
       axis: '#ef4444'
     },
+    chartElements: {
+      bar: {
+        fill: '#dc2626',
+        border: '#991b1b',
+        label: '#fef2f2'
+      },
+      line: {
+        stroke: '#ef4444',
+        point: '#f87171',
+        pointBorder: '#dc2626',
+        pointLabel: '#fee2e2'
+      },
+      area: {
+        fill: '#991b1b',
+        stroke: '#dc2626',
+        point: '#ef4444',
+        pointBorder: '#7f1d1d',
+        pointLabel: '#fef2f2'
+      },
+      pie: {
+        border: '#991b1b',
+        arcLabel: '#fef2f2',
+        arcLinkLabel: '#fee2e2'
+      }
+    },
     grid: {
       background: '#7f1d1d',
       border: '#991b1b'
@@ -542,6 +798,31 @@ export const PLATINUM_TOKENS: DesignTokens = {
       quaternary: '#f4f4f5',
       grid: '#3f3f46',
       axis: '#a1a1aa'
+    },
+    chartElements: {
+      bar: {
+        fill: '#71717a',
+        border: '#52525b',
+        label: '#fafafa'
+      },
+      line: {
+        stroke: '#a1a1aa',
+        point: '#d4d4d8',
+        pointBorder: '#71717a',
+        pointLabel: '#f4f4f5'
+      },
+      area: {
+        fill: '#52525b',
+        stroke: '#71717a',
+        point: '#a1a1aa',
+        pointBorder: '#3f3f46',
+        pointLabel: '#fafafa'
+      },
+      pie: {
+        border: '#3f3f46',
+        arcLabel: '#fafafa',
+        arcLinkLabel: '#f4f4f5'
+      }
     },
     grid: {
       background: '#27272a',

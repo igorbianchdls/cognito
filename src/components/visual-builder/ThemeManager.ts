@@ -117,13 +117,10 @@ export class ThemeManager {
     clonedWidget.barConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
 
     clonedWidget.barConfig.styling.colors = [
-      tokens.colors.chart.primary,
-      tokens.colors.chart.secondary,
-      tokens.colors.chart.tertiary,
-      tokens.colors.chart.quaternary
+      tokens.colors.chartElements.bar.fill
     ];
 
-    clonedWidget.barConfig.styling.containerBorderColor = tokens.colors.border;
+    clonedWidget.barConfig.styling.containerBorderColor = tokens.colors.chartElements.bar.border;
     clonedWidget.barConfig.styling.containerBorderWidth = tokens.borders.width.thin;
     clonedWidget.barConfig.styling.containerBorderRadius = tokens.borders.radius.md;
     clonedWidget.barConfig.styling.containerShadowColor = tokens.shadows.medium;
@@ -171,9 +168,11 @@ export class ThemeManager {
     clonedWidget.lineConfig.styling.axisTextColor = tokens.colors.text.secondary;
     clonedWidget.lineConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
 
-    clonedWidget.lineConfig.styling.colors = [tokens.colors.chart.primary];
-    clonedWidget.lineConfig.styling.containerBorderColor = tokens.colors.border;
+    clonedWidget.lineConfig.styling.colors = [tokens.colors.chartElements.line.stroke];
+    clonedWidget.lineConfig.styling.containerBorderColor = tokens.colors.chartElements.line.point;
     clonedWidget.lineConfig.styling.containerBorderRadius = tokens.borders.radius.md;
+    clonedWidget.lineConfig.styling.pointColor = tokens.colors.chartElements.line.point;
+    clonedWidget.lineConfig.styling.pointBorderColor = tokens.colors.chartElements.line.pointBorder;
 
     return clonedWidget;
   }
@@ -216,14 +215,16 @@ export class ThemeManager {
     clonedWidget.pieConfig.styling.subtitleMarginLeft = 0;
 
     clonedWidget.pieConfig.styling.colors = [
-      tokens.colors.chart.primary,
-      tokens.colors.chart.secondary,
-      tokens.colors.chart.tertiary,
-      tokens.colors.chart.quaternary
+      tokens.colors.chartElements.bar.fill,
+      tokens.colors.chartElements.line.stroke,
+      tokens.colors.chartElements.area.fill,
+      tokens.colors.chartElements.pie.arcLabel
     ];
 
-    clonedWidget.pieConfig.styling.containerBorderColor = tokens.colors.border;
+    clonedWidget.pieConfig.styling.containerBorderColor = tokens.colors.chartElements.pie.border;
     clonedWidget.pieConfig.styling.containerBorderRadius = tokens.borders.radius.md;
+    clonedWidget.pieConfig.styling.arcLabelsTextColor = tokens.colors.chartElements.pie.arcLabel;
+    clonedWidget.pieConfig.styling.arcLinkLabelsTextColor = tokens.colors.chartElements.pie.arcLinkLabel;
 
     return clonedWidget;
   }
@@ -268,9 +269,12 @@ export class ThemeManager {
     clonedWidget.areaConfig.styling.axisTextColor = tokens.colors.text.secondary;
     clonedWidget.areaConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
 
-    clonedWidget.areaConfig.styling.colors = [tokens.colors.chart.primary];
-    clonedWidget.areaConfig.styling.containerBorderColor = tokens.colors.border;
+    clonedWidget.areaConfig.styling.colors = [tokens.colors.chartElements.area.fill];
+    clonedWidget.areaConfig.styling.containerBorderColor = tokens.colors.chartElements.area.stroke;
     clonedWidget.areaConfig.styling.containerBorderRadius = tokens.borders.radius.md;
+    clonedWidget.areaConfig.styling.lineColor = tokens.colors.chartElements.area.stroke;
+    clonedWidget.areaConfig.styling.pointColor = tokens.colors.chartElements.area.point;
+    clonedWidget.areaConfig.styling.pointBorderColor = tokens.colors.chartElements.area.pointBorder;
 
     return clonedWidget;
   }
