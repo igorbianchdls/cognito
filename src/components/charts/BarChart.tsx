@@ -196,13 +196,35 @@ export function BarChart(props: BarChartProps) {
     return undefined;
   };
 
-  // Process colors with opacity
-  const processedColors = () => {
-    const baseColors = barColor ? [barColor] : colors || ['#2563eb'];
+  // Process colors with opacity - type-safe version
+  const processedColors = (): string[] => {
+    // Normalize colors to string array
+    let colorArray: string[] = [];
     
+    if (barColor) {
+      // Single bar color specified
+      colorArray = [barColor];
+    } else if (colors) {
+      // Handle different types of colors prop
+      if (Array.isArray(colors)) {
+        // colors is string[]
+        colorArray = colors;
+      } else if (typeof colors === 'string') {
+        // colors is single string
+        colorArray = [colors];
+      } else {
+        // colors is OrdinalColorScaleConfig - use fallback
+        colorArray = ['#2563eb'];
+      }
+    } else {
+      // No colors specified - use default
+      colorArray = ['#2563eb'];
+    }
+    
+    // Apply opacity if needed
     if (barOpacity !== undefined && barOpacity < 1) {
-      return baseColors.map(color => {
-        if (color.startsWith('#')) {
+      return colorArray.map(color => {
+        if (typeof color === 'string' && color.startsWith('#')) {
           const hex = color.replace('#', '');
           const r = parseInt(hex.substring(0, 2), 16);
           const g = parseInt(hex.substring(2, 4), 16);
@@ -213,7 +235,7 @@ export function BarChart(props: BarChartProps) {
       });
     }
     
-    return baseColors;
+    return colorArray;
   };
 
   // Generate hover styles
@@ -235,13 +257,18 @@ export function BarChart(props: BarChartProps) {
   const finalColors = processedColors();
 
   // Debug: Log visual effects
-  console.log('🎨 BAR CHART efeitos visuais (apenas linear):', {
+  console.log('🎨 BAR CHART efeitos visuais (type-safe):', {
     hasGradient: barGradient?.enabled,
     gradientType: barGradient?.type,
     hasShadow: barShadow?.enabled,
     hasHoverEffects: hoverEffects?.enabled,
     opacity: barOpacity,
-    finalColors,
+    colorProcessing: {
+      originalColors: colors,
+      barColor,
+      finalColors: finalColors,
+      colorsLength: finalColors.length
+    },
     visualEffectsDefs: visualEffectsDefs.length,
     barFillPatterns
   });
