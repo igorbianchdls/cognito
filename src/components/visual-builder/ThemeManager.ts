@@ -90,43 +90,55 @@ export class ThemeManager {
       clonedWidget.barConfig.styling = { ...DEFAULT_CHART_STYLING };
     }
 
-    // Apply design tokens to Bar Chart with rich theming
-    clonedWidget.barConfig.styling.backgroundColor = tokens.colors.surface;
+    // Apply design tokens to Bar Chart with spread pattern (user props override theme defaults)
+    clonedWidget.barConfig.styling = {
+      // Base defaults first
+      ...DEFAULT_CHART_STYLING,
 
-    // Title styling - complete props
-    clonedWidget.barConfig.styling.titleColor = tokens.colors.text.primary;
-    clonedWidget.barConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
-    clonedWidget.barConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
-    clonedWidget.barConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary;
-    clonedWidget.barConfig.styling.titleMarginTop = 0;
-    clonedWidget.barConfig.styling.titleMarginRight = 0;
-    clonedWidget.barConfig.styling.titleMarginBottom = 8;
-    clonedWidget.barConfig.styling.titleMarginLeft = 0;
+      // Theme defaults override base
+      backgroundColor: tokens.colors.surface,
 
-    // Subtitle styling - complete props
-    clonedWidget.barConfig.styling.subtitleFontFamily = tokens.typography.fontFamily.primary;
-    clonedWidget.barConfig.styling.subtitleFontSize = tokens.typography.fontSize.sm;
-    clonedWidget.barConfig.styling.subtitleFontWeight = tokens.typography.fontWeight.normal;
-    clonedWidget.barConfig.styling.subtitleColor = tokens.colors.text.secondary;
-    clonedWidget.barConfig.styling.subtitleMarginTop = 0;
-    clonedWidget.barConfig.styling.subtitleMarginRight = 0;
-    clonedWidget.barConfig.styling.subtitleMarginBottom = 16;
-    clonedWidget.barConfig.styling.subtitleMarginLeft = 0;
+      // Title styling - complete props
+      titleColor: tokens.colors.text.primary,
+      titleFontSize: tokens.typography.fontSize.lg,
+      titleFontWeight: tokens.typography.fontWeight.semibold,
+      titleFontFamily: tokens.typography.fontFamily.primary,
+      titleMarginTop: 0,
+      titleMarginRight: 0,
+      titleMarginBottom: 8,
+      titleMarginLeft: 0,
 
-    clonedWidget.barConfig.styling.axisTextColor = tokens.colors.text.secondary;
-    clonedWidget.barConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
+      // Subtitle styling - complete props
+      subtitleFontFamily: tokens.typography.fontFamily.primary,
+      subtitleFontSize: tokens.typography.fontSize.sm,
+      subtitleFontWeight: tokens.typography.fontWeight.normal,
+      subtitleColor: tokens.colors.text.secondary,
+      subtitleMarginTop: 0,
+      subtitleMarginRight: 0,
+      subtitleMarginBottom: 16,
+      subtitleMarginLeft: 0,
 
-    clonedWidget.barConfig.styling.colors = [
-      tokens.colors.chart.primary,
-      tokens.colors.chart.secondary,
-      tokens.colors.chart.tertiary,
-      tokens.colors.chart.quaternary
-    ];
+      axisTextColor: tokens.colors.text.secondary,
+      axisFontSize: tokens.typography.fontSize.sm,
 
-    clonedWidget.barConfig.styling.containerBorderColor = tokens.colors.border;
-    clonedWidget.barConfig.styling.containerBorderWidth = tokens.borders.width.thin;
-    clonedWidget.barConfig.styling.containerBorderRadius = tokens.borders.radius.md;
-    clonedWidget.barConfig.styling.containerShadowColor = tokens.shadows.medium;
+      containerBorderColor: tokens.colors.border,
+      containerBorderWidth: tokens.borders.width.thin,
+      containerBorderRadius: tokens.borders.radius.md,
+      containerShadowColor: tokens.shadows.medium,
+
+      // User props from JSON override all above (spread at the end)
+      ...clonedWidget.barConfig.styling,
+
+      // Colors override must be after user props to handle both empty and user-defined colors
+      colors: clonedWidget.barConfig.styling?.colors?.length > 0
+        ? clonedWidget.barConfig.styling.colors
+        : [
+            tokens.colors.chart.primary,
+            tokens.colors.chart.secondary,
+            tokens.colors.chart.tertiary,
+            tokens.colors.chart.quaternary
+          ]
+    };
 
     return clonedWidget;
   }
@@ -145,35 +157,48 @@ export class ThemeManager {
       clonedWidget.lineConfig.styling = { ...DEFAULT_CHART_STYLING };
     }
 
-    // Apply design tokens to Line Chart
-    clonedWidget.lineConfig.styling.backgroundColor = tokens.colors.surface;
+    // Apply design tokens to Line Chart with spread pattern (user props override theme defaults)
+    clonedWidget.lineConfig.styling = {
+      // Base defaults first
+      ...DEFAULT_CHART_STYLING,
 
-    // Title styling - complete props
-    clonedWidget.lineConfig.styling.titleColor = tokens.colors.text.primary;
-    clonedWidget.lineConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
-    clonedWidget.lineConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
-    clonedWidget.lineConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary;
-    clonedWidget.lineConfig.styling.titleMarginTop = 0;
-    clonedWidget.lineConfig.styling.titleMarginRight = 0;
-    clonedWidget.lineConfig.styling.titleMarginBottom = 8;
-    clonedWidget.lineConfig.styling.titleMarginLeft = 0;
+      // Theme defaults override base
+      backgroundColor: tokens.colors.surface,
 
-    // Subtitle styling - complete props
-    clonedWidget.lineConfig.styling.subtitleFontFamily = tokens.typography.fontFamily.primary;
-    clonedWidget.lineConfig.styling.subtitleFontSize = tokens.typography.fontSize.sm;
-    clonedWidget.lineConfig.styling.subtitleFontWeight = tokens.typography.fontWeight.normal;
-    clonedWidget.lineConfig.styling.subtitleColor = tokens.colors.text.secondary;
-    clonedWidget.lineConfig.styling.subtitleMarginTop = 0;
-    clonedWidget.lineConfig.styling.subtitleMarginRight = 0;
-    clonedWidget.lineConfig.styling.subtitleMarginBottom = 16;
-    clonedWidget.lineConfig.styling.subtitleMarginLeft = 0;
+      // Title styling - complete props
+      titleColor: tokens.colors.text.primary,
+      titleFontSize: tokens.typography.fontSize.lg,
+      titleFontWeight: tokens.typography.fontWeight.semibold,
+      titleFontFamily: tokens.typography.fontFamily.primary,
+      titleMarginTop: 0,
+      titleMarginRight: 0,
+      titleMarginBottom: 8,
+      titleMarginLeft: 0,
 
-    clonedWidget.lineConfig.styling.axisTextColor = tokens.colors.text.secondary;
-    clonedWidget.lineConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
+      // Subtitle styling - complete props
+      subtitleFontFamily: tokens.typography.fontFamily.primary,
+      subtitleFontSize: tokens.typography.fontSize.sm,
+      subtitleFontWeight: tokens.typography.fontWeight.normal,
+      subtitleColor: tokens.colors.text.secondary,
+      subtitleMarginTop: 0,
+      subtitleMarginRight: 0,
+      subtitleMarginBottom: 16,
+      subtitleMarginLeft: 0,
 
-    clonedWidget.lineConfig.styling.colors = [tokens.colors.chart.primary];
-    clonedWidget.lineConfig.styling.containerBorderColor = tokens.colors.border;
-    clonedWidget.lineConfig.styling.containerBorderRadius = tokens.borders.radius.md;
+      axisTextColor: tokens.colors.text.secondary,
+      axisFontSize: tokens.typography.fontSize.sm,
+
+      containerBorderColor: tokens.colors.border,
+      containerBorderRadius: tokens.borders.radius.md,
+
+      // User props from JSON override all above (spread at the end)
+      ...clonedWidget.lineConfig.styling,
+
+      // Colors override must be after user props to handle both empty and user-defined colors
+      colors: clonedWidget.lineConfig.styling?.colors?.length > 0
+        ? clonedWidget.lineConfig.styling.colors
+        : [tokens.colors.chart.primary]
+    };
 
     return clonedWidget;
   }
@@ -192,38 +217,50 @@ export class ThemeManager {
       clonedWidget.pieConfig.styling = { ...DEFAULT_CHART_STYLING };
     }
 
-    // Apply design tokens to Pie Chart
-    clonedWidget.pieConfig.styling.backgroundColor = tokens.colors.surface;
+    // Apply design tokens to Pie Chart with spread pattern (user props override theme defaults)
+    clonedWidget.pieConfig.styling = {
+      // Base defaults first
+      ...DEFAULT_CHART_STYLING,
 
-    // Title styling - complete props
-    clonedWidget.pieConfig.styling.titleColor = tokens.colors.text.primary;
-    clonedWidget.pieConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
-    clonedWidget.pieConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
-    clonedWidget.pieConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary;
-    clonedWidget.pieConfig.styling.titleMarginTop = 0;
-    clonedWidget.pieConfig.styling.titleMarginRight = 0;
-    clonedWidget.pieConfig.styling.titleMarginBottom = 8;
-    clonedWidget.pieConfig.styling.titleMarginLeft = 0;
+      // Theme defaults override base
+      backgroundColor: tokens.colors.surface,
 
-    // Subtitle styling - complete props
-    clonedWidget.pieConfig.styling.subtitleFontFamily = tokens.typography.fontFamily.primary;
-    clonedWidget.pieConfig.styling.subtitleFontSize = tokens.typography.fontSize.sm;
-    clonedWidget.pieConfig.styling.subtitleFontWeight = tokens.typography.fontWeight.normal;
-    clonedWidget.pieConfig.styling.subtitleColor = tokens.colors.text.secondary;
-    clonedWidget.pieConfig.styling.subtitleMarginTop = 0;
-    clonedWidget.pieConfig.styling.subtitleMarginRight = 0;
-    clonedWidget.pieConfig.styling.subtitleMarginBottom = 16;
-    clonedWidget.pieConfig.styling.subtitleMarginLeft = 0;
+      // Title styling - complete props
+      titleColor: tokens.colors.text.primary,
+      titleFontSize: tokens.typography.fontSize.lg,
+      titleFontWeight: tokens.typography.fontWeight.semibold,
+      titleFontFamily: tokens.typography.fontFamily.primary,
+      titleMarginTop: 0,
+      titleMarginRight: 0,
+      titleMarginBottom: 8,
+      titleMarginLeft: 0,
 
-    clonedWidget.pieConfig.styling.colors = [
-      tokens.colors.chart.primary,
-      tokens.colors.chart.secondary,
-      tokens.colors.chart.tertiary,
-      tokens.colors.chart.quaternary
-    ];
+      // Subtitle styling - complete props
+      subtitleFontFamily: tokens.typography.fontFamily.primary,
+      subtitleFontSize: tokens.typography.fontSize.sm,
+      subtitleFontWeight: tokens.typography.fontWeight.normal,
+      subtitleColor: tokens.colors.text.secondary,
+      subtitleMarginTop: 0,
+      subtitleMarginRight: 0,
+      subtitleMarginBottom: 16,
+      subtitleMarginLeft: 0,
 
-    clonedWidget.pieConfig.styling.containerBorderColor = tokens.colors.border;
-    clonedWidget.pieConfig.styling.containerBorderRadius = tokens.borders.radius.md;
+      containerBorderColor: tokens.colors.border,
+      containerBorderRadius: tokens.borders.radius.md,
+
+      // User props from JSON override all above (spread at the end)
+      ...clonedWidget.pieConfig.styling,
+
+      // Colors override must be after user props to handle both empty and user-defined colors
+      colors: clonedWidget.pieConfig.styling?.colors?.length > 0
+        ? clonedWidget.pieConfig.styling.colors
+        : [
+            tokens.colors.chart.primary,
+            tokens.colors.chart.secondary,
+            tokens.colors.chart.tertiary,
+            tokens.colors.chart.quaternary
+          ]
+    };
 
     return clonedWidget;
   }
@@ -242,35 +279,48 @@ export class ThemeManager {
       clonedWidget.areaConfig.styling = { ...DEFAULT_CHART_STYLING };
     }
 
-    // Apply design tokens to Area Chart
-    clonedWidget.areaConfig.styling.backgroundColor = tokens.colors.surface;
+    // Apply design tokens to Area Chart with spread pattern (user props override theme defaults)
+    clonedWidget.areaConfig.styling = {
+      // Base defaults first
+      ...DEFAULT_CHART_STYLING,
 
-    // Title styling - complete props
-    clonedWidget.areaConfig.styling.titleColor = tokens.colors.text.primary;
-    clonedWidget.areaConfig.styling.titleFontSize = tokens.typography.fontSize.lg;
-    clonedWidget.areaConfig.styling.titleFontWeight = tokens.typography.fontWeight.semibold;
-    clonedWidget.areaConfig.styling.titleFontFamily = tokens.typography.fontFamily.primary;
-    clonedWidget.areaConfig.styling.titleMarginTop = 0;
-    clonedWidget.areaConfig.styling.titleMarginRight = 0;
-    clonedWidget.areaConfig.styling.titleMarginBottom = 8;
-    clonedWidget.areaConfig.styling.titleMarginLeft = 0;
+      // Theme defaults override base
+      backgroundColor: tokens.colors.surface,
 
-    // Subtitle styling - complete props
-    clonedWidget.areaConfig.styling.subtitleFontFamily = tokens.typography.fontFamily.primary;
-    clonedWidget.areaConfig.styling.subtitleFontSize = tokens.typography.fontSize.sm;
-    clonedWidget.areaConfig.styling.subtitleFontWeight = tokens.typography.fontWeight.normal;
-    clonedWidget.areaConfig.styling.subtitleColor = tokens.colors.text.secondary;
-    clonedWidget.areaConfig.styling.subtitleMarginTop = 0;
-    clonedWidget.areaConfig.styling.subtitleMarginRight = 0;
-    clonedWidget.areaConfig.styling.subtitleMarginBottom = 16;
-    clonedWidget.areaConfig.styling.subtitleMarginLeft = 0;
+      // Title styling - complete props
+      titleColor: tokens.colors.text.primary,
+      titleFontSize: tokens.typography.fontSize.lg,
+      titleFontWeight: tokens.typography.fontWeight.semibold,
+      titleFontFamily: tokens.typography.fontFamily.primary,
+      titleMarginTop: 0,
+      titleMarginRight: 0,
+      titleMarginBottom: 8,
+      titleMarginLeft: 0,
 
-    clonedWidget.areaConfig.styling.axisTextColor = tokens.colors.text.secondary;
-    clonedWidget.areaConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
+      // Subtitle styling - complete props
+      subtitleFontFamily: tokens.typography.fontFamily.primary,
+      subtitleFontSize: tokens.typography.fontSize.sm,
+      subtitleFontWeight: tokens.typography.fontWeight.normal,
+      subtitleColor: tokens.colors.text.secondary,
+      subtitleMarginTop: 0,
+      subtitleMarginRight: 0,
+      subtitleMarginBottom: 16,
+      subtitleMarginLeft: 0,
 
-    clonedWidget.areaConfig.styling.colors = [tokens.colors.chart.primary];
-    clonedWidget.areaConfig.styling.containerBorderColor = tokens.colors.border;
-    clonedWidget.areaConfig.styling.containerBorderRadius = tokens.borders.radius.md;
+      axisTextColor: tokens.colors.text.secondary,
+      axisFontSize: tokens.typography.fontSize.sm,
+
+      containerBorderColor: tokens.colors.border,
+      containerBorderRadius: tokens.borders.radius.md,
+
+      // User props from JSON override all above (spread at the end)
+      ...clonedWidget.areaConfig.styling,
+
+      // Colors override must be after user props to handle both empty and user-defined colors
+      colors: clonedWidget.areaConfig.styling?.colors?.length > 0
+        ? clonedWidget.areaConfig.styling.colors
+        : [tokens.colors.chart.primary]
+    };
 
     return clonedWidget;
   }
