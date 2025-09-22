@@ -6,7 +6,7 @@ import type { BarChartConfig } from '@/stores/apps/barChartStore';
 import type { LineChartConfig } from '@/stores/apps/lineChartStore';
 import type { PieChartConfig } from '@/stores/apps/pieChartStore';
 import type { AreaChartConfig } from '@/stores/apps/areaChartStore';
-import { THEME_TOKENS, type ThemeTokenName, type DesignTokens } from './DesignTokens';
+import { THEME_TOKENS, TYPOGRAPHY_PRESETS, type ThemeTokenName, type DesignTokens } from './DesignTokens';
 
 // Re-export theme name type for compatibility
 export type ThemeName = ThemeTokenName;
@@ -350,13 +350,22 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single widget based on its type
    */
-  static applyThemeToWidget(widget: Widget, themeName: ThemeName): Widget {
+  static applyThemeToWidget(widget: Widget, themeName: ThemeName, customFont?: string): Widget {
     if (!this.isValidTheme(themeName)) {
       console.warn(`Invalid theme: ${themeName}. Skipping theme application.`);
       return widget;
     }
 
-    const tokens = this.getThemeTokens(themeName);
+    let tokens = this.getThemeTokens(themeName);
+
+    // Override typography if customFont is provided
+    if (customFont && customFont in TYPOGRAPHY_PRESETS) {
+      const customTypography = TYPOGRAPHY_PRESETS[customFont as keyof typeof TYPOGRAPHY_PRESETS];
+      tokens = {
+        ...tokens,
+        typography: customTypography
+      };
+    }
 
     switch (widget.type) {
       case 'kpi':
@@ -378,8 +387,8 @@ export class ThemeManager {
   /**
    * Applies design tokens to multiple widgets
    */
-  static applyThemeToWidgets(widgets: Widget[], themeName: ThemeName): Widget[] {
-    return widgets.map(widget => this.applyThemeToWidget(widget, themeName));
+  static applyThemeToWidgets(widgets: Widget[], themeName: ThemeName, customFont?: string): Widget[] {
+    return widgets.map(widget => this.applyThemeToWidget(widget, themeName, customFont));
   }
 
   /**

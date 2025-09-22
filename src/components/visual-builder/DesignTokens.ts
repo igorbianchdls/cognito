@@ -206,6 +206,9 @@ const TYPOGRAPHY_PRESETS = {
   }
 };
 
+// Export typography presets for external use
+export { TYPOGRAPHY_PRESETS };
+
 export interface TextTokens {
   primary: string;
   secondary: string;

@@ -21,15 +21,17 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, MessageSquare, Layout, BarChart3 } from "lucide-react";
+import { ChevronDown, MessageSquare, Layout, BarChart3, Type } from "lucide-react";
 import ChatContainer from '../../components/nexus/ChatContainer';
 import DashboardChatPanel from '../../components/nexus/DashboardChatPanel';
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import type { UIMessage } from 'ai';
 import { currentAgent, setCurrentAgent } from '../../stores/nexus/agentStore';
+import { visualBuilderActions, $visualBuilderState } from '../../stores/visualBuilderStore';
 
 export default function Page() {
   const selectedAgent = useStore(currentAgent);
+  const visualBuilderState = useStore($visualBuilderState);
 
   // Array unificado que guarda TODAS as mensagens em ordem cronológica
   const [allMessages, setAllMessages] = useState<(UIMessage & { agent: string })[]>([]);
@@ -39,6 +41,72 @@ export default function Page() {
 
   // State para controlar o modo de visualização
   const [viewMode, setViewMode] = useState<'chat' | 'split' | 'dashboard'>('chat');
+
+  // State para controlar a fonte selecionada
+  const [selectedFont, setSelectedFont] = useState<string>('inter');
+
+  // Extrair tema atual do visual builder para inicializar fonte
+  useEffect(() => {
+    try {
+      const parsedCode = JSON.parse(visualBuilderState.code);
+      const theme = parsedCode.theme;
+      if (theme) {
+        // Mapear temas para suas fontes (baseado nos presets do ThemeManager)
+        const themeToFont: { [key: string]: string } = {
+          'dark': 'inter',
+          'light': 'opensans',
+          'modern': 'roboto',
+          'elegant': 'georgia',
+          'vibrant': 'lato',
+          'minimal': 'montserrat',
+          'ocean': 'arial',
+          'sunset': 'segoe',
+          'forest': 'playfair',
+          'royal': 'merriweather'
+        };
+        setSelectedFont(themeToFont[theme] || 'inter');
+      }
+    } catch (error) {
+      console.warn('Erro ao extrair tema do código:', error);
+    }
+  }, [visualBuilderState.code]);
+
+  // Disponível fonts
+  const availableFonts = [
+    { value: 'inter', label: 'Inter', family: 'Inter, sans-serif' },
+    { value: 'opensans', label: 'Open Sans', family: 'Open Sans, sans-serif' },
+    { value: 'roboto', label: 'Roboto', family: 'Roboto, sans-serif' },
+    { value: 'georgia', label: 'Georgia', family: 'Georgia, serif' },
+    { value: 'lato', label: 'Lato', family: 'Lato, sans-serif' },
+    { value: 'montserrat', label: 'Montserrat', family: 'Montserrat, sans-serif' },
+    { value: 'arial', label: 'Arial', family: 'Arial, sans-serif' },
+    { value: 'segoe', label: 'Segoe UI', family: 'Segoe UI, sans-serif' },
+    { value: 'playfair', label: 'Playfair Display', family: 'Playfair Display, serif' },
+    { value: 'merriweather', label: 'Merriweather', family: 'Merriweather, serif' }
+  ];
+
+  // Handler para mudança de fonte
+  const handleFontChange = (fontKey: string) => {
+    setSelectedFont(fontKey);
+
+    try {
+      // Parse do código atual
+      const currentConfig = JSON.parse(visualBuilderState.code);
+
+      // Update font in theme by creating a custom theme override
+      const updatedConfig = {
+        ...currentConfig,
+        customFont: fontKey  // Add custom font override
+      };
+
+      // Update the configuration
+      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+
+      console.log('🎨 Font changed to:', fontKey);
+    } catch (error) {
+      console.error('Erro ao alterar fonte:', error);
+    }
+  };
 
   // Helper function to get API URL based on agent
   const getApiUrl = (agent: string) => {
@@ -288,8 +356,9 @@ export default function Page() {
             </Breadcrumb>
           </div>
 
-          {/* View Mode Dropdown */}
+          {/* Actions Container */}
           <div className="flex items-center gap-2 px-4">
+            {/* View Mode Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 transition-colors">
@@ -312,6 +381,30 @@ export default function Page() {
                   <BarChart3 className="w-4 h-4 mr-2" />
                   Dashboard Only
                 </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Font Selector Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 transition-colors">
+                  <Type className="w-4 h-4" />
+                  {availableFonts.find(f => f.value === selectedFont)?.label || 'Font'}
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {availableFonts.map((font) => (
+                  <DropdownMenuItem
+                    key={font.value}
+                    onClick={() => handleFontChange(font.value)}
+                    className={selectedFont === font.value ? 'bg-gray-100' : ''}
+                  >
+                    <span style={{ fontFamily: font.family }} className="text-sm">
+                      {font.label}
+                    </span>
+                  </DropdownMenuItem>
+                ))}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

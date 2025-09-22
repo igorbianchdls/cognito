@@ -108,8 +108,8 @@ export class ConfigParser {
   };
 
 
-  private static applyThemeToWidgets(widgets: Widget[], theme: ThemeName): Widget[] {
-    return ThemeManager.applyThemeToWidgets(widgets, theme);
+  private static applyThemeToWidgets(widgets: Widget[], theme: ThemeName, customFont?: string): Widget[] {
+    return ThemeManager.applyThemeToWidgets(widgets, theme, customFont);
   }
 
   static parse(jsonString: string): ParseResult {
@@ -117,10 +117,11 @@ export class ConfigParser {
       // Step 1: Parse JSON (same as chart stores)
       const config = JSON.parse(jsonString);
 
-      // Step 2: Extract widgets, grid config, and theme
+      // Step 2: Extract widgets, grid config, theme, and custom font
       const widgets = (config.widgets || []) as Widget[];
       const rawGridConfig = config.config || {};
       const theme = config.theme as ThemeName;
+      const customFont = config.customFont as string;
 
       // Step 3: Process grid config with defaults
       const gridConfig: GridConfig = {
@@ -154,7 +155,7 @@ export class ConfigParser {
 
       // Step 5: Apply theme to widgets and grid if theme is specified and valid
       const themedWidgets = (theme && ThemeManager.isValidTheme(theme))
-        ? this.applyThemeToWidgets(validWidgets, theme)
+        ? this.applyThemeToWidgets(validWidgets, theme, customFont)
         : validWidgets;
 
       const themedGridConfig = (theme && ThemeManager.isValidTheme(theme))
