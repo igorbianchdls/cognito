@@ -2,6 +2,210 @@
 
 // Design Tokens System - Centralized design variables for consistent theming
 
+// Typography Presets - Modular typography configurations
+const TYPOGRAPHY_PRESETS = {
+  inter: {
+    fontFamily: {
+      primary: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+      mono: 'JetBrains Mono, Consolas, Monaco, monospace'
+    },
+    fontSize: {
+      xs: 12,
+      sm: 14,
+      md: 16,
+      lg: 18,
+      xl: 24,
+      xxl: 32
+    },
+    fontWeight: {
+      normal: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700
+    }
+  },
+  georgia: {
+    fontFamily: {
+      primary: 'Georgia, Times New Roman, serif',
+      mono: 'Menlo, Consolas, Monaco, monospace'
+    },
+    fontSize: {
+      xs: 12,
+      sm: 15,
+      md: 17,
+      lg: 22,
+      xl: 28,
+      xxl: 38
+    },
+    fontWeight: {
+      normal: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700
+    }
+  },
+  roboto: {
+    fontFamily: {
+      primary: 'Roboto, -apple-system, BlinkMacSystemFont, sans-serif',
+      mono: 'Fira Code, Consolas, Monaco, monospace'
+    },
+    fontSize: {
+      xs: 11,
+      sm: 13,
+      md: 15,
+      lg: 19,
+      xl: 25,
+      xxl: 34
+    },
+    fontWeight: {
+      normal: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700
+    }
+  },
+  arial: {
+    fontFamily: {
+      primary: 'Arial, Helvetica, sans-serif',
+      mono: 'Courier New, Consolas, Monaco, monospace'
+    },
+    fontSize: {
+      xs: 11,
+      sm: 13,
+      md: 15,
+      lg: 17,
+      xl: 21,
+      xxl: 28
+    },
+    fontWeight: {
+      normal: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700
+    }
+  },
+  segoe: {
+    fontFamily: {
+      primary: 'Segoe UI, Tahoma, Geneva, sans-serif',
+      mono: 'Cascadia Code, Consolas, Monaco, monospace'
+    },
+    fontSize: {
+      xs: 11,
+      sm: 14,
+      md: 16,
+      lg: 20,
+      xl: 26,
+      xxl: 36
+    },
+    fontWeight: {
+      normal: 300,
+      medium: 400,
+      semibold: 500,
+      bold: 600
+    }
+  },
+  playfair: {
+    fontFamily: {
+      primary: 'Playfair Display, Georgia, serif',
+      mono: 'SF Mono, Consolas, Monaco, monospace'
+    },
+    fontSize: {
+      xs: 11,
+      sm: 13,
+      md: 15,
+      lg: 21,
+      xl: 27,
+      xxl: 35
+    },
+    fontWeight: {
+      normal: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700
+    }
+  },
+  opensans: {
+    fontFamily: {
+      primary: 'Open Sans, -apple-system, BlinkMacSystemFont, sans-serif',
+      mono: 'Source Code Pro, Consolas, Monaco, monospace'
+    },
+    fontSize: {
+      xs: 12,
+      sm: 14,
+      md: 16,
+      lg: 19,
+      xl: 25,
+      xxl: 33
+    },
+    fontWeight: {
+      normal: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700
+    }
+  },
+  montserrat: {
+    fontFamily: {
+      primary: 'Montserrat, -apple-system, BlinkMacSystemFont, sans-serif',
+      mono: 'JetBrains Mono, Consolas, Monaco, monospace'
+    },
+    fontSize: {
+      xs: 11,
+      sm: 13,
+      md: 16,
+      lg: 20,
+      xl: 26,
+      xxl: 35
+    },
+    fontWeight: {
+      normal: 300,
+      medium: 450,
+      semibold: 550,
+      bold: 650
+    }
+  },
+  lato: {
+    fontFamily: {
+      primary: 'Lato, -apple-system, BlinkMacSystemFont, sans-serif',
+      mono: 'IBM Plex Mono, Consolas, Monaco, monospace'
+    },
+    fontSize: {
+      xs: 12,
+      sm: 14,
+      md: 16,
+      lg: 19,
+      xl: 24,
+      xxl: 32
+    },
+    fontWeight: {
+      normal: 300,
+      medium: 400,
+      semibold: 600,
+      bold: 700
+    }
+  },
+  merriweather: {
+    fontFamily: {
+      primary: 'Merriweather, Georgia, serif',
+      mono: 'Menlo, Consolas, Monaco, monospace'
+    },
+    fontSize: {
+      xs: 12,
+      sm: 15,
+      md: 17,
+      lg: 22,
+      xl: 28,
+      xxl: 37
+    },
+    fontWeight: {
+      normal: 300,
+      medium: 400,
+      semibold: 700,
+      bold: 900
+    }
+  }
+};
+
 export interface TextTokens {
   primary: string;
   secondary: string;
@@ -258,26 +462,7 @@ export const DARK_TOKENS: DesignTokens = {
     }
   },
 
-  typography: {
-    fontFamily: {
-      primary: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
-      mono: 'JetBrains Mono, Consolas, Monaco, monospace'
-    },
-    fontSize: {
-      xs: 12,
-      sm: 14,
-      md: 16,
-      lg: 18,
-      xl: 24,
-      xxl: 32
-    },
-    fontWeight: {
-      normal: 400,
-      medium: 500,
-      semibold: 600,
-      bold: 700
-    }
-  }
+  typography: TYPOGRAPHY_PRESETS.inter
 };
 
 // Light Theme Tokens
@@ -369,7 +554,7 @@ export const LIGHT_TOKENS: DesignTokens = {
   },
 
   borders: DARK_TOKENS.borders, // Same border system
-  typography: DARK_TOKENS.typography // Same typography system
+  typography: TYPOGRAPHY_PRESETS.opensans
 };
 
 // Blue Theme Tokens
@@ -418,7 +603,8 @@ export const BLUE_TOKENS: DesignTokens = {
       background: '#1e293b',
       border: '#475569'
     }
-  }
+  },
+  typography: TYPOGRAPHY_PRESETS.roboto
 };
 
 // Green Theme Tokens
@@ -467,7 +653,8 @@ export const GREEN_TOKENS: DesignTokens = {
       background: '#065f46',
       border: '#059669'
     }
-  }
+  },
+  typography: TYPOGRAPHY_PRESETS.lato
 };
 
 // Corporate Theme Tokens
@@ -516,7 +703,8 @@ export const CORPORATE_TOKENS: DesignTokens = {
       background: '#ffffff',
       border: '#e2e8f0'
     }
-  }
+  },
+  typography: TYPOGRAPHY_PRESETS.arial
 };
 
 // Navy Theme Tokens - Azul Marinho Executivo
@@ -576,7 +764,13 @@ export const NAVY_TOKENS: DesignTokens = {
       background: '#1e293b',
       border: '#475569'
     }
-  }
+  },
+
+  spacing: DARK_TOKENS.spacing,
+  shadows: DARK_TOKENS.shadows,
+  borders: DARK_TOKENS.borders,
+
+  typography: TYPOGRAPHY_PRESETS.georgia
 };
 
 // Slate Theme Tokens - Cinza Moderno Premium
@@ -636,7 +830,13 @@ export const SLATE_TOKENS: DesignTokens = {
       background: '#1e293b',
       border: '#374151'
     }
-  }
+  },
+
+  spacing: DARK_TOKENS.spacing,
+  shadows: DARK_TOKENS.shadows,
+  borders: DARK_TOKENS.borders,
+
+  typography: TYPOGRAPHY_PRESETS.segoe
 };
 
 // Forest Theme Tokens - Verde Empresarial Sustentável
@@ -702,7 +902,13 @@ export const FOREST_TOKENS: DesignTokens = {
       background: '#166534',
       border: '#15803d'
     }
-  }
+  },
+
+  spacing: DARK_TOKENS.spacing,
+  shadows: DARK_TOKENS.shadows,
+  borders: DARK_TOKENS.borders,
+
+  typography: TYPOGRAPHY_PRESETS.montserrat
 };
 
 // Burgundy Theme Tokens - Vermelho Vinho Sofisticado
@@ -768,7 +974,13 @@ export const BURGUNDY_TOKENS: DesignTokens = {
       background: '#7f1d1d',
       border: '#991b1b'
     }
-  }
+  },
+
+  spacing: DARK_TOKENS.spacing,
+  shadows: DARK_TOKENS.shadows,
+  borders: DARK_TOKENS.borders,
+
+  typography: TYPOGRAPHY_PRESETS.playfair
 };
 
 // Platinum Theme Tokens - Prata Elegante
@@ -828,7 +1040,13 @@ export const PLATINUM_TOKENS: DesignTokens = {
       background: '#27272a',
       border: '#3f3f46'
     }
-  }
+  },
+
+  spacing: DARK_TOKENS.spacing,
+  shadows: DARK_TOKENS.shadows,
+  borders: DARK_TOKENS.borders,
+
+  typography: TYPOGRAPHY_PRESETS.merriweather
 };
 
 // Theme mapping
