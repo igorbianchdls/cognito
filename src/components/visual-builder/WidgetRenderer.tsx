@@ -181,6 +181,19 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
 
   switch (widget.type) {
     case 'bar':
+      // Debug: Log all styling props being passed
+      console.log('🎨 WidgetRenderer passing props to BarChart:', {
+        widgetId: widget.id,
+        styling: widget.barConfig?.styling,
+        cssProps: {
+          containerBackdropBlur: widget.barConfig?.styling?.containerBackdropBlur,
+          barBrightness: widget.barConfig?.styling?.barBrightness,
+          barSaturate: widget.barConfig?.styling?.barSaturate,
+          hoverScale: widget.barConfig?.styling?.hoverScale,
+          transitionDuration: widget.barConfig?.styling?.transitionDuration
+        }
+      });
+
       return (
         <div className="h-full w-full p-2">
           <BarChart
@@ -189,6 +202,22 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
             // Pass margin and legends from JSON config
             margin={widget.barConfig?.margin || commonChartProps.margin}
             legends={widget.barConfig?.legends}
+            // Explicitly pass CSS effects props
+            containerBackdropBlur={widget.barConfig?.styling?.containerBackdropBlur}
+            containerBackgroundOpacity={widget.barConfig?.styling?.containerBackgroundOpacity}
+            containerBorderOpacity={widget.barConfig?.styling?.containerBorderOpacity}
+            containerDropShadow={widget.barConfig?.styling?.containerDropShadow}
+            barBrightness={widget.barConfig?.styling?.barBrightness}
+            barSaturate={widget.barConfig?.styling?.barSaturate}
+            barContrast={widget.barConfig?.styling?.barContrast}
+            barBlur={widget.barConfig?.styling?.barBlur}
+            barBoxShadow={widget.barConfig?.styling?.barBoxShadow}
+            hoverBrightness={widget.barConfig?.styling?.hoverBrightness}
+            hoverSaturate={widget.barConfig?.styling?.hoverSaturate}
+            hoverScale={widget.barConfig?.styling?.hoverScale}
+            hoverBlur={widget.barConfig?.styling?.hoverBlur}
+            transitionDuration={widget.barConfig?.styling?.transitionDuration}
+            transitionEasing={widget.barConfig?.styling?.transitionEasing}
             // Fallback to styling props if barConfig not provided
             enableGridX={widget.barConfig?.styling?.enableGridX ?? false}
             enableGridY={widget.barConfig?.styling?.enableGridY ?? true}
