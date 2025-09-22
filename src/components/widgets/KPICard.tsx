@@ -306,12 +306,13 @@ export function KPICard({
 
   return (
     <Card
-      className={kpiContainerClassName || "@container/card h-full w-full border-0 p-0"}
+      className={kpiContainerClassName || "@container/card h-full w-full p-0"}
       style={kpiContainerClassName ? {} : {
         background: getAdvancedBackground(),
         backdropFilter: getBackdropFilter(),
         borderColor: kpiContainerBorderColor ? hexToRgba(kpiContainerBorderColor, kpiContainerBorderOpacity ?? 1) : '#e5e7eb',
-        borderWidth: kpiContainerBorderWidth ? `${kpiContainerBorderWidth}px` : undefined,
+        borderWidth: kpiContainerBorderWidth ? `${kpiContainerBorderWidth}px` : '1px',
+        borderStyle: 'solid',
         borderRadius: kpiContainerBorderRadius ? `${kpiContainerBorderRadius}px` : undefined,
         padding: kpiContainerPadding ? `${kpiContainerPadding}px` : undefined,
         textAlign: kpiContainerTextAlign || 'left',

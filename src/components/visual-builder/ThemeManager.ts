@@ -92,6 +92,11 @@ export class ThemeManager {
     clonedWidget.kpiConfig.containerShadowOffsetX = tokens.effects.shadow.offsetX;
     clonedWidget.kpiConfig.containerShadowOffsetY = tokens.effects.shadow.offsetY;
 
+    // Apply border properties automatically (consistent across all widgets)
+    clonedWidget.kpiConfig.kpiContainerBorderColor = tokens.colors.border;
+    clonedWidget.kpiConfig.kpiContainerBorderWidth = tokens.borders.width.medium;
+    clonedWidget.kpiConfig.kpiContainerBorderRadius = tokens.borders.radius.lg;
+
     return clonedWidget;
   }
 
@@ -150,6 +155,11 @@ export class ThemeManager {
     clonedWidget.barConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
     clonedWidget.barConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
 
+    // Apply border properties automatically (consistent across all widgets)
+    clonedWidget.barConfig.styling.containerBorderColor = tokens.colors.border;
+    clonedWidget.barConfig.styling.containerBorderWidth = tokens.borders.width.medium;
+    clonedWidget.barConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
+
     return clonedWidget;
   }
 
@@ -204,6 +214,11 @@ export class ThemeManager {
     clonedWidget.lineConfig.styling.containerBackground = `${tokens.effects.gradient.type}-gradient(${tokens.effects.gradient.direction}, ${tokens.effects.gradient.startColor}, ${tokens.effects.gradient.endColor})`;
     clonedWidget.lineConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
     clonedWidget.lineConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
+
+    // Apply border properties automatically (consistent across all widgets)
+    clonedWidget.lineConfig.styling.containerBorderColor = tokens.colors.border;
+    clonedWidget.lineConfig.styling.containerBorderWidth = tokens.borders.width.medium;
+    clonedWidget.lineConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
 
     return clonedWidget;
   }
@@ -263,6 +278,11 @@ export class ThemeManager {
     clonedWidget.pieConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
     clonedWidget.pieConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
 
+    // Apply border properties automatically (consistent across all widgets)
+    clonedWidget.pieConfig.styling.containerBorderColor = tokens.colors.border;
+    clonedWidget.pieConfig.styling.containerBorderWidth = tokens.borders.width.medium;
+    clonedWidget.pieConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
+
     return clonedWidget;
   }
 
@@ -318,6 +338,11 @@ export class ThemeManager {
     clonedWidget.areaConfig.styling.containerBackground = `${tokens.effects.gradient.type}-gradient(${tokens.effects.gradient.direction}, ${tokens.effects.gradient.startColor}, ${tokens.effects.gradient.endColor})`;
     clonedWidget.areaConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
     clonedWidget.areaConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
+
+    // Apply border properties automatically (consistent across all widgets)
+    clonedWidget.areaConfig.styling.containerBorderColor = tokens.colors.border;
+    clonedWidget.areaConfig.styling.containerBorderWidth = tokens.borders.width.medium;
+    clonedWidget.areaConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
 
     return clonedWidget;
   }
