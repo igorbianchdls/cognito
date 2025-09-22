@@ -181,16 +181,22 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
 
   switch (widget.type) {
     case 'bar':
-      // Debug: Log all styling props being passed
-      console.log('🎨 WidgetRenderer passing props to BarChart:', {
+      // Debug: Log glass effect and modern CSS props being passed
+      console.log('🎨 WidgetRenderer passing DIRECT CSS props to BarChart:', {
         widgetId: widget.id,
-        styling: widget.barConfig?.styling,
-        cssProps: {
-          containerBackdropBlur: widget.barConfig?.styling?.containerBackdropBlur,
+        containerGlassEffect: {
+          containerBackground: widget.barConfig?.styling?.containerBackground,
+          containerOpacity: widget.barConfig?.styling?.containerOpacity,
+          containerBackdropFilter: widget.barConfig?.styling?.containerBackdropFilter,
+          containerBoxShadow: widget.barConfig?.styling?.containerBoxShadow,
+          containerBorder: widget.barConfig?.styling?.containerBorder
+        },
+        modernEffects: {
+          containerFilter: widget.barConfig?.styling?.containerFilter,
+          containerTransform: widget.barConfig?.styling?.containerTransform,
+          containerTransition: widget.barConfig?.styling?.containerTransition,
           barBrightness: widget.barConfig?.styling?.barBrightness,
-          barSaturate: widget.barConfig?.styling?.barSaturate,
-          hoverScale: widget.barConfig?.styling?.hoverScale,
-          transitionDuration: widget.barConfig?.styling?.transitionDuration
+          hoverScale: widget.barConfig?.styling?.hoverScale
         }
       });
 
@@ -202,11 +208,16 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
             // Pass margin and legends from JSON config
             margin={widget.barConfig?.margin || commonChartProps.margin}
             legends={widget.barConfig?.legends}
-            // Explicitly pass CSS effects props
-            containerBackdropBlur={widget.barConfig?.styling?.containerBackdropBlur}
-            containerBackgroundOpacity={widget.barConfig?.styling?.containerBackgroundOpacity}
-            containerBorderOpacity={widget.barConfig?.styling?.containerBorderOpacity}
-            containerDropShadow={widget.barConfig?.styling?.containerDropShadow}
+            // Container Glass Effect & Modern Styles - DIRECT PROPS
+            containerBackground={widget.barConfig?.styling?.containerBackground}
+            containerOpacity={widget.barConfig?.styling?.containerOpacity}
+            containerBackdropFilter={widget.barConfig?.styling?.containerBackdropFilter}
+            containerFilter={widget.barConfig?.styling?.containerFilter}
+            containerBoxShadow={widget.barConfig?.styling?.containerBoxShadow}
+            containerBorder={widget.barConfig?.styling?.containerBorder}
+            containerTransform={widget.barConfig?.styling?.containerTransform}
+            containerTransition={widget.barConfig?.styling?.containerTransition}
+            // Bar Visual Effects - CSS Only
             barBrightness={widget.barConfig?.styling?.barBrightness}
             barSaturate={widget.barConfig?.styling?.barSaturate}
             barContrast={widget.barConfig?.styling?.barContrast}

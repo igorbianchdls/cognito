@@ -39,6 +39,8 @@ const initialCode = `{
         "aggregation": "SUM"
       },
       "barConfig": {
+        "_comment_container": "=== PROPS DO CONTAINER/FUNDO DO CHART ===",
+        "_comment_glass": "Props para glass morphism e efeitos modernos",
         "styling": {
           "colors": ["#3b82f6", "#10b981", "#f59e0b"],
           "showLegend": true,
@@ -56,12 +58,22 @@ const initialCode = `{
           "axisFontSize": 12,
           "axisTextColor": "#64748b",
           "barColor": "#3b82f6",
-          "backgroundColor": "#f1f5f9",
+          
+          "_comment_glass_effect": "=== GLASS MORPHISM CONFIG ===",
+          "containerBackground": "rgba(255, 255, 255, 0.25)",
+          "containerOpacity": 1,
+          "containerBackdropFilter": "blur(10px) saturate(200%)",
+          "containerBoxShadow": "0 8px 32px 0 rgba(31, 38, 135, 0.37)",
+          "containerBorder": "1px solid rgba(255, 255, 255, 0.18)",
+          
+          "_comment_modern_effects": "=== EFEITOS MODERNOS ===",
+          "containerFilter": "brightness(1.05)",
+          "containerTransform": "perspective(1000px)",
+          "containerTransition": "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          
+          "_comment_bar_effects": "=== EFEITOS DAS BARRAS ===",
           "barOpacity": 0.9,
           "barHoverOpacity": 1.0,
-          "containerBackdropBlur": 8,
-          "containerBackgroundOpacity": 0.9,
-          "containerDropShadow": "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
           "barBrightness": 1.0,
           "barSaturate": 1.2,
           "barContrast": 1.1,

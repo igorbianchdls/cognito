@@ -108,16 +108,20 @@ export interface BarChartConfig {
     innerPadding?: number
     barColor?: string
     
-    // Visual Effects - CSS Only
+    // Container Glass Effect & Modern Styles (Props do fundo/container do chart)
+    containerBackground?: string           // background (gradients, rgba, solid colors)
+    containerOpacity?: number             // opacity (0-1)
+    containerBackdropFilter?: string      // backdrop-filter (blur, saturate, etc)
+    containerFilter?: string              // filter (brightness, contrast, etc)
+    containerBoxShadow?: string           // box-shadow (shadows, glow effects)
+    containerBorder?: string              // border (solid, gradient borders)
+    containerTransform?: string           // transform (scale, rotate, perspective)
+    containerTransition?: string          // transition (animations, easing)
+    
+    // Bar Visual Effects - CSS Only
     barOpacity?: number
     barHoverOpacity?: number
     borderOpacity?: number
-    
-    // Container CSS Effects
-    containerBackdropBlur?: number
-    containerBackgroundOpacity?: number
-    containerBorderOpacity?: number
-    containerDropShadow?: string
     
     // Bar CSS Filters
     barBrightness?: number

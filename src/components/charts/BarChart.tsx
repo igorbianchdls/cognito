@@ -35,16 +35,20 @@ export function BarChart(props: BarChartProps) {
     borderRadius,
     borderWidth,
     borderColor,
-    // Visual Effects - CSS Only
+    // Container Glass Effect & Modern Styles
+    containerBackground,
+    containerOpacity,
+    containerBackdropFilter,
+    containerFilter,
+    containerBoxShadow,
+    containerBorder,
+    containerTransform,
+    containerTransition,
+    
+    // Bar Visual Effects - CSS Only
     barOpacity,
     barHoverOpacity,
     borderOpacity,
-    
-    // Container CSS Effects
-    containerBackdropBlur,
-    containerBackgroundOpacity,
-    containerBorderOpacity,
-    containerDropShadow,
     
     // Bar CSS Filters
     barBrightness,
@@ -222,38 +226,35 @@ export function BarChart(props: BarChartProps) {
 
   const finalColors = processedColors();
   
-  // Apply CSS filters to bars
-  const getBarCSSFilters = () => {
-    const filters = [];
-    if (barBrightness !== undefined) filters.push(`brightness(${barBrightness})`);
-    if (barSaturate !== undefined) filters.push(`saturate(${barSaturate})`);
-    if (barContrast !== undefined) filters.push(`contrast(${barContrast})`);
-    if (barBlur !== undefined) filters.push(`blur(${barBlur}px)`);
-    return filters.length > 0 ? filters.join(' ') : undefined;
-  };
+  // Build bar CSS filters directly (no function needed)
+  const barCSSFilters = [
+    barBrightness !== undefined && `brightness(${barBrightness})`,
+    barSaturate !== undefined && `saturate(${barSaturate})`,
+    barContrast !== undefined && `contrast(${barContrast})`,
+    barBlur !== undefined && `blur(${barBlur}px)`
+  ].filter(Boolean).join(' ') || undefined;
   
-  // Apply CSS hover filters
-  const getHoverCSSFilters = () => {
-    const filters = [];
-    if (hoverBrightness !== undefined) filters.push(`brightness(${hoverBrightness})`);
-    if (hoverSaturate !== undefined) filters.push(`saturate(${hoverSaturate})`);
-    if (hoverBlur !== undefined) filters.push(`blur(${hoverBlur}px)`);
-    return filters.length > 0 ? filters.join(' ') : undefined;
-  };
-  
-  // Apply container CSS backdrop filter
-  const getContainerBackdropFilter = () => {
-    const filters = [];
-    if (containerBackdropBlur !== undefined) filters.push(`blur(${containerBackdropBlur}px)`);
-    return filters.length > 0 ? filters.join(' ') : undefined;
-  };
+  // Build hover CSS filters directly (no function needed)
+  const hoverCSSFilters = [
+    hoverBrightness !== undefined && `brightness(${hoverBrightness})`,
+    hoverSaturate !== undefined && `saturate(${hoverSaturate})`,
+    hoverBlur !== undefined && `blur(${hoverBlur}px)`
+  ].filter(Boolean).join(' ') || undefined;
 
   // Debug: Log CSS effects
-  console.log('🎨 BAR CHART efeitos CSS:', {
-    barCSSFilters: getBarCSSFilters(),
-    hoverCSSFilters: getHoverCSSFilters(),
-    containerBackdropFilter: getContainerBackdropFilter(),
-    opacity: barOpacity,
+  console.log('🎨 BAR CHART efeitos CSS diretos:', {
+    containerStyles: {
+      background: containerBackground || backgroundColor,
+      opacity: containerOpacity,
+      backdropFilter: containerBackdropFilter,
+      filter: containerFilter,
+      boxShadow: containerBoxShadow,
+      border: containerBorder,
+      transform: containerTransform,
+      transition: containerTransition
+    },
+    barFilters: barCSSFilters,
+    hoverFilters: hoverCSSFilters,
     colorProcessing: {
       originalColors: colors,
       barColor,
@@ -272,45 +273,24 @@ export function BarChart(props: BarChartProps) {
     boxShadow
   });
 
-  // Create advanced background styles
-  const getAdvancedBackground = () => {
-    // Priority: gradient > backgroundColor with opacity > backgroundColor
-    if (backgroundGradient?.enabled) {
-      const { type, direction, startColor, endColor } = backgroundGradient
-      switch (type) {
-        case 'linear':
-          return `linear-gradient(${direction}, ${startColor}, ${endColor})`
-        case 'radial':
-          return `radial-gradient(${direction}, ${startColor}, ${endColor})`
-        case 'conic':
-          return `conic-gradient(from ${direction}, ${startColor}, ${endColor})`
-        default:
-          return `linear-gradient(${direction}, ${startColor}, ${endColor})`
-      }
-    }
-
-    // Apply opacity to backgroundColor if specified
-    if (backgroundColor && backgroundOpacity !== undefined) {
-      const hex = backgroundColor.replace('#', '')
-      const r = parseInt(hex.substring(0, 2), 16)
-      const g = parseInt(hex.substring(2, 4), 16)
-      const b = parseInt(hex.substring(4, 6), 16)
-      return `rgba(${r}, ${g}, ${b}, ${backgroundOpacity})`
-    }
-
-    return backgroundColor
-  }
-
-  const getBackdropFilter = () => {
-    // Check both old backdropFilter prop and new containerBackdropBlur
-    if (backdropFilter?.enabled && backdropFilter?.blur) {
-      return `blur(${backdropFilter.blur}px)`
-    }
-    if (containerBackdropBlur !== undefined) {
-      return `blur(${containerBackdropBlur}px)`
-    }
-    return undefined
-  }
+  // Container styles - ALL DIRECT (no complex functions!)
+  const containerStyles = {
+    // Background: priority to new containerBackground, fallback to old backgroundColor
+    background: containerBackground || (
+      backgroundGradient?.enabled 
+        ? `linear-gradient(${backgroundGradient.direction}, ${backgroundGradient.startColor}, ${backgroundGradient.endColor})`
+        : backgroundColor
+    ),
+    
+    // Direct CSS props - simple and predictable
+    opacity: containerOpacity !== undefined ? containerOpacity : backgroundOpacity,
+    backdropFilter: containerBackdropFilter || (backdropFilter?.enabled ? `blur(${backdropFilter.blur}px)` : undefined),
+    filter: containerFilter,
+    boxShadow: containerBoxShadow,
+    border: containerBorder,
+    transform: containerTransform,
+    transition: containerTransition || (transitionDuration ? `all ${transitionDuration} ${transitionEasing || 'ease-in-out'}` : undefined),
+  };
 
   // Create dynamic theme that can handle separate axis colors
   const dynamicTheme = {
@@ -349,14 +329,15 @@ export function BarChart(props: BarChartProps) {
         minWidth: 0,
         // Propriedades condicionais (só quando não há containerClassName)
         ...(containerClassName ? {} : {
-          background: getAdvancedBackground(),
-          backdropFilter: getBackdropFilter(),
+          // Apply all container styles directly
+          ...containerStyles,
+          
+          // Override with specific props if provided (backwards compatibility)
           padding: `${containerPadding || 16}px`,
           margin: '0 auto',
-          border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb',
+          border: containerStyles.border || (containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb'),
           borderRadius: `${containerBorderRadius || 8}px`,
-          boxShadow: containerDropShadow || boxShadow,
-          transition: transitionDuration ? `all ${transitionDuration} ${transitionEasing || 'ease-in-out'}` : undefined,
+          boxShadow: containerStyles.boxShadow || containerDropShadow || boxShadow,
         })
       }}
     >
@@ -393,7 +374,7 @@ export function BarChart(props: BarChartProps) {
         style={{ 
           flex: 1,
           height: '100%',
-          filter: getBarCSSFilters(),
+          filter: barCSSFilters,
           boxShadow: barBoxShadow,
           transition: transitionDuration ? `all ${transitionDuration} ${transitionEasing || 'ease-in-out'}` : undefined,
         }}
@@ -401,17 +382,15 @@ export function BarChart(props: BarChartProps) {
           if (hoverScale !== undefined) {
             e.currentTarget.style.transform = `scale(${hoverScale})`;
           }
-          const hoverFilter = getHoverCSSFilters();
-          if (hoverFilter) {
-            e.currentTarget.style.filter = hoverFilter;
+          if (hoverCSSFilters) {
+            e.currentTarget.style.filter = hoverCSSFilters;
           }
         }}
         onMouseLeave={(e) => {
           if (hoverScale !== undefined) {
             e.currentTarget.style.transform = 'scale(1)';
           }
-          const normalFilter = getBarCSSFilters();
-          e.currentTarget.style.filter = normalFilter || '';
+          e.currentTarget.style.filter = barCSSFilters || '';
         }}
       >
         <div style={{ height: '100%', width: '100%', overflow: 'hidden' }}>
