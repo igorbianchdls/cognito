@@ -130,14 +130,14 @@ const BACKGROUND_PRESETS: Record<string, BackgroundPreset> = {
   darkGradient: {
     type: 'gradient',
     name: 'Dark Gradient',
-    description: 'Dark charcoal gradient',
-    backgroundColor: '#232526',
+    description: 'Deep dark background',
+    backgroundColor: '#0A0A0A',
     backgroundGradient: {
       enabled: true,
       type: 'linear',
       direction: '135deg',
-      startColor: '#232526',
-      endColor: '#414345'
+      startColor: '#0A0A0A',
+      endColor: '#0A0A0A'
     }
   },
 

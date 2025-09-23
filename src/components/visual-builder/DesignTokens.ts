@@ -415,7 +415,7 @@ export const DARK_TOKENS: DesignTokens = {
     accent: '#06b6d4',
 
     // Surfaces (background will come from BackgroundManager)
-    surface: '#171717',
+    surface: '#1B1B1B',
     surfaceElevated: '#262626',
 
     // Borders
