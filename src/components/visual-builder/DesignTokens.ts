@@ -787,14 +787,14 @@ export const CORPORATE_TOKENS: DesignTokens = {
     // Widget backgrounds - medium purple/navy
     surface: '#27294E',
     surfaceElevated: '#27294E',
-    // Brand colors
-    primary: '#FFC329',
-    secondary: '#FFD666',
-    accent: '#E6AF00',
+    // Brand colors - will be overridden by ColorManager
+    primary: DARK_TOKENS.colors.primary, // Placeholder, will be replaced by ColorManager
+    secondary: DARK_TOKENS.colors.secondary, // Placeholder, will be replaced by ColorManager
+    accent: DARK_TOKENS.colors.accent, // Placeholder, will be replaced by ColorManager
     // Borders suitable for dark background
     border: '#3A3C5C',
     borderHover: '#4A4D6B',
-    borderFocus: '#FFC329',
+    borderFocus: DARK_TOKENS.colors.borderFocus, // Placeholder, will be replaced by ColorManager
     // Text colors for dark background
     text: {
       primary: '#FFFFFF',
@@ -803,45 +803,19 @@ export const CORPORATE_TOKENS: DesignTokens = {
       inverse: '#151138'
     },
 
-    // Chart colors with white axis
+    // Chart colors with white axis - non-color properties only
     chart: {
-      primary: '#FFC329',
-      secondary: '#FFD666',
-      tertiary: '#E6AF00',
-      quaternary: '#CC9600',
-      grid: '#3A3C5C',
-      axis: '#FFFFFF'
+      ...DARK_TOKENS.colors.chart,
+      // Color properties will be overridden by ColorManager
+      grid: '#3A3C5C', // Keep grid color as it's not yellow
+      axis: '#FFFFFF'  // Keep axis color as it's white
     },
 
-    // Dedicated pie slice colors for variety
-    pieSliceColors: ['#FFC329', '#E6AF00', '#D4A017', '#B8860B', '#FFD700', '#DAA520'],
+    // Pie slice colors - will be overridden by ColorManager
+    pieSliceColors: DARK_TOKENS.colors.pieSliceColors, // Placeholder
 
-    // Chart elements - all using the bright yellow/gold color
-    chartElements: {
-      bar: {
-        fill: '#FFC329',
-        border: '#E6AF00',
-        label: '#FFFFFF'
-      },
-      line: {
-        stroke: '#FFC329',
-        point: '#FFD666',
-        pointBorder: '#E6AF00',
-        pointLabel: '#FFFFFF'
-      },
-      area: {
-        fill: '#FFC329',
-        stroke: '#E6AF00',
-        point: '#FFD666',
-        pointBorder: '#CC9600',
-        pointLabel: '#FFFFFF'
-      },
-      pie: {
-        border: '#3A3C5C',
-        arcLabel: '#FFFFFF',
-        arcLinkLabel: '#FFFFFF'
-      }
-    },
+    // Chart elements - will be overridden by ColorManager
+    chartElements: DARK_TOKENS.colors.chartElements, // Placeholder
     grid: {
       border: '#3A3C5C'
     }

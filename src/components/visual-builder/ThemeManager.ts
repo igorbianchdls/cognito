@@ -8,6 +8,7 @@ import type { PieChartConfig } from '@/stores/apps/pieChartStore';
 import type { AreaChartConfig } from '@/stores/apps/areaChartStore';
 import { THEME_TOKENS, TYPOGRAPHY_PRESETS, THEME_BACKGROUND_MAPPING, type ThemeTokenName, type DesignTokens } from './DesignTokens';
 import { BackgroundManager } from './BackgroundManager';
+import { ColorManager } from './ColorManager';
 
 // Re-export theme name type for compatibility
 export type ThemeName = ThemeTokenName;
@@ -35,15 +36,71 @@ export class ThemeManager {
     const backgroundPresetKey = THEME_BACKGROUND_MAPPING[themeName];
     const backgroundStyle = BackgroundManager.getBackgroundStyle(backgroundPresetKey);
 
-    // Merge base tokens with background from BackgroundManager
+    // For corporate theme, merge with ColorManager colors
+    let mergedColors = baseTokens.colors;
+    if (themeName === 'corporate') {
+      const corporateColors = ColorManager.getCorporateColors();
+      mergedColors = {
+        ...baseTokens.colors,
+        // Apply corporate colors from ColorManager
+        primary: corporateColors.primary,
+        secondary: corporateColors.secondary,
+        accent: corporateColors.tertiary,
+        borderFocus: corporateColors.primary,
+        // Chart colors
+        chart: {
+          ...baseTokens.colors.chart,
+          primary: corporateColors.primary,
+          secondary: corporateColors.secondary,
+          tertiary: corporateColors.tertiary,
+          quaternary: corporateColors.quaternary,
+        },
+        // Pie slice colors
+        pieSliceColors: corporateColors.pieSlices,
+        // Chart elements
+        chartElements: {
+          ...baseTokens.colors.chartElements,
+          bar: {
+            ...baseTokens.colors.chartElements.bar,
+            fill: corporateColors.chartElements.bar.fill,
+            border: corporateColors.chartElements.bar.border,
+            label: corporateColors.chartElements.bar.label
+          },
+          line: {
+            ...baseTokens.colors.chartElements.line,
+            stroke: corporateColors.chartElements.line.stroke,
+            point: corporateColors.chartElements.line.point,
+            pointBorder: corporateColors.chartElements.line.pointBorder,
+            pointLabel: corporateColors.chartElements.line.pointLabel
+          },
+          area: {
+            ...baseTokens.colors.chartElements.area,
+            fill: corporateColors.chartElements.area.fill,
+            stroke: corporateColors.chartElements.area.stroke,
+            point: corporateColors.chartElements.area.point,
+            pointBorder: corporateColors.chartElements.area.pointBorder,
+            pointLabel: corporateColors.chartElements.area.pointLabel
+          },
+          pie: {
+            ...baseTokens.colors.chartElements.pie,
+            fill: corporateColors.chartElements.pie.fill,
+            border: corporateColors.chartElements.pie.border,
+            arcLabel: corporateColors.chartElements.pie.arcLabel,
+            arcLinkLabel: corporateColors.chartElements.pie.arcLinkLabel
+          }
+        }
+      };
+    }
+
+    // Merge base tokens with background from BackgroundManager and colors
     return {
       ...baseTokens,
       colors: {
-        ...baseTokens.colors,
-        background: backgroundStyle.backgroundColor || baseTokens.colors.background,
+        ...mergedColors,
+        background: backgroundStyle.backgroundColor || mergedColors.background,
         grid: {
-          ...baseTokens.colors.grid,
-          background: backgroundStyle.backgroundColor || baseTokens.colors.grid.background
+          ...mergedColors.grid,
+          background: backgroundStyle.backgroundColor || mergedColors.grid.background
         }
       },
       effects: {
