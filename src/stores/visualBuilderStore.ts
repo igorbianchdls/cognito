@@ -56,7 +56,9 @@ const initialCode = `{
       "barConfig": {
         "styling": {
           "showLegend": true,
-          "showGrid": true
+          "showGrid": true,
+          "translateY": 0,
+          "marginBottom": 40
         }
       }
     },
@@ -99,7 +101,9 @@ const initialCode = `{
       "lineConfig": {
         "styling": {
           "showLegend": false,
-          "showGrid": true
+          "showGrid": true,
+          "translateY": 0,
+          "marginBottom": 40
         }
       }
     },
@@ -119,7 +123,9 @@ const initialCode = `{
       "pieConfig": {
         "styling": {
           "showLegend": true,
-          "showGrid": false
+          "showGrid": false,
+          "translateY": 0,
+          "marginBottom": 40
         }
       }
     },
@@ -140,7 +146,9 @@ const initialCode = `{
       "areaConfig": {
         "styling": {
           "showLegend": false,
-          "showGrid": true
+          "showGrid": true,
+          "translateY": 0,
+          "marginBottom": 40
         }
       }
     }
