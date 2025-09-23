@@ -9,6 +9,7 @@ import type { Widget } from '@/stores/visualBuilderStore';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
 import { BackgroundManager, type BackgroundPresetKey } from '@/components/visual-builder/BackgroundManager';
 import { ColorManager, type ColorPresetKey } from '@/components/visual-builder/ColorManager';
+import { FontManager, type FontPresetKey } from '@/components/visual-builder/FontManager';
 import {
   Artifact,
   ArtifactHeader,
@@ -30,7 +31,7 @@ import { FileText, BarChart3, Palette, Check, Type, Square, Paintbrush } from 'l
 export default function DashboardChatPanel() {
   const [activeTab, setActiveTab] = useState<'editor' | 'dashboard'>('editor');
   const [selectedTheme, setSelectedTheme] = useState<ThemeName>('dark');
-  const [selectedFont, setSelectedFont] = useState<string>('inter');
+  const [selectedFont, setSelectedFont] = useState<FontPresetKey>('inter');
   const [selectedBackground, setSelectedBackground] = useState<BackgroundPresetKey>('white');
   const [selectedCorporateColor, setSelectedCorporateColor] = useState<ColorPresetKey>('corporate');
   const visualBuilderState = useStore($visualBuilderState);
@@ -41,19 +42,8 @@ export default function DashboardChatPanel() {
   // Available corporate color palettes
   const availableColorPalettes = ColorManager.getAvailableColorPalettes();
 
-  // Available fonts
-  const availableFonts = [
-    { value: 'inter', label: 'Inter', family: 'Inter, sans-serif' },
-    { value: 'opensans', label: 'Open Sans', family: 'Open Sans, sans-serif' },
-    { value: 'roboto', label: 'Roboto', family: 'Roboto, sans-serif' },
-    { value: 'georgia', label: 'Georgia', family: 'Georgia, serif' },
-    { value: 'lato', label: 'Lato', family: 'Lato, sans-serif' },
-    { value: 'montserrat', label: 'Montserrat', family: 'Montserrat, sans-serif' },
-    { value: 'arial', label: 'Arial', family: 'Arial, sans-serif' },
-    { value: 'segoe', label: 'Segoe UI', family: 'Segoe UI, sans-serif' },
-    { value: 'playfair', label: 'Playfair Display', family: 'Playfair Display, serif' },
-    { value: 'merriweather', label: 'Merriweather', family: 'Merriweather, serif' }
-  ];
+  // Available fonts from FontManager
+  const availableFonts = FontManager.getAvailableFonts();
 
   // Initialize store on mount
   useEffect(() => {
@@ -78,23 +68,11 @@ export default function DashboardChatPanel() {
       const config = JSON.parse(visualBuilderState.code);
 
       // If custom font is set, use it
-      if (config.customFont && availableFonts.some(f => f.value === config.customFont)) {
+      if (config.customFont && FontManager.isValidFont(config.customFont)) {
         setSelectedFont(config.customFont);
       } else if (config.theme) {
-        // Otherwise, map theme to default font
-        const themeToFont: { [key: string]: string } = {
-          'dark': 'inter',
-          'light': 'opensans',
-          'blue': 'roboto',
-          'green': 'lato',
-          'corporate': 'arial',
-          'navy': 'segoe',
-          'slate': 'montserrat',
-          'forest': 'playfair',
-          'burgundy': 'georgia',
-          'platinum': 'merriweather'
-        };
-        setSelectedFont(themeToFont[config.theme] || 'inter');
+        // Otherwise, use theme default font from FontManager
+        setSelectedFont(FontManager.getThemeDefaultFont(config.theme));
       }
     } catch (error) {
       // Invalid JSON, keep current font
@@ -164,7 +142,7 @@ export default function DashboardChatPanel() {
     }
   };
 
-  const handleFontChange = (fontKey: string) => {
+  const handleFontChange = (fontKey: FontPresetKey) => {
     try {
       const config = JSON.parse(visualBuilderState.code);
       const updatedConfig = {
@@ -319,7 +297,7 @@ export default function DashboardChatPanel() {
               <div>
                 <ArtifactAction
                   icon={Type}
-                  tooltip={`Font: ${availableFonts.find(f => f.value === selectedFont)?.label || 'Unknown'}`}
+                  tooltip={`Font: ${availableFonts.find(f => f.key === selectedFont)?.name || 'Unknown'}`}
                   variant="ghost"
                 />
               </div>
@@ -332,14 +310,14 @@ export default function DashboardChatPanel() {
 
               {availableFonts.map((font) => (
                 <DropdownMenuItem
-                  key={font.value}
-                  onClick={() => handleFontChange(font.value)}
+                  key={font.key}
+                  onClick={() => handleFontChange(font.key)}
                   className="flex items-center justify-between py-2"
                 >
                   <span style={{ fontFamily: font.family }} className="text-sm">
-                    {font.label}
+                    {font.name}
                   </span>
-                  {selectedFont === font.value && (
+                  {selectedFont === font.key && (
                     <Check className="w-4 h-4 text-blue-600" />
                   )}
                 </DropdownMenuItem>
