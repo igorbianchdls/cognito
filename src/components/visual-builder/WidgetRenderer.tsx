@@ -266,6 +266,9 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
             enableGridY={widget.barConfig?.styling?.enableGridY ?? true}
             borderRadius={widget.barConfig?.styling?.borderRadius ?? widget.styling?.borderRadius}
             backgroundColor={widget.barConfig?.styling?.backgroundColor ?? widget.styling?.backgroundColor}
+            // Positioning props
+            translateY={widget.barConfig?.styling?.translateY}
+            marginBottom={widget.barConfig?.styling?.marginBottom}
           />
         </div>
       );
@@ -292,6 +295,9 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
             pointSize={widget.lineConfig?.styling?.pointSize ?? 6}
             curve={widget.lineConfig?.styling?.curve ?? "cardinal"}
             backgroundColor={widget.lineConfig?.styling?.backgroundColor ?? widget.styling?.backgroundColor}
+            // Positioning props
+            translateY={widget.lineConfig?.styling?.translateY}
+            marginBottom={widget.lineConfig?.styling?.marginBottom}
           />
         </div>
       );
@@ -315,6 +321,9 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
             padAngle={widget.pieConfig?.styling?.padAngle ?? 1}
             cornerRadius={widget.pieConfig?.styling?.cornerRadius ?? 2}
             backgroundColor={widget.pieConfig?.styling?.backgroundColor ?? widget.styling?.backgroundColor}
+            // Positioning props
+            translateY={widget.pieConfig?.styling?.translateY}
+            marginBottom={widget.pieConfig?.styling?.marginBottom}
           />
         </div>
       );
@@ -342,6 +351,9 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
             pointSize={widget.areaConfig?.styling?.pointSize ?? 6}
             curve={widget.areaConfig?.styling?.curve ?? "cardinal"}
             backgroundColor={widget.areaConfig?.styling?.backgroundColor ?? widget.styling?.backgroundColor}
+            // Positioning props
+            translateY={widget.areaConfig?.styling?.translateY}
+            marginBottom={widget.areaConfig?.styling?.marginBottom}
           />
         </div>
       );

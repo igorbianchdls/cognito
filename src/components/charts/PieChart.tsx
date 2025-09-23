@@ -92,6 +92,10 @@ interface PieChartProps extends BaseChartProps {
   containerShadowBlur?: number
   containerShadowOffsetX?: number
   containerShadowOffsetY?: number
+
+  // Positioning
+  translateY?: number
+  marginBottom?: number
 }
 
 export function PieChart({
@@ -163,7 +167,10 @@ export function PieChart({
   containerShadowOpacity,
   containerShadowBlur,
   containerShadowOffsetX,
-  containerShadowOffsetY
+  containerShadowOffsetY,
+  // Positioning props
+  translateY,
+  marginBottom
 }: PieChartProps) {
   // Debug: Log do que PieChart recebe
   console.log('📊 PIE CHART recebeu:', {
@@ -250,6 +257,9 @@ export function PieChart({
         flexDirection: 'column',
         alignItems: 'stretch',
         minWidth: 0,
+        // Positioning props
+        transform: translateY !== undefined ? `translateY(${translateY}px)` : undefined,
+        marginBottom: marginBottom !== undefined ? `${marginBottom}px` : undefined,
         // Propriedades condicionais (só quando não há containerClassName)
         ...(containerClassName ? {} : {
           ...containerStyles,

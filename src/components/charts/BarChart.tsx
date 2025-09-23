@@ -133,7 +133,10 @@ export function BarChart(props: BarChartProps) {
     containerShadowOpacity,
     containerShadowBlur,
     containerShadowOffsetX,
-    containerShadowOffsetY
+    containerShadowOffsetY,
+    // Positioning props
+    translateY,
+    marginBottom
   } = props;
 
   // Debug: Log do que BarChart recebe
@@ -286,6 +289,9 @@ export function BarChart(props: BarChartProps) {
         flexDirection: 'column',
         alignItems: 'stretch',
         minWidth: 0,
+        // Positioning props
+        transform: translateY !== undefined ? `translateY(${translateY}px)` : undefined,
+        marginBottom: marginBottom !== undefined ? `${marginBottom}px` : undefined,
         // Propriedades condicionais (só quando não há containerClassName)
         ...(containerClassName ? {} : {
           // Apply all container styles directly

@@ -92,6 +92,7 @@ export interface AreaChartConfig {
     marginRight?: number
     marginBottom?: number
     marginLeft?: number
+    translateY?: number
     xAxisLegend?: string
     xAxisLegendPosition?: 'start' | 'middle' | 'end'
     xAxisLegendOffset?: number

@@ -226,6 +226,10 @@ export interface BarChartProps extends BaseChartProps {
   containerShadowBlur?: number;
   containerShadowOffsetX?: number;
   containerShadowOffsetY?: number;
+
+  // Positioning
+  translateY?: number;
+  marginBottom?: number;
   
   // Advanced
   theme?: object;

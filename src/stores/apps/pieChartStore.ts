@@ -93,6 +93,7 @@ export interface PieChartConfig {
     marginRight?: number
     marginBottom?: number
     marginLeft?: number
+    translateY?: number
     // Pie Chart Specific Properties
     padAngle?: number
     cornerRadius?: number

@@ -112,6 +112,10 @@ interface LineChartProps extends BaseChartProps {
   containerShadowBlur?: number
   containerShadowOffsetX?: number
   containerShadowOffsetY?: number
+
+  // Positioning
+  translateY?: number
+  marginBottom?: number
 }
 
 export function LineChart({
@@ -191,7 +195,10 @@ export function LineChart({
   containerShadowOpacity,
   containerShadowBlur,
   containerShadowOffsetX,
-  containerShadowOffsetY
+  containerShadowOffsetY,
+  // Positioning props
+  translateY,
+  marginBottom
 }: LineChartProps) {
   if (!data || data.length === 0) {
     return <EmptyState />;
@@ -250,6 +257,9 @@ export function LineChart({
         flexDirection: 'column',
         alignItems: 'stretch',
         minWidth: 0,
+        // Positioning props
+        transform: translateY !== undefined ? `translateY(${translateY}px)` : undefined,
+        marginBottom: marginBottom !== undefined ? `${marginBottom}px` : undefined,
         // Propriedades condicionais (só quando não há containerClassName)
         ...(containerClassName ? {} : {
           ...containerStyles,
