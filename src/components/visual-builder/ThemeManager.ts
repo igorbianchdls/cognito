@@ -194,6 +194,10 @@ export class ThemeManager {
     clonedWidget.barConfig.styling.axisTextColor = tokens.colors.chart.axis;
     clonedWidget.barConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
 
+    // Grid styling - apply theme grid properties
+    clonedWidget.barConfig.styling.gridColor = tokens.colors.chart.grid;
+    clonedWidget.barConfig.styling.gridStrokeWidth = 0.5;
+
     clonedWidget.barConfig.styling.colors = [
       tokens.colors.chartElements.bar.fill
     ];
@@ -269,6 +273,10 @@ export class ThemeManager {
     clonedWidget.lineConfig.styling.axisTextColor = tokens.colors.chart.axis;
     clonedWidget.lineConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
 
+    // Grid styling - apply theme grid properties
+    clonedWidget.lineConfig.styling.gridColor = tokens.colors.chart.grid;
+    clonedWidget.lineConfig.styling.gridStrokeWidth = 0.5;
+
     clonedWidget.lineConfig.styling.colors = [tokens.colors.chartElements.line.stroke];
     clonedWidget.lineConfig.styling.containerBorderColor = tokens.colors.chartElements.line.point;
     clonedWidget.lineConfig.styling.containerBorderRadius = tokens.borders.radius.md;
@@ -337,6 +345,10 @@ export class ThemeManager {
     clonedWidget.pieConfig.styling.subtitleMarginRight = 0;
     clonedWidget.pieConfig.styling.subtitleMarginBottom = 16;
     clonedWidget.pieConfig.styling.subtitleMarginLeft = 0;
+
+    // Grid styling - apply theme grid properties (for consistency)
+    clonedWidget.pieConfig.styling.gridColor = tokens.colors.chart.grid;
+    clonedWidget.pieConfig.styling.gridStrokeWidth = 0.5;
 
     // Use dedicated pie slice colors if available, otherwise fallback to mixed chart colors
     clonedWidget.pieConfig.styling.colors = tokens.colors.pieSliceColors || [
@@ -416,6 +428,10 @@ export class ThemeManager {
 
     clonedWidget.areaConfig.styling.axisTextColor = tokens.colors.chart.axis;
     clonedWidget.areaConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
+
+    // Grid styling - apply theme grid properties
+    clonedWidget.areaConfig.styling.gridColor = tokens.colors.chart.grid;
+    clonedWidget.areaConfig.styling.gridStrokeWidth = 0.5;
 
     clonedWidget.areaConfig.styling.colors = [tokens.colors.chartElements.area.fill];
     clonedWidget.areaConfig.styling.containerBorderColor = tokens.colors.chartElements.area.stroke;
