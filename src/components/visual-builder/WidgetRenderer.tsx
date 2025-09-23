@@ -264,6 +264,8 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
             // Fallback to styling props if barConfig not provided
             enableGridX={widget.barConfig?.styling?.enableGridX ?? false}
             enableGridY={widget.barConfig?.styling?.enableGridY ?? true}
+            gridColor={widget.barConfig?.styling?.gridColor}
+            gridStrokeWidth={widget.barConfig?.styling?.gridStrokeWidth}
             borderRadius={widget.barConfig?.styling?.borderRadius ?? widget.styling?.borderRadius}
             backgroundColor={widget.barConfig?.styling?.backgroundColor ?? widget.styling?.backgroundColor}
             // Positioning props
