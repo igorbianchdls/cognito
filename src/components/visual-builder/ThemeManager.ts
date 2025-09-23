@@ -131,6 +131,9 @@ export class ThemeManager {
     clonedWidget.kpiConfig.kpiContainerBorderWidth = tokens.borders.width.thin;
     clonedWidget.kpiConfig.kpiContainerBorderRadius = tokens.borders.radius.md;
 
+    // Disable shadow when theme has no shadow opacity (like light theme)
+    clonedWidget.kpiConfig.kpiContainerShadow = tokens.effects.shadow.opacity > 0;
+
     return clonedWidget;
   }
 
