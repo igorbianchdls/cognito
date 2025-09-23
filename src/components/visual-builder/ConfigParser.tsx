@@ -48,7 +48,6 @@ export interface GridConfig {
 
 // Theme types are now managed by ThemeManager
 import { ThemeManager, type ThemeName } from './ThemeManager';
-import { BackgroundManager } from './BackgroundManager';
 
 // Responsive layout interfaces
 export interface LayoutColumn {
@@ -188,7 +187,7 @@ export class ConfigParser {
         : validWidgets;
 
       // Step 6: Apply theme to grid (now handles custom background internally)
-      let themedGridConfig = (theme && ThemeManager.isValidTheme(theme))
+      const themedGridConfig = (theme && ThemeManager.isValidTheme(theme))
         ? ThemeManager.applyThemeToGrid(gridConfig, theme, corporateColor, customBackground)
         : gridConfig;
 
