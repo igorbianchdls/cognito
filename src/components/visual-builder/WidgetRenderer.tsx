@@ -220,6 +220,7 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
         <div className="h-full w-full p-2">
           <BarChart
             {...commonChartProps}
+            {...(widget.barConfig?.styling || {})}
             // Pass margin and legends from JSON config
             margin={widget.barConfig?.margin || commonChartProps.margin}
             legends={widget.barConfig?.legends}
@@ -229,7 +230,6 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
             containerBackdropFilter={widget.barConfig?.styling?.containerBackdropFilter}
             containerFilter={widget.barConfig?.styling?.containerFilter}
             containerBoxShadow={widget.barConfig?.styling?.containerBoxShadow}
-            containerBorder={widget.barConfig?.styling?.containerBorder}
             containerTransform={widget.barConfig?.styling?.containerTransform}
             containerTransition={widget.barConfig?.styling?.containerTransition}
             // Bar Visual Effects - CSS Only
