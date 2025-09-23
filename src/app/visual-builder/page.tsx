@@ -2,13 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useStore } from '@nanostores/react';
-import { Type, ChevronDown } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import GridCanvas from '@/components/visual-builder/GridCanvas';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
@@ -18,76 +11,10 @@ export default function VisualBuilderPage() {
   const visualBuilderState = useStore($visualBuilderState);
   const [activeTab, setActiveTab] = useState<'editor' | 'dashboard'>('editor');
 
-  // State para controlar a fonte selecionada
-  const [selectedFont, setSelectedFont] = useState<string>('inter');
-
   // Initialize store on mount
   useEffect(() => {
     visualBuilderActions.initialize();
   }, []);
-
-  // Extrair tema atual do visual builder para inicializar fonte
-  useEffect(() => {
-    try {
-      const parsedCode = JSON.parse(visualBuilderState.code);
-      const theme = parsedCode.theme;
-      if (theme) {
-        // Mapear temas para suas fontes (baseado nos presets do ThemeManager)
-        const themeToFont: { [key: string]: string } = {
-          'dark': 'inter',
-          'light': 'opensans',
-          'modern': 'roboto',
-          'elegant': 'georgia',
-          'vibrant': 'lato',
-          'minimal': 'montserrat',
-          'ocean': 'arial',
-          'sunset': 'segoe',
-          'forest': 'playfair',
-          'royal': 'merriweather'
-        };
-        setSelectedFont(themeToFont[theme] || 'inter');
-      }
-    } catch (error) {
-      console.warn('Erro ao extrair tema do código:', error);
-    }
-  }, [visualBuilderState.code]);
-
-  // Disponível fonts
-  const availableFonts = [
-    { value: 'inter', label: 'Inter', family: 'Inter, sans-serif' },
-    { value: 'opensans', label: 'Open Sans', family: 'Open Sans, sans-serif' },
-    { value: 'roboto', label: 'Roboto', family: 'Roboto, sans-serif' },
-    { value: 'georgia', label: 'Georgia', family: 'Georgia, serif' },
-    { value: 'lato', label: 'Lato', family: 'Lato, sans-serif' },
-    { value: 'montserrat', label: 'Montserrat', family: 'Montserrat, sans-serif' },
-    { value: 'arial', label: 'Arial', family: 'Arial, sans-serif' },
-    { value: 'segoe', label: 'Segoe UI', family: 'Segoe UI, sans-serif' },
-    { value: 'playfair', label: 'Playfair Display', family: 'Playfair Display, serif' },
-    { value: 'merriweather', label: 'Merriweather', family: 'Merriweather, serif' }
-  ];
-
-  // Handler para mudança de fonte
-  const handleFontChange = (fontKey: string) => {
-    setSelectedFont(fontKey);
-
-    try {
-      // Parse do código atual
-      const currentConfig = JSON.parse(visualBuilderState.code);
-
-      // Update font in theme by creating a custom theme override
-      const updatedConfig = {
-        ...currentConfig,
-        customFont: fontKey  // Add custom font override
-      };
-
-      // Update the configuration
-      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
-
-      console.log('🎨 Font changed to:', fontKey);
-    } catch (error) {
-      console.error('Erro ao alterar fonte:', error);
-    }
-  };
 
   const handleCodeChange = (newCode: string) => {
     visualBuilderActions.updateCode(newCode);
@@ -121,30 +48,6 @@ export default function VisualBuilderPage() {
             <button className="px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
               Import Config
             </button>
-
-            {/* Font Selector Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 px-4 py-2 text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                  <Type className="w-4 h-4" />
-                  {availableFonts.find(f => f.value === selectedFont)?.label || 'Font'}
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                {availableFonts.map((font) => (
-                  <DropdownMenuItem
-                    key={font.value}
-                    onClick={() => handleFontChange(font.value)}
-                    className={selectedFont === font.value ? 'bg-gray-100' : ''}
-                  >
-                    <span style={{ fontFamily: font.family }} className="text-sm">
-                      {font.label}
-                    </span>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </div>
       </div>

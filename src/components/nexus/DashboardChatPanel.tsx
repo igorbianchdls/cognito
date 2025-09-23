@@ -23,12 +23,27 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { FileText, BarChart3, Palette, Check } from 'lucide-react';
+import { FileText, BarChart3, Palette, Check, Type } from 'lucide-react';
 
 export default function DashboardChatPanel() {
   const [activeTab, setActiveTab] = useState<'editor' | 'dashboard'>('editor');
   const [selectedTheme, setSelectedTheme] = useState<ThemeName>('dark');
+  const [selectedFont, setSelectedFont] = useState<string>('inter');
   const visualBuilderState = useStore($visualBuilderState);
+
+  // Available fonts
+  const availableFonts = [
+    { value: 'inter', label: 'Inter', family: 'Inter, sans-serif' },
+    { value: 'opensans', label: 'Open Sans', family: 'Open Sans, sans-serif' },
+    { value: 'roboto', label: 'Roboto', family: 'Roboto, sans-serif' },
+    { value: 'georgia', label: 'Georgia', family: 'Georgia, serif' },
+    { value: 'lato', label: 'Lato', family: 'Lato, sans-serif' },
+    { value: 'montserrat', label: 'Montserrat', family: 'Montserrat, sans-serif' },
+    { value: 'arial', label: 'Arial', family: 'Arial, sans-serif' },
+    { value: 'segoe', label: 'Segoe UI', family: 'Segoe UI, sans-serif' },
+    { value: 'playfair', label: 'Playfair Display', family: 'Playfair Display, serif' },
+    { value: 'merriweather', label: 'Merriweather', family: 'Merriweather, serif' }
+  ];
 
   // Initialize store on mount
   useEffect(() => {
@@ -44,6 +59,35 @@ export default function DashboardChatPanel() {
       }
     } catch (error) {
       // Invalid JSON, keep current theme
+    }
+  }, [visualBuilderState.code]);
+
+  // Detect current font from code and initialize based on theme
+  useEffect(() => {
+    try {
+      const config = JSON.parse(visualBuilderState.code);
+
+      // If custom font is set, use it
+      if (config.customFont && availableFonts.some(f => f.value === config.customFont)) {
+        setSelectedFont(config.customFont);
+      } else if (config.theme) {
+        // Otherwise, map theme to default font
+        const themeToFont: { [key: string]: string } = {
+          'dark': 'inter',
+          'light': 'opensans',
+          'blue': 'roboto',
+          'green': 'lato',
+          'corporate': 'arial',
+          'navy': 'segoe',
+          'slate': 'montserrat',
+          'forest': 'playfair',
+          'burgundy': 'georgia',
+          'platinum': 'merriweather'
+        };
+        setSelectedFont(themeToFont[config.theme] || 'inter');
+      }
+    } catch (error) {
+      // Invalid JSON, keep current font
     }
   }, [visualBuilderState.code]);
 
@@ -73,6 +117,21 @@ export default function DashboardChatPanel() {
       console.log(`🎨 Theme changed to: ${themeName}`);
     } catch (error) {
       console.error('Error applying theme:', error);
+    }
+  };
+
+  const handleFontChange = (fontKey: string) => {
+    try {
+      const config = JSON.parse(visualBuilderState.code);
+      const updatedConfig = {
+        ...config,
+        customFont: fontKey
+      };
+      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      setSelectedFont(fontKey);
+      console.log('🎨 Font changed to:', fontKey);
+    } catch (error) {
+      console.error('Error updating font:', error);
     }
   };
 
@@ -177,6 +236,40 @@ export default function DashboardChatPanel() {
                   </DropdownMenuItem>
                 );
               })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Font Selector */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div>
+                <ArtifactAction
+                  icon={Type}
+                  tooltip={`Font: ${availableFonts.find(f => f.value === selectedFont)?.label || 'Unknown'}`}
+                  variant="ghost"
+                />
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
+                Select Font
+              </div>
+              <DropdownMenuSeparator />
+
+              {availableFonts.map((font) => (
+                <DropdownMenuItem
+                  key={font.value}
+                  onClick={() => handleFontChange(font.value)}
+                  className="flex items-center justify-between py-2"
+                >
+                  <span style={{ fontFamily: font.family }} className="text-sm">
+                    {font.label}
+                  </span>
+                  {selectedFont === font.value && (
+                    <Check className="w-4 h-4 text-blue-600" />
+                  )}
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
         </ArtifactActions>
