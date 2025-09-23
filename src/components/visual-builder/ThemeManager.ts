@@ -105,6 +105,8 @@ export class ThemeManager {
 
     // Apply advanced effects from tokens
     clonedWidget.kpiConfig.backgroundOpacity = tokens.effects.opacity.medium;
+
+    // Always apply gradient (enabled: true if defined, enabled: false if undefined)
     if (tokens.effects.gradient) {
       clonedWidget.kpiConfig.backgroundGradient = {
         enabled: true,
@@ -113,11 +115,26 @@ export class ThemeManager {
         startColor: tokens.effects.gradient.startColor,
         endColor: tokens.effects.gradient.endColor
       };
+    } else {
+      clonedWidget.kpiConfig.backgroundGradient = {
+        enabled: false,
+        type: 'linear',
+        direction: '0deg',
+        startColor: tokens.colors.surface,
+        endColor: tokens.colors.surface
+      };
     }
+
+    // Always apply backdrop filter (enabled: true if defined, enabled: false if undefined)
     if (tokens.effects.backdrop) {
       clonedWidget.kpiConfig.backdropFilter = {
         enabled: true,
         blur: tokens.effects.backdrop.blur
+      };
+    } else {
+      clonedWidget.kpiConfig.backdropFilter = {
+        enabled: false,
+        blur: 0
       };
     }
     clonedWidget.kpiConfig.containerShadowColor = tokens.effects.shadow.color;
@@ -188,11 +205,19 @@ export class ThemeManager {
 
     // Apply advanced effects from tokens
     clonedWidget.barConfig.styling.containerOpacity = tokens.effects.opacity.medium;
+
+    // Always apply gradient (enabled: true if defined, cleared if undefined)
     if (tokens.effects.gradient) {
       clonedWidget.barConfig.styling.containerBackground = `${tokens.effects.gradient.type}-gradient(${tokens.effects.gradient.direction}, ${tokens.effects.gradient.startColor}, ${tokens.effects.gradient.endColor})`;
+    } else {
+      clonedWidget.barConfig.styling.containerBackground = undefined;
     }
+
+    // Always apply backdrop filter (blur if defined, cleared if undefined)
     if (tokens.effects.backdrop) {
       clonedWidget.barConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
+    } else {
+      clonedWidget.barConfig.styling.containerBackdropFilter = undefined;
     }
     clonedWidget.barConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
 
@@ -252,11 +277,19 @@ export class ThemeManager {
 
     // Apply advanced effects from tokens
     clonedWidget.lineConfig.styling.containerOpacity = tokens.effects.opacity.medium;
+
+    // Always apply gradient (enabled: true if defined, cleared if undefined)
     if (tokens.effects.gradient) {
       clonedWidget.lineConfig.styling.containerBackground = `${tokens.effects.gradient.type}-gradient(${tokens.effects.gradient.direction}, ${tokens.effects.gradient.startColor}, ${tokens.effects.gradient.endColor})`;
+    } else {
+      clonedWidget.lineConfig.styling.containerBackground = undefined;
     }
+
+    // Always apply backdrop filter (blur if defined, cleared if undefined)
     if (tokens.effects.backdrop) {
       clonedWidget.lineConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
+    } else {
+      clonedWidget.lineConfig.styling.containerBackdropFilter = undefined;
     }
     clonedWidget.lineConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
 
@@ -319,11 +352,19 @@ export class ThemeManager {
 
     // Apply advanced effects from tokens
     clonedWidget.pieConfig.styling.containerOpacity = tokens.effects.opacity.medium;
+
+    // Always apply gradient (enabled: true if defined, cleared if undefined)
     if (tokens.effects.gradient) {
       clonedWidget.pieConfig.styling.containerBackground = `${tokens.effects.gradient.type}-gradient(${tokens.effects.gradient.direction}, ${tokens.effects.gradient.startColor}, ${tokens.effects.gradient.endColor})`;
+    } else {
+      clonedWidget.pieConfig.styling.containerBackground = undefined;
     }
+
+    // Always apply backdrop filter (blur if defined, cleared if undefined)
     if (tokens.effects.backdrop) {
       clonedWidget.pieConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
+    } else {
+      clonedWidget.pieConfig.styling.containerBackdropFilter = undefined;
     }
     clonedWidget.pieConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
 
@@ -384,11 +425,19 @@ export class ThemeManager {
 
     // Apply advanced effects from tokens
     clonedWidget.areaConfig.styling.containerOpacity = tokens.effects.opacity.medium;
+
+    // Always apply gradient (enabled: true if defined, cleared if undefined)
     if (tokens.effects.gradient) {
       clonedWidget.areaConfig.styling.containerBackground = `${tokens.effects.gradient.type}-gradient(${tokens.effects.gradient.direction}, ${tokens.effects.gradient.startColor}, ${tokens.effects.gradient.endColor})`;
+    } else {
+      clonedWidget.areaConfig.styling.containerBackground = undefined;
     }
+
+    // Always apply backdrop filter (blur if defined, cleared if undefined)
     if (tokens.effects.backdrop) {
       clonedWidget.areaConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
+    } else {
+      clonedWidget.areaConfig.styling.containerBackdropFilter = undefined;
     }
     clonedWidget.areaConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
 
