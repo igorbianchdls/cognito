@@ -1376,3 +1376,20 @@ export const THEME_TOKENS = {
 } as const;
 
 export type ThemeTokenName = keyof typeof THEME_TOKENS;
+
+// Import background manager for theme integration
+import type { BackgroundPresetKey } from './BackgroundManager';
+
+// Theme to Background mapping - each theme uses a specific background preset
+export const THEME_BACKGROUND_MAPPING: Record<ThemeTokenName, BackgroundPresetKey> = {
+  light: 'white',
+  dark: 'darkGradient',
+  blue: 'blueGradient',
+  green: 'greenGradient',
+  corporate: 'lightGray',
+  navy: 'darkGradient',
+  slate: 'glassDark',
+  forest: 'greenGradient',
+  burgundy: 'sunsetGradient',
+  platinum: 'glassLight'
+} as const;

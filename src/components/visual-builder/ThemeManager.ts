@@ -6,7 +6,8 @@ import type { BarChartConfig } from '@/stores/apps/barChartStore';
 import type { LineChartConfig } from '@/stores/apps/lineChartStore';
 import type { PieChartConfig } from '@/stores/apps/pieChartStore';
 import type { AreaChartConfig } from '@/stores/apps/areaChartStore';
-import { THEME_TOKENS, TYPOGRAPHY_PRESETS, type ThemeTokenName, type DesignTokens } from './DesignTokens';
+import { THEME_TOKENS, TYPOGRAPHY_PRESETS, THEME_BACKGROUND_MAPPING, type ThemeTokenName, type DesignTokens } from './DesignTokens';
+import { BackgroundManager } from './BackgroundManager';
 
 // Re-export theme name type for compatibility
 export type ThemeName = ThemeTokenName;
@@ -402,27 +403,19 @@ export class ThemeManager {
 
     const tokens = this.getThemeTokens(themeName);
 
+    // Get the background preset for this theme
+    const backgroundPresetKey = THEME_BACKGROUND_MAPPING[themeName];
+    const backgroundStyle = BackgroundManager.getBackgroundStyle(backgroundPresetKey);
+
     return {
       ...gridConfig,
-      // Basic properties (existing)
-      backgroundColor: gridConfig.backgroundColor || tokens.colors.grid.background,
+      // Apply background from BackgroundManager instead of hardcoded values
+      ...backgroundStyle,
+
+      // Border color from theme tokens (preserve theme consistency)
       borderColor: gridConfig.borderColor || tokens.colors.grid.border,
 
-      // Advanced effects from theme tokens (automatic)
-      backgroundOpacity: gridConfig.backgroundOpacity || tokens.effects.opacity.subtle,
-      backgroundGradient: gridConfig.backgroundGradient || {
-        enabled: true,
-        type: tokens.effects.gradient.type,
-        direction: tokens.effects.gradient.direction,
-        startColor: tokens.effects.gradient.startColor,
-        endColor: tokens.effects.gradient.endColor
-      },
-      backdropFilter: gridConfig.backdropFilter || {
-        enabled: true,
-        blur: tokens.effects.backdrop.blur
-      },
-
-      // Border & Shadow effects
+      // Border & Shadow effects from theme tokens
       borderWidth: gridConfig.borderWidth || tokens.borders.width.thin,
       borderRadius: gridConfig.borderRadius || tokens.borders.radius.md,
       containerShadowColor: gridConfig.containerShadowColor || tokens.effects.shadow.color,
@@ -433,7 +426,10 @@ export class ThemeManager {
 
       // Spacing
       padding: gridConfig.padding || tokens.spacing.md,
-      margin: gridConfig.margin || tokens.spacing.sm
+      margin: gridConfig.margin || tokens.spacing.sm,
+
+      // Keep advanced effects if they were already set manually
+      backgroundOpacity: gridConfig.backgroundOpacity || tokens.effects.opacity.subtle
     };
   }
 
@@ -446,8 +442,11 @@ export class ThemeManager {
     tokens: DesignTokens;
     primaryColor: string;
     backgroundColor: string;
+    backgroundPreset: string;
   } {
     const tokens = this.getThemeTokens(themeName);
+    const backgroundPresetKey = THEME_BACKGROUND_MAPPING[themeName];
+    const backgroundStyle = BackgroundManager.getBackgroundStyle(backgroundPresetKey);
 
     const previews = {
       light: { name: 'Light', description: 'Clean white background with dark text' },
@@ -466,7 +465,8 @@ export class ThemeManager {
       ...previews[themeName],
       tokens,
       primaryColor: tokens.colors.primary,
-      backgroundColor: tokens.colors.background
+      backgroundColor: backgroundStyle.backgroundColor || tokens.colors.background,
+      backgroundPreset: backgroundPresetKey
     };
   }
 
