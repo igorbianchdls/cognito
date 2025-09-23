@@ -29,7 +29,6 @@ export interface CorporateColorPalette {
       pointLabel: string;
     };
     pie: {
-      fill: string;
       border: string;
       arcLabel: string;
       arcLinkLabel: string;
@@ -79,7 +78,6 @@ const CORPORATE_COLORS: CorporateColorPalette = {
       pointLabel: '#FFFFFF'
     },
     pie: {
-      fill: '#FFC329',
       border: '#E6AF00',
       arcLabel: '#FFFFFF',
       arcLinkLabel: '#FFD666'

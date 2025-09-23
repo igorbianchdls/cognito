@@ -83,7 +83,6 @@ export class ThemeManager {
           },
           pie: {
             ...baseTokens.colors.chartElements.pie,
-            fill: corporateColors.chartElements.pie.fill,
             border: corporateColors.chartElements.pie.border,
             arcLabel: corporateColors.chartElements.pie.arcLabel,
             arcLinkLabel: corporateColors.chartElements.pie.arcLinkLabel
