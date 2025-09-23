@@ -263,6 +263,8 @@ export function BarChart(props: BarChartProps) {
       axisFontSize,
       axisFontWeight,
       axisTextColor: axisTextColor || '#6b7280',
+      gridColor,
+      gridStrokeWidth,
       axisLegendFontSize,
       axisLegendFontWeight,
       labelsFontFamily,
