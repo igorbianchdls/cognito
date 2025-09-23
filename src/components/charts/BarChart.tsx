@@ -257,28 +257,6 @@ export function BarChart(props: BarChartProps) {
   };
 
   // Create dynamic theme that can handle separate axis colors
-  const dynamicTheme = {
-    ...createElegantTheme({
-      axisFontFamily,
-      axisFontSize,
-      axisFontWeight,
-      axisTextColor: axisTextColor || '#6b7280',
-      gridColor,
-      gridStrokeWidth,
-      axisLegendFontSize,
-      axisLegendFontWeight,
-      labelsFontFamily,
-      labelsFontSize,
-      labelsFontWeight,
-      labelsTextColor,
-      legendsFontFamily,
-      legendsFontSize,
-      legendsFontWeight,
-      legendsTextColor,
-      tooltipFontSize,
-      tooltipFontFamily
-    }),
-  };
 
 
 
@@ -442,7 +420,11 @@ export function BarChart(props: BarChartProps) {
           
           animate={animate ?? false}
           motionConfig={motionConfig || "gentle"}
-          theme={dynamicTheme}
+          theme={createElegantTheme({
+            axisTextColor: axisTextColor || '#6b7280',
+            gridColor,
+            gridStrokeWidth
+          })}
           
           // Tooltip elegante
           tooltip={({ id, value }) => (
