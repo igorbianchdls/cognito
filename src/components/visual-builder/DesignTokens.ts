@@ -778,47 +778,66 @@ export const GREEN_TOKENS: DesignTokens = {
 
 // Corporate Theme Tokens
 export const CORPORATE_TOKENS: DesignTokens = {
-  ...LIGHT_TOKENS,
+  ...DARK_TOKENS,
   colors: {
-    ...LIGHT_TOKENS.colors,
-    surface: '#ffffff',
-    surfaceElevated: '#f1f5f9',
-    primary: '#475569',
-    secondary: '#64748b',
-    accent: '#0f172a',
+    ...DARK_TOKENS.colors,
+    // Widget backgrounds - medium purple/navy
+    surface: '#27294E',
+    surfaceElevated: '#27294E',
+    // Brand colors
+    primary: '#FFC329',
+    secondary: '#FFD666',
+    accent: '#E6AF00',
+    // Borders suitable for dark background
+    border: '#3A3C5C',
+    borderHover: '#4A4D6B',
+    borderFocus: '#FFC329',
+    // Text colors for dark background
     text: {
-      primary: '#0f172a',
-      secondary: '#334155',
-      muted: '#64748b',
-      inverse: '#ffffff'
+      primary: '#FFFFFF',
+      secondary: '#FFFFFF',
+      muted: '#FFFFFF',
+      inverse: '#151138'
     },
+
+    // Chart colors with white axis
+    chart: {
+      primary: '#FFC329',
+      secondary: '#FFD666',
+      tertiary: '#E6AF00',
+      quaternary: '#CC9600',
+      grid: '#3A3C5C',
+      axis: '#FFFFFF'
+    },
+
+    // Chart elements - all using the bright yellow/gold color
     chartElements: {
       bar: {
-        fill: '#475569',
-        border: '#334155',
-        label: '#0f172a'
+        fill: '#FFC329',
+        border: '#E6AF00',
+        label: '#FFFFFF'
       },
       line: {
-        stroke: '#64748b',
-        point: '#94a3b8',
-        pointBorder: '#475569',
-        pointLabel: '#334155'
+        stroke: '#FFC329',
+        point: '#FFD666',
+        pointBorder: '#E6AF00',
+        pointLabel: '#FFFFFF'
       },
       area: {
-        fill: '#334155',
-        stroke: '#475569',
-        point: '#64748b',
-        pointBorder: '#1e293b',
-        pointLabel: '#0f172a'
+        fill: '#FFC329',
+        stroke: '#E6AF00',
+        point: '#FFD666',
+        pointBorder: '#CC9600',
+        pointLabel: '#FFFFFF'
       },
       pie: {
-        border: '#e2e8f0',
-        arcLabel: '#0f172a',
-        arcLinkLabel: '#334155'
+        border: '#3A3C5C',
+        arcLabel: '#FFFFFF',
+        arcLinkLabel: '#FFFFFF'
       }
     },
     grid: {
-      border: '#e2e8f0'
+      border: '#3A3C5C'
     }
   },
   typography: TYPOGRAPHY_PRESETS.arial,
@@ -1301,7 +1320,7 @@ export const THEME_BACKGROUND_MAPPING: Record<ThemeTokenName, BackgroundPresetKe
   dark: 'darkGradient',
   blue: 'blueGradient',
   green: 'greenGradient',
-  corporate: 'lightGray',
+  corporate: 'corporate',
   navy: 'navy',
   slate: 'glassDark',
   forest: 'greenGradient',

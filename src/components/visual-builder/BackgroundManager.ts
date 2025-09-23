@@ -79,6 +79,13 @@ const BACKGROUND_PRESETS: Record<string, BackgroundPreset> = {
     backgroundColor: '#1a202c',
     backgroundGradient: { enabled: false }
   },
+  corporate: {
+    type: 'solid',
+    name: 'Corporate',
+    description: 'Corporate dark purple background',
+    backgroundColor: '#151138',
+    backgroundGradient: { enabled: false }
+  },
 
   // Gradients
   blueGradient: {
