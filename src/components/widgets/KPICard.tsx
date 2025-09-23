@@ -296,9 +296,6 @@ export function KPICard({
       }, ${containerShadowOpacity || 0.2})`;
     }
 
-    if (kpiContainerShadow) {
-      return '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
-    }
 
     return undefined;
   };
