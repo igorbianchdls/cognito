@@ -7,6 +7,7 @@ import GridCanvas from '@/components/visual-builder/GridCanvas';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 import type { Widget } from '@/stores/visualBuilderStore';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
+import { BackgroundManager, type BackgroundPresetKey } from '@/components/visual-builder/BackgroundManager';
 import {
   Artifact,
   ArtifactHeader,
@@ -23,13 +24,17 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { FileText, BarChart3, Palette, Check, Type } from 'lucide-react';
+import { FileText, BarChart3, Palette, Check, Type, Square } from 'lucide-react';
 
 export default function DashboardChatPanel() {
   const [activeTab, setActiveTab] = useState<'editor' | 'dashboard'>('editor');
   const [selectedTheme, setSelectedTheme] = useState<ThemeName>('dark');
   const [selectedFont, setSelectedFont] = useState<string>('inter');
+  const [selectedBackground, setSelectedBackground] = useState<BackgroundPresetKey>('white');
   const visualBuilderState = useStore($visualBuilderState);
+
+  // Available backgrounds
+  const availableBackgrounds = BackgroundManager.getAvailableBackgrounds();
 
   // Available fonts
   const availableFonts = [
@@ -91,6 +96,23 @@ export default function DashboardChatPanel() {
     }
   }, [visualBuilderState.code]);
 
+  // Detect current background from code
+  useEffect(() => {
+    try {
+      const config = JSON.parse(visualBuilderState.code);
+
+      // If custom background is set, use it
+      if (config.customBackground && BackgroundManager.isValidBackground(config.customBackground)) {
+        setSelectedBackground(config.customBackground);
+      } else {
+        // Default background
+        setSelectedBackground(BackgroundManager.getDefaultBackground());
+      }
+    } catch (error) {
+      // Invalid JSON, keep current background
+    }
+  }, [visualBuilderState.code]);
+
   const handleCodeChange = (newCode: string) => {
     visualBuilderActions.updateCode(newCode);
   };
@@ -132,6 +154,21 @@ export default function DashboardChatPanel() {
       console.log('🎨 Font changed to:', fontKey);
     } catch (error) {
       console.error('Error updating font:', error);
+    }
+  };
+
+  const handleBackgroundChange = (backgroundKey: BackgroundPresetKey) => {
+    try {
+      const config = JSON.parse(visualBuilderState.code);
+      const updatedConfig = {
+        ...config,
+        customBackground: backgroundKey
+      };
+      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      setSelectedBackground(backgroundKey);
+      console.log('🎨 Background changed to:', backgroundKey);
+    } catch (error) {
+      console.error('Error updating background:', error);
     }
   };
 
@@ -266,6 +303,49 @@ export default function DashboardChatPanel() {
                     {font.label}
                   </span>
                   {selectedFont === font.value && (
+                    <Check className="w-4 h-4 text-blue-600" />
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Background Selector */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div>
+                <ArtifactAction
+                  icon={Square}
+                  tooltip={`Background: ${availableBackgrounds.find(b => b.key === selectedBackground)?.name || 'Unknown'}`}
+                  variant="ghost"
+                />
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
+                Select Background
+              </div>
+              <DropdownMenuSeparator />
+
+              {availableBackgrounds.map((background) => (
+                <DropdownMenuItem
+                  key={background.key}
+                  onClick={() => handleBackgroundChange(background.key)}
+                  className="flex items-center justify-between py-2"
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-6 h-6 rounded border border-gray-200"
+                      style={background.previewStyle}
+                    />
+                    <div>
+                      <div className="font-medium text-sm">{background.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {background.description}
+                      </div>
+                    </div>
+                  </div>
+                  {selectedBackground === background.key && (
                     <Check className="w-4 h-4 text-blue-600" />
                   )}
                 </DropdownMenuItem>

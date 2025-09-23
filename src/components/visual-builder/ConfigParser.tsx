@@ -45,6 +45,7 @@ export interface GridConfig {
 
 // Theme types are now managed by ThemeManager
 import { ThemeManager, type ThemeName } from './ThemeManager';
+import { BackgroundManager } from './BackgroundManager';
 
 export interface Widget {
   id: string;
@@ -117,11 +118,12 @@ export class ConfigParser {
       // Step 1: Parse JSON (same as chart stores)
       const config = JSON.parse(jsonString);
 
-      // Step 2: Extract widgets, grid config, theme, and custom font
+      // Step 2: Extract widgets, grid config, theme, custom font, and custom background
       const widgets = (config.widgets || []) as Widget[];
       const rawGridConfig = config.config || {};
       const theme = config.theme as ThemeName;
       const customFont = config.customFont as string;
+      const customBackground = config.customBackground as string;
 
       // Step 3: Process grid config with defaults
       const gridConfig: GridConfig = {
@@ -158,9 +160,18 @@ export class ConfigParser {
         ? this.applyThemeToWidgets(validWidgets, theme, customFont)
         : validWidgets;
 
-      const themedGridConfig = (theme && ThemeManager.isValidTheme(theme))
+      let themedGridConfig = (theme && ThemeManager.isValidTheme(theme))
         ? ThemeManager.applyThemeToGrid(gridConfig, theme)
         : gridConfig;
+
+      // Step 6: Apply custom background if specified
+      if (customBackground && BackgroundManager.isValidBackground(customBackground)) {
+        const backgroundStyle = BackgroundManager.getBackgroundStyle(customBackground);
+        themedGridConfig = {
+          ...themedGridConfig,
+          ...backgroundStyle
+        };
+      }
 
       return {
         widgets: themedWidgets,
