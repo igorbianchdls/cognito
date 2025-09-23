@@ -128,8 +128,8 @@ export class ThemeManager {
 
     // Apply border properties automatically (consistent across all widgets)
     clonedWidget.kpiConfig.kpiContainerBorderColor = tokens.colors.border;
-    clonedWidget.kpiConfig.kpiContainerBorderWidth = tokens.borders.width.medium;
-    clonedWidget.kpiConfig.kpiContainerBorderRadius = tokens.borders.radius.lg;
+    clonedWidget.kpiConfig.kpiContainerBorderWidth = tokens.borders.width.thin;
+    clonedWidget.kpiConfig.kpiContainerBorderRadius = tokens.borders.radius.md;
 
     return clonedWidget;
   }
