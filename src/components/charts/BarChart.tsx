@@ -301,7 +301,7 @@ export function BarChart(props: BarChartProps) {
           // Override with specific props if provided (backwards compatibility)
           padding: `${containerPadding || 16}px`,
           margin: '0 auto',
-          border: containerStyles.border || (containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb'),
+          border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb',
           borderRadius: `${containerBorderRadius || 8}px`,
           boxShadow: containerStyles.boxShadow || boxShadow,
         })
