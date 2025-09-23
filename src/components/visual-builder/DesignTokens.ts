@@ -847,51 +847,63 @@ export const NAVY_TOKENS: DesignTokens = {
   ...DARK_TOKENS,
   colors: {
     ...DARK_TOKENS.colors,
-    surface: '#1e293b',
-    surfaceElevated: '#334155',
-    primary: '#1e40af',
-    secondary: '#3b82f6',
-    accent: '#60a5fa',
-    border: '#475569',
-    borderHover: '#64748b',
+    // Widgets/cards in lighter navy blue (como na imagem)
+    surface: '#2d3748',
+    surfaceElevated: '#4a5568',
+    // Navy azuis da imagem
+    primary: '#3b82f6',
+    secondary: '#60a5fa',
+    accent: '#93c5fd',
+    // Bordas sutis
+    border: '#4a5568',
+    borderHover: '#718096',
     borderFocus: '#3b82f6',
+    // Texto claro para contraste
     text: {
-      primary: '#f1f5f9',
-      secondary: '#cbd5e1',
-      muted: '#94a3b8',
-      inverse: '#0f172a'
+      primary: '#ffffff',
+      secondary: '#e2e8f0',
+      muted: '#cbd5e1',
+      inverse: '#1a202c'
     },
+    // Semantic colors (alertas etc)
+    semantic: {
+      success: '#48bb78',
+      warning: '#ed8936',
+      error: '#f56565',
+      info: '#3b82f6'
+    },
+    // Charts colors
     chart: {
-      primary: '#1e40af',
-      secondary: '#3b82f6',
-      tertiary: '#60a5fa',
-      quaternary: '#93c5fd',
-      grid: '#475569',
-      axis: '#64748b'
+      primary: '#3b82f6',
+      secondary: '#60a5fa',
+      tertiary: '#93c5fd',
+      quaternary: '#bfdbfe',
+      grid: '#4a5568',
+      axis: '#718096'
     },
     chartElements: {
       bar: {
-        fill: '#1e40af',
-        border: '#1e3a8a',
-        label: '#f1f5f9'
+        fill: '#3b82f6',
+        border: '#2563eb',
+        label: '#ffffff'
       },
       line: {
-        stroke: '#3b82f6',
-        point: '#60a5fa',
-        pointBorder: '#1e40af',
-        pointLabel: '#cbd5e1'
+        stroke: '#60a5fa',
+        point: '#93c5fd',
+        pointBorder: '#3b82f6',
+        pointLabel: '#e2e8f0'
       },
       area: {
-        fill: '#1e3a8a',
-        stroke: '#1e40af',
-        point: '#3b82f6',
-        pointBorder: '#1e3a8a',
-        pointLabel: '#f1f5f9'
+        fill: '#2563eb',
+        stroke: '#3b82f6',
+        point: '#60a5fa',
+        pointBorder: '#2563eb',
+        pointLabel: '#ffffff'
       },
       pie: {
-        border: '#475569',
-        arcLabel: '#f1f5f9',
-        arcLinkLabel: '#cbd5e1'
+        border: '#4a5568',
+        arcLabel: '#ffffff',
+        arcLinkLabel: '#e2e8f0'
       }
     },
     grid: {
@@ -1290,7 +1302,7 @@ export const THEME_BACKGROUND_MAPPING: Record<ThemeTokenName, BackgroundPresetKe
   blue: 'blueGradient',
   green: 'greenGradient',
   corporate: 'lightGray',
-  navy: 'darkGradient',
+  navy: 'navy',
   slate: 'glassDark',
   forest: 'greenGradient',
   burgundy: 'sunsetGradient',
