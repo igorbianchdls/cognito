@@ -36,11 +36,71 @@ export interface CorporateColorPalette {
   };
 }
 
-// Corporate color palettes
-const CORPORATE_COLOR_PALETTES: Record<string, CorporateColorPalette> = {
+// Theme-specific color palettes (one for each theme)
+const THEME_COLOR_PALETTES: Record<string, CorporateColorPalette> = {
+  light: {
+    name: 'Light Theme',
+    description: 'Clean light colors with blue accents',
+    primary: '#2563EB',
+    secondary: '#60A5FA',
+    tertiary: '#1D4ED8',
+    quaternary: '#1E40AF',
+    pieSlices: ['#2563EB', '#60A5FA', '#3B82F6', '#1D4ED8', '#93C5FD', '#DBEAFE'],
+    chartElements: {
+      bar: { fill: '#2563EB', border: '#1D4ED8', label: '#FFFFFF' },
+      line: { stroke: '#2563EB', point: '#60A5FA', pointBorder: '#1D4ED8', pointLabel: '#FFFFFF' },
+      area: { fill: '#2563EB', stroke: '#1D4ED8', point: '#60A5FA', pointBorder: '#1E40AF', pointLabel: '#FFFFFF' },
+      pie: { border: '#1D4ED8', arcLabel: '#FFFFFF', arcLinkLabel: '#60A5FA' }
+    }
+  },
+  dark: {
+    name: 'Dark Theme',
+    description: 'Modern dark colors with cyan accents',
+    primary: '#06B6D4',
+    secondary: '#67E8F9',
+    tertiary: '#0891B2',
+    quaternary: '#0E7490',
+    pieSlices: ['#06B6D4', '#0891B2', '#0E7490', '#155E75', '#67E8F9', '#A5F3FC'],
+    chartElements: {
+      bar: { fill: '#06B6D4', border: '#0891B2', label: '#FFFFFF' },
+      line: { stroke: '#06B6D4', point: '#67E8F9', pointBorder: '#0891B2', pointLabel: '#FFFFFF' },
+      area: { fill: '#06B6D4', stroke: '#0891B2', point: '#67E8F9', pointBorder: '#0E7490', pointLabel: '#FFFFFF' },
+      pie: { border: '#0891B2', arcLabel: '#FFFFFF', arcLinkLabel: '#67E8F9' }
+    }
+  },
+  blue: {
+    name: 'Blue Theme',
+    description: 'Professional ocean blue palette',
+    primary: '#1E40AF',
+    secondary: '#3B82F6',
+    tertiary: '#1D4ED8',
+    quaternary: '#1E3A8A',
+    pieSlices: ['#1E40AF', '#1D4ED8', '#1E3A8A', '#312E81', '#3B82F6', '#60A5FA'],
+    chartElements: {
+      bar: { fill: '#1E40AF', border: '#1D4ED8', label: '#FFFFFF' },
+      line: { stroke: '#1E40AF', point: '#3B82F6', pointBorder: '#1D4ED8', pointLabel: '#FFFFFF' },
+      area: { fill: '#1E40AF', stroke: '#1D4ED8', point: '#3B82F6', pointBorder: '#1E3A8A', pointLabel: '#FFFFFF' },
+      pie: { border: '#1D4ED8', arcLabel: '#FFFFFF', arcLinkLabel: '#3B82F6' }
+    }
+  },
+  green: {
+    name: 'Green Theme',
+    description: 'Nature-inspired green palette',
+    primary: '#059669',
+    secondary: '#10B981',
+    tertiary: '#047857',
+    quaternary: '#065F46',
+    pieSlices: ['#059669', '#047857', '#065F46', '#064E3B', '#10B981', '#34D399'],
+    chartElements: {
+      bar: { fill: '#059669', border: '#047857', label: '#FFFFFF' },
+      line: { stroke: '#059669', point: '#10B981', pointBorder: '#047857', pointLabel: '#FFFFFF' },
+      area: { fill: '#059669', stroke: '#047857', point: '#10B981', pointBorder: '#065F46', pointLabel: '#FFFFFF' },
+      pie: { border: '#047857', arcLabel: '#FFFFFF', arcLinkLabel: '#10B981' }
+    }
+  },
   corporate: {
-    name: 'Corporate Yellow',
-    description: 'Yellow and gold corporate color palette',
+    name: 'Corporate Theme',
+    description: 'Professional yellow corporate palette',
     primary: '#FFC329',
     secondary: '#FFD666',
     tertiary: '#E6AF00',
@@ -53,69 +113,84 @@ const CORPORATE_COLOR_PALETTES: Record<string, CorporateColorPalette> = {
       pie: { border: '#E6AF00', arcLabel: '#FFFFFF', arcLinkLabel: '#FFD666' }
     }
   },
-  corporate_blue: {
-    name: 'Corporate Blue',
-    description: 'Blue corporate color palette',
-    primary: '#3B82F6',
-    secondary: '#60A5FA',
-    tertiary: '#2563EB',
-    quaternary: '#1D4ED8',
-    pieSlices: ['#3B82F6', '#2563EB', '#1D4ED8', '#1E40AF', '#60A5FA', '#93C5FD'],
+  navy: {
+    name: 'Navy Theme',
+    description: 'Executive navy blue palette',
+    primary: '#1E3A8A',
+    secondary: '#3B82F6',
+    tertiary: '#1E40AF',
+    quaternary: '#312E81',
+    pieSlices: ['#1E3A8A', '#1E40AF', '#312E81', '#1E1B4B', '#3B82F6', '#60A5FA'],
     chartElements: {
-      bar: { fill: '#3B82F6', border: '#2563EB', label: '#FFFFFF' },
-      line: { stroke: '#3B82F6', point: '#60A5FA', pointBorder: '#2563EB', pointLabel: '#FFFFFF' },
-      area: { fill: '#3B82F6', stroke: '#2563EB', point: '#60A5FA', pointBorder: '#1D4ED8', pointLabel: '#FFFFFF' },
-      pie: { border: '#2563EB', arcLabel: '#FFFFFF', arcLinkLabel: '#60A5FA' }
+      bar: { fill: '#1E3A8A', border: '#1E40AF', label: '#FFFFFF' },
+      line: { stroke: '#1E3A8A', point: '#3B82F6', pointBorder: '#1E40AF', pointLabel: '#FFFFFF' },
+      area: { fill: '#1E3A8A', stroke: '#1E40AF', point: '#3B82F6', pointBorder: '#312E81', pointLabel: '#FFFFFF' },
+      pie: { border: '#1E40AF', arcLabel: '#FFFFFF', arcLinkLabel: '#3B82F6' }
     }
   },
-  corporate_green: {
-    name: 'Corporate Green',
-    description: 'Green corporate color palette',
-    primary: '#10B981',
-    secondary: '#34D399',
-    tertiary: '#059669',
-    quaternary: '#047857',
-    pieSlices: ['#10B981', '#059669', '#047857', '#065F46', '#34D399', '#6EE7B7'],
+  slate: {
+    name: 'Slate Theme',
+    description: 'Premium gray slate palette',
+    primary: '#475569',
+    secondary: '#64748B',
+    tertiary: '#334155',
+    quaternary: '#1E293B',
+    pieSlices: ['#475569', '#334155', '#1E293B', '#0F172A', '#64748B', '#94A3B8'],
     chartElements: {
-      bar: { fill: '#10B981', border: '#059669', label: '#FFFFFF' },
-      line: { stroke: '#10B981', point: '#34D399', pointBorder: '#059669', pointLabel: '#FFFFFF' },
-      area: { fill: '#10B981', stroke: '#059669', point: '#34D399', pointBorder: '#047857', pointLabel: '#FFFFFF' },
-      pie: { border: '#059669', arcLabel: '#FFFFFF', arcLinkLabel: '#34D399' }
+      bar: { fill: '#475569', border: '#334155', label: '#FFFFFF' },
+      line: { stroke: '#475569', point: '#64748B', pointBorder: '#334155', pointLabel: '#FFFFFF' },
+      area: { fill: '#475569', stroke: '#334155', point: '#64748B', pointBorder: '#1E293B', pointLabel: '#FFFFFF' },
+      pie: { border: '#334155', arcLabel: '#FFFFFF', arcLinkLabel: '#64748B' }
     }
   },
-  corporate_red: {
-    name: 'Corporate Red',
-    description: 'Red corporate color palette',
-    primary: '#EF4444',
-    secondary: '#F87171',
-    tertiary: '#DC2626',
-    quaternary: '#B91C1C',
-    pieSlices: ['#EF4444', '#DC2626', '#B91C1C', '#991B1B', '#F87171', '#FCA5A5'],
+  forest: {
+    name: 'Forest Theme',
+    description: 'Deep forest green palette',
+    primary: '#166534',
+    secondary: '#22C55E',
+    tertiary: '#15803D',
+    quaternary: '#14532D',
+    pieSlices: ['#166534', '#15803D', '#14532D', '#052E16', '#22C55E', '#4ADE80'],
     chartElements: {
-      bar: { fill: '#EF4444', border: '#DC2626', label: '#FFFFFF' },
-      line: { stroke: '#EF4444', point: '#F87171', pointBorder: '#DC2626', pointLabel: '#FFFFFF' },
-      area: { fill: '#EF4444', stroke: '#DC2626', point: '#F87171', pointBorder: '#B91C1C', pointLabel: '#FFFFFF' },
-      pie: { border: '#DC2626', arcLabel: '#FFFFFF', arcLinkLabel: '#F87171' }
+      bar: { fill: '#166534', border: '#15803D', label: '#FFFFFF' },
+      line: { stroke: '#166534', point: '#22C55E', pointBorder: '#15803D', pointLabel: '#FFFFFF' },
+      area: { fill: '#166534', stroke: '#15803D', point: '#22C55E', pointBorder: '#14532D', pointLabel: '#FFFFFF' },
+      pie: { border: '#15803D', arcLabel: '#FFFFFF', arcLinkLabel: '#22C55E' }
     }
   },
-  corporate_purple: {
-    name: 'Corporate Purple',
-    description: 'Purple corporate color palette',
-    primary: '#8B5CF6',
-    secondary: '#A78BFA',
-    tertiary: '#7C3AED',
-    quaternary: '#6D28D9',
-    pieSlices: ['#8B5CF6', '#7C3AED', '#6D28D9', '#5B21B6', '#A78BFA', '#C4B5FD'],
+  burgundy: {
+    name: 'Burgundy Theme',
+    description: 'Sophisticated wine red palette',
+    primary: '#991B1B',
+    secondary: '#EF4444',
+    tertiary: '#B91C1C',
+    quaternary: '#7F1D1D',
+    pieSlices: ['#991B1B', '#B91C1C', '#7F1D1D', '#450A0A', '#EF4444', '#F87171'],
     chartElements: {
-      bar: { fill: '#8B5CF6', border: '#7C3AED', label: '#FFFFFF' },
-      line: { stroke: '#8B5CF6', point: '#A78BFA', pointBorder: '#7C3AED', pointLabel: '#FFFFFF' },
-      area: { fill: '#8B5CF6', stroke: '#7C3AED', point: '#A78BFA', pointBorder: '#6D28D9', pointLabel: '#FFFFFF' },
-      pie: { border: '#7C3AED', arcLabel: '#FFFFFF', arcLinkLabel: '#A78BFA' }
+      bar: { fill: '#991B1B', border: '#B91C1C', label: '#FFFFFF' },
+      line: { stroke: '#991B1B', point: '#EF4444', pointBorder: '#B91C1C', pointLabel: '#FFFFFF' },
+      area: { fill: '#991B1B', stroke: '#B91C1C', point: '#EF4444', pointBorder: '#7F1D1D', pointLabel: '#FFFFFF' },
+      pie: { border: '#B91C1C', arcLabel: '#FFFFFF', arcLinkLabel: '#EF4444' }
+    }
+  },
+  platinum: {
+    name: 'Platinum Theme',
+    description: 'Elegant silver platinum palette',
+    primary: '#6B7280',
+    secondary: '#9CA3AF',
+    tertiary: '#4B5563',
+    quaternary: '#374151',
+    pieSlices: ['#6B7280', '#4B5563', '#374151', '#1F2937', '#9CA3AF', '#D1D5DB'],
+    chartElements: {
+      bar: { fill: '#6B7280', border: '#4B5563', label: '#FFFFFF' },
+      line: { stroke: '#6B7280', point: '#9CA3AF', pointBorder: '#4B5563', pointLabel: '#FFFFFF' },
+      area: { fill: '#6B7280', stroke: '#4B5563', point: '#9CA3AF', pointBorder: '#374151', pointLabel: '#FFFFFF' },
+      pie: { border: '#4B5563', arcLabel: '#FFFFFF', arcLinkLabel: '#9CA3AF' }
     }
   }
 };
 
-export type ColorPresetKey = 'corporate' | 'corporate_blue' | 'corporate_green' | 'corporate_red' | 'corporate_purple';
+export type ColorPresetKey = 'light' | 'dark' | 'blue' | 'green' | 'corporate' | 'navy' | 'slate' | 'forest' | 'burgundy' | 'platinum';
 
 export interface ColorPreview {
   key: ColorPresetKey;
@@ -127,24 +202,24 @@ export interface ColorPreview {
 
 export class ColorManager {
   /**
-   * Gets a specific corporate color palette
+   * Gets a specific theme color palette
    */
   static getColorPalette(key: ColorPresetKey): CorporateColorPalette {
-    return CORPORATE_COLOR_PALETTES[key];
+    return THEME_COLOR_PALETTES[key];
   }
 
   /**
    * Gets the corporate color palette (backward compatibility)
    */
   static getCorporateColors(): CorporateColorPalette {
-    return CORPORATE_COLOR_PALETTES.corporate;
+    return THEME_COLOR_PALETTES.corporate;
   }
 
   /**
-   * Gets available corporate color palettes for selection
+   * Gets available theme color palettes for selection
    */
   static getAvailableColorPalettes(): ColorPreview[] {
-    return Object.entries(CORPORATE_COLOR_PALETTES).map(([key, palette]) => ({
+    return Object.entries(THEME_COLOR_PALETTES).map(([key, palette]) => ({
       key: key as ColorPresetKey,
       name: palette.name,
       description: palette.description,
@@ -157,34 +232,34 @@ export class ColorManager {
    * Gets a specific color from a palette
    */
   static getColor(paletteKey: ColorPresetKey, type: keyof Omit<CorporateColorPalette, 'name' | 'description' | 'chartElements' | 'pieSlices'>): string {
-    return CORPORATE_COLOR_PALETTES[paletteKey][type];
+    return THEME_COLOR_PALETTES[paletteKey][type];
   }
 
   /**
    * Gets chart element colors for a specific chart type and palette
    */
   static getChartColors(paletteKey: ColorPresetKey, chartType: keyof CorporateColorPalette['chartElements']) {
-    return CORPORATE_COLOR_PALETTES[paletteKey].chartElements[chartType];
+    return THEME_COLOR_PALETTES[paletteKey].chartElements[chartType];
   }
 
   /**
    * Gets pie slice colors array for a specific palette
    */
   static getPieSliceColors(paletteKey: ColorPresetKey): string[] {
-    return CORPORATE_COLOR_PALETTES[paletteKey].pieSlices;
+    return THEME_COLOR_PALETTES[paletteKey].pieSlices;
   }
 
   /**
    * Gets available color preset keys
    */
   static getAvailablePresets(): ColorPresetKey[] {
-    return Object.keys(CORPORATE_COLOR_PALETTES) as ColorPresetKey[];
+    return Object.keys(THEME_COLOR_PALETTES) as ColorPresetKey[];
   }
 
   /**
    * Validates if a color preset key is supported
    */
   static isValidPreset(presetKey: string): presetKey is ColorPresetKey {
-    return presetKey in CORPORATE_COLOR_PALETTES;
+    return presetKey in THEME_COLOR_PALETTES;
   }
 }

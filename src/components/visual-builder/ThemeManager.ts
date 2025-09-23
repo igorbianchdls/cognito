@@ -36,60 +36,63 @@ export class ThemeManager {
     const backgroundPresetKey = THEME_BACKGROUND_MAPPING[themeName];
     const backgroundStyle = BackgroundManager.getBackgroundStyle(backgroundPresetKey);
 
-    // For corporate theme, merge with ColorManager colors
+    // Apply ColorManager colors for all themes
     let mergedColors = baseTokens.colors;
-    if (themeName === 'corporate') {
-      // Use selected corporate color palette or default to 'corporate'
-      const selectedColorKey = (corporateColorKey && ColorManager.isValidPreset(corporateColorKey))
-        ? corporateColorKey as ColorPresetKey
-        : 'corporate';
-      const corporateColors = ColorManager.getColorPalette(selectedColorKey);
+
+    // Use selected color palette or default to theme name
+    const selectedColorKey = (corporateColorKey && ColorManager.isValidPreset(corporateColorKey))
+      ? corporateColorKey as ColorPresetKey
+      : themeName as ColorPresetKey;
+
+    // Only apply if the color key is valid (theme has a corresponding palette)
+    if (ColorManager.isValidPreset(selectedColorKey)) {
+      const themeColors = ColorManager.getColorPalette(selectedColorKey);
       mergedColors = {
         ...baseTokens.colors,
-        // Apply corporate colors from ColorManager
-        primary: corporateColors.primary,
-        secondary: corporateColors.secondary,
-        accent: corporateColors.tertiary,
-        borderFocus: corporateColors.primary,
+        // Apply theme colors from ColorManager
+        primary: themeColors.primary,
+        secondary: themeColors.secondary,
+        accent: themeColors.tertiary,
+        borderFocus: themeColors.primary,
         // Chart colors
         chart: {
           ...baseTokens.colors.chart,
-          primary: corporateColors.primary,
-          secondary: corporateColors.secondary,
-          tertiary: corporateColors.tertiary,
-          quaternary: corporateColors.quaternary,
+          primary: themeColors.primary,
+          secondary: themeColors.secondary,
+          tertiary: themeColors.tertiary,
+          quaternary: themeColors.quaternary,
         },
         // Pie slice colors
-        pieSliceColors: corporateColors.pieSlices,
+        pieSliceColors: themeColors.pieSlices,
         // Chart elements
         chartElements: {
           ...baseTokens.colors.chartElements,
           bar: {
             ...baseTokens.colors.chartElements.bar,
-            fill: corporateColors.chartElements.bar.fill,
-            border: corporateColors.chartElements.bar.border,
-            label: corporateColors.chartElements.bar.label
+            fill: themeColors.chartElements.bar.fill,
+            border: themeColors.chartElements.bar.border,
+            label: themeColors.chartElements.bar.label
           },
           line: {
             ...baseTokens.colors.chartElements.line,
-            stroke: corporateColors.chartElements.line.stroke,
-            point: corporateColors.chartElements.line.point,
-            pointBorder: corporateColors.chartElements.line.pointBorder,
-            pointLabel: corporateColors.chartElements.line.pointLabel
+            stroke: themeColors.chartElements.line.stroke,
+            point: themeColors.chartElements.line.point,
+            pointBorder: themeColors.chartElements.line.pointBorder,
+            pointLabel: themeColors.chartElements.line.pointLabel
           },
           area: {
             ...baseTokens.colors.chartElements.area,
-            fill: corporateColors.chartElements.area.fill,
-            stroke: corporateColors.chartElements.area.stroke,
-            point: corporateColors.chartElements.area.point,
-            pointBorder: corporateColors.chartElements.area.pointBorder,
-            pointLabel: corporateColors.chartElements.area.pointLabel
+            fill: themeColors.chartElements.area.fill,
+            stroke: themeColors.chartElements.area.stroke,
+            point: themeColors.chartElements.area.point,
+            pointBorder: themeColors.chartElements.area.pointBorder,
+            pointLabel: themeColors.chartElements.area.pointLabel
           },
           pie: {
             ...baseTokens.colors.chartElements.pie,
-            border: corporateColors.chartElements.pie.border,
-            arcLabel: corporateColors.chartElements.pie.arcLabel,
-            arcLinkLabel: corporateColors.chartElements.pie.arcLinkLabel
+            border: themeColors.chartElements.pie.border,
+            arcLabel: themeColors.chartElements.pie.arcLabel,
+            arcLinkLabel: themeColors.chartElements.pie.arcLinkLabel
           }
         }
       };

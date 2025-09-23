@@ -118,6 +118,23 @@ export default function DashboardChatPanel() {
     }
   }, [visualBuilderState.code]);
 
+  // Detect current corporate color from code and initialize based on theme
+  useEffect(() => {
+    try {
+      const config = JSON.parse(visualBuilderState.code);
+
+      // If corporate color is set, use it
+      if (config.corporateColor && ColorManager.isValidPreset(config.corporateColor)) {
+        setSelectedCorporateColor(config.corporateColor);
+      } else if (config.theme && ColorManager.isValidPreset(config.theme)) {
+        // Otherwise, use theme name as default color palette
+        setSelectedCorporateColor(config.theme);
+      }
+    } catch (error) {
+      // Invalid JSON, keep current color
+    }
+  }, [visualBuilderState.code]);
+
   const handleCodeChange = (newCode: string) => {
     visualBuilderActions.updateCode(newCode);
   };
@@ -373,56 +390,54 @@ export default function DashboardChatPanel() {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Color Selector - Only show when Corporate theme is selected */}
-          {selectedTheme === 'corporate' && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <div>
-                  <ArtifactAction
-                    icon={Paintbrush}
-                    tooltip={`Color: ${availableColorPalettes.find(c => c.key === selectedCorporateColor)?.name || 'Unknown'}`}
-                    variant="ghost"
-                  />
-                </div>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
-                  Select Color Palette
-                </div>
-                <DropdownMenuSeparator />
+          {/* Color Selector - Show for all themes */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div>
+                <ArtifactAction
+                  icon={Paintbrush}
+                  tooltip={`Color: ${availableColorPalettes.find(c => c.key === selectedCorporateColor)?.name || 'Unknown'}`}
+                  variant="ghost"
+                />
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
+                Select Color Palette
+              </div>
+              <DropdownMenuSeparator />
 
-                {availableColorPalettes.map((colorPalette) => (
-                  <DropdownMenuItem
-                    key={colorPalette.key}
-                    onClick={() => handleCorporateColorChange(colorPalette.key)}
-                    className="flex items-center justify-between py-2"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex gap-1">
-                        <div
-                          className="w-3 h-3 rounded-full border border-gray-200"
-                          style={{ backgroundColor: colorPalette.primary }}
-                        />
-                        <div
-                          className="w-3 h-3 rounded-full border border-gray-200"
-                          style={{ backgroundColor: colorPalette.secondary }}
-                        />
-                      </div>
-                      <div>
-                        <div className="font-medium text-sm">{colorPalette.name}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {colorPalette.description}
-                        </div>
+              {availableColorPalettes.map((colorPalette) => (
+                <DropdownMenuItem
+                  key={colorPalette.key}
+                  onClick={() => handleCorporateColorChange(colorPalette.key)}
+                  className="flex items-center justify-between py-2"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex gap-1">
+                      <div
+                        className="w-3 h-3 rounded-full border border-gray-200"
+                        style={{ backgroundColor: colorPalette.primary }}
+                      />
+                      <div
+                        className="w-3 h-3 rounded-full border border-gray-200"
+                        style={{ backgroundColor: colorPalette.secondary }}
+                      />
+                    </div>
+                    <div>
+                      <div className="font-medium text-sm">{colorPalette.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {colorPalette.description}
                       </div>
                     </div>
-                    {selectedCorporateColor === colorPalette.key && (
-                      <Check className="w-4 h-4 text-blue-600" />
-                    )}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+                  </div>
+                  {selectedCorporateColor === colorPalette.key && (
+                    <Check className="w-4 h-4 text-blue-600" />
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </ArtifactActions>
       </ArtifactHeader>
 
