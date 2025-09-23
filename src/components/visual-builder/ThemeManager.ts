@@ -31,7 +31,7 @@ export class ThemeManager {
   /**
    * Gets design tokens by theme name, automatically integrating background from BackgroundManager
    */
-  static getThemeTokens(themeName: ThemeName): DesignTokens {
+  static getThemeTokens(themeName: ThemeName, corporateColorKey?: string): DesignTokens {
     const baseTokens = THEME_TOKENS[themeName];
     const backgroundPresetKey = THEME_BACKGROUND_MAPPING[themeName];
     const backgroundStyle = BackgroundManager.getBackgroundStyle(backgroundPresetKey);
@@ -39,7 +39,11 @@ export class ThemeManager {
     // For corporate theme, merge with ColorManager colors
     let mergedColors = baseTokens.colors;
     if (themeName === 'corporate') {
-      const corporateColors = ColorManager.getCorporateColors();
+      // Use selected corporate color palette or default to 'corporate'
+      const selectedColorKey = (corporateColorKey && ColorManager.isValidPreset(corporateColorKey))
+        ? corporateColorKey as any
+        : 'corporate';
+      const corporateColors = ColorManager.getColorPalette(selectedColorKey);
       mergedColors = {
         ...baseTokens.colors,
         // Apply corporate colors from ColorManager
@@ -521,13 +525,13 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single widget based on its type
    */
-  static applyThemeToWidget(widget: Widget, themeName: ThemeName, customFont?: string): Widget {
+  static applyThemeToWidget(widget: Widget, themeName: ThemeName, customFont?: string, corporateColorKey?: string): Widget {
     if (!this.isValidTheme(themeName)) {
       console.warn(`Invalid theme: ${themeName}. Skipping theme application.`);
       return widget;
     }
 
-    let tokens = this.getThemeTokens(themeName);
+    let tokens = this.getThemeTokens(themeName, corporateColorKey);
 
     // Override typography if customFont is provided
     if (customFont && customFont in TYPOGRAPHY_PRESETS) {
@@ -558,20 +562,20 @@ export class ThemeManager {
   /**
    * Applies design tokens to multiple widgets
    */
-  static applyThemeToWidgets(widgets: Widget[], themeName: ThemeName, customFont?: string): Widget[] {
-    return widgets.map(widget => this.applyThemeToWidget(widget, themeName, customFont));
+  static applyThemeToWidgets(widgets: Widget[], themeName: ThemeName, customFont?: string, corporateColorKey?: string): Widget[] {
+    return widgets.map(widget => this.applyThemeToWidget(widget, themeName, customFont, corporateColorKey));
   }
 
   /**
    * Applies design tokens to grid configuration
    */
-  static applyThemeToGrid(gridConfig: GridConfig, themeName: ThemeName): GridConfig {
+  static applyThemeToGrid(gridConfig: GridConfig, themeName: ThemeName, corporateColorKey?: string): GridConfig {
     if (!this.isValidTheme(themeName)) {
       console.warn(`Invalid theme: ${themeName}. Skipping grid theme application.`);
       return gridConfig;
     }
 
-    const tokens = this.getThemeTokens(themeName);
+    const tokens = this.getThemeTokens(themeName, corporateColorKey);
 
     // Get the background preset for this theme
     const backgroundPresetKey = THEME_BACKGROUND_MAPPING[themeName];

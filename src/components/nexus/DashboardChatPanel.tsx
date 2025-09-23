@@ -8,6 +8,7 @@ import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilde
 import type { Widget } from '@/stores/visualBuilderStore';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
 import { BackgroundManager, type BackgroundPresetKey } from '@/components/visual-builder/BackgroundManager';
+import { ColorManager, type ColorPresetKey } from '@/components/visual-builder/ColorManager';
 import {
   Artifact,
   ArtifactHeader,
@@ -24,17 +25,21 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { FileText, BarChart3, Palette, Check, Type, Square } from 'lucide-react';
+import { FileText, BarChart3, Palette, Check, Type, Square, Paintbrush } from 'lucide-react';
 
 export default function DashboardChatPanel() {
   const [activeTab, setActiveTab] = useState<'editor' | 'dashboard'>('editor');
   const [selectedTheme, setSelectedTheme] = useState<ThemeName>('dark');
   const [selectedFont, setSelectedFont] = useState<string>('inter');
   const [selectedBackground, setSelectedBackground] = useState<BackgroundPresetKey>('white');
+  const [selectedCorporateColor, setSelectedCorporateColor] = useState<ColorPresetKey>('corporate');
   const visualBuilderState = useStore($visualBuilderState);
 
   // Available backgrounds
   const availableBackgrounds = BackgroundManager.getAvailableBackgrounds();
+
+  // Available corporate color palettes
+  const availableColorPalettes = ColorManager.getAvailableColorPalettes();
 
   // Available fonts
   const availableFonts = [
@@ -169,6 +174,21 @@ export default function DashboardChatPanel() {
       console.log('🎨 Background changed to:', backgroundKey);
     } catch (error) {
       console.error('Error updating background:', error);
+    }
+  };
+
+  const handleCorporateColorChange = (colorKey: ColorPresetKey) => {
+    try {
+      const config = JSON.parse(visualBuilderState.code);
+      const updatedConfig = {
+        ...config,
+        corporateColor: colorKey
+      };
+      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      setSelectedCorporateColor(colorKey);
+      console.log('🎨 Corporate color changed to:', colorKey);
+    } catch (error) {
+      console.error('Error applying corporate color:', error);
     }
   };
 
@@ -352,6 +372,57 @@ export default function DashboardChatPanel() {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
+
+          {/* Color Selector - Only show when Corporate theme is selected */}
+          {selectedTheme === 'corporate' && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <div>
+                  <ArtifactAction
+                    icon={Paintbrush}
+                    tooltip={`Color: ${availableColorPalettes.find(c => c.key === selectedCorporateColor)?.name || 'Unknown'}`}
+                    variant="ghost"
+                  />
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
+                  Select Color Palette
+                </div>
+                <DropdownMenuSeparator />
+
+                {availableColorPalettes.map((colorPalette) => (
+                  <DropdownMenuItem
+                    key={colorPalette.key}
+                    onClick={() => handleCorporateColorChange(colorPalette.key)}
+                    className="flex items-center justify-between py-2"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex gap-1">
+                        <div
+                          className="w-3 h-3 rounded-full border border-gray-200"
+                          style={{ backgroundColor: colorPalette.primary }}
+                        />
+                        <div
+                          className="w-3 h-3 rounded-full border border-gray-200"
+                          style={{ backgroundColor: colorPalette.secondary }}
+                        />
+                      </div>
+                      <div>
+                        <div className="font-medium text-sm">{colorPalette.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {colorPalette.description}
+                        </div>
+                      </div>
+                    </div>
+                    {selectedCorporateColor === colorPalette.key && (
+                      <Check className="w-4 h-4 text-blue-600" />
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </ArtifactActions>
       </ArtifactHeader>
 
