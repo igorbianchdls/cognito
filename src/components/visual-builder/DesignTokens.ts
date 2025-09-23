@@ -543,7 +543,7 @@ export const LIGHT_TOKENS: DesignTokens = {
     accent: '#1d4ed8',
 
     // Surfaces (background will come from BackgroundManager)
-    surface: '#f8fafc',
+    surface: '#ffffff',
     surfaceElevated: '#ffffff',
 
     // Borders - Mais sutis para visual limpo
