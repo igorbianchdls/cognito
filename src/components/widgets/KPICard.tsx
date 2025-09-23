@@ -313,7 +313,7 @@ export function KPICard({
         borderRadius: kpiContainerBorderRadius ? `${kpiContainerBorderRadius}px` : undefined,
         padding: kpiContainerPadding ? `${kpiContainerPadding}px` : undefined,
         textAlign: kpiContainerTextAlign || 'left',
-        boxShadow: getAdvancedShadow(),
+        boxShadow: 'none',
       }}
     >
         <CardHeader className="!text-left !items-start">
