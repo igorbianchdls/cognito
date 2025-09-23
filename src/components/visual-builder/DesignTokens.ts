@@ -636,7 +636,7 @@ export const LIGHT_TOKENS: DesignTokens = {
     backdrop: undefined,
     shadow: {
       color: '#64748b',
-      opacity: 0.12,
+      opacity: 0,
       blur: 8,
       offsetX: 0,
       offsetY: 2
