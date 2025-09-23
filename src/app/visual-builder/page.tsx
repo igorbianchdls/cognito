@@ -4,12 +4,13 @@ import { useEffect, useState } from 'react';
 import { useStore } from '@nanostores/react';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import GridCanvas from '@/components/visual-builder/GridCanvas';
+import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 import type { Widget } from '@/stores/visualBuilderStore';
 
 export default function VisualBuilderPage() {
   const visualBuilderState = useStore($visualBuilderState);
-  const [activeTab, setActiveTab] = useState<'editor' | 'dashboard'>('editor');
+  const [activeTab, setActiveTab] = useState<'editor' | 'dashboard' | 'responsive'>('editor');
 
   // Initialize store on mount
   useEffect(() => {
@@ -75,6 +76,16 @@ export default function VisualBuilderPage() {
           >
             📊 Dashboard
           </button>
+          <button
+            className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === 'responsive'
+                ? 'border-blue-500 text-blue-600 bg-blue-50'
+                : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+            }`}
+            onClick={() => setActiveTab('responsive')}
+          >
+            📱 Responsive
+          </button>
         </div>
       </div>
 
@@ -110,6 +121,22 @@ export default function VisualBuilderPage() {
                 widgets={visualBuilderState.widgets}
                 gridConfig={visualBuilderState.gridConfig}
                 onLayoutChange={handleLayoutChange}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Responsive Tab */}
+        {activeTab === 'responsive' && (
+          <div className="h-full bg-gray-50">
+            <div className="p-4 border-b border-gray-200 bg-white">
+              <h2 className="text-lg font-semibold text-gray-900">Responsive Dashboard</h2>
+              <p className="text-sm text-gray-600">Auto-adaptive layout: 4 columns (desktop) → 2 columns (tablet) → 1 column (mobile)</p>
+            </div>
+            <div className="h-[calc(100%-73px)] p-6 overflow-auto">
+              <ResponsiveGridCanvas
+                widgets={visualBuilderState.widgets}
+                gridConfig={visualBuilderState.gridConfig}
               />
             </div>
           </div>
