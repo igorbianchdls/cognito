@@ -28,10 +28,39 @@ export class ThemeManager {
   }
 
   /**
-   * Gets design tokens by theme name
+   * Gets design tokens by theme name, automatically integrating background from BackgroundManager
    */
   static getThemeTokens(themeName: ThemeName): DesignTokens {
-    return THEME_TOKENS[themeName];
+    const baseTokens = THEME_TOKENS[themeName];
+    const backgroundPresetKey = THEME_BACKGROUND_MAPPING[themeName];
+    const backgroundStyle = BackgroundManager.getBackgroundStyle(backgroundPresetKey);
+
+    // Merge base tokens with background from BackgroundManager
+    return {
+      ...baseTokens,
+      colors: {
+        ...baseTokens.colors,
+        background: backgroundStyle.backgroundColor || baseTokens.colors.background,
+        grid: {
+          ...baseTokens.colors.grid,
+          background: backgroundStyle.backgroundColor || baseTokens.colors.grid.background
+        }
+      },
+      effects: {
+        ...baseTokens.effects,
+        gradient: backgroundStyle.backgroundGradient?.enabled ? {
+          type: backgroundStyle.backgroundGradient.type,
+          direction: backgroundStyle.backgroundGradient.direction,
+          startColor: backgroundStyle.backgroundGradient.startColor,
+          endColor: backgroundStyle.backgroundGradient.endColor
+        } : baseTokens.effects.gradient,
+        backdrop: backgroundStyle.backdropFilter?.enabled ? {
+          blur: backgroundStyle.backdropFilter.blur,
+          saturate: 150, // default values for missing properties
+          brightness: 110
+        } : baseTokens.effects.backdrop
+      }
+    };
   }
 
   /**
@@ -76,17 +105,21 @@ export class ThemeManager {
 
     // Apply advanced effects from tokens
     clonedWidget.kpiConfig.backgroundOpacity = tokens.effects.opacity.medium;
-    clonedWidget.kpiConfig.backgroundGradient = {
-      enabled: true,
-      type: tokens.effects.gradient.type,
-      direction: tokens.effects.gradient.direction,
-      startColor: tokens.effects.gradient.startColor,
-      endColor: tokens.effects.gradient.endColor
-    };
-    clonedWidget.kpiConfig.backdropFilter = {
-      enabled: true,
-      blur: tokens.effects.backdrop.blur
-    };
+    if (tokens.effects.gradient) {
+      clonedWidget.kpiConfig.backgroundGradient = {
+        enabled: true,
+        type: tokens.effects.gradient.type,
+        direction: tokens.effects.gradient.direction,
+        startColor: tokens.effects.gradient.startColor,
+        endColor: tokens.effects.gradient.endColor
+      };
+    }
+    if (tokens.effects.backdrop) {
+      clonedWidget.kpiConfig.backdropFilter = {
+        enabled: true,
+        blur: tokens.effects.backdrop.blur
+      };
+    }
     clonedWidget.kpiConfig.containerShadowColor = tokens.effects.shadow.color;
     clonedWidget.kpiConfig.containerShadowOpacity = tokens.effects.shadow.opacity;
     clonedWidget.kpiConfig.containerShadowBlur = tokens.effects.shadow.blur;
@@ -152,8 +185,12 @@ export class ThemeManager {
 
     // Apply advanced effects from tokens
     clonedWidget.barConfig.styling.containerOpacity = tokens.effects.opacity.medium;
-    clonedWidget.barConfig.styling.containerBackground = `${tokens.effects.gradient.type}-gradient(${tokens.effects.gradient.direction}, ${tokens.effects.gradient.startColor}, ${tokens.effects.gradient.endColor})`;
-    clonedWidget.barConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
+    if (tokens.effects.gradient) {
+      clonedWidget.barConfig.styling.containerBackground = `${tokens.effects.gradient.type}-gradient(${tokens.effects.gradient.direction}, ${tokens.effects.gradient.startColor}, ${tokens.effects.gradient.endColor})`;
+    }
+    if (tokens.effects.backdrop) {
+      clonedWidget.barConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
+    }
     clonedWidget.barConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
 
     // Apply border properties automatically (consistent across all widgets)
@@ -212,8 +249,12 @@ export class ThemeManager {
 
     // Apply advanced effects from tokens
     clonedWidget.lineConfig.styling.containerOpacity = tokens.effects.opacity.medium;
-    clonedWidget.lineConfig.styling.containerBackground = `${tokens.effects.gradient.type}-gradient(${tokens.effects.gradient.direction}, ${tokens.effects.gradient.startColor}, ${tokens.effects.gradient.endColor})`;
-    clonedWidget.lineConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
+    if (tokens.effects.gradient) {
+      clonedWidget.lineConfig.styling.containerBackground = `${tokens.effects.gradient.type}-gradient(${tokens.effects.gradient.direction}, ${tokens.effects.gradient.startColor}, ${tokens.effects.gradient.endColor})`;
+    }
+    if (tokens.effects.backdrop) {
+      clonedWidget.lineConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
+    }
     clonedWidget.lineConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
 
     // Apply border properties automatically (consistent across all widgets)
@@ -275,8 +316,12 @@ export class ThemeManager {
 
     // Apply advanced effects from tokens
     clonedWidget.pieConfig.styling.containerOpacity = tokens.effects.opacity.medium;
-    clonedWidget.pieConfig.styling.containerBackground = `${tokens.effects.gradient.type}-gradient(${tokens.effects.gradient.direction}, ${tokens.effects.gradient.startColor}, ${tokens.effects.gradient.endColor})`;
-    clonedWidget.pieConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
+    if (tokens.effects.gradient) {
+      clonedWidget.pieConfig.styling.containerBackground = `${tokens.effects.gradient.type}-gradient(${tokens.effects.gradient.direction}, ${tokens.effects.gradient.startColor}, ${tokens.effects.gradient.endColor})`;
+    }
+    if (tokens.effects.backdrop) {
+      clonedWidget.pieConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
+    }
     clonedWidget.pieConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
 
     // Apply border properties automatically (consistent across all widgets)
@@ -336,8 +381,12 @@ export class ThemeManager {
 
     // Apply advanced effects from tokens
     clonedWidget.areaConfig.styling.containerOpacity = tokens.effects.opacity.medium;
-    clonedWidget.areaConfig.styling.containerBackground = `${tokens.effects.gradient.type}-gradient(${tokens.effects.gradient.direction}, ${tokens.effects.gradient.startColor}, ${tokens.effects.gradient.endColor})`;
-    clonedWidget.areaConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
+    if (tokens.effects.gradient) {
+      clonedWidget.areaConfig.styling.containerBackground = `${tokens.effects.gradient.type}-gradient(${tokens.effects.gradient.direction}, ${tokens.effects.gradient.startColor}, ${tokens.effects.gradient.endColor})`;
+    }
+    if (tokens.effects.backdrop) {
+      clonedWidget.areaConfig.styling.containerBackdropFilter = `blur(${tokens.effects.backdrop.blur}px) saturate(${tokens.effects.backdrop.saturate}%) brightness(${tokens.effects.backdrop.brightness}%)`;
+    }
     clonedWidget.areaConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
 
     // Apply border properties automatically (consistent across all widgets)
@@ -465,7 +514,7 @@ export class ThemeManager {
       ...previews[themeName],
       tokens,
       primaryColor: tokens.colors.primary,
-      backgroundColor: backgroundStyle.backgroundColor || tokens.colors.background,
+      backgroundColor: backgroundStyle.backgroundColor || tokens.colors.background || '#ffffff',
       backgroundPreset: backgroundPresetKey
     };
   }
@@ -480,7 +529,7 @@ export class ThemeManager {
       secondary: tokens.colors.secondary,
       accent: tokens.colors.accent,
       surface: tokens.colors.surface,
-      background: tokens.colors.background,
+      background: tokens.colors.background || '#ffffff',
       chartColors: [
         tokens.colors.chart.primary,
         tokens.colors.chart.secondary,

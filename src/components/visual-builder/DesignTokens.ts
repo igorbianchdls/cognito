@@ -229,8 +229,8 @@ export interface ColorTokens {
   secondary: string;
   accent: string;
 
-  // Surface colors
-  background: string;
+  // Surface colors (background comes from BackgroundManager)
+  background?: string;
   surface: string;
   surfaceElevated: string;
 
@@ -282,9 +282,9 @@ export interface ColorTokens {
     };
   };
 
-  // Grid specific
+  // Grid specific (background comes from BackgroundManager)
   grid: {
-    background: string;
+    background?: string;
     border: string;
   };
 }
@@ -314,13 +314,14 @@ export interface EffectsTokens {
     strong: number;
     opaque: number;
   };
-  gradient: {
+  // gradient and backdrop come from BackgroundManager
+  gradient?: {
     type: 'linear' | 'radial' | 'conic';
     direction: string;
     startColor: string;
     endColor: string;
   };
-  backdrop: {
+  backdrop?: {
     blur: number;
     saturate: number;
     brightness: number;
@@ -390,8 +391,7 @@ export const DARK_TOKENS: DesignTokens = {
     secondary: '#64748b',
     accent: '#06b6d4',
 
-    // Surfaces
-    background: '#0a0a0a',
+    // Surfaces (background will come from BackgroundManager)
     surface: '#171717',
     surfaceElevated: '#262626',
 
@@ -453,9 +453,8 @@ export const DARK_TOKENS: DesignTokens = {
       }
     },
 
-    // Grid
+    // Grid (background will come from BackgroundManager)
     grid: {
-      background: '#171717',
       border: '#404040'
     }
   },
@@ -504,17 +503,7 @@ export const DARK_TOKENS: DesignTokens = {
       strong: 0.95,
       opaque: 1
     },
-    gradient: {
-      type: 'linear',
-      direction: '135deg',
-      startColor: '#3b82f6',
-      endColor: '#1e40af'
-    },
-    backdrop: {
-      blur: 10,
-      saturate: 180,
-      brightness: 120
-    },
+    // gradient and backdrop will come from BackgroundManager
     shadow: {
       color: '#000000',
       opacity: 0.25,
@@ -533,8 +522,7 @@ export const LIGHT_TOKENS: DesignTokens = {
     secondary: '#64748b',
     accent: '#0891b2',
 
-    // Surfaces
-    background: '#ffffff',
+    // Surfaces (background will come from BackgroundManager)
     surface: '#f8fafc',
     surfaceElevated: '#ffffff',
 
@@ -596,9 +584,8 @@ export const LIGHT_TOKENS: DesignTokens = {
       }
     },
 
-    // Grid
+    // Grid (background will come from BackgroundManager)
     grid: {
-      background: '#ffffff',
       border: '#e2e8f0'
     }
   },
@@ -624,17 +611,7 @@ export const LIGHT_TOKENS: DesignTokens = {
       strong: 0.98,
       opaque: 1
     },
-    gradient: {
-      type: 'radial',
-      direction: 'circle at top left',
-      startColor: '#f8fafc',
-      endColor: '#e2e8f0'
-    },
-    backdrop: {
-      blur: 8,
-      saturate: 150,
-      brightness: 110
-    },
+    // gradient and backdrop will come from BackgroundManager
     shadow: {
       color: '#64748b',
       opacity: 0.15,
@@ -650,7 +627,6 @@ export const BLUE_TOKENS: DesignTokens = {
   ...DARK_TOKENS,
   colors: {
     ...DARK_TOKENS.colors,
-    background: '#0f172a',
     surface: '#1e293b',
     surfaceElevated: '#334155',
     primary: '#60a5fa',
@@ -688,7 +664,6 @@ export const BLUE_TOKENS: DesignTokens = {
       }
     },
     grid: {
-      background: '#1e293b',
       border: '#475569'
     }
   },
@@ -702,17 +677,7 @@ export const BLUE_TOKENS: DesignTokens = {
       strong: 0.9,
       opaque: 1
     },
-    gradient: {
-      type: 'linear',
-      direction: '45deg',
-      startColor: '#1e3a8a',
-      endColor: '#3b82f6'
-    },
-    backdrop: {
-      blur: 12,
-      saturate: 200,
-      brightness: 130
-    },
+    // gradient and backdrop will come from BackgroundManager
     shadow: {
       color: '#1e40af',
       opacity: 0.3,
@@ -728,7 +693,6 @@ export const GREEN_TOKENS: DesignTokens = {
   ...DARK_TOKENS,
   colors: {
     ...DARK_TOKENS.colors,
-    background: '#064e3b',
     surface: '#065f46',
     surfaceElevated: '#047857',
     primary: '#34d399',
@@ -766,7 +730,6 @@ export const GREEN_TOKENS: DesignTokens = {
       }
     },
     grid: {
-      background: '#065f46',
       border: '#059669'
     }
   },
@@ -780,17 +743,7 @@ export const GREEN_TOKENS: DesignTokens = {
       strong: 0.95,
       opaque: 1
     },
-    gradient: {
-      type: 'conic',
-      direction: 'from 180deg at 50% 50%',
-      startColor: '#047857',
-      endColor: '#10b981'
-    },
-    backdrop: {
-      blur: 8,
-      saturate: 160,
-      brightness: 115
-    },
+    // gradient and backdrop will come from BackgroundManager
     shadow: {
       color: '#059669',
       opacity: 0.25,
@@ -806,7 +759,6 @@ export const CORPORATE_TOKENS: DesignTokens = {
   ...LIGHT_TOKENS,
   colors: {
     ...LIGHT_TOKENS.colors,
-    background: '#f8fafc',
     surface: '#ffffff',
     surfaceElevated: '#f1f5f9',
     primary: '#475569',
@@ -844,7 +796,6 @@ export const CORPORATE_TOKENS: DesignTokens = {
       }
     },
     grid: {
-      background: '#ffffff',
       border: '#e2e8f0'
     }
   },
@@ -858,17 +809,7 @@ export const CORPORATE_TOKENS: DesignTokens = {
       strong: 0.98,
       opaque: 1
     },
-    gradient: {
-      type: 'linear',
-      direction: 'to bottom right',
-      startColor: '#ffffff',
-      endColor: '#f1f5f9'
-    },
-    backdrop: {
-      blur: 4,
-      saturate: 100,
-      brightness: 100
-    },
+    // gradient and backdrop will come from BackgroundManager
     shadow: {
       color: '#475569',
       opacity: 0.1,
@@ -884,7 +825,6 @@ export const NAVY_TOKENS: DesignTokens = {
   ...DARK_TOKENS,
   colors: {
     ...DARK_TOKENS.colors,
-    background: '#0f172a',
     surface: '#1e293b',
     surfaceElevated: '#334155',
     primary: '#1e40af',
@@ -933,7 +873,6 @@ export const NAVY_TOKENS: DesignTokens = {
       }
     },
     grid: {
-      background: '#1e293b',
       border: '#475569'
     }
   },
@@ -952,17 +891,7 @@ export const NAVY_TOKENS: DesignTokens = {
       strong: 0.92,
       opaque: 1
     },
-    gradient: {
-      type: 'radial',
-      direction: 'ellipse at center',
-      startColor: '#1e3a8a',
-      endColor: '#0f172a'
-    },
-    backdrop: {
-      blur: 14,
-      saturate: 170,
-      brightness: 125
-    },
+    // gradient and backdrop will come from BackgroundManager
     shadow: {
       color: '#1e40af',
       opacity: 0.35,
@@ -978,7 +907,6 @@ export const SLATE_TOKENS: DesignTokens = {
   ...DARK_TOKENS,
   colors: {
     ...DARK_TOKENS.colors,
-    background: '#0f172a',
     surface: '#1e293b',
     surfaceElevated: '#334155',
     primary: '#475569',
@@ -1027,7 +955,6 @@ export const SLATE_TOKENS: DesignTokens = {
       }
     },
     grid: {
-      background: '#1e293b',
       border: '#374151'
     }
   },
@@ -1046,17 +973,7 @@ export const SLATE_TOKENS: DesignTokens = {
       strong: 0.9,
       opaque: 1
     },
-    gradient: {
-      type: 'linear',
-      direction: '225deg',
-      startColor: '#334155',
-      endColor: '#1e293b'
-    },
-    backdrop: {
-      blur: 16,
-      saturate: 140,
-      brightness: 110
-    },
+    // gradient and backdrop will come from BackgroundManager
     shadow: {
       color: '#374151',
       opacity: 0.4,
@@ -1072,7 +989,6 @@ export const FOREST_TOKENS: DesignTokens = {
   ...DARK_TOKENS,
   colors: {
     ...DARK_TOKENS.colors,
-    background: '#14532d',
     surface: '#166534',
     surfaceElevated: '#15803d',
     primary: '#16a34a',
@@ -1127,7 +1043,6 @@ export const FOREST_TOKENS: DesignTokens = {
       }
     },
     grid: {
-      background: '#166534',
       border: '#15803d'
     }
   },
@@ -1146,17 +1061,7 @@ export const FOREST_TOKENS: DesignTokens = {
       strong: 0.95,
       opaque: 1
     },
-    gradient: {
-      type: 'conic',
-      direction: 'from 45deg at 25% 75%',
-      startColor: '#15803d',
-      endColor: '#22c55e'
-    },
-    backdrop: {
-      blur: 6,
-      saturate: 180,
-      brightness: 120
-    },
+    // gradient and backdrop will come from BackgroundManager
     shadow: {
       color: '#16a34a',
       opacity: 0.2,
@@ -1172,7 +1077,6 @@ export const BURGUNDY_TOKENS: DesignTokens = {
   ...DARK_TOKENS,
   colors: {
     ...DARK_TOKENS.colors,
-    background: '#450a0a',
     surface: '#7f1d1d',
     surfaceElevated: '#991b1b',
     primary: '#dc2626',
@@ -1227,7 +1131,6 @@ export const BURGUNDY_TOKENS: DesignTokens = {
       }
     },
     grid: {
-      background: '#7f1d1d',
       border: '#991b1b'
     }
   },
@@ -1246,17 +1149,7 @@ export const BURGUNDY_TOKENS: DesignTokens = {
       strong: 0.93,
       opaque: 1
     },
-    gradient: {
-      type: 'radial',
-      direction: 'circle at bottom right',
-      startColor: '#7f1d1d',
-      endColor: '#450a0a'
-    },
-    backdrop: {
-      blur: 18,
-      saturate: 200,
-      brightness: 140
-    },
+    // gradient and backdrop will come from BackgroundManager
     shadow: {
       color: '#dc2626',
       opacity: 0.45,
@@ -1272,7 +1165,6 @@ export const PLATINUM_TOKENS: DesignTokens = {
   ...DARK_TOKENS,
   colors: {
     ...DARK_TOKENS.colors,
-    background: '#18181b',
     surface: '#27272a',
     surfaceElevated: '#3f3f46',
     primary: '#71717a',
@@ -1321,7 +1213,6 @@ export const PLATINUM_TOKENS: DesignTokens = {
       }
     },
     grid: {
-      background: '#27272a',
       border: '#3f3f46'
     }
   },
@@ -1340,17 +1231,7 @@ export const PLATINUM_TOKENS: DesignTokens = {
       strong: 0.97,
       opaque: 1
     },
-    gradient: {
-      type: 'linear',
-      direction: 'to top',
-      startColor: '#27272a',
-      endColor: '#52525b'
-    },
-    backdrop: {
-      blur: 10,
-      saturate: 120,
-      brightness: 105
-    },
+    // gradient and backdrop will come from BackgroundManager
     shadow: {
       color: '#71717a',
       opacity: 0.3,
