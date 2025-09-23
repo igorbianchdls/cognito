@@ -135,6 +135,8 @@ export function LineChart({
   borderColor,
   enableGridX,
   enableGridY,
+  gridColor,
+  gridStrokeWidth,
   enablePoints,
   pointSize,
   curve,
@@ -390,7 +392,9 @@ export function LineChart({
         animate={animate ?? false}
         motionConfig={motionConfig || "gentle"}
         theme={createElegantTheme({
-          axisTextColor: axisTextColor || '#6b7280'
+          axisTextColor: axisTextColor || '#6b7280',
+          gridColor,
+          gridStrokeWidth
         })}
         
         // Tooltip elegante

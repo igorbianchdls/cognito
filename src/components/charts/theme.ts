@@ -41,6 +41,8 @@ interface TypographyConfig {
   legendsTextColor?: string
   tooltipFontSize?: number
   tooltipFontFamily?: string
+  gridColor?: string
+  gridStrokeWidth?: number
 }
 
 // Create elegant theme with custom typography
@@ -61,7 +63,9 @@ export const createElegantTheme = (typography: TypographyConfig = {}) => {
     legendsFontWeight = 400,
     legendsTextColor = '#6b7280',
     tooltipFontSize = 12,
-    tooltipFontFamily = 'Geist, sans-serif'
+    tooltipFontFamily = 'Geist, sans-serif',
+    gridColor = '#f1f5f9',
+    gridStrokeWidth = 1
   } = typography
 
   return {
@@ -87,7 +91,7 @@ export const createElegantTheme = (typography: TypographyConfig = {}) => {
       domain: { line: { stroke: 'transparent' } } // Remove axis lines
     },
     grid: {
-      line: { stroke: '#f1f5f9', strokeWidth: 1 } // Grid sutil
+      line: { stroke: gridColor, strokeWidth: gridStrokeWidth } // Grid configurável
     },
     labels: {
       text: { 

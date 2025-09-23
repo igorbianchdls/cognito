@@ -137,6 +137,8 @@ export function AreaChart({
   borderColor,
   enableGridX,
   enableGridY,
+  gridColor,
+  gridStrokeWidth,
   enableArea,
   areaOpacity,
   lineWidth,
@@ -391,7 +393,9 @@ export function AreaChart({
         animate={animate ?? false}
         motionConfig={motionConfig || "gentle"}
         theme={createElegantTheme({
-          axisTextColor: axisTextColor || '#6b7280'
+          axisTextColor: axisTextColor || '#6b7280',
+          gridColor,
+          gridStrokeWidth
         })}
         
         // Tooltip elegante

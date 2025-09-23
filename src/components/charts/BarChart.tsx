@@ -17,6 +17,8 @@ export function BarChart(props: BarChartProps) {
     margin = DEFAULT_MARGIN,
     enableGridX = DEFAULT_ENABLE_GRID_X,
     enableGridY = DEFAULT_ENABLE_GRID_Y,
+    gridColor,
+    gridStrokeWidth,
     title,
     subtitle,
     // Typography - Title
@@ -271,6 +273,8 @@ export function BarChart(props: BarChartProps) {
       legendsFontSize,
       legendsFontWeight,
       legendsTextColor,
+      gridColor,
+      gridStrokeWidth,
       tooltipFontSize,
       tooltipFontFamily
     }),

@@ -34,6 +34,8 @@ export interface AreaChartConfig {
     showGrid: boolean
     enableGridX?: boolean
     enableGridY?: boolean
+    gridColor?: string
+    gridStrokeWidth?: number
     legendPosition?: 'top' | 'top-right' | 'right' | 'bottom-right' | 'bottom' | 'bottom-left' | 'left' | 'top-left'
     legendDirection?: 'row' | 'column'
     legendSpacing?: number
