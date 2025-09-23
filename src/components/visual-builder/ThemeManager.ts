@@ -589,7 +589,7 @@ export class ThemeManager {
   /**
    * Applies design tokens to grid configuration
    */
-  static applyThemeToGrid(gridConfig: GridConfig, themeName: ThemeName, corporateColorKey?: string): GridConfig {
+  static applyThemeToGrid(gridConfig: GridConfig, themeName: ThemeName, corporateColorKey?: string, customBackground?: string): GridConfig {
     if (!this.isValidTheme(themeName)) {
       console.warn(`Invalid theme: ${themeName}. Skipping grid theme application.`);
       return gridConfig;
@@ -597,9 +597,15 @@ export class ThemeManager {
 
     const tokens = this.getThemeTokens(themeName, corporateColorKey);
 
-    // Get the background preset for this theme
-    const backgroundPresetKey = THEME_BACKGROUND_MAPPING[themeName];
-    const backgroundStyle = BackgroundManager.getBackgroundStyle(backgroundPresetKey);
+    // Use custom background if provided, otherwise use theme default
+    let backgroundStyle;
+    if (customBackground && BackgroundManager.isValidBackground(customBackground)) {
+      backgroundStyle = BackgroundManager.getBackgroundStyle(customBackground);
+    } else {
+      // Fallback to theme default background
+      const backgroundPresetKey = THEME_BACKGROUND_MAPPING[themeName];
+      backgroundStyle = BackgroundManager.getBackgroundStyle(backgroundPresetKey);
+    }
 
     return {
       ...gridConfig,

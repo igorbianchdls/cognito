@@ -187,18 +187,10 @@ export class ConfigParser {
         ? this.applyThemeToWidgets(validWidgets, theme, customFont, corporateColor, customFontSize)
         : validWidgets;
 
+      // Step 6: Apply theme to grid (now handles custom background internally)
       let themedGridConfig = (theme && ThemeManager.isValidTheme(theme))
-        ? ThemeManager.applyThemeToGrid(gridConfig, theme, corporateColor)
+        ? ThemeManager.applyThemeToGrid(gridConfig, theme, corporateColor, customBackground)
         : gridConfig;
-
-      // Step 6: Apply custom background if specified
-      if (customBackground && BackgroundManager.isValidBackground(customBackground)) {
-        const backgroundStyle = BackgroundManager.getBackgroundStyle(customBackground);
-        themedGridConfig = {
-          ...themedGridConfig,
-          ...backgroundStyle
-        };
-      }
 
       return {
         widgets: themedWidgets,
