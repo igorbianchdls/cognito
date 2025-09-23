@@ -8,7 +8,7 @@ import type { PieChartConfig } from '@/stores/apps/pieChartStore';
 import type { AreaChartConfig } from '@/stores/apps/areaChartStore';
 import { THEME_TOKENS, TYPOGRAPHY_PRESETS, THEME_BACKGROUND_MAPPING, type ThemeTokenName, type DesignTokens } from './DesignTokens';
 import { BackgroundManager } from './BackgroundManager';
-import { ColorManager } from './ColorManager';
+import { ColorManager, type ColorPresetKey } from './ColorManager';
 
 // Re-export theme name type for compatibility
 export type ThemeName = ThemeTokenName;
