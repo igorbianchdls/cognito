@@ -627,7 +627,7 @@ export const LIGHT_TOKENS: DesignTokens = {
     opacity: {
       transparent: 0,
       subtle: 0.85,
-      medium: 0.92,
+      medium: 1,
       strong: 0.98,
       opaque: 1
     },
