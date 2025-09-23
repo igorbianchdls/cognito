@@ -15,6 +15,8 @@ interface LineChartProps extends BaseChartProps {
   borderColor?: string
   enableGridX?: boolean
   enableGridY?: boolean
+  gridColor?: string
+  gridStrokeWidth?: number
   enablePoints?: boolean
   pointSize?: number
   curve?: 'linear' | 'cardinal' | 'catmullRom' | 'monotoneX'

@@ -15,6 +15,8 @@ interface AreaChartProps extends BaseChartProps {
   borderColor?: string
   enableGridX?: boolean
   enableGridY?: boolean
+  gridColor?: string
+  gridStrokeWidth?: number
   enableArea?: boolean
   areaOpacity?: number
   lineWidth?: number

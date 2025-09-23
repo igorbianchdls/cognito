@@ -10,6 +10,8 @@ import type { LegendConfig } from '@/types/apps/chartWidgets';
 interface PieChartProps extends BaseChartProps {
   colors?: string[]
   backgroundColor?: string
+  gridColor?: string
+  gridStrokeWidth?: number
   innerRadius?: number
   padAngle?: number
   cornerRadius?: number
