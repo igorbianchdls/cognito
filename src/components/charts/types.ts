@@ -81,6 +81,8 @@ export interface BarChartProps extends BaseChartProps {
   // Grid
   enableGridX?: boolean;
   enableGridY?: boolean;
+  gridColor?: string;
+  gridStrokeWidth?: number;
   
   // Axes Configuration
   axisBottom?: {
