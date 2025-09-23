@@ -241,17 +241,16 @@ export function BarChart(props: BarChartProps) {
   const containerStyles = {
     // Background: priority to new containerBackground, fallback to old backgroundColor
     background: containerBackground || (
-      backgroundGradient?.enabled 
+      backgroundGradient?.enabled
         ? `linear-gradient(${backgroundGradient.direction}, ${backgroundGradient.startColor}, ${backgroundGradient.endColor})`
         : backgroundColor
     ),
-    
+
     // Direct CSS props - simple and predictable
     opacity: containerOpacity !== undefined ? containerOpacity : backgroundOpacity,
     backdropFilter: containerBackdropFilter || (backdropFilter?.enabled ? `blur(${backdropFilter.blur}px)` : undefined),
     filter: containerFilter,
     boxShadow: containerBoxShadow,
-    border: containerBorder,
     transform: containerTransform,
     transition: containerTransition || (transitionDuration ? `all ${transitionDuration} ${transitionEasing || 'ease-in-out'}` : undefined),
   };
