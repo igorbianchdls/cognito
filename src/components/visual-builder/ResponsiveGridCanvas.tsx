@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import WidgetRenderer from './WidgetRenderer';
-import type { Widget, GridConfig } from './ConfigParser';
+import type { Widget, GridConfig, LayoutColumn, WidgetSpan } from './ConfigParser';
 
 interface ResponsiveGridCanvasProps {
   widgets: Widget[];
@@ -48,23 +48,58 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig }: Responsive
     return result ? result.map(h => parseInt(h, 16)).join(', ') : '0, 0, 0';
   }
 
-  // Adapt widget position for responsive layout
-  const adaptWidgetForResponsive = (widget: Widget) => {
-    // Calculate span based on widget width
-    // Widgets with w >= 6 (half grid or more) take 2 columns on desktop
-    // Widgets with w >= 4 take 1 column but can span 2 on tablet
-    const desktopSpan = widget.position.w >= 6 ? 2 : 1;
-    const tabletSpan = widget.position.w >= 4 ? 2 : 1;
-    const mobileSpan = 1; // Always 1 on mobile
+  // Get layout configuration from JSON or use default
+  const getLayoutConfig = (): LayoutColumn => {
+    // If layoutColumns are defined in JSON and widget has a column reference, use it
+    if (gridConfig.layoutColumns && Object.keys(gridConfig.layoutColumns).length > 0) {
+      // Use the first layout column as default if none specified
+      const firstColumnKey = Object.keys(gridConfig.layoutColumns)[0];
+      return gridConfig.layoutColumns[firstColumnKey];
+    }
 
-    // Calculate order based on position (top-to-bottom, left-to-right)
-    const order = widget.position.y * 12 + widget.position.x;
+    // Default fallback layout
+    return {
+      desktop: 4,
+      tablet: 2,
+      mobile: 1
+    };
+  };
+
+  // Adapt widget for responsive layout
+  const adaptWidgetForResponsive = (widget: Widget) => {
+    let layoutConfig = getLayoutConfig();
+
+    // If widget has a specific column reference, use that layout
+    if (widget.column && gridConfig.layoutColumns && gridConfig.layoutColumns[widget.column]) {
+      layoutConfig = gridConfig.layoutColumns[widget.column];
+    }
+
+    // Use widget's defined spans or calculate from position
+    let desktopSpan, tabletSpan, mobileSpan;
+
+    if (widget.span) {
+      // Use explicit span configuration
+      desktopSpan = widget.span.desktop || 1;
+      tabletSpan = widget.span.tablet || 1;
+      mobileSpan = widget.span.mobile || 1;
+    } else {
+      // Fallback: calculate span based on widget width (original logic)
+      desktopSpan = widget.position.w >= 6 ? Math.min(2, layoutConfig.desktop) : 1;
+      tabletSpan = widget.position.w >= 4 ? Math.min(2, layoutConfig.tablet) : 1;
+      mobileSpan = 1; // Always 1 on mobile
+    }
+
+    // Use explicit order or calculate from position
+    const order = widget.order !== undefined
+      ? widget.order
+      : widget.position.y * 12 + widget.position.x;
 
     return {
       desktopSpan,
       tabletSpan,
       mobileSpan,
-      order
+      order,
+      layoutConfig
     };
   };
 
@@ -80,11 +115,23 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig }: Responsive
     const { desktopSpan, tabletSpan, mobileSpan } = adaptWidgetForResponsive(widget);
 
     return [
-      `col-span-${mobileSpan}`,           // Mobile: always 1
-      `md:col-span-${tabletSpan}`,        // Tablet: 1 or 2
-      `lg:col-span-${desktopSpan}`,       // Desktop: 1 or 2
+      `col-span-${mobileSpan}`,           // Mobile span
+      `md:col-span-${tabletSpan}`,        // Tablet span
+      `lg:col-span-${desktopSpan}`,       // Desktop span
       'min-h-[200px]',                    // Minimum height
       'transition-all duration-200'        // Smooth transitions
+    ].join(' ');
+  };
+
+  // Generate grid layout classes based on configuration
+  const getGridClasses = (): string => {
+    const layoutConfig = getLayoutConfig();
+
+    return [
+      'grid gap-4 p-4 auto-rows-min',
+      `grid-cols-${layoutConfig.mobile}`,      // Mobile columns
+      `md:grid-cols-${layoutConfig.tablet}`,   // Tablet columns
+      `lg:grid-cols-${layoutConfig.desktop}`   // Desktop columns
     ].join(' ');
   };
 
@@ -115,13 +162,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig }: Responsive
 
         {/* Responsive Grid Layout */}
         {widgets.length > 0 && (
-          <div className="
-            grid gap-4 p-4
-            grid-cols-1
-            md:grid-cols-2
-            lg:grid-cols-4
-            auto-rows-min
-          ">
+          <div className={getGridClasses()}>
             {sortedWidgets.map((widget) => (
               <div
                 key={widget.id}
@@ -138,9 +179,16 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig }: Responsive
         {/* Layout Info */}
         {widgets.length > 0 && (
           <div className="absolute top-2 right-2 bg-black/20 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
-            <span className="hidden lg:inline">4 cols</span>
-            <span className="hidden md:inline lg:hidden">2 cols</span>
-            <span className="inline md:hidden">1 col</span>
+            {(() => {
+              const layoutConfig = getLayoutConfig();
+              return (
+                <>
+                  <span className="hidden lg:inline">{layoutConfig.desktop} cols</span>
+                  <span className="hidden md:inline lg:hidden">{layoutConfig.tablet} cols</span>
+                  <span className="inline md:hidden">{layoutConfig.mobile} col</span>
+                </>
+              );
+            })()}
           </div>
         )}
       </div>

@@ -41,11 +41,27 @@ export interface GridConfig {
   // Spacing
   padding?: number;
   margin?: number;
+
+  // Responsive layout columns (for ResponsiveGridCanvas)
+  layoutColumns?: Record<string, LayoutColumn>;
 }
 
 // Theme types are now managed by ThemeManager
 import { ThemeManager, type ThemeName } from './ThemeManager';
 import { BackgroundManager } from './BackgroundManager';
+
+// Responsive layout interfaces
+export interface LayoutColumn {
+  desktop: number;
+  tablet: number;
+  mobile: number;
+}
+
+export interface WidgetSpan {
+  desktop?: number;
+  tablet?: number;
+  mobile?: number;
+}
 
 export interface Widget {
   id: string;
@@ -57,6 +73,11 @@ export interface Widget {
     h: number;
   };
   title: string;
+
+  // Responsive layout properties (for ResponsiveGridCanvas)
+  column?: string;        // Reference to layoutColumns key (e.g., "main", "sidebar")
+  span?: WidgetSpan;      // How many columns to span on each breakpoint
+  order?: number;         // Display order
   data?: {
     x: string;
     y: string;
@@ -118,12 +139,13 @@ export class ConfigParser {
       // Step 1: Parse JSON (same as chart stores)
       const config = JSON.parse(jsonString);
 
-      // Step 2: Extract widgets, grid config, theme, custom font, and custom background
+      // Step 2: Extract widgets, grid config, theme, custom font, custom background, and layout columns
       const widgets = (config.widgets || []) as Widget[];
       const rawGridConfig = config.config || {};
       const theme = config.theme as ThemeName;
       const customFont = config.customFont as string;
       const customBackground = config.customBackground as string;
+      const layoutColumns = config.layoutColumns as Record<string, LayoutColumn> | undefined;
 
       // Step 3: Process grid config with defaults
       const gridConfig: GridConfig = {
@@ -135,10 +157,13 @@ export class ConfigParser {
           ? rawGridConfig.cols : this.DEFAULT_GRID_CONFIG.cols,
         height: typeof rawGridConfig.height === 'number' && rawGridConfig.height > 0
           ? rawGridConfig.height : undefined,
-        backgroundColor: typeof rawGridConfig.backgroundColor === 'string' 
+        backgroundColor: typeof rawGridConfig.backgroundColor === 'string'
           ? rawGridConfig.backgroundColor : undefined,
-        borderColor: typeof rawGridConfig.borderColor === 'string' 
-          ? rawGridConfig.borderColor : undefined
+        borderColor: typeof rawGridConfig.borderColor === 'string'
+          ? rawGridConfig.borderColor : undefined,
+
+        // Add responsive layout columns
+        layoutColumns: layoutColumns
       };
 
       // Step 4: Basic filter for runtime safety only

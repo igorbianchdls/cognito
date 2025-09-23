@@ -26,11 +26,26 @@ const initialCode = `{
     "backgroundColor": "#171717",
     "borderColor": "#404040"
   },
+  "layoutColumns": {
+    "main": {
+      "desktop": 4,
+      "tablet": 2,
+      "mobile": 1
+    },
+    "sidebar": {
+      "desktop": 3,
+      "tablet": 2,
+      "mobile": 1
+    }
+  },
   "widgets": [
     {
       "id": "chart1",
       "type": "bar",
       "position": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "column": "main",
+      "span": { "desktop": 2, "tablet": 2, "mobile": 1 },
+      "order": 1,
       "title": "Events by Type",
       "dataSource": {
         "table": "ecommerce",
@@ -49,6 +64,9 @@ const initialCode = `{
       "id": "kpi1",
       "type": "kpi",
       "position": { "x": 6, "y": 0, "w": 3, "h": 2 },
+      "column": "sidebar",
+      "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
+      "order": 2,
       "title": "Total Events",
       "dataSource": {
         "table": "ecommerce",
@@ -68,6 +86,9 @@ const initialCode = `{
       "id": "chart2",
       "type": "line",
       "position": { "x": 0, "y": 4, "w": 9, "h": 4 },
+      "column": "main",
+      "span": { "desktop": 3, "tablet": 2, "mobile": 1 },
+      "order": 3,
       "title": "Quantity Trend",
       "dataSource": {
         "table": "ecommerce",
@@ -86,6 +107,9 @@ const initialCode = `{
       "id": "chart3",
       "type": "pie",
       "position": { "x": 9, "y": 0, "w": 3, "h": 4 },
+      "column": "sidebar",
+      "span": { "desktop": 2, "tablet": 1, "mobile": 1 },
+      "order": 4,
       "title": "Event Distribution",
       "dataSource": {
         "table": "ecommerce",
@@ -103,6 +127,9 @@ const initialCode = `{
       "id": "chart4",
       "type": "area",
       "position": { "x": 9, "y": 4, "w": 3, "h": 4 },
+      "column": "main",
+      "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
+      "order": 5,
       "title": "Quantity Area",
       "dataSource": {
         "table": "ecommerce",
