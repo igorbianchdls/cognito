@@ -631,7 +631,9 @@ export const LIGHT_TOKENS: DesignTokens = {
       strong: 0.98,
       opaque: 1
     },
-    // gradient and backdrop will come from BackgroundManager
+    // Explicit no gradient/backdrop for clean light theme
+    gradient: undefined,
+    backdrop: undefined,
     shadow: {
       color: '#64748b',
       opacity: 0.12,
