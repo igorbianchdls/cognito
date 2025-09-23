@@ -258,9 +258,6 @@ export function AreaChart({
         flexDirection: 'column',
         alignItems: 'stretch',
         minWidth: 0,
-        // Positioning props
-        transform: translateY !== undefined ? `translateY(${translateY}px)` : undefined,
-        marginBottom: marginBottom !== undefined ? `${marginBottom}px` : undefined,
         // Propriedades condicionais (só quando não há containerClassName)
         ...(containerClassName ? {} : {
           ...containerStyles,
@@ -325,7 +322,7 @@ export function AreaChart({
         margin={{
           top: margin?.top ?? 12,
           right: margin?.right ?? 12,
-          bottom: margin?.bottom ?? 0,
+          bottom: marginBottom !== undefined ? marginBottom : (margin?.bottom ?? 0),
           left: margin?.left ?? 50
         }}
         xScale={{ type: 'point' }}
@@ -421,7 +418,7 @@ export function AreaChart({
                 direction: legends.direction || 'row',
                 justify: false,
                 translateX: 0,
-                translateY: 0,
+                translateY: translateY !== undefined ? translateY : 0,
                 itemsSpacing: legends.itemsSpacing || 20,
                 itemWidth: 80,
                 itemHeight: 18,
@@ -448,7 +445,7 @@ export function AreaChart({
               direction: 'row',
               justify: false,
               translateX: 0,
-              translateY: 50,
+              translateY: translateY !== undefined ? translateY : 50,
               itemsSpacing: 20,
               itemWidth: 80,
               itemHeight: 18,

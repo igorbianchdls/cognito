@@ -289,9 +289,6 @@ export function BarChart(props: BarChartProps) {
         flexDirection: 'column',
         alignItems: 'stretch',
         minWidth: 0,
-        // Positioning props
-        transform: translateY !== undefined ? `translateY(${translateY}px)` : undefined,
-        marginBottom: marginBottom !== undefined ? `${marginBottom}px` : undefined,
         // Propriedades condicionais (só quando não há containerClassName)
         ...(containerClassName ? {} : {
           // Apply all container styles directly
@@ -371,7 +368,7 @@ export function BarChart(props: BarChartProps) {
           groupMode={groupMode || 'grouped'}
           
           // Margins com espaço para legenda na parte inferior
-          margin={margin}
+          margin={marginBottom !== undefined ? { ...margin, bottom: marginBottom } : margin}
           padding={padding ?? 0.2}
           
           // Cores configuráveis
@@ -470,7 +467,7 @@ export function BarChart(props: BarChartProps) {
                   direction: legendConfig.direction || 'row',
                   justify: false,
                   translateX: legendConfig.translateX || 0,
-                  translateY: legendConfig.translateY || 0,
+                  translateY: translateY !== undefined ? translateY : (legendConfig.translateY || 0),
                   itemsSpacing: legendConfig.itemsSpacing || 20,
                   itemWidth: legendConfig.itemWidth || 80,
                   itemHeight: legendConfig.itemHeight || 18,
@@ -498,7 +495,7 @@ export function BarChart(props: BarChartProps) {
                 direction: 'row',
                 justify: false,
                 translateX: 0,
-                translateY: 0,
+                translateY: translateY !== undefined ? translateY : 0,
                 itemsSpacing: 20,
                 itemWidth: 80,
                 itemHeight: 18,
