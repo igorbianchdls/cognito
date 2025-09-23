@@ -59,6 +59,15 @@ const FONT_PRESETS: Record<string, FontPreset> = {
     weight: 'semibold',
     style: 'modern'
   },
+  geist: {
+    key: 'geist',
+    name: 'Geist',
+    description: 'Vercel\'s modern interface font, clean and minimal',
+    family: 'Geist, -apple-system, BlinkMacSystemFont, sans-serif',
+    category: 'sans-serif',
+    weight: 'medium',
+    style: 'modern'
+  },
 
   // System Fonts
   arial: {
@@ -126,7 +135,7 @@ const THEME_FONT_MAPPING: Record<string, string> = {
   platinum: 'merriweather'
 };
 
-export type FontPresetKey = 'inter' | 'opensans' | 'roboto' | 'lato' | 'montserrat' | 'arial' | 'segoe' | 'georgia' | 'merriweather' | 'playfair';
+export type FontPresetKey = 'inter' | 'opensans' | 'roboto' | 'lato' | 'montserrat' | 'geist' | 'arial' | 'segoe' | 'georgia' | 'merriweather' | 'playfair';
 
 export interface FontPreview {
   key: FontPresetKey;
