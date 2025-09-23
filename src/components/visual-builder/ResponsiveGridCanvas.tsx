@@ -1,8 +1,11 @@
 'use client';
 
 import { useRef } from 'react';
-import WidgetRenderer from './WidgetRenderer';
+import { DndContext, DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import SortableWidget from './SortableWidget';
 import type { Widget, GridConfig, LayoutColumn, WidgetSpan } from './ConfigParser';
+import { visualBuilderActions } from '@/stores/visualBuilderStore';
 
 interface ResponsiveGridCanvasProps {
   widgets: Widget[];
@@ -11,6 +14,28 @@ interface ResponsiveGridCanvasProps {
 
 export default function ResponsiveGridCanvas({ widgets, gridConfig }: ResponsiveGridCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Handle drag end for reordering widgets
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (active.id !== over?.id) {
+      const oldIndex = widgets.findIndex(w => w.id === active.id);
+      const newIndex = widgets.findIndex(w => w.id === over?.id);
+
+      // Reorder array using arrayMove
+      const newWidgets = arrayMove(widgets, oldIndex, newIndex);
+
+      // Update order property for each widget
+      const updatedWidgets = newWidgets.map((widget, index) => ({
+        ...widget,
+        order: index + 1
+      }));
+
+      // Update store with reordered widgets
+      visualBuilderActions.updateWidgets(updatedWidgets);
+    }
+  };
 
   // Extract theme colors from gridConfig
   const backgroundColor = gridConfig.backgroundColor || '#ffffff';
@@ -160,20 +185,21 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig }: Responsive
           </div>
         )}
 
-        {/* Responsive Grid Layout */}
+        {/* Responsive Grid Layout with Drag and Drop */}
         {widgets.length > 0 && (
-          <div className={getGridClasses()}>
-            {sortedWidgets.map((widget) => (
-              <div
-                key={widget.id}
-                className={getSpanClasses(widget)}
-              >
-                <div className="h-full">
-                  <WidgetRenderer widget={widget} />
-                </div>
-              </div>
-            ))}
-          </div>
+          <DndContext onDragEnd={handleDragEnd}>
+            <div className={getGridClasses()}>
+              <SortableContext items={sortedWidgets.map(w => w.id)} strategy={verticalListSortingStrategy}>
+                {sortedWidgets.map((widget) => (
+                  <SortableWidget
+                    key={widget.id}
+                    widget={widget}
+                    className={getSpanClasses(widget)}
+                  />
+                ))}
+              </SortableContext>
+            </div>
+          </DndContext>
         )}
 
         {/* Layout Info */}
