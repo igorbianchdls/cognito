@@ -137,6 +137,71 @@ export interface FontPreview {
   style: string;
 }
 
+// Font size presets interface
+export interface FontSizePreset {
+  key: string;
+  name: string;
+  description: string;
+  value: number; // px value
+  usage: string;
+}
+
+// Font size presets for titles
+const FONT_SIZE_PRESETS: Record<string, FontSizePreset> = {
+  xs: {
+    key: 'xs',
+    name: 'Extra Small',
+    description: 'Very small titles (12px)',
+    value: 12,
+    usage: 'Compact widgets'
+  },
+  sm: {
+    key: 'sm',
+    name: 'Small',
+    description: 'Small titles (14px)',
+    value: 14,
+    usage: 'Dense dashboards'
+  },
+  md: {
+    key: 'md',
+    name: 'Medium',
+    description: 'Medium titles (16px)',
+    value: 16,
+    usage: 'Standard size'
+  },
+  lg: {
+    key: 'lg',
+    name: 'Large',
+    description: 'Large titles (18px)',
+    value: 18,
+    usage: 'Default recommended'
+  },
+  xl: {
+    key: 'xl',
+    name: 'Extra Large',
+    description: 'Extra large titles (24px)',
+    value: 24,
+    usage: 'Emphasis titles'
+  },
+  xxl: {
+    key: 'xxl',
+    name: 'Extra Extra Large',
+    description: 'Very large titles (32px)',
+    value: 32,
+    usage: 'Hero widgets'
+  }
+};
+
+export type FontSizeKey = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
+
+export interface FontSizePreview {
+  key: FontSizeKey;
+  name: string;
+  description: string;
+  value: number;
+  usage: string;
+}
+
 export class FontManager {
   /**
    * Gets a specific font preset
@@ -236,5 +301,73 @@ export class FontManager {
     if (this.isValidFont(fontKey)) {
       THEME_FONT_MAPPING[themeName] = fontKey;
     }
+  }
+
+  // ===== FONT SIZE METHODS =====
+
+  /**
+   * Gets a specific font size preset
+   */
+  static getFontSizePreset(key: FontSizeKey): FontSizePreset {
+    return FONT_SIZE_PRESETS[key];
+  }
+
+  /**
+   * Gets available font sizes for selection UI
+   */
+  static getAvailableFontSizes(): FontSizePreview[] {
+    return Object.values(FONT_SIZE_PRESETS).map(size => ({
+      key: size.key as FontSizeKey,
+      name: size.name,
+      description: size.description,
+      value: size.value,
+      usage: size.usage
+    }));
+  }
+
+  /**
+   * Gets font size value in pixels
+   */
+  static getFontSizeValue(sizeKey: FontSizeKey): number {
+    return FONT_SIZE_PRESETS[sizeKey]?.value || 18;
+  }
+
+  /**
+   * Gets the default font size for titles
+   */
+  static getDefaultFontSize(): FontSizeKey {
+    return 'lg';
+  }
+
+  /**
+   * Validates if a font size key is supported
+   */
+  static isValidFontSize(sizeKey: string): sizeKey is FontSizeKey {
+    return sizeKey in FONT_SIZE_PRESETS;
+  }
+
+  /**
+   * Gets available font size preset keys
+   */
+  static getAvailableFontSizeKeys(): FontSizeKey[] {
+    return Object.keys(FONT_SIZE_PRESETS) as FontSizeKey[];
+  }
+
+  /**
+   * Gets font size information for a specific key
+   */
+  static getFontSizeInfo(sizeKey: FontSizeKey): {
+    name: string;
+    value: number;
+    description: string;
+    usage: string;
+  } {
+    const preset = FONT_SIZE_PRESETS[sizeKey];
+    return {
+      name: preset.name,
+      value: preset.value,
+      description: preset.description,
+      usage: preset.usage
+    };
   }
 }

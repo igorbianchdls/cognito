@@ -9,7 +9,7 @@ import type { Widget } from '@/stores/visualBuilderStore';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
 import { BackgroundManager, type BackgroundPresetKey } from '@/components/visual-builder/BackgroundManager';
 import { ColorManager, type ColorPresetKey } from '@/components/visual-builder/ColorManager';
-import { FontManager, type FontPresetKey } from '@/components/visual-builder/FontManager';
+import { FontManager, type FontPresetKey, type FontSizeKey } from '@/components/visual-builder/FontManager';
 import {
   Artifact,
   ArtifactHeader,
@@ -32,6 +32,7 @@ export default function DashboardChatPanel() {
   const [activeTab, setActiveTab] = useState<'editor' | 'dashboard'>('editor');
   const [selectedTheme, setSelectedTheme] = useState<ThemeName>('dark');
   const [selectedFont, setSelectedFont] = useState<FontPresetKey>('inter');
+  const [selectedFontSize, setSelectedFontSize] = useState<FontSizeKey>('lg');
   const [selectedBackground, setSelectedBackground] = useState<BackgroundPresetKey>('white');
   const [selectedCorporateColor, setSelectedCorporateColor] = useState<ColorPresetKey>('corporate');
   const visualBuilderState = useStore($visualBuilderState);
@@ -42,8 +43,9 @@ export default function DashboardChatPanel() {
   // Available corporate color palettes
   const availableColorPalettes = ColorManager.getAvailableColorPalettes();
 
-  // Available fonts from FontManager
+  // Available fonts and sizes from FontManager
   const availableFonts = FontManager.getAvailableFonts();
+  const availableFontSizes = FontManager.getAvailableFontSizes();
 
   // Initialize store on mount
   useEffect(() => {
@@ -76,6 +78,23 @@ export default function DashboardChatPanel() {
       }
     } catch (error) {
       // Invalid JSON, keep current font
+    }
+  }, [visualBuilderState.code]);
+
+  // Detect current font size from code
+  useEffect(() => {
+    try {
+      const config = JSON.parse(visualBuilderState.code);
+
+      // If custom font size is set, use it
+      if (config.customFontSize && FontManager.isValidFontSize(config.customFontSize)) {
+        setSelectedFontSize(config.customFontSize);
+      } else {
+        // Otherwise, use default font size
+        setSelectedFontSize(FontManager.getDefaultFontSize());
+      }
+    } catch (error) {
+      // Invalid JSON, keep current font size
     }
   }, [visualBuilderState.code]);
 
@@ -154,6 +173,21 @@ export default function DashboardChatPanel() {
       console.log('🎨 Font changed to:', fontKey);
     } catch (error) {
       console.error('Error updating font:', error);
+    }
+  };
+
+  const handleFontSizeChange = (sizeKey: FontSizeKey) => {
+    try {
+      const config = JSON.parse(visualBuilderState.code);
+      const updatedConfig = {
+        ...config,
+        customFontSize: sizeKey
+      };
+      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      setSelectedFontSize(sizeKey);
+      console.log('🎨 Font size changed to:', sizeKey, `(${FontManager.getFontSizeValue(sizeKey)}px)`);
+    } catch (error) {
+      console.error('Error updating font size:', error);
     }
   };
 
@@ -297,14 +331,15 @@ export default function DashboardChatPanel() {
               <div>
                 <ArtifactAction
                   icon={Type}
-                  tooltip={`Font: ${availableFonts.find(f => f.key === selectedFont)?.name || 'Unknown'}`}
+                  tooltip={`Font: ${availableFonts.find(f => f.key === selectedFont)?.name || 'Unknown'} (${FontManager.getFontSizeValue(selectedFontSize)}px)`}
                   variant="ghost"
                 />
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" className="w-56">
+              {/* Font Selection Section */}
               <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
-                Select Font
+                Font Family
               </div>
               <DropdownMenuSeparator />
 
@@ -318,6 +353,30 @@ export default function DashboardChatPanel() {
                     {font.name}
                   </span>
                   {selectedFont === font.key && (
+                    <Check className="w-4 h-4 text-blue-600" />
+                  )}
+                </DropdownMenuItem>
+              ))}
+
+              <DropdownMenuSeparator />
+
+              {/* Font Size Selection Section */}
+              <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
+                Title Size
+              </div>
+              <DropdownMenuSeparator />
+
+              {availableFontSizes.map((size) => (
+                <DropdownMenuItem
+                  key={size.key}
+                  onClick={() => handleFontSizeChange(size.key)}
+                  className="flex items-center justify-between py-2"
+                >
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">{size.name}</span>
+                    <span className="text-xs text-muted-foreground">{size.value}px • {size.usage}</span>
+                  </div>
+                  {selectedFontSize === size.key && (
                     <Check className="w-4 h-4 text-blue-600" />
                   )}
                 </DropdownMenuItem>

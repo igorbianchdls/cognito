@@ -9,6 +9,7 @@ import type { AreaChartConfig } from '@/stores/apps/areaChartStore';
 import { THEME_TOKENS, TYPOGRAPHY_PRESETS, THEME_BACKGROUND_MAPPING, type ThemeTokenName, type DesignTokens } from './DesignTokens';
 import { BackgroundManager } from './BackgroundManager';
 import { ColorManager, type ColorPresetKey } from './ColorManager';
+import { FontManager, type FontSizeKey } from './FontManager';
 
 // Re-export theme name type for compatibility
 export type ThemeName = ThemeTokenName;
@@ -528,7 +529,7 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single widget based on its type
    */
-  static applyThemeToWidget(widget: Widget, themeName: ThemeName, customFont?: string, corporateColorKey?: string): Widget {
+  static applyThemeToWidget(widget: Widget, themeName: ThemeName, customFont?: string, corporateColorKey?: string, customFontSize?: string): Widget {
     if (!this.isValidTheme(themeName)) {
       console.warn(`Invalid theme: ${themeName}. Skipping theme application.`);
       return widget;
@@ -542,6 +543,22 @@ export class ThemeManager {
       tokens = {
         ...tokens,
         typography: customTypography
+      };
+    }
+
+    // Override title font size if customFontSize is provided
+    if (customFontSize && FontManager.isValidFontSize(customFontSize)) {
+      const titleFontSize = FontManager.getFontSizeValue(customFontSize as FontSizeKey);
+      tokens = {
+        ...tokens,
+        typography: {
+          ...tokens.typography,
+          fontSize: {
+            ...tokens.typography.fontSize,
+            // Override the title size (lg is used for titles)
+            lg: titleFontSize
+          }
+        }
       };
     }
 
@@ -565,8 +582,8 @@ export class ThemeManager {
   /**
    * Applies design tokens to multiple widgets
    */
-  static applyThemeToWidgets(widgets: Widget[], themeName: ThemeName, customFont?: string, corporateColorKey?: string): Widget[] {
-    return widgets.map(widget => this.applyThemeToWidget(widget, themeName, customFont, corporateColorKey));
+  static applyThemeToWidgets(widgets: Widget[], themeName: ThemeName, customFont?: string, corporateColorKey?: string, customFontSize?: string): Widget[] {
+    return widgets.map(widget => this.applyThemeToWidget(widget, themeName, customFont, corporateColorKey, customFontSize));
   }
 
   /**
