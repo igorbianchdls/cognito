@@ -203,6 +203,26 @@ const TYPOGRAPHY_PRESETS = {
       semibold: 700,
       bold: 900
     }
+  },
+  geist: {
+    fontFamily: {
+      primary: 'Geist, -apple-system, BlinkMacSystemFont, sans-serif',
+      mono: 'Geist Mono, JetBrains Mono, Consolas, Monaco, monospace'
+    },
+    fontSize: {
+      xs: 12,
+      sm: 14,
+      md: 16,
+      lg: 18,
+      xl: 24,
+      xxl: 32
+    },
+    fontWeight: {
+      normal: 400,
+      medium: 500,
+      semibold: 600,
+      bold: 700
+    }
   }
 };
 
@@ -517,23 +537,23 @@ export const DARK_TOKENS: DesignTokens = {
 // Light Theme Tokens
 export const LIGHT_TOKENS: DesignTokens = {
   colors: {
-    // Brand
-    primary: '#2563eb',
+    // Brand - Azuis da imagem de referência
+    primary: '#3b82f6',
     secondary: '#64748b',
-    accent: '#0891b2',
+    accent: '#1d4ed8',
 
     // Surfaces (background will come from BackgroundManager)
     surface: '#f8fafc',
     surfaceElevated: '#ffffff',
 
-    // Borders
-    border: '#e2e8f0',
-    borderHover: '#cbd5e1',
-    borderFocus: '#2563eb',
+    // Borders - Mais sutis para visual limpo
+    border: '#f1f5f9',
+    borderHover: '#e2e8f0',
+    borderFocus: '#3b82f6',
 
-    // Text
+    // Text - Melhor hierarquia
     text: {
-      primary: '#0f172a',
+      primary: '#1e293b',
       secondary: '#475569',
       muted: '#64748b',
       inverse: '#ffffff'
@@ -544,49 +564,49 @@ export const LIGHT_TOKENS: DesignTokens = {
       success: '#059669',
       warning: '#d97706',
       error: '#dc2626',
-      info: '#2563eb'
+      info: '#3b82f6'
     },
 
-    // Chart
+    // Chart - Azuis consistentes
     chart: {
-      primary: '#2563eb',
-      secondary: '#059669',
-      tertiary: '#d97706',
-      quaternary: '#dc2626',
-      grid: '#e2e8f0',
+      primary: '#3b82f6',
+      secondary: '#1d4ed8',
+      tertiary: '#2563eb',
+      quaternary: '#60a5fa',
+      grid: '#f1f5f9',
       axis: '#64748b'
     },
 
-    // Chart Elements - Light Theme (cores saturadas para contraste)
+    // Chart Elements - Azuis da imagem de referência
     chartElements: {
       bar: {
-        fill: '#1d4ed8',        // Azul saturado
-        border: '#1e3a8a',      // Azul muito escuro
-        label: '#1e293b'        // Cinza escuro para labels
+        fill: '#3b82f6',        // Azul principal da imagem
+        border: '#2563eb',      // Azul mais escuro para borda
+        label: '#1e293b'        // Texto escuro para contraste
       },
       line: {
-        stroke: '#059669',      // Verde saturado
-        point: '#047857',       // Verde escuro
-        pointBorder: '#064e3b', // Verde muito escuro
-        pointLabel: '#374151'   // Cinza escuro
+        stroke: '#3b82f6',      // Azul principal
+        point: '#1d4ed8',       // Azul mais saturado
+        pointBorder: '#2563eb', // Azul escuro para borda
+        pointLabel: '#475569'   // Cinza para labels
       },
       area: {
-        fill: '#7c2d12',        // Laranja escuro
-        stroke: '#ea580c',      // Laranja médio
-        point: '#9a3412',       // Laranja saturado
-        pointBorder: '#7c2d12', // Laranja escuro
-        pointLabel: '#374151'   // Cinza escuro
+        fill: '#93c5fd',        // Azul claro para área
+        stroke: '#3b82f6',      // Azul principal para linha
+        point: '#1d4ed8',       // Azul saturado
+        pointBorder: '#2563eb', // Azul escuro
+        pointLabel: '#475569'   // Cinza
       },
       pie: {
         border: '#ffffff',      // Branco para separação
-        arcLabel: '#111827',    // Preto para labels
-        arcLinkLabel: '#374151' // Cinza escuro para links
+        arcLabel: '#1e293b',    // Texto escuro
+        arcLinkLabel: '#475569' // Cinza para links
       }
     },
 
     // Grid (background will come from BackgroundManager)
     grid: {
-      border: '#e2e8f0'
+      border: '#f1f5f9'
     }
   },
 
@@ -594,30 +614,30 @@ export const LIGHT_TOKENS: DesignTokens = {
 
   shadows: {
     none: 'none',
-    subtle: '0 1px 3px rgba(0, 0, 0, 0.1)',
-    medium: '0 4px 12px rgba(0, 0, 0, 0.15)',
-    strong: '0 8px 24px rgba(0, 0, 0, 0.2)',
-    glow: '0 0 20px rgba(37, 99, 235, 0.2)'
+    subtle: '0 1px 3px rgba(0, 0, 0, 0.08)',
+    medium: '0 4px 12px rgba(0, 0, 0, 0.12)',
+    strong: '0 8px 24px rgba(0, 0, 0, 0.16)',
+    glow: '0 0 20px rgba(59, 130, 246, 0.15)'
   },
 
   borders: DARK_TOKENS.borders, // Same border system
-  typography: TYPOGRAPHY_PRESETS.opensans,
+  typography: TYPOGRAPHY_PRESETS.geist, // Usando Geist
 
   effects: {
     opacity: {
       transparent: 0,
-      subtle: 0.8,
-      medium: 0.9,
+      subtle: 0.85,
+      medium: 0.92,
       strong: 0.98,
       opaque: 1
     },
     // gradient and backdrop will come from BackgroundManager
     shadow: {
       color: '#64748b',
-      opacity: 0.15,
-      blur: 12,
+      opacity: 0.12,
+      blur: 8,
       offsetX: 0,
-      offsetY: 4
+      offsetY: 2
     }
   }
 };
@@ -1263,7 +1283,7 @@ import type { BackgroundPresetKey } from './BackgroundManager';
 
 // Theme to Background mapping - each theme uses a specific background preset
 export const THEME_BACKGROUND_MAPPING: Record<ThemeTokenName, BackgroundPresetKey> = {
-  light: 'white',
+  light: 'light',
   dark: 'darkGradient',
   blue: 'blueGradient',
   green: 'greenGradient',

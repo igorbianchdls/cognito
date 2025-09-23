@@ -44,6 +44,13 @@ const BACKGROUND_PRESETS: Record<string, BackgroundPreset> = {
     backgroundColor: '#ffffff',
     backgroundGradient: { enabled: false }
   },
+  light: {
+    type: 'solid',
+    name: 'Light',
+    description: 'Light gray background for modern themes',
+    backgroundColor: '#f8fafc',
+    backgroundGradient: { enabled: false }
+  },
   black: {
     type: 'solid',
     name: 'Black',
