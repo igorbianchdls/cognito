@@ -275,8 +275,6 @@ export function BarChart(props: BarChartProps) {
       legendsFontSize,
       legendsFontWeight,
       legendsTextColor,
-      gridColor,
-      gridStrokeWidth,
       tooltipFontSize,
       tooltipFontFamily
     }),
