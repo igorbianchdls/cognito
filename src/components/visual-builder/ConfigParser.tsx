@@ -130,8 +130,8 @@ export class ConfigParser {
   };
 
 
-  private static applyThemeToWidgets(widgets: Widget[], theme: ThemeName, customFont?: string): Widget[] {
-    return ThemeManager.applyThemeToWidgets(widgets, theme, customFont);
+  private static applyThemeToWidgets(widgets: Widget[], theme: ThemeName, customFont?: string, corporateColor?: string): Widget[] {
+    return ThemeManager.applyThemeToWidgets(widgets, theme, customFont, corporateColor);
   }
 
   static parse(jsonString: string): ParseResult {
@@ -139,12 +139,13 @@ export class ConfigParser {
       // Step 1: Parse JSON (same as chart stores)
       const config = JSON.parse(jsonString);
 
-      // Step 2: Extract widgets, grid config, theme, custom font, custom background, and layout columns
+      // Step 2: Extract widgets, grid config, theme, custom font, custom background, corporate color, and layout columns
       const widgets = (config.widgets || []) as Widget[];
       const rawGridConfig = config.config || {};
       const theme = config.theme as ThemeName;
       const customFont = config.customFont as string;
       const customBackground = config.customBackground as string;
+      const corporateColor = config.corporateColor as string;
       const layoutColumns = config.layoutColumns as Record<string, LayoutColumn> | undefined;
 
       // Step 3: Process grid config with defaults
@@ -182,11 +183,11 @@ export class ConfigParser {
 
       // Step 5: Apply theme to widgets and grid if theme is specified and valid
       const themedWidgets = (theme && ThemeManager.isValidTheme(theme))
-        ? this.applyThemeToWidgets(validWidgets, theme, customFont)
+        ? this.applyThemeToWidgets(validWidgets, theme, customFont, corporateColor)
         : validWidgets;
 
       let themedGridConfig = (theme && ThemeManager.isValidTheme(theme))
-        ? ThemeManager.applyThemeToGrid(gridConfig, theme)
+        ? ThemeManager.applyThemeToGrid(gridConfig, theme, corporateColor)
         : gridConfig;
 
       // Step 6: Apply custom background if specified
