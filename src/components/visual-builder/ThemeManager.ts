@@ -257,10 +257,6 @@ export class ThemeManager {
     clonedWidget.barConfig.styling.colors = [
       tokens.colors.chartElements.bar.fill
     ];
-
-    clonedWidget.barConfig.styling.containerBorderColor = tokens.colors.chartElements.bar.border;
-    clonedWidget.barConfig.styling.containerBorderWidth = tokens.borders.width.thin;
-    clonedWidget.barConfig.styling.containerBorderRadius = tokens.borders.radius.md;
     clonedWidget.barConfig.styling.containerShadowColor = tokens.shadows.medium;
 
     // Apply advanced effects from tokens
