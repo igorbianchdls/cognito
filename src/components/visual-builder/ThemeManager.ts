@@ -191,7 +191,7 @@ export class ThemeManager {
     clonedWidget.barConfig.styling.subtitleMarginBottom = 16;
     clonedWidget.barConfig.styling.subtitleMarginLeft = 0;
 
-    clonedWidget.barConfig.styling.axisTextColor = tokens.colors.text.secondary;
+    clonedWidget.barConfig.styling.axisTextColor = tokens.colors.chart.axis;
     clonedWidget.barConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
 
     clonedWidget.barConfig.styling.colors = [
@@ -266,7 +266,7 @@ export class ThemeManager {
     clonedWidget.lineConfig.styling.subtitleMarginBottom = 16;
     clonedWidget.lineConfig.styling.subtitleMarginLeft = 0;
 
-    clonedWidget.lineConfig.styling.axisTextColor = tokens.colors.text.secondary;
+    clonedWidget.lineConfig.styling.axisTextColor = tokens.colors.chart.axis;
     clonedWidget.lineConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
 
     clonedWidget.lineConfig.styling.colors = [tokens.colors.chartElements.line.stroke];
@@ -338,7 +338,8 @@ export class ThemeManager {
     clonedWidget.pieConfig.styling.subtitleMarginBottom = 16;
     clonedWidget.pieConfig.styling.subtitleMarginLeft = 0;
 
-    clonedWidget.pieConfig.styling.colors = [
+    // Use dedicated pie slice colors if available, otherwise fallback to mixed chart colors
+    clonedWidget.pieConfig.styling.colors = tokens.colors.pieSliceColors || [
       tokens.colors.chartElements.bar.fill,
       tokens.colors.chartElements.line.stroke,
       tokens.colors.chartElements.area.fill,
@@ -413,7 +414,7 @@ export class ThemeManager {
     clonedWidget.areaConfig.styling.subtitleMarginBottom = 16;
     clonedWidget.areaConfig.styling.subtitleMarginLeft = 0;
 
-    clonedWidget.areaConfig.styling.axisTextColor = tokens.colors.text.secondary;
+    clonedWidget.areaConfig.styling.axisTextColor = tokens.colors.chart.axis;
     clonedWidget.areaConfig.styling.axisFontSize = tokens.typography.fontSize.sm;
 
     clonedWidget.areaConfig.styling.colors = [tokens.colors.chartElements.area.fill];

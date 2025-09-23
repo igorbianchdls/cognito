@@ -275,6 +275,9 @@ export interface ColorTokens {
     axis: string;
   };
 
+  // Pie chart specific colors for varied slices
+  pieSliceColors?: string[];
+
   // Chart Elements - Specific colors for each chart type
   chartElements: {
     bar: {
@@ -809,6 +812,9 @@ export const CORPORATE_TOKENS: DesignTokens = {
       grid: '#3A3C5C',
       axis: '#FFFFFF'
     },
+
+    // Dedicated pie slice colors for variety
+    pieSliceColors: ['#FFC329', '#E6AF00', '#D4A017', '#B8860B', '#FFD700', '#DAA520'],
 
     // Chart elements - all using the bright yellow/gold color
     chartElements: {

@@ -369,6 +369,7 @@ export function LineChart({
           tickSize: axisLeft.tickSize ?? 0,
           tickPadding: axisLeft.tickPadding ?? 8,
           tickRotation: axisLeft.tickRotation ?? 0,
+          tickValues: 8,
           legend: axisLeft.legend,
           legendOffset: axisLeft.legendOffset ?? -40,
           format: (value) => formatValue(Number(value))
@@ -376,6 +377,7 @@ export function LineChart({
           tickSize: 0,
           tickPadding: 8,
           tickRotation: 0,
+          tickValues: 8,
           format: (value) => formatValue(Number(value))
         }}
         

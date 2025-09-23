@@ -407,16 +407,18 @@ export function BarChart(props: BarChartProps) {
             tickSize: axisLeft.tickSize ?? 0,
             tickPadding: axisLeft.tickPadding ?? 8,
             tickRotation: axisLeft.tickRotation ?? 0,
+            tickValues: 8,
             legend: axisLeft.legend,
             legendOffset: axisLeft.legendOffset ?? -40,
             format: axisLeft.format || (layout === 'horizontal'
-              ? (value) => value.toString().slice(0, 10) // Strings for horizontal  
+              ? (value) => value.toString().slice(0, 10) // Strings for horizontal
               : (value) => formatValue(Number(value)) // Numbers for vertical
             )
           } : {
             tickSize: 0,
             tickPadding: 8,
             tickRotation: 0,
+            tickValues: 8,
             format: layout === 'horizontal'
               ? (value) => value.toString().slice(0, 10)
               : (value) => formatValue(Number(value))
