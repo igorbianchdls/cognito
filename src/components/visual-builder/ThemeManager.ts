@@ -41,7 +41,7 @@ export class ThemeManager {
     if (themeName === 'corporate') {
       // Use selected corporate color palette or default to 'corporate'
       const selectedColorKey = (corporateColorKey && ColorManager.isValidPreset(corporateColorKey))
-        ? corporateColorKey as any
+        ? corporateColorKey as ColorPresetKey
         : 'corporate';
       const corporateColors = ColorManager.getColorPalette(selectedColorKey);
       mergedColors = {
