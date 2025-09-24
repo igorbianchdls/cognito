@@ -175,16 +175,16 @@ export function PieChart({
   marginBottom
 }: PieChartProps) {
   // Debug: Log do que PieChart recebe
-  console.log('📊 PIE CHART recebeu:', {
-    componentType: 'PieChart',
-    hasData: !!data,
-    dataLength: data?.length || 0,
-    firstItem: data?.[0],
-    props: { title, subtitle }
-  });
+  // console.log('📊 PIE CHART recebeu:', {
+  //   componentType: 'PieChart',
+  //   hasData: !!data,
+  //   dataLength: data?.length || 0,
+  //   firstItem: data?.[0],
+  //   props: { title, subtitle }
+  // });
 
   if (!data || data.length === 0) {
-    console.log('📊 PIE CHART: Retornando EmptyState');
+    // console.log('📊 PIE CHART: Retornando EmptyState');
     return <EmptyState />;
   }
 
@@ -196,12 +196,12 @@ export function PieChart({
   }));
 
   // Debug: Log dos dados transformados
-  console.log('📊 PIE CHART dados transformados:', {
-    originalLength: data.length,
-    transformedLength: chartData.length,
-    firstTransformed: chartData[0],
-    allTransformed: chartData.slice(0, 3)
-  });
+  // console.log('📊 PIE CHART dados transformados:', {
+  //   originalLength: data.length,
+  //   transformedLength: chartData.length,
+  //   firstTransformed: chartData[0],
+  //   allTransformed: chartData.slice(0, 3)
+  // });
 
   // Helper function to convert hex to RGB
   const hexToRgb = (hex: string) => {
@@ -210,15 +210,15 @@ export function PieChart({
   };
 
   // Create box shadow style - apply custom shadow or default KPI shadow
-  const hasCustomShadow = containerShadowColor || containerShadowOpacity !== undefined || 
-                         containerShadowBlur !== undefined || containerShadowOffsetX !== undefined || 
-                         containerShadowOffsetY !== undefined;
-  
-  const boxShadow = hasCustomShadow
-    ? `${containerShadowOffsetX || 0}px ${containerShadowOffsetY || 4}px ${containerShadowBlur || 8}px rgba(${
-        hexToRgb(containerShadowColor || '#000000')
-      }, ${containerShadowOpacity || 0.2})`
-    : '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+  // const hasCustomShadow = containerShadowColor || containerShadowOpacity !== undefined ||
+  //                        containerShadowBlur !== undefined || containerShadowOffsetX !== undefined ||
+  //                        containerShadowOffsetY !== undefined;
+  //
+  // const boxShadow = hasCustomShadow
+  //   ? `${containerShadowOffsetX || 0}px ${containerShadowOffsetY || 4}px ${containerShadowBlur || 8}px rgba(${
+  //       hexToRgb(containerShadowColor || '#000000')
+  //     }, ${containerShadowOpacity || 0.2})`
+  //   : '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
 
   // Container styles with priority system (same as BarChart)
   const containerStyles = {
@@ -232,25 +232,25 @@ export function PieChart({
     // Direct CSS props - simple and predictable
     opacity: containerOpacity !== undefined ? containerOpacity : backgroundOpacity,
     backdropFilter: containerBackdropFilter || (backdropFilter?.enabled ? `blur(${backdropFilter.blur}px)` : undefined),
-    boxShadow: containerBoxShadow,
+    // boxShadow: containerBoxShadow, // Commented out
   }
 
   // Debug log
-  console.log('🖼️ PieChart Shadow Debug:', {
-    containerShadowColor,
-    containerShadowOpacity,
-    containerShadowBlur,
-    containerShadowOffsetX,
-    containerShadowOffsetY,
-    boxShadow
-  });
+  // console.log('🖼️ PieChart Shadow Debug:', {
+  //   containerShadowColor,
+  //   containerShadowOpacity,
+  //   containerShadowBlur,
+  //   containerShadowOffsetX,
+  //   containerShadowOffsetY,
+  //   boxShadow
+  // });
 
   // Cores elegantes
   const elegantColors = ['#2563eb', '#dc2626', '#16a34a', '#ca8a04', '#9333ea', '#c2410c'];
 
   return (
     <div
-      className={containerClassName}
+      className={`${containerClassName} relative`}
       style={{
         // Propriedades essenciais SEMPRE aplicadas
         width: '100%',
@@ -264,13 +264,51 @@ export function PieChart({
           ...containerStyles,
           padding: `${containerPadding || 16}px`,
           margin: '0 auto',
-          border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb',
-          borderRadius: containerBorderRadius ? `${containerBorderRadius}px` : undefined,
+          border: '0.5px solid #777', // Corner accent border
+          // border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb', // Commented out
+          // borderRadius: containerBorderRadius ? `${containerBorderRadius}px` : undefined, // Commented for corner accent effect
           // Fallback shadow if containerBoxShadow not provided
-          boxShadow: containerBoxShadow || boxShadow,
+          // boxShadow: containerBoxShadow || boxShadow, // Commented out
         })
       }}
     >
+      {/* Corner accents - positioned to overlay border */}
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          top: '-0.5px',
+          left: '-0.5px',
+          borderTop: '0.5px solid #bbb',
+          borderLeft: '0.5px solid #bbb'
+        }}
+      ></div>
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          top: '-0.5px',
+          right: '-0.5px',
+          borderTop: '0.5px solid #bbb',
+          borderRight: '0.5px solid #bbb'
+        }}
+      ></div>
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          bottom: '-0.5px',
+          left: '-0.5px',
+          borderBottom: '0.5px solid #bbb',
+          borderLeft: '0.5px solid #bbb'
+        }}
+      ></div>
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          bottom: '-0.5px',
+          right: '-0.5px',
+          borderBottom: '0.5px solid #bbb',
+          borderRight: '0.5px solid #bbb'
+        }}
+      ></div>
       {title && (
         <h3
           className={titleClassName || undefined}

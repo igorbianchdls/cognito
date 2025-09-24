@@ -302,9 +302,8 @@ export class ThemeManager {
     }
     // Create enhanced shadow for hightech theme
     if (tokens.effects.shadow.color === '#00ffff') {
-      // Hightech theme: Multiple neon glows
-      clonedWidget.barConfig.styling.containerBoxShadow =
-        `0 8px 32px rgba(0, 255, 255, 0.3), 0 0 0 1px rgba(0, 255, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)`;
+      // Hightech theme: No shadow
+      clonedWidget.barConfig.styling.containerBoxShadow = 'none';
     } else {
       // Other themes: Standard shadow
       clonedWidget.barConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
@@ -312,10 +311,9 @@ export class ThemeManager {
 
     // Apply border properties - enhanced for hightech theme
     if (tokens.effects.shadow.color === '#00ffff') {
-      // Hightech theme: Neon cyan border + straight edges
-      clonedWidget.barConfig.styling.containerBorderColor = '#00ffff';
-      clonedWidget.barConfig.styling.containerBorderWidth = tokens.borders.width.thin;
-      clonedWidget.barConfig.styling.containerBorderRadius = 0;
+      // Hightech theme: No border
+      clonedWidget.barConfig.styling.containerBorderWidth = 0;
+      clonedWidget.barConfig.styling.containerBorderColor = 'transparent';
     } else {
       // Other themes: Standard border
       clonedWidget.barConfig.styling.containerBorderColor = tokens.colors.border;
@@ -488,9 +486,8 @@ export class ThemeManager {
     }
     // Create enhanced shadow for hightech theme
     if (tokens.effects.shadow.color === '#00ffff') {
-      // Hightech theme: Multiple neon glows
-      clonedWidget.pieConfig.styling.containerBoxShadow =
-        `0 8px 32px rgba(0, 255, 255, 0.3), 0 0 0 1px rgba(0, 255, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)`;
+      // Hightech theme: No shadow
+      clonedWidget.pieConfig.styling.containerBoxShadow = 'none';
     } else {
       // Other themes: Standard shadow
       clonedWidget.pieConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
@@ -498,10 +495,9 @@ export class ThemeManager {
 
     // Apply border properties - enhanced for hightech theme
     if (tokens.effects.shadow.color === '#00ffff') {
-      // Hightech theme: Neon cyan border + straight edges
-      clonedWidget.pieConfig.styling.containerBorderColor = '#00ffff';
-      clonedWidget.pieConfig.styling.containerBorderWidth = tokens.borders.width.thin;
-      clonedWidget.pieConfig.styling.containerBorderRadius = 0;
+      // Hightech theme: No border
+      clonedWidget.pieConfig.styling.containerBorderWidth = 0;
+      clonedWidget.pieConfig.styling.containerBorderColor = 'transparent';
     } else {
       // Other themes: Standard border
       clonedWidget.pieConfig.styling.containerBorderColor = tokens.colors.border;

@@ -163,12 +163,12 @@ export function BarChart(props: BarChartProps) {
   }));
 
   // Debug: Log dos dados transformados
-  console.log('📊 BAR CHART dados transformados:', {
-    originalLength: data.length,
-    transformedLength: chartData.length,
-    firstTransformed: chartData[0],
-    allTransformed: chartData.slice(0, 3)
-  });
+  // console.log('📊 BAR CHART dados transformados:', {
+  //   originalLength: data.length,
+  //   transformedLength: chartData.length,
+  //   firstTransformed: chartData[0],
+  //   allTransformed: chartData.slice(0, 3)
+  // });
 
   // Inverter dados automaticamente para layout horizontal (maior valor no topo)
   const finalData = layout === 'horizontal' ? [...chartData].reverse() : chartData;
@@ -180,15 +180,15 @@ export function BarChart(props: BarChartProps) {
   };
 
   // Create box shadow style - apply custom shadow or default KPI shadow
-  const hasCustomShadow = containerShadowColor || containerShadowOpacity !== undefined || 
-                         containerShadowBlur !== undefined || containerShadowOffsetX !== undefined || 
-                         containerShadowOffsetY !== undefined;
-  
-  const boxShadow = hasCustomShadow
-    ? `${containerShadowOffsetX || 0}px ${containerShadowOffsetY || 2}px ${containerShadowBlur || 4}px rgba(${
-        hexToRgb(containerShadowColor || '#000000')
-      }, ${containerShadowOpacity || 0.1})`
-    : '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+  // const hasCustomShadow = containerShadowColor || containerShadowOpacity !== undefined ||
+  //                        containerShadowBlur !== undefined || containerShadowOffsetX !== undefined ||
+  //                        containerShadowOffsetY !== undefined;
+  //
+  // const boxShadow = hasCustomShadow
+  //   ? `${containerShadowOffsetX || 0}px ${containerShadowOffsetY || 2}px ${containerShadowBlur || 4}px rgba(${
+  //     hexToRgb(containerShadowColor || '#000000')
+  //   }, ${containerShadowOpacity || 0.1})`
+  //   : '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
 
 
   
@@ -208,34 +208,34 @@ export function BarChart(props: BarChartProps) {
   ].filter(Boolean).join(' ') || undefined;
 
   // Debug: Log CSS effects
-  console.log('🎨 BAR CHART efeitos CSS diretos:', {
-    containerStyles: {
-      background: containerBackground || backgroundColor,
-      opacity: containerOpacity,
-      backdropFilter: containerBackdropFilter,
-      filter: containerFilter,
-      boxShadow: containerBoxShadow,
-      border: containerBorder,
-      transform: containerTransform,
-      transition: containerTransition
-    },
-    barFilters: barCSSFilters,
-    hoverFilters: hoverCSSFilters,
-    colorProcessing: {
-      originalColors: colors,
-      barColor
-    }
-  });
+  // console.log('🎨 BAR CHART efeitos CSS diretos:', {
+  //   containerStyles: {
+  //     background: containerBackground || backgroundColor,
+  //     opacity: containerOpacity,
+  //     backdropFilter: containerBackdropFilter,
+  //     filter: containerFilter,
+  //     boxShadow: containerBoxShadow,
+  //     border: containerBorder,
+  //     transform: containerTransform,
+  //     transition: containerTransition
+  //   },
+  //   barFilters: barCSSFilters,
+  //   hoverFilters: hoverCSSFilters,
+  //   colorProcessing: {
+  //     originalColors: colors,
+  //     barColor
+  //   }
+  // });
 
   // Debug log
-  console.log('🖼️ BarChart Shadow Debug:', {
-    containerShadowColor,
-    containerShadowOpacity,
-    containerShadowBlur,
-    containerShadowOffsetX,
-    containerShadowOffsetY,
-    boxShadow
-  });
+  // console.log('🖼️ BarChart Shadow Debug:', {
+  //   containerShadowColor,
+  //   containerShadowOpacity,
+  //   containerShadowBlur,
+  //   containerShadowOffsetX,
+  //   containerShadowOffsetY,
+  //   boxShadow
+  // });
 
   // Container styles - ALL DIRECT (no complex functions!)
   const containerStyles = {
@@ -250,7 +250,7 @@ export function BarChart(props: BarChartProps) {
     opacity: containerOpacity !== undefined ? containerOpacity : backgroundOpacity,
     backdropFilter: containerBackdropFilter || (backdropFilter?.enabled ? `blur(${backdropFilter.blur}px)` : undefined),
     filter: containerFilter,
-    boxShadow: containerBoxShadow,
+    // boxShadow: containerBoxShadow, // Commented out
     transform: containerTransform,
     transition: containerTransition || (transitionDuration ? `all ${transitionDuration} ${transitionEasing || 'ease-in-out'}` : undefined),
   };
@@ -261,7 +261,7 @@ export function BarChart(props: BarChartProps) {
 
   return (
     <div
-      className={containerClassName}
+      className={`${containerClassName} relative`}
       style={{
         // Propriedades essenciais SEMPRE aplicadas
         width: '100%',
@@ -274,16 +274,54 @@ export function BarChart(props: BarChartProps) {
         ...(containerClassName ? {} : {
           // Apply all container styles directly
           ...containerStyles,
-          
+
           // Override with specific props if provided (backwards compatibility)
           padding: `${containerPadding || 16}px`,
           margin: '0 auto',
-          border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb',
-          borderRadius: `${containerBorderRadius || 8}px`,
-          boxShadow: containerStyles.boxShadow || boxShadow,
+          border: '0.5px solid #777', // Corner accent border
+          // border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb', // Commented out
+          // borderRadius: `${containerBorderRadius || 8}px`, // Commented for corner accent effect
+          // boxShadow: containerStyles.boxShadow || boxShadow, // Commented out
         })
       }}
     >
+      {/* Corner accents - positioned to overlay border */}
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          top: '-0.5px',
+          left: '-0.5px',
+          borderTop: '0.5px solid #bbb',
+          borderLeft: '0.5px solid #bbb'
+        }}
+      ></div>
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          top: '-0.5px',
+          right: '-0.5px',
+          borderTop: '0.5px solid #bbb',
+          borderRight: '0.5px solid #bbb'
+        }}
+      ></div>
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          bottom: '-0.5px',
+          left: '-0.5px',
+          borderBottom: '0.5px solid #bbb',
+          borderLeft: '0.5px solid #bbb'
+        }}
+      ></div>
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          bottom: '-0.5px',
+          right: '-0.5px',
+          borderBottom: '0.5px solid #bbb',
+          borderRight: '0.5px solid #bbb'
+        }}
+      ></div>
       {title && (
         <h3
           className={titleClassName || undefined}
