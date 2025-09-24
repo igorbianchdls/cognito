@@ -604,21 +604,42 @@ export default function DarkCardsPage() {
           <div className="space-y-2">
             <h3 className="text-sm font-medium text-gray-400 text-center">Corner Accent Test</h3>
             <div
-              className="w-64 h-32 rounded-xl p-6 relative"
+              className="w-64 h-32 p-6 relative"
               style={{
                 background: 'linear-gradient(225deg, rgba(255,255,255,0.1), #0a1525)',
-                borderImage: `
-                  linear-gradient(45deg,
-                    #999999 0%, #999999 15%,
-                    #666666 15%, #666666 35%,
-                    #999999 35%, #999999 50%,
-                    #666666 50%, #666666 65%,
-                    #999999 65%, #999999 85%,
-                    #666666 85%, #666666 100%
-                  ) 1
-                `,
-                border: '1px solid transparent'
+                border: '1px solid #777',
+                position: 'relative'
               }}
+            >
+              {/* Corner accents */}
+              <div
+                className="absolute top-0 left-0 w-4 h-4"
+                style={{
+                  borderTop: '1px solid #bbb',
+                  borderLeft: '1px solid #bbb'
+                }}
+              ></div>
+              <div
+                className="absolute top-0 right-0 w-4 h-4"
+                style={{
+                  borderTop: '1px solid #bbb',
+                  borderRight: '1px solid #bbb'
+                }}
+              ></div>
+              <div
+                className="absolute bottom-0 left-0 w-4 h-4"
+                style={{
+                  borderBottom: '1px solid #bbb',
+                  borderLeft: '1px solid #bbb'
+                }}
+              ></div>
+              <div
+                className="absolute bottom-0 right-0 w-4 h-4"
+                style={{
+                  borderBottom: '1px solid #bbb',
+                  borderRight: '1px solid #bbb'
+                }}
+              ></div>
             >
               <div className="text-white">
                 <div className="text-sm opacity-70 mb-1">Revenue</div>
