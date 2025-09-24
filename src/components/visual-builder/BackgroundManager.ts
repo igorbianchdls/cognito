@@ -66,11 +66,17 @@ const BACKGROUND_PRESETS: Record<string, BackgroundPreset> = {
     backgroundGradient: { enabled: false }
   },
   navy: {
-    type: 'solid',
+    type: 'gradient',
     name: 'Navy',
-    description: 'Deep navy blue background like dashboard',
+    description: 'Navy Deep gradient background',
     backgroundColor: '#1a202c',
-    backgroundGradient: { enabled: false }
+    backgroundGradient: {
+      enabled: true,
+      type: 'linear',
+      direction: '225deg',
+      startColor: 'rgba(255,255,255,0.06)',
+      endColor: '#1a202c'
+    }
   },
   corporate: {
     type: 'solid',
