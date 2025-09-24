@@ -23,7 +23,9 @@ STEP 1 - DESCOBERTA DE TABELAS:
 - Identifique tabelas relacionadas a vendas, pedidos, produtos, campanhas
 
 STEP 2 - MAPEAMENTO DE SCHEMAS:
-- Para cada tabela relevante, use getTableSchema() para entender estrutura
+- Para cada tabela relevante, use getTableSchema(tableName: "nome_da_tabela") para entender estrutura
+- Para a tabela ecommerce, use: getTableSchema(tableName: "ecommerce")
+- O parâmetro correto é tableName, não tableId
 - Analise colunas de métricas (vendas, receita, quantidade)
 - Identifique colunas de dimensões (data, produto, campanha)
 
