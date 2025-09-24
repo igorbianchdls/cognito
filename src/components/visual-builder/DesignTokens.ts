@@ -1105,6 +1105,94 @@ export const FOREST_TOKENS: DesignTokens = {
   }
 };
 
+// High Tech Theme Tokens - Futurístico Ciano/Azul
+export const HIGHTECH_TOKENS: DesignTokens = {
+  ...DARK_TOKENS,
+  colors: {
+    ...DARK_TOKENS.colors,
+    surface: '#0a0f1c',
+    surfaceElevated: '#111827',
+    primary: '#00ffff',
+    secondary: '#0dcaf0',
+    accent: '#20c997',
+    border: '#1f2937',
+    borderHover: '#374151',
+    borderFocus: '#00ffff',
+    text: {
+      primary: '#ffffff',
+      secondary: '#e0f2fe',
+      muted: '#b3e5fc',
+      inverse: '#000a0f'
+    },
+    semantic: {
+      success: '#00ff88',
+      warning: '#ffa726',
+      error: '#ff5252',
+      info: '#00ffff'
+    },
+    chart: {
+      primary: '#00ffff',
+      secondary: '#0dcaf0',
+      tertiary: '#20c997',
+      quaternary: '#40e0d0',
+      grid: '#1f2937',
+      axis: '#9ca3af'
+    },
+    chartElements: {
+      bar: {
+        fill: '#00ffff',        // Bright cyan fill
+        border: '#0dcaf0',      // Cyan border with glow
+        label: '#ffffff'        // White text for contrast
+      },
+      line: {
+        stroke: '#0dcaf0',      // Cyan line
+        point: '#00ffff',       // Bright cyan points
+        pointBorder: '#20c997', // Teal border
+        pointLabel: '#e0f2fe'   // Light blue labels
+      },
+      area: {
+        fill: '#003d4d',        // Dark cyan fill
+        stroke: '#00ffff',      // Bright cyan stroke
+        point: '#0dcaf0',       // Cyan points
+        pointBorder: '#005563', // Dark teal border
+        pointLabel: '#ffffff'   // White labels
+      },
+      pie: {
+        border: '#1f2937',      // Dark border
+        arcLabel: '#ffffff',    // White labels
+        arcLinkLabel: '#e0f2fe' // Light blue links
+      }
+    },
+    grid: {
+      border: '#1f2937'
+    }
+  },
+
+  spacing: DARK_TOKENS.spacing,
+  shadows: DARK_TOKENS.shadows,
+  borders: DARK_TOKENS.borders,
+
+  typography: TYPOGRAPHY_PRESETS.geist,
+
+  effects: {
+    opacity: {
+      transparent: 0,
+      subtle: 1.0,
+      medium: 1.0,
+      strong: 1.0,
+      opaque: 1
+    },
+    // High-tech shadows with cyan glow
+    shadow: {
+      color: '#00ffff',
+      opacity: 0.4,
+      blur: 20,
+      offsetX: 0,
+      offsetY: 8
+    }
+  }
+};
+
 // Burgundy Theme Tokens - Vermelho Vinho Sofisticado
 export const BURGUNDY_TOKENS: DesignTokens = {
   ...DARK_TOKENS,
@@ -1285,6 +1373,7 @@ export const THEME_TOKENS = {
   navy: NAVY_TOKENS,
   slate: SLATE_TOKENS,
   forest: FOREST_TOKENS,
+  hightech: HIGHTECH_TOKENS,
   burgundy: BURGUNDY_TOKENS,
   platinum: PLATINUM_TOKENS
 } as const;
@@ -1304,6 +1393,7 @@ export const THEME_BACKGROUND_MAPPING: Record<ThemeTokenName, BackgroundPresetKe
   navy: 'navy',
   slate: 'glassDark',
   forest: 'greenGradient',
+  hightech: 'hightech',
   burgundy: 'sunsetGradient',
   platinum: 'glassLight'
 } as const;

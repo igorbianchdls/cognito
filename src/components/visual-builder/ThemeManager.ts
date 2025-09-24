@@ -657,6 +657,7 @@ export class ThemeManager {
       navy: { name: 'Navy', description: 'Executive navy blue for C-level presentations' },
       slate: { name: 'Slate', description: 'Premium gray for financial analytics' },
       forest: { name: 'Forest', description: 'Sustainable green for ESG dashboards' },
+      hightech: { name: 'High Tech', description: 'Futuristic neon cyan theme for modern dashboards' },
       burgundy: { name: 'Burgundy', description: 'Sophisticated wine red for sales metrics' },
       platinum: { name: 'Platinum', description: 'Elegant silver for premium reports' }
     };
