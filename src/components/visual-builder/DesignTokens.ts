@@ -1052,12 +1052,12 @@ export const HIGHTECH_TOKENS: DesignTokens = {
       strong: 0.95,
       opaque: 1
     },
-    // Futuristic gradient background
+    // Futuristic gradient background (using Midnight Blue gradient)
     gradient: {
       type: 'linear',
-      direction: '135deg',
-      startColor: 'rgba(10, 15, 28, 0.4)',
-      endColor: 'rgba(17, 24, 39, 0.2)'
+      direction: '225deg',
+      startColor: 'rgba(255,255,255,0.08)',
+      endColor: '#0f172a'
     },
     // Glassmorphism backdrop filter
     backdrop: {
