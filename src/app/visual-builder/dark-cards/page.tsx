@@ -595,6 +595,110 @@ export default function DarkCardsPage() {
         </div>
       </div>
 
+      {/* Navy Gradient Cards */}
+      <div className="mt-16">
+        <h2 className="text-2xl font-bold text-white mb-8 text-center">Navy Gradient Cards</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+          {/* Navy Base Card */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-gray-400 text-center">Navy Base</h3>
+            <KPICard
+              name="Revenue"
+              currentValue={125000}
+              unit="$"
+              backgroundGradient={{
+                enabled: true,
+                type: 'linear',
+                direction: '225deg',
+                startColor: 'rgba(255,255,255,0.08)',
+                endColor: '#2d3748'
+              }}
+              kpiContainerBorderColor="rgba(75, 85, 104, 0.3)"
+              kpiContainerBorderWidth={1}
+              kpiContainerBorderRadius={12}
+              kpiContainerPadding={24}
+              containerShadowColor="rgba(45, 55, 72, 0.3)"
+              containerShadowOpacity={0.6}
+              containerShadowBlur={8}
+              containerShadowOffsetX={0}
+              containerShadowOffsetY={2}
+              kpiNameColor="rgba(255, 255, 255, 0.8)"
+              kpiValueColor="#93c5fd"
+              kpiValueFontSize={28}
+              kpiValueFontWeight={600}
+              kpiNameFontSize={14}
+              success={true}
+            />
+          </div>
+
+          {/* Navy Deep Card */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-gray-400 text-center">Navy Deep</h3>
+            <KPICard
+              name="Growth Rate"
+              currentValue={8.5}
+              unit="%"
+              backgroundGradient={{
+                enabled: true,
+                type: 'linear',
+                direction: '225deg',
+                startColor: 'rgba(255,255,255,0.06)',
+                endColor: '#1a202c'
+              }}
+              kpiContainerBorderColor="rgba(75, 85, 104, 0.3)"
+              kpiContainerBorderWidth={1}
+              kpiContainerBorderRadius={12}
+              kpiContainerPadding={24}
+              containerShadowColor="rgba(26, 32, 44, 0.4)"
+              containerShadowOpacity={0.7}
+              containerShadowBlur={8}
+              containerShadowOffsetX={0}
+              containerShadowOffsetY={2}
+              kpiNameColor="rgba(255, 255, 255, 0.8)"
+              kpiValueColor="#60a5fa"
+              kpiValueFontSize={28}
+              kpiValueFontWeight={600}
+              kpiNameFontSize={14}
+              success={true}
+            />
+          </div>
+
+          {/* Navy Elevated Card */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-gray-400 text-center">Navy Elevated</h3>
+            <KPICard
+              name="Conversion"
+              currentValue={15.2}
+              unit="%"
+              backgroundGradient={{
+                enabled: true,
+                type: 'linear',
+                direction: '225deg',
+                startColor: 'rgba(255,255,255,0.10)',
+                endColor: '#4a5568'
+              }}
+              kpiContainerBorderColor="rgba(75, 85, 104, 0.3)"
+              kpiContainerBorderWidth={1}
+              kpiContainerBorderRadius={12}
+              kpiContainerPadding={24}
+              containerShadowColor="rgba(74, 85, 104, 0.3)"
+              containerShadowOpacity={0.6}
+              containerShadowBlur={8}
+              containerShadowOffsetX={0}
+              containerShadowOffsetY={2}
+              kpiNameColor="rgba(255, 255, 255, 0.8)"
+              kpiValueColor="#3b82f6"
+              kpiValueFontSize={28}
+              kpiValueFontWeight={600}
+              kpiNameFontSize={14}
+              success={true}
+            />
+          </div>
+
+        </div>
+      </div>
+
       {/* Corner Accent Border Test */}
       <div className="mt-16">
         <h2 className="text-2xl font-bold text-white mb-6 text-center">Corner Accent Border Test</h2>
