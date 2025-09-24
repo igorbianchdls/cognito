@@ -306,7 +306,7 @@ export function KPICard({
       className="relative"
       style={{
         border: '0.5px solid #777',
-        borderRadius: kpiContainerBorderRadius ? `${kpiContainerBorderRadius}px` : undefined,
+        // borderRadius: kpiContainerBorderRadius ? `${kpiContainerBorderRadius}px` : undefined, // Commented for corner accent effect
       }}
     >
       {/* Corner accents - positioned outside to overlay border */}
@@ -357,7 +357,7 @@ export function KPICard({
           // borderWidth: kpiContainerBorderWidth ? `${kpiContainerBorderWidth}px` : '1px',
           // borderStyle: 'solid',
           border: 'none', // Remove default border since wrapper handles it
-          borderRadius: kpiContainerBorderRadius ? `${kpiContainerBorderRadius}px` : undefined,
+          // borderRadius: kpiContainerBorderRadius ? `${kpiContainerBorderRadius}px` : undefined, // Commented for corner accent effect
           padding: kpiContainerPadding ? `${kpiContainerPadding}px` : undefined,
           textAlign: kpiContainerTextAlign || 'left',
           boxShadow: 'none',
