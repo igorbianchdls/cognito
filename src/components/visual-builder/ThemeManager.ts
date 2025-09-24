@@ -394,9 +394,8 @@ export class ThemeManager {
     }
     // Create enhanced shadow for hightech theme
     if (tokens.effects.shadow.color === '#00ffff') {
-      // Hightech theme: Multiple neon glows
-      clonedWidget.lineConfig.styling.containerBoxShadow =
-        `0 8px 32px rgba(0, 255, 255, 0.3), 0 0 0 1px rgba(0, 255, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)`;
+      // Hightech theme: No shadow
+      clonedWidget.lineConfig.styling.containerBoxShadow = 'none';
     } else {
       // Other themes: Standard shadow
       clonedWidget.lineConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
@@ -404,10 +403,9 @@ export class ThemeManager {
 
     // Apply border properties - enhanced for hightech theme
     if (tokens.effects.shadow.color === '#00ffff') {
-      // Hightech theme: Neon cyan border
-      clonedWidget.lineConfig.styling.containerBorderColor = '#00ffff';
-      clonedWidget.lineConfig.styling.containerBorderWidth = tokens.borders.width.thin;
-      clonedWidget.lineConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
+      // Hightech theme: No border
+      clonedWidget.lineConfig.styling.containerBorderWidth = 0;
+      clonedWidget.lineConfig.styling.containerBorderColor = 'transparent';
     } else {
       // Other themes: Standard border
       clonedWidget.lineConfig.styling.containerBorderColor = tokens.colors.border;
