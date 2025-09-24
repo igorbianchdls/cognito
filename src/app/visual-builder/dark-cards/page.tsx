@@ -595,6 +595,40 @@ export default function DarkCardsPage() {
         </div>
       </div>
 
+      {/* Corner Accent Border Test */}
+      <div className="mt-16">
+        <h2 className="text-2xl font-bold text-white mb-6 text-center">Corner Accent Border Test</h2>
+        <p className="text-gray-400 text-center mb-8">Card with gray borders and lighter gray corners</p>
+
+        <div className="flex justify-center max-w-6xl mx-auto">
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-gray-400 text-center">Corner Accent Test</h3>
+            <div
+              className="w-64 h-32 rounded-xl p-6 relative"
+              style={{
+                background: 'linear-gradient(225deg, rgba(255,255,255,0.1), #0a1525)',
+                borderImage: `
+                  linear-gradient(45deg,
+                    #999999 0%, #999999 15%,
+                    #666666 15%, #666666 35%,
+                    #999999 35%, #999999 50%,
+                    #666666 50%, #666666 65%,
+                    #999999 65%, #999999 85%,
+                    #666666 85%, #666666 100%
+                  ) 1
+                `,
+                border: '1px solid transparent'
+              }}
+            >
+              <div className="text-white">
+                <div className="text-sm opacity-70 mb-1">Revenue</div>
+                <div className="text-2xl font-semibold text-blue-400">$2,340</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Comparison Info */}
       <div className="mt-12 max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
