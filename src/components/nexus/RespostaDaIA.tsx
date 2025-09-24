@@ -807,14 +807,10 @@ const getAgentInfo = (agent: string) => {
       return { initial: 'B', title: 'Analista de Campanhas Meta Ads', color: 'bg-blue-800', icon: <MetaIcon className="w-full h-full" /> };
     case 'metaCreativeAnalyst':
       return { initial: 'R', title: 'Analista de Criativos Meta Ads', color: 'bg-pink-500', icon: <MetaIcon className="w-full h-full" /> };
-    case 'inventoryAnalyst':
-      return { initial: 'I', title: 'Especialista em Estoque', color: 'bg-amber-600' };
-    case 'cashFlowAnalyst':
-      return { initial: 'F', title: 'Especialista em Fluxo de Caixa', color: 'bg-emerald-500' };
-    case 'pnlAnalyst':
-      return { initial: 'P', title: 'Especialista em DRE', color: 'bg-yellow-400' };
-    case 'budgetPlanningAnalyst':
-      return { initial: 'U', title: 'Especialista em Planejamento Orçamentário', color: 'bg-violet-600' };
+    case 'performanceAgent':
+      return { initial: 'P', title: 'Especialista em Performance', color: 'bg-emerald-500' };
+    case 'productAgent':
+      return { initial: 'D', title: 'Especialista em Produtos', color: 'bg-cyan-500' };
     default:
       return { initial: 'A', title: 'AI Assistant', color: 'bg-gray-500' };
   }
