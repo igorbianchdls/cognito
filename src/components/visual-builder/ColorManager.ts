@@ -158,21 +158,6 @@ const THEME_COLOR_PALETTES: Record<string, CorporateColorPalette> = {
       pie: { border: '#15803D', arcLabel: '#FFFFFF', arcLinkLabel: '#22C55E' }
     }
   },
-  burgundy: {
-    name: 'Burgundy Theme',
-    description: 'Sophisticated wine red palette',
-    primary: '#991B1B',
-    secondary: '#EF4444',
-    tertiary: '#B91C1C',
-    quaternary: '#7F1D1D',
-    pieSlices: ['#991B1B', '#B91C1C', '#7F1D1D', '#450A0A', '#EF4444', '#F87171'],
-    chartElements: {
-      bar: { fill: '#991B1B', border: '#B91C1C', label: '#FFFFFF' },
-      line: { stroke: '#991B1B', point: '#EF4444', pointBorder: '#B91C1C', pointLabel: '#FFFFFF' },
-      area: { fill: '#991B1B', stroke: '#B91C1C', point: '#EF4444', pointBorder: '#7F1D1D', pointLabel: '#FFFFFF' },
-      pie: { border: '#B91C1C', arcLabel: '#FFFFFF', arcLinkLabel: '#EF4444' }
-    }
-  },
   platinum: {
     name: 'Platinum Theme',
     description: 'Elegant silver platinum palette',
@@ -190,7 +175,7 @@ const THEME_COLOR_PALETTES: Record<string, CorporateColorPalette> = {
   }
 };
 
-export type ColorPresetKey = 'light' | 'dark' | 'blue' | 'green' | 'corporate' | 'navy' | 'slate' | 'forest' | 'burgundy' | 'platinum';
+export type ColorPresetKey = 'light' | 'dark' | 'blue' | 'green' | 'corporate' | 'navy' | 'slate' | 'forest' | 'platinum';
 
 export interface ColorPreview {
   key: ColorPresetKey;

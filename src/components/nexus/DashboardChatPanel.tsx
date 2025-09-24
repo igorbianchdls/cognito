@@ -296,7 +296,7 @@ export default function DashboardChatPanel() {
               <div className="px-2 py-1 text-xs font-medium text-muted-foreground">
                 Business
               </div>
-              {(['navy', 'slate', 'hightech', 'burgundy', 'platinum'] as ThemeName[]).map((theme) => {
+              {(['navy', 'slate', 'hightech', 'platinum'] as ThemeName[]).map((theme) => {
                 const preview = ThemeManager.getThemePreview(theme);
                 return (
                   <DropdownMenuItem

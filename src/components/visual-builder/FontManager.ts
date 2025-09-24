@@ -131,7 +131,6 @@ const THEME_FONT_MAPPING: Record<string, string> = {
   navy: 'segoe',
   slate: 'montserrat',
   forest: 'playfair',
-  burgundy: 'georgia',
   platinum: 'merriweather'
 };
 

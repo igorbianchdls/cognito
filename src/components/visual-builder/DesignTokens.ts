@@ -1206,93 +1206,6 @@ export const HIGHTECH_TOKENS: DesignTokens = {
   }
 };
 
-// Burgundy Theme Tokens - Vermelho Vinho Sofisticado
-export const BURGUNDY_TOKENS: DesignTokens = {
-  ...DARK_TOKENS,
-  colors: {
-    ...DARK_TOKENS.colors,
-    surface: '#7f1d1d',
-    surfaceElevated: '#991b1b',
-    primary: '#dc2626',
-    secondary: '#ef4444',
-    accent: '#f87171',
-    border: '#991b1b',
-    borderHover: '#dc2626',
-    borderFocus: '#ef4444',
-    text: {
-      primary: '#fef2f2',
-      secondary: '#fee2e2',
-      muted: '#fecaca',
-      inverse: '#450a0a'
-    },
-    semantic: {
-      success: '#22c55e',
-      warning: '#eab308',
-      error: '#ef4444',
-      info: '#3b82f6'
-    },
-    chart: {
-      primary: '#dc2626',
-      secondary: '#ef4444',
-      tertiary: '#f87171',
-      quaternary: '#fca5a5',
-      grid: '#991b1b',
-      axis: '#ef4444'
-    },
-    chartElements: {
-      bar: {
-        fill: '#dc2626',
-        border: '#991b1b',
-        label: '#fef2f2'
-      },
-      line: {
-        stroke: '#ef4444',
-        point: '#f87171',
-        pointBorder: '#dc2626',
-        pointLabel: '#fee2e2'
-      },
-      area: {
-        fill: '#991b1b',
-        stroke: '#dc2626',
-        point: '#ef4444',
-        pointBorder: '#7f1d1d',
-        pointLabel: '#fef2f2'
-      },
-      pie: {
-        border: '#991b1b',
-        arcLabel: '#fef2f2',
-        arcLinkLabel: '#fee2e2'
-      }
-    },
-    grid: {
-      border: '#991b1b'
-    }
-  },
-
-  spacing: DARK_TOKENS.spacing,
-  shadows: DARK_TOKENS.shadows,
-  borders: DARK_TOKENS.borders,
-
-  typography: TYPOGRAPHY_PRESETS.playfair,
-
-  effects: {
-    opacity: {
-      transparent: 0,
-      subtle: 1.0,
-      medium: 1.0,
-      strong: 1.0,
-      opaque: 1
-    },
-    // gradient and backdrop will come from BackgroundManager
-    shadow: {
-      color: '#dc2626',
-      opacity: 0.45,
-      blur: 24,
-      offsetX: -4,
-      offsetY: 14
-    }
-  }
-};
 
 // Platinum Theme Tokens - Prata Elegante
 export const PLATINUM_TOKENS: DesignTokens = {
@@ -1387,7 +1300,6 @@ export const THEME_TOKENS = {
   slate: SLATE_TOKENS,
   forest: FOREST_TOKENS,
   hightech: HIGHTECH_TOKENS,
-  burgundy: BURGUNDY_TOKENS,
   platinum: PLATINUM_TOKENS
 } as const;
 
@@ -1407,6 +1319,5 @@ export const THEME_BACKGROUND_MAPPING: Record<ThemeTokenName, BackgroundPresetKe
   slate: 'glassDark',
   forest: 'greenGradient',
   hightech: 'hightech',
-  burgundy: 'sunsetGradient',
   platinum: 'glassLight'
 } as const;
