@@ -1,12 +1,20 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { Experimental_Agent as Agent, stepCountIs } from 'ai';
+import { convertToModelMessages, streamText } from 'ai';
 import * as visualizationTools from '@/tools/apps/visualization';
 
 export const maxDuration = 300;
 
-const productAgent = new Agent({
-  model: anthropic('claude-sonnet-4-20250514'),
-  system: `Você é especialista em análise de produtos de lojas.
+export async function POST(req: Request) {
+  console.log('📦 PRODUCT AGENT: Request recebido!');
+
+  try {
+    const body = await req.json();
+    const { messages } = body;
+    console.log('📦 PRODUCT AGENT: Messages:', messages?.length);
+
+    const result = streamText({
+      model: anthropic('claude-sonnet-4-20250514'),
+      system: `Você é especialista em análise de produtos de lojas.
 
 Sua especialidade é analisar:
 - Produtos mais vendidos
@@ -15,28 +23,10 @@ Sua especialidade é analisar:
 - Análise de inventário
 
 Use gerarGrafico para criar visualizações claras dos dados de produtos.`,
-  stopWhen: stepCountIs(3),
-  tools: {
-    gerarGrafico: visualizationTools.gerarGrafico
-  }
-});
-
-export async function POST(req: Request) {
-  console.log('📦 PRODUCT AGENT: Request recebido!');
-
-  try {
-    const body = await req.json();
-    console.log('📦 PRODUCT AGENT: Body:', body);
-
-    const { messages } = body;
-    console.log('📦 PRODUCT AGENT: Messages:', messages?.length);
-
-    if (!messages || messages.length === 0) {
-      return new Response('No messages provided', { status: 400 });
-    }
-
-    const result = productAgent.stream({
-      prompt: messages[messages.length - 1].content
+      messages: convertToModelMessages(messages),
+      tools: {
+        gerarGrafico: visualizationTools.gerarGrafico
+      }
     });
 
     console.log('📦 PRODUCT AGENT: Retornando response...');
