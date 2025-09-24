@@ -237,7 +237,7 @@ export function LineChart({
     // Direct CSS props - simple and predictable
     opacity: containerOpacity !== undefined ? containerOpacity : backgroundOpacity,
     backdropFilter: containerBackdropFilter || (backdropFilter?.enabled ? `blur(${backdropFilter.blur}px)` : undefined),
-    boxShadow: containerBoxShadow,
+    // boxShadow: containerBoxShadow, // Commented out
   }
 
   // Debug log
@@ -266,10 +266,10 @@ export function LineChart({
           ...containerStyles,
           padding: `${containerPadding || 16}px`,
           margin: '0 auto',
-          border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb',
+          // border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb', // Commented out
           borderRadius: containerBorderRadius ? `${containerBorderRadius}px` : undefined,
           // Fallback shadow if containerBoxShadow not provided
-          boxShadow: containerBoxShadow || boxShadow,
+          // boxShadow: containerBoxShadow || boxShadow, // Commented out
         })
       }}
     >
