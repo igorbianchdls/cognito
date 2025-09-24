@@ -9,16 +9,16 @@ export default function DarkCardsPage() {
     }}>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Inner Glow + Gradient - 9 Color Variations</h1>
-        <p className="text-gray-400">Same inner glow technique with 9 different gradient color combinations</p>
+        <h1 className="text-3xl font-bold text-white mb-2">All Blue Gradients - 9 Variations</h1>
+        <p className="text-gray-400">Different blue gradient combinations with inner glow effects</p>
       </div>
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
 
-        {/* Card 1 - Inner Glow + Gradient Azul */}
+        {/* Card 1 - Navy Blue */}
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-gray-400 text-center">Blue Inner Glow</h3>
+          <h3 className="text-sm font-medium text-gray-400 text-center">Navy Blue</h3>
           <KPICard
             name="Receita Total"
             currentValue={847000}
@@ -26,9 +26,9 @@ export default function DarkCardsPage() {
             backgroundGradient={{
               enabled: true,
               type: 'linear',
-              direction: '135deg',
-              startColor: '#1a1a2e',
-              endColor: '#16213e'
+              direction: '45deg',
+              startColor: 'rgba(255,255,255,0.1)',
+              endColor: '#1a1a2e'
             }}
             kpiContainerBorderColor="rgba(96, 165, 250, 0.3)"
             kpiContainerBorderWidth={1}
@@ -48,30 +48,30 @@ export default function DarkCardsPage() {
           />
         </div>
 
-        {/* Card 2 - Inner Glow + Gradient Verde */}
+        {/* Card 2 - Royal Blue */}
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-gray-400 text-center">Green Inner Glow</h3>
+          <h3 className="text-sm font-medium text-gray-400 text-center">Royal Blue</h3>
           <KPICard
             name="Vendas Mensais"
             currentValue={1250}
             backgroundGradient={{
               enabled: true,
               type: 'linear',
-              direction: '135deg',
-              startColor: '#1a2e1a',
-              endColor: '#162e21'
+              direction: '45deg',
+              startColor: 'rgba(255,255,255,0.15)',
+              endColor: '#1e3a8a'
             }}
-            kpiContainerBorderColor="rgba(74, 222, 128, 0.3)"
+            kpiContainerBorderColor="rgba(59, 130, 246, 0.3)"
             kpiContainerBorderWidth={1}
             kpiContainerBorderRadius={12}
             kpiContainerPadding={24}
-            containerShadowColor="rgba(74, 222, 128, 0.2)"
+            containerShadowColor="rgba(59, 130, 246, 0.2)"
             containerShadowOpacity={0.8}
             containerShadowBlur={8}
             containerShadowOffsetX={0}
             containerShadowOffsetY={2}
             kpiNameColor="rgba(255, 255, 255, 0.7)"
-            kpiValueColor="#4ade80"
+            kpiValueColor="#3b82f6"
             kpiValueFontSize={28}
             kpiValueFontWeight={600}
             kpiNameFontSize={14}
@@ -79,9 +79,9 @@ export default function DarkCardsPage() {
           />
         </div>
 
-        {/* Card 3 - Inner Glow + Gradient Roxo */}
+        {/* Card 3 - Steel Blue */}
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-gray-400 text-center">Purple Inner Glow</h3>
+          <h3 className="text-sm font-medium text-gray-400 text-center">Steel Blue</h3>
           <KPICard
             name="ROI Mensal"
             currentValue={34.2}
@@ -89,21 +89,21 @@ export default function DarkCardsPage() {
             backgroundGradient={{
               enabled: true,
               type: 'linear',
-              direction: '135deg',
-              startColor: '#2e1a2e',
-              endColor: '#3e1632'
+              direction: '45deg',
+              startColor: 'rgba(255,255,255,0.1)',
+              endColor: '#334155'
             }}
-            kpiContainerBorderColor="rgba(168, 85, 247, 0.3)"
+            kpiContainerBorderColor="rgba(148, 163, 184, 0.3)"
             kpiContainerBorderWidth={1}
             kpiContainerBorderRadius={12}
             kpiContainerPadding={24}
-            containerShadowColor="rgba(168, 85, 247, 0.2)"
+            containerShadowColor="rgba(148, 163, 184, 0.2)"
             containerShadowOpacity={0.8}
             containerShadowBlur={8}
             containerShadowOffsetX={0}
             containerShadowOffsetY={2}
             kpiNameColor="rgba(255, 255, 255, 0.7)"
-            kpiValueColor="#a855f7"
+            kpiValueColor="#94a3b8"
             kpiValueFontSize={28}
             kpiValueFontWeight={600}
             kpiNameFontSize={14}
@@ -111,35 +111,30 @@ export default function DarkCardsPage() {
           />
         </div>
 
-      </div>
-
-      {/* Second Row - More Variations */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto mt-8">
-
-        {/* Card 4 - Inner Glow + Gradient Laranja */}
+        {/* Card 4 - Ocean Blue */}
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-gray-400 text-center">Orange Inner Glow</h3>
+          <h3 className="text-sm font-medium text-gray-400 text-center">Ocean Blue</h3>
           <KPICard
             name="Leads Qualificados"
             currentValue={156}
             backgroundGradient={{
               enabled: true,
               type: 'linear',
-              direction: '135deg',
-              startColor: '#2e261a',
-              endColor: '#3e2e16'
+              direction: '45deg',
+              startColor: 'rgba(255,255,255,0.12)',
+              endColor: '#1e40af'
             }}
-            kpiContainerBorderColor="rgba(249, 115, 22, 0.3)"
+            kpiContainerBorderColor="rgba(37, 99, 235, 0.3)"
             kpiContainerBorderWidth={1}
             kpiContainerBorderRadius={12}
             kpiContainerPadding={24}
-            containerShadowColor="rgba(249, 115, 22, 0.2)"
+            containerShadowColor="rgba(37, 99, 235, 0.2)"
             containerShadowOpacity={0.8}
             containerShadowBlur={8}
             containerShadowOffsetX={0}
             containerShadowOffsetY={2}
             kpiNameColor="rgba(255, 255, 255, 0.7)"
-            kpiValueColor="#f97316"
+            kpiValueColor="#2563eb"
             kpiValueFontSize={28}
             kpiValueFontWeight={600}
             kpiNameFontSize={14}
@@ -147,30 +142,30 @@ export default function DarkCardsPage() {
           />
         </div>
 
-        {/* Card 5 - Inner Glow + Gradient Cyan */}
+        {/* Card 5 - Sky Blue */}
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-gray-400 text-center">Cyan Inner Glow</h3>
+          <h3 className="text-sm font-medium text-gray-400 text-center">Sky Blue</h3>
           <KPICard
             name="NPS Score"
             currentValue={8.7}
             backgroundGradient={{
               enabled: true,
               type: 'linear',
-              direction: '135deg',
-              startColor: '#1a2e2e',
-              endColor: '#16332e'
+              direction: '45deg',
+              startColor: 'rgba(255,255,255,0.1)',
+              endColor: '#0c4a6e'
             }}
-            kpiContainerBorderColor="rgba(6, 182, 212, 0.3)"
+            kpiContainerBorderColor="rgba(14, 165, 233, 0.3)"
             kpiContainerBorderWidth={1}
             kpiContainerBorderRadius={12}
             kpiContainerPadding={24}
-            containerShadowColor="rgba(6, 182, 212, 0.2)"
+            containerShadowColor="rgba(14, 165, 233, 0.2)"
             containerShadowOpacity={0.8}
             containerShadowBlur={8}
             containerShadowOffsetX={0}
             containerShadowOffsetY={2}
             kpiNameColor="rgba(255, 255, 255, 0.7)"
-            kpiValueColor="#06b6d4"
+            kpiValueColor="#0ea5e9"
             kpiValueFontSize={28}
             kpiValueFontWeight={600}
             kpiNameFontSize={14}
@@ -178,9 +173,9 @@ export default function DarkCardsPage() {
           />
         </div>
 
-        {/* Card 6 - Inner Glow + Gradient Pink */}
+        {/* Card 6 - Midnight Blue */}
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-gray-400 text-center">Pink Inner Glow</h3>
+          <h3 className="text-sm font-medium text-gray-400 text-center">Midnight Blue</h3>
           <KPICard
             name="Ticket Médio"
             currentValue={450}
@@ -188,21 +183,21 @@ export default function DarkCardsPage() {
             backgroundGradient={{
               enabled: true,
               type: 'linear',
-              direction: '135deg',
-              startColor: '#2e1a26',
-              endColor: '#3e1630'
+              direction: '45deg',
+              startColor: 'rgba(255,255,255,0.08)',
+              endColor: '#0f172a'
             }}
-            kpiContainerBorderColor="rgba(236, 72, 153, 0.3)"
+            kpiContainerBorderColor="rgba(71, 85, 105, 0.3)"
             kpiContainerBorderWidth={1}
             kpiContainerBorderRadius={12}
             kpiContainerPadding={24}
-            containerShadowColor="rgba(236, 72, 153, 0.2)"
+            containerShadowColor="rgba(71, 85, 105, 0.2)"
             containerShadowOpacity={0.8}
             containerShadowBlur={8}
             containerShadowOffsetX={0}
             containerShadowOffsetY={2}
             kpiNameColor="rgba(255, 255, 255, 0.7)"
-            kpiValueColor="#ec4899"
+            kpiValueColor="#475569"
             kpiValueFontSize={28}
             kpiValueFontWeight={600}
             kpiNameFontSize={14}
@@ -210,14 +205,9 @@ export default function DarkCardsPage() {
           />
         </div>
 
-      </div>
-
-      {/* Third Row - Additional Variations */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto mt-8">
-
-        {/* Card 7 - Inner Glow + Gradient Vermelho */}
+        {/* Card 7 - Indigo Blue */}
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-gray-400 text-center">Red Inner Glow</h3>
+          <h3 className="text-sm font-medium text-gray-400 text-center">Indigo Blue</h3>
           <KPICard
             name="Taxa Conversão"
             currentValue={12.8}
@@ -225,73 +215,9 @@ export default function DarkCardsPage() {
             backgroundGradient={{
               enabled: true,
               type: 'linear',
-              direction: '135deg',
-              startColor: '#2e1a1a',
-              endColor: '#3e1616'
-            }}
-            kpiContainerBorderColor="rgba(248, 113, 113, 0.3)"
-            kpiContainerBorderWidth={1}
-            kpiContainerBorderRadius={12}
-            kpiContainerPadding={24}
-            containerShadowColor="rgba(248, 113, 113, 0.2)"
-            containerShadowOpacity={0.8}
-            containerShadowBlur={8}
-            containerShadowOffsetX={0}
-            containerShadowOffsetY={2}
-            kpiNameColor="rgba(255, 255, 255, 0.7)"
-            kpiValueColor="#f87171"
-            kpiValueFontSize={28}
-            kpiValueFontWeight={600}
-            kpiNameFontSize={14}
-            success={true}
-          />
-        </div>
-
-        {/* Card 8 - Inner Glow + Gradient Amarelo */}
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium text-gray-400 text-center">Yellow Inner Glow</h3>
-          <KPICard
-            name="CAC Médio"
-            currentValue={89}
-            unit="R$"
-            backgroundGradient={{
-              enabled: true,
-              type: 'linear',
-              direction: '135deg',
-              startColor: '#2e2a1a',
-              endColor: '#3e3216'
-            }}
-            kpiContainerBorderColor="rgba(234, 179, 8, 0.3)"
-            kpiContainerBorderWidth={1}
-            kpiContainerBorderRadius={12}
-            kpiContainerPadding={24}
-            containerShadowColor="rgba(234, 179, 8, 0.2)"
-            containerShadowOpacity={0.8}
-            containerShadowBlur={8}
-            containerShadowOffsetX={0}
-            containerShadowOffsetY={2}
-            kpiNameColor="rgba(255, 255, 255, 0.7)"
-            kpiValueColor="#eab308"
-            kpiValueFontSize={28}
-            kpiValueFontWeight={600}
-            kpiNameFontSize={14}
-            success={true}
-          />
-        </div>
-
-        {/* Card 9 - Inner Glow + Gradient Indigo */}
-        <div className="space-y-2">
-          <h3 className="text-sm font-medium text-gray-400 text-center">Indigo Inner Glow</h3>
-          <KPICard
-            name="LTV Médio"
-            currentValue={2340}
-            unit="R$"
-            backgroundGradient={{
-              enabled: true,
-              type: 'linear',
-              direction: '135deg',
-              startColor: '#1e1a2e',
-              endColor: '#251632'
+              direction: '45deg',
+              startColor: 'rgba(255,255,255,0.15)',
+              endColor: '#312e81'
             }}
             kpiContainerBorderColor="rgba(99, 102, 241, 0.3)"
             kpiContainerBorderWidth={1}
@@ -311,37 +237,101 @@ export default function DarkCardsPage() {
           />
         </div>
 
+        {/* Card 8 - Electric Blue */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium text-gray-400 text-center">Electric Blue</h3>
+          <KPICard
+            name="CAC Médio"
+            currentValue={89}
+            unit="R$"
+            backgroundGradient={{
+              enabled: true,
+              type: 'linear',
+              direction: '45deg',
+              startColor: 'rgba(255,255,255,0.2)',
+              endColor: '#1e3a8a'
+            }}
+            kpiContainerBorderColor="rgba(37, 99, 235, 0.4)"
+            kpiContainerBorderWidth={2}
+            kpiContainerBorderRadius={12}
+            kpiContainerPadding={24}
+            containerShadowColor="rgba(37, 99, 235, 0.3)"
+            containerShadowOpacity={0.9}
+            containerShadowBlur={12}
+            containerShadowOffsetX={0}
+            containerShadowOffsetY={0}
+            kpiNameColor="rgba(255, 255, 255, 0.7)"
+            kpiValueColor="#2563eb"
+            kpiValueFontSize={28}
+            kpiValueFontWeight={600}
+            kpiNameFontSize={14}
+            success={true}
+          />
+        </div>
+
+        {/* Card 9 - Deep Blue */}
+        <div className="space-y-2">
+          <h3 className="text-sm font-medium text-gray-400 text-center">Deep Blue</h3>
+          <KPICard
+            name="LTV Médio"
+            currentValue={2340}
+            unit="R$"
+            backgroundGradient={{
+              enabled: true,
+              type: 'linear',
+              direction: '45deg',
+              startColor: 'rgba(255,255,255,0.1)',
+              endColor: '#0a1525'
+            }}
+            kpiContainerBorderColor="rgba(59, 130, 246, 0.3)"
+            kpiContainerBorderWidth={1}
+            kpiContainerBorderRadius={12}
+            kpiContainerPadding={24}
+            containerShadowColor="rgba(59, 130, 246, 0.2)"
+            containerShadowOpacity={0.8}
+            containerShadowBlur={8}
+            containerShadowOffsetX={0}
+            containerShadowOffsetY={2}
+            kpiNameColor="rgba(255, 255, 255, 0.7)"
+            kpiValueColor="#3b82f6"
+            kpiValueFontSize={28}
+            kpiValueFontWeight={600}
+            kpiNameFontSize={14}
+            success={true}
+          />
+        </div>
+
       </div>
 
       {/* Comparison Info */}
       <div className="mt-12 max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 gap-4 text-center">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
           <div className="p-4 bg-gray-800/30 rounded-lg">
-            <h4 className="font-semibold text-white mb-2">Row 1: Cool Colors</h4>
+            <h4 className="font-semibold text-white mb-2">Row 1: Classic Blues</h4>
             <div className="flex justify-center gap-2 mb-2">
-              <div className="w-4 h-4 rounded bg-blue-400"></div>
-              <div className="w-4 h-4 rounded bg-green-400"></div>
-              <div className="w-4 h-4 rounded bg-purple-400"></div>
+              <div className="w-4 h-4 rounded" style={{backgroundColor: '#60a5fa'}}></div>
+              <div className="w-4 h-4 rounded" style={{backgroundColor: '#3b82f6'}}></div>
+              <div className="w-4 h-4 rounded" style={{backgroundColor: '#94a3b8'}}></div>
             </div>
-            <p className="text-gray-500 text-xs">Blue, Green, Purple - Professional & trustworthy</p>
+            <p className="text-gray-500 text-xs">Navy, Royal, Steel - Traditional professional blues</p>
           </div>
           <div className="p-4 bg-gray-800/30 rounded-lg">
-            <h4 className="font-semibold text-white mb-2">Row 2: Vibrant Colors</h4>
+            <h4 className="font-semibold text-white mb-2">Row 2: Bright Blues</h4>
             <div className="flex justify-center gap-2 mb-2">
-              <div className="w-4 h-4 rounded bg-orange-400"></div>
-              <div className="w-4 h-4 rounded bg-cyan-400"></div>
-              <div className="w-4 h-4 rounded bg-pink-400"></div>
+              <div className="w-4 h-4 rounded" style={{backgroundColor: '#2563eb'}}></div>
+              <div className="w-4 h-4 rounded" style={{backgroundColor: '#0ea5e9'}}></div>
+              <div className="w-4 h-4 rounded" style={{backgroundColor: '#475569'}}></div>
             </div>
-            <p className="text-gray-500 text-xs">Orange, Cyan, Pink - Energetic & modern</p>
+            <p className="text-gray-500 text-xs">Ocean, Sky, Midnight - Vibrant corporate blues</p>
           </div>
           <div className="p-4 bg-gray-800/30 rounded-lg">
-            <h4 className="font-semibold text-white mb-2">Row 3: Bold Colors</h4>
+            <h4 className="font-semibold text-white mb-2">Row 3: Deep Blues</h4>
             <div className="flex justify-center gap-2 mb-2">
-              <div className="w-4 h-4 rounded bg-red-400"></div>
-              <div className="w-4 h-4 rounded bg-yellow-400"></div>
-              <div className="w-4 h-4 rounded bg-indigo-400"></div>
+              <div className="w-4 h-4 rounded" style={{backgroundColor: '#6366f1'}}></div>
+              <div className="w-4 h-4 rounded" style={{backgroundColor: '#2563eb'}}></div>
+              <div className="w-4 h-4 rounded" style={{backgroundColor: '#3b82f6'}}></div>
             </div>
-            <p className="text-gray-500 text-xs">Red, Yellow, Indigo - Bold & attention-grabbing</p>
+            <p className="text-gray-500 text-xs">Indigo, Electric, Deep - Rich and sophisticated</p>
           </div>
         </div>
       </div>
@@ -349,7 +339,7 @@ export default function DarkCardsPage() {
       {/* Footer */}
       <div className="mt-8 text-center">
         <p className="text-gray-500 text-sm">
-          Inner Glow + Gradient combination: subtle inner shadow + matching gradient background + colored border
+          All blue gradient variations with inner glow - perfect for consistent yet varied professional dashboards
         </p>
       </div>
     </div>
