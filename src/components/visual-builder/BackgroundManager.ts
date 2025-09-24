@@ -90,14 +90,16 @@ const BACKGROUND_PRESETS: Record<string, BackgroundPreset> = {
 
   // Glass Effects
   glassLight: {
-    type: 'glass',
-    name: 'Glass Light',
-    description: 'Light glass with blur',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    backgroundGradient: { enabled: false },
-    backdropFilter: {
+    type: 'gradient',
+    name: 'Platinum Deep',
+    description: 'Platinum Deep gradient with subtle glass effect',
+    backgroundColor: '#18181b',
+    backgroundGradient: {
       enabled: true,
-      blur: 10
+      type: 'linear',
+      direction: '225deg',
+      startColor: 'rgba(255,255,255,0.06)',
+      endColor: '#18181b'
     }
   },
   glassDark: {
