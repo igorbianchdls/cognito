@@ -226,6 +226,7 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
             legends={widget.barConfig?.legends}
             // Container Glass Effect & Modern Styles - DIRECT PROPS
             containerBackground={widget.barConfig?.styling?.containerBackground}
+            backgroundGradient={widget.barConfig?.styling?.backgroundGradient}
             containerOpacity={widget.barConfig?.styling?.containerOpacity}
             containerBackdropFilter={widget.barConfig?.styling?.containerBackdropFilter}
             containerFilter={widget.barConfig?.styling?.containerFilter}
@@ -286,6 +287,7 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
             legends={widget.lineConfig?.legends}
             // Container Glass Effect & Modern Styles - DIRECT PROPS
             containerBackground={widget.lineConfig?.styling?.containerBackground}
+            backgroundGradient={widget.lineConfig?.styling?.backgroundGradient}
             containerOpacity={widget.lineConfig?.styling?.containerOpacity}
             containerBackdropFilter={widget.lineConfig?.styling?.containerBackdropFilter}
             containerBoxShadow={widget.lineConfig?.styling?.containerBoxShadow}
@@ -315,6 +317,7 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
             legends={widget.pieConfig?.legends}
             // Container Glass Effect & Modern Styles - DIRECT PROPS
             containerBackground={widget.pieConfig?.styling?.containerBackground}
+            backgroundGradient={widget.pieConfig?.styling?.backgroundGradient}
             containerOpacity={widget.pieConfig?.styling?.containerOpacity}
             containerBackdropFilter={widget.pieConfig?.styling?.containerBackdropFilter}
             containerBoxShadow={widget.pieConfig?.styling?.containerBoxShadow}
@@ -341,6 +344,7 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
             legends={widget.areaConfig?.legends}
             // Container Glass Effect & Modern Styles - DIRECT PROPS
             containerBackground={widget.areaConfig?.styling?.containerBackground}
+            backgroundGradient={widget.areaConfig?.styling?.backgroundGradient}
             containerOpacity={widget.areaConfig?.styling?.containerOpacity}
             containerBackdropFilter={widget.areaConfig?.styling?.containerBackdropFilter}
             containerBoxShadow={widget.areaConfig?.styling?.containerBoxShadow}
