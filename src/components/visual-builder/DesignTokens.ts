@@ -1183,7 +1183,7 @@ export const THEME_BACKGROUND_MAPPING: Record<ThemeTokenName, BackgroundPresetKe
   corporate: 'corporate',
   navy: 'navy',
   slate: 'glassDark',
-  forest: 'greenGradient',
+  forest: 'charcoal',
   hightech: 'hightech',
   platinum: 'glassLight'
 } as const;

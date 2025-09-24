@@ -58,13 +58,6 @@ const BACKGROUND_PRESETS: Record<string, BackgroundPreset> = {
     backgroundColor: '#000000',
     backgroundGradient: { enabled: false }
   },
-  lightGray: {
-    type: 'solid',
-    name: 'Light Gray',
-    description: 'Subtle gray background',
-    backgroundColor: '#f8f9fa',
-    backgroundGradient: { enabled: false }
-  },
   darkGray: {
     type: 'solid',
     name: 'Dark Gray',
@@ -88,45 +81,6 @@ const BACKGROUND_PRESETS: Record<string, BackgroundPreset> = {
   },
 
   // Gradients
-  blueGradient: {
-    type: 'gradient',
-    name: 'Blue Gradient',
-    description: 'Blue to purple gradient',
-    backgroundColor: '#667eea',
-    backgroundGradient: {
-      enabled: true,
-      type: 'linear',
-      direction: '135deg',
-      startColor: '#667eea',
-      endColor: '#764ba2'
-    }
-  },
-  greenGradient: {
-    type: 'gradient',
-    name: 'Green Gradient',
-    description: 'Teal to blue gradient',
-    backgroundColor: '#11998e',
-    backgroundGradient: {
-      enabled: true,
-      type: 'linear',
-      direction: '135deg',
-      startColor: '#11998e',
-      endColor: '#38ef7d'
-    }
-  },
-  sunsetGradient: {
-    type: 'gradient',
-    name: 'Sunset Gradient',
-    description: 'Orange to pink gradient',
-    backgroundColor: '#ff9a9e',
-    backgroundGradient: {
-      enabled: true,
-      type: 'linear',
-      direction: '135deg',
-      startColor: '#ff9a9e',
-      endColor: '#fecfef'
-    }
-  },
   darkGradient: {
     type: 'gradient',
     name: 'Dark Gradient',
