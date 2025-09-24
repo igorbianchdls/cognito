@@ -302,20 +302,67 @@ export function KPICard({
 
 
   return (
-    <Card
-      className={kpiContainerClassName || "@container/card h-full w-full p-0"}
-      style={kpiContainerClassName ? {} : {
-        background: getAdvancedBackground(),
-        backdropFilter: getBackdropFilter(),
-        borderColor: kpiContainerBorderColor ? hexToRgba(kpiContainerBorderColor, kpiContainerBorderOpacity ?? 1) : '#e5e7eb',
-        borderWidth: kpiContainerBorderWidth ? `${kpiContainerBorderWidth}px` : '1px',
-        borderStyle: 'solid',
+    <div
+      className="relative"
+      style={{
+        border: '0.5px solid #777',
         borderRadius: kpiContainerBorderRadius ? `${kpiContainerBorderRadius}px` : undefined,
-        padding: kpiContainerPadding ? `${kpiContainerPadding}px` : undefined,
-        textAlign: kpiContainerTextAlign || 'left',
-        boxShadow: 'none',
       }}
     >
+      {/* Corner accents - positioned outside to overlay border */}
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          top: '-0.5px',
+          left: '-0.5px',
+          borderTop: '0.5px solid #bbb',
+          borderLeft: '0.5px solid #bbb'
+        }}
+      ></div>
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          top: '-0.5px',
+          right: '-0.5px',
+          borderTop: '0.5px solid #bbb',
+          borderRight: '0.5px solid #bbb'
+        }}
+      ></div>
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          bottom: '-0.5px',
+          left: '-0.5px',
+          borderBottom: '0.5px solid #bbb',
+          borderLeft: '0.5px solid #bbb'
+        }}
+      ></div>
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          bottom: '-0.5px',
+          right: '-0.5px',
+          borderBottom: '0.5px solid #bbb',
+          borderRight: '0.5px solid #bbb'
+        }}
+      ></div>
+
+      <Card
+        className={kpiContainerClassName || "@container/card h-full w-full p-0"}
+        style={kpiContainerClassName ? {} : {
+          background: getAdvancedBackground(),
+          backdropFilter: getBackdropFilter(),
+          // Commented out border props - using corner accent wrapper instead
+          // borderColor: kpiContainerBorderColor ? hexToRgba(kpiContainerBorderColor, kpiContainerBorderOpacity ?? 1) : '#e5e7eb',
+          // borderWidth: kpiContainerBorderWidth ? `${kpiContainerBorderWidth}px` : '1px',
+          // borderStyle: 'solid',
+          border: 'none', // Remove default border since wrapper handles it
+          borderRadius: kpiContainerBorderRadius ? `${kpiContainerBorderRadius}px` : undefined,
+          padding: kpiContainerPadding ? `${kpiContainerPadding}px` : undefined,
+          textAlign: kpiContainerTextAlign || 'left',
+          boxShadow: 'none',
+        }}
+      >
         <CardHeader className="!text-left !items-start">
           <CardDescription
             className={kpiNameClassName || "!text-left !justify-start"}
@@ -361,7 +408,8 @@ export function KPICard({
             {formatValue(currentValue, unit || '')}
           </CardTitle>
         </CardHeader>
-    </Card>
+      </Card>
+    </div>
   );
 }
 
