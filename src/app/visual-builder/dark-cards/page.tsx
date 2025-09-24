@@ -640,7 +640,6 @@ export default function DarkCardsPage() {
                   borderRight: '1px solid #bbb'
                 }}
               ></div>
-            >
               <div className="text-white">
                 <div className="text-sm opacity-70 mb-1">Revenue</div>
                 <div className="text-2xl font-semibold text-blue-400">$2,340</div>
