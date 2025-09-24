@@ -699,6 +699,110 @@ export default function DarkCardsPage() {
         </div>
       </div>
 
+      {/* Platinum Gradient Cards */}
+      <div className="mt-16">
+        <h2 className="text-2xl font-bold text-white mb-8 text-center">Platinum Gradient Cards</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+          {/* Platinum Base Card */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-gray-400 text-center">Platinum Base</h3>
+            <KPICard
+              name="Sales Volume"
+              currentValue={89500}
+              unit="$"
+              backgroundGradient={{
+                enabled: true,
+                type: 'linear',
+                direction: '225deg',
+                startColor: 'rgba(255,255,255,0.08)',
+                endColor: '#27272a'
+              }}
+              kpiContainerBorderColor="rgba(161, 161, 170, 0.3)"
+              kpiContainerBorderWidth={1}
+              kpiContainerBorderRadius={12}
+              kpiContainerPadding={24}
+              containerShadowColor="rgba(39, 39, 42, 0.3)"
+              containerShadowOpacity={0.6}
+              containerShadowBlur={8}
+              containerShadowOffsetX={0}
+              containerShadowOffsetY={2}
+              kpiNameColor="rgba(255, 255, 255, 0.8)"
+              kpiValueColor="#a1a1aa"
+              kpiValueFontSize={28}
+              kpiValueFontWeight={600}
+              kpiNameFontSize={14}
+              success={true}
+            />
+          </div>
+
+          {/* Platinum Deep Card */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-gray-400 text-center">Platinum Deep</h3>
+            <KPICard
+              name="Market Share"
+              currentValue={34.7}
+              unit="%"
+              backgroundGradient={{
+                enabled: true,
+                type: 'linear',
+                direction: '225deg',
+                startColor: 'rgba(255,255,255,0.06)',
+                endColor: '#18181b'
+              }}
+              kpiContainerBorderColor="rgba(161, 161, 170, 0.3)"
+              kpiContainerBorderWidth={1}
+              kpiContainerBorderRadius={12}
+              kpiContainerPadding={24}
+              containerShadowColor="rgba(24, 24, 27, 0.4)"
+              containerShadowOpacity={0.7}
+              containerShadowBlur={8}
+              containerShadowOffsetX={0}
+              containerShadowOffsetY={2}
+              kpiNameColor="rgba(255, 255, 255, 0.8)"
+              kpiValueColor="#d4d4d8"
+              kpiValueFontSize={28}
+              kpiValueFontWeight={600}
+              kpiNameFontSize={14}
+              success={true}
+            />
+          </div>
+
+          {/* Platinum Elevated Card */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-gray-400 text-center">Platinum Elevated</h3>
+            <KPICard
+              name="Growth Rate"
+              currentValue={15.3}
+              unit="%"
+              backgroundGradient={{
+                enabled: true,
+                type: 'linear',
+                direction: '225deg',
+                startColor: 'rgba(255,255,255,0.10)',
+                endColor: '#3f3f46'
+              }}
+              kpiContainerBorderColor="rgba(161, 161, 170, 0.3)"
+              kpiContainerBorderWidth={1}
+              kpiContainerBorderRadius={12}
+              kpiContainerPadding={24}
+              containerShadowColor="rgba(63, 63, 70, 0.3)"
+              containerShadowOpacity={0.6}
+              containerShadowBlur={8}
+              containerShadowOffsetX={0}
+              containerShadowOffsetY={2}
+              kpiNameColor="rgba(255, 255, 255, 0.8)"
+              kpiValueColor="#71717a"
+              kpiValueFontSize={28}
+              kpiValueFontWeight={600}
+              kpiNameFontSize={14}
+              success={true}
+            />
+          </div>
+
+        </div>
+      </div>
+
       {/* Corner Accent Border Test */}
       <div className="mt-16">
         <h2 className="text-2xl font-bold text-white mb-6 text-center">Corner Accent Border Test</h2>
