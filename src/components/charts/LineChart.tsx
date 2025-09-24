@@ -252,9 +252,26 @@ export function LineChart({
 
   return (
     <div
-      className="relative"
+      className={`${containerClassName} relative`}
       style={{
-        border: '0.5px solid #777',
+        // Propriedades essenciais SEMPRE aplicadas
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'stretch',
+        minWidth: 0,
+        // Propriedades condicionais (só quando não há containerClassName)
+        ...(containerClassName ? {} : {
+          ...containerStyles,
+          padding: `${containerPadding || 16}px`,
+          margin: '0 auto',
+          border: '0.5px solid #777', // Corner accent border
+          // border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb', // Commented out
+          // borderRadius: containerBorderRadius ? `${containerBorderRadius}px` : undefined, // Commented for corner accent effect
+          // Fallback shadow if containerBoxShadow not provided
+          // boxShadow: containerBoxShadow || boxShadow, // Commented out
+        })
       }}
     >
       {/* Corner accents - positioned outside to overlay border */}
@@ -295,28 +312,6 @@ export function LineChart({
         }}
       ></div>
 
-      <div
-        className={containerClassName}
-        style={{
-        // Propriedades essenciais SEMPRE aplicadas
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'stretch',
-        minWidth: 0,
-        // Propriedades condicionais (só quando não há containerClassName)
-        ...(containerClassName ? {} : {
-          ...containerStyles,
-          padding: `${containerPadding || 16}px`,
-          margin: '0 auto',
-          // border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb', // Commented out
-          borderRadius: containerBorderRadius ? `${containerBorderRadius}px` : undefined,
-          // Fallback shadow if containerBoxShadow not provided
-          // boxShadow: containerBoxShadow || boxShadow, // Commented out
-        })
-      }}
-    >
       {title && (
         <h3
           className={titleClassName || undefined}
@@ -517,7 +512,6 @@ export function LineChart({
         })()}
           />
         </div>
-      </div>
       </div>
     </div>
   );
