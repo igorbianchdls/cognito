@@ -176,6 +176,45 @@ const BACKGROUND_PRESETS: Record<string, BackgroundPreset> = {
       startColor: '#000000',
       endColor: '#001a2e'
     }
+  },
+  deepblue: {
+    type: 'gradient',
+    name: 'Deep Blue',
+    description: 'Professional deep navy background',
+    backgroundColor: '#0a0f1a',
+    backgroundGradient: {
+      enabled: true,
+      type: 'linear',
+      direction: '135deg',
+      startColor: '#0a0f1a',
+      endColor: '#141b26'
+    }
+  },
+  charcoal: {
+    type: 'gradient',
+    name: 'Charcoal',
+    description: 'Premium dark gray gradient',
+    backgroundColor: '#0e1117',
+    backgroundGradient: {
+      enabled: true,
+      type: 'linear',
+      direction: '135deg',
+      startColor: '#0e1117',
+      endColor: '#1c2128'
+    }
+  },
+  midnight: {
+    type: 'gradient',
+    name: 'Midnight',
+    description: 'Minimalist near-black background',
+    backgroundColor: '#080a0f',
+    backgroundGradient: {
+      enabled: true,
+      type: 'linear',
+      direction: '135deg',
+      startColor: '#080a0f',
+      endColor: '#161b22'
+    }
   }
 };
 
