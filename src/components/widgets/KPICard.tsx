@@ -348,7 +348,7 @@ export function KPICard({
       ></div>
 
       <Card
-        className={kpiContainerClassName || "@container/card h-full w-full p-0"}
+        className={kpiContainerClassName || "@container/card h-full w-full p-0 rounded-none"}
         style={kpiContainerClassName ? {} : {
           background: getAdvancedBackground(),
           backdropFilter: getBackdropFilter(),
