@@ -163,6 +163,19 @@ const BACKGROUND_PRESETS: Record<string, BackgroundPreset> = {
       enabled: true,
       blur: 15
     }
+  },
+  hightech: {
+    type: 'gradient',
+    name: 'High Tech',
+    description: 'Futuristic dark gradient with cyan accents',
+    backgroundColor: '#000000',
+    backgroundGradient: {
+      enabled: true,
+      type: 'linear',
+      direction: '135deg',
+      startColor: '#000000',
+      endColor: '#001a2e'
+    }
   }
 };
 
