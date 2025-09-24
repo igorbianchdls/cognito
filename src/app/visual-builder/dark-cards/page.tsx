@@ -611,31 +611,39 @@ export default function DarkCardsPage() {
                 position: 'relative'
               }}
             >
-              {/* Corner accents */}
+              {/* Corner accents - positioned outside to overlay border */}
               <div
-                className="absolute top-0 left-0 w-4 h-4"
+                className="absolute w-4 h-4"
                 style={{
+                  top: '-1px',
+                  left: '-1px',
                   borderTop: '1px solid #bbb',
                   borderLeft: '1px solid #bbb'
                 }}
               ></div>
               <div
-                className="absolute top-0 right-0 w-4 h-4"
+                className="absolute w-4 h-4"
                 style={{
+                  top: '-1px',
+                  right: '-1px',
                   borderTop: '1px solid #bbb',
                   borderRight: '1px solid #bbb'
                 }}
               ></div>
               <div
-                className="absolute bottom-0 left-0 w-4 h-4"
+                className="absolute w-4 h-4"
                 style={{
+                  bottom: '-1px',
+                  left: '-1px',
                   borderBottom: '1px solid #bbb',
                   borderLeft: '1px solid #bbb'
                 }}
               ></div>
               <div
-                className="absolute bottom-0 right-0 w-4 h-4"
+                className="absolute w-4 h-4"
                 style={{
+                  bottom: '-1px',
+                  right: '-1px',
                   borderBottom: '1px solid #bbb',
                   borderRight: '1px solid #bbb'
                 }}
