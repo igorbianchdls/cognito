@@ -647,71 +647,6 @@ export const LIGHT_TOKENS: DesignTokens = {
   }
 };
 
-// Blue Theme Tokens
-export const BLUE_TOKENS: DesignTokens = {
-  ...DARK_TOKENS,
-  colors: {
-    ...DARK_TOKENS.colors,
-    surface: '#1e293b',
-    surfaceElevated: '#334155',
-    primary: '#60a5fa',
-    accent: '#38bdf8',
-    border: '#475569',
-    text: {
-      primary: '#f1f5f9',
-      secondary: '#cbd5e1',
-      muted: '#94a3b8',
-      inverse: '#0f172a'
-    },
-    chartElements: {
-      bar: {
-        fill: '#3b82f6',
-        border: '#1e40af',
-        label: '#e2e8f0'
-      },
-      line: {
-        stroke: '#60a5fa',
-        point: '#93c5fd',
-        pointBorder: '#1e40af',
-        pointLabel: '#dbeafe'
-      },
-      area: {
-        fill: '#1e40af',
-        stroke: '#3b82f6',
-        point: '#60a5fa',
-        pointBorder: '#1e3a8a',
-        pointLabel: '#e2e8f0'
-      },
-      pie: {
-        border: '#475569',
-        arcLabel: '#f1f5f9',
-        arcLinkLabel: '#cbd5e1'
-      }
-    },
-    grid: {
-      border: '#475569'
-    }
-  },
-  typography: TYPOGRAPHY_PRESETS.roboto,
-
-  effects: {
-    opacity: {
-      transparent: 0,
-      subtle: 1.0,
-      medium: 1.0,
-      strong: 1.0,
-      opaque: 1
-    },
-    // gradient and backdrop will come from BackgroundManager
-    shadow: {
-      color: '#1e40af',
-      opacity: 0.3,
-      blur: 20,
-      offsetX: 0,
-      offsetY: 6
-    }
-  }
-};
 
 
 // Corporate Theme Tokens
@@ -1228,7 +1163,6 @@ export const PLATINUM_TOKENS: DesignTokens = {
 export const THEME_TOKENS = {
   light: LIGHT_TOKENS,
   dark: DARK_TOKENS,
-  blue: BLUE_TOKENS,
   corporate: CORPORATE_TOKENS,
   navy: NAVY_TOKENS,
   slate: SLATE_TOKENS,
@@ -1246,7 +1180,6 @@ import type { BackgroundPresetKey } from './BackgroundManager';
 export const THEME_BACKGROUND_MAPPING: Record<ThemeTokenName, BackgroundPresetKey> = {
   light: 'light',
   dark: 'darkGradient',
-  blue: 'blueGradient',
   corporate: 'corporate',
   navy: 'navy',
   slate: 'glassDark',

@@ -732,7 +732,6 @@ export class ThemeManager {
     const previews = {
       light: { name: 'Light', description: 'Clean white background with dark text' },
       dark: { name: 'Dark', description: 'Modern dark theme with enhanced contrast' },
-      blue: { name: 'Blue', description: 'Professional blue ocean theme' },
       corporate: { name: 'Corporate', description: 'Professional business gray theme' },
       navy: { name: 'Navy', description: 'Executive navy blue for C-level presentations' },
       slate: { name: 'Slate', description: 'Premium gray for financial analytics' },

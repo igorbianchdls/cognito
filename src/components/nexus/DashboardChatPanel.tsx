@@ -263,7 +263,7 @@ export default function DashboardChatPanel() {
               <div className="px-2 py-1 text-xs font-medium text-muted-foreground">
                 Classic
               </div>
-              {(['light', 'dark', 'blue', 'corporate'] as ThemeName[]).map((theme) => {
+              {(['light', 'dark', 'corporate'] as ThemeName[]).map((theme) => {
                 const preview = ThemeManager.getThemePreview(theme);
                 return (
                   <DropdownMenuItem

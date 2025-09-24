@@ -125,7 +125,6 @@ const FONT_PRESETS: Record<string, FontPreset> = {
 const THEME_FONT_MAPPING: Record<string, string> = {
   light: 'opensans',
   dark: 'inter',
-  blue: 'roboto',
   corporate: 'arial',
   navy: 'segoe',
   slate: 'montserrat',
