@@ -22,18 +22,20 @@ STEP 1 - DESCOBERTA DE TABELAS:
 - Use getTables() para descobrir tabelas disponíveis no BigQuery
 - Identifique tabelas relacionadas a vendas, pedidos, produtos, campanhas
 
-STEP 2 - MAPEAMENTO DE SCHEMAS:
-- Para cada tabela relevante, use getTableSchema(tableName: "nome_da_tabela") para entender estrutura
-- Para a tabela ecommerce, use: getTableSchema(tableName: "ecommerce")
-- O parâmetro correto é tableName, não tableId
+STEP 2 - MAPEAMENTO DE SCHEMA DA TABELA ECOMMERCE:
+- Use getTableSchema(tableName: "ecommerce") APENAS UMA VEZ
+- Foque na estrutura da tabela ecommerce especificamente
+- Não chame getTableSchema para outras tabelas
 - Analise colunas de métricas (vendas, receita, quantidade)
 - Identifique colunas de dimensões (data, produto, campanha)
 
-STEP 3 - RESUMO DOS SCHEMAS:
-- Apresente um resumo claro e organizado dos schemas descobertos
-- Identifique as principais tabelas e suas colunas mais importantes
-- Destaque colunas de métricas e dimensões relevantes para análise de performance
-- Forneça sugestões de análises que podem ser feitas com esses dados
+STEP 3 - RESUMO FINAL:
+- Com base nos dados coletados, apresente um resumo estruturado:
+  • Tabelas encontradas no Step 1
+  • Schema da tabela ecommerce do Step 2
+  • Principais colunas e tipos de dados
+  • Sugestões de análises possíveis
+- Formato: texto organizado e claro, sem usar ferramentas
 
 Execute os steps sequencialmente. Não pule etapas.`,
       messages: convertToModelMessages(messages),
@@ -60,8 +62,7 @@ Execute os steps sequencialmente. Não pule etapas.`,
         } else if (stepNumber === 3) {
           // Step 3: No tools - only text summary
           return {
-            activeTools: [],
-            toolChoice: 'none'
+            activeTools: []
           };
         }
 
