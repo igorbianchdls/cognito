@@ -794,7 +794,13 @@ export const NAVY_TOKENS: DesignTokens = {
       strong: 1.0,
       opaque: 1
     },
-    // gradient and backdrop will come from BackgroundManager
+    // Navy Deep gradient for all widgets
+    gradient: {
+      type: 'linear',
+      direction: '225deg',
+      startColor: 'rgba(255,255,255,0.06)',
+      endColor: '#1a202c'
+    },
     shadow: {
       color: '#1e40af',
       opacity: 0.35,
