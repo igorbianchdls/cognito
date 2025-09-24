@@ -147,25 +147,16 @@ export class ThemeManager {
     // Apply design tokens to KPI with semantic meaning
     clonedWidget.kpiConfig.kpiContainerBackgroundColor = tokens.colors.surface;
 
-    // KPI Value styling (equivalent to title in charts)
+    // KPI Value styling (fixed values to match dark cards)
     clonedWidget.kpiConfig.kpiValueColor = tokens.colors.text.primary;
-    clonedWidget.kpiConfig.kpiValueFontSize = tokens.typography.fontSize.xl;
-    clonedWidget.kpiConfig.kpiValueFontWeight = tokens.typography.fontWeight.bold;
+    clonedWidget.kpiConfig.kpiValueFontSize = 28; // Fixed size to match dark cards
+    clonedWidget.kpiConfig.kpiValueFontWeight = 600; // Fixed weight to match dark cards
     clonedWidget.kpiConfig.kpiValueFontFamily = tokens.typography.fontFamily.primary;
-    clonedWidget.kpiConfig.kpiValueMarginTop = 0;
-    clonedWidget.kpiConfig.kpiValueMarginRight = 0;
-    clonedWidget.kpiConfig.kpiValueMarginBottom = 8;
-    clonedWidget.kpiConfig.kpiValueMarginLeft = 0;
 
-    // KPI Name styling (equivalent to subtitle in charts)
+    // KPI Name styling (fixed size, default weight like dark cards)
     clonedWidget.kpiConfig.kpiNameColor = tokens.colors.text.secondary;
-    clonedWidget.kpiConfig.kpiNameFontSize = tokens.typography.fontSize.md;
-    clonedWidget.kpiConfig.kpiNameFontWeight = tokens.typography.fontWeight.medium;
+    clonedWidget.kpiConfig.kpiNameFontSize = 14; // Fixed size to match dark cards
     clonedWidget.kpiConfig.kpiNameFontFamily = tokens.typography.fontFamily.primary;
-    clonedWidget.kpiConfig.kpiNameMarginTop = 0;
-    clonedWidget.kpiConfig.kpiNameMarginRight = 0;
-    clonedWidget.kpiConfig.kpiNameMarginBottom = 4;
-    clonedWidget.kpiConfig.kpiNameMarginLeft = 0;
 
     // Apply advanced effects from tokens
     clonedWidget.kpiConfig.backgroundOpacity = tokens.effects.opacity.medium;
