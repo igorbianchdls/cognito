@@ -377,11 +377,17 @@ export class ThemeManager {
     // Apply advanced effects from tokens
     clonedWidget.lineConfig.styling.containerOpacity = tokens.effects.opacity.medium;
 
-    // Always apply gradient (enabled: true if defined, cleared if undefined)
+    // Always apply gradient props directly (like KPI implementation)
     if (tokens.effects.gradient) {
-      clonedWidget.lineConfig.styling.containerBackground = `${tokens.effects.gradient.type}-gradient(${tokens.effects.gradient.direction}, ${tokens.effects.gradient.startColor}, ${tokens.effects.gradient.endColor})`;
+      clonedWidget.lineConfig.styling.backgroundGradient = {
+        enabled: true,
+        type: tokens.effects.gradient.type,
+        direction: tokens.effects.gradient.direction,
+        startColor: tokens.effects.gradient.startColor,
+        endColor: tokens.effects.gradient.endColor
+      };
     } else {
-      clonedWidget.lineConfig.styling.containerBackground = undefined;
+      clonedWidget.lineConfig.styling.backgroundGradient = undefined;
     }
 
     // Always apply backdrop filter (blur if defined, cleared if undefined)
