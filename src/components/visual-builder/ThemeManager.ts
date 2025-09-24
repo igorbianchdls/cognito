@@ -201,19 +201,36 @@ export class ThemeManager {
         blur: 0
       };
     }
-    clonedWidget.kpiConfig.containerShadowColor = tokens.effects.shadow.color;
-    clonedWidget.kpiConfig.containerShadowOpacity = tokens.effects.shadow.opacity;
-    clonedWidget.kpiConfig.containerShadowBlur = tokens.effects.shadow.blur;
-    clonedWidget.kpiConfig.containerShadowOffsetX = tokens.effects.shadow.offsetX;
-    clonedWidget.kpiConfig.containerShadowOffsetY = tokens.effects.shadow.offsetY;
+    // Enhanced shadow and border for hightech theme
+    if (tokens.effects.shadow.color === '#00ffff') {
+      // Hightech theme: Enhanced effects
+      clonedWidget.kpiConfig.containerShadowColor = '#00ffff';
+      clonedWidget.kpiConfig.containerShadowOpacity = 0.4;
+      clonedWidget.kpiConfig.containerShadowBlur = 20;
+      clonedWidget.kpiConfig.containerShadowOffsetX = 0;
+      clonedWidget.kpiConfig.containerShadowOffsetY = 8;
 
-    // Apply border properties automatically (consistent across all widgets)
-    clonedWidget.kpiConfig.kpiContainerBorderColor = tokens.colors.border;
-    clonedWidget.kpiConfig.kpiContainerBorderWidth = tokens.borders.width.thin;
-    clonedWidget.kpiConfig.kpiContainerBorderRadius = tokens.borders.radius.md;
+      // Neon cyan border + straight edges
+      clonedWidget.kpiConfig.kpiContainerBorderColor = '#00ffff';
+      clonedWidget.kpiConfig.kpiContainerBorderWidth = tokens.borders.width.thin;
+      clonedWidget.kpiConfig.kpiContainerBorderRadius = 0;
 
-    // Disable shadow when theme has no shadow opacity (like light theme)
-    clonedWidget.kpiConfig.kpiContainerShadow = tokens.effects.shadow.opacity > 0;
+      clonedWidget.kpiConfig.kpiContainerShadow = true;
+    } else {
+      // Other themes: Standard effects
+      clonedWidget.kpiConfig.containerShadowColor = tokens.effects.shadow.color;
+      clonedWidget.kpiConfig.containerShadowOpacity = tokens.effects.shadow.opacity;
+      clonedWidget.kpiConfig.containerShadowBlur = tokens.effects.shadow.blur;
+      clonedWidget.kpiConfig.containerShadowOffsetX = tokens.effects.shadow.offsetX;
+      clonedWidget.kpiConfig.containerShadowOffsetY = tokens.effects.shadow.offsetY;
+
+      // Standard border
+      clonedWidget.kpiConfig.kpiContainerBorderColor = tokens.colors.border;
+      clonedWidget.kpiConfig.kpiContainerBorderWidth = tokens.borders.width.thin;
+      clonedWidget.kpiConfig.kpiContainerBorderRadius = tokens.borders.radius.md;
+
+      clonedWidget.kpiConfig.kpiContainerShadow = tokens.effects.shadow.opacity > 0;
+    }
 
     return clonedWidget;
   }
@@ -283,12 +300,28 @@ export class ThemeManager {
     } else {
       clonedWidget.barConfig.styling.containerBackdropFilter = undefined;
     }
-    clonedWidget.barConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
+    // Create enhanced shadow for hightech theme
+    if (tokens.effects.shadow.color === '#00ffff') {
+      // Hightech theme: Multiple neon glows
+      clonedWidget.barConfig.styling.containerBoxShadow =
+        `0 8px 32px rgba(0, 255, 255, 0.3), 0 0 0 1px rgba(0, 255, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)`;
+    } else {
+      // Other themes: Standard shadow
+      clonedWidget.barConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
+    }
 
-    // Apply border properties automatically (consistent across all widgets)
-    clonedWidget.barConfig.styling.containerBorderColor = tokens.colors.border;
-    clonedWidget.barConfig.styling.containerBorderWidth = tokens.borders.width.medium;
-    clonedWidget.barConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
+    // Apply border properties - enhanced for hightech theme
+    if (tokens.effects.shadow.color === '#00ffff') {
+      // Hightech theme: Neon cyan border + straight edges
+      clonedWidget.barConfig.styling.containerBorderColor = '#00ffff';
+      clonedWidget.barConfig.styling.containerBorderWidth = tokens.borders.width.thin;
+      clonedWidget.barConfig.styling.containerBorderRadius = 0;
+    } else {
+      // Other themes: Standard border
+      clonedWidget.barConfig.styling.containerBorderColor = tokens.colors.border;
+      clonedWidget.barConfig.styling.containerBorderWidth = tokens.borders.width.medium;
+      clonedWidget.barConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
+    }
 
     return clonedWidget;
   }
@@ -455,12 +488,28 @@ export class ThemeManager {
     } else {
       clonedWidget.pieConfig.styling.containerBackdropFilter = undefined;
     }
-    clonedWidget.pieConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
+    // Create enhanced shadow for hightech theme
+    if (tokens.effects.shadow.color === '#00ffff') {
+      // Hightech theme: Multiple neon glows
+      clonedWidget.pieConfig.styling.containerBoxShadow =
+        `0 8px 32px rgba(0, 255, 255, 0.3), 0 0 0 1px rgba(0, 255, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)`;
+    } else {
+      // Other themes: Standard shadow
+      clonedWidget.pieConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
+    }
 
-    // Apply border properties automatically (consistent across all widgets)
-    clonedWidget.pieConfig.styling.containerBorderColor = tokens.colors.border;
-    clonedWidget.pieConfig.styling.containerBorderWidth = tokens.borders.width.medium;
-    clonedWidget.pieConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
+    // Apply border properties - enhanced for hightech theme
+    if (tokens.effects.shadow.color === '#00ffff') {
+      // Hightech theme: Neon cyan border + straight edges
+      clonedWidget.pieConfig.styling.containerBorderColor = '#00ffff';
+      clonedWidget.pieConfig.styling.containerBorderWidth = tokens.borders.width.thin;
+      clonedWidget.pieConfig.styling.containerBorderRadius = 0;
+    } else {
+      // Other themes: Standard border
+      clonedWidget.pieConfig.styling.containerBorderColor = tokens.colors.border;
+      clonedWidget.pieConfig.styling.containerBorderWidth = tokens.borders.width.medium;
+      clonedWidget.pieConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
+    }
 
     return clonedWidget;
   }
@@ -532,12 +581,28 @@ export class ThemeManager {
     } else {
       clonedWidget.areaConfig.styling.containerBackdropFilter = undefined;
     }
-    clonedWidget.areaConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
+    // Create enhanced shadow for hightech theme
+    if (tokens.effects.shadow.color === '#00ffff') {
+      // Hightech theme: Multiple neon glows
+      clonedWidget.areaConfig.styling.containerBoxShadow =
+        `0 8px 32px rgba(0, 255, 255, 0.3), 0 0 0 1px rgba(0, 255, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1)`;
+    } else {
+      // Other themes: Standard shadow
+      clonedWidget.areaConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
+    }
 
-    // Apply border properties automatically (consistent across all widgets)
-    clonedWidget.areaConfig.styling.containerBorderColor = tokens.colors.border;
-    clonedWidget.areaConfig.styling.containerBorderWidth = tokens.borders.width.medium;
-    clonedWidget.areaConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
+    // Apply border properties - enhanced for hightech theme
+    if (tokens.effects.shadow.color === '#00ffff') {
+      // Hightech theme: Neon cyan border + straight edges
+      clonedWidget.areaConfig.styling.containerBorderColor = '#00ffff';
+      clonedWidget.areaConfig.styling.containerBorderWidth = tokens.borders.width.thin;
+      clonedWidget.areaConfig.styling.containerBorderRadius = 0;
+    } else {
+      // Other themes: Standard border
+      clonedWidget.areaConfig.styling.containerBorderColor = tokens.colors.border;
+      clonedWidget.areaConfig.styling.containerBorderWidth = tokens.borders.width.medium;
+      clonedWidget.areaConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
+    }
 
     return clonedWidget;
   }
