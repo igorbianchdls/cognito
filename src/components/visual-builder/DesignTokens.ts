@@ -1177,10 +1177,23 @@ export const HIGHTECH_TOKENS: DesignTokens = {
   effects: {
     opacity: {
       transparent: 0,
-      subtle: 1.0,
-      medium: 1.0,
-      strong: 1.0,
+      subtle: 0.85,
+      medium: 0.9,
+      strong: 0.95,
       opaque: 1
+    },
+    // Futuristic gradient background
+    gradient: {
+      type: 'linear',
+      direction: '135deg',
+      startColor: 'rgba(10, 15, 28, 0.4)',
+      endColor: 'rgba(17, 24, 39, 0.2)'
+    },
+    // Glassmorphism backdrop filter
+    backdrop: {
+      blur: 20,
+      saturate: 180,
+      brightness: 120
     },
     // High-tech shadows with cyan glow
     shadow: {
