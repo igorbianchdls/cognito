@@ -119,7 +119,7 @@ export default function DarkCardsPage() {
           <div className="p-4 bg-gray-800/30 rounded-lg">
             <h4 className="font-semibold text-white mb-2">Glow Effect</h4>
             <p className="text-gray-400 text-sm">
-              Brilho externo que "vaza" ao redor do card. Efeito mais dramático e visível.
+              Brilho externo que &quot;vaza&quot; ao redor do card. Efeito mais dramático e visível.
             </p>
           </div>
           <div className="p-4 bg-gray-800/30 rounded-lg">
