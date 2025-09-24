@@ -22,7 +22,6 @@ export default function DarkCardsPage() {
           currentValue={1200000}
           unit="R$"
           kpiContainerBackgroundColor="rgba(0, 0, 0, 0.4)"
-          backgroundOpacity={0.4}
           backdropFilter={{
             enabled: true,
             blur: 10
@@ -132,7 +131,6 @@ export default function DarkCardsPage() {
           kpiValueFontWeight={600}
           kpiNameFontSize={14}
           success={true}
-          kpiContainerClassName="shadow-2xl shadow-black/50"
         />
 
         {/* Card 6 - Double Border */}
@@ -144,13 +142,17 @@ export default function DarkCardsPage() {
           kpiContainerBorderWidth={1}
           kpiContainerBorderRadius={12}
           kpiContainerPadding={24}
+          containerShadowColor="rgba(255, 255, 255, 0.1)"
+          containerShadowOpacity={0.8}
+          containerShadowBlur={0}
+          containerShadowOffsetX={0}
+          containerShadowOffsetY={0}
           kpiNameColor="rgba(255, 255, 255, 0.7)"
           kpiValueColor="#f59e0b"
           kpiValueFontSize={28}
           kpiValueFontWeight={600}
           kpiNameFontSize={14}
           success={true}
-          kpiContainerClassName="ring-1 ring-white/10 ring-offset-2 ring-offset-transparent"
         />
 
         {/* Card 7 - Variable Transparency */}
@@ -158,8 +160,7 @@ export default function DarkCardsPage() {
           name="Ticket Médio"
           currentValue={450}
           unit="R$"
-          kpiContainerBackgroundColor="rgba(30, 30, 46, 0.9)"
-          backgroundOpacity={0.9}
+          kpiContainerBackgroundColor="#1e1e2e"
           kpiContainerBorderColor="rgba(255, 255, 255, 0.08)"
           kpiContainerBorderWidth={1}
           kpiContainerBorderRadius={12}
@@ -174,7 +175,6 @@ export default function DarkCardsPage() {
           kpiValueFontWeight={600}
           kpiNameFontSize={14}
           success={true}
-          kpiContainerClassName="hover:bg-opacity-100 transition-all duration-300"
         />
 
         {/* Card 8 - Subtle Pattern */}
