@@ -521,9 +521,9 @@ export const DARK_TOKENS: DesignTokens = {
   effects: {
     opacity: {
       transparent: 0,
-      subtle: 0.7,
-      medium: 0.85,
-      strong: 0.95,
+      subtle: 1.0,
+      medium: 1.0,
+      strong: 1.0,
       opaque: 1
     },
     // gradient and backdrop will come from BackgroundManager
@@ -629,9 +629,9 @@ export const LIGHT_TOKENS: DesignTokens = {
   effects: {
     opacity: {
       transparent: 0,
-      subtle: 0.85,
-      medium: 1,
-      strong: 0.98,
+      subtle: 1.0,
+      medium: 1.0,
+      strong: 1.0,
       opaque: 1
     },
     // Explicit no gradient/backdrop for clean light theme
@@ -697,9 +697,9 @@ export const BLUE_TOKENS: DesignTokens = {
   effects: {
     opacity: {
       transparent: 0,
-      subtle: 0.6,
-      medium: 0.8,
-      strong: 0.9,
+      subtle: 1.0,
+      medium: 1.0,
+      strong: 1.0,
       opaque: 1
     },
     // gradient and backdrop will come from BackgroundManager
@@ -763,9 +763,9 @@ export const GREEN_TOKENS: DesignTokens = {
   effects: {
     opacity: {
       transparent: 0,
-      subtle: 0.75,
-      medium: 0.85,
-      strong: 0.95,
+      subtle: 1.0,
+      medium: 1.0,
+      strong: 1.0,
       opaque: 1
     },
     // gradient and backdrop will come from BackgroundManager
@@ -825,9 +825,9 @@ export const CORPORATE_TOKENS: DesignTokens = {
   effects: {
     opacity: {
       transparent: 0,
-      subtle: 0.9,
-      medium: 0.95,
-      strong: 0.98,
+      subtle: 1.0,
+      medium: 1.0,
+      strong: 1.0,
       opaque: 1
     },
     // gradient and backdrop will come from BackgroundManager
@@ -919,9 +919,9 @@ export const NAVY_TOKENS: DesignTokens = {
   effects: {
     opacity: {
       transparent: 0,
-      subtle: 0.7,
-      medium: 0.85,
-      strong: 0.92,
+      subtle: 1.0,
+      medium: 1.0,
+      strong: 1.0,
       opaque: 1
     },
     // gradient and backdrop will come from BackgroundManager
@@ -1001,9 +1001,9 @@ export const SLATE_TOKENS: DesignTokens = {
   effects: {
     opacity: {
       transparent: 0,
-      subtle: 0.65,
-      medium: 0.8,
-      strong: 0.9,
+      subtle: 1.0,
+      medium: 1.0,
+      strong: 1.0,
       opaque: 1
     },
     // gradient and backdrop will come from BackgroundManager
@@ -1089,9 +1089,9 @@ export const FOREST_TOKENS: DesignTokens = {
   effects: {
     opacity: {
       transparent: 0,
-      subtle: 0.8,
-      medium: 0.9,
-      strong: 0.95,
+      subtle: 1.0,
+      medium: 1.0,
+      strong: 1.0,
       opaque: 1
     },
     // gradient and backdrop will come from BackgroundManager
@@ -1177,9 +1177,9 @@ export const BURGUNDY_TOKENS: DesignTokens = {
   effects: {
     opacity: {
       transparent: 0,
-      subtle: 0.7,
-      medium: 0.82,
-      strong: 0.93,
+      subtle: 1.0,
+      medium: 1.0,
+      strong: 1.0,
       opaque: 1
     },
     // gradient and backdrop will come from BackgroundManager
@@ -1259,9 +1259,9 @@ export const PLATINUM_TOKENS: DesignTokens = {
   effects: {
     opacity: {
       transparent: 0,
-      subtle: 0.85,
-      medium: 0.92,
-      strong: 0.97,
+      subtle: 1.0,
+      medium: 1.0,
+      strong: 1.0,
       opaque: 1
     },
     // gradient and backdrop will come from BackgroundManager
