@@ -252,8 +252,52 @@ export function LineChart({
 
   return (
     <div
-      className={containerClassName}
+      className="relative"
       style={{
+        border: '0.5px solid #777',
+      }}
+    >
+      {/* Corner accents - positioned outside to overlay border */}
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          top: '-0.5px',
+          left: '-0.5px',
+          borderTop: '0.5px solid #bbb',
+          borderLeft: '0.5px solid #bbb'
+        }}
+      ></div>
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          top: '-0.5px',
+          right: '-0.5px',
+          borderTop: '0.5px solid #bbb',
+          borderRight: '0.5px solid #bbb'
+        }}
+      ></div>
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          bottom: '-0.5px',
+          left: '-0.5px',
+          borderBottom: '0.5px solid #bbb',
+          borderLeft: '0.5px solid #bbb'
+        }}
+      ></div>
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          bottom: '-0.5px',
+          right: '-0.5px',
+          borderBottom: '0.5px solid #bbb',
+          borderRight: '0.5px solid #bbb'
+        }}
+      ></div>
+
+      <div
+        className={containerClassName}
+        style={{
         // Propriedades essenciais SEMPRE aplicadas
         width: '100%',
         height: '100%',
@@ -473,6 +517,7 @@ export function LineChart({
         })()}
           />
         </div>
+      </div>
       </div>
     </div>
   );
