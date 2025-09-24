@@ -29,7 +29,8 @@
       "WebFetch(domain:nivo.rocks)",
       "WebSearch",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "WebFetch(domain:vercel.com)"
     ],
     "deny": []
   }
