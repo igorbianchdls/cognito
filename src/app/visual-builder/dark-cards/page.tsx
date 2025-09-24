@@ -94,20 +94,21 @@ export default function DarkCardsPage() {
               startColor: '#1a1a2e',
               endColor: '#16213e'
             }}
-            kpiContainerBorderColor="rgba(255, 255, 255, 0.1)"
+            kpiContainerBorderColor="rgba(96, 165, 250, 0.3)"
             kpiContainerBorderWidth={1}
             kpiContainerBorderRadius={12}
             kpiContainerPadding={24}
+            containerShadowColor="rgba(255, 255, 255, 0.1)"
+            containerShadowOpacity={0.8}
+            containerShadowBlur={8}
+            containerShadowOffsetX={0}
+            containerShadowOffsetY={2}
             kpiNameColor="rgba(255, 255, 255, 0.7)"
             kpiValueColor="#ffffff"
             kpiValueFontSize={28}
             kpiValueFontWeight={600}
             kpiNameFontSize={14}
             success={true}
-            kpiContainerClassName="shadow-inner shadow-blue-400/20"
-            kpiContainerStyle={{
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(96,165,250,0.1), 0 2px 8px rgba(0,0,0,0.3)'
-            }}
           />
         </div>
 
