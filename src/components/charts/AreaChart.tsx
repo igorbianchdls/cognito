@@ -216,15 +216,15 @@ export function AreaChart({
   };
 
   // Create box shadow style - apply custom shadow or default KPI shadow
-  const hasCustomShadow = containerShadowColor || containerShadowOpacity !== undefined || 
-                         containerShadowBlur !== undefined || containerShadowOffsetX !== undefined || 
-                         containerShadowOffsetY !== undefined;
-  
-  const boxShadow = hasCustomShadow
-    ? `${containerShadowOffsetX || 0}px ${containerShadowOffsetY || 4}px ${containerShadowBlur || 8}px rgba(${
-        hexToRgb(containerShadowColor || '#000000')
-      }, ${containerShadowOpacity || 0.2})`
-    : '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+  // const hasCustomShadow = containerShadowColor || containerShadowOpacity !== undefined ||
+  //                        containerShadowBlur !== undefined || containerShadowOffsetX !== undefined ||
+  //                        containerShadowOffsetY !== undefined;
+  //
+  // const boxShadow = hasCustomShadow
+  //   ? `${containerShadowOffsetX || 0}px ${containerShadowOffsetY || 4}px ${containerShadowBlur || 8}px rgba(${
+  //       hexToRgb(containerShadowColor || '#000000')
+  //     }, ${containerShadowOpacity || 0.2})`
+  //   : '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
 
   // Container styles with priority system (same as BarChart)
   const containerStyles = {
@@ -238,22 +238,22 @@ export function AreaChart({
     // Direct CSS props - simple and predictable
     opacity: containerOpacity !== undefined ? containerOpacity : backgroundOpacity,
     backdropFilter: containerBackdropFilter || (backdropFilter?.enabled ? `blur(${backdropFilter.blur}px)` : undefined),
-    boxShadow: containerBoxShadow,
+    // boxShadow: containerBoxShadow, // Commented out
   }
 
   // Debug log
-  console.log('🖼️ AreaChart Shadow Debug:', {
-    containerShadowColor,
-    containerShadowOpacity,
-    containerShadowBlur,
-    containerShadowOffsetX,
-    containerShadowOffsetY,
-    boxShadow
-  });
+  // console.log('🖼️ AreaChart Shadow Debug:', {
+  //   containerShadowColor,
+  //   containerShadowOpacity,
+  //   containerShadowBlur,
+  //   containerShadowOffsetX,
+  //   containerShadowOffsetY,
+  //   boxShadow
+  // });
 
   return (
     <div
-      className={containerClassName}
+      className={`${containerClassName} relative`}
       style={{
         // Propriedades essenciais SEMPRE aplicadas
         width: '100%',
@@ -267,13 +267,51 @@ export function AreaChart({
           ...containerStyles,
           padding: `${containerPadding || 16}px`,
           margin: '0 auto',
-          border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb',
-          borderRadius: containerBorderRadius ? `${containerBorderRadius}px` : undefined,
+          border: '0.5px solid #777', // Corner accent border
+          // border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb', // Commented out
+          // borderRadius: containerBorderRadius ? `${containerBorderRadius}px` : undefined, // Commented for corner accent effect
           // Fallback shadow if containerBoxShadow not provided
-          boxShadow: containerBoxShadow || boxShadow,
+          // boxShadow: containerBoxShadow || boxShadow, // Commented out
         })
       }}
     >
+      {/* Corner accents - positioned to overlay border */}
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          top: '-0.5px',
+          left: '-0.5px',
+          borderTop: '0.5px solid #bbb',
+          borderLeft: '0.5px solid #bbb'
+        }}
+      ></div>
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          top: '-0.5px',
+          right: '-0.5px',
+          borderTop: '0.5px solid #bbb',
+          borderRight: '0.5px solid #bbb'
+        }}
+      ></div>
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          bottom: '-0.5px',
+          left: '-0.5px',
+          borderBottom: '0.5px solid #bbb',
+          borderLeft: '0.5px solid #bbb'
+        }}
+      ></div>
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          bottom: '-0.5px',
+          right: '-0.5px',
+          borderBottom: '0.5px solid #bbb',
+          borderRight: '0.5px solid #bbb'
+        }}
+      ></div>
       {title && (
         <h3
           className={titleClassName || undefined}
