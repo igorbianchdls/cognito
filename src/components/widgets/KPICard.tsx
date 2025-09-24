@@ -302,14 +302,23 @@ export function KPICard({
 
 
   return (
-    <div
-      className="relative"
-      style={{
-        border: '0.5px solid #777',
+    <Card
+      className={kpiContainerClassName || "@container/card h-full w-full p-0 rounded-none relative"}
+      style={kpiContainerClassName ? {} : {
+        background: getAdvancedBackground(),
+        backdropFilter: getBackdropFilter(),
+        // Commented out border props - now handled directly
+        // borderColor: kpiContainerBorderColor ? hexToRgba(kpiContainerBorderColor, kpiContainerBorderOpacity ?? 1) : '#e5e7eb',
+        // borderWidth: kpiContainerBorderWidth ? `${kpiContainerBorderWidth}px` : '1px',
+        // borderStyle: 'solid',
+        border: '0.5px solid #777', // Corner accent border applied directly
         // borderRadius: kpiContainerBorderRadius ? `${kpiContainerBorderRadius}px` : undefined, // Commented for corner accent effect
+        padding: kpiContainerPadding ? `${kpiContainerPadding}px` : undefined,
+        textAlign: kpiContainerTextAlign || 'left',
+        boxShadow: 'none',
       }}
     >
-      {/* Corner accents - positioned outside to overlay border */}
+      {/* Corner accents - positioned inside to overlay border */}
       <div
         className="absolute w-3 h-3"
         style={{
@@ -346,23 +355,6 @@ export function KPICard({
           borderRight: '0.5px solid #bbb'
         }}
       ></div>
-
-      <Card
-        className={kpiContainerClassName || "@container/card h-full w-full p-0 rounded-none"}
-        style={kpiContainerClassName ? {} : {
-          background: getAdvancedBackground(),
-          backdropFilter: getBackdropFilter(),
-          // Commented out border props - using corner accent wrapper instead
-          // borderColor: kpiContainerBorderColor ? hexToRgba(kpiContainerBorderColor, kpiContainerBorderOpacity ?? 1) : '#e5e7eb',
-          // borderWidth: kpiContainerBorderWidth ? `${kpiContainerBorderWidth}px` : '1px',
-          // borderStyle: 'solid',
-          border: 'none', // Remove default border since wrapper handles it
-          // borderRadius: kpiContainerBorderRadius ? `${kpiContainerBorderRadius}px` : undefined, // Commented for corner accent effect
-          padding: kpiContainerPadding ? `${kpiContainerPadding}px` : undefined,
-          textAlign: kpiContainerTextAlign || 'left',
-          boxShadow: 'none',
-        }}
-      >
         <CardHeader className="!text-left !items-start">
           <CardDescription
             className={kpiNameClassName || "!text-left !justify-start"}
@@ -408,8 +400,7 @@ export function KPICard({
             {formatValue(currentValue, unit || '')}
           </CardTitle>
         </CardHeader>
-      </Card>
-    </div>
+    </Card>
   );
 }
 
