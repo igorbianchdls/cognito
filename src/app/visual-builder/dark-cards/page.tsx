@@ -600,9 +600,9 @@ export default function DarkCardsPage() {
         <h2 className="text-2xl font-bold text-white mb-6 text-center">Corner Accent Border Test</h2>
         <p className="text-gray-400 text-center mb-8">Card with gray borders and lighter gray corners</p>
 
-        <div className="flex justify-center max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
           <div className="space-y-2">
-            <h3 className="text-sm font-medium text-gray-400 text-center">Corner Accent Test</h3>
+            <h3 className="text-sm font-medium text-gray-400 text-center">Corner Accent Test (1px, 16px corners)</h3>
             <div
               className="w-64 h-32 p-6 relative"
               style={{
@@ -651,6 +651,60 @@ export default function DarkCardsPage() {
               <div className="text-white">
                 <div className="text-sm opacity-70 mb-1">Revenue</div>
                 <div className="text-2xl font-semibold text-blue-400">$2,340</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-gray-400 text-center">Corner Accent Test (0.5px, 12px corners)</h3>
+            <div
+              className="w-64 h-32 p-6 relative"
+              style={{
+                background: 'linear-gradient(225deg, rgba(255,255,255,0.1), #0a1525)',
+                border: '0.5px solid #777',
+                position: 'relative'
+              }}
+            >
+              {/* Corner accents - smaller and thinner */}
+              <div
+                className="absolute w-3 h-3"
+                style={{
+                  top: '-0.5px',
+                  left: '-0.5px',
+                  borderTop: '0.5px solid #bbb',
+                  borderLeft: '0.5px solid #bbb'
+                }}
+              ></div>
+              <div
+                className="absolute w-3 h-3"
+                style={{
+                  top: '-0.5px',
+                  right: '-0.5px',
+                  borderTop: '0.5px solid #bbb',
+                  borderRight: '0.5px solid #bbb'
+                }}
+              ></div>
+              <div
+                className="absolute w-3 h-3"
+                style={{
+                  bottom: '-0.5px',
+                  left: '-0.5px',
+                  borderBottom: '0.5px solid #bbb',
+                  borderLeft: '0.5px solid #bbb'
+                }}
+              ></div>
+              <div
+                className="absolute w-3 h-3"
+                style={{
+                  bottom: '-0.5px',
+                  right: '-0.5px',
+                  borderBottom: '0.5px solid #bbb',
+                  borderRight: '0.5px solid #bbb'
+                }}
+              ></div>
+              <div className="text-white">
+                <div className="text-sm opacity-70 mb-1">Sales</div>
+                <div className="text-2xl font-semibold text-blue-400">$1,250</div>
               </div>
             </div>
           </div>
