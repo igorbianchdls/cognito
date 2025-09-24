@@ -9,39 +9,20 @@ export default function DarkCardsPage() {
     }}>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Dark KPI Cards Demo</h1>
-        <p className="text-gray-400">8 different dark card styles with professional effects</p>
+        <h1 className="text-3xl font-bold text-white mb-2">Dark KPI Cards - 3 Styles x 3 Colors</h1>
+        <p className="text-gray-400">9 cards demonstrating 3 different styles, each in 3 color variations</p>
       </div>
 
       {/* Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-        {/* Card 1 - Glass Effect */}
+        {/* ===== ESTILO 1: GRADIENTE PURO (3 cores) ===== */}
+
+        {/* Gradiente Azul (original) */}
         <KPICard
           name="Receita Total"
-          currentValue={1200000}
+          currentValue={847000}
           unit="R$"
-          kpiContainerBackgroundColor="rgba(0, 0, 0, 0.4)"
-          backdropFilter={{
-            enabled: true,
-            blur: 10
-          }}
-          kpiContainerBorderColor="rgba(255, 255, 255, 0.1)"
-          kpiContainerBorderWidth={1}
-          kpiContainerBorderRadius={12}
-          kpiContainerPadding={24}
-          kpiNameColor="rgba(255, 255, 255, 0.7)"
-          kpiValueColor="#ffffff"
-          kpiValueFontSize={28}
-          kpiValueFontWeight={600}
-          kpiNameFontSize={14}
-          success={true}
-        />
-
-        {/* Card 2 - Gradient Dark */}
-        <KPICard
-          name="Vendas Mensais"
-          currentValue={847}
           backgroundGradient={{
             enabled: true,
             type: 'linear',
@@ -61,34 +42,59 @@ export default function DarkCardsPage() {
           success={true}
         />
 
-        {/* Card 3 - Solid + Neon Border */}
+        {/* Gradiente Verde */}
         <KPICard
-          name="Taxa Conversão"
-          currentValue={12.3}
-          unit="%"
-          kpiContainerBackgroundColor="#1a1d23"
-          kpiContainerBorderColor="rgba(255, 100, 100, 0.5)"
-          kpiContainerBorderWidth={2}
+          name="Vendas Mensais"
+          currentValue={1250}
+          backgroundGradient={{
+            enabled: true,
+            type: 'linear',
+            direction: '135deg',
+            startColor: '#1a2e1a',
+            endColor: '#162e21'
+          }}
+          kpiContainerBorderColor="rgba(255, 255, 255, 0.05)"
+          kpiContainerBorderWidth={1}
           kpiContainerBorderRadius={12}
           kpiContainerPadding={24}
-          containerShadowColor="#ff6464"
-          containerShadowOpacity={0.3}
-          containerShadowBlur={10}
-          containerShadowOffsetX={0}
-          containerShadowOffsetY={0}
           kpiNameColor="rgba(255, 255, 255, 0.7)"
-          kpiValueColor="#ff6464"
+          kpiValueColor="#4ade80"
           kpiValueFontSize={28}
           kpiValueFontWeight={600}
           kpiNameFontSize={14}
           success={true}
         />
 
-        {/* Card 4 - Glass + Gradient */}
+        {/* Gradiente Vermelho */}
+        <KPICard
+          name="Taxa Conversão"
+          currentValue={8.5}
+          unit="%"
+          backgroundGradient={{
+            enabled: true,
+            type: 'linear',
+            direction: '135deg',
+            startColor: '#2e1a1a',
+            endColor: '#3e1616'
+          }}
+          kpiContainerBorderColor="rgba(255, 255, 255, 0.05)"
+          kpiContainerBorderWidth={1}
+          kpiContainerBorderRadius={12}
+          kpiContainerPadding={24}
+          kpiNameColor="rgba(255, 255, 255, 0.7)"
+          kpiValueColor="#f87171"
+          kpiValueFontSize={28}
+          kpiValueFontWeight={600}
+          kpiNameFontSize={14}
+          success={true}
+        />
+
+        {/* ===== ESTILO 2: GLASS + GRADIENTE (3 cores) ===== */}
+
+        {/* Glass Azul (original) */}
         <KPICard
           name="Clientes Ativos"
           currentValue={2100}
-          unit=""
           backgroundGradient={{
             enabled: true,
             type: 'linear',
@@ -112,72 +118,64 @@ export default function DarkCardsPage() {
           success={true}
         />
 
-        {/* Card 5 - Deep Shadow */}
+        {/* Glass Roxo */}
         <KPICard
           name="ROI Mensal"
-          currentValue={34.5}
+          currentValue={34.2}
           unit="%"
-          kpiContainerBackgroundColor="#1a1d23"
+          backgroundGradient={{
+            enabled: true,
+            type: 'linear',
+            direction: '135deg',
+            startColor: 'rgba(46, 26, 46, 0.8)',
+            endColor: 'rgba(62, 22, 62, 0.6)'
+          }}
+          backdropFilter={{
+            enabled: true,
+            blur: 8
+          }}
+          kpiContainerBorderColor="rgba(255, 255, 255, 0.15)"
+          kpiContainerBorderWidth={1}
           kpiContainerBorderRadius={12}
           kpiContainerPadding={24}
-          containerShadowColor="#000000"
-          containerShadowOpacity={0.5}
-          containerShadowBlur={20}
-          containerShadowOffsetX={0}
-          containerShadowOffsetY={8}
           kpiNameColor="rgba(255, 255, 255, 0.7)"
-          kpiValueColor="#10b981"
+          kpiValueColor="#a855f7"
           kpiValueFontSize={28}
           kpiValueFontWeight={600}
           kpiNameFontSize={14}
           success={true}
         />
 
-        {/* Card 6 - Double Border */}
+        {/* Glass Laranja */}
         <KPICard
           name="Leads Qualificados"
           currentValue={156}
-          kpiContainerBackgroundColor="#1e1e2e"
-          kpiContainerBorderColor="rgba(255, 255, 255, 0.2)"
-          kpiContainerBorderWidth={1}
-          kpiContainerBorderRadius={12}
-          kpiContainerPadding={24}
-          containerShadowColor="rgba(255, 255, 255, 0.1)"
-          containerShadowOpacity={0.8}
-          containerShadowBlur={0}
-          containerShadowOffsetX={0}
-          containerShadowOffsetY={0}
-          kpiNameColor="rgba(255, 255, 255, 0.7)"
-          kpiValueColor="#f59e0b"
-          kpiValueFontSize={28}
-          kpiValueFontWeight={600}
-          kpiNameFontSize={14}
-          success={true}
-        />
-
-        {/* Card 7 - Variable Transparency */}
-        <KPICard
-          name="Ticket Médio"
-          currentValue={450}
-          unit="R$"
-          kpiContainerBackgroundColor="#1e1e2e"
-          kpiContainerBorderColor="rgba(255, 255, 255, 0.08)"
-          kpiContainerBorderWidth={1}
-          kpiContainerBorderRadius={12}
-          kpiContainerPadding={24}
+          backgroundGradient={{
+            enabled: true,
+            type: 'linear',
+            direction: '135deg',
+            startColor: 'rgba(46, 36, 26, 0.8)',
+            endColor: 'rgba(62, 44, 22, 0.6)'
+          }}
           backdropFilter={{
             enabled: true,
-            blur: 5
+            blur: 8
           }}
+          kpiContainerBorderColor="rgba(255, 255, 255, 0.15)"
+          kpiContainerBorderWidth={1}
+          kpiContainerBorderRadius={12}
+          kpiContainerPadding={24}
           kpiNameColor="rgba(255, 255, 255, 0.7)"
-          kpiValueColor="#8b5cf6"
+          kpiValueColor="#f97316"
           kpiValueFontSize={28}
           kpiValueFontWeight={600}
           kpiNameFontSize={14}
           success={true}
         />
 
-        {/* Card 8 - Subtle Pattern */}
+        {/* ===== ESTILO 3: GRADIENTE SUTIL + SHADOW (3 cores) ===== */}
+
+        {/* Sutil Cyan (original) */}
         <KPICard
           name="NPS Score"
           currentValue={8.7}
@@ -200,12 +198,65 @@ export default function DarkCardsPage() {
           kpiContainerClassName="bg-gradient-to-br from-gray-800/50 to-gray-900/50"
         />
 
+        {/* Sutil Pink */}
+        <KPICard
+          name="Ticket Médio"
+          currentValue={450}
+          unit="R$"
+          kpiContainerBackgroundColor="#231719"
+          kpiContainerBorderColor="rgba(255, 255, 255, 0.1)"
+          kpiContainerBorderWidth={1}
+          kpiContainerBorderRadius={12}
+          kpiContainerPadding={24}
+          containerShadowColor="#000000"
+          containerShadowOpacity={0.3}
+          containerShadowBlur={15}
+          containerShadowOffsetX={0}
+          containerShadowOffsetY={4}
+          kpiNameColor="rgba(255, 255, 255, 0.7)"
+          kpiValueColor="#ec4899"
+          kpiValueFontSize={28}
+          kpiValueFontWeight={600}
+          kpiNameFontSize={14}
+          success={true}
+          kpiContainerClassName="bg-gradient-to-br from-rose-800/50 to-rose-900/50"
+        />
+
+        {/* Sutil Amarelo */}
+        <KPICard
+          name="CAC Médio"
+          currentValue={89}
+          unit="R$"
+          kpiContainerBackgroundColor="#232317"
+          kpiContainerBorderColor="rgba(255, 255, 255, 0.1)"
+          kpiContainerBorderWidth={1}
+          kpiContainerBorderRadius={12}
+          kpiContainerPadding={24}
+          containerShadowColor="#000000"
+          containerShadowOpacity={0.3}
+          containerShadowBlur={15}
+          containerShadowOffsetX={0}
+          containerShadowOffsetY={4}
+          kpiNameColor="rgba(255, 255, 255, 0.7)"
+          kpiValueColor="#eab308"
+          kpiValueFontSize={28}
+          kpiValueFontWeight={600}
+          kpiNameFontSize={14}
+          success={true}
+          kpiContainerClassName="bg-gradient-to-br from-amber-800/50 to-amber-900/50"
+        />
+
       </div>
 
       {/* Footer Info */}
-      <div className="mt-12 text-center">
+      <div className="mt-12 text-center space-y-2">
         <p className="text-gray-500 text-sm">
-          Each card demonstrates different dark styling techniques: glass effects, gradients, shadows, borders, and transparency
+          <strong>Row 1:</strong> Pure Gradient style (Blue, Green, Red) |
+          <strong> Row 2:</strong> Glass + Gradient style (Blue, Purple, Orange) |
+          <strong> Row 3:</strong> Subtle Gradient + Shadow style (Cyan, Pink, Yellow)
+        </p>
+        <p className="text-gray-600 text-xs">
+          Same styling patterns, different color variations - perfect for consistent yet varied KPI displays
         </p>
       </div>
     </div>
