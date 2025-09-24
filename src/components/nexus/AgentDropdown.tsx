@@ -41,10 +41,6 @@ const agents = [
   { id: 'googleCampaignAnalyst', name: 'GoogleCampaignAnalyst', icon: 'Y', color: 'text-blue-700' },
   { id: 'metaCampaignAnalyst', name: 'MetaCampaignAnalyst', icon: 'B', color: 'text-blue-800' },
   { id: 'metaCreativeAnalyst', name: 'MetaCreativeAnalyst', icon: 'R', color: 'text-pink-600' },
-  { id: 'inventoryAnalyst', name: 'InventoryAnalyst', icon: 'I', color: 'text-amber-700' },
-  { id: 'cashFlowAnalyst', name: 'CashFlowAnalyst', icon: 'F', color: 'text-emerald-600' },
-  { id: 'pnlAnalyst', name: 'P&LAnalyst', icon: 'P', color: 'text-yellow-500' },
-  { id: 'budgetPlanningAnalyst', name: 'BudgetPlanningAnalyst', icon: 'U', color: 'text-violet-700' },
 ];
 
 // Dropdown elegante que aparece quando o usuário digita "/" no input

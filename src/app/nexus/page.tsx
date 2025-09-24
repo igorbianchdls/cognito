@@ -55,11 +55,6 @@ export default function Page() {
       case 'googleCampaignAnalyst': return '/api/agents/google-campaign-analyst';
       case 'metaCampaignAnalyst': return '/api/agents/meta-campaign-analyst';
       case 'metaCreativeAnalyst': return '/api/agents/meta-creative-analyst';
-      case 'inventoryAnalyst': return '/api/agents/inventory-analyst';
-      case 'cashFlowAnalyst': return '/api/agents/cash-flow-analyst';
-      case 'especialistaDashboard': return '/api/agents/especialista-dashboard';
-      case 'pnlAnalyst': return '/api/agents/pnl-analyst';
-      case 'budgetPlanningAnalyst': return '/api/agents/budget-planning-analyst';
       default: return '/api/agents/shopify-analyst';
     }
   };
