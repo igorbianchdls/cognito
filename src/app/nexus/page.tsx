@@ -55,6 +55,8 @@ export default function Page() {
       case 'googleCampaignAnalyst': return '/api/agents/google-campaign-analyst';
       case 'metaCampaignAnalyst': return '/api/agents/meta-campaign-analyst';
       case 'metaCreativeAnalyst': return '/api/agents/meta-creative-analyst';
+      case 'performanceAgent': return '/api/workflows/performance';
+      case 'productAgent': return '/api/workflows/products';
       default: return '/api/agents/shopify-analyst';
     }
   };
