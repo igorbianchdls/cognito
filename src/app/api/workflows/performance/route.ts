@@ -1,5 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { convertToModelMessages, streamText } from 'ai';
+import { convertToModelMessages, streamText, stepCountIs } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
 
 export const maxDuration = 300;
@@ -14,18 +14,56 @@ export async function POST(req: Request) {
 
     const result = streamText({
       model: anthropic('claude-sonnet-4-20250514'),
-      system: `Você é especialista em análise de performance de lojas.
+      system: `Você é especialista em análise de performance de lojas com workflow estruturado obrigatório.
 
-Sua especialidade é analisar métricas como:
-- Vendas totais por período
-- Número de pedidos
-- Receita e crescimento
-- KPIs de performance geral
+WORKFLOW OBRIGATÓRIO - Execute EXATAMENTE nesta ordem:
 
-Use executarSQL para consultar dados e forneça insights claros sobre performance.`,
+STEP 1 - DESCOBERTA DE TABELAS:
+- Use getTables() para descobrir tabelas disponíveis no BigQuery
+- Identifique tabelas relacionadas a vendas, pedidos, produtos, campanhas
+
+STEP 2 - MAPEAMENTO DE SCHEMAS:
+- Para cada tabela relevante, use getTableSchema() para entender estrutura
+- Analise colunas de métricas (vendas, receita, quantidade)
+- Identifique colunas de dimensões (data, produto, campanha)
+
+STEP 3 - RESUMO DOS SCHEMAS:
+- Apresente um resumo claro e organizado dos schemas descobertos
+- Identifique as principais tabelas e suas colunas mais importantes
+- Destaque colunas de métricas e dimensões relevantes para análise de performance
+- Forneça sugestões de análises que podem ser feitas com esses dados
+
+Execute os steps sequencialmente. Não pule etapas.`,
       messages: convertToModelMessages(messages),
       tools: {
-        executarSQL: bigqueryTools.executarSQL
+        getTables: bigqueryTools.getTables,
+        getTableSchema: bigqueryTools.getTableSchema
+      },
+      stopWhen: stepCountIs(3),
+      prepareStep: async ({ stepNumber }) => {
+        console.log(`🎯 PERFORMANCE AGENT: Preparando step ${stepNumber}`);
+
+        if (stepNumber === 1) {
+          // Step 1: Only getTables allowed
+          return {
+            activeTools: ['getTables'],
+            toolChoice: 'required'
+          };
+        } else if (stepNumber === 2) {
+          // Step 2: Only getTableSchema allowed
+          return {
+            activeTools: ['getTableSchema'],
+            toolChoice: 'required'
+          };
+        } else if (stepNumber === 3) {
+          // Step 3: No tools - only text summary
+          return {
+            activeTools: [],
+            toolChoice: 'none'
+          };
+        }
+
+        return {};
       }
     });
 
