@@ -46,11 +46,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
   'shopeeAnalyst': ShopeeIcon,
   'contaAzulAnalyst': ContaAzulIcon,
   'keywordAnalyst': null,
-  'inventoryAnalyst': null,
-  'cashFlowAnalyst': null,
-  'especialistaDashboard': null,
-  'pnlAnalyst': null,
-  'budgetPlanningAnalyst': null,
+  'performanceAgent': null,
+  'productAgent': null,
 };
 
 const models = [
@@ -66,11 +63,8 @@ const models = [
   { id: 'googleCampaignAnalyst', name: 'GoogleCampaignAnalyst', icon: iconMap['googleCampaignAnalyst'] },
   { id: 'metaCampaignAnalyst', name: 'MetaCampaignAnalyst', icon: iconMap['metaCampaignAnalyst'] },
   { id: 'metaCreativeAnalyst', name: 'MetaCreativeAnalyst', icon: iconMap['metaCreativeAnalyst'] },
-  { id: 'inventoryAnalyst', name: 'InventoryAnalyst', icon: iconMap['inventoryAnalyst'] },
-  { id: 'cashFlowAnalyst', name: 'CashFlowAnalyst', icon: iconMap['cashFlowAnalyst'] },
-  { id: 'especialistaDashboard', name: 'EspecialistaDashboard', icon: iconMap['especialistaDashboard'] },
-  { id: 'pnlAnalyst', name: 'P&LAnalyst', icon: iconMap['pnlAnalyst'] },
-  { id: 'budgetPlanningAnalyst', name: 'BudgetPlanningAnalyst', icon: iconMap['budgetPlanningAnalyst'] },
+  { id: 'performanceAgent', name: 'PerformanceAgent', icon: iconMap['performanceAgent'] },
+  { id: 'productAgent', name: 'ProductAgent', icon: iconMap['productAgent'] },
 ];
 
 export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange }: InputAreaProps) {
