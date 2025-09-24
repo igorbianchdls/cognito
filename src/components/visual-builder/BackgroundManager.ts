@@ -81,19 +81,6 @@ const BACKGROUND_PRESETS: Record<string, BackgroundPreset> = {
   },
 
   // Gradients
-  darkGradient: {
-    type: 'gradient',
-    name: 'Dark Gradient',
-    description: 'Deep dark background',
-    backgroundColor: '#0A0A0A',
-    backgroundGradient: {
-      enabled: true,
-      type: 'linear',
-      direction: '135deg',
-      startColor: '#0A0A0A',
-      endColor: '#0A0A0A'
-    }
-  },
 
   // Glass Effects
   glassLight: {
@@ -144,32 +131,6 @@ const BACKGROUND_PRESETS: Record<string, BackgroundPreset> = {
       endColor: '#1a2332'
     }
   },
-  charcoal: {
-    type: 'gradient',
-    name: 'Charcoal',
-    description: 'Premium dark gray gradient',
-    backgroundColor: '#0f1419',
-    backgroundGradient: {
-      enabled: true,
-      type: 'linear',
-      direction: '135deg',
-      startColor: '#0f1419',
-      endColor: '#242a31'
-    }
-  },
-  midnight: {
-    type: 'gradient',
-    name: 'Midnight',
-    description: 'Minimalist near-black background',
-    backgroundColor: '#050810',
-    backgroundGradient: {
-      enabled: true,
-      type: 'linear',
-      direction: '135deg',
-      startColor: '#050810',
-      endColor: '#1a202c'
-    }
-  }
 };
 
 export type BackgroundPresetKey = keyof typeof BACKGROUND_PRESETS;

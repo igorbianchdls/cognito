@@ -1179,11 +1179,11 @@ import type { BackgroundPresetKey } from './BackgroundManager';
 // Theme to Background mapping - each theme uses a specific background preset
 export const THEME_BACKGROUND_MAPPING: Record<ThemeTokenName, BackgroundPresetKey> = {
   light: 'light',
-  dark: 'darkGradient',
+  dark: 'black',
   corporate: 'corporate',
   navy: 'navy',
   slate: 'glassDark',
-  forest: 'charcoal',
+  forest: 'darkGray',
   hightech: 'hightech',
   platinum: 'glassLight'
 } as const;
