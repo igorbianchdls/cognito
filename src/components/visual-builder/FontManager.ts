@@ -126,7 +126,6 @@ const THEME_FONT_MAPPING: Record<string, string> = {
   light: 'opensans',
   dark: 'inter',
   blue: 'roboto',
-  green: 'lato',
   corporate: 'arial',
   navy: 'segoe',
   slate: 'montserrat',

@@ -83,21 +83,6 @@ const THEME_COLOR_PALETTES: Record<string, CorporateColorPalette> = {
       pie: { border: '#1D4ED8', arcLabel: '#FFFFFF', arcLinkLabel: '#3B82F6' }
     }
   },
-  green: {
-    name: 'Green Theme',
-    description: 'Nature-inspired green palette',
-    primary: '#059669',
-    secondary: '#10B981',
-    tertiary: '#047857',
-    quaternary: '#065F46',
-    pieSlices: ['#059669', '#047857', '#065F46', '#064E3B', '#10B981', '#34D399'],
-    chartElements: {
-      bar: { fill: '#059669', border: '#047857', label: '#FFFFFF' },
-      line: { stroke: '#059669', point: '#10B981', pointBorder: '#047857', pointLabel: '#FFFFFF' },
-      area: { fill: '#059669', stroke: '#047857', point: '#10B981', pointBorder: '#065F46', pointLabel: '#FFFFFF' },
-      pie: { border: '#047857', arcLabel: '#FFFFFF', arcLinkLabel: '#10B981' }
-    }
-  },
   corporate: {
     name: 'Corporate Theme',
     description: 'Professional yellow corporate palette',
@@ -175,7 +160,7 @@ const THEME_COLOR_PALETTES: Record<string, CorporateColorPalette> = {
   }
 };
 
-export type ColorPresetKey = 'light' | 'dark' | 'blue' | 'green' | 'corporate' | 'navy' | 'slate' | 'forest' | 'platinum';
+export type ColorPresetKey = 'light' | 'dark' | 'blue' | 'corporate' | 'navy' | 'slate' | 'forest' | 'platinum';
 
 export interface ColorPreview {
   key: ColorPresetKey;

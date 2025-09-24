@@ -713,71 +713,6 @@ export const BLUE_TOKENS: DesignTokens = {
   }
 };
 
-// Green Theme Tokens
-export const GREEN_TOKENS: DesignTokens = {
-  ...DARK_TOKENS,
-  colors: {
-    ...DARK_TOKENS.colors,
-    surface: '#065f46',
-    surfaceElevated: '#047857',
-    primary: '#34d399',
-    accent: '#6ee7b7',
-    border: '#059669',
-    text: {
-      primary: '#ecfdf5',
-      secondary: '#d1fae5',
-      muted: '#a7f3d0',
-      inverse: '#064e3b'
-    },
-    chartElements: {
-      bar: {
-        fill: '#10b981',
-        border: '#047857',
-        label: '#ecfdf5'
-      },
-      line: {
-        stroke: '#34d399',
-        point: '#6ee7b7',
-        pointBorder: '#047857',
-        pointLabel: '#d1fae5'
-      },
-      area: {
-        fill: '#047857',
-        stroke: '#10b981',
-        point: '#34d399',
-        pointBorder: '#065f46',
-        pointLabel: '#ecfdf5'
-      },
-      pie: {
-        border: '#059669',
-        arcLabel: '#ecfdf5',
-        arcLinkLabel: '#d1fae5'
-      }
-    },
-    grid: {
-      border: '#059669'
-    }
-  },
-  typography: TYPOGRAPHY_PRESETS.lato,
-
-  effects: {
-    opacity: {
-      transparent: 0,
-      subtle: 1.0,
-      medium: 1.0,
-      strong: 1.0,
-      opaque: 1
-    },
-    // gradient and backdrop will come from BackgroundManager
-    shadow: {
-      color: '#059669',
-      opacity: 0.25,
-      blur: 16,
-      offsetX: 2,
-      offsetY: 8
-    }
-  }
-};
 
 // Corporate Theme Tokens
 export const CORPORATE_TOKENS: DesignTokens = {
@@ -1294,7 +1229,6 @@ export const THEME_TOKENS = {
   light: LIGHT_TOKENS,
   dark: DARK_TOKENS,
   blue: BLUE_TOKENS,
-  green: GREEN_TOKENS,
   corporate: CORPORATE_TOKENS,
   navy: NAVY_TOKENS,
   slate: SLATE_TOKENS,
@@ -1313,7 +1247,6 @@ export const THEME_BACKGROUND_MAPPING: Record<ThemeTokenName, BackgroundPresetKe
   light: 'light',
   dark: 'darkGradient',
   blue: 'blueGradient',
-  green: 'greenGradient',
   corporate: 'corporate',
   navy: 'navy',
   slate: 'glassDark',
