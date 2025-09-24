@@ -303,6 +303,298 @@ export default function DarkCardsPage() {
 
       </div>
 
+      {/* Additional Gradient Variations */}
+      <div className="mt-16">
+        <h2 className="text-2xl font-bold text-white mb-6 text-center">Gradient Variations - Different Directions</h2>
+        <p className="text-gray-400 text-center mb-8">Same colors, different gradient directions</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+
+          {/* Navy Blue Variations */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-gray-400 text-center">Navy Blue - Diagonal Opposite</h3>
+            <KPICard
+              name="Receita Total"
+              currentValue={847000}
+              unit="R$"
+              backgroundGradient={{
+                enabled: true,
+                type: 'linear',
+                direction: '225deg',
+                startColor: 'rgba(255,255,255,0.1)',
+                endColor: '#1a1a2e'
+              }}
+              kpiContainerBorderColor="rgba(96, 165, 250, 0.3)"
+              kpiContainerBorderWidth={1}
+              kpiContainerBorderRadius={12}
+              kpiContainerPadding={24}
+              containerShadowColor="rgba(96, 165, 250, 0.2)"
+              containerShadowOpacity={0.8}
+              containerShadowBlur={8}
+              containerShadowOffsetX={0}
+              containerShadowOffsetY={2}
+              kpiNameColor="rgba(255, 255, 255, 0.7)"
+              kpiValueColor="#60a5fa"
+              kpiValueFontSize={28}
+              kpiValueFontWeight={600}
+              kpiNameFontSize={14}
+              success={true}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-gray-400 text-center">Midnight Blue - Diagonal Opposite</h3>
+            <KPICard
+              name="Ticket Médio"
+              currentValue={450}
+              unit="R$"
+              backgroundGradient={{
+                enabled: true,
+                type: 'linear',
+                direction: '225deg',
+                startColor: 'rgba(255,255,255,0.08)',
+                endColor: '#0f172a'
+              }}
+              kpiContainerBorderColor="rgba(71, 85, 105, 0.3)"
+              kpiContainerBorderWidth={1}
+              kpiContainerBorderRadius={12}
+              kpiContainerPadding={24}
+              containerShadowColor="rgba(71, 85, 105, 0.2)"
+              containerShadowOpacity={0.8}
+              containerShadowBlur={8}
+              containerShadowOffsetX={0}
+              containerShadowOffsetY={2}
+              kpiNameColor="rgba(255, 255, 255, 0.7)"
+              kpiValueColor="#475569"
+              kpiValueFontSize={28}
+              kpiValueFontWeight={600}
+              kpiNameFontSize={14}
+              success={true}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-gray-400 text-center">Deep Blue - Diagonal Opposite</h3>
+            <KPICard
+              name="LTV Médio"
+              currentValue={2340}
+              unit="R$"
+              backgroundGradient={{
+                enabled: true,
+                type: 'linear',
+                direction: '225deg',
+                startColor: 'rgba(255,255,255,0.1)',
+                endColor: '#0a1525'
+              }}
+              kpiContainerBorderColor="rgba(59, 130, 246, 0.3)"
+              kpiContainerBorderWidth={1}
+              kpiContainerBorderRadius={12}
+              kpiContainerPadding={24}
+              containerShadowColor="rgba(59, 130, 246, 0.2)"
+              containerShadowOpacity={0.8}
+              containerShadowBlur={8}
+              containerShadowOffsetX={0}
+              containerShadowOffsetY={2}
+              kpiNameColor="rgba(255, 255, 255, 0.7)"
+              kpiValueColor="#3b82f6"
+              kpiValueFontSize={28}
+              kpiValueFontWeight={600}
+              kpiNameFontSize={14}
+              success={true}
+            />
+          </div>
+
+          {/* Vertical Gradients */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-gray-400 text-center">Navy Blue - Vertical</h3>
+            <KPICard
+              name="Receita Total"
+              currentValue={847000}
+              unit="R$"
+              backgroundGradient={{
+                enabled: true,
+                type: 'linear',
+                direction: '180deg',
+                startColor: 'rgba(255,255,255,0.1)',
+                endColor: '#1a1a2e'
+              }}
+              kpiContainerBorderColor="rgba(96, 165, 250, 0.3)"
+              kpiContainerBorderWidth={1}
+              kpiContainerBorderRadius={12}
+              kpiContainerPadding={24}
+              containerShadowColor="rgba(96, 165, 250, 0.2)"
+              containerShadowOpacity={0.8}
+              containerShadowBlur={8}
+              containerShadowOffsetX={0}
+              containerShadowOffsetY={2}
+              kpiNameColor="rgba(255, 255, 255, 0.7)"
+              kpiValueColor="#60a5fa"
+              kpiValueFontSize={28}
+              kpiValueFontWeight={600}
+              kpiNameFontSize={14}
+              success={true}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-gray-400 text-center">Midnight Blue - Vertical</h3>
+            <KPICard
+              name="Ticket Médio"
+              currentValue={450}
+              unit="R$"
+              backgroundGradient={{
+                enabled: true,
+                type: 'linear',
+                direction: '180deg',
+                startColor: 'rgba(255,255,255,0.08)',
+                endColor: '#0f172a'
+              }}
+              kpiContainerBorderColor="rgba(71, 85, 105, 0.3)"
+              kpiContainerBorderWidth={1}
+              kpiContainerBorderRadius={12}
+              kpiContainerPadding={24}
+              containerShadowColor="rgba(71, 85, 105, 0.2)"
+              containerShadowOpacity={0.8}
+              containerShadowBlur={8}
+              containerShadowOffsetX={0}
+              containerShadowOffsetY={2}
+              kpiNameColor="rgba(255, 255, 255, 0.7)"
+              kpiValueColor="#475569"
+              kpiValueFontSize={28}
+              kpiValueFontWeight={600}
+              kpiNameFontSize={14}
+              success={true}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-gray-400 text-center">Deep Blue - Vertical</h3>
+            <KPICard
+              name="LTV Médio"
+              currentValue={2340}
+              unit="R$"
+              backgroundGradient={{
+                enabled: true,
+                type: 'linear',
+                direction: '180deg',
+                startColor: 'rgba(255,255,255,0.1)',
+                endColor: '#0a1525'
+              }}
+              kpiContainerBorderColor="rgba(59, 130, 246, 0.3)"
+              kpiContainerBorderWidth={1}
+              kpiContainerBorderRadius={12}
+              kpiContainerPadding={24}
+              containerShadowColor="rgba(59, 130, 246, 0.2)"
+              containerShadowOpacity={0.8}
+              containerShadowBlur={8}
+              containerShadowOffsetX={0}
+              containerShadowOffsetY={2}
+              kpiNameColor="rgba(255, 255, 255, 0.7)"
+              kpiValueColor="#3b82f6"
+              kpiValueFontSize={28}
+              kpiValueFontWeight={600}
+              kpiNameFontSize={14}
+              success={true}
+            />
+          </div>
+
+          {/* Horizontal Gradients */}
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-gray-400 text-center">Navy Blue - Horizontal</h3>
+            <KPICard
+              name="Receita Total"
+              currentValue={847000}
+              unit="R$"
+              backgroundGradient={{
+                enabled: true,
+                type: 'linear',
+                direction: '90deg',
+                startColor: 'rgba(255,255,255,0.1)',
+                endColor: '#1a1a2e'
+              }}
+              kpiContainerBorderColor="rgba(96, 165, 250, 0.3)"
+              kpiContainerBorderWidth={1}
+              kpiContainerBorderRadius={12}
+              kpiContainerPadding={24}
+              containerShadowColor="rgba(96, 165, 250, 0.2)"
+              containerShadowOpacity={0.8}
+              containerShadowBlur={8}
+              containerShadowOffsetX={0}
+              containerShadowOffsetY={2}
+              kpiNameColor="rgba(255, 255, 255, 0.7)"
+              kpiValueColor="#60a5fa"
+              kpiValueFontSize={28}
+              kpiValueFontWeight={600}
+              kpiNameFontSize={14}
+              success={true}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-gray-400 text-center">Midnight Blue - Horizontal</h3>
+            <KPICard
+              name="Ticket Médio"
+              currentValue={450}
+              unit="R$"
+              backgroundGradient={{
+                enabled: true,
+                type: 'linear',
+                direction: '90deg',
+                startColor: 'rgba(255,255,255,0.08)',
+                endColor: '#0f172a'
+              }}
+              kpiContainerBorderColor="rgba(71, 85, 105, 0.3)"
+              kpiContainerBorderWidth={1}
+              kpiContainerBorderRadius={12}
+              kpiContainerPadding={24}
+              containerShadowColor="rgba(71, 85, 105, 0.2)"
+              containerShadowOpacity={0.8}
+              containerShadowBlur={8}
+              containerShadowOffsetX={0}
+              containerShadowOffsetY={2}
+              kpiNameColor="rgba(255, 255, 255, 0.7)"
+              kpiValueColor="#475569"
+              kpiValueFontSize={28}
+              kpiValueFontWeight={600}
+              kpiNameFontSize={14}
+              success={true}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-gray-400 text-center">Deep Blue - Horizontal</h3>
+            <KPICard
+              name="LTV Médio"
+              currentValue={2340}
+              unit="R$"
+              backgroundGradient={{
+                enabled: true,
+                type: 'linear',
+                direction: '90deg',
+                startColor: 'rgba(255,255,255,0.1)',
+                endColor: '#0a1525'
+              }}
+              kpiContainerBorderColor="rgba(59, 130, 246, 0.3)"
+              kpiContainerBorderWidth={1}
+              kpiContainerBorderRadius={12}
+              kpiContainerPadding={24}
+              containerShadowColor="rgba(59, 130, 246, 0.2)"
+              containerShadowOpacity={0.8}
+              containerShadowBlur={8}
+              containerShadowOffsetX={0}
+              containerShadowOffsetY={2}
+              kpiNameColor="rgba(255, 255, 255, 0.7)"
+              kpiValueColor="#3b82f6"
+              kpiValueFontSize={28}
+              kpiValueFontWeight={600}
+              kpiNameFontSize={14}
+              success={true}
+            />
+          </div>
+
+        </div>
+      </div>
+
       {/* Comparison Info */}
       <div className="mt-12 max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
