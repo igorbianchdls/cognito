@@ -477,11 +477,17 @@ export class ThemeManager {
     // Apply advanced effects from tokens
     clonedWidget.pieConfig.styling.containerOpacity = tokens.effects.opacity.medium;
 
-    // Always apply gradient (enabled: true if defined, cleared if undefined)
+    // Always apply gradient props directly (like KPI implementation)
     if (tokens.effects.gradient) {
-      clonedWidget.pieConfig.styling.containerBackground = `${tokens.effects.gradient.type}-gradient(${tokens.effects.gradient.direction}, ${tokens.effects.gradient.startColor}, ${tokens.effects.gradient.endColor})`;
+      clonedWidget.pieConfig.styling.backgroundGradient = {
+        enabled: true,
+        type: tokens.effects.gradient.type,
+        direction: tokens.effects.gradient.direction,
+        startColor: tokens.effects.gradient.startColor,
+        endColor: tokens.effects.gradient.endColor
+      };
     } else {
-      clonedWidget.pieConfig.styling.containerBackground = undefined;
+      clonedWidget.pieConfig.styling.backgroundGradient = undefined;
     }
 
     // Always apply backdrop filter (blur if defined, cleared if undefined)
@@ -568,11 +574,17 @@ export class ThemeManager {
     // Apply advanced effects from tokens
     clonedWidget.areaConfig.styling.containerOpacity = tokens.effects.opacity.medium;
 
-    // Always apply gradient (enabled: true if defined, cleared if undefined)
+    // Always apply gradient props directly (like KPI implementation)
     if (tokens.effects.gradient) {
-      clonedWidget.areaConfig.styling.containerBackground = `${tokens.effects.gradient.type}-gradient(${tokens.effects.gradient.direction}, ${tokens.effects.gradient.startColor}, ${tokens.effects.gradient.endColor})`;
+      clonedWidget.areaConfig.styling.backgroundGradient = {
+        enabled: true,
+        type: tokens.effects.gradient.type,
+        direction: tokens.effects.gradient.direction,
+        startColor: tokens.effects.gradient.startColor,
+        endColor: tokens.effects.gradient.endColor
+      };
     } else {
-      clonedWidget.areaConfig.styling.containerBackground = undefined;
+      clonedWidget.areaConfig.styling.backgroundGradient = undefined;
     }
 
     // Always apply backdrop filter (blur if defined, cleared if undefined)
