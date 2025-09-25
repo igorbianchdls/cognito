@@ -1266,6 +1266,43 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
+        if (part.type === 'tool-executarSQLComDados') {
+          const sqlDataTool = part as NexusToolUIPart;
+          const callId = sqlDataTool.toolCallId;
+          const shouldBeOpen = sqlDataTool.state === 'output-available' || sqlDataTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-executarSQLComDados" state={sqlDataTool.state} />
+                <ToolContent>
+                  {sqlDataTool.input && (
+                    <ToolInput input={sqlDataTool.input} />
+                  )}
+                  {sqlDataTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={sqlDataTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {sqlDataTool.state === 'output-available' && (
+                <SQLDataResults
+                  sqlQuery={(sqlDataTool.output as ExecutarSQLComDadosToolOutput).sqlQuery}
+                  explicacao={(sqlDataTool.output as ExecutarSQLComDadosToolOutput).explicacao}
+                  queryType={(sqlDataTool.output as ExecutarSQLComDadosToolOutput).queryType}
+                  data={(sqlDataTool.output as ExecutarSQLComDadosToolOutput).data}
+                  rowsReturned={(sqlDataTool.output as ExecutarSQLComDadosToolOutput).rowsReturned}
+                  executionTime={(sqlDataTool.output as ExecutarSQLComDadosToolOutput).executionTime}
+                  success={(sqlDataTool.output as ExecutarSQLComDadosToolOutput).success}
+                  error={(sqlDataTool.output as ExecutarSQLComDadosToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
         if (part.type === 'tool-executarMultiplasSQL') {
           const multiSqlTool = part as NexusToolUIPart;
           const callId = multiSqlTool.toolCallId;
