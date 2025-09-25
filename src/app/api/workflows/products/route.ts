@@ -52,22 +52,27 @@ LIMIT 10"
 - Use o parâmetro sqlQuery com a query exata acima
 - Use o parâmetro explicacao para descrever detalhadamente sua análise
 
-STEP 3 - RESUMO E INSIGHTS OBRIGATÓRIO:
-- OBRIGATÓRIO: Este step é APENAS análise textual - NÃO execute nenhuma tool
-- OBRIGATÓRIO: Baseado EXCLUSIVAMENTE nos dados REAIS obtidos nos STEP 1 e STEP 2, gere um resumo executivo estruturado
-- OBRIGATÓRIO: Analise os seguintes pontos na ordem exata:
-  1. CATEGORIAS: Quais categorias geram mais receita? Qual categoria tem maior ticket médio?
-  2. TOP PRODUTOS: Quais produtos dominam as vendas? Há concentração em poucos produtos?
-  3. INSIGHTS: Compare categorias vs produtos individuais - há produtos específicos que superam suas categorias?
-  4. OPORTUNIDADES: Identifique categorias com potencial inexplorado baseado nos dados
-  5. RECOMENDAÇÕES: Forneça 3-5 ações práticas baseadas APENAS nos dados analisados
-- OBRIGATÓRIO: Use os números e dados REAIS obtidos nas análises anteriores
-- OBRIGATÓRIO: Formate como um relatório executivo estruturado
+STEP 3 - INSIGHTS VISUAIS OBRIGATÓRIO:
+- OBRIGATÓRIO: Execute gerarInsights com base EXCLUSIVAMENTE nos dados REAIS obtidos nos STEP 1 e STEP 2
+- OBRIGATÓRIO: Use gerarInsights com os seguintes parâmetros:
+  1. insights: Array de 4-6 insights principais (cada um com titulo, descricao, dados, importancia)
+  2. resumo: Resumo executivo da análise completa
+  3. contexto: "Baseado em análise de produtos do ecommerce - STEP 1 (categorias) e STEP 2 (top produtos)"
+- OBRIGATÓRIO: Estruture os insights cobrindo:
+  * CATEGORIA DOMINANTE: Qual categoria gera mais receita (importancia: 'alta')
+  * TOP PRODUTO: Qual produto individual domina (importancia: 'alta')
+  * CONCENTRAÇÃO: Análise de concentração vs diversificação (importancia: 'media')
+  * OPORTUNIDADE: Categoria ou produto com potencial (importancia: 'media')
+  * TICKET MÉDIO: Insight sobre preços médios (importancia: 'baixa')
+  * RECOMENDAÇÃO: Ação estratégica principal (importancia: 'alta')
+- OBRIGATÓRIO: No campo 'dados' de cada insight, inclua números REAIS dos steps anteriores
+- OBRIGATÓRIO: Use importancia 'alta' para insights críticos, 'media' para importantes, 'baixa' para informativos
 
 IMPORTANTE: Execute os steps OBRIGATORIAMENTE na sequência 1 → 2 → 3. Não pule etapas. Não repita steps. Cada step deve ser executado UMA ÚNICA VEZ na ordem correta.`,
       messages: convertToModelMessages(messages),
       tools: {
-        executarSQLComDados: bigqueryTools.executarSQLComDados
+        executarSQLComDados: bigqueryTools.executarSQLComDados,
+        gerarInsights: bigqueryTools.gerarInsights
       },
       stopWhen: stepCountIs(3),
       prepareStep: async ({ stepNumber }) => {
@@ -86,10 +91,10 @@ IMPORTANTE: Execute os steps OBRIGATORIAMENTE na sequência 1 → 2 → 3. Não 
             toolChoice: 'required'
           };
         } else if (stepNumber === 3) {
-          // Step 3: No tools, just analysis
+          // Step 3: Only gerarInsights allowed
           return {
-            activeTools: [],
-            toolChoice: 'none'
+            activeTools: ['gerarInsights'],
+            toolChoice: 'required'
           };
         }
 
