@@ -22,6 +22,7 @@ import Dashboard from '../tools/Dashboard';
 import SQLExecution from '../tools/SQLExecution';
 import SQLDataResults from '../tools/SQLDataResults';
 import InsightsResults from '../tools/InsightsResults';
+import AlertsResults from '../tools/AlertsResults';
 import TableCreation from '../tools/TableCreation';
 import { KPICard } from '../widgets/KPICard';
 import WebPreviewCard from '../tools/WebPreviewCard';
@@ -331,6 +332,33 @@ type GerarInsightsToolOutput = {
   resumo?: string;
   contexto?: string;
   totalInsights: number;
+  error?: string;
+};
+
+type GerarAlertasToolInput = {
+  alertas: Array<{
+    titulo: string;
+    descricao: string;
+    dados?: string;
+    nivel: 'critico' | 'alto' | 'medio' | 'baixo';
+    acao?: string;
+  }>;
+  resumo?: string;
+  contexto?: string;
+};
+
+type GerarAlertasToolOutput = {
+  success: boolean;
+  alertas: Array<{
+    titulo: string;
+    descricao: string;
+    dados?: string;
+    nivel: 'critico' | 'alto' | 'medio' | 'baixo';
+    acao?: string;
+  }>;
+  resumo?: string;
+  contexto?: string;
+  totalAlertas: number;
   error?: string;
 };
 
@@ -784,6 +812,10 @@ type NexusToolUIPart = ToolUIPart<{
   gerarInsights: {
     input: GerarInsightsToolInput;
     output: GerarInsightsToolOutput;
+  };
+  gerarAlertas: {
+    input: GerarAlertasToolInput;
+    output: GerarAlertasToolOutput;
   };
   executarMultiplasSQL: {
     input: ExecutarMultiplasSQLToolInput;
@@ -1690,6 +1722,41 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   totalInsights={(insightsTool.output as GerarInsightsToolOutput).totalInsights}
                   success={(insightsTool.output as GerarInsightsToolOutput).success}
                   error={(insightsTool.output as GerarInsightsToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-gerarAlertas') {
+          const alertasTool = part as NexusToolUIPart;
+          const callId = alertasTool.toolCallId;
+          const shouldBeOpen = alertasTool.state === 'output-available' || alertasTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-gerarAlertas" state={alertasTool.state} />
+                <ToolContent>
+                  {alertasTool.input && (
+                    <ToolInput input={alertasTool.input} />
+                  )}
+                  {alertasTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={alertasTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {alertasTool.state === 'output-available' && (
+                <AlertsResults
+                  alertas={(alertasTool.output as GerarAlertasToolOutput).alertas}
+                  resumo={(alertasTool.output as GerarAlertasToolOutput).resumo}
+                  contexto={(alertasTool.output as GerarAlertasToolOutput).contexto}
+                  totalAlertas={(alertasTool.output as GerarAlertasToolOutput).totalAlertas}
+                  success={(alertasTool.output as GerarAlertasToolOutput).success}
+                  error={(alertasTool.output as GerarAlertasToolOutput).error}
                 />
               )}
             </div>
