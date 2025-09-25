@@ -54,19 +54,33 @@ LIMIT 10"
 
 STEP 3 - INSIGHTS VISUAIS OBRIGATÓRIO:
 - OBRIGATÓRIO: Execute gerarInsights com base EXCLUSIVAMENTE nos dados REAIS obtidos nos STEP 1 e STEP 2
-- OBRIGATÓRIO: Use gerarInsights com os seguintes parâmetros:
-  1. insights: Array de 4-6 insights principais (cada um com titulo, descricao, dados, importancia)
-  2. resumo: Resumo executivo da análise completa
+- OBRIGATÓRIO: Use gerarInsights com os seguintes parâmetros EXATOS:
+  1. insights: ARRAY de 4-6 objetos (NÃO string JSON) - cada objeto com titulo, descricao, dados, importancia
+  2. resumo: String com resumo executivo da análise completa
   3. contexto: "Baseado em análise de produtos do ecommerce - STEP 1 (categorias) e STEP 2 (top produtos)"
-- OBRIGATÓRIO: Estruture os insights cobrindo:
-  * CATEGORIA DOMINANTE: Qual categoria gera mais receita (importancia: 'alta')
-  * TOP PRODUTO: Qual produto individual domina (importancia: 'alta')
-  * CONCENTRAÇÃO: Análise de concentração vs diversificação (importancia: 'media')
-  * OPORTUNIDADE: Categoria ou produto com potencial (importancia: 'media')
-  * TICKET MÉDIO: Insight sobre preços médios (importancia: 'baixa')
-  * RECOMENDAÇÃO: Ação estratégica principal (importancia: 'alta')
-- OBRIGATÓRIO: No campo 'dados' de cada insight, inclua números REAIS dos steps anteriores
-- OBRIGATÓRIO: Use importancia 'alta' para insights críticos, 'media' para importantes, 'baixa' para informativos
+- FORMATO OBRIGATÓRIO do parâmetro insights (ARRAY de objetos):
+  insights: [
+    {
+      titulo: "CATEGORIA DOMINANTE: [nome da categoria] com [%] da receita",
+      descricao: "Análise detalhada com dados específicos",
+      dados: "Receita: R$ X | Compras: Y | Preço médio: R$ Z",
+      importancia: "alta"
+    },
+    {
+      titulo: "TOP PRODUTO: [nome do produto] domina com R$ X",
+      descricao: "Análise específica do produto campeão",
+      dados: "Receita: R$ X | Unidades: Y | Estimativa preço: R$ Z",
+      importancia: "alta"
+    }
+  ]
+- OBRIGATÓRIO: Crie insights sobre:
+  * CATEGORIA DOMINANTE (importancia: 'alta')
+  * TOP PRODUTO (importancia: 'alta')
+  * CONCENTRAÇÃO vs DIVERSIFICAÇÃO (importancia: 'media')
+  * OPORTUNIDADE identificada (importancia: 'media')
+  * TICKET MÉDIO por categoria (importancia: 'baixa')
+  * RECOMENDAÇÃO estratégica (importancia: 'alta')
+- CRÍTICO: insights deve ser ARRAY de objetos, não string JSON!
 
 IMPORTANTE: Execute os steps OBRIGATORIAMENTE na sequência 1 → 2 → 3. Não pule etapas. Não repita steps. Cada step deve ser executado UMA ÚNICA VEZ na ordem correta.`,
       messages: convertToModelMessages(messages),
