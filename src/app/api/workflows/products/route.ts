@@ -16,6 +16,24 @@ export async function POST(req: Request) {
       model: anthropic('claude-sonnet-4-20250514'),
       system: `Você é especialista em análise de produtos de lojas com workflow estruturado obrigatório.
 
+🔧 REGRAS CRÍTICAS PARA USO DE TOOLS:
+
+TOOL gerarInsights:
+- Parâmetro 'insights' DEVE ser ARRAY de objetos, NUNCA string JSON
+- Formato correto: insights: [{titulo:"...", descricao:"...", dados:"...", importancia:"alta"}]
+- Formato ERRADO: insights: "[{\"titulo\":\"...\"}]"
+- Cada insight deve ter: titulo (string), descricao (string), dados (string opcional), importancia ("alta"|"media"|"baixa")
+- Use entre 4-6 insights por análise
+
+TOOL gerarAlertas:
+- Parâmetro 'alertas' DEVE ser ARRAY de objetos, NUNCA string JSON
+- Formato correto: alertas: [{titulo:"...", descricao:"...", dados:"...", nivel:"critico", acao:"..."}]
+- Formato ERRADO: alertas: "[{\"titulo\":\"...\"}]"
+- Cada alerta deve ter: titulo (string), descricao (string), dados (string opcional), nivel ("critico"|"alto"|"medio"|"baixo"), acao (string opcional)
+- Use entre 3-5 alertas por análise
+
+⚠️ ATENÇÃO: Use parâmetros nativos JavaScript, NÃO serialize como strings JSON!
+
 COMANDO DE ATIVAÇÃO:
 Quando o usuário enviar "executar análise produtos", execute automaticamente o workflow completo de 3 steps.
 
@@ -53,10 +71,11 @@ LIMIT 10"
 - Use o parâmetro explicacao para descrever detalhadamente sua análise
 
 STEP 3 - INSIGHTS VISUAIS:
+⚠️ IMPORTANTE: O parâmetro insights DEVE SER UM ARRAY DE OBJETOS, NÃO UMA STRING JSON!
 **OBRIGATÓRIO**: Execute gerarInsights com os seguintes parâmetros:
 
 PARÂMETROS da tool gerarInsights:
-- insights: array de objetos insight (OBRIGATÓRIO)
+- insights: array de objetos insight (OBRIGATÓRIO) - FORMATO: ARRAY, NÃO STRING
 - resumo: resumo executivo geral (opcional)
 - contexto: contexto da análise (opcional)
 
@@ -66,11 +85,18 @@ Estrutura de cada objeto insight:
 - dados: string (números/dados que suportam, opcional)
 - importancia: "alta" | "media" | "baixa"
 
-Exemplo de chamada:
-insights: [
-  {titulo: "CATEGORIA DOMINANTE...", descricao: "...", dados: "...", importancia: "alta"},
-  {titulo: "TOP PRODUTO...", descricao: "...", dados: "...", importancia: "alta"}
-]
+EXEMPLO CORRETO de chamada da tool gerarInsights:
+gerarInsights({
+  insights: [
+    {titulo: "CATEGORIA DOMINANTE - Anéis Lideram", descricao: "explicação detalhada", dados: "dados específicos", importancia: "alta"},
+    {titulo: "TOP PRODUTO - Nome do produto", descricao: "explicação detalhada", dados: "dados específicos", importancia: "alta"}
+  ],
+  resumo: "Resumo executivo dos insights",
+  contexto: "Contexto da análise realizada"
+})
+
+❌ ERRADO: insights: "[{\"titulo\":...}]" (string)
+✅ CORRETO: insights: [{titulo:...}] (array)
 
 TÓPICOS obrigatórios (4-6 insights):
 • CATEGORIA DOMINANTE (alta)
