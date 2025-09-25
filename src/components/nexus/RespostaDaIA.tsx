@@ -21,6 +21,7 @@ import ResultDisplay from '../tools/ResultDisplay';
 import Dashboard from '../tools/Dashboard';
 import SQLExecution from '../tools/SQLExecution';
 import SQLDataResults from '../tools/SQLDataResults';
+import InsightsResults from '../tools/InsightsResults';
 import TableCreation from '../tools/TableCreation';
 import { KPICard } from '../widgets/KPICard';
 import WebPreviewCard from '../tools/WebPreviewCard';
@@ -305,6 +306,31 @@ type ExecutarSQLComDadosToolOutput = {
   executionTime: number;
   success: boolean;
   message?: string;
+  error?: string;
+};
+
+type GerarInsightsToolInput = {
+  insights: Array<{
+    titulo: string;
+    descricao: string;
+    dados?: string;
+    importancia: 'alta' | 'media' | 'baixa';
+  }>;
+  resumo?: string;
+  contexto?: string;
+};
+
+type GerarInsightsToolOutput = {
+  success: boolean;
+  insights: Array<{
+    titulo: string;
+    descricao: string;
+    dados?: string;
+    importancia: 'alta' | 'media' | 'baixa';
+  }>;
+  resumo?: string;
+  contexto?: string;
+  totalInsights: number;
   error?: string;
 };
 
@@ -754,6 +780,10 @@ type NexusToolUIPart = ToolUIPart<{
   gerarMultiplosGraficos: {
     input: GerarMultiplosGraficosToolInput;
     output: GerarMultiplosGraficosToolOutput;
+  };
+  gerarInsights: {
+    input: GerarInsightsToolInput;
+    output: GerarInsightsToolOutput;
   };
   executarMultiplasSQL: {
     input: ExecutarMultiplasSQLToolInput;
@@ -1625,6 +1655,41 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   charts={(dashboardTool.output as GerarMultiplosGraficosToolOutput).charts}
                   summary={(dashboardTool.output as GerarMultiplosGraficosToolOutput).summary}
                   metadata={(dashboardTool.output as GerarMultiplosGraficosToolOutput).metadata}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-gerarInsights') {
+          const insightsTool = part as NexusToolUIPart;
+          const callId = insightsTool.toolCallId;
+          const shouldBeOpen = insightsTool.state === 'output-available' || insightsTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-gerarInsights" state={insightsTool.state} />
+                <ToolContent>
+                  {insightsTool.input && (
+                    <ToolInput input={insightsTool.input} />
+                  )}
+                  {insightsTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={insightsTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {insightsTool.state === 'output-available' && (
+                <InsightsResults
+                  insights={(insightsTool.output as GerarInsightsToolOutput).insights}
+                  resumo={(insightsTool.output as GerarInsightsToolOutput).resumo}
+                  contexto={(insightsTool.output as GerarInsightsToolOutput).contexto}
+                  totalInsights={(insightsTool.output as GerarInsightsToolOutput).totalInsights}
+                  success={(insightsTool.output as GerarInsightsToolOutput).success}
+                  error={(insightsTool.output as GerarInsightsToolOutput).error}
                 />
               )}
             </div>
