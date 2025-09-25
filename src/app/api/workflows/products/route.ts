@@ -53,7 +53,8 @@ LIMIT 10"
 - Use o parâmetro explicacao para descrever detalhadamente sua análise
 
 STEP 3 - INSIGHTS VISUAIS:
-Execute gerarInsights com dados dos STEP 1 e STEP 2.
+**OBRIGATÓRIO**: Execute gerarInsights usando os dados coletados dos STEP 1 e STEP 2.
+Analise os resultados das categorias e produtos para gerar insights estratégicos.
 
 Gere insights com a estrutura:
 - Cada insight: {titulo, descricao, dados, importancia}
