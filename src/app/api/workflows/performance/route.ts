@@ -29,19 +29,19 @@ STEP 2 - MAPEAMENTO DE SCHEMA DA TABELA ECOMMERCE:
 - Analise colunas de métricas (vendas, receita, quantidade)
 - Identifique colunas de dimensões (data, produto, campanha)
 
-STEP 3 - RESUMO FINAL:
-- Com base nos dados coletados, apresente um resumo estruturado:
-  • Tabelas encontradas no Step 1
-  • Schema da tabela ecommerce do Step 2
-  • Principais colunas e tipos de dados
-  • Sugestões de análises possíveis
-- Formato: texto organizado e claro, sem usar ferramentas
+STEP 3 - ANÁLISE SQL INTELIGENTE:
+- Com base no schema da tabela ecommerce descoberto no Step 2, execute executarSQL
+- Use as colunas reais da tabela para criar query de análise de performance
+- Exemplo: Se encontrou colunas como 'revenue', 'order_date', 'quantity', use-as na query
+- Foque em métricas como: total de vendas, pedidos por período, ticket médio
+- Crie query que aproveite a estrutura real da tabela ecommerce descoberta
 
 Execute os steps sequencialmente. Não pule etapas.`,
       messages: convertToModelMessages(messages),
       tools: {
         getTables: bigqueryTools.getTables,
-        getTableSchema: bigqueryTools.getTableSchema
+        getTableSchema: bigqueryTools.getTableSchema,
+        executarSQL: bigqueryTools.executarSQL
       },
       stopWhen: stepCountIs(3),
       prepareStep: async ({ stepNumber }) => {
@@ -60,9 +60,10 @@ Execute os steps sequencialmente. Não pule etapas.`,
             toolChoice: 'required'
           };
         } else if (stepNumber === 3) {
-          // Step 3: No tools - only text summary
+          // Step 3: Only executarSQL allowed
           return {
-            activeTools: []
+            activeTools: ['executarSQL'],
+            toolChoice: 'required'
           };
         }
 
