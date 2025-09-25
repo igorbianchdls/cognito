@@ -52,12 +52,20 @@ LIMIT 10"
 - Use o parâmetro sqlQuery com a query exata acima
 - Use o parâmetro explicacao para descrever detalhadamente sua análise
 
+STEP 3 - RESUMO E INSIGHTS:
+- Baseado nos dados reais obtidos nos STEP 1 e STEP 2, gere um resumo executivo
+- Analise os padrões encontrados nas categorias de produtos
+- Compare o performance dos top produtos vs categorias gerais
+- Identifique oportunidades de crescimento e insights estratégicos
+- Forneça recomendações práticas baseadas nos dados analisados
+- Este step é apenas análise textual - não execute nenhuma tool
+
 Execute os steps sequencialmente. Não pule etapas.`,
       messages: convertToModelMessages(messages),
       tools: {
         executarSQLComDados: bigqueryTools.executarSQLComDados
       },
-      stopWhen: stepCountIs(2),
+      stopWhen: stepCountIs(3),
       prepareStep: async ({ stepNumber }) => {
         console.log(`📦 PRODUCT AGENT: Preparando step ${stepNumber}`);
 
@@ -72,6 +80,12 @@ Execute os steps sequencialmente. Não pule etapas.`,
           return {
             activeTools: ['executarSQLComDados'],
             toolChoice: 'required'
+          };
+        } else if (stepNumber === 3) {
+          // Step 3: No tools, just analysis
+          return {
+            activeTools: [],
+            toolChoice: 'none'
           };
         }
 
