@@ -807,3 +807,41 @@ export const gerarInsights = tool({
     }
   }
 });
+
+export const gerarAlertas = tool({
+  description: 'Gera alertas estruturados a partir de análises de dados com interface visual de alertas',
+  inputSchema: z.object({
+    alertas: z.array(z.object({
+      titulo: z.string().describe('Título do alerta (ex: "Vendas Abaixo da Meta - Ação Necessária")'),
+      descricao: z.string().describe('Descrição detalhada do alerta'),
+      dados: z.string().optional().describe('Dados/números que suportam este alerta'),
+      nivel: z.enum(['critico', 'alto', 'medio', 'baixo']).describe('Nível de criticidade do alerta'),
+      acao: z.string().optional().describe('Ação recomendada para resolver o alerta')
+    })).describe('Array de alertas a serem exibidos'),
+    resumo: z.string().optional().describe('Resumo executivo dos alertas'),
+    contexto: z.string().optional().describe('Contexto da análise (ex: "Baseado em análise de performance semanal")')
+  }),
+  execute: async ({ alertas, resumo, contexto }) => {
+    try {
+      return {
+        success: true,
+        alertas,
+        resumo,
+        contexto,
+        totalAlertas: alertas.length,
+        metadata: {
+          generatedAt: new Date().toISOString(),
+          dataSource: 'alerts-analysis'
+        }
+      };
+    } catch (error) {
+      console.error('❌ Erro ao gerar alertas:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to generate alerts',
+        alertas: [],
+        totalAlertas: 0
+      };
+    }
+  }
+});
