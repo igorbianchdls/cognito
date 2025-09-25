@@ -35,9 +35,8 @@ STEP 2 - MAPEAMENTO DE SCHEMA DA TABELA ECOMMERCE:
 - Identifique colunas de dimensões (data, produto, campanha)
 
 STEP 3 - ANÁLISE SQL ESPECÍFICA:
-- Antes de executar executarSQL(), explique de forma detalhada o que você vai fazer
-- Execute executarSQL com EXATAMENTE esta query (sem modificações):
-  sqlQuery: "SELECT
+- Execute executarSQL com os seguintes parâmetros:
+  1. sqlQuery: "SELECT
     product_category,
     COUNT(DISTINCT purchase_id) as total_purchases,
     SUM(product_price * quantity) as revenue,
@@ -46,8 +45,9 @@ FROM \`creatto-463117.biquery_data.ecommerce\`
 WHERE event_name = 'purchase'
 GROUP BY product_category
 ORDER BY revenue DESC"
-- Use o parâmetro sqlQuery, não query
-- Não crie outras queries, use apenas esta
+  2. explicacao: "Gere aqui sua explicação detalhada do que você está fazendo"
+- Use o parâmetro sqlQuery com a query exata acima
+- Use o parâmetro explicacao para descrever detalhadamente sua análise
 
 Execute os steps sequencialmente. Não pule etapas.`,
       messages: convertToModelMessages(messages),
