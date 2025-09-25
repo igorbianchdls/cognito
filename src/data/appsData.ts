@@ -30,7 +30,7 @@ export const categories = [
   'Daaa', 
   'LandiPs',
   'ApGaes',
-  'Components',
+  'Componnts',
   'Login & Sign Up',
   'Blog & Portfolio',
   'E-commerce',
