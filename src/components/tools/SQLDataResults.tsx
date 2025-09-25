@@ -4,7 +4,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { DataTable, TableData } from '@/components/widgets/Table';
 
 interface SQLDataRow extends TableData {
-  [key: string]: string | number | boolean | null | undefined;
+  [key: string]: unknown;
 }
 
 interface SQLDataResultsProps {
