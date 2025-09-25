@@ -1,17 +1,13 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import { DataTable, TableData } from '@/components/widgets/Table';
-
-interface SQLDataRow extends TableData {
-  [key: string]: unknown;
-}
+import { DataTable } from '@/components/widgets/Table';
 
 interface SQLDataResultsProps {
   sqlQuery?: string;
   explicacao?: string;
   queryType?: string;
-  data?: SQLDataRow[];
+  data?: Record<string, unknown>[];
   rowsReturned?: number;
   executionTime?: number;
   success?: boolean;
@@ -28,7 +24,7 @@ function formatNumber(num: number): string {
 }
 
 // Generate dynamic columns based on data keys
-function generateColumns(data: SQLDataRow[]): ColumnDef<SQLDataRow>[] {
+function generateColumns(data: Record<string, unknown>[]): ColumnDef<Record<string, unknown>>[] {
   if (!data || data.length === 0) return [];
 
   const firstRow = data[0];
