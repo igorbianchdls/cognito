@@ -830,7 +830,17 @@ export const gerarAlertas = tool({
     resumo: z.string().optional().describe('Resumo executivo dos alertas'),
     contexto: z.string().optional().describe('Contexto da análise (ex: "Baseado em análise de performance semanal")')
   }),
-  execute: async ({ alertas, resumo, contexto }) => {
+  execute: async ({ alertas, resumo, contexto }: {
+    alertas: Array<{
+      titulo: string;
+      descricao: string;
+      dados?: string;
+      nivel: 'critico' | 'alto' | 'medio' | 'baixo';
+      acao?: string;
+    }>;
+    resumo?: string;
+    contexto?: string;
+  }) => {
     try {
       return {
         success: true,
