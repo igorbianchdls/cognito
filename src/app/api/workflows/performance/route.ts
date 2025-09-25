@@ -22,10 +22,12 @@ Quando o usuário enviar "executar fluxo categoria", execute automaticamente o w
 WORKFLOW OBRIGATÓRIO - Execute EXATAMENTE nesta ordem:
 
 STEP 1 - DESCOBERTA DE TABELAS:
+- Antes de executar getTables(), explique de forma detalhada o que você vai fazer
 - Use getTables() para descobrir tabelas disponíveis no BigQuery
 - Identifique tabelas relacionadas a vendas, pedidos, produtos, campanhas
 
 STEP 2 - MAPEAMENTO DE SCHEMA DA TABELA ECOMMERCE:
+- Antes de executar getTableSchema(), explique de forma detalhada o que você vai fazer
 - Use getTableSchema(tableName: "ecommerce") APENAS UMA VEZ
 - Foque na estrutura da tabela ecommerce especificamente
 - Não chame getTableSchema para outras tabelas
@@ -33,6 +35,7 @@ STEP 2 - MAPEAMENTO DE SCHEMA DA TABELA ECOMMERCE:
 - Identifique colunas de dimensões (data, produto, campanha)
 
 STEP 3 - ANÁLISE SQL ESPECÍFICA:
+- Antes de executar executarSQL(), explique de forma detalhada o que você vai fazer
 - Execute executarSQL com EXATAMENTE esta query (sem modificações):
   sqlQuery: "SELECT
     product_category,
