@@ -35,7 +35,7 @@ TOOL gerarAlertas:
 ⚠️ ATENÇÃO: Use parâmetros nativos JavaScript, NÃO serialize como strings JSON!
 
 COMANDO DE ATIVAÇÃO:
-Quando o usuário enviar "executar análise produtos", execute automaticamente o workflow completo de 3 steps.
+Quando o usuário enviar "executar análise produtos", execute automaticamente o workflow completo de 4 steps.
 
 WORKFLOW OBRIGATÓRIO - Execute EXATAMENTE nesta ordem:
 
@@ -106,13 +106,50 @@ TÓPICOS obrigatórios (4-6 insights):
 • TICKET MÉDIO (baixa)
 • RECOMENDAÇÃO (alta)
 
-IMPORTANTE: Execute os steps OBRIGATORIAMENTE na sequência 1 → 2 → 3. Não pule etapas. Não repita steps. Cada step deve ser executado UMA ÚNICA VEZ na ordem correta.`,
+STEP 4 - ALERTAS CRÍTICOS:
+⚠️ IMPORTANTE: O parâmetro alertas DEVE SER UM ARRAY DE OBJETOS, NÃO UMA STRING JSON!
+**OBRIGATÓRIO**: Execute gerarAlertas com os seguintes parâmetros:
+
+PARÂMETROS da tool gerarAlertas:
+- alertas: array de objetos alerta (OBRIGATÓRIO) - FORMATO: ARRAY, NÃO STRING
+- resumo: resumo executivo geral (opcional)
+- contexto: contexto da análise (opcional)
+
+Estrutura de cada objeto alerta:
+- titulo: string (ex: "CATEGORIA DOMINANTE - Anéis Lideram")
+- descricao: string (explicação detalhada)
+- dados: string (números/dados que suportam, opcional)
+- nivel: "critico" | "alto" | "medio" | "baixo"
+- acao: string (ação recomendada, opcional)
+
+EXEMPLO CORRETO de chamada da tool gerarAlertas:
+gerarAlertas({
+  alertas: [
+    {titulo: "CATEGORIA DOMINANTE - Anéis Lideram", descricao: "explicação detalhada", dados: "dados específicos", nivel: "critico", acao: "ação específica"},
+    {titulo: "TOP PRODUTO - Nome do produto", descricao: "explicação detalhada", dados: "dados específicos", nivel: "alto", acao: "ação específica"}
+  ],
+  resumo: "Resumo executivo dos alertas",
+  contexto: "Contexto da análise realizada"
+})
+
+❌ ERRADO: alertas: "[{\"titulo\":...}]" (string)
+✅ CORRETO: alertas: [{titulo:...}] (array)
+
+TÓPICOS obrigatórios (3-5 alertas):
+• CATEGORIA DOMINANTE (critico)
+• TOP PRODUTO (alto)
+• CONCENTRAÇÃO/DIVERSIFICAÇÃO (medio)
+• OPORTUNIDADE (alto)
+• RECOMENDAÇÃO (critico)
+
+IMPORTANTE: Execute os steps OBRIGATORIAMENTE na sequência 1 → 2 → 3 → 4. Não pule etapas. Não repita steps. Cada step deve ser executado UMA ÚNICA VEZ na ordem correta.`,
       messages: convertToModelMessages(messages),
       tools: {
         executarSQLComDados: bigqueryTools.executarSQLComDados,
-        gerarInsights: bigqueryTools.gerarInsights
+        gerarInsights: bigqueryTools.gerarInsights,
+        gerarAlertas: bigqueryTools.gerarAlertas
       },
-      stopWhen: stepCountIs(4),
+      stopWhen: stepCountIs(5),
       prepareStep: async ({ stepNumber }) => {
         console.log(`📦 PRODUCT AGENT: Preparando step ${stepNumber}`);
 
@@ -132,6 +169,12 @@ IMPORTANTE: Execute os steps OBRIGATORIAMENTE na sequência 1 → 2 → 3. Não 
           // Step 3: Only gerarInsights allowed
           return {
             activeTools: ['gerarInsights'],
+            toolChoice: 'required'
+          };
+        } else if (stepNumber === 4) {
+          // Step 4: Only gerarAlertas allowed
+          return {
+            activeTools: ['gerarAlertas'],
             toolChoice: 'required'
           };
         }
