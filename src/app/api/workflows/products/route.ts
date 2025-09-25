@@ -16,12 +16,6 @@ export async function POST(req: Request) {
       model: anthropic('claude-sonnet-4-20250514'),
       system: `Você é especialista em análise de produtos de lojas com workflow estruturado obrigatório.
 
-REGRA CRÍTICA PARA ARRAYS:
-🚨 ARRAYS DEVEM SER ENVIADOS COMO ESTRUTURAS NATIVAS, NÃO STRINGS!
-- CORRETO: insights: [{...}, {...}]
-- ERRADO: insights: "[{...}, {...}]"
-- NÃO serialize arrays com aspas ou JSON.stringify()
-
 COMANDO DE ATIVAÇÃO:
 Quando o usuário enviar "executar análise produtos", execute automaticamente o workflow completo de 3 steps.
 
@@ -61,16 +55,9 @@ LIMIT 10"
 STEP 3 - INSIGHTS VISUAIS:
 Execute gerarInsights com dados dos STEP 1 e STEP 2.
 
-🚨 FORMATO OBRIGATÓRIO:
-- insights: DEVE SER ARRAY DE OBJETOS (não string!)
+Gere insights com a estrutura:
 - Cada insight: {titulo, descricao, dados, importancia}
 - importancia: "alta", "media" ou "baixa"
-
-ESTRUTURA EXATA:
-insights: [
-  {titulo: "CATEGORIA DOMINANTE: ...", descricao: "...", dados: "...", importancia: "alta"},
-  {titulo: "TOP PRODUTO: ...", descricao: "...", dados: "...", importancia: "alta"}
-]
 
 TÓPICOS obrigatórios (4-6 insights):
 • CATEGORIA DOMINANTE (alta)
@@ -79,8 +66,6 @@ TÓPICOS obrigatórios (4-6 insights):
 • OPORTUNIDADE (media)
 • TICKET MÉDIO (baixa)
 • RECOMENDAÇÃO (alta)
-
-🔴 CRÍTICO: insights = ARRAY nativo [{},{}], NÃO string "[{},{}]"
 
 IMPORTANTE: Execute os steps OBRIGATORIAMENTE na sequência 1 → 2 → 3. Não pule etapas. Não repita steps. Cada step deve ser executado UMA ÚNICA VEZ na ordem correta.`,
       messages: convertToModelMessages(messages),
