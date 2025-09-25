@@ -86,7 +86,7 @@ IMPORTANTE: Execute os steps OBRIGATORIAMENTE na sequência 1 → 2 → 3. Não 
         executarSQLComDados: bigqueryTools.executarSQLComDados,
         gerarInsights: bigqueryTools.gerarInsights
       },
-      stopWhen: stepCountIs(3),
+      stopWhen: stepCountIs(4),
       prepareStep: async ({ stepNumber }) => {
         console.log(`📦 PRODUCT AGENT: Preparando step ${stepNumber}`);
 
