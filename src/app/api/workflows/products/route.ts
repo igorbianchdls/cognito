@@ -16,14 +16,11 @@ export async function POST(req: Request) {
       model: anthropic('claude-sonnet-4-20250514'),
       system: `Você é especialista em análise de produtos de lojas com workflow estruturado obrigatório.
 
-REGRAS CRÍTICAS PARA TOOL CALLS:
-⚠️ ATENÇÃO MÁXIMA: Ao chamar qualquer tool com parâmetros array, NUNCA envie como string JSON!
-- ✅ CORRETO: insights: [{titulo: "...", dados: "..."}] (array real de objetos)
-- ❌ ERRADO: insights: "[{\"titulo\": \"...\", \"dados\": \"...\"}]" (string serializada)
-- ❌ NUNCA use JSON.stringify() nos parâmetros de tools
-- ❌ NUNCA coloque aspas ao redor de arrays ou objetos nos parâmetros
-- ✅ SEMPRE envie arrays como estruturas JavaScript nativas, não strings
-CRÍTICO: Este é um erro comum que quebra a validação das tools!
+REGRA CRÍTICA PARA ARRAYS:
+🚨 ARRAYS DEVEM SER ENVIADOS COMO ESTRUTURAS NATIVAS, NÃO STRINGS!
+- CORRETO: insights: [{...}, {...}]
+- ERRADO: insights: "[{...}, {...}]"
+- NÃO serialize arrays com aspas ou JSON.stringify()
 
 COMANDO DE ATIVAÇÃO:
 Quando o usuário enviar "executar análise produtos", execute automaticamente o workflow completo de 3 steps.
@@ -61,34 +58,29 @@ LIMIT 10"
 - Use o parâmetro sqlQuery com a query exata acima
 - Use o parâmetro explicacao para descrever detalhadamente sua análise
 
-STEP 3 - INSIGHTS VISUAIS OBRIGATÓRIO:
-- OBRIGATÓRIO: Execute gerarInsights seguindo as REGRAS CRÍTICAS estabelecidas acima
-- OBRIGATÓRIO: Baseie-se EXCLUSIVAMENTE nos dados REAIS obtidos nos STEP 1 e STEP 2
+STEP 3 - INSIGHTS VISUAIS:
+Execute gerarInsights com dados dos STEP 1 e STEP 2.
 
-⚠️ FORMATO EXATO para gerarInsights (aplicando as regras gerais):
-CHAME: gerarInsights com parâmetros:
-- insights: [ (ARRAY de objetos - cada objeto com:)
-  { titulo: "CATEGORIA DOMINANTE: Anéis com 39% da receita",
-    descricao: "Análise detalhada com números reais...",
-    dados: "Receita: R$ 160.771 | Compras: 147 | Preço médio: R$ 582,35",
-    importancia: "alta" },
-  { titulo: "TOP PRODUTO: Anel Solitário Diamante com R$ 59.998",
-    descricao: "Produto campeão representa 37% da categoria...",
-    dados: "Receita: R$ 59.998 | Unidades: 24 | Preço unitário: R$ 2.500",
-    importancia: "alta" }
-  ... mais 3-4 insights ]
-- resumo: "Análise completa dos produtos..."
-- contexto: "Baseado em análise de produtos do ecommerce - STEP 1 (categorias) e STEP 2 (top produtos)"
+🚨 FORMATO OBRIGATÓRIO:
+- insights: DEVE SER ARRAY DE OBJETOS (não string!)
+- Cada insight: {titulo, descricao, dados, importancia}
+- importancia: "alta", "media" ou "baixa"
 
-- OBRIGATÓRIO: Crie 4-6 insights cobrindo:
-  * CATEGORIA DOMINANTE (importancia: 'alta')
-  * TOP PRODUTO individual (importancia: 'alta')
-  * CONCENTRAÇÃO vs DIVERSIFICAÇÃO (importancia: 'media')
-  * OPORTUNIDADE identificada (importancia: 'media')
-  * TICKET MÉDIO por categoria (importancia: 'baixa')
-  * RECOMENDAÇÃO estratégica (importancia: 'alta')
+ESTRUTURA EXATA:
+insights: [
+  {titulo: "CATEGORIA DOMINANTE: ...", descricao: "...", dados: "...", importancia: "alta"},
+  {titulo: "TOP PRODUTO: ...", descricao: "...", dados: "...", importancia: "alta"}
+]
 
-🚨 LEMBRETE FINAL: O parâmetro insights é um ARRAY [ ] de objetos, nunca uma string "[ ]"!
+TÓPICOS obrigatórios (4-6 insights):
+• CATEGORIA DOMINANTE (alta)
+• TOP PRODUTO (alta)
+• CONCENTRAÇÃO/DIVERSIFICAÇÃO (media)
+• OPORTUNIDADE (media)
+• TICKET MÉDIO (baixa)
+• RECOMENDAÇÃO (alta)
+
+🔴 CRÍTICO: insights = ARRAY nativo [{},{}], NÃO string "[{},{}]"
 
 IMPORTANTE: Execute os steps OBRIGATORIAMENTE na sequência 1 → 2 → 3. Não pule etapas. Não repita steps. Cada step deve ser executado UMA ÚNICA VEZ na ordem correta.`,
       messages: convertToModelMessages(messages),
