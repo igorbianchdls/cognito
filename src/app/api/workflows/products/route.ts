@@ -66,27 +66,19 @@ STEP 3 - INSIGHTS VISUAIS OBRIGATÓRIO:
 - OBRIGATÓRIO: Baseie-se EXCLUSIVAMENTE nos dados REAIS obtidos nos STEP 1 e STEP 2
 
 ⚠️ FORMATO EXATO para gerarInsights (aplicando as regras gerais):
-```
-gerarInsights({
-  insights: [    // ← ARRAY real, NÃO string!
-    {
-      titulo: "CATEGORIA DOMINANTE: Anéis com 39% da receita",
-      descricao: "Análise detalhada com números reais...",
-      dados: "Receita: R$ 160.771 | Compras: 147 | Preço médio: R$ 582,35",
-      importancia: "alta"
-    },
-    {
-      titulo: "TOP PRODUTO: Anel Solitário Diamante com R$ 59.998",
-      descricao: "Produto campeão representa 37% da categoria...",
-      dados: "Receita: R$ 59.998 | Unidades: 24 | Preço unitário: R$ 2.500",
-      importancia: "alta"
-    }
-    // ... mais 3-4 insights
-  ],
-  resumo: "Análise completa dos produtos...",
-  contexto: "Baseado em análise de produtos do ecommerce - STEP 1 (categorias) e STEP 2 (top produtos)"
-})
-```
+CHAME: gerarInsights com parâmetros:
+- insights: [ (ARRAY de objetos - cada objeto com:)
+  { titulo: "CATEGORIA DOMINANTE: Anéis com 39% da receita",
+    descricao: "Análise detalhada com números reais...",
+    dados: "Receita: R$ 160.771 | Compras: 147 | Preço médio: R$ 582,35",
+    importancia: "alta" },
+  { titulo: "TOP PRODUTO: Anel Solitário Diamante com R$ 59.998",
+    descricao: "Produto campeão representa 37% da categoria...",
+    dados: "Receita: R$ 59.998 | Unidades: 24 | Preço unitário: R$ 2.500",
+    importancia: "alta" }
+  ... mais 3-4 insights ]
+- resumo: "Análise completa dos produtos..."
+- contexto: "Baseado em análise de produtos do ecommerce - STEP 1 (categorias) e STEP 2 (top produtos)"
 
 - OBRIGATÓRIO: Crie 4-6 insights cobrindo:
   * CATEGORIA DOMINANTE (importancia: 'alta')
