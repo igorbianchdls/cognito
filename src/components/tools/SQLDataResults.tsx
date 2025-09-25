@@ -138,8 +138,8 @@ export default function SQLDataResults({
 
       {/* Results Table */}
       <DataTable
-        columns={columns}
-        data={data}
+        columns={columns as never}
+        data={data as never}
         searchPlaceholder="Filtrar resultados..."
         pageSize={25}
       />
