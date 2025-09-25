@@ -53,12 +53,24 @@ LIMIT 10"
 - Use o parâmetro explicacao para descrever detalhadamente sua análise
 
 STEP 3 - INSIGHTS VISUAIS:
-**OBRIGATÓRIO**: Execute gerarInsights usando os dados coletados dos STEP 1 e STEP 2.
-Analise os resultados das categorias e produtos para gerar insights estratégicos.
+**OBRIGATÓRIO**: Execute gerarInsights com os seguintes parâmetros:
 
-Gere insights com a estrutura:
-- Cada insight: {titulo, descricao, dados, importancia}
-- importancia: "alta", "media" ou "baixa"
+PARÂMETROS da tool gerarInsights:
+- insights: array de objetos insight (OBRIGATÓRIO)
+- resumo: resumo executivo geral (opcional)
+- contexto: contexto da análise (opcional)
+
+Estrutura de cada objeto insight:
+- titulo: string (ex: "CATEGORIA DOMINANTE - Anéis Lideram")
+- descricao: string (explicação detalhada)
+- dados: string (números/dados que suportam, opcional)
+- importancia: "alta" | "media" | "baixa"
+
+Exemplo de chamada:
+insights: [
+  {titulo: "CATEGORIA DOMINANTE...", descricao: "...", dados: "...", importancia: "alta"},
+  {titulo: "TOP PRODUTO...", descricao: "...", dados: "...", importancia: "alta"}
+]
 
 TÓPICOS obrigatórios (4-6 insights):
 • CATEGORIA DOMINANTE (alta)
