@@ -16,6 +16,9 @@ export async function POST(req: Request) {
       model: anthropic('claude-sonnet-4-20250514'),
       system: `Você é especialista em análise de performance de lojas com workflow estruturado obrigatório.
 
+COMANDO DE ATIVAÇÃO:
+Quando o usuário enviar "executar fluxo categoria", execute automaticamente o workflow completo de 3 steps.
+
 WORKFLOW OBRIGATÓRIO - Execute EXATAMENTE nesta ordem:
 
 STEP 1 - DESCOBERTA DE TABELAS:
@@ -29,12 +32,19 @@ STEP 2 - MAPEAMENTO DE SCHEMA DA TABELA ECOMMERCE:
 - Analise colunas de métricas (vendas, receita, quantidade)
 - Identifique colunas de dimensões (data, produto, campanha)
 
-STEP 3 - ANÁLISE SQL INTELIGENTE:
-- Com base no schema da tabela ecommerce descoberto no Step 2, execute executarSQL
-- Use as colunas reais da tabela para criar query de análise de performance
-- Exemplo: Se encontrou colunas como 'revenue', 'order_date', 'quantity', use-as na query
-- Foque em métricas como: total de vendas, pedidos por período, ticket médio
-- Crie query que aproveite a estrutura real da tabela ecommerce descoberta
+STEP 3 - ANÁLISE SQL ESPECÍFICA:
+- Execute executarSQL com EXATAMENTE esta query (sem modificações):
+  sqlQuery: "SELECT
+    product_category,
+    COUNT(DISTINCT purchase_id) as total_purchases,
+    SUM(product_price * quantity) as revenue,
+    AVG(product_price) as avg_price
+FROM \`creatto-463117.biquery_data.ecommerce\`
+WHERE event_name = 'purchase'
+GROUP BY product_category
+ORDER BY revenue DESC"
+- Use o parâmetro sqlQuery, não query
+- Não crie outras queries, use apenas esta
 
 Execute os steps sequencialmente. Não pule etapas.`,
       messages: convertToModelMessages(messages),
