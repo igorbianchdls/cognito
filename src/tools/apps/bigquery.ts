@@ -770,3 +770,40 @@ export const executarSQLComDados = tool({
     }
   },
 });
+
+export const gerarInsights = tool({
+  description: 'Gera insights estruturados a partir de análises de dados com interface visual',
+  inputSchema: z.object({
+    insights: z.array(z.object({
+      titulo: z.string().describe('Título do insight (ex: "Categoria Eletrônicos Domina Vendas")'),
+      descricao: z.string().describe('Descrição detalhada do insight'),
+      dados: z.string().optional().describe('Dados/números que suportam este insight'),
+      importancia: z.enum(['alta', 'media', 'baixa']).describe('Nível de importância')
+    })).describe('Array de insights a serem exibidos'),
+    resumo: z.string().optional().describe('Resumo executivo geral'),
+    contexto: z.string().optional().describe('Contexto da análise (ex: "Baseado em análise de produtos Q4 2024")')
+  }),
+  execute: async ({ insights, resumo, contexto }) => {
+    try {
+      return {
+        success: true,
+        insights,
+        resumo,
+        contexto,
+        totalInsights: insights.length,
+        metadata: {
+          generatedAt: new Date().toISOString(),
+          dataSource: 'insights-analysis'
+        }
+      };
+    } catch (error) {
+      console.error('❌ Erro ao gerar insights:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to generate insights',
+        insights: [],
+        totalInsights: 0
+      };
+    }
+  }
+});
