@@ -837,7 +837,7 @@ export const gerarAlertas = tool({
         alertas,
         resumo,
         contexto,
-        totalAlertas: alertas.length,
+        totalAlertas: (alertas as Array<{titulo: string; descricao: string; dados?: string; nivel: 'critico' | 'alto' | 'medio' | 'baixo'; acao?: string}>).length,
         metadata: {
           generatedAt: new Date().toISOString(),
           dataSource: 'alerts-analysis'
