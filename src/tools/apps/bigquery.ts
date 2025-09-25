@@ -710,3 +710,63 @@ export const getTimelineContext = tool({
     }
   }
 });
+
+export const executarSQLComDados = tool({
+  description: 'Execute SQL queries and return real data to AI while displaying results in a beautiful table UI',
+  inputSchema: z.object({
+    sqlQuery: z.string().describe('The SQL query to execute'),
+    explicacao: z.string().optional().describe('Explicação do que esta query vai analisar')
+  }),
+  execute: async ({ sqlQuery, explicacao }) => {
+    console.log('📋 BigQuery executarSQLComDados tool executed:', { sqlQuery });
+
+    try {
+      // Initialize BigQuery service if not already done
+      if (!bigQueryService['client']) {
+        console.log('⚡ Initializing BigQuery service...');
+        await bigQueryService.initialize();
+      }
+
+      const queryType = sqlQuery.trim().toLowerCase().split(' ')[0];
+      const startTime = Date.now();
+
+      console.log('🔍 Executing SQL query with real data...');
+
+      // Execute the query and get real results
+      const result = await bigQueryService.executeQuery({
+        query: sqlQuery,
+        jobTimeoutMs: 60000
+      });
+
+      const executionTime = Date.now() - startTime;
+      console.log('✅ Query completed in', executionTime, 'ms');
+      console.log('📈 Rows returned:', result.data?.length || 0);
+
+      return {
+        sqlQuery,
+        explicacao: explicacao,
+        queryType: queryType.toUpperCase(),
+        data: result.data || [], // Real data for AI to analyze
+        schema: result.schema || [],
+        rowsReturned: result.data?.length || 0,
+        executionTime,
+        success: true,
+        message: `Query executada com sucesso. ${result.data?.length || 0} registros retornados.`
+      };
+
+    } catch (error) {
+      console.error('❌ Error executing SQL query:', error);
+      return {
+        sqlQuery,
+        explicacao: explicacao,
+        queryType: sqlQuery.trim().toLowerCase().split(' ')[0].toUpperCase(),
+        data: [],
+        schema: [],
+        rowsReturned: 0,
+        executionTime: 0,
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to execute SQL query'
+      };
+    }
+  },
+});
