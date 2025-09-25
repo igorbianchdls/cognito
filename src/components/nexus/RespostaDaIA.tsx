@@ -20,6 +20,7 @@ import ChartVisualization from '../tools/ChartVisualization';
 import ResultDisplay from '../tools/ResultDisplay';
 import Dashboard from '../tools/Dashboard';
 import SQLExecution from '../tools/SQLExecution';
+import SQLDataResults from '../tools/SQLDataResults';
 import TableCreation from '../tools/TableCreation';
 import { KPICard } from '../widgets/KPICard';
 import WebPreviewCard from '../tools/WebPreviewCard';
@@ -287,6 +288,23 @@ type ExecutarSQLToolOutput = {
   bytesProcessed: number;
   success: boolean;
   validationErrors: string[];
+  error?: string;
+};
+
+type ExecutarSQLComDadosToolInput = {
+  sqlQuery: string;
+  explicacao?: string;
+};
+
+type ExecutarSQLComDadosToolOutput = {
+  sqlQuery: string;
+  explicacao?: string;
+  queryType: string;
+  data: Array<Record<string, unknown>>;
+  rowsReturned: number;
+  executionTime: number;
+  success: boolean;
+  message?: string;
   error?: string;
 };
 
