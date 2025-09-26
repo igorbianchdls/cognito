@@ -14,6 +14,17 @@ export async function POST(req: Request) {
 
     const result = streamText({
       model: anthropic('claude-sonnet-4-20250514'),
+
+      // Enable Claude reasoning/thinking
+      providerOptions: {
+        anthropic: {
+          thinking: {
+            type: 'enabled',
+            budgetTokens: 12000
+          }
+        }
+      },
+
       system: `Você é especialista em análise de produtos de lojas com workflow estruturado obrigatório.
 
 🔧 REGRAS CRÍTICAS PARA USO DE TOOLS:
