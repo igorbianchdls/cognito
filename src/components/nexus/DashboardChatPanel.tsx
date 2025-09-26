@@ -26,10 +26,11 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { FileText, BarChart3, Palette, Check, Type, Square, Paintbrush } from 'lucide-react';
+import { FileText, BarChart3, Palette, Check, Type, Square, Paintbrush, Monitor, Tablet, Smartphone } from 'lucide-react';
 
 export default function DashboardChatPanel() {
   const [activeTab, setActiveTab] = useState<'editor' | 'dashboard'>('editor');
+  const [selectedViewport, setSelectedViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [selectedTheme, setSelectedTheme] = useState<ThemeName>('dark');
   const [selectedFont, setSelectedFont] = useState<FontPresetKey>('inter');
   const [selectedFontSize, setSelectedFontSize] = useState<FontSizeKey>('lg');
@@ -228,6 +229,29 @@ export default function DashboardChatPanel() {
           <ArtifactTitle>Dashboard Builder</ArtifactTitle>
           <ArtifactDescription>Visual dashboard creation tool</ArtifactDescription>
         </div>
+
+        {/* Viewport Selector - NO MEIO */}
+        <div className="flex items-center gap-1">
+          <ArtifactAction
+            icon={Monitor}
+            onClick={() => setSelectedViewport('desktop')}
+            tooltip="Desktop View"
+            variant={selectedViewport === 'desktop' ? 'outline' : 'ghost'}
+          />
+          <ArtifactAction
+            icon={Tablet}
+            onClick={() => setSelectedViewport('tablet')}
+            tooltip="Tablet View"
+            variant={selectedViewport === 'tablet' ? 'outline' : 'ghost'}
+          />
+          <ArtifactAction
+            icon={Smartphone}
+            onClick={() => setSelectedViewport('mobile')}
+            tooltip="Mobile View"
+            variant={selectedViewport === 'mobile' ? 'outline' : 'ghost'}
+          />
+        </div>
+
         <ArtifactActions>
           <ArtifactAction
             icon={FileText}
