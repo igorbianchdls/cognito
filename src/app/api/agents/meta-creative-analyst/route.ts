@@ -67,7 +67,7 @@ Execute os steps sequencialmente. Não pule etapas.`,
       gerarInsights: bigqueryTools.gerarInsights,
       gerarAlertas: bigqueryTools.gerarAlertas,
     },
-    stopWhen: stepCountIs(6),
+    stopWhen: stepCountIs(7),
     prepareStep: async ({ stepNumber }) => {
       console.log(`📘 META CREATIVE ANALYST: Preparando step ${stepNumber}`);
 

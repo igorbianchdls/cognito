@@ -1,5 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { convertToModelMessages, streamText, hasToolCall } from 'ai';
+import { convertToModelMessages, streamText, stepCountIs } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
 
 export const maxDuration = 300;
@@ -14,16 +14,6 @@ export async function POST(req: Request) {
 
     const result = streamText({
       model: anthropic('claude-sonnet-4-20250514'),
-
-      // Enable Claude reasoning/thinking
-      providerOptions: {
-        anthropic: {
-          thinking: {
-            type: 'enabled',
-            budgetTokens: 12000
-          }
-        }
-      },
 
       system: `Você é especialista em análise de produtos de lojas com workflow estruturado obrigatório.
 
@@ -160,7 +150,7 @@ IMPORTANTE: Execute os steps OBRIGATORIAMENTE na sequência 1 → 2 → 3 → 4.
         gerarInsights: bigqueryTools.gerarInsights,
         gerarAlertas: bigqueryTools.gerarAlertas
       },
-      stopWhen: hasToolCall('gerarAlertas'),
+      stopWhen: stepCountIs(4),
       prepareStep: async ({ stepNumber }) => {
         console.log(`📦 PRODUCT AGENT: Preparando step ${stepNumber}`);
 
