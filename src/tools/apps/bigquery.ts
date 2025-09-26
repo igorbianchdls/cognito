@@ -774,12 +774,21 @@ export const executarSQLComDados = tool({
 export const gerarInsights = tool({
   description: 'Gera insights estruturados a partir de análises de dados com interface visual',
   inputSchema: z.object({
-    insights: z.array(z.object({
+    insights: z.preprocess((val) => {
+      if (typeof val === "string") {
+        try {
+          return JSON.parse(val); // transforma string em array
+        } catch {
+          return []; // fallback
+        }
+      }
+      return val;
+    }, z.array(z.object({
       titulo: z.string().describe('Título do insight (ex: "Categoria Eletrônicos Domina Vendas")'),
       descricao: z.string().describe('Descrição detalhada do insight'),
       dados: z.string().optional().describe('Dados/números que suportam este insight'),
       importancia: z.enum(['alta', 'media', 'baixa']).describe('Nível de importância')
-    })).describe('Array de insights a serem exibidos'),
+    }))).describe('Array de insights a serem exibidos'),
     resumo: z.string().optional().describe('Resumo executivo geral'),
     contexto: z.string().optional().describe('Contexto da análise (ex: "Baseado em análise de produtos Q4 2024")')
   }),
