@@ -57,7 +57,7 @@ export default function ChatContainer({
       <div className="overflow-y-auto custom-scrollbar focus:outline-none" tabIndex={0} autoFocus>
         <MessageList messages={messages} selectedAgent={selectedAgent} />
       </div>
-      <div className="pb-4" style={{backgroundColor: 'white'}}>
+      <div className="pb-2" style={{backgroundColor: 'white'}}>
         <InputArea 
           input={input}
           setInput={setInput}
