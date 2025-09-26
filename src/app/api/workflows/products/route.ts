@@ -181,15 +181,37 @@ TÓPICOS obrigatórios (3-5 recomendações):
 • DIVERSIFICAÇÃO (medio)
 • FOCO COMERCIAL (alto)
 
-IMPORTANTE: Execute os steps OBRIGATORIAMENTE na sequência 1 → 2 → 3 → 4 → 5. Não pule etapas. Não repita steps. Cada step deve ser executado UMA ÚNICA VEZ na ordem correta.`,
+STEP 6 - RELATÓRIO CONSOLIDADO:
+**OBRIGATÓRIO**: Execute gerarReport consolidando TODOS os resultados anteriores:
+
+PARÂMETROS da tool gerarReport:
+- titulo: "Relatório de Análise de Produtos" (string)
+- insights: TODOS os insights gerados no step 3 (array de objetos)
+- alertas: TODOS os alertas gerados no step 4 (array de objetos)
+- recomendacoes: TODAS as recomendações geradas no step 5 (array de objetos)
+- contexto: "Análise completa de produtos com base em dados BigQuery" (string opcional)
+- dataAnalise: data atual no formato "DD/MM/AAAA" (string opcional)
+
+EXEMPLO CORRETO de chamada da tool gerarReport:
+gerarReport({
+  titulo: "Relatório de Análise de Produtos",
+  insights: [todos os insights do step 3],
+  alertas: [todos os alertas do step 4],
+  recomendacoes: [todas as recomendações do step 5],
+  contexto: "Análise completa de produtos com base em dados BigQuery",
+  dataAnalise: "26/09/2024"
+})
+
+IMPORTANTE: Execute os steps OBRIGATORIAMENTE na sequência 1 → 2 → 3 → 4 → 5 → 6. Não pule etapas. Não repita steps. Cada step deve ser executado UMA ÚNICA VEZ na ordem correta.`,
       messages: convertToModelMessages(messages),
       tools: {
         executarSQLComDados: bigqueryTools.executarSQLComDados,
         gerarInsights: bigqueryTools.gerarInsights,
         gerarAlertas: bigqueryTools.gerarAlertas,
-        gerarRecomendacoes: bigqueryTools.gerarRecomendacoes
+        gerarRecomendacoes: bigqueryTools.gerarRecomendacoes,
+        gerarReport: bigqueryTools.gerarReport
       },
-      stopWhen: stepCountIs(5),
+      stopWhen: stepCountIs(6),
       prepareStep: async ({ stepNumber }) => {
         console.log(`📦 PRODUCT AGENT: Preparando step ${stepNumber}`);
 
@@ -221,6 +243,12 @@ IMPORTANTE: Execute os steps OBRIGATORIAMENTE na sequência 1 → 2 → 3 → 4 
           // Step 5: Only gerarRecomendacoes allowed
           return {
             activeTools: ['gerarRecomendacoes'],
+            toolChoice: 'required'
+          };
+        } else if (stepNumber === 6) {
+          // Step 6: Only gerarReport allowed
+          return {
+            activeTools: ['gerarReport'],
             toolChoice: 'required'
           };
         }

@@ -24,6 +24,7 @@ import SQLDataResults from '../tools/SQLDataResults';
 import InsightsResults from '../tools/InsightsResults';
 import AlertsResults from '../tools/AlertsResults';
 import RecommendationsResults from '../tools/RecommendationsResults';
+import ReportResults from '../tools/ReportResults';
 import TableCreation from '../tools/TableCreation';
 import { KPICard } from '../widgets/KPICard';
 import WebPreviewCard from '../tools/WebPreviewCard';
@@ -391,6 +392,48 @@ type GerarRecomendacoesToolOutput = {
   resumo?: string;
   contexto?: string;
   totalRecomendacoes: number;
+  error?: string;
+};
+
+type GerarReportToolInput = {
+  titulo: string;
+  insights: Array<{
+    titulo: string;
+    descricao: string;
+    dados?: string;
+    importancia: 'alta' | 'media' | 'baixa';
+  }>;
+  alertas: Array<{
+    titulo: string;
+    descricao: string;
+    dados?: string;
+    nivel: 'critico' | 'alto' | 'medio' | 'baixo';
+    acao?: string;
+  }>;
+  recomendacoes: Array<{
+    titulo: string;
+    descricao: string;
+    impacto: 'alto' | 'medio' | 'baixo';
+    facilidade: 'facil' | 'medio' | 'dificil';
+    categoria?: string;
+    proximosPassos?: string[];
+    estimativaResultado?: string;
+  }>;
+  contexto?: string;
+  dataAnalise?: string;
+};
+
+type GerarReportToolOutput = {
+  success: boolean;
+  titulo: string;
+  markdown: string;
+  totalInsights: number;
+  totalAlertas: number;
+  totalRecomendacoes: number;
+  metadata?: {
+    generatedAt: string;
+    dataSource: string;
+  };
   error?: string;
 };
 
@@ -852,6 +895,10 @@ type NexusToolUIPart = ToolUIPart<{
   gerarRecomendacoes: {
     input: GerarRecomendacoesToolInput;
     output: GerarRecomendacoesToolOutput;
+  };
+  gerarReport: {
+    input: GerarReportToolInput;
+    output: GerarReportToolOutput;
   };
   executarMultiplasSQL: {
     input: ExecutarMultiplasSQLToolInput;
@@ -1844,6 +1891,43 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   totalRecomendacoes={(recomendacoesTool.output as GerarRecomendacoesToolOutput).totalRecomendacoes}
                   success={(recomendacoesTool.output as GerarRecomendacoesToolOutput).success}
                   error={(recomendacoesTool.output as GerarRecomendacoesToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-gerarReport') {
+          const reportTool = part as NexusToolUIPart;
+          const callId = reportTool.toolCallId;
+          const shouldBeOpen = reportTool.state === 'output-available' || reportTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-gerarReport" state={reportTool.state} />
+                <ToolContent>
+                  {reportTool.input && (
+                    <ToolInput input={reportTool.input} />
+                  )}
+                  {reportTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={reportTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {reportTool.state === 'output-available' && (
+                <ReportResults
+                  titulo={(reportTool.output as GerarReportToolOutput).titulo}
+                  markdown={(reportTool.output as GerarReportToolOutput).markdown}
+                  totalInsights={(reportTool.output as GerarReportToolOutput).totalInsights}
+                  totalAlertas={(reportTool.output as GerarReportToolOutput).totalAlertas}
+                  totalRecomendacoes={(reportTool.output as GerarReportToolOutput).totalRecomendacoes}
+                  success={(reportTool.output as GerarReportToolOutput).success}
+                  error={(reportTool.output as GerarReportToolOutput).error}
+                  metadata={(reportTool.output as GerarReportToolOutput).metadata}
                 />
               )}
             </div>

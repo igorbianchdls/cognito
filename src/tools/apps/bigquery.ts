@@ -920,3 +920,150 @@ export const gerarRecomendacoes = tool({
     }
   }
 });
+
+export const gerarReport = tool({
+  description: 'Gera relatório consolidado em markdown com todos os insights, alertas e recomendações',
+  inputSchema: z.object({
+    titulo: z.string().describe('Título do relatório'),
+    insights: z.array(z.object({
+      titulo: z.string(),
+      descricao: z.string(),
+      dados: z.string().optional(),
+      importancia: z.enum(['alta', 'media', 'baixa'])
+    })).describe('Array de insights gerados'),
+    alertas: z.array(z.object({
+      titulo: z.string(),
+      descricao: z.string(),
+      dados: z.string().optional(),
+      nivel: z.enum(['critico', 'alto', 'medio', 'baixo']),
+      acao: z.string().optional()
+    })).describe('Array de alertas gerados'),
+    recomendacoes: z.array(z.object({
+      titulo: z.string(),
+      descricao: z.string(),
+      impacto: z.enum(['alto', 'medio', 'baixo']),
+      facilidade: z.enum(['facil', 'medio', 'dificil']),
+      categoria: z.string().optional(),
+      proximosPassos: z.array(z.string()).optional(),
+      estimativaResultado: z.string().optional()
+    })).describe('Array de recomendações geradas'),
+    contexto: z.string().optional().describe('Contexto da análise'),
+    dataAnalise: z.string().optional().describe('Data da análise')
+  }),
+  execute: async ({ titulo, insights, alertas, recomendacoes, contexto, dataAnalise }) => {
+    try {
+      // Helper function to get importance/level icons
+      const getImportanceIcon = (level: string) => {
+        const icons = {
+          'alta': '🎯', 'critico': '🚨', 'alto': '⚠️',
+          'media': '📊', 'medio': '⚡', 'baixo': '📝',
+          'facil': '✅', 'dificil': '🔧'
+        };
+        return icons[level as keyof typeof icons] || '📌';
+      };
+
+      // Build markdown document
+      let markdown = `# ${titulo}\n\n`;
+
+      if (dataAnalise) {
+        markdown += `**Data da Análise:** ${dataAnalise}\n`;
+      }
+      if (contexto) {
+        markdown += `**Contexto:** ${contexto}\n`;
+      }
+      markdown += `**Gerado em:** ${new Date().toLocaleString('pt-BR')}\n\n`;
+      markdown += `---\n\n`;
+
+      // Insights section
+      if (insights && insights.length > 0) {
+        markdown += `## 📊 Insights Identificados\n\n`;
+        insights.forEach((insight, index) => {
+          const icon = getImportanceIcon(insight.importancia);
+          markdown += `### ${icon} ${insight.titulo}\n`;
+          markdown += `**Importância:** ${insight.importancia.charAt(0).toUpperCase() + insight.importancia.slice(1)}\n`;
+          markdown += `**Descrição:** ${insight.descricao}\n`;
+          if (insight.dados) {
+            markdown += `**Dados:** ${insight.dados}\n`;
+          }
+          markdown += `\n`;
+        });
+        markdown += `---\n\n`;
+      }
+
+      // Alerts section
+      if (alertas && alertas.length > 0) {
+        markdown += `## 🚨 Alertas Críticos\n\n`;
+        alertas.forEach((alerta, index) => {
+          const icon = getImportanceIcon(alerta.nivel);
+          markdown += `### ${icon} ${alerta.titulo}\n`;
+          markdown += `**Nível:** ${alerta.nivel.charAt(0).toUpperCase() + alerta.nivel.slice(1)}\n`;
+          markdown += `**Descrição:** ${alerta.descricao}\n`;
+          if (alerta.dados) {
+            markdown += `**Dados:** ${alerta.dados}\n`;
+          }
+          if (alerta.acao) {
+            markdown += `**Ação:** ${alerta.acao}\n`;
+          }
+          markdown += `\n`;
+        });
+        markdown += `---\n\n`;
+      }
+
+      // Recommendations section
+      if (recomendacoes && recomendacoes.length > 0) {
+        markdown += `## 💡 Recomendações Estratégicas\n\n`;
+        recomendacoes.forEach((rec, index) => {
+          const impactoIcon = getImportanceIcon(rec.impacto);
+          const facilidadeIcon = getImportanceIcon(rec.facilidade);
+          markdown += `### 🚀 ${rec.titulo}\n`;
+          markdown += `**Impacto:** ${impactoIcon} ${rec.impacto.charAt(0).toUpperCase() + rec.impacto.slice(1)} | `;
+          markdown += `**Facilidade:** ${facilidadeIcon} ${rec.facilidade.charAt(0).toUpperCase() + rec.facilidade.slice(1)}\n`;
+          if (rec.categoria) {
+            markdown += `**Categoria:** ${rec.categoria}\n`;
+          }
+          markdown += `**Descrição:** ${rec.descricao}\n`;
+
+          if (rec.proximosPassos && rec.proximosPassos.length > 0) {
+            markdown += `**Próximos Passos:**\n`;
+            rec.proximosPassos.forEach(passo => {
+              markdown += `- ${passo}\n`;
+            });
+          }
+
+          if (rec.estimativaResultado) {
+            markdown += `**Estimativa de Resultado:** ${rec.estimativaResultado}\n`;
+          }
+          markdown += `\n`;
+        });
+      }
+
+      // Footer
+      markdown += `---\n\n`;
+      markdown += `*Relatório gerado automaticamente pelo sistema de análise de dados*\n`;
+
+      return {
+        success: true,
+        titulo,
+        markdown,
+        totalInsights: insights?.length || 0,
+        totalAlertas: alertas?.length || 0,
+        totalRecomendacoes: recomendacoes?.length || 0,
+        metadata: {
+          generatedAt: new Date().toISOString(),
+          dataSource: 'consolidated-report'
+        }
+      };
+
+    } catch (error) {
+      console.error('❌ Erro ao gerar relatório:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to generate report',
+        markdown: '',
+        totalInsights: 0,
+        totalAlertas: 0,
+        totalRecomendacoes: 0
+      };
+    }
+  }
+});
