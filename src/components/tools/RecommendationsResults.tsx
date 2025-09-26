@@ -121,7 +121,7 @@ export default function RecommendationsResults({
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 mb-4">
       {/* Header */}
       <div className="bg-gray-100 border border-gray-200 rounded-lg p-4">
         <div className="flex items-center justify-between mb-2">
