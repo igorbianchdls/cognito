@@ -14,7 +14,8 @@ interface UpdateItem {
 }
 
 interface UpdatesData {
-  updates: UpdateItem[];
+  updates?: UpdateItem[];
+  newWidgets?: Widget[];
 }
 
 interface UpdateDashboardToolProps {
@@ -36,39 +37,48 @@ export default function UpdateDashboardTool({
 
   const applyUpdates = () => {
     try {
-      // Parse do JSON de updates
+      // Parse do JSON de updates/newWidgets
       const updatesData = JSON.parse(editableUpdateJson) as UpdatesData;
 
       // Parse do estado atual do dashboard
       const currentDashboard = JSON.parse(visualBuilderState.code);
 
-      // Aplica updates nos widgets específicos por ID
-      const updatedWidgets = currentDashboard.widgets.map((widget: Widget) => {
-        const update = updatesData.updates.find((u: UpdateItem) => u.id === widget.id);
+      let finalWidgets = [...currentDashboard.widgets];
 
-        if (update) {
-          // Merge profundo das mudanças
-          return {
-            ...widget,
-            ...update.changes,
-            // Merge específico para objetos nested
-            ...(update.changes.position && { position: { ...widget.position, ...update.changes.position } }),
-            ...(update.changes.styling && { styling: { ...widget.styling, ...update.changes.styling } }),
-            ...(update.changes.kpiConfig && { kpiConfig: { ...widget.kpiConfig, ...update.changes.kpiConfig } }),
-            ...(update.changes.barConfig && { barConfig: { ...widget.barConfig, ...update.changes.barConfig } }),
-            ...(update.changes.lineConfig && { lineConfig: { ...widget.lineConfig, ...update.changes.lineConfig } }),
-            ...(update.changes.pieConfig && { pieConfig: { ...widget.pieConfig, ...update.changes.pieConfig } }),
-            ...(update.changes.areaConfig && { areaConfig: { ...widget.areaConfig, ...update.changes.areaConfig } }),
-          };
-        }
+      // 1. Aplica updates nos widgets existentes (se houver)
+      if (updatesData.updates && updatesData.updates.length > 0) {
+        finalWidgets = finalWidgets.map((widget: Widget) => {
+          const update = updatesData.updates!.find((u: UpdateItem) => u.id === widget.id);
 
-        return widget; // Widget não mencionado permanece inalterado
-      });
+          if (update) {
+            // Merge profundo das mudanças
+            return {
+              ...widget,
+              ...update.changes,
+              // Merge específico para objetos nested
+              ...(update.changes.position && { position: { ...widget.position, ...update.changes.position } }),
+              ...(update.changes.styling && { styling: { ...widget.styling, ...update.changes.styling } }),
+              ...(update.changes.kpiConfig && { kpiConfig: { ...widget.kpiConfig, ...update.changes.kpiConfig } }),
+              ...(update.changes.barConfig && { barConfig: { ...widget.barConfig, ...update.changes.barConfig } }),
+              ...(update.changes.lineConfig && { lineConfig: { ...widget.lineConfig, ...update.changes.lineConfig } }),
+              ...(update.changes.pieConfig && { pieConfig: { ...widget.pieConfig, ...update.changes.pieConfig } }),
+              ...(update.changes.areaConfig && { areaConfig: { ...widget.areaConfig, ...update.changes.areaConfig } }),
+            };
+          }
 
-      // Cria JSON final com widgets atualizados
+          return widget; // Widget não mencionado permanece inalterado
+        });
+      }
+
+      // 2. Adiciona novos widgets (se houver)
+      if (updatesData.newWidgets && updatesData.newWidgets.length > 0) {
+        finalWidgets.push(...updatesData.newWidgets);
+      }
+
+      // Cria JSON final com widgets atualizados/adicionados
       const finalDashboard = {
         ...currentDashboard,
-        widgets: updatedWidgets
+        widgets: finalWidgets
       };
 
       // Aplica ao Visual Builder
@@ -97,7 +107,7 @@ export default function UpdateDashboardTool({
       <div className="bg-orange-50 border-b border-orange-200 p-4">
         <div className="flex items-center gap-2 mb-2">
           <RefreshCw className="w-5 h-5 text-orange-600" />
-          <h3 className="font-medium text-orange-900">Update Dashboard Widgets</h3>
+          <h3 className="font-medium text-orange-900">Add New Widgets to Dashboard</h3>
         </div>
         <p className="text-sm text-orange-700">{description}</p>
         {message && (
@@ -131,7 +141,7 @@ export default function UpdateDashboardTool({
       <div className="border-t border-gray-200 p-4 bg-gray-50">
         <div className="flex items-center justify-between">
           <div className="text-sm text-gray-600">
-            Updates will be applied only to widgets with matching IDs
+            New widgets will be added to the dashboard or existing widgets updated by ID
           </div>
 
           <Button
@@ -146,12 +156,12 @@ export default function UpdateDashboardTool({
             {isApplied ? (
               <>
                 <CheckCircle className="w-4 h-4" />
-                Updates Applied!
+                Widgets Added!
               </>
             ) : (
               <>
                 <Play className="w-4 h-4" />
-                Apply Updates
+                Add Widgets
               </>
             )}
           </Button>
