@@ -1369,14 +1369,21 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
         if (part.type === 'tool-executarSQLComDados') {
           const sqlDataTool = part as NexusToolUIPart;
           const callId = sqlDataTool.toolCallId;
-          const shouldBeOpen = sqlDataTool.state === 'output-available' || sqlDataTool.state === 'output-error';
+          const shouldBeOpen = sqlDataTool.state === 'output-available' || sqlDataTool.state === 'output-error' || sqlDataTool.state === 'input-streaming';
 
           return (
             <div key={callId}>
               <Tool defaultOpen={shouldBeOpen}>
                 <ToolHeader type="tool-executarSQLComDados" state={sqlDataTool.state} />
                 <ToolContent>
-                  {sqlDataTool.input && (
+                  {sqlDataTool.state === 'input-streaming' && (
+                    <ToolInputStreaming
+                      input={sqlDataTool.input}
+                      isStreaming={true}
+                      streamingData={sqlDataTool.input}
+                    />
+                  )}
+                  {sqlDataTool.state === 'input-available' && (
                     <ToolInput input={sqlDataTool.input} />
                   )}
                   {sqlDataTool.state === 'output-error' && (
@@ -1734,14 +1741,21 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
         if (part.type === 'tool-gerarInsights') {
           const insightsTool = part as NexusToolUIPart;
           const callId = insightsTool.toolCallId;
-          const shouldBeOpen = insightsTool.state === 'output-available' || insightsTool.state === 'output-error';
+          const shouldBeOpen = insightsTool.state === 'output-available' || insightsTool.state === 'output-error' || insightsTool.state === 'input-streaming';
 
           return (
             <div key={callId}>
               <Tool defaultOpen={shouldBeOpen}>
                 <ToolHeader type="tool-gerarInsights" state={insightsTool.state} />
                 <ToolContent>
-                  {insightsTool.input && (
+                  {insightsTool.state === 'input-streaming' && (
+                    <ToolInputStreaming
+                      input={insightsTool.input}
+                      isStreaming={true}
+                      streamingData={insightsTool.input}
+                    />
+                  )}
+                  {insightsTool.state === 'input-available' && (
                     <ToolInput input={insightsTool.input} />
                   )}
                   {insightsTool.state === 'output-error' && (
