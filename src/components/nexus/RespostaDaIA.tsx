@@ -891,6 +891,8 @@ const getAgentInfo = (agent: string) => {
       return { initial: 'P', title: 'Especialista em Performance', color: 'bg-emerald-500' };
     case 'productAgent':
       return { initial: 'D', title: 'Especialista em Produtos', color: 'bg-cyan-500' };
+    case 'analistaDados':
+      return { initial: 'A', title: 'Analista de Dados', color: 'bg-indigo-500' };
     default:
       return { initial: 'A', title: 'AI Assistant', color: 'bg-gray-500' };
   }
