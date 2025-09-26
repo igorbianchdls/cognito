@@ -285,8 +285,8 @@ export default function Page() {
             </Breadcrumb>
           </div>
 
-          {/* View Mode Dropdown */}
-          <div className="flex items-center gap-2 px-4">
+          {/* View Mode Dropdown - Extrema Direita */}
+          <div className="ml-auto px-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 transition-colors">
