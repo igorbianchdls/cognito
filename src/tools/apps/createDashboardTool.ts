@@ -5,6 +5,7 @@ export const createDashboardTool = tool({
   description: 'Cria dashboard completo baseado em dados reais explorados com getTables e getTableSchema',
   inputSchema: z.object({
     dashboardDescription: z.string().describe('Descrição do dashboard a ser criado'),
+    theme: z.enum(['light', 'dark', 'minimal', 'corporate', 'neon', 'circuit', 'glass']).optional().describe('Tema visual do dashboard'),
     gridConfig: z.object({
       maxRows: z.number().describe('Número máximo de linhas no grid'),
       rowHeight: z.number().describe('Altura de cada linha do grid em pixels'),
@@ -51,10 +52,27 @@ export const createDashboardTool = tool({
         showTarget: z.boolean().optional(),
         trend: z.enum(['increasing', 'decreasing', 'stable']).optional(),
         visualizationType: z.enum(['card', 'gauge', 'progress']).optional()
-      }).optional().describe('Configurações específicas para KPI')
+      }).optional().describe('Configurações específicas para KPI'),
+      pieConfig: z.object({
+        styling: z.object({
+          colors: z.array(z.string()).optional(),
+          showLegend: z.boolean().optional(),
+          enableGridX: z.boolean().optional(),
+          enableGridY: z.boolean().optional()
+        }).optional()
+      }).optional().describe('Configurações específicas para gráfico de pizza'),
+      areaConfig: z.object({
+        styling: z.object({
+          colors: z.array(z.string()).optional(),
+          showLegend: z.boolean().optional(),
+          enableGridX: z.boolean().optional(),
+          enableGridY: z.boolean().optional(),
+          fillOpacity: z.number().optional()
+        }).optional()
+      }).optional().describe('Configurações específicas para gráfico de área')
     }))
   }),
-  execute: async ({ dashboardDescription, gridConfig, widgets }) => {
+  execute: async ({ dashboardDescription, theme, gridConfig, widgets }) => {
     console.log('🎨 createDashboardTool: Criando dashboard com dados reais');
     console.log(`📊 Dashboard: ${dashboardDescription}`);
     console.log(`🔧 Grid: ${gridConfig.cols}x${gridConfig.maxRows}, altura: ${gridConfig.rowHeight}px`);
@@ -97,6 +115,7 @@ export const createDashboardTool = tool({
       // Gerar configuração final do dashboard
       const dashboardConfig = {
         config: gridConfig,
+        theme: theme || 'light',
         widgets: widgets
       };
 
