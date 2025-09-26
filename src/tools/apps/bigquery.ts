@@ -863,3 +863,60 @@ export const gerarAlertas = tool({
     }
   }
 });
+
+export const gerarRecomendacoes = tool({
+  description: 'Gera recomendações estruturadas a partir de análises de dados com interface visual de recomendações',
+  inputSchema: z.object({
+    recomendacoes: z.preprocess((val) => {
+      if (typeof val === "string") {
+        try {
+          return JSON.parse(val); // transforma string em array
+        } catch {
+          return []; // fallback
+        }
+      }
+      return val;
+    }, z.array(z.object({
+      titulo: z.string().describe('Título da recomendação (ex: "Otimizar Budget para Categoria Eletrônicos")'),
+      descricao: z.string().describe('Descrição detalhada da recomendação'),
+      impacto: z.enum(['alto', 'medio', 'baixo']).describe('Nível de impacto esperado'),
+      facilidade: z.enum(['facil', 'medio', 'dificil']).describe('Facilidade de implementação'),
+      categoria: z.string().optional().describe('Categoria da recomendação (ex: "Marketing", "Produto", "Processo")'),
+      proximosPassos: z.array(z.string()).optional().describe('Lista de próximos passos para implementar'),
+      estimativaResultado: z.string().optional().describe('Estimativa de resultado esperado (ex: "Aumento de 15% nas vendas")')
+    }))).describe('Array de recomendações a serem exibidas'),
+    resumo: z.string().optional().describe('Resumo executivo das recomendações'),
+    contexto: z.string().optional().describe('Contexto da análise (ex: "Baseado em análise de performance trimestral")')
+  }),
+  execute: async ({ recomendacoes, resumo, contexto }) => {
+    try {
+      return {
+        success: true,
+        recomendacoes,
+        resumo,
+        contexto,
+        totalRecomendacoes: (recomendacoes as Array<{
+          titulo: string;
+          descricao: string;
+          impacto: 'alto' | 'medio' | 'baixo';
+          facilidade: 'facil' | 'medio' | 'dificil';
+          categoria?: string;
+          proximosPassos?: string[];
+          estimativaResultado?: string;
+        }>).length,
+        metadata: {
+          generatedAt: new Date().toISOString(),
+          dataSource: 'recommendations-analysis'
+        }
+      };
+    } catch (error) {
+      console.error('❌ Erro ao gerar recomendações:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to generate recommendations',
+        recomendacoes: [],
+        totalRecomendacoes: 0
+      };
+    }
+  }
+});
