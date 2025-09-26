@@ -517,7 +517,7 @@ export default function DashboardChatPanel() {
 
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
-          <div className="h-full bg-gray-50 p-4 overflow-auto">
+          <div className="h-full bg-gray-50 py-2 px-4 overflow-auto">
             <GridCanvas
               widgets={visualBuilderState.widgets}
               gridConfig={visualBuilderState.gridConfig}
