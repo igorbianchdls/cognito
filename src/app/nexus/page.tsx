@@ -289,7 +289,7 @@ export default function Page() {
           <div className="ml-auto px-4">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 transition-colors">
+                <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition-colors">
                   {viewMode === 'chat' && <><MessageSquare className="w-4 h-4" /> Chat Only</>}
                   {viewMode === 'split' && <><Layout className="w-4 h-4" /> Chat + Dashboard</>}
                   {viewMode === 'dashboard' && <><BarChart3 className="w-4 h-4" /> Dashboard Only</>}
