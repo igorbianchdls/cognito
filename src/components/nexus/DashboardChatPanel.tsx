@@ -26,11 +26,12 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { FileText, BarChart3, Palette, Check, Type, Square, Paintbrush, Monitor, Tablet, Smartphone } from 'lucide-react';
+import { FileText, BarChart3, Palette, Check, Type, Square, Paintbrush, Monitor, Tablet, Smartphone, ChevronDown } from 'lucide-react';
 
 export default function DashboardChatPanel() {
   const [activeTab, setActiveTab] = useState<'editor' | 'dashboard'>('editor');
   const [selectedViewport, setSelectedViewport] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  const [selectedDashboard, setSelectedDashboard] = useState('Dashboard Builder');
   const [selectedTheme, setSelectedTheme] = useState<ThemeName>('dark');
   const [selectedFont, setSelectedFont] = useState<FontPresetKey>('inter');
   const [selectedFontSize, setSelectedFontSize] = useState<FontSizeKey>('lg');
@@ -226,8 +227,28 @@ export default function DashboardChatPanel() {
     <Artifact className="h-full">
       <ArtifactHeader className="bg-white">
         <div>
-          <ArtifactTitle>Dashboard Builder</ArtifactTitle>
-          <ArtifactDescription>Visual dashboard creation tool</ArtifactDescription>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
+                {selectedDashboard}
+                <ChevronDown className="w-4 h-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem onClick={() => setSelectedDashboard('Dashboard Builder')}>
+                Dashboard Builder
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSelectedDashboard('Sales Dashboard')}>
+                Sales Dashboard
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSelectedDashboard('Analytics Dashboard')}>
+                Analytics Dashboard
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSelectedDashboard('E-commerce Dashboard')}>
+                E-commerce Dashboard
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Viewport Selector - NO MEIO */}
