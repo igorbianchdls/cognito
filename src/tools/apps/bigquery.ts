@@ -799,7 +799,7 @@ export const gerarInsights = tool({
         insights,
         resumo,
         contexto,
-        totalInsights: insights.length,
+        totalInsights: (insights as Array<{titulo: string; descricao: string; dados?: string; importancia: 'alta' | 'media' | 'baixa'}>).length,
         metadata: {
           generatedAt: new Date().toISOString(),
           dataSource: 'insights-analysis'
