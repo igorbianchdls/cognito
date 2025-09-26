@@ -292,5 +292,38 @@ export const visualBuilderActions = {
       console.log('🧹 Visual Builder: localStorage limpo')
     }
     visualBuilderActions.reset()
+  },
+
+  // Adicionar novos widgets à store
+  addWidgets: (newWidgets: Widget[]) => {
+    const currentState = $visualBuilderState.get()
+    const updatedWidgets = [...currentState.widgets, ...newWidgets]
+
+    console.log('➕ Visual Builder: Adicionando novos widgets', {
+      existing: currentState.widgets.length,
+      new: newWidgets.length,
+      total: updatedWidgets.length
+    })
+
+    // Extrair tema atual do código
+    let currentTheme = 'light'
+    try {
+      const parsedCode = JSON.parse(currentState.code)
+      currentTheme = parsedCode.theme || 'light'
+    } catch (error) {
+      console.warn('Erro ao extrair tema do código atual:', error)
+    }
+
+    const newCode = JSON.stringify({
+      theme: currentTheme,
+      config: currentState.gridConfig,
+      widgets: updatedWidgets
+    }, null, 2)
+
+    $visualBuilderState.set({
+      ...currentState,
+      widgets: updatedWidgets,
+      code: newCode
+    })
   }
 }

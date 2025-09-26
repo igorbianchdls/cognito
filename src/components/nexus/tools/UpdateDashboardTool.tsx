@@ -40,49 +40,10 @@ export default function UpdateDashboardTool({
       // Parse do JSON de updates/newWidgets
       const updatesData = JSON.parse(editableUpdateJson) as UpdatesData;
 
-      // Parse do estado atual do dashboard
-      const currentDashboard = JSON.parse(visualBuilderState.code);
-
-      let finalWidgets = [...currentDashboard.widgets];
-
-      // 1. Aplica updates nos widgets existentes (se houver)
-      if (updatesData.updates && updatesData.updates.length > 0) {
-        finalWidgets = finalWidgets.map((widget: Widget) => {
-          const update = updatesData.updates!.find((u: UpdateItem) => u.id === widget.id);
-
-          if (update) {
-            // Merge profundo das mudanças
-            return {
-              ...widget,
-              ...update.changes,
-              // Merge específico para objetos nested
-              ...(update.changes.position && { position: { ...widget.position, ...update.changes.position } }),
-              ...(update.changes.styling && { styling: { ...widget.styling, ...update.changes.styling } }),
-              ...(update.changes.kpiConfig && { kpiConfig: { ...widget.kpiConfig, ...update.changes.kpiConfig } }),
-              ...(update.changes.barConfig && { barConfig: { ...widget.barConfig, ...update.changes.barConfig } }),
-              ...(update.changes.lineConfig && { lineConfig: { ...widget.lineConfig, ...update.changes.lineConfig } }),
-              ...(update.changes.pieConfig && { pieConfig: { ...widget.pieConfig, ...update.changes.pieConfig } }),
-              ...(update.changes.areaConfig && { areaConfig: { ...widget.areaConfig, ...update.changes.areaConfig } }),
-            };
-          }
-
-          return widget; // Widget não mencionado permanece inalterado
-        });
-      }
-
-      // 2. Adiciona novos widgets (se houver)
+      // Adiciona novos widgets (se houver)
       if (updatesData.newWidgets && updatesData.newWidgets.length > 0) {
-        finalWidgets.push(...updatesData.newWidgets);
+        visualBuilderActions.addWidgets(updatesData.newWidgets);
       }
-
-      // Cria JSON final com widgets atualizados/adicionados
-      const finalDashboard = {
-        ...currentDashboard,
-        widgets: finalWidgets
-      };
-
-      // Aplica ao Visual Builder
-      visualBuilderActions.updateCode(JSON.stringify(finalDashboard, null, 2));
 
       setIsApplied(true);
       setTimeout(() => setIsApplied(false), 3000);
