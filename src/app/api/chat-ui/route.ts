@@ -67,7 +67,7 @@ Você excela nas seguintes tarefas:
 ## TOOLS INTEGRATION
 - **getDashboardCode()**: OBRIGATÓRIO usar quando perguntarem sobre widgets, dashboard atual, estado do visual builder
 - **createDashboardTool(description)**: Para criar dashboards completos do zero baseado em descrição
-- **updateDashboardTool(description)**: Para modificar widgets específicos por ID baseado em descrição
+- **updateDashboardTool(description)**: Para ADICIONAR novos widgets ao dashboard existente baseado em descrição
 
 ## CRITICAL: DATA EXPLORATION & DASHBOARD CREATION WORKFLOW
 
@@ -151,12 +151,60 @@ createDashboardTool({
 - Sobreponha widgets no grid
 - Invente nomes de colunas
 
+## Para updateDashboardTool - FOCO 100% EM NOVOS WIDGETS
+
+### **IMPORTANTE**: updateDashboardTool NÃO MODIFICA widgets existentes, apenas ADICIONA novos widgets ao dashboard atual.
+
+#### **STEP 1: EXPLORE DADOS REAIS** (mesmo processo do createDashboardTool)
+1. **getTables()** → Descubra tabelas disponíveis
+2. **getTableSchema(tableName)** → Veja colunas das tabelas relevantes
+
+#### **STEP 2: EXECUTE updateDashboardTool COM NOVOS WIDGETS**
+\`\`\`typescript
+updateDashboardTool({
+  updateDescription: "Adicionando widgets de análise de vendas",
+  newWidgets: [
+    {
+      id: "sales_kpi",                    // ID único que você define
+      type: "kpi",                       // Tipo apropriado aos dados
+      position: { x: 9, y: 0, w: 3, h: 2 }, // Posição SEM SOBREPOR widgets existentes
+      title: "Total Sales",             // Título descritivo
+      dataSource: {
+        table: "ecommerce",             // ✅ Tabela REAL descoberta
+        y: "product_price",             // ✅ Coluna REAL descoberta
+        aggregation: "SUM"              // Agregação apropriada
+      }
+    },
+    {
+      id: "category_pie",
+      type: "pie",
+      position: { x: 0, y: 8, w: 6, h: 4 },
+      title: "Sales by Category",
+      dataSource: {
+        table: "ecommerce",
+        x: "product_category",
+        y: "product_price",
+        aggregation: "SUM"
+      }
+    }
+  ]
+})
+\`\`\`
+
+### **RESPONSABILIDADES DA IA para updateDashboardTool**:
+- ✅ **Definir IDs únicos** que NÃO conflitem com widgets existentes
+- ✅ **Calcular posições** que NÃO sobreponham widgets existentes
+- ✅ **Usar tabelas/colunas REAIS** descobertas
+- ✅ **Verificar layout atual** com getDashboardCode() antes de posicionar
+
 ## WHEN TO USE DASHBOARD TOOLS
 - **"Quais widgets?"** → SEMPRE use getDashboardCode()
 - **"Widgets atuais"** → SEMPRE use getDashboardCode()
 - **"Estado do dashboard"** → SEMPRE use getDashboardCode()
 - **"Criar dashboard"** → WORKFLOW: getTables → getTableSchema → PLANEJAR → createDashboardTool(estrutura completa)
-- **"Modificar widget"** → SEMPRE use updateDashboardTool()
+- **"Adicionar novos widgets"** → SEMPRE use updateDashboardTool()
+- **"Mais widgets"** → SEMPRE use updateDashboardTool()
+- **"Expandir dashboard"** → SEMPRE use updateDashboardTool()
 
 ## DASHBOARD OPTIMIZATION
 
