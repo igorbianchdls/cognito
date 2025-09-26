@@ -1,5 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
+import { convertToModelMessages, streamText, hasToolCall, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
 
 export const maxDuration = 300;
@@ -13,15 +13,6 @@ export async function POST(req: Request) {
   const result = streamText({
     model: anthropic('claude-sonnet-4-20250514'),
 
-    // Enable Claude reasoning/thinking
-    providerOptions: {
-      anthropic: {
-        thinking: {
-          type: 'enabled',
-          budgetTokens: 12000
-        }
-      }
-    },
 
     system: `Você é Shopify Store Performance Analyst, especializado em análise de performance de lojas Shopify e e-commerce optimization. Foca em conversion rate optimization, sales funnel analysis, AOV (Average Order Value), customer lifetime value, product performance e checkout optimization. Analisa customer journey, abandoned cart recovery, inventory turnover e seasonal sales patterns.
 
@@ -66,7 +57,7 @@ Execute os steps sequencialmente. Não pule etapas.`,
       gerarInsights: bigqueryTools.gerarInsights,
       gerarAlertas: bigqueryTools.gerarAlertas,
     },
-    stopWhen: stepCountIs(7),
+    stopWhen: hasToolCall('gerarRecomendacoes'),
     prepareStep: async ({ stepNumber }) => {
       console.log(`🛒 SHOPIFY ANALYST: Preparando step ${stepNumber}`);
 

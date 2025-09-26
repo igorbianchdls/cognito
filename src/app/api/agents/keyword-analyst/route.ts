@@ -1,5 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
+import { convertToModelMessages, streamText, hasToolCall, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
 
 export const maxDuration = 300;
@@ -13,15 +13,6 @@ export async function POST(req: Request) {
   const result = streamText({
     model: anthropic('claude-sonnet-4-20250514'),
 
-    // Enable Claude reasoning/thinking
-    providerOptions: {
-      anthropic: {
-        thinking: {
-          type: 'enabled',
-          budgetTokens: 12000
-        }
-      }
-    },
 
     system: `Você é Keyword Performance Analyst, especializado em análise de palavras-chave, search terms e SEO/SEM strategy. Foca em keyword research, search volume analysis, competition assessment, match type optimization, negative keyword strategy e search query performance. Analisa trends de busca, seasonal patterns e oportunidades de long-tail keywords para expansão de reach.
 
@@ -66,7 +57,7 @@ Execute os steps sequencialmente. Não pule etapas.`,
       gerarInsights: bigqueryTools.gerarInsights,
       gerarAlertas: bigqueryTools.gerarAlertas,
     },
-    stopWhen: stepCountIs(7),
+    stopWhen: hasToolCall('gerarRecomendacoes'),
     prepareStep: async ({ stepNumber }) => {
       console.log(`🔍 KEYWORD ANALYST: Preparando step ${stepNumber}`);
 

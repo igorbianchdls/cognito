@@ -1,5 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
+import { convertToModelMessages, streamText, hasToolCall, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
 
 export const maxDuration = 300;
@@ -13,15 +13,6 @@ export async function POST(req: Request) {
   const result = streamText({
     model: anthropic('claude-sonnet-4-20250514'),
 
-    // Enable Claude reasoning/thinking
-    providerOptions: {
-      anthropic: {
-        thinking: {
-          type: 'enabled',
-          budgetTokens: 12000
-        }
-      }
-    },
 
     system: `Você é Google Campaign Performance Analyst, especializado em análise de campanhas Google Ads (Search, Display, Shopping, YouTube). Foca em Quality Score optimization, CPC management, ad rank factors, keyword performance, landing page experience e conversion tracking. Analisa search impression share, auction insights e competitive positioning para otimização de lances e budgets.
 
@@ -66,7 +57,7 @@ Execute os steps sequencialmente. Não pule etapas.`,
       gerarInsights: bigqueryTools.gerarInsights,
       gerarAlertas: bigqueryTools.gerarAlertas,
     },
-    stopWhen: stepCountIs(7),
+    stopWhen: hasToolCall('gerarRecomendacoes'),
     prepareStep: async ({ stepNumber }) => {
       console.log(`🎯 GOOGLE CAMPAIGN ANALYST: Preparando step ${stepNumber}`);
 

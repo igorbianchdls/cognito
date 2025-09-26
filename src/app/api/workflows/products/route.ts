@@ -143,14 +143,53 @@ TÓPICOS obrigatórios (3-5 alertas):
 • OPORTUNIDADE (alto)
 • RECOMENDAÇÃO (critico)
 
-IMPORTANTE: Execute os steps OBRIGATORIAMENTE na sequência 1 → 2 → 3 → 4. Não pule etapas. Não repita steps. Cada step deve ser executado UMA ÚNICA VEZ na ordem correta.`,
+STEP 5 - RECOMENDAÇÕES ESTRATÉGICAS:
+⚠️ IMPORTANTE: O parâmetro recomendacoes DEVE SER UM ARRAY DE OBJETOS, NÃO UMA STRING JSON!
+**OBRIGATÓRIO**: Execute gerarRecomendacoes com os seguintes parâmetros:
+
+PARÂMETROS da tool gerarRecomendacoes:
+- recomendacoes: array de objetos recomendacao (OBRIGATÓRIO) - FORMATO: ARRAY, NÃO STRING
+- resumo: resumo executivo geral (opcional)
+- contexto: contexto da análise (opcional)
+
+Estrutura de cada objeto recomendacao:
+- titulo: string (ex: "EXPANSÃO DE CATEGORIA - Diversificar Portfolio")
+- descricao: string (explicação detalhada da recomendação)
+- impacto: "alto" | "medio" | "baixo"
+- facilidade: "facil" | "medio" | "dificil"
+- categoria: string (categoria da recomendação, opcional)
+- proximosPassos: array de strings (próximos passos, opcional)
+- estimativaResultado: string (estimativa de resultado, opcional)
+
+EXEMPLO CORRETO de chamada da tool gerarRecomendacoes:
+gerarRecomendacoes({
+  recomendacoes: [
+    {titulo: "EXPANSÃO DE CATEGORIA - Diversificar Portfolio", descricao: "explicação detalhada", impacto: "alto", facilidade: "medio", categoria: "Expansão", proximosPassos: ["passo 1", "passo 2"], estimativaResultado: "estimativa"},
+    {titulo: "OTIMIZAÇÃO TOP PRODUTO", descricao: "explicação detalhada", impacto: "alto", facilidade: "facil"}
+  ],
+  resumo: "Resumo executivo das recomendações",
+  contexto: "Contexto da análise realizada"
+})
+
+❌ ERRADO: recomendacoes: "[{\"titulo\":...}]" (string)
+✅ CORRETO: recomendacoes: [{titulo:...}] (array)
+
+TÓPICOS obrigatórios (3-5 recomendações):
+• EXPANSÃO DE CATEGORIA (alto)
+• OTIMIZAÇÃO TOP PRODUTO (alto)
+• ESTRATÉGIA DE PREÇOS (medio)
+• DIVERSIFICAÇÃO (medio)
+• FOCO COMERCIAL (alto)
+
+IMPORTANTE: Execute os steps OBRIGATORIAMENTE na sequência 1 → 2 → 3 → 4 → 5. Não pule etapas. Não repita steps. Cada step deve ser executado UMA ÚNICA VEZ na ordem correta.`,
       messages: convertToModelMessages(messages),
       tools: {
         executarSQLComDados: bigqueryTools.executarSQLComDados,
         gerarInsights: bigqueryTools.gerarInsights,
-        gerarAlertas: bigqueryTools.gerarAlertas
+        gerarAlertas: bigqueryTools.gerarAlertas,
+        gerarRecomendacoes: bigqueryTools.gerarRecomendacoes
       },
-      stopWhen: stepCountIs(4),
+      stopWhen: stepCountIs(5),
       prepareStep: async ({ stepNumber }) => {
         console.log(`📦 PRODUCT AGENT: Preparando step ${stepNumber}`);
 
@@ -176,6 +215,12 @@ IMPORTANTE: Execute os steps OBRIGATORIAMENTE na sequência 1 → 2 → 3 → 4.
           // Step 4: Only gerarAlertas allowed
           return {
             activeTools: ['gerarAlertas'],
+            toolChoice: 'required'
+          };
+        } else if (stepNumber === 5) {
+          // Step 5: Only gerarRecomendacoes allowed
+          return {
+            activeTools: ['gerarRecomendacoes'],
             toolChoice: 'required'
           };
         }

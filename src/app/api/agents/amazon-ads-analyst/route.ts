@@ -1,5 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
+import { convertToModelMessages, streamText, hasToolCall, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
 
 export const maxDuration = 300;
@@ -13,15 +13,6 @@ export async function POST(req: Request) {
   const result = streamText({
     model: anthropic('claude-sonnet-4-20250514'),
 
-    // Enable Claude reasoning/thinking
-    providerOptions: {
-      anthropic: {
-        thinking: {
-          type: 'enabled',
-          budgetTokens: 12000
-        }
-      }
-    },
 
     system: `Você é Amazon Ads Performance Analyst, especializado em campanhas Amazon Advertising (Sponsored Products, Sponsored Brands, Sponsored Display). Foca em ACOS optimization, impression share, organic rank impact, search term performance e product visibility strategies. Analisa competitor analysis, keyword harvesting, bid optimization e sales attribution across Amazon ecosystem.
 
@@ -66,7 +57,7 @@ Execute os steps sequencialmente. Não pule etapas.`,
       gerarInsights: bigqueryTools.gerarInsights,
       gerarAlertas: bigqueryTools.gerarAlertas,
     },
-    stopWhen: stepCountIs(7),
+    stopWhen: hasToolCall('gerarRecomendacoes'),
     prepareStep: async ({ stepNumber }) => {
       console.log(`📦 AMAZON ADS ANALYST: Preparando step ${stepNumber}`);
 
