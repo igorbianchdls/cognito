@@ -23,6 +23,7 @@ import SQLExecution from '../tools/SQLExecution';
 import SQLDataResults from '../tools/SQLDataResults';
 import InsightsResults from '../tools/InsightsResults';
 import AlertsResults from '../tools/AlertsResults';
+import RecommendationsResults from '../tools/RecommendationsResults';
 import TableCreation from '../tools/TableCreation';
 import { KPICard } from '../widgets/KPICard';
 import WebPreviewCard from '../tools/WebPreviewCard';
@@ -359,6 +360,37 @@ type GerarAlertasToolOutput = {
   resumo?: string;
   contexto?: string;
   totalAlertas: number;
+  error?: string;
+};
+
+type GerarRecomendacoesToolInput = {
+  recomendacoes: Array<{
+    titulo: string;
+    descricao: string;
+    impacto: 'alto' | 'medio' | 'baixo';
+    facilidade: 'facil' | 'medio' | 'dificil';
+    categoria?: string;
+    proximosPassos?: string[];
+    estimativaResultado?: string;
+  }>;
+  resumo?: string;
+  contexto?: string;
+};
+
+type GerarRecomendacoesToolOutput = {
+  success: boolean;
+  recomendacoes: Array<{
+    titulo: string;
+    descricao: string;
+    impacto: 'alto' | 'medio' | 'baixo';
+    facilidade: 'facil' | 'medio' | 'dificil';
+    categoria?: string;
+    proximosPassos?: string[];
+    estimativaResultado?: string;
+  }>;
+  resumo?: string;
+  contexto?: string;
+  totalRecomendacoes: number;
   error?: string;
 };
 
@@ -816,6 +848,10 @@ type NexusToolUIPart = ToolUIPart<{
   gerarAlertas: {
     input: GerarAlertasToolInput;
     output: GerarAlertasToolOutput;
+  };
+  gerarRecomendacoes: {
+    input: GerarRecomendacoesToolInput;
+    output: GerarRecomendacoesToolOutput;
   };
   executarMultiplasSQL: {
     input: ExecutarMultiplasSQLToolInput;
@@ -1759,6 +1795,41 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   totalAlertas={(alertasTool.output as GerarAlertasToolOutput).totalAlertas}
                   success={(alertasTool.output as GerarAlertasToolOutput).success}
                   error={(alertasTool.output as GerarAlertasToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-gerarRecomendacoes') {
+          const recomendacoesTool = part as NexusToolUIPart;
+          const callId = recomendacoesTool.toolCallId;
+          const shouldBeOpen = recomendacoesTool.state === 'output-available' || recomendacoesTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-gerarRecomendacoes" state={recomendacoesTool.state} />
+                <ToolContent>
+                  {recomendacoesTool.input && (
+                    <ToolInput input={recomendacoesTool.input} />
+                  )}
+                  {recomendacoesTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={recomendacoesTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {recomendacoesTool.state === 'output-available' && (
+                <RecommendationsResults
+                  recomendacoes={(recomendacoesTool.output as GerarRecomendacoesToolOutput).recomendacoes}
+                  resumo={(recomendacoesTool.output as GerarRecomendacoesToolOutput).resumo}
+                  contexto={(recomendacoesTool.output as GerarRecomendacoesToolOutput).contexto}
+                  totalRecomendacoes={(recomendacoesTool.output as GerarRecomendacoesToolOutput).totalRecomendacoes}
+                  success={(recomendacoesTool.output as GerarRecomendacoesToolOutput).success}
+                  error={(recomendacoesTool.output as GerarRecomendacoesToolOutput).error}
                 />
               )}
             </div>
