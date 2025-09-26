@@ -24,24 +24,24 @@ function getPriorityStyles(impacto: 'alto' | 'medio' | 'baixo', facilidade: 'fac
 
   if (priority >= 7) {
     return {
-      border: 'border-green-200',
-      bg: 'bg-green-50',
-      icon: 'text-green-500',
-      badge: 'bg-green-100 text-green-800'
+      border: 'border-green-300',
+      bg: 'bg-green-100',
+      icon: 'text-green-600',
+      badge: 'bg-green-200 text-green-900'
     };
   } else if (priority >= 5) {
     return {
-      border: 'border-yellow-200',
-      bg: 'bg-yellow-50',
-      icon: 'text-yellow-500',
-      badge: 'bg-yellow-100 text-yellow-800'
+      border: 'border-teal-200',
+      bg: 'bg-teal-50',
+      icon: 'text-teal-600',
+      badge: 'bg-teal-100 text-teal-800'
     };
   } else {
     return {
-      border: 'border-gray-200',
-      bg: 'bg-gray-50',
-      icon: 'text-gray-500',
-      badge: 'bg-gray-100 text-gray-800'
+      border: 'border-lime-200',
+      bg: 'bg-lime-50',
+      icon: 'text-lime-600',
+      badge: 'bg-lime-100 text-lime-800'
     };
   }
 }
@@ -123,29 +123,29 @@ export default function RecommendationsResults({
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+      <div className="bg-gray-100 border border-gray-200 rounded-lg p-4">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
             </svg>
-            <h3 className="font-semibold text-purple-800">📋 Recomendações de Análise</h3>
+            <h3 className="font-semibold text-gray-900">📋 Recomendações de Análise</h3>
           </div>
-          <div className="text-sm text-purple-600">
+          <div className="text-sm text-gray-700">
             {totalRecomendacoes} recomendaç{totalRecomendacoes !== 1 ? 'ões' : 'ão'}
           </div>
         </div>
 
         {contexto && (
-          <p className="text-purple-700 text-sm mb-2">{contexto}</p>
+          <p className="text-gray-800 text-sm mb-2">{contexto}</p>
         )}
       </div>
 
       {/* Resumo Executivo */}
       {resumo && (
-        <div className="bg-violet-50 border border-violet-200 rounded-lg p-4">
-          <h4 className="font-semibold text-violet-800 mb-2">💡 Resumo das Recomendações</h4>
-          <p className="text-violet-700 text-sm">{resumo}</p>
+        <div className="bg-gray-100 border border-gray-200 rounded-lg p-4">
+          <h4 className="font-semibold text-gray-900 mb-2">💡 Resumo das Recomendações</h4>
+          <p className="text-gray-800 text-sm">{resumo}</p>
         </div>
       )}
 
@@ -178,7 +178,7 @@ export default function RecommendationsResults({
 
               {recomendacao.categoria && (
                 <div className="mb-3">
-                  <span className="bg-purple-100 text-purple-800 px-2 py-1 text-xs font-medium rounded-full">
+                  <span className="bg-green-100 text-green-800 px-2 py-1 text-xs font-medium rounded-full">
                     {recomendacao.categoria}
                   </span>
                 </div>

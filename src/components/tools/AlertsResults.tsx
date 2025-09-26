@@ -19,31 +19,31 @@ function getNivelStyles(nivel: 'critico' | 'alto' | 'medio' | 'baixo') {
   switch (nivel) {
     case 'critico':
       return {
-        border: 'border-red-200',
-        bg: 'bg-red-50',
-        icon: 'text-red-500',
-        badge: 'bg-red-100 text-red-800'
+        border: 'border-red-300',
+        bg: 'bg-red-100',
+        icon: 'text-red-600',
+        badge: 'bg-red-200 text-red-900'
       };
     case 'alto':
       return {
         border: 'border-orange-200',
         bg: 'bg-orange-50',
-        icon: 'text-orange-500',
+        icon: 'text-orange-600',
         badge: 'bg-orange-100 text-orange-800'
       };
     case 'medio':
       return {
-        border: 'border-yellow-200',
-        bg: 'bg-yellow-50',
-        icon: 'text-yellow-500',
-        badge: 'bg-yellow-100 text-yellow-800'
+        border: 'border-amber-200',
+        bg: 'bg-amber-50',
+        icon: 'text-amber-600',
+        badge: 'bg-amber-100 text-amber-800'
       };
     case 'baixo':
       return {
-        border: 'border-green-200',
-        bg: 'bg-green-50',
-        icon: 'text-green-500',
-        badge: 'bg-green-100 text-green-800'
+        border: 'border-pink-200',
+        bg: 'bg-pink-50',
+        icon: 'text-pink-600',
+        badge: 'bg-pink-100 text-pink-800'
       };
     default:
       return {
@@ -128,29 +128,29 @@ export default function AlertsResults({
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+      <div className="bg-gray-100 border border-gray-200 rounded-lg p-4">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
-            <h3 className="font-semibold text-red-800">Alertas de Análise</h3>
+            <h3 className="font-semibold text-gray-900">Alertas de Análise</h3>
           </div>
-          <div className="text-sm text-red-600">
+          <div className="text-sm text-gray-700">
             {totalAlertas} alerta{totalAlertas !== 1 ? 's' : ''}
           </div>
         </div>
 
         {contexto && (
-          <p className="text-red-700 text-sm mb-2">{contexto}</p>
+          <p className="text-gray-800 text-sm mb-2">{contexto}</p>
         )}
       </div>
 
       {/* Resumo Executivo */}
       {resumo && (
-        <div className="bg-rose-50 border border-rose-200 rounded-lg p-4">
-          <h4 className="font-semibold text-rose-800 mb-2">🚨 Resumo dos Alertas</h4>
-          <p className="text-rose-700 text-sm">{resumo}</p>
+        <div className="bg-gray-100 border border-gray-200 rounded-lg p-4">
+          <h4 className="font-semibold text-gray-900 mb-2">🚨 Resumo dos Alertas</h4>
+          <p className="text-gray-800 text-sm">{resumo}</p>
         </div>
       )}
 
