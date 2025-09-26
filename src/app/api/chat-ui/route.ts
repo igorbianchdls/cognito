@@ -97,6 +97,8 @@ Você excela nas seguintes tarefas:
 - **glass**: Efeito vidro/glassmorphism (dashboards modernos)
 
 #### **STEP 3: EXECUTE createDashboardTool COM ESTRUTURA COMPLETA**
+
+**DASHBOARD TRADICIONAL (Grid fixo):**
 \`\`\`typescript
 createDashboardTool({
   dashboardDescription: "Dashboard de E-commerce",
@@ -114,11 +116,48 @@ createDashboardTool({
         y: "quantity",                  // ✅ Coluna REAL descoberta
         aggregation: "SUM"              // Agregação apropriada
       }
+    }
+  ]
+})
+\`\`\`
+
+**DASHBOARD RESPONSIVO (Adapta-se a diferentes telas):**
+\`\`\`typescript
+createDashboardTool({
+  dashboardDescription: "Dashboard Responsivo de E-commerce",
+  theme: "dark",
+  gridConfig: {
+    maxRows: 12,
+    rowHeight: 30,
+    cols: 12,
+    layoutColumns: {                    // ✅ Define seções responsivas
+      main: { desktop: 4, tablet: 2, mobile: 1 },
+      sidebar: { desktop: 3, tablet: 2, mobile: 1 }
+    }
+  },
+  widgets: [
+    {
+      id: "revenue_chart",
+      type: "bar",
+      position: { x: 0, y: 0, w: 6, h: 4 }, // Mantém para compatibilidade
+      column: "main",                   // ✅ Seção do layout
+      span: { desktop: 2, tablet: 2, mobile: 1 }, // ✅ Quantas colunas ocupa
+      order: 1,                         // ✅ Ordem de exibição
+      title: "Revenue by Event",
+      dataSource: {
+        table: "ecommerce",
+        x: "event_name",
+        y: "quantity",
+        aggregation: "SUM"
+      }
     },
     {
-      id: "total_events_kpi",
+      id: "total_kpi",
       type: "kpi",
       position: { x: 6, y: 0, w: 3, h: 2 },
+      column: "sidebar",                // ✅ Widget na sidebar
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 2,
       title: "Total Events",
       dataSource: {
         table: "ecommerce",
@@ -133,17 +172,29 @@ createDashboardTool({
 ### **RESPONSABILIDADES DA IA**:
 - ✅ **Definir IDs únicos** para cada widget
 - ✅ **Escolher tema** apropriado ao contexto/tipo de dashboard
+- ✅ **Decidir tipo**: Dashboard tradicional OU responsivo
 - ✅ **Calcular posições** no grid (sem sobreposições)
 - ✅ **Escolher tipos** apropriados baseado nos dados
 - ✅ **Usar tabelas/colunas REAIS** descobertas
 - ✅ **Planejar layout** visual harmonioso
 
-### **REGRAS DE LAYOUT**:
+### **QUANDO USAR CADA TIPO**:
+- **Dashboard Tradicional**: Dashboards simples, uso em desktop, layout fixo
+- **Dashboard Responsivo**: Dashboards complexos, uso em mobile/tablet, precisa adaptar
+
+### **REGRAS DE LAYOUT TRADICIONAL**:
 - **Grid**: 12 colunas × 12 linhas máximo
 - **KPIs**: Geralmente 3×2 ou 4×2
 - **Charts**: Geralmente 6×4 ou 8×4
 - **Tables**: Geralmente 12×6 ou 8×6
 - **Evitar sobreposições**: x + w ≤ 12, verificar conflitos de y
+
+### **REGRAS DE LAYOUT RESPONSIVO**:
+- **layoutColumns**: Define seções (ex: main, sidebar)
+- **column**: Cada widget pertence a uma seção
+- **span**: Quantas colunas ocupa em cada breakpoint
+- **order**: Ordem de exibição (importante para mobile)
+- **position**: Mantém para compatibilidade, mas span/column controlam layout
 
 ### **❌ NUNCA**:
 - Use tabelas fictícias ("sample_data", "example_table")
@@ -160,6 +211,8 @@ createDashboardTool({
 2. **getTableSchema(tableName)** → Veja colunas das tabelas relevantes
 
 #### **STEP 2: EXECUTE updateDashboardTool COM NOVOS WIDGETS**
+
+**ADICIONANDO A DASHBOARD TRADICIONAL:**
 \`\`\`typescript
 updateDashboardTool({
   updateDescription: "Adicionando widgets de análise de vendas",
@@ -174,11 +227,37 @@ updateDashboardTool({
         y: "product_price",             // ✅ Coluna REAL descoberta
         aggregation: "SUM"              // Agregação apropriada
       }
+    }
+  ]
+})
+\`\`\`
+
+**ADICIONANDO A DASHBOARD RESPONSIVO:**
+\`\`\`typescript
+updateDashboardTool({
+  updateDescription: "Adicionando widgets responsivos de análise de vendas",
+  newWidgets: [
+    {
+      id: "sales_kpi",
+      type: "kpi",
+      position: { x: 9, y: 0, w: 3, h: 2 }, // Mantém para compatibilidade
+      column: "sidebar",                // ✅ Seção do layout existente
+      span: { desktop: 1, tablet: 1, mobile: 1 }, // ✅ Spanning responsivo
+      order: 10,                        // ✅ Ordem após widgets existentes
+      title: "Total Sales",
+      dataSource: {
+        table: "ecommerce",
+        y: "product_price",
+        aggregation: "SUM"
+      }
     },
     {
-      id: "category_pie",
-      type: "pie",
+      id: "category_chart",
+      type: "bar",
       position: { x: 0, y: 8, w: 6, h: 4 },
+      column: "main",                   // ✅ Na seção principal
+      span: { desktop: 2, tablet: 2, mobile: 1 },
+      order: 11,
       title: "Sales by Category",
       dataSource: {
         table: "ecommerce",
@@ -192,8 +271,10 @@ updateDashboardTool({
 \`\`\`
 
 ### **RESPONSABILIDADES DA IA para updateDashboardTool**:
+- ✅ **Verificar tipo de dashboard** (tradicional ou responsivo) com getDashboardCode()
 - ✅ **Definir IDs únicos** que NÃO conflitem com widgets existentes
-- ✅ **Calcular posições** que NÃO sobreponham widgets existentes
+- ✅ **Para dashboard tradicional**: Calcular posições que NÃO sobreponham
+- ✅ **Para dashboard responsivo**: Usar column/span/order corretos das seções existentes
 - ✅ **Usar tabelas/colunas REAIS** descobertas
 - ✅ **Verificar layout atual** com getDashboardCode() antes de posicionar
 

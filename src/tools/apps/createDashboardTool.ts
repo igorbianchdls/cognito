@@ -9,7 +9,12 @@ export const createDashboardTool = tool({
     gridConfig: z.object({
       maxRows: z.number().describe('Número máximo de linhas no grid'),
       rowHeight: z.number().describe('Altura de cada linha do grid em pixels'),
-      cols: z.number().describe('Número de colunas no grid')
+      cols: z.number().describe('Número de colunas no grid'),
+      layoutColumns: z.record(z.string(), z.object({
+        desktop: z.number().describe('Número de colunas no desktop'),
+        tablet: z.number().describe('Número de colunas no tablet'),
+        mobile: z.number().describe('Número de colunas no mobile')
+      })).optional().describe('Layout responsivo por seções (ex: main, sidebar)')
     }),
     widgets: z.array(z.object({
       id: z.string().describe('ID único do widget (ex: "chart1", "kpi1")'),
@@ -21,6 +26,14 @@ export const createDashboardTool = tool({
         h: z.number().describe('Altura do widget em linhas do grid')
       }).describe('Posição e tamanho no grid'),
       title: z.string().describe('Título do widget'),
+      // Campos responsivos opcionais
+      column: z.string().optional().describe('Referência para seção do layout (ex: "main", "sidebar")'),
+      span: z.object({
+        desktop: z.number().optional().describe('Quantas colunas ocupar no desktop'),
+        tablet: z.number().optional().describe('Quantas colunas ocupar no tablet'),
+        mobile: z.number().optional().describe('Quantas colunas ocupar no mobile')
+      }).optional().describe('Configuração responsiva de spanning'),
+      order: z.number().optional().describe('Ordem de exibição do widget'),
       dataSource: z.object({
         table: z.string().describe('Nome EXATO da tabela descoberta via getTables'),
         x: z.string().optional().describe('Campo X - coluna EXATA descoberta via getTableSchema'),

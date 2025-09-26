@@ -15,6 +15,14 @@ export const updateDashboardTool = tool({
         h: z.number().describe('Altura do widget em linhas')
       }).describe('Posição e tamanho no grid'),
       title: z.string().describe('Título do widget'),
+      // Campos responsivos opcionais
+      column: z.string().optional().describe('Referência para seção do layout (ex: "main", "sidebar")'),
+      span: z.object({
+        desktop: z.number().optional().describe('Quantas colunas ocupar no desktop'),
+        tablet: z.number().optional().describe('Quantas colunas ocupar no tablet'),
+        mobile: z.number().optional().describe('Quantas colunas ocupar no mobile')
+      }).optional().describe('Configuração responsiva de spanning'),
+      order: z.number().optional().describe('Ordem de exibição do widget'),
       dataSource: z.object({
         table: z.string().describe('Nome EXATO da tabela descoberta via getTables'),
         x: z.string().optional().describe('Campo X - coluna EXATA descoberta via getTableSchema'),
