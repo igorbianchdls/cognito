@@ -1,7 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
-import * as analyticsTools from '@/tools/apps/analytics';
+import * as utilitiesTools from '@/tools/utilities';
 import * as visualizationTools from '@/tools/apps/visualization';
 
 export const maxDuration = 300;
@@ -97,7 +97,7 @@ Trabalhe em português e seja proativo em sugerir análises relevantes baseado n
       gerarAlertas: bigqueryTools.gerarAlertas,
 
       // Busca semântica
-      retrieveResult: analyticsTools.retrieveResult,
+      retrieveResult: utilitiesTools.retrieveResult,
     },
   });
 
