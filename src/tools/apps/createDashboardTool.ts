@@ -27,49 +27,6 @@ export const createDashboardTool = tool({
         y: z.string().optional().describe('Campo Y - coluna EXATA descoberta via getTableSchema'),
         aggregation: z.enum(['SUM', 'COUNT', 'AVG', 'MIN', 'MAX']).optional().describe('Tipo de agregação para cálculos')
       }).describe('Fonte de dados com nomes reais das tabelas e colunas'),
-      // Configurações específicas por tipo de widget
-      barConfig: z.object({
-        styling: z.object({
-          colors: z.array(z.string()).optional(),
-          showLegend: z.boolean().optional(),
-          enableGridX: z.boolean().optional(),
-          enableGridY: z.boolean().optional()
-        }).optional()
-      }).optional().describe('Configurações específicas para gráfico de barras'),
-      lineConfig: z.object({
-        styling: z.object({
-          colors: z.array(z.string()).optional(),
-          showLegend: z.boolean().optional(),
-          enableGridX: z.boolean().optional(),
-          enableGridY: z.boolean().optional(),
-          lineWidth: z.number().optional(),
-          enablePoints: z.boolean().optional()
-        }).optional()
-      }).optional().describe('Configurações específicas para gráfico de linha'),
-      kpiConfig: z.object({
-        unit: z.string().optional(),
-        target: z.number().optional(),
-        showTarget: z.boolean().optional(),
-        trend: z.enum(['increasing', 'decreasing', 'stable']).optional(),
-        visualizationType: z.enum(['card', 'gauge', 'progress']).optional()
-      }).optional().describe('Configurações específicas para KPI'),
-      pieConfig: z.object({
-        styling: z.object({
-          colors: z.array(z.string()).optional(),
-          showLegend: z.boolean().optional(),
-          enableGridX: z.boolean().optional(),
-          enableGridY: z.boolean().optional()
-        }).optional()
-      }).optional().describe('Configurações específicas para gráfico de pizza'),
-      areaConfig: z.object({
-        styling: z.object({
-          colors: z.array(z.string()).optional(),
-          showLegend: z.boolean().optional(),
-          enableGridX: z.boolean().optional(),
-          enableGridY: z.boolean().optional(),
-          fillOpacity: z.number().optional()
-        }).optional()
-      }).optional().describe('Configurações específicas para gráfico de área')
     }))
   }),
   execute: async ({ dashboardDescription, theme, gridConfig, widgets }) => {
