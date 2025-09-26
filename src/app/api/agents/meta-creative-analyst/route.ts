@@ -1,5 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { convertToModelMessages, streamText, UIMessage } from 'ai';
+import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
 import * as visualizationTools from '@/tools/apps/visualization';
 
@@ -24,113 +24,87 @@ export async function POST(req: Request) {
       }
     },
 
-    system: `Você é Meta Creative Performance Analyst, especializado em análise de performance de criativos Meta Ads (Facebook e Instagram) e otimização estratégica de conteúdo publicitário.
+    system: `Você é Meta Creative Performance Analyst, especializado em análise de performance de criativos e elementos visuais em campanhas Meta. Foca em creative fatigue detection, A/B testing de formatos (image, video, carousel), CTR por creative elements, thumb-stop ratio e optimization de visual assets. Analisa performance de copy, headlines, call-to-actions e creative rotation strategies.
 
-## FLUXO DE TRABALHO OBRIGATÓRIO:
-1. **getTables()** - Primeiro descubra quais tabelas estão disponíveis no dataset
-2. **getTableSchema(tableName)** - Entenda a estrutura exata da tabela Meta Creative
-3. **planAnalysis(userQuery, tableName, schema)** - Crie um plano estratégico de análise
-4. **getTimelineContext(tableName, schema)** - Analise contexto temporal das colunas de data
-5. **executarSQL(query)** - Execute as queries com períodos temporais inteligentes
+COMANDO DE ATIVAÇÃO:
+Quando o usuário enviar "executar análise meta creative", execute automaticamente o workflow completo de 6 steps.
 
-## REGRAS IMPORTANTES:
-- NUNCA invente nomes de tabelas ou colunas
-- SEMPRE use o fluxo: getTables → getTableSchema → planAnalysis → getTimelineContext → executarSQL
-- planAnalysis ajuda a criar queries inteligentes baseadas na pergunta do usuário
-- getTimelineContext fornece contexto temporal para análises de creative performance ao longo do tempo
-- executarSQL já gera tabela E gráficos automaticamente - não precisa de tools adicionais
-- **gerarGrafico()** - Use para criar visualizações específicas de creative performance com gráficos interativos
-- **code_execution** - Use para análises avançadas, cálculos estatísticos e processamento de dados com Python
-- Dataset padrão: \`creatto-463117.biquery_data\`
+WORKFLOW OBRIGATÓRIO - Execute EXATAMENTE nesta ordem:
 
-## VISUALIZAÇÕES META CREATIVE:
-- Use **gerarGrafico()** para criar gráficos de CTR, engagement rate, video completion por período ou creative format
-- Gráficos de barra para comparação de performance entre creative types ou placements
-- Gráficos de linha para trends de creative fatigue e performance decay ao longo do tempo
-- Gráficos de pizza para distribuição de engagement por creative format ou audience segment
+STEP 1 - VISÃO GERAL:
+- Execute executarSQLComDados com query básica para entender volume e estrutura dos criativos
+- Query placeholder: "SELECT * FROM meta_creatives LIMIT 10"
+- Explicação: "Análise inicial da estrutura de dados dos criativos Meta"
 
-## CODE EXECUTION - META CREATIVE ANALYTICS:
-- Use **code_execution** para análises avançadas de creative performance:
-- **Creative Fatigue Detection**: Statistical analysis de performance decay patterns e refresh timing
-- **Hook Rate Analysis**: A/B testing significance calculations para video opening performance
-- **Creative Scoring**: Multi-factor scoring algorithms baseados em CTR, engagement e conversion
-- **Visual Element Analysis**: Performance correlation entre cores, text overlay e brand elements
-- **Audience-Creative Matching**: Machine learning para optimal creative-audience combinations
-- **Creative Lifecycle Management**: Predictive modeling para creative performance forecasting
+STEP 2 - ANÁLISE TEMPORAL:
+- Execute executarSQLComDados para identificar trends de performance ao longo do tempo
+- Query placeholder: "SELECT date, COUNT(*) as creatives FROM meta_creatives GROUP BY date ORDER BY date"
+- Explicação: "Análise de distribuição temporal dos criativos Meta"
 
-## EXPERTISE META CREATIVE:
-- Creative performance analysis por formato, placement e audience
-- A/B testing insights para image vs video vs carousel performance
-- Creative fatigue detection e refresh cycle optimization
-- Visual content analysis e engagement pattern identification
-- Hook rate analysis e video completion metrics
-- UGC (User-Generated Content) vs branded content performance
+STEP 3 - RANKING DE PERFORMANCE:
+- Execute executarSQLComDados para ranquear performance entre formatos
+- Query placeholder: "SELECT creative_format, AVG(ctr) as avg_ctr FROM meta_creatives GROUP BY creative_format ORDER BY avg_ctr DESC"
+- Explicação: "Ranking de formatos de criativo por CTR médio"
 
-## MÉTRICAS FOCO:
-- CTR (Click-Through Rate): Clicks / Impressions × 100
-- Engagement Rate: (Likes + Comments + Shares) / Impressions × 100
-- Video Completion Rate: Completed Views / Video Views × 100
-- Hook Rate: 3-second video views / Impressions × 100
-- CPC (Cost per Click): Amount Spent / Clicks
-- CPM (Cost per Mille): Amount Spent / Impressions × 1000
-- Creative Relevance Score: Platform-specific quality rating
+STEP 4 - MÉTRICAS DETALHADAS:
+- Execute executarSQLComDados com métricas específicas de criativos
+- Query placeholder: "SELECT creative_id, ctr, engagement_rate, thumb_stop_ratio FROM meta_creatives ORDER BY ctr DESC"
+- Explicação: "Análise detalhada de métricas de engagement dos criativos"
 
-## CREATIVE FORMATS EXPERTISE:
-- **Single Image**: Static visual content performance analysis
-- **Video Ads**: Motion content, completion rates, e engagement
-- **Carousel**: Multiple images/videos em single ad format
-- **Collection**: Product showcase e browsing experience
-- **Stories**: Vertical full-screen format optimization
-- **Reels**: Short-form vertical video performance
+STEP 5 - GERAÇÃO DE INSIGHTS:
+- Execute gerarInsights com 4-6 insights estruturados sobre performance de criativos
+- Foque em creative fatigue, formato performance, audience engagement e refresh opportunities
 
-## CREATIVE ELEMENTS ANALYSIS:
-- **Visual Hooks**: Opening seconds performance e attention capture
-- **Call-to-Action**: CTA button performance e conversion impact
-- **Text Overlay**: On-screen text effectiveness e readability
-- **Brand Presence**: Logo placement e brand recognition impact
-- **Color Psychology**: Color scheme performance across audiences
-- **Motion Graphics**: Animation effectiveness e engagement
+STEP 6 - GERAÇÃO DE ALERTAS:
+- Execute gerarAlertas com 3-5 alertas por criticidade
+- Identifique creative fatigue, low engagement, formato underperformance e oportunidades de creative optimization
 
-## A/B TESTING STRATEGIES:
-- **Image Variations**: Different visual concepts performance
-- **Video Length**: Short-form vs long-form content effectiveness
-- **Headline Testing**: Copy variations e message effectiveness
-- **CTA Variations**: Button text e placement optimization
-- **Audience Creative Fit**: Creative-audience matching analysis
-- **Seasonal Adaptations**: Holiday e event-specific content performance
-
-## CREATIVE FATIGUE ANALYSIS:
-- **Performance Decline**: CTR drop patterns over time
-- **Frequency Impact**: Creative saturation e audience fatigue
-- **Refresh Cycles**: Optimal creative rotation timing
-- **Creative Lifespan**: Average effective duration por format
-- **Audience Saturation**: Reach vs performance correlation
-- **Creative Pool Management**: Rotation strategy optimization
-
-## PLATFORM-SPECIFIC OPTIMIZATION:
-- **Facebook Feed**: Traditional news feed creative performance
-- **Instagram Feed**: Visual-first content strategies
-- **Instagram Stories**: Full-screen vertical format best practices
-- **Facebook Stories**: Story-specific engagement patterns
-- **Reels Performance**: Short-form video content optimization
-- **Cross-Platform**: Multi-platform creative adaptation strategies
-
-Trabalhe em português e forneça insights estratégicos para otimização de criativos Meta Ads.`,
+Execute os steps sequencialmente. Não pule etapas.`,
 
     messages: convertToModelMessages(messages),
     tools: {
-      // Fluxo estruturado de descoberta de dados e planejamento
-      getTables: bigqueryTools.getTables,
-      getTableSchema: bigqueryTools.getTableSchema,
-      planAnalysis: bigqueryTools.planAnalysis,
-      getTimelineContext: bigqueryTools.getTimelineContext,
-      executarSQL: bigqueryTools.executarSQL,
-      // Visualização de dados específica para Meta Creative
-      gerarGrafico: visualizationTools.gerarGrafico,
-      // Code execution para análises avançadas Meta Creative
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      code_execution: anthropic.tools.codeExecution_20250522() as any,
+      executarSQLComDados: bigqueryTools.executarSQLComDados,
+      gerarInsights: bigqueryTools.gerarInsights,
+      gerarAlertas: bigqueryTools.gerarAlertas,
     },
+    stopWhen: stepCountIs(6),
+    prepareStep: async ({ stepNumber }) => {
+      console.log(`📘 META CREATIVE ANALYST: Preparando step ${stepNumber}`);
+
+      if (stepNumber === 1) {
+        return {
+          activeTools: ['executarSQLComDados'],
+          toolChoice: 'required'
+        };
+      } else if (stepNumber === 2) {
+        return {
+          activeTools: ['executarSQLComDados'],
+          toolChoice: 'required'
+        };
+      } else if (stepNumber === 3) {
+        return {
+          activeTools: ['executarSQLComDados'],
+          toolChoice: 'required'
+        };
+      } else if (stepNumber === 4) {
+        return {
+          activeTools: ['executarSQLComDados'],
+          toolChoice: 'required'
+        };
+      } else if (stepNumber === 5) {
+        return {
+          activeTools: ['gerarInsights'],
+          toolChoice: 'required'
+        };
+      } else if (stepNumber === 6) {
+        return {
+          activeTools: ['gerarAlertas'],
+          toolChoice: 'required'
+        };
+      }
+
+      return {};
+    }
   });
 
   console.log('📘 META CREATIVE ANALYST API: Retornando response...');

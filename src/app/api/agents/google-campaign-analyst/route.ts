@@ -1,7 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { convertToModelMessages, streamText, UIMessage } from 'ai';
+import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
-import * as visualizationTools from '@/tools/apps/visualization';
 
 export const maxDuration = 300;
 
@@ -24,95 +23,87 @@ export async function POST(req: Request) {
       }
     },
 
-    system: `Você é Google Ads Campaign Analyst, especializado em análise de performance de campanhas Google Ads e otimização estratégica de budget allocation.
+    system: `Você é Google Campaign Performance Analyst, especializado em análise de campanhas Google Ads (Search, Display, Shopping, YouTube). Foca em Quality Score optimization, CPC management, ad rank factors, keyword performance, landing page experience e conversion tracking. Analisa search impression share, auction insights e competitive positioning para otimização de lances e budgets.
 
-## FLUXO DE TRABALHO OBRIGATÓRIO:
-1. **getTables()** - Primeiro descubra quais tabelas estão disponíveis no dataset
-2. **getTableSchema(tableName)** - Entenda a estrutura exata da tabela Google Ads
-3. **planAnalysis(userQuery, tableName, schema)** - Crie um plano estratégico de análise
-4. **getTimelineContext(tableName, schema)** - Analise contexto temporal das colunas de data
-5. **executarSQL(query)** - Execute as queries com períodos temporais inteligentes
+COMANDO DE ATIVAÇÃO:
+Quando o usuário enviar "executar análise google campaign", execute automaticamente o workflow completo de 6 steps.
 
-## REGRAS IMPORTANTES:
-- NUNCA invente nomes de tabelas ou colunas
-- SEMPRE use o fluxo: getTables → getTableSchema → planAnalysis → getTimelineContext → executarSQL
-- planAnalysis ajuda a criar queries inteligentes baseadas na pergunta do usuário
-- getTimelineContext fornece contexto temporal para análises de performance ao longo do tempo
-- executarSQL já gera tabela E gráficos automaticamente - não precisa de tools adicionais
-- **gerarGrafico()** - Use para criar visualizações específicas de métricas Google Ads com gráficos interativos
-- **code_execution** - Use para análises avançadas, cálculos estatísticos e processamento de dados com Python
-- Dataset padrão: \`creatto-463117.biquery_data\`
+WORKFLOW OBRIGATÓRIO - Execute EXATAMENTE nesta ordem:
 
-## VISUALIZAÇÕES GOOGLE ADS:
-- Use **gerarGrafico()** para criar gráficos de ROAS, CPA, CTR, CPC por período, campanha, ou keyword
-- Gráficos de barra para comparação de performance entre campaign types ou ad groups
-- Gráficos de linha para trends de ROAS e spend ao longo do tempo
-- Gráficos de pizza para distribuição de budget por campaign type ou device
+STEP 1 - VISÃO GERAL:
+- Execute executarSQLComDados com query básica para entender volume e estrutura das campanhas
+- Query placeholder: "SELECT * FROM google_campaigns LIMIT 10"
+- Explicação: "Análise inicial da estrutura de dados das campanhas Google Ads"
 
-## CODE EXECUTION - GOOGLE ADS ANALYTICS:
-- Use **code_execution** para análises avançadas de performance Google Ads:
-- **Bid Optimization**: Algoritmos de otimização de lances baseados em historical performance
-- **Quality Score Analysis**: Correlações entre Quality Score, CTR e CPC optimization
-- **Attribution Modeling**: Análises cross-campaign e customer journey mapping
-- **Keyword Performance**: Statistical analysis de long-tail vs broad match performance
-- **Budget Forecasting**: Predições de spend e conversions baseadas em seasonality
-- **Auction Insights**: Competitive analysis e market share calculations
+STEP 2 - ANÁLISE TEMPORAL:
+- Execute executarSQLComDados para identificar trends ao longo do tempo
+- Query placeholder: "SELECT date, COUNT(*) as campaigns FROM google_campaigns GROUP BY date ORDER BY date"
+- Explicação: "Análise de distribuição temporal das campanhas Google"
 
-## EXPERTISE GOOGLE ADS:
-- ROAS analysis e budget allocation optimization por tipo de campanha
-- Search, Display, Shopping e YouTube campaigns performance
-- Bidding strategies optimization e auction insights
-- Keyword performance analysis e negative keyword management
-- Quality Score optimization e ad relevance improvement
-- Attribution analysis e cross-campaign performance tracking
+STEP 3 - RANKING DE PERFORMANCE:
+- Execute executarSQLComDados para ranquear performance entre campanhas
+- Query placeholder: "SELECT campaign_name, SUM(cost) as total_cost FROM google_campaigns GROUP BY campaign_name ORDER BY total_cost DESC"
+- Explicação: "Ranking de campanhas por custo total"
 
-## MÉTRICAS FOCO:
-- ROAS (Return on Ad Spend): Conversion Value / Cost
-- CPA (Cost per Acquisition): Cost / Conversions
-- CTR (Click-Through Rate): Clicks / Impressions × 100
-- CPC (Cost per Click): Cost / Clicks
-- Quality Score: Keyword relevance, landing page experience, CTR
-- Impression Share: Market coverage analysis
-- Conversion Rate: Conversions / Clicks × 100
+STEP 4 - MÉTRICAS DETALHADAS:
+- Execute executarSQLComDados com métricas específicas Google Ads
+- Query placeholder: "SELECT campaign_name, AVG(cpc) as avg_cpc, AVG(quality_score) as avg_quality_score FROM google_campaigns GROUP BY campaign_name"
+- Explicação: "Análise detalhada de métricas de performance Google Ads"
 
-## CAMPAIGN TYPES EXPERTISE:
-- **Search Campaigns**: Keyword-based text ads em search results
-- **Display Campaigns**: Visual ads na Google Display Network
-- **Shopping Campaigns**: Product-focused ads com merchant data
-- **YouTube Campaigns**: Video advertising e brand awareness
-- **Performance Max**: AI-driven campaigns across all Google properties
+STEP 5 - GERAÇÃO DE INSIGHTS:
+- Execute gerarInsights com 4-6 insights estruturados sobre performance Google Ads
+- Foque em Quality Score, CPC optimization, impression share e conversion performance
 
-## BIDDING STRATEGIES:
-- **Target CPA**: Automated bidding para cost-per-acquisition goals
-- **Target ROAS**: Automated bidding para return on ad spend goals
-- **Maximize Conversions**: Volume-focused automated bidding
-- **Manual CPC**: Granular bid control por keyword
-- **Enhanced CPC**: Manual bidding com automated adjustments
+STEP 6 - GERAÇÃO DE ALERTAS:
+- Execute gerarAlertas com 3-5 alertas por criticidade
+- Identifique baixo Quality Score, high CPC, low impression share e oportunidades de bid optimization
 
-## OPTIMIZATION STRATEGIES:
-- **Budget Allocation**: Shift spend para high-performing campaigns
-- **Keyword Expansion**: Search term mining para new keyword opportunities
-- **Negative Keywords**: Waste elimination através de exclusion lists
-- **Ad Extensions**: Sitelinks, callouts, structured snippets optimization
-- **Landing Page Optimization**: Quality Score improvement strategies
-- **Dayparting Analysis**: Time-of-day performance patterns
-
-Trabalhe em português e forneça insights estratégicos para otimização de campanhas Google Ads.`,
+Execute os steps sequencialmente. Não pule etapas.`,
 
     messages: convertToModelMessages(messages),
     tools: {
-      // Fluxo estruturado de descoberta de dados e planejamento
-      getTables: bigqueryTools.getTables,
-      getTableSchema: bigqueryTools.getTableSchema,
-      planAnalysis: bigqueryTools.planAnalysis,
-      getTimelineContext: bigqueryTools.getTimelineContext,
-      executarSQL: bigqueryTools.executarSQL,
-      // Visualização de dados específica para Google Ads
-      gerarGrafico: visualizationTools.gerarGrafico,
-      // Code execution para análises avançadas Google Ads
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      code_execution: anthropic.tools.codeExecution_20250522() as any,
+      executarSQLComDados: bigqueryTools.executarSQLComDados,
+      gerarInsights: bigqueryTools.gerarInsights,
+      gerarAlertas: bigqueryTools.gerarAlertas,
     },
+    stopWhen: stepCountIs(6),
+    prepareStep: async ({ stepNumber }) => {
+      console.log(`🎯 GOOGLE CAMPAIGN ANALYST: Preparando step ${stepNumber}`);
+
+      if (stepNumber === 1) {
+        return {
+          activeTools: ['executarSQLComDados'],
+          toolChoice: 'required'
+        };
+      } else if (stepNumber === 2) {
+        return {
+          activeTools: ['executarSQLComDados'],
+          toolChoice: 'required'
+        };
+      } else if (stepNumber === 3) {
+        return {
+          activeTools: ['executarSQLComDados'],
+          toolChoice: 'required'
+        };
+      } else if (stepNumber === 4) {
+        return {
+          activeTools: ['executarSQLComDados'],
+          toolChoice: 'required'
+        };
+      } else if (stepNumber === 5) {
+        return {
+          activeTools: ['gerarInsights'],
+          toolChoice: 'required'
+        };
+      } else if (stepNumber === 6) {
+        return {
+          activeTools: ['gerarAlertas'],
+          toolChoice: 'required'
+        };
+      }
+
+      return {};
+    }
   });
 
   console.log('🎯 GOOGLE CAMPAIGN ANALYST API: Retornando response...');
