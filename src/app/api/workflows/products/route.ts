@@ -1,5 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { convertToModelMessages, streamText, stepCountIs } from 'ai';
+import { convertToModelMessages, streamText, hasToolCall } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
 
 export const maxDuration = 300;
@@ -149,7 +149,7 @@ IMPORTANTE: Execute os steps OBRIGATORIAMENTE na sequência 1 → 2 → 3 → 4.
         gerarInsights: bigqueryTools.gerarInsights,
         gerarAlertas: bigqueryTools.gerarAlertas
       },
-      stopWhen: stepCountIs(5),
+      stopWhen: hasToolCall('gerarAlertas'),
       prepareStep: async ({ stepNumber }) => {
         console.log(`📦 PRODUCT AGENT: Preparando step ${stepNumber}`);
 
