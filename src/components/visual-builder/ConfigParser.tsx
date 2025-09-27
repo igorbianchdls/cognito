@@ -6,6 +6,30 @@ import type { LineChartConfig } from '@/stores/apps/lineChartStore';
 import type { PieChartConfig } from '@/stores/apps/pieChartStore';
 import type { AreaChartConfig } from '@/stores/apps/areaChartStore';
 
+// Widget types configurations
+export interface InsightsConfig {
+  maxItems?: number;
+  useGlobalStore?: boolean;
+  showActions?: boolean;
+  collapsible?: boolean;
+}
+
+export interface AlertsConfig {
+  maxItems?: number;
+  useGlobalStore?: boolean;
+  showActions?: boolean;
+  collapsible?: boolean;
+  showOnlyCritical?: boolean;
+}
+
+export interface RecommendationsConfig {
+  maxItems?: number;
+  useGlobalStore?: boolean;
+  showActions?: boolean;
+  collapsible?: boolean;
+  priorityFilter?: 'all' | 'high' | 'medium' | 'low';
+}
+
 export interface GridConfig {
   maxRows: number;
   rowHeight: number;
@@ -64,7 +88,7 @@ export interface WidgetSpan {
 
 export interface Widget {
   id: string;
-  type: 'bar' | 'line' | 'pie' | 'area' | 'kpi';
+  type: 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'insights' | 'alerts' | 'recommendations';
   position: {
     x: number;
     y: number;
@@ -103,6 +127,9 @@ export interface Widget {
   lineConfig?: Partial<LineChartConfig>;
   pieConfig?: Partial<PieChartConfig>;
   areaConfig?: Partial<AreaChartConfig>;
+  insightsConfig?: InsightsConfig;
+  alertsConfig?: AlertsConfig;
+  recommendationsConfig?: RecommendationsConfig;
 }
 
 
@@ -121,7 +148,7 @@ export interface ParseResult {
 }
 
 export class ConfigParser {
-  private static VALID_TYPES = ['bar', 'line', 'pie', 'area', 'kpi'];
+  private static VALID_TYPES = ['bar', 'line', 'pie', 'area', 'kpi', 'insights', 'alerts', 'recommendations'];
   private static DEFAULT_GRID_CONFIG: GridConfig = {
     maxRows: 12,
     rowHeight: 30,
