@@ -6,6 +6,9 @@ import { LineChart } from '@/components/charts/LineChart';
 import { PieChart } from '@/components/charts/PieChart';
 import { AreaChart } from '@/components/charts/AreaChart';
 import { KPICard } from '@/components/widgets/KPICard';
+import InsightsCard from '@/components/widgets/InsightsCard';
+import AlertasCard from '@/components/widgets/AlertasCard';
+import RecomendacoesCard from '@/components/widgets/RecomendacoesCard';
 import type { Widget } from '../visual-builder/ConfigParser';
 
 // Define chart data types
@@ -39,8 +42,18 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
     dataSource: widget.dataSource
   });
 
+  // Check if widget type needs BigQuery data
+  const needsBigQueryData = (type: string): boolean => {
+    return ['bar', 'line', 'pie', 'area', 'kpi'].includes(type);
+  };
+
   // Fetch ONLY BigQuery data - no mock data ever
   useEffect(() => {
+    // Skip data fetching for widgets that don't need BigQuery data
+    if (!needsBigQueryData(widget.type)) {
+      return;
+    }
+
     const fetchData = async () => {
       // Se não tem dataSource, não busca nada
       if (!widget.dataSource) {
@@ -157,8 +170,8 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
     animate: false,
   };
 
-  // Loading state
-  if (loading) {
+  // Loading state - only for BigQuery widgets
+  if (needsBigQueryData(widget.type) && loading) {
     return (
       <div className="h-full w-full p-2 flex items-center justify-center">
         <div className="text-center text-gray-500">
@@ -169,8 +182,8 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
     );
   }
 
-  // Error state - show error, no fallback data
-  if (error) {
+  // Error state - show error, no fallback data - only for BigQuery widgets
+  if (needsBigQueryData(widget.type) && error) {
     return (
       <div className="h-full w-full p-2 flex items-center justify-center bg-red-50 rounded">
         <div className="text-center text-red-600">
@@ -182,8 +195,8 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
     );
   }
 
-  // Empty data state
-  if (!loading && (!data || (Array.isArray(data) && data.length === 0))) {
+  // Empty data state - only for BigQuery widgets
+  if (needsBigQueryData(widget.type) && !loading && (!data || (Array.isArray(data) && data.length === 0))) {
     return (
       <div className="h-full w-full p-2 flex items-center justify-center bg-gray-50 rounded">
         <div className="text-center text-gray-500">
@@ -377,6 +390,39 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
             kpiContainerBackgroundColor={widget.kpiConfig?.kpiContainerBackgroundColor || widget.styling?.backgroundColor}
             kpiValueColor={widget.kpiConfig?.kpiValueColor || widget.styling?.textColor}
             kpiValueFontSize={widget.kpiConfig?.kpiValueFontSize || widget.styling?.fontSize}
+          />
+        </div>
+      );
+
+    case 'insights':
+      return (
+        <div className="h-full w-full p-2">
+          <InsightsCard
+            title={widget.title}
+            useGlobalStore={widget.insightsConfig?.useGlobalStore ?? true}
+            {...(widget.insightsConfig || {})}
+          />
+        </div>
+      );
+
+    case 'alerts':
+      return (
+        <div className="h-full w-full p-2">
+          <AlertasCard
+            title={widget.title}
+            useGlobalStore={widget.alertsConfig?.useGlobalStore ?? true}
+            {...(widget.alertsConfig || {})}
+          />
+        </div>
+      );
+
+    case 'recommendations':
+      return (
+        <div className="h-full w-full p-2">
+          <RecomendacoesCard
+            title={widget.title}
+            useGlobalStore={widget.recommendationsConfig?.useGlobalStore ?? true}
+            {...(widget.recommendationsConfig || {})}
           />
         </div>
       );
