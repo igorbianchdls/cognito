@@ -2,6 +2,54 @@ import { tool } from 'ai';
 import { z } from 'zod';
 import { agentsetService } from '@/services/agentset';
 
+export const sendEmail = tool({
+  description: 'Send email with analysis summary and insights (placeholder implementation)',
+  inputSchema: z.object({
+    to: z.string().email().describe('Recipient email address'),
+    subject: z.string().describe('Email subject line'),
+    body: z.string().describe('Email body content with analysis summary'),
+    priority: z.enum(['low', 'normal', 'high']).optional().default('normal').describe('Email priority level'),
+    attachments: z.array(z.string()).optional().describe('Optional file attachments (placeholder)')
+  }),
+  execute: async ({ to, subject, body, priority, attachments }) => {
+    console.log('📧 SEND EMAIL TOOL: Email placeholder executed');
+    console.log('📧 Email Details:', {
+      to,
+      subject,
+      bodyLength: body.length,
+      priority,
+      attachments: attachments?.length || 0
+    });
+
+    // Placeholder implementation - log email content
+    console.log('📧 EMAIL CONTENT:');
+    console.log('📧 To:', to);
+    console.log('📧 Subject:', subject);
+    console.log('📧 Priority:', priority);
+    console.log('📧 Body Preview:', body.substring(0, 200) + (body.length > 200 ? '...' : ''));
+
+    if (attachments && attachments.length > 0) {
+      console.log('📧 Attachments:', attachments);
+    }
+
+    // Simulate email sending success
+    const emailId = `email_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    return {
+      success: true,
+      emailId,
+      message: `Email successfully prepared and logged (placeholder). To: ${to}, Subject: "${subject}"`,
+      recipient: to,
+      subject,
+      bodyLength: body.length,
+      priority,
+      attachmentCount: attachments?.length || 0,
+      timestamp: new Date().toISOString(),
+      note: 'This is a placeholder implementation. Email was logged but not actually sent.'
+    };
+  }
+});
+
 export const retrieveResult = tool({
   description: 'Retrieve results from RAG search - searches documents in vector database with real semantic search',
   inputSchema: z.object({
