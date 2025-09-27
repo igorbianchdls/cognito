@@ -31,7 +31,7 @@ interface AlertasCardProps {
   title?: string;
   maxHeight?: number;
   onActionClick?: (alerta: Alerta, index: number) => void;
-  useStore?: boolean; // Flag para usar store ou props
+  useGlobalStore?: boolean; // Flag para usar store ou props
 }
 
 const NivelConfig = {
@@ -76,15 +76,15 @@ export default function AlertasCard({
   title = "Alertas",
   maxHeight = 400,
   onActionClick,
-  useStore = false
+  useGlobalStore = false
 }: AlertasCardProps) {
   const storeAlertas = useStore($alertasOrdenados)
   const totalAlertas = useStore($totalAlertas)
   const alertasAtivos = useStore($alertasAtivos)
   const alertasCriticos = useStore($alertasCriticos)
 
-  const alertas = useStore ? storeAlertas : (propAlertas || [])
-  const showActions = useStore // Só mostra ações quando usa store
+  const alertas = useGlobalStore ? storeAlertas : (propAlertas || [])
+  const showActions = useGlobalStore // Só mostra ações quando usa store
   if (!alertas || alertas.length === 0) {
     return (
       <Card className="w-full">
@@ -100,7 +100,7 @@ export default function AlertasCard({
   }
 
   // Usar alertas já ordenados da store ou ordenar props
-  const alertasOrdenados = useStore ? alertas : [...alertas].sort((a, b) => {
+  const alertasOrdenados = useGlobalStore ? alertas : [...alertas].sort((a, b) => {
     const ordem = { critico: 0, alto: 1, medio: 2, baixo: 3 };
     return ordem[a.nivel] - ordem[b.nivel];
   });
@@ -112,18 +112,18 @@ export default function AlertasCard({
           <AlertTriangle className="h-5 w-5 text-orange-600" />
           {title}
           <div className="ml-auto flex items-center gap-2">
-            {useStore && alertasCriticos.length > 0 && (
+            {useGlobalStore && alertasCriticos.length > 0 && (
               <Badge variant="destructive" className="text-xs">
                 {alertasCriticos.length} críticos
               </Badge>
             )}
-            {useStore && (
+            {useGlobalStore && (
               <Badge variant="outline" className="text-xs">
                 {alertasAtivos.length} ativos
               </Badge>
             )}
             <Badge variant="secondary">
-              {useStore ? totalAlertas : alertas.length}
+              {useGlobalStore ? totalAlertas : alertas.length}
             </Badge>
           </div>
         </CardTitle>
@@ -133,7 +133,7 @@ export default function AlertasCard({
           </CardDescription>
         )}
 
-        {useStore && alertas.length > 0 && (
+        {useGlobalStore && alertas.length > 0 && (
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -157,9 +157,9 @@ export default function AlertasCard({
 
               return (
                 <div
-                  key={useStore ? alerta.id : index}
+                  key={useGlobalStore ? alerta.id : index}
                   className={`p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow ${config.cardBorder} ${
-                    useStore && alerta.resolved ? 'opacity-50' : ''
+                    useGlobalStore && alerta.resolved ? 'opacity-50' : ''
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -173,7 +173,7 @@ export default function AlertasCard({
                           {alerta.titulo}
                         </h4>
                         <div className="flex items-center gap-1">
-                          {useStore && alerta.resolved && (
+                          {useGlobalStore && alerta.resolved && (
                             <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
                               Resolvido
                             </Badge>
@@ -264,7 +264,7 @@ export default function AlertasCard({
           </div>
         )}
 
-        {useStore && alertas.length > 0 && (
+        {useGlobalStore && alertas.length > 0 && (
           <div className="mt-4 pt-3 border-t border-gray-200">
             <p className="text-xs text-gray-500">
               <strong>Fonte:</strong> Store global • <strong>Ativos:</strong> {alertasAtivos.length} • <strong>Críticos:</strong> {alertasCriticos.length}

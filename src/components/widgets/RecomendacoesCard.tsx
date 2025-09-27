@@ -29,7 +29,7 @@ interface RecomendacoesCardProps {
   title?: string;
   maxHeight?: number;
   onActionClick?: (recomendacao: Recomendacao, index: number) => void;
-  useStore?: boolean; // Flag para usar store ou props
+  useGlobalStore?: boolean; // Flag para usar store ou props
 }
 
 const ImpactoConfig = {
@@ -77,15 +77,15 @@ export default function RecomendacoesCard({
   title = "Recomendações",
   maxHeight = 400,
   onActionClick,
-  useStore = false
+  useGlobalStore = false
 }: RecomendacoesCardProps) {
   const storeRecomendacoes = useStore($recomendacoesOrdenadas)
   const totalRecomendacoes = useStore($totalRecomendacoes)
   const recomendacoesAtivas = useStore($recomendacoesAtivas)
   const recomendacoesAltaPrioridade = useStore($recomendacoesAltaPrioridade)
 
-  const recomendacoes = useStore ? storeRecomendacoes : (propRecomendacoes || [])
-  const showActions = useStore // Só mostra ações quando usa store
+  const recomendacoes = useGlobalStore ? storeRecomendacoes : (propRecomendacoes || [])
+  const showActions = useGlobalStore // Só mostra ações quando usa store
   if (!recomendacoes || recomendacoes.length === 0) {
     return (
       <Card className="w-full">
@@ -101,7 +101,7 @@ export default function RecomendacoesCard({
   }
 
   // Usar recomendações já ordenadas da store ou ordenar props
-  const recomendacoesOrdenadas = useStore ? recomendacoes : [...recomendacoes].sort((a, b) => {
+  const recomendacoesOrdenadas = useGlobalStore ? recomendacoes : [...recomendacoes].sort((a, b) => {
     const calcularPrioridade = (rec: { impacto: 'alto' | 'medio' | 'baixo'; facilidade: 'facil' | 'medio' | 'dificil' }) => {
       const impactoScore = { alto: 3, medio: 2, baixo: 1 }
       const facilidadeScore = { facil: 3, medio: 2, dificil: 1 }
@@ -117,18 +117,18 @@ export default function RecomendacoesCard({
           <Target className="h-5 w-5 text-purple-600" />
           {title}
           <div className="ml-auto flex items-center gap-2">
-            {useStore && recomendacoesAltaPrioridade.length > 0 && (
+            {useGlobalStore && recomendacoesAltaPrioridade.length > 0 && (
               <Badge variant="default" className="text-xs">
                 {recomendacoesAltaPrioridade.length} alta prioridade
               </Badge>
             )}
-            {useStore && (
+            {useGlobalStore && (
               <Badge variant="outline" className="text-xs">
                 {recomendacoesAtivas.length} ativas
               </Badge>
             )}
             <Badge variant="secondary">
-              {useStore ? totalRecomendacoes : recomendacoes.length}
+              {useGlobalStore ? totalRecomendacoes : recomendacoes.length}
             </Badge>
           </div>
         </CardTitle>
@@ -136,7 +136,7 @@ export default function RecomendacoesCard({
           Ordenadas por prioridade (impacto + facilidade)
         </CardDescription>
 
-        {useStore && recomendacoes.length > 0 && (
+        {useGlobalStore && recomendacoes.length > 0 && (
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -158,7 +158,7 @@ export default function RecomendacoesCard({
               const impactoConfig = ImpactoConfig[recomendacao.impacto];
               const facilidadeConfig = FacilidadeConfig[recomendacao.facilidade];
               const ImpactoIcon = impactoConfig.icon;
-              const prioridade = useStore ? getPrioridadeRecomendacao(recomendacao) : (() => {
+              const prioridade = useGlobalStore ? getPrioridadeRecomendacao(recomendacao) : (() => {
                 const impactoScore = { alto: 3, medio: 2, baixo: 1 }
                 const facilidadeScore = { facil: 3, medio: 2, dificil: 1 }
                 return (impactoScore[recomendacao.impacto] * 2) + facilidadeScore[recomendacao.facilidade]
@@ -166,9 +166,9 @@ export default function RecomendacoesCard({
 
               return (
                 <div
-                  key={useStore ? recomendacao.id : index}
+                  key={useGlobalStore ? recomendacao.id : index}
                   className={`p-4 border border-gray-200 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow ${
-                    useStore && recomendacao.implemented ? 'opacity-50 border-green-300 bg-green-50' : ''
+                    useGlobalStore && recomendacao.implemented ? 'opacity-50 border-green-300 bg-green-50' : ''
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -182,7 +182,7 @@ export default function RecomendacoesCard({
                           {recomendacao.titulo}
                         </h4>
                         <div className="flex gap-1 shrink-0">
-                          {useStore && recomendacao.implemented && (
+                          {useGlobalStore && recomendacao.implemented && (
                             <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
                               Implementada
                             </Badge>
@@ -276,7 +276,7 @@ export default function RecomendacoesCard({
           </div>
         </ScrollArea>
 
-        {useStore && recomendacoes.length > 0 && (
+        {useGlobalStore && recomendacoes.length > 0 && (
           <div className="mt-4 pt-3 border-t border-gray-200">
             <p className="text-xs text-gray-500">
               <strong>Fonte:</strong> Store global • <strong>Ativas:</strong> {recomendacoesAtivas.length} • <strong>Alta prioridade:</strong> {recomendacoesAltaPrioridade.length}

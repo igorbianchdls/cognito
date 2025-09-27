@@ -28,7 +28,7 @@ interface InsightsCardProps {
   contexto?: string;
   title?: string;
   maxHeight?: number;
-  useStore?: boolean; // Flag para usar store ou props
+  useGlobalStore?: boolean; // Flag para usar store ou props
 }
 
 const ImportanceConfig = {
@@ -58,14 +58,14 @@ export default function InsightsCard({
   contexto,
   title = "Insights",
   maxHeight = 400,
-  useStore = false
+  useGlobalStore = false
 }: InsightsCardProps) {
   const storeInsights = useStore($insightsOrdenados)
   const totalInsights = useStore($totalInsights)
   const insightsNaoLidos = useStore($insightsNaoLidos)
 
-  const insights = useStore ? storeInsights : (propInsights || [])
-  const showActions = useStore // Só mostra ações quando usa store
+  const insights = useGlobalStore ? storeInsights : (propInsights || [])
+  const showActions = useGlobalStore // Só mostra ações quando usa store
   if (!insights || insights.length === 0) {
     return (
       <Card className="w-full">
@@ -87,13 +87,13 @@ export default function InsightsCard({
           <Lightbulb className="h-5 w-5 text-blue-600" />
           {title}
           <div className="ml-auto flex items-center gap-2">
-            {useStore && insightsNaoLidos.length > 0 && (
+            {useGlobalStore && insightsNaoLidos.length > 0 && (
               <Badge variant="destructive" className="text-xs">
                 {insightsNaoLidos.length} novos
               </Badge>
             )}
             <Badge variant="secondary">
-              {useStore ? totalInsights : insights.length}
+              {useGlobalStore ? totalInsights : insights.length}
             </Badge>
           </div>
         </CardTitle>
@@ -103,7 +103,7 @@ export default function InsightsCard({
           </CardDescription>
         )}
 
-        {useStore && insights.length > 0 && (
+        {useGlobalStore && insights.length > 0 && (
           <div className="flex gap-2">
             <Button
               variant="outline"
@@ -127,9 +127,9 @@ export default function InsightsCard({
 
               return (
                 <div
-                  key={useStore ? insight.id : index}
+                  key={useGlobalStore ? insight.id : index}
                   className={`p-4 border border-gray-200 rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow ${
-                    useStore && !insight.read ? 'border-blue-300 bg-blue-50' : ''
+                    useGlobalStore && !insight.read ? 'border-blue-300 bg-blue-50' : ''
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -143,7 +143,7 @@ export default function InsightsCard({
                           {insight.titulo}
                         </h4>
                         <div className="flex items-center gap-1">
-                          {useStore && !insight.read && (
+                          {useGlobalStore && !insight.read && (
                             <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
                               Novo
                             </Badge>
@@ -208,7 +208,7 @@ export default function InsightsCard({
           </div>
         )}
 
-        {useStore && insights.length > 0 && (
+        {useGlobalStore && insights.length > 0 && (
           <div className="mt-4 pt-3 border-t border-gray-200">
             <p className="text-xs text-gray-500">
               <strong>Fonte:</strong> Store global • <strong>Não lidos:</strong> {insightsNaoLidos.length}
