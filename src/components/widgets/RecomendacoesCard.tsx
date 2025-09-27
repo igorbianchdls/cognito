@@ -102,7 +102,7 @@ export default function RecomendacoesCard({
 
   // Usar recomendações já ordenadas da store ou ordenar props
   const recomendacoesOrdenadas = useStore ? recomendacoes : [...recomendacoes].sort((a, b) => {
-    const calcularPrioridade = (rec: any) => {
+    const calcularPrioridade = (rec: { impacto: 'alto' | 'medio' | 'baixo'; facilidade: 'facil' | 'medio' | 'dificil' }) => {
       const impactoScore = { alto: 3, medio: 2, baixo: 1 }
       const facilidadeScore = { facil: 3, medio: 2, dificil: 1 }
       return (impactoScore[rec.impacto] * 2) + facilidadeScore[rec.facilidade]
