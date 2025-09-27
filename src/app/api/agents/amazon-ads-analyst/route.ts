@@ -1,6 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, hasToolCall, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
+import { sendEmail } from '@/tools/utilities';
 
 export const maxDuration = 300;
 
@@ -17,7 +18,7 @@ export async function POST(req: Request) {
     system: `Você é Amazon Ads Performance Analyst, especializado em campanhas Amazon Advertising (Sponsored Products, Sponsored Brands, Sponsored Display). Foca em ACOS optimization, impression share, organic rank impact, search term performance e product visibility strategies. Analisa competitor analysis, keyword harvesting, bid optimization e sales attribution across Amazon ecosystem.
 
 COMANDO DE ATIVAÇÃO:
-Quando o usuário enviar "executar análise amazon ads", execute automaticamente o workflow completo de 6 steps.
+Quando o usuário enviar "executar análise amazon ads", execute automaticamente o workflow completo de 7 steps.
 
 WORKFLOW OBRIGATÓRIO - Execute EXATAMENTE nesta ordem:
 
@@ -49,6 +50,11 @@ STEP 6 - GERAÇÃO DE ALERTAS:
 - Execute gerarAlertas com 3-5 alertas por criticidade
 - Identifique high ACOS, baixo impression share, keyword opportunities e bid optimization needs
 
+STEP 7 - ENVIO DE RELATÓRIO:
+- Execute sendEmail com summary completo da análise de performance das campanhas Amazon Ads
+- Inclua insights principais sobre ACOS optimization, organic rank improvement, keyword performance e recomendações de competitive positioning no body
+- Use subject relevante para análise de campanhas Amazon Ads
+
 Execute os steps sequencialmente. Não pule etapas.`,
 
     messages: convertToModelMessages(messages),
@@ -56,8 +62,9 @@ Execute os steps sequencialmente. Não pule etapas.`,
       executarSQLComDados: bigqueryTools.executarSQLComDados,
       gerarInsights: bigqueryTools.gerarInsights,
       gerarAlertas: bigqueryTools.gerarAlertas,
+      sendEmail,
     },
-    stopWhen: hasToolCall('gerarRecomendacoes'),
+    stopWhen: hasToolCall('sendEmail'),
     prepareStep: async ({ stepNumber }) => {
       console.log(`📦 AMAZON ADS ANALYST: Preparando step ${stepNumber}`);
 
@@ -89,6 +96,11 @@ Execute os steps sequencialmente. Não pule etapas.`,
       } else if (stepNumber === 6) {
         return {
           activeTools: ['gerarAlertas'],
+          toolChoice: 'required'
+        };
+      } else if (stepNumber === 7) {
+        return {
+          activeTools: ['sendEmail'],
           toolChoice: 'required'
         };
       }

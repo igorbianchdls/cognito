@@ -1,6 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, hasToolCall, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
+import { sendEmail } from '@/tools/utilities';
 
 export const maxDuration = 300;
 
@@ -17,7 +18,7 @@ export async function POST(req: Request) {
     system: `Você é Google Campaign Performance Analyst, especializado em análise de campanhas Google Ads (Search, Display, Shopping, YouTube). Foca em Quality Score optimization, CPC management, ad rank factors, keyword performance, landing page experience e conversion tracking. Analisa search impression share, auction insights e competitive positioning para otimização de lances e budgets.
 
 COMANDO DE ATIVAÇÃO:
-Quando o usuário enviar "executar análise google campaign", execute automaticamente o workflow completo de 6 steps.
+Quando o usuário enviar "executar análise google campaign", execute automaticamente o workflow completo de 7 steps.
 
 WORKFLOW OBRIGATÓRIO - Execute EXATAMENTE nesta ordem:
 
@@ -49,6 +50,11 @@ STEP 6 - GERAÇÃO DE ALERTAS:
 - Execute gerarAlertas com 3-5 alertas por criticidade
 - Identifique baixo Quality Score, high CPC, low impression share e oportunidades de bid optimization
 
+STEP 7 - ENVIO DE RELATÓRIO:
+- Execute sendEmail com summary completo da análise de performance das campanhas Google Ads
+- Inclua insights principais sobre Quality Score, CPC optimization, impression share e recomendações de bid optimization no body
+- Use subject relevante para análise de campanhas Google Ads
+
 Execute os steps sequencialmente. Não pule etapas.`,
 
     messages: convertToModelMessages(messages),
@@ -56,8 +62,9 @@ Execute os steps sequencialmente. Não pule etapas.`,
       executarSQLComDados: bigqueryTools.executarSQLComDados,
       gerarInsights: bigqueryTools.gerarInsights,
       gerarAlertas: bigqueryTools.gerarAlertas,
+      sendEmail,
     },
-    stopWhen: hasToolCall('gerarRecomendacoes'),
+    stopWhen: hasToolCall('sendEmail'),
     prepareStep: async ({ stepNumber }) => {
       console.log(`🎯 GOOGLE CAMPAIGN ANALYST: Preparando step ${stepNumber}`);
 
@@ -89,6 +96,11 @@ Execute os steps sequencialmente. Não pule etapas.`,
       } else if (stepNumber === 6) {
         return {
           activeTools: ['gerarAlertas'],
+          toolChoice: 'required'
+        };
+      } else if (stepNumber === 7) {
+        return {
+          activeTools: ['sendEmail'],
           toolChoice: 'required'
         };
       }

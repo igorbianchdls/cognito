@@ -1,7 +1,8 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { convertToModelMessages, streamText, stepCountIs, UIMessage } from 'ai';
+import { convertToModelMessages, streamText, hasToolCall, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
 import * as visualizationTools from '@/tools/apps/visualization';
+import { sendEmail } from '@/tools/utilities';
 
 export const maxDuration = 300;
 
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
     system: `Você é Meta Creative Performance Analyst, especializado em análise de performance de criativos e elementos visuais em campanhas Meta. Foca em creative fatigue detection, A/B testing de formatos (image, video, carousel), CTR por creative elements, thumb-stop ratio e optimization de visual assets. Analisa performance de copy, headlines, call-to-actions e creative rotation strategies.
 
 COMANDO DE ATIVAÇÃO:
-Quando o usuário enviar "executar análise meta creative", execute automaticamente o workflow completo de 6 steps.
+Quando o usuário enviar "executar análise meta creative", execute automaticamente o workflow completo de 7 steps.
 
 WORKFLOW OBRIGATÓRIO - Execute EXATAMENTE nesta ordem:
 
@@ -59,6 +60,11 @@ STEP 6 - GERAÇÃO DE ALERTAS:
 - Execute gerarAlertas com 3-5 alertas por criticidade
 - Identifique creative fatigue, low engagement, formato underperformance e oportunidades de creative optimization
 
+STEP 7 - ENVIO DE RELATÓRIO:
+- Execute sendEmail com summary completo da análise de performance dos criativos Meta
+- Inclua insights principais sobre creative fatigue, performance por formato e recomendações de otimização no body
+- Use subject relevante para análise de criativos Meta
+
 Execute os steps sequencialmente. Não pule etapas.`,
 
     messages: convertToModelMessages(messages),
@@ -66,8 +72,9 @@ Execute os steps sequencialmente. Não pule etapas.`,
       executarSQLComDados: bigqueryTools.executarSQLComDados,
       gerarInsights: bigqueryTools.gerarInsights,
       gerarAlertas: bigqueryTools.gerarAlertas,
+      sendEmail,
     },
-    stopWhen: stepCountIs(7),
+    stopWhen: hasToolCall('sendEmail'),
     prepareStep: async ({ stepNumber }) => {
       console.log(`📘 META CREATIVE ANALYST: Preparando step ${stepNumber}`);
 
@@ -99,6 +106,11 @@ Execute os steps sequencialmente. Não pule etapas.`,
       } else if (stepNumber === 6) {
         return {
           activeTools: ['gerarAlertas'],
+          toolChoice: 'required'
+        };
+      } else if (stepNumber === 7) {
+        return {
+          activeTools: ['sendEmail'],
           toolChoice: 'required'
         };
       }
