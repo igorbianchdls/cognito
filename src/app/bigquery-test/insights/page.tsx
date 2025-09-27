@@ -24,6 +24,63 @@ export default function InsightsTestPage() {
     }))
   }
 
+  // Funções para ícones (copiadas dos componentes)
+  function getImportanceIcon(importancia: 'alta' | 'media' | 'baixa') {
+    switch (importancia) {
+      case 'alta':
+        return (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3l1.09 3.26L16 9l-2.91 1.74L12 21l-1.09-3.26L8 15l2.91-1.74L12 3z" />
+          </svg>
+        );
+      case 'media':
+        return (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          </svg>
+        );
+      case 'baixa':
+        return (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+        );
+      default:
+        return null;
+    }
+  }
+
+  function getNivelIcon(nivel: 'critico' | 'alto' | 'medio' | 'baixo') {
+    switch (nivel) {
+      case 'critico':
+        return (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+          </svg>
+        );
+      case 'alto':
+        return (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
+      case 'medio':
+        return (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        );
+      case 'baixo':
+        return (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
+      default:
+        return null;
+    }
+  }
+
   // Mock data - 5 insights
   const mockInsights = [
     {
@@ -242,46 +299,53 @@ export default function InsightsTestPage() {
               slidesPerView={1}
               breakpoints={{
                 640: {
-                  slidesPerView: 2,
+                  slidesPerView: 1.5,
                 },
                 768: {
-                  slidesPerView: 3,
+                  slidesPerView: 2,
                 },
                 1024: {
-                  slidesPerView: 4,
+                  slidesPerView: 3,
                 },
               }}
               className="w-full"
             >
               {mockInsights.map((insight, index) => {
                 const styles = {
-                  alta: { border: 'border-blue-300', bg: 'bg-blue-100', badge: 'bg-blue-200 text-blue-900' },
-                  media: { border: 'border-indigo-200', bg: 'bg-indigo-50', badge: 'bg-indigo-100 text-indigo-800' },
-                  baixa: { border: 'border-slate-200', bg: 'bg-slate-50', badge: 'bg-slate-100 text-slate-800' }
+                  alta: { border: 'border-blue-300', bg: 'bg-blue-100', icon: 'text-blue-600', badge: 'bg-blue-200 text-blue-900' },
+                  media: { border: 'border-indigo-200', bg: 'bg-indigo-50', icon: 'text-indigo-600', badge: 'bg-indigo-100 text-indigo-800' },
+                  baixa: { border: 'border-slate-200', bg: 'bg-slate-50', icon: 'text-slate-600', badge: 'bg-slate-100 text-slate-800' }
                 }[insight.importancia];
 
                 const cardId = `insight-slider-${index}`;
                 const isExpanded = expandedSliderCards[cardId] || false;
+                const icon = getImportanceIcon(insight.importancia);
 
                 return (
                   <SwiperSlide key={index}>
                     <div className={`${styles.bg} ${styles.border} border rounded-lg overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-lg ${isExpanded ? 'shadow-xl' : 'hover:shadow-md'}`}>
                       {/* Header (sempre visível) */}
                       <div
-                        className="p-3 cursor-pointer flex items-center justify-between"
+                        className="p-4 cursor-pointer flex items-center justify-between"
                         onClick={() => toggleSliderExpanded(cardId)}
                       >
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <h3 className="font-semibold text-gray-900 text-xs leading-tight truncate">
-                            {insight.titulo}
-                          </h3>
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className={`${styles.icon} flex-shrink-0`}>
+                            {icon}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h5 className="font-semibold text-gray-900 text-sm truncate">
+                              {insight.titulo}
+                            </h5>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
+
+                        <div className="flex items-center gap-2">
                           <span className={`${styles.badge} px-2 py-1 text-xs font-medium rounded-full ${insight.importancia === 'alta' ? 'animate-pulse' : ''}`}>
                             {insight.importancia}
                           </span>
                           <ChevronDown
-                            className={`h-3 w-3 text-gray-500 transition-transform duration-200 ${
+                            className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${
                               isExpanded ? 'rotate-180' : ''
                             }`}
                           />
@@ -291,17 +355,17 @@ export default function InsightsTestPage() {
                       {/* Content (colapsável) */}
                       <div className={`transition-all duration-300 ease-out ${
                         isExpanded
-                          ? 'max-h-96 opacity-100'
+                          ? 'max-h-screen opacity-100'
                           : 'max-h-0 opacity-0'
                       }`}>
-                        <div className="px-3 pb-3 border-t border-gray-100">
+                        <div className="px-4 pb-4 border-t border-gray-100">
                           <div className="pt-3">
-                            <p className="text-gray-700 text-xs mb-3 leading-relaxed">
+                            <p className="text-gray-700 text-sm mb-3 leading-relaxed">
                               {insight.descricao}
                             </p>
 
                             {insight.dados && (
-                              <div className="bg-white/50 rounded p-2 text-xs text-gray-600 font-mono border border-gray-200">
+                              <div className="bg-white/50 rounded p-3 text-xs text-gray-600 font-mono mb-3 border border-gray-200">
                                 📊 {insight.dados}
                               </div>
                             )}
@@ -328,47 +392,54 @@ export default function InsightsTestPage() {
               slidesPerView={1}
               breakpoints={{
                 640: {
-                  slidesPerView: 2,
+                  slidesPerView: 1.5,
                 },
                 768: {
-                  slidesPerView: 3,
+                  slidesPerView: 2,
                 },
                 1024: {
-                  slidesPerView: 4,
+                  slidesPerView: 3,
                 },
               }}
               className="w-full"
             >
               {mockAlertas.map((alerta, index) => {
                 const styles = {
-                  critico: { border: 'border-red-300', bg: 'bg-red-100', badge: 'bg-red-200 text-red-900' },
-                  alto: { border: 'border-red-200', bg: 'bg-red-50', badge: 'bg-red-100 text-red-800' },
-                  medio: { border: 'border-orange-200', bg: 'bg-orange-50', badge: 'bg-orange-100 text-orange-800' },
-                  baixo: { border: 'border-red-300', bg: 'bg-red-200', badge: 'bg-red-300 text-red-900' }
+                  critico: { border: 'border-red-300', bg: 'bg-red-100', icon: 'text-red-600', badge: 'bg-red-200 text-red-900' },
+                  alto: { border: 'border-red-200', bg: 'bg-red-50', icon: 'text-red-600', badge: 'bg-red-100 text-red-800' },
+                  medio: { border: 'border-orange-200', bg: 'bg-orange-50', icon: 'text-orange-600', badge: 'bg-orange-100 text-orange-800' },
+                  baixo: { border: 'border-red-300', bg: 'bg-red-200', icon: 'text-red-900', badge: 'bg-red-300 text-red-900' }
                 }[alerta.nivel];
 
                 const cardId = `alerta-slider-${index}`;
                 const isExpanded = expandedSliderCards[cardId] || false;
+                const icon = getNivelIcon(alerta.nivel);
 
                 return (
                   <SwiperSlide key={index}>
                     <div className={`${styles.bg} ${styles.border} border rounded-lg overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-lg ${alerta.nivel === 'critico' ? 'ring-2 ring-red-300 shadow-red-500/20' : ''} ${isExpanded ? 'shadow-xl' : 'hover:shadow-md'}`}>
                       {/* Header (sempre visível) */}
                       <div
-                        className="p-3 cursor-pointer flex items-center justify-between"
+                        className="p-4 cursor-pointer flex items-center justify-between"
                         onClick={() => toggleSliderExpanded(cardId)}
                       >
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <h3 className="font-semibold text-gray-900 text-xs leading-tight truncate">
-                            {alerta.titulo}
-                          </h3>
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className={`${styles.icon} flex-shrink-0`}>
+                            {icon}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h5 className="font-semibold text-gray-900 text-sm truncate">
+                              {alerta.titulo}
+                            </h5>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-1">
+
+                        <div className="flex items-center gap-2">
                           <span className={`${styles.badge} px-2 py-1 text-xs font-medium rounded-full ${alerta.nivel === 'critico' ? 'animate-pulse' : ''}`}>
                             {alerta.nivel}
                           </span>
                           <ChevronDown
-                            className={`h-3 w-3 text-gray-500 transition-transform duration-200 ${
+                            className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${
                               isExpanded ? 'rotate-180' : ''
                             }`}
                           />
@@ -378,24 +449,25 @@ export default function InsightsTestPage() {
                       {/* Content (colapsável) */}
                       <div className={`transition-all duration-300 ease-out ${
                         isExpanded
-                          ? 'max-h-96 opacity-100'
+                          ? 'max-h-screen opacity-100'
                           : 'max-h-0 opacity-0'
                       }`}>
-                        <div className="px-3 pb-3 border-t border-gray-100">
+                        <div className="px-4 pb-4 border-t border-gray-100">
                           <div className="pt-3">
-                            <p className="text-gray-700 text-xs mb-3 leading-relaxed">
+                            <p className="text-gray-700 text-sm mb-3 leading-relaxed">
                               {alerta.descricao}
                             </p>
 
                             {alerta.dados && (
-                              <div className="bg-white/50 rounded p-2 text-xs text-gray-600 font-mono mb-2 border border-gray-200">
+                              <div className="bg-white/50 rounded p-3 text-xs text-gray-600 font-mono mb-3 border border-gray-200">
                                 📊 {alerta.dados}
                               </div>
                             )}
 
                             {alerta.acao && (
-                              <div className="bg-white/70 rounded p-2 text-xs text-gray-700 border-l-2 border-indigo-400">
-                                <span className="font-medium text-indigo-800">💡 Ação:</span> {alerta.acao}
+                              <div className="bg-white/70 rounded p-3 text-xs text-gray-700 border-l-4 border-indigo-400 mb-3">
+                                <div className="font-medium text-indigo-800 mb-1">💡 Ação:</div>
+                                <div>{alerta.acao}</div>
                               </div>
                             )}
                           </div>
@@ -421,13 +493,13 @@ export default function InsightsTestPage() {
               slidesPerView={1}
               breakpoints={{
                 640: {
-                  slidesPerView: 2,
+                  slidesPerView: 1.5,
                 },
                 768: {
-                  slidesPerView: 3,
+                  slidesPerView: 2,
                 },
                 1024: {
-                  slidesPerView: 4,
+                  slidesPerView: 3,
                 },
               }}
               className="w-full"
@@ -453,25 +525,31 @@ export default function InsightsTestPage() {
                     <div className={`${impactoStyles.bg} ${impactoStyles.border} border rounded-lg overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-lg ${isExpanded ? 'shadow-xl' : 'hover:shadow-md'}`}>
                       {/* Header (sempre visível) */}
                       <div
-                        className="p-3 cursor-pointer flex items-center justify-between"
+                        className="p-4 cursor-pointer flex items-center justify-between"
                         onClick={() => toggleSliderExpanded(cardId)}
                       >
-                        <div className="flex items-center gap-2 flex-1 min-w-0">
-                          <h3 className="font-semibold text-gray-900 text-xs leading-tight truncate">
-                            {recomendacao.titulo}
-                          </h3>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <div className="flex gap-1">
-                            <span className={`${impactoStyles.badge} px-1.5 py-0.5 text-xs font-medium rounded-full ${recomendacao.impacto === 'alto' ? 'animate-pulse' : ''}`}>
-                              {recomendacao.impacto}
-                            </span>
-                            <span className={`${facilidadeStyles} px-1.5 py-0.5 text-xs font-medium rounded-full`}>
-                              {recomendacao.facilidade}
-                            </span>
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="flex-shrink-0">
+                            <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                            </svg>
                           </div>
+                          <div className="flex-1 min-w-0">
+                            <h5 className="font-semibold text-gray-900 text-sm truncate">
+                              {recomendacao.titulo}
+                            </h5>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className={`${impactoStyles.badge} px-2 py-1 text-xs font-medium rounded-full ${recomendacao.impacto === 'alto' ? 'animate-pulse' : ''}`}>
+                            {recomendacao.impacto}
+                          </span>
+                          <span className={`${facilidadeStyles} px-2 py-1 text-xs font-medium rounded-full`}>
+                            {recomendacao.facilidade}
+                          </span>
                           <ChevronDown
-                            className={`h-3 w-3 text-gray-500 transition-transform duration-200 ${
+                            className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${
                               isExpanded ? 'rotate-180' : ''
                             }`}
                           />
@@ -481,32 +559,33 @@ export default function InsightsTestPage() {
                       {/* Content (colapsável) */}
                       <div className={`transition-all duration-300 ease-out ${
                         isExpanded
-                          ? 'max-h-96 opacity-100'
+                          ? 'max-h-screen opacity-100'
                           : 'max-h-0 opacity-0'
                       }`}>
-                        <div className="px-3 pb-3 border-t border-gray-100">
+                        <div className="px-4 pb-4 border-t border-gray-100">
                           <div className="pt-3">
-                            <p className="text-gray-700 text-xs mb-3 leading-relaxed">
+                            <p className="text-gray-700 text-sm mb-3 leading-relaxed">
                               {recomendacao.descricao}
                             </p>
 
                             {recomendacao.categoria && (
-                              <div className="bg-white/50 rounded p-2 text-xs text-gray-600 mb-2 border border-gray-200">
+                              <div className="bg-white/50 rounded p-3 text-xs text-gray-600 mb-3 border border-gray-200">
                                 🏷️ {recomendacao.categoria}
                               </div>
                             )}
 
                             {recomendacao.estimativaResultado && (
-                              <div className="bg-white/70 rounded p-2 text-xs text-gray-700 border-l-2 border-purple-400">
-                                <span className="font-medium text-purple-800">📈 Resultado:</span> {recomendacao.estimativaResultado}
+                              <div className="bg-white/70 rounded p-3 text-xs text-gray-700 border-l-4 border-purple-400 mb-3">
+                                <div className="font-medium text-purple-800 mb-1">📈 Resultado:</div>
+                                <div>{recomendacao.estimativaResultado}</div>
                               </div>
                             )}
 
                             {recomendacao.proximosPassos && recomendacao.proximosPassos.length > 0 && (
-                              <div className="bg-white/50 rounded p-2 text-xs text-gray-600 mt-2 border border-gray-200">
-                                <span className="font-medium">📝 Próximos Passos:</span>
-                                <ul className="list-disc list-inside mt-1 space-y-1">
-                                  {recomendacao.proximosPassos.slice(0, 2).map((passo, i) => (
+                              <div className="bg-white/50 rounded p-3 text-xs text-gray-600 border border-gray-200">
+                                <div className="font-medium mb-2">📝 Próximos Passos:</div>
+                                <ul className="list-disc list-inside space-y-1">
+                                  {recomendacao.proximosPassos.map((passo, i) => (
                                     <li key={i}>{passo}</li>
                                   ))}
                                 </ul>
