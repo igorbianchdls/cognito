@@ -9,6 +9,7 @@ import BigQueryTablesList from '@/components/julius/BigQueryTablesList';
 import BigQueryTableData from '@/components/julius/BigQueryTableData';
 import BigQueryChartGenerator from '@/components/julius/BigQueryChartGenerator';
 import RAGSearchResults from '@/components/julius/RAGSearchResults';
+import EmailResult from '@/components/tools/EmailResult';
 
 interface ToolCall {
   id: string;
@@ -234,6 +235,24 @@ export default function RespostaDaIA({ content, isLoading, toolCalls }: Resposta
                               topK={result.topK as number}
                               sourcesCount={result.sourcesCount as number}
                               success={result.success as boolean}
+                              error={result.error as string}
+                            />
+                          </div>
+                        );
+                      case 'sendEmail':
+                        return (
+                          <div key={id} className="my-4">
+                            <EmailResult
+                              success={result.success as boolean}
+                              emailId={result.emailId as string}
+                              recipient={result.recipient as string}
+                              subject={result.subject as string}
+                              bodyLength={result.bodyLength as number}
+                              priority={result.priority as string}
+                              attachmentCount={result.attachmentCount as number}
+                              timestamp={result.timestamp as string}
+                              message={result.message as string}
+                              note={result.note as string}
                               error={result.error as string}
                             />
                           </div>

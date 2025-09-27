@@ -38,6 +38,7 @@ import CodeExecutionResult from '../tools/CodeExecutionResult';
 import RenderDashboardCode from './tools/renderDashboardCode';
 import CreateDashboardResult from './tools/CreateDashboardResult';
 import UpdateDashboardResult from './tools/UpdateDashboardResult';
+import EmailResult from '../tools/EmailResult';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -2057,6 +2058,46 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   updateJson={(updateTool.output as UpdateDashboardToolOutput).updateJson}
                   description={(updateTool.output as UpdateDashboardToolOutput).description}
                   message={(updateTool.output as UpdateDashboardToolOutput).message}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-sendEmail') {
+          const emailTool = part as NexusToolUIPart;
+          const callId = emailTool.toolCallId;
+          const shouldBeOpen = emailTool.state === 'output-available' || emailTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-sendEmail" state={emailTool.state} />
+                <ToolContent>
+                  {emailTool.input && (
+                    <ToolInput input={emailTool.input} />
+                  )}
+                  {emailTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={emailTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {emailTool.state === 'output-available' && emailTool.output && (
+                <EmailResult
+                  success={(emailTool.output as any).success}
+                  emailId={(emailTool.output as any).emailId}
+                  recipient={(emailTool.output as any).recipient}
+                  subject={(emailTool.output as any).subject}
+                  bodyLength={(emailTool.output as any).bodyLength}
+                  priority={(emailTool.output as any).priority}
+                  attachmentCount={(emailTool.output as any).attachmentCount}
+                  timestamp={(emailTool.output as any).timestamp}
+                  message={(emailTool.output as any).message}
+                  note={(emailTool.output as any).note}
+                  error={(emailTool.output as any).error}
                 />
               )}
             </div>
