@@ -296,9 +296,18 @@ type ExecutarSQLToolOutput = {
   error?: string;
 };
 
-type ExecutarSQLComDadosToolInput = {
-  sqlQuery: string;
-  explicacao?: string;
+type SendEmailToolOutput = {
+  success: boolean;
+  emailId?: string;
+  recipient: string;
+  subject: string;
+  bodyLength: number;
+  priority?: string;
+  attachmentCount?: number;
+  timestamp: string;
+  message: string;
+  note?: string;
+  error?: string;
 };
 
 type ExecutarSQLComDadosToolOutput = {
@@ -2087,17 +2096,17 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {emailTool.state === 'output-available' && emailTool.output && (
                 <EmailResult
-                  success={(emailTool.output as any).success}
-                  emailId={(emailTool.output as any).emailId}
-                  recipient={(emailTool.output as any).recipient}
-                  subject={(emailTool.output as any).subject}
-                  bodyLength={(emailTool.output as any).bodyLength}
-                  priority={(emailTool.output as any).priority}
-                  attachmentCount={(emailTool.output as any).attachmentCount}
-                  timestamp={(emailTool.output as any).timestamp}
-                  message={(emailTool.output as any).message}
-                  note={(emailTool.output as any).note}
-                  error={(emailTool.output as any).error}
+                  success={(emailTool.output as SendEmailToolOutput).success}
+                  emailId={(emailTool.output as SendEmailToolOutput).emailId}
+                  recipient={(emailTool.output as SendEmailToolOutput).recipient}
+                  subject={(emailTool.output as SendEmailToolOutput).subject}
+                  bodyLength={(emailTool.output as SendEmailToolOutput).bodyLength}
+                  priority={(emailTool.output as SendEmailToolOutput).priority}
+                  attachmentCount={(emailTool.output as SendEmailToolOutput).attachmentCount}
+                  timestamp={(emailTool.output as SendEmailToolOutput).timestamp}
+                  message={(emailTool.output as SendEmailToolOutput).message}
+                  note={(emailTool.output as SendEmailToolOutput).note}
+                  error={(emailTool.output as SendEmailToolOutput).error}
                 />
               )}
             </div>
