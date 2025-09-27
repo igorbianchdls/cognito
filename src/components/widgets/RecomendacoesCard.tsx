@@ -164,7 +164,7 @@ export default function RecomendacoesCard({
           return (
             <div
               key={useGlobalStore ? recomendacao.id : index}
-              className={`${styles.bg} ${styles.border} border rounded-lg overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-lg ${
+              className={`${styles.bg} ${styles.border} rounded-lg overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-lg ${
                 isHighImpact ? 'ring-2 ring-green-300 shadow-green-500/20' : ''
               } ${isExpanded ? 'shadow-xl' : 'hover:shadow-md'} ${
                 isImplemented ? 'opacity-60' : ''
