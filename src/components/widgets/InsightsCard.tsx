@@ -159,8 +159,8 @@ export default function InsightsCard({
         </div>
       )}
 
-      {/* Grid de Insights */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {/* Lista de Insights */}
+      <div className="space-y-4">
         {insights.map((insight, index) => {
           const styles = getImportanceStyles(insight.importancia);
           const icon = getImportanceIcon(insight.importancia);

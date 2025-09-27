@@ -188,8 +188,8 @@ export default function AlertasCard({
         </div>
       )}
 
-      {/* Grid de Alertas */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {/* Lista de Alertas */}
+      <div className="space-y-4">
         {alertasOrdenados.map((alerta, index) => {
           const styles = getNivelStyles(alerta.nivel);
           const icon = getNivelIcon(alerta.nivel);

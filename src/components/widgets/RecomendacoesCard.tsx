@@ -162,8 +162,8 @@ export default function RecomendacoesCard({
         )}
       </div>
 
-      {/* Grid de Recomendações */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      {/* Lista de Recomendações */}
+      <div className="space-y-4">
         {recomendacoesOrdenadas.map((recomendacao, index) => {
           const styles = getPriorityStyles(recomendacao.impacto, recomendacao.facilidade);
           const icon = getPriorityIcon(recomendacao.impacto, recomendacao.facilidade);
