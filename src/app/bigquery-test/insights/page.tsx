@@ -7,12 +7,23 @@ import RecomendacoesCard from '@/components/widgets/RecomendacoesCard';
 // Swiper imports
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Virtual, Navigation, Pagination } from 'swiper/modules';
+import { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/virtual';
 
 export default function InsightsTestPage() {
+  const [expandedSliderCards, setExpandedSliderCards] = useState<Record<string, boolean>>({})
+
+  const toggleSliderExpanded = (id: string) => {
+    setExpandedSliderCards(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }))
+  }
+
   // Mock data - 5 insights
   const mockInsights = [
     {
@@ -227,23 +238,20 @@ export default function InsightsTestPage() {
               modules={[Navigation, Pagination]}
               navigation
               pagination={{ clickable: true }}
-              spaceBetween={20}
+              spaceBetween={15}
               slidesPerView={1}
               breakpoints={{
                 640: {
-                  slidesPerView: 1.2,
-                },
-                768: {
                   slidesPerView: 2,
                 },
-                1024: {
-                  slidesPerView: 2.5,
-                },
-                1280: {
+                768: {
                   slidesPerView: 3,
                 },
+                1024: {
+                  slidesPerView: 4,
+                },
               }}
-              className="w-full h-64"
+              className="w-full"
             >
               {mockInsights.map((insight, index) => {
                 const styles = {
@@ -252,27 +260,54 @@ export default function InsightsTestPage() {
                   baixa: { border: 'border-slate-200', bg: 'bg-slate-50', badge: 'bg-slate-100 text-slate-800' }
                 }[insight.importancia];
 
+                const cardId = `insight-slider-${index}`;
+                const isExpanded = expandedSliderCards[cardId] || false;
+
                 return (
                   <SwiperSlide key={index}>
-                    <div className={`${styles.bg} ${styles.border} border rounded-lg p-4 h-56 overflow-hidden hover:shadow-lg transition-all duration-300`}>
-                      <div className="flex items-start justify-between mb-3">
-                        <h3 className="font-semibold text-gray-900 text-sm leading-tight flex-1 pr-2">
-                          {insight.titulo}
-                        </h3>
-                        <span className={`${styles.badge} px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${insight.importancia === 'alta' ? 'animate-pulse' : ''}`}>
-                          {insight.importancia}
-                        </span>
+                    <div className={`${styles.bg} ${styles.border} border rounded-lg overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-lg ${isExpanded ? 'shadow-xl' : 'hover:shadow-md'}`}>
+                      {/* Header (sempre visível) */}
+                      <div
+                        className="p-3 cursor-pointer flex items-center justify-between"
+                        onClick={() => toggleSliderExpanded(cardId)}
+                      >
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <h3 className="font-semibold text-gray-900 text-xs leading-tight truncate">
+                            {insight.titulo}
+                          </h3>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className={`${styles.badge} px-2 py-1 text-xs font-medium rounded-full ${insight.importancia === 'alta' ? 'animate-pulse' : ''}`}>
+                            {insight.importancia}
+                          </span>
+                          <ChevronDown
+                            className={`h-3 w-3 text-gray-500 transition-transform duration-200 ${
+                              isExpanded ? 'rotate-180' : ''
+                            }`}
+                          />
+                        </div>
                       </div>
 
-                      <p className="text-gray-700 text-xs mb-3 leading-relaxed line-clamp-4">
-                        {insight.descricao}
-                      </p>
+                      {/* Content (colapsável) */}
+                      <div className={`transition-all duration-300 ease-out ${
+                        isExpanded
+                          ? 'max-h-96 opacity-100'
+                          : 'max-h-0 opacity-0'
+                      }`}>
+                        <div className="px-3 pb-3 border-t border-gray-100">
+                          <div className="pt-3">
+                            <p className="text-gray-700 text-xs mb-3 leading-relaxed">
+                              {insight.descricao}
+                            </p>
 
-                      {insight.dados && (
-                        <div className="bg-white/50 rounded p-2 text-xs text-gray-600 font-mono border border-gray-200">
-                          📊 {insight.dados}
+                            {insight.dados && (
+                              <div className="bg-white/50 rounded p-2 text-xs text-gray-600 font-mono border border-gray-200">
+                                📊 {insight.dados}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      )}
+                      </div>
                     </div>
                   </SwiperSlide>
                 );
@@ -289,23 +324,20 @@ export default function InsightsTestPage() {
               modules={[Navigation, Pagination]}
               navigation
               pagination={{ clickable: true }}
-              spaceBetween={20}
+              spaceBetween={15}
               slidesPerView={1}
               breakpoints={{
                 640: {
-                  slidesPerView: 1.2,
-                },
-                768: {
                   slidesPerView: 2,
                 },
-                1024: {
-                  slidesPerView: 2.5,
-                },
-                1280: {
+                768: {
                   slidesPerView: 3,
                 },
+                1024: {
+                  slidesPerView: 4,
+                },
               }}
-              className="w-full h-64"
+              className="w-full"
             >
               {mockAlertas.map((alerta, index) => {
                 const styles = {
@@ -315,33 +347,60 @@ export default function InsightsTestPage() {
                   baixo: { border: 'border-red-300', bg: 'bg-red-200', badge: 'bg-red-300 text-red-900' }
                 }[alerta.nivel];
 
+                const cardId = `alerta-slider-${index}`;
+                const isExpanded = expandedSliderCards[cardId] || false;
+
                 return (
                   <SwiperSlide key={index}>
-                    <div className={`${styles.bg} ${styles.border} border rounded-lg p-4 h-56 overflow-hidden hover:shadow-lg transition-all duration-300 ${alerta.nivel === 'critico' ? 'ring-2 ring-red-300 shadow-red-500/20' : ''}`}>
-                      <div className="flex items-start justify-between mb-3">
-                        <h3 className="font-semibold text-gray-900 text-sm leading-tight flex-1 pr-2">
-                          {alerta.titulo}
-                        </h3>
-                        <span className={`${styles.badge} px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${alerta.nivel === 'critico' ? 'animate-pulse' : ''}`}>
-                          {alerta.nivel}
-                        </span>
+                    <div className={`${styles.bg} ${styles.border} border rounded-lg overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-lg ${alerta.nivel === 'critico' ? 'ring-2 ring-red-300 shadow-red-500/20' : ''} ${isExpanded ? 'shadow-xl' : 'hover:shadow-md'}`}>
+                      {/* Header (sempre visível) */}
+                      <div
+                        className="p-3 cursor-pointer flex items-center justify-between"
+                        onClick={() => toggleSliderExpanded(cardId)}
+                      >
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <h3 className="font-semibold text-gray-900 text-xs leading-tight truncate">
+                            {alerta.titulo}
+                          </h3>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className={`${styles.badge} px-2 py-1 text-xs font-medium rounded-full ${alerta.nivel === 'critico' ? 'animate-pulse' : ''}`}>
+                            {alerta.nivel}
+                          </span>
+                          <ChevronDown
+                            className={`h-3 w-3 text-gray-500 transition-transform duration-200 ${
+                              isExpanded ? 'rotate-180' : ''
+                            }`}
+                          />
+                        </div>
                       </div>
 
-                      <p className="text-gray-700 text-xs mb-3 leading-relaxed line-clamp-3">
-                        {alerta.descricao}
-                      </p>
+                      {/* Content (colapsável) */}
+                      <div className={`transition-all duration-300 ease-out ${
+                        isExpanded
+                          ? 'max-h-96 opacity-100'
+                          : 'max-h-0 opacity-0'
+                      }`}>
+                        <div className="px-3 pb-3 border-t border-gray-100">
+                          <div className="pt-3">
+                            <p className="text-gray-700 text-xs mb-3 leading-relaxed">
+                              {alerta.descricao}
+                            </p>
 
-                      {alerta.dados && (
-                        <div className="bg-white/50 rounded p-2 text-xs text-gray-600 font-mono mb-2 border border-gray-200">
-                          📊 {alerta.dados}
-                        </div>
-                      )}
+                            {alerta.dados && (
+                              <div className="bg-white/50 rounded p-2 text-xs text-gray-600 font-mono mb-2 border border-gray-200">
+                                📊 {alerta.dados}
+                              </div>
+                            )}
 
-                      {alerta.acao && (
-                        <div className="bg-white/70 rounded p-2 text-xs text-gray-700 border-l-2 border-indigo-400">
-                          <span className="font-medium text-indigo-800">💡 Ação:</span> {alerta.acao}
+                            {alerta.acao && (
+                              <div className="bg-white/70 rounded p-2 text-xs text-gray-700 border-l-2 border-indigo-400">
+                                <span className="font-medium text-indigo-800">💡 Ação:</span> {alerta.acao}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      )}
+                      </div>
                     </div>
                   </SwiperSlide>
                 );
@@ -358,23 +417,20 @@ export default function InsightsTestPage() {
               modules={[Navigation, Pagination]}
               navigation
               pagination={{ clickable: true }}
-              spaceBetween={20}
+              spaceBetween={15}
               slidesPerView={1}
               breakpoints={{
                 640: {
-                  slidesPerView: 1.2,
-                },
-                768: {
                   slidesPerView: 2,
                 },
-                1024: {
-                  slidesPerView: 2.5,
-                },
-                1280: {
+                768: {
                   slidesPerView: 3,
                 },
+                1024: {
+                  slidesPerView: 4,
+                },
               }}
-              className="w-full h-64"
+              className="w-full"
             >
               {mockRecomendacoes.map((recomendacao, index) => {
                 const impactoStyles = {
@@ -389,38 +445,76 @@ export default function InsightsTestPage() {
                   dificil: 'bg-rose-100 text-rose-800'
                 }[recomendacao.facilidade];
 
+                const cardId = `recomendacao-slider-${index}`;
+                const isExpanded = expandedSliderCards[cardId] || false;
+
                 return (
                   <SwiperSlide key={index}>
-                    <div className={`${impactoStyles.bg} ${impactoStyles.border} border rounded-lg p-4 h-56 overflow-hidden hover:shadow-lg transition-all duration-300`}>
-                      <div className="flex items-start justify-between mb-3">
-                        <h3 className="font-semibold text-gray-900 text-sm leading-tight flex-1 pr-2">
-                          {recomendacao.titulo}
-                        </h3>
-                        <div className="flex flex-col gap-1">
-                          <span className={`${impactoStyles.badge} px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${recomendacao.impacto === 'alto' ? 'animate-pulse' : ''}`}>
-                            {recomendacao.impacto}
-                          </span>
-                          <span className={`${facilidadeStyles} px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap`}>
-                            {recomendacao.facilidade}
-                          </span>
+                    <div className={`${impactoStyles.bg} ${impactoStyles.border} border rounded-lg overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-lg ${isExpanded ? 'shadow-xl' : 'hover:shadow-md'}`}>
+                      {/* Header (sempre visível) */}
+                      <div
+                        className="p-3 cursor-pointer flex items-center justify-between"
+                        onClick={() => toggleSliderExpanded(cardId)}
+                      >
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <h3 className="font-semibold text-gray-900 text-xs leading-tight truncate">
+                            {recomendacao.titulo}
+                          </h3>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <div className="flex gap-1">
+                            <span className={`${impactoStyles.badge} px-1.5 py-0.5 text-xs font-medium rounded-full ${recomendacao.impacto === 'alto' ? 'animate-pulse' : ''}`}>
+                              {recomendacao.impacto}
+                            </span>
+                            <span className={`${facilidadeStyles} px-1.5 py-0.5 text-xs font-medium rounded-full`}>
+                              {recomendacao.facilidade}
+                            </span>
+                          </div>
+                          <ChevronDown
+                            className={`h-3 w-3 text-gray-500 transition-transform duration-200 ${
+                              isExpanded ? 'rotate-180' : ''
+                            }`}
+                          />
                         </div>
                       </div>
 
-                      <p className="text-gray-700 text-xs mb-3 leading-relaxed line-clamp-3">
-                        {recomendacao.descricao}
-                      </p>
+                      {/* Content (colapsável) */}
+                      <div className={`transition-all duration-300 ease-out ${
+                        isExpanded
+                          ? 'max-h-96 opacity-100'
+                          : 'max-h-0 opacity-0'
+                      }`}>
+                        <div className="px-3 pb-3 border-t border-gray-100">
+                          <div className="pt-3">
+                            <p className="text-gray-700 text-xs mb-3 leading-relaxed">
+                              {recomendacao.descricao}
+                            </p>
 
-                      {recomendacao.categoria && (
-                        <div className="bg-white/50 rounded p-2 text-xs text-gray-600 mb-2 border border-gray-200">
-                          🏷️ {recomendacao.categoria}
-                        </div>
-                      )}
+                            {recomendacao.categoria && (
+                              <div className="bg-white/50 rounded p-2 text-xs text-gray-600 mb-2 border border-gray-200">
+                                🏷️ {recomendacao.categoria}
+                              </div>
+                            )}
 
-                      {recomendacao.estimativaResultado && (
-                        <div className="bg-white/70 rounded p-2 text-xs text-gray-700 border-l-2 border-purple-400">
-                          <span className="font-medium text-purple-800">📈 Resultado:</span> {recomendacao.estimativaResultado}
+                            {recomendacao.estimativaResultado && (
+                              <div className="bg-white/70 rounded p-2 text-xs text-gray-700 border-l-2 border-purple-400">
+                                <span className="font-medium text-purple-800">📈 Resultado:</span> {recomendacao.estimativaResultado}
+                              </div>
+                            )}
+
+                            {recomendacao.proximosPassos && recomendacao.proximosPassos.length > 0 && (
+                              <div className="bg-white/50 rounded p-2 text-xs text-gray-600 mt-2 border border-gray-200">
+                                <span className="font-medium">📝 Próximos Passos:</span>
+                                <ul className="list-disc list-inside mt-1 space-y-1">
+                                  {recomendacao.proximosPassos.slice(0, 2).map((passo, i) => (
+                                    <li key={i}>{passo}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      )}
+                      </div>
                     </div>
                   </SwiperSlide>
                 );
