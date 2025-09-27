@@ -18,8 +18,17 @@ const loadInsightsFromStorage = (): Insight[] => {
   try {
     const stored = localStorage.getItem('cognito-insights')
     if (!stored) return []
-    const parsed = JSON.parse(stored)
-    return parsed.map((insight: any) => ({
+    const parsed = JSON.parse(stored) as Array<{
+      id: string
+      titulo: string
+      descricao: string
+      dados?: string
+      importancia: 'alta' | 'media' | 'baixa'
+      timestamp: string
+      source?: string
+      read?: boolean
+    }>
+    return parsed.map((insight) => ({
       ...insight,
       timestamp: new Date(insight.timestamp)
     }))

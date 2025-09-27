@@ -19,8 +19,18 @@ const loadAlertasFromStorage = (): Alerta[] => {
   try {
     const stored = localStorage.getItem('cognito-alertas')
     if (!stored) return []
-    const parsed = JSON.parse(stored)
-    return parsed.map((alerta: any) => ({
+    const parsed = JSON.parse(stored) as Array<{
+      id: string
+      titulo: string
+      descricao: string
+      dados?: string
+      nivel: 'critico' | 'alto' | 'medio' | 'baixo'
+      acao?: string
+      timestamp: string
+      source?: string
+      resolved?: boolean
+    }>
+    return parsed.map((alerta) => ({
       ...alerta,
       timestamp: new Date(alerta.timestamp)
     }))

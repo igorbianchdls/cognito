@@ -21,8 +21,20 @@ const loadRecomendacoesFromStorage = (): Recomendacao[] => {
   try {
     const stored = localStorage.getItem('cognito-recomendacoes')
     if (!stored) return []
-    const parsed = JSON.parse(stored)
-    return parsed.map((recomendacao: any) => ({
+    const parsed = JSON.parse(stored) as Array<{
+      id: string
+      titulo: string
+      descricao: string
+      impacto: 'alto' | 'medio' | 'baixo'
+      facilidade: 'facil' | 'medio' | 'dificil'
+      categoria?: string
+      proximosPassos?: string[]
+      estimativaResultado?: string
+      timestamp: string
+      source?: string
+      implemented?: boolean
+    }>
+    return parsed.map((recomendacao) => ({
       ...recomendacao,
       timestamp: new Date(recomendacao.timestamp)
     }))
