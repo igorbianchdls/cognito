@@ -27,24 +27,24 @@ function getImportanceStyles(importancia: 'alta' | 'media' | 'baixa') {
   switch (importancia) {
     case 'alta':
       return {
-        border: 'border-blue-300',
-        bg: 'bg-blue-100',
-        icon: 'text-blue-600',
-        badge: 'bg-blue-200 text-blue-900'
+        border: 'border-red-700',
+        bg: 'bg-red-800',
+        icon: 'text-red-100',
+        badge: 'bg-red-700 text-red-100'
       };
     case 'media':
       return {
-        border: 'border-indigo-200',
-        bg: 'bg-indigo-50',
-        icon: 'text-indigo-600',
-        badge: 'bg-indigo-100 text-indigo-800'
+        border: 'border-red-400',
+        bg: 'bg-red-500',
+        icon: 'text-white',
+        badge: 'bg-red-400 text-white'
       };
     case 'baixa':
       return {
-        border: 'border-slate-200',
-        bg: 'bg-slate-50',
-        icon: 'text-slate-600',
-        badge: 'bg-slate-100 text-slate-800'
+        border: 'border-red-300',
+        bg: 'bg-red-200',
+        icon: 'text-red-900',
+        badge: 'bg-red-300 text-red-900'
       };
     default:
       return {

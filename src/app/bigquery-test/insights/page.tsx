@@ -172,16 +172,16 @@ export default function InsightsTestPage() {
     }
   ];
   return (
-    <div className="min-h-screen bg-black p-8">
+    <div className="min-h-screen bg-gray-100 p-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold text-white mb-8 text-center">
+        <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
           🔍 Teste de Widgets: Insights, Alertas e Recomendações
         </h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Insights - Props Mode */}
           <div>
-            <h2 className="text-xl font-semibold text-white mb-4">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4">
               💡 Insights (Props)
             </h2>
             <InsightsCard insights={mockInsights} />
@@ -189,7 +189,7 @@ export default function InsightsTestPage() {
 
           {/* Alertas - Props Mode */}
           <div>
-            <h2 className="text-xl font-semibold text-white mb-4">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4">
               ⚠️ Alertas (Props)
             </h2>
             <AlertasCard alertas={mockAlertas} />
@@ -197,7 +197,7 @@ export default function InsightsTestPage() {
 
           {/* Recomendações - Props Mode */}
           <div>
-            <h2 className="text-xl font-semibold text-white mb-4">
+            <h2 className="text-xl font-semibold text-gray-700 mb-4">
               🎯 Recomendações (Props)
             </h2>
             <RecomendacoesCard recomendacoes={mockRecomendacoes} />

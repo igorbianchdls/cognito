@@ -30,31 +30,31 @@ function getNivelStyles(nivel: 'critico' | 'alto' | 'medio' | 'baixo') {
   switch (nivel) {
     case 'critico':
       return {
-        border: 'border-red-300',
-        bg: 'bg-red-100',
-        icon: 'text-red-600',
-        badge: 'bg-red-200 text-red-900'
+        border: 'border-red-800',
+        bg: 'bg-red-900',
+        icon: 'text-red-100',
+        badge: 'bg-red-800 text-red-100'
       };
     case 'alto':
       return {
-        border: 'border-orange-200',
-        bg: 'bg-orange-50',
-        icon: 'text-orange-600',
-        badge: 'bg-orange-100 text-orange-800'
+        border: 'border-red-600',
+        bg: 'bg-red-700',
+        icon: 'text-red-100',
+        badge: 'bg-red-600 text-red-100'
       };
     case 'medio':
       return {
-        border: 'border-amber-200',
-        bg: 'bg-amber-50',
-        icon: 'text-amber-600',
-        badge: 'bg-amber-100 text-amber-800'
+        border: 'border-red-400',
+        bg: 'bg-red-500',
+        icon: 'text-white',
+        badge: 'bg-red-400 text-white'
       };
     case 'baixo':
       return {
-        border: 'border-pink-200',
-        bg: 'bg-pink-50',
-        icon: 'text-pink-600',
-        badge: 'bg-pink-100 text-pink-800'
+        border: 'border-red-300',
+        bg: 'bg-red-200',
+        icon: 'text-red-900',
+        badge: 'bg-red-300 text-red-900'
       };
     default:
       return {
