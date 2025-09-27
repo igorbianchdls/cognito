@@ -30,24 +30,24 @@ function getPriorityStyles(impacto: 'alto' | 'medio' | 'baixo', facilidade: 'fac
 
   if (priority >= 7) {
     return {
-      border: 'border-emerald-300',
-      bg: 'bg-emerald-100',
-      icon: 'text-emerald-600',
-      badge: 'bg-emerald-200 text-emerald-900'
+      border: 'border-green-300',
+      bg: 'bg-green-50',
+      icon: 'text-green-700',
+      badge: 'bg-green-100 text-green-800'
     };
   } else if (priority >= 5) {
     return {
-      border: 'border-emerald-200',
-      bg: 'bg-emerald-50',
-      icon: 'text-emerald-600',
-      badge: 'bg-emerald-100 text-emerald-800'
+      border: 'border-teal-300',
+      bg: 'bg-teal-50',
+      icon: 'text-teal-600',
+      badge: 'bg-teal-100 text-teal-700'
     };
   } else {
     return {
-      border: 'border-teal-200',
-      bg: 'bg-teal-50',
-      icon: 'text-teal-600',
-      badge: 'bg-teal-100 text-teal-800'
+      border: 'border-slate-300',
+      bg: 'bg-slate-50',
+      icon: 'text-slate-500',
+      badge: 'bg-slate-100 text-slate-700'
     };
   }
 }
