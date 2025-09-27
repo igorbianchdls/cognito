@@ -10,23 +10,28 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { AlertTriangle, AlertCircle, Info, CheckCircle, ArrowRight } from "lucide-react"
-
-interface Alerta {
-  titulo: string;
-  descricao: string;
-  dados?: string;
-  nivel: 'critico' | 'alto' | 'medio' | 'baixo';
-  acao?: string;
-}
+import { AlertTriangle, AlertCircle, Info, CheckCircle, ArrowRight, X, Check } from "lucide-react"
+import { useStore } from '@nanostores/react'
+import {
+  $alertasOrdenados,
+  $totalAlertas,
+  $alertasAtivos,
+  $alertasCriticos,
+  markAsResolved,
+  markAllAsResolved,
+  removeAlerta,
+  executeAction,
+  type Alerta
+} from '@/stores/widgets/alertasStore'
 
 interface AlertasCardProps {
-  alertas: Alerta[];
+  alertas?: Alerta[]; // Opcional, usa store se não fornecido
   resumo?: string;
   contexto?: string;
   title?: string;
   maxHeight?: number;
   onActionClick?: (alerta: Alerta, index: number) => void;
+  useStore?: boolean; // Flag para usar store ou props
 }
 
 const NivelConfig = {
@@ -65,13 +70,21 @@ const NivelConfig = {
 };
 
 export default function AlertasCard({
-  alertas = [],
+  alertas: propAlertas,
   resumo,
   contexto,
   title = "Alertas",
   maxHeight = 400,
-  onActionClick
+  onActionClick,
+  useStore = false
 }: AlertasCardProps) {
+  const storeAlertas = useStore($alertasOrdenados)
+  const totalAlertas = useStore($totalAlertas)
+  const alertasAtivos = useStore($alertasAtivos)
+  const alertasCriticos = useStore($alertasCriticos)
+
+  const alertas = useStore ? storeAlertas : (propAlertas || [])
+  const showActions = useStore // Só mostra ações quando usa store
   if (!alertas || alertas.length === 0) {
     return (
       <Card className="w-full">
@@ -86,8 +99,8 @@ export default function AlertasCard({
     );
   }
 
-  // Ordenar alertas por criticidade
-  const alertasOrdenados = [...alertas].sort((a, b) => {
+  // Usar alertas já ordenados da store ou ordenar props
+  const alertasOrdenados = useStore ? alertas : [...alertas].sort((a, b) => {
     const ordem = { critico: 0, alto: 1, medio: 2, baixo: 3 };
     return ordem[a.nivel] - ordem[b.nivel];
   });
@@ -98,14 +111,40 @@ export default function AlertasCard({
         <CardTitle className="text-lg font-semibold flex items-center gap-2">
           <AlertTriangle className="h-5 w-5 text-orange-600" />
           {title}
-          <Badge variant="secondary" className="ml-auto">
-            {alertas.length}
-          </Badge>
+          <div className="ml-auto flex items-center gap-2">
+            {useStore && alertasCriticos.length > 0 && (
+              <Badge variant="destructive" className="text-xs">
+                {alertasCriticos.length} críticos
+              </Badge>
+            )}
+            {useStore && (
+              <Badge variant="outline" className="text-xs">
+                {alertasAtivos.length} ativos
+              </Badge>
+            )}
+            <Badge variant="secondary">
+              {useStore ? totalAlertas : alertas.length}
+            </Badge>
+          </div>
         </CardTitle>
         {resumo && (
           <CardDescription className="text-sm">
             {resumo}
           </CardDescription>
+        )}
+
+        {useStore && alertas.length > 0 && (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={markAllAsResolved}
+              className="text-xs h-7"
+            >
+              <Check className="h-3 w-3 mr-1" />
+              Resolver todos
+            </Button>
+          </div>
         )}
       </CardHeader>
 
@@ -118,8 +157,10 @@ export default function AlertasCard({
 
               return (
                 <div
-                  key={index}
-                  className={`p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow ${config.cardBorder}`}
+                  key={useStore ? alerta.id : index}
+                  className={`p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow ${config.cardBorder} ${
+                    useStore && alerta.resolved ? 'opacity-50' : ''
+                  }`}
                 >
                   <div className="flex items-start gap-3">
                     <div className={`p-2 rounded-full ${config.color}`}>
@@ -131,9 +172,16 @@ export default function AlertasCard({
                         <h4 className="font-medium text-gray-900 text-sm leading-tight">
                           {alerta.titulo}
                         </h4>
-                        <Badge variant={config.badgeVariant} className="text-xs shrink-0">
-                          {config.label}
-                        </Badge>
+                        <div className="flex items-center gap-1">
+                          {useStore && alerta.resolved && (
+                            <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
+                              Resolvido
+                            </Badge>
+                          )}
+                          <Badge variant={config.badgeVariant} className="text-xs shrink-0">
+                            {config.label}
+                          </Badge>
+                        </div>
                       </div>
 
                       <p className="text-gray-600 text-sm leading-relaxed mb-3">
@@ -153,17 +201,51 @@ export default function AlertasCard({
                           <span className="text-xs text-gray-600">
                             <strong>Ação:</strong> {alerta.acao}
                           </span>
-                          {onActionClick && (
+                          {(onActionClick || showActions) && !alerta.resolved && (
                             <Button
                               variant="outline"
                               size="sm"
                               className="h-7 px-2 text-xs"
-                              onClick={() => onActionClick(alerta, index)}
+                              onClick={() => {
+                                if (onActionClick) {
+                                  onActionClick(alerta, index)
+                                }
+                                if (showActions) {
+                                  executeAction(alerta.id)
+                                }
+                              }}
                             >
                               Executar
                               <ArrowRight className="h-3 w-3 ml-1" />
                             </Button>
                           )}
+                        </div>
+                      )}
+
+                      {showActions && (
+                        <div className="flex items-center justify-between gap-2 mt-3 pt-2 border-t border-gray-100">
+                          <div className="flex gap-2">
+                            {!alerta.resolved && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => markAsResolved(alerta.id)}
+                                className="h-6 px-2 text-xs"
+                              >
+                                <Check className="h-3 w-3 mr-1" />
+                                Resolver
+                              </Button>
+                            )}
+                          </div>
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeAlerta(alerta.id)}
+                            className="h-6 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
                         </div>
                       )}
                     </div>
@@ -178,6 +260,14 @@ export default function AlertasCard({
           <div className="mt-4 pt-3 border-t border-gray-200">
             <p className="text-xs text-gray-500">
               <strong>Contexto:</strong> {contexto}
+            </p>
+          </div>
+        )}
+
+        {useStore && alertas.length > 0 && (
+          <div className="mt-4 pt-3 border-t border-gray-200">
+            <p className="text-xs text-gray-500">
+              <strong>Fonte:</strong> Store global • <strong>Ativos:</strong> {alertasAtivos.length} • <strong>Críticos:</strong> {alertasCriticos.length}
             </p>
           </div>
         )}
