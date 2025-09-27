@@ -23,58 +23,35 @@ interface RecomendacoesCardProps {
   useGlobalStore?: boolean; // Flag para usar store ou props
 }
 
-function getPriorityStyles(impacto: 'alto' | 'medio' | 'baixo', facilidade: 'facil' | 'medio' | 'dificil') {
-  const impactoScore = { alto: 3, medio: 2, baixo: 1 };
-  const facilidadeScore = { facil: 3, medio: 2, dificil: 1 };
-  const priority = (impactoScore[impacto] * 2) + facilidadeScore[facilidade];
-
-  if (priority >= 7) {
-    return {
-      border: 'border-green-300',
-      bg: 'bg-green-100',
-      icon: 'text-green-600',
-      badge: 'bg-green-200 text-green-900'
-    };
-  } else if (priority >= 5) {
-    return {
-      border: 'border-yellow-200',
-      bg: 'bg-yellow-50',
-      icon: 'text-yellow-600',
-      badge: 'bg-yellow-100 text-yellow-800'
-    };
-  } else {
-    return {
-      border: 'border-gray-200',
-      bg: 'bg-gray-50',
-      icon: 'text-gray-600',
-      badge: 'bg-gray-100 text-gray-800'
-    };
-  }
+function getImpactoStyles(impacto: 'alto' | 'medio' | 'baixo') {
+  const styles = {
+    alto: { border: 'border-green-300', bg: 'bg-green-100', icon: 'text-green-600', badge: 'bg-green-200 text-green-900' },
+    medio: { border: 'border-yellow-200', bg: 'bg-yellow-50', icon: 'text-yellow-600', badge: 'bg-yellow-100 text-yellow-800' },
+    baixo: { border: 'border-gray-200', bg: 'bg-gray-50', icon: 'text-gray-600', badge: 'bg-gray-100 text-gray-800' }
+  };
+  return styles[impacto];
 }
 
-function getPriorityIcon(impacto: 'alto' | 'medio' | 'baixo', facilidade: 'facil' | 'medio' | 'dificil') {
-  const impactoScore = { alto: 3, medio: 2, baixo: 1 };
-  const facilidadeScore = { facil: 3, medio: 2, dificil: 1 };
-  const priority = (impactoScore[impacto] * 2) + facilidadeScore[facilidade];
-
-  if (priority >= 7) {
-    return (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-      </svg>
-    );
-  } else if (priority >= 5) {
-    return (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-      </svg>
-    );
-  } else {
-    return (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-      </svg>
-    );
+function getImpactoIcon(impacto: 'alto' | 'medio' | 'baixo') {
+  switch (impacto) {
+    case 'alto':
+      return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+        </svg>
+      );
+    case 'medio':
+      return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      );
+    case 'baixo':
+      return (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg>
+      );
   }
 }
 
@@ -174,21 +151,21 @@ export default function RecomendacoesCard({
       {/* Lista de Recomendações */}
       <div className="space-y-4">
         {recomendacoesOrdenadas.map((recomendacao, index) => {
-          const styles = getPriorityStyles(recomendacao.impacto, recomendacao.facilidade);
-          const icon = getPriorityIcon(recomendacao.impacto, recomendacao.facilidade);
+          const styles = getImpactoStyles(recomendacao.impacto);
+          const icon = getImpactoIcon(recomendacao.impacto);
           const impactoScore = { alto: 3, medio: 2, baixo: 1 };
           const facilidadeScore = { facil: 3, medio: 2, dificil: 1 };
           const priority = (impactoScore[recomendacao.impacto] * 2) + facilidadeScore[recomendacao.facilidade];
           const cardId = useGlobalStore ? recomendacao.id : index.toString();
           const isExpanded = expandedCards[cardId] || false;
-          const isHighPriority = priority >= 7;
+          const isHighImpact = recomendacao.impacto === 'alto';
           const isImplemented = useGlobalStore && recomendacao.implemented;
 
           return (
             <div
               key={useGlobalStore ? recomendacao.id : index}
               className={`${styles.bg} ${styles.border} border rounded-lg overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-lg ${
-                isHighPriority ? 'ring-2 ring-green-300 shadow-green-500/20' : ''
+                isHighImpact ? 'ring-2 ring-green-300 shadow-green-500/20' : ''
               } ${isExpanded ? 'shadow-xl' : 'hover:shadow-md'} ${
                 isImplemented ? 'opacity-60' : ''
               }`}
@@ -220,8 +197,8 @@ export default function RecomendacoesCard({
                       {recomendacao.categoria}
                     </span>
                   )}
-                  <span className={`${styles.badge} px-2 py-1 text-xs font-medium rounded-full ${isHighPriority ? 'animate-pulse' : ''}`}>
-                    P{priority}
+                  <span className={`${styles.badge} px-2 py-1 text-xs font-medium rounded-full ${isHighImpact ? 'animate-pulse' : ''}`}>
+                    {recomendacao.impacto}
                   </span>
                   <ChevronDown
                     className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${
