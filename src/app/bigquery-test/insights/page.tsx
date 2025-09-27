@@ -4,6 +4,14 @@ import InsightsCard from '@/components/widgets/InsightsCard';
 import AlertasCard from '@/components/widgets/AlertasCard';
 import RecomendacoesCard from '@/components/widgets/RecomendacoesCard';
 
+// Swiper imports
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Virtual, Navigation, Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import 'swiper/css/virtual';
+
 export default function InsightsTestPage() {
   // Mock data - 5 insights
   const mockInsights = [
@@ -202,6 +210,61 @@ export default function InsightsTestPage() {
             </h2>
             <RecomendacoesCard recomendacoes={mockRecomendacoes} />
           </div>
+        </div>
+
+        {/* Nova Seção: Slider */}
+        <div className="mt-16">
+          <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
+            🎠 Visualização em Slider
+          </h1>
+
+          <Swiper
+            modules={[Virtual, Navigation, Pagination]}
+            virtual
+            navigation
+            pagination={{ clickable: true }}
+            spaceBetween={30}
+            slidesPerView={1}
+            breakpoints={{
+              640: {
+                slidesPerView: 1,
+              },
+              768: {
+                slidesPerView: 2,
+              },
+              1024: {
+                slidesPerView: 3,
+              },
+            }}
+            className="w-full"
+          >
+            <SwiperSlide virtualIndex={0}>
+              <div className="h-full">
+                <h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">
+                  💡 Insights
+                </h2>
+                <InsightsCard insights={mockInsights} />
+              </div>
+            </SwiperSlide>
+
+            <SwiperSlide virtualIndex={1}>
+              <div className="h-full">
+                <h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">
+                  ⚠️ Alertas
+                </h2>
+                <AlertasCard alertas={mockAlertas} />
+              </div>
+            </SwiperSlide>
+
+            <SwiperSlide virtualIndex={2}>
+              <div className="h-full">
+                <h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">
+                  🎯 Recomendações
+                </h2>
+                <RecomendacoesCard recomendacoes={mockRecomendacoes} />
+              </div>
+            </SwiperSlide>
+          </Swiper>
         </div>
       </div>
     </div>
