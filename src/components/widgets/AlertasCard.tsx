@@ -2,7 +2,8 @@
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, X, Check } from "lucide-react"
+import { ArrowRight, X, Check, ChevronDown } from "lucide-react"
+import { useState } from "react"
 import { useStore } from '@nanostores/react'
 import {
   $alertasOrdenados,
@@ -193,91 +194,131 @@ export default function AlertasCard({
         {alertasOrdenados.map((alerta, index) => {
           const styles = getNivelStyles(alerta.nivel);
           const icon = getNivelIcon(alerta.nivel);
+          const [isExpanded, setIsExpanded] = useState(false);
+          const isCritico = alerta.nivel === 'critico';
+          const isResolved = useGlobalStore && alerta.resolved;
 
           return (
             <div
               key={useGlobalStore ? alerta.id : index}
-              className={`${styles.bg} ${styles.border} border rounded-lg p-4 ${
-                useGlobalStore && alerta.resolved ? 'opacity-50' : ''
+              className={`${styles.bg} ${styles.border} border rounded-lg overflow-hidden transition-all duration-300 hover:scale-[1.01] hover:shadow-lg ${
+                isCritico ? 'ring-2 ring-red-300 shadow-red-500/20' : ''
+              } ${isExpanded ? 'shadow-xl' : 'hover:shadow-md'} ${
+                isResolved ? 'opacity-60' : ''
               }`}
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className={`${styles.icon} flex-shrink-0`}>
-                  {icon}
+              {/* Header (sempre visível) */}
+              <div
+                className="p-4 cursor-pointer flex items-center justify-between"
+                onClick={() => setIsExpanded(!isExpanded)}
+              >
+                <div className="flex items-center gap-3 flex-1">
+                  <div className={`${styles.icon} flex-shrink-0`}>
+                    {icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h5 className="font-semibold text-gray-900 text-sm truncate">
+                      {alerta.titulo}
+                    </h5>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  {useGlobalStore && alerta.resolved && (
+
+                <div className="flex items-center gap-2">
+                  {isResolved && (
                     <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
                       Resolvido
                     </Badge>
                   )}
-                  <span className={`${styles.badge} px-2 py-1 text-xs font-medium rounded-full`}>
+                  <span className={`${styles.badge} px-2 py-1 text-xs font-medium rounded-full ${isCritico ? 'animate-pulse' : ''}`}>
                     {alerta.nivel}
                   </span>
+                  <ChevronDown
+                    className={`h-4 w-4 text-gray-500 transition-transform duration-200 ${
+                      isExpanded ? 'rotate-180' : ''
+                    }`}
+                  />
                 </div>
               </div>
 
-              <h5 className="font-semibold text-gray-900 mb-2">{alerta.titulo}</h5>
+              {/* Content (colapsável) */}
+              <div className={`transition-all duration-300 ease-out ${
+                isExpanded
+                  ? 'max-h-screen opacity-100'
+                  : 'max-h-0 opacity-0'
+              }`}>
+                <div className="px-4 pb-4 border-t border-gray-100">
+                  <div className="pt-3">
+                    <p className="text-gray-700 text-sm mb-3 leading-relaxed">
+                      {alerta.descricao}
+                    </p>
 
-              <p className="text-gray-700 text-sm mb-3">{alerta.descricao}</p>
+                    {alerta.dados && (
+                      <div className="bg-white/50 rounded p-3 text-xs text-gray-600 font-mono mb-3 border border-gray-200">
+                        📊 {alerta.dados}
+                      </div>
+                    )}
 
-              {alerta.dados && (
-                <div className="bg-white/50 rounded p-2 text-xs text-gray-600 font-mono mb-3">
-                  📊 {alerta.dados}
-                </div>
-              )}
+                    {alerta.acao && (
+                      <div className="bg-white/70 rounded p-3 text-xs text-gray-700 border-l-4 border-indigo-400 mb-3">
+                        <div className="font-medium text-indigo-800 mb-1">💡 Ação:</div>
+                        <div className="mb-2">{alerta.acao}</div>
+                        {(onActionClick || showActions) && !alerta.resolved && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-3 text-xs hover:bg-indigo-50"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (onActionClick) {
+                                onActionClick(alerta, index)
+                              }
+                              if (showActions) {
+                                executeAction(alerta.id)
+                              }
+                            }}
+                          >
+                            Executar
+                            <ArrowRight className="h-3 w-3 ml-1" />
+                          </Button>
+                        )}
+                      </div>
+                    )}
 
-              {alerta.acao && (
-                <div className="bg-white/70 rounded p-2 text-xs text-gray-700 border-l-4 border-indigo-400 mb-3">
-                  <div className="font-medium text-indigo-800">💡 Ação:</div>
-                  {alerta.acao}
-                  {(onActionClick || showActions) && !alerta.resolved && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-6 px-2 text-xs mt-2"
-                      onClick={() => {
-                        if (onActionClick) {
-                          onActionClick(alerta, index)
-                        }
-                        if (showActions) {
-                          executeAction(alerta.id)
-                        }
-                      }}
-                    >
-                      Executar
-                      <ArrowRight className="h-3 w-3 ml-1" />
-                    </Button>
-                  )}
-                </div>
-              )}
+                    {showActions && (
+                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-gray-100">
+                        <div className="flex gap-2">
+                          {!alerta.resolved && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                markAsResolved(alerta.id);
+                              }}
+                              className="h-7 px-3 text-xs hover:bg-green-50"
+                            >
+                              <Check className="h-3 w-3 mr-1" />
+                              Resolver
+                            </Button>
+                          )}
+                        </div>
 
-              {showActions && (
-                <div className="flex items-center justify-between gap-2 mt-3 pt-2 border-t border-gray-100">
-                  <div className="flex gap-2">
-                    {!alerta.resolved && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => markAsResolved(alerta.id)}
-                        className="h-6 px-2 text-xs"
-                      >
-                        <Check className="h-3 w-3 mr-1" />
-                        Resolver
-                      </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeAlerta(alerta.id);
+                          }}
+                          className="h-7 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
                     )}
                   </div>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => removeAlerta(alerta.id)}
-                    className="h-6 px-2 text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
                 </div>
-              )}
+              </div>
             </div>
           );
         })}
