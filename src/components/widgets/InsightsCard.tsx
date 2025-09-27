@@ -94,6 +94,14 @@ export default function InsightsCard({
 
   const insights = useGlobalStore ? storeInsights : (propInsights || [])
   const showActions = useGlobalStore // Só mostra ações quando usa store
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({})
+
+  const toggleExpanded = (id: string) => {
+    setExpandedCards(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }))
+  }
   if (!insights || insights.length === 0) {
     return (
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
@@ -165,7 +173,8 @@ export default function InsightsCard({
         {insights.map((insight, index) => {
           const styles = getImportanceStyles(insight.importancia);
           const icon = getImportanceIcon(insight.importancia);
-          const [isExpanded, setIsExpanded] = useState(false);
+          const cardId = useGlobalStore ? insight.id : index.toString();
+          const isExpanded = expandedCards[cardId] || false;
           const isNew = useGlobalStore && !insight.read;
 
           return (
@@ -178,7 +187,7 @@ export default function InsightsCard({
               {/* Header (sempre visível) */}
               <div
                 className="p-4 cursor-pointer flex items-center justify-between"
-                onClick={() => setIsExpanded(!isExpanded)}
+                onClick={() => toggleExpanded(cardId)}
               >
                 <div className="flex items-center gap-3 flex-1">
                   <div className={`${styles.icon} flex-shrink-0`}>

@@ -92,6 +92,14 @@ export default function RecomendacoesCard({
 
   const recomendacoes = useGlobalStore ? storeRecomendacoes : (propRecomendacoes || [])
   const showActions = useGlobalStore // Só mostra ações quando usa store
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({})
+
+  const toggleExpanded = (id: string) => {
+    setExpandedCards(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }))
+  }
   if (!recomendacoes || recomendacoes.length === 0) {
     return (
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -171,7 +179,8 @@ export default function RecomendacoesCard({
           const impactoScore = { alto: 3, medio: 2, baixo: 1 };
           const facilidadeScore = { facil: 3, medio: 2, dificil: 1 };
           const priority = (impactoScore[recomendacao.impacto] * 2) + facilidadeScore[recomendacao.facilidade];
-          const [isExpanded, setIsExpanded] = useState(false);
+          const cardId = useGlobalStore ? recomendacao.id : index.toString();
+          const isExpanded = expandedCards[cardId] || false;
           const isHighPriority = priority >= 7;
           const isImplemented = useGlobalStore && recomendacao.implemented;
 
@@ -187,7 +196,7 @@ export default function RecomendacoesCard({
               {/* Header (sempre visível) */}
               <div
                 className="p-4 cursor-pointer flex items-center justify-between"
-                onClick={() => setIsExpanded(!isExpanded)}
+                onClick={() => toggleExpanded(cardId)}
               >
                 <div className="flex items-center gap-3 flex-1">
                   <div className={`${styles.icon} flex-shrink-0`}>

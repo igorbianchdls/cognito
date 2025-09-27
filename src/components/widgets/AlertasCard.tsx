@@ -112,6 +112,14 @@ export default function AlertasCard({
 
   const alertas = useGlobalStore ? storeAlertas : (propAlertas || [])
   const showActions = useGlobalStore // Só mostra ações quando usa store
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({})
+
+  const toggleExpanded = (id: string) => {
+    setExpandedCards(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }))
+  }
   if (!alertas || alertas.length === 0) {
     return (
       <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -194,7 +202,8 @@ export default function AlertasCard({
         {alertasOrdenados.map((alerta, index) => {
           const styles = getNivelStyles(alerta.nivel);
           const icon = getNivelIcon(alerta.nivel);
-          const [isExpanded, setIsExpanded] = useState(false);
+          const cardId = useGlobalStore ? alerta.id : index.toString();
+          const isExpanded = expandedCards[cardId] || false;
           const isCritico = alerta.nivel === 'critico';
           const isResolved = useGlobalStore && alerta.resolved;
 
@@ -210,7 +219,7 @@ export default function AlertasCard({
               {/* Header (sempre visível) */}
               <div
                 className="p-4 cursor-pointer flex items-center justify-between"
-                onClick={() => setIsExpanded(!isExpanded)}
+                onClick={() => toggleExpanded(cardId)}
               >
                 <div className="flex items-center gap-3 flex-1">
                   <div className={`${styles.icon} flex-shrink-0`}>
