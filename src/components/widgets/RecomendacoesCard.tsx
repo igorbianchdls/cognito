@@ -192,11 +192,6 @@ export default function RecomendacoesCard({
                       Implementada
                     </Badge>
                   )}
-                  {recomendacao.categoria && (
-                    <span className="bg-purple-100 text-purple-800 px-2 py-1 text-xs font-medium rounded-full">
-                      {recomendacao.categoria}
-                    </span>
-                  )}
                   <span className={`${styles.badge} px-2 py-1 text-xs font-medium rounded-full ${isHighImpact ? 'animate-pulse' : ''}`}>
                     {recomendacao.impacto}
                   </span>
