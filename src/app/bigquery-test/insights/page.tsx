@@ -212,59 +212,221 @@ export default function InsightsTestPage() {
           </div>
         </div>
 
-        {/* Nova Seção: Slider */}
-        <div className="mt-16">
+        {/* Nova Seção: Sliders Horizontais */}
+        <div className="mt-16 space-y-12">
           <h1 className="text-3xl font-bold text-gray-800 mb-8 text-center">
-            🎠 Visualização em Slider
+            🎠 Visualização em Sliders Horizontais
           </h1>
 
-          <Swiper
-            modules={[Virtual, Navigation, Pagination]}
-            virtual
-            navigation
-            pagination={{ clickable: true }}
-            spaceBetween={30}
-            slidesPerView={1}
-            breakpoints={{
-              640: {
-                slidesPerView: 1,
-              },
-              768: {
-                slidesPerView: 2,
-              },
-              1024: {
-                slidesPerView: 3,
-              },
-            }}
-            className="w-full"
-          >
-            <SwiperSlide virtualIndex={0}>
-              <div className="h-full">
-                <h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">
-                  💡 Insights
-                </h2>
-                <InsightsCard insights={mockInsights} />
-              </div>
-            </SwiperSlide>
+          {/* Slider de Insights */}
+          <div>
+            <h2 className="text-2xl font-semibold text-gray-700 mb-6 flex items-center gap-2">
+              💡 Insights
+            </h2>
+            <Swiper
+              modules={[Navigation, Pagination]}
+              navigation
+              pagination={{ clickable: true }}
+              spaceBetween={20}
+              slidesPerView={1}
+              breakpoints={{
+                640: {
+                  slidesPerView: 1.2,
+                },
+                768: {
+                  slidesPerView: 2,
+                },
+                1024: {
+                  slidesPerView: 2.5,
+                },
+                1280: {
+                  slidesPerView: 3,
+                },
+              }}
+              className="w-full h-64"
+            >
+              {mockInsights.map((insight, index) => {
+                const styles = {
+                  alta: { border: 'border-blue-300', bg: 'bg-blue-100', badge: 'bg-blue-200 text-blue-900' },
+                  media: { border: 'border-indigo-200', bg: 'bg-indigo-50', badge: 'bg-indigo-100 text-indigo-800' },
+                  baixa: { border: 'border-slate-200', bg: 'bg-slate-50', badge: 'bg-slate-100 text-slate-800' }
+                }[insight.importancia];
 
-            <SwiperSlide virtualIndex={1}>
-              <div className="h-full">
-                <h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">
-                  ⚠️ Alertas
-                </h2>
-                <AlertasCard alertas={mockAlertas} />
-              </div>
-            </SwiperSlide>
+                return (
+                  <SwiperSlide key={index}>
+                    <div className={`${styles.bg} ${styles.border} border rounded-lg p-4 h-56 overflow-hidden hover:shadow-lg transition-all duration-300`}>
+                      <div className="flex items-start justify-between mb-3">
+                        <h3 className="font-semibold text-gray-900 text-sm leading-tight flex-1 pr-2">
+                          {insight.titulo}
+                        </h3>
+                        <span className={`${styles.badge} px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${insight.importancia === 'alta' ? 'animate-pulse' : ''}`}>
+                          {insight.importancia}
+                        </span>
+                      </div>
 
-            <SwiperSlide virtualIndex={2}>
-              <div className="h-full">
-                <h2 className="text-xl font-semibold text-gray-700 mb-4 text-center">
-                  🎯 Recomendações
-                </h2>
-                <RecomendacoesCard recomendacoes={mockRecomendacoes} />
-              </div>
-            </SwiperSlide>
-          </Swiper>
+                      <p className="text-gray-700 text-xs mb-3 leading-relaxed line-clamp-4">
+                        {insight.descricao}
+                      </p>
+
+                      {insight.dados && (
+                        <div className="bg-white/50 rounded p-2 text-xs text-gray-600 font-mono border border-gray-200">
+                          📊 {insight.dados}
+                        </div>
+                      )}
+                    </div>
+                  </SwiperSlide>
+                );
+              })}
+            </Swiper>
+          </div>
+
+          {/* Slider de Alertas */}
+          <div>
+            <h2 className="text-2xl font-semibold text-gray-700 mb-6 flex items-center gap-2">
+              ⚠️ Alertas
+            </h2>
+            <Swiper
+              modules={[Navigation, Pagination]}
+              navigation
+              pagination={{ clickable: true }}
+              spaceBetween={20}
+              slidesPerView={1}
+              breakpoints={{
+                640: {
+                  slidesPerView: 1.2,
+                },
+                768: {
+                  slidesPerView: 2,
+                },
+                1024: {
+                  slidesPerView: 2.5,
+                },
+                1280: {
+                  slidesPerView: 3,
+                },
+              }}
+              className="w-full h-64"
+            >
+              {mockAlertas.map((alerta, index) => {
+                const styles = {
+                  critico: { border: 'border-red-300', bg: 'bg-red-100', badge: 'bg-red-200 text-red-900' },
+                  alto: { border: 'border-red-200', bg: 'bg-red-50', badge: 'bg-red-100 text-red-800' },
+                  medio: { border: 'border-orange-200', bg: 'bg-orange-50', badge: 'bg-orange-100 text-orange-800' },
+                  baixo: { border: 'border-red-300', bg: 'bg-red-200', badge: 'bg-red-300 text-red-900' }
+                }[alerta.nivel];
+
+                return (
+                  <SwiperSlide key={index}>
+                    <div className={`${styles.bg} ${styles.border} border rounded-lg p-4 h-56 overflow-hidden hover:shadow-lg transition-all duration-300 ${alerta.nivel === 'critico' ? 'ring-2 ring-red-300 shadow-red-500/20' : ''}`}>
+                      <div className="flex items-start justify-between mb-3">
+                        <h3 className="font-semibold text-gray-900 text-sm leading-tight flex-1 pr-2">
+                          {alerta.titulo}
+                        </h3>
+                        <span className={`${styles.badge} px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${alerta.nivel === 'critico' ? 'animate-pulse' : ''}`}>
+                          {alerta.nivel}
+                        </span>
+                      </div>
+
+                      <p className="text-gray-700 text-xs mb-3 leading-relaxed line-clamp-3">
+                        {alerta.descricao}
+                      </p>
+
+                      {alerta.dados && (
+                        <div className="bg-white/50 rounded p-2 text-xs text-gray-600 font-mono mb-2 border border-gray-200">
+                          📊 {alerta.dados}
+                        </div>
+                      )}
+
+                      {alerta.acao && (
+                        <div className="bg-white/70 rounded p-2 text-xs text-gray-700 border-l-2 border-indigo-400">
+                          <span className="font-medium text-indigo-800">💡 Ação:</span> {alerta.acao}
+                        </div>
+                      )}
+                    </div>
+                  </SwiperSlide>
+                );
+              })}
+            </Swiper>
+          </div>
+
+          {/* Slider de Recomendações */}
+          <div>
+            <h2 className="text-2xl font-semibold text-gray-700 mb-6 flex items-center gap-2">
+              🎯 Recomendações
+            </h2>
+            <Swiper
+              modules={[Navigation, Pagination]}
+              navigation
+              pagination={{ clickable: true }}
+              spaceBetween={20}
+              slidesPerView={1}
+              breakpoints={{
+                640: {
+                  slidesPerView: 1.2,
+                },
+                768: {
+                  slidesPerView: 2,
+                },
+                1024: {
+                  slidesPerView: 2.5,
+                },
+                1280: {
+                  slidesPerView: 3,
+                },
+              }}
+              className="w-full h-64"
+            >
+              {mockRecomendacoes.map((recomendacao, index) => {
+                const impactoStyles = {
+                  alto: { border: 'border-green-300', bg: 'bg-green-100', badge: 'bg-green-200 text-green-900' },
+                  medio: { border: 'border-yellow-200', bg: 'bg-yellow-50', badge: 'bg-yellow-100 text-yellow-800' },
+                  baixo: { border: 'border-gray-200', bg: 'bg-gray-50', badge: 'bg-gray-100 text-gray-800' }
+                }[recomendacao.impacto];
+
+                const facilidadeStyles = {
+                  facil: 'bg-emerald-100 text-emerald-800',
+                  medio: 'bg-amber-100 text-amber-800',
+                  dificil: 'bg-rose-100 text-rose-800'
+                }[recomendacao.facilidade];
+
+                return (
+                  <SwiperSlide key={index}>
+                    <div className={`${impactoStyles.bg} ${impactoStyles.border} border rounded-lg p-4 h-56 overflow-hidden hover:shadow-lg transition-all duration-300`}>
+                      <div className="flex items-start justify-between mb-3">
+                        <h3 className="font-semibold text-gray-900 text-sm leading-tight flex-1 pr-2">
+                          {recomendacao.titulo}
+                        </h3>
+                        <div className="flex flex-col gap-1">
+                          <span className={`${impactoStyles.badge} px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap ${recomendacao.impacto === 'alto' ? 'animate-pulse' : ''}`}>
+                            {recomendacao.impacto}
+                          </span>
+                          <span className={`${facilidadeStyles} px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap`}>
+                            {recomendacao.facilidade}
+                          </span>
+                        </div>
+                      </div>
+
+                      <p className="text-gray-700 text-xs mb-3 leading-relaxed line-clamp-3">
+                        {recomendacao.descricao}
+                      </p>
+
+                      {recomendacao.categoria && (
+                        <div className="bg-white/50 rounded p-2 text-xs text-gray-600 mb-2 border border-gray-200">
+                          🏷️ {recomendacao.categoria}
+                        </div>
+                      )}
+
+                      {recomendacao.estimativaResultado && (
+                        <div className="bg-white/70 rounded p-2 text-xs text-gray-700 border-l-2 border-purple-400">
+                          <span className="font-medium text-purple-800">📈 Resultado:</span> {recomendacao.estimativaResultado}
+                        </div>
+                      )}
+                    </div>
+                  </SwiperSlide>
+                );
+              })}
+            </Swiper>
+          </div>
         </div>
       </div>
     </div>
