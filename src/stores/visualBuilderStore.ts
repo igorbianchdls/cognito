@@ -151,6 +151,53 @@ const initialCode = `{
           "marginBottom": 40
         }
       }
+    },
+    {
+      "id": "insights1",
+      "type": "insights",
+      "position": { "x": 0, "y": 8, "w": 4, "h": 6 },
+      "column": "main",
+      "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
+      "order": 6,
+      "title": "💡 Insights",
+      "insightsConfig": {
+        "useGlobalStore": true,
+        "maxItems": 5,
+        "collapsible": true,
+        "showActions": true
+      }
+    },
+    {
+      "id": "alerts1",
+      "type": "alerts",
+      "position": { "x": 4, "y": 8, "w": 4, "h": 6 },
+      "column": "main",
+      "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
+      "order": 7,
+      "title": "⚠️ Alertas",
+      "alertsConfig": {
+        "useGlobalStore": true,
+        "maxItems": 5,
+        "collapsible": true,
+        "showActions": true,
+        "showOnlyCritical": false
+      }
+    },
+    {
+      "id": "recommendations1",
+      "type": "recommendations",
+      "position": { "x": 8, "y": 8, "w": 4, "h": 6 },
+      "column": "sidebar",
+      "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
+      "order": 8,
+      "title": "🎯 Recomendações",
+      "recommendationsConfig": {
+        "useGlobalStore": true,
+        "maxItems": 5,
+        "collapsible": true,
+        "showActions": true,
+        "priorityFilter": "all"
+      }
     }
   ]
 }`

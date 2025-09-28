@@ -6,15 +6,17 @@ import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import GridCanvas from '@/components/visual-builder/GridCanvas';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
+import { initializeMockData } from '@/lib/mockDataInitializer';
 import type { Widget } from '@/stores/visualBuilderStore';
 
 export default function VisualBuilderPage() {
   const visualBuilderState = useStore($visualBuilderState);
   const [activeTab, setActiveTab] = useState<'editor' | 'dashboard' | 'responsive'>('editor');
 
-  // Initialize store on mount
+  // Initialize store and mock data on mount
   useEffect(() => {
-    visualBuilderActions.initialize();
+    initializeMockData(); // Initialize widgets stores with mock data
+    visualBuilderActions.initialize(); // Initialize visual builder store
   }, []);
 
   const handleCodeChange = (newCode: string) => {
