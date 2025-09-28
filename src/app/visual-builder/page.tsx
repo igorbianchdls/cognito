@@ -16,6 +16,11 @@ export default function VisualBuilderPage() {
   // Initialize store and mock data on mount
   useEffect(() => {
     initializeMockData(); // Initialize widgets stores with mock data
+
+    // Temporarily clear storage to force new widgets to appear
+    // TODO: Remove this after testing
+    visualBuilderActions.clearStorage();
+
     visualBuilderActions.initialize(); // Initialize visual builder store
   }, []);
 

@@ -19,9 +19,9 @@ interface VisualBuilderState {
 const initialCode = `{
   "theme": "dark",
   "config": {
-    "maxRows": 20,
+    "maxRows": 25,
     "rowHeight": 30,
-    "height": 800,
+    "height": 1000,
     "cols": 12,
     "backgroundColor": "#171717",
     "borderColor": "#404040"
