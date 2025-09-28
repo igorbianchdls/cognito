@@ -13,12 +13,49 @@ export interface Alerta {
   resolved?: boolean
 }
 
+// Mock data para alertas
+const mockAlertas: Alerta[] = [
+  {
+    id: 'alerta_1',
+    titulo: "Orçamento Google Ads próximo do limite",
+    descricao: "Campaign 'Black Friday 2024' está com 85% do orçamento consumido. Considere aumentar o budget ou pausar ads de baixa performance.",
+    dados: "Gasto: R$8.500 / R$10.000 | CPA atual: R$45",
+    acao: "Revisar palavras-chave com CPC alto e pausar anúncios com CTR < 1%",
+    nivel: 'critico',
+    timestamp: new Date(),
+    source: 'optimization-test',
+    resolved: false
+  },
+  {
+    id: 'alerta_2',
+    titulo: "CTR do Facebook abaixo da média",
+    descricao: "Campanha 'Promoção Verão' apresenta CTR de 0.8%, bem abaixo da média de 2.1% do segmento.",
+    dados: "CTR: 0.8% vs 2.1% (benchmark) | Impressões: 45k",
+    acao: "Testar novos criativos e revisar targeting de audiência",
+    nivel: 'alto',
+    timestamp: new Date(),
+    source: 'optimization-test',
+    resolved: false
+  },
+  {
+    id: 'alerta_3',
+    titulo: "Landing page com alta taxa de saída",
+    descricao: "Página de checkout está com 65% de abandono, indicando possíveis problemas de UX ou performance.",
+    dados: "Taxa de saída: 65% | Tempo na página: 1m23s",
+    acao: "Implementar testes A/B no formulário de checkout",
+    nivel: 'medio',
+    timestamp: new Date(),
+    source: 'optimization-test',
+    resolved: false
+  }
+]
+
 // Load alertas from localStorage on initialization
 const loadAlertasFromStorage = (): Alerta[] => {
-  if (typeof window === 'undefined') return []
+  if (typeof window === 'undefined') return mockAlertas
   try {
     const stored = localStorage.getItem('cognito-alertas')
-    if (!stored) return []
+    if (!stored) return mockAlertas
     const parsed = JSON.parse(stored) as Array<{
       id: string
       titulo: string

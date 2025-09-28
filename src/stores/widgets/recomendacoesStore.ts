@@ -15,12 +15,53 @@ export interface Recomendacao {
   implemented?: boolean
 }
 
+// Mock data para recomendações
+const mockRecomendacoes: Recomendacao[] = [
+  {
+    id: 'recomendacao_1',
+    titulo: "Implementar pixel de conversão avançado",
+    descricao: "Configurar tracking de eventos personalizados para melhor atribuição e otimização automática das campanhas.",
+    impacto: 'alto',
+    facilidade: 'medio',
+    categoria: "Tracking",
+    proximosPassos: ["Mapear eventos de conversão", "Configurar GTM", "Testar implementação", "Validar dados"],
+    estimativaResultado: "Melhoria de 20-30% na otimização de campanhas",
+    timestamp: new Date(),
+    source: 'optimization-test',
+    implemented: false
+  },
+  {
+    id: 'recomendacao_2',
+    titulo: "Sistema de reviews de produtos",
+    descricao: "Permitir avaliações e comentários de clientes nos produtos para aumentar confiança e conversões.",
+    impacto: 'medio',
+    facilidade: 'facil',
+    proximosPassos: ["Criar interface de review", "Sistema de moderação", "Integrar com email", "Incentivar reviews"],
+    estimativaResultado: "Aumento de 10-15% na confiança do cliente",
+    timestamp: new Date(),
+    source: 'optimization-test',
+    implemented: false
+  },
+  {
+    id: 'recomendacao_3',
+    titulo: "Funcionalidade de wishlist",
+    descricao: "Permitir que usuários salvem produtos favoritos para compra futura, aumentando retorno e engajamento.",
+    impacto: 'baixo',
+    facilidade: 'medio',
+    proximosPassos: ["Desenhar interface", "Implementar persistência", "Email de lembrete", "Análise de uso"],
+    estimativaResultado: "Aumento de 5-8% no retorno de usuários",
+    timestamp: new Date(),
+    source: 'optimization-test',
+    implemented: false
+  }
+]
+
 // Load recomendacoes from localStorage on initialization
 const loadRecomendacoesFromStorage = (): Recomendacao[] => {
-  if (typeof window === 'undefined') return []
+  if (typeof window === 'undefined') return mockRecomendacoes
   try {
     const stored = localStorage.getItem('cognito-recomendacoes')
-    if (!stored) return []
+    if (!stored) return mockRecomendacoes
     const parsed = JSON.parse(stored) as Array<{
       id: string
       titulo: string
