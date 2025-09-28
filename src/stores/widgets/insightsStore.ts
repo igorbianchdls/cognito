@@ -12,12 +12,46 @@ export interface Insight {
   read?: boolean
 }
 
+// Mock data para insights
+const mockInsights: Insight[] = [
+  {
+    id: 'insight_1',
+    titulo: "Conversões aumentaram 15%",
+    descricao: "Campanhas de retargeting no Instagram e Facebook mostraram excelente performance nas últimas 2 semanas.",
+    dados: "CTR: 3.2% | CPM: R$12,50 | ROAS: 4.8x",
+    importancia: 'alta',
+    timestamp: new Date(),
+    source: 'optimization-test',
+    read: false
+  },
+  {
+    id: 'insight_2',
+    titulo: "Bounce rate melhorou 8%",
+    descricao: "Otimizações de UX implementadas na página inicial resultaram em maior engajamento e permanência dos usuários.",
+    dados: "Bounce rate: 42% vs 50% (mês anterior)",
+    importancia: 'baixa',
+    timestamp: new Date(),
+    source: 'optimization-test',
+    read: false
+  },
+  {
+    id: 'insight_3',
+    titulo: "ROI do email marketing subiu 22%",
+    descricao: "Segmentação mais precisa e subject lines personalizadas aumentaram significativamente as taxas de abertura.",
+    dados: "Open rate: 28% | Click rate: 6.5% | ROI: 122%",
+    importancia: 'media',
+    timestamp: new Date(),
+    source: 'optimization-test',
+    read: false
+  }
+]
+
 // Load insights from localStorage on initialization
 const loadInsightsFromStorage = (): Insight[] => {
-  if (typeof window === 'undefined') return []
+  if (typeof window === 'undefined') return mockInsights
   try {
     const stored = localStorage.getItem('cognito-insights')
-    if (!stored) return []
+    if (!stored) return mockInsights
     const parsed = JSON.parse(stored) as Array<{
       id: string
       titulo: string
