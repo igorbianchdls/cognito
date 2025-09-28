@@ -101,6 +101,7 @@ export interface Widget {
   column?: string;        // Reference to layoutColumns key (e.g., "main", "sidebar")
   span?: WidgetSpan;      // How many columns to span on each breakpoint
   order?: number;         // Display order
+  heightPx?: number;      // Height in pixels for responsive layout
   data?: {
     x: string;
     y: string;

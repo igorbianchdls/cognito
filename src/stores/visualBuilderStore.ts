@@ -46,6 +46,7 @@ const initialCode = `{
       "column": "main",
       "span": { "desktop": 2, "tablet": 2, "mobile": 1 },
       "order": 1,
+      "heightPx": 320,
       "title": "Events by Type",
       "dataSource": {
         "table": "ecommerce",
@@ -69,6 +70,7 @@ const initialCode = `{
       "column": "sidebar",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 2,
+      "heightPx": 150,
       "title": "Total Events",
       "dataSource": {
         "table": "ecommerce",
@@ -91,6 +93,7 @@ const initialCode = `{
       "column": "main",
       "span": { "desktop": 3, "tablet": 2, "mobile": 1 },
       "order": 3,
+      "heightPx": 280,
       "title": "Quantity Trend",
       "dataSource": {
         "table": "ecommerce",
@@ -159,6 +162,7 @@ const initialCode = `{
       "column": "main",
       "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
       "order": 6,
+      "heightPx": 400,
       "title": "💡 Insights",
       "insightsConfig": {
         "useGlobalStore": true,

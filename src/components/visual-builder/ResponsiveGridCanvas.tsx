@@ -110,6 +110,22 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig }: Responsive
     return orderA - orderB;
   });
 
+  // Calculate widget height based on heightPx or fallback logic
+  const getWidgetHeight = (widget: Widget): string => {
+    // Priority 1: Use explicit heightPx if defined
+    if (widget.heightPx) {
+      return `${widget.heightPx}px`;
+    }
+
+    // Priority 2: Use position.h with grid conversion (h * rowHeight)
+    if (widget.position?.h && gridConfig.rowHeight) {
+      return `${widget.position.h * gridConfig.rowHeight}px`;
+    }
+
+    // Priority 3: Default minimum height
+    return '200px';
+  };
+
   // Generate CSS classes for widget spans
   const getSpanClasses = (widget: Widget): string => {
     const { desktopSpan, tabletSpan, mobileSpan } = adaptWidgetForResponsive(widget);
@@ -118,7 +134,6 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig }: Responsive
       `col-span-${mobileSpan}`,           // Mobile span
       `md:col-span-${tabletSpan}`,        // Tablet span
       `lg:col-span-${desktopSpan}`,       // Desktop span
-      'min-h-[200px]',                    // Minimum height
       'transition-all duration-200'        // Smooth transitions
     ].join(' ');
   };
@@ -167,6 +182,10 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig }: Responsive
               <div
                 key={widget.id}
                 className={getSpanClasses(widget)}
+                style={{
+                  height: getWidgetHeight(widget),
+                  minHeight: getWidgetHeight(widget)
+                }}
               >
                 <WidgetRenderer widget={widget} />
               </div>
