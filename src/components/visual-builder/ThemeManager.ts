@@ -615,6 +615,105 @@ export class ThemeManager {
   }
 
   /**
+   * Applies design tokens to a single Insights widget
+   */
+  private static applyThemeToInsights(widget: Widget, tokens: DesignTokens): Widget {
+    const clonedWidget = { ...widget };
+
+    if (!clonedWidget.insightsConfig) {
+      clonedWidget.insightsConfig = {};
+    }
+
+    // Apply background color
+    clonedWidget.insightsConfig.backgroundColor = tokens.colors.surface;
+
+    // Apply gradient if available
+    if (tokens.effects.gradient) {
+      clonedWidget.insightsConfig.backgroundGradient = {
+        enabled: true,
+        direction: tokens.effects.gradient.direction,
+        startColor: tokens.effects.gradient.startColor,
+        endColor: tokens.effects.gradient.endColor
+      };
+    } else {
+      clonedWidget.insightsConfig.backgroundGradient = {
+        enabled: false,
+        direction: '135deg',
+        startColor: tokens.colors.surface,
+        endColor: tokens.colors.surface
+      };
+    }
+
+    return clonedWidget;
+  }
+
+  /**
+   * Applies design tokens to a single Alerts widget
+   */
+  private static applyThemeToAlerts(widget: Widget, tokens: DesignTokens): Widget {
+    const clonedWidget = { ...widget };
+
+    if (!clonedWidget.alertsConfig) {
+      clonedWidget.alertsConfig = {};
+    }
+
+    // Apply background color
+    clonedWidget.alertsConfig.backgroundColor = tokens.colors.surface;
+
+    // Apply gradient if available
+    if (tokens.effects.gradient) {
+      clonedWidget.alertsConfig.backgroundGradient = {
+        enabled: true,
+        direction: tokens.effects.gradient.direction,
+        startColor: tokens.effects.gradient.startColor,
+        endColor: tokens.effects.gradient.endColor
+      };
+    } else {
+      clonedWidget.alertsConfig.backgroundGradient = {
+        enabled: false,
+        direction: '135deg',
+        startColor: tokens.colors.surface,
+        endColor: tokens.colors.surface
+      };
+    }
+
+    return clonedWidget;
+  }
+
+  /**
+   * Applies design tokens to a single Recommendations widget
+   */
+  private static applyThemeToRecommendations(widget: Widget, tokens: DesignTokens): Widget {
+    const clonedWidget = { ...widget };
+
+    if (!clonedWidget.recommendationsConfig) {
+      clonedWidget.recommendationsConfig = {};
+    }
+
+    // Apply background color
+    clonedWidget.recommendationsConfig.backgroundColor = tokens.colors.surface;
+
+    // Apply gradient if available
+    if (tokens.effects.gradient) {
+      clonedWidget.recommendationsConfig.backgroundGradient = {
+        enabled: true,
+        direction: tokens.effects.gradient.direction,
+        startColor: tokens.effects.gradient.startColor,
+        endColor: tokens.effects.gradient.endColor
+      };
+    } else {
+      clonedWidget.recommendationsConfig.backgroundGradient = {
+        enabled: false,
+        direction: '135deg',
+        startColor: tokens.colors.surface,
+        endColor: tokens.colors.surface
+      };
+    }
+
+    return clonedWidget;
+  }
+
+  /**
    * Applies design tokens to a single widget based on its type
    */
   static applyThemeToWidget(widget: Widget, themeName: ThemeName, customFont?: string, corporateColorKey?: string, customFontSize?: string): Widget {
@@ -661,6 +760,12 @@ export class ThemeManager {
         return this.applyThemeToPieChart(widget, tokens);
       case 'area':
         return this.applyThemeToAreaChart(widget, tokens);
+      case 'insights':
+        return this.applyThemeToInsights(widget, tokens);
+      case 'alerts':
+        return this.applyThemeToAlerts(widget, tokens);
+      case 'recommendations':
+        return this.applyThemeToRecommendations(widget, tokens);
       default:
         console.warn(`Unknown widget type: ${widget.type}. Skipping theme application.`);
         return widget;
