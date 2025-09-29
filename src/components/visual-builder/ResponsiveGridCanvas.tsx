@@ -104,12 +104,29 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
     };
   };
 
-  // Sort widgets by their calculated order
-  const sortedWidgets = [...widgets].sort((a, b) => {
-    const orderA = adaptWidgetForResponsive(a).order;
-    const orderB = adaptWidgetForResponsive(b).order;
-    return orderA - orderB;
-  });
+  // Group widgets by row and sort within each group
+  const groupWidgetsByRow = () => {
+    const groups: { [key: string]: Widget[] } = {};
+
+    widgets.forEach(widget => {
+      const row = widget.row || '1'; // Default to row 1 if no row specified
+      if (!groups[row]) groups[row] = [];
+      groups[row].push(widget);
+    });
+
+    // Sort widgets within each group by order
+    Object.keys(groups).forEach(row => {
+      groups[row].sort((a, b) => {
+        const orderA = adaptWidgetForResponsive(a).order;
+        const orderB = adaptWidgetForResponsive(b).order;
+        return orderA - orderB;
+      });
+    });
+
+    return groups;
+  };
+
+  const widgetGroups = groupWidgetsByRow();
 
   // Calculate widget height based on heightPx or fallback logic
   const getWidgetHeight = (widget: Widget): string => {
@@ -152,9 +169,14 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
     ].join(' ');
   };
 
-  // Generate grid layout classes based on viewportMode
-  const getGridClasses = (): string => {
-    const layoutConfig = getLayoutConfig();
+  // Generate grid layout classes for a specific row
+  const getGridClassesForRow = (rowKey: string): string => {
+    let layoutConfig = getLayoutConfig();
+
+    // Get specific layout for this row if available
+    if (gridConfig.layoutRows && gridConfig.layoutRows[rowKey]) {
+      layoutConfig = gridConfig.layoutRows[rowKey];
+    }
 
     // Use viewportMode to determine columns instead of CSS breakpoints
     let columns: number;
@@ -172,7 +194,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
     }
 
     return [
-      'grid gap-4 p-4 auto-rows-min',
+      'grid gap-4 auto-rows-min',
       `grid-cols-${columns}`
     ].join(' ');
   };
@@ -232,21 +254,28 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
           </div>
         )}
 
-        {/* Responsive Grid Layout */}
+        {/* Responsive Grid Layout - Grouped by Rows */}
         {widgets.length > 0 && (
-          <div className={getGridClasses()}>
-            {sortedWidgets.map((widget) => (
-              <div
-                key={widget.id}
-                className={getSpanClasses(widget)}
-                style={{
-                  height: getWidgetHeight(widget),
-                  minHeight: getWidgetHeight(widget)
-                }}
-              >
-                <WidgetRenderer widget={widget} />
-              </div>
-            ))}
+          <div className="p-4 space-y-4">
+            {Object.keys(widgetGroups)
+              .sort((a, b) => parseInt(a) - parseInt(b)) // Sort rows numerically
+              .map((rowKey) => (
+                <div key={`row-${rowKey}`} className={getGridClassesForRow(rowKey)}>
+                  {widgetGroups[rowKey].map((widget) => (
+                    <div
+                      key={widget.id}
+                      className={getSpanClasses(widget)}
+                      style={{
+                        height: getWidgetHeight(widget),
+                        minHeight: getWidgetHeight(widget)
+                      }}
+                    >
+                      <WidgetRenderer widget={widget} />
+                    </div>
+                  ))}
+                </div>
+              ))
+            }
           </div>
         )}
 
