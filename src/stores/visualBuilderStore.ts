@@ -33,7 +33,7 @@ const initialCode = `{
       "mobile": 1
     },
     "2": {
-      "desktop": 3,
+      "desktop": 2,
       "tablet": 2,
       "mobile": 1
     },
@@ -72,7 +72,7 @@ const initialCode = `{
       "id": "kpi1",
       "type": "kpi",
       "position": { "x": 6, "y": 0, "w": 3, "h": 2 },
-      "row": "2",
+      "row": "1",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 2,
       "heightPx": 150,
@@ -95,9 +95,9 @@ const initialCode = `{
       "id": "chart2",
       "type": "line",
       "position": { "x": 0, "y": 4, "w": 9, "h": 4 },
-      "row": "1",
-      "span": { "desktop": 3, "tablet": 2, "mobile": 1 },
-      "order": 3,
+      "row": "2",
+      "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
+      "order": 4,
       "heightPx": 280,
       "title": "Quantity Trend",
       "dataSource": {
@@ -119,9 +119,9 @@ const initialCode = `{
       "id": "chart3",
       "type": "pie",
       "position": { "x": 9, "y": 0, "w": 3, "h": 4 },
-      "row": "2",
-      "span": { "desktop": 2, "tablet": 1, "mobile": 1 },
-      "order": 4,
+      "row": "1",
+      "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
+      "order": 3,
       "title": "Event Distribution",
       "dataSource": {
         "table": "ecommerce",
@@ -141,7 +141,7 @@ const initialCode = `{
       "id": "chart4",
       "type": "area",
       "position": { "x": 9, "y": 4, "w": 3, "h": 4 },
-      "row": "1",
+      "row": "2",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 5,
       "title": "Quantity Area",
