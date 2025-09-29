@@ -121,7 +121,8 @@ export default function InsightsCard({
   return (
     <div className="relative" style={{
       border: '0.5px solid #777',
-      padding: '16px'
+      padding: '16px',
+      background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)'
     }}>
       {/* Corner accents - positioned to overlay border */}
       <div
