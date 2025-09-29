@@ -156,7 +156,6 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig }: Responsive
       <div
         className="relative overflow-hidden"
         style={{
-          minHeight: '600px',
           ...containerStyles,
           border: `${containerStyles.borderWidth} solid ${containerStyles.borderColor}`
         }}

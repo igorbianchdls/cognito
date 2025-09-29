@@ -178,6 +178,7 @@ const initialCode = `{
       "column": "main",
       "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
       "order": 7,
+      "heightPx": 400,
       "title": "⚠️ Alertas",
       "alertsConfig": {
         "useGlobalStore": true,
@@ -194,6 +195,7 @@ const initialCode = `{
       "column": "sidebar",
       "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
       "order": 8,
+      "heightPx": 400,
       "title": "🎯 Recomendações",
       "recommendationsConfig": {
         "useGlobalStore": true,
