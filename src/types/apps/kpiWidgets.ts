@@ -61,6 +61,7 @@ export interface KPIConfig {
   kpiContainerBackgroundColor?: string
   kpiContainerBackgroundOpacity?: number
   kpiContainerBorderColor?: string
+  kpiContainerBorderAccentColor?: string
   kpiContainerBorderOpacity?: number
   kpiContainerBorderWidth?: number
   kpiContainerBorderRadius?: number

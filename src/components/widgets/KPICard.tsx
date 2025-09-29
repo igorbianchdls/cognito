@@ -61,6 +61,7 @@ interface KPICardProps {
   kpiContainerBackgroundColor?: string;
   kpiContainerBackgroundOpacity?: number;
   kpiContainerBorderColor?: string;
+  kpiContainerBorderAccentColor?: string;
   kpiContainerBorderOpacity?: number;
   kpiContainerBorderWidth?: number;
   kpiContainerBorderRadius?: number;
@@ -158,6 +159,7 @@ export function KPICard({
   kpiContainerBackgroundColor,
   kpiContainerBackgroundOpacity,
   kpiContainerBorderColor,
+  kpiContainerBorderAccentColor,
   kpiContainerBorderOpacity,
   kpiContainerBorderWidth,
   kpiContainerBorderRadius,
@@ -311,7 +313,7 @@ export function KPICard({
         // borderColor: kpiContainerBorderColor ? hexToRgba(kpiContainerBorderColor, kpiContainerBorderOpacity ?? 1) : '#e5e7eb',
         // borderWidth: kpiContainerBorderWidth ? `${kpiContainerBorderWidth}px` : '1px',
         // borderStyle: 'solid',
-        border: '0.5px solid #777', // Corner accent border applied directly
+        border: `0.5px solid ${kpiContainerBorderColor || '#777'}`, // Corner accent border applied directly
         // borderRadius: kpiContainerBorderRadius ? `${kpiContainerBorderRadius}px` : undefined, // Commented for corner accent effect
         padding: kpiContainerPadding ? `${kpiContainerPadding}px` : undefined,
         textAlign: kpiContainerTextAlign || 'left',
@@ -324,8 +326,8 @@ export function KPICard({
         style={{
           top: '-0.5px',
           left: '-0.5px',
-          borderTop: '0.5px solid #bbb',
-          borderLeft: '0.5px solid #bbb'
+          borderTop: `0.5px solid ${kpiContainerBorderAccentColor || '#bbb'}`,
+          borderLeft: `0.5px solid ${kpiContainerBorderAccentColor || '#bbb'}`
         }}
       ></div>
       <div
@@ -333,8 +335,8 @@ export function KPICard({
         style={{
           top: '-0.5px',
           right: '-0.5px',
-          borderTop: '0.5px solid #bbb',
-          borderRight: '0.5px solid #bbb'
+          borderTop: `0.5px solid ${kpiContainerBorderAccentColor || '#bbb'}`,
+          borderRight: `0.5px solid ${kpiContainerBorderAccentColor || '#bbb'}`
         }}
       ></div>
       <div
@@ -342,8 +344,8 @@ export function KPICard({
         style={{
           bottom: '-0.5px',
           left: '-0.5px',
-          borderBottom: '0.5px solid #bbb',
-          borderLeft: '0.5px solid #bbb'
+          borderBottom: `0.5px solid ${kpiContainerBorderAccentColor || '#bbb'}`,
+          borderLeft: `0.5px solid ${kpiContainerBorderAccentColor || '#bbb'}`
         }}
       ></div>
       <div
@@ -351,8 +353,8 @@ export function KPICard({
         style={{
           bottom: '-0.5px',
           right: '-0.5px',
-          borderBottom: '0.5px solid #bbb',
-          borderRight: '0.5px solid #bbb'
+          borderBottom: `0.5px solid ${kpiContainerBorderAccentColor || '#bbb'}`,
+          borderRight: `0.5px solid ${kpiContainerBorderAccentColor || '#bbb'}`
         }}
       ></div>
         <CardHeader className="!text-left !items-start">

@@ -137,7 +137,7 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single KPI widget
    */
-  private static applyThemeToKPI(widget: Widget, tokens: DesignTokens): Widget {
+  private static applyThemeToKPI(widget: Widget, tokens: DesignTokens, themeName: ThemeName): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.kpiConfig) {
@@ -203,6 +203,7 @@ export class ThemeManager {
 
       // Neon cyan border + straight edges
       clonedWidget.kpiConfig.kpiContainerBorderColor = '#00ffff';
+      clonedWidget.kpiConfig.kpiContainerBorderAccentColor = '#00ffff';
       clonedWidget.kpiConfig.kpiContainerBorderWidth = tokens.borders.width.thin;
       clonedWidget.kpiConfig.kpiContainerBorderRadius = 0;
 
@@ -215,8 +216,14 @@ export class ThemeManager {
       clonedWidget.kpiConfig.containerShadowOffsetX = tokens.effects.shadow.offsetX;
       clonedWidget.kpiConfig.containerShadowOffsetY = tokens.effects.shadow.offsetY;
 
-      // Standard border
-      clonedWidget.kpiConfig.kpiContainerBorderColor = tokens.colors.border;
+      // Standard border with light/dark variants
+      if (themeName === 'light') {
+        clonedWidget.kpiConfig.kpiContainerBorderColor = '#ddd';
+        clonedWidget.kpiConfig.kpiContainerBorderAccentColor = '#eee';
+      } else {
+        clonedWidget.kpiConfig.kpiContainerBorderColor = '#777';
+        clonedWidget.kpiConfig.kpiContainerBorderAccentColor = '#bbb';
+      }
       clonedWidget.kpiConfig.kpiContainerBorderWidth = tokens.borders.width.thin;
       clonedWidget.kpiConfig.kpiContainerBorderRadius = tokens.borders.radius.md;
 
@@ -809,7 +816,7 @@ export class ThemeManager {
 
     switch (widget.type) {
       case 'kpi':
-        return this.applyThemeToKPI(widget, tokens);
+        return this.applyThemeToKPI(widget, tokens, themeName);
       case 'bar':
         return this.applyThemeToBarChart(widget, tokens, themeName);
       case 'line':
