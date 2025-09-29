@@ -26,13 +26,13 @@ const initialCode = `{
     "backgroundColor": "#171717",
     "borderColor": "#404040"
   },
-  "layoutColumns": {
-    "main": {
+  "layoutRows": {
+    "1": {
       "desktop": 4,
       "tablet": 2,
       "mobile": 1
     },
-    "sidebar": {
+    "2": {
       "desktop": 3,
       "tablet": 2,
       "mobile": 1
@@ -43,7 +43,7 @@ const initialCode = `{
       "id": "chart1",
       "type": "bar",
       "position": { "x": 0, "y": 0, "w": 6, "h": 4 },
-      "column": "main",
+      "row": "1",
       "span": { "desktop": 2, "tablet": 2, "mobile": 1 },
       "order": 1,
       "heightPx": 320,
@@ -67,7 +67,7 @@ const initialCode = `{
       "id": "kpi1",
       "type": "kpi",
       "position": { "x": 6, "y": 0, "w": 3, "h": 2 },
-      "column": "sidebar",
+      "row": "2",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 2,
       "heightPx": 150,
@@ -90,7 +90,7 @@ const initialCode = `{
       "id": "chart2",
       "type": "line",
       "position": { "x": 0, "y": 4, "w": 9, "h": 4 },
-      "column": "main",
+      "row": "1",
       "span": { "desktop": 3, "tablet": 2, "mobile": 1 },
       "order": 3,
       "heightPx": 280,
@@ -114,7 +114,7 @@ const initialCode = `{
       "id": "chart3",
       "type": "pie",
       "position": { "x": 9, "y": 0, "w": 3, "h": 4 },
-      "column": "sidebar",
+      "row": "2",
       "span": { "desktop": 2, "tablet": 1, "mobile": 1 },
       "order": 4,
       "title": "Event Distribution",
@@ -136,7 +136,7 @@ const initialCode = `{
       "id": "chart4",
       "type": "area",
       "position": { "x": 9, "y": 4, "w": 3, "h": 4 },
-      "column": "main",
+      "row": "1",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 5,
       "title": "Quantity Area",
@@ -159,7 +159,7 @@ const initialCode = `{
       "id": "insights1",
       "type": "insights",
       "position": { "x": 0, "y": 8, "w": 4, "h": 6 },
-      "column": "main",
+      "row": "1",
       "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
       "order": 6,
       "heightPx": 400,
@@ -175,7 +175,7 @@ const initialCode = `{
       "id": "alerts1",
       "type": "alerts",
       "position": { "x": 4, "y": 8, "w": 4, "h": 6 },
-      "column": "main",
+      "row": "1",
       "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
       "order": 7,
       "heightPx": 400,
@@ -192,7 +192,7 @@ const initialCode = `{
       "id": "recommendations1",
       "type": "recommendations",
       "position": { "x": 8, "y": 8, "w": 4, "h": 6 },
-      "column": "sidebar",
+      "row": "2",
       "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
       "order": 8,
       "heightPx": 400,

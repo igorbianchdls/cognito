@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import WidgetRenderer from './WidgetRenderer';
-import type { Widget, GridConfig, LayoutColumn, WidgetSpan } from './ConfigParser';
+import type { Widget, GridConfig, LayoutRow, WidgetSpan } from './ConfigParser';
 
 interface ResponsiveGridCanvasProps {
   widgets: Widget[];
@@ -49,12 +49,12 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig }: Responsive
   }
 
   // Get layout configuration from JSON or use default
-  const getLayoutConfig = (): LayoutColumn => {
-    // If layoutColumns are defined in JSON and widget has a column reference, use it
-    if (gridConfig.layoutColumns && Object.keys(gridConfig.layoutColumns).length > 0) {
-      // Use the first layout column as default if none specified
-      const firstColumnKey = Object.keys(gridConfig.layoutColumns)[0];
-      return gridConfig.layoutColumns[firstColumnKey];
+  const getLayoutConfig = (): LayoutRow => {
+    // If layoutRows are defined in JSON and widget has a row reference, use it
+    if (gridConfig.layoutRows && Object.keys(gridConfig.layoutRows).length > 0) {
+      // Use the first layout row as default if none specified
+      const firstRowKey = Object.keys(gridConfig.layoutRows)[0];
+      return gridConfig.layoutRows[firstRowKey];
     }
 
     // Default fallback layout
@@ -69,9 +69,9 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig }: Responsive
   const adaptWidgetForResponsive = (widget: Widget) => {
     let layoutConfig = getLayoutConfig();
 
-    // If widget has a specific column reference, use that layout
-    if (widget.column && gridConfig.layoutColumns && gridConfig.layoutColumns[widget.column]) {
-      layoutConfig = gridConfig.layoutColumns[widget.column];
+    // If widget has a specific row reference, use that layout
+    if (widget.row && gridConfig.layoutRows && gridConfig.layoutRows[widget.row]) {
+      layoutConfig = gridConfig.layoutRows[widget.row];
     }
 
     // Use widget's defined spans or calculate from position

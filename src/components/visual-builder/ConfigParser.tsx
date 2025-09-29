@@ -66,15 +66,15 @@ export interface GridConfig {
   padding?: number;
   margin?: number;
 
-  // Responsive layout columns (for ResponsiveGridCanvas)
-  layoutColumns?: Record<string, LayoutColumn>;
+  // Responsive layout rows (for ResponsiveGridCanvas)
+  layoutRows?: Record<string, LayoutRow>;
 }
 
 // Theme types are now managed by ThemeManager
 import { ThemeManager, type ThemeName } from './ThemeManager';
 
 // Responsive layout interfaces
-export interface LayoutColumn {
+export interface LayoutRow {
   desktop: number;
   tablet: number;
   mobile: number;
@@ -98,7 +98,7 @@ export interface Widget {
   title: string;
 
   // Responsive layout properties (for ResponsiveGridCanvas)
-  column?: string;        // Reference to layoutColumns key (e.g., "main", "sidebar")
+  row?: string;           // Reference to layoutRows key (e.g., "1", "2")
   span?: WidgetSpan;      // How many columns to span on each breakpoint
   order?: number;         // Display order
   heightPx?: number;      // Height in pixels for responsive layout
@@ -174,7 +174,7 @@ export class ConfigParser {
       const customFontSize = config.customFontSize as string;
       const customBackground = config.customBackground as string;
       const corporateColor = config.corporateColor as string;
-      const layoutColumns = config.layoutColumns as Record<string, LayoutColumn> | undefined;
+      const layoutRows = config.layoutRows as Record<string, LayoutRow> | undefined;
 
       // Step 3: Process grid config with defaults
       const gridConfig: GridConfig = {
@@ -191,8 +191,8 @@ export class ConfigParser {
         borderColor: typeof rawGridConfig.borderColor === 'string'
           ? rawGridConfig.borderColor : undefined,
 
-        // Add responsive layout columns
-        layoutColumns: layoutColumns
+        // Add responsive layout rows
+        layoutRows: layoutRows
       };
 
       // Step 4: Basic filter for runtime safety only

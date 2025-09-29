@@ -16,7 +16,7 @@ export const updateDashboardTool = tool({
       }).describe('Posição e tamanho no grid'),
       title: z.string().describe('Título do widget'),
       // Campos responsivos opcionais
-      column: z.string().optional().describe('Referência para seção do layout (ex: "main", "sidebar")'),
+      row: z.string().optional().describe('Referência para linha do layout (ex: "1", "2", "3")'),
       span: z.object({
         desktop: z.number().optional().describe('Quantas colunas ocupar no desktop'),
         tablet: z.number().optional().describe('Quantas colunas ocupar no tablet'),
