@@ -284,7 +284,7 @@ export default function AlertasCard({
                     {icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h5 className="font-semibold text-gray-900 text-sm truncate">
+                    <h5 className="font-semibold text-gray-900 text-sm break-words leading-tight">
                       {alerta.titulo}
                     </h5>
                   </div>
