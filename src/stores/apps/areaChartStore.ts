@@ -157,6 +157,7 @@ export interface AreaChartConfig {
     // Container Border
     containerBorderWidth?: number
     containerBorderColor?: string
+    containerBorderAccentColor?: string
     containerBorderRadius?: number
     containerPadding?: number
     

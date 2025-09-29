@@ -189,6 +189,7 @@ export interface BarChartConfig {
     // Container Border
     containerBorderWidth?: number
     containerBorderColor?: string
+    containerBorderAccentColor?: string
     containerBorderRadius?: number
     containerPadding?: number
     
