@@ -127,27 +127,53 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
     return '200px';
   };
 
-  // Generate CSS classes for widget spans
+  // Generate CSS classes for widget spans based on viewportMode
   const getSpanClasses = (widget: Widget): string => {
     const { desktopSpan, tabletSpan, mobileSpan } = adaptWidgetForResponsive(widget);
 
+    // Use viewportMode to determine span instead of CSS breakpoints
+    let span: number;
+    switch (viewportMode) {
+      case 'mobile':
+        span = mobileSpan;
+        break;
+      case 'tablet':
+        span = tabletSpan;
+        break;
+      case 'desktop':
+      default:
+        span = desktopSpan;
+        break;
+    }
+
     return [
-      `col-span-${mobileSpan}`,           // Mobile span
-      `md:col-span-${tabletSpan}`,        // Tablet span
-      `lg:col-span-${desktopSpan}`,       // Desktop span
+      `col-span-${span}`,
       'transition-all duration-200'        // Smooth transitions
     ].join(' ');
   };
 
-  // Generate grid layout classes based on configuration
+  // Generate grid layout classes based on viewportMode
   const getGridClasses = (): string => {
     const layoutConfig = getLayoutConfig();
 
+    // Use viewportMode to determine columns instead of CSS breakpoints
+    let columns: number;
+    switch (viewportMode) {
+      case 'mobile':
+        columns = layoutConfig.mobile;
+        break;
+      case 'tablet':
+        columns = layoutConfig.tablet;
+        break;
+      case 'desktop':
+      default:
+        columns = layoutConfig.desktop;
+        break;
+    }
+
     return [
       'grid gap-4 p-4 auto-rows-min',
-      `grid-cols-${layoutConfig.mobile}`,      // Mobile columns
-      `md:grid-cols-${layoutConfig.tablet}`,   // Tablet columns
-      `lg:grid-cols-${layoutConfig.desktop}`   // Desktop columns
+      `grid-cols-${columns}`
     ].join(' ');
   };
 
