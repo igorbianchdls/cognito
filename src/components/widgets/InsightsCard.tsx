@@ -21,6 +21,13 @@ interface InsightsCardProps {
   contexto?: string;
   title?: string;
   useGlobalStore?: boolean; // Flag para usar store ou props
+  backgroundColor?: string;
+  backgroundGradient?: {
+    enabled: boolean;
+    direction: string;
+    startColor: string;
+    endColor: string;
+  };
 }
 
 function getImportanceStyles(importancia: 'alta' | 'media' | 'baixa') {
@@ -86,7 +93,9 @@ export default function InsightsCard({
   resumo,
   contexto,
   title = "Insights",
-  useGlobalStore = false
+  useGlobalStore = false,
+  backgroundColor,
+  backgroundGradient
 }: InsightsCardProps) {
   const storeInsights = useStore($insightsOrdenados)
   const totalInsights = useStore($totalInsights)
@@ -122,7 +131,9 @@ export default function InsightsCard({
     <div className="relative" style={{
       border: '0.5px solid #777',
       padding: '16px',
-      background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)'
+      background: backgroundGradient?.enabled
+        ? `linear-gradient(${backgroundGradient.direction}, ${backgroundGradient.startColor}, ${backgroundGradient.endColor})`
+        : (backgroundColor || 'linear-gradient(135deg, #f8fafc, #e2e8f0)')
     }}>
       {/* Corner accents - positioned to overlay border */}
       <div

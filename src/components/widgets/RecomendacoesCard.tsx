@@ -21,6 +21,13 @@ interface RecomendacoesCardProps {
   title?: string;
   onActionClick?: (recomendacao: Recomendacao, index: number) => void;
   useGlobalStore?: boolean; // Flag para usar store ou props
+  backgroundColor?: string;
+  backgroundGradient?: {
+    enabled: boolean;
+    direction: string;
+    startColor: string;
+    endColor: string;
+  };
 }
 
 function getImpactoStyles(impacto: 'alto' | 'medio' | 'baixo') {
@@ -60,7 +67,9 @@ export default function RecomendacoesCard({
   recomendacoes: propRecomendacoes,
   title = "Recomendações",
   onActionClick,
-  useGlobalStore = false
+  useGlobalStore = false,
+  backgroundColor,
+  backgroundGradient
 }: RecomendacoesCardProps) {
   const storeRecomendacoes = useStore($recomendacoesOrdenadas)
   const totalRecomendacoes = useStore($totalRecomendacoes)
@@ -107,7 +116,9 @@ export default function RecomendacoesCard({
     <div className="relative" style={{
       border: '0.5px solid #777',
       padding: '16px',
-      background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)'
+      background: backgroundGradient?.enabled
+        ? `linear-gradient(${backgroundGradient.direction}, ${backgroundGradient.startColor}, ${backgroundGradient.endColor})`
+        : (backgroundColor || 'linear-gradient(135deg, #f8fafc, #e2e8f0)')
     }}>
       {/* Corner accents - positioned to overlay border */}
       <div

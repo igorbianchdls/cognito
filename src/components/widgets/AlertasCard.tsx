@@ -24,6 +24,13 @@ interface AlertasCardProps {
   title?: string;
   onActionClick?: (alerta: Alerta, index: number) => void;
   useGlobalStore?: boolean; // Flag para usar store ou props
+  backgroundColor?: string;
+  backgroundGradient?: {
+    enabled: boolean;
+    direction: string;
+    startColor: string;
+    endColor: string;
+  };
 }
 
 function getNivelStyles(nivel: 'critico' | 'alto' | 'medio' | 'baixo') {
@@ -103,7 +110,9 @@ export default function AlertasCard({
   contexto,
   title = "Alertas",
   onActionClick,
-  useGlobalStore = false
+  useGlobalStore = false,
+  backgroundColor,
+  backgroundGradient
 }: AlertasCardProps) {
   const storeAlertas = useStore($alertasOrdenados)
   const totalAlertas = useStore($totalAlertas)
@@ -146,7 +155,9 @@ export default function AlertasCard({
     <div className="relative" style={{
       border: '0.5px solid #777',
       padding: '16px',
-      background: 'linear-gradient(135deg, #f8fafc, #e2e8f0)'
+      background: backgroundGradient?.enabled
+        ? `linear-gradient(${backgroundGradient.direction}, ${backgroundGradient.startColor}, ${backgroundGradient.endColor})`
+        : (backgroundColor || 'linear-gradient(135deg, #f8fafc, #e2e8f0)')
     }}>
       {/* Corner accents - positioned to overlay border */}
       <div
