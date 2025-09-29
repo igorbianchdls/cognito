@@ -28,6 +28,8 @@ interface RecomendacoesCardProps {
     startColor: string;
     endColor: string;
   };
+  borderColor?: string;
+  borderAccentColor?: string;
 }
 
 function getImpactoStyles(impacto: 'alto' | 'medio' | 'baixo') {
@@ -69,7 +71,9 @@ export default function RecomendacoesCard({
   onActionClick,
   useGlobalStore = false,
   backgroundColor,
-  backgroundGradient
+  backgroundGradient,
+  borderColor,
+  borderAccentColor
 }: RecomendacoesCardProps) {
   const storeRecomendacoes = useStore($recomendacoesOrdenadas)
   const totalRecomendacoes = useStore($totalRecomendacoes)
@@ -114,7 +118,7 @@ export default function RecomendacoesCard({
 
   return (
     <div className="relative" style={{
-      border: '0.5px solid #777',
+      border: `0.5px solid ${borderColor || '#777'}`,
       padding: '16px',
       background: backgroundGradient?.enabled
         ? `linear-gradient(${backgroundGradient.direction}, ${backgroundGradient.startColor}, ${backgroundGradient.endColor})`
@@ -126,8 +130,8 @@ export default function RecomendacoesCard({
         style={{
           top: '-0.5px',
           left: '-0.5px',
-          borderTop: '0.5px solid #bbb',
-          borderLeft: '0.5px solid #bbb'
+          borderTop: `0.5px solid ${borderAccentColor || '#bbb'}`,
+          borderLeft: `0.5px solid ${borderAccentColor || '#bbb'}`
         }}
       ></div>
       <div
@@ -135,8 +139,8 @@ export default function RecomendacoesCard({
         style={{
           top: '-0.5px',
           right: '-0.5px',
-          borderTop: '0.5px solid #bbb',
-          borderRight: '0.5px solid #bbb'
+          borderTop: `0.5px solid ${borderAccentColor || '#bbb'}`,
+          borderRight: `0.5px solid ${borderAccentColor || '#bbb'}`
         }}
       ></div>
       <div
@@ -144,8 +148,8 @@ export default function RecomendacoesCard({
         style={{
           bottom: '-0.5px',
           left: '-0.5px',
-          borderBottom: '0.5px solid #bbb',
-          borderLeft: '0.5px solid #bbb'
+          borderBottom: `0.5px solid ${borderAccentColor || '#bbb'}`,
+          borderLeft: `0.5px solid ${borderAccentColor || '#bbb'}`
         }}
       ></div>
       <div
@@ -153,8 +157,8 @@ export default function RecomendacoesCard({
         style={{
           bottom: '-0.5px',
           right: '-0.5px',
-          borderBottom: '0.5px solid #bbb',
-          borderRight: '0.5px solid #bbb'
+          borderBottom: `0.5px solid ${borderAccentColor || '#bbb'}`,
+          borderRight: `0.5px solid ${borderAccentColor || '#bbb'}`
         }}
       ></div>
 

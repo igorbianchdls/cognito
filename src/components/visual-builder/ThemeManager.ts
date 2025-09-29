@@ -627,6 +627,10 @@ export class ThemeManager {
     // Apply background color
     clonedWidget.insightsConfig.backgroundColor = tokens.colors.surface;
 
+    // Apply border colors (same for all themes)
+    clonedWidget.insightsConfig.borderColor = '#777';
+    clonedWidget.insightsConfig.borderAccentColor = '#bbb';
+
     // Apply gradient if available
     if (tokens.effects.gradient) {
       clonedWidget.insightsConfig.backgroundGradient = {
@@ -660,6 +664,10 @@ export class ThemeManager {
     // Apply background color
     clonedWidget.alertsConfig.backgroundColor = tokens.colors.surface;
 
+    // Apply border colors (same for all themes)
+    clonedWidget.alertsConfig.borderColor = '#777';
+    clonedWidget.alertsConfig.borderAccentColor = '#bbb';
+
     // Apply gradient if available
     if (tokens.effects.gradient) {
       clonedWidget.alertsConfig.backgroundGradient = {
@@ -692,6 +700,10 @@ export class ThemeManager {
 
     // Apply background color
     clonedWidget.recommendationsConfig.backgroundColor = tokens.colors.surface;
+
+    // Apply border colors (same for all themes)
+    clonedWidget.recommendationsConfig.borderColor = '#777';
+    clonedWidget.recommendationsConfig.borderAccentColor = '#bbb';
 
     // Apply gradient if available
     if (tokens.effects.gradient) {

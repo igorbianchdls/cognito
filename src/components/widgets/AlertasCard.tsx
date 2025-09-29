@@ -31,6 +31,8 @@ interface AlertasCardProps {
     startColor: string;
     endColor: string;
   };
+  borderColor?: string;
+  borderAccentColor?: string;
 }
 
 function getNivelStyles(nivel: 'critico' | 'alto' | 'medio' | 'baixo') {
@@ -112,7 +114,9 @@ export default function AlertasCard({
   onActionClick,
   useGlobalStore = false,
   backgroundColor,
-  backgroundGradient
+  backgroundGradient,
+  borderColor,
+  borderAccentColor
 }: AlertasCardProps) {
   const storeAlertas = useStore($alertasOrdenados)
   const totalAlertas = useStore($totalAlertas)
@@ -153,7 +157,7 @@ export default function AlertasCard({
 
   return (
     <div className="relative" style={{
-      border: '0.5px solid #777',
+      border: `0.5px solid ${borderColor || '#777'}`,
       padding: '16px',
       background: backgroundGradient?.enabled
         ? `linear-gradient(${backgroundGradient.direction}, ${backgroundGradient.startColor}, ${backgroundGradient.endColor})`
@@ -165,8 +169,8 @@ export default function AlertasCard({
         style={{
           top: '-0.5px',
           left: '-0.5px',
-          borderTop: '0.5px solid #bbb',
-          borderLeft: '0.5px solid #bbb'
+          borderTop: `0.5px solid ${borderAccentColor || '#bbb'}`,
+          borderLeft: `0.5px solid ${borderAccentColor || '#bbb'}`
         }}
       ></div>
       <div
@@ -174,8 +178,8 @@ export default function AlertasCard({
         style={{
           top: '-0.5px',
           right: '-0.5px',
-          borderTop: '0.5px solid #bbb',
-          borderRight: '0.5px solid #bbb'
+          borderTop: `0.5px solid ${borderAccentColor || '#bbb'}`,
+          borderRight: `0.5px solid ${borderAccentColor || '#bbb'}`
         }}
       ></div>
       <div
@@ -183,8 +187,8 @@ export default function AlertasCard({
         style={{
           bottom: '-0.5px',
           left: '-0.5px',
-          borderBottom: '0.5px solid #bbb',
-          borderLeft: '0.5px solid #bbb'
+          borderBottom: `0.5px solid ${borderAccentColor || '#bbb'}`,
+          borderLeft: `0.5px solid ${borderAccentColor || '#bbb'}`
         }}
       ></div>
       <div
@@ -192,8 +196,8 @@ export default function AlertasCard({
         style={{
           bottom: '-0.5px',
           right: '-0.5px',
-          borderBottom: '0.5px solid #bbb',
-          borderRight: '0.5px solid #bbb'
+          borderBottom: `0.5px solid ${borderAccentColor || '#bbb'}`,
+          borderRight: `0.5px solid ${borderAccentColor || '#bbb'}`
         }}
       ></div>
 

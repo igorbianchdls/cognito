@@ -19,6 +19,8 @@ export interface InsightsConfig {
     startColor: string;
     endColor: string;
   };
+  borderColor?: string;
+  borderAccentColor?: string;
 }
 
 export interface AlertsConfig {
@@ -34,6 +36,8 @@ export interface AlertsConfig {
     startColor: string;
     endColor: string;
   };
+  borderColor?: string;
+  borderAccentColor?: string;
 }
 
 export interface RecommendationsConfig {
@@ -49,6 +53,8 @@ export interface RecommendationsConfig {
     startColor: string;
     endColor: string;
   };
+  borderColor?: string;
+  borderAccentColor?: string;
 }
 
 export interface GridConfig {
