@@ -7,9 +7,10 @@ import type { Widget, GridConfig, LayoutRow, WidgetSpan } from './ConfigParser';
 interface ResponsiveGridCanvasProps {
   widgets: Widget[];
   gridConfig: GridConfig;
+  viewportMode?: 'desktop' | 'tablet' | 'mobile';
 }
 
-export default function ResponsiveGridCanvas({ widgets, gridConfig }: ResponsiveGridCanvasProps) {
+export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode = 'desktop' }: ResponsiveGridCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Extract theme colors from gridConfig
@@ -150,15 +151,46 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig }: Responsive
     ].join(' ');
   };
 
+  // Get device-specific styles
+  const getDeviceStyles = () => {
+    const baseStyles = {
+      ...containerStyles,
+      border: `${containerStyles.borderWidth} solid ${containerStyles.borderColor}`
+    };
+
+    switch (viewportMode) {
+      case 'desktop':
+        return {
+          ...baseStyles,
+          maxWidth: '1200px',
+          width: '100%',
+          margin: '0 auto'
+        };
+      case 'tablet':
+        return {
+          ...baseStyles,
+          maxWidth: '768px',
+          width: '100%',
+          margin: '0 auto'
+        };
+      case 'mobile':
+        return {
+          ...baseStyles,
+          maxWidth: '375px',
+          width: '100%',
+          margin: '0 auto'
+        };
+      default:
+        return baseStyles;
+    }
+  };
+
   return (
     <div ref={containerRef} className="w-full h-full">
       {/* Grid container */}
       <div
         className="relative overflow-hidden"
-        style={{
-          ...containerStyles,
-          border: `${containerStyles.borderWidth} solid ${containerStyles.borderColor}`
-        }}
+        style={getDeviceStyles()}
       >
         {/* Empty State */}
         {widgets.length === 0 && (

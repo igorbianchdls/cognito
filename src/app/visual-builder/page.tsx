@@ -11,6 +11,7 @@ import type { Widget } from '@/stores/visualBuilderStore';
 export default function VisualBuilderPage() {
   const visualBuilderState = useStore($visualBuilderState);
   const [activeTab, setActiveTab] = useState<'editor' | 'dashboard' | 'responsive'>('editor');
+  const [viewportMode, setViewportMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
 
   // Initialize store on mount
   useEffect(() => {
@@ -134,13 +135,51 @@ export default function VisualBuilderPage() {
         {activeTab === 'responsive' && (
           <div className="h-full bg-gray-50">
             <div className="p-4 border-b border-gray-200 bg-white">
-              <h2 className="text-lg font-semibold text-gray-900">Responsive Dashboard</h2>
-              <p className="text-sm text-gray-600">Auto-adaptive layout: 4 columns (desktop) → 2 columns (tablet) → 1 column (mobile)</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Responsive Dashboard</h2>
+                  <p className="text-sm text-gray-600">Preview different device layouts</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500 mr-2">Device:</span>
+                  <button
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                      viewportMode === 'desktop'
+                        ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                    onClick={() => setViewportMode('desktop')}
+                  >
+                    💻 Desktop
+                  </button>
+                  <button
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                      viewportMode === 'tablet'
+                        ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                    onClick={() => setViewportMode('tablet')}
+                  >
+                    📱 Tablet
+                  </button>
+                  <button
+                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                      viewportMode === 'mobile'
+                        ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                    onClick={() => setViewportMode('mobile')}
+                  >
+                    📱 Mobile
+                  </button>
+                </div>
+              </div>
             </div>
             <div className="h-[calc(100%-73px)] p-6 overflow-auto">
               <ResponsiveGridCanvas
                 widgets={visualBuilderState.widgets}
                 gridConfig={visualBuilderState.gridConfig}
+                viewportMode={viewportMode}
               />
             </div>
           </div>
