@@ -617,7 +617,7 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single Insights widget
    */
-  private static applyThemeToInsights(widget: Widget, tokens: DesignTokens): Widget {
+  private static applyThemeToInsights(widget: Widget, tokens: DesignTokens, themeName: ThemeName): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.insightsConfig) {
@@ -627,9 +627,15 @@ export class ThemeManager {
     // Apply background color
     clonedWidget.insightsConfig.backgroundColor = tokens.colors.surface;
 
-    // Apply border colors (same for all themes)
-    clonedWidget.insightsConfig.borderColor = '#777';
-    clonedWidget.insightsConfig.borderAccentColor = '#bbb';
+    // Apply border colors - light theme vs dark themes
+    if (themeName === 'light') {
+      clonedWidget.insightsConfig.borderColor = '#ddd';
+      clonedWidget.insightsConfig.borderAccentColor = '#eee';
+    } else {
+      // All other themes use current dark colors
+      clonedWidget.insightsConfig.borderColor = '#777';
+      clonedWidget.insightsConfig.borderAccentColor = '#bbb';
+    }
 
     // Apply gradient if available
     if (tokens.effects.gradient) {
@@ -654,7 +660,7 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single Alerts widget
    */
-  private static applyThemeToAlerts(widget: Widget, tokens: DesignTokens): Widget {
+  private static applyThemeToAlerts(widget: Widget, tokens: DesignTokens, themeName: ThemeName): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.alertsConfig) {
@@ -664,9 +670,15 @@ export class ThemeManager {
     // Apply background color
     clonedWidget.alertsConfig.backgroundColor = tokens.colors.surface;
 
-    // Apply border colors (same for all themes)
-    clonedWidget.alertsConfig.borderColor = '#777';
-    clonedWidget.alertsConfig.borderAccentColor = '#bbb';
+    // Apply border colors - light theme vs dark themes
+    if (themeName === 'light') {
+      clonedWidget.alertsConfig.borderColor = '#ddd';
+      clonedWidget.alertsConfig.borderAccentColor = '#eee';
+    } else {
+      // All other themes use current dark colors
+      clonedWidget.alertsConfig.borderColor = '#777';
+      clonedWidget.alertsConfig.borderAccentColor = '#bbb';
+    }
 
     // Apply gradient if available
     if (tokens.effects.gradient) {
@@ -691,7 +703,7 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single Recommendations widget
    */
-  private static applyThemeToRecommendations(widget: Widget, tokens: DesignTokens): Widget {
+  private static applyThemeToRecommendations(widget: Widget, tokens: DesignTokens, themeName: ThemeName): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.recommendationsConfig) {
@@ -701,9 +713,15 @@ export class ThemeManager {
     // Apply background color
     clonedWidget.recommendationsConfig.backgroundColor = tokens.colors.surface;
 
-    // Apply border colors (same for all themes)
-    clonedWidget.recommendationsConfig.borderColor = '#777';
-    clonedWidget.recommendationsConfig.borderAccentColor = '#bbb';
+    // Apply border colors - light theme vs dark themes
+    if (themeName === 'light') {
+      clonedWidget.recommendationsConfig.borderColor = '#ddd';
+      clonedWidget.recommendationsConfig.borderAccentColor = '#eee';
+    } else {
+      // All other themes use current dark colors
+      clonedWidget.recommendationsConfig.borderColor = '#777';
+      clonedWidget.recommendationsConfig.borderAccentColor = '#bbb';
+    }
 
     // Apply gradient if available
     if (tokens.effects.gradient) {
@@ -773,11 +791,11 @@ export class ThemeManager {
       case 'area':
         return this.applyThemeToAreaChart(widget, tokens);
       case 'insights':
-        return this.applyThemeToInsights(widget, tokens);
+        return this.applyThemeToInsights(widget, tokens, themeName);
       case 'alerts':
-        return this.applyThemeToAlerts(widget, tokens);
+        return this.applyThemeToAlerts(widget, tokens, themeName);
       case 'recommendations':
-        return this.applyThemeToRecommendations(widget, tokens);
+        return this.applyThemeToRecommendations(widget, tokens, themeName);
       default:
         console.warn(`Unknown widget type: ${widget.type}. Skipping theme application.`);
         return widget;
