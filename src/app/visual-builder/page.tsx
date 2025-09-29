@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useStore } from '@nanostores/react';
+import Link from 'next/link';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import GridCanvas from '@/components/visual-builder/GridCanvas';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
@@ -172,6 +173,16 @@ export default function VisualBuilderPage() {
                   >
                     📱 Mobile
                   </button>
+
+                  {/* Botão Visualizar */}
+                  <div className="ml-4 pl-4 border-l border-gray-300">
+                    <Link
+                      href="/visual-builder/preview"
+                      className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      👁️ Visualizar
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>
