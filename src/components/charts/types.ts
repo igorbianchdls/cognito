@@ -219,6 +219,7 @@ export interface BarChartProps extends BaseChartProps {
   // Container Border
   containerBorderWidth?: number;
   containerBorderColor?: string;
+  containerBorderAccentColor?: string;
   containerBorderRadius?: number;
   containerPadding?: number;
   

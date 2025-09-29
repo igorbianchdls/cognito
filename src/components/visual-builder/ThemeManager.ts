@@ -229,7 +229,7 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single Bar Chart widget
    */
-  private static applyThemeToBarChart(widget: Widget, tokens: DesignTokens): Widget {
+  private static applyThemeToBarChart(widget: Widget, tokens: DesignTokens, themeName: ThemeName): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.barConfig) {
@@ -311,9 +311,16 @@ export class ThemeManager {
       // Hightech theme: No border
       clonedWidget.barConfig.styling.containerBorderWidth = 0;
       clonedWidget.barConfig.styling.containerBorderColor = 'transparent';
+      clonedWidget.barConfig.styling.containerBorderAccentColor = 'transparent';
     } else {
-      // Other themes: Standard border
-      clonedWidget.barConfig.styling.containerBorderColor = tokens.colors.border;
+      // Other themes: Standard border with light/dark variants
+      if (themeName === 'light') {
+        clonedWidget.barConfig.styling.containerBorderColor = '#ddd';
+        clonedWidget.barConfig.styling.containerBorderAccentColor = '#eee';
+      } else {
+        clonedWidget.barConfig.styling.containerBorderColor = '#777';
+        clonedWidget.barConfig.styling.containerBorderAccentColor = '#bbb';
+      }
       clonedWidget.barConfig.styling.containerBorderWidth = tokens.borders.width.medium;
       clonedWidget.barConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
     }
@@ -324,7 +331,7 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single Line Chart widget
    */
-  private static applyThemeToLineChart(widget: Widget, tokens: DesignTokens): Widget {
+  private static applyThemeToLineChart(widget: Widget, tokens: DesignTokens, themeName: ThemeName): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.lineConfig) {
@@ -407,9 +414,16 @@ export class ThemeManager {
       // Hightech theme: No border
       clonedWidget.lineConfig.styling.containerBorderWidth = 0;
       clonedWidget.lineConfig.styling.containerBorderColor = 'transparent';
+      clonedWidget.lineConfig.styling.containerBorderAccentColor = 'transparent';
     } else {
-      // Other themes: Standard border
-      clonedWidget.lineConfig.styling.containerBorderColor = tokens.colors.border;
+      // Other themes: Standard border with light/dark variants
+      if (themeName === 'light') {
+        clonedWidget.lineConfig.styling.containerBorderColor = '#ddd';
+        clonedWidget.lineConfig.styling.containerBorderAccentColor = '#eee';
+      } else {
+        clonedWidget.lineConfig.styling.containerBorderColor = '#777';
+        clonedWidget.lineConfig.styling.containerBorderAccentColor = '#bbb';
+      }
       clonedWidget.lineConfig.styling.containerBorderWidth = tokens.borders.width.medium;
       clonedWidget.lineConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
     }
@@ -420,7 +434,7 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single Pie Chart widget
    */
-  private static applyThemeToPieChart(widget: Widget, tokens: DesignTokens): Widget {
+  private static applyThemeToPieChart(widget: Widget, tokens: DesignTokens, themeName: ThemeName): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.pieConfig) {
@@ -507,9 +521,16 @@ export class ThemeManager {
       // Hightech theme: No border
       clonedWidget.pieConfig.styling.containerBorderWidth = 0;
       clonedWidget.pieConfig.styling.containerBorderColor = 'transparent';
+      clonedWidget.pieConfig.styling.containerBorderAccentColor = 'transparent';
     } else {
-      // Other themes: Standard border
-      clonedWidget.pieConfig.styling.containerBorderColor = tokens.colors.border;
+      // Other themes: Standard border with light/dark variants
+      if (themeName === 'light') {
+        clonedWidget.pieConfig.styling.containerBorderColor = '#ddd';
+        clonedWidget.pieConfig.styling.containerBorderAccentColor = '#eee';
+      } else {
+        clonedWidget.pieConfig.styling.containerBorderColor = '#777';
+        clonedWidget.pieConfig.styling.containerBorderAccentColor = '#bbb';
+      }
       clonedWidget.pieConfig.styling.containerBorderWidth = tokens.borders.width.medium;
       clonedWidget.pieConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
     }
@@ -520,7 +541,7 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single Area Chart widget
    */
-  private static applyThemeToAreaChart(widget: Widget, tokens: DesignTokens): Widget {
+  private static applyThemeToAreaChart(widget: Widget, tokens: DesignTokens, themeName: ThemeName): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.areaConfig) {
@@ -604,9 +625,16 @@ export class ThemeManager {
       // Hightech theme: No border
       clonedWidget.areaConfig.styling.containerBorderWidth = 0;
       clonedWidget.areaConfig.styling.containerBorderColor = 'transparent';
+      clonedWidget.areaConfig.styling.containerBorderAccentColor = 'transparent';
     } else {
-      // Other themes: Standard border
-      clonedWidget.areaConfig.styling.containerBorderColor = tokens.colors.border;
+      // Other themes: Standard border with light/dark variants
+      if (themeName === 'light') {
+        clonedWidget.areaConfig.styling.containerBorderColor = '#ddd';
+        clonedWidget.areaConfig.styling.containerBorderAccentColor = '#eee';
+      } else {
+        clonedWidget.areaConfig.styling.containerBorderColor = '#777';
+        clonedWidget.areaConfig.styling.containerBorderAccentColor = '#bbb';
+      }
       clonedWidget.areaConfig.styling.containerBorderWidth = tokens.borders.width.medium;
       clonedWidget.areaConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
     }
@@ -783,13 +811,13 @@ export class ThemeManager {
       case 'kpi':
         return this.applyThemeToKPI(widget, tokens);
       case 'bar':
-        return this.applyThemeToBarChart(widget, tokens);
+        return this.applyThemeToBarChart(widget, tokens, themeName);
       case 'line':
-        return this.applyThemeToLineChart(widget, tokens);
+        return this.applyThemeToLineChart(widget, tokens, themeName);
       case 'pie':
-        return this.applyThemeToPieChart(widget, tokens);
+        return this.applyThemeToPieChart(widget, tokens, themeName);
       case 'area':
-        return this.applyThemeToAreaChart(widget, tokens);
+        return this.applyThemeToAreaChart(widget, tokens, themeName);
       case 'insights':
         return this.applyThemeToInsights(widget, tokens, themeName);
       case 'alerts':

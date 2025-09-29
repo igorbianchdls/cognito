@@ -128,6 +128,7 @@ export function BarChart(props: BarChartProps) {
     // Container Border props
     containerBorderWidth,
     containerBorderColor,
+    containerBorderAccentColor,
     containerBorderRadius,
     containerPadding,
     // Container Shadow props
@@ -278,7 +279,7 @@ export function BarChart(props: BarChartProps) {
           // Override with specific props if provided (backwards compatibility)
           padding: `${containerPadding || 16}px`,
           margin: '0 auto',
-          border: '0.5px solid #777', // Corner accent border
+          border: `0.5px solid ${containerBorderColor || '#777'}`, // Corner accent border
           // border: containerBorderWidth ? `${containerBorderWidth}px solid ${containerBorderColor || '#e5e7eb'}` : '1px solid #e5e7eb', // Commented out
           // borderRadius: `${containerBorderRadius || 8}px`, // Commented for corner accent effect
           // boxShadow: containerStyles.boxShadow || boxShadow, // Commented out
@@ -291,8 +292,8 @@ export function BarChart(props: BarChartProps) {
         style={{
           top: '-0.5px',
           left: '-0.5px',
-          borderTop: '0.5px solid #bbb',
-          borderLeft: '0.5px solid #bbb'
+          borderTop: `0.5px solid ${containerBorderAccentColor || '#bbb'}`,
+          borderLeft: `0.5px solid ${containerBorderAccentColor || '#bbb'}`
         }}
       ></div>
       <div
@@ -300,8 +301,8 @@ export function BarChart(props: BarChartProps) {
         style={{
           top: '-0.5px',
           right: '-0.5px',
-          borderTop: '0.5px solid #bbb',
-          borderRight: '0.5px solid #bbb'
+          borderTop: `0.5px solid ${containerBorderAccentColor || '#bbb'}`,
+          borderRight: `0.5px solid ${containerBorderAccentColor || '#bbb'}`
         }}
       ></div>
       <div
@@ -309,8 +310,8 @@ export function BarChart(props: BarChartProps) {
         style={{
           bottom: '-0.5px',
           left: '-0.5px',
-          borderBottom: '0.5px solid #bbb',
-          borderLeft: '0.5px solid #bbb'
+          borderBottom: `0.5px solid ${containerBorderAccentColor || '#bbb'}`,
+          borderLeft: `0.5px solid ${containerBorderAccentColor || '#bbb'}`
         }}
       ></div>
       <div
@@ -318,8 +319,8 @@ export function BarChart(props: BarChartProps) {
         style={{
           bottom: '-0.5px',
           right: '-0.5px',
-          borderBottom: '0.5px solid #bbb',
-          borderRight: '0.5px solid #bbb'
+          borderBottom: `0.5px solid ${containerBorderAccentColor || '#bbb'}`,
+          borderRight: `0.5px solid ${containerBorderAccentColor || '#bbb'}`
         }}
       ></div>
       {title && (
