@@ -143,7 +143,49 @@ export default function AlertasCard({
   });
 
   return (
-    <div className="space-y-4 mb-4">
+    <div className="relative" style={{
+      border: '0.5px solid #777',
+      padding: '16px'
+    }}>
+      {/* Corner accents - positioned to overlay border */}
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          top: '-0.5px',
+          left: '-0.5px',
+          borderTop: '0.5px solid #bbb',
+          borderLeft: '0.5px solid #bbb'
+        }}
+      ></div>
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          top: '-0.5px',
+          right: '-0.5px',
+          borderTop: '0.5px solid #bbb',
+          borderRight: '0.5px solid #bbb'
+        }}
+      ></div>
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          bottom: '-0.5px',
+          left: '-0.5px',
+          borderBottom: '0.5px solid #bbb',
+          borderLeft: '0.5px solid #bbb'
+        }}
+      ></div>
+      <div
+        className="absolute w-3 h-3"
+        style={{
+          bottom: '-0.5px',
+          right: '-0.5px',
+          borderBottom: '0.5px solid #bbb',
+          borderRight: '0.5px solid #bbb'
+        }}
+      ></div>
+
+      <div className="space-y-4 mb-4">
       {/* Header */}
       <div className="bg-gray-100 border border-gray-200 rounded-lg p-4">
         <div className="flex items-center justify-between mb-2">
@@ -340,6 +382,7 @@ export default function AlertasCard({
           </p>
         </div>
       )}
+      </div>
     </div>
   );
 }
