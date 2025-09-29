@@ -154,7 +154,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig }: Responsive
     <div ref={containerRef} className="w-full h-full">
       {/* Grid container */}
       <div
-        className="relative overflow-auto"
+        className="relative overflow-hidden"
         style={{
           minHeight: '600px',
           ...containerStyles,
@@ -193,21 +193,6 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig }: Responsive
           </div>
         )}
 
-        {/* Layout Info */}
-        {widgets.length > 0 && (
-          <div className="absolute top-2 right-2 bg-black/20 text-white text-xs px-2 py-1 rounded backdrop-blur-sm">
-            {(() => {
-              const layoutConfig = getLayoutConfig();
-              return (
-                <>
-                  <span className="hidden lg:inline">{layoutConfig.desktop} cols</span>
-                  <span className="hidden md:inline lg:hidden">{layoutConfig.tablet} cols</span>
-                  <span className="inline md:hidden">{layoutConfig.mobile} col</span>
-                </>
-              );
-            })()}
-          </div>
-        )}
       </div>
     </div>
   );
