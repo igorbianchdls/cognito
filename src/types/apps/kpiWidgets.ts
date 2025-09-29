@@ -228,6 +228,7 @@ export const DEFAULT_KPI_CONFIG: Required<Omit<KPIConfig, 'name' | 'value' | 'un
   kpiContainerBackgroundColor: '#ffffff',
   kpiContainerBackgroundOpacity: 1,
   kpiContainerBorderColor: '#e5e7eb',
+  kpiContainerBorderAccentColor: '#bbb',
   kpiContainerBorderOpacity: 1,
   kpiContainerBorderWidth: 1,
   kpiContainerBorderRadius: 8,
