@@ -12,6 +12,13 @@ export interface InsightsConfig {
   useGlobalStore?: boolean;
   showActions?: boolean;
   collapsible?: boolean;
+  backgroundColor?: string;
+  backgroundGradient?: {
+    enabled: boolean;
+    direction: string;
+    startColor: string;
+    endColor: string;
+  };
 }
 
 export interface AlertsConfig {
@@ -20,6 +27,13 @@ export interface AlertsConfig {
   showActions?: boolean;
   collapsible?: boolean;
   showOnlyCritical?: boolean;
+  backgroundColor?: string;
+  backgroundGradient?: {
+    enabled: boolean;
+    direction: string;
+    startColor: string;
+    endColor: string;
+  };
 }
 
 export interface RecommendationsConfig {
@@ -28,6 +42,13 @@ export interface RecommendationsConfig {
   showActions?: boolean;
   collapsible?: boolean;
   priorityFilter?: 'all' | 'high' | 'medium' | 'low';
+  backgroundColor?: string;
+  backgroundGradient?: {
+    enabled: boolean;
+    direction: string;
+    startColor: string;
+    endColor: string;
+  };
 }
 
 export interface GridConfig {
