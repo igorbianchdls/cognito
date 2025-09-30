@@ -188,9 +188,7 @@ Seja sempre profissional, orientado a dados e ofereça insights acionáveis. Pri
 
       tools: {
         getInvoices
-      },
-
-      maxSteps: 10
+      }
     });
 
     return result.toDataStreamResponse();
