@@ -48,6 +48,7 @@ import ServiceOrdersList from '../tools/ServiceOrdersList';
 import ContasAReceberList from '../tools/ContasAReceberList';
 import ReceiptsList from '../tools/ReceiptsList';
 import NotasFiscaisList from '../tools/NotasFiscaisList';
+import InventoryList from '../tools/InventoryList';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -615,6 +616,41 @@ type GetNotasFiscaisToolOutput = {
     protocolo_autorizacao?: string;
     observacoes?: string;
     created_at?: string;
+  }>;
+  message: string;
+  error?: string;
+};
+
+type GetInventoryToolInput = {
+  limit?: number;
+  status?: 'disponivel' | 'baixo_estoque' | 'esgotado' | 'descontinuado';
+  categoria?: string;
+  nome_produto?: string;
+};
+
+type GetInventoryToolOutput = {
+  success: boolean;
+  count: number;
+  data: Array<{
+    id: string;
+    codigo_produto: string;
+    nome_produto: string;
+    categoria?: string;
+    descricao?: string;
+    quantidade_atual: number;
+    quantidade_minima?: number;
+    quantidade_maxima?: number;
+    unidade_medida?: string;
+    localizacao?: string;
+    fornecedor?: string;
+    custo_unitario?: number;
+    preco_venda?: number;
+    ultima_compra?: string;
+    ultima_venda?: string;
+    status?: string;
+    observacoes?: string;
+    created_at?: string;
+    updated_at?: string;
   }>;
   message: string;
   error?: string;
@@ -1301,6 +1337,10 @@ type NexusToolUIPart = ToolUIPart<{
     input: GetNotasFiscaisToolInput;
     output: GetNotasFiscaisToolOutput;
   };
+  getInventory: {
+    input: GetInventoryToolInput;
+    output: GetInventoryToolOutput;
+  };
 }>;
 
 // Função para mapear agente
@@ -1348,6 +1388,8 @@ const getAgentInfo = (agent: string) => {
       return { initial: 'R', title: 'Receipts Agent', color: 'bg-orange-600' };
     case 'nfeAgent':
       return { initial: 'N', title: 'Invoice Agent', color: 'bg-emerald-600' };
+    case 'inventoryAgent':
+      return { initial: 'I', title: 'Inventory Agent', color: 'bg-blue-600' };
     default:
       return { initial: 'A', title: 'AI Assistant', color: 'bg-gray-500' };
   }
@@ -2809,6 +2851,40 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   data={(nfeTool.output as GetNotasFiscaisToolOutput).data}
                   message={(nfeTool.output as GetNotasFiscaisToolOutput).message}
                   error={(nfeTool.output as GetNotasFiscaisToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getInventory') {
+          const inventoryTool = part as NexusToolUIPart;
+          const callId = inventoryTool.toolCallId;
+          const shouldBeOpen = inventoryTool.state === 'output-available' || inventoryTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getInventory" state={inventoryTool.state} />
+                <ToolContent>
+                  {inventoryTool.input && (
+                    <ToolInput input={inventoryTool.input} />
+                  )}
+                  {inventoryTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={inventoryTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {inventoryTool.state === 'output-available' && (
+                <InventoryList
+                  success={(inventoryTool.output as GetInventoryToolOutput).success}
+                  count={(inventoryTool.output as GetInventoryToolOutput).count}
+                  data={(inventoryTool.output as GetInventoryToolOutput).data}
+                  message={(inventoryTool.output as GetInventoryToolOutput).message}
+                  error={(inventoryTool.output as GetInventoryToolOutput).error}
                 />
               )}
             </div>

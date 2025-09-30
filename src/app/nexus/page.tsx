@@ -65,6 +65,7 @@ export default function Page() {
       case 'contasAReceberAgent': return '/api/claudeAgents/contas-a-receber';
       case 'receiptsAgent': return '/api/claudeAgents/receipts';
       case 'nfeAgent': return '/api/claudeAgents/nfe';
+      case 'inventoryAgent': return '/api/claudeAgents/inventory';
       default: return '/api/agents/shopify-analyst';
     }
   };
