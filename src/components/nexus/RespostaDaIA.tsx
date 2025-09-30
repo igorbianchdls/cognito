@@ -42,6 +42,7 @@ import EmailResult from '../tools/EmailResult';
 import YouTubeContentList from '../tools/YouTubeContentList';
 import ReelsContentList from '../tools/ReelsContentList';
 import ContentCreationSuccess from '../tools/ContentCreationSuccess';
+import SalesCallsList from '../tools/SalesCallsList';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -408,6 +409,41 @@ type CreateReelsContentToolOutput = {
     hook_expansion?: string;
     script?: string;
   };
+  message: string;
+  error?: string;
+};
+
+type GetSalesCallsToolInput = {
+  limit?: number;
+  status?: 'prospecting' | 'qualification' | 'proposal' | 'negotiation' | 'closed-won' | 'closed-lost';
+  sales_rep?: string;
+};
+
+type GetSalesCallsToolOutput = {
+  success: boolean;
+  count: number;
+  data: Array<{
+    id: string;
+    call_date?: string;
+    duration_minutes?: number;
+    client_name: string;
+    client_company?: string;
+    sales_rep: string;
+    transcription?: string;
+    summary?: string;
+    key_points?: string;
+    objections_identified?: string;
+    objections_handled?: string;
+    sentiment_score?: number;
+    engagement_score?: number;
+    close_probability?: number;
+    next_steps?: string;
+    follow_up_date?: string;
+    status?: string;
+    deal_value?: number;
+    notes?: string;
+    created_at?: string;
+  }>;
   message: string;
   error?: string;
 };
@@ -1068,6 +1104,10 @@ type NexusToolUIPart = ToolUIPart<{
   createReelsContent: {
     input: CreateReelsContentToolInput;
     output: CreateReelsContentToolOutput;
+  };
+  getSalesCalls: {
+    input: GetSalesCallsToolInput;
+    output: GetSalesCallsToolOutput;
   };
 }>;
 
@@ -2361,6 +2401,40 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   message={(createReelsTool.output as CreateReelsContentToolOutput).message}
                   error={(createReelsTool.output as CreateReelsContentToolOutput).error}
                   contentType="reels"
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getSalesCalls') {
+          const salesCallsTool = part as NexusToolUIPart;
+          const callId = salesCallsTool.toolCallId;
+          const shouldBeOpen = salesCallsTool.state === 'output-available' || salesCallsTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getSalesCalls" state={salesCallsTool.state} />
+                <ToolContent>
+                  {salesCallsTool.input && (
+                    <ToolInput input={salesCallsTool.input} />
+                  )}
+                  {salesCallsTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={salesCallsTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {salesCallsTool.state === 'output-available' && (
+                <SalesCallsList
+                  success={(salesCallsTool.output as GetSalesCallsToolOutput).success}
+                  count={(salesCallsTool.output as GetSalesCallsToolOutput).count}
+                  data={(salesCallsTool.output as GetSalesCallsToolOutput).data}
+                  message={(salesCallsTool.output as GetSalesCallsToolOutput).message}
+                  error={(salesCallsTool.output as GetSalesCallsToolOutput).error}
                 />
               )}
             </div>
