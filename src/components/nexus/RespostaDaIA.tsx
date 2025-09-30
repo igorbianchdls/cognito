@@ -45,6 +45,7 @@ import ContentCreationSuccess from '../tools/ContentCreationSuccess';
 import SalesCallsList from '../tools/SalesCallsList';
 import RHCandidatesList from '../tools/RHCandidatesList';
 import ServiceOrdersList from '../tools/ServiceOrdersList';
+import InvoicesList from '../tools/InvoicesList';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -503,6 +504,37 @@ type GetServiceOrdersToolOutput = {
     valor_total?: number;
     data_abertura?: string;
     data_conclusao?: string;
+    created_at?: string;
+  }>;
+  message: string;
+  error?: string;
+};
+
+type GetInvoicesToolInput = {
+  limit?: number;
+  status?: 'pendente' | 'pago' | 'vencido' | 'cancelado';
+  cliente_nome?: string;
+};
+
+type GetInvoicesToolOutput = {
+  success: boolean;
+  count: number;
+  data: Array<{
+    id: string;
+    numero_fatura: string;
+    cliente_nome: string;
+    cliente_email?: string;
+    valor_total: number;
+    valor_pago?: number;
+    valor_pendente?: number;
+    data_emissao?: string;
+    data_vencimento?: string;
+    data_pagamento?: string;
+    status?: string;
+    itens_descricao?: string;
+    metodo_pagamento?: string;
+    nota_fiscal_url?: string;
+    observacoes?: string;
     created_at?: string;
   }>;
   message: string;
@@ -1177,6 +1209,10 @@ type NexusToolUIPart = ToolUIPart<{
   getServiceOrders: {
     input: GetServiceOrdersToolInput;
     output: GetServiceOrdersToolOutput;
+  };
+  getInvoices: {
+    input: GetInvoicesToolInput;
+    output: GetInvoicesToolOutput;
   };
 }>;
 
@@ -2572,6 +2608,40 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   data={(serviceOrdersTool.output as GetServiceOrdersToolOutput).data}
                   message={(serviceOrdersTool.output as GetServiceOrdersToolOutput).message}
                   error={(serviceOrdersTool.output as GetServiceOrdersToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getInvoices') {
+          const invoicesTool = part as NexusToolUIPart;
+          const callId = invoicesTool.toolCallId;
+          const shouldBeOpen = invoicesTool.state === 'output-available' || invoicesTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getInvoices" state={invoicesTool.state} />
+                <ToolContent>
+                  {invoicesTool.input && (
+                    <ToolInput input={invoicesTool.input} />
+                  )}
+                  {invoicesTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={invoicesTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {invoicesTool.state === 'output-available' && (
+                <InvoicesList
+                  success={(invoicesTool.output as GetInvoicesToolOutput).success}
+                  count={(invoicesTool.output as GetInvoicesToolOutput).count}
+                  data={(invoicesTool.output as GetInvoicesToolOutput).data}
+                  message={(invoicesTool.output as GetInvoicesToolOutput).message}
+                  error={(invoicesTool.output as GetInvoicesToolOutput).error}
                 />
               )}
             </div>
