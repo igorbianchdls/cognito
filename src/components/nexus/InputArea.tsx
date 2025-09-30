@@ -36,6 +36,7 @@ interface InputAreaProps {
 const iconMap: Record<string, React.ComponentType<{ className?: string }> | null> = {
   'nexus': null,
   'teste': null,
+  'claudeAgent': null,
   'metaAnalyst': MetaIcon,
   'metaCampaignAnalyst': MetaIcon,
   'metaCreativeAnalyst': MetaIcon,
@@ -54,6 +55,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
 const models = [
   { id: 'nexus', name: 'Nexus', icon: iconMap['nexus'] },
   { id: 'teste', name: 'Teste', icon: iconMap['teste'] },
+  { id: 'claudeAgent', name: 'Claude Agent', icon: iconMap['claudeAgent'] },
   { id: 'metaAnalyst', name: 'MetaAnalyst', icon: iconMap['metaAnalyst'] },
   { id: 'amazonAdsAnalyst', name: 'AmazonAdsAnalyst', icon: iconMap['amazonAdsAnalyst'] },
   { id: 'googleAnalyticsAnalyst', name: 'GoogleAnalyticsAnalyst', icon: iconMap['googleAnalyticsAnalyst'] },
@@ -124,6 +126,7 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
               switch (id) {
                 case 'nexus': return 'Nexus';
                 case 'teste': return 'Teste';
+                case 'claudeAgent': return 'Claude Agent';
                 case 'metaAnalyst': return 'MetaAnalyst';
                 case 'amazonAdsAnalyst': return 'AmazonAdsAnalyst';
                 case 'googleAnalyticsAnalyst': return 'GoogleAnalyticsAnalyst';
