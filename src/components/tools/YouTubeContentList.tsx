@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, Video } from 'lucide-react';
+import { CheckCircle2, XCircle, Video, Eye, ThumbsUp, MessageCircle, TrendingUp, UserPlus } from 'lucide-react';
 
 interface YouTubeContent {
   id: string;
@@ -12,6 +12,11 @@ interface YouTubeContent {
   categoria?: string;
   status?: string;
   created_at?: string;
+  views?: number;
+  likes?: number;
+  comments?: number;
+  retention_rate?: number;
+  subscribers_gained?: number;
 }
 
 interface YouTubeContentListProps {
@@ -107,6 +112,45 @@ export default function YouTubeContentList({ success, count, data, message, erro
                     <p className="text-sm text-gray-700 line-clamp-3">{video.script}</p>
                   </div>
                 )}
+
+                {(video.views !== undefined || video.likes !== undefined || video.comments !== undefined || video.retention_rate !== undefined || video.subscribers_gained !== undefined) && (
+                  <div className="pt-3 border-t">
+                    <p className="text-xs font-semibold text-gray-500 mb-2">MÉTRICAS DE PERFORMANCE</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {video.views !== undefined && (
+                        <div className="flex items-center gap-1.5">
+                          <Eye className="h-4 w-4 text-blue-500" />
+                          <span className="text-sm text-gray-700">{video.views.toLocaleString('pt-BR')} visualizações</span>
+                        </div>
+                      )}
+                      {video.likes !== undefined && (
+                        <div className="flex items-center gap-1.5">
+                          <ThumbsUp className="h-4 w-4 text-green-500" />
+                          <span className="text-sm text-gray-700">{video.likes.toLocaleString('pt-BR')} likes</span>
+                        </div>
+                      )}
+                      {video.comments !== undefined && (
+                        <div className="flex items-center gap-1.5">
+                          <MessageCircle className="h-4 w-4 text-purple-500" />
+                          <span className="text-sm text-gray-700">{video.comments.toLocaleString('pt-BR')} comentários</span>
+                        </div>
+                      )}
+                      {video.retention_rate !== undefined && (
+                        <div className="flex items-center gap-1.5">
+                          <TrendingUp className="h-4 w-4 text-orange-500" />
+                          <span className="text-sm text-gray-700">{video.retention_rate.toFixed(1)}% retenção</span>
+                        </div>
+                      )}
+                      {video.subscribers_gained !== undefined && (
+                        <div className="flex items-center gap-1.5">
+                          <UserPlus className="h-4 w-4 text-red-500" />
+                          <span className="text-sm text-gray-700">+{video.subscribers_gained.toLocaleString('pt-BR')} inscritos</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {video.created_at && (
                   <p className="text-xs text-gray-400 pt-2 border-t">
                     Criado em: {new Date(video.created_at).toLocaleDateString('pt-BR')}

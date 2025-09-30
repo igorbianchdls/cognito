@@ -331,6 +331,11 @@ type GetYouTubeContentToolOutput = {
     categoria?: string;
     status?: string;
     created_at?: string;
+    views?: number;
+    likes?: number;
+    comments?: number;
+    retention_rate?: number;
+    subscribers_gained?: number;
   }>;
   message: string;
   error?: string;
@@ -352,6 +357,12 @@ type GetReelsContentToolOutput = {
     script?: string;
     status?: string;
     created_at?: string;
+    views?: number;
+    likes?: number;
+    comments?: number;
+    saves?: number;
+    engagement_rate?: number;
+    follows?: number;
   }>;
   message: string;
   error?: string;
