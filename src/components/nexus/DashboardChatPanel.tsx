@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '@nanostores/react';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
-import GridCanvas from '@/components/visual-builder/GridCanvas';
+import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 import type { Widget } from '@/stores/visualBuilderStore';
 import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
@@ -539,10 +539,10 @@ export default function DashboardChatPanel() {
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
           <div className="h-full bg-gray-50 py-2 px-4 overflow-auto">
-            <GridCanvas
+            <ResponsiveGridCanvas
               widgets={visualBuilderState.widgets}
               gridConfig={visualBuilderState.gridConfig}
-              onLayoutChange={handleLayoutChange}
+              viewportMode={selectedViewport}
             />
           </div>
         )}
