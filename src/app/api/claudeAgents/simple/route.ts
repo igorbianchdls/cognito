@@ -1,45 +1,45 @@
-import { query } from '@anthropic-ai/claude-agent-sdk';
+import { anthropic } from '@ai-sdk/anthropic';
+import { convertToModelMessages, streamText, UIMessage } from 'ai';
+import { readFileTool, listDirectoryTool, getFileInfoTool } from '@/tools/fileTools';
 
 export const maxDuration = 300;
 
 export async function POST(req: Request) {
   console.log('🤖 CLAUDE AGENT: Request recebido!');
 
-  const { messages } = await req.json();
-  const lastMessage = messages[messages.length - 1];
+  const { messages }: { messages: UIMessage[] } = await req.json();
 
-  console.log('🤖 CLAUDE AGENT: Última mensagem:', lastMessage?.content);
+  console.log('🤖 CLAUDE AGENT: Messages:', messages?.length);
 
   try {
-    const result = query({
-      prompt: lastMessage?.content || "Olá!",
-      options: {
-        model: 'sonnet',
-        systemPrompt: `Você é um assistente AI simples e útil criado com o Claude Agent SDK.
+    const result = streamText({
+      model: anthropic('claude-sonnet-4-20250514'),
 
-Responda de forma clara, direta e em português brasileiro.
-Seja amigável e prestativo em todas as suas respostas.`,
-        allowedTools: []
+      system: `Você é um assistente AI útil com capacidade de ler arquivos do sistema.
+
+**Suas capacidades:**
+- Ler arquivos de texto usando readFileTool
+- Listar diretórios usando listDirectoryTool
+- Obter informações de arquivos usando getFileInfoTool
+
+**Como usar:**
+- Para ler um arquivo: "Leia o arquivo X"
+- Para listar pasta: "Liste o diretório Y"
+- Para info do arquivo: "Mostre informações do arquivo Z"
+
+Responda sempre em português brasileiro de forma clara e prestativa.`,
+
+      messages: convertToModelMessages(messages),
+
+      tools: {
+        readFile: readFileTool,
+        listDirectory: listDirectoryTool,
+        getFileInfo: getFileInfoTool
       }
     });
 
-    console.log('🤖 CLAUDE AGENT: Query executado, coletando resposta...');
-
-    // Coletar resposta completa do Agent SDK
-    let fullResponse = '';
-    for await (const message of result) {
-      if (message.type === 'assistant') {
-        fullResponse += message.message.content;
-      }
-    }
-
-    console.log('🤖 CLAUDE AGENT: Resposta coletada:', fullResponse.substring(0, 100) + '...');
-
-    // Retornar resposta no formato esperado pelo useChat
-    return Response.json({
-      role: 'assistant',
-      content: fullResponse
-    });
+    console.log('🤖 CLAUDE AGENT: StreamText executado, retornando response...');
+    return result.toUIMessageStreamResponse();
 
   } catch (error) {
     console.error('🤖 CLAUDE AGENT: Erro:', error);
