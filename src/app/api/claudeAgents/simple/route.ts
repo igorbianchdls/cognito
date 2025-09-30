@@ -14,51 +14,32 @@ export async function POST(req: Request) {
     const result = query({
       prompt: lastMessage?.content || "Olá!",
       options: {
-        model: 'claude-sonnet-4',
+        model: 'sonnet',
         systemPrompt: `Você é um assistente AI simples e útil criado com o Claude Agent SDK.
 
 Responda de forma clara, direta e em português brasileiro.
 Seja amigável e prestativo em todas as suas respostas.`,
-        // Sem tools por enquanto - agente bem simples
         allowedTools: []
       }
     });
 
-    console.log('🤖 CLAUDE AGENT: Query executado, retornando resposta...');
+    console.log('🤖 CLAUDE AGENT: Query executado, coletando resposta...');
 
-    // Converter o resultado do Agent SDK para o formato esperado
-    const response = new Response(
-      new ReadableStream({
-        async start(controller) {
-          try {
-            for await (const chunk of result) {
-              const message = {
-                role: 'assistant',
-                content: chunk.content || chunk.text || ''
-              };
-
-              const data = `data: ${JSON.stringify(message)}\n\n`;
-              controller.enqueue(new TextEncoder().encode(data));
-            }
-
-            controller.enqueue(new TextEncoder().encode('data: [DONE]\n\n'));
-            controller.close();
-          } catch (error) {
-            console.error('🤖 CLAUDE AGENT: Erro no stream:', error);
-            controller.error(error);
-          }
-        }
-      }),
-      {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          'Connection': 'keep-alive',
-        }
+    // Coletar resposta completa do Agent SDK
+    let fullResponse = '';
+    for await (const message of result) {
+      if (message.type === 'assistant') {
+        fullResponse += message.message.content;
       }
-    );
+    }
 
-    return response;
+    console.log('🤖 CLAUDE AGENT: Resposta coletada:', fullResponse.substring(0, 100) + '...');
+
+    // Retornar resposta no formato esperado pelo useChat
+    return Response.json({
+      role: 'assistant',
+      content: fullResponse
+    });
 
   } catch (error) {
     console.error('🤖 CLAUDE AGENT: Erro:', error);
