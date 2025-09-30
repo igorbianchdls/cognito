@@ -19,6 +19,7 @@ import {
 interface RecomendacoesCardProps {
   recomendacoes?: Recomendacao[]; // Opcional, usa store se não fornecido
   title?: string;
+  contexto?: string;
   onActionClick?: (recomendacao: Recomendacao, index: number) => void;
   useGlobalStore?: boolean; // Flag para usar store ou props
   backgroundColor?: string;
@@ -68,6 +69,7 @@ function getImpactoIcon(impacto: 'alto' | 'medio' | 'baixo') {
 export default function RecomendacoesCard({
   recomendacoes: propRecomendacoes,
   title = "Recomendações",
+  contexto,
   onActionClick,
   useGlobalStore = false,
   backgroundColor,
