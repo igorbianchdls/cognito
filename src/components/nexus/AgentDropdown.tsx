@@ -46,7 +46,7 @@ const agents = [
   { id: 'salesAgent', name: 'SalesAgent', icon: 'V', color: 'text-indigo-600' },
   { id: 'rhAgent', name: 'RH Agent', icon: 'H', color: 'text-purple-600' },
   { id: 'serviceOrdersAgent', name: 'Service Orders Agent', icon: 'O', color: 'text-amber-600' },
-  { id: 'invoicesAgent', name: 'Faturas Agent', icon: 'I', color: 'text-teal-600' },
+  { id: 'contasAReceberAgent', name: 'Contas a Receber', icon: 'C', color: 'text-teal-600' },
   { id: 'receiptsAgent', name: 'Receipts Agent', icon: 'R', color: 'text-orange-600' },
   { id: 'nfeAgent', name: 'Invoice Agent', icon: 'N', color: 'text-emerald-600' },
 ];

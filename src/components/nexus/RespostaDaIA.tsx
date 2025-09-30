@@ -45,7 +45,7 @@ import ContentCreationSuccess from '../tools/ContentCreationSuccess';
 import SalesCallsList from '../tools/SalesCallsList';
 import RHCandidatesList from '../tools/RHCandidatesList';
 import ServiceOrdersList from '../tools/ServiceOrdersList';
-import InvoicesList from '../tools/InvoicesList';
+import ContasAReceberList from '../tools/ContasAReceberList';
 import ReceiptsList from '../tools/ReceiptsList';
 import NotasFiscaisList from '../tools/NotasFiscaisList';
 
@@ -512,13 +512,13 @@ type GetServiceOrdersToolOutput = {
   error?: string;
 };
 
-type GetInvoicesToolInput = {
+type GetContasAReceberToolInput = {
   limit?: number;
   status?: 'pendente' | 'pago' | 'vencido' | 'cancelado';
   cliente_nome?: string;
 };
 
-type GetInvoicesToolOutput = {
+type GetContasAReceberToolOutput = {
   success: boolean;
   count: number;
   data: Array<{
@@ -1289,9 +1289,9 @@ type NexusToolUIPart = ToolUIPart<{
     input: GetServiceOrdersToolInput;
     output: GetServiceOrdersToolOutput;
   };
-  getInvoices: {
-    input: GetInvoicesToolInput;
-    output: GetInvoicesToolOutput;
+  getContasAReceber: {
+    input: GetContasAReceberToolInput;
+    output: GetContasAReceberToolOutput;
   };
   getReceipts: {
     input: GetReceiptsToolInput;
@@ -1342,8 +1342,8 @@ const getAgentInfo = (agent: string) => {
       return { initial: 'H', title: 'RH Agent', color: 'bg-purple-600' };
     case 'serviceOrdersAgent':
       return { initial: 'O', title: 'Service Orders Agent', color: 'bg-amber-600' };
-    case 'invoicesAgent':
-      return { initial: 'I', title: 'Faturas Agent', color: 'bg-teal-600' };
+    case 'contasAReceberAgent':
+      return { initial: 'C', title: 'Contas a Receber', color: 'bg-teal-600' };
     case 'receiptsAgent':
       return { initial: 'R', title: 'Receipts Agent', color: 'bg-orange-600' };
     case 'nfeAgent':
@@ -2713,34 +2713,34 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
-        if (part.type === 'tool-getInvoices') {
-          const invoicesTool = part as NexusToolUIPart;
-          const callId = invoicesTool.toolCallId;
-          const shouldBeOpen = invoicesTool.state === 'output-available' || invoicesTool.state === 'output-error';
+        if (part.type === 'tool-getContasAReceber') {
+          const contasAReceberTool = part as NexusToolUIPart;
+          const callId = contasAReceberTool.toolCallId;
+          const shouldBeOpen = contasAReceberTool.state === 'output-available' || contasAReceberTool.state === 'output-error';
 
           return (
             <div key={callId}>
               <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="tool-getInvoices" state={invoicesTool.state} />
+                <ToolHeader type="tool-getContasAReceber" state={contasAReceberTool.state} />
                 <ToolContent>
-                  {invoicesTool.input && (
-                    <ToolInput input={invoicesTool.input} />
+                  {contasAReceberTool.input && (
+                    <ToolInput input={contasAReceberTool.input} />
                   )}
-                  {invoicesTool.state === 'output-error' && (
+                  {contasAReceberTool.state === 'output-error' && (
                     <ToolOutput
                       output={null}
-                      errorText={invoicesTool.errorText}
+                      errorText={contasAReceberTool.errorText}
                     />
                   )}
                 </ToolContent>
               </Tool>
-              {invoicesTool.state === 'output-available' && (
-                <InvoicesList
-                  success={(invoicesTool.output as GetInvoicesToolOutput).success}
-                  count={(invoicesTool.output as GetInvoicesToolOutput).count}
-                  data={(invoicesTool.output as GetInvoicesToolOutput).data}
-                  message={(invoicesTool.output as GetInvoicesToolOutput).message}
-                  error={(invoicesTool.output as GetInvoicesToolOutput).error}
+              {contasAReceberTool.state === 'output-available' && (
+                <ContasAReceberList
+                  success={(contasAReceberTool.output as GetContasAReceberToolOutput).success}
+                  count={(contasAReceberTool.output as GetContasAReceberToolOutput).count}
+                  data={(contasAReceberTool.output as GetContasAReceberToolOutput).data}
+                  message={(contasAReceberTool.output as GetContasAReceberToolOutput).message}
+                  error={(contasAReceberTool.output as GetContasAReceberToolOutput).error}
                 />
               )}
             </div>

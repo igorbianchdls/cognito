@@ -62,7 +62,7 @@ export default function Page() {
       case 'salesAgent': return '/api/claudeAgents/sales';
       case 'rhAgent': return '/api/claudeAgents/rh';
       case 'serviceOrdersAgent': return '/api/claudeAgents/service-orders';
-      case 'invoicesAgent': return '/api/claudeAgents/invoices';
+      case 'contasAReceberAgent': return '/api/claudeAgents/contas-a-receber';
       case 'receiptsAgent': return '/api/claudeAgents/receipts';
       case 'nfeAgent': return '/api/claudeAgents/nfe';
       default: return '/api/agents/shopify-analyst';
