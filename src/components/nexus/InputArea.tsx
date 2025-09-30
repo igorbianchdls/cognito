@@ -77,7 +77,7 @@ const models = [
   { id: 'salesAgent', name: 'SalesAgent', icon: iconMap['salesAgent'] },
   { id: 'rhAgent', name: 'RH Agent', icon: iconMap['rhAgent'] },
   { id: 'serviceOrdersAgent', name: 'Service Orders Agent', icon: iconMap['serviceOrdersAgent'] },
-  { id: 'invoicesAgent', name: 'Invoices Agent', icon: iconMap['invoicesAgent'] },
+  { id: 'invoicesAgent', name: 'Faturas Agent', icon: iconMap['invoicesAgent'] },
   { id: 'receiptsAgent', name: 'Receipts Agent', icon: iconMap['receiptsAgent'] },
 ];
 
@@ -155,7 +155,7 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
                 case 'salesAgent': return 'SalesAgent';
                 case 'rhAgent': return 'RH Agent';
                 case 'serviceOrdersAgent': return 'Service Orders Agent';
-                case 'invoicesAgent': return 'Invoices Agent';
+                case 'invoicesAgent': return 'Faturas Agent';
                 case 'receiptsAgent': return 'Receipts Agent';
                 default: return id;
               }
