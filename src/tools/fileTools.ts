@@ -5,7 +5,7 @@ import path from 'path';
 
 export const readFileTool = tool({
   description: 'Lê o conteúdo de um arquivo do sistema de arquivos',
-  parameters: z.object({
+  inputSchema: z.object({
     filePath: z.string().describe('Caminho do arquivo para ler (absoluto ou relativo)'),
     encoding: z.string().default('utf8').describe('Codificação do arquivo (utf8, base64, etc.)')
   }),
@@ -30,7 +30,7 @@ export const readFileTool = tool({
 
 export const listDirectoryTool = tool({
   description: 'Lista arquivos e pastas em um diretório',
-  parameters: z.object({
+  inputSchema: z.object({
     dirPath: z.string().describe('Caminho do diretório para listar'),
     showHidden: z.boolean().default(false).describe('Mostrar arquivos ocultos (que começam com .)')
   }),
@@ -80,7 +80,7 @@ export const listDirectoryTool = tool({
 
 export const getFileInfoTool = tool({
   description: 'Obtém informações detalhadas sobre um arquivo ou diretório',
-  parameters: z.object({
+  inputSchema: z.object({
     filePath: z.string().describe('Caminho do arquivo ou diretório')
   }),
   execute: async ({ filePath }) => {
