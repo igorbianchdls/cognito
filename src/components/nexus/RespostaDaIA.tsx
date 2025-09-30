@@ -1336,6 +1336,18 @@ const getAgentInfo = (agent: string) => {
       return { initial: 'D', title: 'Especialista em Produtos', color: 'bg-cyan-500' };
     case 'analistaDados':
       return { initial: 'A', title: 'Analista de Dados', color: 'bg-indigo-500' };
+    case 'salesAgent':
+      return { initial: 'V', title: 'SalesAgent', color: 'bg-indigo-600' };
+    case 'rhAgent':
+      return { initial: 'H', title: 'RH Agent', color: 'bg-purple-600' };
+    case 'serviceOrdersAgent':
+      return { initial: 'O', title: 'Service Orders Agent', color: 'bg-amber-600' };
+    case 'invoicesAgent':
+      return { initial: 'I', title: 'Faturas Agent', color: 'bg-teal-600' };
+    case 'receiptsAgent':
+      return { initial: 'R', title: 'Receipts Agent', color: 'bg-orange-600' };
+    case 'nfeAgent':
+      return { initial: 'N', title: 'Invoice Agent', color: 'bg-emerald-600' };
     default:
       return { initial: 'A', title: 'AI Assistant', color: 'bg-gray-500' };
   }
