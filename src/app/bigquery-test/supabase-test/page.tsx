@@ -3,166 +3,205 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
-interface TestResult {
-  status: 'loading' | 'success' | 'error'
-  message: string
-  details?: Record<string, unknown>
+interface YouTubeContent {
+  id: string
+  titulo: string
+  categoria: string | null
+  views: number
+  likes: number
+  comments: number
+  retention_rate: number | null
+  subscribers_gained: number
+  status: string
+  created_at: string
 }
 
-export default function SupabaseTestPage() {
-  const [envTest, setEnvTest] = useState<TestResult>({ status: 'loading', message: 'Verificando variáveis de ambiente...' })
-  const [connectionTest, setConnectionTest] = useState<TestResult>({ status: 'loading', message: 'Testando conexão...' })
-  const [authTest, setAuthTest] = useState<TestResult>({ status: 'loading', message: 'Testando autenticação...' })
+interface ReelsContent {
+  id: string
+  titulo: string
+  views: number
+  likes: number
+  comments: number
+  saves: number
+  engagement_rate: number | null
+  follows: number
+  status: string
+  created_at: string
+}
+
+export default function SupabaseDataPage() {
+  const [youtubeData, setYoutubeData] = useState<YouTubeContent[]>([])
+  const [reelsData, setReelsData] = useState<ReelsContent[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    runTests()
+    fetchData()
   }, [])
 
-  async function runTests() {
-    // Test 1: Verificar variáveis de ambiente
+  async function fetchData() {
     try {
-      const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-      const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      setLoading(true)
+      const supabase = createClient()
 
-      if (!url || !key) {
-        setEnvTest({
-          status: 'error',
-          message: 'Variáveis de ambiente não encontradas',
-          details: {
-            NEXT_PUBLIC_SUPABASE_URL: !!url,
-            NEXT_PUBLIC_SUPABASE_ANON_KEY: !!key
-          }
-        })
-        return
-      }
+      const [youtubeResult, reelsResult] = await Promise.all([
+        supabase.from('youtube_content').select('*').order('created_at', { ascending: false }),
+        supabase.from('reels_content').select('*').order('created_at', { ascending: false })
+      ])
 
-      setEnvTest({
-        status: 'success',
-        message: 'Variáveis de ambiente carregadas',
-        details: {
-          url: url,
-          keyLength: key.length
-        }
-      })
+      if (youtubeResult.error) throw new Error(`YouTube: ${youtubeResult.error.message}`)
+      if (reelsResult.error) throw new Error(`Reels: ${reelsResult.error.message}`)
 
-      // Test 2: Testar conexão
-      try {
-        const supabase = createClient()
-
-        setConnectionTest({
-          status: 'success',
-          message: 'Cliente Supabase criado com sucesso',
-          details: {
-            supabaseUrl: url
-          }
-        })
-
-        // Test 3: Testar autenticação
-        try {
-          const { data, error } = await supabase.auth.getSession()
-
-          if (error) {
-            setAuthTest({
-              status: 'error',
-              message: 'Erro ao verificar sessão',
-              details: { error: error.message }
-            })
-          } else {
-            setAuthTest({
-              status: 'success',
-              message: data.session ? 'Usuário autenticado' : 'Nenhum usuário autenticado (normal)',
-              details: {
-                hasSession: !!data.session,
-                user: data.session?.user?.email || 'N/A'
-              }
-            })
-          }
-        } catch (error) {
-          setAuthTest({
-            status: 'error',
-            message: 'Erro ao testar autenticação',
-            details: { error: String(error) }
-          })
-        }
-
-      } catch (error) {
-        setConnectionTest({
-          status: 'error',
-          message: 'Erro ao criar cliente Supabase',
-          details: { error: String(error) }
-        })
-      }
-
-    } catch (error) {
-      setEnvTest({
-        status: 'error',
-        message: 'Erro ao verificar variáveis',
-        details: { error: String(error) }
-      })
+      setYoutubeData(youtubeResult.data || [])
+      setReelsData(reelsResult.data || [])
+      setError(null)
+    } catch (err) {
+      setError(String(err))
+    } finally {
+      setLoading(false)
     }
   }
 
-  const renderTestResult = (test: TestResult, title: string) => {
-    const statusColors = {
-      loading: 'bg-yellow-100 border-yellow-400 text-yellow-800',
-      success: 'bg-green-100 border-green-400 text-green-800',
-      error: 'bg-red-100 border-red-400 text-red-800'
-    }
+  const formatNumber = (num: number) => {
+    return new Intl.NumberFormat('pt-BR').format(num)
+  }
 
-    const statusIcons = {
-      loading: '⏳',
-      success: '✅',
-      error: '❌'
-    }
+  const formatDate = (date: string) => {
+    return new Date(date).toLocaleDateString('pt-BR')
+  }
 
+  if (loading) {
     return (
-      <div className={`border-l-4 p-4 rounded ${statusColors[test.status]}`}>
-        <h3 className="font-bold flex items-center gap-2">
-          <span>{statusIcons[test.status]}</span>
-          {title}
-        </h3>
-        <p className="mt-2">{test.message}</p>
-        {test.details && (
-          <pre className="mt-2 text-xs overflow-auto bg-white/50 p-2 rounded">
-            {JSON.stringify(test.details, null, 2)}
-          </pre>
-        )}
+      <div className="min-h-screen p-8 flex items-center justify-center">
+        <div className="text-2xl">Carregando dados...</div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <strong>Erro:</strong> {error}
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen p-8 bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-2 text-gray-800">
-          Teste de Integração do Supabase
-        </h1>
-        <p className="text-gray-600 mb-8">
-          Esta página testa a configuração e conexão com o Supabase
-        </p>
-
-        <div className="space-y-4">
-          {renderTestResult(envTest, '1. Variáveis de Ambiente')}
-          {renderTestResult(connectionTest, '2. Conexão com Supabase')}
-          {renderTestResult(authTest, '3. Sistema de Autenticação')}
+    <div className="min-h-screen p-8 bg-gray-50">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <div>
+          <h1 className="text-4xl font-bold mb-2 text-gray-800">Conteúdo do Supabase</h1>
+          <p className="text-gray-600">Dados das tabelas YouTube e Reels</p>
         </div>
 
-        <div className="mt-8 p-6 bg-white rounded-lg shadow">
-          <h2 className="text-xl font-bold mb-4 text-gray-800">Próximos Passos</h2>
-          <ul className="space-y-2 text-gray-700">
-            <li>✓ Se todos os testes passaram, o Supabase está configurado corretamente</li>
-            <li>• Configure tabelas no Supabase Dashboard</li>
-            <li>• Implemente autenticação (login/signup)</li>
-            <li>• Crie queries para suas tabelas</li>
-          </ul>
+        {/* Tabela YouTube */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="px-6 py-4 bg-red-600 text-white">
+            <h2 className="text-2xl font-bold">YouTube ({youtubeData.length})</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Título</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoria</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Views</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Likes</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Comments</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Retention</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Subs+</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {youtubeData.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.titulo}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{item.categoria || '-'}</td>
+                    <td className="px-6 py-4 text-sm text-right text-gray-900">{formatNumber(item.views)}</td>
+                    <td className="px-6 py-4 text-sm text-right text-gray-900">{formatNumber(item.likes)}</td>
+                    <td className="px-6 py-4 text-sm text-right text-gray-900">{formatNumber(item.comments)}</td>
+                    <td className="px-6 py-4 text-sm text-right text-gray-900">
+                      {item.retention_rate ? `${item.retention_rate}%` : '-'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-right text-green-600 font-medium">
+                      +{formatNumber(item.subscribers_gained)}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        item.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{formatDate(item.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <div className="mt-6 text-center">
+        {/* Tabela Reels */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className="px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+            <h2 className="text-2xl font-bold">Reels ({reelsData.length})</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Título</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Views</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Likes</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Comments</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Saves</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Engagement</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Follows+</th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Data</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {reelsData.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.titulo}</td>
+                    <td className="px-6 py-4 text-sm text-right text-gray-900">{formatNumber(item.views)}</td>
+                    <td className="px-6 py-4 text-sm text-right text-gray-900">{formatNumber(item.likes)}</td>
+                    <td className="px-6 py-4 text-sm text-right text-gray-900">{formatNumber(item.comments)}</td>
+                    <td className="px-6 py-4 text-sm text-right text-gray-900">{formatNumber(item.saves)}</td>
+                    <td className="px-6 py-4 text-sm text-right text-gray-900">
+                      {item.engagement_rate ? `${item.engagement_rate}%` : '-'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-right text-green-600 font-medium">
+                      +{formatNumber(item.follows)}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        item.status === 'published' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{formatDate(item.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="text-center">
           <button
-            onClick={runTests}
+            onClick={fetchData}
             className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
           >
-            🔄 Executar Testes Novamente
+            🔄 Recarregar Dados
           </button>
         </div>
       </div>
