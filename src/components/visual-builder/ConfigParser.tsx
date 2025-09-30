@@ -21,6 +21,11 @@ export interface InsightsConfig {
   };
   borderColor?: string;
   borderAccentColor?: string;
+  // Typography - Title
+  titleFontFamily?: string;
+  titleFontSize?: number;
+  titleFontWeight?: string | number;
+  titleColor?: string;
 }
 
 export interface AlertsConfig {
@@ -38,6 +43,11 @@ export interface AlertsConfig {
   };
   borderColor?: string;
   borderAccentColor?: string;
+  // Typography - Title
+  titleFontFamily?: string;
+  titleFontSize?: number;
+  titleFontWeight?: string | number;
+  titleColor?: string;
 }
 
 export interface RecommendationsConfig {
@@ -55,6 +65,11 @@ export interface RecommendationsConfig {
   };
   borderColor?: string;
   borderAccentColor?: string;
+  // Typography - Title
+  titleFontFamily?: string;
+  titleFontSize?: number;
+  titleFontWeight?: string | number;
+  titleColor?: string;
 }
 
 export interface GridConfig {
