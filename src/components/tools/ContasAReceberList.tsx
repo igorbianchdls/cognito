@@ -229,27 +229,27 @@ export default function ContasAReceberList({ success, count, data, message, erro
 
       {data && data.length > 0 && (
         <div className="grid gap-4 md:grid-cols-1">
-          {data.map((invoice) => {
-            const diasAtraso = calcularDiasAtraso(invoice.data_vencimento, invoice.data_pagamento, invoice.status);
+          {data.map((conta) => {
+            const diasAtraso = calcularDiasAtraso(conta.data_vencimento, conta.data_pagamento, conta.status);
 
             return (
-              <Card key={invoice.id} className="hover:shadow-lg transition-shadow">
+              <Card key={conta.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 flex-1">
                       <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
                       <div>
-                        <CardTitle className="text-lg">Conta #{invoice.numero_fatura}</CardTitle>
+                        <CardTitle className="text-lg">Conta #{conta.numero_fatura}</CardTitle>
                         <CardDescription className="text-sm mt-1 flex items-center gap-1">
                           <Building2 className="h-3 w-3" />
-                          {invoice.cliente_nome}
+                          {conta.cliente_nome}
                         </CardDescription>
                       </div>
                     </div>
                     <div className="flex gap-2 items-center flex-col">
-                      {invoice.status && (
-                        <Badge className={getStatusColor(invoice.status)}>
-                          {invoice.status}
+                      {conta.status && (
+                        <Badge className={getStatusColor(conta.status)}>
+                          {conta.status}
                         </Badge>
                       )}
                       {diasAtraso !== null && diasAtraso > 0 && (
@@ -260,29 +260,29 @@ export default function ContasAReceberList({ success, count, data, message, erro
                     </div>
                   </div>
                   <div className="flex items-center gap-4 text-xs text-gray-500 mt-2">
-                    {invoice.cliente_email && <span>{invoice.cliente_email}</span>}
-                    {invoice.data_emissao && (
+                    {conta.cliente_email && <span>{conta.cliente_email}</span>}
+                    {conta.data_emissao && (
                       <span className="flex items-center gap-1">
                         <Calendar className="h-3 w-3" />
-                        Emissão: {new Date(invoice.data_emissao).toLocaleDateString('pt-BR')}
+                        Emissão: {new Date(conta.data_emissao).toLocaleDateString('pt-BR')}
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-4 text-sm font-medium mt-2">
                     <span className="flex items-center gap-1 text-blue-600">
                       <DollarSign className="h-4 w-4" />
-                      Total: R$ {invoice.valor_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      Total: R$ {conta.valor_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </span>
-                    {invoice.valor_pago !== undefined && invoice.valor_pago > 0 && (
+                    {conta.valor_pago !== undefined && conta.valor_pago > 0 && (
                       <span className="flex items-center gap-1 text-green-600">
                         <CheckCircle2 className="h-4 w-4" />
-                        Pago: R$ {invoice.valor_pago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        Pago: R$ {conta.valor_pago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </span>
                     )}
-                    {invoice.valor_pendente !== undefined && invoice.valor_pendente > 0 && (
+                    {conta.valor_pendente !== undefined && conta.valor_pendente > 0 && (
                       <span className="flex items-center gap-1 text-orange-600">
                         <Clock className="h-4 w-4" />
-                        Pendente: R$ {invoice.valor_pendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        Pendente: R$ {conta.valor_pendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                       </span>
                     )}
                   </div>
@@ -295,55 +295,55 @@ export default function ContasAReceberList({ success, count, data, message, erro
                         <div className="w-full pointer-events-none">
                           <p className="text-xs font-semibold text-gray-500 mb-2">DETALHES DA CONTA</p>
                           <div className="flex items-center gap-2">
-                            {getStatusIcon(invoice.status)}
+                            {getStatusIcon(conta.status)}
                             <span className="text-sm text-gray-700">
-                              {invoice.status === 'pago' && invoice.data_pagamento
-                                ? `Pago em ${new Date(invoice.data_pagamento).toLocaleDateString('pt-BR')}`
-                                : invoice.status === 'vencido'
+                              {conta.status === 'pago' && conta.data_pagamento
+                                ? `Pago em ${new Date(conta.data_pagamento).toLocaleDateString('pt-BR')}`
+                                : conta.status === 'vencido'
                                 ? `Vencida ${diasAtraso ? `há ${diasAtraso} dias` : ''}`
-                                : invoice.status === 'pendente' && invoice.data_vencimento
-                                ? `Vence em ${new Date(invoice.data_vencimento).toLocaleDateString('pt-BR')}`
-                                : `Status: ${invoice.status}`}
+                                : conta.status === 'pendente' && conta.data_vencimento
+                                ? `Vence em ${new Date(conta.data_vencimento).toLocaleDateString('pt-BR')}`
+                                : `Status: ${conta.status}`}
                             </span>
                           </div>
                         </div>
                       </AccordionTrigger>
                       <AccordionContent>
                         <div className="space-y-4 pt-2">
-                          {invoice.itens_descricao && (
+                          {conta.itens_descricao && (
                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                               <p className="text-xs font-semibold text-blue-700 mb-2">📋 ITENS DA CONTA</p>
-                              <p className="text-sm text-gray-700 whitespace-pre-wrap">{invoice.itens_descricao}</p>
+                              <p className="text-sm text-gray-700 whitespace-pre-wrap">{conta.itens_descricao}</p>
                             </div>
                           )}
 
                           <div className="grid grid-cols-2 gap-3 text-sm">
-                            {invoice.data_vencimento && (
+                            {conta.data_vencimento && (
                               <div>
                                 <p className="text-xs text-gray-500 font-semibold">Vencimento</p>
-                                <p className="text-gray-700">{new Date(invoice.data_vencimento).toLocaleDateString('pt-BR')}</p>
+                                <p className="text-gray-700">{new Date(conta.data_vencimento).toLocaleDateString('pt-BR')}</p>
                               </div>
                             )}
-                            {invoice.metodo_pagamento && (
+                            {conta.metodo_pagamento && (
                               <div>
                                 <p className="text-xs text-gray-500 font-semibold">Método de Pagamento</p>
-                                <p className="text-gray-700">{invoice.metodo_pagamento}</p>
+                                <p className="text-gray-700">{conta.metodo_pagamento}</p>
                               </div>
                             )}
                           </div>
 
-                          {invoice.observacoes && (
+                          {conta.observacoes && (
                             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                               <p className="text-xs font-semibold text-yellow-700 mb-2">💬 OBSERVAÇÕES</p>
-                              <p className="text-sm text-gray-700">{invoice.observacoes}</p>
+                              <p className="text-sm text-gray-700">{conta.observacoes}</p>
                             </div>
                           )}
 
-                          {invoice.nota_fiscal_url && (
+                          {conta.nota_fiscal_url && (
                             <div className="bg-green-50 border border-green-200 rounded-lg p-3">
                               <p className="text-xs font-semibold text-green-700 mb-2">📄 NOTA FISCAL</p>
                               <a
-                                href={invoice.nota_fiscal_url}
+                                href={conta.nota_fiscal_url}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-sm text-blue-600 hover:underline"
@@ -354,12 +354,12 @@ export default function ContasAReceberList({ success, count, data, message, erro
                           )}
 
                           {/* Financial Actions Section - Only for non-final states */}
-                          {invoice.status !== 'pago' && invoice.status !== 'cancelado' && (
+                          {conta.status !== 'pago' && conta.status !== 'cancelado' && (
                             <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mt-4">
                               <p className="text-xs font-semibold text-purple-700 mb-3">⚡ AÇÕES FINANCEIRAS</p>
 
                               {/* Feedback Message */}
-                              {feedbackMessage && feedbackMessage.id === invoice.id && (
+                              {feedbackMessage && feedbackMessage.id === conta.id && (
                                 <div className={`mb-3 p-2 rounded-md text-sm ${
                                   feedbackMessage.type === 'success'
                                     ? 'bg-green-100 text-green-800 border border-green-300'
@@ -370,16 +370,16 @@ export default function ContasAReceberList({ success, count, data, message, erro
                               )}
 
                               {/* Pagamento Form */}
-                              {showPagamentoForm === invoice.id ? (
+                              {showPagamentoForm === conta.id ? (
                                 <div className="space-y-3">
                                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
                                     <p className="text-xs font-semibold text-blue-700 mb-1">💰 RESUMO FINANCEIRO</p>
                                     <div className="text-sm space-y-1">
-                                      <p>Valor Total: <span className="font-semibold">R$ {invoice.valor_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></p>
-                                      {invoice.valor_pago !== undefined && invoice.valor_pago > 0 && (
-                                        <p>Já Pago: <span className="font-semibold text-green-600">R$ {invoice.valor_pago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></p>
+                                      <p>Valor Total: <span className="font-semibold">R$ {conta.valor_total.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></p>
+                                      {conta.valor_pago !== undefined && conta.valor_pago > 0 && (
+                                        <p>Já Pago: <span className="font-semibold text-green-600">R$ {conta.valor_pago.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></p>
                                       )}
-                                      <p>Pendente: <span className="font-semibold text-orange-600">R$ {(invoice.valor_pendente || invoice.valor_total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></p>
+                                      <p>Pendente: <span className="font-semibold text-orange-600">R$ {(conta.valor_pendente || conta.valor_total).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span></p>
                                     </div>
                                   </div>
 
@@ -392,9 +392,9 @@ export default function ContasAReceberList({ success, count, data, message, erro
                                       step="0.01"
                                       value={valorPago}
                                       onChange={(e) => setValorPago(e.target.value)}
-                                      placeholder={`Máximo: ${(invoice.valor_pendente || invoice.valor_total).toFixed(2)}`}
+                                      placeholder={`Máximo: ${(conta.valor_pendente || conta.valor_total).toFixed(2)}`}
                                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                                      disabled={loadingId === invoice.id}
+                                      disabled={loadingId === conta.id}
                                     />
                                   </div>
 
@@ -406,7 +406,7 @@ export default function ContasAReceberList({ success, count, data, message, erro
                                       value={metodoPagamento}
                                       onChange={(e) => setMetodoPagamento(e.target.value)}
                                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                                      disabled={loadingId === invoice.id}
+                                      disabled={loadingId === conta.id}
                                     >
                                       <option value="PIX">PIX</option>
                                       <option value="Boleto">Boleto</option>
@@ -418,12 +418,12 @@ export default function ContasAReceberList({ success, count, data, message, erro
 
                                   <div className="flex gap-2">
                                     <Button
-                                      onClick={() => handleRegistrarPagamento(invoice.id, invoice)}
-                                      disabled={loadingId === invoice.id}
+                                      onClick={() => handleRegistrarPagamento(conta.id, invoice)}
+                                      disabled={loadingId === conta.id}
                                       className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                                       size="sm"
                                     >
-                                      {loadingId === invoice.id ? (
+                                      {loadingId === conta.id ? (
                                         <>
                                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                           Registrando...
@@ -441,7 +441,7 @@ export default function ContasAReceberList({ success, count, data, message, erro
                                         setValorPago('');
                                         setMetodoPagamento('PIX');
                                       }}
-                                      disabled={loadingId === invoice.id}
+                                      disabled={loadingId === conta.id}
                                       variant="outline"
                                       size="sm"
                                     >
@@ -449,7 +449,7 @@ export default function ContasAReceberList({ success, count, data, message, erro
                                     </Button>
                                   </div>
                                 </div>
-                              ) : showCancelarForm === invoice.id ? (
+                              ) : showCancelarForm === conta.id ? (
                                 <div className="space-y-3">
                                   <div>
                                     <label className="text-xs font-semibold text-gray-700 mb-1 block">
@@ -460,17 +460,17 @@ export default function ContasAReceberList({ success, count, data, message, erro
                                       onChange={(e) => setMotivoCancelamento(e.target.value)}
                                       placeholder="Descreva o motivo do cancelamento... (mínimo 10 caracteres)"
                                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 min-h-20"
-                                      disabled={loadingId === invoice.id}
+                                      disabled={loadingId === conta.id}
                                     />
                                   </div>
                                   <div className="flex gap-2">
                                     <Button
-                                      onClick={() => handleCancelarFatura(invoice.id)}
-                                      disabled={loadingId === invoice.id}
+                                      onClick={() => handleCancelarConta(conta.id)}
+                                      disabled={loadingId === conta.id}
                                       className="flex-1 bg-red-600 hover:bg-red-700 text-white"
                                       size="sm"
                                     >
-                                      {loadingId === invoice.id ? (
+                                      {loadingId === conta.id ? (
                                         <>
                                           <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                                           Cancelando...
@@ -487,7 +487,7 @@ export default function ContasAReceberList({ success, count, data, message, erro
                                         setShowCancelarForm(null);
                                         setMotivoCancelamento('');
                                       }}
-                                      disabled={loadingId === invoice.id}
+                                      disabled={loadingId === conta.id}
                                       variant="outline"
                                       size="sm"
                                     >
@@ -498,7 +498,7 @@ export default function ContasAReceberList({ success, count, data, message, erro
                               ) : (
                                 <div className="flex gap-2">
                                   <Button
-                                    onClick={() => setShowPagamentoForm(invoice.id)}
+                                    onClick={() => setShowPagamentoForm(conta.id)}
                                     className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                                     size="sm"
                                   >
@@ -506,7 +506,7 @@ export default function ContasAReceberList({ success, count, data, message, erro
                                     Registrar Pagamento
                                   </Button>
                                   <Button
-                                    onClick={() => setShowCancelarForm(invoice.id)}
+                                    onClick={() => setShowCancelarForm(conta.id)}
                                     variant="outline"
                                     size="sm"
                                     className="border-red-300 text-red-600 hover:bg-red-50"
@@ -523,9 +523,9 @@ export default function ContasAReceberList({ success, count, data, message, erro
                     </AccordionItem>
                   </Accordion>
 
-                  {invoice.created_at && (
+                  {conta.created_at && (
                     <p className="text-xs text-gray-400 pt-3 border-t mt-3">
-                      Registrada em: {new Date(invoice.created_at).toLocaleDateString('pt-BR')}
+                      Registrada em: {new Date(conta.created_at).toLocaleDateString('pt-BR')}
                     </p>
                   )}
                 </CardContent>
