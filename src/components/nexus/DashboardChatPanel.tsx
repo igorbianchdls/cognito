@@ -26,6 +26,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import { FileText, BarChart3, Palette, Check, Type, Square, Paintbrush, Monitor, Tablet, Smartphone, ChevronDown } from 'lucide-react';
 
 export default function DashboardChatPanel() {
@@ -521,9 +522,18 @@ export default function DashboardChatPanel() {
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {/* Outline Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {}}
+          >
+            Ação
+          </Button>
+
           {/* Compartilhar Button */}
           <button
-            className="px-3 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+            className="px-3 py-2 bg-black text-white rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors"
             onClick={() => {}}
           >
             Compartilhar
