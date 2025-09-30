@@ -281,7 +281,7 @@ export default function InsightsCard({
                   ? 'max-h-screen opacity-100'
                   : 'max-h-0 opacity-0'
               }`}>
-                <div className="px-4 pb-4 border-t border-gray-100">
+                <div className="px-4 pb-4 border-t border-gray-100 bg-white">
                   <div className="pt-3">
                     <p className="text-gray-700 text-sm mb-3 leading-relaxed">
                       {insight.descricao}
