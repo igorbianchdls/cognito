@@ -1,7 +1,12 @@
+'use client';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { CheckCircle2, XCircle, Wrench, User, Calendar, DollarSign, FileText, Settings, CheckCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, Wrench, User, Calendar, DollarSign, FileText, Settings, CheckCircle, PlayCircle, PauseCircle, Loader2, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 interface ServiceOrder {
   id: string;
@@ -48,6 +53,222 @@ const getStatusIcon = (status?: string) => {
 };
 
 export default function ServiceOrdersList({ success, count, data, message, error }: ServiceOrdersListProps) {
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [showConcluirForm, setShowConcluirForm] = useState<string | null>(null);
+  const [showCancelarForm, setShowCancelarForm] = useState<string | null>(null);
+  const [servicoExecutado, setServicoExecutado] = useState<string>('');
+  const [valorTotal, setValorTotal] = useState<string>('');
+  const [motivoCancelamento, setMotivoCancelamento] = useState<string>('');
+  const [feedbackMessage, setFeedbackMessage] = useState<{ id: string; type: 'success' | 'error'; message: string } | null>(null);
+
+  const supabase = createClient();
+
+  // Iniciar Ordem: aberta → em_andamento
+  const handleIniciarOrdem = async (osId: string) => {
+    setLoadingId(osId);
+    setFeedbackMessage(null);
+
+    try {
+      const { error } = await supabase
+        .from('service_orders')
+        .update({
+          status: 'em_andamento'
+        })
+        .eq('id', osId);
+
+      if (error) throw error;
+
+      setFeedbackMessage({
+        id: osId,
+        type: 'success',
+        message: 'Ordem de serviço iniciada com sucesso!'
+      });
+
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    } catch (err) {
+      console.error('Erro ao iniciar ordem:', err);
+      setFeedbackMessage({
+        id: osId,
+        type: 'error',
+        message: 'Erro ao iniciar ordem. Tente novamente.'
+      });
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  // Pausar para Peças: em_andamento → aguardando_pecas
+  const handlePausarParaPecas = async (osId: string) => {
+    setLoadingId(osId);
+    setFeedbackMessage(null);
+
+    try {
+      const { error } = await supabase
+        .from('service_orders')
+        .update({
+          status: 'aguardando_pecas'
+        })
+        .eq('id', osId);
+
+      if (error) throw error;
+
+      setFeedbackMessage({
+        id: osId,
+        type: 'success',
+        message: 'Ordem pausada - aguardando peças.'
+      });
+
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    } catch (err) {
+      console.error('Erro ao pausar ordem:', err);
+      setFeedbackMessage({
+        id: osId,
+        type: 'error',
+        message: 'Erro ao pausar ordem. Tente novamente.'
+      });
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  // Retomar Ordem: aguardando_pecas → em_andamento
+  const handleRetomarOrdem = async (osId: string) => {
+    setLoadingId(osId);
+    setFeedbackMessage(null);
+
+    try {
+      const { error } = await supabase
+        .from('service_orders')
+        .update({
+          status: 'em_andamento'
+        })
+        .eq('id', osId);
+
+      if (error) throw error;
+
+      setFeedbackMessage({
+        id: osId,
+        type: 'success',
+        message: 'Ordem retomada com sucesso!'
+      });
+
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    } catch (err) {
+      console.error('Erro ao retomar ordem:', err);
+      setFeedbackMessage({
+        id: osId,
+        type: 'error',
+        message: 'Erro ao retomar ordem. Tente novamente.'
+      });
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  // Concluir Ordem: em_andamento → concluida
+  const handleConcluirOrdem = async (osId: string) => {
+    if (!servicoExecutado.trim()) {
+      setFeedbackMessage({
+        id: osId,
+        type: 'error',
+        message: 'Por favor, informe o serviço executado.'
+      });
+      return;
+    }
+
+    if (!valorTotal || parseFloat(valorTotal) <= 0) {
+      setFeedbackMessage({
+        id: osId,
+        type: 'error',
+        message: 'Por favor, informe um valor válido.'
+      });
+      return;
+    }
+
+    setLoadingId(osId);
+    setFeedbackMessage(null);
+
+    try {
+      const { error } = await supabase
+        .from('service_orders')
+        .update({
+          status: 'concluida',
+          servico_executado: servicoExecutado,
+          valor_total: parseFloat(valorTotal),
+          data_conclusao: new Date().toISOString()
+        })
+        .eq('id', osId);
+
+      if (error) throw error;
+
+      setFeedbackMessage({
+        id: osId,
+        type: 'success',
+        message: 'Ordem de serviço concluída com sucesso!'
+      });
+      setShowConcluirForm(null);
+      setServicoExecutado('');
+      setValorTotal('');
+
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    } catch (err) {
+      console.error('Erro ao concluir ordem:', err);
+      setFeedbackMessage({
+        id: osId,
+        type: 'error',
+        message: 'Erro ao concluir ordem. Tente novamente.'
+      });
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  // Cancelar Ordem: qualquer → cancelada
+  const handleCancelarOrdem = async (osId: string) => {
+    if (!motivoCancelamento.trim() || motivoCancelamento.length < 10) {
+      setFeedbackMessage({
+        id: osId,
+        type: 'error',
+        message: 'Por favor, informe o motivo do cancelamento (mínimo 10 caracteres).'
+      });
+      return;
+    }
+
+    setLoadingId(osId);
+    setFeedbackMessage(null);
+
+    try {
+      const { error } = await supabase
+        .from('service_orders')
+        .update({
+          status: 'cancelada'
+          // Opcional: adicionar campo motivo_cancelamento no banco
+        })
+        .eq('id', osId);
+
+      if (error) throw error;
+
+      setFeedbackMessage({
+        id: osId,
+        type: 'success',
+        message: 'Ordem de serviço cancelada.'
+      });
+      setShowCancelarForm(null);
+      setMotivoCancelamento('');
+
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    } catch (err) {
+      console.error('Erro ao cancelar ordem:', err);
+      setFeedbackMessage({
+        id: osId,
+        type: 'error',
+        message: 'Erro ao cancelar ordem. Tente novamente.'
+      });
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
   if (!success && error) {
     return (
       <Card className="border-red-200 bg-red-50">
@@ -175,6 +396,230 @@ export default function ServiceOrdersList({ success, count, data, message, error
                               )}{' '}
                               dia(s)
                             </span>
+                          </div>
+                        )}
+
+                        {/* Status Management Section - Only for non-final states */}
+                        {os.status !== 'concluida' && os.status !== 'cancelada' && (
+                          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mt-4">
+                            <p className="text-xs font-semibold text-purple-700 mb-3">⚡ AÇÕES DE GESTÃO</p>
+
+                            {/* Feedback Message */}
+                            {feedbackMessage && feedbackMessage.id === os.id && (
+                              <div className={`mb-3 p-2 rounded-md text-sm ${
+                                feedbackMessage.type === 'success'
+                                  ? 'bg-green-100 text-green-800 border border-green-300'
+                                  : 'bg-red-100 text-red-800 border border-red-300'
+                              }`}>
+                                {feedbackMessage.message}
+                              </div>
+                            )}
+
+                            {/* Concluir Form */}
+                            {showConcluirForm === os.id ? (
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="text-xs font-semibold text-gray-700 mb-1 block">
+                                    Serviço Executado
+                                  </label>
+                                  <textarea
+                                    value={servicoExecutado}
+                                    onChange={(e) => setServicoExecutado(e.target.value)}
+                                    placeholder="Descreva o serviço realizado..."
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500 min-h-20"
+                                    disabled={loadingId === os.id}
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-xs font-semibold text-gray-700 mb-1 block">
+                                    Valor Total (R$)
+                                  </label>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    value={valorTotal}
+                                    onChange={(e) => setValorTotal(e.target.value)}
+                                    placeholder="0.00"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                                    disabled={loadingId === os.id}
+                                  />
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button
+                                    onClick={() => handleConcluirOrdem(os.id)}
+                                    disabled={loadingId === os.id}
+                                    className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                                    size="sm"
+                                  >
+                                    {loadingId === os.id ? (
+                                      <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        Concluindo...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <CheckCircle className="h-4 w-4 mr-2" />
+                                        Confirmar Conclusão
+                                      </>
+                                    )}
+                                  </Button>
+                                  <Button
+                                    onClick={() => {
+                                      setShowConcluirForm(null);
+                                      setServicoExecutado('');
+                                      setValorTotal('');
+                                    }}
+                                    disabled={loadingId === os.id}
+                                    variant="outline"
+                                    size="sm"
+                                  >
+                                    Cancelar
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : showCancelarForm === os.id ? (
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="text-xs font-semibold text-gray-700 mb-1 block">
+                                    Motivo do Cancelamento
+                                  </label>
+                                  <textarea
+                                    value={motivoCancelamento}
+                                    onChange={(e) => setMotivoCancelamento(e.target.value)}
+                                    placeholder="Descreva o motivo do cancelamento... (mínimo 10 caracteres)"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 min-h-20"
+                                    disabled={loadingId === os.id}
+                                  />
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button
+                                    onClick={() => handleCancelarOrdem(os.id)}
+                                    disabled={loadingId === os.id}
+                                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                                    size="sm"
+                                  >
+                                    {loadingId === os.id ? (
+                                      <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        Cancelando...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <XCircle className="h-4 w-4 mr-2" />
+                                        Confirmar Cancelamento
+                                      </>
+                                    )}
+                                  </Button>
+                                  <Button
+                                    onClick={() => {
+                                      setShowCancelarForm(null);
+                                      setMotivoCancelamento('');
+                                    }}
+                                    disabled={loadingId === os.id}
+                                    variant="outline"
+                                    size="sm"
+                                  >
+                                    Voltar
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                {/* Actions for 'aberta' status */}
+                                {os.status === 'aberta' && (
+                                  <div className="flex gap-2">
+                                    <Button
+                                      onClick={() => handleIniciarOrdem(os.id)}
+                                      disabled={loadingId === os.id}
+                                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                                      size="sm"
+                                    >
+                                      {loadingId === os.id ? (
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                      ) : (
+                                        <PlayCircle className="h-4 w-4 mr-2" />
+                                      )}
+                                      Iniciar Ordem
+                                    </Button>
+                                    <Button
+                                      onClick={() => setShowCancelarForm(os.id)}
+                                      variant="outline"
+                                      size="sm"
+                                      className="border-red-300 text-red-600 hover:bg-red-50"
+                                    >
+                                      <XCircle className="h-4 w-4 mr-2" />
+                                      Cancelar
+                                    </Button>
+                                  </div>
+                                )}
+
+                                {/* Actions for 'em_andamento' status */}
+                                {os.status === 'em_andamento' && (
+                                  <div className="space-y-2">
+                                    <div className="flex gap-2">
+                                      <Button
+                                        onClick={() => handlePausarParaPecas(os.id)}
+                                        disabled={loadingId === os.id}
+                                        className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
+                                        size="sm"
+                                      >
+                                        {loadingId === os.id ? (
+                                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        ) : (
+                                          <PauseCircle className="h-4 w-4 mr-2" />
+                                        )}
+                                        Pausar - Aguardar Peças
+                                      </Button>
+                                      <Button
+                                        onClick={() => setShowConcluirForm(os.id)}
+                                        className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                                        size="sm"
+                                      >
+                                        <CheckCircle className="h-4 w-4 mr-2" />
+                                        Concluir Ordem
+                                      </Button>
+                                    </div>
+                                    <Button
+                                      onClick={() => setShowCancelarForm(os.id)}
+                                      variant="outline"
+                                      size="sm"
+                                      className="w-full border-red-300 text-red-600 hover:bg-red-50"
+                                    >
+                                      <XCircle className="h-4 w-4 mr-2" />
+                                      Cancelar Ordem
+                                    </Button>
+                                  </div>
+                                )}
+
+                                {/* Actions for 'aguardando_pecas' status */}
+                                {os.status === 'aguardando_pecas' && (
+                                  <div className="flex gap-2">
+                                    <Button
+                                      onClick={() => handleRetomarOrdem(os.id)}
+                                      disabled={loadingId === os.id}
+                                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                                      size="sm"
+                                    >
+                                      {loadingId === os.id ? (
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                      ) : (
+                                        <PlayCircle className="h-4 w-4 mr-2" />
+                                      )}
+                                      Retomar Ordem
+                                    </Button>
+                                    <Button
+                                      onClick={() => setShowCancelarForm(os.id)}
+                                      variant="outline"
+                                      size="sm"
+                                      className="border-red-300 text-red-600 hover:bg-red-50"
+                                    >
+                                      <XCircle className="h-4 w-4 mr-2" />
+                                      Cancelar
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
