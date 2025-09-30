@@ -266,7 +266,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
                       key={widget.id}
                       className={getSpanClasses(widget)}
                       style={{
-                        height: getWidgetHeight(widget),
+                        height: 'auto',
                         minHeight: getWidgetHeight(widget)
                       }}
                     >
