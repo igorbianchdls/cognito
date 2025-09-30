@@ -335,7 +335,7 @@ export default function Page() {
             // Chat + Dashboard - painéis redimensionáveis
             <div data-page="nexus" className="w-full h-[calc(100vh-4rem-2rem)]">
               <PanelGroup direction="horizontal">
-                <Panel defaultSize={50} minSize={30}>
+                <Panel defaultSize={33} minSize={30}>
                   <ChatContainer
                     messages={displayedMessages}
                     input={input}
@@ -347,7 +347,7 @@ export default function Page() {
                   />
                 </Panel>
                 <PanelResizeHandle className="w-1 hover:w-2 transition-all cursor-col-resize" />
-                <Panel defaultSize={50} minSize={30}>
+                <Panel defaultSize={67} minSize={30}>
                   <div className="h-full mb-4">
                     <DashboardChatPanel />
                   </div>
