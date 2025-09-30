@@ -1,9 +1,9 @@
-import { readFile, readdir, stat } from 'fs/promises';
+import { readFile, writeFile, readdir, stat } from 'fs/promises';
 import { z } from 'zod';
 import { tool } from 'ai';
 import path from 'path';
 
-export const readFileTool = tool({
+export const readFiles = tool({
   description: 'Lê o conteúdo de um arquivo do sistema de arquivos',
   inputSchema: z.object({
     filePath: z.string().describe('Caminho do arquivo para ler (absoluto ou relativo)'),
@@ -78,36 +78,100 @@ export const listDirectoryTool = tool({
   }
 });
 
-export const getFileInfoTool = tool({
-  description: 'Obtém informações detalhadas sobre um arquivo ou diretório',
+export const writeFiles = tool({
+  description: 'Cria ou sobrescreve um arquivo com o conteúdo especificado',
   inputSchema: z.object({
-    filePath: z.string().describe('Caminho do arquivo ou diretório')
+    filePath: z.string().describe('Caminho do arquivo para criar/sobrescrever'),
+    content: z.string().describe('Conteúdo do arquivo'),
+    encoding: z.string().default('utf8').describe('Codificação do arquivo (utf8, base64, etc.)')
   }),
-  execute: async ({ filePath }) => {
+  execute: async ({ filePath, content, encoding }) => {
     try {
-      const stats = await stat(filePath);
-      const parsed = path.parse(filePath);
-
+      await writeFile(filePath, content, encoding as BufferEncoding);
       return {
         success: true,
-        info: {
-          path: filePath,
-          name: parsed.name,
-          extension: parsed.ext,
-          directory: parsed.dir,
-          type: stats.isDirectory() ? 'directory' : 'file',
-          size: stats.size,
-          created: stats.birthtime.toISOString(),
-          modified: stats.mtime.toISOString(),
-          accessed: stats.atime.toISOString()
-        },
-        message: `✅ Informações obtidas para: ${filePath}`
+        message: `✅ Arquivo criado/atualizado com sucesso: ${filePath}`,
+        size: content.length
       };
     } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erro desconhecido',
-        message: `❌ Erro ao obter informações: ${filePath}`
+        message: `❌ Erro ao escrever arquivo: ${filePath}`
+      };
+    }
+  }
+});
+
+export const editFiles = tool({
+  description: 'Edita um arquivo existente usando operações de find & replace',
+  inputSchema: z.object({
+    filePath: z.string().describe('Caminho do arquivo para editar'),
+    operation: z.enum(['replace', 'replaceAll', 'insertAfter', 'insertBefore']).describe('Tipo de operação'),
+    oldText: z.string().describe('Texto a ser encontrado (para replace) ou texto de referência (para insert)'),
+    newText: z.string().describe('Novo texto para substituir ou inserir'),
+    encoding: z.string().default('utf8').describe('Codificação do arquivo')
+  }),
+  execute: async ({ filePath, operation, oldText, newText, encoding }) => {
+    try {
+      // Ler arquivo atual
+      const currentContent = await readFile(filePath, encoding as BufferEncoding);
+      let content = currentContent.toString();
+
+      // Aplicar operação
+      switch (operation) {
+        case 'replace':
+          if (!content.includes(oldText)) {
+            return {
+              success: false,
+              error: 'Texto não encontrado no arquivo',
+              message: `❌ Texto "${oldText}" não encontrado em: ${filePath}`
+            };
+          }
+          content = content.replace(oldText, newText);
+          break;
+
+        case 'replaceAll':
+          content = content.replaceAll(oldText, newText);
+          break;
+
+        case 'insertAfter':
+          if (!content.includes(oldText)) {
+            return {
+              success: false,
+              error: 'Texto de referência não encontrado',
+              message: `❌ Texto de referência "${oldText}" não encontrado em: ${filePath}`
+            };
+          }
+          content = content.replace(oldText, oldText + newText);
+          break;
+
+        case 'insertBefore':
+          if (!content.includes(oldText)) {
+            return {
+              success: false,
+              error: 'Texto de referência não encontrado',
+              message: `❌ Texto de referência "${oldText}" não encontrado em: ${filePath}`
+            };
+          }
+          content = content.replace(oldText, newText + oldText);
+          break;
+      }
+
+      // Salvar arquivo editado
+      await writeFile(filePath, content, encoding as BufferEncoding);
+
+      return {
+        success: true,
+        message: `✅ Arquivo editado com sucesso: ${filePath}`,
+        operation,
+        size: content.length
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        message: `❌ Erro ao editar arquivo: ${filePath}`
       };
     }
   }

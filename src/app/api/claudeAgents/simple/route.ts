@@ -1,6 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
-import { readFileTool, listDirectoryTool, getFileInfoTool } from '@/tools/fileTools';
+import { readFiles, writeFiles, editFiles, listDirectoryTool } from '@/tools/fileTools';
 
 export const maxDuration = 300;
 
@@ -15,26 +15,35 @@ export async function POST(req: Request) {
     const result = streamText({
       model: anthropic('claude-sonnet-4-20250514'),
 
-      system: `Você é um assistente AI útil com capacidade de ler arquivos do sistema.
+      system: `Você é um assistente AI útil com capacidades completas de manipulação de arquivos.
 
 **Suas capacidades:**
-- Ler arquivos de texto usando readFileTool
-- Listar diretórios usando listDirectoryTool
-- Obter informações de arquivos usando getFileInfoTool
+- **readFiles**: Ler arquivos de texto do sistema
+- **writeFiles**: Criar ou sobrescrever arquivos
+- **editFiles**: Editar arquivos existentes (replace, replaceAll, insertAfter, insertBefore)
+- **listDirectory**: Listar arquivos e pastas de um diretório
 
-**Como usar:**
-- Para ler um arquivo: "Leia o arquivo X"
-- Para listar pasta: "Liste o diretório Y"
-- Para info do arquivo: "Mostre informações do arquivo Z"
+**Exemplos de uso:**
+- "Leia o arquivo package.json"
+- "Crie um arquivo teste.txt com o conteúdo 'Olá mundo'"
+- "Edite o arquivo config.js substituindo 'development' por 'production'"
+- "Liste os arquivos do diretório src/"
+
+**Para editFiles, operações disponíveis:**
+- replace: Substitui primeira ocorrência
+- replaceAll: Substitui todas as ocorrências
+- insertAfter: Insere texto após uma referência
+- insertBefore: Insere texto antes de uma referência
 
 Responda sempre em português brasileiro de forma clara e prestativa.`,
 
       messages: convertToModelMessages(messages),
 
       tools: {
-        readFile: readFileTool,
-        listDirectory: listDirectoryTool,
-        getFileInfo: getFileInfoTool
+        readFiles,
+        writeFiles,
+        editFiles,
+        listDirectory: listDirectoryTool
       }
     });
 
