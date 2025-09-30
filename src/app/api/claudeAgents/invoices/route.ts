@@ -191,7 +191,7 @@ Seja sempre profissional, orientado a dados e ofereça insights acionáveis. Pri
       }
     });
 
-    return result.toDataStreamResponse();
+    return result.toUIMessageStreamResponse();
   } catch (error) {
     console.error('💰 INVOICES AGENT: Erro ao processar request:', error);
     throw error;
