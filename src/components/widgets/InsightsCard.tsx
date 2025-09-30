@@ -36,31 +36,31 @@ function getImportanceStyles(importancia: 'alta' | 'media' | 'baixa') {
   switch (importancia) {
     case 'alta':
       return {
-        border: 'border-blue-300',
-        bg: 'bg-blue-100',
-        icon: 'text-blue-600',
-        badge: 'bg-blue-200 text-blue-900'
+        border: 'border-blue-700',
+        bg: 'bg-blue-600',
+        icon: 'text-white',
+        badge: 'bg-blue-800 text-white'
       };
     case 'media':
       return {
-        border: 'border-indigo-200',
-        bg: 'bg-indigo-50',
-        icon: 'text-indigo-600',
-        badge: 'bg-indigo-100 text-indigo-800'
+        border: 'border-indigo-700',
+        bg: 'bg-indigo-600',
+        icon: 'text-white',
+        badge: 'bg-indigo-800 text-white'
       };
     case 'baixa':
       return {
-        border: 'border-slate-200',
-        bg: 'bg-slate-50',
-        icon: 'text-slate-600',
-        badge: 'bg-slate-100 text-slate-800'
+        border: 'border-slate-700',
+        bg: 'bg-slate-600',
+        icon: 'text-white',
+        badge: 'bg-slate-800 text-white'
       };
     default:
       return {
-        border: 'border-gray-200',
-        bg: 'bg-gray-50',
-        icon: 'text-gray-500',
-        badge: 'bg-gray-100 text-gray-800'
+        border: 'border-gray-700',
+        bg: 'bg-gray-600',
+        icon: 'text-white',
+        badge: 'bg-gray-800 text-white'
       };
   }
 }
@@ -252,7 +252,7 @@ export default function InsightsCard({
                     {icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h5 className="font-semibold text-gray-900 text-sm truncate">
+                    <h5 className="font-semibold text-white text-sm truncate">
                       {insight.titulo}
                     </h5>
                   </div>

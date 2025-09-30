@@ -39,38 +39,38 @@ function getNivelStyles(nivel: 'critico' | 'alto' | 'medio' | 'baixo') {
   switch (nivel) {
     case 'critico':
       return {
-        border: 'border-red-300',
-        bg: 'bg-red-100',
-        icon: 'text-red-600',
-        badge: 'bg-red-200 text-red-900'
+        border: 'border-red-700',
+        bg: 'bg-red-600',
+        icon: 'text-white',
+        badge: 'bg-red-800 text-white'
       };
     case 'alto':
       return {
-        border: 'border-red-200',
-        bg: 'bg-red-50',
-        icon: 'text-red-600',
-        badge: 'bg-red-100 text-red-800'
+        border: 'border-red-700',
+        bg: 'bg-red-500',
+        icon: 'text-white',
+        badge: 'bg-red-700 text-white'
       };
     case 'medio':
       return {
-        border: 'border-orange-200',
-        bg: 'bg-orange-50',
-        icon: 'text-orange-600',
-        badge: 'bg-orange-100 text-orange-800'
+        border: 'border-orange-700',
+        bg: 'bg-orange-600',
+        icon: 'text-white',
+        badge: 'bg-orange-800 text-white'
       };
     case 'baixo':
       return {
-        border: 'border-red-300',
-        bg: 'bg-red-200',
-        icon: 'text-red-900',
-        badge: 'bg-red-300 text-red-900'
+        border: 'border-yellow-700',
+        bg: 'bg-yellow-600',
+        icon: 'text-white',
+        badge: 'bg-yellow-800 text-white'
       };
     default:
       return {
-        border: 'border-gray-200',
-        bg: 'bg-gray-50',
-        icon: 'text-gray-500',
-        badge: 'bg-gray-100 text-gray-800'
+        border: 'border-gray-700',
+        bg: 'bg-gray-600',
+        icon: 'text-white',
+        badge: 'bg-gray-800 text-white'
       };
   }
 }
@@ -284,7 +284,7 @@ export default function AlertasCard({
                     {icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h5 className="font-semibold text-gray-900 text-sm break-words leading-tight">
+                    <h5 className="font-semibold text-white text-sm break-words leading-tight">
                       {alerta.titulo}
                     </h5>
                   </div>

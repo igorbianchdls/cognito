@@ -34,9 +34,9 @@ interface RecomendacoesCardProps {
 
 function getImpactoStyles(impacto: 'alto' | 'medio' | 'baixo') {
   const styles = {
-    alto: { border: 'border-green-300', bg: 'bg-green-100', icon: 'text-green-600', badge: 'bg-green-200 text-green-900' },
-    medio: { border: 'border-yellow-200', bg: 'bg-yellow-50', icon: 'text-yellow-600', badge: 'bg-yellow-100 text-yellow-800' },
-    baixo: { border: 'border-gray-200', bg: 'bg-gray-50', icon: 'text-gray-600', badge: 'bg-gray-100 text-gray-800' }
+    alto: { border: 'border-green-700', bg: 'bg-green-600', icon: 'text-white', badge: 'bg-green-800 text-white' },
+    medio: { border: 'border-purple-700', bg: 'bg-purple-600', icon: 'text-white', badge: 'bg-purple-800 text-white' },
+    baixo: { border: 'border-gray-700', bg: 'bg-gray-600', icon: 'text-white', badge: 'bg-gray-800 text-white' }
   };
   return styles[impacto];
 }
@@ -238,7 +238,7 @@ export default function RecomendacoesCard({
                     {icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h5 className="font-semibold text-gray-900 text-sm truncate">
+                    <h5 className="font-semibold text-white text-sm truncate">
                       {recomendacao.titulo}
                     </h5>
                   </div>
