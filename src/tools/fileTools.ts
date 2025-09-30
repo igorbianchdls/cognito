@@ -7,14 +7,14 @@ export const readFileTool = tool({
   description: 'Lê o conteúdo de um arquivo do sistema de arquivos',
   parameters: z.object({
     filePath: z.string().describe('Caminho do arquivo para ler (absoluto ou relativo)'),
-    encoding: z.enum(['utf8', 'base64']).default('utf8').describe('Codificação do arquivo')
+    encoding: z.string().default('utf8').describe('Codificação do arquivo (utf8, base64, etc.)')
   }),
   execute: async ({ filePath, encoding }) => {
     try {
-      const content = await readFile(filePath, encoding);
+      const content = await readFile(filePath, encoding as BufferEncoding);
       return {
         success: true,
-        content,
+        content: content.toString(),
         message: `✅ Arquivo lido com sucesso: ${filePath}`,
         size: content.length
       };
