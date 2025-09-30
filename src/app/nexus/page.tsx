@@ -59,6 +59,7 @@ export default function Page() {
       case 'performanceAgent': return '/api/workflows/performance';
       case 'productAgent': return '/api/workflows/products';
       case 'analistaDados': return '/api/agents/analista-dados';
+      case 'salesAgent': return '/api/claudeAgents/sales';
       default: return '/api/agents/shopify-analyst';
     }
   };
