@@ -4,7 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Package, AlertTriangle, CheckCircle2, XCircle, MapPin, DollarSign, TrendingUp, TrendingDown, Archive, Loader2 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Package, AlertTriangle, CheckCircle2, XCircle, MapPin, DollarSign, TrendingUp, TrendingDown, Archive, Loader2, Edit } from 'lucide-react';
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
@@ -73,6 +77,18 @@ export default function InventoryList({ success, count, data, message, error }: 
   const [showAjustarForm, setShowAjustarForm] = useState<string | null>(null);
   const [novaQuantidade, setNovaQuantidade] = useState<string>('');
   const [feedbackMessage, setFeedbackMessage] = useState<{ id: string; type: 'success' | 'error'; message: string } | null>(null);
+
+  // Estados para modal de edicao
+  const [showEditModal, setShowEditModal] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    preco_venda: '',
+    custo_unitario: '',
+    fornecedor: '',
+    localizacao: '',
+    quantidade_minima: '',
+    quantidade_maxima: '',
+    observacoes: ''
+  });
 
   const supabase = createClient();
 
@@ -170,6 +186,60 @@ export default function InventoryList({ success, count, data, message, error }: 
     }
   };
 
+  // Editar produto
+  const handleEditarProduto = async (itemId: string) => {
+    setLoadingId(itemId);
+    setFeedbackMessage(null);
+
+    try {
+      const updateData: Record<string, unknown> = {
+        updated_at: new Date().toISOString()
+      };
+
+      if (editForm.preco_venda) updateData.preco_venda = Number(editForm.preco_venda);
+      if (editForm.custo_unitario) updateData.custo_unitario = Number(editForm.custo_unitario);
+      if (editForm.fornecedor) updateData.fornecedor = editForm.fornecedor;
+      if (editForm.localizacao) updateData.localizacao = editForm.localizacao;
+      if (editForm.quantidade_minima) updateData.quantidade_minima = Number(editForm.quantidade_minima);
+      if (editForm.quantidade_maxima) updateData.quantidade_maxima = Number(editForm.quantidade_maxima);
+      if (editForm.observacoes !== undefined) updateData.observacoes = editForm.observacoes;
+
+      const { error } = await supabase
+        .from('inventory')
+        .update(updateData)
+        .eq('id', itemId);
+
+      if (error) throw error;
+
+      setFeedbackMessage({
+        id: itemId,
+        type: 'success',
+        message: 'Produto atualizado com sucesso!'
+      });
+
+      setShowEditModal(null);
+      setEditForm({
+        preco_venda: '',
+        custo_unitario: '',
+        fornecedor: '',
+        localizacao: '',
+        quantidade_minima: '',
+        quantidade_maxima: '',
+        observacoes: ''
+      });
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    } catch (err) {
+      console.error('Erro ao editar produto:', err);
+      setFeedbackMessage({
+        id: itemId,
+        type: 'error',
+        message: 'Erro ao editar produto. Tente novamente.'
+      });
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
   // Calcular margem de lucro
   const calcularMargem = (custo?: number, venda?: number) => {
     if (!custo || !venda || custo === 0) return null;
@@ -214,6 +284,7 @@ export default function InventoryList({ success, count, data, message, error }: 
   }
 
   return (
+    <>
     <Card className="w-full border-gray-200">
       <CardHeader>
         <CardTitle className="text-gray-800 flex items-center gap-2">
@@ -385,6 +456,28 @@ export default function InventoryList({ success, count, data, message, error }: 
                       )}
 
                       <Button
+                        onClick={() => {
+                          setShowEditModal(item.id);
+                          setEditForm({
+                            preco_venda: item.preco_venda?.toString() || '',
+                            custo_unitario: item.custo_unitario?.toString() || '',
+                            fornecedor: item.fornecedor || '',
+                            localizacao: item.localizacao || '',
+                            quantidade_minima: item.quantidade_minima?.toString() || '',
+                            quantidade_maxima: item.quantidade_maxima?.toString() || '',
+                            observacoes: item.observacoes || ''
+                          });
+                        }}
+                        disabled={loadingId === item.id}
+                        size="sm"
+                        variant="outline"
+                        className="border-purple-300 text-purple-700 hover:bg-purple-50"
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Editar
+                      </Button>
+
+                      <Button
                         onClick={() => handleDescontinuar(item.id)}
                         disabled={loadingId === item.id}
                         size="sm"
@@ -402,5 +495,120 @@ export default function InventoryList({ success, count, data, message, error }: 
         </Accordion>
       </CardContent>
     </Card>
+
+    {/* Modal de Edicao */}
+    {showEditModal && (
+      <Dialog open={!!showEditModal} onOpenChange={() => setShowEditModal(null)}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Editar Produto</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="preco_venda">Preco de Venda (R$)</Label>
+                <Input
+                  id="preco_venda"
+                  type="number"
+                  step="0.01"
+                  value={editForm.preco_venda}
+                  onChange={(e) => setEditForm({ ...editForm, preco_venda: e.target.value })}
+                  placeholder="0.00"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="custo_unitario">Custo Unitario (R$)</Label>
+                <Input
+                  id="custo_unitario"
+                  type="number"
+                  step="0.01"
+                  value={editForm.custo_unitario}
+                  onChange={(e) => setEditForm({ ...editForm, custo_unitario: e.target.value })}
+                  placeholder="0.00"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="fornecedor">Fornecedor</Label>
+              <Input
+                id="fornecedor"
+                value={editForm.fornecedor}
+                onChange={(e) => setEditForm({ ...editForm, fornecedor: e.target.value })}
+                placeholder="Nome do fornecedor"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="localizacao">Localizacao</Label>
+              <Input
+                id="localizacao"
+                value={editForm.localizacao}
+                onChange={(e) => setEditForm({ ...editForm, localizacao: e.target.value })}
+                placeholder="Ex: Prateleira A1"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="quantidade_minima">Quantidade Minima</Label>
+                <Input
+                  id="quantidade_minima"
+                  type="number"
+                  value={editForm.quantidade_minima}
+                  onChange={(e) => setEditForm({ ...editForm, quantidade_minima: e.target.value })}
+                  placeholder="0"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="quantidade_maxima">Quantidade Maxima</Label>
+                <Input
+                  id="quantidade_maxima"
+                  type="number"
+                  value={editForm.quantidade_maxima}
+                  onChange={(e) => setEditForm({ ...editForm, quantidade_maxima: e.target.value })}
+                  placeholder="0"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="observacoes">Observacoes</Label>
+              <Textarea
+                id="observacoes"
+                value={editForm.observacoes}
+                onChange={(e) => setEditForm({ ...editForm, observacoes: e.target.value })}
+                placeholder="Informacoes adicionais sobre o produto"
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowEditModal(null)}
+              disabled={loadingId === showEditModal}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => handleEditarProduto(showEditModal)}
+              disabled={loadingId === showEditModal}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              {loadingId === showEditModal ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                'Salvar Alteracoes'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )}
+    </>
   );
 }
