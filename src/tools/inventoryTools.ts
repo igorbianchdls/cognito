@@ -8,9 +8,9 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export const getInventory = tool({
-  description: 'Busca itens do inventário/estoque do banco de dados com informações de quantidade, localização e status',
+  description: 'Busca itens do inventario/estoque do banco de dados com informacoes de quantidade, localizacao e status',
   inputSchema: z.object({
-    limit: z.number().default(10).describe('Número máximo de resultados'),
+    limit: z.number().default(10).describe('Numero maximo de resultados'),
     status: z.enum(['disponivel', 'baixo_estoque', 'esgotado', 'descontinuado']).optional().describe('Filtrar por status do item'),
     categoria: z.string().optional().describe('Filtrar por categoria do produto'),
     nome_produto: z.string().optional().describe('Filtrar por nome do produto')
@@ -43,13 +43,13 @@ export const getInventory = tool({
         success: true,
         count: data?.length || 0,
         data: data,
-        message: ` ${data?.length || 0} ${data?.length !== 1 ? 'itens' : 'item'} encontrado${data?.length !== 1 ? 's' : ''} no estoque`
+        message: `${data?.length || 0} ${data?.length !== 1 ? 'itens' : 'item'} encontrado${data?.length !== 1 ? 's' : ''} no estoque`
       };
     } catch (error) {
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Erro desconhecido',
-        message: 'L Erro ao buscar itens do estoque'
+        message: 'Erro ao buscar itens do estoque'
       };
     }
   }
