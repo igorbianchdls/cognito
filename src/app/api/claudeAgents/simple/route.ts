@@ -1,6 +1,5 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
-import { readFiles, writeFiles, editFiles, listDirectoryTool } from '@/tools/fileTools';
 
 export const maxDuration = 300;
 
@@ -15,36 +14,11 @@ export async function POST(req: Request) {
     const result = streamText({
       model: anthropic('claude-sonnet-4-20250514'),
 
-      system: `Você é um assistente AI útil com capacidades completas de manipulação de arquivos.
-
-**Suas capacidades:**
-- **readFiles**: Ler arquivos de texto do sistema
-- **writeFiles**: Criar ou sobrescrever arquivos
-- **editFiles**: Editar arquivos existentes (replace, replaceAll, insertAfter, insertBefore)
-- **listDirectory**: Listar arquivos e pastas de um diretório
-
-**Exemplos de uso:**
-- "Leia o arquivo package.json"
-- "Crie um arquivo teste.txt com o conteúdo 'Olá mundo'"
-- "Edite o arquivo config.js substituindo 'development' por 'production'"
-- "Liste os arquivos do diretório src/"
-
-**Para editFiles, operações disponíveis:**
-- replace: Substitui primeira ocorrência
-- replaceAll: Substitui todas as ocorrências
-- insertAfter: Insere texto após uma referência
-- insertBefore: Insere texto antes de uma referência
+      system: `Você é um assistente AI útil e prestativo.
 
 Responda sempre em português brasileiro de forma clara e prestativa.`,
 
-      messages: convertToModelMessages(messages),
-
-      tools: {
-        readFiles,
-        writeFiles,
-        editFiles,
-        listDirectory: listDirectoryTool
-      }
+      messages: convertToModelMessages(messages)
     });
 
     console.log('🤖 CLAUDE AGENT: StreamText executado, retornando response...');
