@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { CheckCircle2, XCircle, Instagram, Eye, Heart, MessageCircle, Bookmark, TrendingUp, UserPlus } from 'lucide-react';
 
 interface ReelsContent {
@@ -81,72 +82,83 @@ export default function ReelsContentList({ success, count, data, message, error 
                   )}
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {reel.hook && (
-                  <div>
-                    <p className="text-xs font-semibold text-gray-500 mb-1">HOOK (1-2s)</p>
-                    <p className="text-sm text-gray-700 font-medium">{reel.hook}</p>
-                  </div>
-                )}
-                {reel.hook_expansion && (
-                  <div>
-                    <p className="text-xs font-semibold text-gray-500 mb-1">HOOK EXPANSION</p>
-                    <p className="text-sm text-gray-700">{reel.hook_expansion}</p>
-                  </div>
-                )}
-                {reel.script && (
-                  <div>
-                    <p className="text-xs font-semibold text-gray-500 mb-1">SCRIPT</p>
-                    <p className="text-sm text-gray-700 line-clamp-4">{reel.script}</p>
-                  </div>
-                )}
-
-                {(reel.views !== undefined || reel.likes !== undefined || reel.comments !== undefined || reel.saves !== undefined || reel.engagement_rate !== undefined || reel.follows !== undefined) && (
-                  <div className="pt-3 border-t">
-                    <p className="text-xs font-semibold text-gray-500 mb-2">MÉTRICAS DE PERFORMANCE</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {reel.views !== undefined && (
-                        <div className="flex items-center gap-1.5">
-                          <Eye className="h-4 w-4 text-blue-500" />
-                          <span className="text-sm text-gray-700">{reel.views.toLocaleString('pt-BR')} views</span>
-                        </div>
-                      )}
-                      {reel.likes !== undefined && (
-                        <div className="flex items-center gap-1.5">
-                          <Heart className="h-4 w-4 text-pink-500" />
-                          <span className="text-sm text-gray-700">{reel.likes.toLocaleString('pt-BR')} likes</span>
-                        </div>
-                      )}
-                      {reel.comments !== undefined && (
-                        <div className="flex items-center gap-1.5">
-                          <MessageCircle className="h-4 w-4 text-purple-500" />
-                          <span className="text-sm text-gray-700">{reel.comments.toLocaleString('pt-BR')} comentários</span>
-                        </div>
-                      )}
-                      {reel.saves !== undefined && (
-                        <div className="flex items-center gap-1.5">
-                          <Bookmark className="h-4 w-4 text-yellow-500" />
-                          <span className="text-sm text-gray-700">{reel.saves.toLocaleString('pt-BR')} salvos</span>
-                        </div>
-                      )}
-                      {reel.engagement_rate !== undefined && (
-                        <div className="flex items-center gap-1.5">
-                          <TrendingUp className="h-4 w-4 text-orange-500" />
-                          <span className="text-sm text-gray-700">{reel.engagement_rate.toFixed(1)}% engajamento</span>
-                        </div>
-                      )}
-                      {reel.follows !== undefined && (
-                        <div className="flex items-center gap-1.5">
-                          <UserPlus className="h-4 w-4 text-green-500" />
-                          <span className="text-sm text-gray-700">+{reel.follows.toLocaleString('pt-BR')} seguidores</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+              <CardContent>
+                <Accordion type="single" collapsible>
+                  <AccordionItem value="content" className="border-none">
+                    <AccordionTrigger className="hover:no-underline py-3">
+                      <div className="w-full">
+                        <p className="text-xs font-semibold text-gray-500 mb-2">MÉTRICAS DE PERFORMANCE</p>
+                        {(reel.views !== undefined || reel.likes !== undefined || reel.comments !== undefined || reel.saves !== undefined || reel.engagement_rate !== undefined || reel.follows !== undefined) ? (
+                          <div className="grid grid-cols-2 gap-2">
+                            {reel.views !== undefined && (
+                              <div className="flex items-center gap-1.5">
+                                <Eye className="h-4 w-4 text-blue-500" />
+                                <span className="text-sm text-gray-700">{reel.views.toLocaleString('pt-BR')} views</span>
+                              </div>
+                            )}
+                            {reel.likes !== undefined && (
+                              <div className="flex items-center gap-1.5">
+                                <Heart className="h-4 w-4 text-pink-500" />
+                                <span className="text-sm text-gray-700">{reel.likes.toLocaleString('pt-BR')} likes</span>
+                              </div>
+                            )}
+                            {reel.comments !== undefined && (
+                              <div className="flex items-center gap-1.5">
+                                <MessageCircle className="h-4 w-4 text-purple-500" />
+                                <span className="text-sm text-gray-700">{reel.comments.toLocaleString('pt-BR')} comentários</span>
+                              </div>
+                            )}
+                            {reel.saves !== undefined && (
+                              <div className="flex items-center gap-1.5">
+                                <Bookmark className="h-4 w-4 text-yellow-500" />
+                                <span className="text-sm text-gray-700">{reel.saves.toLocaleString('pt-BR')} salvos</span>
+                              </div>
+                            )}
+                            {reel.engagement_rate !== undefined && (
+                              <div className="flex items-center gap-1.5">
+                                <TrendingUp className="h-4 w-4 text-orange-500" />
+                                <span className="text-sm text-gray-700">{reel.engagement_rate.toFixed(1)}% engajamento</span>
+                              </div>
+                            )}
+                            {reel.follows !== undefined && (
+                              <div className="flex items-center gap-1.5">
+                                <UserPlus className="h-4 w-4 text-green-500" />
+                                <span className="text-sm text-gray-700">+{reel.follows.toLocaleString('pt-BR')} seguidores</span>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-gray-400">Sem métricas disponíveis</p>
+                        )}
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-3 pt-2">
+                        {reel.hook && (
+                          <div>
+                            <p className="text-xs font-semibold text-gray-500 mb-1">HOOK (1-2s)</p>
+                            <p className="text-sm text-gray-700 font-medium">{reel.hook}</p>
+                          </div>
+                        )}
+                        {reel.hook_expansion && (
+                          <div>
+                            <p className="text-xs font-semibold text-gray-500 mb-1">HOOK EXPANSION</p>
+                            <p className="text-sm text-gray-700">{reel.hook_expansion}</p>
+                          </div>
+                        )}
+                        {reel.script && (
+                          <div>
+                            <p className="text-xs font-semibold text-gray-500 mb-1">SCRIPT</p>
+                            <p className="text-sm text-gray-700">{reel.script}</p>
+                          </div>
+                        )}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
 
                 {reel.created_at && (
-                  <p className="text-xs text-gray-400 pt-2 border-t">
+                  <p className="text-xs text-gray-400 pt-3 border-t mt-3">
                     Criado em: {new Date(reel.created_at).toLocaleDateString('pt-BR')}
                   </p>
                 )}
