@@ -19,7 +19,7 @@ export const getYouTubeContent = tool({
         .from('youtube_content')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(limit);
+        .limit(limit ?? 10);
 
       if (status) {
         query = query.eq('status', status);
@@ -57,7 +57,7 @@ export const getReelsContent = tool({
         .from('reels_content')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(limit);
+        .limit(limit ?? 10);
 
       if (status) {
         query = query.eq('status', status);
