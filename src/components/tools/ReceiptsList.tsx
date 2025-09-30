@@ -1,7 +1,12 @@
+'use client';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { CheckCircle2, XCircle, Receipt, User, Calendar, DollarSign, FileText, Clock, CheckCircle, AlertCircle, ExternalLink } from 'lucide-react';
+import { CheckCircle2, XCircle, Receipt, User, Calendar, DollarSign, FileText, Clock, CheckCircle, AlertCircle, ExternalLink, ThumbsUp, ThumbsDown, Loader2 } from 'lucide-react';
+import { useState } from 'react';
+import { createClient } from '@/lib/supabase/client';
 
 interface ReceiptItem {
   id: string;
@@ -75,6 +80,106 @@ const getStatusIcon = (status?: string) => {
 };
 
 export default function ReceiptsList({ success, count, data, message, error }: ReceiptsListProps) {
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [showApprovalForm, setShowApprovalForm] = useState<string | null>(null);
+  const [showRejectionForm, setShowRejectionForm] = useState<string | null>(null);
+  const [metodoReembolso, setMetodoReembolso] = useState<string>('PIX');
+  const [motivoReprovacao, setMotivoReprovacao] = useState<string>('');
+  const [feedbackMessage, setFeedbackMessage] = useState<{ id: string; type: 'success' | 'error'; message: string } | null>(null);
+
+  const supabase = createClient();
+
+  const handleAprovar = async (receiptId: string) => {
+    setLoadingId(receiptId);
+    setFeedbackMessage(null);
+
+    try {
+      const { error } = await supabase
+        .from('receipts')
+        .update({
+          status: 'aprovado',
+          aprovador_nome: 'Usuário Atual', // TODO: Get from auth context
+          data_aprovacao: new Date().toISOString(),
+          metodo_reembolso: metodoReembolso
+        })
+        .eq('id', receiptId);
+
+      if (error) {
+        throw error;
+      }
+
+      setFeedbackMessage({
+        id: receiptId,
+        type: 'success',
+        message: `Recibo aprovado com sucesso! Método: ${metodoReembolso}`
+      });
+      setShowApprovalForm(null);
+      setMetodoReembolso('PIX');
+
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    } catch (err) {
+      console.error('Erro ao aprovar recibo:', err);
+      setFeedbackMessage({
+        id: receiptId,
+        type: 'error',
+        message: 'Erro ao aprovar recibo. Tente novamente.'
+      });
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
+  const handleReprovar = async (receiptId: string) => {
+    if (!motivoReprovacao.trim()) {
+      setFeedbackMessage({
+        id: receiptId,
+        type: 'error',
+        message: 'Por favor, informe o motivo da reprovação.'
+      });
+      return;
+    }
+
+    setLoadingId(receiptId);
+    setFeedbackMessage(null);
+
+    try {
+      const { error } = await supabase
+        .from('receipts')
+        .update({
+          status: 'reprovado',
+          aprovador_nome: 'Usuário Atual', // TODO: Get from auth context
+          data_aprovacao: new Date().toISOString(),
+          motivo_reprovacao: motivoReprovacao
+        })
+        .eq('id', receiptId);
+
+      if (error) {
+        throw error;
+      }
+
+      setFeedbackMessage({
+        id: receiptId,
+        type: 'success',
+        message: 'Recibo reprovado com sucesso.'
+      });
+      setShowRejectionForm(null);
+      setMotivoReprovacao('');
+
+      // Auto-hide success message after 3 seconds
+      setTimeout(() => setFeedbackMessage(null), 3000);
+    } catch (err) {
+      console.error('Erro ao reprovar recibo:', err);
+      setFeedbackMessage({
+        id: receiptId,
+        type: 'error',
+        message: 'Erro ao reprovar recibo. Tente novamente.'
+      });
+    } finally {
+      setLoadingId(null);
+    }
+  };
+
   if (!success && error) {
     return (
       <Card className="border-red-200 bg-red-50">
@@ -238,6 +343,142 @@ export default function ReceiptsList({ success, count, data, message, error }: R
                             </div>
                           )}
                         </div>
+
+                        {/* Approval/Rejection Section - Only for Pending Receipts */}
+                        {receipt.status === 'pendente' && (
+                          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mt-4">
+                            <p className="text-xs font-semibold text-purple-700 mb-3">⚡ AÇÕES ADMINISTRATIVAS</p>
+
+                            {/* Feedback Message */}
+                            {feedbackMessage && feedbackMessage.id === receipt.id && (
+                              <div className={`mb-3 p-2 rounded-md text-sm ${
+                                feedbackMessage.type === 'success'
+                                  ? 'bg-green-100 text-green-800 border border-green-300'
+                                  : 'bg-red-100 text-red-800 border border-red-300'
+                              }`}>
+                                {feedbackMessage.message}
+                              </div>
+                            )}
+
+                            {/* Approval Form */}
+                            {showApprovalForm === receipt.id ? (
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="text-xs font-semibold text-gray-700 mb-1 block">
+                                    Método de Reembolso
+                                  </label>
+                                  <select
+                                    value={metodoReembolso}
+                                    onChange={(e) => setMetodoReembolso(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                                    disabled={loadingId === receipt.id}
+                                  >
+                                    <option value="PIX">PIX</option>
+                                    <option value="TED">TED</option>
+                                    <option value="Depósito">Depósito</option>
+                                    <option value="Cheque">Cheque</option>
+                                  </select>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button
+                                    onClick={() => handleAprovar(receipt.id)}
+                                    disabled={loadingId === receipt.id}
+                                    className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                                    size="sm"
+                                  >
+                                    {loadingId === receipt.id ? (
+                                      <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        Aprovando...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <CheckCircle className="h-4 w-4 mr-2" />
+                                        Confirmar Aprovação
+                                      </>
+                                    )}
+                                  </Button>
+                                  <Button
+                                    onClick={() => {
+                                      setShowApprovalForm(null);
+                                      setMetodoReembolso('PIX');
+                                    }}
+                                    disabled={loadingId === receipt.id}
+                                    variant="outline"
+                                    size="sm"
+                                  >
+                                    Cancelar
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : showRejectionForm === receipt.id ? (
+                              <div className="space-y-3">
+                                <div>
+                                  <label className="text-xs font-semibold text-gray-700 mb-1 block">
+                                    Motivo da Reprovação
+                                  </label>
+                                  <textarea
+                                    value={motivoReprovacao}
+                                    onChange={(e) => setMotivoReprovacao(e.target.value)}
+                                    placeholder="Descreva o motivo da reprovação..."
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-red-500 min-h-20"
+                                    disabled={loadingId === receipt.id}
+                                  />
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button
+                                    onClick={() => handleReprovar(receipt.id)}
+                                    disabled={loadingId === receipt.id}
+                                    className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                                    size="sm"
+                                  >
+                                    {loadingId === receipt.id ? (
+                                      <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                        Reprovando...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <XCircle className="h-4 w-4 mr-2" />
+                                        Confirmar Reprovação
+                                      </>
+                                    )}
+                                  </Button>
+                                  <Button
+                                    onClick={() => {
+                                      setShowRejectionForm(null);
+                                      setMotivoReprovacao('');
+                                    }}
+                                    disabled={loadingId === receipt.id}
+                                    variant="outline"
+                                    size="sm"
+                                  >
+                                    Cancelar
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex gap-2">
+                                <Button
+                                  onClick={() => setShowApprovalForm(receipt.id)}
+                                  className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                                  size="sm"
+                                >
+                                  <ThumbsUp className="h-4 w-4 mr-2" />
+                                  Aprovar
+                                </Button>
+                                <Button
+                                  onClick={() => setShowRejectionForm(receipt.id)}
+                                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                                  size="sm"
+                                >
+                                  <ThumbsDown className="h-4 w-4 mr-2" />
+                                  Reprovar
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </AccordionContent>
                   </AccordionItem>
