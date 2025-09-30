@@ -50,6 +50,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
   'performanceAgent': null,
   'productAgent': null,
   'analistaDados': null,
+  'salesAgent': null,
 };
 
 const models = [
@@ -69,6 +70,7 @@ const models = [
   { id: 'performanceAgent', name: 'PerformanceAgent', icon: iconMap['performanceAgent'] },
   { id: 'productAgent', name: 'ProductAgent', icon: iconMap['productAgent'] },
   { id: 'analistaDados', name: 'Analista de Dados', icon: iconMap['analistaDados'] },
+  { id: 'salesAgent', name: 'SalesAgent', icon: iconMap['salesAgent'] },
 ];
 
 export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange }: InputAreaProps) {
@@ -142,6 +144,7 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
                 case 'pnlAnalyst': return 'P&LAnalyst';
                 case 'budgetPlanningAnalyst': return 'BudgetPlanningAnalyst';
                 case 'analistaDados': return 'Analista de Dados';
+                case 'salesAgent': return 'SalesAgent';
                 default: return id;
               }
             };
