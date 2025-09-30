@@ -672,6 +672,12 @@ export class ThemeManager {
       clonedWidget.insightsConfig.borderAccentColor = '#bbb';
     }
 
+    // Title styling
+    clonedWidget.insightsConfig.titleColor = tokens.colors.text.primary;
+    clonedWidget.insightsConfig.titleFontSize = tokens.typography.fontSize.lg;
+    clonedWidget.insightsConfig.titleFontWeight = tokens.typography.fontWeight.semibold;
+    clonedWidget.insightsConfig.titleFontFamily = tokens.typography.fontFamily.primary;
+
     // Apply gradient if available
     if (tokens.effects.gradient) {
       clonedWidget.insightsConfig.backgroundGradient = {
@@ -715,6 +721,12 @@ export class ThemeManager {
       clonedWidget.alertsConfig.borderAccentColor = '#bbb';
     }
 
+    // Title styling
+    clonedWidget.alertsConfig.titleColor = tokens.colors.text.primary;
+    clonedWidget.alertsConfig.titleFontSize = tokens.typography.fontSize.lg;
+    clonedWidget.alertsConfig.titleFontWeight = tokens.typography.fontWeight.semibold;
+    clonedWidget.alertsConfig.titleFontFamily = tokens.typography.fontFamily.primary;
+
     // Apply gradient if available
     if (tokens.effects.gradient) {
       clonedWidget.alertsConfig.backgroundGradient = {
@@ -757,6 +769,12 @@ export class ThemeManager {
       clonedWidget.recommendationsConfig.borderColor = '#777';
       clonedWidget.recommendationsConfig.borderAccentColor = '#bbb';
     }
+
+    // Title styling
+    clonedWidget.recommendationsConfig.titleColor = tokens.colors.text.primary;
+    clonedWidget.recommendationsConfig.titleFontSize = tokens.typography.fontSize.lg;
+    clonedWidget.recommendationsConfig.titleFontWeight = tokens.typography.fontWeight.semibold;
+    clonedWidget.recommendationsConfig.titleFontFamily = tokens.typography.fontFamily.primary;
 
     // Apply gradient if available
     if (tokens.effects.gradient) {

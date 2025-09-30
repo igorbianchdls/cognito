@@ -401,6 +401,11 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
             title={widget.title}
             useGlobalStore={widget.insightsConfig?.useGlobalStore ?? true}
             {...(widget.insightsConfig || {})}
+            // Typography props - Title
+            titleFontFamily={widget.insightsConfig?.titleFontFamily}
+            titleFontSize={widget.insightsConfig?.titleFontSize}
+            titleFontWeight={widget.insightsConfig?.titleFontWeight}
+            titleColor={widget.insightsConfig?.titleColor}
           />
         </div>
       );
@@ -412,6 +417,11 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
             title={widget.title}
             useGlobalStore={widget.alertsConfig?.useGlobalStore ?? true}
             {...(widget.alertsConfig || {})}
+            // Typography props - Title
+            titleFontFamily={widget.alertsConfig?.titleFontFamily}
+            titleFontSize={widget.alertsConfig?.titleFontSize}
+            titleFontWeight={widget.alertsConfig?.titleFontWeight}
+            titleColor={widget.alertsConfig?.titleColor}
           />
         </div>
       );
@@ -423,6 +433,11 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
             title={widget.title}
             useGlobalStore={widget.recommendationsConfig?.useGlobalStore ?? true}
             {...(widget.recommendationsConfig || {})}
+            // Typography props - Title
+            titleFontFamily={widget.recommendationsConfig?.titleFontFamily}
+            titleFontSize={widget.recommendationsConfig?.titleFontSize}
+            titleFontWeight={widget.recommendationsConfig?.titleFontWeight}
+            titleColor={widget.recommendationsConfig?.titleColor}
           />
         </div>
       );

@@ -30,6 +30,11 @@ interface InsightsCardProps {
   };
   borderColor?: string;
   borderAccentColor?: string;
+  // Typography - Title
+  titleFontFamily?: string;
+  titleFontSize?: number;
+  titleFontWeight?: string | number;
+  titleColor?: string;
 }
 
 function getImportanceStyles(importancia: 'alta' | 'media' | 'baixa') {
@@ -99,7 +104,11 @@ export default function InsightsCard({
   backgroundColor,
   backgroundGradient,
   borderColor,
-  borderAccentColor
+  borderAccentColor,
+  titleFontFamily,
+  titleFontSize,
+  titleFontWeight,
+  titleColor
 }: InsightsCardProps) {
   const storeInsights = useStore($insightsOrdenados)
   const totalInsights = useStore($totalInsights)
@@ -180,7 +189,17 @@ export default function InsightsCard({
       <div className="space-y-4 mb-4">
       {/* Header */}
       <div className="mb-4">
-        <h3 className="font-semibold text-white break-words mb-2">{title}</h3>
+        <h3
+          className="break-words mb-2"
+          style={{
+            fontFamily: titleFontFamily || undefined,
+            fontSize: titleFontSize ? `${titleFontSize}px` : undefined,
+            fontWeight: titleFontWeight || 600,
+            color: titleColor || '#ffffff'
+          }}
+        >
+          {title}
+        </h3>
         {contexto && (
           <p className="text-white text-sm">{contexto}</p>
         )}

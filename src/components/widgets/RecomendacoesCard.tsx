@@ -31,6 +31,11 @@ interface RecomendacoesCardProps {
   };
   borderColor?: string;
   borderAccentColor?: string;
+  // Typography - Title
+  titleFontFamily?: string;
+  titleFontSize?: number;
+  titleFontWeight?: string | number;
+  titleColor?: string;
 }
 
 function getImpactoStyles(impacto: 'alto' | 'medio' | 'baixo') {
@@ -75,7 +80,11 @@ export default function RecomendacoesCard({
   backgroundColor,
   backgroundGradient,
   borderColor,
-  borderAccentColor
+  borderAccentColor,
+  titleFontFamily,
+  titleFontSize,
+  titleFontWeight,
+  titleColor
 }: RecomendacoesCardProps) {
   const storeRecomendacoes = useStore($recomendacoesOrdenadas)
   const totalRecomendacoes = useStore($totalRecomendacoes)
@@ -167,7 +176,17 @@ export default function RecomendacoesCard({
       <div className="space-y-4 mb-4">
       {/* Header */}
       <div className="mb-4">
-        <h3 className="font-semibold text-white break-words mb-2">📋 {title}</h3>
+        <h3
+          className="break-words mb-2"
+          style={{
+            fontFamily: titleFontFamily || undefined,
+            fontSize: titleFontSize ? `${titleFontSize}px` : undefined,
+            fontWeight: titleFontWeight || 600,
+            color: titleColor || '#ffffff'
+          }}
+        >
+          📋 {title}
+        </h3>
         {contexto && (
           <p className="text-white text-sm">{contexto}</p>
         )}
