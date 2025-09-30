@@ -15,6 +15,16 @@ export async function POST(req: Request) {
     const result = streamText({
       model: anthropic('claude-sonnet-4-20250514'),
 
+      // Enable Claude reasoning/thinking
+      providerOptions: {
+        anthropic: {
+          thinking: {
+            type: 'enabled',
+            budgetTokens: 10000
+          }
+        }
+      },
+
       system: `Você é um assistente AI especializado em criação e gestão de conteúdo para redes sociais, com foco em YouTube e Instagram Reels. Seu objetivo é ajudar criadores de conteúdo a organizar, criar e otimizar seus roteiros de vídeos.
 
 # 🎯 Sua Missão

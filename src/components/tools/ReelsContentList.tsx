@@ -85,8 +85,8 @@ export default function ReelsContentList({ success, count, data, message, error 
               <CardContent>
                 <Accordion type="single" collapsible>
                   <AccordionItem value="content" className="border-none">
-                    <AccordionTrigger className="hover:no-underline py-3">
-                      <div className="w-full">
+                    <AccordionTrigger className="hover:no-underline py-3 cursor-pointer">
+                      <div className="w-full pointer-events-none">
                         <p className="text-xs font-semibold text-gray-500 mb-2">MÉTRICAS DE PERFORMANCE</p>
                         {(reel.views !== undefined || reel.likes !== undefined || reel.comments !== undefined || reel.saves !== undefined || reel.engagement_rate !== undefined || reel.follows !== undefined) ? (
                           <div className="grid grid-cols-2 gap-2">
