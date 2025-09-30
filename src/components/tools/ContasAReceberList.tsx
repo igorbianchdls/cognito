@@ -418,7 +418,7 @@ export default function ContasAReceberList({ success, count, data, message, erro
 
                                   <div className="flex gap-2">
                                     <Button
-                                      onClick={() => handleRegistrarPagamento(conta.id, invoice)}
+                                      onClick={() => handleRegistrarPagamento(conta.id, conta)}
                                       disabled={loadingId === conta.id}
                                       className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                                       size="sm"
