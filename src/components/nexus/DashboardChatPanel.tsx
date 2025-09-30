@@ -525,10 +525,10 @@ export default function DashboardChatPanel() {
           {/* Outline Button */}
           <Button
             variant="outline"
-            size="sm"
+            className="px-3 py-2 text-xs font-medium"
             onClick={() => {}}
           >
-            Ação
+            Preview
           </Button>
 
           {/* Compartilhar Button */}

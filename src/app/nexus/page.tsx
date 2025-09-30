@@ -291,24 +291,24 @@ export default function Page() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-white text-gray-700 border border-gray-200 hover:bg-gray-100 transition-colors">
-                  {viewMode === 'chat' && <><MessageSquare className="w-4 h-4" /> Chat Only</>}
-                  {viewMode === 'split' && <><Layout className="w-4 h-4" /> Chat + Dashboard</>}
-                  {viewMode === 'dashboard' && <><BarChart3 className="w-4 h-4" /> Dashboard Only</>}
+                  {viewMode === 'chat' && <><MessageSquare className="w-4 h-4" /> Chat</>}
+                  {viewMode === 'split' && <><Layout className="w-4 h-4" /> Workspace</>}
+                  {viewMode === 'dashboard' && <><BarChart3 className="w-4 h-4" /> Dashboard</>}
                   <ChevronDown className="w-4 h-4" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setViewMode('chat')}>
                   <MessageSquare className="w-4 h-4 mr-2" />
-                  Chat Only
+                  Chat
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setViewMode('split')}>
                   <Layout className="w-4 h-4 mr-2" />
-                  Chat + Dashboard
+                  Workspace
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setViewMode('dashboard')}>
                   <BarChart3 className="w-4 h-4 mr-2" />
-                  Dashboard Only
+                  Dashboard
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
