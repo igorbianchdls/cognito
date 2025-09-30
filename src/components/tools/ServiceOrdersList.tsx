@@ -1,7 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { CheckCircle2, XCircle, Wrench, User, Calendar, DollarSign, FileText, Tool, CheckCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, Wrench, User, Calendar, DollarSign, FileText, Settings, CheckCircle } from 'lucide-react';
 
 interface ServiceOrder {
   id: string;
@@ -41,7 +41,7 @@ const getStatusColor = (status?: string) => {
 const getStatusIcon = (status?: string) => {
   switch (status) {
     case 'concluida': return <CheckCircle className="h-4 w-4 text-green-600" />;
-    case 'em_andamento': return <Tool className="h-4 w-4 text-blue-600 animate-pulse" />;
+    case 'em_andamento': return <Settings className="h-4 w-4 text-blue-600 animate-pulse" />;
     case 'aberta': return <FileText className="h-4 w-4 text-yellow-600" />;
     default: return <Wrench className="h-4 w-4 text-gray-600" />;
   }
