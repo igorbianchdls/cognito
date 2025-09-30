@@ -165,41 +165,9 @@ export default function RecomendacoesCard({
       <div className="space-y-4 mb-4">
       {/* Header */}
       <div className="mb-4">
-        <div className="flex items-start justify-between mb-2 flex-wrap gap-2">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <h3 className="font-semibold text-gray-900 break-words min-w-0">📋 {title}</h3>
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {useGlobalStore && recomendacoesAltaPrioridade.length > 0 && (
-              <Badge variant="default" className="text-xs">
-                {recomendacoesAltaPrioridade.length} alta prioridade
-              </Badge>
-            )}
-            {useGlobalStore && (
-              <Badge variant="outline" className="text-xs">
-                {recomendacoesAtivas.length} ativas
-              </Badge>
-            )}
-            <div className="text-sm text-gray-700">
-              {useGlobalStore ? totalRecomendacoes : recomendacoes.length} recomendaç{(useGlobalStore ? totalRecomendacoes : recomendacoes.length) !== 1 ? 'ões' : 'ão'}
-            </div>
-          </div>
-        </div>
-
-        <p className="text-gray-800 text-sm mb-2">Ordenadas por prioridade (impacto + facilidade)</p>
-
-        {useGlobalStore && recomendacoes.length > 0 && (
-          <div className="flex gap-2 mt-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={markAllAsImplemented}
-              className="text-xs h-7"
-            >
-              <Check className="h-3 w-3 mr-1" />
-              Implementar todas
-            </Button>
-          </div>
+        <h3 className="font-semibold text-white break-words mb-2">📋 {title}</h3>
+        {contexto && (
+          <p className="text-white text-sm">{contexto}</p>
         )}
       </div>
 
@@ -345,13 +313,6 @@ export default function RecomendacoesCard({
         })}
       </div>
 
-      {useGlobalStore && recomendacoes.length > 0 && (
-        <div className="mt-4 pt-3 border-t border-gray-200">
-          <p className="text-xs text-gray-500">
-            <strong>Fonte:</strong> Store global • <strong>Ativas:</strong> {recomendacoesAtivas.length} • <strong>Alta prioridade:</strong> {recomendacoesAltaPrioridade.length}
-          </p>
-        </div>
-      )}
       </div>
     </div>
   );

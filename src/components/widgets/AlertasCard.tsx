@@ -204,43 +204,9 @@ export default function AlertasCard({
       <div className="space-y-4 mb-4">
       {/* Header */}
       <div className="mb-4">
-        <div className="flex items-start justify-between mb-2 flex-wrap gap-2">
-          <div className="flex items-center gap-2 min-w-0 flex-1">
-            <h3 className="font-semibold text-gray-900 break-words min-w-0">{title}</h3>
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {useGlobalStore && alertasCriticos.length > 0 && (
-              <Badge variant="destructive" className="text-xs">
-                {alertasCriticos.length} críticos
-              </Badge>
-            )}
-            {useGlobalStore && (
-              <Badge variant="outline" className="text-xs">
-                {alertasAtivos.length} ativos
-              </Badge>
-            )}
-            <div className="text-sm text-gray-700">
-              {useGlobalStore ? totalAlertas : alertas.length} alerta{(useGlobalStore ? totalAlertas : alertas.length) !== 1 ? 's' : ''}
-            </div>
-          </div>
-        </div>
-
+        <h3 className="font-semibold text-white break-words mb-2">{title}</h3>
         {contexto && (
-          <p className="text-gray-800 text-sm mb-2">{contexto}</p>
-        )}
-
-        {useGlobalStore && alertas.length > 0 && (
-          <div className="flex gap-2 mt-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={markAllAsResolved}
-              className="text-xs h-7"
-            >
-              <Check className="h-3 w-3 mr-1" />
-              Resolver todos
-            </Button>
-          </div>
+          <p className="text-white text-sm">{contexto}</p>
         )}
       </div>
 
@@ -388,13 +354,6 @@ export default function AlertasCard({
         })}
       </div>
 
-      {useGlobalStore && alertas.length > 0 && (
-        <div className="mt-4 pt-3 border-t border-gray-200">
-          <p className="text-xs text-gray-500">
-            <strong>Fonte:</strong> Store global • <strong>Ativos:</strong> {alertasAtivos.length} • <strong>Críticos:</strong> {alertasCriticos.length}
-          </p>
-        </div>
-      )}
       </div>
     </div>
   );
