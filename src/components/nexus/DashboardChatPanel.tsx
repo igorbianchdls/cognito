@@ -525,7 +525,7 @@ export default function DashboardChatPanel() {
           {/* Outline Button */}
           <Button
             variant="outline"
-            className="px-3 py-2 text-xs font-medium"
+            className="px-2 py-1 text-xs font-medium"
             onClick={() => {}}
           >
             Preview
@@ -533,7 +533,7 @@ export default function DashboardChatPanel() {
 
           {/* Compartilhar Button */}
           <button
-            className="px-3 py-2 bg-black text-white rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors"
+            className="px-2 py-1 bg-black text-white rounded-lg text-xs font-medium hover:bg-gray-800 transition-colors"
             onClick={() => {}}
           >
             Compartilhar
