@@ -45,6 +45,7 @@ export default function Page() {
     switch (agent) {
       case 'nexus': return '/api/chat-ui';
       case 'teste': return '/api/teste';
+      case 'claudeAgent': return '/api/claudeAgents/simple';
       case 'shopifyAnalyst': return '/api/agents/shopify-analyst';
       case 'metaAnalyst': return '/api/agents/meta-analyst';
       case 'googleAnalyticsAnalyst': return '/api/agents/google-analytics-analyst';
