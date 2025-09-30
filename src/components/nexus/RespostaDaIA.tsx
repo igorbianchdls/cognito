@@ -47,6 +47,7 @@ import RHCandidatesList from '../tools/RHCandidatesList';
 import ServiceOrdersList from '../tools/ServiceOrdersList';
 import InvoicesList from '../tools/InvoicesList';
 import ReceiptsList from '../tools/ReceiptsList';
+import NotasFiscaisList from '../tools/NotasFiscaisList';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -570,6 +571,48 @@ type GetReceiptsToolOutput = {
     data_aprovacao?: string;
     motivo_reprovacao?: string;
     metodo_reembolso?: string;
+    observacoes?: string;
+    created_at?: string;
+  }>;
+  message: string;
+  error?: string;
+};
+
+type GetNotasFiscaisToolInput = {
+  limit?: number;
+  status?: 'autorizada' | 'cancelada' | 'denegada' | 'inutilizada';
+  tipo?: 'entrada' | 'saida';
+  emitente_cnpj?: string;
+  destinatario_cnpj?: string;
+};
+
+type GetNotasFiscaisToolOutput = {
+  success: boolean;
+  count: number;
+  data: Array<{
+    id: string;
+    numero_nfe: string;
+    chave_acesso: string;
+    serie: string;
+    tipo: string;
+    emitente_nome: string;
+    emitente_cnpj: string;
+    destinatario_nome: string;
+    destinatario_cnpj: string;
+    valor_total: number;
+    valor_produtos: number;
+    valor_icms?: number;
+    valor_ipi?: number;
+    valor_pis?: number;
+    valor_cofins?: number;
+    data_emissao?: string;
+    data_entrada_saida?: string;
+    status?: string;
+    natureza_operacao?: string;
+    cfop?: string;
+    xml_url?: string;
+    pdf_url?: string;
+    protocolo_autorizacao?: string;
     observacoes?: string;
     created_at?: string;
   }>;
@@ -1253,6 +1296,10 @@ type NexusToolUIPart = ToolUIPart<{
   getReceipts: {
     input: GetReceiptsToolInput;
     output: GetReceiptsToolOutput;
+  };
+  getNotasFiscais: {
+    input: GetNotasFiscaisToolInput;
+    output: GetNotasFiscaisToolOutput;
   };
 }>;
 
@@ -2716,6 +2763,40 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   data={(receiptsTool.output as GetReceiptsToolOutput).data}
                   message={(receiptsTool.output as GetReceiptsToolOutput).message}
                   error={(receiptsTool.output as GetReceiptsToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getNotasFiscais') {
+          const nfeTool = part as NexusToolUIPart;
+          const callId = nfeTool.toolCallId;
+          const shouldBeOpen = nfeTool.state === 'output-available' || nfeTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getNotasFiscais" state={nfeTool.state} />
+                <ToolContent>
+                  {nfeTool.input && (
+                    <ToolInput input={nfeTool.input} />
+                  )}
+                  {nfeTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={nfeTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {nfeTool.state === 'output-available' && (
+                <NotasFiscaisList
+                  success={(nfeTool.output as GetNotasFiscaisToolOutput).success}
+                  count={(nfeTool.output as GetNotasFiscaisToolOutput).count}
+                  data={(nfeTool.output as GetNotasFiscaisToolOutput).data}
+                  message={(nfeTool.output as GetNotasFiscaisToolOutput).message}
+                  error={(nfeTool.output as GetNotasFiscaisToolOutput).error}
                 />
               )}
             </div>
