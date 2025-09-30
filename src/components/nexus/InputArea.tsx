@@ -54,6 +54,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
   'rhAgent': null,
   'serviceOrdersAgent': null,
   'invoicesAgent': null,
+  'receiptsAgent': null,
 };
 
 const models = [
@@ -77,6 +78,7 @@ const models = [
   { id: 'rhAgent', name: 'RH Agent', icon: iconMap['rhAgent'] },
   { id: 'serviceOrdersAgent', name: 'Service Orders Agent', icon: iconMap['serviceOrdersAgent'] },
   { id: 'invoicesAgent', name: 'Invoices Agent', icon: iconMap['invoicesAgent'] },
+  { id: 'receiptsAgent', name: 'Receipts Agent', icon: iconMap['receiptsAgent'] },
 ];
 
 export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange }: InputAreaProps) {
@@ -154,6 +156,7 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
                 case 'rhAgent': return 'RH Agent';
                 case 'serviceOrdersAgent': return 'Service Orders Agent';
                 case 'invoicesAgent': return 'Invoices Agent';
+                case 'receiptsAgent': return 'Receipts Agent';
                 default: return id;
               }
             };

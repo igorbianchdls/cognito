@@ -46,6 +46,7 @@ import SalesCallsList from '../tools/SalesCallsList';
 import RHCandidatesList from '../tools/RHCandidatesList';
 import ServiceOrdersList from '../tools/ServiceOrdersList';
 import InvoicesList from '../tools/InvoicesList';
+import ReceiptsList from '../tools/ReceiptsList';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -534,6 +535,41 @@ type GetInvoicesToolOutput = {
     itens_descricao?: string;
     metodo_pagamento?: string;
     nota_fiscal_url?: string;
+    observacoes?: string;
+    created_at?: string;
+  }>;
+  message: string;
+  error?: string;
+};
+
+type GetReceiptsToolInput = {
+  limit?: number;
+  status?: 'pendente' | 'aprovado' | 'reprovado' | 'reembolsado';
+  tipo?: 'reembolso' | 'compra' | 'servico' | 'doacao' | 'outros';
+  solicitante_nome?: string;
+};
+
+type GetReceiptsToolOutput = {
+  success: boolean;
+  count: number;
+  data: Array<{
+    id: string;
+    numero_recibo: string;
+    tipo: string;
+    solicitante_nome: string;
+    solicitante_email?: string;
+    fornecedor_nome: string;
+    valor: number;
+    data_emissao?: string;
+    data_envio?: string;
+    categoria: string;
+    descricao?: string;
+    anexo_url?: string;
+    status?: string;
+    aprovador_nome?: string;
+    data_aprovacao?: string;
+    motivo_reprovacao?: string;
+    metodo_reembolso?: string;
     observacoes?: string;
     created_at?: string;
   }>;
@@ -1213,6 +1249,10 @@ type NexusToolUIPart = ToolUIPart<{
   getInvoices: {
     input: GetInvoicesToolInput;
     output: GetInvoicesToolOutput;
+  };
+  getReceipts: {
+    input: GetReceiptsToolInput;
+    output: GetReceiptsToolOutput;
   };
 }>;
 
@@ -2642,6 +2682,40 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   data={(invoicesTool.output as GetInvoicesToolOutput).data}
                   message={(invoicesTool.output as GetInvoicesToolOutput).message}
                   error={(invoicesTool.output as GetInvoicesToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getReceipts') {
+          const receiptsTool = part as NexusToolUIPart;
+          const callId = receiptsTool.toolCallId;
+          const shouldBeOpen = receiptsTool.state === 'output-available' || receiptsTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getReceipts" state={receiptsTool.state} />
+                <ToolContent>
+                  {receiptsTool.input && (
+                    <ToolInput input={receiptsTool.input} />
+                  )}
+                  {receiptsTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={receiptsTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {receiptsTool.state === 'output-available' && (
+                <ReceiptsList
+                  success={(receiptsTool.output as GetReceiptsToolOutput).success}
+                  count={(receiptsTool.output as GetReceiptsToolOutput).count}
+                  data={(receiptsTool.output as GetReceiptsToolOutput).data}
+                  message={(receiptsTool.output as GetReceiptsToolOutput).message}
+                  error={(receiptsTool.output as GetReceiptsToolOutput).error}
                 />
               )}
             </div>

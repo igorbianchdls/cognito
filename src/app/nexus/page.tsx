@@ -63,6 +63,7 @@ export default function Page() {
       case 'rhAgent': return '/api/claudeAgents/rh';
       case 'serviceOrdersAgent': return '/api/claudeAgents/service-orders';
       case 'invoicesAgent': return '/api/claudeAgents/invoices';
+      case 'receiptsAgent': return '/api/claudeAgents/receipts';
       default: return '/api/agents/shopify-analyst';
     }
   };
