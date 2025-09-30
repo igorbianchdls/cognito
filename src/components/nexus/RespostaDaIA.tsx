@@ -43,6 +43,8 @@ import YouTubeContentList from '../tools/YouTubeContentList';
 import ReelsContentList from '../tools/ReelsContentList';
 import ContentCreationSuccess from '../tools/ContentCreationSuccess';
 import SalesCallsList from '../tools/SalesCallsList';
+import RHCandidatesList from '../tools/RHCandidatesList';
+import ServiceOrdersList from '../tools/ServiceOrdersList';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -442,6 +444,65 @@ type GetSalesCallsToolOutput = {
     status?: string;
     deal_value?: number;
     notes?: string;
+    created_at?: string;
+  }>;
+  message: string;
+  error?: string;
+};
+
+type GetRHCandidatesToolInput = {
+  limit?: number;
+  status?: 'em_analise' | 'aprovado' | 'reprovado';
+  vaga?: string;
+};
+
+type GetRHCandidatesToolOutput = {
+  success: boolean;
+  count: number;
+  data: Array<{
+    id: string;
+    nome: string;
+    email?: string;
+    telefone?: string;
+    vaga: string;
+    curriculo_resumo?: string;
+    call_transcription?: string;
+    call_summary?: string;
+    pontos_fortes?: string;
+    pontos_atencao?: string;
+    fit_cultural_score?: number;
+    fit_tecnico_score?: number;
+    recomendacao?: string;
+    status?: string;
+    data_entrevista?: string;
+    created_at?: string;
+  }>;
+  message: string;
+  error?: string;
+};
+
+type GetServiceOrdersToolInput = {
+  limit?: number;
+  status?: 'aberta' | 'em_andamento' | 'aguardando_pecas' | 'concluida' | 'cancelada';
+  tecnico_responsavel?: string;
+};
+
+type GetServiceOrdersToolOutput = {
+  success: boolean;
+  count: number;
+  data: Array<{
+    id: string;
+    numero_os: string;
+    cliente_nome: string;
+    equipamento: string;
+    defeito_relatado: string;
+    diagnostico?: string;
+    servico_executado?: string;
+    tecnico_responsavel: string;
+    status?: string;
+    valor_total?: number;
+    data_abertura?: string;
+    data_conclusao?: string;
     created_at?: string;
   }>;
   message: string;
@@ -1108,6 +1169,14 @@ type NexusToolUIPart = ToolUIPart<{
   getSalesCalls: {
     input: GetSalesCallsToolInput;
     output: GetSalesCallsToolOutput;
+  };
+  getRHCandidates: {
+    input: GetRHCandidatesToolInput;
+    output: GetRHCandidatesToolOutput;
+  };
+  getServiceOrders: {
+    input: GetServiceOrdersToolInput;
+    output: GetServiceOrdersToolOutput;
   };
 }>;
 
@@ -2435,6 +2504,74 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   data={(salesCallsTool.output as GetSalesCallsToolOutput).data}
                   message={(salesCallsTool.output as GetSalesCallsToolOutput).message}
                   error={(salesCallsTool.output as GetSalesCallsToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getRHCandidates') {
+          const rhCandidatesTool = part as NexusToolUIPart;
+          const callId = rhCandidatesTool.toolCallId;
+          const shouldBeOpen = rhCandidatesTool.state === 'output-available' || rhCandidatesTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getRHCandidates" state={rhCandidatesTool.state} />
+                <ToolContent>
+                  {rhCandidatesTool.input && (
+                    <ToolInput input={rhCandidatesTool.input} />
+                  )}
+                  {rhCandidatesTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={rhCandidatesTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {rhCandidatesTool.state === 'output-available' && (
+                <RHCandidatesList
+                  success={(rhCandidatesTool.output as GetRHCandidatesToolOutput).success}
+                  count={(rhCandidatesTool.output as GetRHCandidatesToolOutput).count}
+                  data={(rhCandidatesTool.output as GetRHCandidatesToolOutput).data}
+                  message={(rhCandidatesTool.output as GetRHCandidatesToolOutput).message}
+                  error={(rhCandidatesTool.output as GetRHCandidatesToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getServiceOrders') {
+          const serviceOrdersTool = part as NexusToolUIPart;
+          const callId = serviceOrdersTool.toolCallId;
+          const shouldBeOpen = serviceOrdersTool.state === 'output-available' || serviceOrdersTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getServiceOrders" state={serviceOrdersTool.state} />
+                <ToolContent>
+                  {serviceOrdersTool.input && (
+                    <ToolInput input={serviceOrdersTool.input} />
+                  )}
+                  {serviceOrdersTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={serviceOrdersTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {serviceOrdersTool.state === 'output-available' && (
+                <ServiceOrdersList
+                  success={(serviceOrdersTool.output as GetServiceOrdersToolOutput).success}
+                  count={(serviceOrdersTool.output as GetServiceOrdersToolOutput).count}
+                  data={(serviceOrdersTool.output as GetServiceOrdersToolOutput).data}
+                  message={(serviceOrdersTool.output as GetServiceOrdersToolOutput).message}
+                  error={(serviceOrdersTool.output as GetServiceOrdersToolOutput).error}
                 />
               )}
             </div>

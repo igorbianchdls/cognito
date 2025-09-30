@@ -60,6 +60,8 @@ export default function Page() {
       case 'productAgent': return '/api/workflows/products';
       case 'analistaDados': return '/api/agents/analista-dados';
       case 'salesAgent': return '/api/claudeAgents/sales';
+      case 'rhAgent': return '/api/claudeAgents/rh';
+      case 'serviceOrdersAgent': return '/api/claudeAgents/service-orders';
       default: return '/api/agents/shopify-analyst';
     }
   };
