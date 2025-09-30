@@ -39,6 +39,9 @@ import RenderDashboardCode from './tools/renderDashboardCode';
 import CreateDashboardResult from './tools/CreateDashboardResult';
 import UpdateDashboardResult from './tools/UpdateDashboardResult';
 import EmailResult from '../tools/EmailResult';
+import YouTubeContentList from '../tools/YouTubeContentList';
+import ReelsContentList from '../tools/ReelsContentList';
+import ContentCreationSuccess from '../tools/ContentCreationSuccess';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -307,6 +310,94 @@ type SendEmailToolOutput = {
   timestamp: string;
   message: string;
   note?: string;
+  error?: string;
+};
+
+type GetYouTubeContentToolInput = {
+  limit?: number;
+  status?: 'draft' | 'published' | 'archived';
+};
+
+type GetYouTubeContentToolOutput = {
+  success: boolean;
+  count: number;
+  data: Array<{
+    id: string;
+    titulo: string;
+    hook?: string;
+    intro?: string;
+    value_proposition?: string;
+    script?: string;
+    categoria?: string;
+    status?: string;
+    created_at?: string;
+  }>;
+  message: string;
+  error?: string;
+};
+
+type GetReelsContentToolInput = {
+  limit?: number;
+  status?: 'draft' | 'published' | 'archived';
+};
+
+type GetReelsContentToolOutput = {
+  success: boolean;
+  count: number;
+  data: Array<{
+    id: string;
+    titulo: string;
+    hook?: string;
+    hook_expansion?: string;
+    script?: string;
+    status?: string;
+    created_at?: string;
+  }>;
+  message: string;
+  error?: string;
+};
+
+type CreateYouTubeContentToolInput = {
+  titulo: string;
+  hook?: string;
+  intro?: string;
+  value_proposition?: string;
+  script?: string;
+  categoria?: string;
+};
+
+type CreateYouTubeContentToolOutput = {
+  success: boolean;
+  data?: {
+    id: string;
+    titulo: string;
+    hook?: string;
+    intro?: string;
+    value_proposition?: string;
+    script?: string;
+    categoria?: string;
+  };
+  message: string;
+  error?: string;
+};
+
+type CreateReelsContentToolInput = {
+  titulo: string;
+  hook?: string;
+  hook_expansion?: string;
+  script?: string;
+};
+
+type CreateReelsContentToolOutput = {
+  success: boolean;
+  data?: {
+    id: string;
+    titulo: string;
+    hook?: string;
+    hook_expansion?: string;
+    script?: string;
+  };
+  message: string;
   error?: string;
 };
 
@@ -950,6 +1041,22 @@ type NexusToolUIPart = ToolUIPart<{
       updateDescription: string;
     };
     output: UpdateDashboardToolOutput;
+  };
+  getYouTubeContent: {
+    input: GetYouTubeContentToolInput;
+    output: GetYouTubeContentToolOutput;
+  };
+  getReelsContent: {
+    input: GetReelsContentToolInput;
+    output: GetReelsContentToolOutput;
+  };
+  createYouTubeContent: {
+    input: CreateYouTubeContentToolInput;
+    output: CreateYouTubeContentToolOutput;
+  };
+  createReelsContent: {
+    input: CreateReelsContentToolInput;
+    output: CreateReelsContentToolOutput;
   };
 }>;
 
@@ -2107,6 +2214,142 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   message={(emailTool.output as SendEmailToolOutput).message}
                   note={(emailTool.output as SendEmailToolOutput).note}
                   error={(emailTool.output as SendEmailToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getYouTubeContent') {
+          const youtubeTool = part as NexusToolUIPart;
+          const callId = youtubeTool.toolCallId;
+          const shouldBeOpen = youtubeTool.state === 'output-available' || youtubeTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getYouTubeContent" state={youtubeTool.state} />
+                <ToolContent>
+                  {youtubeTool.input && (
+                    <ToolInput input={youtubeTool.input} />
+                  )}
+                  {youtubeTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={youtubeTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {youtubeTool.state === 'output-available' && (
+                <YouTubeContentList
+                  success={(youtubeTool.output as GetYouTubeContentToolOutput).success}
+                  count={(youtubeTool.output as GetYouTubeContentToolOutput).count}
+                  data={(youtubeTool.output as GetYouTubeContentToolOutput).data}
+                  message={(youtubeTool.output as GetYouTubeContentToolOutput).message}
+                  error={(youtubeTool.output as GetYouTubeContentToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getReelsContent') {
+          const reelsTool = part as NexusToolUIPart;
+          const callId = reelsTool.toolCallId;
+          const shouldBeOpen = reelsTool.state === 'output-available' || reelsTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getReelsContent" state={reelsTool.state} />
+                <ToolContent>
+                  {reelsTool.input && (
+                    <ToolInput input={reelsTool.input} />
+                  )}
+                  {reelsTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={reelsTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {reelsTool.state === 'output-available' && (
+                <ReelsContentList
+                  success={(reelsTool.output as GetReelsContentToolOutput).success}
+                  count={(reelsTool.output as GetReelsContentToolOutput).count}
+                  data={(reelsTool.output as GetReelsContentToolOutput).data}
+                  message={(reelsTool.output as GetReelsContentToolOutput).message}
+                  error={(reelsTool.output as GetReelsContentToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-createYouTubeContent') {
+          const createYoutubeTool = part as NexusToolUIPart;
+          const callId = createYoutubeTool.toolCallId;
+          const shouldBeOpen = createYoutubeTool.state === 'output-available' || createYoutubeTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-createYouTubeContent" state={createYoutubeTool.state} />
+                <ToolContent>
+                  {createYoutubeTool.input && (
+                    <ToolInput input={createYoutubeTool.input} />
+                  )}
+                  {createYoutubeTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={createYoutubeTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {createYoutubeTool.state === 'output-available' && (
+                <ContentCreationSuccess
+                  success={(createYoutubeTool.output as CreateYouTubeContentToolOutput).success}
+                  data={(createYoutubeTool.output as CreateYouTubeContentToolOutput).data}
+                  message={(createYoutubeTool.output as CreateYouTubeContentToolOutput).message}
+                  error={(createYoutubeTool.output as CreateYouTubeContentToolOutput).error}
+                  contentType="youtube"
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-createReelsContent') {
+          const createReelsTool = part as NexusToolUIPart;
+          const callId = createReelsTool.toolCallId;
+          const shouldBeOpen = createReelsTool.state === 'output-available' || createReelsTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-createReelsContent" state={createReelsTool.state} />
+                <ToolContent>
+                  {createReelsTool.input && (
+                    <ToolInput input={createReelsTool.input} />
+                  )}
+                  {createReelsTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={createReelsTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {createReelsTool.state === 'output-available' && (
+                <ContentCreationSuccess
+                  success={(createReelsTool.output as CreateReelsContentToolOutput).success}
+                  data={(createReelsTool.output as CreateReelsContentToolOutput).data}
+                  message={(createReelsTool.output as CreateReelsContentToolOutput).message}
+                  error={(createReelsTool.output as CreateReelsContentToolOutput).error}
+                  contentType="reels"
                 />
               )}
             </div>
