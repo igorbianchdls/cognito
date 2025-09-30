@@ -34,6 +34,25 @@ export default function SupabaseDataPage() {
   const [reelsData, setReelsData] = useState<ReelsContent[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showYoutubeForm, setShowYoutubeForm] = useState(false)
+  const [showReelsForm, setShowReelsForm] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+
+  const [youtubeForm, setYoutubeForm] = useState({
+    titulo: '',
+    hook: '',
+    intro: '',
+    value_proposition: '',
+    script: '',
+    categoria: ''
+  })
+
+  const [reelsForm, setReelsForm] = useState({
+    titulo: '',
+    hook: '',
+    hook_expansion: '',
+    script: ''
+  })
 
   useEffect(() => {
     fetchData()
@@ -59,6 +78,44 @@ export default function SupabaseDataPage() {
       setError(String(err))
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleCreateYoutube(e: React.FormEvent) {
+    e.preventDefault()
+    setSubmitting(true)
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.from('youtube_content').insert([youtubeForm])
+
+      if (error) throw error
+
+      setYoutubeForm({ titulo: '', hook: '', intro: '', value_proposition: '', script: '', categoria: '' })
+      setShowYoutubeForm(false)
+      await fetchData()
+    } catch (err) {
+      alert('Erro ao criar: ' + String(err))
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function handleCreateReels(e: React.FormEvent) {
+    e.preventDefault()
+    setSubmitting(true)
+    try {
+      const supabase = createClient()
+      const { error } = await supabase.from('reels_content').insert([reelsForm])
+
+      if (error) throw error
+
+      setReelsForm({ titulo: '', hook: '', hook_expansion: '', script: '' })
+      setShowReelsForm(false)
+      await fetchData()
+    } catch (err) {
+      alert('Erro ao criar: ' + String(err))
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -100,9 +157,87 @@ export default function SupabaseDataPage() {
 
         {/* Tabela YouTube */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 bg-red-600 text-white">
+          <div className="px-6 py-4 bg-red-600 text-white flex justify-between items-center">
             <h2 className="text-2xl font-bold">YouTube ({youtubeData.length})</h2>
+            <button
+              onClick={() => setShowYoutubeForm(!showYoutubeForm)}
+              className="px-4 py-2 bg-white text-red-600 rounded hover:bg-gray-100 font-semibold"
+            >
+              {showYoutubeForm ? 'Cancelar' : '+ Criar Novo'}
+            </button>
           </div>
+
+          {showYoutubeForm && (
+            <form onSubmit={handleCreateYoutube} className="p-6 bg-gray-50 border-b">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Título*</label>
+                  <input
+                    type="text"
+                    required
+                    value={youtubeForm.titulo}
+                    onChange={e => setYoutubeForm({...youtubeForm, titulo: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                  <input
+                    type="text"
+                    value={youtubeForm.categoria}
+                    onChange={e => setYoutubeForm({...youtubeForm, categoria: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Hook</label>
+                  <textarea
+                    value={youtubeForm.hook}
+                    onChange={e => setYoutubeForm({...youtubeForm, hook: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    rows={2}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Intro</label>
+                  <textarea
+                    value={youtubeForm.intro}
+                    onChange={e => setYoutubeForm({...youtubeForm, intro: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    rows={2}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Value Proposition</label>
+                  <textarea
+                    value={youtubeForm.value_proposition}
+                    onChange={e => setYoutubeForm({...youtubeForm, value_proposition: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    rows={2}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Script</label>
+                  <textarea
+                    value={youtubeForm.script}
+                    onChange={e => setYoutubeForm({...youtubeForm, script: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    rows={4}
+                  />
+                </div>
+              </div>
+              <div className="mt-4 flex gap-2">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-6 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                >
+                  {submitting ? 'Criando...' : 'Criar Vídeo'}
+                </button>
+              </div>
+            </form>
+          )}
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-100">
@@ -149,9 +284,69 @@ export default function SupabaseDataPage() {
 
         {/* Tabela Reels */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          <div className="px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+          <div className="px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white flex justify-between items-center">
             <h2 className="text-2xl font-bold">Reels ({reelsData.length})</h2>
+            <button
+              onClick={() => setShowReelsForm(!showReelsForm)}
+              className="px-4 py-2 bg-white text-purple-600 rounded hover:bg-gray-100 font-semibold"
+            >
+              {showReelsForm ? 'Cancelar' : '+ Criar Novo'}
+            </button>
           </div>
+
+          {showReelsForm && (
+            <form onSubmit={handleCreateReels} className="p-6 bg-gray-50 border-b">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Título*</label>
+                  <input
+                    type="text"
+                    required
+                    value={reelsForm.titulo}
+                    onChange={e => setReelsForm({...reelsForm, titulo: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Hook</label>
+                  <textarea
+                    value={reelsForm.hook}
+                    onChange={e => setReelsForm({...reelsForm, hook: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    rows={2}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Hook Expansion</label>
+                  <textarea
+                    value={reelsForm.hook_expansion}
+                    onChange={e => setReelsForm({...reelsForm, hook_expansion: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    rows={2}
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Script</label>
+                  <textarea
+                    value={reelsForm.script}
+                    onChange={e => setReelsForm({...reelsForm, script: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                    rows={4}
+                  />
+                </div>
+              </div>
+              <div className="mt-4 flex gap-2">
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded hover:opacity-90 disabled:opacity-50"
+                >
+                  {submitting ? 'Criando...' : 'Criar Reel'}
+                </button>
+              </div>
+            </form>
+          )}
+
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-100">
