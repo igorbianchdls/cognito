@@ -210,6 +210,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
       case 'desktop':
         return {
           ...baseStyles,
+          maxWidth: '1200px',
           width: '100%',
           margin: '0 auto'
         };
