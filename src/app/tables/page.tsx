@@ -17,7 +17,7 @@ export default function TablesPage() {
   return (
     <SidebarProvider>
       <SidebarShadcn />
-      <SidebarInset className="h-screen flex overflow-hidden">
+      <SidebarInset className="h-screen flex flex-row overflow-hidden">
         {/* Coluna principal: Header + Table */}
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
           {/* Header com toolbar */}
