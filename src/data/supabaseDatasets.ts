@@ -383,9 +383,9 @@ export const inventoryColumns: ColDef[] = [
       if (params.value < minimo) {
         return { backgroundColor: '#ffebee', color: '#c62828', fontWeight: 'bold' };
       } else if (params.value < minimo * 2) {
-        return { backgroundColor: '#fff3e0', color: '#f57c00' };
+        return { backgroundColor: '#fff3e0', color: '#f57c00', fontWeight: 'normal' };
       }
-      return { backgroundColor: '#e8f5e9', color: '#2e7d32' };
+      return { backgroundColor: '#e8f5e9', color: '#2e7d32', fontWeight: 'normal' };
     }
   },
   {
