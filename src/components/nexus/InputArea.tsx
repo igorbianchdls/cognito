@@ -11,7 +11,20 @@ import {
   PromptInputToolbar,
   PromptInputTools,
 } from '@/components/ai-elements/prompt-input';
-import { GlobeIcon, MicIcon, Plus } from 'lucide-react';
+import {
+  GlobeIcon,
+  MicIcon,
+  Plus,
+  TrendingUp,
+  Users,
+  Wrench,
+  ArrowDownLeft,
+  Receipt,
+  FileText,
+  Package,
+  ArrowUpRight,
+  Activity
+} from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import type { ChatStatus } from 'ai';
 import AgentDropdown from './AgentDropdown';
@@ -50,15 +63,15 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
   'performanceAgent': null,
   'productAgent': null,
   'analistaDados': null,
-  'salesAgent': null,
-  'rhAgent': null,
-  'serviceOrdersAgent': null,
-  'contasAReceberAgent': null,
-  'receiptsAgent': null,
-  'nfeAgent': null,
-  'inventoryAgent': null,
-  'contasAPagarAgent': null,
-  'fluxoCaixaAgent': null,
+  'salesAgent': TrendingUp,
+  'rhAgent': Users,
+  'serviceOrdersAgent': Wrench,
+  'contasAReceberAgent': ArrowDownLeft,
+  'receiptsAgent': Receipt,
+  'nfeAgent': FileText,
+  'inventoryAgent': Package,
+  'contasAPagarAgent': ArrowUpRight,
+  'fluxoCaixaAgent': Activity,
 };
 
 const models = [
