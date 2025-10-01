@@ -14,7 +14,7 @@ export default function TablesPage() {
   return (
     <SidebarProvider>
       <SidebarShadcn />
-      <SidebarInset className="h-screen flex flex-col">
+      <SidebarInset className="h-screen flex flex-col overflow-hidden">
         {/* Header fixo com trigger */}
         <header className="h-16 border-b bg-white flex items-center gap-2 px-4 shrink-0">
           <SidebarTrigger className="-ml-1" />
