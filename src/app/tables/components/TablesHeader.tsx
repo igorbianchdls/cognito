@@ -26,7 +26,7 @@ export default function TablesHeader({
       {/* TableHeader content inline */}
       <div className="flex-1">
         <TableHeader
-          className="border-0"
+          className="border-0 [&>div]:pl-2"
           onFiltersChange={onFiltersChange}
           onSortChange={onSortChange}
           onViewChange={onViewChange}
