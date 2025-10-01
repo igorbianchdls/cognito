@@ -49,6 +49,7 @@ import ContasAReceberList from '../tools/ContasAReceberList';
 import ReceiptsList from '../tools/ReceiptsList';
 import NotasFiscaisList from '../tools/NotasFiscaisList';
 import InventoryList from '../tools/InventoryList';
+import ContasAPagarList from '../tools/ContasAPagarList';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -649,6 +650,49 @@ type GetInventoryToolOutput = {
     ultima_venda?: string;
     status?: string;
     observacoes?: string;
+    created_at?: string;
+    updated_at?: string;
+  }>;
+  message: string;
+  error?: string;
+};
+
+type GetContasAPagarToolInput = {
+  limit?: number;
+  status?: 'pendente' | 'pago' | 'vencido' | 'cancelado';
+  fornecedor_nome?: string;
+  categoria?: string;
+};
+
+type GetContasAPagarToolOutput = {
+  success: boolean;
+  count: number;
+  data: Array<{
+    id: string;
+    numero_conta: string;
+    fornecedor_nome: string;
+    fornecedor_cnpj?: string;
+    valor_total: number;
+    valor_pago?: number;
+    valor_pendente?: number;
+    data_emissao?: string;
+    data_vencimento?: string;
+    status?: string;
+    categoria?: string;
+    centro_custo?: string;
+    descricao?: string;
+    forma_pagamento?: string;
+    banco_conta?: string;
+    numero_documento?: string;
+    observacoes?: string;
+    historico_pagamentos?: Array<{
+      data: string;
+      valor: number;
+      forma_pagamento: string;
+      observacoes?: string;
+    }>;
+    motivo_cancelamento?: string;
+    data_cancelamento?: string;
     created_at?: string;
     updated_at?: string;
   }>;
@@ -1341,6 +1385,10 @@ type NexusToolUIPart = ToolUIPart<{
     input: GetInventoryToolInput;
     output: GetInventoryToolOutput;
   };
+  getContasAPagar: {
+    input: GetContasAPagarToolInput;
+    output: GetContasAPagarToolOutput;
+  };
 }>;
 
 // Função para mapear agente
@@ -1390,6 +1438,8 @@ const getAgentInfo = (agent: string) => {
       return { initial: 'N', title: 'Invoice Agent', color: 'bg-emerald-600' };
     case 'inventoryAgent':
       return { initial: 'I', title: 'Inventory Agent', color: 'bg-blue-600' };
+    case 'contasAPagarAgent':
+      return { initial: 'P', title: 'Contas a Pagar', color: 'bg-red-600' };
     default:
       return { initial: 'A', title: 'AI Assistant', color: 'bg-gray-500' };
   }
@@ -2885,6 +2935,40 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   data={(inventoryTool.output as GetInventoryToolOutput).data}
                   message={(inventoryTool.output as GetInventoryToolOutput).message}
                   error={(inventoryTool.output as GetInventoryToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getContasAPagar') {
+          const contasAPagarTool = part as NexusToolUIPart;
+          const callId = contasAPagarTool.toolCallId;
+          const shouldBeOpen = contasAPagarTool.state === 'output-available' || contasAPagarTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getContasAPagar" state={contasAPagarTool.state} />
+                <ToolContent>
+                  {contasAPagarTool.input && (
+                    <ToolInput input={contasAPagarTool.input} />
+                  )}
+                  {contasAPagarTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={contasAPagarTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {contasAPagarTool.state === 'output-available' && (
+                <ContasAPagarList
+                  success={(contasAPagarTool.output as GetContasAPagarToolOutput).success}
+                  count={(contasAPagarTool.output as GetContasAPagarToolOutput).count}
+                  data={(contasAPagarTool.output as GetContasAPagarToolOutput).data}
+                  message={(contasAPagarTool.output as GetContasAPagarToolOutput).message}
+                  error={(contasAPagarTool.output as GetContasAPagarToolOutput).error}
                 />
               )}
             </div>
