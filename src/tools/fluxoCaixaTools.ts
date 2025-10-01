@@ -22,7 +22,7 @@ export const calcularFluxoCaixa = tool({
 
       // Buscar contas a receber pendentes
       const { data: entradas, error: errorEntradas } = await supabase
-        .from('accounts_receivable')
+        .from('invoices')
         .select('*')
         .in('status', ['pendente', 'vencido']);
 
@@ -171,7 +171,7 @@ export const calcularRunway = tool({
       let receitasMensais = 0;
       if (considerar_receitas) {
         const { data: contasRecebidas } = await supabase
-          .from('accounts_receivable')
+          .from('invoices')
           .select('*')
           .eq('status', 'pago')
           .gte('updated_at', dataInicio.toISOString());
