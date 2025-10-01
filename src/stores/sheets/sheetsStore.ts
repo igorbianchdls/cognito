@@ -1,6 +1,7 @@
 import { atom } from 'nanostores'
 import { ColDef } from 'ag-grid-community'
 import { MOCK_DATASETS, DatasetInfo } from '@/data/mockDatasets'
+import { SUPABASE_DATASETS, fetchSupabaseTable, SupabaseDatasetConfig } from '@/data/supabaseDatasets'
 
 // Types
 export interface CellData {
@@ -43,9 +44,27 @@ export const univerAPIStore = atom<unknown>(null)
 export const univerInstanceStore = atom<unknown>(null)
 
 // Datasets Management
-export const availableDatasetsStore = atom<DatasetInfo[]>(MOCK_DATASETS)
-export const activeDatasetIdStore = atom<string>('produtos') // Default to 'produtos'
+// Start with Supabase datasets (merged with mock datasets for backward compatibility)
+const initialDatasets: DatasetInfo[] = [
+  ...SUPABASE_DATASETS.map(ds => ({
+    id: ds.id,
+    name: ds.name,
+    description: ds.description,
+    rows: 0, // Will be fetched dynamically
+    columns: ds.columnDefs.length,
+    size: 'Loading...',
+    type: 'grid' as const,
+    lastModified: new Date(),
+    data: [],
+    columnDefs: ds.columnDefs
+  })),
+  ...MOCK_DATASETS
+]
+
+export const availableDatasetsStore = atom<DatasetInfo[]>(initialDatasets)
+export const activeDatasetIdStore = atom<string>('contas-a-receber') // Default to Contas a Receber
 export const activeDatasetStore = atom<ActiveDataset | null>(null)
+export const supabaseDatasetsConfigStore = atom<SupabaseDatasetConfig[]>(SUPABASE_DATASETS)
 
 // Legacy Sheet Data (maintained for compatibility)
 export const sheetDataStore = atom<SheetData>({
@@ -75,7 +94,7 @@ export const setSheetLoading = (loading: boolean) => {
 }
 
 // Dataset Management Functions
-export const switchToDataset = (datasetId: string) => {
+export const switchToDataset = async (datasetId: string) => {
   setSheetLoading(true)
   setSheetError(null)
 
@@ -83,7 +102,7 @@ export const switchToDataset = (datasetId: string) => {
     // Find dataset by ID
     const datasets = availableDatasetsStore.get()
     const dataset = datasets.find(ds => ds.id === datasetId)
-    
+
     if (!dataset) {
       throw new Error(`Dataset '${datasetId}' não encontrado`)
     }
@@ -91,13 +110,37 @@ export const switchToDataset = (datasetId: string) => {
     // Update active dataset ID
     activeDatasetIdStore.set(datasetId)
 
+    let dataToUse = dataset.data
+
+    // Check if this is a Supabase dataset and fetch real data
+    const supabaseConfig = SUPABASE_DATASETS.find(ds => ds.id === datasetId)
+    if (supabaseConfig) {
+      console.log(`Fetching Supabase data for: ${supabaseConfig.tableName}`)
+      const supabaseData = await fetchSupabaseTable(supabaseConfig.tableName)
+      dataToUse = supabaseData
+
+      // Update dataset in store with fetched data
+      const updatedDatasets = datasets.map(ds => {
+        if (ds.id === datasetId) {
+          return {
+            ...ds,
+            data: supabaseData,
+            rows: supabaseData.length,
+            size: `${supabaseData.length} registros`
+          }
+        }
+        return ds
+      })
+      availableDatasetsStore.set(updatedDatasets)
+    }
+
     // Create active dataset object
     const activeDataset: ActiveDataset = {
       id: dataset.id,
       name: dataset.name,
-      data: dataset.data,
+      data: dataToUse,
       columnDefs: dataset.columnDefs,
-      totalRows: dataset.rows,
+      totalRows: dataToUse.length,
       totalCols: dataset.columns
     }
 
@@ -106,9 +149,9 @@ export const switchToDataset = (datasetId: string) => {
 
     // Extract headers from column definitions
     const headers = dataset.columnDefs.map(col => col.headerName || col.field || '')
-    
+
     // Convert data to rows format (legacy compatibility)
-    const rows = dataset.data.map(item => 
+    const rows = dataToUse.map(item =>
       dataset.columnDefs.map(col => {
         const dataItem = item as Record<string, unknown>;
         return dataItem[col.field || ''] || '';
@@ -120,11 +163,11 @@ export const switchToDataset = (datasetId: string) => {
       rows,
       headers,
       selectedCells: [],
-      totalRows: dataset.rows,
+      totalRows: dataToUse.length,
       totalCols: dataset.columns
     })
 
-    console.log(`Switched to dataset: ${dataset.name} (${dataset.rows} rows, ${dataset.columns} columns)`)
+    console.log(`Switched to dataset: ${dataset.name} (${dataToUse.length} rows, ${dataset.columns} columns)`)
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido ao trocar dataset'
