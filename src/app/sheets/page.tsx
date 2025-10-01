@@ -63,9 +63,9 @@ export default function SheetsPage() {
         />
         
         {/* Área inferior: AG Grid + RightPanel lado a lado */}
-        <div className="flex-1 min-h-0 flex">
+        <div className="flex-1 min-h-0 flex overflow-hidden">
           {/* AG Grid - Área central */}
-          <div className="flex-1 min-w-0 relative">
+          <div className="flex-1 min-w-0 relative overflow-hidden">
             <AGGridSheet 
               filters={filters}
               sorting={sorting}
