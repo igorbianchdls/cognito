@@ -1159,6 +1159,7 @@ export interface SupabaseDatasetConfig {
   tableName: string;
   columnDefs: ColDef[];
   icon?: string;
+  category: string;
 }
 
 export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
@@ -1168,7 +1169,8 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     description: 'Faturas e recebiveis de clientes',
     tableName: 'invoices',
     columnDefs: contasAReceberColumns,
-    icon: '💰'
+    icon: '💰',
+    category: 'Finanças'
   },
   {
     id: 'contas-a-pagar',
@@ -1176,39 +1178,8 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     description: 'Despesas e contas de fornecedores',
     tableName: 'accounts_payable',
     columnDefs: contasAPagarColumns,
-    icon: '💸'
-  },
-  {
-    id: 'estoque',
-    name: 'Estoque',
-    description: 'Inventario de produtos',
-    tableName: 'inventory',
-    columnDefs: inventoryColumns,
-    icon: '📦'
-  },
-  {
-    id: 'sales-calls',
-    name: 'Chamadas de Vendas',
-    description: 'Gravações e transcrições de calls',
-    tableName: 'sales_calls',
-    columnDefs: salesCallsColumns,
-    icon: '📞'
-  },
-  {
-    id: 'rh-candidates',
-    name: 'Candidatos RH',
-    description: 'Entrevistas e candidatos',
-    tableName: 'rh_candidates',
-    columnDefs: rhCandidatesColumns,
-    icon: '👥'
-  },
-  {
-    id: 'service-orders',
-    name: 'Ordens de Serviço',
-    description: 'Ordens de serviço e manutenções',
-    tableName: 'service_orders',
-    columnDefs: serviceOrdersColumns,
-    icon: '🔧'
+    icon: '💸',
+    category: 'Finanças'
   },
   {
     id: 'receipts',
@@ -1216,7 +1187,8 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     description: 'Solicitações de reembolso',
     tableName: 'receipts',
     columnDefs: receiptsColumns,
-    icon: '🧾'
+    icon: '🧾',
+    category: 'Finanças'
   },
   {
     id: 'notas-fiscais',
@@ -1224,7 +1196,17 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     description: 'NFe de entrada e saída',
     tableName: 'notas_fiscais',
     columnDefs: notasFiscaisColumns,
-    icon: '📄'
+    icon: '📄',
+    category: 'Finanças'
+  },
+  {
+    id: 'sales-calls',
+    name: 'Chamadas de Vendas',
+    description: 'Gravações e transcrições de calls',
+    tableName: 'sales_calls',
+    columnDefs: salesCallsColumns,
+    icon: '📞',
+    category: 'Vendas & Marketing'
   },
   {
     id: 'youtube-content',
@@ -1232,7 +1214,8 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     description: 'Scripts e roteiros de vídeos',
     tableName: 'youtube_content',
     columnDefs: youtubeContentColumns,
-    icon: '📺'
+    icon: '📺',
+    category: 'Vendas & Marketing'
   },
   {
     id: 'reels-content',
@@ -1240,6 +1223,34 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     description: 'Scripts de Reels Instagram',
     tableName: 'reels_content',
     columnDefs: reelsContentColumns,
-    icon: '📱'
+    icon: '📱',
+    category: 'Vendas & Marketing'
+  },
+  {
+    id: 'estoque',
+    name: 'Estoque',
+    description: 'Inventario de produtos',
+    tableName: 'inventory',
+    columnDefs: inventoryColumns,
+    icon: '📦',
+    category: 'Operações'
+  },
+  {
+    id: 'service-orders',
+    name: 'Ordens de Serviço',
+    description: 'Ordens de serviço e manutenções',
+    tableName: 'service_orders',
+    columnDefs: serviceOrdersColumns,
+    icon: '🔧',
+    category: 'Operações'
+  },
+  {
+    id: 'rh-candidates',
+    name: 'Candidatos RH',
+    description: 'Entrevistas e candidatos',
+    tableName: 'rh_candidates',
+    columnDefs: rhCandidatesColumns,
+    icon: '👥',
+    category: 'Recursos Humanos'
   }
 ];
