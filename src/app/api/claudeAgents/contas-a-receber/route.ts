@@ -1,15 +1,17 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import { getContasAReceber } from '@/tools/contasAReceberTools';
+import { getContasAPagar } from '@/tools/contasAPagarTools';
+import { calcularFluxoCaixa } from '@/tools/fluxoCaixaTools';
 
 export const maxDuration = 300;
 
 export async function POST(req: Request) {
-  console.log('💰 CONTAS A RECEBER AGENT: Request recebido!');
+  console.log('💰 CONTAS PAGAR/RECEBER AGENT: Request recebido!');
 
   const { messages }: { messages: UIMessage[] } = await req.json();
 
-  console.log('💰 CONTAS A RECEBER AGENT: Messages:', messages?.length);
+  console.log('💰 CONTAS PAGAR/RECEBER AGENT: Messages:', messages?.length);
 
   try {
     const result = streamText({
@@ -25,16 +27,18 @@ export async function POST(req: Request) {
         }
       },
 
-      system: `Você é um assistente AI especializado em análise financeira e gestão de contas a receber. Seu objetivo é ajudar empresas a gerenciar recebíveis, identificar riscos de inadimplência e otimizar o fluxo de caixa.
+      system: `Você é um assistente AI especializado em análise financeira completa, gestão de contas a pagar, contas a receber e projeções de fluxo de caixa. Seu objetivo é ajudar empresas a gerenciar todo o ciclo financeiro.
 
 # 🎯 Sua Missão
 Auxiliar gestores financeiros e controllers a:
 - Analisar contas a receber pendentes, pagas e vencidas
-- Identificar padrões de pagamento de clientes
-- Calcular KPIs financeiros (DSO, aging, taxa de inadimplência)
-- Prever riscos de inadimplência
-- Sugerir ações de cobrança e negociação
-- Otimizar fluxo de caixa
+- Gerenciar contas a pagar por fornecedor e categoria
+- Calcular projeções de fluxo de caixa (7, 30, 90 dias)
+- Identificar padrões de pagamento de clientes e fornecedores
+- Calcular KPIs financeiros (DSO, DPO, aging, inadimplência)
+- Prever riscos de inadimplência e problemas de liquidez
+- Sugerir ações de cobrança, negociação e priorização de pagamentos
+- Otimizar fluxo de caixa e capital de giro
 
 # 🛠️ Suas Ferramentas
 
@@ -42,6 +46,16 @@ Auxiliar gestores financeiros e controllers a:
 **getContasAReceber** - Busca contas a receber do banco de dados
 - Parâmetros: \`limit\` (padrão: 10), \`status\` (pendente/pago/vencido/cancelado), \`cliente_nome\`
 - Use quando: usuário pedir para ver/listar contas a receber, analisar recebimentos, verificar inadimplência, analisar cliente específico
+
+## 💳 BUSCAR CONTAS A PAGAR
+**getContasAPagar** - Busca contas a pagar do banco de dados
+- Parâmetros: \`limit\` (padrão: 10), \`status\` (pendente/pago/vencido/cancelado), \`fornecedor_nome\`, \`categoria\` (aluguel/salario/fornecedor/imposto/servicos)
+- Use quando: usuário pedir para ver pagamentos, analisar despesas, verificar fornecedores, priorizar pagamentos
+
+## 📈 CALCULAR FLUXO DE CAIXA
+**calcularFluxoCaixa** - Calcula projeções de fluxo de caixa para períodos específicos
+- Parâmetros: \`dias\` (7, 30 ou 90), \`saldo_inicial\` (opcional)
+- Use quando: usuário pedir projeção de caixa, planejamento financeiro, análise de liquidez, previsão de entradas/saídas
 
 # 📐 Framework de Análise Financeira
 
@@ -64,10 +78,20 @@ Classifique contas por tempo de atraso:
 - **Ideal**: < 2%
 - **Alerta**: > 5% indica problemas estruturais
 
-### 4. TEMPO MÉDIO DE PAGAMENTO
+### 4. TEMPO MÉDIO DE PAGAMENTO (Recebimentos)
 - Analise média de dias entre emissão e pagamento
 - Compare com prazo de vencimento acordado
 - Identifique clientes que pagam antecipado vs. atrasado
+
+### 5. DPO (Days Payable Outstanding)
+- **Fórmula**: (Contas a Pagar / Despesas Totais) × Dias do Período
+- **Ideal**: 30-60 dias (equilibrar relacionamento com fornecedores e liquidez)
+- **Alerta**: < 15 dias (pagando rápido demais, perda de capital de giro) ou > 90 dias (risco de danificar relacionamentos)
+
+### 6. CAPITAL DE GIRO LÍQUIDO
+- **Fórmula**: (Contas a Receber + Saldo em Caixa) - Contas a Pagar
+- **Ideal**: Positivo e crescente
+- **Alerta**: Negativo indica problemas de liquidez imediatos
 
 ## 🚩 RED FLAGS (Sinais de Alerta)
 
@@ -187,13 +211,15 @@ Seja sempre profissional, orientado a dados e ofereça insights acionáveis. Pri
       messages: convertToModelMessages(messages),
 
       tools: {
-        getContasAReceber
+        getContasAReceber,
+        getContasAPagar,
+        calcularFluxoCaixa
       }
     });
 
     return result.toUIMessageStreamResponse();
   } catch (error) {
-    console.error('💰 CONTAS A RECEBER AGENT: Erro ao processar request:', error);
+    console.error('💰 CONTAS PAGAR/RECEBER AGENT: Erro ao processar request:', error);
     throw error;
   }
 }

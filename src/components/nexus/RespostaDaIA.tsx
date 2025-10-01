@@ -1500,7 +1500,7 @@ const getAgentInfo = (agent: string) => {
     case 'serviceOrdersAgent':
       return { initial: 'O', title: 'Service Orders Agent', color: 'bg-amber-600' };
     case 'contasAReceberAgent':
-      return { initial: 'C', title: 'Contas a Receber', color: 'bg-teal-600' };
+      return { initial: 'C', title: 'Contas a Pagar e Receber', color: 'bg-teal-600' };
     case 'receiptsAgent':
       return { initial: 'R', title: 'Receipts Agent', color: 'bg-orange-600' };
     case 'nfeAgent':

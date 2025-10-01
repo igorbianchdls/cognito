@@ -94,7 +94,7 @@ const models = [
   { id: 'salesAgent', name: 'SalesAgent', icon: iconMap['salesAgent'] },
   { id: 'rhAgent', name: 'RH Agent', icon: iconMap['rhAgent'] },
   { id: 'serviceOrdersAgent', name: 'Service Orders Agent', icon: iconMap['serviceOrdersAgent'] },
-  { id: 'contasAReceberAgent', name: 'Contas a Receber', icon: iconMap['contasAReceberAgent'] },
+  { id: 'contasAReceberAgent', name: 'Contas a Pagar e Receber', icon: iconMap['contasAReceberAgent'] },
   { id: 'receiptsAgent', name: 'Receipts Agent', icon: iconMap['receiptsAgent'] },
   { id: 'nfeAgent', name: 'Invoice Agent', icon: iconMap['nfeAgent'] },
   { id: 'inventoryAgent', name: 'Inventory Agent', icon: iconMap['inventoryAgent'] },
