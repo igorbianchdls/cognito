@@ -1,6 +1,6 @@
 import { atom } from 'nanostores'
 import { ColDef } from 'ag-grid-community'
-import { MOCK_DATASETS, DatasetInfo } from '@/data/mockDatasets'
+import { DatasetInfo } from '@/data/mockDatasets'
 import { SUPABASE_DATASETS, fetchSupabaseTable, SupabaseDatasetConfig } from '@/data/supabaseDatasets'
 
 // Types
@@ -44,22 +44,19 @@ export const univerAPIStore = atom<unknown>(null)
 export const univerInstanceStore = atom<unknown>(null)
 
 // Datasets Management
-// Start with Supabase datasets (merged with mock datasets for backward compatibility)
-const initialDatasets: DatasetInfo[] = [
-  ...SUPABASE_DATASETS.map(ds => ({
-    id: ds.id,
-    name: ds.name,
-    description: ds.description,
-    rows: 0, // Will be fetched dynamically
-    columns: ds.columnDefs.length,
-    size: 'Loading...',
-    type: 'grid' as const,
-    lastModified: new Date(),
-    data: [],
-    columnDefs: ds.columnDefs
-  })),
-  ...MOCK_DATASETS
-]
+// Use only Supabase datasets
+const initialDatasets: DatasetInfo[] = SUPABASE_DATASETS.map(ds => ({
+  id: ds.id,
+  name: ds.name,
+  description: ds.description,
+  rows: 0, // Will be fetched dynamically
+  columns: ds.columnDefs.length,
+  size: 'Loading...',
+  type: 'grid' as const,
+  lastModified: new Date(),
+  data: [],
+  columnDefs: ds.columnDefs
+}))
 
 export const availableDatasetsStore = atom<DatasetInfo[]>(initialDatasets)
 export const activeDatasetIdStore = atom<string>('contas-a-receber') // Default to Contas a Receber

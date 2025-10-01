@@ -42,7 +42,18 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
   }, []);
 
   // Categorize datasets
-  const supabaseDatasetIds = ['contas-a-receber', 'contas-a-pagar', 'estoque'];
+  const supabaseDatasetIds = [
+    'contas-a-receber',
+    'contas-a-pagar',
+    'estoque',
+    'sales-calls',
+    'rh-candidates',
+    'service-orders',
+    'receipts',
+    'notas-fiscais',
+    'youtube-content',
+    'reels-content'
+  ];
   const supabaseDatasets = datasets.filter(ds => supabaseDatasetIds.includes(ds.id));
   const systemDatasets = datasets.filter(ds => !supabaseDatasetIds.includes(ds.id) && !ds.id.startsWith('imported-'));
   const importedDatasets = datasets.filter(ds => ds.id.startsWith('imported-'));
@@ -205,71 +216,6 @@ export default function DatasetsSidebar({ className = '' }: DatasetsSidebarProps
           </div>
         )}
 
-        {/* System Datasets Section (Mock Data) */}
-        {systemDatasets.length > 0 && (
-          <div className="px-2 py-2">
-            <button
-              onClick={() => setSystemSectionCollapsed(!systemSectionCollapsed)}
-              className="w-full flex items-center justify-between px-2 py-1 text-xs font-medium text-[#5e6c84] hover:text-[#172b4d] transition-colors"
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-[#8993a4]">SYSTEM</span>
-                <span className="text-[#8993a4] bg-[#f4f5f7] px-1.5 py-0.5 rounded text-xs">
-                  {systemDatasets.length}
-                </span>
-              </div>
-              <svg 
-                className={`w-3 h-3 transition-transform ${systemSectionCollapsed ? '-rotate-90' : ''}`}
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            {!systemSectionCollapsed && (
-              <div className="mt-1 space-y-1">
-                {systemDatasets.map((dataset) => {
-                  const isActive = dataset.id === activeDatasetId;
-                  const isLoadingThis = isLoading && dataset.id === activeDatasetId;
-                  
-                  return (
-                    <div
-                      key={dataset.id}
-                      onClick={() => handleSelectDataset(dataset.id)}
-                      className={`
-                        group flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer transition-all
-                        ${isActive 
-                          ? 'bg-[#f4f5f7]' 
-                          : 'text-[#172b4d] hover:bg-[#f4f5f7]'
-                        }
-                        ${isLoadingThis ? 'opacity-50' : ''}
-                      `}
-                    >
-                      <span className="text-[#8993a4]">{getDatasetIcon(dataset)}</span>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate text-[#172b4d]">
-                          {dataset.name}
-                        </div>
-                      </div>
-                      
-                      {/* Loading indicator */}
-                      {isLoadingThis && (
-                        <div className="w-3 h-3 border border-[#0052cc] border-t-transparent rounded-full animate-spin"></div>
-                      )}
-                      
-                      {/* Active indicator */}
-                      {isActive && !isLoadingThis && (
-                        <div className="w-2 h-2 bg-[#0052cc] rounded-full"></div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
 
         {/* Imported Datasets Section */}
         <div className="px-2 py-2">
