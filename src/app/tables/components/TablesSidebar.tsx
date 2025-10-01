@@ -22,8 +22,6 @@ export default function TablesSidebar({ selectedTable, onSelectTable }: TablesSi
   return (
     <aside className="w-64 border-l bg-sidebar flex-shrink-0 overflow-y-auto">
       <div className="p-4">
-        <h2 className="text-sm font-semibold mb-4 text-foreground/70">Tabelas</h2>
-
         <div className="space-y-4">
           {Object.entries(groupedDatasets).map(([category, datasets]) => (
             <div key={category}>
