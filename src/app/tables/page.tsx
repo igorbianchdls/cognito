@@ -23,9 +23,9 @@ export default function TablesPage() {
         </header>
 
         {/* Área principal: Table + Sidebar */}
-        <div className="flex flex-1 min-h-0">
+        <div className="flex flex-1 min-h-0 overflow-hidden">
           {/* Table com scroll horizontal */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 overflow-hidden">
             <TablesDataTable tableName={selectedTable} />
           </div>
 

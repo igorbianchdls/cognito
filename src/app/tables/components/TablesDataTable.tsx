@@ -140,7 +140,7 @@ export default function TablesDataTable({ tableName }: TablesDataTableProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Table with horizontal scroll */}
-      <div className="flex-1 overflow-x-auto">
+      <div className="flex-1 overflow-x-auto border-b">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
