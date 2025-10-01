@@ -700,6 +700,63 @@ type GetContasAPagarToolOutput = {
   error?: string;
 };
 
+type CalcularFluxoCaixaToolInput = {
+  dias: number;
+  saldo_inicial?: number;
+};
+
+type CalcularFluxoCaixaToolOutput = {
+  success: boolean;
+  periodo_dias: number;
+  saldo_inicial: number;
+  entradas_previstas: number;
+  saidas_previstas: number;
+  saldo_projetado: number;
+  status_fluxo: string;
+  entradas_vencidas: number;
+  saidas_vencidas: number;
+  total_contas_receber: number;
+  total_contas_pagar: number;
+  error?: string;
+  message?: string;
+};
+
+type CalcularBurnRateToolInput = {
+  dias_analise?: number;
+};
+
+type CalcularBurnRateToolOutput = {
+  success: boolean;
+  periodo_dias: number;
+  total_gasto: number;
+  burn_rate_diario: number;
+  burn_rate_mensal: number;
+  burn_rate_anual: number;
+  gasto_por_categoria: Record<string, number>;
+  total_contas_pagas: number;
+  error?: string;
+  message?: string;
+};
+
+type CalcularRunwayToolInput = {
+  saldo_atual: number;
+  considerar_receitas?: boolean;
+};
+
+type CalcularRunwayToolOutput = {
+  success: boolean;
+  saldo_atual: number;
+  burn_rate_mensal: number;
+  receitas_mensais: number;
+  queima_liquida_mensal: number;
+  runway_meses: number | string;
+  runway_dias: number | string;
+  data_esgotamento: string | null;
+  status_saude: string;
+  error?: string;
+  message?: string;
+};
+
 type ExecutarSQLComDadosToolOutput = {
   sqlQuery: string;
   explicacao?: string;
@@ -1389,6 +1446,18 @@ type NexusToolUIPart = ToolUIPart<{
     input: GetContasAPagarToolInput;
     output: GetContasAPagarToolOutput;
   };
+  calcularFluxoCaixa: {
+    input: CalcularFluxoCaixaToolInput;
+    output: CalcularFluxoCaixaToolOutput;
+  };
+  calcularBurnRate: {
+    input: CalcularBurnRateToolInput;
+    output: CalcularBurnRateToolOutput;
+  };
+  calcularRunway: {
+    input: CalcularRunwayToolInput;
+    output: CalcularRunwayToolOutput;
+  };
 }>;
 
 // Função para mapear agente
@@ -1440,6 +1509,8 @@ const getAgentInfo = (agent: string) => {
       return { initial: 'I', title: 'Inventory Agent', color: 'bg-blue-600' };
     case 'contasAPagarAgent':
       return { initial: 'P', title: 'Contas a Pagar', color: 'bg-red-600' };
+    case 'fluxoCaixaAgent':
+      return { initial: 'F', title: 'Fluxo de Caixa', color: 'bg-green-600' };
     default:
       return { initial: 'A', title: 'AI Assistant', color: 'bg-gray-500' };
   }

@@ -67,6 +67,7 @@ export default function Page() {
       case 'nfeAgent': return '/api/claudeAgents/nfe';
       case 'inventoryAgent': return '/api/claudeAgents/inventory';
       case 'contasAPagarAgent': return '/api/claudeAgents/contas-a-pagar';
+      case 'fluxoCaixaAgent': return '/api/claudeAgents/fluxo-caixa';
       default: return '/api/agents/shopify-analyst';
     }
   };
