@@ -411,7 +411,7 @@ export default function ContasAPagarList({ success, count, data, message, error 
 
       {data && data.length > 0 && (
         <div className="space-y-4">
-          <Card>
+          <div className="border rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -685,7 +685,7 @@ export default function ContasAPagarList({ success, count, data, message, error 
                 </TableBody>
               </Table>
             </div>
-          </Card>
+          </div>
 
           {/* Pagination */}
           <div className="border-t bg-white py-4 px-6 flex items-center justify-between">

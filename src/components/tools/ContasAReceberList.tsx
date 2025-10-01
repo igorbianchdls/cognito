@@ -382,7 +382,7 @@ export default function ContasAReceberList({ success, count, data, message, erro
 
       {data && data.length > 0 && (
         <div className="space-y-4">
-          <Card>
+          <div className="border rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -618,7 +618,7 @@ export default function ContasAReceberList({ success, count, data, message, erro
                 </TableBody>
               </Table>
             </div>
-          </Card>
+          </div>
 
           {/* Pagination */}
           <div className="border-t bg-white py-4 px-6 flex items-center justify-between">
