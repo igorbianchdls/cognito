@@ -16,19 +16,22 @@ export default function TablesHeader({
   onViewChange
 }: TablesHeaderProps) {
   return (
-    <>
-      {/* Top bar with sidebar trigger */}
-      <div className="flex items-center gap-2 px-4 border-b bg-white h-16 shrink-0">
+    <div className="flex items-center bg-white border-b border-gray-200 h-12 shrink-0">
+      {/* Sidebar trigger + separator */}
+      <div className="flex items-center gap-2 px-4">
         <SidebarTrigger className="-ml-1" />
-        <Separator orientation="vertical" className="mr-2 h-4" />
+        <Separator orientation="vertical" className="h-4" />
       </div>
 
-      {/* Toolbar with filters, sort, etc */}
-      <TableHeader
-        onFiltersChange={onFiltersChange}
-        onSortChange={onSortChange}
-        onViewChange={onViewChange}
-      />
-    </>
+      {/* TableHeader content inline */}
+      <div className="flex-1">
+        <TableHeader
+          className="border-0"
+          onFiltersChange={onFiltersChange}
+          onSortChange={onSortChange}
+          onViewChange={onViewChange}
+        />
+      </div>
+    </div>
   );
 }
