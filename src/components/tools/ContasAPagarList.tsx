@@ -248,12 +248,12 @@ export default function ContasAPagarList({ success, count, data, message, error 
       </CardHeader>
 
       {data && data.length > 0 && (
-        <div className="grid gap-4 md:grid-cols-1">
+        <div className="grid gap-4 md:grid-cols-3">
           {data.map((conta) => {
             const diasAtraso = calcularDiasAtraso(conta.data_vencimento, conta.data_pagamento, conta.status);
 
             return (
-              <Card key={conta.id} className="hover:shadow-lg transition-shadow">
+              <Card key={conta.id} className="hover:shadow-lg transition-shadow h-full flex flex-col">
                 <CardHeader className="pb-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -280,7 +280,7 @@ export default function ContasAPagarList({ success, count, data, message, error 
                   </div>
                 </CardHeader>
 
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-4 flex-1">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     {conta.fornecedor_email && <span>{conta.fornecedor_email}</span>}
                     {conta.data_emissao && (

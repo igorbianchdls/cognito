@@ -228,12 +228,12 @@ export default function ContasAReceberList({ success, count, data, message, erro
       </Card>
 
       {data && data.length > 0 && (
-        <div className="grid gap-4 md:grid-cols-1">
+        <div className="grid gap-4 md:grid-cols-4">
           {data.map((conta) => {
             const diasAtraso = calcularDiasAtraso(conta.data_vencimento, conta.data_pagamento, conta.status);
 
             return (
-              <Card key={conta.id} className="hover:shadow-lg transition-shadow">
+              <Card key={conta.id} className="hover:shadow-lg transition-shadow h-full flex flex-col">
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2 flex-1">
@@ -288,7 +288,7 @@ export default function ContasAReceberList({ success, count, data, message, erro
                   </div>
                 </CardHeader>
 
-                <CardContent>
+                <CardContent className="flex-1">
                   <Accordion type="single" collapsible>
                     <AccordionItem value="content" className="border-none">
                       <AccordionTrigger className="hover:no-underline py-3 cursor-pointer">
