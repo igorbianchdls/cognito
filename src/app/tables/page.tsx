@@ -29,7 +29,7 @@ export default function TablesPage() {
 
           {/* Table com scroll horizontal */}
           <div className="flex-1 overflow-hidden">
-            <TablesDataTable tableName={selectedTable} />
+            <TablesDataTable tableName={selectedTable} filters={filters} />
           </div>
         </div>
 

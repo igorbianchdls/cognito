@@ -29,11 +29,11 @@ interface TableHeaderProps {
   onViewChange?: (view: 'grid' | 'list') => void;
 }
 
-export default function TableHeader({ 
-  className = '', 
-  onFiltersChange, 
+export default function TableHeader({
+  className = '',
+  onFiltersChange,
   onSortChange,
-  onViewChange 
+  onViewChange
 }: TableHeaderProps) {
   const [activeView, setActiveView] = useState<'grid' | 'list'>('grid');
   const [filters, setFilters] = useState<FilterState[]>([]);
@@ -53,6 +53,13 @@ export default function TableHeader({
 
   const handleRemoveFilter = (index: number) => {
     const updatedFilters = filters.filter((_, i) => i !== index);
+    setFilters(updatedFilters);
+    onFiltersChange?.(updatedFilters);
+  };
+
+  const handleUpdateFilter = (index: number, field: keyof FilterState, value: string) => {
+    const updatedFilters = [...filters];
+    updatedFilters[index] = { ...updatedFilters[index], [field]: value };
     setFilters(updatedFilters);
     onFiltersChange?.(updatedFilters);
   };
@@ -122,7 +129,7 @@ export default function TableHeader({
                 {filters.length > 0 ? `${filters.length} Filters` : 'Filters'}
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-64">
+            <DropdownMenuContent align="start" className="w-96">
               <DropdownMenuLabel>Filters</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {filters.length === 0 ? (
@@ -130,17 +137,52 @@ export default function TableHeader({
                   No filters applied
                 </div>
               ) : (
-                filters.map((filter, index) => (
-                  <DropdownMenuItem key={index} className="flex justify-between">
-                    <span className="text-xs">{filter.column || 'Column'} {filter.operator} {filter.value || 'value'}</span>
-                    <button 
-                      onClick={() => handleRemoveFilter(index)}
-                      className="text-red-500 hover:text-red-700 ml-2"
-                    >
-                      ×
-                    </button>
-                  </DropdownMenuItem>
-                ))
+                <div className="p-2 space-y-2 max-h-96 overflow-y-auto">
+                  {filters.map((filter, index) => (
+                    <div key={index} className="flex flex-col gap-2 p-2 border rounded bg-gray-50">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Column name"
+                          value={filter.column}
+                          onChange={(e) => handleUpdateFilter(index, 'column', e.target.value)}
+                          className="flex-1 px-2 py-1 text-xs border rounded"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveFilter(index);
+                          }}
+                          className="text-red-500 hover:text-red-700 px-2"
+                        >
+                          ×
+                        </button>
+                      </div>
+                      <select
+                        value={filter.operator}
+                        onChange={(e) => handleUpdateFilter(index, 'operator', e.target.value)}
+                        className="px-2 py-1 text-xs border rounded"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <option value="contains">Contains</option>
+                        <option value="equals">Equals</option>
+                        <option value="startsWith">Starts with</option>
+                        <option value="endsWith">Ends with</option>
+                        <option value="greaterThan">Greater than</option>
+                        <option value="lessThan">Less than</option>
+                      </select>
+                      <input
+                        type="text"
+                        placeholder="Filter value"
+                        value={filter.value}
+                        onChange={(e) => handleUpdateFilter(index, 'value', e.target.value)}
+                        className="px-2 py-1 text-xs border rounded"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  ))}
+                </div>
               )}
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleAddFilter}>

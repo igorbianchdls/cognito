@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   ColumnDef,
   flexRender,
@@ -9,6 +9,8 @@ import {
   getSortedRowModel,
   SortingState,
   useReactTable,
+  getFilteredRowModel,
+  ColumnFiltersState,
 } from '@tanstack/react-table';
 import { ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -22,14 +24,28 @@ import {
 } from '@/components/ui/table';
 import { useSupabaseTables } from '../hooks/useSupabaseTables';
 import { SUPABASE_DATASETS } from '@/data/supabaseDatasets';
+import { FilterState } from '@/components/sheets/core/TableHeader';
 
 interface TablesDataTableProps {
   tableName: string | null;
+  filters?: FilterState[];
 }
 
-export default function TablesDataTable({ tableName }: TablesDataTableProps) {
+export default function TablesDataTable({ tableName, filters = [] }: TablesDataTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const { data, loading, error } = useSupabaseTables(tableName || '');
+
+  // Convert FilterState[] to ColumnFiltersState when filters prop changes
+  useEffect(() => {
+    const tanstackFilters: ColumnFiltersState = filters
+      .filter(f => f.column && f.value) // Only apply filters that have column and value
+      .map(f => ({
+        id: f.column,
+        value: f.value
+      }));
+    setColumnFilters(tanstackFilters);
+  }, [filters]);
 
   // Get column definitions from SUPABASE_DATASETS
   const datasetConfig = SUPABASE_DATASETS.find(ds => ds.tableName === tableName);
@@ -91,11 +107,14 @@ export default function TablesDataTable({ tableName }: TablesDataTableProps) {
     data,
     columns,
     onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
     state: {
       sorting,
+      columnFilters,
     },
     initialState: {
       pagination: {
