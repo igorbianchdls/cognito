@@ -50,6 +50,7 @@ import ReceiptsList from '../tools/ReceiptsList';
 import NotasFiscaisList from '../tools/NotasFiscaisList';
 import InventoryList from '../tools/InventoryList';
 import ContasAPagarList from '../tools/ContasAPagarList';
+import FluxoCaixaResult from '../tools/FluxoCaixaResult';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -3040,6 +3041,48 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   data={(contasAPagarTool.output as GetContasAPagarToolOutput).data}
                   message={(contasAPagarTool.output as GetContasAPagarToolOutput).message}
                   error={(contasAPagarTool.output as GetContasAPagarToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-calcularFluxoCaixa') {
+          const fluxoCaixaTool = part as NexusToolUIPart;
+          const callId = fluxoCaixaTool.toolCallId;
+          const shouldBeOpen = fluxoCaixaTool.state === 'output-available' || fluxoCaixaTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-calcularFluxoCaixa" state={fluxoCaixaTool.state} />
+                <ToolContent>
+                  {fluxoCaixaTool.input && (
+                    <ToolInput input={fluxoCaixaTool.input} />
+                  )}
+                  {fluxoCaixaTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={fluxoCaixaTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {fluxoCaixaTool.state === 'output-available' && (
+                <FluxoCaixaResult
+                  success={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).success}
+                  periodo_dias={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).periodo_dias}
+                  saldo_inicial={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).saldo_inicial}
+                  entradas_previstas={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).entradas_previstas}
+                  saidas_previstas={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).saidas_previstas}
+                  saldo_projetado={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).saldo_projetado}
+                  status_fluxo={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).status_fluxo}
+                  entradas_vencidas={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).entradas_vencidas}
+                  saidas_vencidas={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).saidas_vencidas}
+                  total_contas_receber={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).total_contas_receber}
+                  total_contas_pagar={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).total_contas_pagar}
+                  error={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).error}
+                  message={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).message}
                 />
               )}
             </div>
