@@ -720,6 +720,18 @@ type CalcularFluxoCaixaToolOutput = {
   total_contas_pagar: number;
   error?: string;
   message?: string;
+  detalhes_entradas?: Array<{
+    numero_fatura: string;
+    cliente: string;
+    valor_pendente: number;
+    vencimento: string;
+  }>;
+  detalhes_saidas?: Array<{
+    numero_conta: string;
+    fornecedor: string;
+    valor_pendente: number;
+    vencimento: string;
+  }>;
 };
 
 type CalcularBurnRateToolInput = {
@@ -3083,6 +3095,8 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   total_contas_pagar={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).total_contas_pagar}
                   error={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).error}
                   message={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).message}
+                  detalhes_entradas={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).detalhes_entradas}
+                  detalhes_saidas={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).detalhes_saidas}
                 />
               )}
             </div>

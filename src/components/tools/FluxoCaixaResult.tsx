@@ -2,7 +2,17 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, Activity, AlertCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, Activity, AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
+import { useState } from 'react';
+
+interface ContaDetalhe {
+  numero_fatura?: string;
+  numero_conta?: string;
+  cliente?: string;
+  fornecedor?: string;
+  valor_pendente: number;
+  vencimento: string;
+}
 
 interface FluxoCaixaResultProps {
   success: boolean;
@@ -18,6 +28,8 @@ interface FluxoCaixaResultProps {
   total_contas_pagar?: number;
   error?: string;
   message?: string;
+  detalhes_entradas?: ContaDetalhe[];
+  detalhes_saidas?: ContaDetalhe[];
 }
 
 export default function FluxoCaixaResult({
@@ -33,8 +45,11 @@ export default function FluxoCaixaResult({
   total_contas_receber,
   total_contas_pagar,
   error,
-  message
+  message,
+  detalhes_entradas,
+  detalhes_saidas
 }: FluxoCaixaResultProps) {
+  const [showDetalhes, setShowDetalhes] = useState(false);
 
   if (!success) {
     return (
@@ -186,6 +201,110 @@ export default function FluxoCaixaResult({
               </div>
             </div>
           </div>
+
+          {/* Seção de Detalhes do Cálculo */}
+          {(detalhes_entradas?.length || detalhes_saidas?.length) && (
+            <div className="border-t pt-4">
+              <button
+                onClick={() => setShowDetalhes(!showDetalhes)}
+                className="flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-gray-900 w-full"
+              >
+                {showDetalhes ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                Ver Cálculo Detalhado ({(detalhes_entradas?.length || 0) + (detalhes_saidas?.length || 0)} contas)
+              </button>
+
+              {showDetalhes && (
+                <div className="mt-4 space-y-4">
+                  {/* Detalhes das Entradas */}
+                  {detalhes_entradas && detalhes_entradas.length > 0 && (
+                    <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                      <div className="flex items-center gap-2 mb-3">
+                        <TrendingUp className="h-4 w-4 text-green-600" />
+                        <p className="text-sm font-semibold text-green-700">
+                          Contas a Receber Consideradas ({detalhes_entradas.length})
+                        </p>
+                      </div>
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {detalhes_entradas.map((conta, idx) => (
+                          <div key={idx} className="flex justify-between items-center text-xs bg-white p-2 rounded border border-green-100">
+                            <div>
+                              <p className="font-medium text-gray-900">{conta.numero_fatura}</p>
+                              <p className="text-gray-500">{conta.cliente}</p>
+                              <p className="text-gray-400">Venc: {new Date(conta.vencimento).toLocaleDateString('pt-BR')}</p>
+                            </div>
+                            <p className="font-bold text-green-600">
+                              R$ {conta.valor_pendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 pt-2 border-t border-green-200 flex justify-between text-sm font-bold">
+                        <span className="text-green-700">Total Entradas:</span>
+                        <span className="text-green-600">
+                          R$ {(detalhes_entradas.reduce((sum, c) => sum + c.valor_pendente, 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Detalhes das Saídas */}
+                  {detalhes_saidas && detalhes_saidas.length > 0 && (
+                    <div className="bg-red-50 rounded-lg p-4 border border-red-200">
+                      <div className="flex items-center gap-2 mb-3">
+                        <TrendingDown className="h-4 w-4 text-red-600" />
+                        <p className="text-sm font-semibold text-red-700">
+                          Contas a Pagar Consideradas ({detalhes_saidas.length})
+                        </p>
+                      </div>
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {detalhes_saidas.map((conta, idx) => (
+                          <div key={idx} className="flex justify-between items-center text-xs bg-white p-2 rounded border border-red-100">
+                            <div>
+                              <p className="font-medium text-gray-900">{conta.numero_conta}</p>
+                              <p className="text-gray-500">{conta.fornecedor}</p>
+                              <p className="text-gray-400">Venc: {new Date(conta.vencimento).toLocaleDateString('pt-BR')}</p>
+                            </div>
+                            <p className="font-bold text-red-600">
+                              R$ {conta.valor_pendente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 pt-2 border-t border-red-200 flex justify-between text-sm font-bold">
+                        <span className="text-red-700">Total Saídas:</span>
+                        <span className="text-red-600">
+                          R$ {(detalhes_saidas.reduce((sum, c) => sum + c.valor_pendente, 0)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Fórmula do Cálculo */}
+                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <p className="text-xs font-semibold text-blue-700 mb-2">FÓRMULA DO CÁLCULO</p>
+                    <div className="space-y-1 text-sm font-mono">
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Saldo Inicial:</span>
+                        <span className="font-medium">R$ {(saldo_inicial || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                      <div className="flex justify-between text-green-600">
+                        <span>+ Entradas Previstas:</span>
+                        <span className="font-medium">R$ {(entradas_previstas || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                      <div className="flex justify-between text-red-600">
+                        <span>- Saídas Previstas:</span>
+                        <span className="font-medium">R$ {(saidas_previstas || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                      <div className="flex justify-between pt-2 border-t border-blue-200 font-bold text-blue-700">
+                        <span>= Saldo Projetado:</span>
+                        <span>R$ {(saldo_projetado || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

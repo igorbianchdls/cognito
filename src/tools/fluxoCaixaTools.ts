@@ -37,21 +37,22 @@ export const calcularFluxoCaixa = tool({
       if (errorSaidas) throw errorSaidas;
 
       // CALCULOS MATEMATICOS PRECISOS (TypeScript, nao IA)
-      const entradasNoPeriodo = (entradas || [])
+      const entradasFiltradas = (entradas || [])
         .filter(c => {
           if (!c.data_vencimento) return false;
           const vencimento = new Date(c.data_vencimento);
           return vencimento <= dataLimite;
-        })
-        .reduce((sum, c) => sum + (c.valor_pendente || 0), 0);
+        });
 
-      const saidasNoPeriodo = (saidas || [])
+      const saidasFiltradas = (saidas || [])
         .filter(c => {
           if (!c.data_vencimento) return false;
           const vencimento = new Date(c.data_vencimento);
           return vencimento <= dataLimite;
-        })
-        .reduce((sum, c) => sum + (c.valor_pendente || 0), 0);
+        });
+
+      const entradasNoPeriodo = entradasFiltradas.reduce((sum, c) => sum + (c.valor_pendente || 0), 0);
+      const saidasNoPeriodo = saidasFiltradas.reduce((sum, c) => sum + (c.valor_pendente || 0), 0);
 
       const saldoProjetado = saldo_inicial + entradasNoPeriodo - saidasNoPeriodo;
 
@@ -75,7 +76,20 @@ export const calcularFluxoCaixa = tool({
         entradas_vencidas: entradasVencidas,
         saidas_vencidas: saidasVencidas,
         total_contas_receber: entradas?.length || 0,
-        total_contas_pagar: saidas?.length || 0
+        total_contas_pagar: saidas?.length || 0,
+        // Detalhes das contas para auditoria
+        detalhes_entradas: entradasFiltradas.map(c => ({
+          numero_fatura: c.numero_fatura,
+          cliente: c.cliente_nome,
+          valor_pendente: c.valor_pendente,
+          vencimento: c.data_vencimento
+        })),
+        detalhes_saidas: saidasFiltradas.map(c => ({
+          numero_conta: c.numero_conta,
+          fornecedor: c.fornecedor_nome,
+          valor_pendente: c.valor_pendente,
+          vencimento: c.data_vencimento
+        }))
       };
     } catch (error) {
       return {
