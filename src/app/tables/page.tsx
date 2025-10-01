@@ -17,27 +17,27 @@ export default function TablesPage() {
   return (
     <SidebarProvider>
       <SidebarShadcn />
-      <SidebarInset className="h-screen flex flex-col overflow-hidden">
-        {/* Header com toolbar */}
-        <TablesHeader
-          onFiltersChange={setFilters}
-          onSortChange={setSorting}
-          onViewChange={setView}
-        />
+      <SidebarInset className="h-screen flex overflow-hidden">
+        {/* Coluna principal: Header + Table */}
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          {/* Header com toolbar */}
+          <TablesHeader
+            onFiltersChange={setFilters}
+            onSortChange={setSorting}
+            onViewChange={setView}
+          />
 
-        {/* Área principal: Table + Sidebar */}
-        <div className="flex flex-1 min-h-0 overflow-hidden">
           {/* Table com scroll horizontal */}
-          <div className="flex-1 min-w-0 overflow-hidden">
+          <div className="flex-1 overflow-hidden">
             <TablesDataTable tableName={selectedTable} />
           </div>
-
-          {/* Sidebar fixo - sem scroll horizontal */}
-          <TablesSidebar
-            selectedTable={selectedTable}
-            onSelectTable={setSelectedTable}
-          />
         </div>
+
+        {/* Sidebar direito - altura completa */}
+        <TablesSidebar
+          selectedTable={selectedTable}
+          onSelectTable={setSelectedTable}
+        />
       </SidebarInset>
     </SidebarProvider>
   );
