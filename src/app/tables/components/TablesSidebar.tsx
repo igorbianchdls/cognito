@@ -1,5 +1,6 @@
 'use client';
 
+import { Database } from 'lucide-react';
 import { SUPABASE_DATASETS } from '@/data/supabaseDatasets';
 
 interface TablesSidebarProps {
@@ -9,11 +10,11 @@ interface TablesSidebarProps {
 
 export default function TablesSidebar({ selectedTable, onSelectTable }: TablesSidebarProps) {
   return (
-    <aside className="w-80 border-l bg-gray-50 flex-shrink-0 overflow-y-auto">
+    <aside className="w-64 border-l bg-background flex-shrink-0 overflow-y-auto">
       <div className="p-4">
-        <h2 className="text-sm font-semibold text-gray-900 mb-4">Tabelas Disponíveis</h2>
+        <h2 className="text-sm font-semibold mb-3 text-foreground/70">Tabelas</h2>
 
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {SUPABASE_DATASETS.map((dataset) => {
             const isSelected = selectedTable === dataset.tableName;
 
@@ -21,23 +22,14 @@ export default function TablesSidebar({ selectedTable, onSelectTable }: TablesSi
               <button
                 key={dataset.id}
                 onClick={() => onSelectTable(dataset.tableName)}
-                className={`w-full text-left px-3 py-2 rounded-lg transition-colors ${
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
                   isSelected
-                    ? 'bg-blue-50 text-blue-700 font-medium'
-                    : 'hover:bg-gray-100 text-gray-700'
+                    ? 'bg-accent text-accent-foreground font-medium'
+                    : 'text-foreground/80 hover:bg-accent/50 hover:text-accent-foreground'
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{dataset.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">
-                      {dataset.name}
-                    </div>
-                    <div className="text-xs text-gray-500 truncate">
-                      {dataset.description}
-                    </div>
-                  </div>
-                </div>
+                <Database className="h-4 w-4 shrink-0" />
+                <span className="truncate text-left">{dataset.name}</span>
               </button>
             );
           })}
