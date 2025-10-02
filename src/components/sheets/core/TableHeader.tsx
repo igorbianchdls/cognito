@@ -1,7 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useStore } from '@nanostores/react';
 import { getActiveDatasetInfo } from '@/stores/sheets/sheetsStore';
+import {
+  $rowHeight,
+  $fontSize,
+  $cellTextColor,
+  $headerTextColor,
+} from '@/stores/table/tablePreferences';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,6 +49,12 @@ export default function TableHeader({
   const [filters, setFilters] = useState<FilterState[]>([]);
   const [sorting, setSorting] = useState<SortState[]>([]);
   const datasetInfo = getActiveDatasetInfo();
+
+  // Table preferences from nanostores
+  const rowHeight = useStore($rowHeight);
+  const fontSize = useStore($fontSize);
+  const cellTextColor = useStore($cellTextColor);
+  const headerTextColor = useStore($headerTextColor);
 
   const handleAddFilter = () => {
     const newFilter: FilterState = {
@@ -300,12 +313,76 @@ export default function TableHeader({
             Hide Fields
           </button>
           
-          <button className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+                {rowHeight}px
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuLabel>Row Height</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => $rowHeight.set(24)}>24px - Compact</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => $rowHeight.set(32)}>32px - Small</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => $rowHeight.set(40)}>40px - Normal</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => $rowHeight.set(48)}>48px - Medium</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => $rowHeight.set(56)}>56px - Large</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+                </svg>
+                {fontSize}px
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuLabel>Font Size</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => $fontSize.set(10)}>10px</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => $fontSize.set(12)}>12px</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => $fontSize.set(14)}>14px - Normal</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => $fontSize.set(16)}>16px</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => $fontSize.set(18)}>18px</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => $fontSize.set(20)}>20px</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <div className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM7 21h16M7 21v-4a2 2 0 012-2h14" />
             </svg>
-            Height
-          </button>
+            <label className="cursor-pointer">
+              Cell Color
+              <input
+                type="color"
+                value={cellTextColor}
+                onChange={(e) => $cellTextColor.set(e.target.value)}
+                className="ml-1 w-6 h-6 cursor-pointer border-0 rounded"
+              />
+            </label>
+          </div>
+
+          <div className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM7 21h16M7 21v-4a2 2 0 012-2h14" />
+            </svg>
+            <label className="cursor-pointer">
+              Header Color
+              <input
+                type="color"
+                value={headerTextColor}
+                onChange={(e) => $headerTextColor.set(e.target.value)}
+                className="ml-1 w-6 h-6 cursor-pointer border-0 rounded"
+              />
+            </label>
+          </div>
         </div>
         
       </div>

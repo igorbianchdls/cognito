@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
+import { useStore } from '@nanostores/react';
 import {
   ColumnDef,
   flexRender,
@@ -26,6 +27,12 @@ import {
 import { useSupabaseTables } from '../hooks/useSupabaseTables';
 import { SUPABASE_DATASETS } from '@/data/supabaseDatasets';
 import { FilterState } from '@/components/sheets/core/TableHeader';
+import {
+  $rowHeight,
+  $fontSize,
+  $cellTextColor,
+  $headerTextColor,
+} from '@/stores/table/tablePreferences';
 
 interface TablesDataTableProps {
   tableName: string | null;
@@ -83,6 +90,12 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const { data, loading, error } = useSupabaseTables(tableName || '');
+
+  // Table preferences from nanostores
+  const rowHeight = useStore($rowHeight);
+  const fontSize = useStore($fontSize);
+  const cellTextColor = useStore($cellTextColor);
+  const headerTextColor = useStore($headerTextColor);
 
   // Convert FilterState[] to ColumnFiltersState when filters prop changes
   useEffect(() => {
@@ -244,7 +257,14 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="whitespace-nowrap font-semibold">
+                  <TableHead
+                    key={header.id}
+                    className="whitespace-nowrap font-semibold"
+                    style={{
+                      fontSize: `${fontSize}px`,
+                      color: headerTextColor,
+                    }}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -258,7 +278,15 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="whitespace-nowrap border-b border-gray-200">
+                    <TableCell
+                      key={cell.id}
+                      className="whitespace-nowrap border-b border-gray-200"
+                      style={{
+                        height: `${rowHeight}px`,
+                        fontSize: `${fontSize}px`,
+                        color: cellTextColor,
+                      }}
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}

@@ -199,7 +199,7 @@ export default function TablesGalleryView({ tableName, showCover = true }: Table
                 </div>
               )}
 
-              <div className="p-6 space-y-4">
+              <div className="px-6 pb-6 pt-3 space-y-4">
                 {/* Title - GRANDE */}
                 <h3 className="font-bold text-xl text-gray-900 line-clamp-2">
                   {title}
