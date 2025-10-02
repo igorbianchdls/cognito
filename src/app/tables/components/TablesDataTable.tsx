@@ -248,7 +248,7 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
         convertedValue = editValue;
       }
 
-      await updateSupabaseTableRow(tableName, row.id, {
+      await updateSupabaseTableRow(tableName, row.id as string | number, {
         [columnId]: convertedValue,
       });
 
