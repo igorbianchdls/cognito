@@ -21,7 +21,7 @@ export default function SheetsPage() {
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
   const [filters, setFilters] = useState<FilterState[]>([]);
   const [sorting, setSorting] = useState<SortState[]>([]);
-  const [view, setView] = useState<'grid' | 'gallery'>('grid');
+  const [view, setView] = useState<'grid' | 'gallery' | 'kanban'>('grid');
 
   const toggleRightPanel = () => {
     setIsRightPanelCollapsed(!isRightPanelCollapsed);

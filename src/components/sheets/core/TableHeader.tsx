@@ -26,7 +26,7 @@ interface TableHeaderProps {
   className?: string;
   onFiltersChange?: (filters: FilterState[]) => void;
   onSortChange?: (sorting: SortState[]) => void;
-  onViewChange?: (view: 'grid' | 'gallery') => void;
+  onViewChange?: (view: 'grid' | 'gallery' | 'kanban') => void;
   onShowCoverChange?: (show: boolean) => void;
 }
 
@@ -37,7 +37,7 @@ export default function TableHeader({
   onViewChange,
   onShowCoverChange
 }: TableHeaderProps) {
-  const [activeView, setActiveView] = useState<'grid' | 'gallery'>('grid');
+  const [activeView, setActiveView] = useState<'grid' | 'gallery' | 'kanban'>('grid');
   const [showCover, setShowCover] = useState<boolean>(true);
   const [filters, setFilters] = useState<FilterState[]>([]);
   const [sorting, setSorting] = useState<SortState[]>([]);
@@ -67,7 +67,7 @@ export default function TableHeader({
     onFiltersChange?.(updatedFilters);
   };
 
-  const handleViewChange = (view: 'grid' | 'gallery') => {
+  const handleViewChange = (view: 'grid' | 'gallery' | 'kanban') => {
     setActiveView(view);
     onViewChange?.(view);
   };
@@ -105,11 +105,13 @@ export default function TableHeader({
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   {activeView === 'grid' ? (
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                  ) : (
+                  ) : activeView === 'gallery' ? (
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
                   )}
                 </svg>
-                {activeView === 'grid' ? 'Table' : 'Gallery'}
+                {activeView === 'grid' ? 'Table' : activeView === 'gallery' ? 'Gallery' : 'Kanban'}
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -129,6 +131,12 @@ export default function TableHeader({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
                 </svg>
                 Gallery View
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleViewChange('kanban')}>
+                <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+                </svg>
+                Kanban View
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

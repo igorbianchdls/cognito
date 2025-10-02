@@ -7,7 +7,7 @@ import TableHeader, { FilterState, SortState } from '@/components/sheets/core/Ta
 interface TablesHeaderProps {
   onFiltersChange?: (filters: FilterState[]) => void;
   onSortChange?: (sorting: SortState[]) => void;
-  onViewChange?: (view: 'grid' | 'gallery') => void;
+  onViewChange?: (view: 'grid' | 'gallery' | 'kanban') => void;
   onShowCoverChange?: (show: boolean) => void;
 }
 

@@ -6,6 +6,7 @@ import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import TablesHeader from './components/TablesHeader';
 import TablesDataTable from './components/TablesDataTable';
 import TablesGalleryView from './components/TablesGalleryView';
+import TablesKanbanView from './components/TablesKanbanView';
 import TablesSidebar from './components/TablesSidebar';
 import { FilterState, SortState } from '@/components/sheets/core/TableHeader';
 
@@ -13,7 +14,7 @@ export default function TablesPage() {
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterState[]>([]);
   const [sorting, setSorting] = useState<SortState[]>([]);
-  const [view, setView] = useState<'grid' | 'gallery'>('grid');
+  const [view, setView] = useState<'grid' | 'gallery' | 'kanban'>('grid');
   const [showCover, setShowCover] = useState<boolean>(true);
 
   return (
@@ -30,12 +31,14 @@ export default function TablesPage() {
             onShowCoverChange={setShowCover}
           />
 
-          {/* Conteúdo: Table ou Gallery */}
+          {/* Conteúdo: Table, Gallery ou Kanban */}
           <div className="flex-1 overflow-hidden">
             {view === 'grid' ? (
               <TablesDataTable tableName={selectedTable} filters={filters} />
-            ) : (
+            ) : view === 'gallery' ? (
               <TablesGalleryView tableName={selectedTable} showCover={showCover} />
+            ) : (
+              <TablesKanbanView tableName={selectedTable} />
             )}
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { fetchSupabaseTable } from '@/data/supabaseDatasets';
 
 export interface UseSupabaseTablesReturn {
@@ -6,12 +6,18 @@ export interface UseSupabaseTablesReturn {
   loading: boolean;
   error: string | null;
   rowCount: number;
+  refetch: () => void;
 }
 
 export function useSupabaseTables(tableName: string): UseSupabaseTablesReturn {
   const [data, setData] = useState<Array<Record<string, unknown>>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refetchTrigger, setRefetchTrigger] = useState(0);
+
+  const refetch = useCallback(() => {
+    setRefetchTrigger(prev => prev + 1);
+  }, []);
 
   useEffect(() => {
     if (!tableName) {
@@ -31,12 +37,13 @@ export function useSupabaseTables(tableName: string): UseSupabaseTablesReturn {
         setError(err instanceof Error ? err.message : 'Erro ao carregar dados');
         setLoading(false);
       });
-  }, [tableName]);
+  }, [tableName, refetchTrigger]);
 
   return {
     data,
     loading,
     error,
-    rowCount: data.length
+    rowCount: data.length,
+    refetch
   };
 }
