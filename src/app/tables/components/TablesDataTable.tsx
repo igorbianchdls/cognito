@@ -320,6 +320,7 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
     if (!datasetConfig?.columnDefs) return [];
 
     return datasetConfig.columnDefs.map((colDef) => ({
+      id: colDef.field || '',
       accessorKey: colDef.field || '',
       header: ({ column }) => {
         return (
@@ -440,12 +441,16 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
     }));
   }, [datasetConfig, headerFontSize, headerFontFamily, headerLetterSpacing, editingCell, editValue, savingCell, fontSize, cellFontFamily]);
 
-  // Inicializar columnOrder quando as colunas mudarem
+  // Inicializar/resetar columnOrder quando as colunas mudarem
   useEffect(() => {
-    if (columns.length > 0 && columnOrder.length === 0) {
-      setColumnOrder(columns.map((col) => (col as { id?: string }).id || '').filter(Boolean));
+    if (columns.length > 0) {
+      const ids = columns.map((col) => {
+        const c = col as { id?: string; accessorKey?: string };
+        return c.id || c.accessorKey || '';
+      }).filter(Boolean);
+      setColumnOrder(ids);
     }
-  }, [columns, columnOrder.length]);
+  }, [columns]);
 
   const table = useReactTable({
     data,
