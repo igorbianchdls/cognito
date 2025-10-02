@@ -1,10 +1,28 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useStore } from '@nanostores/react';
 import { useSupabaseTables } from '../hooks/useSupabaseTables';
 import { SUPABASE_DATASETS } from '@/data/supabaseDatasets';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  $galleryTitleColor,
+  $galleryTitleSize,
+  $galleryTitleWeight,
+  $galleryTitleLetterSpacing,
+  $galleryTitleFontFamily,
+  $galleryLabelColor,
+  $galleryLabelSize,
+  $galleryLabelWeight,
+  $galleryLabelLetterSpacing,
+  $galleryLabelFontFamily,
+  $galleryValueColor,
+  $galleryValueSize,
+  $galleryValueWeight,
+  $galleryValueLetterSpacing,
+  $galleryValueFontFamily,
+} from '@/stores/table/tablePreferences';
 
 interface TablesGalleryViewProps {
   tableName: string | null;
@@ -14,6 +32,23 @@ interface TablesGalleryViewProps {
 export default function TablesGalleryView({ tableName, showCover = true }: TablesGalleryViewProps) {
   const { data, loading, error } = useSupabaseTables(tableName || '');
   const datasetConfig = SUPABASE_DATASETS.find(ds => ds.tableName === tableName);
+
+  // Gallery styles from nanostores
+  const galleryTitleColor = useStore($galleryTitleColor);
+  const galleryTitleSize = useStore($galleryTitleSize);
+  const galleryTitleWeight = useStore($galleryTitleWeight);
+  const galleryTitleLetterSpacing = useStore($galleryTitleLetterSpacing);
+  const galleryTitleFontFamily = useStore($galleryTitleFontFamily);
+  const galleryLabelColor = useStore($galleryLabelColor);
+  const galleryLabelSize = useStore($galleryLabelSize);
+  const galleryLabelWeight = useStore($galleryLabelWeight);
+  const galleryLabelLetterSpacing = useStore($galleryLabelLetterSpacing);
+  const galleryLabelFontFamily = useStore($galleryLabelFontFamily);
+  const galleryValueColor = useStore($galleryValueColor);
+  const galleryValueSize = useStore($galleryValueSize);
+  const galleryValueWeight = useStore($galleryValueWeight);
+  const galleryValueLetterSpacing = useStore($galleryValueLetterSpacing);
+  const galleryValueFontFamily = useStore($galleryValueFontFamily);
 
   // Identify key fields to display on cards
   const displayFields = useMemo(() => {
@@ -201,14 +236,34 @@ export default function TablesGalleryView({ tableName, showCover = true }: Table
 
               <div className="px-6 pb-6 pt-3 space-y-4">
                 {/* Title - GRANDE */}
-                <h3 className="font-bold text-xl text-gray-900 line-clamp-2">
+                <h3
+                  className="line-clamp-2"
+                  style={{
+                    fontSize: `${galleryTitleSize}px`,
+                    fontWeight: galleryTitleWeight,
+                    letterSpacing: galleryTitleLetterSpacing,
+                    color: galleryTitleColor,
+                    fontFamily: galleryTitleFontFamily === 'Inter' ? 'var(--font-inter)' : 'var(--font-geist-sans)',
+                  }}
+                >
                   {title}
                 </h3>
 
                 {/* Status Section */}
                 {status && status !== '' && (
                   <div className="space-y-1">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</p>
+                    <p
+                      className="uppercase"
+                      style={{
+                        fontSize: `${galleryLabelSize}px`,
+                        fontWeight: galleryLabelWeight,
+                        letterSpacing: galleryLabelLetterSpacing,
+                        color: galleryLabelColor,
+                        fontFamily: galleryLabelFontFamily === 'Inter' ? 'var(--font-inter)' : 'var(--font-geist-sans)',
+                      }}
+                    >
+                      Status
+                    </p>
                     <Badge className={`${getStatusColor(status)} px-3 py-1 text-sm font-medium`}>
                       {status}
                     </Badge>
@@ -218,8 +273,28 @@ export default function TablesGalleryView({ tableName, showCover = true }: Table
                 {/* Description/Info Section */}
                 {description && (
                   <div className="space-y-1">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Descrição</p>
-                    <p className="text-sm text-gray-700 line-clamp-3">
+                    <p
+                      className="uppercase"
+                      style={{
+                        fontSize: `${galleryLabelSize}px`,
+                        fontWeight: galleryLabelWeight,
+                        letterSpacing: galleryLabelLetterSpacing,
+                        color: galleryLabelColor,
+                        fontFamily: galleryLabelFontFamily === 'Inter' ? 'var(--font-inter)' : 'var(--font-geist-sans)',
+                      }}
+                    >
+                      Descrição
+                    </p>
+                    <p
+                      className="line-clamp-3"
+                      style={{
+                        fontSize: `${galleryValueSize}px`,
+                        fontWeight: galleryValueWeight,
+                        letterSpacing: galleryValueLetterSpacing,
+                        color: galleryValueColor,
+                        fontFamily: galleryValueFontFamily === 'Inter' ? 'var(--font-inter)' : 'var(--font-geist-sans)',
+                      }}
+                    >
                       {description}
                     </p>
                   </div>
@@ -236,10 +311,27 @@ export default function TablesGalleryView({ tableName, showCover = true }: Table
 
                       return (
                         <div key={field.field} className="space-y-1">
-                          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                          <p
+                            className="uppercase"
+                            style={{
+                              fontSize: `${galleryLabelSize}px`,
+                              fontWeight: galleryLabelWeight,
+                              letterSpacing: galleryLabelLetterSpacing,
+                              color: galleryLabelColor,
+                              fontFamily: galleryLabelFontFamily === 'Inter' ? 'var(--font-inter)' : 'var(--font-geist-sans)',
+                            }}
+                          >
                             {field.headerName}
                           </p>
-                          <p className="text-sm text-gray-900 font-medium">
+                          <p
+                            style={{
+                              fontSize: `${galleryValueSize}px`,
+                              fontWeight: galleryValueWeight,
+                              letterSpacing: galleryValueLetterSpacing,
+                              color: galleryValueColor,
+                              fontFamily: galleryValueFontFamily === 'Inter' ? 'var(--font-inter)' : 'var(--font-geist-sans)',
+                            }}
+                          >
                             {formatValue(value, field.field || '')}
                           </p>
                         </div>

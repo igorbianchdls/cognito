@@ -24,6 +24,21 @@ import {
   $kanbanNameLetterSpacing,
   $kanbanTitleFontFamily,
   $kanbanNameFontFamily,
+  $galleryTitleColor,
+  $galleryTitleSize,
+  $galleryTitleWeight,
+  $galleryTitleLetterSpacing,
+  $galleryTitleFontFamily,
+  $galleryLabelColor,
+  $galleryLabelSize,
+  $galleryLabelWeight,
+  $galleryLabelLetterSpacing,
+  $galleryLabelFontFamily,
+  $galleryValueColor,
+  $galleryValueSize,
+  $galleryValueWeight,
+  $galleryValueLetterSpacing,
+  $galleryValueFontFamily,
 } from '@/stores/table/tablePreferences';
 import {
   DropdownMenu,
@@ -89,6 +104,23 @@ export default function TableHeader({
   const kanbanNameLetterSpacing = useStore($kanbanNameLetterSpacing);
   const kanbanTitleFontFamily = useStore($kanbanTitleFontFamily);
   const kanbanNameFontFamily = useStore($kanbanNameFontFamily);
+
+  // Gallery preferences
+  const galleryTitleColor = useStore($galleryTitleColor);
+  const galleryTitleSize = useStore($galleryTitleSize);
+  const galleryTitleWeight = useStore($galleryTitleWeight);
+  const galleryTitleLetterSpacing = useStore($galleryTitleLetterSpacing);
+  const galleryTitleFontFamily = useStore($galleryTitleFontFamily);
+  const galleryLabelColor = useStore($galleryLabelColor);
+  const galleryLabelSize = useStore($galleryLabelSize);
+  const galleryLabelWeight = useStore($galleryLabelWeight);
+  const galleryLabelLetterSpacing = useStore($galleryLabelLetterSpacing);
+  const galleryLabelFontFamily = useStore($galleryLabelFontFamily);
+  const galleryValueColor = useStore($galleryValueColor);
+  const galleryValueSize = useStore($galleryValueSize);
+  const galleryValueWeight = useStore($galleryValueWeight);
+  const galleryValueLetterSpacing = useStore($galleryValueLetterSpacing);
+  const galleryValueFontFamily = useStore($galleryValueFontFamily);
 
   const handleAddFilter = () => {
     const newFilter: FilterState = {
@@ -714,6 +746,261 @@ export default function TableHeader({
                     <option value="-0.3em">-0.3em</option>
                     <option value="-0.2em">-0.2em</option>
                     <option value="-0.1em">-0.1em</option>
+                    <option value="-0.05em">-0.05em</option>
+                    <option value="-0.03em">-0.03em</option>
+                    <option value="-0.02em">-0.02em</option>
+                    <option value="-0.01em">-0.01em</option>
+                    <option value="0em">0em</option>
+                    <option value="0.01em">0.01em</option>
+                    <option value="0.02em">0.02em</option>
+                    <option value="0.05em">0.05em</option>
+                  </select>
+                </div>
+              </div>
+
+              <DropdownMenuSeparator />
+
+              {/* Gallery Styles Section */}
+              <DropdownMenuLabel>Gallery Styles</DropdownMenuLabel>
+
+              {/* Title Styles */}
+              <div className="px-3 py-2 space-y-3">
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Title</div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Title Color</span>
+                  <input
+                    type="color"
+                    value={galleryTitleColor}
+                    onChange={(e) => $galleryTitleColor.set(e.target.value)}
+                    className="w-10 h-8 cursor-pointer border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Title Font Size</span>
+                  <select
+                    value={galleryTitleSize}
+                    onChange={(e) => $galleryTitleSize.set(Number(e.target.value))}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="12">12px</option>
+                    <option value="14">14px</option>
+                    <option value="16">16px</option>
+                    <option value="18">18px</option>
+                    <option value="20">20px</option>
+                    <option value="24">24px</option>
+                    <option value="28">28px</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Title Weight</span>
+                  <select
+                    value={galleryTitleWeight}
+                    onChange={(e) => $galleryTitleWeight.set(Number(e.target.value))}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="300">Light</option>
+                    <option value="400">Normal</option>
+                    <option value="500">Medium</option>
+                    <option value="600">Semibold</option>
+                    <option value="700">Bold</option>
+                    <option value="800">Extrabold</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Title Font Family</span>
+                  <select
+                    value={galleryTitleFontFamily}
+                    onChange={(e) => $galleryTitleFontFamily.set(e.target.value)}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="Geist">Geist</option>
+                    <option value="Inter">Inter</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Title Spacing</span>
+                  <select
+                    value={galleryTitleLetterSpacing}
+                    onChange={(e) => $galleryTitleLetterSpacing.set(e.target.value)}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="-0.5em">-0.5em</option>
+                    <option value="-0.4em">-0.4em</option>
+                    <option value="-0.3em">-0.3em</option>
+                    <option value="-0.2em">-0.2em</option>
+                    <option value="-0.1em">-0.1em</option>
+                    <option value="-0.05em">-0.05em</option>
+                    <option value="-0.03em">-0.03em</option>
+                    <option value="-0.02em">-0.02em</option>
+                    <option value="-0.01em">-0.01em</option>
+                    <option value="0em">0em</option>
+                    <option value="0.01em">0.01em</option>
+                    <option value="0.02em">0.02em</option>
+                    <option value="0.05em">0.05em</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Label Styles */}
+              <div className="px-3 py-2 space-y-3">
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Labels</div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Label Color</span>
+                  <input
+                    type="color"
+                    value={galleryLabelColor}
+                    onChange={(e) => $galleryLabelColor.set(e.target.value)}
+                    className="w-10 h-8 cursor-pointer border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Label Font Size</span>
+                  <select
+                    value={galleryLabelSize}
+                    onChange={(e) => $galleryLabelSize.set(Number(e.target.value))}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="10">10px</option>
+                    <option value="12">12px</option>
+                    <option value="14">14px</option>
+                    <option value="16">16px</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Label Weight</span>
+                  <select
+                    value={galleryLabelWeight}
+                    onChange={(e) => $galleryLabelWeight.set(Number(e.target.value))}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="300">Light</option>
+                    <option value="400">Normal</option>
+                    <option value="500">Medium</option>
+                    <option value="600">Semibold</option>
+                    <option value="700">Bold</option>
+                    <option value="800">Extrabold</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Label Font Family</span>
+                  <select
+                    value={galleryLabelFontFamily}
+                    onChange={(e) => $galleryLabelFontFamily.set(e.target.value)}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="Geist">Geist</option>
+                    <option value="Inter">Inter</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Label Spacing</span>
+                  <select
+                    value={galleryLabelLetterSpacing}
+                    onChange={(e) => $galleryLabelLetterSpacing.set(e.target.value)}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="-0.05em">-0.05em</option>
+                    <option value="-0.03em">-0.03em</option>
+                    <option value="-0.02em">-0.02em</option>
+                    <option value="-0.01em">-0.01em</option>
+                    <option value="0em">0em</option>
+                    <option value="0.01em">0.01em</option>
+                    <option value="0.02em">0.02em</option>
+                    <option value="0.025em">0.025em</option>
+                    <option value="0.05em">0.05em</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Value Styles */}
+              <div className="px-3 py-2 space-y-3">
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Values</div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Value Color</span>
+                  <input
+                    type="color"
+                    value={galleryValueColor}
+                    onChange={(e) => $galleryValueColor.set(e.target.value)}
+                    className="w-10 h-8 cursor-pointer border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Value Font Size</span>
+                  <select
+                    value={galleryValueSize}
+                    onChange={(e) => $galleryValueSize.set(Number(e.target.value))}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="10">10px</option>
+                    <option value="12">12px</option>
+                    <option value="14">14px</option>
+                    <option value="16">16px</option>
+                    <option value="18">18px</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Value Weight</span>
+                  <select
+                    value={galleryValueWeight}
+                    onChange={(e) => $galleryValueWeight.set(Number(e.target.value))}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="300">Light</option>
+                    <option value="400">Normal</option>
+                    <option value="500">Medium</option>
+                    <option value="600">Semibold</option>
+                    <option value="700">Bold</option>
+                    <option value="800">Extrabold</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Value Font Family</span>
+                  <select
+                    value={galleryValueFontFamily}
+                    onChange={(e) => $galleryValueFontFamily.set(e.target.value)}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="Geist">Geist</option>
+                    <option value="Inter">Inter</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Value Spacing</span>
+                  <select
+                    value={galleryValueLetterSpacing}
+                    onChange={(e) => $galleryValueLetterSpacing.set(e.target.value)}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <option value="-0.05em">-0.05em</option>
                     <option value="-0.03em">-0.03em</option>
                     <option value="-0.02em">-0.02em</option>

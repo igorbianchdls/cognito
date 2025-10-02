@@ -47,3 +47,24 @@ export const $kanbanTitleFontFamily = atom<string>('Geist');
 
 // Kanban name font family
 export const $kanbanNameFontFamily = atom<string>('Geist');
+
+// Gallery title styles
+export const $galleryTitleColor = atom<string>('#111827'); // gray-900
+export const $galleryTitleSize = atom<number>(20); // text-xl
+export const $galleryTitleWeight = atom<number>(700); // bold
+export const $galleryTitleLetterSpacing = atom<string>('-0.01em');
+export const $galleryTitleFontFamily = atom<string>('Geist');
+
+// Gallery label styles
+export const $galleryLabelColor = atom<string>('#6b7280'); // gray-500
+export const $galleryLabelSize = atom<number>(12); // text-xs
+export const $galleryLabelWeight = atom<number>(600); // semibold
+export const $galleryLabelLetterSpacing = atom<string>('0.025em'); // tracking-wide
+export const $galleryLabelFontFamily = atom<string>('Geist');
+
+// Gallery value styles
+export const $galleryValueColor = atom<string>('#374151'); // gray-700
+export const $galleryValueSize = atom<number>(14); // text-sm
+export const $galleryValueWeight = atom<number>(400); // normal
+export const $galleryValueLetterSpacing = atom<string>('0em');
+export const $galleryValueFontFamily = atom<string>('Geist');
