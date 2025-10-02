@@ -173,7 +173,21 @@ export default function TablesKanbanView({ tableName }: TablesKanbanViewProps) {
     return grouped;
   }, [localData]);
 
-  const columns = Object.keys(kanbanData);
+  // Get status order for consistent column ordering
+  const getStatusOrder = (status: string): number => {
+    const statusLower = status.toLowerCase();
+    if (statusLower.includes('vencido')) return 1;
+    if (statusLower.includes('pendente')) return 2;
+    if (statusLower.includes('andamento') || statusLower.includes('draft') || statusLower.includes('aberta')) return 3;
+    if (statusLower.includes('pago') || statusLower.includes('conclu') || statusLower.includes('aprovado') || statusLower.includes('autorizada')) return 4;
+    if (statusLower.includes('cancelad') || statusLower.includes('reprovado') || statusLower.includes('denegada')) return 5;
+    return 99; // outros no final
+  };
+
+  // Sort columns consistently to prevent position jumping
+  const columns = Object.keys(kanbanData).sort((a, b) =>
+    getStatusOrder(a) - getStatusOrder(b)
+  );
 
   // Get status color
   const getStatusColor = (status: string): string => {
