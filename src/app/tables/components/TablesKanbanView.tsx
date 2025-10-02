@@ -60,7 +60,8 @@ function SortableCard({ card, titleField, datasetConfig, statusBadgeColor }: {
   };
 
   // Identificar campos principais
-  const title = titleField ? card.data[titleField] : card.id;
+  const titleValue = titleField ? card.data[titleField] : card.id;
+  const title = String(titleValue || '');
 
   // Subtitle: empresa, company, contato, cliente
   const subtitleField = datasetConfig?.columnDefs.find(
@@ -69,7 +70,8 @@ function SortableCard({ card, titleField, datasetConfig, statusBadgeColor }: {
            col.field?.includes('contato') ||
            col.field?.includes('cliente')
   );
-  const subtitle = subtitleField ? card.data[subtitleField.field || ''] : null;
+  const subtitleValue = subtitleField ? card.data[subtitleField.field || ''] : null;
+  const subtitle = subtitleValue ? String(subtitleValue) : null;
 
   // Valor: valor, amount, preco
   const valorField = datasetConfig?.columnDefs.find(
@@ -100,13 +102,13 @@ function SortableCard({ card, titleField, datasetConfig, statusBadgeColor }: {
         <CardContent className="p-3 space-y-2">
           {/* 1. Título - negrito preto */}
           <h4 className="font-bold text-sm text-gray-900 line-clamp-2">
-            {String(title)}
+            {title}
           </h4>
 
           {/* 2. Subtítulo - normal cinza */}
           {subtitle && (
             <p className="text-sm text-gray-500 font-normal line-clamp-1">
-              {String(subtitle)}
+              {subtitle}
             </p>
           )}
 
