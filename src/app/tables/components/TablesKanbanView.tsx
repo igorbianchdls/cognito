@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useSupabaseTables } from '../hooks/useSupabaseTables';
 import { SUPABASE_DATASETS } from '@/data/supabaseDatasets';
 import { Card, CardContent } from '@/components/ui/card';
@@ -120,9 +120,15 @@ function SortableCard({ card, titleField, datasetConfig }: {
 }
 
 export default function TablesKanbanView({ tableName }: TablesKanbanViewProps) {
-  const { data, loading, error, refetch } = useSupabaseTables(tableName || '');
+  const { data, loading, error } = useSupabaseTables(tableName || '');
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [localData, setLocalData] = useState<Array<Record<string, unknown>>>([]);
   const datasetConfig = SUPABASE_DATASETS.find(ds => ds.tableName === tableName);
+
+  // Sync local data with server data
+  useEffect(() => {
+    setLocalData(data);
+  }, [data]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -146,13 +152,13 @@ export default function TablesKanbanView({ tableName }: TablesKanbanViewProps) {
     return candidates?.field || datasetConfig.columnDefs[1]?.field || null;
   }, [datasetConfig]);
 
-  // Group data by status
+  // Group data by status (using localData for optimistic updates)
   const kanbanData = useMemo(() => {
-    if (!data.length) return {};
+    if (!localData.length) return {};
 
     const grouped: Record<string, KanbanCard[]> = {};
 
-    data.forEach((row: Record<string, unknown>) => {
+    localData.forEach((row: Record<string, unknown>) => {
       const status = String(row.status || 'sem-status');
       if (!grouped[status]) {
         grouped[status] = [];
@@ -165,7 +171,7 @@ export default function TablesKanbanView({ tableName }: TablesKanbanViewProps) {
     });
 
     return grouped;
-  }, [data]);
+  }, [localData]);
 
   const columns = Object.keys(kanbanData);
 
@@ -256,6 +262,16 @@ export default function TablesKanbanView({ tableName }: TablesKanbanViewProps) {
 
     // Update Supabase if status changed
     if (newStatus && newStatus !== cardBeingDragged.status && tableName) {
+      // Optimistic update: update local state immediately
+      setLocalData(prevData =>
+        prevData.map(item =>
+          item.id === activeId
+            ? { ...item, status: newStatus }
+            : item
+        )
+      );
+
+      // Update Supabase in background
       try {
         const { error } = await supabase
           .from(tableName)
@@ -264,12 +280,13 @@ export default function TablesKanbanView({ tableName }: TablesKanbanViewProps) {
 
         if (error) {
           console.error('Error updating status:', error);
-        } else {
-          // Refetch data to update UI
-          refetch?.();
+          // Revert optimistic update on error
+          setLocalData(data);
         }
       } catch (err) {
         console.error('Error updating card:', err);
+        // Revert optimistic update on error
+        setLocalData(data);
       }
     }
 
