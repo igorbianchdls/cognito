@@ -410,8 +410,6 @@ export default function Page() {
                 </div>
               </Panel>
 
-              <PanelResizeHandle className="w-1 hover:w-2 transition-all cursor-col-resize bg-gray-200" />
-
               {/* Coluna Direita: Dashboard altura completa */}
               <Panel defaultSize={60} minSize={30}>
                 <div className="h-full">
