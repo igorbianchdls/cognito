@@ -235,13 +235,34 @@ function SortableCard({
 
           {/* 3. Badges hardcoded */}
           <div className="flex flex-wrap gap-1.5">
-            <span className="text-xs px-1.5 py-0.5 rounded border bg-red-100 text-red-700 border-red-200">
+            <span
+              className="text-xs px-1.5 py-0.5 rounded-sm border font-normal"
+              style={{
+                backgroundColor: '#fef2f2',
+                color: '#991b1b',
+                borderColor: '#fecaca',
+              }}
+            >
               Bug
             </span>
-            <span className="text-xs px-1.5 py-0.5 rounded border bg-purple-100 text-purple-700 border-purple-200">
+            <span
+              className="text-xs px-1.5 py-0.5 rounded-sm border font-normal"
+              style={{
+                backgroundColor: '#faf5ff',
+                color: '#6b21a8',
+                borderColor: '#e9d5ff',
+              }}
+            >
               Epic
             </span>
-            <span className="text-xs px-1.5 py-0.5 rounded border bg-gray-100 text-gray-600 border-gray-200">
+            <span
+              className="text-xs px-1.5 py-0.5 rounded-sm border font-normal"
+              style={{
+                backgroundColor: '#f9fafb',
+                color: '#374151',
+                borderColor: '#e5e7eb',
+              }}
+            >
               Sprint 20
             </span>
           </div>

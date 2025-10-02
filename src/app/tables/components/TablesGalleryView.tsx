@@ -29,6 +29,127 @@ interface TablesGalleryViewProps {
   showCover?: boolean;
 }
 
+// Helper functions to get badge colors (soft palette)
+const getBadgeBackgroundColor = (field: string, value: string): string => {
+  const valueLower = String(value).toLowerCase();
+
+  // Status colors
+  if (field === 'status' || field === 'etapa') {
+    if (valueLower.includes('pago') || valueLower.includes('conclu') || valueLower.includes('aprovado') || valueLower.includes('autorizada') || valueLower.includes('ganho')) {
+      return '#f0fdf4'; // green-50
+    }
+    if (valueLower.includes('pendente') || valueLower.includes('draft') || valueLower.includes('fazer') || valueLower.includes('qualifica')) {
+      return '#fefce8'; // yellow-50
+    }
+    if (valueLower.includes('vencido') || valueLower.includes('cancelad') || valueLower.includes('perdido')) {
+      return '#fef2f2'; // red-50
+    }
+    if (valueLower.includes('andamento') || valueLower.includes('progresso') || valueLower.includes('revisão') || valueLower.includes('negociacao') || valueLower.includes('proposta')) {
+      return '#eff6ff'; // blue-50
+    }
+    if (valueLower.includes('prospec')) {
+      return '#faf5ff'; // purple-50
+    }
+  }
+
+  // Category/Type colors
+  if (field === 'categoria' || field === 'tipo') {
+    const colors = ['#faf5ff', '#fdf2f8', '#eef2ff', '#f0fdfa', '#fff7ed'];
+    const index = value.length % colors.length;
+    return colors[index];
+  }
+
+  // Prioridade
+  if (field === 'prioridade') {
+    if (valueLower.includes('urgente')) return '#fef2f2';
+    if (valueLower.includes('alta')) return '#fff7ed';
+    if (valueLower.includes('média')) return '#eff6ff';
+    if (valueLower.includes('baixa')) return '#f9fafb';
+  }
+
+  return '#f9fafb'; // gray-50
+};
+
+const getBadgeTextColor = (field: string, value: string): string => {
+  const valueLower = String(value).toLowerCase();
+
+  // Status colors
+  if (field === 'status' || field === 'etapa') {
+    if (valueLower.includes('pago') || valueLower.includes('conclu') || valueLower.includes('aprovado') || valueLower.includes('autorizada') || valueLower.includes('ganho')) {
+      return '#166534'; // green-800
+    }
+    if (valueLower.includes('pendente') || valueLower.includes('draft') || valueLower.includes('fazer') || valueLower.includes('qualifica')) {
+      return '#854d0e'; // yellow-800
+    }
+    if (valueLower.includes('vencido') || valueLower.includes('cancelad') || valueLower.includes('perdido')) {
+      return '#991b1b'; // red-800
+    }
+    if (valueLower.includes('andamento') || valueLower.includes('progresso') || valueLower.includes('revisão') || valueLower.includes('negociacao') || valueLower.includes('proposta')) {
+      return '#1e40af'; // blue-800
+    }
+    if (valueLower.includes('prospec')) {
+      return '#6b21a8'; // purple-800
+    }
+  }
+
+  // Category/Type colors
+  if (field === 'categoria' || field === 'tipo') {
+    const colors = ['#6b21a8', '#9f1239', '#3730a3', '#115e59', '#9a3412'];
+    const index = value.length % colors.length;
+    return colors[index];
+  }
+
+  // Prioridade
+  if (field === 'prioridade') {
+    if (valueLower.includes('urgente')) return '#991b1b';
+    if (valueLower.includes('alta')) return '#9a3412';
+    if (valueLower.includes('média')) return '#1e40af';
+    if (valueLower.includes('baixa')) return '#374151';
+  }
+
+  return '#374151'; // gray-700
+};
+
+const getBadgeBorderColor = (field: string, value: string): string => {
+  const valueLower = String(value).toLowerCase();
+
+  // Status colors
+  if (field === 'status' || field === 'etapa') {
+    if (valueLower.includes('pago') || valueLower.includes('conclu') || valueLower.includes('aprovado') || valueLower.includes('autorizada') || valueLower.includes('ganho')) {
+      return '#bbf7d0'; // green-200
+    }
+    if (valueLower.includes('pendente') || valueLower.includes('draft') || valueLower.includes('fazer') || valueLower.includes('qualifica')) {
+      return '#fde047'; // yellow-300
+    }
+    if (valueLower.includes('vencido') || valueLower.includes('cancelad') || valueLower.includes('perdido')) {
+      return '#fecaca'; // red-200
+    }
+    if (valueLower.includes('andamento') || valueLower.includes('progresso') || valueLower.includes('revisão') || valueLower.includes('negociacao') || valueLower.includes('proposta')) {
+      return '#bfdbfe'; // blue-200
+    }
+    if (valueLower.includes('prospec')) {
+      return '#e9d5ff'; // purple-200
+    }
+  }
+
+  // Category/Type colors
+  if (field === 'categoria' || field === 'tipo') {
+    const colors = ['#e9d5ff', '#fbcfe8', '#c7d2fe', '#99f6e4', '#fed7aa'];
+    const index = value.length % colors.length;
+    return colors[index];
+  }
+
+  // Prioridade
+  if (field === 'prioridade') {
+    if (valueLower.includes('urgente')) return '#fecaca';
+    if (valueLower.includes('alta')) return '#fed7aa';
+    if (valueLower.includes('média')) return '#bfdbfe';
+    if (valueLower.includes('baixa')) return '#e5e7eb';
+  }
+
+  return '#e5e7eb'; // gray-200
+};
+
 export default function TablesGalleryView({ tableName, showCover = true }: TablesGalleryViewProps) {
   const { data, loading, error } = useSupabaseTables(tableName || '');
   const datasetConfig = SUPABASE_DATASETS.find(ds => ds.tableName === tableName);
@@ -103,26 +224,6 @@ export default function TablesGalleryView({ tableName, showCover = true }: Table
     }
 
     return String(value);
-  };
-
-  // Get status badge color (mais destacado)
-  const getStatusColor = (status: string): string => {
-    const statusLower = status?.toLowerCase() || '';
-
-    if (statusLower.includes('pago') || statusLower.includes('conclu') || statusLower.includes('aprovado') || statusLower.includes('autorizada')) {
-      return 'bg-green-500 text-white';
-    }
-    if (statusLower.includes('pendente') || statusLower.includes('draft') || statusLower.includes('fazer')) {
-      return 'bg-yellow-500 text-white';
-    }
-    if (statusLower.includes('vencido') || statusLower.includes('reprovado') || statusLower.includes('cancelad')) {
-      return 'bg-red-500 text-white';
-    }
-    if (statusLower.includes('andamento') || statusLower.includes('progresso') || statusLower.includes('revisão')) {
-      return 'bg-blue-500 text-white';
-    }
-
-    return 'bg-gray-500 text-white';
   };
 
   // Get gradient for cover based on status/category
@@ -264,7 +365,14 @@ export default function TablesGalleryView({ tableName, showCover = true }: Table
                     >
                       Status
                     </p>
-                    <Badge className={`${getStatusColor(status)} px-3 py-1 text-sm font-medium`}>
+                    <Badge
+                      className="px-2 py-0.5 text-xs font-normal border rounded-sm"
+                      style={{
+                        backgroundColor: getBadgeBackgroundColor('status', status),
+                        color: getBadgeTextColor('status', status),
+                        borderColor: getBadgeBorderColor('status', status),
+                      }}
+                    >
                       {status}
                     </Badge>
                   </div>
