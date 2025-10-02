@@ -248,7 +248,15 @@ function DroppableColumn({
   titleField,
   datasetConfig,
   getStatusBadgeColor,
-  getStatusTextColor
+  getStatusTextColor,
+  kanbanTitleColor,
+  kanbanTitleSize,
+  kanbanTitleWeight,
+  kanbanTitleLetterSpacing,
+  kanbanNameColor,
+  kanbanNameSize,
+  kanbanNameWeight,
+  kanbanNameLetterSpacing,
 }: {
   status: string;
   cards: KanbanCard[];
@@ -256,6 +264,14 @@ function DroppableColumn({
   datasetConfig: typeof SUPABASE_DATASETS[0] | undefined;
   getStatusBadgeColor: (status: string) => string;
   getStatusTextColor: (status: string) => string;
+  kanbanTitleColor: string;
+  kanbanTitleSize: number;
+  kanbanTitleWeight: number;
+  kanbanTitleLetterSpacing: string;
+  kanbanNameColor: string;
+  kanbanNameSize: number;
+  kanbanNameWeight: number;
+  kanbanNameLetterSpacing: string;
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: `column-${status}`,
@@ -594,6 +610,14 @@ export default function TablesKanbanView({ tableName }: TablesKanbanViewProps) {
                 datasetConfig={datasetConfig}
                 getStatusBadgeColor={getStatusBadgeColor}
                 getStatusTextColor={getStatusTextColor}
+                kanbanTitleColor={kanbanTitleColor}
+                kanbanTitleSize={kanbanTitleSize}
+                kanbanTitleWeight={kanbanTitleWeight}
+                kanbanTitleLetterSpacing={kanbanTitleLetterSpacing}
+                kanbanNameColor={kanbanNameColor}
+                kanbanNameSize={kanbanNameSize}
+                kanbanNameWeight={kanbanNameWeight}
+                kanbanNameLetterSpacing={kanbanNameLetterSpacing}
               />
             );
           })}
