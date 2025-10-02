@@ -314,7 +314,7 @@ export default function TablesKanbanView({ tableName }: TablesKanbanViewProps) {
       <div className="flex items-center justify-center h-full">
         <div className="text-center text-gray-500">
           <p className="text-lg font-medium">Nenhum registro encontrado</p>
-          <p className="text-sm">Esta tabela está vazia ou não possui campo "status"</p>
+          <p className="text-sm">Esta tabela está vazia ou não possui campo 'status'</p>
         </div>
       </div>
     );
