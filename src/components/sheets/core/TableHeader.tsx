@@ -316,120 +316,122 @@ export default function TableHeader({
             </svg>
             Hide Fields
           </button>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                </svg>
-                Row {rowHeight}px
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuLabel>Row Height</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => $rowHeight.set(24)}>24px - Compact</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => $rowHeight.set(32)}>32px - Small</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => $rowHeight.set(40)}>40px - Normal</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => $rowHeight.set(48)}>48px - Medium</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => $rowHeight.set(56)}>56px - Large</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
-                Header {headerRowHeight}px
+                Properties
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuLabel>Header Row Height</DropdownMenuLabel>
+            <DropdownMenuContent align="start" className="w-80">
+              {/* Heights Section */}
+              <DropdownMenuLabel>Heights</DropdownMenuLabel>
+              <div className="px-3 py-2 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Row Height</span>
+                  <select
+                    value={rowHeight}
+                    onChange={(e) => $rowHeight.set(Number(e.target.value))}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="24">24px</option>
+                    <option value="32">32px</option>
+                    <option value="40">40px</option>
+                    <option value="48">48px</option>
+                    <option value="56">56px</option>
+                  </select>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Header Height</span>
+                  <select
+                    value={headerRowHeight}
+                    onChange={(e) => $headerRowHeight.set(Number(e.target.value))}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="24">24px</option>
+                    <option value="32">32px</option>
+                    <option value="40">40px</option>
+                    <option value="48">48px</option>
+                    <option value="56">56px</option>
+                  </select>
+                </div>
+              </div>
+
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => $headerRowHeight.set(24)}>24px - Compact</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => $headerRowHeight.set(32)}>32px - Small</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => $headerRowHeight.set(40)}>40px - Normal</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => $headerRowHeight.set(48)}>48px - Medium</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => $headerRowHeight.set(56)}>56px - Large</DropdownMenuItem>
+
+              {/* Font Sizes Section */}
+              <DropdownMenuLabel>Font Sizes</DropdownMenuLabel>
+              <div className="px-3 py-2 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Cell Font</span>
+                  <select
+                    value={fontSize}
+                    onChange={(e) => $fontSize.set(Number(e.target.value))}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="10">10px</option>
+                    <option value="12">12px</option>
+                    <option value="13">13px</option>
+                    <option value="14">14px</option>
+                    <option value="16">16px</option>
+                    <option value="18">18px</option>
+                    <option value="20">20px</option>
+                  </select>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Header Font</span>
+                  <select
+                    value={headerFontSize}
+                    onChange={(e) => $headerFontSize.set(Number(e.target.value))}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="10">10px</option>
+                    <option value="12">12px</option>
+                    <option value="13">13px</option>
+                    <option value="14">14px</option>
+                    <option value="16">16px</option>
+                    <option value="18">18px</option>
+                    <option value="20">20px</option>
+                  </select>
+                </div>
+              </div>
+
+              <DropdownMenuSeparator />
+
+              {/* Text Colors Section */}
+              <DropdownMenuLabel>Text Colors</DropdownMenuLabel>
+              <div className="px-3 py-2 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Cell Color</span>
+                  <input
+                    type="color"
+                    value={cellTextColor}
+                    onChange={(e) => $cellTextColor.set(e.target.value)}
+                    className="w-10 h-8 cursor-pointer border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Header Color</span>
+                  <input
+                    type="color"
+                    value={headerTextColor}
+                    onChange={(e) => $headerTextColor.set(e.target.value)}
+                    className="w-10 h-8 cursor-pointer border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+              </div>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-                </svg>
-                Cell {fontSize}px
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuLabel>Cell Font Size</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => $fontSize.set(10)}>10px</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => $fontSize.set(12)}>12px</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => $fontSize.set(13)}>13px</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => $fontSize.set(14)}>14px - Normal</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => $fontSize.set(16)}>16px</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => $fontSize.set(18)}>18px</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => $fontSize.set(20)}>20px</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-                </svg>
-                Header {headerFontSize}px
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuLabel>Header Font Size</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => $headerFontSize.set(10)}>10px</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => $headerFontSize.set(12)}>12px</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => $headerFontSize.set(13)}>13px</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => $headerFontSize.set(14)}>14px - Normal</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => $headerFontSize.set(16)}>16px</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => $headerFontSize.set(18)}>18px</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => $headerFontSize.set(20)}>20px</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <div className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM7 21h16M7 21v-4a2 2 0 012-2h14" />
-            </svg>
-            <label className="cursor-pointer">
-              Cell Color
-              <input
-                type="color"
-                value={cellTextColor}
-                onChange={(e) => $cellTextColor.set(e.target.value)}
-                className="ml-1 w-6 h-6 cursor-pointer border-0 rounded"
-              />
-            </label>
-          </div>
-
-          <div className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM7 21h16M7 21v-4a2 2 0 012-2h14" />
-            </svg>
-            <label className="cursor-pointer">
-              Header Color
-              <input
-                type="color"
-                value={headerTextColor}
-                onChange={(e) => $headerTextColor.set(e.target.value)}
-                className="ml-1 w-6 h-6 cursor-pointer border-0 rounded"
-              />
-            </label>
-          </div>
         </div>
         
       </div>
