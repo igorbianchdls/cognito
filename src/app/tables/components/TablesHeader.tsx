@@ -8,12 +8,14 @@ interface TablesHeaderProps {
   onFiltersChange?: (filters: FilterState[]) => void;
   onSortChange?: (sorting: SortState[]) => void;
   onViewChange?: (view: 'grid' | 'gallery') => void;
+  onShowCoverChange?: (show: boolean) => void;
 }
 
 export default function TablesHeader({
   onFiltersChange,
   onSortChange,
-  onViewChange
+  onViewChange,
+  onShowCoverChange
 }: TablesHeaderProps) {
   return (
     <div className="flex items-center bg-white border-b border-gray-200 h-12 shrink-0">
@@ -30,6 +32,7 @@ export default function TablesHeader({
           onFiltersChange={onFiltersChange}
           onSortChange={onSortChange}
           onViewChange={onViewChange}
+          onShowCoverChange={onShowCoverChange}
         />
       </div>
     </div>

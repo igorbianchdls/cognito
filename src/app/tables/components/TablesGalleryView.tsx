@@ -8,9 +8,10 @@ import { Badge } from '@/components/ui/badge';
 
 interface TablesGalleryViewProps {
   tableName: string | null;
+  showCover?: boolean;
 }
 
-export default function TablesGalleryView({ tableName }: TablesGalleryViewProps) {
+export default function TablesGalleryView({ tableName, showCover = true }: TablesGalleryViewProps) {
   const { data, loading, error } = useSupabaseTables(tableName || '');
   const datasetConfig = SUPABASE_DATASETS.find(ds => ds.tableName === tableName);
 
@@ -146,10 +147,12 @@ export default function TablesGalleryView({ tableName }: TablesGalleryViewProps)
               key={row.id as string}
               className="hover:shadow-lg transition-shadow cursor-pointer overflow-hidden"
             >
-              {/* Cover/Attachment area - placeholder for now */}
-              <div className="w-full h-32 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
-                <div className="text-4xl opacity-30">{datasetConfig?.icon || '📄'}</div>
-              </div>
+              {/* Cover/Attachment area - only shown if showCover is true */}
+              {showCover && (
+                <div className="w-full h-32 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+                  <div className="text-4xl opacity-30">{datasetConfig?.icon || '📄'}</div>
+                </div>
+              )}
 
               <CardContent className="p-4 space-y-3">
                 {/* Title */}

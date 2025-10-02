@@ -14,6 +14,7 @@ export default function TablesPage() {
   const [filters, setFilters] = useState<FilterState[]>([]);
   const [sorting, setSorting] = useState<SortState[]>([]);
   const [view, setView] = useState<'grid' | 'gallery'>('grid');
+  const [showCover, setShowCover] = useState<boolean>(true);
 
   return (
     <SidebarProvider>
@@ -26,6 +27,7 @@ export default function TablesPage() {
             onFiltersChange={setFilters}
             onSortChange={setSorting}
             onViewChange={setView}
+            onShowCoverChange={setShowCover}
           />
 
           {/* Conteúdo: Table ou Gallery */}
@@ -33,7 +35,7 @@ export default function TablesPage() {
             {view === 'grid' ? (
               <TablesDataTable tableName={selectedTable} filters={filters} />
             ) : (
-              <TablesGalleryView tableName={selectedTable} />
+              <TablesGalleryView tableName={selectedTable} showCover={showCover} />
             )}
           </div>
         </div>
