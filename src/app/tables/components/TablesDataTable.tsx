@@ -34,6 +34,10 @@ import {
   $headerFontSize,
   $cellTextColor,
   $headerTextColor,
+  $cellFontFamily,
+  $headerFontFamily,
+  $cellLetterSpacing,
+  $headerLetterSpacing,
 } from '@/stores/table/tablePreferences';
 
 interface TablesDataTableProps {
@@ -100,6 +104,10 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
   const headerFontSize = useStore($headerFontSize);
   const cellTextColor = useStore($cellTextColor);
   const headerTextColor = useStore($headerTextColor);
+  const cellFontFamily = useStore($cellFontFamily);
+  const headerFontFamily = useStore($headerFontFamily);
+  const cellLetterSpacing = useStore($cellLetterSpacing);
+  const headerLetterSpacing = useStore($headerLetterSpacing);
 
   // Convert FilterState[] to ColumnFiltersState when filters prop changes
   useEffect(() => {
@@ -127,7 +135,11 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
             className="hover:bg-gray-100"
-            style={{ fontSize: `${headerFontSize}px` }}
+            style={{
+              fontSize: `${headerFontSize}px`,
+              fontFamily: headerFontFamily === 'Inter' ? 'var(--font-inter)' : 'var(--font-geist-sans)',
+              letterSpacing: headerLetterSpacing,
+            }}
           >
             {colDef.headerName || colDef.field}
             <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -178,7 +190,7 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
         return String(value);
       },
     }));
-  }, [datasetConfig, headerFontSize]);
+  }, [datasetConfig, headerFontSize, headerFontFamily, headerLetterSpacing]);
 
   const table = useReactTable({
     data,
@@ -270,6 +282,8 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
                       paddingBottom: `${(headerRowHeight - headerFontSize) / 2}px`,
                       fontSize: `${headerFontSize}px`,
                       color: headerTextColor,
+                      fontFamily: headerFontFamily === 'Inter' ? 'var(--font-inter)' : 'var(--font-geist-sans)',
+                      letterSpacing: headerLetterSpacing,
                     }}
                   >
                     {header.isPlaceholder
@@ -293,6 +307,8 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
                         paddingBottom: `${(rowHeight - fontSize) / 2}px`,
                         fontSize: `${fontSize}px`,
                         color: cellTextColor,
+                        fontFamily: cellFontFamily === 'Inter' ? 'var(--font-inter)' : 'var(--font-geist-sans)',
+                        letterSpacing: cellLetterSpacing,
                       }}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}

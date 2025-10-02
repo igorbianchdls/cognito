@@ -17,3 +17,15 @@ export const $cellTextColor = atom<string>('#111827'); // gray-900
 
 // Header text color (hex)
 export const $headerTextColor = atom<string>('#1f2937'); // gray-800
+
+// Cell font family
+export const $cellFontFamily = atom<string>('Geist');
+
+// Header font family
+export const $headerFontFamily = atom<string>('Geist');
+
+// Cell letter spacing
+export const $cellLetterSpacing = atom<string>('-0.01em');
+
+// Header letter spacing
+export const $headerLetterSpacing = atom<string>('-0.01em');

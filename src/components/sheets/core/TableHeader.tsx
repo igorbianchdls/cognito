@@ -10,6 +10,10 @@ import {
   $headerFontSize,
   $cellTextColor,
   $headerTextColor,
+  $cellFontFamily,
+  $headerFontFamily,
+  $cellLetterSpacing,
+  $headerLetterSpacing,
 } from '@/stores/table/tablePreferences';
 import {
   DropdownMenu,
@@ -58,6 +62,10 @@ export default function TableHeader({
   const fontSize = useStore($fontSize);
   const headerFontSize = useStore($headerFontSize);
   const cellTextColor = useStore($cellTextColor);
+  const cellFontFamily = useStore($cellFontFamily);
+  const headerFontFamily = useStore($headerFontFamily);
+  const cellLetterSpacing = useStore($cellLetterSpacing);
+  const headerLetterSpacing = useStore($headerLetterSpacing);
   const headerTextColor = useStore($headerTextColor);
 
   const handleAddFilter = () => {
@@ -428,6 +436,90 @@ export default function TableHeader({
                     className="w-10 h-8 cursor-pointer border rounded"
                     onClick={(e) => e.stopPropagation()}
                   />
+                </div>
+              </div>
+
+              <DropdownMenuSeparator />
+
+              {/* Font Families Section */}
+              <DropdownMenuLabel>Font Families</DropdownMenuLabel>
+              <div className="px-3 py-2 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Cell Font Family</span>
+                  <select
+                    value={cellFontFamily}
+                    onChange={(e) => $cellFontFamily.set(e.target.value)}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="Geist">Geist</option>
+                    <option value="Inter">Inter</option>
+                  </select>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Header Font Family</span>
+                  <select
+                    value={headerFontFamily}
+                    onChange={(e) => $headerFontFamily.set(e.target.value)}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="Geist">Geist</option>
+                    <option value="Inter">Inter</option>
+                  </select>
+                </div>
+              </div>
+
+              <DropdownMenuSeparator />
+
+              {/* Letter Spacing Section */}
+              <DropdownMenuLabel>Letter Spacing</DropdownMenuLabel>
+              <div className="px-3 py-2 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Cell Letter Spacing</span>
+                  <select
+                    value={cellLetterSpacing}
+                    onChange={(e) => $cellLetterSpacing.set(e.target.value)}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="-0.5em">-0.5em</option>
+                    <option value="-0.4em">-0.4em</option>
+                    <option value="-0.3em">-0.3em</option>
+                    <option value="-0.2em">-0.2em</option>
+                    <option value="-0.1em">-0.1em</option>
+                    <option value="-0.05em">-0.05em</option>
+                    <option value="-0.03em">-0.03em</option>
+                    <option value="-0.02em">-0.02em</option>
+                    <option value="-0.01em">-0.01em</option>
+                    <option value="0em">0em</option>
+                    <option value="0.01em">0.01em</option>
+                    <option value="0.02em">0.02em</option>
+                    <option value="0.05em">0.05em</option>
+                  </select>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Header Letter Spacing</span>
+                  <select
+                    value={headerLetterSpacing}
+                    onChange={(e) => $headerLetterSpacing.set(e.target.value)}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="-0.5em">-0.5em</option>
+                    <option value="-0.4em">-0.4em</option>
+                    <option value="-0.3em">-0.3em</option>
+                    <option value="-0.2em">-0.2em</option>
+                    <option value="-0.1em">-0.1em</option>
+                    <option value="-0.05em">-0.05em</option>
+                    <option value="-0.03em">-0.03em</option>
+                    <option value="-0.02em">-0.02em</option>
+                    <option value="-0.01em">-0.01em</option>
+                    <option value="0em">0em</option>
+                    <option value="0.01em">0.01em</option>
+                    <option value="0.02em">0.02em</option>
+                    <option value="0.05em">0.05em</option>
+                  </select>
                 </div>
               </div>
             </DropdownMenuContent>
