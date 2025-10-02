@@ -13,6 +13,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
+  useDroppable,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -115,6 +116,63 @@ function SortableCard({ card, titleField, datasetConfig }: {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function DroppableColumn({
+  status,
+  cards,
+  titleField,
+  datasetConfig,
+  getStatusColor,
+  getStatusTextColor
+}: {
+  status: string;
+  cards: KanbanCard[];
+  titleField: string | null;
+  datasetConfig: typeof SUPABASE_DATASETS[0] | undefined;
+  getStatusColor: (status: string) => string;
+  getStatusTextColor: (status: string) => string;
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `column-${status}`,
+  });
+
+  const cardIds = cards.map(c => c.id);
+
+  return (
+    <div
+      ref={setNodeRef}
+      className="flex-shrink-0 w-80"
+    >
+      <div className={`rounded-lg border-2 h-full flex flex-col ${getStatusColor(status)} ${isOver ? 'ring-2 ring-blue-400' : ''}`}>
+        {/* Column Header */}
+        <div className="p-3 border-b border-gray-300">
+          <div className="flex items-center justify-between mb-1">
+            <h3 className={`font-semibold text-sm uppercase ${getStatusTextColor(status)}`}>
+              {status}
+            </h3>
+            <Badge variant="outline" className="text-xs">
+              {cards.length}
+            </Badge>
+          </div>
+        </div>
+
+        {/* Column Body - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-3">
+          <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
+            {cards.map((card) => (
+              <SortableCard
+                key={card.id}
+                card={card}
+                titleField={titleField}
+                datasetConfig={datasetConfig}
+              />
+            ))}
+          </SortableContext>
+        </div>
+      </div>
     </div>
   );
 }
@@ -279,7 +337,7 @@ export default function TablesKanbanView({ tableName }: TablesKanbanViewProps) {
       // Optimistic update: update local state immediately
       setLocalData(prevData =>
         prevData.map(item =>
-          item.id === activeId
+          String(item.id) === activeId
             ? { ...item, status: newStatus }
             : item
         )
@@ -287,10 +345,13 @@ export default function TablesKanbanView({ tableName }: TablesKanbanViewProps) {
 
       // Update Supabase in background
       try {
+        // Tentar converter para número se possível, caso contrário usar string
+        const idValue = isNaN(Number(activeId)) ? activeId : Number(activeId);
+
         const { error } = await supabase
           .from(tableName)
           .update({ status: newStatus })
-          .eq('id', activeId);
+          .eq('id', idValue);
 
         if (error) {
           console.error('Error updating status:', error);
@@ -361,42 +422,17 @@ export default function TablesKanbanView({ tableName }: TablesKanbanViewProps) {
         <div className="flex gap-4 h-full min-w-max">
           {columns.map((status) => {
             const cards = kanbanData[status];
-            const cardIds = cards.map(c => c.id);
 
             return (
-              <div
+              <DroppableColumn
                 key={status}
-                id={`column-${status}`}
-                className="flex-shrink-0 w-80"
-              >
-                <div className={`rounded-lg border-2 h-full flex flex-col ${getStatusColor(status)}`}>
-                  {/* Column Header */}
-                  <div className="p-3 border-b border-gray-300">
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className={`font-semibold text-sm uppercase ${getStatusTextColor(status)}`}>
-                        {status}
-                      </h3>
-                      <Badge variant="outline" className="text-xs">
-                        {cards.length}
-                      </Badge>
-                    </div>
-                  </div>
-
-                  {/* Column Body - Scrollable */}
-                  <div className="flex-1 overflow-y-auto p-3">
-                    <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
-                      {cards.map((card) => (
-                        <SortableCard
-                          key={card.id}
-                          card={card}
-                          titleField={titleField}
-                          datasetConfig={datasetConfig}
-                        />
-                      ))}
-                    </SortableContext>
-                  </div>
-                </div>
-              </div>
+                status={status}
+                cards={cards}
+                titleField={titleField}
+                datasetConfig={datasetConfig}
+                getStatusColor={getStatusColor}
+                getStatusTextColor={getStatusTextColor}
+              />
             );
           })}
         </div>
