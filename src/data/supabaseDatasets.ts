@@ -1151,6 +1151,616 @@ export const reelsContentColumns: ColDef[] = [
   }
 ];
 
+// Configurações de colunas para Contatos (CRM)
+export const contactsColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 80,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'nome',
+    headerName: 'Nome',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'email',
+    headerName: 'Email',
+    width: 220,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'telefone',
+    headerName: 'Telefone',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'empresa',
+    headerName: 'Empresa',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'cargo',
+    headerName: 'Cargo',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'linkedin',
+    headerName: 'LinkedIn',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'tags',
+    headerName: 'Tags',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter'
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    width: 100,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    cellStyle: (params) => {
+      return params.value === 'ativo'
+        ? { color: '#2e7d32', fontWeight: 'bold' }
+        : { color: '#757575', fontWeight: 'bold' };
+    }
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 120,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Leads (CRM)
+export const leadsColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 80,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'nome',
+    headerName: 'Nome',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'email',
+    headerName: 'Email',
+    width: 220,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'telefone',
+    headerName: 'Telefone',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'empresa',
+    headerName: 'Empresa',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'cargo',
+    headerName: 'Cargo',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'fonte',
+    headerName: 'Fonte',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    enablePivot: true
+  },
+  {
+    field: 'score',
+    headerName: 'Score',
+    width: 90,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'avg',
+    cellStyle: (params) => {
+      const score = params.value || 0;
+      if (score >= 80) return { backgroundColor: '#e8f5e9', color: '#2e7d32', fontWeight: 'bold' };
+      if (score >= 60) return { backgroundColor: '#fff3e0', color: '#f57c00', fontWeight: 'normal' };
+      return { backgroundColor: '#ffebee', color: '#c62828', fontWeight: 'normal' };
+    }
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    enablePivot: true,
+    cellStyle: (params) => {
+      switch (params.value) {
+        case 'cliente': return { color: '#2e7d32', fontWeight: 'bold' };
+        case 'oportunidade': return { color: '#1976d2', fontWeight: 'bold' };
+        case 'qualificado': return { color: '#388e3c', fontWeight: 'bold' };
+        case 'contatado': return { color: '#f57c00', fontWeight: 'bold' };
+        case 'novo': return { color: '#9c27b0', fontWeight: 'bold' };
+        case 'perdido': return { color: '#757575', fontWeight: 'bold' };
+        default: return undefined;
+      }
+    }
+  },
+  {
+    field: 'temperatura',
+    headerName: 'Temperatura',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    cellStyle: (params) => {
+      switch (params.value) {
+        case 'quente': return { color: '#d32f2f', fontWeight: 'bold' };
+        case 'morno': return { color: '#f57c00', fontWeight: 'bold' };
+        case 'frio': return { color: '#1976d2', fontWeight: 'bold' };
+        default: return undefined;
+      }
+    }
+  },
+  {
+    field: 'data_primeiro_contato',
+    headerName: 'Primeiro Contato',
+    width: 140,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'data_ultimo_contato',
+    headerName: 'Último Contato',
+    width: 140,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Deals/Oportunidades (CRM)
+export const dealsColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 80,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'nome_negociacao',
+    headerName: 'Negociação',
+    width: 220,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'valor',
+    headerName: 'Valor (R$)',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(params.value);
+    }
+  },
+  {
+    field: 'probabilidade',
+    headerName: 'Probabilidade %',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'avg',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return `${params.value}%`;
+    },
+    cellStyle: (params) => {
+      const prob = params.value || 0;
+      if (prob >= 75) return { backgroundColor: '#e8f5e9', color: '#2e7d32', fontWeight: 'bold' };
+      if (prob >= 50) return { backgroundColor: '#fff3e0', color: '#f57c00', fontWeight: 'normal' };
+      return { backgroundColor: '#ffebee', color: '#c62828', fontWeight: 'normal' };
+    }
+  },
+  {
+    field: 'etapa',
+    headerName: 'Etapa',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    enablePivot: true,
+    cellStyle: (params) => {
+      switch (params.value) {
+        case 'fechado-ganho': return { color: '#2e7d32', fontWeight: 'bold' };
+        case 'negociacao': return { color: '#388e3c', fontWeight: 'bold' };
+        case 'proposta': return { color: '#1976d2', fontWeight: 'bold' };
+        case 'qualificacao': return { color: '#f57c00', fontWeight: 'bold' };
+        case 'prospeccao': return { color: '#9c27b0', fontWeight: 'bold' };
+        case 'fechado-perdido': return { color: '#757575', fontWeight: 'bold' };
+        default: return undefined;
+      }
+    }
+  },
+  {
+    field: 'contato_nome',
+    headerName: 'Contato',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'empresa',
+    headerName: 'Empresa',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'data_fechamento_prevista',
+    headerName: 'Fechamento Previsto',
+    width: 160,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'data_fechamento_real',
+    headerName: 'Fechamento Real',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 120,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Companies/Empresas (CRM)
+export const companiesColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 80,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'nome_empresa',
+    headerName: 'Empresa',
+    width: 220,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'cnpj',
+    headerName: 'CNPJ',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'setor',
+    headerName: 'Setor',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    enablePivot: true
+  },
+  {
+    field: 'tamanho',
+    headerName: 'Tamanho',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'receita_anual',
+    headerName: 'Receita Anual (R$)',
+    width: 160,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(params.value);
+    }
+  },
+  {
+    field: 'site',
+    headerName: 'Website',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'telefone',
+    headerName: 'Telefone',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'cidade',
+    headerName: 'Cidade',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'estado',
+    headerName: 'Estado',
+    width: 100,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 120,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Activities/Atividades (CRM)
+export const activitiesColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 80,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'tipo',
+    headerName: 'Tipo',
+    width: 110,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    enablePivot: true,
+    cellStyle: (params) => {
+      switch (params.value) {
+        case 'call': return { color: '#1976d2', fontWeight: 'bold' };
+        case 'email': return { color: '#388e3c', fontWeight: 'bold' };
+        case 'meeting': return { color: '#f57c00', fontWeight: 'bold' };
+        case 'demo': return { color: '#7b1fa2', fontWeight: 'bold' };
+        case 'note': return { color: '#616161', fontWeight: 'normal' };
+        case 'task': return { color: '#d32f2f', fontWeight: 'bold' };
+        default: return undefined;
+      }
+    }
+  },
+  {
+    field: 'titulo',
+    headerName: 'Título',
+    width: 250,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'descricao',
+    headerName: 'Descrição',
+    width: 300,
+    editable: true,
+    sortable: false,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'data_atividade',
+    headerName: 'Data',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'duracao_minutos',
+    headerName: 'Duração (min)',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum'
+  },
+  {
+    field: 'resultado',
+    headerName: 'Resultado',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    cellStyle: (params) => {
+      switch (params.value) {
+        case 'sucesso': return { color: '#2e7d32', fontWeight: 'bold' };
+        case 'sem-resposta': return { color: '#f57c00', fontWeight: 'bold' };
+        case 'remarcado': return { color: '#1976d2', fontWeight: 'bold' };
+        case 'cancelado': return { color: '#757575', fontWeight: 'bold' };
+        default: return undefined;
+      }
+    }
+  },
+  {
+    field: 'responsavel',
+    headerName: 'Responsável',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'proximo_followup',
+    headerName: 'Próximo Follow-up',
+    width: 160,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'concluida',
+    headerName: 'Concluída',
+    width: 110,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    valueFormatter: (params) => {
+      return params.value ? 'Sim' : 'Não';
+    },
+    cellStyle: (params) => {
+      return params.value
+        ? { color: '#2e7d32', fontWeight: 'bold' }
+        : { color: '#f57c00', fontWeight: 'normal' };
+    }
+  }
+];
+
 // Definição de datasets do Supabase
 export interface SupabaseDatasetConfig {
   id: string;
@@ -1206,6 +1816,51 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     tableName: 'sales_calls',
     columnDefs: salesCallsColumns,
     icon: '📞',
+    category: 'CRM'
+  },
+  {
+    id: 'contacts',
+    name: 'Contatos',
+    description: 'Pessoas e decisores',
+    tableName: 'contacts',
+    columnDefs: contactsColumns,
+    icon: '👤',
+    category: 'CRM'
+  },
+  {
+    id: 'leads',
+    name: 'Leads',
+    description: 'Prospects e oportunidades em potencial',
+    tableName: 'leads',
+    columnDefs: leadsColumns,
+    icon: '🎯',
+    category: 'CRM'
+  },
+  {
+    id: 'deals',
+    name: 'Negociações',
+    description: 'Pipeline de vendas e oportunidades',
+    tableName: 'deals',
+    columnDefs: dealsColumns,
+    icon: '💰',
+    category: 'CRM'
+  },
+  {
+    id: 'companies',
+    name: 'Empresas',
+    description: 'Cadastro de empresas clientes',
+    tableName: 'companies',
+    columnDefs: companiesColumns,
+    icon: '🏢',
+    category: 'CRM'
+  },
+  {
+    id: 'activities',
+    name: 'Atividades',
+    description: 'Timeline de interações e tarefas',
+    tableName: 'activities',
+    columnDefs: activitiesColumns,
+    icon: '📅',
     category: 'CRM'
   },
   {
