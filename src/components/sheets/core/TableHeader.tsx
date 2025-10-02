@@ -22,6 +22,8 @@ import {
   $kanbanNameSize,
   $kanbanNameWeight,
   $kanbanNameLetterSpacing,
+  $kanbanTitleFontFamily,
+  $kanbanNameFontFamily,
 } from '@/stores/table/tablePreferences';
 import {
   DropdownMenu,
@@ -85,6 +87,8 @@ export default function TableHeader({
   const kanbanNameSize = useStore($kanbanNameSize);
   const kanbanNameWeight = useStore($kanbanNameWeight);
   const kanbanNameLetterSpacing = useStore($kanbanNameLetterSpacing);
+  const kanbanTitleFontFamily = useStore($kanbanTitleFontFamily);
+  const kanbanNameFontFamily = useStore($kanbanNameFontFamily);
 
   const handleAddFilter = () => {
     const newFilter: FilterState = {
@@ -597,6 +601,19 @@ export default function TableHeader({
                 </div>
 
                 <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Title Font Family</span>
+                  <select
+                    value={kanbanTitleFontFamily}
+                    onChange={(e) => $kanbanTitleFontFamily.set(e.target.value)}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="Geist">Geist</option>
+                    <option value="Inter">Inter</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Title Spacing</span>
                   <select
                     value={kanbanTitleLetterSpacing}
@@ -668,6 +685,19 @@ export default function TableHeader({
                     <option value="600">Semibold</option>
                     <option value="700">Bold</option>
                     <option value="800">Extrabold</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Name Font Family</span>
+                  <select
+                    value={kanbanNameFontFamily}
+                    onChange={(e) => $kanbanNameFontFamily.set(e.target.value)}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="Geist">Geist</option>
+                    <option value="Inter">Inter</option>
                   </select>
                 </div>
 

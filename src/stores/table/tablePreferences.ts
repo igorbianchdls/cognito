@@ -41,3 +41,9 @@ export const $kanbanNameColor = atom<string>('#374151'); // gray-700
 export const $kanbanNameSize = atom<number>(12);
 export const $kanbanNameWeight = atom<number>(400); // normal
 export const $kanbanNameLetterSpacing = atom<string>('0em');
+
+// Kanban title font family
+export const $kanbanTitleFontFamily = atom<string>('Geist');
+
+// Kanban name font family
+export const $kanbanNameFontFamily = atom<string>('Geist');

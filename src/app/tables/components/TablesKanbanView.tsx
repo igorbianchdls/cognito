@@ -16,6 +16,8 @@ import {
   $kanbanNameSize,
   $kanbanNameWeight,
   $kanbanNameLetterSpacing,
+  $kanbanTitleFontFamily,
+  $kanbanNameFontFamily,
 } from '@/stores/table/tablePreferences';
 import {
   DndContext,
@@ -62,6 +64,8 @@ function SortableCard({
   kanbanNameSize,
   kanbanNameWeight,
   kanbanNameLetterSpacing,
+  kanbanTitleFontFamily,
+  kanbanNameFontFamily,
 }: {
   card: KanbanCard;
   titleField: string | null;
@@ -75,6 +79,8 @@ function SortableCard({
   kanbanNameSize: number;
   kanbanNameWeight: number;
   kanbanNameLetterSpacing: string;
+  kanbanTitleFontFamily: string;
+  kanbanNameFontFamily: string;
 }) {
   const {
     attributes,
@@ -188,6 +194,7 @@ function SortableCard({
                 fontWeight: kanbanTitleWeight,
                 letterSpacing: kanbanTitleLetterSpacing,
                 color: kanbanTitleColor,
+                fontFamily: kanbanTitleFontFamily === 'Inter' ? 'var(--font-inter)' : 'var(--font-geist-sans)',
               }}
             >
               {title}
@@ -204,6 +211,7 @@ function SortableCard({
                   fontWeight: kanbanNameWeight,
                   letterSpacing: kanbanNameLetterSpacing,
                   color: kanbanNameColor,
+                  fontFamily: kanbanNameFontFamily === 'Inter' ? 'var(--font-inter)' : 'var(--font-geist-sans)',
                 }}
               >
                 Camille Ricketts
@@ -217,6 +225,7 @@ function SortableCard({
                   fontWeight: kanbanNameWeight,
                   letterSpacing: kanbanNameLetterSpacing,
                   color: kanbanNameColor,
+                  fontFamily: kanbanNameFontFamily === 'Inter' ? 'var(--font-inter)' : 'var(--font-geist-sans)',
                 }}
               >
                 Nate Martins
@@ -227,10 +236,10 @@ function SortableCard({
           {/* 3. Badges hardcoded */}
           <div className="flex flex-wrap gap-1.5">
             <span className="text-xs px-1.5 py-0.5 rounded border bg-red-100 text-red-700 border-red-200">
-              Bug 🐛
+              Bug
             </span>
             <span className="text-xs px-1.5 py-0.5 rounded border bg-purple-100 text-purple-700 border-purple-200">
-              Epic ⛰️
+              Epic
             </span>
             <span className="text-xs px-1.5 py-0.5 rounded border bg-gray-100 text-gray-600 border-gray-200">
               Sprint 20
@@ -257,6 +266,8 @@ function DroppableColumn({
   kanbanNameSize,
   kanbanNameWeight,
   kanbanNameLetterSpacing,
+  kanbanTitleFontFamily,
+  kanbanNameFontFamily,
 }: {
   status: string;
   cards: KanbanCard[];
@@ -272,6 +283,8 @@ function DroppableColumn({
   kanbanNameSize: number;
   kanbanNameWeight: number;
   kanbanNameLetterSpacing: string;
+  kanbanTitleFontFamily: string;
+  kanbanNameFontFamily: string;
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: `column-${status}`,
@@ -316,6 +329,8 @@ function DroppableColumn({
                 kanbanNameSize={kanbanNameSize}
                 kanbanNameWeight={kanbanNameWeight}
                 kanbanNameLetterSpacing={kanbanNameLetterSpacing}
+                kanbanTitleFontFamily={kanbanTitleFontFamily}
+                kanbanNameFontFamily={kanbanNameFontFamily}
               />
             ))}
           </SortableContext>
@@ -340,6 +355,8 @@ export default function TablesKanbanView({ tableName }: TablesKanbanViewProps) {
   const kanbanNameSize = useStore($kanbanNameSize);
   const kanbanNameWeight = useStore($kanbanNameWeight);
   const kanbanNameLetterSpacing = useStore($kanbanNameLetterSpacing);
+  const kanbanTitleFontFamily = useStore($kanbanTitleFontFamily);
+  const kanbanNameFontFamily = useStore($kanbanNameFontFamily);
 
   // Sync local data with server data
   useEffect(() => {
@@ -618,6 +635,8 @@ export default function TablesKanbanView({ tableName }: TablesKanbanViewProps) {
                 kanbanNameSize={kanbanNameSize}
                 kanbanNameWeight={kanbanNameWeight}
                 kanbanNameLetterSpacing={kanbanNameLetterSpacing}
+                kanbanTitleFontFamily={kanbanTitleFontFamily}
+                kanbanNameFontFamily={kanbanNameFontFamily}
               />
             );
           })}
