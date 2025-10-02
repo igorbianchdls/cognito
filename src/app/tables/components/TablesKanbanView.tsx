@@ -112,15 +112,40 @@ function SortableCard({ card, titleField, datasetConfig, statusBadgeColor }: {
   const statusLower = String(card.status || '').toLowerCase();
   const isUrgent = statusLower.includes('vencid') || statusLower.includes('urgente');
 
+  // Cores dos badges baseadas no tipo
+  const getBadgeColor = (value: string, type: 'categoria' | 'tipo' | 'prioridade'): string => {
+    const lowerValue = value.toLowerCase();
+
+    // Bug/Error - vermelho
+    if (lowerValue.includes('bug') || lowerValue.includes('erro')) {
+      return 'bg-red-100 text-red-700 border-red-200';
+    }
+    // Epic/Feature - roxo
+    if (lowerValue.includes('epic') || lowerValue.includes('feature')) {
+      return 'bg-purple-100 text-purple-700 border-purple-200';
+    }
+    // Task - amarelo/laranja
+    if (lowerValue.includes('task') || lowerValue.includes('tarefa')) {
+      return 'bg-yellow-100 text-yellow-700 border-yellow-200';
+    }
+    // Urgente - vermelho
+    if (lowerValue.includes('urgent') || lowerValue.includes('alta')) {
+      return 'bg-red-100 text-red-700 border-red-200';
+    }
+
+    // Padrão - cinza
+    return 'bg-gray-100 text-gray-700 border-gray-200';
+  };
+
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
       <Card
-        className="mb-2 cursor-grab active:cursor-grabbing hover:brightness-95 transition-all border-gray-200 bg-white"
+        className="mb-2 cursor-grab active:cursor-grabbing hover:brightness-95 transition-all border-gray-200 bg-white rounded-md"
         style={{
           boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 2px 3px -2px rgba(0,0,0,0.05), 0 3px 12px -4px rgba(0,0,0,0.04), 0 4px 16px -8px rgba(0,0,0,0.04)'
         }}
       >
-        <CardContent className="p-2.5 space-y-2.5">
+        <CardContent className="px-2.5 pt-2 pb-2.5 space-y-2.5">
           {/* 1. Emoji + Título */}
           <div className="flex items-start gap-1.5">
             <span className="text-base leading-none">{datasetConfig?.icon || '📄'}</span>
@@ -129,13 +154,15 @@ function SortableCard({ card, titleField, datasetConfig, statusBadgeColor }: {
             </h4>
           </div>
 
-          {/* 2. Avatares hardcoded */}
-          <div className="flex -space-x-1.5">
-            <div className="w-6 h-6 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center text-white text-xs font-medium">
-              JD
+          {/* 2. Pessoas (ícone + nome) hardcoded */}
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-1.5">
+              <div className="w-5 h-5 rounded-full bg-gray-300 flex-shrink-0" />
+              <span className="text-xs text-gray-700">Camille Ricketts</span>
             </div>
-            <div className="w-6 h-6 rounded-full bg-green-500 border-2 border-white flex items-center justify-center text-white text-xs font-medium">
-              AM
+            <div className="flex items-center gap-1.5">
+              <div className="w-5 h-5 rounded-full bg-gray-300 flex-shrink-0" />
+              <span className="text-xs text-gray-700">Nate Martins</span>
             </div>
           </div>
 
@@ -143,28 +170,34 @@ function SortableCard({ card, titleField, datasetConfig, statusBadgeColor }: {
           {(categoria || tipo || prioridade) && (
             <div className="flex flex-wrap gap-1.5">
               {categoria && (
-                <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                <span className={`text-xs px-1.5 py-0.5 rounded border ${getBadgeColor(categoria, 'categoria')}`}>
                   {categoria}
-                </Badge>
+                </span>
               )}
               {tipo && (
-                <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                <span className={`text-xs px-1.5 py-0.5 rounded border ${getBadgeColor(tipo, 'tipo')}`}>
                   {tipo}
-                </Badge>
+                </span>
               )}
               {prioridade && (
-                <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                <span className={`text-xs px-1.5 py-0.5 rounded border ${getBadgeColor(prioridade, 'prioridade')}`}>
                   {prioridade}
-                </Badge>
+                </span>
               )}
             </div>
           )}
 
           {/* 4. Footer info (sprint, valor, alerta) */}
           {(sprint || valorFormatado || isUrgent) && (
-            <div className="flex items-center gap-2 text-xs text-gray-500">
-              {sprint && <span>{sprint}</span>}
-              {valorFormatado && <span className="font-medium text-gray-900">{valorFormatado}</span>}
+            <div className="flex items-center gap-2 text-xs">
+              {sprint && (
+                <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                  {sprint}
+                </span>
+              )}
+              {valorFormatado && (
+                <span className="font-medium text-gray-900">{valorFormatado}</span>
+              )}
               {isUrgent && <AlertTriangle className="w-3.5 h-3.5 text-yellow-500" />}
             </div>
           )}
