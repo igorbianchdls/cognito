@@ -1,11 +1,22 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
+import { useStore } from '@nanostores/react';
 import { useSupabaseTables } from '../hooks/useSupabaseTables';
 import { SUPABASE_DATASETS } from '@/data/supabaseDatasets';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, FileText } from 'lucide-react';
+import {
+  $kanbanTitleColor,
+  $kanbanTitleSize,
+  $kanbanTitleWeight,
+  $kanbanTitleLetterSpacing,
+  $kanbanNameColor,
+  $kanbanNameSize,
+  $kanbanNameWeight,
+  $kanbanNameLetterSpacing,
+} from '@/stores/table/tablePreferences';
 import {
   DndContext,
   DragEndEvent,
@@ -38,11 +49,32 @@ interface KanbanCard {
   data: Record<string, unknown>;
 }
 
-function SortableCard({ card, titleField, datasetConfig, statusBadgeColor }: {
+function SortableCard({
+  card,
+  titleField,
+  datasetConfig,
+  statusBadgeColor,
+  kanbanTitleColor,
+  kanbanTitleSize,
+  kanbanTitleWeight,
+  kanbanTitleLetterSpacing,
+  kanbanNameColor,
+  kanbanNameSize,
+  kanbanNameWeight,
+  kanbanNameLetterSpacing,
+}: {
   card: KanbanCard;
   titleField: string | null;
   datasetConfig: typeof SUPABASE_DATASETS[0] | undefined;
   statusBadgeColor: string;
+  kanbanTitleColor: string;
+  kanbanTitleSize: number;
+  kanbanTitleWeight: number;
+  kanbanTitleLetterSpacing: string;
+  kanbanNameColor: string;
+  kanbanNameSize: number;
+  kanbanNameWeight: number;
+  kanbanNameLetterSpacing: string;
 }) {
   const {
     attributes,
@@ -146,10 +178,18 @@ function SortableCard({ card, titleField, datasetConfig, statusBadgeColor }: {
         }}
       >
         <CardContent className="px-2.5 pt-0 pb-0 space-y-2">
-          {/* 1. Emoji + Título */}
+          {/* 1. Ícone + Título */}
           <div className="flex items-start gap-1.5">
-            <span className="text-base leading-none">{datasetConfig?.icon || '📄'}</span>
-            <h4 className="font-semibold text-sm text-gray-900 line-clamp-2 flex-1">
+            <FileText className="h-4 w-4 text-gray-600 flex-shrink-0 mt-0.5" />
+            <h4
+              className="line-clamp-2 flex-1"
+              style={{
+                fontSize: `${kanbanTitleSize}px`,
+                fontWeight: kanbanTitleWeight,
+                letterSpacing: kanbanTitleLetterSpacing,
+                color: kanbanTitleColor,
+              }}
+            >
               {title}
             </h4>
           </div>
@@ -158,11 +198,29 @@ function SortableCard({ card, titleField, datasetConfig, statusBadgeColor }: {
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-1.5">
               <div className="w-5 h-5 rounded-full bg-gray-300 flex-shrink-0" />
-              <span className="text-xs text-gray-700">Camille Ricketts</span>
+              <span
+                style={{
+                  fontSize: `${kanbanNameSize}px`,
+                  fontWeight: kanbanNameWeight,
+                  letterSpacing: kanbanNameLetterSpacing,
+                  color: kanbanNameColor,
+                }}
+              >
+                Camille Ricketts
+              </span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="w-5 h-5 rounded-full bg-gray-300 flex-shrink-0" />
-              <span className="text-xs text-gray-700">Nate Martins</span>
+              <span
+                style={{
+                  fontSize: `${kanbanNameSize}px`,
+                  fontWeight: kanbanNameWeight,
+                  letterSpacing: kanbanNameLetterSpacing,
+                  color: kanbanNameColor,
+                }}
+              >
+                Nate Martins
+              </span>
             </div>
           </div>
 
@@ -234,6 +292,14 @@ function DroppableColumn({
                 titleField={titleField}
                 datasetConfig={datasetConfig}
                 statusBadgeColor={getStatusBadgeColor(card.status)}
+                kanbanTitleColor={kanbanTitleColor}
+                kanbanTitleSize={kanbanTitleSize}
+                kanbanTitleWeight={kanbanTitleWeight}
+                kanbanTitleLetterSpacing={kanbanTitleLetterSpacing}
+                kanbanNameColor={kanbanNameColor}
+                kanbanNameSize={kanbanNameSize}
+                kanbanNameWeight={kanbanNameWeight}
+                kanbanNameLetterSpacing={kanbanNameLetterSpacing}
               />
             ))}
           </SortableContext>
@@ -248,6 +314,16 @@ export default function TablesKanbanView({ tableName }: TablesKanbanViewProps) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [localData, setLocalData] = useState<Array<Record<string, unknown>>>([]);
   const datasetConfig = SUPABASE_DATASETS.find(ds => ds.tableName === tableName);
+
+  // Kanban styles from nanostores
+  const kanbanTitleColor = useStore($kanbanTitleColor);
+  const kanbanTitleSize = useStore($kanbanTitleSize);
+  const kanbanTitleWeight = useStore($kanbanTitleWeight);
+  const kanbanTitleLetterSpacing = useStore($kanbanTitleLetterSpacing);
+  const kanbanNameColor = useStore($kanbanNameColor);
+  const kanbanNameSize = useStore($kanbanNameSize);
+  const kanbanNameWeight = useStore($kanbanNameWeight);
+  const kanbanNameLetterSpacing = useStore($kanbanNameLetterSpacing);
 
   // Sync local data with server data
   useEffect(() => {

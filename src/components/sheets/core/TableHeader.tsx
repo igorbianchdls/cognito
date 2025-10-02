@@ -14,6 +14,14 @@ import {
   $headerFontFamily,
   $cellLetterSpacing,
   $headerLetterSpacing,
+  $kanbanTitleColor,
+  $kanbanTitleSize,
+  $kanbanTitleWeight,
+  $kanbanTitleLetterSpacing,
+  $kanbanNameColor,
+  $kanbanNameSize,
+  $kanbanNameWeight,
+  $kanbanNameLetterSpacing,
 } from '@/stores/table/tablePreferences';
 import {
   DropdownMenu,
@@ -67,6 +75,16 @@ export default function TableHeader({
   const cellLetterSpacing = useStore($cellLetterSpacing);
   const headerLetterSpacing = useStore($headerLetterSpacing);
   const headerTextColor = useStore($headerTextColor);
+
+  // Kanban preferences
+  const kanbanTitleColor = useStore($kanbanTitleColor);
+  const kanbanTitleSize = useStore($kanbanTitleSize);
+  const kanbanTitleWeight = useStore($kanbanTitleWeight);
+  const kanbanTitleLetterSpacing = useStore($kanbanTitleLetterSpacing);
+  const kanbanNameColor = useStore($kanbanNameColor);
+  const kanbanNameSize = useStore($kanbanNameSize);
+  const kanbanNameWeight = useStore($kanbanNameWeight);
+  const kanbanNameLetterSpacing = useStore($kanbanNameLetterSpacing);
 
   const handleAddFilter = () => {
     const newFilter: FilterState = {
@@ -503,6 +521,161 @@ export default function TableHeader({
                   <select
                     value={headerLetterSpacing}
                     onChange={(e) => $headerLetterSpacing.set(e.target.value)}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="-0.5em">-0.5em</option>
+                    <option value="-0.4em">-0.4em</option>
+                    <option value="-0.3em">-0.3em</option>
+                    <option value="-0.2em">-0.2em</option>
+                    <option value="-0.1em">-0.1em</option>
+                    <option value="-0.05em">-0.05em</option>
+                    <option value="-0.03em">-0.03em</option>
+                    <option value="-0.02em">-0.02em</option>
+                    <option value="-0.01em">-0.01em</option>
+                    <option value="0em">0em</option>
+                    <option value="0.01em">0.01em</option>
+                    <option value="0.02em">0.02em</option>
+                    <option value="0.05em">0.05em</option>
+                  </select>
+                </div>
+              </div>
+
+              <DropdownMenuSeparator />
+
+              {/* Kanban Styles Section */}
+              <DropdownMenuLabel>Kanban Styles</DropdownMenuLabel>
+
+              {/* Title Styles */}
+              <div className="px-3 py-2 space-y-3">
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Title</div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Title Color</span>
+                  <input
+                    type="color"
+                    value={kanbanTitleColor}
+                    onChange={(e) => $kanbanTitleColor.set(e.target.value)}
+                    className="w-10 h-8 cursor-pointer border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Title Font Size</span>
+                  <select
+                    value={kanbanTitleSize}
+                    onChange={(e) => $kanbanTitleSize.set(Number(e.target.value))}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="10">10px</option>
+                    <option value="12">12px</option>
+                    <option value="13">13px</option>
+                    <option value="14">14px</option>
+                    <option value="16">16px</option>
+                    <option value="18">18px</option>
+                    <option value="20">20px</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Title Weight</span>
+                  <select
+                    value={kanbanTitleWeight}
+                    onChange={(e) => $kanbanTitleWeight.set(Number(e.target.value))}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="300">Light</option>
+                    <option value="400">Normal</option>
+                    <option value="500">Medium</option>
+                    <option value="600">Semibold</option>
+                    <option value="700">Bold</option>
+                    <option value="800">Extrabold</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Title Spacing</span>
+                  <select
+                    value={kanbanTitleLetterSpacing}
+                    onChange={(e) => $kanbanTitleLetterSpacing.set(e.target.value)}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="-0.5em">-0.5em</option>
+                    <option value="-0.4em">-0.4em</option>
+                    <option value="-0.3em">-0.3em</option>
+                    <option value="-0.2em">-0.2em</option>
+                    <option value="-0.1em">-0.1em</option>
+                    <option value="-0.05em">-0.05em</option>
+                    <option value="-0.03em">-0.03em</option>
+                    <option value="-0.02em">-0.02em</option>
+                    <option value="-0.01em">-0.01em</option>
+                    <option value="0em">0em</option>
+                    <option value="0.01em">0.01em</option>
+                    <option value="0.02em">0.02em</option>
+                    <option value="0.05em">0.05em</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Name Styles */}
+              <div className="px-3 py-2 space-y-3">
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Name</div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Name Color</span>
+                  <input
+                    type="color"
+                    value={kanbanNameColor}
+                    onChange={(e) => $kanbanNameColor.set(e.target.value)}
+                    className="w-10 h-8 cursor-pointer border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Name Font Size</span>
+                  <select
+                    value={kanbanNameSize}
+                    onChange={(e) => $kanbanNameSize.set(Number(e.target.value))}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="10">10px</option>
+                    <option value="12">12px</option>
+                    <option value="13">13px</option>
+                    <option value="14">14px</option>
+                    <option value="16">16px</option>
+                    <option value="18">18px</option>
+                    <option value="20">20px</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Name Weight</span>
+                  <select
+                    value={kanbanNameWeight}
+                    onChange={(e) => $kanbanNameWeight.set(Number(e.target.value))}
+                    className="px-2 py-1 text-sm border rounded"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <option value="300">Light</option>
+                    <option value="400">Normal</option>
+                    <option value="500">Medium</option>
+                    <option value="600">Semibold</option>
+                    <option value="700">Bold</option>
+                    <option value="800">Extrabold</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Name Spacing</span>
+                  <select
+                    value={kanbanNameLetterSpacing}
+                    onChange={(e) => $kanbanNameLetterSpacing.set(e.target.value)}
                     className="px-2 py-1 text-sm border rounded"
                     onClick={(e) => e.stopPropagation()}
                   >
