@@ -145,7 +145,7 @@ function SortableCard({ card, titleField, datasetConfig, statusBadgeColor }: {
           boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 2px 3px -2px rgba(0,0,0,0.05), 0 3px 12px -4px rgba(0,0,0,0.04), 0 4px 16px -8px rgba(0,0,0,0.04)'
         }}
       >
-        <CardContent className="px-2.5 pt-1.5 pb-1.5 space-y-2">
+        <CardContent className="px-2.5 pt-0 pb-0 space-y-2">
           {/* 1. Emoji + Título */}
           <div className="flex items-start gap-1.5">
             <span className="text-base leading-none">{datasetConfig?.icon || '📄'}</span>
@@ -166,26 +166,18 @@ function SortableCard({ card, titleField, datasetConfig, statusBadgeColor }: {
             </div>
           </div>
 
-          {/* 3. Badges (categoria, tipo, prioridade) */}
-          {(categoria || tipo || prioridade) && (
-            <div className="flex flex-wrap gap-1.5">
-              {categoria && (
-                <span className={`text-xs px-1.5 py-0.5 rounded border ${getBadgeColor(categoria, 'categoria')}`}>
-                  {categoria}
-                </span>
-              )}
-              {tipo && (
-                <span className={`text-xs px-1.5 py-0.5 rounded border ${getBadgeColor(tipo, 'tipo')}`}>
-                  {tipo}
-                </span>
-              )}
-              {prioridade && (
-                <span className={`text-xs px-1.5 py-0.5 rounded border ${getBadgeColor(prioridade, 'prioridade')}`}>
-                  {prioridade}
-                </span>
-              )}
-            </div>
-          )}
+          {/* 3. Badges hardcoded */}
+          <div className="flex flex-wrap gap-1.5">
+            <span className="text-xs px-1.5 py-0.5 rounded border bg-red-100 text-red-700 border-red-200">
+              Bug 🐛
+            </span>
+            <span className="text-xs px-1.5 py-0.5 rounded border bg-purple-100 text-purple-700 border-purple-200">
+              Epic ⛰️
+            </span>
+            <span className="text-xs px-1.5 py-0.5 rounded border bg-gray-100 text-gray-600 border-gray-200">
+              Sprint 20
+            </span>
+          </div>
         </CardContent>
       </Card>
     </div>
