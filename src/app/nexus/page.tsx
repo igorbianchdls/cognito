@@ -345,7 +345,7 @@ export default function Page() {
             // Modo Split - Header + Chat | Dashboard
             <PanelGroup direction="horizontal">
               {/* Coluna Esquerda: Header + Chat */}
-              <Panel defaultSize={40} minSize={30}>
+              <Panel defaultSize={33} minSize={25}>
                 <div className="flex flex-col h-full">
                   {/* Header da coluna esquerda */}
                   <header className="flex h-16 shrink-0 items-center gap-2 px-4">
@@ -411,7 +411,7 @@ export default function Page() {
               </Panel>
 
               {/* Coluna Direita: Dashboard altura completa */}
-              <Panel defaultSize={60} minSize={30}>
+              <Panel defaultSize={67} minSize={40}>
                 <div className="h-full">
                   <DashboardChatPanel />
                 </div>
