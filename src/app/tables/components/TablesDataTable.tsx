@@ -169,12 +169,16 @@ const getBadgeBorderColor = (field: string, value: string): string => {
 export default function TablesDataTable({ tableName, filters = [] }: TablesDataTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnOrder, setColumnOrder] = useState<string[]>([]);
   const { data, loading, error, refetch } = useSupabaseTables(tableName || '');
 
   // Estados para edição inline
   const [editingCell, setEditingCell] = useState<{ rowId: string; columnId: string } | null>(null);
   const [editValue, setEditValue] = useState<string>('');
   const [savingCell, setSavingCell] = useState<{ rowId: string; columnId: string } | null>(null);
+
+  // Estado para drag and drop
+  const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
 
   // Table preferences from nanostores
   const rowHeight = useStore($rowHeight);
@@ -275,6 +279,37 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
   const handleCellCancel = () => {
     setEditingCell(null);
     setEditValue('');
+  };
+
+  // Funções de drag and drop para reordenar colunas
+  const handleDragStart = (columnId: string) => {
+    setDraggedColumn(columnId);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (targetColumnId: string) => {
+    if (!draggedColumn || draggedColumn === targetColumnId) {
+      setDraggedColumn(null);
+      return;
+    }
+
+    setColumnOrder((currentOrder) => {
+      const newOrder = [...currentOrder];
+      const draggedIndex = newOrder.indexOf(draggedColumn);
+      const targetIndex = newOrder.indexOf(targetColumnId);
+
+      if (draggedIndex !== -1 && targetIndex !== -1) {
+        newOrder.splice(draggedIndex, 1);
+        newOrder.splice(targetIndex, 0, draggedColumn);
+      }
+
+      return newOrder;
+    });
+
+    setDraggedColumn(null);
   };
 
   // Get column definitions from SUPABASE_DATASETS
@@ -405,11 +440,19 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
     }));
   }, [datasetConfig, headerFontSize, headerFontFamily, headerLetterSpacing, editingCell, editValue, savingCell, fontSize, cellFontFamily]);
 
+  // Inicializar columnOrder quando as colunas mudarem
+  useEffect(() => {
+    if (columns.length > 0 && columnOrder.length === 0) {
+      setColumnOrder(columns.map((col) => col.accessorKey as string));
+    }
+  }, [columns, columnOrder.length]);
+
   const table = useReactTable({
     data,
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
+    onColumnOrderChange: setColumnOrder,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
@@ -417,6 +460,7 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
     state: {
       sorting,
       columnFilters,
+      columnOrder,
     },
     initialState: {
       pagination: {
@@ -488,6 +532,16 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
         .custom-scrollbar:hover {
           scrollbar-color: #9ca3af transparent;
         }
+        th[draggable="true"] {
+          user-select: none;
+          transition: opacity 0.2s ease, background-color 0.2s ease;
+        }
+        th[draggable="true"]:active {
+          cursor: grabbing !important;
+        }
+        th[draggable="true"]:hover {
+          background-color: rgba(0, 0, 0, 0.05);
+        }
       `}} />
       {/* Table with horizontal scroll */}
       <div className="flex-1 overflow-x-auto border-b custom-scrollbar">
@@ -495,24 +549,34 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
           <TableHeader className="bg-gray-100">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead
-                    key={header.id}
-                    className="whitespace-nowrap font-semibold"
-                    style={{
-                      paddingTop: `${(headerRowHeight - headerFontSize) / 2}px`,
-                      paddingBottom: `${(headerRowHeight - headerFontSize) / 2}px`,
-                      fontSize: `${headerFontSize}px`,
-                      color: headerTextColor,
-                      fontFamily: headerFontFamily === 'Inter' ? 'var(--font-inter)' : 'var(--font-geist-sans)',
-                      letterSpacing: headerLetterSpacing,
-                    }}
-                  >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
+                {headerGroup.headers.map((header) => {
+                  const columnId = header.column.id;
+                  const isDragging = draggedColumn === columnId;
+
+                  return (
+                    <TableHead
+                      key={header.id}
+                      draggable
+                      onDragStart={() => handleDragStart(columnId)}
+                      onDragOver={handleDragOver}
+                      onDrop={() => handleDrop(columnId)}
+                      className={`whitespace-nowrap font-semibold ${isDragging ? 'opacity-50' : ''}`}
+                      style={{
+                        paddingTop: `${(headerRowHeight - headerFontSize) / 2}px`,
+                        paddingBottom: `${(headerRowHeight - headerFontSize) / 2}px`,
+                        fontSize: `${headerFontSize}px`,
+                        color: headerTextColor,
+                        fontFamily: headerFontFamily === 'Inter' ? 'var(--font-inter)' : 'var(--font-geist-sans)',
+                        letterSpacing: headerLetterSpacing,
+                        cursor: 'grab',
+                      }}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             ))}
           </TableHeader>
