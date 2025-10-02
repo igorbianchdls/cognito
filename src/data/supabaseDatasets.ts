@@ -1170,7 +1170,7 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     tableName: 'invoices',
     columnDefs: contasAReceberColumns,
     icon: '💰',
-    category: 'Finanças'
+    category: 'ERP'
   },
   {
     id: 'contas-a-pagar',
@@ -1179,7 +1179,7 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     tableName: 'accounts_payable',
     columnDefs: contasAPagarColumns,
     icon: '💸',
-    category: 'Finanças'
+    category: 'ERP'
   },
   {
     id: 'receipts',
@@ -1188,7 +1188,7 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     tableName: 'receipts',
     columnDefs: receiptsColumns,
     icon: '🧾',
-    category: 'Finanças'
+    category: 'ERP'
   },
   {
     id: 'notas-fiscais',
@@ -1197,7 +1197,7 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     tableName: 'notas_fiscais',
     columnDefs: notasFiscaisColumns,
     icon: '📄',
-    category: 'Finanças'
+    category: 'ERP'
   },
   {
     id: 'sales-calls',
@@ -1206,7 +1206,7 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     tableName: 'sales_calls',
     columnDefs: salesCallsColumns,
     icon: '📞',
-    category: 'Vendas & Marketing'
+    category: 'CRM'
   },
   {
     id: 'youtube-content',
@@ -1215,7 +1215,7 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     tableName: 'youtube_content',
     columnDefs: youtubeContentColumns,
     icon: '📺',
-    category: 'Vendas & Marketing'
+    category: 'Marketing'
   },
   {
     id: 'reels-content',
@@ -1224,7 +1224,7 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     tableName: 'reels_content',
     columnDefs: reelsContentColumns,
     icon: '📱',
-    category: 'Vendas & Marketing'
+    category: 'Marketing'
   },
   {
     id: 'estoque',
@@ -1251,6 +1251,6 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     tableName: 'rh_candidates',
     columnDefs: rhCandidatesColumns,
     icon: '👥',
-    category: 'Recursos Humanos'
+    category: 'RH'
   }
 ];
