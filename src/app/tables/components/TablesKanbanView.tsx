@@ -5,6 +5,7 @@ import { useSupabaseTables } from '../hooks/useSupabaseTables';
 import { SUPABASE_DATASETS } from '@/data/supabaseDatasets';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { User, AlertTriangle } from 'lucide-react';
 import {
   DndContext,
   DragEndEvent,
@@ -58,70 +59,71 @@ function SortableCard({ card, titleField, datasetConfig, statusBadgeColor }: {
     opacity: isDragging ? 0.5 : 1,
   };
 
+  // Identificar campos principais
   const title = titleField ? card.data[titleField] : card.id;
 
-  // Get first 2 displayable fields (reduced from 3)
-  const displayFields = datasetConfig?.columnDefs
-    .filter(col => col.field !== 'id' && col.field !== 'status' && col.field !== 'created_at' && col.field !== 'updated_at')
-    .slice(0, 2) || [];
+  // Subtitle: empresa, company, contato, cliente
+  const subtitleField = datasetConfig?.columnDefs.find(
+    col => col.field?.includes('empresa') ||
+           col.field?.includes('company') ||
+           col.field?.includes('contato') ||
+           col.field?.includes('cliente')
+  );
+  const subtitle = subtitleField ? card.data[subtitleField.field || ''] : null;
 
-  const formatValue = (value: unknown, fieldName: string): string => {
-    if (value === null || value === undefined) return '—';
+  // Valor: valor, amount, preco
+  const valorField = datasetConfig?.columnDefs.find(
+    col => col.field?.includes('valor') ||
+           col.field?.includes('amount') ||
+           col.field?.includes('preco')
+  );
+  const valor = valorField ? card.data[valorField.field || ''] : null;
 
-    if (fieldName?.includes('valor') || fieldName?.includes('preco')) {
-      const num = Number(value);
-      if (!isNaN(num)) {
-        return new Intl.NumberFormat('pt-BR', {
-          style: 'currency',
-          currency: 'BRL'
-        }).format(num);
-      }
+  // Alerta: vencido, urgente
+  const statusLower = String(card.status || '').toLowerCase();
+  const isUrgent = statusLower.includes('vencid') || statusLower.includes('urgente');
+
+  const formatCurrency = (value: unknown): string => {
+    const num = Number(value);
+    if (!isNaN(num)) {
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(num);
     }
-
-    if (fieldName?.includes('data')) {
-      const date = new Date(String(value));
-      if (!isNaN(date.getTime())) {
-        return date.toLocaleDateString('pt-BR');
-      }
-    }
-
-    if (typeof value === 'boolean') {
-      return value ? 'Sim' : 'Não';
-    }
-
     return String(value);
   };
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <Card className="mb-2 cursor-grab active:cursor-grabbing hover:shadow-lg transition-all border-gray-200 bg-white">
-        <CardContent className="p-4">
-          {/* Status badge e Título */}
-          <div className="flex items-start gap-2 mb-3">
-            <div className={`w-2 h-2 rounded-full mt-1 ${statusBadgeColor}`}></div>
-            <h4 className="font-semibold text-base text-gray-900 line-clamp-2 flex-1">
-              {formatValue(title, titleField || '')}
-            </h4>
-          </div>
+      <Card className="mb-2 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow border-gray-200 bg-white">
+        <CardContent className="p-3 space-y-2">
+          {/* 1. Título - negrito preto */}
+          <h4 className="font-bold text-sm text-gray-900 line-clamp-2">
+            {String(title)}
+          </h4>
 
-          {/* Informações secundárias */}
-          <div className="space-y-1.5">
-            {displayFields.map((field) => {
-              const value = card.data[field.field || ''];
-              if (!value) return null;
+          {/* 2. Subtítulo - normal cinza */}
+          {subtitle && (
+            <p className="text-sm text-gray-500 font-normal line-clamp-1">
+              {String(subtitle)}
+            </p>
+          )}
 
-              return (
-                <div key={field.field} className="text-sm text-gray-600 flex justify-between">
-                  <span className="text-gray-500">{field.headerName}</span>
-                  <span className="font-medium">{formatValue(value, field.field || '')}</span>
-                </div>
-              );
-            })}
-          </div>
+          {/* 3. Footer: ícone + valor + alerta */}
+          <div className="flex items-center justify-between pt-1">
+            {/* Valor com ícone */}
+            {valor && (
+              <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
+                <User className="w-3.5 h-3.5 text-gray-400" />
+                {formatCurrency(valor)}
+              </div>
+            )}
 
-          {/* ID discreto */}
-          <div className="text-xs text-gray-400 mt-3 pt-2 border-t border-gray-100">
-            #{card.id}
+            {/* Badge alerta */}
+            {isUrgent && (
+              <AlertTriangle className="w-4 h-4 text-yellow-500" />
+            )}
           </div>
         </CardContent>
       </Card>
@@ -157,13 +159,13 @@ function DroppableColumn({
     >
       <div className={`rounded-lg border border-gray-200 h-full flex flex-col bg-gray-50 ${isOver ? 'ring-2 ring-blue-400 bg-blue-50' : ''}`}>
         {/* Column Header */}
-        <div className="p-4 border-b border-gray-200 bg-white">
-          <div className="flex items-center gap-2 mb-2">
-            <div className={`w-3 h-3 rounded-full ${getStatusBadgeColor(status)}`}></div>
+        <div className="p-3 border-b border-gray-200 bg-white">
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${getStatusBadgeColor(status)}`}></div>
             <h3 className="font-semibold text-sm text-gray-900">
               {status}
             </h3>
-            <span className="ml-auto text-xs text-gray-500 font-medium">
+            <span className="ml-auto text-xs text-gray-500">
               {cards.length}
             </span>
           </div>
