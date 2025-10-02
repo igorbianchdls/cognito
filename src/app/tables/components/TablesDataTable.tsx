@@ -14,6 +14,7 @@ import {
 } from '@tanstack/react-table';
 import { ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -30,6 +31,53 @@ interface TablesDataTableProps {
   tableName: string | null;
   filters?: FilterState[];
 }
+
+// Helper function to get badge color
+const getBadgeColor = (field: string, value: string): string => {
+  const valueLower = String(value).toLowerCase();
+
+  // Status colors
+  if (field === 'status' || field === 'etapa') {
+    if (valueLower.includes('pago') || valueLower.includes('conclu') || valueLower.includes('aprovado') || valueLower.includes('autorizada') || valueLower.includes('ganho')) {
+      return 'bg-green-500 text-white hover:bg-green-600';
+    }
+    if (valueLower.includes('pendente') || valueLower.includes('draft') || valueLower.includes('fazer') || valueLower.includes('qualifica')) {
+      return 'bg-yellow-500 text-white hover:bg-yellow-600';
+    }
+    if (valueLower.includes('vencido') || valueLower.includes('cancelad') || valueLower.includes('perdido')) {
+      return 'bg-red-500 text-white hover:bg-red-600';
+    }
+    if (valueLower.includes('andamento') || valueLower.includes('progresso') || valueLower.includes('revisão') || valueLower.includes('negociacao') || valueLower.includes('proposta')) {
+      return 'bg-blue-500 text-white hover:bg-blue-600';
+    }
+    if (valueLower.includes('prospec')) {
+      return 'bg-purple-500 text-white hover:bg-purple-600';
+    }
+  }
+
+  // Category/Type colors
+  if (field === 'categoria' || field === 'tipo') {
+    const colors = [
+      'bg-purple-500 text-white hover:bg-purple-600',
+      'bg-pink-500 text-white hover:bg-pink-600',
+      'bg-indigo-500 text-white hover:bg-indigo-600',
+      'bg-teal-500 text-white hover:bg-teal-600',
+      'bg-orange-500 text-white hover:bg-orange-600',
+    ];
+    const index = value.length % colors.length;
+    return colors[index];
+  }
+
+  // Prioridade
+  if (field === 'prioridade') {
+    if (valueLower.includes('urgente')) return 'bg-red-500 text-white hover:bg-red-600';
+    if (valueLower.includes('alta')) return 'bg-orange-500 text-white hover:bg-orange-600';
+    if (valueLower.includes('média')) return 'bg-blue-500 text-white hover:bg-blue-600';
+    if (valueLower.includes('baixa')) return 'bg-gray-500 text-white hover:bg-gray-600';
+  }
+
+  return 'bg-gray-500 text-white hover:bg-gray-600';
+};
 
 export default function TablesDataTable({ tableName, filters = [] }: TablesDataTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -70,12 +118,23 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
       },
       cell: ({ row }) => {
         const value = row.getValue(colDef.field || '');
+        const fieldName = colDef.field || '';
 
         // Format based on column type
         if (value === null || value === undefined) return <span className="text-gray-400">—</span>;
 
+        // Badge for special fields (status, etapa, categoria, tipo, prioridade)
+        if (fieldName === 'status' || fieldName === 'etapa' || fieldName === 'categoria' || fieldName === 'tipo' || fieldName === 'prioridade') {
+          const strValue = String(value);
+          return (
+            <Badge className={`${getBadgeColor(fieldName, strValue)} font-medium`}>
+              {strValue}
+            </Badge>
+          );
+        }
+
         // Currency formatting
-        if (colDef.field?.includes('valor') || colDef.field?.includes('preco')) {
+        if (fieldName.includes('valor') || fieldName.includes('preco')) {
           const num = Number(value);
           if (!isNaN(num)) {
             return new Intl.NumberFormat('pt-BR', {
@@ -86,7 +145,7 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
         }
 
         // Date formatting
-        if (colDef.field?.includes('data')) {
+        if (fieldName.includes('data')) {
           const date = new Date(String(value));
           if (!isNaN(date.getTime())) {
             return date.toLocaleDateString('pt-BR');
@@ -181,11 +240,11 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
       {/* Table with horizontal scroll */}
       <div className="flex-1 overflow-x-auto border-b custom-scrollbar">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-gray-100">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} className="whitespace-nowrap">
+                  <TableHead key={header.id} className="whitespace-nowrap font-semibold">
                     {header.isPlaceholder
                       ? null
                       : flexRender(header.column.columnDef.header, header.getContext())}
@@ -199,7 +258,7 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
               table.getRowModel().rows.map((row) => (
                 <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="whitespace-nowrap">
+                    <TableCell key={cell.id} className="whitespace-nowrap border-b border-gray-200">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}
