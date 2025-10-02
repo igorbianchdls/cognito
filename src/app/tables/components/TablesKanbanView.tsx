@@ -81,10 +81,6 @@ function SortableCard({ card, titleField, datasetConfig, statusBadgeColor }: {
   );
   const valor = valorField ? card.data[valorField.field || ''] : null;
 
-  // Alerta: vencido, urgente
-  const statusLower = String(card.status || '').toLowerCase();
-  const isUrgent = statusLower.includes('vencid') || statusLower.includes('urgente');
-
   const formatCurrency = (value: unknown): string => {
     const num = Number(value);
     if (!isNaN(num)) {
@@ -95,6 +91,13 @@ function SortableCard({ card, titleField, datasetConfig, statusBadgeColor }: {
     }
     return String(value);
   };
+
+  // Formatar valor ANTES do JSX
+  const valorFormatado = valor ? formatCurrency(valor) : null;
+
+  // Alerta: vencido, urgente
+  const statusLower = String(card.status || '').toLowerCase();
+  const isUrgent = statusLower.includes('vencid') || statusLower.includes('urgente');
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
@@ -115,10 +118,10 @@ function SortableCard({ card, titleField, datasetConfig, statusBadgeColor }: {
           {/* 3. Footer: ícone + valor + alerta */}
           <div className="flex items-center justify-between pt-1">
             {/* Valor com ícone */}
-            {valor && (
+            {valorFormatado && (
               <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
                 <User className="w-3.5 h-3.5 text-gray-400" />
-                {formatCurrency(valor)}
+                {valorFormatado}
               </div>
             )}
 
