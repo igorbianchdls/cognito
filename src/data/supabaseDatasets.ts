@@ -26,7 +26,7 @@ export async function fetchSupabaseTable(tableName: string) {
 // Função genérica para atualizar um registro de uma tabela
 export async function updateSupabaseTableRow(
   tableName: string,
-  id: number,
+  id: number | string,
   updates: Record<string, unknown>
 ) {
   try {
