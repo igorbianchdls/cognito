@@ -443,7 +443,7 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
   // Inicializar columnOrder quando as colunas mudarem
   useEffect(() => {
     if (columns.length > 0 && columnOrder.length === 0) {
-      setColumnOrder(columns.map((col) => col.accessorKey as string));
+      setColumnOrder(columns.map((col) => (col as { id?: string }).id || '').filter(Boolean));
     }
   }, [columns, columnOrder.length]);
 
