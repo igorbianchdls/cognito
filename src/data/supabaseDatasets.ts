@@ -23,6 +23,28 @@ export async function fetchSupabaseTable(tableName: string) {
   }
 }
 
+// Função genérica para atualizar um registro de uma tabela
+export async function updateSupabaseTableRow(
+  tableName: string,
+  id: number,
+  updates: Record<string, unknown>
+) {
+  try {
+    const { data, error } = await supabase
+      .from(tableName)
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error(`Error updating table ${tableName}:`, error);
+    throw error;
+  }
+}
+
 // Configurações de colunas para Contas a Receber
 export const contasAReceberColumns: ColDef[] = [
   {

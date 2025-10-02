@@ -25,7 +25,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useSupabaseTables } from '../hooks/useSupabaseTables';
-import { SUPABASE_DATASETS } from '@/data/supabaseDatasets';
+import { SUPABASE_DATASETS, updateSupabaseTableRow } from '@/data/supabaseDatasets';
 import { FilterState } from '@/components/sheets/core/TableHeader';
 import {
   $rowHeight,
@@ -169,7 +169,12 @@ const getBadgeBorderColor = (field: string, value: string): string => {
 export default function TablesDataTable({ tableName, filters = [] }: TablesDataTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const { data, loading, error } = useSupabaseTables(tableName || '');
+  const { data, loading, error, refetch } = useSupabaseTables(tableName || '');
+
+  // Estados para edição inline
+  const [editingCell, setEditingCell] = useState<{ rowId: string; columnId: string } | null>(null);
+  const [editValue, setEditValue] = useState<string>('');
+  const [savingCell, setSavingCell] = useState<{ rowId: string; columnId: string } | null>(null);
 
   // Table preferences from nanostores
   const rowHeight = useStore($rowHeight);
@@ -193,6 +198,49 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
       }));
     setColumnFilters(tanstackFilters);
   }, [filters]);
+
+  // Funções de edição inline
+  const handleCellClick = (rowId: string, columnId: string, currentValue: unknown, isEditable: boolean) => {
+    if (!isEditable) return;
+    setEditingCell({ rowId, columnId });
+    setEditValue(currentValue != null ? String(currentValue) : '');
+  };
+
+  const handleCellSave = async (rowId: string, columnId: string) => {
+    if (!tableName) return;
+
+    const row = data.find((r) => String(r.id) === rowId);
+    if (!row) return;
+
+    // Se o valor não mudou, apenas cancela a edição
+    const currentValue = row[columnId];
+    if (String(currentValue) === editValue) {
+      setEditingCell(null);
+      return;
+    }
+
+    setSavingCell({ rowId, columnId });
+
+    try {
+      await updateSupabaseTableRow(tableName, Number(row.id), {
+        [columnId]: editValue,
+      });
+
+      // Recarrega os dados
+      refetch();
+      setEditingCell(null);
+    } catch (err) {
+      console.error('Erro ao salvar:', err);
+      alert('Erro ao salvar alteração');
+    } finally {
+      setSavingCell(null);
+    }
+  };
+
+  const handleCellCancel = () => {
+    setEditingCell(null);
+    setEditValue('');
+  };
 
   // Get column definitions from SUPABASE_DATASETS
   const datasetConfig = SUPABASE_DATASETS.find(ds => ds.tableName === tableName);
@@ -223,55 +271,104 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
       cell: ({ row }) => {
         const value = row.getValue(colDef.field || '');
         const fieldName = colDef.field || '';
+        const rowId = String(row.original.id);
+        const isEditable = colDef.editable !== false;
+        const isEditing = editingCell?.rowId === rowId && editingCell?.columnId === fieldName;
+        const isSaving = savingCell?.rowId === rowId && savingCell?.columnId === fieldName;
 
-        // Format based on column type
-        if (value === null || value === undefined) return <span className="text-gray-400">—</span>;
-
-        // Badge for special fields (status, etapa, categoria, tipo, prioridade)
-        if (fieldName === 'status' || fieldName === 'etapa' || fieldName === 'categoria' || fieldName === 'tipo' || fieldName === 'prioridade') {
-          const strValue = String(value);
+        // Se está editando esta célula
+        if (isEditing) {
           return (
-            <Badge
-              className="px-2 py-0.5 text-xs font-normal border rounded-sm"
-              style={{
-                backgroundColor: getBadgeBackgroundColor(fieldName, strValue),
-                color: getBadgeTextColor(fieldName, strValue),
-                borderColor: getBadgeBorderColor(fieldName, strValue),
+            <input
+              type="text"
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onBlur={() => handleCellSave(rowId, fieldName)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleCellSave(rowId, fieldName);
+                } else if (e.key === 'Escape') {
+                  handleCellCancel();
+                }
               }}
-            >
-              {strValue}
-            </Badge>
+              autoFocus
+              className="w-full px-2 py-1 border border-blue-500 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{
+                fontSize: `${fontSize}px`,
+                fontFamily: cellFontFamily === 'Inter' ? 'var(--font-inter)' : 'var(--font-geist-sans)',
+              }}
+            />
           );
         }
 
-        // Currency formatting
-        if (fieldName.includes('valor') || fieldName.includes('preco')) {
-          const num = Number(value);
-          if (!isNaN(num)) {
-            return new Intl.NumberFormat('pt-BR', {
-              style: 'currency',
-              currency: 'BRL'
-            }).format(num);
+        // Indicador de loading durante o salvamento
+        const cellContent = (() => {
+          // Format based on column type
+          if (value === null || value === undefined) return <span className="text-gray-400">—</span>;
+
+          // Badge for special fields (status, etapa, categoria, tipo, prioridade)
+          if (fieldName === 'status' || fieldName === 'etapa' || fieldName === 'categoria' || fieldName === 'tipo' || fieldName === 'prioridade') {
+            const strValue = String(value);
+            return (
+              <Badge
+                className="px-2 py-0.5 text-xs font-normal border rounded-sm"
+                style={{
+                  backgroundColor: getBadgeBackgroundColor(fieldName, strValue),
+                  color: getBadgeTextColor(fieldName, strValue),
+                  borderColor: getBadgeBorderColor(fieldName, strValue),
+                }}
+              >
+                {strValue}
+              </Badge>
+            );
           }
-        }
 
-        // Date formatting
-        if (fieldName.includes('data')) {
-          const date = new Date(String(value));
-          if (!isNaN(date.getTime())) {
-            return date.toLocaleDateString('pt-BR');
+          // Currency formatting
+          if (fieldName.includes('valor') || fieldName.includes('preco')) {
+            const num = Number(value);
+            if (!isNaN(num)) {
+              return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+              }).format(num);
+            }
           }
-        }
 
-        // Boolean formatting
-        if (typeof value === 'boolean') {
-          return value ? '✓' : '✗';
-        }
+          // Date formatting
+          if (fieldName.includes('data')) {
+            const date = new Date(String(value));
+            if (!isNaN(date.getTime())) {
+              return date.toLocaleDateString('pt-BR');
+            }
+          }
 
-        return String(value);
+          // Boolean formatting
+          if (typeof value === 'boolean') {
+            return value ? '✓' : '✗';
+          }
+
+          return String(value);
+        })();
+
+        return (
+          <div
+            onClick={() => handleCellClick(rowId, fieldName, value, isEditable)}
+            className={`${isEditable ? 'cursor-pointer hover:bg-gray-50' : ''} ${isSaving ? 'opacity-50' : ''}`}
+            title={isEditable ? 'Clique para editar' : ''}
+          >
+            {isSaving ? (
+              <span className="flex items-center gap-2">
+                <span className="animate-spin">⏳</span>
+                {cellContent}
+              </span>
+            ) : (
+              cellContent
+            )}
+          </div>
+        );
       },
     }));
-  }, [datasetConfig, headerFontSize, headerFontFamily, headerLetterSpacing]);
+  }, [datasetConfig, headerFontSize, headerFontFamily, headerLetterSpacing, editingCell, editValue, savingCell, fontSize, cellFontFamily]);
 
   const table = useReactTable({
     data,

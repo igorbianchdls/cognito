@@ -10,7 +10,13 @@ interface TablesSidebarProps {
 }
 
 export default function TablesSidebar({ selectedTable, onSelectTable }: TablesSidebarProps) {
-  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>(() => {
+    const categories = new Set(SUPABASE_DATASETS.map(d => d.category));
+    return Array.from(categories).reduce((acc, category) => {
+      acc[category] = true;
+      return acc;
+    }, {} as Record<string, boolean>);
+  });
 
   // Group datasets by category
   const groupedDatasets = SUPABASE_DATASETS.reduce((acc, dataset) => {
