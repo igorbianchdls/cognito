@@ -139,7 +139,7 @@ export default function TablesGalleryView({ tableName }: TablesGalleryViewProps)
         {data.map((row: Record<string, unknown>) => {
           const title = titleField ? row[titleField] : row.id;
           const statusField = Object.keys(row).find(key => key === 'status');
-          const status = statusField ? row[statusField] : null;
+          const status = statusField ? String(row[statusField] || '') : '';
 
           return (
             <Card
@@ -157,9 +157,9 @@ export default function TablesGalleryView({ tableName }: TablesGalleryViewProps)
                   <h3 className="font-semibold text-gray-900 line-clamp-2 flex-1">
                     {formatValue(title, titleField || '')}
                   </h3>
-                  {status && (
-                    <Badge className={getStatusColor(String(status))}>
-                      {String(status)}
+                  {status && status !== '' && (
+                    <Badge className={getStatusColor(status)}>
+                      {status}
                     </Badge>
                   )}
                 </div>
