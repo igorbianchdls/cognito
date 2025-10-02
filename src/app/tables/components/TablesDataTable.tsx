@@ -30,6 +30,7 @@ import { FilterState } from '@/components/sheets/core/TableHeader';
 import {
   $rowHeight,
   $fontSize,
+  $headerFontSize,
   $cellTextColor,
   $headerTextColor,
 } from '@/stores/table/tablePreferences';
@@ -94,6 +95,7 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
   // Table preferences from nanostores
   const rowHeight = useStore($rowHeight);
   const fontSize = useStore($fontSize);
+  const headerFontSize = useStore($headerFontSize);
   const cellTextColor = useStore($cellTextColor);
   const headerTextColor = useStore($headerTextColor);
 
@@ -261,7 +263,7 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
                     key={header.id}
                     className="whitespace-nowrap font-semibold"
                     style={{
-                      fontSize: `${fontSize}px`,
+                      fontSize: `${headerFontSize}px`,
                       color: headerTextColor,
                     }}
                   >
@@ -282,7 +284,8 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
                       key={cell.id}
                       className="whitespace-nowrap border-b border-gray-200"
                       style={{
-                        height: `${rowHeight}px`,
+                        paddingTop: `${(rowHeight - fontSize) / 2}px`,
+                        paddingBottom: `${(rowHeight - fontSize) / 2}px`,
                         fontSize: `${fontSize}px`,
                         color: cellTextColor,
                       }}
