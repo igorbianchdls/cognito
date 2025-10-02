@@ -5,7 +5,7 @@ import { useSupabaseTables } from '../hooks/useSupabaseTables';
 import { SUPABASE_DATASETS } from '@/data/supabaseDatasets';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { User, AlertTriangle } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import {
   DndContext,
   DragEndEvent,
@@ -63,15 +63,29 @@ function SortableCard({ card, titleField, datasetConfig, statusBadgeColor }: {
   const titleValue = titleField ? card.data[titleField] : card.id;
   const title = String(titleValue || '');
 
-  // Subtitle: empresa, company, contato, cliente
-  const subtitleField = datasetConfig?.columnDefs.find(
-    col => col.field?.includes('empresa') ||
-           col.field?.includes('company') ||
-           col.field?.includes('contato') ||
-           col.field?.includes('cliente')
+  // Categoria: categoria, category
+  const categoriaField = datasetConfig?.columnDefs.find(
+    col => col.field?.includes('categoria') || col.field?.includes('category')
   );
-  const subtitleValue = subtitleField ? card.data[subtitleField.field || ''] : null;
-  const subtitle = subtitleValue ? String(subtitleValue) : null;
+  const categoria = categoriaField ? String(card.data[categoriaField.field || ''] || '') : null;
+
+  // Tipo: tipo, type
+  const tipoField = datasetConfig?.columnDefs.find(
+    col => col.field?.includes('tipo') || col.field?.includes('type')
+  );
+  const tipo = tipoField ? String(card.data[tipoField.field || ''] || '') : null;
+
+  // Prioridade: prioridade, priority
+  const prioridadeField = datasetConfig?.columnDefs.find(
+    col => col.field?.includes('prioridade') || col.field?.includes('priority')
+  );
+  const prioridade = prioridadeField ? String(card.data[prioridadeField.field || ''] || '') : null;
+
+  // Sprint: sprint, iteracao
+  const sprintField = datasetConfig?.columnDefs.find(
+    col => col.field?.includes('sprint') || col.field?.includes('iteracao')
+  );
+  const sprint = sprintField ? String(card.data[sprintField.field || ''] || '') : null;
 
   // Valor: valor, amount, preco
   const valorField = datasetConfig?.columnDefs.find(
@@ -92,7 +106,6 @@ function SortableCard({ card, titleField, datasetConfig, statusBadgeColor }: {
     return String(value);
   };
 
-  // Formatar valor ANTES do JSX
   const valorFormatado = valor ? formatCurrency(valor) : null;
 
   // Alerta: vencido, urgente
@@ -107,34 +120,54 @@ function SortableCard({ card, titleField, datasetConfig, statusBadgeColor }: {
           boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 2px 3px -2px rgba(0,0,0,0.05), 0 3px 12px -4px rgba(0,0,0,0.04), 0 4px 16px -8px rgba(0,0,0,0.04)'
         }}
       >
-        <CardContent className="p-2 space-y-2">
-          {/* 1. Título - negrito preto */}
-          <h4 className="font-bold text-sm text-gray-900 line-clamp-2">
-            {title}
-          </h4>
+        <CardContent className="p-2.5 space-y-2.5">
+          {/* 1. Emoji + Título */}
+          <div className="flex items-start gap-1.5">
+            <span className="text-base leading-none">{datasetConfig?.icon || '📄'}</span>
+            <h4 className="font-semibold text-sm text-gray-900 line-clamp-2 flex-1">
+              {title}
+            </h4>
+          </div>
 
-          {/* 2. Subtítulo - normal cinza */}
-          {subtitle && (
-            <p className="text-sm text-gray-500 font-normal line-clamp-1">
-              {subtitle}
-            </p>
+          {/* 2. Avatares hardcoded */}
+          <div className="flex -space-x-1.5">
+            <div className="w-6 h-6 rounded-full bg-blue-500 border-2 border-white flex items-center justify-center text-white text-xs font-medium">
+              JD
+            </div>
+            <div className="w-6 h-6 rounded-full bg-green-500 border-2 border-white flex items-center justify-center text-white text-xs font-medium">
+              AM
+            </div>
+          </div>
+
+          {/* 3. Badges (categoria, tipo, prioridade) */}
+          {(categoria || tipo || prioridade) && (
+            <div className="flex flex-wrap gap-1.5">
+              {categoria && (
+                <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                  {categoria}
+                </Badge>
+              )}
+              {tipo && (
+                <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                  {tipo}
+                </Badge>
+              )}
+              {prioridade && (
+                <Badge variant="secondary" className="text-xs px-2 py-0.5">
+                  {prioridade}
+                </Badge>
+              )}
+            </div>
           )}
 
-          {/* 3. Footer: ícone + valor + alerta */}
-          <div className="flex items-center justify-between pt-1">
-            {/* Valor com ícone */}
-            {valorFormatado && (
-              <div className="flex items-center gap-1 text-sm font-medium text-gray-900">
-                <User className="w-3.5 h-3.5 text-gray-400" />
-                {valorFormatado}
-              </div>
-            )}
-
-            {/* Badge alerta */}
-            {isUrgent && (
-              <AlertTriangle className="w-4 h-4 text-yellow-500" />
-            )}
-          </div>
+          {/* 4. Footer info (sprint, valor, alerta) */}
+          {(sprint || valorFormatado || isUrgent) && (
+            <div className="flex items-center gap-2 text-xs text-gray-500">
+              {sprint && <span>{sprint}</span>}
+              {valorFormatado && <span className="font-medium text-gray-900">{valorFormatado}</span>}
+              {isUrgent && <AlertTriangle className="w-3.5 h-3.5 text-yellow-500" />}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
