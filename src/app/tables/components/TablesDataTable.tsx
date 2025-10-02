@@ -471,12 +471,21 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
         .custom-scrollbar::-webkit-scrollbar-thumb {
           background: #9ca3af;
           border-radius: 3px;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+        .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+          opacity: 1;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: #6b7280;
         }
         .custom-scrollbar {
           scrollbar-width: thin;
+          scrollbar-color: transparent transparent;
+          transition: scrollbar-color 0.3s ease;
+        }
+        .custom-scrollbar:hover {
           scrollbar-color: #9ca3af transparent;
         }
       `}} />
