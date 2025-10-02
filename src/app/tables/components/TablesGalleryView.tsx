@@ -179,11 +179,13 @@ export default function TablesGalleryView({ tableName, showCover = true }: Table
       <div className="h-full overflow-y-auto bg-white p-6 gallery-scrollbar">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {data.map((row: Record<string, unknown>) => {
-          const title = titleField ? row[titleField] : row.id;
+          const titleValue = titleField ? row[titleField] : row.id;
+          const title = String(titleValue || '');
           const statusField = Object.keys(row).find(key => key === 'status');
           const status = statusField ? String(row[statusField] || '') : '';
           const descField = displayFields.find(f => f.field?.includes('descri'));
-          const description = descField ? row[descField.field || ''] : null;
+          const descriptionValue = descField ? row[descField.field || ''] : null;
+          const description = descriptionValue ? String(descriptionValue) : null;
 
           return (
             <Card
@@ -200,7 +202,7 @@ export default function TablesGalleryView({ tableName, showCover = true }: Table
               <CardContent className="p-6 space-y-4">
                 {/* Title - GRANDE */}
                 <h3 className="font-bold text-xl text-gray-900 line-clamp-2">
-                  {formatValue(title, titleField || '')}
+                  {title}
                 </h3>
 
                 {/* Status Section */}
@@ -218,7 +220,7 @@ export default function TablesGalleryView({ tableName, showCover = true }: Table
                   <div className="space-y-1">
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Descrição</p>
                     <p className="text-sm text-gray-700 line-clamp-3">
-                      {formatValue(description, descField?.field || '')}
+                      {description}
                     </p>
                   </div>
                 )}
