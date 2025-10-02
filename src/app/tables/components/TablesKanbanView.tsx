@@ -145,7 +145,7 @@ function SortableCard({ card, titleField, datasetConfig, statusBadgeColor }: {
           boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 2px 3px -2px rgba(0,0,0,0.05), 0 3px 12px -4px rgba(0,0,0,0.04), 0 4px 16px -8px rgba(0,0,0,0.04)'
         }}
       >
-        <CardContent className="px-2.5 pt-2 pb-2.5 space-y-2.5">
+        <CardContent className="px-2.5 pt-1.5 pb-1.5 space-y-2">
           {/* 1. Emoji + Título */}
           <div className="flex items-start gap-1.5">
             <span className="text-base leading-none">{datasetConfig?.icon || '📄'}</span>
@@ -186,21 +186,6 @@ function SortableCard({ card, titleField, datasetConfig, statusBadgeColor }: {
               )}
             </div>
           )}
-
-          {/* 4. Footer info (sprint, valor, alerta) */}
-          {(sprint || valorFormatado || isUrgent) && (
-            <div className="flex items-center gap-2 text-xs">
-              {sprint && (
-                <span className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
-                  {sprint}
-                </span>
-              )}
-              {valorFormatado && (
-                <span className="font-medium text-gray-900">{valorFormatado}</span>
-              )}
-              {isUrgent && <AlertTriangle className="w-3.5 h-3.5 text-yellow-500" />}
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
@@ -233,7 +218,7 @@ function DroppableColumn({
       ref={setNodeRef}
       className="flex-shrink-0 w-80"
     >
-      <div className={`rounded-lg border border-gray-200 h-full flex flex-col bg-gray-50 ${isOver ? 'ring-2 ring-blue-400 bg-blue-50' : ''}`}>
+      <div className={`rounded-lg border border-gray-200 flex flex-col bg-gray-50 ${isOver ? 'ring-2 ring-blue-400 bg-blue-50' : ''}`}>
         {/* Column Header */}
         <div className="p-3 border-b border-gray-200 bg-white">
           <div className="flex items-center gap-2">
@@ -247,8 +232,8 @@ function DroppableColumn({
           </div>
         </div>
 
-        {/* Column Body - Scrollable */}
-        <div className="flex-1 overflow-y-auto px-2 pt-2 pb-3 kanban-scrollbar">
+        {/* Column Body */}
+        <div className="px-2 pt-2 pb-3">
           <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
             {cards.map((card) => (
               <SortableCard
@@ -527,8 +512,8 @@ export default function TablesKanbanView({ tableName }: TablesKanbanViewProps) {
           scrollbar-color: #9ca3af transparent;
         }
       `}} />
-      <div className="h-full overflow-x-auto bg-white px-3 py-3 kanban-scrollbar">
-        <div className="flex gap-4 h-full min-w-max">
+      <div className="h-full overflow-auto bg-white px-3 py-3 kanban-scrollbar">
+        <div className="flex gap-4 min-w-max">
           {columns.map((status) => {
             const cards = kanbanData[status];
 
