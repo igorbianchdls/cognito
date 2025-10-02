@@ -5,6 +5,7 @@ import { SidebarShadcn } from '@/components/navigation/SidebarShadcn';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import TablesHeader from './components/TablesHeader';
 import TablesDataTable from './components/TablesDataTable';
+import TablesGalleryView from './components/TablesGalleryView';
 import TablesSidebar from './components/TablesSidebar';
 import { FilterState, SortState } from '@/components/sheets/core/TableHeader';
 
@@ -12,7 +13,7 @@ export default function TablesPage() {
   const [selectedTable, setSelectedTable] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterState[]>([]);
   const [sorting, setSorting] = useState<SortState[]>([]);
-  const [view, setView] = useState<'grid' | 'list'>('grid');
+  const [view, setView] = useState<'grid' | 'gallery'>('grid');
 
   return (
     <SidebarProvider>
@@ -27,9 +28,13 @@ export default function TablesPage() {
             onViewChange={setView}
           />
 
-          {/* Table com scroll horizontal */}
+          {/* Conteúdo: Table ou Gallery */}
           <div className="flex-1 overflow-hidden">
-            <TablesDataTable tableName={selectedTable} filters={filters} />
+            {view === 'grid' ? (
+              <TablesDataTable tableName={selectedTable} filters={filters} />
+            ) : (
+              <TablesGalleryView tableName={selectedTable} />
+            )}
           </div>
         </div>
 

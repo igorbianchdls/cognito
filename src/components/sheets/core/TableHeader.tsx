@@ -26,7 +26,7 @@ interface TableHeaderProps {
   className?: string;
   onFiltersChange?: (filters: FilterState[]) => void;
   onSortChange?: (sorting: SortState[]) => void;
-  onViewChange?: (view: 'grid' | 'list') => void;
+  onViewChange?: (view: 'grid' | 'gallery') => void;
 }
 
 export default function TableHeader({
@@ -35,7 +35,7 @@ export default function TableHeader({
   onSortChange,
   onViewChange
 }: TableHeaderProps) {
-  const [activeView, setActiveView] = useState<'grid' | 'list'>('grid');
+  const [activeView, setActiveView] = useState<'grid' | 'gallery'>('grid');
   const [filters, setFilters] = useState<FilterState[]>([]);
   const [sorting, setSorting] = useState<SortState[]>([]);
   const datasetInfo = getActiveDatasetInfo();
@@ -64,7 +64,7 @@ export default function TableHeader({
     onFiltersChange?.(updatedFilters);
   };
 
-  const handleViewChange = (view: 'grid' | 'list') => {
+  const handleViewChange = (view: 'grid' | 'gallery') => {
     setActiveView(view);
     onViewChange?.(view);
   };
@@ -94,9 +94,13 @@ export default function TableHeader({
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  {activeView === 'grid' ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                  )}
                 </svg>
-                {activeView === 'grid' ? 'Grid' : 'List'}
+                {activeView === 'grid' ? 'Table' : 'Gallery'}
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
@@ -109,13 +113,13 @@ export default function TableHeader({
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                 </svg>
-                Grid View
+                Table View
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleViewChange('list')}>
+              <DropdownMenuItem onClick={() => handleViewChange('gallery')}>
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zM14 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
                 </svg>
-                List View
+                Gallery View
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
