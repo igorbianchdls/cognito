@@ -5,6 +5,7 @@ import { useStore } from '@nanostores/react';
 import { getActiveDatasetInfo } from '@/stores/sheets/sheetsStore';
 import {
   $rowHeight,
+  $headerRowHeight,
   $fontSize,
   $headerFontSize,
   $cellTextColor,
@@ -53,6 +54,7 @@ export default function TableHeader({
 
   // Table preferences from nanostores
   const rowHeight = useStore($rowHeight);
+  const headerRowHeight = useStore($headerRowHeight);
   const fontSize = useStore($fontSize);
   const headerFontSize = useStore($headerFontSize);
   const cellTextColor = useStore($cellTextColor);
@@ -321,7 +323,7 @@ export default function TableHeader({
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
                 </svg>
-                {rowHeight}px
+                Row {rowHeight}px
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
@@ -332,6 +334,26 @@ export default function TableHeader({
               <DropdownMenuItem onClick={() => $rowHeight.set(40)}>40px - Normal</DropdownMenuItem>
               <DropdownMenuItem onClick={() => $rowHeight.set(48)}>48px - Medium</DropdownMenuItem>
               <DropdownMenuItem onClick={() => $rowHeight.set(56)}>56px - Large</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-1 px-2 py-1 text-sm text-gray-600 hover:bg-gray-100 rounded">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+                Header {headerRowHeight}px
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuLabel>Header Row Height</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => $headerRowHeight.set(24)}>24px - Compact</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => $headerRowHeight.set(32)}>32px - Small</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => $headerRowHeight.set(40)}>40px - Normal</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => $headerRowHeight.set(48)}>48px - Medium</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => $headerRowHeight.set(56)}>56px - Large</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 

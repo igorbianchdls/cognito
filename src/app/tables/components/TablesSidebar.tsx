@@ -1,6 +1,7 @@
 'use client';
 
-import { Database } from 'lucide-react';
+import { useState } from 'react';
+import { Database, ChevronDown } from 'lucide-react';
 import { SUPABASE_DATASETS } from '@/data/supabaseDatasets';
 
 interface TablesSidebarProps {
@@ -9,6 +10,8 @@ interface TablesSidebarProps {
 }
 
 export default function TablesSidebar({ selectedTable, onSelectTable }: TablesSidebarProps) {
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+
   // Group datasets by category
   const groupedDatasets = SUPABASE_DATASETS.reduce((acc, dataset) => {
     const category = dataset.category;
@@ -19,19 +22,34 @@ export default function TablesSidebar({ selectedTable, onSelectTable }: TablesSi
     return acc;
   }, {} as Record<string, typeof SUPABASE_DATASETS>);
 
+  const toggleCollapse = (category: string) => {
+    setCollapsed(prev => ({ ...prev, [category]: !prev[category] }));
+  };
+
   return (
     <aside className="w-64 border-l bg-sidebar flex-shrink-0 overflow-y-auto">
       <div className="p-4">
         <div className="space-y-4">
           {Object.entries(groupedDatasets).map(([category, datasets]) => (
             <div key={category}>
-              {/* Category label */}
-              <h3 className="text-xs font-semibold text-foreground/50 uppercase tracking-wide mb-2 px-2">
-                {category}
-              </h3>
+              {/* Category label - collapsible */}
+              <button
+                onClick={() => toggleCollapse(category)}
+                className="w-full flex items-center justify-between px-2 mb-2 hover:opacity-70 transition-opacity"
+              >
+                <h3 className="text-xs font-semibold text-foreground/50 uppercase tracking-wide">
+                  {category}
+                </h3>
+                <ChevronDown
+                  className={`h-3 w-3 text-foreground/50 transition-transform ${
+                    collapsed[category] ? '-rotate-90' : ''
+                  }`}
+                />
+              </button>
 
               {/* Datasets in category */}
-              <div className="space-y-0.5">
+              {!collapsed[category] && (
+                <div className="space-y-0.5">
                 {datasets.map((dataset) => {
                   const isSelected = selectedTable === dataset.tableName;
 
@@ -50,7 +68,8 @@ export default function TablesSidebar({ selectedTable, onSelectTable }: TablesSi
                     </button>
                   );
                 })}
-              </div>
+                </div>
+              )}
             </div>
           ))}
         </div>

@@ -1,7 +1,10 @@
 import { atom } from 'nanostores';
 
-// Row height in pixels
+// Row height in pixels (data cells)
 export const $rowHeight = atom<number>(40);
+
+// Header row height in pixels
+export const $headerRowHeight = atom<number>(40);
 
 // Cell font size in pixels
 export const $fontSize = atom<number>(14);

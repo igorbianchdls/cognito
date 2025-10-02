@@ -29,6 +29,7 @@ import { SUPABASE_DATASETS } from '@/data/supabaseDatasets';
 import { FilterState } from '@/components/sheets/core/TableHeader';
 import {
   $rowHeight,
+  $headerRowHeight,
   $fontSize,
   $headerFontSize,
   $cellTextColor,
@@ -94,6 +95,7 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
 
   // Table preferences from nanostores
   const rowHeight = useStore($rowHeight);
+  const headerRowHeight = useStore($headerRowHeight);
   const fontSize = useStore($fontSize);
   const headerFontSize = useStore($headerFontSize);
   const cellTextColor = useStore($cellTextColor);
@@ -125,6 +127,7 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
             className="hover:bg-gray-100"
+            style={{ fontSize: `${headerFontSize}px` }}
           >
             {colDef.headerName || colDef.field}
             <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -175,7 +178,7 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
         return String(value);
       },
     }));
-  }, [datasetConfig]);
+  }, [datasetConfig, headerFontSize]);
 
   const table = useReactTable({
     data,
@@ -263,6 +266,8 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
                     key={header.id}
                     className="whitespace-nowrap font-semibold"
                     style={{
+                      paddingTop: `${(headerRowHeight - headerFontSize) / 2}px`,
+                      paddingBottom: `${(headerRowHeight - headerFontSize) / 2}px`,
                       fontSize: `${headerFontSize}px`,
                       color: headerTextColor,
                     }}
