@@ -222,8 +222,34 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
     setSavingCell({ rowId, columnId });
 
     try {
+      // Converter o tipo baseado no valor original
+      let convertedValue: unknown = editValue;
+
+      // Se o valor original era número
+      if (typeof currentValue === 'number') {
+        convertedValue = editValue === '' ? null : Number(editValue);
+        if (isNaN(convertedValue as number)) {
+          alert('Valor inválido. Digite um número válido.');
+          setSavingCell(null);
+          return;
+        }
+      }
+      // Se o valor original era boolean
+      else if (typeof currentValue === 'boolean') {
+        convertedValue = editValue.toLowerCase() === 'true' || editValue === '1';
+      }
+      // Se é campo de data
+      else if (columnId.includes('data') || columnId.includes('date')) {
+        // Mantém como string ISO para o Supabase
+        convertedValue = editValue;
+      }
+      // String normal
+      else {
+        convertedValue = editValue;
+      }
+
       await updateSupabaseTableRow(tableName, Number(row.id), {
-        [columnId]: editValue,
+        [columnId]: convertedValue,
       });
 
       // Recarrega os dados
@@ -231,7 +257,16 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
       setEditingCell(null);
     } catch (err) {
       console.error('Erro ao salvar:', err);
-      alert('Erro ao salvar alteração');
+
+      // Mostrar erro mais detalhado
+      let errorMessage = 'Erro ao salvar alteração';
+      if (err instanceof Error) {
+        errorMessage = `Erro: ${err.message}`;
+      } else if (typeof err === 'object' && err !== null) {
+        errorMessage = `Erro: ${JSON.stringify(err)}`;
+      }
+
+      alert(errorMessage);
     } finally {
       setSavingCell(null);
     }
