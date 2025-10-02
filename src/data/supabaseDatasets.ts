@@ -1761,6 +1761,284 @@ export const activitiesColumns: ColDef[] = [
   }
 ];
 
+// Configurações de colunas para Projects (Projetos)
+export const projectsColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 80,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'nome',
+    headerName: 'Nome do Projeto',
+    width: 250,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true,
+    cellStyle: { fontWeight: 'bold' }
+  },
+  {
+    field: 'descricao',
+    headerName: 'Descrição',
+    width: 300,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    wrapText: true,
+    autoHeight: true
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    enablePivot: true,
+    cellStyle: (params) => {
+      switch (params.value) {
+        case 'Ativo': return { backgroundColor: '#e3f2fd', color: '#1976d2', fontWeight: 'bold' };
+        case 'Em Progresso': return { backgroundColor: '#e8f5e9', color: '#388e3c', fontWeight: 'bold' };
+        case 'Pausado': return { backgroundColor: '#fff3e0', color: '#f57c00', fontWeight: 'bold' };
+        case 'Concluído': return { backgroundColor: '#f1f8e9', color: '#689f38', fontWeight: 'bold' };
+        case 'Cancelado': return { backgroundColor: '#ffebee', color: '#d32f2f', fontWeight: 'bold' };
+        default: return undefined;
+      }
+    }
+  },
+  {
+    field: 'responsavel',
+    headerName: 'Responsável',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'cor',
+    headerName: 'Cor',
+    width: 100,
+    editable: true,
+    sortable: true,
+    cellStyle: (params) => {
+      return {
+        backgroundColor: params.value || '#3B82F6',
+        color: '#FFFFFF',
+        fontWeight: 'bold',
+        textAlign: 'center'
+      };
+    }
+  },
+  {
+    field: 'data_inicio',
+    headerName: 'Data Início',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'data_fim',
+    headerName: 'Data Fim',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 140,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Tasks (Tarefas)
+export const tasksColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 80,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'titulo',
+    headerName: 'Título',
+    width: 300,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true,
+    cellStyle: { fontWeight: 'bold' }
+  },
+  {
+    field: 'descricao',
+    headerName: 'Descrição',
+    width: 350,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    wrapText: true,
+    autoHeight: true
+  },
+  {
+    field: 'projeto_id',
+    headerName: 'Projeto ID',
+    width: 110,
+    editable: false,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    enablePivot: true,
+    cellStyle: (params) => {
+      switch (params.value) {
+        case 'A Fazer': return { backgroundColor: '#f5f5f5', color: '#616161', fontWeight: 'bold' };
+        case 'Em Progresso': return { backgroundColor: '#e3f2fd', color: '#1976d2', fontWeight: 'bold' };
+        case 'Em Revisão': return { backgroundColor: '#fff3e0', color: '#f57c00', fontWeight: 'bold' };
+        case 'Concluído': return { backgroundColor: '#e8f5e9', color: '#388e3c', fontWeight: 'bold' };
+        default: return undefined;
+      }
+    }
+  },
+  {
+    field: 'prioridade',
+    headerName: 'Prioridade',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    enablePivot: true,
+    cellStyle: (params) => {
+      switch (params.value) {
+        case 'Urgente': return { backgroundColor: '#ffebee', color: '#c62828', fontWeight: 'bold' };
+        case 'Alta': return { backgroundColor: '#fff3e0', color: '#f57c00', fontWeight: 'bold' };
+        case 'Média': return { backgroundColor: '#e3f2fd', color: '#1976d2', fontWeight: 'normal' };
+        case 'Baixa': return { backgroundColor: '#f5f5f5', color: '#757575', fontWeight: 'normal' };
+        default: return undefined;
+      }
+    }
+  },
+  {
+    field: 'assignee',
+    headerName: 'Responsável',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'etiquetas',
+    headerName: 'Etiquetas',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      // Se for array, fazer join
+      if (Array.isArray(params.value)) {
+        return params.value.join(', ');
+      }
+      return params.value;
+    },
+    cellStyle: {
+      backgroundColor: '#f3e5f5',
+      color: '#7b1fa2',
+      fontStyle: 'italic'
+    }
+  },
+  {
+    field: 'data_inicio',
+    headerName: 'Data Início',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'data_vencimento',
+    headerName: 'Vencimento',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value);
+      return date.toLocaleDateString('pt-BR');
+    },
+    cellStyle: (params) => {
+      if (!params.value) return undefined;
+      const hoje = new Date();
+      const vencimento = new Date(params.value);
+
+      // Se já venceu
+      if (vencimento < hoje && params.data.status !== 'Concluído') {
+        return { backgroundColor: '#ffebee', color: '#c62828', fontWeight: 'bold' };
+      }
+
+      // Se vence em até 3 dias
+      const diffTime = vencimento.getTime() - hoje.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays <= 3 && diffDays >= 0 && params.data.status !== 'Concluído') {
+        return { backgroundColor: '#fff3e0', color: '#f57c00', fontWeight: 'bold' };
+      }
+
+      return undefined;
+    }
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 140,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  }
+];
+
 // Definição de datasets do Supabase
 export interface SupabaseDatasetConfig {
   id: string;
@@ -1880,6 +2158,24 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     columnDefs: reelsContentColumns,
     icon: '📱',
     category: 'Marketing'
+  },
+  {
+    id: 'projects',
+    name: 'Projetos',
+    description: 'Quadros e projetos de trabalho',
+    tableName: 'projects',
+    columnDefs: projectsColumns,
+    icon: '📋',
+    category: 'Projetos'
+  },
+  {
+    id: 'tasks',
+    name: 'Tarefas',
+    description: 'Tarefas vinculadas a projetos',
+    tableName: 'tasks',
+    columnDefs: tasksColumns,
+    icon: '✅',
+    category: 'Projetos'
   },
   {
     id: 'estoque',
