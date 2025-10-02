@@ -158,8 +158,28 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
 
   return (
     <div className="flex flex-col h-full">
+      <style dangerouslySetInnerHTML={{__html: `
+        .custom-scrollbar::-webkit-scrollbar {
+          height: 6px;
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #9ca3af;
+          border-radius: 3px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #6b7280;
+        }
+        .custom-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: #9ca3af transparent;
+        }
+      `}} />
       {/* Table with horizontal scroll */}
-      <div className="flex-1 overflow-x-auto border-b">
+      <div className="flex-1 overflow-x-auto border-b custom-scrollbar">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
