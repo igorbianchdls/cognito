@@ -37,10 +37,11 @@ interface KanbanCard {
   data: Record<string, unknown>;
 }
 
-function SortableCard({ card, titleField, datasetConfig }: {
+function SortableCard({ card, titleField, datasetConfig, statusBadgeColor }: {
   card: KanbanCard;
   titleField: string | null;
   datasetConfig: typeof SUPABASE_DATASETS[0] | undefined;
+  statusBadgeColor: string;
 }) {
   const {
     attributes,
@@ -59,10 +60,10 @@ function SortableCard({ card, titleField, datasetConfig }: {
 
   const title = titleField ? card.data[titleField] : card.id;
 
-  // Get first 3 displayable fields
+  // Get first 2 displayable fields (reduced from 3)
   const displayFields = datasetConfig?.columnDefs
     .filter(col => col.field !== 'id' && col.field !== 'status' && col.field !== 'created_at' && col.field !== 'updated_at')
-    .slice(0, 3) || [];
+    .slice(0, 2) || [];
 
   const formatValue = (value: unknown, fieldName: string): string => {
     if (value === null || value === undefined) return '—';
@@ -93,26 +94,34 @@ function SortableCard({ card, titleField, datasetConfig }: {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <Card className="mb-2 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow">
-        <CardContent className="p-3 space-y-2">
-          <h4 className="font-semibold text-sm text-gray-900 line-clamp-2">
-            {formatValue(title, titleField || '')}
-          </h4>
-          <div className="space-y-1">
+      <Card className="mb-2 cursor-grab active:cursor-grabbing hover:shadow-lg transition-all border-gray-200 bg-white">
+        <CardContent className="p-4">
+          {/* Status badge e Título */}
+          <div className="flex items-start gap-2 mb-3">
+            <div className={`w-2 h-2 rounded-full mt-1 ${statusBadgeColor}`}></div>
+            <h4 className="font-semibold text-base text-gray-900 line-clamp-2 flex-1">
+              {formatValue(title, titleField || '')}
+            </h4>
+          </div>
+
+          {/* Informações secundárias */}
+          <div className="space-y-1.5">
             {displayFields.map((field) => {
               const value = card.data[field.field || ''];
               if (!value) return null;
 
               return (
-                <div key={field.field} className="text-xs text-gray-600">
-                  <span className="font-medium">{field.headerName}:</span>{' '}
-                  {formatValue(value, field.field || '')}
+                <div key={field.field} className="text-sm text-gray-600 flex justify-between">
+                  <span className="text-gray-500">{field.headerName}</span>
+                  <span className="font-medium">{formatValue(value, field.field || '')}</span>
                 </div>
               );
             })}
           </div>
-          <div className="text-xs text-gray-400 border-t pt-1">
-            ID: {card.id}
+
+          {/* ID discreto */}
+          <div className="text-xs text-gray-400 mt-3 pt-2 border-t border-gray-100">
+            #{card.id}
           </div>
         </CardContent>
       </Card>
@@ -125,14 +134,14 @@ function DroppableColumn({
   cards,
   titleField,
   datasetConfig,
-  getStatusColor,
+  getStatusBadgeColor,
   getStatusTextColor
 }: {
   status: string;
   cards: KanbanCard[];
   titleField: string | null;
   datasetConfig: typeof SUPABASE_DATASETS[0] | undefined;
-  getStatusColor: (status: string) => string;
+  getStatusBadgeColor: (status: string) => string;
   getStatusTextColor: (status: string) => string;
 }) {
   const { setNodeRef, isOver } = useDroppable({
@@ -146,21 +155,22 @@ function DroppableColumn({
       ref={setNodeRef}
       className="flex-shrink-0 w-80"
     >
-      <div className={`rounded-lg border-2 h-full flex flex-col ${getStatusColor(status)} ${isOver ? 'ring-2 ring-blue-400' : ''}`}>
+      <div className={`rounded-lg border border-gray-200 h-full flex flex-col bg-gray-50 ${isOver ? 'ring-2 ring-blue-400 bg-blue-50' : ''}`}>
         {/* Column Header */}
-        <div className="p-3 border-b border-gray-300">
-          <div className="flex items-center justify-between mb-1">
-            <h3 className={`font-semibold text-sm uppercase ${getStatusTextColor(status)}`}>
+        <div className="p-4 border-b border-gray-200 bg-white">
+          <div className="flex items-center gap-2 mb-2">
+            <div className={`w-3 h-3 rounded-full ${getStatusBadgeColor(status)}`}></div>
+            <h3 className="font-semibold text-sm text-gray-900">
               {status}
             </h3>
-            <Badge variant="outline" className="text-xs">
+            <span className="ml-auto text-xs text-gray-500 font-medium">
               {cards.length}
-            </Badge>
+            </span>
           </div>
         </div>
 
         {/* Column Body - Scrollable */}
-        <div className="flex-1 overflow-y-auto p-3">
+        <div className="flex-1 overflow-y-auto p-3 kanban-scrollbar">
           <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
             {cards.map((card) => (
               <SortableCard
@@ -168,6 +178,7 @@ function DroppableColumn({
                 card={card}
                 titleField={titleField}
                 datasetConfig={datasetConfig}
+                statusBadgeColor={getStatusBadgeColor(card.status)}
               />
             ))}
           </SortableContext>
@@ -247,43 +258,43 @@ export default function TablesKanbanView({ tableName }: TablesKanbanViewProps) {
     getStatusOrder(a) - getStatusOrder(b)
   );
 
-  // Get status color
-  const getStatusColor = (status: string): string => {
+  // Get status badge color (pill style)
+  const getStatusBadgeColor = (status: string): string => {
     const statusLower = status?.toLowerCase() || '';
 
     if (statusLower.includes('pago') || statusLower.includes('conclu') || statusLower.includes('aprovado') || statusLower.includes('autorizada')) {
-      return 'bg-green-100 border-green-300';
+      return 'bg-green-500';
     }
-    if (statusLower.includes('pendente') || statusLower.includes('draft')) {
-      return 'bg-yellow-100 border-yellow-300';
+    if (statusLower.includes('pendente') || statusLower.includes('draft') || statusLower.includes('fazer')) {
+      return 'bg-yellow-500';
     }
     if (statusLower.includes('vencido') || statusLower.includes('reprovado') || statusLower.includes('cancelad')) {
-      return 'bg-red-100 border-red-300';
+      return 'bg-red-500';
     }
-    if (statusLower.includes('andamento')) {
-      return 'bg-blue-100 border-blue-300';
+    if (statusLower.includes('andamento') || statusLower.includes('progresso') || statusLower.includes('revisão')) {
+      return 'bg-blue-500';
     }
 
-    return 'bg-gray-100 border-gray-300';
+    return 'bg-gray-500';
   };
 
   const getStatusTextColor = (status: string): string => {
     const statusLower = status?.toLowerCase() || '';
 
     if (statusLower.includes('pago') || statusLower.includes('conclu') || statusLower.includes('aprovado') || statusLower.includes('autorizada')) {
-      return 'text-green-800';
+      return 'text-green-700';
     }
-    if (statusLower.includes('pendente') || statusLower.includes('draft')) {
-      return 'text-yellow-800';
+    if (statusLower.includes('pendente') || statusLower.includes('draft') || statusLower.includes('fazer')) {
+      return 'text-yellow-700';
     }
     if (statusLower.includes('vencido') || statusLower.includes('reprovado') || statusLower.includes('cancelad')) {
-      return 'text-red-800';
+      return 'text-red-700';
     }
-    if (statusLower.includes('andamento')) {
-      return 'text-blue-800';
+    if (statusLower.includes('andamento') || statusLower.includes('progresso') || statusLower.includes('revisão')) {
+      return 'text-blue-700';
     }
 
-    return 'text-gray-800';
+    return 'text-gray-700';
   };
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -418,7 +429,27 @@ export default function TablesKanbanView({ tableName }: TablesKanbanViewProps) {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="h-full overflow-x-auto bg-gray-50 p-6">
+      <style dangerouslySetInnerHTML={{__html: `
+        .kanban-scrollbar::-webkit-scrollbar {
+          height: 6px;
+          width: 6px;
+        }
+        .kanban-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .kanban-scrollbar::-webkit-scrollbar-thumb {
+          background: #9ca3af;
+          border-radius: 3px;
+        }
+        .kanban-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #6b7280;
+        }
+        .kanban-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: #9ca3af transparent;
+        }
+      `}} />
+      <div className="h-full overflow-x-auto bg-white p-6 kanban-scrollbar">
         <div className="flex gap-4 h-full min-w-max">
           {columns.map((status) => {
             const cards = kanbanData[status];
@@ -430,7 +461,7 @@ export default function TablesKanbanView({ tableName }: TablesKanbanViewProps) {
                 cards={cards}
                 titleField={titleField}
                 datasetConfig={datasetConfig}
-                getStatusColor={getStatusColor}
+                getStatusBadgeColor={getStatusBadgeColor}
                 getStatusTextColor={getStatusTextColor}
               />
             );
