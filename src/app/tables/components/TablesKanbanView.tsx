@@ -101,8 +101,13 @@ function SortableCard({ card, titleField, datasetConfig, statusBadgeColor }: {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <Card className="mb-2 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow border-gray-200 bg-white">
-        <CardContent className="p-3 space-y-2">
+      <Card
+        className="mb-2 cursor-grab active:cursor-grabbing hover:brightness-95 transition-all border-gray-200 bg-white"
+        style={{
+          boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 2px 3px -2px rgba(0,0,0,0.05), 0 3px 12px -4px rgba(0,0,0,0.04), 0 4px 16px -8px rgba(0,0,0,0.04)'
+        }}
+      >
+        <CardContent className="p-2 space-y-2">
           {/* 1. Título - negrito preto */}
           <h4 className="font-bold text-sm text-gray-900 line-clamp-2">
             {title}
@@ -177,7 +182,7 @@ function DroppableColumn({
         </div>
 
         {/* Column Body - Scrollable */}
-        <div className="flex-1 overflow-y-auto p-3 kanban-scrollbar">
+        <div className="flex-1 overflow-y-auto px-2 pt-2 pb-3 kanban-scrollbar">
           <SortableContext items={cardIds} strategy={verticalListSortingStrategy}>
             {cards.map((card) => (
               <SortableCard
@@ -456,7 +461,7 @@ export default function TablesKanbanView({ tableName }: TablesKanbanViewProps) {
           scrollbar-color: #9ca3af transparent;
         }
       `}} />
-      <div className="h-full overflow-x-auto bg-white p-6 kanban-scrollbar">
+      <div className="h-full overflow-x-auto bg-white px-3 py-3 kanban-scrollbar">
         <div className="flex gap-4 h-full min-w-max">
           {columns.map((status) => {
             const cards = kanbanData[status];
