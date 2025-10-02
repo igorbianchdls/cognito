@@ -190,16 +190,16 @@ export default function TablesGalleryView({ tableName, showCover = true }: Table
           return (
             <Card
               key={row.id as string}
-              className="hover:shadow-xl transition-all cursor-pointer overflow-hidden border border-gray-200"
+              className="hover:shadow-xl transition-all cursor-pointer overflow-hidden border border-gray-200 p-0"
             >
-              {/* Cover/Header - maior e com gradiente baseado em status */}
+              {/* Cover/Header - sem padding, colado no topo */}
               {showCover && (
-                <div className={`w-full h-48 bg-gradient-to-br ${getCoverGradient(row)} flex items-center justify-center relative`}>
+                <div className={`w-full h-48 bg-gradient-to-br ${getCoverGradient(row)} flex items-center justify-center`}>
                   <div className="text-6xl text-white opacity-40">{datasetConfig?.icon || '📄'}</div>
                 </div>
               )}
 
-              <CardContent className="p-6 space-y-4">
+              <div className="p-6 space-y-4">
                 {/* Title - GRANDE */}
                 <h3 className="font-bold text-xl text-gray-900 line-clamp-2">
                   {title}
@@ -253,7 +253,7 @@ export default function TablesGalleryView({ tableName, showCover = true }: Table
                     #{row.id as string}
                   </span>
                 </div>
-              </CardContent>
+              </div>
             </Card>
           );
         })}
