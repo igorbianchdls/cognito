@@ -67,6 +67,7 @@ function DraggableWidget({ widget, spanClasses, minHeight, onEdit }: DraggableWi
         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <button
             onClick={(e) => {
+              console.log('🔵 Botão de edição clicado:', widget.id);
               e.stopPropagation();
               onEdit(widget);
             }}
@@ -87,7 +88,9 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
 
   // Handle widget edit
   const handleEditWidget = (widget: Widget) => {
+    console.log('🟢 handleEditWidget chamado:', widget.id);
     setEditingWidget(widget);
+    console.log('🟢 Estado atualizado para:', widget);
   };
 
   // Handle save widget changes
@@ -409,6 +412,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
       </div>
 
       {/* Widget Editor Modal */}
+      {console.log('🟡 Modal renderizando com:', { editingWidget, isOpen: !!editingWidget })}
       <WidgetEditorModal
         widget={editingWidget}
         isOpen={!!editingWidget}
