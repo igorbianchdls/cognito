@@ -119,6 +119,11 @@ export function GenerativeChart({
 
   // Renderização condicional baseada no tipo de gráfico atual
   const renderChart = () => {
+    // Verificação de segurança - não deve acontecer pois já verificamos hasError
+    if (!data || data.length === 0) {
+      return <EmptyState />;
+    }
+
     switch (currentChartType) {
       case 'bar':
         return <BarChart data={data} />;
@@ -137,6 +142,8 @@ export function GenerativeChart({
 
   // Handler para copiar dados do gráfico
   const handleCopyData = async () => {
+    if (!data) return;
+
     try {
       const dataText = JSON.stringify(data, null, 2);
       await navigator.clipboard.writeText(dataText);
@@ -148,6 +155,8 @@ export function GenerativeChart({
 
   // Handler para download como CSV
   const handleDownload = () => {
+    if (!data || data.length === 0) return;
+
     const headers = ['x', 'y', 'label', 'value'];
     const csvContent = [
       headers.join(','),
