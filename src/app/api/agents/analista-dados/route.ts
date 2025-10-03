@@ -287,6 +287,7 @@ Apply WHERE filters when relevant
 
       // Visualização
       gerarGrafico: visualizationTools.gerarGrafico,
+      gerarMultiplosGraficos: visualizationTools.gerarMultiplosGraficos,
 
       // Insights e alertas
       gerarInsights: bigqueryTools.gerarInsights,
