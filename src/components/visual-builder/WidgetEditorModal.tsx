@@ -161,7 +161,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
                   value={formData.dataSource.aggregation}
                   onChange={(e) => setFormData({
                     ...formData,
-                    dataSource: { ...formData.dataSource, aggregation: e.target.value }
+                    dataSource: { ...formData.dataSource, aggregation: e.target.value as 'SUM' | 'COUNT' | 'AVG' | 'MAX' | 'MIN' }
                   })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
