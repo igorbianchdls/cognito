@@ -101,6 +101,9 @@ interface PieChartProps extends BaseChartProps {
   marginBottom?: number
 }
 
+const DEFAULT_MARGIN_BOTTOM = 40;
+const DEFAULT_TRANSLATE_Y = 30;
+
 export function PieChart({
   data,
   colors,
@@ -356,7 +359,7 @@ export function PieChart({
         margin={{
           top: margin?.top ?? 20,
           right: margin?.right ?? 20,
-          bottom: marginBottom !== undefined ? marginBottom : (margin?.bottom ?? 0),
+          bottom: marginBottom !== undefined ? marginBottom : (margin?.bottom ?? DEFAULT_MARGIN_BOTTOM),
           left: margin?.left ?? 20
         }}
         
@@ -413,7 +416,7 @@ export function PieChart({
                 direction: legends.direction || 'row',
                 justify: false,
                 translateX: 0,
-                translateY: translateY !== undefined ? translateY : 0,
+                translateY: translateY !== undefined ? translateY : DEFAULT_TRANSLATE_Y,
                 itemsSpacing: legends.itemsSpacing || 20,
                 itemWidth: 80,
                 itemHeight: 18,
@@ -440,7 +443,7 @@ export function PieChart({
               direction: 'row',
               justify: false,
               translateX: 0,
-              translateY: translateY !== undefined ? translateY : 50,
+              translateY: translateY !== undefined ? translateY : DEFAULT_TRANSLATE_Y,
               itemsSpacing: 20,
               itemWidth: 80,
               itemHeight: 18,

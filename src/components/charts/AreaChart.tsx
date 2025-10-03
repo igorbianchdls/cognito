@@ -120,6 +120,9 @@ interface AreaChartProps extends BaseChartProps {
   marginBottom?: number
 }
 
+const DEFAULT_MARGIN_BOTTOM = 50;
+const DEFAULT_TRANSLATE_Y = 50;
+
 export function AreaChart({
   data,
   xColumn,
@@ -366,7 +369,7 @@ export function AreaChart({
         margin={{
           top: margin?.top ?? 12,
           right: margin?.right ?? 12,
-          bottom: marginBottom !== undefined ? marginBottom : (margin?.bottom ?? 0),
+          bottom: marginBottom !== undefined ? marginBottom : (margin?.bottom ?? DEFAULT_MARGIN_BOTTOM),
           left: margin?.left ?? 50
         }}
         xScale={{ type: 'point' }}
@@ -466,7 +469,7 @@ export function AreaChart({
                 direction: legends.direction || 'row',
                 justify: false,
                 translateX: 0,
-                translateY: translateY !== undefined ? translateY : 0,
+                translateY: translateY !== undefined ? translateY : DEFAULT_TRANSLATE_Y,
                 itemsSpacing: legends.itemsSpacing || 20,
                 itemWidth: 80,
                 itemHeight: 18,
@@ -493,7 +496,7 @@ export function AreaChart({
               direction: 'row',
               justify: false,
               translateX: 0,
-              translateY: translateY !== undefined ? translateY : 50,
+              translateY: translateY !== undefined ? translateY : DEFAULT_TRANSLATE_Y,
               itemsSpacing: 20,
               itemWidth: 80,
               itemHeight: 18,
