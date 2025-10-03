@@ -179,13 +179,14 @@ export function MultipleCharts({
   };
 
   // Função para obter ícone baseado no tipo de gráfico
-  const getChartIcon = (type: 'bar' | 'line' | 'pie' | 'horizontal-bar' | 'area') => {
+  const getChartIcon = (type: 'bar' | 'line' | 'pie' | 'horizontal-bar' | 'area' | 'table') => {
     switch (type) {
       case 'bar': return BarChart3;
       case 'line': return LineChartIcon;
       case 'pie': return PieChartIcon;
       case 'horizontal-bar': return BarChart2;
       case 'area': return TrendingUp;
+      case 'table': return TableIcon;
       default: return BarChart3;
     }
   };
