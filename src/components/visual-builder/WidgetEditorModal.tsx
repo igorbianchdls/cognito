@@ -85,7 +85,10 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
             </label>
             <select
               value={formData.type}
-              onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+              onChange={(e) => setFormData({
+                ...formData,
+                type: e.target.value as 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'insights' | 'alerts' | 'recommendations'
+              })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="bar">Bar Chart</option>
