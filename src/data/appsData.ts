@@ -27,12 +27,12 @@ export interface AppData {
 export const categories = [
   'All',
   'Fors',
-  'Dsa', 
+  'Ds', 
   'LnPs',
   'ApGes',
   'Componnts',
-  'Login & Sign Up',
-  'Blog & Portfolio',
+  'Login & ign Up',
+  'Blog & Porolio',
   'E-commerce',
   'AI'
 ] as const
