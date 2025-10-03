@@ -1106,7 +1106,7 @@ type GerarGraficoToolInput = {
 
 type GerarGraficoToolOutput = {
   success: boolean;
-  chartData: Array<{
+  chartData?: Array<{
     x: string;
     y: number;
     label: string;
@@ -1118,9 +1118,9 @@ type GerarGraficoToolOutput = {
   explicacao?: string;
   xColumn: string;
   yColumn: string;
-  sqlQuery: string;
-  totalRecords: number;
-  metadata: {
+  sqlQuery?: string;
+  totalRecords?: number;
+  metadata?: {
     generatedAt: string;
     dataSource: string;
   };
@@ -2294,6 +2294,8 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   yColumn={(graficoTool.output as GerarGraficoToolOutput).yColumn}
                   sqlQuery={(graficoTool.output as GerarGraficoToolOutput).sqlQuery}
                   totalRecords={(graficoTool.output as GerarGraficoToolOutput).totalRecords}
+                  error={(graficoTool.output as GerarGraficoToolOutput).error}
+                  fallbackMode={(graficoTool.output as GerarGraficoToolOutput).fallbackMode}
                 />
               )}
             </div>

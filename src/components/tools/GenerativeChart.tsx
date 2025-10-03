@@ -5,6 +5,7 @@ import { BarChart } from '@/components/charts/BarChart';
 import { LineChart } from '@/components/charts/LineChart';
 import { PieChart } from '@/components/charts/PieChart';
 import { AreaChart } from '@/components/charts/AreaChart';
+import { EmptyState } from '@/components/charts/EmptyState';
 import {
   Artifact,
   ArtifactHeader,
@@ -26,15 +27,17 @@ interface ChartDataPoint {
 }
 
 interface GenerativeChartProps {
-  data: ChartDataPoint[];
+  data?: ChartDataPoint[];
   chartType: 'bar' | 'line' | 'pie' | 'horizontal-bar' | 'area';
   title: string;
   description?: string;
   explicacao?: string;
   xColumn: string;
   yColumn: string;
-  sqlQuery: string;
-  totalRecords: number;
+  sqlQuery?: string;
+  totalRecords?: number;
+  error?: string;
+  fallbackMode?: boolean;
 }
 
 export function GenerativeChart({
@@ -46,11 +49,17 @@ export function GenerativeChart({
   xColumn,
   yColumn,
   sqlQuery,
-  totalRecords
+  totalRecords,
+  error,
+  fallbackMode
 }: GenerativeChartProps) {
   const [currentChartType, setCurrentChartType] = useState<'bar' | 'line' | 'pie' | 'horizontal-bar' | 'area'>(chartType);
   const [showChartSelector, setShowChartSelector] = useState(false);
   const [showTable, setShowTable] = useState(false);
+
+  // Verificar se há erro ou dados vazios
+  const hasError = fallbackMode || error || !data || data.length === 0;
+  const errorMessage = error || 'Não foi possível carregar os dados do BigQuery';
 
   // Função para obter ícone baseado no tipo de gráfico
   const getChartIcon = (type: 'bar' | 'line' | 'pie' | 'horizontal-bar' | 'area') => {
@@ -78,6 +87,10 @@ export function GenerativeChart({
 
   // Renderização de tabela com dados do gráfico
   const renderTable = () => {
+    if (!data || data.length === 0) {
+      return <EmptyState message="Sem dados" subtitle="Nenhum dado disponível para exibir" />;
+    }
+
     return (
       <div className="h-full overflow-auto">
         <Table>
@@ -165,7 +178,10 @@ export function GenerativeChart({
           <div className="flex-1 min-w-0">
             <ArtifactTitle>{title}</ArtifactTitle>
             <ArtifactDescription>
-              {description || `📊 ${totalRecords} registros • 🔍 ${sqlQuery.length > 60 ? sqlQuery.substring(0, 60) + '...' : sqlQuery}`}
+              {description || (totalRecords !== undefined && sqlQuery
+                ? `📊 ${totalRecords} registros • 🔍 ${sqlQuery.length > 60 ? sqlQuery.substring(0, 60) + '...' : sqlQuery}`
+                : `Gráfico ${chartType} • ${xColumn} x ${yColumn}`
+              )}
             </ArtifactDescription>
           </div>
           <ArtifactActions>
@@ -226,7 +242,30 @@ export function GenerativeChart({
 
         <ArtifactContent className="p-0">
           <div style={{ height: '400px', width: '100%' }}>
-            {showTable ? renderTable() : renderChart()}
+            {hasError ? (
+              <div className="flex flex-col items-center justify-center h-full p-8 bg-red-50">
+                <div className="text-center max-w-md">
+                  <div className="text-red-600 text-4xl mb-4">⚠️</div>
+                  <h3 className="text-lg font-semibold text-red-800 mb-2">
+                    Erro ao carregar dados
+                  </h3>
+                  <p className="text-sm text-red-700 mb-4">
+                    {errorMessage}
+                  </p>
+                  {sqlQuery && (
+                    <div className="text-left bg-white p-3 rounded border border-red-200">
+                      <p className="text-xs font-mono text-gray-600 mb-1">Query SQL:</p>
+                      <p className="text-xs font-mono text-gray-800 break-all">{sqlQuery}</p>
+                    </div>
+                  )}
+                  <p className="text-xs text-red-600 mt-3">
+                    Verifique se a tabela existe, as colunas estão corretas e você tem permissões adequadas.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              showTable ? renderTable() : renderChart()
+            )}
           </div>
         </ArtifactContent>
       </Artifact>
