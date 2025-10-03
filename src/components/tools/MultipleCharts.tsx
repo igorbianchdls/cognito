@@ -65,7 +65,7 @@ export function MultipleCharts({
   summary,
   metadata
 }: MultipleChartsProps) {
-  const successfulCharts = charts.filter(chart => chart.success && chart.chartData);
+  const successfulCharts = charts.filter(chart => chart.success && (chart.chartData || chart.tableData));
   const failedCharts = charts.filter(chart => !chart.success);
 
   // State management para múltiplos charts
