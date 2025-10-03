@@ -158,10 +158,10 @@ export function BarChart(props: BarChartProps) {
     return <EmptyState />;
   }
 
-  // Transformar dados para formato Nivo
+  // Transformar dados para formato Nivo com chave dinâmica
   const chartData = data.map(item => ({
     id: item.x || item.label || 'Unknown',
-    value: item.y || item.value || 0,
+    [seriesLabel || 'value']: item.y || item.value || 0,
     label: item.x || item.label || 'Unknown'
   }));
 
