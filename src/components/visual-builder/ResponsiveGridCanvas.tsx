@@ -57,7 +57,7 @@ function DraggableWidget({ widget, spanClasses, minHeight, onEdit }: DraggableWi
         {...listeners}
         onClick={handleClick}
         style={{
-          minHeight: minHeight,
+          height: minHeight,
           cursor: isDragging ? 'grabbing' : 'grab',
           position: 'relative'
         }}
