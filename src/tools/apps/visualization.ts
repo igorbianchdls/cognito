@@ -5,6 +5,21 @@ import { bigQueryService } from '@/services/bigquery';
 // Tipo para dados retornados do BigQuery
 type BigQueryRowData = Record<string, unknown>;
 
+// Função helper para adicionar backticks de forma inteligente
+const safeSQLIdentifier = (identifier: string): string => {
+  const trimmed = identifier.trim();
+  // Se já tem backticks, retorna como está
+  if (trimmed.startsWith('`') && trimmed.endsWith('`')) {
+    return trimmed;
+  }
+  // Se contém parênteses (função SQL ou expressão), retorna como está
+  if (trimmed.includes('(')) {
+    return trimmed;
+  }
+  // Caso contrário, adiciona backticks
+  return `\`${trimmed}\``;
+};
+
 // Função para gerar SQL automaticamente baseado no tipo de gráfico
 const generateSQL = (tipo: string, x: string, y: string, tabela: string, agregacao?: string): string => {
   // Define agregação padrão se não fornecida
@@ -17,16 +32,16 @@ const generateSQL = (tipo: string, x: string, y: string, tabela: string, agregac
     case 'horizontal-bar':
     case 'area':
       if (funcaoAgregacao === 'COUNT') {
-        return `SELECT \`${x}\`, COUNT(*) as count FROM ${tabela} GROUP BY \`${x}\` ORDER BY \`${x}\` LIMIT 50`;
+        return `SELECT ${safeSQLIdentifier(x)}, COUNT(*) as count FROM ${tabela} GROUP BY ${safeSQLIdentifier(x)} ORDER BY ${safeSQLIdentifier(x)} LIMIT 50`;
       }
-      return `SELECT \`${x}\`, ${funcaoAgregacao}(\`${y}\`) as value FROM ${tabela} GROUP BY \`${x}\` ORDER BY \`${x}\` LIMIT 50`;
+      return `SELECT ${safeSQLIdentifier(x)}, ${funcaoAgregacao}(${safeSQLIdentifier(y)}) as value FROM ${tabela} GROUP BY ${safeSQLIdentifier(x)} ORDER BY ${safeSQLIdentifier(x)} LIMIT 50`;
     case 'pie':
       if (funcaoAgregacao === 'COUNT') {
-        return `SELECT \`${x}\`, COUNT(*) as count FROM ${tabela} GROUP BY \`${x}\` ORDER BY count DESC LIMIT 10`;
+        return `SELECT ${safeSQLIdentifier(x)}, COUNT(*) as count FROM ${tabela} GROUP BY ${safeSQLIdentifier(x)} ORDER BY count DESC LIMIT 10`;
       }
-      return `SELECT \`${x}\`, ${funcaoAgregacao}(\`${y}\`) as value FROM ${tabela} GROUP BY \`${x}\` ORDER BY ${funcaoAgregacao}(\`${y}\`) DESC LIMIT 10`;
+      return `SELECT ${safeSQLIdentifier(x)}, ${funcaoAgregacao}(${safeSQLIdentifier(y)}) as value FROM ${tabela} GROUP BY ${safeSQLIdentifier(x)} ORDER BY ${funcaoAgregacao}(${safeSQLIdentifier(y)}) DESC LIMIT 10`;
     default:
-      return `SELECT \`${x}\`, \`${y}\` FROM ${tabela} LIMIT 50`;
+      return `SELECT ${safeSQLIdentifier(x)}, ${safeSQLIdentifier(y)} FROM ${tabela} LIMIT 50`;
   }
 };
 
@@ -38,10 +53,10 @@ const generateSQLForTable = (
   ordenacao?: string,
   limite?: number
 ): string => {
-  // Adicionar backticks em cada coluna separadamente
+  // Adicionar backticks em cada coluna de forma inteligente
   const colunasComBackticks = colunas === '*'
     ? '*'
-    : colunas.split(',').map(col => `\`${col.trim()}\``).join(', ');
+    : colunas.split(',').map(col => safeSQLIdentifier(col)).join(', ');
 
   let sql = `SELECT ${colunasComBackticks} FROM ${tabela}`;
   if (filtro) sql += ` WHERE ${filtro}`;
