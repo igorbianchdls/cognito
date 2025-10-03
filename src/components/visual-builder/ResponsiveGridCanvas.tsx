@@ -55,7 +55,6 @@ function DraggableWidget({ widget, spanClasses, minHeight, onEdit }: DraggableWi
     >
       <div
         {...listeners}
-        onClick={handleClick}
         style={{
           height: minHeight,
           cursor: isDragging ? 'grabbing' : 'grab',
@@ -68,10 +67,15 @@ function DraggableWidget({ widget, spanClasses, minHeight, onEdit }: DraggableWi
           <button
             onClick={(e) => {
               console.log('🔵 Botão de edição clicado:', widget.id);
+              e.preventDefault();
               e.stopPropagation();
               onEdit(widget);
             }}
+            onMouseDown={(e) => {
+              e.stopPropagation();
+            }}
             className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium hover:bg-blue-700 cursor-pointer"
+            style={{ pointerEvents: 'auto' }}
           >
             ✏️ Click para editar
           </button>
