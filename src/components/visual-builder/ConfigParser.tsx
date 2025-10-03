@@ -216,7 +216,7 @@ export class ConfigParser {
       const customFontSize = config.customFontSize as string;
       const customBackground = config.customBackground as string;
       const corporateColor = config.corporateColor as string;
-      const layoutRows = config.layoutRows as Record<string, LayoutRow> | undefined;
+      const layoutRows = (config.layoutRows || rawGridConfig.layoutRows) as Record<string, LayoutRow> | undefined;
 
       // Step 3: Process grid config with defaults
       const gridConfig: GridConfig = {
