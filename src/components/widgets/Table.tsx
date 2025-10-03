@@ -394,9 +394,9 @@ export function DataTable<TData extends TableData>({
 
         {/* Table Content - flex-1 overflow-auto */}
         <div className="flex-1 overflow-auto rounded-md">
-          <Table 
-            className="border"
-            style={{ 
+          <Table
+            className="border-y"
+            style={{
               borderColor,
             }}
           >
