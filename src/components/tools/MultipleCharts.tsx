@@ -353,7 +353,10 @@ export function MultipleCharts({
             </ArtifactHeader>
 
             <ArtifactContent className="p-0">
-              <div style={{ height: '400px', width: '100%' }}>
+              <div style={{
+                height: (chart.type === 'table' || chart.chartType === 'table') ? 'auto' : '400px',
+                width: '100%'
+              }}>
                 {showTableStates[index] ? renderTable(chart) : renderChart(chart, index)}
               </div>
             </ArtifactContent>

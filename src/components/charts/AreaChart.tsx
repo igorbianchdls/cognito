@@ -370,7 +370,7 @@ export function AreaChart({
           top: margin?.top ?? 12,
           right: margin?.right ?? 12,
           bottom: marginBottom !== undefined ? marginBottom : (margin?.bottom ?? DEFAULT_MARGIN_BOTTOM),
-          left: margin?.left ?? 80
+          left: margin?.left ?? 60
         }}
         xScale={{ type: 'point' }}
         yScale={{ type: 'linear', min: 0, max: 'auto' }}
