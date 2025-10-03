@@ -54,15 +54,24 @@ function DraggableWidget({ widget, spanClasses, minHeight, onEdit }: DraggableWi
       className={spanClasses}
     >
       <div
-        {...listeners}
         style={{
           height: minHeight,
-          cursor: isDragging ? 'grabbing' : 'grab',
           position: 'relative'
         }}
         className="group hover:ring-2 hover:ring-blue-400 rounded-lg transition-all"
       >
-        {/* Edit Icon on Hover */}
+        {/* Drag Handle - Left Side */}
+        <div
+          {...listeners}
+          className="absolute left-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-gray-700 text-white px-2 py-1 rounded cursor-grab active:cursor-grabbing"
+          style={{
+            cursor: isDragging ? 'grabbing' : 'grab'
+          }}
+        >
+          ⋮⋮
+        </div>
+
+        {/* Edit Button - Right Side */}
         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <button
             onClick={(e) => {
@@ -71,15 +80,12 @@ function DraggableWidget({ widget, spanClasses, minHeight, onEdit }: DraggableWi
               e.stopPropagation();
               onEdit(widget);
             }}
-            onMouseDown={(e) => {
-              e.stopPropagation();
-            }}
             className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium hover:bg-blue-700 cursor-pointer"
-            style={{ pointerEvents: 'auto' }}
           >
-            ✏️ Click para editar
+            ✏️ Editar
           </button>
         </div>
+
         <WidgetRenderer widget={widget} />
       </div>
     </div>
