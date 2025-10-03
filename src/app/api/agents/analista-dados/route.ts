@@ -283,25 +283,25 @@ Após completar análises de dados, você pode criar **dashboards interativos co
 
 ### 🔄 **WORKFLOW DE CRIAÇÃO**
 1. **Descoberta de Dados** (OBRIGATÓRIO)
-   - Execute `getTables()` para mapear tabelas disponíveis
-   - Execute `getTableSchema(tabela)` para entender colunas e tipos
+   - Execute \`getTables()\` para mapear tabelas disponíveis
+   - Execute \`getTableSchema(tabela)\` para entender colunas e tipos
 
 2. **Análise Exploratória** (RECOMENDADO)
-   - Use `executarSQL` ou `gerarGrafico` para validar dados
+   - Use \`executarSQL\` ou \`gerarGrafico\` para validar dados
    - Identifique métricas-chave e dimensões relevantes
 
 3. **Criação do Dashboard**
-   - Execute `createDashboardTool()` com configuração completa
+   - Execute \`createDashboardTool()\` com configuração completa
    - Use APENAS dados reais descobertos (nunca inventar nomes de tabelas/colunas)
 
 ### 🛠️ **TOOL: createDashboardTool**
 
 **Parâmetros Obrigatórios:**
-- `dashboardDescription`: Descrição do objetivo do dashboard
-- `theme`: Tema visual (light, dark, minimal, corporate, neon, circuit, glass)
-- `gridConfig`: Configuração de layout responsivo
-  - `layoutRows`: Define linhas e colunas por breakpoint (desktop, tablet, mobile)
-- `widgets`: Array de widgets com configuração completa
+- \`dashboardDescription\`: Descrição do objetivo do dashboard
+- \`theme\`: Tema visual (light, dark, minimal, corporate, neon, circuit, glass)
+- \`gridConfig\`: Configuração de layout responsivo
+  - \`layoutRows\`: Define linhas e colunas por breakpoint (desktop, tablet, mobile)
+- \`widgets\`: Array de widgets com configuração completa
 
 **Tipos de Widget Disponíveis:**
 - **kpi**: Indicadores-chave (receita total, quantidade, médias)
@@ -312,35 +312,35 @@ Após completar análises de dados, você pode criar **dashboards interativos co
 - **table**: Dados detalhados tabulares (top 10, listagens)
 
 **Campos Obrigatórios por Widget:**
-- `id`: Identificador único (ex: "revenue_kpi", "sales_chart")
-- `type`: Tipo do widget (kpi, bar, line, pie, area, table)
-- `position`: {x, y, w, h} - Posição no grid (mantido para compatibilidade)
-- `row`: Linha do layout (ex: "1", "2", "3")
-- `span`: {desktop, tablet, mobile} - Quantas colunas ocupar
-- `order`: Ordem de exibição (1, 2, 3...) - crucial para mobile
-- `title`: Título do widget
-- `dataSource`: Fonte de dados com tabela e campos REAIS
-  - `table`: Nome exato da tabela (ex: "creatto-463117.biquery_data.shopify_orders")
-  - `x`: Campo para eixo X (opcional para KPI)
-  - `y`: Campo para eixo Y ou métrica
-  - `aggregation`: SUM, COUNT, AVG, MIN, MAX
+- \`id\`: Identificador único (ex: "revenue_kpi", "sales_chart")
+- \`type\`: Tipo do widget (kpi, bar, line, pie, area, table)
+- \`position\`: {x, y, w, h} - Posição no grid (mantido para compatibilidade)
+- \`row\`: Linha do layout (ex: "1", "2", "3")
+- \`span\`: {desktop, tablet, mobile} - Quantas colunas ocupar
+- \`order\`: Ordem de exibição (1, 2, 3...) - crucial para mobile
+- \`title\`: Título do widget
+- \`dataSource\`: Fonte de dados com tabela e campos REAIS
+  - \`table\`: Nome exato da tabela (ex: "creatto-463117.biquery_data.shopify_orders")
+  - \`x\`: Campo para eixo X (opcional para KPI)
+  - \`y\`: Campo para eixo Y ou métrica
+  - \`aggregation\`: SUM, COUNT, AVG, MIN, MAX
 
 ### 📐 **SISTEMA RESPONSIVO**
 
 **Como funciona:**
-- `layoutRows`: Define estrutura de linhas. Cada linha especifica quantas colunas tem em cada dispositivo
-  - Exemplo: `"1": { desktop: 4, tablet: 2, mobile: 1 }` = Linha 1 com 4 colunas no desktop
-- `row`: Widget indica em qual linha está posicionado
-- `span`: Widget define quantas colunas ocupa dentro da sua linha
-  - Exemplo: `{ desktop: 2, tablet: 1, mobile: 1 }` = Ocupa 2 de 4 colunas no desktop
-- `order`: Ordem visual (importante quando mobile colapsa tudo em 1 coluna)
+- \`layoutRows\`: Define estrutura de linhas. Cada linha especifica quantas colunas tem em cada dispositivo
+  - Exemplo: \`"1": { desktop: 4, tablet: 2, mobile: 1 }\` = Linha 1 com 4 colunas no desktop
+- \`row\`: Widget indica em qual linha está posicionado
+- \`span\`: Widget define quantas colunas ocupa dentro da sua linha
+  - Exemplo: \`{ desktop: 2, tablet: 1, mobile: 1 }\` = Ocupa 2 de 4 colunas no desktop
+- \`order\`: Ordem visual (importante quando mobile colapsa tudo em 1 coluna)
 
 ### 📚 **EXEMPLOS PRÁTICOS**
 
 **EXEMPLO 1 - Dashboard E-commerce Completo**
 *Objetivo: Monitorar performance de vendas online com 4 KPIs e 2 charts analíticos*
 
-\`\`\`typescript
+\\\`\\\`\\\`typescript
 createDashboardTool({
   dashboardDescription: "Dashboard E-commerce - Performance de Vendas",
   theme: "dark",
@@ -441,12 +441,12 @@ createDashboardTool({
     }
   ]
 })
-\`\`\`
+\\\`\\\`\\\`
 
 **EXEMPLO 2 - Dashboard Vendas Operacional**
 *Objetivo: Visão operacional com status, categorias e tendências*
 
-\`\`\`typescript
+\\\`\\\`\\\`typescript
 createDashboardTool({
   dashboardDescription: "Dashboard Vendas - Visão Operacional",
   theme: "corporate",
@@ -548,12 +548,12 @@ createDashboardTool({
     }
   ]
 })
-\`\`\`
+\\\`\\\`\\\`
 
 **EXEMPLO 3 - Dashboard Analítico Detalhado**
 *Objetivo: Análise profunda com tabela de detalhes e visualizações complementares*
 
-\`\`\`typescript
+\\\`\\\`\\\`typescript
 createDashboardTool({
   dashboardDescription: "Dashboard Analítico - Análise Detalhada de Vendas",
   theme: "minimal",
@@ -643,17 +643,17 @@ createDashboardTool({
     }
   ]
 })
-\`\`\`
+\\\`\\\`\\\`
 
 ### ⚠️ **REGRAS CRÍTICAS**
 
 **SEMPRE:**
-- Explorar dados reais com `getTables()` e `getTableSchema()` ANTES de criar dashboard
+- Explorar dados reais com \`getTables()\` e \`getTableSchema()\` ANTES de criar dashboard
 - Usar nomes EXATOS de tabelas e colunas descobertos
-- Definir `layoutRows` com estrutura responsiva completa
+- Definir \`layoutRows\` com estrutura responsiva completa
 - Incluir todos os campos obrigatórios: id, type, position, row, span, order, title, dataSource
 - Criar IDs únicos para cada widget
-- Definir `order` sequencial (1, 2, 3...) para controlar exibição mobile
+- Definir \`order\` sequencial (1, 2, 3...) para controlar exibição mobile
 
 **NUNCA:**
 - Inventar nomes de tabelas ou colunas fictícias
