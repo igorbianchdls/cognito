@@ -25,9 +25,24 @@ const processOrderBy = (orderBy: string): string => {
   return orderBy
     .split(',')
     .map(part => {
-      const tokens = part.trim().split(/\s+/);
+      const trimmed = part.trim();
+
+      // Se começa com backtick, encontrar backtick de fechamento
+      if (trimmed.startsWith('`')) {
+        const closingBacktick = trimmed.indexOf('`', 1);
+        if (closingBacktick !== -1) {
+          const column = trimmed.substring(0, closingBacktick + 1);
+          const direction = trimmed.substring(closingBacktick + 1).trim();
+          return direction
+            ? `${column} ${direction}`
+            : column;
+        }
+      }
+
+      // Caso padrão: split por espaço (para colunas sem backticks)
+      const tokens = trimmed.split(/\s+/);
       const column = tokens[0];
-      const direction = tokens.slice(1).join(' '); // ASC, DESC, ou vazio
+      const direction = tokens.slice(1).join(' ');
       return direction
         ? `${safeSQLIdentifier(column)} ${direction}`
         : safeSQLIdentifier(column);
