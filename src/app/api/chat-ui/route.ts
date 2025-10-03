@@ -70,69 +70,100 @@ Você é um especialista em **criação, análise e otimização de dashboards i
 - **light** (relatórios), **dark** (executivo), **minimal** (foco)
 - **corporate** (apresentações), **neon** (tech), **circuit** (sistemas), **glass** (moderno)
 
-## TIPOS DE DASHBOARD
+## FORMATO DE DASHBOARD
 
-### 🖥️ **TRADICIONAL** (Grid Fixo)
-**Quando usar:** Dashboards simples, uso desktop, layout fixo
-**Campos obrigatórios:** 'position: {x, y, w, h}', 'id', 'type', 'title', 'dataSource'
+### 📱 **SISTEMA RESPONSIVO** (ÚNICO FORMATO ACEITO)
+**Campos obrigatórios no gridConfig:** 'layoutRows'
+**Campos obrigatórios nos widgets:** 'id', 'type', 'title', 'dataSource', 'position', 'row', 'span', 'order'
 
-### 📱 **RESPONSIVO** (Adaptativo)
-**Quando usar:** Dashboards complexos, mobile/tablet, layout adaptativo
-**Campos extras:** 'layoutColumns', 'column', 'span', 'order'
-**Como detectar:** Presença de 'layoutColumns' no gridConfig
-
-#### 🏗️ **COMO FUNCIONA O RESPONSIVO:**
-- **'layoutColumns'**: Define seções do layout (ex: main, sidebar) e quantas colunas cada uma tem
-- **'column'**: Qual seção o widget pertence ("main", "sidebar", etc)
-- **'span'**: Quantas colunas o widget ocupa dentro da sua seção em cada breakpoint
-- **'order'**: Ordem de exibição (crucial para mobile quando tudo vira 1 coluna)
+#### 🏗️ **COMO FUNCIONA:**
+- **'layoutRows'**: Define as linhas do dashboard (ex: "1", "2", "3") e quantas colunas cada linha tem em cada breakpoint
+  - Exemplo: `"1": { desktop: 4, tablet: 2, mobile: 1 }` = Linha 1 tem 4 colunas no desktop, 2 no tablet, 1 no mobile
+- **'row'**: Em qual linha o widget está (ex: "1", "2", "3")
+- **'span'**: Quantas colunas o widget ocupa dentro da sua linha em cada breakpoint
+  - Exemplo: `{ desktop: 2, tablet: 1, mobile: 1 }` = Ocupa 2 de 4 colunas no desktop
+- **'order'**: Ordem de exibição (1, 2, 3...) - crucial para mobile quando tudo vira 1 coluna
+- **'position'**: Mantido para compatibilidade `{x, y, w, h}` mas NÃO é usado para altura (só heightPx)
+- **'heightPx'**: (Opcional) Altura explícita em pixels
+  - Se NÃO definido: KPI = 200px padrão, Charts (bar/line/pie/area) = 500px padrão
+  - Se definido: usa o valor especificado
 
 ## EXEMPLOS CONCISOS
 
-### 📝 **createDashboardTool - Tradicional:**
+### 📝 **createDashboardTool - Exemplo Básico:**
 \`\`\`typescript
 createDashboardTool({
   dashboardDescription: "Dashboard E-commerce",
   theme: "dark",
-  gridConfig: { maxRows: 12, rowHeight: 30, cols: 12 },
+  gridConfig: {
+    layoutRows: {                         // ✅ OBRIGATÓRIO - Define linhas do layout
+      "1": { desktop: 4, tablet: 2, mobile: 1 },  // Linha 1: 4 colunas desktop, 2 tablet, 1 mobile
+      "2": { desktop: 2, tablet: 2, mobile: 1 }   // Linha 2: 2 colunas desktop, 2 tablet, 1 mobile
+    }
+  },
   widgets: [{
     id: "revenue_bar", type: "bar",
-    position: { x: 0, y: 0, w: 6, h: 4 },
+    position: { x: 0, y: 0, w: 6, h: 4 },        // Mantém para compatibilidade (não usado para altura)
+    row: "1",                                     // ✅ Widget na linha 1
+    span: { desktop: 2, tablet: 1, mobile: 1 },  // ✅ Ocupa 2 colunas desktop, 1 tablet, 1 mobile
+    order: 1,                                     // ✅ Ordem de exibição (importante para mobile)
     title: "Revenue by Event",
     dataSource: { table: "ecommerce", x: "event_name", y: "quantity", aggregation: "SUM" }
   }]
 })
 \`\`\`
 
-### 📝 **createDashboardTool - Responsivo:**
+### 📝 **createDashboardTool - Exemplo Completo:**
 \`\`\`typescript
 createDashboardTool({
-  dashboardDescription: "Dashboard Responsivo",
+  dashboardDescription: "Dashboard Responsivo Completo",
   theme: "dark",
   gridConfig: {
-    maxRows: 12, rowHeight: 30, cols: 12,
-    layoutColumns: {                    // ✅ Define seções do layout
-      main: { desktop: 4, tablet: 2, mobile: 1 },    // Seção principal: 4 colunas desktop → 2 tablet → 1 mobile
-      sidebar: { desktop: 3, tablet: 2, mobile: 1 }  // Sidebar: 3 colunas desktop → 2 tablet → 1 mobile
+    layoutRows: {                         // ✅ OBRIGATÓRIO
+      "1": { desktop: 4, tablet: 2, mobile: 1 },  // Linha de KPIs: 4 KPIs lado a lado no desktop
+      "2": { desktop: 2, tablet: 2, mobile: 1 }   // Linha de charts: 2 charts lado a lado no desktop
     }
   },
-  widgets: [{
-    id: "revenue_bar", type: "bar",
-    position: { x: 0, y: 0, w: 6, h: 4 },            // Mantém para compatibilidade
-    column: "main",                                   // ✅ Widget pertence à seção "main"
-    span: { desktop: 2, tablet: 1, mobile: 1 },      // ✅ Ocupa 2 colunas desktop, 1 tablet, 1 mobile
-    order: 1,                                         // ✅ Primeiro na ordem (importante para mobile)
-    title: "Revenue",
-    dataSource: { table: "ecommerce", x: "event_name", y: "quantity", aggregation: "SUM" }
-  }, {
-    id: "total_kpi", type: "kpi",
-    position: { x: 6, y: 0, w: 3, h: 2 },
-    column: "sidebar",                                // ✅ Widget na sidebar
-    span: { desktop: 1, tablet: 1, mobile: 1 },      // ✅ Ocupa 1 coluna em todos breakpoints
-    order: 2,                                         // ✅ Segundo na ordem
-    title: "Total Events",
-    dataSource: { table: "ecommerce", y: "quantity", aggregation: "COUNT" }
-  }]
+  widgets: [
+    // Row 1: KPIs
+    {
+      id: "revenue_kpi", type: "kpi",
+      position: { x: 0, y: 0, w: 3, h: 2 },
+      row: "1",                                   // ✅ Linha 1
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 1,
+      title: "Receita Total",
+      dataSource: { table: "ecommerce", y: "revenue", aggregation: "SUM" }
+    },
+    {
+      id: "orders_kpi", type: "kpi",
+      position: { x: 3, y: 0, w: 3, h: 2 },
+      row: "1",                                   // ✅ Linha 1
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 2,
+      title: "Total Pedidos",
+      dataSource: { table: "ecommerce", y: "order_id", aggregation: "COUNT" }
+    },
+    // Row 2: Charts
+    {
+      id: "revenue_bar", type: "bar",
+      position: { x: 0, y: 2, w: 6, h: 4 },
+      row: "2",                                   // ✅ Linha 2
+      span: { desktop: 1, tablet: 1, mobile: 1 }, // Ocupa 1 das 2 colunas da linha 2
+      order: 3,
+      title: "Revenue by Event",
+      dataSource: { table: "ecommerce", x: "event_name", y: "quantity", aggregation: "SUM" }
+    },
+    {
+      id: "status_pie", type: "pie",
+      position: { x: 6, y: 2, w: 6, h: 4 },
+      row: "2",                                   // ✅ Linha 2
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 4,
+      title: "Status Distribution",
+      dataSource: { table: "ecommerce", x: "status", y: "order_id", aggregation: "COUNT" }
+    }
+  ]
 })
 \`\`\`
 
