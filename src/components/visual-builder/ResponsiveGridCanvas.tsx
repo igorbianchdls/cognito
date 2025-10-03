@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import { DndContext, closestCenter, DragEndEvent, UniqueIdentifier } from '@dnd-kit/core';
-import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, useSortable, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import WidgetRenderer from './WidgetRenderer';
 import type { Widget, GridConfig, LayoutRow, WidgetSpan } from './ConfigParser';
@@ -60,38 +60,6 @@ function DraggableWidget({ widget, spanClasses, minHeight }: DraggableWidgetProp
 
 export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode = 'desktop', onLayoutChange }: ResponsiveGridCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-
-  // Handle drag end - reorder widgets within the same row
-  const handleDragEnd = (event: DragEndEvent, rowKey: string) => {
-    const { active, over } = event;
-
-    if (!over || active.id === over.id || !onLayoutChange) return;
-
-    // Find widgets in this row
-    const rowWidgets = widgetGroups[rowKey];
-    const oldIndex = rowWidgets.findIndex(w => w.id === active.id);
-    const newIndex = rowWidgets.findIndex(w => w.id === over.id);
-
-    if (oldIndex === -1 || newIndex === -1) return;
-
-    // Reorder widgets in the row
-    const reorderedRowWidgets = [...rowWidgets];
-    const [movedWidget] = reorderedRowWidgets.splice(oldIndex, 1);
-    reorderedRowWidgets.splice(newIndex, 0, movedWidget);
-
-    // Update order values based on new positions
-    const updatedRowWidgets = reorderedRowWidgets.map((widget, index) => ({
-      ...widget,
-      order: index + 1
-    }));
-
-    // Merge with widgets from other rows
-    const otherWidgets = widgets.filter(w => (w.row || '1') !== rowKey);
-    const updatedWidgets = [...otherWidgets, ...updatedRowWidgets];
-
-    // Call parent callback
-    onLayoutChange(updatedWidgets);
-  };
 
   // Extract theme colors from gridConfig
   const backgroundColor = gridConfig.backgroundColor || '#ffffff';
@@ -207,6 +175,38 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
   };
 
   const widgetGroups = groupWidgetsByRow();
+
+  // Handle drag end - reorder widgets within the same row
+  const handleDragEnd = (event: DragEndEvent, rowKey: string) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id || !onLayoutChange) return;
+
+    // Find widgets in this row
+    const rowWidgets = widgetGroups[rowKey];
+    const oldIndex = rowWidgets.findIndex(w => w.id === active.id);
+    const newIndex = rowWidgets.findIndex(w => w.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    // Reorder widgets in the row
+    const reorderedRowWidgets = [...rowWidgets];
+    const [movedWidget] = reorderedRowWidgets.splice(oldIndex, 1);
+    reorderedRowWidgets.splice(newIndex, 0, movedWidget);
+
+    // Update order values based on new positions
+    const updatedRowWidgets = reorderedRowWidgets.map((widget, index) => ({
+      ...widget,
+      order: index + 1
+    }));
+
+    // Merge with widgets from other rows
+    const otherWidgets = widgets.filter(w => (w.row || '1') !== rowKey);
+    const updatedWidgets = [...otherWidgets, ...updatedRowWidgets];
+
+    // Call parent callback
+    onLayoutChange(updatedWidgets);
+  };
 
   // Calculate widget height based on heightPx or fallback logic
   const getWidgetHeight = (widget: Widget): string => {
@@ -347,7 +347,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
                     collisionDetection={closestCenter}
                     onDragEnd={(event) => handleDragEnd(event, rowKey)}
                   >
-                    <SortableContext items={widgetIds} strategy={verticalListSortingStrategy}>
+                    <SortableContext items={widgetIds} strategy={horizontalListSortingStrategy}>
                       <div className={getGridClassesForRow(rowKey)}>
                         {rowWidgets.map((widget) => (
                           <DraggableWidget
