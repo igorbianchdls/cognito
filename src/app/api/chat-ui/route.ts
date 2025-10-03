@@ -181,8 +181,20 @@ updateDashboardTool({
     },
 
     tools: {
-      // BigQuery tools
-      ...bigqueryTools,
+      // BigQuery tools (excluding planAnalysis)
+      getDatasets: bigqueryTools.getDatasets,
+      getTables: bigqueryTools.getTables,
+      getData: bigqueryTools.getData,
+      executarSQL: bigqueryTools.executarSQL,
+      getTableSchema: bigqueryTools.getTableSchema,
+      executarMultiplasSQL: bigqueryTools.executarMultiplasSQL,
+      getCampaigns: bigqueryTools.getCampaigns,
+      getTimelineContext: bigqueryTools.getTimelineContext,
+      executarSQLComDados: bigqueryTools.executarSQLComDados,
+      gerarInsights: bigqueryTools.gerarInsights,
+      gerarAlertas: bigqueryTools.gerarAlertas,
+      gerarRecomendacoes: bigqueryTools.gerarRecomendacoes,
+      gerarReport: bigqueryTools.gerarReport,
       // Analytics tools (only dashboard-relevant ones)
       criarGrafico: analyticsTools.criarGrafico,
       // Visualization tools
