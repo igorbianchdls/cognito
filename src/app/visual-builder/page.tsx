@@ -191,6 +191,7 @@ export default function VisualBuilderPage() {
                 widgets={visualBuilderState.widgets}
                 gridConfig={visualBuilderState.gridConfig}
                 viewportMode={viewportMode}
+                onLayoutChange={handleLayoutChange}
               />
             </div>
           </div>

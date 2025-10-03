@@ -1,6 +1,9 @@
 'use client';
 
 import { useRef } from 'react';
+import { DndContext, closestCenter, DragEndEvent, UniqueIdentifier } from '@dnd-kit/core';
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import WidgetRenderer from './WidgetRenderer';
 import type { Widget, GridConfig, LayoutRow, WidgetSpan } from './ConfigParser';
 
@@ -8,10 +11,87 @@ interface ResponsiveGridCanvasProps {
   widgets: Widget[];
   gridConfig: GridConfig;
   viewportMode?: 'desktop' | 'tablet' | 'mobile';
+  onLayoutChange?: (widgets: Widget[]) => void;
 }
 
-export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode = 'desktop' }: ResponsiveGridCanvasProps) {
+// Draggable Widget Component
+interface DraggableWidgetProps {
+  widget: Widget;
+  spanClasses: string;
+  minHeight: string;
+}
+
+function DraggableWidget({ widget, spanClasses, minHeight }: DraggableWidgetProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: widget.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    cursor: isDragging ? 'grabbing' : 'grab',
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={spanClasses}
+    >
+      <div
+        style={{
+          height: 'auto',
+          minHeight: minHeight
+        }}
+      >
+        <WidgetRenderer widget={widget} />
+      </div>
+    </div>
+  );
+}
+
+export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode = 'desktop', onLayoutChange }: ResponsiveGridCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Handle drag end - reorder widgets within the same row
+  const handleDragEnd = (event: DragEndEvent, rowKey: string) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id || !onLayoutChange) return;
+
+    // Find widgets in this row
+    const rowWidgets = widgetGroups[rowKey];
+    const oldIndex = rowWidgets.findIndex(w => w.id === active.id);
+    const newIndex = rowWidgets.findIndex(w => w.id === over.id);
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    // Reorder widgets in the row
+    const reorderedRowWidgets = [...rowWidgets];
+    const [movedWidget] = reorderedRowWidgets.splice(oldIndex, 1);
+    reorderedRowWidgets.splice(newIndex, 0, movedWidget);
+
+    // Update order values based on new positions
+    const updatedRowWidgets = reorderedRowWidgets.map((widget, index) => ({
+      ...widget,
+      order: index + 1
+    }));
+
+    // Merge with widgets from other rows
+    const otherWidgets = widgets.filter(w => (w.row || '1') !== rowKey);
+    const updatedWidgets = [...otherWidgets, ...updatedRowWidgets];
+
+    // Call parent callback
+    onLayoutChange(updatedWidgets);
+  };
 
   // Extract theme colors from gridConfig
   const backgroundColor = gridConfig.backgroundColor || '#ffffff';
@@ -257,22 +337,31 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
           <div className="p-4 space-y-4">
             {Object.keys(widgetGroups)
               .sort((a, b) => parseInt(a) - parseInt(b)) // Sort rows numerically
-              .map((rowKey) => (
-                <div key={`row-${rowKey}`} className={getGridClassesForRow(rowKey)}>
-                  {widgetGroups[rowKey].map((widget) => (
-                    <div
-                      key={widget.id}
-                      className={getSpanClasses(widget)}
-                      style={{
-                        height: 'auto',
-                        minHeight: getWidgetHeight(widget)
-                      }}
-                    >
-                      <WidgetRenderer widget={widget} />
-                    </div>
-                  ))}
-                </div>
-              ))
+              .map((rowKey) => {
+                const rowWidgets = widgetGroups[rowKey];
+                const widgetIds = rowWidgets.map(w => w.id);
+
+                return (
+                  <DndContext
+                    key={`dnd-${rowKey}`}
+                    collisionDetection={closestCenter}
+                    onDragEnd={(event) => handleDragEnd(event, rowKey)}
+                  >
+                    <SortableContext items={widgetIds} strategy={verticalListSortingStrategy}>
+                      <div className={getGridClassesForRow(rowKey)}>
+                        {rowWidgets.map((widget) => (
+                          <DraggableWidget
+                            key={widget.id}
+                            widget={widget}
+                            spanClasses={getSpanClasses(widget)}
+                            minHeight={getWidgetHeight(widget)}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                );
+              })
             }
           </div>
         )}
