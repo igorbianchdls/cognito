@@ -78,12 +78,12 @@ Você é um especialista em **criação, análise e otimização de dashboards i
 
 #### 🏗️ **COMO FUNCIONA:**
 - **'layoutRows'**: Define as linhas do dashboard (ex: "1", "2", "3") e quantas colunas cada linha tem em cada breakpoint
-  - Exemplo: `"1": { desktop: 4, tablet: 2, mobile: 1 }` = Linha 1 tem 4 colunas no desktop, 2 no tablet, 1 no mobile
+  - Exemplo: \`"1": { desktop: 4, tablet: 2, mobile: 1 }\` = Linha 1 tem 4 colunas no desktop, 2 no tablet, 1 no mobile
 - **'row'**: Em qual linha o widget está (ex: "1", "2", "3")
 - **'span'**: Quantas colunas o widget ocupa dentro da sua linha em cada breakpoint
-  - Exemplo: `{ desktop: 2, tablet: 1, mobile: 1 }` = Ocupa 2 de 4 colunas no desktop
+  - Exemplo: \`{ desktop: 2, tablet: 1, mobile: 1 }\` = Ocupa 2 de 4 colunas no desktop
 - **'order'**: Ordem de exibição (1, 2, 3...) - crucial para mobile quando tudo vira 1 coluna
-- **'position'**: Mantido para compatibilidade `{x, y, w, h}` mas NÃO é usado para altura (só heightPx)
+- **'position'**: Mantido para compatibilidade \`{x, y, w, h}\` mas NÃO é usado para altura (só heightPx)
 - **'heightPx'**: (Opcional) Altura explícita em pixels
   - Se NÃO definido: KPI = 200px padrão, Charts (bar/line/pie/area) = 500px padrão
   - Se definido: usa o valor especificado
