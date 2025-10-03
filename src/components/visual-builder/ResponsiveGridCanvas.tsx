@@ -1,10 +1,11 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { DndContext, closestCenter, DragEndEvent, UniqueIdentifier } from '@dnd-kit/core';
 import { SortableContext, useSortable, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import WidgetRenderer from './WidgetRenderer';
+import WidgetEditorModal from './WidgetEditorModal';
 import type { Widget, GridConfig, LayoutRow, WidgetSpan } from './ConfigParser';
 
 interface ResponsiveGridCanvasProps {
@@ -19,9 +20,10 @@ interface DraggableWidgetProps {
   widget: Widget;
   spanClasses: string;
   minHeight: string;
+  onEdit: (widget: Widget) => void;
 }
 
-function DraggableWidget({ widget, spanClasses, minHeight }: DraggableWidgetProps) {
+function DraggableWidget({ widget, spanClasses, minHeight, onEdit }: DraggableWidgetProps) {
   const {
     attributes,
     listeners,
@@ -35,7 +37,13 @@ function DraggableWidget({ widget, spanClasses, minHeight }: DraggableWidgetProp
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    cursor: isDragging ? 'grabbing' : 'grab',
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    // Only trigger edit on direct click, not during drag
+    if (!isDragging) {
+      onEdit(widget);
+    }
   };
 
   return (
@@ -43,15 +51,25 @@ function DraggableWidget({ widget, spanClasses, minHeight }: DraggableWidgetProp
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
       className={spanClasses}
     >
       <div
+        {...listeners}
+        onClick={handleClick}
         style={{
           height: 'auto',
-          minHeight: minHeight
+          minHeight: minHeight,
+          cursor: isDragging ? 'grabbing' : 'grab',
+          position: 'relative'
         }}
+        className="group hover:ring-2 hover:ring-blue-400 rounded-lg transition-all"
       >
+        {/* Edit Icon on Hover */}
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+          <div className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium">
+            ✏️ Click para editar
+          </div>
+        </div>
         <WidgetRenderer widget={widget} />
       </div>
     </div>
@@ -60,6 +78,22 @@ function DraggableWidget({ widget, spanClasses, minHeight }: DraggableWidgetProp
 
 export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode = 'desktop', onLayoutChange }: ResponsiveGridCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
+
+  // Handle widget edit
+  const handleEditWidget = (widget: Widget) => {
+    setEditingWidget(widget);
+  };
+
+  // Handle save widget changes
+  const handleSaveWidget = (updatedWidget: Widget) => {
+    if (!onLayoutChange) return;
+
+    const updatedWidgets = widgets.map(w =>
+      w.id === updatedWidget.id ? updatedWidget : w
+    );
+    onLayoutChange(updatedWidgets);
+  };
 
   // Extract theme colors from gridConfig
   const backgroundColor = gridConfig.backgroundColor || '#ffffff';
@@ -355,6 +389,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
                             widget={widget}
                             spanClasses={getSpanClasses(widget)}
                             minHeight={getWidgetHeight(widget)}
+                            onEdit={handleEditWidget}
                           />
                         ))}
                       </div>
@@ -367,6 +402,14 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
         )}
 
       </div>
+
+      {/* Widget Editor Modal */}
+      <WidgetEditorModal
+        widget={editingWidget}
+        isOpen={!!editingWidget}
+        onClose={() => setEditingWidget(null)}
+        onSave={handleSaveWidget}
+      />
     </div>
   );
 }
