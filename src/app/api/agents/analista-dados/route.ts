@@ -140,10 +140,101 @@ When user uses one of these commands after seeing the plan → Execute ALL plann
 **getTableSchema**: Dive deep into relevant tables, understand relationships
 **executarSQL**: Complex exploratory analysis, queries with joins, window functions, CTEs
 **gerarGrafico**: Simple queries prioritizing visual output and quick insights
+**gerarMultiplosGraficos**: Generate multiple charts AND TABLES in parallel for complete dashboards
+  - Supports types: 'bar', 'line', 'pie', 'horizontal-bar', 'area', 'table'
+  - For TABLES: use fields 'colunas', 'filtro', 'ordenacao', 'limite'
+  - For CHARTS: use fields 'x', 'y', 'agregacao'
+  - Ideal for comprehensive analysis with visual insights + detailed data
 **gerarInsights**: Compile structured findings with visual interface
 **gerarAlertas**: Identify issues/opportunities with criticality levels
 **retrieveResult**: Search information in knowledge base when necessary
 </tool_guidelines>
+
+<multiple_charts_examples>
+**Example 1 - Complete Sales Dashboard:**
+gerarMultiplosGraficos({
+  tabela: "creatto-463117.biquery_data.shopify_orders",
+  graficos: [
+    {
+      tipo: 'bar',
+      x: 'product_name',
+      y: 'total_price',
+      agregacao: 'SUM',
+      titulo: 'Receita Total por Produto',
+      descricao: 'Soma da receita agrupada por produto',
+      explicacao: 'Mostra quais produtos geram mais receita'
+    },
+    {
+      tipo: 'table',
+      titulo: 'Top 10 Pedidos de Alto Valor',
+      colunas: 'order_id, customer_name, product_name, total_price, created_at',
+      filtro: 'total_price > 500',
+      ordenacao: 'total_price DESC',
+      limite: 10,
+      explicacao: 'Lista dos 10 pedidos com valor acima de R$ 500'
+    },
+    {
+      tipo: 'pie',
+      x: 'status',
+      y: 'order_id',
+      agregacao: 'COUNT',
+      titulo: 'Distribuição de Pedidos por Status',
+      explicacao: 'Proporção de pedidos em cada status (completo, pendente, cancelado)'
+    }
+  ]
+})
+
+**Example 2 - Temporal Performance Analysis:**
+gerarMultiplosGraficos({
+  tabela: "creatto-463117.biquery_data.shopify_orders",
+  graficos: [
+    {
+      tipo: 'line',
+      x: 'DATE(created_at)',
+      y: 'total_price',
+      agregacao: 'SUM',
+      titulo: 'Evolução de Receita Diária',
+      explicacao: 'Tendência de receita ao longo dos dias'
+    },
+    {
+      tipo: 'table',
+      titulo: 'Últimos 20 Pedidos',
+      colunas: 'created_at, order_id, customer_email, total_price, status',
+      ordenacao: 'created_at DESC',
+      limite: 20,
+      explicacao: 'Pedidos mais recentes para auditoria'
+    }
+  ]
+})
+
+**Example 3 - Customer Investigation:**
+gerarMultiplosGraficos({
+  tabela: "creatto-463117.biquery_data.shopify_orders",
+  graficos: [
+    {
+      tipo: 'horizontal-bar',
+      x: 'customer_name',
+      y: 'total_price',
+      agregacao: 'SUM',
+      titulo: 'Top 15 Clientes por Receita',
+      explicacao: 'Ranking dos clientes que mais gastaram'
+    },
+    {
+      tipo: 'table',
+      titulo: 'Clientes VIP - Pedidos Individuais',
+      colunas: 'customer_name, customer_email, order_id, total_price, created_at, product_name',
+      filtro: 'total_price > 1000',
+      ordenacao: 'customer_name, created_at DESC',
+      limite: 50,
+      explicacao: 'Detalhamento de todos os pedidos acima de R$ 1000 por cliente'
+    }
+  ]
+})
+
+**When to use TABLE vs CHART:**
+- TABLE: Need exact data, multiple columns, audit details, specific records
+- CHART: Identify patterns, compare categories, see temporal trends, visual insights
+</multiple_charts_examples>
 
 <output_standards>
 - Lead with executive summary
