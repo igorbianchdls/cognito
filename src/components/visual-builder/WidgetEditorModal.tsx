@@ -45,7 +45,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
 
     const updatedWidget: Widget = {
       ...widget,
-      type: formData.type as 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'table',
+      type: formData.type as 'bar' | 'line' | 'pie' | 'area' | 'kpi' | 'insights' | 'alerts' | 'recommendations',
       title: formData.title,
       heightPx: formData.heightPx,
       dataSource: {
@@ -93,7 +93,9 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
               <option value="pie">Pie Chart</option>
               <option value="area">Area Chart</option>
               <option value="kpi">KPI</option>
-              <option value="table">Table</option>
+              <option value="insights">Insights</option>
+              <option value="alerts">Alerts</option>
+              <option value="recommendations">Recommendations</option>
             </select>
           </div>
 
@@ -169,7 +171,7 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
               </div>
 
               {/* X Field */}
-              {formData.type !== 'kpi' && (
+              {!['kpi', 'insights', 'alerts', 'recommendations'].includes(formData.type) && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Campo X (Dimensão)
