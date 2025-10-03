@@ -17,16 +17,16 @@ const generateSQL = (tipo: string, x: string, y: string, tabela: string, agregac
     case 'horizontal-bar':
     case 'area':
       if (funcaoAgregacao === 'COUNT') {
-        return `SELECT ${x}, COUNT(*) as count FROM ${tabela} GROUP BY ${x} ORDER BY ${x} LIMIT 50`;
+        return `SELECT \`${x}\`, COUNT(*) as count FROM ${tabela} GROUP BY \`${x}\` ORDER BY \`${x}\` LIMIT 50`;
       }
-      return `SELECT ${x}, ${funcaoAgregacao}(${y}) as ${y} FROM ${tabela} GROUP BY ${x} ORDER BY ${x} LIMIT 50`;
+      return `SELECT \`${x}\`, ${funcaoAgregacao}(\`${y}\`) as value FROM ${tabela} GROUP BY \`${x}\` ORDER BY \`${x}\` LIMIT 50`;
     case 'pie':
       if (funcaoAgregacao === 'COUNT') {
-        return `SELECT ${x}, COUNT(*) as count FROM ${tabela} GROUP BY ${x} ORDER BY count DESC LIMIT 10`;
+        return `SELECT \`${x}\`, COUNT(*) as count FROM ${tabela} GROUP BY \`${x}\` ORDER BY count DESC LIMIT 10`;
       }
-      return `SELECT ${x}, ${funcaoAgregacao}(${y}) as ${y} FROM ${tabela} GROUP BY ${x} ORDER BY ${funcaoAgregacao}(${y}) DESC LIMIT 10`;
+      return `SELECT \`${x}\`, ${funcaoAgregacao}(\`${y}\`) as value FROM ${tabela} GROUP BY \`${x}\` ORDER BY ${funcaoAgregacao}(\`${y}\`) DESC LIMIT 10`;
     default:
-      return `SELECT ${x}, ${y} FROM ${tabela} LIMIT 50`;
+      return `SELECT \`${x}\`, \`${y}\` FROM ${tabela} LIMIT 50`;
   }
 };
 
@@ -34,9 +34,9 @@ const generateSQL = (tipo: string, x: string, y: string, tabela: string, agregac
 const processDataForChart = (data: BigQueryRowData[], x: string, y: string, tipo: string) => {
   return data.map(row => ({
     x: String(row[x] || 'N/A'),
-    y: Number(row[y] || row.count || 0),
+    y: Number(row.value || row.count || 0),
     label: String(row[x] || 'N/A'),
-    value: Number(row[y] || row.count || 0)
+    value: Number(row.value || row.count || 0)
   }));
 };
 
