@@ -261,7 +261,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
 
     // Priority 2: Default height by widget type
     if (widget.type === 'kpi') {
-      return '200px';
+      return '140px';
     }
 
     if (['bar', 'line', 'pie', 'area'].includes(widget.type)) {
