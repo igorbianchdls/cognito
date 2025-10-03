@@ -267,12 +267,16 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
       return `${widget.heightPx}px`;
     }
 
-    // Priority 2: Use position.h with grid conversion (h * rowHeight)
-    if (widget.position?.h && gridConfig.rowHeight) {
-      return `${widget.position.h * gridConfig.rowHeight}px`;
+    // Priority 2: Default height by widget type
+    if (widget.type === 'kpi') {
+      return '200px';
     }
 
-    // Priority 3: Default minimum height
+    if (['bar', 'line', 'pie', 'area'].includes(widget.type)) {
+      return '500px';
+    }
+
+    // Priority 3: Fallback for other widget types
     return '200px';
   };
 
