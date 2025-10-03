@@ -130,17 +130,17 @@ export function GenerativeChart({
 
     switch (currentChartType) {
       case 'bar':
-        return <BarChart data={data} containerBorder="none" />;
+        return <BarChart data={data} containerBorderColor="transparent" containerBorderAccentColor="transparent" />;
       case 'line':
-        return <LineChart data={data} containerBorder="none" />;
+        return <LineChart data={data} containerBorderColor="transparent" containerBorderAccentColor="transparent" />;
       case 'pie':
-        return <PieChart data={data} containerBorder="none" />;
+        return <PieChart data={data} containerBorderColor="transparent" containerBorderAccentColor="transparent" />;
       case 'horizontal-bar':
-        return <BarChart data={data} layout="horizontal" containerBorder="none" />;
+        return <BarChart data={data} layout="horizontal" containerBorderColor="transparent" containerBorderAccentColor="transparent" />;
       case 'area':
-        return <AreaChart data={data} containerBorder="none" />;
+        return <AreaChart data={data} containerBorderColor="transparent" containerBorderAccentColor="transparent" />;
       default:
-        return <BarChart data={data} containerBorder="none" />; // fallback para bar
+        return <BarChart data={data} containerBorderColor="transparent" containerBorderAccentColor="transparent" />; // fallback para bar
     }
   };
 
