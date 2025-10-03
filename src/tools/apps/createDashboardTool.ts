@@ -7,14 +7,11 @@ export const createDashboardTool = tool({
     dashboardDescription: z.string().describe('Descrição do dashboard a ser criado'),
     theme: z.enum(['light', 'dark', 'minimal', 'corporate', 'neon', 'circuit', 'glass']).optional().describe('Tema visual do dashboard'),
     gridConfig: z.object({
-      maxRows: z.number().describe('Número máximo de linhas no grid'),
-      rowHeight: z.number().describe('Altura de cada linha do grid em pixels'),
-      cols: z.number().describe('Número de colunas no grid'),
       layoutRows: z.record(z.string(), z.object({
         desktop: z.number().describe('Número de colunas no desktop'),
         tablet: z.number().describe('Número de colunas no tablet'),
         mobile: z.number().describe('Número de colunas no mobile')
-      })).optional().describe('Layout responsivo por linhas (ex: "1", "2", "3")')
+      })).describe('Layout responsivo por linhas (ex: "1", "2", "3")')
     }),
     widgets: z.array(z.object({
       id: z.string().describe('ID único do widget (ex: "chart1", "kpi1")'),
@@ -45,7 +42,6 @@ export const createDashboardTool = tool({
   execute: async ({ dashboardDescription, theme, gridConfig, widgets }) => {
     console.log('🎨 createDashboardTool: Criando dashboard com dados reais');
     console.log(`📊 Dashboard: ${dashboardDescription}`);
-    console.log(`🔧 Grid: ${gridConfig.cols}x${gridConfig.maxRows}, altura: ${gridConfig.rowHeight}px`);
     console.log(`📈 Widgets: ${widgets.length} widgets definidos`);
 
     try {
@@ -71,10 +67,10 @@ export const createDashboardTool = tool({
         }
 
         // Validar posições no grid
-        if (widget.position.x < 0 || widget.position.x >= gridConfig.cols) {
+        if (widget.position.x < 0) {
           throw new Error(`Widget ${widget.id}: invalid x position (${widget.position.x})`);
         }
-        if (widget.position.w <= 0 || widget.position.x + widget.position.w > gridConfig.cols) {
+        if (widget.position.w <= 0) {
           throw new Error(`Widget ${widget.id}: invalid width (${widget.position.w})`);
         }
         if (widget.position.h <= 0) {
