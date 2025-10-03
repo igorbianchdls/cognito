@@ -16,16 +16,19 @@ import {
 } from '@/components/ai-elements/artifact';
 import { CopyIcon, DownloadIcon, DatabaseIcon, BarChart3, LineChart as LineChartIcon, PieChart as PieChartIcon, BarChart2, TrendingUp, Table as TableIcon } from 'lucide-react';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
+import SQLDataResults from '@/components/tools/SQLDataResults';
 
 interface ChartData {
   success: boolean;
+  type?: 'chart' | 'table';
   chartData?: Array<{
     x: string;
     y: number;
     label: string;
     value: number;
   }>;
-  chartType: 'bar' | 'line' | 'pie' | 'horizontal-bar' | 'area';
+  tableData?: Record<string, unknown>[];
+  chartType: 'bar' | 'line' | 'pie' | 'horizontal-bar' | 'area' | 'table';
   title: string;
   description?: string;
   explicacao?: string;
@@ -110,6 +113,28 @@ export function MultipleCharts({
 
   // Render chart component based on type and current state
   const renderChart = (chart: ChartData, index: number) => {
+    // Se é uma tabela, renderiza SQLDataResults
+    if (chart.type === 'table' || chart.chartType === 'table') {
+      console.log('📊 RENDER TABLE:', {
+        title: chart.title,
+        hasTableData: !!chart.tableData,
+        dataLength: chart.tableData?.length || 0,
+        success: chart.success
+      });
+
+      return (
+        <SQLDataResults
+          data={chart.tableData || []}
+          sqlQuery={chart.sqlQuery}
+          explicacao={chart.explicacao}
+          rowsReturned={chart.totalRecords}
+          success={chart.success}
+          error={chart.error}
+        />
+      );
+    }
+
+    // Para gráficos, renderiza chart components
     const currentType = chartTypes[index] || chart.chartType;
 
     // Debug: Log completo do que chega no renderChart
@@ -138,15 +163,15 @@ export function MultipleCharts({
 
     switch (currentType) {
       case 'bar':
-        return <BarChart data={chart.chartData} />;
+        return <BarChart data={chart.chartData} seriesLabel={chart.yColumn} containerBorderColor="transparent" containerBorderAccentColor="transparent" />;
       case 'line':
-        return <LineChart data={chart.chartData} />;
+        return <LineChart data={chart.chartData} seriesLabel={chart.yColumn} containerBorderColor="transparent" containerBorderAccentColor="transparent" />;
       case 'pie':
-        return <PieChart data={chart.chartData} />;
+        return <PieChart data={chart.chartData} containerBorderColor="transparent" containerBorderAccentColor="transparent" />;
       case 'horizontal-bar':
-        return <BarChart data={chart.chartData} layout="horizontal" />;
+        return <BarChart data={chart.chartData} layout="horizontal" seriesLabel={chart.yColumn} containerBorderColor="transparent" containerBorderAccentColor="transparent" />;
       case 'area':
-        return <AreaChart data={chart.chartData} />;
+        return <AreaChart data={chart.chartData} containerBorderColor="transparent" containerBorderAccentColor="transparent" />;
       default:
         console.log('❌ TIPO INVÁLIDO:', currentType);
         return <div style={{ padding: '20px', color: 'red' }}>ERRO: Tipo inválido {currentType}</div>;

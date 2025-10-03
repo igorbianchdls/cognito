@@ -30,6 +30,26 @@ const generateSQL = (tipo: string, x: string, y: string, tabela: string, agregac
   }
 };
 
+// Função para gerar SQL para tabelas (sem agregação)
+const generateSQLForTable = (
+  colunas: string,
+  tabela: string,
+  filtro?: string,
+  ordenacao?: string,
+  limite?: number
+): string => {
+  // Adicionar backticks em cada coluna separadamente
+  const colunasComBackticks = colunas === '*'
+    ? '*'
+    : colunas.split(',').map(col => `\`${col.trim()}\``).join(', ');
+
+  let sql = `SELECT ${colunasComBackticks} FROM ${tabela}`;
+  if (filtro) sql += ` WHERE ${filtro}`;
+  if (ordenacao) sql += ` ORDER BY ${ordenacao}`;
+  sql += ` LIMIT ${limite || 100}`;
+  return sql;
+};
+
 // Função para processar dados BigQuery para formato dos charts
 const processDataForChart = (data: BigQueryRowData[], x: string, y: string, tipo: string) => {
   return data.map(row => ({
@@ -133,18 +153,23 @@ export const gerarGrafico = tool({
 });
 
 export const gerarMultiplosGraficos = tool({
-  description: 'Gera múltiplos gráficos em um dashboard para análises Shopify completas',
+  description: 'Gera múltiplos gráficos e tabelas em um dashboard para análises completas',
   inputSchema: z.object({
     tabela: z.string().describe('Nome da tabela (ex: creatto-463117.biquery_data.shopify_orders)'),
     graficos: z.array(z.object({
-      tipo: z.enum(['bar', 'line', 'pie', 'horizontal-bar', 'area']).describe('Tipo do gráfico'),
-      x: z.string().describe('Coluna X'),
-      y: z.string().describe('Coluna Y'),
-      agregacao: z.enum(['SUM', 'COUNT', 'AVG', 'MAX', 'MIN']).optional().describe('Função de agregação'),
-      titulo: z.string().describe('Título do gráfico'),
-      descricao: z.string().optional().describe('Descrição do gráfico'),
-      explicacao: z.string().optional().describe('Explicação do que este gráfico vai analisar')
-    })).describe('Array de configurações de gráficos')
+      tipo: z.enum(['bar', 'line', 'pie', 'horizontal-bar', 'area', 'table']).describe('Tipo do gráfico ou tabela'),
+      x: z.string().describe('Coluna X (para gráficos) ou ignorado para tabelas'),
+      y: z.string().describe('Coluna Y (para gráficos) ou ignorado para tabelas'),
+      agregacao: z.enum(['SUM', 'COUNT', 'AVG', 'MAX', 'MIN']).optional().describe('Função de agregação para gráficos'),
+      titulo: z.string().describe('Título do gráfico ou tabela'),
+      descricao: z.string().optional().describe('Descrição do gráfico ou tabela'),
+      explicacao: z.string().optional().describe('Explicação do que este gráfico/tabela vai analisar'),
+      // Campos específicos para tabelas
+      colunas: z.string().optional().describe('Colunas a selecionar para tabela (ex: "id, name, total_price") ou "*" para todas'),
+      filtro: z.string().optional().describe('Condição WHERE para filtrar dados (ex: "total_price > 1000")'),
+      ordenacao: z.string().optional().describe('Cláusula ORDER BY (ex: "created_at DESC")'),
+      limite: z.number().optional().describe('LIMIT - número máximo de registros para tabela (padrão: 100)')
+    })).describe('Array de configurações de gráficos e tabelas')
   }),
   execute: async ({ tabela, graficos }) => {
     console.log('📊 Gerando múltiplos gráficos:', { tabela, quantidadeGraficos: graficos.length });
@@ -159,8 +184,18 @@ export const gerarMultiplosGraficos = tool({
       // Execute all queries in parallel
       const chartPromises = graficos.map(async (grafico, index) => {
         try {
-          const sqlQuery = generateSQL(grafico.tipo, grafico.x, grafico.y, tabela, grafico.agregacao);
-          console.log(`🔍 SQL gerado para gráfico ${index + 1}:`, sqlQuery);
+          // Gerar SQL apropriado baseado no tipo
+          const sqlQuery = grafico.tipo === 'table'
+            ? generateSQLForTable(
+                grafico.colunas || '*',
+                tabela,
+                grafico.filtro,
+                grafico.ordenacao,
+                grafico.limite
+              )
+            : generateSQL(grafico.tipo, grafico.x, grafico.y, tabela, grafico.agregacao);
+
+          console.log(`🔍 SQL gerado para ${grafico.tipo === 'table' ? 'tabela' : 'gráfico'} ${index + 1}:`, sqlQuery);
 
           const result = await bigQueryService.executeQuery({
             query: sqlQuery,
@@ -169,17 +204,37 @@ export const gerarMultiplosGraficos = tool({
 
           const data = result.data || [];
 
-          // Debug: Dados do gráfico individual
-          console.log(`🔍 GRÁFICO ${index + 1} - Dados BigQuery:`, {
+          // Debug: Dados do BigQuery
+          console.log(`🔍 ${grafico.tipo.toUpperCase()} ${index + 1} - Dados BigQuery:`, {
             titulo: grafico.titulo,
+            tipo: grafico.tipo,
             rawLength: data.length,
             firstRaw: data[0],
             sqlQuery
           });
 
+          // Para TABELAS: retornar dados raw
+          if (grafico.tipo === 'table') {
+            return {
+              success: true,
+              type: 'table',
+              tableData: data,
+              title: grafico.titulo,
+              description: grafico.descricao,
+              explicacao: grafico.explicacao,
+              sqlQuery,
+              totalRecords: data.length,
+              metadata: {
+                generatedAt: new Date().toISOString(),
+                dataSource: 'bigquery-sql'
+              }
+            };
+          }
+
+          // Para GRÁFICOS: processar dados
           const processedData = processDataForChart(data, grafico.x, grafico.y, grafico.tipo);
 
-          // Debug: Dados processados do gráfico individual
+          // Debug: Dados processados do gráfico
           console.log(`🔍 GRÁFICO ${index + 1} - Dados Processados:`, {
             titulo: grafico.titulo,
             processedLength: processedData.length,
@@ -188,6 +243,7 @@ export const gerarMultiplosGraficos = tool({
 
           return {
             success: true,
+            type: 'chart',
             chartData: processedData,
             chartType: grafico.tipo,
             title: grafico.titulo,
@@ -204,9 +260,10 @@ export const gerarMultiplosGraficos = tool({
             }
           };
         } catch (error) {
-          console.error(`❌ Erro no gráfico ${index + 1}:`, error);
+          console.error(`❌ Erro no item ${index + 1}:`, error);
           return {
             success: false,
+            type: grafico.tipo === 'table' ? 'table' : 'chart',
             error: error instanceof Error ? error.message : 'Erro desconhecido',
             title: grafico.titulo,
             chartType: grafico.tipo
