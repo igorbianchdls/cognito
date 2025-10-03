@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { BarChart } from '@/components/charts/BarChart';
 import { LineChart } from '@/components/charts/LineChart';
 import { PieChart } from '@/components/charts/PieChart';
@@ -56,6 +56,7 @@ export function GenerativeChart({
   const [currentChartType, setCurrentChartType] = useState<'bar' | 'line' | 'pie' | 'horizontal-bar' | 'area'>(chartType);
   const [showChartSelector, setShowChartSelector] = useState(false);
   const [showTable, setShowTable] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Verificar se há erro ou dados vazios
   const hasError = fallbackMode || error || !data || data.length === 0;
@@ -76,12 +77,15 @@ export function GenerativeChart({
   // Fechar dropdown quando clicar fora
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (showChartSelector) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowChartSelector(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    if (showChartSelector) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showChartSelector]);
 
@@ -126,17 +130,17 @@ export function GenerativeChart({
 
     switch (currentChartType) {
       case 'bar':
-        return <BarChart data={data} />;
+        return <BarChart data={data} containerBorder="none" />;
       case 'line':
-        return <LineChart data={data} />;
+        return <LineChart data={data} containerBorder="none" />;
       case 'pie':
-        return <PieChart data={data} />;
+        return <PieChart data={data} containerBorder="none" />;
       case 'horizontal-bar':
-        return <BarChart data={data} layout="horizontal" />;
+        return <BarChart data={data} layout="horizontal" containerBorder="none" />;
       case 'area':
-        return <AreaChart data={data} />;
+        return <AreaChart data={data} containerBorder="none" />;
       default:
-        return <BarChart data={data} />; // fallback para bar
+        return <BarChart data={data} containerBorder="none" />; // fallback para bar
     }
   };
 
@@ -202,7 +206,7 @@ export function GenerativeChart({
               />
               {/* Dropdown para seleção de chart */}
               {showChartSelector && (
-                <div className="absolute top-full mt-2 right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50 min-w-[120px]">
+                <div ref={dropdownRef} className="absolute top-full mt-2 right-0 bg-white border border-gray-200 rounded-lg shadow-lg py-2 z-50 min-w-[120px]">
                   {[
                     { type: 'bar' as const, label: 'Bar Chart', icon: BarChart3 },
                     { type: 'line' as const, label: 'Line Chart', icon: LineChartIcon },
