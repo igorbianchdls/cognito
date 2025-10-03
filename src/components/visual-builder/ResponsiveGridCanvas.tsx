@@ -389,7 +389,8 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
                       <div
                         className={getGridClassesForRow()}
                         style={{
-                          gridTemplateColumns: `repeat(${getColumnsValue(rowKey)}, 1fr)`
+                          gridTemplateColumns: `repeat(${getColumnsValue(rowKey)}, 1fr)`,
+                          width: '100%'
                         }}
                       >
                         {rowWidgets.map((widget) => (
