@@ -64,10 +64,16 @@ function DraggableWidget({ widget, spanClasses, minHeight, onEdit }: DraggableWi
         className="group hover:ring-2 hover:ring-blue-400 rounded-lg transition-all"
       >
         {/* Edit Icon on Hover */}
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
-          <div className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium">
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(widget);
+            }}
+            className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-medium hover:bg-blue-700 cursor-pointer"
+          >
             ✏️ Click para editar
-          </div>
+          </button>
         </div>
         <WidgetRenderer widget={widget} />
       </div>
