@@ -158,8 +158,8 @@ export const gerarMultiplosGraficos = tool({
     tabela: z.string().describe('Nome da tabela (ex: creatto-463117.biquery_data.shopify_orders)'),
     graficos: z.array(z.object({
       tipo: z.enum(['bar', 'line', 'pie', 'horizontal-bar', 'area', 'table']).describe('Tipo do gráfico ou tabela'),
-      x: z.string().describe('Coluna X (para gráficos) ou ignorado para tabelas'),
-      y: z.string().describe('Coluna Y (para gráficos) ou ignorado para tabelas'),
+      x: z.string().optional().describe('Coluna X (obrigatório para gráficos, ignorado para tabelas)'),
+      y: z.string().optional().describe('Coluna Y (obrigatório para gráficos, ignorado para tabelas)'),
       agregacao: z.enum(['SUM', 'COUNT', 'AVG', 'MAX', 'MIN']).optional().describe('Função de agregação para gráficos'),
       titulo: z.string().describe('Título do gráfico ou tabela'),
       descricao: z.string().optional().describe('Descrição do gráfico ou tabela'),
@@ -193,7 +193,7 @@ export const gerarMultiplosGraficos = tool({
                 grafico.ordenacao,
                 grafico.limite
               )
-            : generateSQL(grafico.tipo, grafico.x, grafico.y, tabela, grafico.agregacao);
+            : generateSQL(grafico.tipo, grafico.x || '', grafico.y || '', tabela, grafico.agregacao);
 
           console.log(`🔍 SQL gerado para ${grafico.tipo === 'table' ? 'tabela' : 'gráfico'} ${index + 1}:`, sqlQuery);
 
