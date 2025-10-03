@@ -231,7 +231,12 @@ export const gerarMultiplosGraficos = tool({
             };
           }
 
-          // Para GRÁFICOS: processar dados
+          // Para GRÁFICOS: validar campos obrigatórios
+          if (!grafico.x || !grafico.y) {
+            throw new Error(`Gráfico "${grafico.titulo}" do tipo "${grafico.tipo}" requer campos x e y`);
+          }
+
+          // Processar dados do gráfico
           const processedData = processDataForChart(data, grafico.x, grafico.y, grafico.tipo);
 
           // Debug: Dados processados do gráfico
