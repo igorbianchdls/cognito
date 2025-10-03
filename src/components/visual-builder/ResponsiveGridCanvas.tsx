@@ -294,12 +294,12 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
 
   // Get columns value for row based on viewportMode
   const getColumnsValue = (rowKey: string): number => {
-    let layoutConfig = getLayoutConfig();
-
-    // Get specific layout for this row if available
-    if (gridConfig.layoutRows && gridConfig.layoutRows[rowKey]) {
-      layoutConfig = gridConfig.layoutRows[rowKey];
-    }
+    // Get specific layout for this row or use default
+    const layoutConfig = gridConfig.layoutRows?.[rowKey] || {
+      desktop: 4,
+      tablet: 2,
+      mobile: 1
+    };
 
     switch (viewportMode) {
       case 'mobile':
