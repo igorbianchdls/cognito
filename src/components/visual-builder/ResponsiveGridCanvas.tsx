@@ -19,11 +19,12 @@ interface ResponsiveGridCanvasProps {
 interface DraggableWidgetProps {
   widget: Widget;
   spanClasses: string;
+  spanValue: number;
   minHeight: string;
   onEdit: (widget: Widget) => void;
 }
 
-function DraggableWidget({ widget, spanClasses, minHeight, onEdit }: DraggableWidgetProps) {
+function DraggableWidget({ widget, spanClasses, spanValue, minHeight, onEdit }: DraggableWidgetProps) {
   const {
     attributes,
     listeners,
@@ -37,13 +38,7 @@ function DraggableWidget({ widget, spanClasses, minHeight, onEdit }: DraggableWi
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-  };
-
-  const handleClick = (e: React.MouseEvent) => {
-    // Only trigger edit on direct click, not during drag
-    if (!isDragging) {
-      onEdit(widget);
-    }
+    gridColumn: `span ${spanValue}`, // CSS Grid native span
   };
 
   return (
@@ -75,7 +70,6 @@ function DraggableWidget({ widget, spanClasses, minHeight, onEdit }: DraggableWi
         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <button
             onClick={(e) => {
-              console.log('🔵 Botão de edição clicado:', widget.id);
               e.preventDefault();
               e.stopPropagation();
               onEdit(widget);
@@ -98,9 +92,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
 
   // Handle widget edit
   const handleEditWidget = (widget: Widget) => {
-    console.log('🟢 handleEditWidget chamado:', widget.id);
     setEditingWidget(widget);
-    console.log('🟢 Estado atualizado para:', widget);
   };
 
   // Handle save widget changes
@@ -280,33 +272,28 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
     return '200px';
   };
 
-  // Generate CSS classes for widget spans based on viewportMode
-  const getSpanClasses = (widget: Widget): string => {
+  // Get span value for widget based on viewportMode
+  const getSpanValue = (widget: Widget): number => {
     const { desktopSpan, tabletSpan, mobileSpan } = adaptWidgetForResponsive(widget);
 
-    // Use viewportMode to determine span instead of CSS breakpoints
-    let span: number;
     switch (viewportMode) {
       case 'mobile':
-        span = mobileSpan;
-        break;
+        return mobileSpan;
       case 'tablet':
-        span = tabletSpan;
-        break;
+        return tabletSpan;
       case 'desktop':
       default:
-        span = desktopSpan;
-        break;
+        return desktopSpan;
     }
-
-    return [
-      `col-span-${span}`,
-      'transition-all duration-200'        // Smooth transitions
-    ].join(' ');
   };
 
-  // Generate grid layout classes for a specific row
-  const getGridClassesForRow = (rowKey: string): string => {
+  // Generate CSS classes for widget (only fixed classes)
+  const getSpanClasses = (): string => {
+    return 'transition-all duration-200';
+  };
+
+  // Get columns value for row based on viewportMode
+  const getColumnsValue = (rowKey: string): number => {
     let layoutConfig = getLayoutConfig();
 
     // Get specific layout for this row if available
@@ -314,25 +301,20 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
       layoutConfig = gridConfig.layoutRows[rowKey];
     }
 
-    // Use viewportMode to determine columns instead of CSS breakpoints
-    let columns: number;
     switch (viewportMode) {
       case 'mobile':
-        columns = layoutConfig.mobile;
-        break;
+        return layoutConfig.mobile;
       case 'tablet':
-        columns = layoutConfig.tablet;
-        break;
+        return layoutConfig.tablet;
       case 'desktop':
       default:
-        columns = layoutConfig.desktop;
-        break;
+        return layoutConfig.desktop;
     }
+  };
 
-    return [
-      'grid gap-4 auto-rows-min',
-      `grid-cols-${columns}`
-    ].join(' ');
+  // Generate grid layout classes for a specific row (only fixed classes)
+  const getGridClassesForRow = (): string => {
+    return 'grid gap-4 auto-rows-min';
   };
 
   // Get device-specific styles
@@ -404,12 +386,18 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
                     onDragEnd={(event) => handleDragEnd(event, rowKey)}
                   >
                     <SortableContext items={widgetIds} strategy={horizontalListSortingStrategy}>
-                      <div className={getGridClassesForRow(rowKey)}>
+                      <div
+                        className={getGridClassesForRow()}
+                        style={{
+                          gridTemplateColumns: `repeat(${getColumnsValue(rowKey)}, 1fr)`
+                        }}
+                      >
                         {rowWidgets.map((widget) => (
                           <DraggableWidget
                             key={widget.id}
                             widget={widget}
-                            spanClasses={getSpanClasses(widget)}
+                            spanClasses={getSpanClasses()}
+                            spanValue={getSpanValue(widget)}
                             minHeight={getWidgetHeight(widget)}
                             onEdit={handleEditWidget}
                           />
