@@ -20,6 +20,50 @@ const safeSQLIdentifier = (identifier: string): string => {
   return `\`${trimmed}\``;
 };
 
+// Função para processar cláusula ORDER BY
+const processOrderBy = (orderBy: string): string => {
+  return orderBy
+    .split(',')
+    .map(part => {
+      const tokens = part.trim().split(/\s+/);
+      const column = tokens[0];
+      const direction = tokens.slice(1).join(' '); // ASC, DESC, ou vazio
+      return direction
+        ? `${safeSQLIdentifier(column)} ${direction}`
+        : safeSQLIdentifier(column);
+    })
+    .join(', ');
+};
+
+// Função para processar cláusula WHERE
+const processWhereClause = (where: string): string => {
+  // Operadores SQL comuns (ordenados por tamanho para match correto)
+  const operators = ['>=', '<=', '!=', '<>', '>', '<', '='];
+
+  // Encontrar primeiro operador
+  let operatorIndex = -1;
+  let operator = '';
+
+  for (const op of operators) {
+    const index = where.indexOf(op);
+    if (index !== -1 && (operatorIndex === -1 || index < operatorIndex)) {
+      operatorIndex = index;
+      operator = op;
+    }
+  }
+
+  if (operatorIndex === -1) {
+    // Sem operador encontrado, retorna como está
+    return where;
+  }
+
+  // Separar coluna e resto da expressão
+  const column = where.substring(0, operatorIndex).trim();
+  const rest = where.substring(operatorIndex); // Inclui operador e valor
+
+  return `${safeSQLIdentifier(column)}${rest}`;
+};
+
 // Função para gerar SQL automaticamente baseado no tipo de gráfico
 const generateSQL = (tipo: string, x: string, y: string, tabela: string, agregacao?: string): string => {
   // Define agregação padrão se não fornecida
@@ -59,8 +103,8 @@ const generateSQLForTable = (
     : colunas.split(',').map(col => safeSQLIdentifier(col)).join(', ');
 
   let sql = `SELECT ${colunasComBackticks} FROM ${tabela}`;
-  if (filtro) sql += ` WHERE ${filtro}`;
-  if (ordenacao) sql += ` ORDER BY ${ordenacao}`;
+  if (filtro) sql += ` WHERE ${processWhereClause(filtro)}`;
+  if (ordenacao) sql += ` ORDER BY ${processOrderBy(ordenacao)}`;
   sql += ` LIMIT ${limite || 100}`;
   return sql;
 };
