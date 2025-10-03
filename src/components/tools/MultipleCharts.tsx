@@ -69,8 +69,8 @@ export function MultipleCharts({
   const failedCharts = charts.filter(chart => !chart.success);
 
   // State management para múltiplos charts
-  const [chartTypes, setChartTypes] = useState<Record<number, 'bar' | 'line' | 'pie' | 'horizontal-bar' | 'area'>>(() => {
-    const initialTypes: Record<number, 'bar' | 'line' | 'pie' | 'horizontal-bar' | 'area'> = {};
+  const [chartTypes, setChartTypes] = useState<Record<number, 'bar' | 'line' | 'pie' | 'horizontal-bar' | 'area' | 'table'>>(() => {
+    const initialTypes: Record<number, 'bar' | 'line' | 'pie' | 'horizontal-bar' | 'area' | 'table'> = {};
     charts.forEach((chart, index) => {
       initialTypes[index] = chart.chartType;
     });
