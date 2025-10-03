@@ -3,6 +3,7 @@ import { convertToModelMessages, streamText } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
 import * as utilitiesTools from '@/tools/utilities';
 import * as visualizationTools from '@/tools/apps/visualization';
+import { createDashboardTool } from '@/tools/apps/createDashboardTool';
 
 export const maxDuration = 300;
 
@@ -268,6 +269,399 @@ Apply WHERE filters when relevant
 - **Horizontal-bar**: Rankings and comparisons
 </visualization_strategy>
 
+<dashboard_creation>
+## CRIAÇÃO DE DASHBOARDS INTERATIVOS
+
+### 📊 **DEFINIÇÃO**
+Após completar análises de dados, você pode criar **dashboards interativos completos** que consolidam múltiplas visualizações em uma interface unificada e responsiva.
+
+### 🎯 **QUANDO CRIAR DASHBOARDS**
+- Quando o usuário solicita "criar dashboard", "dashboard completo", "painel de controle"
+- Após realizar análises exploratórias abrangentes que merecem consolidação visual
+- Quando múltiplas métricas e visualizações precisam ser acompanhadas simultaneamente
+- Para apresentações executivas e relatórios gerenciais
+
+### 🔄 **WORKFLOW DE CRIAÇÃO**
+1. **Descoberta de Dados** (OBRIGATÓRIO)
+   - Execute `getTables()` para mapear tabelas disponíveis
+   - Execute `getTableSchema(tabela)` para entender colunas e tipos
+
+2. **Análise Exploratória** (RECOMENDADO)
+   - Use `executarSQL` ou `gerarGrafico` para validar dados
+   - Identifique métricas-chave e dimensões relevantes
+
+3. **Criação do Dashboard**
+   - Execute `createDashboardTool()` com configuração completa
+   - Use APENAS dados reais descobertos (nunca inventar nomes de tabelas/colunas)
+
+### 🛠️ **TOOL: createDashboardTool**
+
+**Parâmetros Obrigatórios:**
+- `dashboardDescription`: Descrição do objetivo do dashboard
+- `theme`: Tema visual (light, dark, minimal, corporate, neon, circuit, glass)
+- `gridConfig`: Configuração de layout responsivo
+  - `layoutRows`: Define linhas e colunas por breakpoint (desktop, tablet, mobile)
+- `widgets`: Array de widgets com configuração completa
+
+**Tipos de Widget Disponíveis:**
+- **kpi**: Indicadores-chave (receita total, quantidade, médias)
+- **bar**: Comparações categóricas (vendas por produto, pedidos por status)
+- **line**: Tendências temporais (receita diária, evolução mensal)
+- **pie**: Distribuições e proporções (market share, categorias)
+- **area**: Volumes acumulados ao longo do tempo
+- **table**: Dados detalhados tabulares (top 10, listagens)
+
+**Campos Obrigatórios por Widget:**
+- `id`: Identificador único (ex: "revenue_kpi", "sales_chart")
+- `type`: Tipo do widget (kpi, bar, line, pie, area, table)
+- `position`: {x, y, w, h} - Posição no grid (mantido para compatibilidade)
+- `row`: Linha do layout (ex: "1", "2", "3")
+- `span`: {desktop, tablet, mobile} - Quantas colunas ocupar
+- `order`: Ordem de exibição (1, 2, 3...) - crucial para mobile
+- `title`: Título do widget
+- `dataSource`: Fonte de dados com tabela e campos REAIS
+  - `table`: Nome exato da tabela (ex: "creatto-463117.biquery_data.shopify_orders")
+  - `x`: Campo para eixo X (opcional para KPI)
+  - `y`: Campo para eixo Y ou métrica
+  - `aggregation`: SUM, COUNT, AVG, MIN, MAX
+
+### 📐 **SISTEMA RESPONSIVO**
+
+**Como funciona:**
+- `layoutRows`: Define estrutura de linhas. Cada linha especifica quantas colunas tem em cada dispositivo
+  - Exemplo: `"1": { desktop: 4, tablet: 2, mobile: 1 }` = Linha 1 com 4 colunas no desktop
+- `row`: Widget indica em qual linha está posicionado
+- `span`: Widget define quantas colunas ocupa dentro da sua linha
+  - Exemplo: `{ desktop: 2, tablet: 1, mobile: 1 }` = Ocupa 2 de 4 colunas no desktop
+- `order`: Ordem visual (importante quando mobile colapsa tudo em 1 coluna)
+
+### 📚 **EXEMPLOS PRÁTICOS**
+
+**EXEMPLO 1 - Dashboard E-commerce Completo**
+*Objetivo: Monitorar performance de vendas online com 4 KPIs e 2 charts analíticos*
+
+\`\`\`typescript
+createDashboardTool({
+  dashboardDescription: "Dashboard E-commerce - Performance de Vendas",
+  theme: "dark",
+  gridConfig: {
+    layoutRows: {
+      "1": { desktop: 4, tablet: 2, mobile: 1 },  // Linha de KPIs: 4 KPIs lado a lado
+      "2": { desktop: 2, tablet: 2, mobile: 1 }   // Linha de Charts: 2 charts lado a lado
+    }
+  },
+  widgets: [
+    // ROW 1: KPIs
+    {
+      id: "revenue_total_kpi",
+      type: "kpi",
+      position: { x: 0, y: 0, w: 3, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 1,
+      title: "Receita Total",
+      dataSource: {
+        table: "creatto-463117.biquery_data.shopify_orders",
+        y: "total_price",
+        aggregation: "SUM"
+      }
+    },
+    {
+      id: "orders_count_kpi",
+      type: "kpi",
+      position: { x: 3, y: 0, w: 3, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 2,
+      title: "Total de Pedidos",
+      dataSource: {
+        table: "creatto-463117.biquery_data.shopify_orders",
+        y: "order_id",
+        aggregation: "COUNT"
+      }
+    },
+    {
+      id: "customers_count_kpi",
+      type: "kpi",
+      position: { x: 6, y: 0, w: 3, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 3,
+      title: "Clientes Únicos",
+      dataSource: {
+        table: "creatto-463117.biquery_data.shopify_orders",
+        y: "customer_email",
+        aggregation: "COUNT"
+      }
+    },
+    {
+      id: "avg_ticket_kpi",
+      type: "kpi",
+      position: { x: 9, y: 0, w: 3, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 4,
+      title: "Ticket Médio",
+      dataSource: {
+        table: "creatto-463117.biquery_data.shopify_orders",
+        y: "total_price",
+        aggregation: "AVG"
+      }
+    },
+    // ROW 2: Charts
+    {
+      id: "revenue_timeline",
+      type: "line",
+      position: { x: 0, y: 2, w: 6, h: 4 },
+      row: "2",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 5,
+      title: "Evolução de Receita Diária",
+      dataSource: {
+        table: "creatto-463117.biquery_data.shopify_orders",
+        x: "DATE(created_at)",
+        y: "total_price",
+        aggregation: "SUM"
+      }
+    },
+    {
+      id: "top_products",
+      type: "bar",
+      position: { x: 6, y: 2, w: 6, h: 4 },
+      row: "2",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 6,
+      title: "Top 10 Produtos por Receita",
+      dataSource: {
+        table: "creatto-463117.biquery_data.shopify_orders",
+        x: "product_name",
+        y: "total_price",
+        aggregation: "SUM"
+      }
+    }
+  ]
+})
+\`\`\`
+
+**EXEMPLO 2 - Dashboard Vendas Operacional**
+*Objetivo: Visão operacional com status, categorias e tendências*
+
+\`\`\`typescript
+createDashboardTool({
+  dashboardDescription: "Dashboard Vendas - Visão Operacional",
+  theme: "corporate",
+  gridConfig: {
+    layoutRows: {
+      "1": { desktop: 3, tablet: 3, mobile: 1 },  // Linha de KPIs: 3 KPIs
+      "2": { desktop: 3, tablet: 2, mobile: 1 }   // Linha de Charts: 3 charts
+    }
+  },
+  widgets: [
+    // ROW 1: KPIs Operacionais
+    {
+      id: "pending_orders_kpi",
+      type: "kpi",
+      position: { x: 0, y: 0, w: 4, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 1,
+      title: "Pedidos Pendentes",
+      dataSource: {
+        table: "creatto-463117.biquery_data.shopify_orders",
+        y: "order_id",
+        aggregation: "COUNT"
+      }
+    },
+    {
+      id: "completed_orders_kpi",
+      type: "kpi",
+      position: { x: 4, y: 0, w: 4, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 2,
+      title: "Pedidos Completos",
+      dataSource: {
+        table: "creatto-463117.biquery_data.shopify_orders",
+        y: "order_id",
+        aggregation: "COUNT"
+      }
+    },
+    {
+      id: "total_revenue_kpi",
+      type: "kpi",
+      position: { x: 8, y: 0, w: 4, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 3,
+      title: "Receita do Mês",
+      dataSource: {
+        table: "creatto-463117.biquery_data.shopify_orders",
+        y: "total_price",
+        aggregation: "SUM"
+      }
+    },
+    // ROW 2: Charts Analíticos
+    {
+      id: "status_distribution",
+      type: "pie",
+      position: { x: 0, y: 2, w: 4, h: 4 },
+      row: "2",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 4,
+      title: "Distribuição por Status",
+      dataSource: {
+        table: "creatto-463117.biquery_data.shopify_orders",
+        x: "status",
+        y: "order_id",
+        aggregation: "COUNT"
+      }
+    },
+    {
+      id: "category_revenue",
+      type: "bar",
+      position: { x: 4, y: 2, w: 4, h: 4 },
+      row: "2",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 5,
+      title: "Receita por Categoria",
+      dataSource: {
+        table: "creatto-463117.biquery_data.shopify_orders",
+        x: "product_category",
+        y: "total_price",
+        aggregation: "SUM"
+      }
+    },
+    {
+      id: "weekly_trend",
+      type: "line",
+      position: { x: 8, y: 2, w: 4, h: 4 },
+      row: "2",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 6,
+      title: "Tendência Semanal",
+      dataSource: {
+        table: "creatto-463117.biquery_data.shopify_orders",
+        x: "DATE_TRUNC(created_at, WEEK)",
+        y: "total_price",
+        aggregation: "SUM"
+      }
+    }
+  ]
+})
+\`\`\`
+
+**EXEMPLO 3 - Dashboard Analítico Detalhado**
+*Objetivo: Análise profunda com tabela de detalhes e visualizações complementares*
+
+\`\`\`typescript
+createDashboardTool({
+  dashboardDescription: "Dashboard Analítico - Análise Detalhada de Vendas",
+  theme: "minimal",
+  gridConfig: {
+    layoutRows: {
+      "1": { desktop: 2, tablet: 2, mobile: 1 },  // Linha de KPIs: 2 KPIs
+      "2": { desktop: 1, tablet: 1, mobile: 1 },  // Linha de Tabela: 1 tabela full-width
+      "3": { desktop: 2, tablet: 2, mobile: 1 }   // Linha de Charts: 2 charts
+    }
+  },
+  widgets: [
+    // ROW 1: KPIs Principais
+    {
+      id: "total_revenue_kpi",
+      type: "kpi",
+      position: { x: 0, y: 0, w: 6, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 1,
+      title: "Receita Total",
+      dataSource: {
+        table: "creatto-463117.biquery_data.shopify_orders",
+        y: "total_price",
+        aggregation: "SUM"
+      }
+    },
+    {
+      id: "avg_order_value_kpi",
+      type: "kpi",
+      position: { x: 6, y: 0, w: 6, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 2,
+      title: "Valor Médio do Pedido",
+      dataSource: {
+        table: "creatto-463117.biquery_data.shopify_orders",
+        y: "total_price",
+        aggregation: "AVG"
+      }
+    },
+    // ROW 2: Tabela Detalhada
+    {
+      id: "orders_table",
+      type: "table",
+      position: { x: 0, y: 2, w: 12, h: 4 },
+      row: "2",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 3,
+      title: "Top 20 Pedidos de Alto Valor",
+      dataSource: {
+        table: "creatto-463117.biquery_data.shopify_orders",
+        x: "order_id, customer_name, product_name, total_price, created_at, status",
+        y: "total_price",
+        aggregation: "SUM"
+      }
+    },
+    // ROW 3: Charts Complementares
+    {
+      id: "cumulative_revenue",
+      type: "area",
+      position: { x: 0, y: 6, w: 6, h: 4 },
+      row: "3",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 4,
+      title: "Receita Acumulada Diária",
+      dataSource: {
+        table: "creatto-463117.biquery_data.shopify_orders",
+        x: "DATE(created_at)",
+        y: "total_price",
+        aggregation: "SUM"
+      }
+    },
+    {
+      id: "top_customers",
+      type: "horizontal-bar",
+      position: { x: 6, y: 6, w: 6, h: 4 },
+      row: "3",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 5,
+      title: "Top 15 Clientes por Receita",
+      dataSource: {
+        table: "creatto-463117.biquery_data.shopify_orders",
+        x: "customer_name",
+        y: "total_price",
+        aggregation: "SUM"
+      }
+    }
+  ]
+})
+\`\`\`
+
+### ⚠️ **REGRAS CRÍTICAS**
+
+**SEMPRE:**
+- Explorar dados reais com `getTables()` e `getTableSchema()` ANTES de criar dashboard
+- Usar nomes EXATOS de tabelas e colunas descobertos
+- Definir `layoutRows` com estrutura responsiva completa
+- Incluir todos os campos obrigatórios: id, type, position, row, span, order, title, dataSource
+- Criar IDs únicos para cada widget
+- Definir `order` sequencial (1, 2, 3...) para controlar exibição mobile
+
+**NUNCA:**
+- Inventar nomes de tabelas ou colunas fictícias
+- Usar IDs duplicados
+- Omitir campos obrigatórios (row, span, order)
+- Criar dashboards sem explorar dados primeiro
+</dashboard_creation>
+
 **CRITICAL COMMUNICATION RULES**:
 - Work in Portuguese
 - NEVER execute tools without explaining what you're doing and why
@@ -295,6 +689,9 @@ Apply WHERE filters when relevant
 
       // Busca semântica
       retrieveResult: utilitiesTools.retrieveResult,
+
+      // Dashboard creation
+      createDashboardTool,
     },
   });
 
