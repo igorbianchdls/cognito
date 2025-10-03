@@ -22,6 +22,7 @@ export function BarChart(props: BarChartProps) {
     gridStrokeWidth,
     title,
     subtitle,
+    seriesLabel,
     // Typography - Title
     titleFontFamily,
     titleFontSize = 18,
@@ -381,7 +382,7 @@ export function BarChart(props: BarChartProps) {
         <div style={{ height: '100%', width: '100%', overflow: 'hidden' }}>
           <ResponsiveBar
           data={finalData}
-          keys={['value']}
+          keys={[seriesLabel || 'value']}
           indexBy="id"
           
           // Layout configurável

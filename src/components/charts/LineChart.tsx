@@ -119,6 +119,9 @@ interface LineChartProps extends BaseChartProps {
   // Positioning
   translateY?: number
   marginBottom?: number
+
+  // Series Label (for dynamic legend)
+  seriesLabel?: string
 }
 
 const DEFAULT_MARGIN_BOTTOM = 50;
@@ -126,6 +129,7 @@ const DEFAULT_TRANSLATE_Y = 50;
 
 export function LineChart({
   data,
+  seriesLabel,
   colors,
   backgroundColor,
   backgroundOpacity,
@@ -358,7 +362,7 @@ export function LineChart({
           <ResponsiveLine
         data={[
           {
-            id: 'series',
+            id: seriesLabel || 'series',
             data: data.map(item => ({
               x: item.x || item.label || 'Unknown',
               y: item.y || item.value || 0

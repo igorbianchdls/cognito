@@ -239,6 +239,9 @@ export interface BarChartProps extends BaseChartProps {
   tooltip?: (data: { id: string; value: number }) => React.ReactNode;
   keys?: string[];
   indexBy?: string;
+
+  // Series Label (for dynamic legend)
+  seriesLabel?: string;
 }
 
 export interface ChartMetadata {
