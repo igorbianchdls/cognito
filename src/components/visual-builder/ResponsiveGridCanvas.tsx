@@ -412,7 +412,6 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
       </div>
 
       {/* Widget Editor Modal */}
-      {console.log('🟡 Modal renderizando com:', { editingWidget, isOpen: !!editingWidget })}
       <WidgetEditorModal
         widget={editingWidget}
         isOpen={!!editingWidget}
