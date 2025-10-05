@@ -61,8 +61,8 @@ export default function WidgetEditorModal({ widget, isOpen, onClose, onSave }: W
   if (!isOpen || !widget) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-20" onClick={onClose}>
-      <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 pointer-events-none">
+      <div className="absolute top-20 right-8 w-96 bg-white rounded-lg shadow-2xl border border-gray-200 p-6 pointer-events-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900">Editar Widget</h2>
