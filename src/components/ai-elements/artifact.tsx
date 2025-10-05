@@ -102,7 +102,7 @@ export const ArtifactAction = ({
   children,
   className,
   size = "sm",
-  variant = "ghost",
+  variant = "outline",
   ...props
 }: ArtifactActionProps) => {
   const button = (
