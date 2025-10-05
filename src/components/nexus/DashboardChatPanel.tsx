@@ -561,6 +561,7 @@ export default function DashboardChatPanel() {
               widgets={visualBuilderState.widgets}
               gridConfig={visualBuilderState.gridConfig}
               viewportMode={selectedViewport}
+              onLayoutChange={visualBuilderActions.updateWidgets}
             />
           </div>
         )}
