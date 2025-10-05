@@ -888,17 +888,10 @@ export class ThemeManager {
       // Apply background from BackgroundManager instead of hardcoded values
       ...backgroundStyle,
 
-      // Border color from theme tokens (preserve theme consistency)
-      borderColor: gridConfig.borderColor || tokens.colors.grid.border,
-
-      // Border & Shadow effects from theme tokens
-      borderWidth: gridConfig.borderWidth || tokens.borders.width.thin,
-      borderRadius: gridConfig.borderRadius || tokens.borders.radius.md,
-      containerShadowColor: gridConfig.containerShadowColor || tokens.effects.shadow.color,
-      containerShadowOpacity: gridConfig.containerShadowOpacity || tokens.effects.shadow.opacity,
-      containerShadowBlur: gridConfig.containerShadowBlur || tokens.effects.shadow.blur,
-      containerShadowOffsetX: gridConfig.containerShadowOffsetX || tokens.effects.shadow.offsetX,
-      containerShadowOffsetY: gridConfig.containerShadowOffsetY || tokens.effects.shadow.offsetY,
+      // Fixed border style (gray, no shadow)
+      borderColor: '#d1d5db',        // Cinza claro fixo
+      borderWidth: 1,                 // 1px
+      borderRadius: 8,                // 8px arredondamento
 
       // Spacing
       padding: gridConfig.padding || tokens.spacing.md,
