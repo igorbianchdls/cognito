@@ -331,6 +331,7 @@ export default function Page() {
   // Renderiza ChatContainer ÚNICO - nunca é desmontado
   const renderChatContainer = () => (
     <ChatContainer
+      key="persistent-chat-container"
       messages={displayedMessages}
       input={input}
       setInput={setInput}
