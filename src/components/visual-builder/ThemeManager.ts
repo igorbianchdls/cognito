@@ -192,38 +192,20 @@ export class ThemeManager {
         blur: 0
       };
     }
-    // Enhanced shadow and border for hightech theme
-    if (tokens.effects.shadow.color === '#00ffff') {
-      // Hightech theme: Enhanced effects
-      clonedWidget.kpiConfig.containerShadowColor = '#00ffff';
-      clonedWidget.kpiConfig.containerShadowOpacity = 0.4;
-      clonedWidget.kpiConfig.containerShadowBlur = 20;
-      clonedWidget.kpiConfig.containerShadowOffsetX = 0;
-      clonedWidget.kpiConfig.containerShadowOffsetY = 8;
+    // Standard effects from tokens
+    clonedWidget.kpiConfig.containerShadowColor = tokens.effects.shadow.color;
+    clonedWidget.kpiConfig.containerShadowOpacity = tokens.effects.shadow.opacity;
+    clonedWidget.kpiConfig.containerShadowBlur = tokens.effects.shadow.blur;
+    clonedWidget.kpiConfig.containerShadowOffsetX = tokens.effects.shadow.offsetX;
+    clonedWidget.kpiConfig.containerShadowOffsetY = tokens.effects.shadow.offsetY;
 
-      // Neon cyan border + straight edges
-      clonedWidget.kpiConfig.kpiContainerBorderColor = '#00ffff';
-      clonedWidget.kpiConfig.kpiContainerBorderAccentColor = '#00ffff';
-      clonedWidget.kpiConfig.kpiContainerBorderWidth = tokens.borders.width.thin;
-      clonedWidget.kpiConfig.kpiContainerBorderRadius = 0;
+    // Standard border from tokens
+    clonedWidget.kpiConfig.kpiContainerBorderColor = tokens.borders.color;
+    clonedWidget.kpiConfig.kpiContainerBorderAccentColor = tokens.borders.accentColor;
+    clonedWidget.kpiConfig.kpiContainerBorderWidth = tokens.borders.width.thin;
+    clonedWidget.kpiConfig.kpiContainerBorderRadius = tokens.borders.radius.md;
 
-      clonedWidget.kpiConfig.kpiContainerShadow = true;
-    } else {
-      // Other themes: Standard effects
-      clonedWidget.kpiConfig.containerShadowColor = tokens.effects.shadow.color;
-      clonedWidget.kpiConfig.containerShadowOpacity = tokens.effects.shadow.opacity;
-      clonedWidget.kpiConfig.containerShadowBlur = tokens.effects.shadow.blur;
-      clonedWidget.kpiConfig.containerShadowOffsetX = tokens.effects.shadow.offsetX;
-      clonedWidget.kpiConfig.containerShadowOffsetY = tokens.effects.shadow.offsetY;
-
-      // Standard border from tokens
-      clonedWidget.kpiConfig.kpiContainerBorderColor = tokens.borders.color;
-      clonedWidget.kpiConfig.kpiContainerBorderAccentColor = tokens.borders.accentColor;
-      clonedWidget.kpiConfig.kpiContainerBorderWidth = tokens.borders.width.thin;
-      clonedWidget.kpiConfig.kpiContainerBorderRadius = tokens.borders.radius.md;
-
-      clonedWidget.kpiConfig.kpiContainerShadow = tokens.effects.shadow.opacity > 0;
-    }
+    clonedWidget.kpiConfig.kpiContainerShadow = tokens.effects.shadow.opacity > 0;
 
     return clonedWidget;
   }
@@ -308,19 +290,11 @@ export class ThemeManager {
       clonedWidget.barConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
     }
 
-    // Apply border properties - enhanced for hightech theme
-    if (tokens.effects.shadow.color === '#00ffff') {
-      // Hightech theme: No border
-      clonedWidget.barConfig.styling.containerBorderWidth = 0;
-      clonedWidget.barConfig.styling.containerBorderColor = 'transparent';
-      clonedWidget.barConfig.styling.containerBorderAccentColor = 'transparent';
-    } else {
-      // Other themes: Standard border from tokens
-      clonedWidget.barConfig.styling.containerBorderColor = tokens.borders.color;
-      clonedWidget.barConfig.styling.containerBorderAccentColor = tokens.borders.accentColor;
-      clonedWidget.barConfig.styling.containerBorderWidth = tokens.borders.width.medium;
-      clonedWidget.barConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
-    }
+    // Apply border properties from tokens
+    clonedWidget.barConfig.styling.containerBorderColor = tokens.borders.color;
+    clonedWidget.barConfig.styling.containerBorderAccentColor = tokens.borders.accentColor;
+    clonedWidget.barConfig.styling.containerBorderWidth = tokens.borders.width.medium;
+    clonedWidget.barConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
 
     return clonedWidget;
   }
@@ -406,19 +380,11 @@ export class ThemeManager {
       clonedWidget.lineConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
     }
 
-    // Apply border properties - enhanced for hightech theme
-    if (tokens.effects.shadow.color === '#00ffff') {
-      // Hightech theme: No border
-      clonedWidget.lineConfig.styling.containerBorderWidth = 0;
-      clonedWidget.lineConfig.styling.containerBorderColor = 'transparent';
-      clonedWidget.lineConfig.styling.containerBorderAccentColor = 'transparent';
-    } else {
-      // Other themes: Standard border from tokens
-      clonedWidget.lineConfig.styling.containerBorderColor = tokens.borders.color;
-      clonedWidget.lineConfig.styling.containerBorderAccentColor = tokens.borders.accentColor;
-      clonedWidget.lineConfig.styling.containerBorderWidth = tokens.borders.width.medium;
-      clonedWidget.lineConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
-    }
+    // Apply border properties from tokens
+    clonedWidget.lineConfig.styling.containerBorderColor = tokens.borders.color;
+    clonedWidget.lineConfig.styling.containerBorderAccentColor = tokens.borders.accentColor;
+    clonedWidget.lineConfig.styling.containerBorderWidth = tokens.borders.width.medium;
+    clonedWidget.lineConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
 
     return clonedWidget;
   }
@@ -508,19 +474,11 @@ export class ThemeManager {
       clonedWidget.pieConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
     }
 
-    // Apply border properties - enhanced for hightech theme
-    if (tokens.effects.shadow.color === '#00ffff') {
-      // Hightech theme: No border
-      clonedWidget.pieConfig.styling.containerBorderWidth = 0;
-      clonedWidget.pieConfig.styling.containerBorderColor = 'transparent';
-      clonedWidget.pieConfig.styling.containerBorderAccentColor = 'transparent';
-    } else {
-      // Other themes: Standard border from tokens
-      clonedWidget.pieConfig.styling.containerBorderColor = tokens.borders.color;
-      clonedWidget.pieConfig.styling.containerBorderAccentColor = tokens.borders.accentColor;
-      clonedWidget.pieConfig.styling.containerBorderWidth = tokens.borders.width.medium;
-      clonedWidget.pieConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
-    }
+    // Apply border properties from tokens
+    clonedWidget.pieConfig.styling.containerBorderColor = tokens.borders.color;
+    clonedWidget.pieConfig.styling.containerBorderAccentColor = tokens.borders.accentColor;
+    clonedWidget.pieConfig.styling.containerBorderWidth = tokens.borders.width.medium;
+    clonedWidget.pieConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
 
     return clonedWidget;
   }
@@ -607,19 +565,11 @@ export class ThemeManager {
       clonedWidget.areaConfig.styling.containerBoxShadow = `${tokens.effects.shadow.offsetX}px ${tokens.effects.shadow.offsetY}px ${tokens.effects.shadow.blur}px rgba(0, 0, 0, ${tokens.effects.shadow.opacity})`;
     }
 
-    // Apply border properties - enhanced for hightech theme
-    if (tokens.effects.shadow.color === '#00ffff') {
-      // Hightech theme: No border
-      clonedWidget.areaConfig.styling.containerBorderWidth = 0;
-      clonedWidget.areaConfig.styling.containerBorderColor = 'transparent';
-      clonedWidget.areaConfig.styling.containerBorderAccentColor = 'transparent';
-    } else {
-      // Other themes: Standard border from tokens
-      clonedWidget.areaConfig.styling.containerBorderColor = tokens.borders.color;
-      clonedWidget.areaConfig.styling.containerBorderAccentColor = tokens.borders.accentColor;
-      clonedWidget.areaConfig.styling.containerBorderWidth = tokens.borders.width.medium;
-      clonedWidget.areaConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
-    }
+    // Apply border properties from tokens
+    clonedWidget.areaConfig.styling.containerBorderColor = tokens.borders.color;
+    clonedWidget.areaConfig.styling.containerBorderAccentColor = tokens.borders.accentColor;
+    clonedWidget.areaConfig.styling.containerBorderWidth = tokens.borders.width.medium;
+    clonedWidget.areaConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
 
     return clonedWidget;
   }
