@@ -219,7 +219,7 @@ export class ThemeManager {
       // Standard border with light/dark variants
       if (themeName === 'light') {
         clonedWidget.kpiConfig.kpiContainerBorderColor = '#ddd';
-        clonedWidget.kpiConfig.kpiContainerBorderAccentColor = '#eee';
+        clonedWidget.kpiConfig.kpiContainerBorderAccentColor = '#ccc';
       } else {
         clonedWidget.kpiConfig.kpiContainerBorderColor = '#777';
         clonedWidget.kpiConfig.kpiContainerBorderAccentColor = '#bbb';
@@ -665,7 +665,7 @@ export class ThemeManager {
     // Apply border colors - light theme vs dark themes
     if (themeName === 'light') {
       clonedWidget.insightsConfig.borderColor = '#ddd';
-      clonedWidget.insightsConfig.borderAccentColor = '#eee';
+      clonedWidget.insightsConfig.borderAccentColor = '#ccc';
     } else {
       // All other themes use current dark colors
       clonedWidget.insightsConfig.borderColor = '#777';
@@ -714,7 +714,7 @@ export class ThemeManager {
     // Apply border colors - light theme vs dark themes
     if (themeName === 'light') {
       clonedWidget.alertsConfig.borderColor = '#ddd';
-      clonedWidget.alertsConfig.borderAccentColor = '#eee';
+      clonedWidget.alertsConfig.borderAccentColor = '#ccc';
     } else {
       // All other themes use current dark colors
       clonedWidget.alertsConfig.borderColor = '#777';
@@ -763,7 +763,7 @@ export class ThemeManager {
     // Apply border colors - light theme vs dark themes
     if (themeName === 'light') {
       clonedWidget.recommendationsConfig.borderColor = '#ddd';
-      clonedWidget.recommendationsConfig.borderAccentColor = '#eee';
+      clonedWidget.recommendationsConfig.borderAccentColor = '#ccc';
     } else {
       // All other themes use current dark colors
       clonedWidget.recommendationsConfig.borderColor = '#777';
