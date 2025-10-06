@@ -373,6 +373,8 @@ export interface BorderTokens {
     medium: number;
     thick: number;
   };
+  color: string;
+  accentColor: string;
 }
 
 export interface TypographyTokens {
@@ -513,7 +515,9 @@ export const DARK_TOKENS: DesignTokens = {
       thin: 1,
       medium: 2,
       thick: 4
-    }
+    },
+    color: '#777',
+    accentColor: '#bbb'
   },
 
   typography: TYPOGRAPHY_PRESETS.inter,
@@ -623,7 +627,11 @@ export const LIGHT_TOKENS: DesignTokens = {
     glow: '0 0 20px rgba(59, 130, 246, 0.15)'
   },
 
-  borders: DARK_TOKENS.borders, // Same border system
+  borders: {
+    ...DARK_TOKENS.borders,
+    color: '#ddd',
+    accentColor: '#ccc'
+  },
   typography: TYPOGRAPHY_PRESETS.geist, // Usando Geist
 
   effects: {

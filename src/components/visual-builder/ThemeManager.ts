@@ -216,14 +216,9 @@ export class ThemeManager {
       clonedWidget.kpiConfig.containerShadowOffsetX = tokens.effects.shadow.offsetX;
       clonedWidget.kpiConfig.containerShadowOffsetY = tokens.effects.shadow.offsetY;
 
-      // Standard border with light/dark variants
-      if (themeName === 'light') {
-        clonedWidget.kpiConfig.kpiContainerBorderColor = '#ddd';
-        clonedWidget.kpiConfig.kpiContainerBorderAccentColor = '#ccc';
-      } else {
-        clonedWidget.kpiConfig.kpiContainerBorderColor = '#777';
-        clonedWidget.kpiConfig.kpiContainerBorderAccentColor = '#bbb';
-      }
+      // Standard border from tokens
+      clonedWidget.kpiConfig.kpiContainerBorderColor = tokens.borders.color;
+      clonedWidget.kpiConfig.kpiContainerBorderAccentColor = tokens.borders.accentColor;
       clonedWidget.kpiConfig.kpiContainerBorderWidth = tokens.borders.width.thin;
       clonedWidget.kpiConfig.kpiContainerBorderRadius = tokens.borders.radius.md;
 
@@ -320,14 +315,9 @@ export class ThemeManager {
       clonedWidget.barConfig.styling.containerBorderColor = 'transparent';
       clonedWidget.barConfig.styling.containerBorderAccentColor = 'transparent';
     } else {
-      // Other themes: Standard border with light/dark variants
-      if (themeName === 'light') {
-        clonedWidget.barConfig.styling.containerBorderColor = '#ddd';
-        clonedWidget.barConfig.styling.containerBorderAccentColor = '#eee';
-      } else {
-        clonedWidget.barConfig.styling.containerBorderColor = '#777';
-        clonedWidget.barConfig.styling.containerBorderAccentColor = '#bbb';
-      }
+      // Other themes: Standard border from tokens
+      clonedWidget.barConfig.styling.containerBorderColor = tokens.borders.color;
+      clonedWidget.barConfig.styling.containerBorderAccentColor = tokens.borders.accentColor;
       clonedWidget.barConfig.styling.containerBorderWidth = tokens.borders.width.medium;
       clonedWidget.barConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
     }
@@ -423,14 +413,9 @@ export class ThemeManager {
       clonedWidget.lineConfig.styling.containerBorderColor = 'transparent';
       clonedWidget.lineConfig.styling.containerBorderAccentColor = 'transparent';
     } else {
-      // Other themes: Standard border with light/dark variants
-      if (themeName === 'light') {
-        clonedWidget.lineConfig.styling.containerBorderColor = '#ddd';
-        clonedWidget.lineConfig.styling.containerBorderAccentColor = '#eee';
-      } else {
-        clonedWidget.lineConfig.styling.containerBorderColor = '#777';
-        clonedWidget.lineConfig.styling.containerBorderAccentColor = '#bbb';
-      }
+      // Other themes: Standard border from tokens
+      clonedWidget.lineConfig.styling.containerBorderColor = tokens.borders.color;
+      clonedWidget.lineConfig.styling.containerBorderAccentColor = tokens.borders.accentColor;
       clonedWidget.lineConfig.styling.containerBorderWidth = tokens.borders.width.medium;
       clonedWidget.lineConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
     }
@@ -530,14 +515,9 @@ export class ThemeManager {
       clonedWidget.pieConfig.styling.containerBorderColor = 'transparent';
       clonedWidget.pieConfig.styling.containerBorderAccentColor = 'transparent';
     } else {
-      // Other themes: Standard border with light/dark variants
-      if (themeName === 'light') {
-        clonedWidget.pieConfig.styling.containerBorderColor = '#ddd';
-        clonedWidget.pieConfig.styling.containerBorderAccentColor = '#eee';
-      } else {
-        clonedWidget.pieConfig.styling.containerBorderColor = '#777';
-        clonedWidget.pieConfig.styling.containerBorderAccentColor = '#bbb';
-      }
+      // Other themes: Standard border from tokens
+      clonedWidget.pieConfig.styling.containerBorderColor = tokens.borders.color;
+      clonedWidget.pieConfig.styling.containerBorderAccentColor = tokens.borders.accentColor;
       clonedWidget.pieConfig.styling.containerBorderWidth = tokens.borders.width.medium;
       clonedWidget.pieConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
     }
@@ -634,14 +614,9 @@ export class ThemeManager {
       clonedWidget.areaConfig.styling.containerBorderColor = 'transparent';
       clonedWidget.areaConfig.styling.containerBorderAccentColor = 'transparent';
     } else {
-      // Other themes: Standard border with light/dark variants
-      if (themeName === 'light') {
-        clonedWidget.areaConfig.styling.containerBorderColor = '#ddd';
-        clonedWidget.areaConfig.styling.containerBorderAccentColor = '#eee';
-      } else {
-        clonedWidget.areaConfig.styling.containerBorderColor = '#777';
-        clonedWidget.areaConfig.styling.containerBorderAccentColor = '#bbb';
-      }
+      // Other themes: Standard border from tokens
+      clonedWidget.areaConfig.styling.containerBorderColor = tokens.borders.color;
+      clonedWidget.areaConfig.styling.containerBorderAccentColor = tokens.borders.accentColor;
       clonedWidget.areaConfig.styling.containerBorderWidth = tokens.borders.width.medium;
       clonedWidget.areaConfig.styling.containerBorderRadius = tokens.borders.radius.lg;
     }
@@ -662,15 +637,9 @@ export class ThemeManager {
     // Apply background color
     clonedWidget.insightsConfig.backgroundColor = tokens.colors.surface;
 
-    // Apply border colors - light theme vs dark themes
-    if (themeName === 'light') {
-      clonedWidget.insightsConfig.borderColor = '#ddd';
-      clonedWidget.insightsConfig.borderAccentColor = '#ccc';
-    } else {
-      // All other themes use current dark colors
-      clonedWidget.insightsConfig.borderColor = '#777';
-      clonedWidget.insightsConfig.borderAccentColor = '#bbb';
-    }
+    // Apply border colors from tokens
+    clonedWidget.insightsConfig.borderColor = tokens.borders.color;
+    clonedWidget.insightsConfig.borderAccentColor = tokens.borders.accentColor;
 
     // Title styling
     clonedWidget.insightsConfig.titleColor = tokens.colors.text.primary;
@@ -711,15 +680,9 @@ export class ThemeManager {
     // Apply background color
     clonedWidget.alertsConfig.backgroundColor = tokens.colors.surface;
 
-    // Apply border colors - light theme vs dark themes
-    if (themeName === 'light') {
-      clonedWidget.alertsConfig.borderColor = '#ddd';
-      clonedWidget.alertsConfig.borderAccentColor = '#ccc';
-    } else {
-      // All other themes use current dark colors
-      clonedWidget.alertsConfig.borderColor = '#777';
-      clonedWidget.alertsConfig.borderAccentColor = '#bbb';
-    }
+    // Apply border colors from tokens
+    clonedWidget.alertsConfig.borderColor = tokens.borders.color;
+    clonedWidget.alertsConfig.borderAccentColor = tokens.borders.accentColor;
 
     // Title styling
     clonedWidget.alertsConfig.titleColor = tokens.colors.text.primary;
@@ -760,15 +723,9 @@ export class ThemeManager {
     // Apply background color
     clonedWidget.recommendationsConfig.backgroundColor = tokens.colors.surface;
 
-    // Apply border colors - light theme vs dark themes
-    if (themeName === 'light') {
-      clonedWidget.recommendationsConfig.borderColor = '#ddd';
-      clonedWidget.recommendationsConfig.borderAccentColor = '#ccc';
-    } else {
-      // All other themes use current dark colors
-      clonedWidget.recommendationsConfig.borderColor = '#777';
-      clonedWidget.recommendationsConfig.borderAccentColor = '#bbb';
-    }
+    // Apply border colors from tokens
+    clonedWidget.recommendationsConfig.borderColor = tokens.borders.color;
+    clonedWidget.recommendationsConfig.borderAccentColor = tokens.borders.accentColor;
 
     // Title styling
     clonedWidget.recommendationsConfig.titleColor = tokens.colors.text.primary;
