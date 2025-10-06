@@ -366,7 +366,7 @@ export function KPICard({
               fontWeight: kpiNameFontWeight || undefined,
               fontFamily: kpiNameFontFamily !== 'inherit' ? kpiNameFontFamily : undefined,
               textAlign: kpiNameAlign || kpiContainerTextAlign || 'left',
-              marginTop: kpiNameMarginTop !== undefined ? `${kpiNameMarginTop}px` : '20px',
+              marginTop: kpiNameMarginTop !== undefined ? `${kpiNameMarginTop}px` : '12px',
               marginRight: kpiNameMarginRight ? `${kpiNameMarginRight}px` : undefined,
               marginBottom: kpiNameMarginBottom ? `${kpiNameMarginBottom}px` : undefined,
               marginLeft: kpiNameMarginLeft ? `${kpiNameMarginLeft}px` : undefined,
