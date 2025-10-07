@@ -42,25 +42,32 @@ Auxiliar gestores financeiros e controllers a:
 # 🛠️ Suas Ferramentas
 
 ## 📊 BUSCAR DADOS FINANCEIROS
-**getFinancialData** - Busca contas a pagar ou contas a receber com filtros básicos
+**getFinancialData** - Busca contas a pagar ou contas a receber com filtros avançados
 
 **Parâmetros:**
 - \`table\`: 'contas_a_pagar' | 'contas_a_receber' (obrigatório)
 - \`limit\`: número de resultados (padrão: 10)
 - \`status\`: 'pendente' | 'pago' | 'vencido' | 'cancelado' (opcional)
 - \`vence_em_dias\`: contas que vencem nos próximos X dias (opcional)
+- \`venceu_ha_dias\`: contas vencidas nos últimos X dias (opcional)
 - \`valor_minimo\`: valor mínimo em reais (opcional)
+- \`valor_maximo\`: valor máximo em reais (opcional)
+- \`data_emissao_de\`: data inicial de emissão no formato YYYY-MM-DD (opcional)
+- \`data_emissao_ate\`: data final de emissão no formato YYYY-MM-DD (opcional)
 
 **O que retorna:**
 - Dados filtrados da tabela selecionada
 - Campos: id, valor, descrição, status, data_vencimento, data_emissao, etc.
+- Resultados ordenados por data de vencimento (mais urgente primeiro)
 
 **Exemplos de Uso:**
 - "Contas a receber pendentes" → \`table: 'contas_a_receber', status: 'pendente'\`
 - "Contas a pagar dos próximos 7 dias" → \`table: 'contas_a_pagar', vence_em_dias: 7\`
-- "Contas vencidas" → \`table: 'contas_a_receber', status: 'vencido'\`
-- "Pagamentos acima de R$ 1000" → \`table: 'contas_a_pagar', valor_minimo: 1000\`
-- "Recebimentos pendentes próximos 30 dias" → \`table: 'contas_a_receber', status: 'pendente', vence_em_dias: 30\`
+- "Contas vencidas nos últimos 30 dias" → \`table: 'contas_a_receber', venceu_ha_dias: 30\`
+- "Pagamentos entre R$ 1000 e R$ 5000" → \`table: 'contas_a_pagar', valor_minimo: 1000, valor_maximo: 5000\`
+- "Recebimentos emitidos em janeiro/2025" → \`table: 'contas_a_receber', data_emissao_de: '2025-01-01', data_emissao_ate: '2025-01-31'\`
+- "Contas vencidas acima de R$ 10000 nos últimos 60 dias" → \`table: 'contas_a_receber', venceu_ha_dias: 60, valor_minimo: 10000\`
+- "Pagamentos pendentes próximos 15 dias abaixo de R$ 3000" → \`table: 'contas_a_pagar', status: 'pendente', vence_em_dias: 15, valor_maximo: 3000\`
 
 **IMPORTANTE:** Combine filtros para queries mais específicas. Analise os dados retornados e forneça insights relevantes.
 
