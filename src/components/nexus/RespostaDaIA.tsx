@@ -52,6 +52,7 @@ import InventoryList from '../tools/InventoryList';
 import ContasAPagarList from '../tools/ContasAPagarList';
 import FluxoCaixaResult from '../tools/FluxoCaixaResult';
 import FinancialDataTable from '../tools/FinancialDataTable';
+import OrganicMarketingDataTable from '../tools/OrganicMarketingDataTable';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -674,6 +675,51 @@ type GetFinancialDataToolOutput = {
     data_vencimento?: string;
     data_emissao?: string;
     descricao?: string;
+    [key: string]: unknown;
+  }>;
+  message: string;
+  error?: string;
+};
+
+type GetOrganicMarketingDataToolInput = {
+  table: 'contas_sociais' | 'publicacoes' | 'metricas_publicacoes' | 'resumos_conta';
+  limit?: number;
+  plataforma?: string;
+  status?: string;
+  tipo_post?: string;
+  data_de?: string;
+  data_ate?: string;
+  engajamento_minimo?: number;
+  curtidas_minimo?: number;
+};
+
+type GetOrganicMarketingDataToolOutput = {
+  success: boolean;
+  count: number;
+  table: string;
+  data: Array<{
+    id: string | number;
+    plataforma?: string;
+    status?: string;
+    tipo_post?: string;
+    nome_conta?: string;
+    conectado_em?: string;
+    titulo?: string;
+    hook?: string;
+    publicado_em?: string;
+    criado_em?: string;
+    curtidas?: number;
+    comentarios?: number;
+    compartilhamentos?: number;
+    visualizacoes?: number;
+    salvamentos?: number;
+    alcance?: number;
+    taxa_engajamento?: number;
+    registrado_em?: string;
+    seguidores?: number;
+    seguindo?: number;
+    total_publicacoes?: number;
+    alcance_total?: number;
     [key: string]: unknown;
   }>;
   message: string;
@@ -3081,6 +3127,41 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   data={(financialDataTool.output as GetFinancialDataToolOutput).data}
                   message={(financialDataTool.output as GetFinancialDataToolOutput).message}
                   error={(financialDataTool.output as GetFinancialDataToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getOrganicMarketingData') {
+          const organicMarketingTool = part as NexusToolUIPart;
+          const callId = organicMarketingTool.toolCallId;
+          const shouldBeOpen = organicMarketingTool.state === 'output-available' || organicMarketingTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getOrganicMarketingData" state={organicMarketingTool.state} />
+                <ToolContent>
+                  {organicMarketingTool.input && (
+                    <ToolInput input={organicMarketingTool.input} />
+                  )}
+                  {organicMarketingTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={organicMarketingTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {organicMarketingTool.state === 'output-available' && (
+                <OrganicMarketingDataTable
+                  success={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).success}
+                  count={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).count}
+                  table={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).table}
+                  data={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).data}
+                  message={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).message}
+                  error={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).error}
                 />
               )}
             </div>

@@ -2,6 +2,7 @@ import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
 import * as visualizationTools from '@/tools/apps/visualization';
+import { getOrganicMarketingData } from '@/tools/organicMarketingTools';
 
 export const maxDuration = 300;
 
@@ -42,6 +43,37 @@ export async function POST(req: Request) {
 - **gerarGrafico()** - Use para criar visualizações específicas de métricas Meta Ads com gráficos interativos
 - **code_execution** - Use para análises avançadas, cálculos estatísticos e processamento de dados com Python
 - Dataset padrão: \`creatto-463117.biquery_data\`
+
+## 📱 MARKETING ORGÂNICO (SUPABASE):
+**getOrganicMarketingData** - Busca dados de redes sociais orgânicas (Instagram, Facebook, LinkedIn, etc.)
+
+**Tabelas disponíveis:**
+- \`contas_sociais\`: Contas conectadas e suas plataformas
+- \`publicacoes\`: Posts publicados (carrossel, imagem, video, reels, story)
+- \`metricas_publicacoes\`: Performance dos posts (curtidas, comentários, compartilhamentos, alcance, engajamento)
+- \`resumos_conta\`: Resumos gerais (seguidores, taxa de engajamento, alcance total)
+
+**Parâmetros:**
+- \`table\`: contas_sociais | publicacoes | metricas_publicacoes | resumos_conta (obrigatório)
+- \`limit\`: número de resultados (padrão: 20)
+- \`plataforma\`: Instagram | Facebook | LinkedIn | Twitter | YouTube | TikTok (opcional)
+- \`status\`: rascunho | agendado | publicado | cancelado (opcional)
+- \`tipo_post\`: carrossel | imagem | video | reels | story (opcional)
+- \`data_de\` / \`data_ate\`: range de datas YYYY-MM-DD (opcional)
+- \`engajamento_minimo\`: taxa mínima 0-1 (ex: 0.05 = 5%) (opcional)
+- \`curtidas_minimo\`: número mínimo de curtidas (opcional)
+
+**Exemplos de uso:**
+- "Posts do Instagram publicados em janeiro" → \`table: 'publicacoes', plataforma: 'Instagram', data_de: '2025-01-01', data_ate: '2025-01-31', status: 'publicado'\`
+- "Métricas de posts com engajamento acima de 5%" → \`table: 'metricas_publicacoes', engajamento_minimo: 0.05\`
+- "Resumo de todas as contas sociais" → \`table: 'resumos_conta'\`
+- "Posts tipo reels mais curtidos" → \`table: 'publicacoes', tipo_post: 'reels', limit: 50\` + depois buscar métricas
+
+**Use para:**
+- Comparar performance orgânico vs pago (organic reach vs paid reach)
+- Identificar melhores horários e tipos de conteúdo orgânico
+- Analisar crescimento de seguidores e taxa de engajamento
+- Benchmarking de performance entre plataformas
 
 ## VISUALIZAÇÕES META ADS:
 - Use **gerarGrafico()** para criar gráficos de ROAS, CPM, CTR, CPC por período, campanha, ou placement
@@ -118,6 +150,8 @@ Trabalhe em português e forneça insights estratégicos para otimização de ca
       executarSQL: bigqueryTools.executarSQL,
       // Visualização de dados específica para Meta Ads
       gerarGrafico: visualizationTools.gerarGrafico,
+      // Marketing Orgânico (Supabase)
+      getOrganicMarketingData,
       // Code execution para análises avançadas Meta Ads
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       code_execution: anthropic.tools.codeExecution_20250522() as any,
