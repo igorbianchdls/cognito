@@ -20,7 +20,7 @@ export const getFinancialData = tool({
         .schema('gestaofinanceira')
         .from(table)
         .select('*')
-        .limit(limit);
+        .limit(limit ?? 10);
 
       if (error) throw error;
 
