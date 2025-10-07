@@ -1784,6 +1784,692 @@ export const returnsColumns: ColDef[] = [
   }
 ];
 
+// ============================================
+// SUPPLY CHAIN - Schema: supplychainecommerce
+// ============================================
+
+// Configurações de colunas para Warehouses (Supply Chain)
+export const warehousesColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'name',
+    headerName: 'Nome',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'location',
+    headerName: 'Localização',
+    width: 250,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'manager',
+    headerName: 'Gerente',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'capacity',
+    headerName: 'Capacidade',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum'
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 150,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Suppliers (Supply Chain)
+export const suppliersColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'name',
+    headerName: 'Nome',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'contact_name',
+    headerName: 'Contato',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'email',
+    headerName: 'Email',
+    width: 220,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'phone',
+    headerName: 'Telefone',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'address',
+    headerName: 'Endereço',
+    width: 300,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'rating',
+    headerName: 'Avaliação',
+    width: 110,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    cellStyle: (params) => {
+      const rating = params.value || 0;
+      if (rating >= 4) return { color: '#2e7d32', fontWeight: 'bold' };
+      if (rating >= 3) return { color: '#f57c00', fontWeight: 'bold' };
+      return { color: '#c62828', fontWeight: 'bold' };
+    }
+  },
+  {
+    field: 'active',
+    headerName: 'Ativo',
+    width: 100,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    valueFormatter: (params) => {
+      return params.value ? 'Sim' : 'Não';
+    },
+    cellStyle: (params) => {
+      return params.value
+        ? { color: '#2e7d32', fontWeight: 'bold' }
+        : { color: '#9e9e9e', fontWeight: 'normal' };
+    }
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 150,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Purchases (Supply Chain)
+export const purchasesColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'supplier_id',
+    headerName: 'Fornecedor ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'warehouse_id',
+    headerName: 'Armazém ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'order_number',
+    headerName: 'Nº Pedido',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontWeight: 'bold' }
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    enablePivot: true,
+    cellStyle: (params) => {
+      switch (params.value) {
+        case 'received': return { color: '#2e7d32', fontWeight: 'bold' };
+        case 'in_transit': return { color: '#1976d2', fontWeight: 'bold' };
+        case 'pending': return { color: '#f57c00', fontWeight: 'bold' };
+        case 'cancelled': return { color: '#c62828', fontWeight: 'bold' };
+        default: return undefined;
+      }
+    }
+  },
+  {
+    field: 'total_amount',
+    headerName: 'Valor Total (R$)',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(params.value);
+    },
+    cellStyle: { fontWeight: 'bold' }
+  },
+  {
+    field: 'expected_delivery',
+    headerName: 'Entrega Prevista',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'received_at',
+    headerName: 'Recebido em',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 150,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Purchase Items (Supply Chain)
+export const purchaseItemsColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'purchase_id',
+    headerName: 'Compra ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'product_id',
+    headerName: 'Produto ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'quantity_ordered',
+    headerName: 'Qtd Pedida',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum'
+  },
+  {
+    field: 'quantity_received',
+    headerName: 'Qtd Recebida',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum'
+  },
+  {
+    field: 'unit_price',
+    headerName: 'Preço Unit (R$)',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(params.value);
+    }
+  },
+  {
+    field: 'total_price',
+    headerName: 'Total (R$)',
+    width: 140,
+    editable: false,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(params.value);
+    },
+    cellStyle: { fontWeight: 'bold' }
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 150,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Inventory (Supply Chain)
+export const inventoryColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'product_id',
+    headerName: 'Produto ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'warehouse_id',
+    headerName: 'Armazém ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'channel_id',
+    headerName: 'Canal ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'quantity',
+    headerName: 'Quantidade',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    cellStyle: (params) => {
+      const qty = params.value || 0;
+      if (qty === 0) return { color: '#c62828', fontWeight: 'bold' };
+      if (qty < 10) return { color: '#f57c00', fontWeight: 'bold' };
+      return { color: '#2e7d32', fontWeight: 'normal' };
+    }
+  },
+  {
+    field: 'updated_at',
+    headerName: 'Atualizado em',
+    width: 150,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 150,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Inventory Movements (Supply Chain)
+export const inventoryMovementsColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'product_id',
+    headerName: 'Produto ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'warehouse_id',
+    headerName: 'Armazém ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'movement_type',
+    headerName: 'Tipo',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    enablePivot: true,
+    cellStyle: (params) => {
+      switch (params.value) {
+        case 'in': return { color: '#2e7d32', fontWeight: 'bold' };
+        case 'out': return { color: '#c62828', fontWeight: 'bold' };
+        case 'adjustment': return { color: '#f57c00', fontWeight: 'bold' };
+        default: return undefined;
+      }
+    }
+  },
+  {
+    field: 'quantity',
+    headerName: 'Quantidade',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum'
+  },
+  {
+    field: 'order_id',
+    headerName: 'Pedido ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'return_id',
+    headerName: 'Devolução ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'purchase_id',
+    headerName: 'Compra ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 150,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Shipments (Supply Chain)
+export const shipmentsColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'order_id',
+    headerName: 'Pedido ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'carrier',
+    headerName: 'Transportadora',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'tracking_number',
+    headerName: 'Código Rastreio',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontWeight: 'bold' }
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    enablePivot: true,
+    cellStyle: (params) => {
+      switch (params.value) {
+        case 'delivered': return { color: '#2e7d32', fontWeight: 'bold' };
+        case 'in_transit': return { color: '#1976d2', fontWeight: 'bold' };
+        case 'pending': return { color: '#f57c00', fontWeight: 'bold' };
+        case 'failed': return { color: '#c62828', fontWeight: 'bold' };
+        default: return undefined;
+      }
+    }
+  },
+  {
+    field: 'shipped_at',
+    headerName: 'Enviado em',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'delivered_at',
+    headerName: 'Entregue em',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 150,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Shipment Events (Supply Chain)
+export const shipmentEventsColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'shipment_id',
+    headerName: 'Envio ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'event_type',
+    headerName: 'Tipo de Evento',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    enablePivot: true
+  },
+  {
+    field: 'location',
+    headerName: 'Localização',
+    width: 250,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'event_time',
+    headerName: 'Data/Hora do Evento',
+    width: 170,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 150,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
+  }
+];
+
 // Definição de datasets do Supabase
 export interface SupabaseDatasetConfig {
   id: string;
@@ -1957,5 +2643,77 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     columnDefs: returnsColumns,
     icon: '↩️',
     category: 'Vendas E-commerce'
+  },
+  {
+    id: 'supply-warehouses',
+    name: 'Armazéns',
+    description: 'Armazéns e centros de distribuição',
+    tableName: 'supplychainecommerce.warehouses',
+    columnDefs: warehousesColumns,
+    icon: '🏭',
+    category: 'Supply Chain'
+  },
+  {
+    id: 'supply-suppliers',
+    name: 'Fornecedores',
+    description: 'Fornecedores e parceiros',
+    tableName: 'supplychainecommerce.suppliers',
+    columnDefs: suppliersColumns,
+    icon: '🤝',
+    category: 'Supply Chain'
+  },
+  {
+    id: 'supply-purchases',
+    name: 'Ordens de Compra',
+    description: 'Pedidos de compra aos fornecedores',
+    tableName: 'supplychainecommerce.purchases',
+    columnDefs: purchasesColumns,
+    icon: '📋',
+    category: 'Supply Chain'
+  },
+  {
+    id: 'supply-purchase-items',
+    name: 'Itens de Compra',
+    description: 'Produtos nas ordens de compra',
+    tableName: 'supplychainecommerce.purchase_items',
+    columnDefs: purchaseItemsColumns,
+    icon: '📦',
+    category: 'Supply Chain'
+  },
+  {
+    id: 'supply-inventory',
+    name: 'Estoque',
+    description: 'Níveis de estoque por produto/armazém',
+    tableName: 'supplychainecommerce.inventory',
+    columnDefs: inventoryColumns,
+    icon: '📊',
+    category: 'Supply Chain'
+  },
+  {
+    id: 'supply-inventory-movements',
+    name: 'Movimentações de Estoque',
+    description: 'Histórico de entradas e saídas',
+    tableName: 'supplychainecommerce.inventory_movements',
+    columnDefs: inventoryMovementsColumns,
+    icon: '🔄',
+    category: 'Supply Chain'
+  },
+  {
+    id: 'supply-shipments',
+    name: 'Envios',
+    description: 'Envios e entregas',
+    tableName: 'supplychainecommerce.shipments',
+    columnDefs: shipmentsColumns,
+    icon: '🚚',
+    category: 'Supply Chain'
+  },
+  {
+    id: 'supply-shipment-events',
+    name: 'Eventos de Rastreamento',
+    description: 'Histórico de rastreamento dos envios',
+    tableName: 'supplychainecommerce.shipment_events',
+    columnDefs: shipmentEventsColumns,
+    icon: '📍',
+    category: 'Supply Chain'
   }
 ];
