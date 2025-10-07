@@ -17,17 +17,28 @@ export async function fetchSupabaseTable(tableName: string) {
     // Determinar coluna de ordenação (schemas novos usam criado_em)
     const orderColumn = schema ? 'criado_em' : 'created_at';
 
-    const query = schema
-      ? supabase.schema(schema).from(table)
-      : supabase.from(table);
+    if (schema) {
+      // Para schemas customizados, usar RPC function
+      const { data, error } = await supabase.rpc('fetch_table_data', {
+        p_schema: schema,
+        p_table: table,
+        p_order_column: orderColumn,
+        p_limit: 1000
+      });
 
-    const { data, error } = await query
-      .select('*')
-      .order(orderColumn, { ascending: false })
-      .limit(1000);
+      if (error) throw error;
+      return data || [];
+    } else {
+      // Para schema public, usar o método normal
+      const { data, error } = await supabase
+        .from(table)
+        .select('*')
+        .order(orderColumn, { ascending: false })
+        .limit(1000);
 
-    if (error) throw error;
-    return data || [];
+      if (error) throw error;
+      return data || [];
+    }
   } catch (error) {
     console.error(`Error fetching table ${tableName}:`, error);
     throw error;
