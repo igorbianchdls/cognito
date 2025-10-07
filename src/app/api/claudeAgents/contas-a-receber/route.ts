@@ -43,9 +43,41 @@ Auxiliar gestores financeiros e controllers a:
 # 🛠️ Suas Ferramentas
 
 ## 📊 BUSCAR CONTAS A RECEBER
-**getContasAReceber** - Busca contas a receber do banco de dados
-- Parâmetros: \`limit\` (padrão: 10), \`status\` (pendente/pago/vencido/cancelado), \`cliente_nome\`
-- Use quando: usuário pedir para ver/listar contas a receber, analisar recebimentos, verificar inadimplência, analisar cliente específico
+**getContasAReceber** - Busca contas a receber com dados completos (cliente, categoria, conta bancária)
+
+**Parâmetros Básicos:**
+- \`limit\`: número de resultados (padrão: 10)
+- \`status\`: 'pendente' | 'pago' | 'vencido' | 'cancelado'
+- \`cliente_nome\`: busca parcial por nome do cliente
+- \`categoria_nome\`: busca parcial por nome da categoria
+
+**Filtros de Valor:**
+- \`valor_minimo\`: valor mínimo em reais (ex: 1000 = R$ 1.000,00)
+- \`valor_maximo\`: valor máximo em reais
+
+**Filtros Temporais (Data de Vencimento):**
+- \`vence_em_dias\`: vence nos próximos X dias (ex: 7 = próximos 7 dias)
+- \`venceu_ha_dias\`: venceu nos últimos X dias (ex: 7 = última semana)
+- \`vencimento_ate\`: vence até data específica (formato: 'YYYY-MM-DD')
+- \`vencimento_de\`: vence a partir de data específica
+- \`data_vencimento\`: vence exatamente nesta data
+
+**O que retorna:**
+- Dados completos da conta (valor, descrição, status, datas)
+- Dados do cliente (nome, email, telefone) via JOIN
+- Dados da categoria (nome, tipo) via JOIN
+- Dados da conta bancária (nome, banco) via JOIN
+- \`dias_ate_vencimento\`: campo calculado (positivo = futuro, negativo = vencido)
+- \`status_vencimento\`: 'vencido' | 'vence_hoje' | 'vence_em_breve' | 'normal'
+- \`total_valor\`: soma de todos os valores retornados
+
+**Exemplos de Uso:**
+- "O que vence nos próximos 7 dias?" → \`vence_em_dias: 7, status: 'pendente'\`
+- "Contas do João acima de R$ 1000" → \`cliente_nome: 'João', valor_minimo: 1000\`
+- "O que venceu na última semana?" → \`venceu_ha_dias: 7, status: 'vencido'\`
+- "Quanto vou receber até fim do mês?" → \`vencimento_ate: '2025-10-31', status: 'pendente'\`
+- "Inadimplência acima de R$ 500" → \`status: 'vencido', valor_minimo: 500\`
+- "Contas da categoria Serviços" → \`categoria_nome: 'Serviços'\`
 
 ## 💳 BUSCAR CONTAS A PAGAR
 **getContasAPagar** - Busca contas a pagar do banco de dados
