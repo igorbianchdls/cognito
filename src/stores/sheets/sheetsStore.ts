@@ -1,7 +1,8 @@
 import { atom } from 'nanostores'
 import { ColDef } from 'ag-grid-community'
 import { DatasetInfo } from '@/data/mockDatasets'
-import { SUPABASE_DATASETS, fetchSupabaseTable, SupabaseDatasetConfig } from '@/data/supabaseDatasets'
+import { SUPABASE_DATASETS, fetchSupabaseTable } from '@/data/supabaseDatasets'
+import type { SupabaseDatasetConfig } from '@/data/types'
 
 // Types
 export interface CellData {
