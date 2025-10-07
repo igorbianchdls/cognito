@@ -27,6 +27,25 @@ export async function fetchSupabaseTable(tableName: string) {
       } else if (table === 'metricas_publicacoes' || table === 'resumos_conta') {
         orderColumn = 'registrado_em';
       }
+    } else if (schema === 'trafego_pago') {
+      // trafego_pago usa diferentes colunas por tabela
+      if (table === 'contas_ads') {
+        orderColumn = 'conectado_em';
+      } else if (table === 'campanhas') {
+        orderColumn = 'inicio';
+      } else if (table === 'grupos_de_anuncios') {
+        orderColumn = 'id'; // Sem timestamp, ordenar por ID
+      } else if (table === 'anuncios_criacao') {
+        orderColumn = 'criado_em';
+      } else if (table === 'anuncios_colaboradores') {
+        orderColumn = 'registrado_em';
+      } else if (table === 'anuncios_publicados') {
+        orderColumn = 'publicado_em';
+      } else if (table === 'metricas_anuncios') {
+        orderColumn = 'data';
+      } else if (table === 'resumos_campanhas') {
+        orderColumn = 'registrado_em';
+      }
     }
 
     if (schema) {
@@ -2481,6 +2500,171 @@ export const shipmentEventsColumns: ColDef[] = [
 
 // Definição de datasets do Supabase
 // ============================================
+// TRÁFEGO PAGO - Schema: trafego_pago
+// ============================================
+
+// Configurações de colunas para Contas Ads
+export const contasAdsColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'plataforma',
+    headerName: 'Plataforma',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    cellStyle: (params) => {
+      const plataforma = String(params.value || '').toLowerCase();
+      if (plataforma.includes('google')) return { color: '#4285F4', fontWeight: 'bold' };
+      if (plataforma.includes('meta') || plataforma.includes('facebook')) return { color: '#1877F2', fontWeight: 'bold' };
+      if (plataforma.includes('tiktok')) return { color: '#000000', fontWeight: 'bold' };
+      if (plataforma.includes('linkedin')) return { color: '#0A66C2', fontWeight: 'bold' };
+      return { color: '#000000', fontWeight: 'normal' };
+    }
+  },
+  {
+    field: 'nome_conta',
+    headerName: 'Nome da Conta',
+    width: 250,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontWeight: 'bold' }
+  },
+  {
+    field: 'conectado_em',
+    headerName: 'Conectado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleDateString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Campanhas (Tráfego Pago)
+export const campanhasTrafegoPagoColumns: ColDef[] = [
+  { field: 'id', headerName: 'ID', width: 280, pinned: 'left', editable: false, sortable: true },
+  { field: 'conta_ads_id', headerName: 'Conta Ads', width: 280, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'nome', headerName: 'Nome', width: 300, editable: true, sortable: true, filter: 'agTextColumnFilter', cellStyle: { fontWeight: 'bold' } },
+  { field: 'objetivo', headerName: 'Objetivo', width: 180, editable: true, sortable: true, filter: 'agSetColumnFilter', enableRowGroup: true },
+  { field: 'orcamento_total', headerName: 'Orçamento Total', width: 160, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'sum', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value) : String(params.value); }, cellStyle: { textAlign: 'right', fontWeight: 'bold' } },
+  { field: 'status', headerName: 'Status', width: 130, editable: true, sortable: true, filter: 'agSetColumnFilter', enableRowGroup: true, cellStyle: (params) => { const status = String(params.value || '').toLowerCase(); if (status === 'ativa' || status === 'ativo') return { color: '#2e7d32', fontWeight: 'bold' }; if (status === 'pausada' || status === 'pausado') return { color: '#f57c00', fontWeight: 'bold' }; if (status === 'encerrada' || status === 'encerrado') return { color: '#c62828', fontWeight: 'bold' }; return { color: '#000000', fontWeight: 'normal' }; } },
+  { field: 'inicio', headerName: 'Início', width: 130, editable: true, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => { if (!params.value) return ''; const date = new Date(params.value as string); return isNaN(date.getTime()) ? String(params.value) : date.toLocaleDateString('pt-BR'); } },
+  { field: 'fim', headerName: 'Fim', width: 130, editable: true, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => { if (!params.value) return ''; const date = new Date(params.value as string); return isNaN(date.getTime()) ? String(params.value) : date.toLocaleDateString('pt-BR'); } }
+];
+
+// Configurações de colunas para Grupos de Anúncios
+export const gruposDeAnunciosColumns: ColDef[] = [
+  { field: 'id', headerName: 'ID', width: 280, pinned: 'left', editable: false, sortable: true },
+  { field: 'campanha_id', headerName: 'Campanha', width: 280, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'nome', headerName: 'Nome', width: 300, editable: true, sortable: true, filter: 'agTextColumnFilter', cellStyle: { fontWeight: 'bold' } },
+  { field: 'publico_alvo', headerName: 'Público-Alvo', width: 200, editable: true, sortable: false, valueFormatter: (params) => { if (!params.value) return ''; try { const json = typeof params.value === 'string' ? JSON.parse(params.value) : params.value; return JSON.stringify(json); } catch { return String(params.value); } } },
+  { field: 'orcamento_diario', headerName: 'Orçamento Diário', width: 160, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'sum', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value) : String(params.value); }, cellStyle: { textAlign: 'right', fontWeight: 'bold' } },
+  { field: 'status', headerName: 'Status', width: 130, editable: true, sortable: true, filter: 'agSetColumnFilter', enableRowGroup: true, cellStyle: (params) => { const status = String(params.value || '').toLowerCase(); if (status === 'ativa' || status === 'ativo') return { color: '#2e7d32', fontWeight: 'bold' }; if (status === 'pausada' || status === 'pausado') return { color: '#f57c00', fontWeight: 'bold' }; if (status === 'encerrada' || status === 'encerrado') return { color: '#c62828', fontWeight: 'bold' }; return { color: '#000000', fontWeight: 'normal' }; } }
+];
+
+// Configurações de colunas para Anúncios Criação
+export const anunciosCriacaoColumns: ColDef[] = [
+  { field: 'id', headerName: 'ID', width: 280, pinned: 'left', editable: false, sortable: true },
+  { field: 'grupo_id', headerName: 'Grupo', width: 280, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'titulo', headerName: 'Título', width: 250, editable: true, sortable: true, filter: 'agTextColumnFilter', cellStyle: { fontWeight: 'bold' } },
+  { field: 'hook', headerName: 'Hook', width: 300, editable: true, sortable: true, filter: 'agTextColumnFilter', wrapText: true, autoHeight: true },
+  { field: 'expansao_hook', headerName: 'Expansão do Hook', width: 300, editable: true, sortable: true, filter: 'agTextColumnFilter', wrapText: true, autoHeight: true },
+  { field: 'copy_completo', headerName: 'Copy Completo', width: 400, editable: true, sortable: true, filter: 'agTextColumnFilter', wrapText: true, autoHeight: true },
+  { field: 'legenda', headerName: 'Legenda', width: 300, editable: true, sortable: true, filter: 'agTextColumnFilter', wrapText: true, autoHeight: true },
+  { field: 'explicacao', headerName: 'Explicação', width: 300, editable: true, sortable: true, filter: 'agTextColumnFilter', wrapText: true, autoHeight: true },
+  { field: 'hashtags', headerName: 'Hashtags', width: 200, editable: true, sortable: false, valueFormatter: (params) => { if (!params.value) return ''; try { const tags = Array.isArray(params.value) ? params.value : JSON.parse(params.value as string); return tags.length > 0 ? tags.join(', ') : ''; } catch { return String(params.value); } } },
+  { field: 'criativo_status', headerName: 'Status', width: 130, editable: true, sortable: true, filter: 'agSetColumnFilter', enableRowGroup: true, cellStyle: (params) => { const status = String(params.value || '').toLowerCase(); if (status === 'aprovado') return { color: '#2e7d32', fontWeight: 'bold' }; if (status === 'rascunho') return { color: '#f57c00', fontWeight: 'bold' }; if (status === 'em_revisao') return { color: '#1976d2', fontWeight: 'bold' }; if (status === 'rejeitado') return { color: '#c62828', fontWeight: 'bold' }; return { color: '#000000', fontWeight: 'normal' }; } },
+  { field: 'criado_por', headerName: 'Criado Por', width: 280, editable: false, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'atualizado_por', headerName: 'Atualizado Por', width: 280, editable: false, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'criado_em', headerName: 'Criado em', width: 180, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => { if (!params.value) return ''; const date = new Date(params.value as string); return isNaN(date.getTime()) ? String(params.value) : date.toLocaleDateString('pt-BR'); } },
+  { field: 'atualizado_em', headerName: 'Atualizado em', width: 180, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => { if (!params.value) return ''; const date = new Date(params.value as string); return isNaN(date.getTime()) ? String(params.value) : date.toLocaleDateString('pt-BR'); } }
+];
+
+// Configurações de colunas para Anúncios Colaboradores
+export const anunciosColaboradoresColumns: ColDef[] = [
+  { field: 'id', headerName: 'ID', width: 280, pinned: 'left', editable: false, sortable: true },
+  { field: 'anuncio_criacao_id', headerName: 'Anúncio', width: 280, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'usuario_id', headerName: 'Usuário', width: 280, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'acao', headerName: 'Ação', width: 150, editable: true, sortable: true, filter: 'agSetColumnFilter', enableRowGroup: true },
+  { field: 'comentario', headerName: 'Comentário', width: 400, editable: true, sortable: true, filter: 'agTextColumnFilter', wrapText: true, autoHeight: true },
+  { field: 'registrado_em', headerName: 'Registrado em', width: 180, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => { if (!params.value) return ''; const date = new Date(params.value as string); return isNaN(date.getTime()) ? String(params.value) : date.toLocaleDateString('pt-BR'); } }
+];
+
+// Configurações de colunas para Anúncios Publicados
+export const anunciosPublicadosColumns: ColDef[] = [
+  { field: 'id', headerName: 'ID', width: 280, pinned: 'left', editable: false, sortable: true },
+  { field: 'anuncio_criacao_id', headerName: 'Criativo', width: 280, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'conta_ads_id', headerName: 'Conta Ads', width: 280, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'grupo_id', headerName: 'Grupo', width: 280, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'anuncio_id_plataforma', headerName: 'ID na Plataforma', width: 200, editable: true, sortable: true, filter: 'agTextColumnFilter', cellStyle: { fontFamily: 'monospace' } },
+  { field: 'titulo', headerName: 'Título', width: 250, editable: true, sortable: true, filter: 'agTextColumnFilter', cellStyle: { fontWeight: 'bold' } },
+  { field: 'plataforma', headerName: 'Plataforma', width: 130, editable: true, sortable: true, filter: 'agSetColumnFilter', enableRowGroup: true },
+  { field: 'status', headerName: 'Status', width: 130, editable: true, sortable: true, filter: 'agSetColumnFilter', enableRowGroup: true, cellStyle: (params) => { const status = String(params.value || '').toLowerCase(); if (status === 'ativo') return { color: '#2e7d32', fontWeight: 'bold' }; if (status === 'pausado') return { color: '#f57c00', fontWeight: 'bold' }; if (status === 'rejeitado') return { color: '#c62828', fontWeight: 'bold' }; return { color: '#000000', fontWeight: 'normal' }; } },
+  { field: 'publicado_em', headerName: 'Publicado em', width: 180, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => { if (!params.value) return ''; const date = new Date(params.value as string); return isNaN(date.getTime()) ? String(params.value) : date.toLocaleDateString('pt-BR'); } },
+  { field: 'data_criacao', headerName: 'Data Criação', width: 150, editable: true, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => { if (!params.value) return ''; const date = new Date(params.value as string); return isNaN(date.getTime()) ? String(params.value) : date.toLocaleDateString('pt-BR'); } }
+];
+
+// Configurações de colunas para Métricas de Anúncios
+export const metricasAnunciosColumns: ColDef[] = [
+  { field: 'id', headerName: 'ID', width: 280, pinned: 'left', editable: false, sortable: true },
+  { field: 'anuncio_publicado_id', headerName: 'Anúncio', width: 280, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'conta_ads_id', headerName: 'Conta Ads', width: 280, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'data', headerName: 'Data', width: 130, editable: true, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => { if (!params.value) return ''; const date = new Date(params.value as string); return isNaN(date.getTime()) ? String(params.value) : date.toLocaleDateString('pt-BR'); } },
+  { field: 'plataforma', headerName: 'Plataforma', width: 120, editable: true, sortable: true, filter: 'agSetColumnFilter', enableRowGroup: true },
+  { field: 'impressao', headerName: 'Impressões', width: 130, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'sum', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? params.value.toLocaleString('pt-BR') : String(params.value); }, cellStyle: { textAlign: 'right' } },
+  { field: 'cliques', headerName: 'Cliques', width: 110, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'sum', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? params.value.toLocaleString('pt-BR') : String(params.value); }, cellStyle: { textAlign: 'right', fontWeight: 'bold' } },
+  { field: 'ctr', headerName: 'CTR', width: 100, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'avg', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? `${(params.value * 100).toFixed(2)}%` : String(params.value); }, cellStyle: { textAlign: 'right' } },
+  { field: 'cpc', headerName: 'CPC', width: 110, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'avg', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value) : String(params.value); }, cellStyle: { textAlign: 'right' } },
+  { field: 'conversao', headerName: 'Conversões', width: 120, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'sum', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? params.value.toLocaleString('pt-BR') : String(params.value); }, cellStyle: { textAlign: 'right', fontWeight: 'bold', color: '#2e7d32' } },
+  { field: 'gasto', headerName: 'Gasto', width: 120, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'sum', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value) : String(params.value); }, cellStyle: { textAlign: 'right', fontWeight: 'bold', color: '#c62828' } },
+  { field: 'receita', headerName: 'Receita', width: 120, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'sum', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value) : String(params.value); }, cellStyle: { textAlign: 'right', fontWeight: 'bold', color: '#2e7d32' } },
+  { field: 'cpa', headerName: 'CPA', width: 110, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'avg', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value) : String(params.value); }, cellStyle: { textAlign: 'right' } },
+  { field: 'roas', headerName: 'ROAS', width: 100, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'avg', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? `${params.value.toFixed(2)}x` : String(params.value); }, cellStyle: (params) => { const value = params.value as number; if (value >= 3) return { color: '#2e7d32', fontWeight: 'bold', textAlign: 'right' }; if (value >= 1.5) return { color: '#f57c00', fontWeight: 'bold', textAlign: 'right' }; return { color: '#c62828', fontWeight: 'normal', textAlign: 'right' }; } },
+  { field: 'view_content', headerName: 'View Content', width: 130, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'sum', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? params.value.toLocaleString('pt-BR') : String(params.value); }, cellStyle: { textAlign: 'right' } },
+  { field: 'add_to_cart', headerName: 'Add to Cart', width: 130, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'sum', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? params.value.toLocaleString('pt-BR') : String(params.value); }, cellStyle: { textAlign: 'right' } },
+  { field: 'begin_checkout', headerName: 'Begin Checkout', width: 140, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'sum', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? params.value.toLocaleString('pt-BR') : String(params.value); }, cellStyle: { textAlign: 'right' } },
+  { field: 'visualizacoes_video', headerName: 'Visualizações Vídeo', width: 160, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'sum', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? params.value.toLocaleString('pt-BR') : String(params.value); }, cellStyle: { textAlign: 'right' } },
+  { field: 'likes', headerName: 'Likes', width: 100, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'sum', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? params.value.toLocaleString('pt-BR') : String(params.value); }, cellStyle: { textAlign: 'right' } },
+  { field: 'compartilhamentos', headerName: 'Compartilhamentos', width: 160, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'sum', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? params.value.toLocaleString('pt-BR') : String(params.value); }, cellStyle: { textAlign: 'right' } },
+  { field: 'comentarios', headerName: 'Comentários', width: 130, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'sum', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? params.value.toLocaleString('pt-BR') : String(params.value); }, cellStyle: { textAlign: 'right' } },
+  { field: 'salvos', headerName: 'Salvos', width: 100, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'sum', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? params.value.toLocaleString('pt-BR') : String(params.value); }, cellStyle: { textAlign: 'right' } },
+  { field: 'ctr_video', headerName: 'CTR Vídeo', width: 110, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'avg', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? `${(params.value * 100).toFixed(2)}%` : String(params.value); }, cellStyle: { textAlign: 'right' } },
+  { field: 'tempo_medio_visualizacao', headerName: 'Tempo Médio', width: 130, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'avg', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? `${params.value.toFixed(1)}s` : String(params.value); }, cellStyle: { textAlign: 'right' } },
+  { field: 'frequencia', headerName: 'Frequência', width: 120, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'avg', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? params.value.toFixed(2) : String(params.value); }, cellStyle: { textAlign: 'right' } },
+  { field: 'cpm_real', headerName: 'CPM', width: 110, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'avg', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value) : String(params.value); }, cellStyle: { textAlign: 'right' } },
+  { field: 'dispositivo', headerName: 'Dispositivo', width: 120, editable: true, sortable: true, filter: 'agSetColumnFilter', enableRowGroup: true },
+  { field: 'localizacao', headerName: 'Localização', width: 150, editable: true, sortable: true, filter: 'agSetColumnFilter', enableRowGroup: true },
+  { field: 'horario', headerName: 'Horário', width: 110, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'observacoes', headerName: 'Observações', width: 300, editable: true, sortable: true, filter: 'agTextColumnFilter', wrapText: true, autoHeight: true }
+];
+
+// Configurações de colunas para Resumos de Campanhas
+export const resumosCampanhasColumns: ColDef[] = [
+  { field: 'id', headerName: 'ID', width: 280, pinned: 'left', editable: false, sortable: true },
+  { field: 'campanha_id', headerName: 'Campanha', width: 280, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'total_gasto', headerName: 'Gasto Total', width: 140, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'sum', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value) : String(params.value); }, cellStyle: { textAlign: 'right', fontWeight: 'bold', color: '#c62828' } },
+  { field: 'total_cliques', headerName: 'Cliques Totais', width: 140, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'sum', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? params.value.toLocaleString('pt-BR') : String(params.value); }, cellStyle: { textAlign: 'right', fontWeight: 'bold' } },
+  { field: 'total_conversoes', headerName: 'Conversões Totais', width: 160, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'sum', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? params.value.toLocaleString('pt-BR') : String(params.value); }, cellStyle: { textAlign: 'right', fontWeight: 'bold', color: '#2e7d32' } },
+  { field: 'ctr_medio', headerName: 'CTR Médio', width: 120, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'avg', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? `${(params.value * 100).toFixed(2)}%` : String(params.value); }, cellStyle: { textAlign: 'right' } },
+  { field: 'cpc_medio', headerName: 'CPC Médio', width: 120, editable: true, sortable: true, filter: 'agNumberColumnFilter', enableValue: true, aggFunc: 'avg', valueFormatter: (params) => { if (params.value == null) return ''; return typeof params.value === 'number' ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value) : String(params.value); }, cellStyle: { textAlign: 'right' } },
+  { field: 'registrado_em', headerName: 'Registrado em', width: 180, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => { if (!params.value) return ''; const date = new Date(params.value as string); return isNaN(date.getTime()) ? String(params.value) : date.toLocaleDateString('pt-BR'); } }
+];
+
+// ============================================
 // MARKETING ORGÂNICO - Schema: marketing_organico
 // ============================================
 
@@ -3204,5 +3388,77 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     columnDefs: resumosContaColumns,
     icon: '📈',
     category: 'Marketing Orgânico'
+  },
+  {
+    id: 'trafego-contas-ads',
+    name: 'Contas de Anúncios',
+    description: 'Contas publicitárias (Google Ads, Meta Ads, etc.)',
+    tableName: 'trafego_pago.contas_ads',
+    columnDefs: contasAdsColumns,
+    icon: '🔑',
+    category: 'Tráfego Pago'
+  },
+  {
+    id: 'trafego-campanhas',
+    name: 'Campanhas',
+    description: 'Campanhas de tráfego pago',
+    tableName: 'trafego_pago.campanhas',
+    columnDefs: campanhasTrafegoPagoColumns,
+    icon: '🎯',
+    category: 'Tráfego Pago'
+  },
+  {
+    id: 'trafego-grupos-anuncios',
+    name: 'Grupos de Anúncios',
+    description: 'Conjuntos de anúncios / Ad Sets',
+    tableName: 'trafego_pago.grupos_de_anuncios',
+    columnDefs: gruposDeAnunciosColumns,
+    icon: '📂',
+    category: 'Tráfego Pago'
+  },
+  {
+    id: 'trafego-anuncios-criacao',
+    name: 'Criativos em Desenvolvimento',
+    description: 'Anúncios em processo de criação',
+    tableName: 'trafego_pago.anuncios_criacao',
+    columnDefs: anunciosCriacaoColumns,
+    icon: '✏️',
+    category: 'Tráfego Pago'
+  },
+  {
+    id: 'trafego-anuncios-colaboradores',
+    name: 'Histórico de Colaboração',
+    description: 'Ações e comentários nos criativos',
+    tableName: 'trafego_pago.anuncios_colaboradores',
+    columnDefs: anunciosColaboradoresColumns,
+    icon: '👥',
+    category: 'Tráfego Pago'
+  },
+  {
+    id: 'trafego-anuncios-publicados',
+    name: 'Anúncios Publicados',
+    description: 'Anúncios ativos nas plataformas',
+    tableName: 'trafego_pago.anuncios_publicados',
+    columnDefs: anunciosPublicadosColumns,
+    icon: '🚀',
+    category: 'Tráfego Pago'
+  },
+  {
+    id: 'trafego-metricas',
+    name: 'Métricas de Anúncios',
+    description: 'Performance detalhada dos anúncios',
+    tableName: 'trafego_pago.metricas_anuncios',
+    columnDefs: metricasAnunciosColumns,
+    icon: '📊',
+    category: 'Tráfego Pago'
+  },
+  {
+    id: 'trafego-resumos-campanhas',
+    name: 'Resumos de Campanhas',
+    description: 'Consolidação de resultados por campanha',
+    tableName: 'trafego_pago.resumos_campanhas',
+    columnDefs: resumosCampanhasColumns,
+    icon: '📈',
+    category: 'Tráfego Pago'
   }
 ];
