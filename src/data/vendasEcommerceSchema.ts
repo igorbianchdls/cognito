@@ -47,7 +47,7 @@ export const channelsColumns: ColDef[] = [
     cellStyle: (params) => {
       return params.value
         ? { color: '#2e7d32', fontWeight: 'bold' }
-        : { color: '#9e9e9e' };
+        : { color: '#9e9e9e', fontWeight: 'normal' };
     }
   },
   {
@@ -207,7 +207,7 @@ export const couponsColumns: ColDef[] = [
     cellStyle: (params) => {
       return params.value
         ? { color: '#2e7d32', fontWeight: 'bold' }
-        : { color: '#9e9e9e' };
+        : { color: '#9e9e9e', fontWeight: 'normal' };
     }
   },
   {
@@ -324,7 +324,7 @@ export const loyaltyPointsColumns: ColDef[] = [
       const points = params.value || 0;
       return points > 0
         ? { color: '#2e7d32', fontWeight: 'bold' }
-        : { color: '#9e9e9e' };
+        : { color: '#9e9e9e', fontWeight: 'normal' };
     }
   },
   {
@@ -410,7 +410,7 @@ export const loyaltyRewardsColumns: ColDef[] = [
       const stock = params.value || 0;
       if (stock === 0) return { color: '#c62828', fontWeight: 'bold' };
       if (stock < 10) return { color: '#f57c00', fontWeight: 'bold' };
-      return { color: '#2e7d32' };
+      return { color: '#2e7d32', fontWeight: 'normal' };
     }
   },
   {
@@ -427,7 +427,7 @@ export const loyaltyRewardsColumns: ColDef[] = [
     cellStyle: (params) => {
       return params.value
         ? { color: '#2e7d32', fontWeight: 'bold' }
-        : { color: '#9e9e9e' };
+        : { color: '#9e9e9e', fontWeight: 'normal' };
     }
   },
   {
@@ -900,7 +900,7 @@ export const productsColumns: ColDef[] = [
       const stock = params.value || 0;
       if (stock === 0) return { color: '#c62828', fontWeight: 'bold' };
       if (stock < 10) return { color: '#f57c00', fontWeight: 'bold' };
-      return { color: '#2e7d32' };
+      return { color: '#2e7d32', fontWeight: 'normal' };
     }
   },
   {
@@ -917,7 +917,7 @@ export const productsColumns: ColDef[] = [
     cellStyle: (params) => {
       return params.value
         ? { color: '#2e7d32', fontWeight: 'bold' }
-        : { color: '#9e9e9e' };
+        : { color: '#9e9e9e', fontWeight: 'normal' };
     }
   },
   {
