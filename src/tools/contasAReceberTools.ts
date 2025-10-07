@@ -63,16 +63,10 @@ export const getContasAReceber = tool({
       // Detectar se precisa de INNER JOIN
       const hasClienteFilter = !!cliente_nome;
 
-      // Construir SELECT dinamicamente baseado nos filtros
+      // Construir SELECT dinamicamente baseado nos filtros (single-line para evitar ParserError)
       const selectQuery = hasClienteFilter
-        ? `*,
-           cliente:gestaofinanceira.clientes!inner(id, nome, email, telefone),
-           categoria:gestaofinanceira.categorias(id, nome, tipo),
-           conta:gestaofinanceira.contas(id, nome, banco)`
-        : `*,
-           cliente:gestaofinanceira.clientes(id, nome, email, telefone),
-           categoria:gestaofinanceira.categorias(id, nome, tipo),
-           conta:gestaofinanceira.contas(id, nome, banco)`;
+        ? `*, cliente:gestaofinanceira.clientes!inner(id,nome,email,telefone), categoria:gestaofinanceira.categorias(id,nome,tipo), conta:gestaofinanceira.contas(id,nome,banco)`
+        : `*, cliente:gestaofinanceira.clientes(id,nome,email,telefone), categoria:gestaofinanceira.categorias(id,nome,tipo), conta:gestaofinanceira.contas(id,nome,banco)`;
 
       // Construir query base com JOINs (UMA VEZ)
       let query = supabase
