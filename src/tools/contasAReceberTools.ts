@@ -60,28 +60,24 @@ export const getContasAReceber = tool({
     venceu_ha_dias
   }) => {
     try {
-      // Construir query base com JOINs
+      // Detectar se precisa de INNER JOIN
+      const hasClienteFilter = !!cliente_nome;
+
+      // Construir SELECT dinamicamente baseado nos filtros
+      const selectQuery = hasClienteFilter
+        ? `*,
+           cliente:gestaofinanceira.clientes!inner(id, nome, email, telefone),
+           categoria:gestaofinanceira.categorias(id, nome, tipo),
+           conta:gestaofinanceira.contas(id, nome, banco)`
+        : `*,
+           cliente:gestaofinanceira.clientes(id, nome, email, telefone),
+           categoria:gestaofinanceira.categorias(id, nome, tipo),
+           conta:gestaofinanceira.contas(id, nome, banco)`;
+
+      // Construir query base com JOINs (UMA VEZ)
       let query = supabase
         .from('gestaofinanceira.contas_a_receber')
-        .select(`
-          *,
-          cliente:gestaofinanceira.clientes(
-            id,
-            nome,
-            email,
-            telefone
-          ),
-          categoria:gestaofinanceira.categorias(
-            id,
-            nome,
-            tipo
-          ),
-          conta:gestaofinanceira.contas(
-            id,
-            nome,
-            banco
-          )
-        `)
+        .select(selectQuery)
         .order('data_vencimento', { ascending: true })
         .limit(limit ?? 10);
 
@@ -90,25 +86,9 @@ export const getContasAReceber = tool({
         query = query.eq('status', status);
       }
 
-      // FILTROS DE RELACIONAMENTO (usar !inner)
+      // FILTROS DE RELACIONAMENTO
       if (cliente_nome) {
-        // Refazer select com !inner para cliente
-        query = supabase
-          .from('gestaofinanceira.contas_a_receber')
-          .select(`
-            *,
-            cliente:gestaofinanceira.clientes!inner(id, nome, email, telefone),
-            categoria:gestaofinanceira.categorias(id, nome, tipo),
-            conta:gestaofinanceira.contas(id, nome, banco)
-          `)
-          .ilike('cliente.nome', `%${cliente_nome}%`)
-          .order('data_vencimento', { ascending: true })
-          .limit(limit ?? 10);
-
-        // Reaplicar status se existir
-        if (status) {
-          query = query.eq('status', status);
-        }
+        query = query.ilike('cliente.nome', `%${cliente_nome}%`);
       }
 
       if (categoria_nome) {
