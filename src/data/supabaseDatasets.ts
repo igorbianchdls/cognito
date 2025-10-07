@@ -14,10 +14,19 @@ export async function fetchSupabaseTable(tableName: string) {
     const schema = maybeTable ? schemaOrTable : undefined;
     const table = maybeTable || schemaOrTable;
 
-    // Determinar coluna de ordenação baseado no schema
+    // Determinar coluna de ordenação baseado no schema e tabela
     let orderColumn = 'created_at';
     if (schema === 'gestaofinanceira') {
       orderColumn = 'criado_em';
+    } else if (schema === 'marketing_organico') {
+      // marketing_organico usa diferentes colunas por tabela
+      if (table === 'publicacoes') {
+        orderColumn = 'criado_em';
+      } else if (table === 'contas_sociais') {
+        orderColumn = 'conectado_em';
+      } else if (table === 'metricas_publicacoes' || table === 'resumos_conta') {
+        orderColumn = 'registrado_em';
+      }
     }
 
     if (schema) {
@@ -2471,6 +2480,450 @@ export const shipmentEventsColumns: ColDef[] = [
 ];
 
 // Definição de datasets do Supabase
+// ============================================
+// MARKETING ORGÂNICO - Schema: marketing_organico
+// ============================================
+
+// Configurações de colunas para Contas Sociais
+export const contasSociaisColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'plataforma',
+    headerName: 'Plataforma',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    cellStyle: (params) => {
+      const plataforma = String(params.value || '').toLowerCase();
+      if (plataforma.includes('instagram')) return { color: '#E4405F', fontWeight: 'bold' };
+      if (plataforma.includes('facebook')) return { color: '#1877F2', fontWeight: 'bold' };
+      if (plataforma.includes('linkedin')) return { color: '#0A66C2', fontWeight: 'bold' };
+      if (plataforma.includes('twitter') || plataforma.includes('x')) return { color: '#000000', fontWeight: 'bold' };
+      if (plataforma.includes('youtube')) return { color: '#FF0000', fontWeight: 'bold' };
+      return { fontWeight: 'normal' };
+    }
+  },
+  {
+    field: 'nome_conta',
+    headerName: 'Nome da Conta',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'conectado_em',
+    headerName: 'Conectado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleDateString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Publicações
+export const publicacoesColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'conta_social_id',
+    headerName: 'Conta Social',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'titulo',
+    headerName: 'Título',
+    width: 250,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontWeight: 'bold' }
+  },
+  {
+    field: 'hook',
+    headerName: 'Hook',
+    width: 300,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    wrapText: true,
+    autoHeight: true
+  },
+  {
+    field: 'expansao_hook',
+    headerName: 'Expansão do Hook',
+    width: 300,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    wrapText: true,
+    autoHeight: true
+  },
+  {
+    field: 'copy_completo',
+    headerName: 'Copy Completo',
+    width: 400,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    wrapText: true,
+    autoHeight: true
+  },
+  {
+    field: 'legenda',
+    headerName: 'Legenda',
+    width: 300,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    wrapText: true,
+    autoHeight: true
+  },
+  {
+    field: 'url_midia',
+    headerName: 'URLs de Mídia',
+    width: 200,
+    editable: true,
+    sortable: false,
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      try {
+        const urls = Array.isArray(params.value) ? params.value : JSON.parse(params.value as string);
+        return urls.length > 0 ? `${urls.length} arquivo(s)` : '';
+      } catch {
+        return String(params.value);
+      }
+    }
+  },
+  {
+    field: 'links',
+    headerName: 'Links',
+    width: 200,
+    editable: true,
+    sortable: false,
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      try {
+        const links = Array.isArray(params.value) ? params.value : JSON.parse(params.value as string);
+        return links.length > 0 ? `${links.length} link(s)` : '';
+      } catch {
+        return String(params.value);
+      }
+    }
+  },
+  {
+    field: 'tipo_post',
+    headerName: 'Tipo de Post',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'hashtags',
+    headerName: 'Hashtags',
+    width: 200,
+    editable: true,
+    sortable: false,
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      try {
+        const tags = Array.isArray(params.value) ? params.value : JSON.parse(params.value as string);
+        return tags.length > 0 ? tags.join(', ') : '';
+      } catch {
+        return String(params.value);
+      }
+    }
+  },
+  {
+    field: 'explicacao',
+    headerName: 'Explicação',
+    width: 300,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    wrapText: true,
+    autoHeight: true
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    cellStyle: (params) => {
+      const status = String(params.value || '').toLowerCase();
+      if (status === 'publicado') return { color: '#2e7d32', fontWeight: 'bold' };
+      if (status === 'rascunho') return { color: '#f57c00', fontWeight: 'bold' };
+      if (status === 'agendado') return { color: '#1976d2', fontWeight: 'bold' };
+      return { fontWeight: 'normal' };
+    }
+  },
+  {
+    field: 'criado_em',
+    headerName: 'Criado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleDateString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Métricas de Publicações
+export const metricasPublicacoesColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'publicacao_id',
+    headerName: 'Publicação',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'curtidas',
+    headerName: 'Curtidas',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return typeof params.value === 'number'
+        ? params.value.toLocaleString('pt-BR')
+        : String(params.value);
+    },
+    cellStyle: { textAlign: 'right', fontWeight: 'bold' }
+  },
+  {
+    field: 'comentarios',
+    headerName: 'Comentários',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return typeof params.value === 'number'
+        ? params.value.toLocaleString('pt-BR')
+        : String(params.value);
+    },
+    cellStyle: { textAlign: 'right' }
+  },
+  {
+    field: 'compartilhamentos',
+    headerName: 'Compartilhamentos',
+    width: 160,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return typeof params.value === 'number'
+        ? params.value.toLocaleString('pt-BR')
+        : String(params.value);
+    },
+    cellStyle: { textAlign: 'right' }
+  },
+  {
+    field: 'visualizacoes',
+    headerName: 'Visualizações',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return typeof params.value === 'number'
+        ? params.value.toLocaleString('pt-BR')
+        : String(params.value);
+    },
+    cellStyle: { textAlign: 'right' }
+  },
+  {
+    field: 'impressoes',
+    headerName: 'Impressões',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return typeof params.value === 'number'
+        ? params.value.toLocaleString('pt-BR')
+        : String(params.value);
+    },
+    cellStyle: { textAlign: 'right' }
+  },
+  {
+    field: 'registrado_em',
+    headerName: 'Registrado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleDateString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Resumos de Conta
+export const resumosContaColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'conta_social_id',
+    headerName: 'Conta Social',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'seguidores',
+    headerName: 'Seguidores',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'avg',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return typeof params.value === 'number'
+        ? params.value.toLocaleString('pt-BR')
+        : String(params.value);
+    },
+    cellStyle: { textAlign: 'right', fontWeight: 'bold' }
+  },
+  {
+    field: 'seguindo',
+    headerName: 'Seguindo',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'avg',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return typeof params.value === 'number'
+        ? params.value.toLocaleString('pt-BR')
+        : String(params.value);
+    },
+    cellStyle: { textAlign: 'right' }
+  },
+  {
+    field: 'total_publicacoes',
+    headerName: 'Total de Publicações',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return typeof params.value === 'number'
+        ? params.value.toLocaleString('pt-BR')
+        : String(params.value);
+    },
+    cellStyle: { textAlign: 'right' }
+  },
+  {
+    field: 'taxa_engajamento',
+    headerName: 'Taxa de Engajamento',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'avg',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return typeof params.value === 'number'
+        ? `${(params.value * 100).toFixed(2)}%`
+        : String(params.value);
+    },
+    cellStyle: (params) => {
+      const value = params.value as number;
+      if (value > 0.05) return { color: '#2e7d32', fontWeight: 'bold', textAlign: 'right' };
+      if (value > 0.02) return { color: '#f57c00', fontWeight: 'bold', textAlign: 'right' };
+      return { color: '#c62828', fontWeight: 'normal', textAlign: 'right' };
+    }
+  },
+  {
+    field: 'registrado_em',
+    headerName: 'Registrado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleDateString('pt-BR');
+    }
+  }
+];
+
 export interface SupabaseDatasetConfig {
   id: string;
   name: string;
@@ -2715,5 +3168,41 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     columnDefs: shipmentEventsColumns,
     icon: '📍',
     category: 'Supply Chain'
+  },
+  {
+    id: 'marketing-contas-sociais',
+    name: 'Contas Sociais',
+    description: 'Contas de redes sociais conectadas',
+    tableName: 'marketing_organico.contas_sociais',
+    columnDefs: contasSociaisColumns,
+    icon: '🔗',
+    category: 'Marketing Orgânico'
+  },
+  {
+    id: 'marketing-publicacoes',
+    name: 'Publicações',
+    description: 'Publicações nas redes sociais',
+    tableName: 'marketing_organico.publicacoes',
+    columnDefs: publicacoesColumns,
+    icon: '📝',
+    category: 'Marketing Orgânico'
+  },
+  {
+    id: 'marketing-metricas',
+    name: 'Métricas de Publicações',
+    description: 'Métricas e engajamento das publicações',
+    tableName: 'marketing_organico.metricas_publicacoes',
+    columnDefs: metricasPublicacoesColumns,
+    icon: '📊',
+    category: 'Marketing Orgânico'
+  },
+  {
+    id: 'marketing-resumos-conta',
+    name: 'Resumos de Conta',
+    description: 'Resumos estatísticos das contas sociais',
+    tableName: 'marketing_organico.resumos_conta',
+    columnDefs: resumosContaColumns,
+    icon: '📈',
+    category: 'Marketing Orgânico'
   }
 ];
