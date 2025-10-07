@@ -49,7 +49,8 @@ export const getContasAReceber = tool({
     try {
       // Query base simples - SEM JOINs
       let query = supabase
-        .from('gestaofinanceira.contas_a_receber')
+        .schema('gestaofinanceira')
+        .from('contas_a_receber')
         .select('*')
         .order('data_vencimento', { ascending: true })
         .limit(limit ?? 10);
