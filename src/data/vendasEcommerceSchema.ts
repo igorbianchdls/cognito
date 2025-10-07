@@ -1,4 +1,5 @@
 import { ColDef } from 'ag-grid-community';
+import type { SupabaseDatasetConfig } from './supabaseDatasets';
 
 // ============================================
 // VENDAS E-COMMERCE - Schema: vendasecommerce
@@ -1035,16 +1036,6 @@ export const returnsColumns: ColDef[] = [
 ];
 
 // Definição de datasets do Vendas E-commerce
-export interface SupabaseDatasetConfig {
-  id: string;
-  name: string;
-  description: string;
-  tableName: string;
-  columnDefs: ColDef[];
-  icon?: string;
-  category: string;
-}
-
 export const VENDAS_ECOMMERCE_DATASETS: SupabaseDatasetConfig[] = [
   {
     id: 'ecommerce-channels',
