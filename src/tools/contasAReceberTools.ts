@@ -8,9 +8,7 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export const getContasAReceber = tool({
-  description: `Busca contas a receber do banco de dados com informações completas de cliente, categoria e conta bancária.
-  Suporta filtros avançados de data, valor e status.`,
-
+  description: 'Busca contas a receber do banco de dados focado em datas de vencimento e status',
   inputSchema: z.object({
     // Paginação
     limit: z.number().default(10).describe('Número máximo de resultados'),
@@ -19,12 +17,6 @@ export const getContasAReceber = tool({
     status: z.enum(['pendente', 'pago', 'vencido', 'cancelado']).optional()
       .describe('Filtrar por status da conta'),
 
-    // Filtros de relacionamento
-    cliente_nome: z.string().optional()
-      .describe('Filtrar por nome do cliente (busca parcial)'),
-    categoria_nome: z.string().optional()
-      .describe('Filtrar por nome da categoria'),
-
     // Filtros de valor
     valor_minimo: z.number().optional()
       .describe('Valor mínimo da conta (em reais)'),
@@ -32,8 +24,6 @@ export const getContasAReceber = tool({
       .describe('Valor máximo da conta (em reais)'),
 
     // Filtros de data - vencimento futuro
-    data_vencimento: z.string().optional()
-      .describe('Data específica de vencimento (formato: YYYY-MM-DD)'),
     vence_em_dias: z.number().optional()
       .describe('Vence nos próximos X dias'),
     vencimento_ate: z.string().optional()
@@ -49,44 +39,24 @@ export const getContasAReceber = tool({
   execute: async ({
     limit,
     status,
-    cliente_nome,
-    categoria_nome,
     valor_minimo,
     valor_maximo,
-    data_vencimento,
     vence_em_dias,
     vencimento_ate,
     vencimento_de,
     venceu_ha_dias
   }) => {
     try {
-      // Detectar se precisa de INNER JOIN
-      const hasClienteFilter = !!cliente_nome;
-
-      // Construir SELECT dinamicamente baseado nos filtros (single-line para evitar ParserError)
-      const selectQuery = hasClienteFilter
-        ? `*, cliente:clientes!inner(id,nome,email,telefone), categoria:categorias(id,nome,tipo), conta:contas(id,nome,banco)`
-        : `*, cliente:clientes(id,nome,email,telefone), categoria:categorias(id,nome,tipo), conta:contas(id,nome,banco)`;
-
-      // Construir query base com JOINs (UMA VEZ)
+      // Query base simples - SEM JOINs
       let query = supabase
         .from('gestaofinanceira.contas_a_receber')
-        .select(selectQuery)
+        .select('*')
         .order('data_vencimento', { ascending: true })
         .limit(limit ?? 10);
 
       // FILTROS BÁSICOS
       if (status) {
         query = query.eq('status', status);
-      }
-
-      // FILTROS DE RELACIONAMENTO
-      if (cliente_nome) {
-        query = query.ilike('cliente.nome', `%${cliente_nome}%`);
-      }
-
-      if (categoria_nome) {
-        query = query.ilike('categoria.nome', `%${categoria_nome}%`);
       }
 
       // FILTROS DE VALOR
@@ -99,11 +69,6 @@ export const getContasAReceber = tool({
       }
 
       // FILTROS DE DATA
-      // Data específica
-      if (data_vencimento) {
-        query = query.eq('data_vencimento', data_vencimento);
-      }
-
       // Vence nos próximos X dias
       if (vence_em_dias !== undefined) {
         const hoje = new Date();
@@ -142,7 +107,6 @@ export const getContasAReceber = tool({
       if (error) throw error;
 
       // PROCESSAR RESULTADOS
-      // Calcular dias até vencimento e total
       const hoje = new Date();
       let totalValor = 0;
 

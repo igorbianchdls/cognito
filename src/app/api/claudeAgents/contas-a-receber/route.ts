@@ -43,13 +43,11 @@ Auxiliar gestores financeiros e controllers a:
 # 🛠️ Suas Ferramentas
 
 ## 📊 BUSCAR CONTAS A RECEBER
-**getContasAReceber** - Busca contas a receber com dados completos (cliente, categoria, conta bancária)
+**getContasAReceber** - Busca contas a receber do banco de dados focado em datas de vencimento e status
 
 **Parâmetros Básicos:**
 - \`limit\`: número de resultados (padrão: 10)
 - \`status\`: 'pendente' | 'pago' | 'vencido' | 'cancelado'
-- \`cliente_nome\`: busca parcial por nome do cliente
-- \`categoria_nome\`: busca parcial por nome da categoria
 
 **Filtros de Valor:**
 - \`valor_minimo\`: valor mínimo em reais (ex: 1000 = R$ 1.000,00)
@@ -60,29 +58,47 @@ Auxiliar gestores financeiros e controllers a:
 - \`venceu_ha_dias\`: venceu nos últimos X dias (ex: 7 = última semana)
 - \`vencimento_ate\`: vence até data específica (formato: 'YYYY-MM-DD')
 - \`vencimento_de\`: vence a partir de data específica
-- \`data_vencimento\`: vence exatamente nesta data
 
 **O que retorna:**
-- Dados completos da conta (valor, descrição, status, datas)
-- Dados do cliente (nome, email, telefone) via JOIN
-- Dados da categoria (nome, tipo) via JOIN
-- Dados da conta bancária (nome, banco) via JOIN
+- Dados da conta (id, valor, descrição, status, data_vencimento, data_emissao, etc.)
 - \`dias_ate_vencimento\`: campo calculado (positivo = futuro, negativo = vencido)
 - \`status_vencimento\`: 'vencido' | 'vence_hoje' | 'vence_em_breve' | 'normal'
 - \`total_valor\`: soma de todos os valores retornados
 
 **Exemplos de Uso:**
 - "O que vence nos próximos 7 dias?" → \`vence_em_dias: 7, status: 'pendente'\`
-- "Contas do João acima de R$ 1000" → \`cliente_nome: 'João', valor_minimo: 1000\`
 - "O que venceu na última semana?" → \`venceu_ha_dias: 7, status: 'vencido'\`
 - "Quanto vou receber até fim do mês?" → \`vencimento_ate: '2025-10-31', status: 'pendente'\`
 - "Inadimplência acima de R$ 500" → \`status: 'vencido', valor_minimo: 500\`
-- "Contas da categoria Serviços" → \`categoria_nome: 'Serviços'\`
+- "Contas pendentes entre R$ 100 e R$ 1000" → \`status: 'pendente', valor_minimo: 100, valor_maximo: 1000\`
 
 ## 💳 BUSCAR CONTAS A PAGAR
-**getContasAPagar** - Busca contas a pagar do banco de dados
-- Parâmetros: \`limit\` (padrão: 10), \`status\` (pendente/pago/vencido/cancelado), \`fornecedor_nome\`, \`categoria\` (aluguel/salario/fornecedor/imposto/servicos)
-- Use quando: usuário pedir para ver pagamentos, analisar despesas, verificar fornecedores, priorizar pagamentos
+**getContasAPagar** - Busca contas a pagar do banco de dados focado em datas de vencimento e status
+
+**Parâmetros Básicos:**
+- \`limit\`: número de resultados (padrão: 10)
+- \`status\`: 'pendente' | 'pago' | 'vencido' | 'cancelado'
+
+**Filtros de Valor:**
+- \`valor_minimo\`: valor mínimo em reais
+- \`valor_maximo\`: valor máximo em reais
+
+**Filtros Temporais (Data de Vencimento):**
+- \`vence_em_dias\`: vence nos próximos X dias
+- \`venceu_ha_dias\`: venceu nos últimos X dias
+- \`vencimento_ate\`: vence até data específica (formato: 'YYYY-MM-DD')
+- \`vencimento_de\`: vence a partir de data específica
+
+**O que retorna:**
+- Dados da conta (id, valor, descrição, status, data_vencimento, etc.)
+- \`dias_ate_vencimento\`: campo calculado
+- \`status_vencimento\`: 'vencido' | 'vence_hoje' | 'vence_em_breve' | 'normal'
+- \`total_valor\`: soma de todos os valores retornados
+
+**Exemplos de Uso:**
+- "Pagamentos dos próximos 7 dias" → \`vence_em_dias: 7, status: 'pendente'\`
+- "Contas vencidas" → \`status: 'vencido'\`
+- "Despesas acima de R$ 1000" → \`valor_minimo: 1000\`
 
 ## 📈 CALCULAR FLUXO DE CAIXA
 **calcularFluxoCaixa** - Calcula projeções de fluxo de caixa para períodos específicos
