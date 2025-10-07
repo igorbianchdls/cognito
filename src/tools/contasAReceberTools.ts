@@ -10,28 +10,19 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 export const getContasAReceber = tool({
   description: 'Busca contas a receber do banco de dados focado em datas de vencimento e status',
   inputSchema: z.object({
-    // Paginação
     limit: z.number().default(10).describe('Número máximo de resultados'),
-
-    // Filtros básicos
     status: z.enum(['pendente', 'pago', 'vencido', 'cancelado']).optional()
       .describe('Filtrar por status da conta'),
-
-    // Filtros de valor
     valor_minimo: z.number().optional()
       .describe('Valor mínimo da conta (em reais)'),
     valor_maximo: z.number().optional()
       .describe('Valor máximo da conta (em reais)'),
-
-    // Filtros de data - vencimento futuro
     vence_em_dias: z.number().optional()
       .describe('Vence nos próximos X dias'),
     vencimento_ate: z.string().optional()
       .describe('Vence até esta data (formato: YYYY-MM-DD)'),
     vencimento_de: z.string().optional()
       .describe('Vence a partir desta data (formato: YYYY-MM-DD)'),
-
-    // Filtros de data - vencimento passado
     venceu_ha_dias: z.number().optional()
       .describe('Venceu nos últimos X dias'),
   }),
@@ -47,71 +38,76 @@ export const getContasAReceber = tool({
     venceu_ha_dias
   }) => {
     try {
-      // Query base simples - SEM JOINs
-      let query = supabase
-        .schema('gestaofinanceira')
-        .from('contas_a_receber')
-        .select('*')
-        .order('data_vencimento', { ascending: true })
-        .limit(limit ?? 10);
+      // Buscar dados via RPC
+      const { data, error } = await supabase.rpc('fetch_table_data', {
+        p_schema: 'gestaofinanceira',
+        p_table: 'contas_a_receber',
+        p_order_column: 'criado_em',
+        p_limit: 1000
+      });
+
+      if (error) throw error;
+
+      let dataFiltrada = data || [];
 
       // FILTROS BÁSICOS
       if (status) {
-        query = query.eq('status', status);
+        dataFiltrada = dataFiltrada.filter(c => c.status === status);
       }
 
       // FILTROS DE VALOR
       if (valor_minimo !== undefined) {
-        query = query.gte('valor', valor_minimo);
+        dataFiltrada = dataFiltrada.filter(c => c.valor >= valor_minimo);
       }
 
       if (valor_maximo !== undefined) {
-        query = query.lte('valor', valor_maximo);
+        dataFiltrada = dataFiltrada.filter(c => c.valor <= valor_maximo);
       }
 
       // FILTROS DE DATA
-      // Vence nos próximos X dias
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+
       if (vence_em_dias !== undefined) {
-        const hoje = new Date();
-        const dataLimite = new Date();
+        const dataLimite = new Date(hoje);
         dataLimite.setDate(hoje.getDate() + vence_em_dias);
 
-        query = query
-          .gte('data_vencimento', hoje.toISOString().split('T')[0])
-          .lte('data_vencimento', dataLimite.toISOString().split('T')[0]);
+        dataFiltrada = dataFiltrada.filter(c => {
+          const venc = new Date(c.data_vencimento);
+          return venc >= hoje && venc <= dataLimite;
+        });
       }
 
-      // Vence até uma data
       if (vencimento_ate) {
-        query = query.lte('data_vencimento', vencimento_ate);
+        const dataLimite = new Date(vencimento_ate);
+        dataFiltrada = dataFiltrada.filter(c => {
+          const venc = new Date(c.data_vencimento);
+          return venc <= dataLimite;
+        });
       }
 
-      // Vence a partir de uma data
       if (vencimento_de) {
-        query = query.gte('data_vencimento', vencimento_de);
+        const dataInicio = new Date(vencimento_de);
+        dataFiltrada = dataFiltrada.filter(c => {
+          const venc = new Date(c.data_vencimento);
+          return venc >= dataInicio;
+        });
       }
 
-      // Venceu nos últimos X dias
       if (venceu_ha_dias !== undefined) {
-        const hoje = new Date();
-        const dataInicio = new Date();
+        const dataInicio = new Date(hoje);
         dataInicio.setDate(hoje.getDate() - venceu_ha_dias);
 
-        query = query
-          .gte('data_vencimento', dataInicio.toISOString().split('T')[0])
-          .lt('data_vencimento', hoje.toISOString().split('T')[0]);
+        dataFiltrada = dataFiltrada.filter(c => {
+          const venc = new Date(c.data_vencimento);
+          return venc >= dataInicio && venc < hoje;
+        });
       }
 
-      // EXECUTAR QUERY
-      const { data, error } = await query;
-
-      if (error) throw error;
-
       // PROCESSAR RESULTADOS
-      const hoje = new Date();
       let totalValor = 0;
 
-      const dataProcessada = (data || []).map(conta => {
+      const dataProcessada = dataFiltrada.map(conta => {
         const vencimento = new Date(conta.data_vencimento);
         const diffTime = vencimento.getTime() - hoje.getTime();
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -127,18 +123,26 @@ export const getContasAReceber = tool({
         };
       });
 
-      // RETORNAR RESULTADO
+      // Ordenar por data de vencimento
+      dataProcessada.sort((a, b) => {
+        const dateA = new Date(a.data_vencimento).getTime();
+        const dateB = new Date(b.data_vencimento).getTime();
+        return dateA - dateB;
+      });
+
+      // Limitar resultados
+      const resultados = dataProcessada.slice(0, limit ?? 10);
+
       return {
         success: true,
-        count: dataProcessada.length,
+        count: resultados.length,
         total_valor: totalValor,
-        message: `✅ ${dataProcessada.length} conta${dataProcessada.length !== 1 ? 's' : ''} a receber encontrada${dataProcessada.length !== 1 ? 's' : ''} (Total: R$ ${totalValor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`,
-        data: dataProcessada
+        message: `✅ ${resultados.length} conta${resultados.length !== 1 ? 's' : ''} a receber encontrada${resultados.length !== 1 ? 's' : ''} (Total: R$ ${totalValor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`,
+        data: resultados
       };
 
     } catch (error) {
-      console.error('ERRO COMPLETO getContasAReceber:', error);
-      console.error('ERRO STACK:', error instanceof Error ? error.stack : 'sem stack');
+      console.error('ERRO getContasAReceber:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : JSON.stringify(error),
