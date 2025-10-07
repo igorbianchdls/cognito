@@ -137,9 +137,11 @@ export const getContasAReceber = tool({
       };
 
     } catch (error) {
+      console.error('ERRO COMPLETO getContasAReceber:', error);
+      console.error('ERRO STACK:', error instanceof Error ? error.stack : 'sem stack');
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        error: error instanceof Error ? error.message : JSON.stringify(error),
         message: '❌ Erro ao buscar contas a receber',
         data: []
       };

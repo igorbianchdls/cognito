@@ -137,9 +137,11 @@ export const getContasAPagar = tool({
       };
 
     } catch (error) {
+      console.error('ERRO COMPLETO getContasAPagar:', error);
+      console.error('ERRO STACK:', error instanceof Error ? error.stack : 'sem stack');
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
+        error: error instanceof Error ? error.message : JSON.stringify(error),
         message: '❌ Erro ao buscar contas a pagar',
         data: []
       };
