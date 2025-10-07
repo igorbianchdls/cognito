@@ -51,6 +51,7 @@ import NotasFiscaisList from '../tools/NotasFiscaisList';
 import InventoryList from '../tools/InventoryList';
 import ContasAPagarList from '../tools/ContasAPagarList';
 import FluxoCaixaResult from '../tools/FluxoCaixaResult';
+import FinancialDataTable from '../tools/FinancialDataTable';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -653,6 +654,27 @@ type GetInventoryToolOutput = {
     observacoes?: string;
     created_at?: string;
     updated_at?: string;
+  }>;
+  message: string;
+  error?: string;
+};
+
+type GetFinancialDataToolInput = {
+  table: 'contas_a_pagar' | 'contas_a_receber';
+  limit?: number;
+};
+
+type GetFinancialDataToolOutput = {
+  success: boolean;
+  count: number;
+  data: Array<{
+    id: string | number;
+    valor?: number;
+    status?: string;
+    data_vencimento?: string;
+    data_emissao?: string;
+    descricao?: string;
+    [key: string]: unknown;
   }>;
   message: string;
   error?: string;
@@ -1458,6 +1480,10 @@ type NexusToolUIPart = ToolUIPart<{
   getContasAPagar: {
     input: GetContasAPagarToolInput;
     output: GetContasAPagarToolOutput;
+  };
+  getFinancialData: {
+    input: GetFinancialDataToolInput;
+    output: GetFinancialDataToolOutput;
   };
   calcularFluxoCaixa: {
     input: CalcularFluxoCaixaToolInput;
@@ -3021,6 +3047,40 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   data={(inventoryTool.output as GetInventoryToolOutput).data}
                   message={(inventoryTool.output as GetInventoryToolOutput).message}
                   error={(inventoryTool.output as GetInventoryToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getFinancialData') {
+          const financialDataTool = part as NexusToolUIPart;
+          const callId = financialDataTool.toolCallId;
+          const shouldBeOpen = financialDataTool.state === 'output-available' || financialDataTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getFinancialData" state={financialDataTool.state} />
+                <ToolContent>
+                  {financialDataTool.input && (
+                    <ToolInput input={financialDataTool.input} />
+                  )}
+                  {financialDataTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={financialDataTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {financialDataTool.state === 'output-available' && (
+                <FinancialDataTable
+                  success={(financialDataTool.output as GetFinancialDataToolOutput).success}
+                  count={(financialDataTool.output as GetFinancialDataToolOutput).count}
+                  data={(financialDataTool.output as GetFinancialDataToolOutput).data}
+                  message={(financialDataTool.output as GetFinancialDataToolOutput).message}
+                  error={(financialDataTool.output as GetFinancialDataToolOutput).error}
                 />
               )}
             </div>
