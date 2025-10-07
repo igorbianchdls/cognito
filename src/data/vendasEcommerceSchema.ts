@@ -1,5 +1,5 @@
 import { ColDef } from 'ag-grid-community';
-import type { SupabaseDatasetConfig } from './supabaseDatasets';
+import type { SupabaseDatasetConfig } from './types';
 
 // ============================================
 // VENDAS E-COMMERCE - Schema: vendasecommerce

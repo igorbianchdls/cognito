@@ -1,5 +1,6 @@
 import { ColDef } from 'ag-grid-community';
 import { createClient } from '@supabase/supabase-js';
+import type { SupabaseDatasetConfig } from './types';
 import { VENDAS_ECOMMERCE_DATASETS } from './vendasEcommerceSchema';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -749,16 +750,6 @@ export const movimentosGestaoColumns: ColDef[] = [
 ];
 
 // Definição de datasets do Supabase
-export interface SupabaseDatasetConfig {
-  id: string;
-  name: string;
-  description: string;
-  tableName: string;
-  columnDefs: ColDef[];
-  icon?: string;
-  category: string;
-}
-
 export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
   {
     id: 'gestao-categorias',
