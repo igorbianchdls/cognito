@@ -14,8 +14,11 @@ export async function fetchSupabaseTable(tableName: string) {
     const schema = maybeTable ? schemaOrTable : undefined;
     const table = maybeTable || schemaOrTable;
 
-    // Determinar coluna de ordenação (schemas novos usam criado_em)
-    const orderColumn = schema ? 'criado_em' : 'created_at';
+    // Determinar coluna de ordenação baseado no schema
+    let orderColumn = 'created_at';
+    if (schema === 'gestaofinanceira') {
+      orderColumn = 'criado_em';
+    }
 
     if (schema) {
       // Para schemas customizados, usar RPC function
