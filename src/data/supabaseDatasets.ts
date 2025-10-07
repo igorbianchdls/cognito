@@ -1,5 +1,6 @@
 import { ColDef } from 'ag-grid-community';
 import { createClient } from '@supabase/supabase-js';
+import { VENDAS_ECOMMERCE_DATASETS } from './vendasEcommerceSchema';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -830,5 +831,6 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     columnDefs: movimentosGestaoColumns,
     icon: '📊',
     category: 'Gestão Financeira'
-  }
+  },
+  ...VENDAS_ECOMMERCE_DATASETS
 ];
