@@ -17,7 +17,7 @@ export async function fetchSupabaseTable(tableName: string) {
     // Determinar coluna de ordenação (schemas novos usam criado_em)
     const orderColumn = schema ? 'criado_em' : 'created_at';
 
-    let query = schema
+    const query = schema
       ? supabase.schema(schema).from(table)
       : supabase.from(table);
 
