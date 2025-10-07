@@ -2509,7 +2509,7 @@ export const contasSociaisColumns: ColDef[] = [
       if (plataforma.includes('linkedin')) return { color: '#0A66C2', fontWeight: 'bold' };
       if (plataforma.includes('twitter') || plataforma.includes('x')) return { color: '#000000', fontWeight: 'bold' };
       if (plataforma.includes('youtube')) return { color: '#FF0000', fontWeight: 'bold' };
-      return { fontWeight: 'normal' };
+      return { color: '#000000', fontWeight: 'normal' };
     }
   },
   {
@@ -2682,7 +2682,7 @@ export const publicacoesColumns: ColDef[] = [
       if (status === 'publicado') return { color: '#2e7d32', fontWeight: 'bold' };
       if (status === 'rascunho') return { color: '#f57c00', fontWeight: 'bold' };
       if (status === 'agendado') return { color: '#1976d2', fontWeight: 'bold' };
-      return { fontWeight: 'normal' };
+      return { color: '#000000', fontWeight: 'normal' };
     }
   },
   {
