@@ -54,6 +54,7 @@ import FluxoCaixaResult from '../tools/FluxoCaixaResult';
 import FinancialDataTable from '../tools/FinancialDataTable';
 import OrganicMarketingDataTable from '../tools/OrganicMarketingDataTable';
 import PaidTrafficDataTable from '../tools/PaidTrafficDataTable';
+import InventoryDataTable from '../tools/InventoryDataTable';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -790,6 +791,52 @@ type GetPaidTrafficDataToolOutput = {
     ctr_medio?: number;
     cpc_medio?: number;
     registrado_em?: string;
+    [key: string]: unknown;
+  }>;
+  message: string;
+  error?: string;
+};
+
+type GetInventoryDataToolInput = {
+  table: 'centros_distribuicao' | 'estoque_canal' | 'integracoes_canais' | 'movimentacoes_estoque' | 'precos_canais';
+  limit?: number;
+  ativo?: boolean;
+  product_id?: string;
+  channel_id?: string;
+  tipo?: string;
+  quantidade_minima?: number;
+  quantidade_maxima?: number;
+  data_de?: string;
+  data_ate?: string;
+};
+
+type GetInventoryDataToolOutput = {
+  success: boolean;
+  count: number;
+  table: string;
+  data: Array<{
+    id: string;
+    nome?: string;
+    endereco?: string;
+    ativo?: boolean;
+    product_id?: string;
+    channel_id?: string;
+    sku_channel?: string;
+    quantity_available?: number;
+    quantity_reserved?: number;
+    last_updated?: string;
+    api_key?: string;
+    config?: unknown;
+    last_sync?: string;
+    order_id?: string;
+    type?: string;
+    quantity?: number;
+    reason?: string;
+    price?: number;
+    start_date?: string;
+    end_date?: string;
+    created_at?: string;
+    updated_at?: string;
     [key: string]: unknown;
   }>;
   message: string;
@@ -3267,6 +3314,41 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   data={(paidTrafficTool.output as GetPaidTrafficDataToolOutput).data}
                   message={(paidTrafficTool.output as GetPaidTrafficDataToolOutput).message}
                   error={(paidTrafficTool.output as GetPaidTrafficDataToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getInventoryData') {
+          const inventoryTool = part as NexusToolUIPart;
+          const callId = inventoryTool.toolCallId;
+          const shouldBeOpen = inventoryTool.state === 'output-available' || inventoryTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getInventoryData" state={inventoryTool.state} />
+                <ToolContent>
+                  {inventoryTool.input && (
+                    <ToolInput input={inventoryTool.input} />
+                  )}
+                  {inventoryTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={inventoryTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {inventoryTool.state === 'output-available' && (
+                <InventoryDataTable
+                  success={(inventoryTool.output as GetInventoryDataToolOutput).success}
+                  count={(inventoryTool.output as GetInventoryDataToolOutput).count}
+                  table={(inventoryTool.output as GetInventoryDataToolOutput).table}
+                  data={(inventoryTool.output as GetInventoryDataToolOutput).data}
+                  message={(inventoryTool.output as GetInventoryDataToolOutput).message}
+                  error={(inventoryTool.output as GetInventoryDataToolOutput).error}
                 />
               )}
             </div>
