@@ -1242,6 +1242,216 @@ export const entidadesColumns: ColDef[] = [
 ];
 
 // ============================================
+// GESTÃO DE COMPRAS - Schema: gestaocompras
+// ============================================
+
+// Configurações de colunas para Fornecedores (Gestão de Compras)
+export const fornecedoresColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    cellDataType: 'text'
+  },
+  {
+    field: 'entidade_id',
+    headerName: 'Entidade',
+    width: 280,
+    cellDataType: 'text'
+  },
+  {
+    field: 'codigo_fornecedor',
+    headerName: 'Código',
+    width: 150,
+    cellDataType: 'text'
+  },
+  {
+    field: 'prazo_entrega_medio_dias',
+    headerName: 'Prazo Entrega (dias)',
+    width: 180,
+    cellDataType: 'number'
+  },
+  {
+    field: 'avaliacao_fornecedor',
+    headerName: 'Avaliação',
+    width: 150,
+    cellDataType: 'number',
+    cellRenderer: (params: { value: number }) => {
+      if (!params.value) return '';
+      const stars = '⭐'.repeat(params.value);
+      return `<span>${stars}</span>`;
+    }
+  },
+  {
+    field: 'criado_em',
+    headerName: 'Criado em',
+    width: 200,
+    cellDataType: 'date'
+  }
+];
+
+// Configurações de colunas para Pedidos de Compra (Gestão de Compras)
+export const pedidosCompraColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    cellDataType: 'text'
+  },
+  {
+    field: 'numero_pedido',
+    headerName: 'Nº Pedido',
+    width: 150,
+    cellDataType: 'text'
+  },
+  {
+    field: 'fornecedor_id',
+    headerName: 'Fornecedor',
+    width: 280,
+    cellDataType: 'text'
+  },
+  {
+    field: 'solicitante_id',
+    headerName: 'Solicitante',
+    width: 280,
+    cellDataType: 'text'
+  },
+  {
+    field: 'data_emissao',
+    headerName: 'Data Emissão',
+    width: 150,
+    cellDataType: 'date'
+  },
+  {
+    field: 'data_previsao_entrega',
+    headerName: 'Previsão Entrega',
+    width: 170,
+    cellDataType: 'date'
+  },
+  {
+    field: 'valor_total',
+    headerName: 'Valor Total',
+    width: 150,
+    cellDataType: 'number',
+    valueFormatter: (params: { value: number }) => {
+      if (params.value == null) return '';
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(params.value);
+    }
+  },
+  {
+    field: 'status_pedido',
+    headerName: 'Status',
+    width: 150,
+    cellDataType: 'text',
+    cellRenderer: (params: { value: string }) => {
+      const statusColors: Record<string, string> = {
+        'Rascunho': 'bg-gray-100 text-gray-800',
+        'Enviado': 'bg-blue-100 text-blue-800',
+        'Aprovado': 'bg-green-100 text-green-800',
+        'Recebido': 'bg-purple-100 text-purple-800',
+        'Cancelado': 'bg-red-100 text-red-800'
+      };
+      const colorClass = statusColors[params.value] || 'bg-gray-100 text-gray-800';
+      return `<span class="px-2 py-1 rounded-full text-xs font-medium ${colorClass}">${params.value}</span>`;
+    }
+  },
+  {
+    field: 'condicao_pagamento',
+    headerName: 'Condição Pagamento',
+    width: 200,
+    cellDataType: 'text'
+  },
+  {
+    field: 'observacoes',
+    headerName: 'Observações',
+    width: 250,
+    cellDataType: 'text'
+  },
+  {
+    field: 'criado_em',
+    headerName: 'Criado em',
+    width: 200,
+    cellDataType: 'date'
+  }
+];
+
+// Configurações de colunas para Itens de Pedido de Compra (Gestão de Compras)
+export const pedidoCompraItensColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    cellDataType: 'text'
+  },
+  {
+    field: 'pedido_compra_id',
+    headerName: 'Pedido de Compra',
+    width: 280,
+    cellDataType: 'text'
+  },
+  {
+    field: 'descricao',
+    headerName: 'Descrição',
+    width: 300,
+    cellDataType: 'text'
+  },
+  {
+    field: 'codigo_produto_fornecedor',
+    headerName: 'Código Produto',
+    width: 180,
+    cellDataType: 'text'
+  },
+  {
+    field: 'quantidade_solicitada',
+    headerName: 'Quantidade',
+    width: 130,
+    cellDataType: 'number',
+    valueFormatter: (params: { value: number }) => {
+      if (params.value == null) return '';
+      return new Intl.NumberFormat('pt-BR', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }).format(params.value);
+    }
+  },
+  {
+    field: 'valor_unitario',
+    headerName: 'Valor Unitário',
+    width: 150,
+    cellDataType: 'number',
+    valueFormatter: (params: { value: number }) => {
+      if (params.value == null) return '';
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(params.value);
+    }
+  },
+  {
+    field: 'valor_total_item',
+    headerName: 'Valor Total',
+    width: 150,
+    cellDataType: 'number',
+    valueFormatter: (params: { value: number }) => {
+      if (params.value == null) return '';
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(params.value);
+    }
+  },
+  {
+    field: 'criado_em',
+    headerName: 'Criado em',
+    width: 200,
+    cellDataType: 'date'
+  }
+];
+
+// ============================================
 // VENDAS E-COMMERCE - Schema: vendasecommerce
 // ============================================
 
@@ -5555,6 +5765,33 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     columnDefs: entidadesColumns,
     icon: '🏢',
     category: 'Gestão Financeira'
+  },
+  {
+    id: 'compras-fornecedores',
+    name: 'Fornecedores',
+    description: 'Cadastro e avaliação de fornecedores',
+    tableName: 'gestaocompras.fornecedores',
+    columnDefs: fornecedoresColumns,
+    icon: '🏭',
+    category: 'Gestão de Compras'
+  },
+  {
+    id: 'compras-pedidos',
+    name: 'Pedidos de Compra',
+    description: 'Pedidos de compra e solicitações',
+    tableName: 'gestaocompras.pedidos_compra',
+    columnDefs: pedidosCompraColumns,
+    icon: '🛒',
+    category: 'Gestão de Compras'
+  },
+  {
+    id: 'compras-itens-pedido',
+    name: 'Itens de Pedido',
+    description: 'Itens e linhas dos pedidos de compra',
+    tableName: 'gestaocompras.pedido_compra_itens',
+    columnDefs: pedidoCompraItensColumns,
+    icon: '📦',
+    category: 'Gestão de Compras'
   },
   {
     id: 'ecommerce-channels',
