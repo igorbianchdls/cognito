@@ -46,6 +46,9 @@ export async function fetchSupabaseTable(tableName: string) {
       } else if (table === 'resumos_campanhas') {
         orderColumn = 'registrado_em';
       }
+    } else if (schema === 'gestaoestoque') {
+      // gestaoestoque - todas as tabelas usam created_at
+      orderColumn = 'created_at';
     }
 
     if (schema) {
