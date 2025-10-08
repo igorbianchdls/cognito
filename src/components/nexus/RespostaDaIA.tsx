@@ -58,6 +58,7 @@ import InventoryDataTable from '../tools/InventoryDataTable';
 import EcommerceSalesDataTable from '../tools/EcommerceSalesDataTable';
 import LogisticsDataTable from '../tools/LogisticsDataTable';
 import AnalyticsDataTable from '../tools/AnalyticsDataTable';
+import ComprasDataTable from '../tools/ComprasDataTable';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -965,6 +966,54 @@ type GetLogisticsDataToolOutput = {
     prazo_entrega_dias?: number;
     custo_por_kg?: number;
     created_at?: string;
+    updated_at?: string;
+    [key: string]: unknown;
+  }>;
+  message: string;
+  error?: string;
+};
+
+type GetComprasDataToolInput = {
+  table: 'fornecedores' | 'pedidos_compra' | 'pedido_compra_itens';
+  limit?: number;
+  fornecedor_id?: string;
+  solicitante_id?: string;
+  status_pedido?: string;
+  numero_pedido?: string;
+  pedido_compra_id?: string;
+  avaliacao_minima?: number;
+  valor_minimo?: number;
+  valor_maximo?: number;
+  data_de?: string;
+  data_ate?: string;
+};
+
+type GetComprasDataToolOutput = {
+  success: boolean;
+  count: number;
+  table: string;
+  data: Array<{
+    id: string;
+    entidade_id?: string;
+    codigo_fornecedor?: string;
+    prazo_entrega_medio_dias?: number;
+    avaliacao_fornecedor?: number;
+    fornecedor_id?: string;
+    solicitante_id?: string;
+    numero_pedido?: string;
+    data_emissao?: string;
+    data_previsao_entrega?: string;
+    valor_total?: number;
+    status_pedido?: string;
+    condicao_pagamento?: string;
+    observacoes?: string;
+    pedido_compra_id?: string;
+    descricao?: string;
+    codigo_produto_fornecedor?: string;
+    quantidade_solicitada?: number;
+    valor_unitario?: number;
+    valor_total_item?: number;
+    criado_em?: string;
     updated_at?: string;
     [key: string]: unknown;
   }>;
@@ -3619,6 +3668,41 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   data={(logisticsTool.output as GetLogisticsDataToolOutput).data}
                   message={(logisticsTool.output as GetLogisticsDataToolOutput).message}
                   error={(logisticsTool.output as GetLogisticsDataToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getComprasData') {
+          const comprasTool = part as NexusToolUIPart;
+          const callId = comprasTool.toolCallId;
+          const shouldBeOpen = comprasTool.state === 'output-available' || comprasTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getComprasData" state={comprasTool.state} />
+                <ToolContent>
+                  {comprasTool.input && (
+                    <ToolInput input={comprasTool.input} />
+                  )}
+                  {comprasTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={comprasTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {comprasTool.state === 'output-available' && (
+                <ComprasDataTable
+                  success={(comprasTool.output as GetComprasDataToolOutput).success}
+                  count={(comprasTool.output as GetComprasDataToolOutput).count}
+                  table={(comprasTool.output as GetComprasDataToolOutput).table}
+                  data={(comprasTool.output as GetComprasDataToolOutput).data}
+                  message={(comprasTool.output as GetComprasDataToolOutput).message}
+                  error={(comprasTool.output as GetComprasDataToolOutput).error}
                 />
               )}
             </div>
