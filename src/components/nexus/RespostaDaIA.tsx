@@ -53,6 +53,7 @@ import ContasAPagarList from '../tools/ContasAPagarList';
 import FluxoCaixaResult from '../tools/FluxoCaixaResult';
 import FinancialDataTable from '../tools/FinancialDataTable';
 import OrganicMarketingDataTable from '../tools/OrganicMarketingDataTable';
+import PaidTrafficDataTable from '../tools/PaidTrafficDataTable';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -720,6 +721,75 @@ type GetOrganicMarketingDataToolOutput = {
     seguindo?: number;
     total_publicacoes?: number;
     alcance_total?: number;
+    [key: string]: unknown;
+  }>;
+  message: string;
+  error?: string;
+};
+
+type GetPaidTrafficDataToolInput = {
+  table: 'contas_ads' | 'campanhas' | 'grupos_de_anuncios' | 'anuncios_criacao' | 'anuncios_colaboradores' | 'anuncios_publicados' | 'metricas_anuncios' | 'resumos_campanhas';
+  limit?: number;
+  plataforma?: string;
+  status?: string;
+  criativo_status?: string;
+  objetivo?: string;
+  data_de?: string;
+  data_ate?: string;
+  roas_minimo?: number;
+  gasto_minimo?: number;
+  gasto_maximo?: number;
+  conversoes_minimo?: number;
+  ctr_minimo?: number;
+};
+
+type GetPaidTrafficDataToolOutput = {
+  success: boolean;
+  count: number;
+  table: string;
+  data: Array<{
+    id: string | number;
+    plataforma?: string;
+    nome_conta?: string;
+    conectado_em?: string;
+    conta_ads_id?: string;
+    nome?: string;
+    objetivo?: string;
+    orcamento_total?: number;
+    orcamento_diario?: number;
+    status?: string;
+    inicio?: string;
+    fim?: string;
+    campanha_id?: string;
+    publico_alvo?: unknown;
+    grupo_id?: string;
+    titulo?: string;
+    hook?: string;
+    criativo_status?: string;
+    criado_por?: string;
+    criado_em?: string;
+    atualizado_em?: string;
+    anuncio_criacao_id?: string;
+    anuncio_id_plataforma?: string;
+    publicado_em?: string;
+    anuncio_publicado_id?: string;
+    data?: string;
+    impressao?: number;
+    cliques?: number;
+    ctr?: number;
+    cpc?: number;
+    conversao?: number;
+    gasto?: number;
+    receita?: number;
+    cpa?: number;
+    roas?: number;
+    cpm_real?: number;
+    total_gasto?: number;
+    total_cliques?: number;
+    total_conversoes?: number;
+    ctr_medio?: number;
+    cpc_medio?: number;
+    registrado_em?: string;
     [key: string]: unknown;
   }>;
   message: string;
@@ -3162,6 +3232,41 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   data={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).data}
                   message={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).message}
                   error={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getPaidTrafficData') {
+          const paidTrafficTool = part as NexusToolUIPart;
+          const callId = paidTrafficTool.toolCallId;
+          const shouldBeOpen = paidTrafficTool.state === 'output-available' || paidTrafficTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getPaidTrafficData" state={paidTrafficTool.state} />
+                <ToolContent>
+                  {paidTrafficTool.input && (
+                    <ToolInput input={paidTrafficTool.input} />
+                  )}
+                  {paidTrafficTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={paidTrafficTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {paidTrafficTool.state === 'output-available' && (
+                <PaidTrafficDataTable
+                  success={(paidTrafficTool.output as GetPaidTrafficDataToolOutput).success}
+                  count={(paidTrafficTool.output as GetPaidTrafficDataToolOutput).count}
+                  table={(paidTrafficTool.output as GetPaidTrafficDataToolOutput).table}
+                  data={(paidTrafficTool.output as GetPaidTrafficDataToolOutput).data}
+                  message={(paidTrafficTool.output as GetPaidTrafficDataToolOutput).message}
+                  error={(paidTrafficTool.output as GetPaidTrafficDataToolOutput).error}
                 />
               )}
             </div>

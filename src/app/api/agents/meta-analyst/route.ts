@@ -3,6 +3,7 @@ import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
 import * as visualizationTools from '@/tools/apps/visualization';
 import { getOrganicMarketingData } from '@/tools/organicMarketingTools';
+import { getPaidTrafficData } from '@/tools/paidTrafficTools';
 
 export const maxDuration = 300;
 
@@ -74,6 +75,47 @@ export async function POST(req: Request) {
 - Identificar melhores horários e tipos de conteúdo orgânico
 - Analisar crescimento de seguidores e taxa de engajamento
 - Benchmarking de performance entre plataformas
+
+## 💰 TRÁFEGO PAGO (SUPABASE):
+**getPaidTrafficData** - Busca dados de campanhas pagas (Google Ads, Meta Ads, TikTok Ads, LinkedIn Ads)
+
+**Tabelas disponíveis:**
+- \`contas_ads\`: Contas de anúncios conectadas nas plataformas
+- \`campanhas\`: Campanhas publicitárias (objetivo, orçamento, status, datas)
+- \`grupos_de_anuncios\`: Conjuntos de anúncios/Ad Sets (público-alvo, orçamento diário)
+- \`anuncios_criacao\`: Criativos em criação (título, hook, copy, status criativo)
+- \`anuncios_colaboradores\`: Histórico de colaboração em anúncios
+- \`anuncios_publicados\`: Anúncios publicados nas plataformas
+- \`metricas_anuncios\`: Métricas de performance (impressões, cliques, CTR, CPC, conversões, gasto, receita, ROAS, CPA, CPM)
+- \`resumos_campanhas\`: Resumos agregados de campanhas
+
+**Parâmetros:**
+- \`table\`: contas_ads | campanhas | grupos_de_anuncios | anuncios_criacao | anuncios_colaboradores | anuncios_publicados | metricas_anuncios | resumos_campanhas (obrigatório)
+- \`limit\`: número de resultados (padrão: 20)
+- \`plataforma\`: Google | Meta | Facebook | TikTok | LinkedIn (opcional)
+- \`status\`: ativa/ativo | pausada/pausado | encerrada/encerrado | rejeitado (opcional)
+- \`criativo_status\`: aprovado | rascunho | em_revisao | rejeitado (opcional)
+- \`objetivo\`: objetivo da campanha (string) (opcional)
+- \`data_de\` / \`data_ate\`: range de datas YYYY-MM-DD (opcional)
+- \`roas_minimo\`: ROAS mínimo (ex: 2.0 = 2x) (opcional)
+- \`gasto_minimo\` / \`gasto_maximo\`: range de gastos em R$ (opcional)
+- \`conversoes_minimo\`: número mínimo de conversões (opcional)
+- \`ctr_minimo\`: CTR mínimo 0-1 (ex: 0.05 = 5%) (opcional)
+
+**Exemplos de uso:**
+- "Campanhas ativas do Google Ads" → \`table: 'campanhas', plataforma: 'Google', status: 'ativa'\`
+- "Métricas com ROAS acima de 3x" → \`table: 'metricas_anuncios', roas_minimo: 3.0\`
+- "Anúncios publicados no Meta em janeiro" → \`table: 'anuncios_publicados', plataforma: 'Meta', data_de: '2025-01-01', data_ate: '2025-01-31'\`
+- "Campanhas com objetivo de conversão" → \`table: 'campanhas', objetivo: 'conversao'\`
+- "Métricas com gasto entre R$ 100 e R$ 1000 e mínimo 10 conversões" → \`table: 'metricas_anuncios', gasto_minimo: 100, gasto_maximo: 1000, conversoes_minimo: 10\`
+
+**Use para:**
+- Análise de ROI e ROAS por campanha, plataforma, ou período
+- Otimização de orçamento e lances (budget allocation)
+- Identificar anúncios com melhor performance (best performers)
+- Comparar performance entre plataformas (Google vs Meta vs TikTok)
+- Análise de funil de conversão (impressões → cliques → conversões)
+- Identificar criativos com melhor CTR ou taxa de conversão
 
 ## VISUALIZAÇÕES META ADS:
 - Use **gerarGrafico()** para criar gráficos de ROAS, CPM, CTR, CPC por período, campanha, ou placement
@@ -152,6 +194,8 @@ Trabalhe em português e forneça insights estratégicos para otimização de ca
       gerarGrafico: visualizationTools.gerarGrafico,
       // Marketing Orgânico (Supabase)
       getOrganicMarketingData,
+      // Tráfego Pago (Supabase)
+      getPaidTrafficData,
       // Code execution para análises avançadas Meta Ads
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       code_execution: anthropic.tools.codeExecution_20250522() as any,
