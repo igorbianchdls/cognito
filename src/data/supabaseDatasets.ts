@@ -49,6 +49,19 @@ export async function fetchSupabaseTable(tableName: string) {
     } else if (schema === 'gestaoestoque') {
       // gestaoestoque - todas as tabelas usam created_at
       orderColumn = 'created_at';
+    } else if (schema === 'gestaologistica') {
+      // gestaologistica - ordenação específica por tabela
+      if (table === 'envios') {
+        orderColumn = 'data_postagem';
+      } else if (table === 'eventos_rastreio') {
+        orderColumn = 'data_evento';
+      } else if (table === 'logistica_reversa') {
+        orderColumn = 'created_at';
+      } else if (table === 'pacotes') {
+        orderColumn = 'id'; // Sem timestamp específico
+      } else if (table === 'transportadoras') {
+        orderColumn = 'created_at';
+      }
     }
 
     if (schema) {
@@ -3170,6 +3183,503 @@ export const precosCanalColumns: ColDef[] = [
 ];
 
 // ============================================
+// GESTÃO LOGÍSTICA - Schema: gestaologistica
+// ============================================
+
+// Configurações de colunas para Envios
+export const enviosColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true,
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'order_id',
+    headerName: 'Pedido ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'transportadora_id',
+    headerName: 'Transportadora ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'centro_distribuicao_id',
+    headerName: 'Centro Distribuição ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'codigo_rastreio',
+    headerName: 'Código Rastreio',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontWeight: 'bold', fontSize: '0.9em' }
+  },
+  {
+    field: 'status_atual',
+    headerName: 'Status',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    cellStyle: (params) => {
+      const status = String(params.value || '').toLowerCase();
+      if (status.includes('entregue') || status.includes('delivered')) return { color: '#2e7d32', fontWeight: 'bold' };
+      if (status.includes('transito') || status.includes('transit')) return { color: '#f57c00', fontWeight: 'bold' };
+      if (status.includes('enviado') || status.includes('shipped')) return { color: '#1976d2', fontWeight: 'bold' };
+      if (status.includes('cancelado') || status.includes('cancelled')) return { color: '#c62828', fontWeight: 'bold' };
+      return { color: '#000000', fontWeight: 'bold' };
+    }
+  },
+  {
+    field: 'custo_frete',
+    headerName: 'Custo Frete (R$)',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(params.value);
+    },
+    cellStyle: { fontWeight: 'bold', textAlign: 'right' }
+  },
+  {
+    field: 'data_estimada_entrega',
+    headerName: 'Entrega Estimada',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'data_postagem',
+    headerName: 'Data Postagem',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'data_entrega_real',
+    headerName: 'Entrega Real',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'updated_at',
+    headerName: 'Atualizado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Eventos de Rastreio
+export const eventosRastreioColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true,
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'envio_id',
+    headerName: 'Envio ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    cellStyle: (params) => {
+      const status = String(params.value || '').toLowerCase();
+      if (status.includes('entregue') || status.includes('delivered')) return { color: '#2e7d32', fontWeight: 'bold' };
+      if (status.includes('transito') || status.includes('transit')) return { color: '#f57c00', fontWeight: 'bold' };
+      if (status.includes('saiu') || status.includes('out')) return { color: '#1976d2', fontWeight: 'bold' };
+      return { color: '#000000', fontWeight: 'normal' };
+    }
+  },
+  {
+    field: 'mensagem',
+    headerName: 'Mensagem',
+    width: 350,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    wrapText: true,
+    autoHeight: true
+  },
+  {
+    field: 'localizacao',
+    headerName: 'Localização',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'data_evento',
+    headerName: 'Data do Evento',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Logística Reversa
+export const logisticaReversaColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true,
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'return_id',
+    headerName: 'Devolução ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'transportadora_id',
+    headerName: 'Transportadora ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'codigo_rastreio_reverso',
+    headerName: 'Código Rastreio',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontWeight: 'bold', fontSize: '0.9em' }
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    cellStyle: (params) => {
+      const status = String(params.value || '').toLowerCase();
+      if (status.includes('recebido') || status.includes('received')) return { color: '#2e7d32', fontWeight: 'bold' };
+      if (status.includes('transito') || status.includes('transit')) return { color: '#f57c00', fontWeight: 'bold' };
+      if (status.includes('aguardando') || status.includes('pending')) return { color: '#1976d2', fontWeight: 'bold' };
+      if (status.includes('cancelado') || status.includes('cancelled')) return { color: '#c62828', fontWeight: 'bold' };
+      return { color: '#000000', fontWeight: 'bold' };
+    }
+  },
+  {
+    field: 'data_recebimento',
+    headerName: 'Data Recebimento',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'centro_distribuicao_id_retorno',
+    headerName: 'Centro Retorno ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'updated_at',
+    headerName: 'Atualizado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Pacotes
+export const pacotesColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true,
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'envio_id',
+    headerName: 'Envio ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'peso_kg',
+    headerName: 'Peso (kg)',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return typeof params.value === 'number'
+        ? `${params.value.toLocaleString('pt-BR')} kg`
+        : String(params.value);
+    },
+    cellStyle: { textAlign: 'right', fontWeight: 'bold' }
+  },
+  {
+    field: 'altura_cm',
+    headerName: 'Altura (cm)',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return `${params.value} cm`;
+    },
+    cellStyle: { textAlign: 'right' }
+  },
+  {
+    field: 'lar_cm',
+    headerName: 'Largura (cm)',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return `${params.value} cm`;
+    },
+    cellStyle: { textAlign: 'right' }
+  },
+  {
+    field: 'comprimento_cm',
+    headerName: 'Comprimento (cm)',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return `${params.value} cm`;
+    },
+    cellStyle: { textAlign: 'right' }
+  },
+  {
+    field: 'valor_declarado',
+    headerName: 'Valor Declarado (R$)',
+    width: 160,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(params.value);
+    },
+    cellStyle: { fontWeight: 'bold', color: '#1976d2', textAlign: 'right' }
+  }
+];
+
+// Configurações de colunas para Transportadoras
+export const transportadorasColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true,
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'nome',
+    headerName: 'Nome',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontWeight: 'bold' }
+  },
+  {
+    field: 'codigo_integracao',
+    headerName: 'Código Integração',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.9em' }
+  },
+  {
+    field: 'ativo',
+    headerName: 'Ativo',
+    width: 100,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    valueFormatter: (params) => {
+      return params.value ? 'Sim' : 'Não';
+    },
+    cellStyle: (params) => {
+      return params.value
+        ? { color: '#2e7d32', fontWeight: 'bold' }
+        : { color: '#c62828', fontWeight: 'bold' };
+    }
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'updated_at',
+    headerName: 'Atualizado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  }
+];
+
+// ============================================
 // MARKETING ORGÂNICO - Schema: marketing_organico
 // ============================================
 
@@ -4014,5 +4524,54 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     columnDefs: precosCanalColumns,
     icon: '💰',
     category: 'Gestão de Estoque'
+  },
+
+  // ============================================
+  // GESTÃO LOGÍSTICA - Schema: gestaologistica
+  // ============================================
+  {
+    id: 'logistica-envios',
+    name: 'Envios',
+    description: 'Gerenciamento de envios e entregas',
+    tableName: 'gestaologistica.envios',
+    columnDefs: enviosColumns,
+    icon: '📦',
+    category: 'Gestão Logística'
+  },
+  {
+    id: 'logistica-eventos-rastreio',
+    name: 'Eventos de Rastreio',
+    description: 'Histórico de rastreamento dos envios',
+    tableName: 'gestaologistica.eventos_rastreio',
+    columnDefs: eventosRastreioColumns,
+    icon: '📍',
+    category: 'Gestão Logística'
+  },
+  {
+    id: 'logistica-reversa',
+    name: 'Logística Reversa',
+    description: 'Gestão de devoluções e retornos',
+    tableName: 'gestaologistica.logistica_reversa',
+    columnDefs: logisticaReversaColumns,
+    icon: '↩️',
+    category: 'Gestão Logística'
+  },
+  {
+    id: 'logistica-pacotes',
+    name: 'Pacotes',
+    description: 'Informações de dimensões e peso dos pacotes',
+    tableName: 'gestaologistica.pacotes',
+    columnDefs: pacotesColumns,
+    icon: '📐',
+    category: 'Gestão Logística'
+  },
+  {
+    id: 'logistica-transportadoras',
+    name: 'Transportadoras',
+    description: 'Cadastro de transportadoras e integrações',
+    tableName: 'gestaologistica.transportadoras',
+    columnDefs: transportadorasColumns,
+    icon: '🚚',
+    category: 'Gestão Logística'
   }
 ];
