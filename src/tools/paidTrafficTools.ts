@@ -148,7 +148,7 @@ export const getPaidTrafficData = tool({
 
       // Ordenação dinâmica por tabela
       let orderColumn = 'criado_em';
-      let ascending = false;
+      const ascending = false;
 
       if (table === 'contas_ads') {
         orderColumn = 'conectado_em';
