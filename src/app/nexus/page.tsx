@@ -68,6 +68,9 @@ export default function Page() {
       case 'inventoryAgent': return '/api/claudeAgents/inventory';
       case 'contasAPagarAgent': return '/api/claudeAgents/contas-a-pagar';
       case 'fluxoCaixaAgent': return '/api/claudeAgents/fluxo-caixa';
+      case 'ecommerceSalesAgent': return '/api/claudeAgents/ecommerce-sales';
+      case 'webAnalyticsAgent': return '/api/claudeAgents/web-analytics';
+      case 'logisticsAgent': return '/api/claudeAgents/logistics';
       default: return '/api/agents/shopify-analyst';
     }
   };
