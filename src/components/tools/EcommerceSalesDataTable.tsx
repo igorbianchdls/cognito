@@ -61,7 +61,6 @@ interface EcommerceRecord {
   subtotal?: number;
 
   // Campos de orders
-  customer_id?: string;
   channel_id?: string;
   status?: string;
   order_date?: string;
