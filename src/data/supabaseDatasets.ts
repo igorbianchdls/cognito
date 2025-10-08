@@ -142,7 +142,7 @@ export async function updateSupabaseTableRow(
 // ============================================
 
 // Configurações de colunas para Categorias (Gestão Financeira)
-export const categoriasGestaoColumns: ColDef[] = [
+export const categoriasColumns: ColDef[] = [
   {
     field: 'id',
     headerName: 'ID',
@@ -189,122 +189,8 @@ export const categoriasGestaoColumns: ColDef[] = [
   }
 ];
 
-// Configurações de colunas para Clientes (Gestão Financeira)
-export const clientesGestaoColumns: ColDef[] = [
-  {
-    field: 'id',
-    headerName: 'ID',
-    width: 280,
-    pinned: 'left',
-    editable: false,
-    sortable: true
-  },
-  {
-    field: 'nome',
-    headerName: 'Nome',
-    width: 200,
-    editable: true,
-    sortable: true,
-    filter: 'agTextColumnFilter',
-    enableRowGroup: true
-  },
-  {
-    field: 'cpf_cnpj',
-    headerName: 'CPF/CNPJ',
-    width: 150,
-    editable: true,
-    sortable: true,
-    filter: 'agTextColumnFilter'
-  },
-  {
-    field: 'email',
-    headerName: 'Email',
-    width: 220,
-    editable: true,
-    sortable: true,
-    filter: 'agTextColumnFilter'
-  },
-  {
-    field: 'telefone',
-    headerName: 'Telefone',
-    width: 140,
-    editable: true,
-    sortable: true,
-    filter: 'agTextColumnFilter'
-  },
-  {
-    field: 'criado_em',
-    headerName: 'Criado em',
-    width: 150,
-    editable: false,
-    sortable: true,
-    filter: 'agDateColumnFilter',
-    valueFormatter: (params) => {
-      if (!params.value) return '';
-      return new Date(params.value).toLocaleString('pt-BR');
-    }
-  }
-];
-
-// Configurações de colunas para Fornecedores (Gestão Financeira)
-export const fornecedoresGestaoColumns: ColDef[] = [
-  {
-    field: 'id',
-    headerName: 'ID',
-    width: 280,
-    pinned: 'left',
-    editable: false,
-    sortable: true
-  },
-  {
-    field: 'nome',
-    headerName: 'Nome',
-    width: 200,
-    editable: true,
-    sortable: true,
-    filter: 'agTextColumnFilter',
-    enableRowGroup: true
-  },
-  {
-    field: 'cnpj',
-    headerName: 'CNPJ',
-    width: 150,
-    editable: true,
-    sortable: true,
-    filter: 'agTextColumnFilter'
-  },
-  {
-    field: 'email',
-    headerName: 'Email',
-    width: 220,
-    editable: true,
-    sortable: true,
-    filter: 'agTextColumnFilter'
-  },
-  {
-    field: 'telefone',
-    headerName: 'Telefone',
-    width: 140,
-    editable: true,
-    sortable: true,
-    filter: 'agTextColumnFilter'
-  },
-  {
-    field: 'criado_em',
-    headerName: 'Criado em',
-    width: 150,
-    editable: false,
-    sortable: true,
-    filter: 'agDateColumnFilter',
-    valueFormatter: (params) => {
-      if (!params.value) return '';
-      return new Date(params.value).toLocaleString('pt-BR');
-    }
-  }
-];
-
 // Configurações de colunas para Contas (Gestão Financeira)
-export const contasGestaoColumns: ColDef[] = [
+export const contasColumns: ColDef[] = [
   {
     field: 'id',
     headerName: 'ID',
@@ -370,7 +256,7 @@ export const contasGestaoColumns: ColDef[] = [
 ];
 
 // Configurações de colunas para Contas a Pagar (Gestão Financeira)
-export const contasAPagarGestaoColumns: ColDef[] = [
+export const contasAPagarColumns: ColDef[] = [
   {
     field: 'id',
     headerName: 'ID',
@@ -471,6 +357,14 @@ export const contasAPagarGestaoColumns: ColDef[] = [
     filter: 'agTextColumnFilter'
   },
   {
+    field: 'documento_id',
+    headerName: 'Documento ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
     field: 'criado_em',
     headerName: 'Criado em',
     width: 150,
@@ -485,7 +379,7 @@ export const contasAPagarGestaoColumns: ColDef[] = [
 ];
 
 // Configurações de colunas para Contas a Receber (Gestão Financeira)
-export const contasAReceberGestaoColumns: ColDef[] = [
+export const contasAReceberColumns: ColDef[] = [
   {
     field: 'id',
     headerName: 'ID',
@@ -580,6 +474,14 @@ export const contasAReceberGestaoColumns: ColDef[] = [
   {
     field: 'conta_id',
     headerName: 'Conta ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'documento_id',
+    headerName: 'Documento ID',
     width: 280,
     editable: true,
     sortable: true,
@@ -718,7 +620,7 @@ export const conciliacaoBancariaColumns: ColDef[] = [
 ];
 
 // Configurações de colunas para Movimentos (Gestão Financeira)
-export const movimentosGestaoColumns: ColDef[] = [
+export const movimentosColumns: ColDef[] = [
   {
     field: 'id',
     headerName: 'ID',
@@ -802,6 +704,528 @@ export const movimentosGestaoColumns: ColDef[] = [
     editable: true,
     sortable: true,
     filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'criado_em',
+    headerName: 'Criado em',
+    width: 150,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Contratos (Gestão Financeira)
+export const contratosColumns: ColDef[] = [
+  {
+    field: 'documento_id',
+    headerName: 'Documento ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'objeto_contrato',
+    headerName: 'Objeto do Contrato',
+    width: 300,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'data_inicio_vigencia',
+    headerName: 'Início Vigência',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'data_fim_vigencia',
+    headerName: 'Fim Vigência',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'valor_parcela',
+    headerName: 'Valor Parcela',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value && params.value !== 0) return '';
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value);
+    }
+  },
+  {
+    field: 'periodicidade',
+    headerName: 'Periodicidade',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'dia_vencimento_parcela',
+    headerName: 'Dia Vencimento',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter'
+  },
+  {
+    field: 'indice_reajuste',
+    headerName: 'Índice Reajuste',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'status_contrato',
+    headerName: 'Status',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    cellStyle: (params) => {
+      const status = String(params.value || '').toLowerCase();
+      if (status === 'ativo') return { color: '#2e7d32', fontWeight: 'bold' };
+      if (status === 'encerrado') return { color: '#c62828', fontWeight: 'bold' };
+      if (status === 'suspenso') return { color: '#f57c00', fontWeight: 'bold' };
+      return { color: '#000000', fontWeight: 'normal' };
+    }
+  }
+];
+
+// Configurações de colunas para Documento Itens (Gestão Financeira)
+export const documentoItensColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'documento_id',
+    headerName: 'Documento ID',
+    width: 280,
+    editable: false,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'descricao',
+    headerName: 'Descrição',
+    width: 250,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'quantidade',
+    headerName: 'Quantidade',
+    width: 110,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value && params.value !== 0) return '';
+      return params.value.toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'valor_unitario',
+    headerName: 'Valor Unitário',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value && params.value !== 0) return '';
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value);
+    }
+  },
+  {
+    field: 'valor_total_item',
+    headerName: 'Valor Total',
+    width: 130,
+    editable: false,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value && params.value !== 0) return '';
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value);
+    },
+    cellStyle: { fontWeight: 'bold', color: '#2e7d32' }
+  },
+  {
+    field: 'codigo_produto',
+    headerName: 'Código Produto',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'unidade_medida',
+    headerName: 'Unidade',
+    width: 90,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter'
+  },
+  {
+    field: 'ncm',
+    headerName: 'NCM',
+    width: 110,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'cfop',
+    headerName: 'CFOP',
+    width: 90,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'codigo_servico',
+    headerName: 'Código Serviço',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'aliquota_iss',
+    headerName: 'Alíquota ISS',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value && params.value !== 0) return '';
+      return `${params.value.toLocaleString('pt-BR')}%`;
+    }
+  }
+];
+
+// Configurações de colunas para Documentos (Gestão Financeira)
+export const documentosColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'emitente_id',
+    headerName: 'Emitente ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'destinatario_id',
+    headerName: 'Destinatário ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'tipo_documento',
+    headerName: 'Tipo',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    cellStyle: { fontWeight: 'bold' }
+  },
+  {
+    field: 'numero',
+    headerName: 'Número',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'serie',
+    headerName: 'Série',
+    width: 90,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'chave_acesso',
+    headerName: 'Chave de Acesso',
+    width: 350,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'data_emissao',
+    headerName: 'Data Emissão',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'data_competencia',
+    headerName: 'Data Competência',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'valor_total',
+    headerName: 'Valor Total',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value && params.value !== 0) return '';
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value);
+    },
+    cellStyle: { fontWeight: 'bold', color: '#2e7d32' }
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    width: 110,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    cellStyle: (params) => {
+      const status = String(params.value || '').toLowerCase();
+      if (status === 'ativo') return { color: '#2e7d32', fontWeight: 'bold' };
+      if (status === 'cancelado') return { color: '#c62828', fontWeight: 'bold' };
+      return { color: '#000000', fontWeight: 'normal' };
+    }
+  },
+  {
+    field: 'arquivo_xml',
+    headerName: 'Arquivo XML',
+    width: 300,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'arquivo_pdf_url',
+    headerName: 'PDF URL',
+    width: 300,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'criado_em',
+    headerName: 'Criado em',
+    width: 150,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'relatorio_despesa_id',
+    headerName: 'Relatório Despesa ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  }
+];
+
+// Configurações de colunas para Entidades (Gestão Financeira)
+export const entidadesColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'nome_razao_social',
+    headerName: 'Razão Social',
+    width: 250,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true,
+    cellStyle: { fontWeight: 'bold' }
+  },
+  {
+    field: 'nome_fantasia',
+    headerName: 'Nome Fantasia',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'cpf_cnpj',
+    headerName: 'CPF/CNPJ',
+    width: 160,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace' }
+  },
+  {
+    field: 'tipo_entidade',
+    headerName: 'Tipo',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    enablePivot: true
+  },
+  {
+    field: 'inscricao_estadual',
+    headerName: 'Inscrição Estadual',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'inscricao_municipal',
+    headerName: 'Inscrição Municipal',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'email',
+    headerName: 'Email',
+    width: 220,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'telefone',
+    headerName: 'Telefone',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'endereco_logradouro',
+    headerName: 'Logradouro',
+    width: 250,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'endereco_numero',
+    headerName: 'Número',
+    width: 90,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'endereco_complemento',
+    headerName: 'Complemento',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'endereco_bairro',
+    headerName: 'Bairro',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'endereco_cidade',
+    headerName: 'Cidade',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'endereco_uf',
+    headerName: 'UF',
+    width: 70,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'endereco_cep',
+    headerName: 'CEP',
+    width: 110,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace' }
   },
   {
     field: 'criado_em',
@@ -5047,26 +5471,8 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     name: 'Categorias',
     description: 'Categorias de receitas e despesas',
     tableName: 'gestaofinanceira.categorias',
-    columnDefs: categoriasGestaoColumns,
+    columnDefs: categoriasColumns,
     icon: '🏷️',
-    category: 'Gestão Financeira'
-  },
-  {
-    id: 'gestao-clientes',
-    name: 'Clientes',
-    description: 'Cadastro de clientes',
-    tableName: 'gestaofinanceira.clientes',
-    columnDefs: clientesGestaoColumns,
-    icon: '👥',
-    category: 'Gestão Financeira'
-  },
-  {
-    id: 'gestao-fornecedores',
-    name: 'Fornecedores',
-    description: 'Cadastro de fornecedores',
-    tableName: 'gestaofinanceira.fornecedores',
-    columnDefs: fornecedoresGestaoColumns,
-    icon: '🏭',
     category: 'Gestão Financeira'
   },
   {
@@ -5074,7 +5480,7 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     name: 'Contas Bancárias',
     description: 'Contas bancárias e saldos',
     tableName: 'gestaofinanceira.contas',
-    columnDefs: contasGestaoColumns,
+    columnDefs: contasColumns,
     icon: '🏦',
     category: 'Gestão Financeira'
   },
@@ -5083,7 +5489,7 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     name: 'Contas a Pagar',
     description: 'Contas a pagar e despesas',
     tableName: 'gestaofinanceira.contas_a_pagar',
-    columnDefs: contasAPagarGestaoColumns,
+    columnDefs: contasAPagarColumns,
     icon: '💸',
     category: 'Gestão Financeira'
   },
@@ -5092,7 +5498,7 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     name: 'Contas a Receber',
     description: 'Contas a receber e receitas',
     tableName: 'gestaofinanceira.contas_a_receber',
-    columnDefs: contasAReceberGestaoColumns,
+    columnDefs: contasAReceberColumns,
     icon: '💰',
     category: 'Gestão Financeira'
   },
@@ -5110,8 +5516,44 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     name: 'Movimentos Financeiros',
     description: 'Histórico de movimentações',
     tableName: 'gestaofinanceira.movimentos',
-    columnDefs: movimentosGestaoColumns,
+    columnDefs: movimentosColumns,
     icon: '📊',
+    category: 'Gestão Financeira'
+  },
+  {
+    id: 'gestao-contratos',
+    name: 'Contratos',
+    description: 'Contratos recorrentes e parcelados',
+    tableName: 'gestaofinanceira.contratos',
+    columnDefs: contratosColumns,
+    icon: '📝',
+    category: 'Gestão Financeira'
+  },
+  {
+    id: 'gestao-documento-itens',
+    name: 'Documento Itens',
+    description: 'Itens de documentos fiscais',
+    tableName: 'gestaofinanceira.documento_itens',
+    columnDefs: documentoItensColumns,
+    icon: '📋',
+    category: 'Gestão Financeira'
+  },
+  {
+    id: 'gestao-documentos',
+    name: 'Documentos Fiscais',
+    description: 'Notas fiscais e documentos',
+    tableName: 'gestaofinanceira.documentos',
+    columnDefs: documentosColumns,
+    icon: '🧾',
+    category: 'Gestão Financeira'
+  },
+  {
+    id: 'gestao-entidades',
+    name: 'Entidades',
+    description: 'Cadastro de clientes e fornecedores',
+    tableName: 'gestaofinanceira.entidades',
+    columnDefs: entidadesColumns,
+    icon: '🏢',
     category: 'Gestão Financeira'
   },
   {
