@@ -62,6 +62,29 @@ export async function fetchSupabaseTable(tableName: string) {
       } else if (table === 'transportadoras') {
         orderColumn = 'created_at';
       }
+    } else if (schema === 'gestaoanalytics') {
+      // gestaoanalytics - ordenação específica por tabela
+      if (table === 'agregado_diario_por_fonte' || table === 'agregado_diario_por_pagina') {
+        orderColumn = 'data';
+      } else if (table === 'consentimentos_visitante') {
+        orderColumn = 'timestamp_consentimento';
+      } else if (table === 'eventos') {
+        orderColumn = 'timestamp_evento';
+      } else if (table === 'itens_transacao') {
+        orderColumn = 'id';
+      } else if (table === 'metas') {
+        orderColumn = 'id';
+      } else if (table === 'propriedades') {
+        orderColumn = 'created_at';
+      } else if (table === 'propriedades_visitante') {
+        orderColumn = 'updated_at';
+      } else if (table === 'sessoes') {
+        orderColumn = 'timestamp_inicio_sessao';
+      } else if (table === 'transacoes') {
+        orderColumn = 'timestamp_transacao';
+      } else if (table === 'visitantes') {
+        orderColumn = 'primeira_visita_timestamp';
+      }
     }
 
     if (schema) {
@@ -3680,6 +3703,891 @@ export const transportadorasColumns: ColDef[] = [
 ];
 
 // ============================================
+// GESTÃO ANALYTICS - Schema: gestaoanalytics
+// ============================================
+
+// Configurações de colunas para Agregado Diário por Fonte
+export const agregadoDiarioPorFonteColumns: ColDef[] = [
+  {
+    field: 'data',
+    headerName: 'Data',
+    width: 150,
+    pinned: 'left',
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'id_propriedade',
+    headerName: 'Propriedade ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'canal_trafego',
+    headerName: 'Canal',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    cellStyle: { fontWeight: 'bold' }
+  },
+  {
+    field: 'utm_source',
+    headerName: 'UTM Source',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontSize: '0.9em' }
+  },
+  {
+    field: 'total_sessoes',
+    headerName: 'Sessões',
+    width: 120,
+    editable: false,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return typeof params.value === 'number'
+        ? params.value.toLocaleString('pt-BR')
+        : String(params.value);
+    },
+    cellStyle: { textAlign: 'right', fontWeight: 'bold', color: '#1976d2' }
+  },
+  {
+    field: 'total_visitantes',
+    headerName: 'Visitantes',
+    width: 120,
+    editable: false,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return typeof params.value === 'number'
+        ? params.value.toLocaleString('pt-BR')
+        : String(params.value);
+    },
+    cellStyle: { textAlign: 'right', fontWeight: 'bold', color: '#2e7d32' }
+  }
+];
+
+// Configurações de colunas para Agregado Diário por Página
+export const agregadoDiarioPorPaginaColumns: ColDef[] = [
+  {
+    field: 'data',
+    headerName: 'Data',
+    width: 150,
+    pinned: 'left',
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'id_propriedade',
+    headerName: 'Propriedade ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'url_pagina',
+    headerName: 'URL',
+    width: 350,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontSize: '0.85em' }
+  },
+  {
+    field: 'total_visualizacoes',
+    headerName: 'Visualizações',
+    width: 140,
+    editable: false,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return typeof params.value === 'number'
+        ? params.value.toLocaleString('pt-BR')
+        : String(params.value);
+    },
+    cellStyle: { textAlign: 'right', fontWeight: 'bold', color: '#1976d2' }
+  },
+  {
+    field: 'visitantes_unicos',
+    headerName: 'Visitantes Únicos',
+    width: 150,
+    editable: false,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return typeof params.value === 'number'
+        ? params.value.toLocaleString('pt-BR')
+        : String(params.value);
+    },
+    cellStyle: { textAlign: 'right', fontWeight: 'bold', color: '#2e7d32' }
+  }
+];
+
+// Configurações de colunas para Consentimentos de Visitante
+export const consentimentosVisitanteColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true,
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'id_visitante',
+    headerName: 'Visitante ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'tipo_consentimento',
+    headerName: 'Tipo',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    cellStyle: (params) => {
+      const status = String(params.value || '').toLowerCase();
+      if (status.includes('aceito') || status.includes('accepted')) return { color: '#2e7d32', fontWeight: 'bold' };
+      if (status.includes('negado') || status.includes('denied')) return { color: '#c62828', fontWeight: 'bold' };
+      if (status.includes('pendente') || status.includes('pending')) return { color: '#f57c00', fontWeight: 'bold' };
+      return { color: '#000000', fontWeight: 'normal' };
+    }
+  },
+  {
+    field: 'timestamp_consentimento',
+    headerName: 'Data Consentimento',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Eventos
+export const eventosColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 120,
+    pinned: 'left',
+    editable: false,
+    sortable: true,
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'id_sessao',
+    headerName: 'Sessão ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'id_propriedade',
+    headerName: 'Propriedade ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'timestamp_evento',
+    headerName: 'Timestamp',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'tipo_evento',
+    headerName: 'Tipo',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    cellStyle: { fontWeight: 'bold', color: '#1976d2' }
+  },
+  {
+    field: 'nome_evento',
+    headerName: 'Nome do Evento',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontWeight: 'bold' }
+  },
+  {
+    field: 'url_pagina',
+    headerName: 'URL',
+    width: 300,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontSize: '0.85em' }
+  },
+  {
+    field: 'titulo_pagina',
+    headerName: 'Título',
+    width: 250,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'propriedades_customizadas',
+    headerName: 'Propriedades Custom',
+    width: 200,
+    editable: true,
+    sortable: false,
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      try {
+        const props = typeof params.value === 'string' ? JSON.parse(params.value) : params.value;
+        const keys = Object.keys(props);
+        return keys.length > 0 ? `${keys.length} propriedade(s)` : 'Vazio';
+      } catch {
+        return 'JSON inválido';
+      }
+    },
+    cellStyle: { fontSize: '0.9em' }
+  }
+];
+
+// Configurações de colunas para Itens de Transação
+export const itensTransacaoColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true,
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'id_transacao',
+    headerName: 'Transação ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'sku_produto',
+    headerName: 'SKU',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontWeight: 'bold' }
+  },
+  {
+    field: 'nome_produto',
+    headerName: 'Produto',
+    width: 250,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontWeight: 'bold' }
+  },
+  {
+    field: 'categoria_produto',
+    headerName: 'Categoria',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'preco_unitario',
+    headerName: 'Preço Unit. (R$)',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'avg',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(params.value);
+    },
+    cellStyle: { fontWeight: 'bold', color: '#1976d2', textAlign: 'right' }
+  },
+  {
+    field: 'quantidade',
+    headerName: 'Qtd',
+    width: 100,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return typeof params.value === 'number'
+        ? params.value.toLocaleString('pt-BR')
+        : String(params.value);
+    },
+    cellStyle: { textAlign: 'right', fontWeight: 'bold' }
+  }
+];
+
+// Configurações de colunas para Metas
+export const metasColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true,
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'id_propriedade',
+    headerName: 'Propriedade ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'nome_meta',
+    headerName: 'Nome da Meta',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontWeight: 'bold' }
+  },
+  {
+    field: 'tipo_meta',
+    headerName: 'Tipo',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'condicao',
+    headerName: 'Condição',
+    width: 300,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    wrapText: true,
+    autoHeight: true
+  }
+];
+
+// Configurações de colunas para Propriedades
+export const propriedadesAnalyticsColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true,
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'id_rastreamento',
+    headerName: 'ID Rastreamento',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontWeight: 'bold', fontSize: '0.9em' }
+  },
+  {
+    field: 'nome_propriedade',
+    headerName: 'Nome',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontWeight: 'bold' }
+  },
+  {
+    field: 'url_site',
+    headerName: 'URL do Site',
+    width: 300,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Propriedades de Visitante
+export const propriedadesVisitanteColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true,
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'id_visitante',
+    headerName: 'Visitante ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'chave_propriedade',
+    headerName: 'Chave',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontWeight: 'bold' }
+  },
+  {
+    field: 'valor_propriedade',
+    headerName: 'Valor',
+    width: 250,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'updated_at',
+    headerName: 'Atualizado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Sessões
+export const sessoesColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true,
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'id_visitante',
+    headerName: 'Visitante ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'timestamp_inicio_sessao',
+    headerName: 'Início',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'timestamp_fim_sessao',
+    headerName: 'Fim',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'ip_address',
+    headerName: 'IP',
+    width: 140,
+    editable: false,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'user_agent',
+    headerName: 'User Agent',
+    width: 300,
+    editable: false,
+    sortable: false,
+    wrapText: true,
+    cellStyle: { fontSize: '0.75em' }
+  },
+  {
+    field: 'url_referencia',
+    headerName: 'Referência',
+    width: 250,
+    editable: false,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontSize: '0.85em' }
+  },
+  {
+    field: 'canal_trafego',
+    headerName: 'Canal',
+    width: 130,
+    editable: false,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    cellStyle: { fontWeight: 'bold' }
+  },
+  {
+    field: 'utm_source',
+    headerName: 'UTM Source',
+    width: 130,
+    editable: false,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'utm_medium',
+    headerName: 'UTM Medium',
+    width: 130,
+    editable: false,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'utm_campaign',
+    headerName: 'UTM Campaign',
+    width: 150,
+    editable: false,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'pais',
+    headerName: 'País',
+    width: 100,
+    editable: false,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'cidade',
+    headerName: 'Cidade',
+    width: 150,
+    editable: false,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'tipo_dispositivo',
+    headerName: 'Dispositivo',
+    width: 120,
+    editable: false,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'navegador',
+    headerName: 'Navegador',
+    width: 120,
+    editable: false,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'sistema_operacional',
+    headerName: 'SO',
+    width: 120,
+    editable: false,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'eh_bot',
+    headerName: 'Bot',
+    width: 80,
+    editable: false,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    valueFormatter: (params) => {
+      return params.value ? 'Sim' : 'Não';
+    },
+    cellStyle: (params) => {
+      return params.value
+        ? { color: '#c62828', fontWeight: 'bold' }
+        : { color: '#2e7d32', fontWeight: 'normal' };
+    }
+  }
+];
+
+// Configurações de colunas para Transações
+export const transacoesAnalyticsColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true,
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'id_sessao',
+    headerName: 'Sessão ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'id_visitante',
+    headerName: 'Visitante ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'valor_total',
+    headerName: 'Valor Total (R$)',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(params.value);
+    },
+    cellStyle: { fontWeight: 'bold', color: '#2e7d32', textAlign: 'right' }
+  },
+  {
+    field: 'impostos',
+    headerName: 'Impostos (R$)',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(params.value);
+    },
+    cellStyle: { textAlign: 'right' }
+  },
+  {
+    field: 'frete',
+    headerName: 'Frete (R$)',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(params.value);
+    },
+    cellStyle: { textAlign: 'right' }
+  },
+  {
+    field: 'moeda',
+    headerName: 'Moeda',
+    width: 100,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontWeight: 'bold' }
+  },
+  {
+    field: 'timestamp_transacao',
+    headerName: 'Data Transação',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Visitantes
+export const visitantesColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true,
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'id_propriedade',
+    headerName: 'Propriedade ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'id_visitante_persistente',
+    headerName: 'ID Persistente',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'primeira_visita_timestamp',
+    headerName: 'Primeira Visita',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'ultima_visita_timestamp',
+    headerName: 'Última Visita',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  }
+];
+
+// ============================================
 // MARKETING ORGÂNICO - Schema: marketing_organico
 // ============================================
 
@@ -4573,5 +5481,108 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     columnDefs: transportadorasColumns,
     icon: '🚚',
     category: 'Gestão Logística'
+  },
+
+  // ============================================
+  // GESTÃO ANALYTICS - Schema: gestaoanalytics
+  // ============================================
+  {
+    id: 'analytics-agregado-fonte',
+    name: 'Agregado Diário por Fonte',
+    description: 'Dados agregados de tráfego por fonte e canal',
+    tableName: 'gestaoanalytics.agregado_diario_por_fonte',
+    columnDefs: agregadoDiarioPorFonteColumns,
+    icon: '📊',
+    category: 'Gestão Analytics'
+  },
+  {
+    id: 'analytics-agregado-pagina',
+    name: 'Agregado Diário por Página',
+    description: 'Dados agregados de visualizações por página',
+    tableName: 'gestaoanalytics.agregado_diario_por_pagina',
+    columnDefs: agregadoDiarioPorPaginaColumns,
+    icon: '📄',
+    category: 'Gestão Analytics'
+  },
+  {
+    id: 'analytics-consentimentos',
+    name: 'Consentimentos',
+    description: 'Gestão de consentimentos de privacidade',
+    tableName: 'gestaoanalytics.consentimentos_visitante',
+    columnDefs: consentimentosVisitanteColumns,
+    icon: '✅',
+    category: 'Gestão Analytics'
+  },
+  {
+    id: 'analytics-eventos',
+    name: 'Eventos',
+    description: 'Rastreamento de eventos personalizados',
+    tableName: 'gestaoanalytics.eventos',
+    columnDefs: eventosColumns,
+    icon: '🎯',
+    category: 'Gestão Analytics'
+  },
+  {
+    id: 'analytics-itens-transacao',
+    name: 'Itens de Transação',
+    description: 'Produtos e itens das transações',
+    tableName: 'gestaoanalytics.itens_transacao',
+    columnDefs: itensTransacaoColumns,
+    icon: '🛒',
+    category: 'Gestão Analytics'
+  },
+  {
+    id: 'analytics-metas',
+    name: 'Metas',
+    description: 'Configuração de metas e objetivos',
+    tableName: 'gestaoanalytics.metas',
+    columnDefs: metasColumns,
+    icon: '🎯',
+    category: 'Gestão Analytics'
+  },
+  {
+    id: 'analytics-propriedades',
+    name: 'Propriedades',
+    description: 'Propriedades e sites rastreados',
+    tableName: 'gestaoanalytics.propriedades',
+    columnDefs: propriedadesAnalyticsColumns,
+    icon: '🌐',
+    category: 'Gestão Analytics'
+  },
+  {
+    id: 'analytics-propriedades-visitante',
+    name: 'Propriedades de Visitante',
+    description: 'Atributos personalizados dos visitantes',
+    tableName: 'gestaoanalytics.propriedades_visitante',
+    columnDefs: propriedadesVisitanteColumns,
+    icon: '👤',
+    category: 'Gestão Analytics'
+  },
+  {
+    id: 'analytics-sessoes',
+    name: 'Sessões',
+    description: 'Sessões de navegação dos visitantes',
+    tableName: 'gestaoanalytics.sessoes',
+    columnDefs: sessoesColumns,
+    icon: '🔄',
+    category: 'Gestão Analytics'
+  },
+  {
+    id: 'analytics-transacoes',
+    name: 'Transações',
+    description: 'Transações e conversões de e-commerce',
+    tableName: 'gestaoanalytics.transacoes',
+    columnDefs: transacoesAnalyticsColumns,
+    icon: '💳',
+    category: 'Gestão Analytics'
+  },
+  {
+    id: 'analytics-visitantes',
+    name: 'Visitantes',
+    description: 'Visitantes únicos e histórico',
+    tableName: 'gestaoanalytics.visitantes',
+    columnDefs: visitantesColumns,
+    icon: '👥',
+    category: 'Gestão Analytics'
   }
 ];
