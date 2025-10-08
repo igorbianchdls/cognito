@@ -59,6 +59,7 @@ import EcommerceSalesDataTable from '../tools/EcommerceSalesDataTable';
 import LogisticsDataTable from '../tools/LogisticsDataTable';
 import AnalyticsDataTable from '../tools/AnalyticsDataTable';
 import ComprasDataTable from '../tools/ComprasDataTable';
+import ProjetosDataTable from '../tools/ProjetosDataTable';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -1014,6 +1015,44 @@ type GetComprasDataToolOutput = {
     valor_unitario?: number;
     valor_total_item?: number;
     criado_em?: string;
+    updated_at?: string;
+    [key: string]: unknown;
+  }>;
+  message: string;
+  error?: string;
+};
+
+type GetProjetosDataToolInput = {
+  table: 'projects' | 'status_types' | 'tasks';
+  limit?: number;
+  project_id?: string;
+  owner_id?: string;
+  team_id?: string;
+  assignee_id?: string;
+  status_id?: number;
+  overdue?: boolean;
+  data_de?: string;
+  data_ate?: string;
+};
+
+type GetProjetosDataToolOutput = {
+  success: boolean;
+  count: number;
+  table: string;
+  data: Array<{
+    id: string | number;
+    name?: string;
+    description?: string;
+    owner_id?: string;
+    team_id?: string;
+    start_date?: string;
+    end_date?: string;
+    title?: string;
+    status_id?: number;
+    project_id?: string;
+    assignee_id?: string;
+    due_date?: string;
+    created_at?: string;
     updated_at?: string;
     [key: string]: unknown;
   }>;
@@ -3703,6 +3742,41 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   data={(comprasTool.output as GetComprasDataToolOutput).data}
                   message={(comprasTool.output as GetComprasDataToolOutput).message}
                   error={(comprasTool.output as GetComprasDataToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getProjetosData') {
+          const projetosTool = part as NexusToolUIPart;
+          const callId = projetosTool.toolCallId;
+          const shouldBeOpen = projetosTool.state === 'output-available' || projetosTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getProjetosData" state={projetosTool.state} />
+                <ToolContent>
+                  {projetosTool.input && (
+                    <ToolInput input={projetosTool.input} />
+                  )}
+                  {projetosTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={projetosTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {projetosTool.state === 'output-available' && (
+                <ProjetosDataTable
+                  success={(projetosTool.output as GetProjetosDataToolOutput).success}
+                  count={(projetosTool.output as GetProjetosDataToolOutput).count}
+                  table={(projetosTool.output as GetProjetosDataToolOutput).table}
+                  data={(projetosTool.output as GetProjetosDataToolOutput).data}
+                  message={(projetosTool.output as GetProjetosDataToolOutput).message}
+                  error={(projetosTool.output as GetProjetosDataToolOutput).error}
                 />
               )}
             </div>
