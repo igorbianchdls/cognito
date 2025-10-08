@@ -55,6 +55,9 @@ import FinancialDataTable from '../tools/FinancialDataTable';
 import OrganicMarketingDataTable from '../tools/OrganicMarketingDataTable';
 import PaidTrafficDataTable from '../tools/PaidTrafficDataTable';
 import InventoryDataTable from '../tools/InventoryDataTable';
+import EcommerceSalesDataTable from '../tools/EcommerceSalesDataTable';
+import LogisticsDataTable from '../tools/LogisticsDataTable';
+import AnalyticsDataTable from '../tools/AnalyticsDataTable';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -835,6 +838,203 @@ type GetInventoryDataToolOutput = {
     price?: number;
     start_date?: string;
     end_date?: string;
+    created_at?: string;
+    updated_at?: string;
+    [key: string]: unknown;
+  }>;
+  message: string;
+  error?: string;
+};
+
+type GetEcommerceSalesDataToolInput = {
+  table: 'channels' | 'coupons' | 'customers' | 'loyalty_points' | 'loyalty_rewards' | 'order_items' | 'orders' | 'payments' | 'products' | 'returns';
+  limit?: number;
+  is_active?: boolean;
+  status?: string;
+  customer_id?: string;
+  channel_id?: string;
+  product_id?: string;
+  order_id?: string;
+  valor_minimo?: number;
+  valor_maximo?: number;
+  data_de?: string;
+  data_ate?: string;
+};
+
+type GetEcommerceSalesDataToolOutput = {
+  success: boolean;
+  count: number;
+  table: string;
+  data: Array<{
+    id: string;
+    name?: string;
+    type?: string;
+    is_active?: boolean;
+    config?: unknown;
+    code?: string;
+    discount_value?: number;
+    discount_type?: string;
+    valid_from?: string;
+    valid_until?: string;
+    usage_limit?: number;
+    times_used?: number;
+    email?: string;
+    first_name?: string;
+    last_name?: string;
+    phone?: string;
+    total_spent?: number;
+    total_orders?: number;
+    customer_id?: string;
+    points?: number;
+    earned_date?: string;
+    expiry_date?: string;
+    reward_name?: string;
+    points_required?: number;
+    description?: string;
+    order_id?: string;
+    product_id?: string;
+    quantity?: number;
+    unit_price?: number;
+    subtotal?: number;
+    channel_id?: string;
+    status?: string;
+    order_date?: string;
+    total_value?: number;
+    shipping_cost?: number;
+    discount?: number;
+    amount?: number;
+    payment_method?: string;
+    payment_date?: string;
+    transaction_id?: string;
+    sku?: string;
+    price?: number;
+    stock_quantity?: number;
+    category?: string;
+    return_date?: string;
+    reason?: string;
+    refund_amount?: number;
+    return_status?: string;
+    criado_em?: string;
+    updated_at?: string;
+    [key: string]: unknown;
+  }>;
+  message: string;
+  error?: string;
+};
+
+type GetLogisticsDataToolInput = {
+  table: 'envios' | 'eventos_rastreio' | 'logistica_reversa' | 'pacotes' | 'transportadoras';
+  limit?: number;
+  status_atual?: string;
+  transportadora_id?: string;
+  codigo_rastreio?: string;
+  order_id?: string;
+  ativo?: boolean;
+  data_de?: string;
+  data_ate?: string;
+};
+
+type GetLogisticsDataToolOutput = {
+  success: boolean;
+  count: number;
+  table: string;
+  data: Array<{
+    id: string;
+    order_id?: string;
+    transportadora_id?: string;
+    codigo_rastreio?: string;
+    status_atual?: string;
+    data_postagem?: string;
+    data_prevista_entrega?: string;
+    data_entrega?: string;
+    custo_frete?: number;
+    peso_kg?: number;
+    destinatario?: string;
+    endereco_destino?: string;
+    data_evento?: string;
+    localizacao?: string;
+    descricao?: string;
+    motivo?: string;
+    data_solicitacao?: string;
+    codigo_rastreio_reverso?: string;
+    altura_cm?: number;
+    largura_cm?: number;
+    comprimento_cm?: number;
+    nome?: string;
+    ativo?: boolean;
+    prazo_entrega_dias?: number;
+    custo_por_kg?: number;
+    created_at?: string;
+    updated_at?: string;
+    [key: string]: unknown;
+  }>;
+  message: string;
+  error?: string;
+};
+
+type GetAnalyticsDataToolInput = {
+  table: 'agregado_diario_por_fonte' | 'agregado_diario_por_pagina' | 'consentimentos_visitante' | 'eventos' | 'itens_transacao' | 'metas' | 'propriedades_analytics' | 'propriedades_visitante' | 'sessoes' | 'transacoes_analytics' | 'visitantes';
+  limit?: number;
+  visitor_id?: string;
+  session_id?: string;
+  fonte?: string;
+  pagina?: string;
+  eh_bot?: boolean;
+  event_name?: string;
+  data_de?: string;
+  data_ate?: string;
+};
+
+type GetAnalyticsDataToolOutput = {
+  success: boolean;
+  count: number;
+  table: string;
+  data: Array<{
+    id: string;
+    data?: string;
+    fonte?: string;
+    pageviews?: number;
+    sessoes?: number;
+    usuarios?: number;
+    pagina?: string;
+    visitor_id?: string;
+    consent_status?: string;
+    consent_timestamp?: string;
+    analytics_allowed?: boolean;
+    marketing_allowed?: boolean;
+    session_id?: string;
+    event_name?: string;
+    event_timestamp?: string;
+    page_url?: string;
+    event_properties?: unknown;
+    transaction_id?: string;
+    product_name?: string;
+    quantity?: number;
+    price?: number;
+    goal_name?: string;
+    goal_condition?: string;
+    conversion_value?: number;
+    property_name?: string;
+    property_value?: string;
+    browser?: string;
+    os?: string;
+    device_type?: string;
+    session_start?: string;
+    session_end?: string;
+    duration_seconds?: number;
+    pages_viewed?: number;
+    utm_source?: string;
+    utm_medium?: string;
+    utm_campaign?: string;
+    eh_bot?: boolean;
+    transaction_timestamp?: string;
+    revenue?: number;
+    tax?: number;
+    shipping?: number;
+    first_seen?: string;
+    last_seen?: string;
+    total_sessions?: number;
+    total_pageviews?: number;
     created_at?: string;
     updated_at?: string;
     [key: string]: unknown;
@@ -3349,6 +3549,111 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   data={(inventoryTool.output as GetInventoryDataToolOutput).data}
                   message={(inventoryTool.output as GetInventoryDataToolOutput).message}
                   error={(inventoryTool.output as GetInventoryDataToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getEcommerceSalesData') {
+          const ecommerceTool = part as NexusToolUIPart;
+          const callId = ecommerceTool.toolCallId;
+          const shouldBeOpen = ecommerceTool.state === 'output-available' || ecommerceTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getEcommerceSalesData" state={ecommerceTool.state} />
+                <ToolContent>
+                  {ecommerceTool.input && (
+                    <ToolInput input={ecommerceTool.input} />
+                  )}
+                  {ecommerceTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={ecommerceTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {ecommerceTool.state === 'output-available' && (
+                <EcommerceSalesDataTable
+                  success={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).success}
+                  count={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).count}
+                  table={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).table}
+                  data={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).data}
+                  message={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).message}
+                  error={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getLogisticsData') {
+          const logisticsTool = part as NexusToolUIPart;
+          const callId = logisticsTool.toolCallId;
+          const shouldBeOpen = logisticsTool.state === 'output-available' || logisticsTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getLogisticsData" state={logisticsTool.state} />
+                <ToolContent>
+                  {logisticsTool.input && (
+                    <ToolInput input={logisticsTool.input} />
+                  )}
+                  {logisticsTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={logisticsTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {logisticsTool.state === 'output-available' && (
+                <LogisticsDataTable
+                  success={(logisticsTool.output as GetLogisticsDataToolOutput).success}
+                  count={(logisticsTool.output as GetLogisticsDataToolOutput).count}
+                  table={(logisticsTool.output as GetLogisticsDataToolOutput).table}
+                  data={(logisticsTool.output as GetLogisticsDataToolOutput).data}
+                  message={(logisticsTool.output as GetLogisticsDataToolOutput).message}
+                  error={(logisticsTool.output as GetLogisticsDataToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getAnalyticsData') {
+          const analyticsTool = part as NexusToolUIPart;
+          const callId = analyticsTool.toolCallId;
+          const shouldBeOpen = analyticsTool.state === 'output-available' || analyticsTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getAnalyticsData" state={analyticsTool.state} />
+                <ToolContent>
+                  {analyticsTool.input && (
+                    <ToolInput input={analyticsTool.input} />
+                  )}
+                  {analyticsTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={analyticsTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {analyticsTool.state === 'output-available' && (
+                <AnalyticsDataTable
+                  success={(analyticsTool.output as GetAnalyticsDataToolOutput).success}
+                  count={(analyticsTool.output as GetAnalyticsDataToolOutput).count}
+                  table={(analyticsTool.output as GetAnalyticsDataToolOutput).table}
+                  data={(analyticsTool.output as GetAnalyticsDataToolOutput).data}
+                  message={(analyticsTool.output as GetAnalyticsDataToolOutput).message}
+                  error={(analyticsTool.output as GetAnalyticsDataToolOutput).error}
                 />
               )}
             </div>
