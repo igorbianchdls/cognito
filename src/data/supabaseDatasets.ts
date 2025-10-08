@@ -3011,7 +3011,7 @@ export const movimentacoesEstoqueColumns: ColDef[] = [
       if (type.includes('entrada') || type.includes('in')) return { color: '#2e7d32', fontWeight: 'bold' };
       if (type.includes('saida') || type.includes('out')) return { color: '#c62828', fontWeight: 'bold' };
       if (type.includes('ajuste') || type.includes('adjust')) return { color: '#f57c00', fontWeight: 'bold' };
-      return { fontWeight: 'bold' };
+      return { color: '#000000', fontWeight: 'bold' };
     }
   },
   {
