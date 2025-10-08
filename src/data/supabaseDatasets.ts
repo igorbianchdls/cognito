@@ -1452,6 +1452,176 @@ export const pedidoCompraItensColumns: ColDef[] = [
 ];
 
 // ============================================
+// GESTÃO DE PROJETOS - Schema: gestaodeprojetos
+// ============================================
+
+// Configurações de colunas para Projects (Gestão de Projetos)
+export const projectsColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    cellDataType: 'text'
+  },
+  {
+    field: 'name',
+    headerName: 'Nome do Projeto',
+    width: 250,
+    cellDataType: 'text'
+  },
+  {
+    field: 'description',
+    headerName: 'Descrição',
+    width: 300,
+    cellDataType: 'text'
+  },
+  {
+    field: 'owner_id',
+    headerName: 'Responsável',
+    width: 200,
+    cellDataType: 'text'
+  },
+  {
+    field: 'team_id',
+    headerName: 'Equipe',
+    width: 280,
+    cellDataType: 'text'
+  },
+  {
+    field: 'start_date',
+    headerName: 'Data Início',
+    width: 150,
+    cellDataType: 'date'
+  },
+  {
+    field: 'end_date',
+    headerName: 'Data Fim',
+    width: 150,
+    cellDataType: 'date'
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 200,
+    cellDataType: 'date'
+  },
+  {
+    field: 'updated_at',
+    headerName: 'Atualizado em',
+    width: 200,
+    cellDataType: 'date'
+  }
+];
+
+// Configurações de colunas para Status Types (Gestão de Projetos)
+export const statusTypesColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 100,
+    cellDataType: 'number'
+  },
+  {
+    field: 'name',
+    headerName: 'Nome do Status',
+    width: 200,
+    cellDataType: 'text',
+    cellRenderer: (params: { value: string }) => {
+      const statusColors: Record<string, string> = {
+        'To Do': 'bg-gray-100 text-gray-800',
+        'In Progress': 'bg-blue-100 text-blue-800',
+        'Done': 'bg-green-100 text-green-800',
+        'Blocked': 'bg-red-100 text-red-800',
+        'Review': 'bg-purple-100 text-purple-800',
+        'Testing': 'bg-yellow-100 text-yellow-800'
+      };
+      const colorClass = statusColors[params.value] || 'bg-gray-100 text-gray-800';
+      return `<span class="px-2 py-1 rounded-full text-xs font-medium ${colorClass}">${params.value}</span>`;
+    }
+  }
+];
+
+// Configurações de colunas para Tasks (Gestão de Projetos)
+export const tasksColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    cellDataType: 'text'
+  },
+  {
+    field: 'title',
+    headerName: 'Título',
+    width: 250,
+    cellDataType: 'text'
+  },
+  {
+    field: 'description',
+    headerName: 'Descrição',
+    width: 300,
+    cellDataType: 'text'
+  },
+  {
+    field: 'status_id',
+    headerName: 'Status',
+    width: 100,
+    cellDataType: 'number',
+    cellRenderer: (params: { value: number }) => {
+      const statusMap: Record<number, { label: string; color: string }> = {
+        1: { label: 'To Do', color: 'bg-gray-100 text-gray-800' },
+        2: { label: 'In Progress', color: 'bg-blue-100 text-blue-800' },
+        3: { label: 'Done', color: 'bg-green-100 text-green-800' },
+        4: { label: 'Blocked', color: 'bg-red-100 text-red-800' }
+      };
+      const status = statusMap[params.value] || { label: `Status ${params.value}`, color: 'bg-gray-100 text-gray-800' };
+      return `<span class="px-2 py-1 rounded-full text-xs font-medium ${status.color}">${status.label}</span>`;
+    }
+  },
+  {
+    field: 'project_id',
+    headerName: 'Projeto',
+    width: 280,
+    cellDataType: 'text'
+  },
+  {
+    field: 'assignee_id',
+    headerName: 'Responsável',
+    width: 200,
+    cellDataType: 'text'
+  },
+  {
+    field: 'due_date',
+    headerName: 'Prazo',
+    width: 200,
+    cellDataType: 'date',
+    cellRenderer: (params: { value: string }) => {
+      if (!params.value) return '';
+      const dueDate = new Date(params.value);
+      const today = new Date();
+      const isOverdue = dueDate < today;
+      const dateStr = dueDate.toLocaleDateString('pt-BR');
+
+      if (isOverdue) {
+        return `<span class="text-red-600 font-semibold">⚠️ ${dateStr}</span>`;
+      }
+      return dateStr;
+    }
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 200,
+    cellDataType: 'date'
+  },
+  {
+    field: 'updated_at',
+    headerName: 'Atualizado em',
+    width: 200,
+    cellDataType: 'date'
+  }
+];
+
+// ============================================
 // VENDAS E-COMMERCE - Schema: vendasecommerce
 // ============================================
 
@@ -5792,6 +5962,33 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     columnDefs: pedidoCompraItensColumns,
     icon: '📦',
     category: 'Gestão de Compras'
+  },
+  {
+    id: 'projetos-projects',
+    name: 'Projetos',
+    description: 'Projetos e cronogramas',
+    tableName: 'gestaodeprojetos.projects',
+    columnDefs: projectsColumns,
+    icon: '📊',
+    category: 'Gestão de Projetos'
+  },
+  {
+    id: 'projetos-status-types',
+    name: 'Status Types',
+    description: 'Tipos de status para tarefas',
+    tableName: 'gestaodeprojetos.status_types',
+    columnDefs: statusTypesColumns,
+    icon: '🏷️',
+    category: 'Gestão de Projetos'
+  },
+  {
+    id: 'projetos-tasks',
+    name: 'Tarefas',
+    description: 'Tarefas e atribuições',
+    tableName: 'gestaodeprojetos.tasks',
+    columnDefs: tasksColumns,
+    icon: '✅',
+    category: 'Gestão de Projetos'
   },
   {
     id: 'ecommerce-channels',
