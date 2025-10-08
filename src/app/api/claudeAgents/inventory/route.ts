@@ -1,6 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
-import { getInventory } from '@/tools/inventoryTools';
+import { getInventoryData } from '@/tools/inventoryTools';
 
 export const maxDuration = 300;
 
@@ -38,10 +38,35 @@ Auxiliar gestores de estoque, compradores e controllers a:
 
 # 🛠️ Suas Ferramentas
 
-## 📊 BUSCAR ITENS DO ESTOQUE
-**getInventory** - Busca itens do inventário
-- Parâmetros: \`limit\` (padrão: 10), \`status\` (disponivel/baixo_estoque/esgotado/descontinuado), \`categoria\`, \`nome_produto\`
-- Use quando: usuário pedir para ver/listar estoque, analisar produtos, verificar disponibilidade, avaliar categorias
+## 📊 BUSCAR DADOS DE GESTÃO DE ESTOQUE
+**getInventoryData** - Busca dados de gestão de estoque (centros de distribuição, estoque por canal, movimentações, preços)
+
+### Tabelas Disponíveis:
+- **centros_distribuicao** - Centros de distribuição e suas informações
+- **estoque_canal** - Estoque disponível por canal de venda
+- **integracoes_canais** - Integrações com canais de venda
+- **movimentacoes_estoque** - Histórico de movimentações (entrada/saida/ajuste)
+- **precos_canais** - Preços por canal de venda
+
+### Parâmetros:
+- \`table\` (obrigatório) - Tabela a consultar (enum das 5 tabelas acima)
+- \`limit\` (padrão: 20) - Número máximo de resultados
+- \`ativo\` (boolean, opcional) - Filtrar por status ativo (para centros_distribuicao)
+- \`product_id\` (string, opcional) - Filtrar por ID do produto (para estoque_canal, movimentacoes_estoque, precos_canais)
+- \`channel_id\` (string, opcional) - Filtrar por ID do canal (para estoque_canal, integracoes_canais, precos_canais)
+- \`tipo\` (string, opcional) - Filtrar por tipo de movimentação: entrada, saida, ajuste (para movimentacoes_estoque)
+- \`quantidade_minima\` (number, opcional) - Quantidade mínima disponível (para estoque_canal)
+- \`quantidade_maxima\` (number, opcional) - Quantidade máxima disponível (para estoque_canal)
+- \`data_de\` (string YYYY-MM-DD, opcional) - Data inicial
+- \`data_ate\` (string YYYY-MM-DD, opcional) - Data final
+
+### Quando usar:
+- Analisar centros de distribuição ativos/inativos
+- Verificar níveis de estoque por canal
+- Identificar produtos com estoque baixo (quantidade_minima/maxima)
+- Analisar movimentações de entrada/saída/ajuste
+- Comparar preços entre canais
+- Verificar integrações com marketplaces
 
 # 📐 Framework de Análise de Inventário
 
@@ -212,7 +237,7 @@ Seja sempre orientado a dados, priorize eficiência operacional e saúde finance
       messages: convertToModelMessages(messages),
 
       tools: {
-        getInventory
+        getInventoryData
       }
     });
 
