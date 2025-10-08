@@ -3460,5 +3460,54 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     columnDefs: resumosCampanhasColumns,
     icon: '📈',
     category: 'Tráfego Pago'
+  },
+
+  // ============================================
+  // GESTÃO DE ESTOQUE - Schema: gestaoestoque
+  // ============================================
+  {
+    id: 'estoque-centros-distribuicao',
+    name: 'Centros de Distribuição',
+    description: 'Gestão de centros de distribuição',
+    tableName: 'gestaoestoque.centros_distribuicao',
+    columnDefs: [],
+    icon: '🏭',
+    category: 'Gestão de Estoque'
+  },
+  {
+    id: 'estoque-estoque-canal',
+    name: 'Estoque por Canal',
+    description: 'Controle de estoque por canal de venda',
+    tableName: 'gestaoestoque.estoque_canal',
+    columnDefs: [],
+    icon: '📊',
+    category: 'Gestão de Estoque'
+  },
+  {
+    id: 'estoque-integracoes-canais',
+    name: 'Integrações de Canais',
+    description: 'Configuração de integrações com canais',
+    tableName: 'gestaoestoque.integracoes_canais',
+    columnDefs: [],
+    icon: '🔗',
+    category: 'Gestão de Estoque'
+  },
+  {
+    id: 'estoque-movimentacoes',
+    name: 'Movimentações de Estoque',
+    description: 'Histórico de entradas e saídas',
+    tableName: 'gestaoestoque.movimentacoes_estoque',
+    columnDefs: [],
+    icon: '📋',
+    category: 'Gestão de Estoque'
+  },
+  {
+    id: 'estoque-precos-canais',
+    name: 'Preços por Canal',
+    description: 'Gestão de preços por canal de venda',
+    tableName: 'gestaoestoque.precos_canais',
+    columnDefs: [],
+    icon: '💰',
+    category: 'Gestão de Estoque'
   }
 ];

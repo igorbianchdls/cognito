@@ -317,8 +317,77 @@ export default function TablesDataTable({ tableName, filters = [] }: TablesDataT
 
   // Create columns dynamically from dataset config
   const columns: ColumnDef<Record<string, unknown>>[] = useMemo(() => {
-    if (!datasetConfig?.columnDefs) return [];
+    // COLUNAS DINÂMICAS - quando columnDefs está vazio ou não existe
+    if (!datasetConfig?.columnDefs || datasetConfig.columnDefs.length === 0) {
+      if (!data || data.length === 0) return [];
 
+      const firstRow = data[0];
+      const keys = Object.keys(firstRow);
+
+      return keys.map(key => ({
+        id: key,
+        accessorKey: key,
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
+            className="hover:bg-gray-100"
+            style={{
+              fontSize: `${headerFontSize}px`,
+              fontFamily: headerFontFamily === 'Inter' ? 'var(--font-inter)' : 'var(--font-geist-sans)',
+              letterSpacing: headerLetterSpacing,
+            }}
+          >
+            {key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ')}
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => {
+          const value = row.getValue(key);
+
+          // Auto-formatação por tipo
+          if (value instanceof Date || (typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}T/))) {
+            return (
+              <div style={{
+                fontSize: `${fontSize}px`,
+                fontFamily: cellFontFamily === 'Inter' ? 'var(--font-inter)' : 'var(--font-geist-sans)',
+                letterSpacing: cellLetterSpacing,
+                color: cellTextColor,
+              }}>
+                {new Date(value).toLocaleDateString('pt-BR')}
+              </div>
+            );
+          }
+          if (typeof value === 'number') {
+            return (
+              <div style={{
+                fontSize: `${fontSize}px`,
+                fontFamily: cellFontFamily === 'Inter' ? 'var(--font-inter)' : 'var(--font-geist-sans)',
+                letterSpacing: cellLetterSpacing,
+                color: cellTextColor,
+              }}>
+                {value.toLocaleString('pt-BR')}
+              </div>
+            );
+          }
+          if (typeof value === 'boolean') {
+            return <Badge>{value ? 'Sim' : 'Não'}</Badge>;
+          }
+          return (
+            <div style={{
+              fontSize: `${fontSize}px`,
+              fontFamily: cellFontFamily === 'Inter' ? 'var(--font-inter)' : 'var(--font-geist-sans)',
+              letterSpacing: cellLetterSpacing,
+              color: cellTextColor,
+            }}>
+              {String(value || '-')}
+            </div>
+          );
+        },
+      }));
+    }
+
+    // COLUNAS FIXAS - usar columnDefs existente
     return datasetConfig.columnDefs.map((colDef) => ({
       id: colDef.field || '',
       accessorKey: colDef.field || '',
