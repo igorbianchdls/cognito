@@ -2668,6 +2668,508 @@ export const resumosCampanhasColumns: ColDef[] = [
 ];
 
 // ============================================
+// GESTÃO DE ESTOQUE - Schema: gestaoestoque
+// ============================================
+
+// Configurações de colunas para Centros de Distribuição
+export const centrosDistribuicaoColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true,
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'nome',
+    headerName: 'Nome',
+    width: 250,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontWeight: 'bold' }
+  },
+  {
+    field: 'endereco',
+    headerName: 'Endereço',
+    width: 300,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    wrapText: true
+  },
+  {
+    field: 'ativo',
+    headerName: 'Ativo',
+    width: 100,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    valueFormatter: (params) => {
+      return params.value ? 'Sim' : 'Não';
+    },
+    cellStyle: (params) => {
+      return params.value
+        ? { color: '#2e7d32', fontWeight: 'bold' }
+        : { color: '#c62828', fontWeight: 'bold' };
+    }
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'updated_at',
+    headerName: 'Atualizado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Estoque por Canal
+export const estoqueCanaisColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true,
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'product_id',
+    headerName: 'Produto ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'channel_id',
+    headerName: 'Canal ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'sku_channel',
+    headerName: 'SKU do Canal',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontWeight: 'bold' }
+  },
+  {
+    field: 'quantity_available',
+    headerName: 'Qtd Disponível',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return typeof params.value === 'number'
+        ? params.value.toLocaleString('pt-BR')
+        : String(params.value);
+    },
+    cellStyle: (params) => {
+      const qty = params.value || 0;
+      if (qty === 0) return { color: '#c62828', fontWeight: 'bold', textAlign: 'right' };
+      if (qty < 10) return { color: '#f57c00', fontWeight: 'bold', textAlign: 'right' };
+      return { color: '#2e7d32', fontWeight: 'bold', textAlign: 'right' };
+    }
+  },
+  {
+    field: 'quantity_reserved',
+    headerName: 'Qtd Reservada',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return typeof params.value === 'number'
+        ? params.value.toLocaleString('pt-BR')
+        : String(params.value);
+    },
+    cellStyle: { textAlign: 'right' }
+  },
+  {
+    field: 'last_updated',
+    headerName: 'Última Atualização',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'updated_at',
+    headerName: 'Atualizado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Integrações de Canais
+export const integracoesCanaisColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true,
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'channel_id',
+    headerName: 'Canal ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'api_key',
+    headerName: 'API Key',
+    width: 200,
+    editable: true,
+    sortable: false,
+    filter: 'agTextColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const key = String(params.value);
+      if (key.length > 8) {
+        return key.substring(0, 4) + '*****' + key.substring(key.length - 4);
+      }
+      return '*****';
+    },
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em', color: '#666' }
+  },
+  {
+    field: 'config',
+    headerName: 'Configuração',
+    width: 250,
+    editable: true,
+    sortable: false,
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      try {
+        const config = typeof params.value === 'string' ? JSON.parse(params.value) : params.value;
+        const keys = Object.keys(config);
+        return keys.length > 0 ? `${keys.length} configuração(ões)` : 'Vazio';
+      } catch {
+        return 'JSON inválido';
+      }
+    },
+    cellStyle: { fontSize: '0.9em' }
+  },
+  {
+    field: 'last_sync',
+    headerName: 'Última Sincronização',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'updated_at',
+    headerName: 'Atualizado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Movimentações de Estoque
+export const movimentacoesEstoqueColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true,
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'product_id',
+    headerName: 'Produto ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'channel_id',
+    headerName: 'Canal ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'order_id',
+    headerName: 'Pedido ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'type',
+    headerName: 'Tipo',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    enablePivot: true,
+    cellStyle: (params) => {
+      const type = String(params.value || '').toLowerCase();
+      if (type.includes('entrada') || type.includes('in')) return { color: '#2e7d32', fontWeight: 'bold' };
+      if (type.includes('saida') || type.includes('out')) return { color: '#c62828', fontWeight: 'bold' };
+      if (type.includes('ajuste') || type.includes('adjust')) return { color: '#f57c00', fontWeight: 'bold' };
+      return { fontWeight: 'bold' };
+    }
+  },
+  {
+    field: 'quantity',
+    headerName: 'Quantidade',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return typeof params.value === 'number'
+        ? params.value.toLocaleString('pt-BR')
+        : String(params.value);
+    },
+    cellStyle: { textAlign: 'right', fontWeight: 'bold' }
+  },
+  {
+    field: 'reason',
+    headerName: 'Motivo',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    wrapText: true
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'updated_at',
+    headerName: 'Atualizado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Preços por Canal
+export const precosCanalColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true,
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'product_id',
+    headerName: 'Produto ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'channel_id',
+    headerName: 'Canal ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'price',
+    headerName: 'Preço (R$)',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'avg',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(params.value);
+    },
+    cellStyle: { fontWeight: 'bold', color: '#1976d2', textAlign: 'right' }
+  },
+  {
+    field: 'start_date',
+    headerName: 'Data Início',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'end_date',
+    headerName: 'Data Fim',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'created_at',
+    headerName: 'Criado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  },
+  {
+    field: 'updated_at',
+    headerName: 'Atualizado em',
+    width: 180,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const date = new Date(params.value as string);
+      return isNaN(date.getTime()) ? String(params.value) : date.toLocaleString('pt-BR');
+    }
+  }
+];
+
+// ============================================
 // MARKETING ORGÂNICO - Schema: marketing_organico
 // ============================================
 
@@ -3473,7 +3975,7 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     name: 'Centros de Distribuição',
     description: 'Gestão de centros de distribuição',
     tableName: 'gestaoestoque.centros_distribuicao',
-    columnDefs: [],
+    columnDefs: centrosDistribuicaoColumns,
     icon: '🏭',
     category: 'Gestão de Estoque'
   },
@@ -3482,7 +3984,7 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     name: 'Estoque por Canal',
     description: 'Controle de estoque por canal de venda',
     tableName: 'gestaoestoque.estoque_canal',
-    columnDefs: [],
+    columnDefs: estoqueCanaisColumns,
     icon: '📊',
     category: 'Gestão de Estoque'
   },
@@ -3491,7 +3993,7 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     name: 'Integrações de Canais',
     description: 'Configuração de integrações com canais',
     tableName: 'gestaoestoque.integracoes_canais',
-    columnDefs: [],
+    columnDefs: integracoesCanaisColumns,
     icon: '🔗',
     category: 'Gestão de Estoque'
   },
@@ -3500,7 +4002,7 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     name: 'Movimentações de Estoque',
     description: 'Histórico de entradas e saídas',
     tableName: 'gestaoestoque.movimentacoes_estoque',
-    columnDefs: [],
+    columnDefs: movimentacoesEstoqueColumns,
     icon: '📋',
     category: 'Gestão de Estoque'
   },
@@ -3509,7 +4011,7 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     name: 'Preços por Canal',
     description: 'Gestão de preços por canal de venda',
     tableName: 'gestaoestoque.precos_canais',
-    columnDefs: [],
+    columnDefs: precosCanalColumns,
     icon: '💰',
     category: 'Gestão de Estoque'
   }
