@@ -73,6 +73,7 @@ export default function Page() {
       case 'logisticsAgent': return '/api/claudeAgents/logistics';
       case 'gestorDeComprasAgent': return '/api/claudeAgents/gestor-de-compras';
       case 'gestorDeProjetosAgent': return '/api/claudeAgents/gestor-de-projetos';
+      case 'funcionariosAgent': return '/api/claudeAgents/funcionarios';
       default: return '/api/agents/shopify-analyst';
     }
   };

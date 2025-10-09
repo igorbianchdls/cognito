@@ -60,6 +60,7 @@ import LogisticsDataTable from '../tools/LogisticsDataTable';
 import AnalyticsDataTable from '../tools/AnalyticsDataTable';
 import ComprasDataTable from '../tools/ComprasDataTable';
 import ProjetosDataTable from '../tools/ProjetosDataTable';
+import FuncionariosDataTable from '../tools/FuncionariosDataTable';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -968,6 +969,68 @@ type GetLogisticsDataToolOutput = {
     custo_por_kg?: number;
     created_at?: string;
     updated_at?: string;
+    [key: string]: unknown;
+  }>;
+  message: string;
+  error?: string;
+};
+
+type GetFuncionariosDataToolOutput = {
+  success: boolean;
+  count: number;
+  table: string;
+  data: Array<{
+    id_funcionario?: number;
+    id_departamento?: number;
+    id_cargo?: number;
+    id_historico?: number;
+    id_ponto?: number;
+    id_ausencia?: number;
+    id_folha?: number;
+    id_beneficio?: number;
+    id_funcionario_beneficio?: number;
+    id_treinamento?: number;
+    id_funcionario_treinamento?: number;
+    id_avaliacao?: number;
+    id_desligamento?: number;
+    nome_completo?: string;
+    cpf?: string;
+    email_corporativo?: string;
+    telefone?: string;
+    data_nascimento?: string;
+    data_admissao?: string;
+    genero?: string;
+    status?: string;
+    nome?: string;
+    titulo?: string;
+    descricao?: string;
+    salario?: number;
+    data_inicio?: string;
+    data_fim?: string;
+    data_hora_marcacao?: string;
+    tipo_marcacao?: string;
+    tipo?: string;
+    motivo?: string;
+    status_aprovacao?: string;
+    mes_referencia?: number;
+    ano_referencia?: number;
+    data_pagamento?: string;
+    salario_base?: number;
+    total_vencimentos?: number;
+    total_descontos?: number;
+    valor_liquido?: number;
+    valor_padrao?: number;
+    data_adesao?: string;
+    nome_curso?: string;
+    carga_horaria?: number;
+    data_conclusao?: string;
+    nota_aproveitamento?: number;
+    id_avaliador?: number;
+    data_avaliacao?: string;
+    nota?: number;
+    comentarios?: string;
+    data_desligamento?: string;
+    tipo_desligamento?: string;
     [key: string]: unknown;
   }>;
   message: string;
@@ -3777,6 +3840,41 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   data={(projetosTool.output as GetProjetosDataToolOutput).data}
                   message={(projetosTool.output as GetProjetosDataToolOutput).message}
                   error={(projetosTool.output as GetProjetosDataToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getFuncionariosData') {
+          const funcionariosTool = part as NexusToolUIPart;
+          const callId = funcionariosTool.toolCallId;
+          const shouldBeOpen = funcionariosTool.state === 'output-available' || funcionariosTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getFuncionariosData" state={funcionariosTool.state} />
+                <ToolContent>
+                  {funcionariosTool.input && (
+                    <ToolInput input={funcionariosTool.input} />
+                  )}
+                  {funcionariosTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={funcionariosTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {funcionariosTool.state === 'output-available' && (
+                <FuncionariosDataTable
+                  success={(funcionariosTool.output as GetFuncionariosDataToolOutput).success}
+                  count={(funcionariosTool.output as GetFuncionariosDataToolOutput).count}
+                  table={(funcionariosTool.output as GetFuncionariosDataToolOutput).table}
+                  data={(funcionariosTool.output as GetFuncionariosDataToolOutput).data}
+                  message={(funcionariosTool.output as GetFuncionariosDataToolOutput).message}
+                  error={(funcionariosTool.output as GetFuncionariosDataToolOutput).error}
                 />
               )}
             </div>
