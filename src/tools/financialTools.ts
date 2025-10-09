@@ -96,12 +96,12 @@ export const getContasAReceber = tool({
 
       // FILTRO 8: Data de emissão inicial
       if (data_emissao_de) {
-        query = query.gte('created_at', data_emissao_de);
+        query = query.gte('criado_em', data_emissao_de);
       }
 
       // FILTRO 9: Data de emissão final
       if (data_emissao_ate) {
-        query = query.lte('created_at', data_emissao_ate);
+        query = query.lte('criado_em', data_emissao_ate);
       }
 
       // Ordenação padrão por data de vencimento (mais urgente primeiro)
@@ -225,12 +225,12 @@ export const getContasAPagar = tool({
 
       // FILTRO 8: Data de emissão inicial
       if (data_emissao_de) {
-        query = query.gte('created_at', data_emissao_de);
+        query = query.gte('criado_em', data_emissao_de);
       }
 
       // FILTRO 9: Data de emissão final
       if (data_emissao_ate) {
-        query = query.lte('created_at', data_emissao_ate);
+        query = query.lte('criado_em', data_emissao_ate);
       }
 
       // Ordenação padrão por data de vencimento (mais urgente primeiro)
