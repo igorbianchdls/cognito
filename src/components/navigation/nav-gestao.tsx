@@ -75,10 +75,10 @@ const funcionariosTables = [
 export function NavGestao() {
   const router = useRouter()
   const pathname = usePathname()
-  const [isFinanceiraOpen, setIsFinanceiraOpen] = useState(true)
-  const [isProjetosOpen, setIsProjetosOpen] = useState(true)
-  const [isVendasOpen, setIsVendasOpen] = useState(true)
-  const [isFuncionariosOpen, setIsFuncionariosOpen] = useState(true)
+  const [isFinanceiraOpen, setIsFinanceiraOpen] = useState(false)
+  const [isProjetosOpen, setIsProjetosOpen] = useState(false)
+  const [isVendasOpen, setIsVendasOpen] = useState(false)
+  const [isFuncionariosOpen, setIsFuncionariosOpen] = useState(false)
 
   return (
     <SidebarGroup>
