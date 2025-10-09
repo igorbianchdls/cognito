@@ -34,7 +34,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarRail,
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
@@ -172,7 +171,6 @@ export function SidebarShadcn({ ...props }: React.ComponentProps<typeof Sidebar>
       <SidebarFooter>
         <NavUser user={dataWithActiveState.user} />
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   )
 }
