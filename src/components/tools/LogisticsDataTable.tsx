@@ -411,8 +411,8 @@ export default function LogisticsDataTable({ success, count, data, table, messag
         </ArtifactActions>
       </ArtifactHeader>
 
-      <ArtifactContent>
-        <div className="rounded-md border">
+      <ArtifactContent className="p-0">
+        <div className="border-b">
           <Table>
             <TableHeader>
               {reactTable.getHeaderGroups().map((headerGroup) => (
@@ -445,7 +445,7 @@ export default function LogisticsDataTable({ success, count, data, table, messag
           </Table>
         </div>
 
-        <div className="flex items-center justify-between space-x-2 py-4">
+        <div className="flex items-center justify-between space-x-2 py-4 px-4">
           <div className="text-sm text-muted-foreground">
             Página {reactTable.getState().pagination.pageIndex + 1} de {reactTable.getPageCount()}
           </div>
