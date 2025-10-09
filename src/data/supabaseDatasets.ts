@@ -166,6 +166,44 @@ export async function updateSupabaseTableRow(
   }
 }
 
+// Função genérica para inserir um novo registro em uma tabela
+export async function insertSupabaseTableRow(
+  tableName: string,
+  newRecord: Record<string, unknown>
+) {
+  try {
+    // Detectar se há schema no nome da tabela (ex: gestaofinanceira.categorias)
+    const [schemaOrTable, maybeTable] = tableName.split('.');
+    const schema = maybeTable ? schemaOrTable : undefined;
+    const table = maybeTable || schemaOrTable;
+
+    if (schema) {
+      // Para schemas customizados, usar RPC function
+      const { data, error } = await supabase.rpc('insert_table_data', {
+        p_schema: schema,
+        p_table: table,
+        p_data: newRecord
+      });
+
+      if (error) throw error;
+      return data;
+    } else {
+      // Para schema public, usar o método normal
+      const { data, error } = await supabase
+        .from(table)
+        .insert(newRecord)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
+  } catch (error) {
+    console.error(`Error inserting into table ${tableName}:`, error);
+    throw error;
+  }
+}
+
 // ============================================
 // GESTÃO FINANCEIRA - Schema: gestaofinanceira
 // ============================================

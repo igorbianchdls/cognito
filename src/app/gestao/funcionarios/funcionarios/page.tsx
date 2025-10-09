@@ -10,6 +10,12 @@ import { FilterState, SortState } from '@/components/sheets/core/TableHeader';
 export default function FuncionariosPage() {
   const [filters, setFilters] = useState<FilterState[]>([]);
   const [sorting, setSorting] = useState<SortState[]>([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handleRecordCreated = () => {
+    // Forçar refresh da tabela incrementando o trigger
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   return (
     <SidebarProvider>
@@ -20,9 +26,15 @@ export default function FuncionariosPage() {
           onSortChange={setSorting}
           onViewChange={() => {}}
           onShowCoverChange={() => {}}
+          tableName="gestaofuncionarios.funcionarios"
+          onRecordCreated={handleRecordCreated}
         />
         <div className="flex-1 overflow-hidden">
-          <TablesDataTable tableName="gestaofuncionarios.funcionarios" filters={filters} />
+          <TablesDataTable
+            tableName="gestaofuncionarios.funcionarios"
+            filters={filters}
+            key={refreshTrigger}
+          />
         </div>
       </SidebarInset>
     </SidebarProvider>
