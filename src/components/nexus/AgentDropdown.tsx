@@ -18,7 +18,6 @@ interface AgentDropdownProps {
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   'metaAnalyst': MetaIcon,
   'metaCampaignAnalyst': MetaIcon,
-  'metaCreativeAnalyst': MetaIcon,
   'amazonAdsAnalyst': AmazonIcon,
   'googleAnalyticsAnalyst': GoogleAnalyticsIcon,
   'googleCampaignAnalyst': GoogleAdsIcon,
@@ -29,8 +28,6 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 // Lista de agentes disponíveis com suas informações visuais
 const agents = [
-  { id: 'nexus', name: 'Nexus', icon: 'N', color: 'text-blue-600' },
-  { id: 'teste', name: 'Teste', icon: 'T', color: 'text-green-600' },
   { id: 'metaAnalyst', name: 'MetaAnalyst', icon: 'M', color: 'text-purple-600' },
   { id: 'amazonAdsAnalyst', name: 'AmazonAdsAnalyst', icon: 'A', color: 'text-orange-600' },
   { id: 'googleAnalyticsAnalyst', name: 'GoogleAnalyticsAnalyst', icon: 'G', color: 'text-blue-500' },
@@ -40,9 +37,7 @@ const agents = [
   { id: 'keywordAnalyst', name: 'KeywordAnalyst', icon: 'K', color: 'text-yellow-600' },
   { id: 'googleCampaignAnalyst', name: 'GoogleCampaignAnalyst', icon: 'Y', color: 'text-blue-700' },
   { id: 'metaCampaignAnalyst', name: 'MetaCampaignAnalyst', icon: 'B', color: 'text-blue-800' },
-  { id: 'metaCreativeAnalyst', name: 'MetaCreativeAnalyst', icon: 'R', color: 'text-pink-600' },
   { id: 'salesAgent', name: 'SalesAgent', icon: 'V', color: 'text-indigo-600' },
-  { id: 'serviceOrdersAgent', name: 'Service Orders Agent', icon: 'O', color: 'text-amber-600' },
   { id: 'contasAReceberAgent', name: 'Contas a Receber', icon: 'C', color: 'text-teal-600' },
   { id: 'receiptsAgent', name: 'Receipts Agent', icon: 'R', color: 'text-orange-600' },
   { id: 'nfeAgent', name: 'Invoice Agent', icon: 'N', color: 'text-emerald-600' },

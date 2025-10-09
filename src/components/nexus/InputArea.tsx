@@ -47,12 +47,9 @@ interface InputAreaProps {
 
 // Mapeamento de ícones das integrações
 const iconMap: Record<string, React.ComponentType<{ className?: string }> | null> = {
-  'nexus': null,
-  'teste': null,
   'claudeAgent': null,
   'metaAnalyst': MetaIcon,
   'metaCampaignAnalyst': MetaIcon,
-  'metaCreativeAnalyst': MetaIcon,
   'amazonAdsAnalyst': AmazonIcon,
   'googleAnalyticsAnalyst': GoogleAnalyticsIcon,
   'googleCampaignAnalyst': GoogleAdsIcon,
@@ -62,7 +59,6 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
   'keywordAnalyst': null,
   'analistaDados': null,
   'salesAgent': TrendingUp,
-  'serviceOrdersAgent': Wrench,
   'contasAReceberAgent': ArrowDownLeft,
   'receiptsAgent': Receipt,
   'nfeAgent': FileText,
@@ -76,8 +72,6 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
 };
 
 const models = [
-  { id: 'nexus', name: 'Nexus', icon: iconMap['nexus'] },
-  { id: 'teste', name: 'Teste', icon: iconMap['teste'] },
   { id: 'claudeAgent', name: 'Claude Agent', icon: iconMap['claudeAgent'] },
   { id: 'metaAnalyst', name: 'MetaAnalyst', icon: iconMap['metaAnalyst'] },
   { id: 'amazonAdsAnalyst', name: 'AmazonAdsAnalyst', icon: iconMap['amazonAdsAnalyst'] },
@@ -88,10 +82,8 @@ const models = [
   { id: 'keywordAnalyst', name: 'KeywordAnalyst', icon: iconMap['keywordAnalyst'] },
   { id: 'googleCampaignAnalyst', name: 'GoogleCampaignAnalyst', icon: iconMap['googleCampaignAnalyst'] },
   { id: 'metaCampaignAnalyst', name: 'MetaCampaignAnalyst', icon: iconMap['metaCampaignAnalyst'] },
-  { id: 'metaCreativeAnalyst', name: 'MetaCreativeAnalyst', icon: iconMap['metaCreativeAnalyst'] },
   { id: 'analistaDados', name: 'Analista de Dados', icon: iconMap['analistaDados'] },
   { id: 'salesAgent', name: 'SalesAgent', icon: iconMap['salesAgent'] },
-  { id: 'serviceOrdersAgent', name: 'Service Orders Agent', icon: iconMap['serviceOrdersAgent'] },
   { id: 'contasAReceberAgent', name: 'Contas a Pagar e Receber', icon: iconMap['contasAReceberAgent'] },
   { id: 'receiptsAgent', name: 'Receipts Agent', icon: iconMap['receiptsAgent'] },
   { id: 'nfeAgent', name: 'Invoice Agent', icon: iconMap['nfeAgent'] },
@@ -157,8 +149,6 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
             // Mapear ID do agente para nome legível
             const getAgentName = (id: string) => {
               switch (id) {
-                case 'nexus': return 'Nexus';
-                case 'teste': return 'Teste';
                 case 'claudeAgent': return 'Claude Agent';
                 case 'metaAnalyst': return 'MetaAnalyst';
                 case 'amazonAdsAnalyst': return 'AmazonAdsAnalyst';
@@ -169,14 +159,12 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
                 case 'keywordAnalyst': return 'KeywordAnalyst';
                 case 'googleCampaignAnalyst': return 'GoogleCampaignAnalyst';
                 case 'metaCampaignAnalyst': return 'MetaCampaignAnalyst';
-                case 'metaCreativeAnalyst': return 'MetaCreativeAnalyst';
                 case 'inventoryAnalyst': return 'InventoryAnalyst';
                 case 'cashFlowAnalyst': return 'CashFlowAnalyst';
                 case 'pnlAnalyst': return 'P&LAnalyst';
                 case 'budgetPlanningAnalyst': return 'BudgetPlanningAnalyst';
                 case 'analistaDados': return 'Analista de Dados';
                 case 'salesAgent': return 'SalesAgent';
-                case 'serviceOrdersAgent': return 'Service Orders Agent';
                 case 'contasAReceberAgent': return 'Contas a Receber';
                 case 'receiptsAgent': return 'Receipts Agent';
                 case 'nfeAgent': return 'Invoice Agent';

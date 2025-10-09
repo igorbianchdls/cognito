@@ -1,7 +1,7 @@
 import { atom } from 'nanostores'
 
 // Estado global do agente atual
-export const currentAgent = atom<string>('nexus')
+export const currentAgent = atom<string>('metaAnalyst')
 
 // Action para mudar agente
 export const setCurrentAgent = (agent: string) => {

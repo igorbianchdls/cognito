@@ -43,8 +43,6 @@ export default function Page() {
   // Helper function to get API URL based on agent
   const getApiUrl = (agent: string) => {
     switch (agent) {
-      case 'nexus': return '/api/chat-ui';
-      case 'teste': return '/api/teste';
       case 'claudeAgent': return '/api/claudeAgents/simple';
       case 'shopifyAnalyst': return '/api/agents/shopify-analyst';
       case 'metaAnalyst': return '/api/agents/meta-analyst';
@@ -55,10 +53,8 @@ export default function Page() {
       case 'keywordAnalyst': return '/api/agents/keyword-analyst';
       case 'googleCampaignAnalyst': return '/api/agents/google-campaign-analyst';
       case 'metaCampaignAnalyst': return '/api/agents/meta-campaign-analyst';
-      case 'metaCreativeAnalyst': return '/api/agents/meta-creative-analyst';
       case 'analistaDados': return '/api/agents/analista-dados';
       case 'salesAgent': return '/api/claudeAgents/sales';
-      case 'serviceOrdersAgent': return '/api/claudeAgents/service-orders';
       case 'contasAReceberAgent': return '/api/claudeAgents/contas-a-receber';
       case 'receiptsAgent': return '/api/claudeAgents/receipts';
       case 'nfeAgent': return '/api/claudeAgents/nfe';
