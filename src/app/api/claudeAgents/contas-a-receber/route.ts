@@ -1,6 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
-import { getContasAReceber, getContasAPagar } from '@/tools/financialTools';
+import { getContasAReceber, getContasAPagar, calculateDateRange } from '@/tools/financialTools';
 import { calcularFluxoCaixa } from '@/tools/fluxoCaixaTools';
 
 export const maxDuration = 300;
@@ -89,6 +89,28 @@ Auxiliar gestores financeiros e controllers a:
 **calcularFluxoCaixa** - Calcula projeções de fluxo de caixa para períodos específicos
 - Parâmetros: \`dias\` (7, 30 ou 90), \`saldo_inicial\` (opcional)
 - Use quando: usuário pedir projeção de caixa, planejamento financeiro, análise de liquidez, previsão de entradas/saídas
+
+## 📅 CALCULAR INTERVALO DE DATAS
+**calculateDateRange** - Calcula intervalos de datas relativos à data atual do servidor
+
+**Parâmetros:**
+- \`periodo\`: 'ultimos_dias' | 'proximos_dias' | 'mes_atual' | 'mes_passado' | 'ano_atual' | 'ano_passado'
+- \`quantidade_dias\`: número de dias (obrigatório para ultimos_dias e proximos_dias)
+
+**Retorna:**
+- \`data_inicial\`: data inicial no formato YYYY-MM-DD
+- \`data_final\`: data final no formato YYYY-MM-DD
+
+**Exemplos de uso:**
+- "Contas dos últimos 30 dias" → \`calculateDateRange({ periodo: 'ultimos_dias', quantidade_dias: 30 })\` → depois use as datas retornadas com \`getContasAReceber({ data_emissao_de: data_inicial, data_emissao_ate: data_final })\`
+- "Contas do mês atual" → \`calculateDateRange({ periodo: 'mes_atual' })\`
+- "Contas do ano passado" → \`calculateDateRange({ periodo: 'ano_passado' })\`
+- "Próximos 7 dias" → \`calculateDateRange({ periodo: 'proximos_dias', quantidade_dias: 7 })\`
+
+**IMPORTANTE:**
+- Use esta tool primeiro para calcular as datas quando o usuário pedir períodos relativos ("últimos X dias", "mês passado", etc)
+- Depois use as datas retornadas (\`data_inicial\` e \`data_final\`) como parâmetros \`data_emissao_de\` e \`data_emissao_ate\` nas tools getContasAReceber ou getContasAPagar
+- A tool sempre usa a data atual do servidor, então "hoje" é sempre preciso
 
 # 📐 Framework de Análise Financeira
 
@@ -246,7 +268,8 @@ Seja sempre profissional, orientado a dados e ofereça insights acionáveis. Pri
       tools: {
         getContasAReceber,
         getContasAPagar,
-        calcularFluxoCaixa
+        calcularFluxoCaixa,
+        calculateDateRange
       }
     });
 

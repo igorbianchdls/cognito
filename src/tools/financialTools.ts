@@ -264,3 +264,80 @@ export const getContasAPagar = tool({
     }
   }
 });
+
+export const calculateDateRange = tool({
+  description: 'Calcula intervalos de datas relativos (últimos X dias, próximos X dias, etc). Use quando usuário pedir períodos relativos como "últimos 30 dias", "próxima semana", etc.',
+  inputSchema: z.object({
+    periodo: z.enum(['ultimos_dias', 'proximos_dias', 'mes_atual', 'mes_passado', 'ano_atual', 'ano_passado'])
+      .describe('Tipo de período a calcular'),
+    quantidade_dias: z.number().optional()
+      .describe('Quantidade de dias (obrigatório para ultimos_dias e proximos_dias)'),
+  }),
+
+  execute: async ({ periodo, quantidade_dias }) => {
+    try {
+      const hoje = new Date();
+      let dataInicial: Date;
+      let dataFinal: Date;
+
+      switch (periodo) {
+        case 'ultimos_dias':
+          if (!quantidade_dias) throw new Error('quantidade_dias é obrigatório para ultimos_dias');
+          dataInicial = new Date();
+          dataInicial.setDate(hoje.getDate() - quantidade_dias);
+          dataFinal = hoje;
+          break;
+
+        case 'proximos_dias':
+          if (!quantidade_dias) throw new Error('quantidade_dias é obrigatório para proximos_dias');
+          dataInicial = hoje;
+          dataFinal = new Date();
+          dataFinal.setDate(hoje.getDate() + quantidade_dias);
+          break;
+
+        case 'mes_atual':
+          dataInicial = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+          dataFinal = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+          break;
+
+        case 'mes_passado':
+          dataInicial = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+          dataFinal = new Date(hoje.getFullYear(), hoje.getMonth(), 0);
+          break;
+
+        case 'ano_atual':
+          dataInicial = new Date(hoje.getFullYear(), 0, 1);
+          dataFinal = new Date(hoje.getFullYear(), 11, 31);
+          break;
+
+        case 'ano_passado':
+          dataInicial = new Date(hoje.getFullYear() - 1, 0, 1);
+          dataFinal = new Date(hoje.getFullYear() - 1, 11, 31);
+          break;
+
+        default:
+          throw new Error('Período inválido');
+      }
+
+      const dataInicialStr = dataInicial.toISOString().split('T')[0];
+      const dataFinalStr = dataFinal.toISOString().split('T')[0];
+
+      return {
+        success: true,
+        data_inicial: dataInicialStr,
+        data_final: dataFinalStr,
+        periodo_descricao: periodo,
+        dias_calculados: quantidade_dias,
+        message: `📅 Período calculado: ${dataInicialStr} até ${dataFinalStr}`
+      };
+
+    } catch (error) {
+      console.error('ERRO calculateDateRange:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : JSON.stringify(error),
+        message: `❌ Erro ao calcular período de datas`
+      };
+    }
+  }
+});

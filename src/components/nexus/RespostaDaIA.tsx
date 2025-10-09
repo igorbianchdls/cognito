@@ -1237,6 +1237,21 @@ type GetContasAPagarToolOutput = {
   error?: string;
 };
 
+type CalculateDateRangeToolInput = {
+  periodo: 'ultimos_dias' | 'proximos_dias' | 'mes_atual' | 'mes_passado' | 'ano_atual' | 'ano_passado';
+  quantidade_dias?: number;
+};
+
+type CalculateDateRangeToolOutput = {
+  success: boolean;
+  data_inicial: string;
+  data_final: string;
+  periodo_descricao: string;
+  dias_calculados?: number;
+  message: string;
+  error?: string;
+};
+
 type CalcularFluxoCaixaToolInput = {
   dias: number;
   saldo_inicial?: number;
@@ -3647,6 +3662,34 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   error={(contasAPagarTool.output as GetContasAPagarToolOutput).error}
                 />
               )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-calculateDateRange') {
+          const calculateDateRangeTool = part as NexusToolUIPart;
+          const callId = calculateDateRangeTool.toolCallId;
+          const shouldBeOpen = calculateDateRangeTool.state === 'output-available' || calculateDateRangeTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-calculateDateRange" state={calculateDateRangeTool.state} />
+                <ToolContent>
+                  {calculateDateRangeTool.input && (
+                    <ToolInput input={calculateDateRangeTool.input} />
+                  )}
+                  {calculateDateRangeTool.state === 'output-available' && (
+                    <ToolOutput output={(calculateDateRangeTool.output as CalculateDateRangeToolOutput)} />
+                  )}
+                  {calculateDateRangeTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={calculateDateRangeTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
             </div>
           );
         }
