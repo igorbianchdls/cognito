@@ -1,6 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
-import { getFinancialData } from '@/tools/financialTools';
+import { getContasAReceber, getContasAPagar } from '@/tools/financialTools';
 import { calcularFluxoCaixa } from '@/tools/fluxoCaixaTools';
 
 export const maxDuration = 300;
@@ -41,35 +41,49 @@ Auxiliar gestores financeiros e controllers a:
 
 # 🛠️ Suas Ferramentas
 
-## 📊 BUSCAR DADOS FINANCEIROS
-**getFinancialData** - Busca contas a pagar ou contas a receber com filtros avançados
+## 📊 BUSCAR CONTAS A RECEBER
+**getContasAReceber** - Busca contas a receber (clientes, receitas) com filtros avançados
 
 **Parâmetros:**
-- \`table\`: 'contas_a_pagar' | 'contas_a_receber' (obrigatório)
-- \`limit\`: número de resultados (padrão: 10)
+- \`limit\`: número de resultados (padrão: 20)
 - \`status\`: 'pendente' | 'pago' | 'vencido' | 'cancelado' (opcional)
+- \`cliente_id\`: filtrar por ID do cliente (opcional)
+- \`categoria_id\`: filtrar por ID da categoria (opcional)
 - \`vence_em_dias\`: contas que vencem nos próximos X dias (opcional)
 - \`venceu_ha_dias\`: contas vencidas nos últimos X dias (opcional)
 - \`valor_minimo\`: valor mínimo em reais (opcional)
 - \`valor_maximo\`: valor máximo em reais (opcional)
-- \`data_emissao_de\`: data inicial de emissão no formato YYYY-MM-DD (opcional)
-- \`data_emissao_ate\`: data final de emissão no formato YYYY-MM-DD (opcional)
+- \`data_emissao_de\`: data inicial de emissão YYYY-MM-DD (opcional)
+- \`data_emissao_ate\`: data final de emissão YYYY-MM-DD (opcional)
 
-**O que retorna:**
-- Dados filtrados da tabela selecionada
-- Campos: id, valor, descrição, status, data_vencimento, data_emissao, etc.
-- Resultados ordenados por data de vencimento (mais urgente primeiro)
+**Exemplos:**
+- "Contas a receber pendentes" → \`status: 'pendente'\`
+- "Recebimentos dos próximos 7 dias" → \`vence_em_dias: 7\`
+- "Recebimentos vencidos nos últimos 30 dias" → \`venceu_ha_dias: 30, status: 'vencido'\`
+- "Recebimentos acima de R$ 5000 vencidos" → \`valor_minimo: 5000, status: 'vencido'\`
 
-**Exemplos de Uso:**
-- "Contas a receber pendentes" → \`table: 'contas_a_receber', status: 'pendente'\`
-- "Contas a pagar dos próximos 7 dias" → \`table: 'contas_a_pagar', vence_em_dias: 7\`
-- "Contas vencidas nos últimos 30 dias" → \`table: 'contas_a_receber', venceu_ha_dias: 30\`
-- "Pagamentos entre R$ 1000 e R$ 5000" → \`table: 'contas_a_pagar', valor_minimo: 1000, valor_maximo: 5000\`
-- "Recebimentos emitidos em janeiro/2025" → \`table: 'contas_a_receber', data_emissao_de: '2025-01-01', data_emissao_ate: '2025-01-31'\`
-- "Contas vencidas acima de R$ 10000 nos últimos 60 dias" → \`table: 'contas_a_receber', venceu_ha_dias: 60, valor_minimo: 10000\`
-- "Pagamentos pendentes próximos 15 dias abaixo de R$ 3000" → \`table: 'contas_a_pagar', status: 'pendente', vence_em_dias: 15, valor_maximo: 3000\`
+## 💸 BUSCAR CONTAS A PAGAR
+**getContasAPagar** - Busca contas a pagar (fornecedores, despesas) com filtros avançados
 
-**IMPORTANTE:** Combine filtros para queries mais específicas. Analise os dados retornados e forneça insights relevantes.
+**Parâmetros:**
+- \`limit\`: número de resultados (padrão: 20)
+- \`status\`: 'pendente' | 'pago' | 'vencido' | 'cancelado' (opcional)
+- \`fornecedor_id\`: filtrar por ID do fornecedor (opcional)
+- \`categoria_id\`: filtrar por ID da categoria (opcional)
+- \`vence_em_dias\`: contas que vencem nos próximos X dias (opcional)
+- \`venceu_ha_dias\`: contas vencidas nos últimos X dias (opcional)
+- \`valor_minimo\`: valor mínimo em reais (opcional)
+- \`valor_maximo\`: valor máximo em reais (opcional)
+- \`data_emissao_de\`: data inicial de emissão YYYY-MM-DD (opcional)
+- \`data_emissao_ate\`: data final de emissão YYYY-MM-DD (opcional)
+
+**Exemplos:**
+- "Contas a pagar pendentes" → \`status: 'pendente'\`
+- "Pagamentos dos próximos 7 dias" → \`vence_em_dias: 7\`
+- "Despesas vencidas nos últimos 30 dias" → \`venceu_ha_dias: 30, status: 'vencido'\`
+- "Pagamentos entre R$ 1000 e R$ 5000" → \`valor_minimo: 1000, valor_maximo: 5000\`
+
+**IMPORTANTE:** Use tools específicas para cada contexto. Combine filtros para queries precisas.
 
 ## 📈 CALCULAR FLUXO DE CAIXA
 **calcularFluxoCaixa** - Calcula projeções de fluxo de caixa para períodos específicos
@@ -230,7 +244,8 @@ Seja sempre profissional, orientado a dados e ofereça insights acionáveis. Pri
       messages: convertToModelMessages(messages),
 
       tools: {
-        getFinancialData,
+        getContasAReceber,
+        getContasAPagar,
         calcularFluxoCaixa
       }
     });
