@@ -3583,6 +3583,74 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
+        if (part.type === 'tool-getContasAReceber') {
+          const contasAReceberTool = part as NexusToolUIPart;
+          const callId = contasAReceberTool.toolCallId;
+          const shouldBeOpen = contasAReceberTool.state === 'output-available' || contasAReceberTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getContasAReceber" state={contasAReceberTool.state} />
+                <ToolContent>
+                  {contasAReceberTool.input && (
+                    <ToolInput input={contasAReceberTool.input} />
+                  )}
+                  {contasAReceberTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={contasAReceberTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {contasAReceberTool.state === 'output-available' && (
+                <FinancialDataTable
+                  success={(contasAReceberTool.output as GetContasAReceberToolOutput).success}
+                  count={(contasAReceberTool.output as GetContasAReceberToolOutput).count}
+                  data={(contasAReceberTool.output as GetContasAReceberToolOutput).data}
+                  message={(contasAReceberTool.output as GetContasAReceberToolOutput).message}
+                  error={(contasAReceberTool.output as GetContasAReceberToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getContasAPagar') {
+          const contasAPagarTool = part as NexusToolUIPart;
+          const callId = contasAPagarTool.toolCallId;
+          const shouldBeOpen = contasAPagarTool.state === 'output-available' || contasAPagarTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getContasAPagar" state={contasAPagarTool.state} />
+                <ToolContent>
+                  {contasAPagarTool.input && (
+                    <ToolInput input={contasAPagarTool.input} />
+                  )}
+                  {contasAPagarTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={contasAPagarTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {contasAPagarTool.state === 'output-available' && (
+                <FinancialDataTable
+                  success={(contasAPagarTool.output as GetContasAPagarToolOutput).success}
+                  count={(contasAPagarTool.output as GetContasAPagarToolOutput).count}
+                  data={(contasAPagarTool.output as GetContasAPagarToolOutput).data}
+                  message={(contasAPagarTool.output as GetContasAPagarToolOutput).message}
+                  error={(contasAPagarTool.output as GetContasAPagarToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
         if (part.type === 'tool-getOrganicMarketingData') {
           const organicMarketingTool = part as NexusToolUIPart;
           const callId = organicMarketingTool.toolCallId;
