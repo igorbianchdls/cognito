@@ -10,6 +10,11 @@ import { FilterState, SortState } from '@/components/sheets/core/TableHeader';
 export default function ReturnsPage() {
   const [filters, setFilters] = useState<FilterState[]>([]);
   const [sorting, setSorting] = useState<SortState[]>([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handleRecordCreated = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   return (
     <SidebarProvider>
@@ -20,9 +25,15 @@ export default function ReturnsPage() {
           onSortChange={setSorting}
           onViewChange={() => {}}
           onShowCoverChange={() => {}}
+          tableName="vendasecommerce.returns"
+          onRecordCreated={handleRecordCreated}
         />
         <div className="flex-1 overflow-hidden">
-          <TablesDataTable tableName="vendasecommerce.returns" filters={filters} />
+          <TablesDataTable
+            tableName="vendasecommerce.returns"
+            filters={filters}
+            key={refreshTrigger}
+          />
         </div>
       </SidebarInset>
     </SidebarProvider>
