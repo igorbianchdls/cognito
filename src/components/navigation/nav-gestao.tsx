@@ -22,16 +22,16 @@ import {
 
 // Tabelas do schema gestaofinanceira
 const financeiraTables = [
-  { name: "Categorias", route: "/gestao/categorias" },
-  { name: "Contas Bancárias", route: "/gestao/contas" },
-  { name: "Contas a Pagar", route: "/gestao/contas-a-pagar" },
-  { name: "Contas a Receber", route: "/gestao/contas-a-receber" },
-  { name: "Conciliação Bancária", route: "/gestao/conciliacao-bancaria" },
-  { name: "Movimentos", route: "/gestao/movimentos" },
-  { name: "Contratos", route: "/gestao/contratos" },
-  { name: "Documento Itens", route: "/gestao/documento-itens" },
-  { name: "Documentos", route: "/gestao/documentos" },
-  { name: "Entidades", route: "/gestao/entidades" },
+  { name: "Categorias", route: "/gestao/financeira/categorias" },
+  { name: "Contas Bancárias", route: "/gestao/financeira/contas" },
+  { name: "Contas a Pagar", route: "/gestao/financeira/contas-a-pagar" },
+  { name: "Contas a Receber", route: "/gestao/financeira/contas-a-receber" },
+  { name: "Conciliação Bancária", route: "/gestao/financeira/conciliacao-bancaria" },
+  { name: "Movimentos", route: "/gestao/financeira/movimentos" },
+  { name: "Contratos", route: "/gestao/financeira/contratos" },
+  { name: "Documento Itens", route: "/gestao/financeira/documento-itens" },
+  { name: "Documentos", route: "/gestao/financeira/documentos" },
+  { name: "Entidades", route: "/gestao/financeira/entidades" },
 ]
 
 export function NavGestao() {
