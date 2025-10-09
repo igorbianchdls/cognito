@@ -247,7 +247,7 @@ form[class*="divide"] button:focus-visible {
   background: rgba(136, 136, 136, 0.5);
 }
 
-/* Sidebar scrollbar - aparece apenas no hover */
+/* Sidebar scrollbar - sutil por padrão, visível no hover */
 .sidebar-scrollbar::-webkit-scrollbar {
   width: 8px;
 }
@@ -257,8 +257,9 @@ form[class*="divide"] button:focus-visible {
 }
 
 .sidebar-scrollbar::-webkit-scrollbar-thumb {
-  background: transparent;
+  background: rgba(136, 136, 136, 0.1);
   border-radius: 4px;
+  transition: background 0.2s ease;
 }
 
 /* Mostra a scrollbar quando o mouse está sobre o sidebar */
@@ -266,17 +267,21 @@ form[class*="divide"] button:focus-visible {
   background: rgba(136, 136, 136, 0.3);
 }
 
-.sidebar-scrollbar:hover::-webkit-scrollbar-thumb:hover {
-  background: rgba(136, 136, 136, 0.5);
+.sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(136, 136, 136, 0.5) !important;
 }
 
 /* Dark mode */
+.dark .sidebar-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+}
+
 .dark .sidebar-scrollbar:hover::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
 }
 
-.dark .sidebar-scrollbar:hover::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.4);
+.dark .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4) !important;
 }
 
 /* Fundo específico para página nexus */
