@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
@@ -8,7 +8,7 @@ import TablesHeader from '@/app/tables/components/TablesHeader';
 import TablesDataTable from '@/app/tables/components/TablesDataTable';
 import { FilterState, SortState } from '@/components/sheets/core/TableHeader';
 
-export default function GestaoPage() {
+function GestaoContent() {
   const searchParams = useSearchParams();
   const tableParam = searchParams.get('table');
 
@@ -41,5 +41,17 @@ export default function GestaoPage() {
         </div>
       </SidebarInset>
     </SidebarProvider>
+  );
+}
+
+export default function GestaoPage() {
+  return (
+    <Suspense fallback={
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-muted-foreground">Carregando...</div>
+      </div>
+    }>
+      <GestaoContent />
+    </Suspense>
   );
 }
