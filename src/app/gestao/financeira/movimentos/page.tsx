@@ -10,6 +10,11 @@ import { FilterState, SortState } from '@/components/sheets/core/TableHeader';
 export default function MovimentosPage() {
   const [filters, setFilters] = useState<FilterState[]>([]);
   const [sorting, setSorting] = useState<SortState[]>([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handleRecordCreated = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   return (
     <SidebarProvider>
@@ -20,9 +25,15 @@ export default function MovimentosPage() {
           onSortChange={setSorting}
           onViewChange={() => {}}
           onShowCoverChange={() => {}}
+          tableName="gestaofinanceira.movimentos"
+          onRecordCreated={handleRecordCreated}
         />
         <div className="flex-1 overflow-hidden">
-          <TablesDataTable tableName="gestaofinanceira.movimentos" filters={filters} />
+          <TablesDataTable
+            tableName="gestaofinanceira.movimentos"
+            filters={filters}
+            key={refreshTrigger}
+          />
         </div>
       </SidebarInset>
     </SidebarProvider>
