@@ -247,6 +247,38 @@ form[class*="divide"] button:focus-visible {
   background: rgba(136, 136, 136, 0.5);
 }
 
+/* Sidebar scrollbar - aparece apenas no hover */
+.sidebar-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+}
+
+/* Mostra a scrollbar quando o mouse está sobre o sidebar */
+.sidebar-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: rgba(136, 136, 136, 0.3);
+}
+
+.sidebar-scrollbar:hover::-webkit-scrollbar-thumb:hover {
+  background: rgba(136, 136, 136, 0.5);
+}
+
+/* Dark mode */
+.dark .sidebar-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dark .sidebar-scrollbar:hover::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
 /* Fundo específico para página nexus */
 body:has([data-page="nexus"]) {
   background-color: #FBFBFB !important;
