@@ -60,18 +60,13 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
   'shopeeAnalyst': ShopeeIcon,
   'contaAzulAnalyst': ContaAzulIcon,
   'keywordAnalyst': null,
-  'performanceAgent': null,
-  'productAgent': null,
   'analistaDados': null,
   'salesAgent': TrendingUp,
-  'rhAgent': Users,
   'serviceOrdersAgent': Wrench,
   'contasAReceberAgent': ArrowDownLeft,
   'receiptsAgent': Receipt,
   'nfeAgent': FileText,
   'inventoryAgent': Package,
-  'contasAPagarAgent': ArrowUpRight,
-  'fluxoCaixaAgent': Activity,
   'ecommerceSalesAgent': TrendingUp,
   'webAnalyticsAgent': Activity,
   'logisticsAgent': Package,
@@ -94,18 +89,13 @@ const models = [
   { id: 'googleCampaignAnalyst', name: 'GoogleCampaignAnalyst', icon: iconMap['googleCampaignAnalyst'] },
   { id: 'metaCampaignAnalyst', name: 'MetaCampaignAnalyst', icon: iconMap['metaCampaignAnalyst'] },
   { id: 'metaCreativeAnalyst', name: 'MetaCreativeAnalyst', icon: iconMap['metaCreativeAnalyst'] },
-  { id: 'performanceAgent', name: 'PerformanceAgent', icon: iconMap['performanceAgent'] },
-  { id: 'productAgent', name: 'ProductAgent', icon: iconMap['productAgent'] },
   { id: 'analistaDados', name: 'Analista de Dados', icon: iconMap['analistaDados'] },
   { id: 'salesAgent', name: 'SalesAgent', icon: iconMap['salesAgent'] },
-  { id: 'rhAgent', name: 'RH Agent', icon: iconMap['rhAgent'] },
   { id: 'serviceOrdersAgent', name: 'Service Orders Agent', icon: iconMap['serviceOrdersAgent'] },
   { id: 'contasAReceberAgent', name: 'Contas a Pagar e Receber', icon: iconMap['contasAReceberAgent'] },
   { id: 'receiptsAgent', name: 'Receipts Agent', icon: iconMap['receiptsAgent'] },
   { id: 'nfeAgent', name: 'Invoice Agent', icon: iconMap['nfeAgent'] },
   { id: 'inventoryAgent', name: 'Inventory Agent', icon: iconMap['inventoryAgent'] },
-  { id: 'contasAPagarAgent', name: 'Contas a Pagar', icon: iconMap['contasAPagarAgent'] },
-  { id: 'fluxoCaixaAgent', name: 'Fluxo de Caixa', icon: iconMap['fluxoCaixaAgent'] },
   { id: 'ecommerceSalesAgent', name: 'E-commerce Sales Agent', icon: iconMap['ecommerceSalesAgent'] },
   { id: 'webAnalyticsAgent', name: 'Web Analytics Agent', icon: iconMap['webAnalyticsAgent'] },
   { id: 'logisticsAgent', name: 'Logistics Agent', icon: iconMap['logisticsAgent'] },
@@ -186,14 +176,11 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
                 case 'budgetPlanningAnalyst': return 'BudgetPlanningAnalyst';
                 case 'analistaDados': return 'Analista de Dados';
                 case 'salesAgent': return 'SalesAgent';
-                case 'rhAgent': return 'RH Agent';
                 case 'serviceOrdersAgent': return 'Service Orders Agent';
                 case 'contasAReceberAgent': return 'Contas a Receber';
                 case 'receiptsAgent': return 'Receipts Agent';
                 case 'nfeAgent': return 'Invoice Agent';
                 case 'inventoryAgent': return 'Inventory Agent';
-                case 'contasAPagarAgent': return 'Contas a Pagar';
-                case 'fluxoCaixaAgent': return 'Fluxo de Caixa';
                 case 'ecommerceSalesAgent': return 'E-commerce Sales Agent';
                 case 'webAnalyticsAgent': return 'Web Analytics Agent';
                 case 'logisticsAgent': return 'Logistics Agent';

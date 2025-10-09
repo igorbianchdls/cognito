@@ -2040,16 +2040,10 @@ const getAgentInfo = (agent: string) => {
       return { initial: 'B', title: 'Analista de Campanhas Meta Ads', color: 'bg-blue-800', icon: <MetaIcon className="w-full h-full" /> };
     case 'metaCreativeAnalyst':
       return { initial: 'R', title: 'Analista de Criativos Meta Ads', color: 'bg-pink-500', icon: <MetaIcon className="w-full h-full" /> };
-    case 'performanceAgent':
-      return { initial: 'P', title: 'Especialista em Performance', color: 'bg-emerald-500' };
-    case 'productAgent':
-      return { initial: 'D', title: 'Especialista em Produtos', color: 'bg-cyan-500' };
     case 'analistaDados':
       return { initial: 'A', title: 'Analista de Dados', color: 'bg-indigo-500' };
     case 'salesAgent':
       return { initial: 'V', title: 'SalesAgent', color: 'bg-indigo-600' };
-    case 'rhAgent':
-      return { initial: 'H', title: 'RH Agent', color: 'bg-purple-600' };
     case 'serviceOrdersAgent':
       return { initial: 'O', title: 'Service Orders Agent', color: 'bg-amber-600' };
     case 'contasAReceberAgent':
@@ -2060,10 +2054,6 @@ const getAgentInfo = (agent: string) => {
       return { initial: 'N', title: 'Invoice Agent', color: 'bg-emerald-600' };
     case 'inventoryAgent':
       return { initial: 'I', title: 'Inventory Agent', color: 'bg-blue-600' };
-    case 'contasAPagarAgent':
-      return { initial: 'P', title: 'Contas a Pagar', color: 'bg-red-600' };
-    case 'fluxoCaixaAgent':
-      return { initial: 'F', title: 'Fluxo de Caixa', color: 'bg-green-600' };
     default:
       return { initial: 'A', title: 'AI Assistant', color: 'bg-gray-500' };
   }

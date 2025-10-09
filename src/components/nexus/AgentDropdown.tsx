@@ -41,17 +41,12 @@ const agents = [
   { id: 'googleCampaignAnalyst', name: 'GoogleCampaignAnalyst', icon: 'Y', color: 'text-blue-700' },
   { id: 'metaCampaignAnalyst', name: 'MetaCampaignAnalyst', icon: 'B', color: 'text-blue-800' },
   { id: 'metaCreativeAnalyst', name: 'MetaCreativeAnalyst', icon: 'R', color: 'text-pink-600' },
-  { id: 'performanceAgent', name: 'PerformanceAgent', icon: 'P', color: 'text-emerald-600' },
-  { id: 'productAgent', name: 'ProductAgent', icon: 'D', color: 'text-cyan-600' },
   { id: 'salesAgent', name: 'SalesAgent', icon: 'V', color: 'text-indigo-600' },
-  { id: 'rhAgent', name: 'RH Agent', icon: 'H', color: 'text-purple-600' },
   { id: 'serviceOrdersAgent', name: 'Service Orders Agent', icon: 'O', color: 'text-amber-600' },
   { id: 'contasAReceberAgent', name: 'Contas a Receber', icon: 'C', color: 'text-teal-600' },
   { id: 'receiptsAgent', name: 'Receipts Agent', icon: 'R', color: 'text-orange-600' },
   { id: 'nfeAgent', name: 'Invoice Agent', icon: 'N', color: 'text-emerald-600' },
   { id: 'inventoryAgent', name: 'Inventory Agent', icon: 'I', color: 'text-blue-600' },
-  { id: 'contasAPagarAgent', name: 'Contas a Pagar', icon: 'P', color: 'text-red-600' },
-  { id: 'fluxoCaixaAgent', name: 'Fluxo de Caixa', icon: 'F', color: 'text-green-600' },
   { id: 'funcionariosAgent', name: 'Funcionários Agent', icon: 'F', color: 'text-purple-600' },
 ];
 

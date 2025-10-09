@@ -56,18 +56,13 @@ export default function Page() {
       case 'googleCampaignAnalyst': return '/api/agents/google-campaign-analyst';
       case 'metaCampaignAnalyst': return '/api/agents/meta-campaign-analyst';
       case 'metaCreativeAnalyst': return '/api/agents/meta-creative-analyst';
-      case 'performanceAgent': return '/api/workflows/performance';
-      case 'productAgent': return '/api/workflows/products';
       case 'analistaDados': return '/api/agents/analista-dados';
       case 'salesAgent': return '/api/claudeAgents/sales';
-      case 'rhAgent': return '/api/claudeAgents/rh';
       case 'serviceOrdersAgent': return '/api/claudeAgents/service-orders';
       case 'contasAReceberAgent': return '/api/claudeAgents/contas-a-receber';
       case 'receiptsAgent': return '/api/claudeAgents/receipts';
       case 'nfeAgent': return '/api/claudeAgents/nfe';
       case 'inventoryAgent': return '/api/claudeAgents/inventory';
-      case 'contasAPagarAgent': return '/api/claudeAgents/contas-a-pagar';
-      case 'fluxoCaixaAgent': return '/api/claudeAgents/fluxo-caixa';
       case 'ecommerceSalesAgent': return '/api/claudeAgents/ecommerce-sales';
       case 'webAnalyticsAgent': return '/api/claudeAgents/web-analytics';
       case 'logisticsAgent': return '/api/claudeAgents/logistics';
