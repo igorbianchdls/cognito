@@ -10,6 +10,11 @@ import { FilterState, SortState } from '@/components/sheets/core/TableHeader';
 export default function DesligamentosPage() {
   const [filters, setFilters] = useState<FilterState[]>([]);
   const [sorting, setSorting] = useState<SortState[]>([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handleRecordCreated = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   return (
     <SidebarProvider>
@@ -20,9 +25,15 @@ export default function DesligamentosPage() {
           onSortChange={setSorting}
           onViewChange={() => {}}
           onShowCoverChange={() => {}}
+          tableName="gestaofuncionarios.desligamentos"
+          onRecordCreated={handleRecordCreated}
         />
         <div className="flex-1 overflow-hidden">
-          <TablesDataTable tableName="gestaofuncionarios.desligamentos" filters={filters} />
+          <TablesDataTable
+            tableName="gestaofuncionarios.desligamentos"
+            filters={filters}
+            key={refreshTrigger}
+          />
         </div>
       </SidebarInset>
     </SidebarProvider>

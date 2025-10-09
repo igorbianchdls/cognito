@@ -10,6 +10,11 @@ import { FilterState, SortState } from '@/components/sheets/core/TableHeader';
 export default function HistoricoCargosPage() {
   const [filters, setFilters] = useState<FilterState[]>([]);
   const [sorting, setSorting] = useState<SortState[]>([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  const handleRecordCreated = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
 
   return (
     <SidebarProvider>
@@ -20,9 +25,15 @@ export default function HistoricoCargosPage() {
           onSortChange={setSorting}
           onViewChange={() => {}}
           onShowCoverChange={() => {}}
+          tableName="gestaofuncionarios.historico_cargos"
+          onRecordCreated={handleRecordCreated}
         />
         <div className="flex-1 overflow-hidden">
-          <TablesDataTable tableName="gestaofuncionarios.historico_cargos" filters={filters} />
+          <TablesDataTable
+            tableName="gestaofuncionarios.historico_cargos"
+            filters={filters}
+            key={refreshTrigger}
+          />
         </div>
       </SidebarInset>
     </SidebarProvider>
