@@ -1,10 +1,18 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Artifact,
+  ArtifactHeader,
+  ArtifactTitle,
+  ArtifactDescription,
+  ArtifactActions,
+  ArtifactAction,
+  ArtifactContent
+} from '@/components/ai-elements/artifact';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { XCircle, ArrowUpDown, ChevronLeft, ChevronRight, Truck } from 'lucide-react';
+import { XCircle, ArrowUpDown, ChevronLeft, ChevronRight, Truck, Copy, Download, CheckCircle, AlertCircle } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import {
   ColumnDef,
@@ -106,6 +114,7 @@ const formatDate = (value?: string) => {
 
 export default function LogisticsDataTable({ success, count, data, table, message, error }: LogisticsDataTableProps) {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [copied, setCopied] = useState(false);
 
   const columns: ColumnDef<LogisticsRecord>[] = useMemo(() => {
     const baseColumns: ColumnDef<LogisticsRecord>[] = [
@@ -323,37 +332,86 @@ export default function LogisticsDataTable({ success, count, data, table, messag
     },
   });
 
+  const handleCopyJSON = async () => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Erro ao copiar:', err);
+    }
+  };
+
+  const handleDownloadCSV = () => {
+    if (!data || data.length === 0) return;
+
+    const headers = Object.keys(data[0]).join(',');
+    const rows = data.map(row =>
+      Object.values(row).map(val =>
+        typeof val === 'string' ? `"${val}"` : val
+      ).join(',')
+    );
+    const csv = [headers, ...rows].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `logistics_${table}_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   if (!success) {
     return (
-      <Card className="w-full border-red-200 bg-red-50">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <XCircle className="h-5 w-5 text-red-600" />
-            <CardTitle className="text-red-900">Erro ao Buscar Dados de Logística</CardTitle>
+      <Artifact className="w-full border-red-200 bg-red-50">
+        <ArtifactHeader>
+          <div className="flex items-center gap-3">
+            <AlertCircle className="h-5 w-5 text-red-600" />
+            <ArtifactTitle className="text-red-800">Erro ao Buscar Dados de Logística</ArtifactTitle>
           </div>
-          <CardDescription className="text-red-700">{message}</CardDescription>
-        </CardHeader>
-        {error && (
-          <CardContent>
-            <p className="text-sm text-red-600 font-mono bg-red-100 p-3 rounded-md">{error}</p>
-          </CardContent>
-        )}
-      </Card>
+        </ArtifactHeader>
+        <ArtifactContent>
+          <p className="text-red-700">{message}</p>
+          {error && (
+            <p className="text-sm text-red-600 font-mono bg-red-100 p-3 rounded-md mt-2">{error}</p>
+          )}
+        </ArtifactContent>
+      </Artifact>
     );
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <Truck className="h-5 w-5 text-blue-600" />
-          <CardTitle>Dados de Gestão Logística</CardTitle>
+    <Artifact className="w-full">
+      <ArtifactHeader>
+        <div>
+          <div className="flex items-center gap-2">
+            <Truck className="h-5 w-5 text-blue-600" />
+            <ArtifactTitle>Dados de Gestão Logística</ArtifactTitle>
+          </div>
+          <ArtifactDescription className="mt-1">
+            {message} - Mostrando {reactTable.getRowModel().rows.length} de {count} registros
+          </ArtifactDescription>
         </div>
-        <CardDescription>
-          {message} - Mostrando {reactTable.getRowModel().rows.length} de {count} registros
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+
+        <ArtifactActions>
+          <ArtifactAction
+            icon={copied ? CheckCircle : Copy}
+            tooltip={copied ? "Copiado!" : "Copiar JSON"}
+            onClick={handleCopyJSON}
+            className={copied ? "text-green-600" : ""}
+          />
+          <ArtifactAction
+            icon={Download}
+            tooltip="Exportar CSV"
+            onClick={handleDownloadCSV}
+          />
+        </ArtifactActions>
+      </ArtifactHeader>
+
+      <ArtifactContent>
         <div className="rounded-md border">
           <Table>
             <TableHeader>
@@ -412,7 +470,7 @@ export default function LogisticsDataTable({ success, count, data, table, messag
             </Button>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </ArtifactContent>
+    </Artifact>
   );
 }
