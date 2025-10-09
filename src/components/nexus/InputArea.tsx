@@ -72,6 +72,12 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
   'inventoryAgent': Package,
   'contasAPagarAgent': ArrowUpRight,
   'fluxoCaixaAgent': Activity,
+  'ecommerceSalesAgent': TrendingUp,
+  'webAnalyticsAgent': Activity,
+  'logisticsAgent': Package,
+  'gestorDeComprasAgent': Package,
+  'gestorDeProjetosAgent': Wrench,
+  'funcionariosAgent': Users,
 };
 
 const models = [
@@ -100,6 +106,12 @@ const models = [
   { id: 'inventoryAgent', name: 'Inventory Agent', icon: iconMap['inventoryAgent'] },
   { id: 'contasAPagarAgent', name: 'Contas a Pagar', icon: iconMap['contasAPagarAgent'] },
   { id: 'fluxoCaixaAgent', name: 'Fluxo de Caixa', icon: iconMap['fluxoCaixaAgent'] },
+  { id: 'ecommerceSalesAgent', name: 'E-commerce Sales Agent', icon: iconMap['ecommerceSalesAgent'] },
+  { id: 'webAnalyticsAgent', name: 'Web Analytics Agent', icon: iconMap['webAnalyticsAgent'] },
+  { id: 'logisticsAgent', name: 'Logistics Agent', icon: iconMap['logisticsAgent'] },
+  { id: 'gestorDeComprasAgent', name: 'Gestor de Compras', icon: iconMap['gestorDeComprasAgent'] },
+  { id: 'gestorDeProjetosAgent', name: 'Gestor de Projetos', icon: iconMap['gestorDeProjetosAgent'] },
+  { id: 'funcionariosAgent', name: 'Funcionários Agent', icon: iconMap['funcionariosAgent'] },
 ];
 
 export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange }: InputAreaProps) {
@@ -182,6 +194,12 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
                 case 'inventoryAgent': return 'Inventory Agent';
                 case 'contasAPagarAgent': return 'Contas a Pagar';
                 case 'fluxoCaixaAgent': return 'Fluxo de Caixa';
+                case 'ecommerceSalesAgent': return 'E-commerce Sales Agent';
+                case 'webAnalyticsAgent': return 'Web Analytics Agent';
+                case 'logisticsAgent': return 'Logistics Agent';
+                case 'gestorDeComprasAgent': return 'Gestor de Compras';
+                case 'gestorDeProjetosAgent': return 'Gestor de Projetos';
+                case 'funcionariosAgent': return 'Funcionários Agent';
                 default: return id;
               }
             };
