@@ -3670,6 +3670,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           const calculateDateRangeTool = part as NexusToolUIPart;
           const callId = calculateDateRangeTool.toolCallId;
           const shouldBeOpen = calculateDateRangeTool.state === 'output-available' || calculateDateRangeTool.state === 'output-error';
+          const output = calculateDateRangeTool.output as CalculateDateRangeToolOutput;
 
           return (
             <div key={callId}>
@@ -3679,9 +3680,6 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   {calculateDateRangeTool.input && (
                     <ToolInput input={calculateDateRangeTool.input} />
                   )}
-                  {calculateDateRangeTool.state === 'output-available' && (
-                    <ToolOutput output={(calculateDateRangeTool.output as CalculateDateRangeToolOutput)} />
-                  )}
                   {calculateDateRangeTool.state === 'output-error' && (
                     <ToolOutput
                       output={null}
@@ -3690,6 +3688,41 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   )}
                 </ToolContent>
               </Tool>
+              {calculateDateRangeTool.state === 'output-available' && output && (
+                <div className="mb-4 rounded-md border border-gray-200 bg-white p-4">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-sm">📅 Período Calculado</h3>
+                      <span className="rounded-full bg-blue-100 px-3 py-1 text-blue-800 text-xs font-medium">
+                        {output.periodo_descricao.replace('_', ' ')}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="rounded-md bg-gray-50 p-3">
+                        <p className="mb-1 text-gray-600 text-xs font-medium">Data Inicial</p>
+                        <p className="font-mono text-sm font-semibold">{output.data_inicial}</p>
+                      </div>
+                      <div className="rounded-md bg-gray-50 p-3">
+                        <p className="mb-1 text-gray-600 text-xs font-medium">Data Final</p>
+                        <p className="font-mono text-sm font-semibold">{output.data_final}</p>
+                      </div>
+                    </div>
+
+                    {output.dias_calculados && (
+                      <div className="rounded-md bg-blue-50 p-3 text-center">
+                        <p className="text-blue-900 text-sm">
+                          <span className="font-semibold">{output.dias_calculados}</span> dias
+                        </p>
+                      </div>
+                    )}
+
+                    {output.message && (
+                      <p className="text-gray-600 text-sm">{output.message}</p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           );
         }
