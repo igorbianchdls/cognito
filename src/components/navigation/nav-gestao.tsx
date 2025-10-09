@@ -1,7 +1,7 @@
 "use client"
 
 import { ChevronRight, DollarSign } from "lucide-react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
 
 import {
@@ -22,26 +22,17 @@ import {
 
 // Tabelas do schema gestaofinanceira
 const financeiraTables = [
-  { name: "Categorias", tableName: "gestaofinanceira.categorias" },
-  { name: "Contas Bancárias", tableName: "gestaofinanceira.contas" },
-  { name: "Contas a Pagar", tableName: "gestaofinanceira.contas_a_pagar" },
-  { name: "Contas a Receber", tableName: "gestaofinanceira.contas_a_receber" },
-  { name: "Transações", tableName: "gestaofinanceira.transacoes" },
+  { name: "Categorias", route: "/gestao/categorias" },
+  { name: "Contas Bancárias", route: "/gestao/contas" },
+  { name: "Contas a Pagar", route: "/gestao/contas-a-pagar" },
+  { name: "Contas a Receber", route: "/gestao/contas-a-receber" },
+  { name: "Transações", route: "/gestao/transacoes" },
 ]
 
 export function NavGestao() {
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
-  const currentTable = searchParams.get("table")
-
   const [isFinanceiraOpen, setIsFinanceiraOpen] = useState(true)
-
-  const handleTableClick = (tableName: string) => {
-    router.push(`/gestao?table=${tableName}`)
-  }
-
-  const isActive = pathname === "/gestao"
 
   return (
     <SidebarGroup>
@@ -63,10 +54,10 @@ export function NavGestao() {
             <CollapsibleContent>
               <SidebarMenuSub>
                 {financeiraTables.map((table) => (
-                  <SidebarMenuSubItem key={table.tableName}>
+                  <SidebarMenuSubItem key={table.route}>
                     <SidebarMenuSubButton
-                      onClick={() => handleTableClick(table.tableName)}
-                      isActive={isActive && currentTable === table.tableName}
+                      onClick={() => router.push(table.route)}
+                      isActive={pathname === table.route}
                     >
                       <span>{table.name}</span>
                     </SidebarMenuSubButton>
