@@ -26,7 +26,12 @@ const financeiraTables = [
   { name: "Contas Bancárias", route: "/gestao/contas" },
   { name: "Contas a Pagar", route: "/gestao/contas-a-pagar" },
   { name: "Contas a Receber", route: "/gestao/contas-a-receber" },
-  { name: "Transações", route: "/gestao/transacoes" },
+  { name: "Conciliação Bancária", route: "/gestao/conciliacao-bancaria" },
+  { name: "Movimentos", route: "/gestao/movimentos" },
+  { name: "Contratos", route: "/gestao/contratos" },
+  { name: "Documento Itens", route: "/gestao/documento-itens" },
+  { name: "Documentos", route: "/gestao/documentos" },
+  { name: "Entidades", route: "/gestao/entidades" },
 ]
 
 export function NavGestao() {

@@ -7,7 +7,7 @@ import TablesHeader from '@/app/tables/components/TablesHeader';
 import TablesDataTable from '@/app/tables/components/TablesDataTable';
 import { FilterState, SortState } from '@/components/sheets/core/TableHeader';
 
-export default function TransacoesPage() {
+export default function MovimentosPage() {
   const [filters, setFilters] = useState<FilterState[]>([]);
   const [sorting, setSorting] = useState<SortState[]>([]);
 
@@ -22,7 +22,7 @@ export default function TransacoesPage() {
           onShowCoverChange={() => {}}
         />
         <div className="flex-1 overflow-hidden">
-          <TablesDataTable tableName="gestaofinanceira.transacoes" filters={filters} />
+          <TablesDataTable tableName="gestaofinanceira.movimentos" filters={filters} />
         </div>
       </SidebarInset>
     </SidebarProvider>
