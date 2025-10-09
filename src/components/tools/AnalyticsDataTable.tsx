@@ -1,20 +1,11 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { XCircle, ArrowUpDown, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
-import { useState, useMemo } from 'react';
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  SortingState,
-  useReactTable,
-} from '@tanstack/react-table';
+import { ArrowUpDown, BarChart3 } from 'lucide-react';
+import { useMemo } from 'react';
+import { ColumnDef } from '@tanstack/react-table';
 
 interface AnalyticsRecord {
   id: string;
@@ -133,8 +124,6 @@ const formatDuration = (seconds?: number) => {
 };
 
 export default function AnalyticsDataTable({ success, count, data, table, message, error }: AnalyticsDataTableProps) {
-  const [sorting, setSorting] = useState<SortingState>([]);
-
   const columns: ColumnDef<AnalyticsRecord>[] = useMemo(() => {
     const baseColumns: ColumnDef<AnalyticsRecord>[] = [
       {
@@ -488,113 +477,18 @@ export default function AnalyticsDataTable({ success, count, data, table, messag
     return baseColumns;
   }, [table]);
 
-  const reactTable = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    onSortingChange: setSorting,
-    state: {
-      sorting,
-    },
-    initialState: {
-      pagination: {
-        pageSize: 10,
-      },
-    },
-  });
-
-  if (!success) {
-    return (
-      <Card className="w-full border-red-200 bg-red-50">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <XCircle className="h-5 w-5 text-red-600" />
-            <CardTitle className="text-red-900">Erro ao Buscar Dados de Analytics</CardTitle>
-          </div>
-          <CardDescription className="text-red-700">{message}</CardDescription>
-        </CardHeader>
-        {error && (
-          <CardContent>
-            <p className="text-sm text-red-600 font-mono bg-red-100 p-3 rounded-md">{error}</p>
-          </CardContent>
-        )}
-      </Card>
-    );
-  }
-
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-blue-600" />
-          <CardTitle>Dados de Analytics Web</CardTitle>
-        </div>
-        <CardDescription>
-          {message} - Mostrando {reactTable.getRowModel().rows.length} de {count} registros
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              {reactTable.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <TableHead key={header.id}>
-                      {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {reactTable.getRowModel().rows?.length ? (
-                reactTable.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={columns.length} className="h-24 text-center">
-                    Nenhum resultado encontrado.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        <div className="flex items-center justify-between space-x-2 py-4">
-          <div className="text-sm text-muted-foreground">
-            Página {reactTable.getState().pagination.pageIndex + 1} de {reactTable.getPageCount()}
-          </div>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => reactTable.previousPage()}
-              disabled={!reactTable.getCanPreviousPage()}
-            >
-              <ChevronLeft className="h-4 w-4 mr-1" />
-              Anterior
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => reactTable.nextPage()}
-              disabled={!reactTable.getCanNextPage()}
-            >
-              Próxima
-              <ChevronRight className="h-4 w-4 ml-1" />
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <ArtifactDataTable
+      data={data}
+      columns={columns}
+      title="Dados de Analytics Web"
+      icon={BarChart3}
+      iconColor="text-violet-600"
+      message={message}
+      success={success}
+      count={count}
+      error={error}
+      exportFileName={`analytics_${table}`}
+    />
   );
 }

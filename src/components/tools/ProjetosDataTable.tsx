@@ -1,20 +1,11 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { XCircle, ArrowUpDown, ChevronLeft, ChevronRight, FolderKanban } from 'lucide-react';
-import { useState, useMemo } from 'react';
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  SortingState,
-  useReactTable,
-} from '@tanstack/react-table';
+import { ArrowUpDown, FolderKanban } from 'lucide-react';
+import { useMemo } from 'react';
+import { ColumnDef } from '@tanstack/react-table';
 
 interface ProjetosRecord {
   id: string | number;
@@ -98,9 +89,6 @@ const isOverdue = (dueDate?: string) => {
 };
 
 export default function ProjetosDataTable({ success, count, data, table, message, error }: ProjetosDataTableProps) {
-  const [sorting, setSorting] = useState<SortingState>([]);
-
-  // Definir colunas dinamicamente com base na tabela
   const columns = useMemo<ColumnDef<ProjetosRecord>[]>(() => {
     const baseColumns: ColumnDef<ProjetosRecord>[] = [];
 
@@ -271,123 +259,18 @@ export default function ProjetosDataTable({ success, count, data, table, message
     return baseColumns;
   }, [table]);
 
-  const tableInstance = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    onSortingChange: setSorting,
-    state: {
-      sorting,
-    },
-    initialState: {
-      pagination: {
-        pageSize: 10,
-      },
-    },
-  });
-
-  if (!success && error) {
-    return (
-      <Card className="border-red-200 bg-red-50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-red-700">
-            <XCircle className="h-5 w-5" />
-            Erro ao buscar dados
-          </CardTitle>
-          <CardDescription className="text-red-600">{message}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-red-600">{error}</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const tableLabels: Record<string, string> = {
-    'projects': 'Projetos',
-    'status_types': 'Status Types',
-    'tasks': 'Tarefas'
-  };
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FolderKanban className="h-5 w-5 text-blue-600" />
-          {tableLabels[table] || table}
-        </CardTitle>
-        <CardDescription>{message}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                {tableInstance.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(header.column.columnDef.header, header.getContext())}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {tableInstance.getRowModel().rows?.length ? (
-                  tableInstance.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center">
-                      Nenhum resultado encontrado.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* Paginação */}
-          <div className="flex items-center justify-between px-2">
-            <div className="text-sm text-muted-foreground">
-              Página {tableInstance.getState().pagination.pageIndex + 1} de{' '}
-              {tableInstance.getPageCount()} ({count} registros)
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => tableInstance.previousPage()}
-                disabled={!tableInstance.getCanPreviousPage()}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Anterior
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => tableInstance.nextPage()}
-                disabled={!tableInstance.getCanNextPage()}
-              >
-                Próxima
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <ArtifactDataTable
+      data={data}
+      columns={columns}
+      title="Dados de Gestão de Projetos"
+      icon={FolderKanban}
+      iconColor="text-indigo-600"
+      message={message}
+      success={success}
+      count={count}
+      error={error}
+      exportFileName={`projetos_${table}`}
+    />
   );
 }

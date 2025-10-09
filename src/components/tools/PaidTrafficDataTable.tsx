@@ -1,20 +1,11 @@
 'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { XCircle, ArrowUpDown, ChevronLeft, ChevronRight, DollarSign } from 'lucide-react';
-import { useState, useMemo } from 'react';
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  SortingState,
-  useReactTable,
-} from '@tanstack/react-table';
+import { ArrowUpDown, DollarSign } from 'lucide-react';
+import { useMemo } from 'react';
+import { ColumnDef } from '@tanstack/react-table';
 
 interface PaidTrafficRecord {
   id: string | number;
@@ -136,9 +127,6 @@ const getRoasColor = (roas?: number) => {
 };
 
 export default function PaidTrafficDataTable({ success, count, data, table, message, error }: PaidTrafficDataTableProps) {
-  const [sorting, setSorting] = useState<SortingState>([]);
-
-  // Colunas dinâmicas baseadas na tabela
   const columns: ColumnDef<PaidTrafficRecord>[] = useMemo(() => {
     const baseColumns: ColumnDef<PaidTrafficRecord>[] = [
       {
@@ -558,138 +546,19 @@ export default function PaidTrafficDataTable({ success, count, data, table, mess
     return baseColumns;
   }, [table]);
 
-  const reactTable = useReactTable({
-    data,
-    columns,
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    state: {
-      sorting,
-    },
-    initialState: {
-      pagination: {
-        pageSize: 20,
-      },
-    },
-  });
-
-  if (!success) {
-    return (
-      <Card className="w-full border-red-200 bg-red-50/50">
-        <CardHeader>
-          <CardTitle className="text-red-800 flex items-center gap-2">
-            <XCircle className="h-5 w-5" />
-            Erro ao Buscar Dados de Tráfego Pago
-          </CardTitle>
-          <CardDescription className="text-red-600">
-            {error || 'Erro desconhecido ao buscar dados'}
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
-
-  if (count === 0) {
-    return (
-      <Card className="w-full border-gray-200">
-        <CardHeader>
-          <CardTitle className="text-gray-700 flex items-center gap-2">
-            <DollarSign className="h-5 w-5" />
-            Nenhum Registro Encontrado
-          </CardTitle>
-          <CardDescription>
-            Não há registros na tabela {table} que correspondam à consulta.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
-
   return (
-    <div className="space-y-4">
-      <Card className="border-green-200 bg-green-50">
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <DollarSign className="h-5 w-5 text-green-500" />
-            <CardTitle className="text-green-700">{message}</CardTitle>
-          </div>
-          <CardDescription className="text-green-600">
-            {count} registro{count !== 1 ? 's' : ''} encontrado{count !== 1 ? 's' : ''} em <strong>{table}</strong>
-          </CardDescription>
-        </CardHeader>
-      </Card>
-
-      {data && data.length > 0 && (
-        <div className="space-y-4">
-          <div className="border rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  {reactTable.getHeaderGroups().map((headerGroup) => (
-                    <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => (
-                        <TableHead key={header.id} className="whitespace-nowrap">
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
-                        </TableHead>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableHeader>
-                <TableBody>
-                  {reactTable.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} className="hover:bg-green-50">
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} className="whitespace-nowrap">
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-
-          {/* Pagination */}
-          <div className="border-t bg-white py-4 px-6 flex items-center justify-between">
-            <div className="text-sm text-gray-600">
-              Mostrando {reactTable.getState().pagination.pageIndex * reactTable.getState().pagination.pageSize + 1} até{' '}
-              {Math.min(
-                (reactTable.getState().pagination.pageIndex + 1) * reactTable.getState().pagination.pageSize,
-                data.length
-              )}{' '}
-              de {data.length} registros
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => reactTable.previousPage()}
-                disabled={!reactTable.getCanPreviousPage()}
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                Anterior
-              </Button>
-              <span className="text-sm text-gray-600">
-                Página {reactTable.getState().pagination.pageIndex + 1} de {reactTable.getPageCount()}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => reactTable.nextPage()}
-                disabled={!reactTable.getCanNextPage()}
-              >
-                Próxima
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    <ArtifactDataTable
+      data={data}
+      columns={columns}
+      title="Dados de Tráfego Pago"
+      icon={DollarSign}
+      iconColor="text-emerald-600"
+      message={message}
+      success={success}
+      count={count}
+      error={error}
+      exportFileName={`paid_traffic_${table}`}
+      pageSize={20}
+    />
   );
 }
