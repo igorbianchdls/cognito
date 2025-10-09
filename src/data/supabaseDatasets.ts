@@ -85,6 +85,35 @@ export async function fetchSupabaseTable(tableName: string) {
       } else if (table === 'visitantes') {
         orderColumn = 'primeira_visita_timestamp';
       }
+    } else if (schema === 'gestaofuncionarios') {
+      // gestaofuncionarios - ordenação específica por tabela
+      if (table === 'ausencias') {
+        orderColumn = 'data_inicio';
+      } else if (table === 'avaliacoes_desempenho') {
+        orderColumn = 'data_avaliacao';
+      } else if (table === 'beneficios') {
+        orderColumn = 'id_beneficio';
+      } else if (table === 'cargos') {
+        orderColumn = 'id_cargo';
+      } else if (table === 'departamentos') {
+        orderColumn = 'id_departamento';
+      } else if (table === 'desligamentos') {
+        orderColumn = 'data_desligamento';
+      } else if (table === 'folha_pagamento') {
+        orderColumn = 'data_pagamento';
+      } else if (table === 'funcionarios') {
+        orderColumn = 'data_admissao';
+      } else if (table === 'funcionarios_beneficios') {
+        orderColumn = 'data_adesao';
+      } else if (table === 'funcionarios_treinamentos') {
+        orderColumn = 'id_funcionario_treinamento';
+      } else if (table === 'historico_cargos') {
+        orderColumn = 'data_inicio';
+      } else if (table === 'ponto') {
+        orderColumn = 'data_hora_marcacao';
+      } else if (table === 'treinamentos') {
+        orderColumn = 'id_treinamento';
+      }
     }
 
     if (schema) {
@@ -5835,6 +5864,132 @@ export const resumosContaColumns: ColDef[] = [
   }
 ];
 
+// GESTÃO DE FUNCIONÁRIOS - Schema: gestaofuncionarios
+// ====================================================
+
+// Configurações de colunas para Funcionários
+export const funcionariosColumns: ColDef[] = [
+  { field: 'id_funcionario', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'nome_completo', headerName: 'Nome Completo', width: 250, editable: true, sortable: true, filter: 'agTextColumnFilter', cellStyle: { fontWeight: 'bold' } },
+  { field: 'cpf', headerName: 'CPF', width: 150, editable: true, sortable: true, filter: 'agTextColumnFilter', cellStyle: { fontFamily: 'monospace' } },
+  { field: 'email_corporativo', headerName: 'Email', width: 250, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'telefone', headerName: 'Telefone', width: 150, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'data_nascimento', headerName: 'Data Nascimento', width: 150, editable: true, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
+  { field: 'data_admissao', headerName: 'Data Admissão', width: 150, editable: true, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
+  { field: 'genero', headerName: 'Gênero', width: 120, editable: true, sortable: true, filter: 'agSetColumnFilter' },
+  { field: 'status', headerName: 'Status', width: 120, editable: true, sortable: true, filter: 'agSetColumnFilter', cellStyle: (params) => params.value === 'Ativo' ? { color: '#2e7d32', fontWeight: 'bold' } : { color: '#d32f2f', fontWeight: 'bold' } }
+];
+
+// Configurações de colunas para Departamentos
+export const departamentosColumns: ColDef[] = [
+  { field: 'id_departamento', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'nome', headerName: 'Nome', width: 250, editable: true, sortable: true, filter: 'agTextColumnFilter', cellStyle: { fontWeight: 'bold' } },
+  { field: 'descricao', headerName: 'Descrição', width: 400, editable: true, sortable: true, filter: 'agTextColumnFilter' }
+];
+
+// Configurações de colunas para Cargos
+export const cargosColumns: ColDef[] = [
+  { field: 'id_cargo', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'titulo', headerName: 'Título', width: 250, editable: true, sortable: true, filter: 'agTextColumnFilter', cellStyle: { fontWeight: 'bold' } },
+  { field: 'descricao', headerName: 'Descrição', width: 400, editable: true, sortable: true, filter: 'agTextColumnFilter' }
+];
+
+// Configurações de colunas para Histórico de Cargos
+export const historicoCargosColumns: ColDef[] = [
+  { field: 'id_historico', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'id_funcionario', headerName: 'Funcionário ID', width: 150, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'id_cargo', headerName: 'Cargo ID', width: 120, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'id_departamento', headerName: 'Departamento ID', width: 150, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'salario', headerName: 'Salário', width: 150, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? `R$ ${Number(params.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '', cellStyle: { textAlign: 'right', fontWeight: 'bold', color: '#1976d2' } },
+  { field: 'data_inicio', headerName: 'Data Início', width: 150, editable: true, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
+  { field: 'data_fim', headerName: 'Data Fim', width: 150, editable: true, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' }
+];
+
+// Configurações de colunas para Ponto
+export const pontoColumns: ColDef[] = [
+  { field: 'id_ponto', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'id_funcionario', headerName: 'Funcionário ID', width: 150, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'data_hora_marcacao', headerName: 'Data/Hora Marcação', width: 200, editable: true, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleString('pt-BR') : '' },
+  { field: 'tipo_marcacao', headerName: 'Tipo', width: 150, editable: true, sortable: true, filter: 'agSetColumnFilter', cellStyle: { fontWeight: 'bold' } }
+];
+
+// Configurações de colunas para Ausências
+export const ausenciasColumns: ColDef[] = [
+  { field: 'id_ausencia', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'id_funcionario', headerName: 'Funcionário ID', width: 150, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'tipo', headerName: 'Tipo', width: 150, editable: true, sortable: true, filter: 'agSetColumnFilter', cellStyle: { fontWeight: 'bold' } },
+  { field: 'data_inicio', headerName: 'Data Início', width: 150, editable: true, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
+  { field: 'data_fim', headerName: 'Data Fim', width: 150, editable: true, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
+  { field: 'motivo', headerName: 'Motivo', width: 300, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'status_aprovacao', headerName: 'Status', width: 150, editable: true, sortable: true, filter: 'agSetColumnFilter', cellStyle: (params) => params.value === 'Aprovado' ? { color: '#2e7d32', fontWeight: 'bold' } : params.value === 'Pendente' ? { color: '#ed6c02', fontWeight: 'bold' } : { color: '#d32f2f', fontWeight: 'bold' } }
+];
+
+// Configurações de colunas para Folha de Pagamento
+export const folhaPagamentoColumns: ColDef[] = [
+  { field: 'id_folha', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'id_funcionario', headerName: 'Funcionário ID', width: 150, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'mes_referencia', headerName: 'Mês', width: 100, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'ano_referencia', headerName: 'Ano', width: 100, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'data_pagamento', headerName: 'Data Pagamento', width: 150, editable: true, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
+  { field: 'salario_base', headerName: 'Salário Base', width: 150, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? `R$ ${Number(params.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '', cellStyle: { textAlign: 'right', fontWeight: 'bold' } },
+  { field: 'total_vencimentos', headerName: 'Vencimentos', width: 150, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? `R$ ${Number(params.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '', cellStyle: { textAlign: 'right', color: '#2e7d32', fontWeight: 'bold' } },
+  { field: 'total_descontos', headerName: 'Descontos', width: 150, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? `R$ ${Number(params.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '', cellStyle: { textAlign: 'right', color: '#d32f2f', fontWeight: 'bold' } },
+  { field: 'valor_liquido', headerName: 'Líquido', width: 150, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? `R$ ${Number(params.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '', cellStyle: { textAlign: 'right', fontWeight: 'bold', color: '#1976d2' } }
+];
+
+// Configurações de colunas para Benefícios
+export const beneficiosColumns: ColDef[] = [
+  { field: 'id_beneficio', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'nome', headerName: 'Nome', width: 250, editable: true, sortable: true, filter: 'agTextColumnFilter', cellStyle: { fontWeight: 'bold' } },
+  { field: 'descricao', headerName: 'Descrição', width: 400, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'valor_padrao', headerName: 'Valor Padrão', width: 150, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? `R$ ${Number(params.value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : '', cellStyle: { textAlign: 'right', fontWeight: 'bold', color: '#1976d2' } }
+];
+
+// Configurações de colunas para Funcionários x Benefícios
+export const funcionariosBeneficiosColumns: ColDef[] = [
+  { field: 'id_funcionario_beneficio', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'id_funcionario', headerName: 'Funcionário ID', width: 150, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'id_beneficio', headerName: 'Benefício ID', width: 150, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'data_adesao', headerName: 'Data Adesão', width: 150, editable: true, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' }
+];
+
+// Configurações de colunas para Treinamentos
+export const treinamentosColumns: ColDef[] = [
+  { field: 'id_treinamento', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'nome_curso', headerName: 'Nome do Curso', width: 300, editable: true, sortable: true, filter: 'agTextColumnFilter', cellStyle: { fontWeight: 'bold' } },
+  { field: 'descricao', headerName: 'Descrição', width: 400, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'carga_horaria', headerName: 'Carga Horária', width: 150, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? `${params.value}h` : '' }
+];
+
+// Configurações de colunas para Funcionários x Treinamentos
+export const funcionariosTreinamentosColumns: ColDef[] = [
+  { field: 'id_funcionario_treinamento', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'id_funcionario', headerName: 'Funcionário ID', width: 150, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'id_treinamento', headerName: 'Treinamento ID', width: 150, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'data_conclusao', headerName: 'Data Conclusão', width: 150, editable: true, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
+  { field: 'status', headerName: 'Status', width: 150, editable: true, sortable: true, filter: 'agSetColumnFilter', cellStyle: (params) => params.value === 'Concluído' ? { color: '#2e7d32', fontWeight: 'bold' } : { color: '#ed6c02', fontWeight: 'bold' } },
+  { field: 'nota_aproveitamento', headerName: 'Nota', width: 120, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? Number(params.value).toFixed(1) : '' }
+];
+
+// Configurações de colunas para Avaliações de Desempenho
+export const avaliacoesDesempenhoColumns: ColDef[] = [
+  { field: 'id_avaliacao', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'id_funcionario', headerName: 'Funcionário ID', width: 150, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'id_avaliador', headerName: 'Avaliador ID', width: 150, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'data_avaliacao', headerName: 'Data Avaliação', width: 150, editable: true, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
+  { field: 'nota', headerName: 'Nota', width: 120, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? Number(params.value).toFixed(1) : '', cellStyle: { textAlign: 'right', fontWeight: 'bold', color: '#1976d2' } },
+  { field: 'comentarios', headerName: 'Comentários', width: 400, editable: true, sortable: true, filter: 'agTextColumnFilter' }
+];
+
+// Configurações de colunas para Desligamentos
+export const desligamentosColumns: ColDef[] = [
+  { field: 'id_desligamento', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'id_funcionario', headerName: 'Funcionário ID', width: 150, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'data_desligamento', headerName: 'Data Desligamento', width: 170, editable: true, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
+  { field: 'tipo_desligamento', headerName: 'Tipo', width: 200, editable: true, sortable: true, filter: 'agSetColumnFilter', cellStyle: { fontWeight: 'bold' } },
+  { field: 'motivo', headerName: 'Motivo', width: 400, editable: true, sortable: true, filter: 'agTextColumnFilter' }
+];
+
 export interface SupabaseDatasetConfig {
   id: string;
   name: string;
@@ -6460,5 +6615,124 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     columnDefs: visitantesColumns,
     icon: '👥',
     category: 'Gestão Analytics'
+  },
+
+  // GESTÃO DE FUNCIONÁRIOS - Schema: gestaofuncionarios
+  {
+    id: 'funcionarios',
+    name: 'Funcionários',
+    description: 'Cadastro e gestão de funcionários',
+    tableName: 'gestaofuncionarios.funcionarios',
+    columnDefs: funcionariosColumns,
+    icon: '👤',
+    category: 'Gestão de Funcionários'
+  },
+  {
+    id: 'funcionarios-departamentos',
+    name: 'Departamentos',
+    description: 'Departamentos da organização',
+    tableName: 'gestaofuncionarios.departamentos',
+    columnDefs: departamentosColumns,
+    icon: '🏢',
+    category: 'Gestão de Funcionários'
+  },
+  {
+    id: 'funcionarios-cargos',
+    name: 'Cargos',
+    description: 'Cargos e funções',
+    tableName: 'gestaofuncionarios.cargos',
+    columnDefs: cargosColumns,
+    icon: '💼',
+    category: 'Gestão de Funcionários'
+  },
+  {
+    id: 'funcionarios-historico-cargos',
+    name: 'Histórico de Cargos',
+    description: 'Histórico de cargos e promoções',
+    tableName: 'gestaofuncionarios.historico_cargos',
+    columnDefs: historicoCargosColumns,
+    icon: '📊',
+    category: 'Gestão de Funcionários'
+  },
+  {
+    id: 'funcionarios-ponto',
+    name: 'Ponto',
+    description: 'Registro de ponto dos funcionários',
+    tableName: 'gestaofuncionarios.ponto',
+    columnDefs: pontoColumns,
+    icon: '🕒',
+    category: 'Gestão de Funcionários'
+  },
+  {
+    id: 'funcionarios-ausencias',
+    name: 'Ausências',
+    description: 'Controle de férias, faltas e licenças',
+    tableName: 'gestaofuncionarios.ausencias',
+    columnDefs: ausenciasColumns,
+    icon: '📅',
+    category: 'Gestão de Funcionários'
+  },
+  {
+    id: 'funcionarios-folha-pagamento',
+    name: 'Folha de Pagamento',
+    description: 'Gestão de folha de pagamento',
+    tableName: 'gestaofuncionarios.folha_pagamento',
+    columnDefs: folhaPagamentoColumns,
+    icon: '💰',
+    category: 'Gestão de Funcionários'
+  },
+  {
+    id: 'funcionarios-beneficios',
+    name: 'Benefícios',
+    description: 'Benefícios oferecidos aos funcionários',
+    tableName: 'gestaofuncionarios.beneficios',
+    columnDefs: beneficiosColumns,
+    icon: '🎁',
+    category: 'Gestão de Funcionários'
+  },
+  {
+    id: 'funcionarios-funcionarios-beneficios',
+    name: 'Funcionários x Benefícios',
+    description: 'Associação de benefícios aos funcionários',
+    tableName: 'gestaofuncionarios.funcionarios_beneficios',
+    columnDefs: funcionariosBeneficiosColumns,
+    icon: '🔗',
+    category: 'Gestão de Funcionários'
+  },
+  {
+    id: 'funcionarios-treinamentos',
+    name: 'Treinamentos',
+    description: 'Cursos e treinamentos disponíveis',
+    tableName: 'gestaofuncionarios.treinamentos',
+    columnDefs: treinamentosColumns,
+    icon: '📚',
+    category: 'Gestão de Funcionários'
+  },
+  {
+    id: 'funcionarios-funcionarios-treinamentos',
+    name: 'Funcionários x Treinamentos',
+    description: 'Acompanhamento de treinamentos dos funcionários',
+    tableName: 'gestaofuncionarios.funcionarios_treinamentos',
+    columnDefs: funcionariosTreinamentosColumns,
+    icon: '✅',
+    category: 'Gestão de Funcionários'
+  },
+  {
+    id: 'funcionarios-avaliacoes-desempenho',
+    name: 'Avaliações de Desempenho',
+    description: 'Avaliações de performance dos funcionários',
+    tableName: 'gestaofuncionarios.avaliacoes_desempenho',
+    columnDefs: avaliacoesDesempenhoColumns,
+    icon: '⭐',
+    category: 'Gestão de Funcionários'
+  },
+  {
+    id: 'funcionarios-desligamentos',
+    name: 'Desligamentos',
+    description: 'Registro de desligamentos e demissões',
+    tableName: 'gestaofuncionarios.desligamentos',
+    columnDefs: desligamentosColumns,
+    icon: '🚪',
+    category: 'Gestão de Funcionários'
   }
 ];
