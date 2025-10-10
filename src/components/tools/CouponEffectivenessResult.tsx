@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Ticket, TrendingUp, DollarSign, Percent, AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
+import { Ticket, TrendingUp, TrendingDown, DollarSign, AlertCircle, ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 
 interface CupomMetrica {
