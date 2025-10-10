@@ -66,6 +66,13 @@ import CustomerMetricsResult from '../tools/CustomerMetricsResult';
 import ProductPerformanceResult from '../tools/ProductPerformanceResult';
 import CouponEffectivenessResult from '../tools/CouponEffectivenessResult';
 import ChannelAnalysisResult from '../tools/ChannelAnalysisResult';
+import CalculateMetricsResult from '../tools/inventory/CalculateMetricsResult';
+import TrendsAnalysisResult from '../tools/inventory/TrendsAnalysisResult';
+import RestockForecastResult from '../tools/inventory/RestockForecastResult';
+import SlowMovingItemsResult from '../tools/inventory/SlowMovingItemsResult';
+import ChannelComparisonResult from '../tools/inventory/ChannelComparisonResult';
+import ABCAnalysisResult from '../tools/inventory/ABCAnalysisResult';
+import AnomaliesResult from '../tools/inventory/AnomaliesResult';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -4514,9 +4521,122 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
+        // Inventory Analytics Tools
+        if (part.type === 'tool-calculateInventoryMetrics') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-calculateInventoryMetrics" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && <CalculateMetricsResult {...(tool.output as any)} />}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-analyzeStockMovementTrends') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-analyzeStockMovementTrends" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && <TrendsAnalysisResult {...(tool.output as any)} />}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-forecastRestockNeeds') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-forecastRestockNeeds" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && <RestockForecastResult {...(tool.output as any)} />}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-identifySlowMovingItems') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-identifySlowMovingItems" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && <SlowMovingItemsResult {...(tool.output as any)} />}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-compareChannelPerformance') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-compareChannelPerformance" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && <ChannelComparisonResult {...(tool.output as any)} />}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-generateABCAnalysis') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-generateABCAnalysis" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && <ABCAnalysisResult {...(tool.output as any)} />}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-detectAnomalies') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-detectAnomalies" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && <AnomaliesResult {...(tool.output as any)} />}
+            </div>
+          );
+        }
+
         return null;
       })}
-      
+
       <Actions className="mt-2">
         <Action tooltip="Copy message" onClick={handleCopy}>
           <CopyIcon className="size-4" />
