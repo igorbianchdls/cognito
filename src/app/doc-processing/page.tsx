@@ -16,18 +16,47 @@ import { Separator } from "@/components/ui/separator";
 import DocumentUpload from '@/components/doc-processing/DocumentUpload';
 import FieldsPanel from '@/components/doc-processing/FieldsPanel';
 
+interface ExtractedField {
+  key: string;
+  value: string;
+  confidence?: number;
+}
+
 export default function DocProcessingPage() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [extractedFields, setExtractedFields] = useState<ExtractedField[]>([]);
 
-  const handleFileUpload = (file: File) => {
+  const handleFileUpload = async (file: File) => {
     setUploadedFile(file);
     setIsProcessing(true);
+    setExtractedFields([]); // Limpar campos anteriores
 
-    // Simular processamento
-    setTimeout(() => {
+    try {
+      console.log('📄 Enviando arquivo para extração...');
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/doc-processing/extract', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to extract document data');
+      }
+
+      const data = await response.json();
+      console.log('📄 Campos extraídos:', data.fields?.length);
+
+      setExtractedFields(data.fields || []);
+    } catch (error) {
+      console.error('📄 Erro ao extrair dados:', error);
+      alert('Erro ao processar documento. Tente novamente.');
+    } finally {
       setIsProcessing(false);
-    }, 2000);
+    }
   };
 
   return (
@@ -80,6 +109,7 @@ export default function DocProcessingPage() {
                     <FieldsPanel
                       hasDocument={!!uploadedFile}
                       isProcessing={isProcessing}
+                      extractedFields={extractedFields}
                     />
                   </div>
                 </Panel>

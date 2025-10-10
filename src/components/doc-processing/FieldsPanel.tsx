@@ -2,9 +2,16 @@
 
 import { MoreVertical } from 'lucide-react';
 
+interface ExtractedField {
+  key: string;
+  value: string;
+  confidence?: number;
+}
+
 interface FieldsPanelProps {
   hasDocument: boolean;
   isProcessing: boolean;
+  extractedFields?: ExtractedField[];
 }
 
 // Dados de exemplo hardcoded (depois vamos substituir por dados da IA)
@@ -24,7 +31,28 @@ const mockFields = [
   { key: 'Total amount', value: '1,680', color: 'bg-teal-500' },
 ];
 
-export default function FieldsPanel({ hasDocument, isProcessing }: FieldsPanelProps) {
+// Cores para os indicadores dos campos
+const colorOptions = [
+  'bg-purple-500',
+  'bg-teal-500',
+  'bg-pink-500',
+  'bg-yellow-500',
+  'bg-orange-500',
+  'bg-blue-500',
+  'bg-green-500',
+  'bg-red-500',
+  'bg-indigo-500',
+];
+
+export default function FieldsPanel({ hasDocument, isProcessing, extractedFields }: FieldsPanelProps) {
+  // Usar campos extraídos se disponíveis, senão usar mock
+  const fields = extractedFields && extractedFields.length > 0
+    ? extractedFields.map((field, index) => ({
+        key: field.key,
+        value: field.value,
+        color: colorOptions[index % colorOptions.length],
+      }))
+    : mockFields;
   if (!hasDocument) {
     return (
       <div className="h-full flex items-center justify-center">
@@ -69,7 +97,7 @@ export default function FieldsPanel({ hasDocument, isProcessing }: FieldsPanelPr
 
             {/* Fields */}
             <div className="divide-y divide-gray-200">
-              {mockFields.map((field, index) => (
+              {fields.map((field, index) => (
                 <div
                   key={index}
                   className="grid grid-cols-[1fr,2fr,auto] gap-4 px-4 py-3 hover:bg-gray-50 transition-colors group"
