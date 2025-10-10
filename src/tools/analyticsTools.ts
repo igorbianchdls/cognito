@@ -386,7 +386,7 @@ export const analyzeConversionFunnel = tool({
       const { data: eventos } = await supabase
         .schema('gestaoanalytics')
         .from('eventos')
-        .select('*')
+        .select('event_name, session_id')
         .gte('event_timestamp', dataInicio.toISOString())
         .in('event_name', funnel_events);
 
@@ -397,43 +397,35 @@ export const analyzeConversionFunnel = tool({
         };
       }
 
-      // Agrupar por sessão
-      const sessoesFunil = new Map();
-      eventos.forEach(evento => {
-        if (!sessoesFunil.has(evento.session_id)) {
-          sessoesFunil.set(evento.session_id, []);
-        }
-        sessoesFunil.get(evento.session_id).push(evento);
-      });
+      const steps = [];
+      let usuariosAnterior = 0;
 
-      // Primeiro calcular usuários de cada step
-      const stepsComUsuarios = funnel_events.map((eventName, idx) => {
-        const sessoesComEvento = Array.from(sessoesFunil.values()).filter(eventosSession =>
-          eventosSession.some(e => e.event_name === eventName)
-        ).length;
+      for (let i = 0; i < funnel_events.length; i++) {
+        const eventName = funnel_events[i];
+        const usuarios = eventos.filter(e => e.event_name === eventName).length;
 
-        return {
-          step: idx + 1,
+        const dropOff = i > 0 && usuariosAnterior > 0 ?
+          ((usuariosAnterior - usuarios) / usuariosAnterior) * 100 : 0;
+
+        steps.push({
+          step: i + 1,
           event_name: eventName,
-          usuarios: sessoesComEvento,
-        };
-      });
+          usuarios: usuarios,
+          drop_off: dropOff.toFixed(2) + '%'
+        });
 
-      // Depois calcular drop_off
-      const steps = stepsComUsuarios.map((stepAtual, idx) => {
-        const dropOff = idx > 0 ?
-          ((stepsComUsuarios[idx - 1].usuarios - stepAtual.usuarios) / stepsComUsuarios[idx - 1].usuarios) * 100 : 0;
-
-        return {
-          ...stepAtual,
-          drop_off: dropOff.toFixed(2) + '%',
-        };
-      });
+        usuariosAnterior = usuarios;
+      }
 
       const conversionRate = steps.length > 0 && steps[0].usuarios > 0 ?
         (steps[steps.length - 1].usuarios / steps[0].usuarios) * 100 : 0;
 
-      const gargalos = steps.filter((s, i) => i > 0 && parseFloat(s.drop_off) > 50);
+      const gargalos = [];
+      for (const step of steps) {
+        if (parseFloat(step.drop_off) > 50) {
+          gargalos.push(`Step ${step.step}: ${step.event_name} (drop ${step.drop_off})`);
+        }
+      }
 
       return {
         success: true,
@@ -442,7 +434,7 @@ export const analyzeConversionFunnel = tool({
         total_steps: funnel_events.length,
         conversion_rate: conversionRate.toFixed(2) + '%',
         steps,
-        gargalos: gargalos.map(g => `Step ${g.step}: ${g.event_name} (drop ${g.drop_off})`)
+        gargalos
       };
 
     } catch (error) {
