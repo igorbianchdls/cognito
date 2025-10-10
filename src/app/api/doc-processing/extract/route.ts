@@ -27,10 +27,11 @@ export async function POST(req: Request) {
 
     console.log('📄 DOC EXTRACTION: Processando arquivo:', file.name);
 
-    // Converter arquivo para base64
+    // Converter arquivo para Data URL (formato esperado pelo AI SDK)
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const base64 = buffer.toString('base64');
+    const dataURL = `data:${file.type};base64,${base64}`;
 
     console.log('📄 DOC EXTRACTION: Enviando para Claude Vision via AI SDK...');
 
@@ -43,9 +44,10 @@ export async function POST(req: Request) {
           content: [
             {
               type: 'file',
-              data: base64,
-              mimeType: 'application/pdf',
-            } as any, // Type assertion para contornar limitação do tipo TypeScript
+              filename: file.name,
+              mediaType: file.type,
+              url: dataURL,
+            },
             {
               type: 'text',
               text: `Analise este documento e extraia TODOS os campos e informações relevantes.
