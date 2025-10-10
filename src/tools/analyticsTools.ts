@@ -642,7 +642,15 @@ export const detectTrafficAnomalies = tool({
       const variancia = valores.reduce((acc, val) => acc + Math.pow(val - media, 2), 0) / valores.length;
       const desvio = Math.sqrt(variancia);
 
-      const anomalias = [];
+      const anomalias: Array<{
+        data: string;
+        sessoes: number;
+        media: number;
+        z_score: string;
+        tipo: string;
+        severidade: string;
+      }> = [];
+
       sessoesPorDia.forEach((sessoes, data) => {
         const zScore = desvio > 0 ? (sessoes - media) / desvio : 0;
         if (Math.abs(zScore) > sensitivity) {
