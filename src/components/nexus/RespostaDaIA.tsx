@@ -4533,7 +4533,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
-              {tool.state === 'output-available' && <CalculateMetricsResult {...(tool.output as any)} />}
+              {tool.state === 'output-available' && tool.output && <CalculateMetricsResult {...tool.output} />}
             </div>
           );
         }
@@ -4549,7 +4549,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
-              {tool.state === 'output-available' && <TrendsAnalysisResult {...(tool.output as any)} />}
+              {tool.state === 'output-available' && tool.output && <TrendsAnalysisResult {...tool.output} />}
             </div>
           );
         }
@@ -4565,7 +4565,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
-              {tool.state === 'output-available' && <RestockForecastResult {...(tool.output as any)} />}
+              {tool.state === 'output-available' && tool.output && <RestockForecastResult {...tool.output} />}
             </div>
           );
         }
@@ -4581,7 +4581,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
-              {tool.state === 'output-available' && <SlowMovingItemsResult {...(tool.output as any)} />}
+              {tool.state === 'output-available' && tool.output && <SlowMovingItemsResult {...tool.output} />}
             </div>
           );
         }
@@ -4597,7 +4597,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
-              {tool.state === 'output-available' && <ChannelComparisonResult {...(tool.output as any)} />}
+              {tool.state === 'output-available' && tool.output && <ChannelComparisonResult {...tool.output} />}
             </div>
           );
         }
@@ -4613,7 +4613,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
-              {tool.state === 'output-available' && <ABCAnalysisResult {...(tool.output as any)} />}
+              {tool.state === 'output-available' && tool.output && <ABCAnalysisResult {...tool.output} />}
             </div>
           );
         }
@@ -4629,7 +4629,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
-              {tool.state === 'output-available' && <AnomaliesResult {...(tool.output as any)} />}
+              {tool.state === 'output-available' && tool.output && <AnomaliesResult {...tool.output} />}
             </div>
           );
         }
