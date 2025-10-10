@@ -406,18 +406,26 @@ export const analyzeConversionFunnel = tool({
         sessoesFunil.get(evento.session_id).push(evento);
       });
 
-      const steps = funnel_events.map((eventName, idx) => {
+      // Primeiro calcular usuários de cada step
+      const stepsComUsuarios = funnel_events.map((eventName, idx) => {
         const sessoesComEvento = Array.from(sessoesFunil.values()).filter(eventosSession =>
           eventosSession.some(e => e.event_name === eventName)
         ).length;
-
-        const dropOff = idx > 0 ?
-          ((steps[idx - 1].usuarios - sessoesComEvento) / steps[idx - 1].usuarios) * 100 : 0;
 
         return {
           step: idx + 1,
           event_name: eventName,
           usuarios: sessoesComEvento,
+        };
+      });
+
+      // Depois calcular drop_off
+      const steps = stepsComUsuarios.map((stepAtual, idx) => {
+        const dropOff = idx > 0 ?
+          ((stepsComUsuarios[idx - 1].usuarios - stepAtual.usuarios) / stepsComUsuarios[idx - 1].usuarios) * 100 : 0;
+
+        return {
+          ...stepAtual,
           drop_off: dropOff.toFixed(2) + '%',
         };
       });
