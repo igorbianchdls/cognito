@@ -1,9 +1,17 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { anthropic } from '@ai-sdk/anthropic';
+import { generateObject } from 'ai';
+import { z } from 'zod';
 
 export const maxDuration = 300;
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+const extractionSchema = z.object({
+  fields: z.array(
+    z.object({
+      key: z.string().describe('Nome do campo em português'),
+      value: z.string().describe('Valor extraído do documento'),
+      confidence: z.number().min(0).max(1).describe('Nível de confiança de 0 a 1'),
+    })
+  ),
 });
 
 export async function POST(req: Request) {
@@ -24,64 +32,23 @@ export async function POST(req: Request) {
     const buffer = Buffer.from(bytes);
     const base64 = buffer.toString('base64');
 
-    console.log('📄 DOC EXTRACTION: Enviando para Claude Vision...');
+    console.log('📄 DOC EXTRACTION: Enviando para Claude Vision via AI SDK...');
 
-    // Chamar Claude Vision com Tools para resposta estruturada
-    const message = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 4096,
-      tools: [
-        {
-          name: 'extract_document_fields',
-          description: 'Extract structured fields from a document',
-          input_schema: {
-            type: 'object',
-            properties: {
-              fields: {
-                type: 'array',
-                description: 'Array of extracted fields from the document',
-                items: {
-                  type: 'object',
-                  properties: {
-                    key: {
-                      type: 'string',
-                      description: 'Nome do campo em português (ex: "Número da Nota Fiscal", "CNPJ Emitente")',
-                    },
-                    value: {
-                      type: 'string',
-                      description: 'Valor extraído do documento',
-                    },
-                    confidence: {
-                      type: 'number',
-                      description: 'Nível de confiança da extração de 0 a 1',
-                      minimum: 0,
-                      maximum: 1,
-                    },
-                  },
-                  required: ['key', 'value', 'confidence'],
-                },
-              },
-            },
-            required: ['fields'],
-          },
-        },
-      ],
-      tool_choice: { type: 'tool', name: 'extract_document_fields' },
+    // Chamar Claude Vision usando AI SDK com generateObject
+    const result = await generateObject({
+      model: anthropic('claude-3-5-sonnet-20241022'),
       messages: [
         {
           role: 'user',
           content: [
             {
-              type: 'document',
-              source: {
-                type: 'base64',
-                media_type: 'application/pdf',
-                data: base64,
-              },
-            },
+              type: 'file',
+              data: base64,
+              mimeType: 'application/pdf',
+            } as any, // Type assertion para contornar limitação do tipo TypeScript
             {
               type: 'text',
-              text: `Analise este documento e extraia TODOS os campos e informações relevantes usando a ferramenta extract_document_fields.
+              text: `Analise este documento e extraia TODOS os campos e informações relevantes.
 
 Se for uma nota fiscal/invoice, extraia campos como:
 - Número da nota/invoice
@@ -97,28 +64,18 @@ Se for uma nota fiscal/invoice, extraia campos como:
 
 Para cada campo extraído, forneça:
 - key: nome descritivo do campo em português
-- value: valor exato extraído do documento
+- value: valor extraído
 - confidence: seu nível de confiança (0 a 1)`,
             },
           ],
         },
       ],
+      schema: extractionSchema,
     });
 
-    console.log('📄 DOC EXTRACTION: Resposta recebida do Claude');
+    console.log('📄 DOC EXTRACTION: Campos extraídos:', result.object.fields?.length);
 
-    // Extrair dados da tool response
-    const toolUse = message.content.find((block) => block.type === 'tool_use');
-
-    if (!toolUse || toolUse.type !== 'tool_use') {
-      throw new Error('No tool use in response');
-    }
-
-    const extractedData = toolUse.input as { fields: Array<{ key: string; value: string; confidence: number }> };
-
-    console.log('📄 DOC EXTRACTION: Campos extraídos:', extractedData.fields?.length);
-
-    return Response.json(extractedData);
+    return Response.json(result.object);
   } catch (error) {
     console.error('📄 DOC EXTRACTION: Erro:', error);
     return Response.json(
