@@ -5057,8 +5057,10 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   success={(tool.output as ComparePlatformPerformanceToolOutput).success}
                   message={(tool.output as ComparePlatformPerformanceToolOutput).message}
                   periodo_dias={(tool.output as ComparePlatformPerformanceToolOutput).periodo_dias}
+                  total_plataformas={(tool.output as ComparePlatformPerformanceToolOutput).total_plataformas}
+                  melhor_plataforma={(tool.output as ComparePlatformPerformanceToolOutput).melhor_plataforma}
+                  pior_plataforma={(tool.output as ComparePlatformPerformanceToolOutput).pior_plataforma}
                   plataformas={(tool.output as ComparePlatformPerformanceToolOutput).plataformas}
-                  recomendacoes={(tool.output as ComparePlatformPerformanceToolOutput).recomendacoes}
                 />
               )}
             </div>
