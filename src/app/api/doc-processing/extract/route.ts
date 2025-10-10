@@ -27,11 +27,9 @@ export async function POST(req: Request) {
 
     console.log('📄 DOC EXTRACTION: Processando arquivo:', file.name);
 
-    // Converter arquivo para Data URL (formato esperado pelo AI SDK)
+    // Converter arquivo para Buffer (não para base64 string)
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const base64 = buffer.toString('base64');
-    const dataURL = `data:${file.type};base64,${base64}`;
 
     console.log('📄 DOC EXTRACTION: Enviando para Claude Vision via AI SDK...');
 
@@ -44,9 +42,8 @@ export async function POST(req: Request) {
           content: [
             {
               type: 'file',
-              filename: file.name,
-              mediaType: file.type,
-              url: dataURL,
+              data: buffer,
+              mediaType: 'application/pdf',
             },
             {
               type: 'text',
