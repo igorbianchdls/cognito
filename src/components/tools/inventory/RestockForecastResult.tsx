@@ -122,7 +122,7 @@ export default function RestockForecastResult({
       {previsoes && previsoes.length > 0 ? (
         <div className="space-y-4">
           {ordemUrgencia.map((urgencia) => {
-            const items = previsõesAgrupadas?.[urgencia] || [];
+            const items = previsoesAgrupadas?.[urgencia] || [];
             if (items.length === 0) return null;
 
             return (
