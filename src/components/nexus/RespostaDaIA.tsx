@@ -5033,7 +5033,6 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   message={(tool.output as AnalyzeContentPerformanceToolOutput).message}
                   periodo_dias={(tool.output as AnalyzeContentPerformanceToolOutput).periodo_dias}
                   plataforma={(tool.output as AnalyzeContentPerformanceToolOutput).plataforma}
-                  total_posts={(tool.output as AnalyzeContentPerformanceToolOutput).total_posts}
                   metricas_gerais={(tool.output as AnalyzeContentPerformanceToolOutput).metricas_gerais}
                   performance_por_tipo={(tool.output as AnalyzeContentPerformanceToolOutput).performance_por_tipo}
                 />
