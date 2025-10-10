@@ -1,6 +1,15 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
-import { getInventoryData } from '@/tools/inventoryTools';
+import {
+  getInventoryData,
+  calculateInventoryMetrics,
+  analyzeStockMovementTrends,
+  forecastRestockNeeds,
+  identifySlowMovingItems,
+  compareChannelPerformance,
+  generateABCAnalysis,
+  detectAnomalies
+} from '@/tools/inventoryTools';
 
 export const maxDuration = 300;
 
@@ -38,35 +47,55 @@ Auxiliar gestores de estoque, compradores e controllers a:
 
 # 🛠️ Suas Ferramentas
 
-## 📊 BUSCAR DADOS DE GESTÃO DE ESTOQUE
-**getInventoryData** - Busca dados de gestão de estoque (centros de distribuição, estoque por canal, movimentações, preços)
+## 📊 FERRAMENTAS DE CONSULTA
 
-### Tabelas Disponíveis:
-- **centros_distribuicao** - Centros de distribuição e suas informações
-- **estoque_canal** - Estoque disponível por canal de venda
-- **integracoes_canais** - Integrações com canais de venda
-- **movimentacoes_estoque** - Histórico de movimentações (entrada/saida/ajuste)
-- **precos_canais** - Preços por canal de venda
+**1. getInventoryData** - Busca dados brutos de gestão de estoque
+- Tabelas: centros_distribuicao, estoque_canal, integracoes_canais, movimentacoes_estoque, precos_canais
+- Use para: Consultar dados específicos, verificar registros individuais
 
-### Parâmetros:
-- \`table\` (obrigatório) - Tabela a consultar (enum das 5 tabelas acima)
-- \`limit\` (padrão: 20) - Número máximo de resultados
-- \`ativo\` (boolean, opcional) - Filtrar por status ativo (para centros_distribuicao)
-- \`product_id\` (string, opcional) - Filtrar por ID do produto (para estoque_canal, movimentacoes_estoque, precos_canais)
-- \`channel_id\` (string, opcional) - Filtrar por ID do canal (para estoque_canal, integracoes_canais, precos_canais)
-- \`tipo\` (string, opcional) - Filtrar por tipo de movimentação: entrada, saida, ajuste (para movimentacoes_estoque)
-- \`quantidade_minima\` (number, opcional) - Quantidade mínima disponível (para estoque_canal)
-- \`quantidade_maxima\` (number, opcional) - Quantidade máxima disponível (para estoque_canal)
-- \`data_de\` (string YYYY-MM-DD, opcional) - Data inicial
-- \`data_ate\` (string YYYY-MM-DD, opcional) - Data final
+## 📈 FERRAMENTAS ANALÍTICAS (USE ESTAS PARA ANÁLISES!)
 
-### Quando usar:
-- Analisar centros de distribuição ativos/inativos
-- Verificar níveis de estoque por canal
-- Identificar produtos com estoque baixo (quantidade_minima/maxima)
-- Analisar movimentações de entrada/saída/ajuste
-- Comparar preços entre canais
-- Verificar integrações com marketplaces
+**2. calculateInventoryMetrics** ⭐ - Calcula KPIs automáticos
+- Métricas: turnover, coverage, stockout_rate, valor_imobilizado
+- Use para: "Calcule o giro de estoque", "Qual a cobertura?", "Taxa de ruptura?"
+
+**3. analyzeStockMovementTrends** ⭐ - Analisa tendências e sazonalidade
+- Períodos: daily, weekly, monthly
+- Use para: "Qual a tendência?", "Demanda está crescendo?", "Padrões sazonais?"
+
+**4. forecastRestockNeeds** ⭐ - Prevê necessidades de reposição
+- Urgência: CRÍTICO, ALTO, MÉDIO, BAIXO
+- Use para: "O que precisa repor?", "Quando vai esgotar?", "Previsão de ruptura?"
+
+**5. identifySlowMovingItems** - Identifica dead stock
+- Critério: dias sem movimentação
+- Use para: "Produtos parados?", "Dead stock?", "Itens de baixo giro?"
+
+**6. compareChannelPerformance** - Compara canais
+- Métricas: stock_level, turnover, price_variance
+- Use para: "Qual canal vende mais?", "Diferença de preços entre canais?"
+
+**7. generateABCAnalysis** - Classificação ABC automática
+- Critérios: value, quantity, margin
+- Use para: "Análise ABC", "Produtos classe A?", "Curva de Pareto?"
+
+**8. detectAnomalies** - Detecta movimentações suspeitas
+- Sensibilidade: low, medium, high
+- Use para: "Anomalias?", "Picos anormais?", "Discrepâncias entre canais?"
+
+## 🎯 WORKFLOW RECOMENDADO
+
+Para análises completas, USE AS FERRAMENTAS ANALÍTICAS na seguinte ordem:
+
+1. **calculateInventoryMetrics** - Obter snapshot geral dos KPIs
+2. **identifySlowMovingItems** - Identificar problemas de dead stock
+3. **forecastRestockNeeds** - Prever necessidades urgentes
+4. **generateABCAnalysis** - Classificar produtos por importância
+5. **analyzeStockMovementTrends** - Entender tendências
+6. **compareChannelPerformance** - Comparar performance multi-canal
+7. **detectAnomalies** - Verificar inconsistências
+
+IMPORTANTE: Priorize usar as ferramentas analíticas (#2-#8) em vez de fazer cálculos manuais!
 
 # 📐 Framework de Análise de Inventário
 
@@ -237,7 +266,14 @@ Seja sempre orientado a dados, priorize eficiência operacional e saúde finance
       messages: convertToModelMessages(messages),
 
       tools: {
-        getInventoryData
+        getInventoryData,
+        calculateInventoryMetrics,
+        analyzeStockMovementTrends,
+        forecastRestockNeeds,
+        identifySlowMovingItems,
+        compareChannelPerformance,
+        generateABCAnalysis,
+        detectAnomalies
       }
     });
 
