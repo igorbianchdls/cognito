@@ -1,7 +1,18 @@
 import { anthropic } from '@ai-sdk/anthropic';
-import { generateText } from 'ai';
+import { generateObject } from 'ai';
+import { z } from 'zod';
 
 export const maxDuration = 300;
+
+const extractionSchema = z.object({
+  fields: z.array(
+    z.object({
+      key: z.string().describe('Nome do campo em português'),
+      value: z.string().describe('Valor extraído do documento'),
+      confidence: z.number().min(0).max(1).describe('Nível de confiança de 0 a 1'),
+    })
+  ),
+});
 
 export async function POST(req: Request) {
   console.log('📄 DOC EXTRACTION: Request recebido');
@@ -23,9 +34,9 @@ export async function POST(req: Request) {
 
     console.log('📄 DOC EXTRACTION: Enviando para Claude Vision via AI SDK...');
 
-    // Chamar Claude Vision usando AI SDK
-    const result = await generateText({
-      model: anthropic('claude-sonnet-4-20250514'),
+    // Chamar Claude Vision usando AI SDK com generateObject
+    const result = await generateObject({
+      model: anthropic('claude-3-5-sonnet-20241022'),
       messages: [
         {
           role: 'user',
@@ -37,55 +48,34 @@ export async function POST(req: Request) {
             },
             {
               type: 'text',
-              text: `Analise este documento e extraia TODOS os campos e informações relevantes em formato estruturado.
-
-Para cada campo extraído, retorne um objeto JSON com:
-- "key": nome do campo em português (ex: "Número da Nota Fiscal", "Data de Emissão", "CNPJ Fornecedor")
-- "value": valor extraído do documento
-- "confidence": nível de confiança de 0 a 1
+              text: `Analise este documento e extraia TODOS os campos e informações relevantes.
 
 Se for uma nota fiscal/invoice, extraia campos como:
 - Número da nota/invoice
 - Data de emissão
-- Valor total
-- Impostos (ICMS, IPI, PIS, COFINS, etc)
+- Valor total e subtotais
+- Impostos (ICMS, IPI, PIS, COFINS, ISS, etc)
 - Informações do emitente (nome, CNPJ/CPF, endereço, email, telefone)
 - Informações do destinatário (nome, CNPJ/CPF, endereço, email, telefone)
 - Descrição de produtos/serviços
 - Condições de pagamento
 - Chave de acesso (se houver)
+- Qualquer outro campo relevante
 
-Retorne APENAS um JSON válido no formato:
-{
-  "fields": [
-    { "key": "campo1", "value": "valor1", "confidence": 0.95 },
-    { "key": "campo2", "value": "valor2", "confidence": 0.98 }
-  ]
-}
-
-Não adicione explicações, apenas o JSON.`,
+Para cada campo extraído, forneça:
+- key: nome descritivo do campo em português
+- value: valor extraído
+- confidence: seu nível de confiança (0 a 1)`,
             },
           ],
         },
       ],
+      schema: extractionSchema,
     });
 
-    console.log('📄 DOC EXTRACTION: Resposta recebida do Claude');
+    console.log('📄 DOC EXTRACTION: Campos extraídos:', result.object.fields?.length);
 
-    // Parse do JSON retornado pelo Claude
-    const responseText = result.text.trim();
-
-    // Remover possíveis markdown code blocks
-    let jsonText = responseText;
-    if (jsonText.startsWith('```')) {
-      jsonText = jsonText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-    }
-
-    const extractedData = JSON.parse(jsonText);
-
-    console.log('📄 DOC EXTRACTION: Campos extraídos:', extractedData.fields?.length);
-
-    return Response.json(extractedData);
+    return Response.json(result.object);
   } catch (error) {
     console.error('📄 DOC EXTRACTION: Erro:', error);
     return Response.json(
