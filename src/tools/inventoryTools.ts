@@ -830,11 +830,15 @@ export const generateABCAnalysis = tool({
       }
 
       // Calcular percentual acumulado
-      const valorTotal = produtos.reduce((sum, p) => sum + p[criteria], 0);
+      const valorTotal = produtos.reduce((sum, p) => {
+        const val = criteria === 'value' ? p.valor : criteria === 'quantity' ? p.quantidade : p.margem;
+        return sum + val;
+      }, 0);
       let acumulado = 0;
 
       const produtosComClasse = produtos.map(produto => {
-        acumulado += produto[criteria];
+        const val = criteria === 'value' ? produto.valor : criteria === 'quantity' ? produto.quantidade : produto.margem;
+        acumulado += val;
         const percentualAcumulado = (acumulado / valorTotal) * 100;
 
         const classe = percentualAcumulado <= 80 ? 'A'
