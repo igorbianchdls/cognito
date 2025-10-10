@@ -1,9 +1,12 @@
 'use client';
 
 import { useRef } from 'react';
+import dynamic from 'next/dynamic';
 import { Upload, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import PDFViewer from './PDFViewer';
+
+// Import PDFViewer dinamicamente para evitar erro de SSR
+const PDFViewer = dynamic(() => import('./PDFViewer'), { ssr: false });
 
 interface DocumentUploadProps {
   onFileUpload: (file: File) => void;
