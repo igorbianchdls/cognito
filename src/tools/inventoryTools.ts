@@ -154,7 +154,7 @@ export const calculateInventoryMetrics = tool({
       .describe('Métricas a calcular')
   }),
 
-  execute: async ({ product_id, date_range_days, metrics }) => {
+  execute: async ({ product_id, date_range_days = 90, metrics }) => {
     try {
       const dataInicial = new Date();
       dataInicial.setDate(dataInicial.getDate() - date_range_days);
@@ -283,7 +283,7 @@ export const analyzeStockMovementTrends = tool({
       .describe('Quantos dias analisar no histórico (padrão: 90)')
   }),
 
-  execute: async ({ product_id, period, lookback_days }) => {
+  execute: async ({ product_id, period = 'weekly', lookback_days = 90 }) => {
     try {
       const dataInicial = new Date();
       dataInicial.setDate(dataInicial.getDate() - lookback_days);
@@ -394,7 +394,7 @@ export const forecastRestockNeeds = tool({
       .describe('Nível de confiança da previsão (afeta margem de segurança)')
   }),
 
-  execute: async ({ forecast_days, confidence_level }) => {
+  execute: async ({ forecast_days = 30, confidence_level = 'medio' }) => {
     try {
       // Buscar estoque atual
       const { data: estoqueAtual, error: errorEstoque } = await supabase
@@ -507,7 +507,7 @@ export const identifySlowMovingItems = tool({
       .describe('Valor mínimo em estoque para alertar (evita alertas de itens de baixo valor)')
   }),
 
-  execute: async ({ min_days_no_movement, min_stock_value }) => {
+  execute: async ({ min_days_no_movement = 90, min_stock_value = 0 }) => {
     try {
       // Buscar estoque atual
       const { data: estoqueAtual, error: errorEstoque } = await supabase
@@ -601,7 +601,7 @@ export const compareChannelPerformance = tool({
       .describe('Métrica para comparar entre canais')
   }),
 
-  execute: async ({ product_id, metric }) => {
+  execute: async ({ product_id, metric = 'stock_level' }) => {
     try {
       // Buscar estoque por canal
       let queryEstoque = supabase
@@ -761,7 +761,7 @@ export const generateABCAnalysis = tool({
       .describe('Período de análise em dias (padrão: 90)')
   }),
 
-  execute: async ({ criteria, period_days }) => {
+  execute: async ({ criteria = 'value', period_days = 90 }) => {
     try {
       // Buscar estoque atual
       const { data: estoqueAtual, error: errorEstoque } = await supabase
@@ -903,7 +903,7 @@ export const detectAnomalies = tool({
       .describe('Sensibilidade de detecção de anomalias (low = apenas anomalias óbvias, high = mais sensível)')
   }),
 
-  execute: async ({ sensitivity }) => {
+  execute: async ({ sensitivity = 'medium' }) => {
     try {
       // Buscar movimentações dos últimos 30 dias
       const dataInicial = new Date();
