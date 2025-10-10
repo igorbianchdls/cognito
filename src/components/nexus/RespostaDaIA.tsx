@@ -80,6 +80,13 @@ import ReverseLogisticsTrendsResult from '../tools/logistics/ReverseLogisticsTre
 import OptimizePackageDimensionsResult from '../tools/logistics/OptimizePackageDimensionsResult';
 import DetectDeliveryAnomaliesResult from '../tools/logistics/DetectDeliveryAnomaliesResult';
 import ForecastDeliveryCostsResult from '../tools/logistics/ForecastDeliveryCostsResult';
+import ContentPerformanceResult from '../tools/organic-marketing/ContentPerformanceResult';
+import PlatformBenchmarkResult from '../tools/organic-marketing/PlatformBenchmarkResult';
+import AudienceGrowthResult from '../tools/organic-marketing/AudienceGrowthResult';
+import TopContentResult from '../tools/organic-marketing/TopContentResult';
+import ContentMixResult from '../tools/organic-marketing/ContentMixResult';
+import ForecastEngagementResult from '../tools/organic-marketing/ForecastEngagementResult';
+import ContentROIResult from '../tools/organic-marketing/ContentROIResult';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -1370,6 +1377,166 @@ type ForecastDeliveryCostsToolOutput = {
     periodo: string;
   };
   insights?: string[];
+};
+
+type AnalyzeContentPerformanceToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  plataforma?: string;
+  metricas_gerais?: {
+    total_posts: number;
+    total_curtidas: number;
+    total_comentarios: number;
+    total_compartilhamentos: number;
+    total_visualizacoes: number;
+    total_alcance: number;
+    engagement_total: number;
+    engagement_rate: string;
+    alcance_medio_por_post: string;
+    classificacao: string;
+  };
+  performance_por_tipo?: Array<{
+    tipo: string;
+    total_posts: number;
+    engagement_total: number;
+    alcance_total: number;
+    engagement_medio_por_post: string;
+    engagement_rate: string;
+  }>;
+};
+
+type ComparePlatformPerformanceToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  total_plataformas?: number;
+  melhor_plataforma?: string;
+  pior_plataforma?: string;
+  plataformas?: Array<{
+    plataforma: string;
+    contas_ativas: number;
+    total_seguidores: number;
+    total_publicacoes: number;
+    total_alcance: number;
+    engagement_total: number;
+    engagement_rate: string;
+    alcance_medio_por_post: string;
+    classificacao: string;
+    recomendacao: string;
+  }>;
+};
+
+type AnalyzeAudienceGrowthToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  crescimento?: {
+    seguidores_inicial: number;
+    seguidores_final: number;
+    crescimento_total: number;
+    taxa_crescimento: string;
+    crescimento_medio_semanal: number;
+    classificacao: string;
+  };
+  previsao?: {
+    seguidores_previstos_4_semanas: number;
+    crescimento_esperado: number;
+  };
+  historico_semanal?: Array<{
+    periodo: string;
+    seguidores: number;
+    data: string;
+  }>;
+};
+
+type IdentifyTopContentToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  total_analisados?: number;
+  top_posts?: Array<{
+    publicacao_id: string;
+    titulo: string;
+    tipo_post: string;
+    plataforma: string;
+    publicado_em: string;
+    curtidas: number;
+    comentarios: number;
+    compartilhamentos: number;
+    visualizacoes: number;
+    alcance: number;
+    engagement_total: number;
+    engagement_rate: string;
+    virality_score: string;
+    classificacao: string;
+  }>;
+};
+
+type AnalyzeContentMixToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  total_posts?: number;
+  frequencia?: {
+    posts_por_dia: string;
+    posts_por_semana: string;
+    dias_com_postagem: number;
+    dias_sem_postagem: number;
+    consistencia: string;
+    classificacao: string;
+  };
+  distribuicao_por_tipo?: Array<{
+    tipo: string;
+    quantidade: number;
+    percentual: string;
+  }>;
+  recomendacoes?: string[];
+};
+
+type ForecastEngagementToolOutput = {
+  success: boolean;
+  message: string;
+  forecast_days?: number;
+  lookback_days?: number;
+  historico?: {
+    media_engagement_semanal: number;
+    media_alcance_semanal: number;
+    tendencia: string;
+    slope: string;
+  };
+  previsao?: {
+    engagement_previsto_total: number;
+    alcance_previsto_total: number;
+    engagement_rate_previsto: string;
+    periodo: string;
+  };
+  insights?: string[];
+};
+
+type CalculateContentROIToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  total_posts?: number;
+  custos?: {
+    custo_por_post: string;
+    custo_total: string;
+  };
+  resultados?: {
+    total_alcance: number;
+    total_engagement: number;
+    valor_alcance: string;
+    valor_engagement: string;
+    valor_total_gerado: string;
+  };
+  roi?: {
+    percentual: string;
+    valor_retorno: string;
+    custo_por_alcance: string;
+    custo_por_engagement: string;
+    classificacao: string;
+  };
 };
 
 type GetFuncionariosDataToolOutput = {
@@ -4843,6 +5010,184 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   historico={(tool.output as ForecastDeliveryCostsToolOutput).historico}
                   previsao={(tool.output as ForecastDeliveryCostsToolOutput).previsao}
                   insights={(tool.output as ForecastDeliveryCostsToolOutput).insights}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-analyzeContentPerformance') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-analyzeContentPerformance" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <ContentPerformanceResult
+                  success={(tool.output as AnalyzeContentPerformanceToolOutput).success}
+                  message={(tool.output as AnalyzeContentPerformanceToolOutput).message}
+                  periodo_dias={(tool.output as AnalyzeContentPerformanceToolOutput).periodo_dias}
+                  plataforma={(tool.output as AnalyzeContentPerformanceToolOutput).plataforma}
+                  total_posts={(tool.output as AnalyzeContentPerformanceToolOutput).total_posts}
+                  metricas_gerais={(tool.output as AnalyzeContentPerformanceToolOutput).metricas_gerais}
+                  performance_por_tipo={(tool.output as AnalyzeContentPerformanceToolOutput).performance_por_tipo}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-comparePlatformPerformance') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-comparePlatformPerformance" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <PlatformBenchmarkResult
+                  success={(tool.output as ComparePlatformPerformanceToolOutput).success}
+                  message={(tool.output as ComparePlatformPerformanceToolOutput).message}
+                  periodo_dias={(tool.output as ComparePlatformPerformanceToolOutput).periodo_dias}
+                  plataformas={(tool.output as ComparePlatformPerformanceToolOutput).plataformas}
+                  recomendacoes={(tool.output as ComparePlatformPerformanceToolOutput).recomendacoes}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-analyzeAudienceGrowth') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-analyzeAudienceGrowth" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <AudienceGrowthResult
+                  success={(tool.output as AnalyzeAudienceGrowthToolOutput).success}
+                  message={(tool.output as AnalyzeAudienceGrowthToolOutput).message}
+                  periodo_dias={(tool.output as AnalyzeAudienceGrowthToolOutput).periodo_dias}
+                  plataforma={(tool.output as AnalyzeAudienceGrowthToolOutput).plataforma}
+                  crescimento={(tool.output as AnalyzeAudienceGrowthToolOutput).crescimento}
+                  historico_semanal={(tool.output as AnalyzeAudienceGrowthToolOutput).historico_semanal}
+                  previsao={(tool.output as AnalyzeAudienceGrowthToolOutput).previsao}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-identifyTopContent') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-identifyTopContent" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <TopContentResult
+                  success={(tool.output as IdentifyTopContentToolOutput).success}
+                  message={(tool.output as IdentifyTopContentToolOutput).message}
+                  periodo_dias={(tool.output as IdentifyTopContentToolOutput).periodo_dias}
+                  total_analisados={(tool.output as IdentifyTopContentToolOutput).total_analisados}
+                  top_posts={(tool.output as IdentifyTopContentToolOutput).top_posts}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-analyzeContentMix') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-analyzeContentMix" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <ContentMixResult
+                  success={(tool.output as AnalyzeContentMixToolOutput).success}
+                  message={(tool.output as AnalyzeContentMixToolOutput).message}
+                  periodo_dias={(tool.output as AnalyzeContentMixToolOutput).periodo_dias}
+                  total_posts={(tool.output as AnalyzeContentMixToolOutput).total_posts}
+                  frequencia={(tool.output as AnalyzeContentMixToolOutput).frequencia}
+                  distribuicao_por_tipo={(tool.output as AnalyzeContentMixToolOutput).distribuicao_por_tipo}
+                  recomendacoes={(tool.output as AnalyzeContentMixToolOutput).recomendacoes}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-forecastEngagement') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-forecastEngagement" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <ForecastEngagementResult
+                  success={(tool.output as ForecastEngagementToolOutput).success}
+                  message={(tool.output as ForecastEngagementToolOutput).message}
+                  forecast_days={(tool.output as ForecastEngagementToolOutput).forecast_days}
+                  lookback_days={(tool.output as ForecastEngagementToolOutput).lookback_days}
+                  historico={(tool.output as ForecastEngagementToolOutput).historico}
+                  previsao={(tool.output as ForecastEngagementToolOutput).previsao}
+                  insights={(tool.output as ForecastEngagementToolOutput).insights}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-calculateContentROI') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-calculateContentROI" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <ContentROIResult
+                  success={(tool.output as CalculateContentROIToolOutput).success}
+                  message={(tool.output as CalculateContentROIToolOutput).message}
+                  periodo_dias={(tool.output as CalculateContentROIToolOutput).periodo_dias}
+                  total_posts={(tool.output as CalculateContentROIToolOutput).total_posts}
+                  custos={(tool.output as CalculateContentROIToolOutput).custos}
+                  resultados={(tool.output as CalculateContentROIToolOutput).resultados}
+                  roi={(tool.output as CalculateContentROIToolOutput).roi}
                 />
               )}
             </div>
