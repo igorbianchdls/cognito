@@ -5,6 +5,7 @@ import { z } from 'zod';
 export const maxDuration = 300;
 
 const extractionSchema = z.object({
+  summary: z.string().describe('Resumo executivo do documento em 2-3 frases'),
   fields: z.array(
     z.object({
       key: z.string().describe('Nome do campo em português'),
@@ -47,7 +48,10 @@ export async function POST(req: Request) {
             },
             {
               type: 'text',
-              text: `Analise este documento e extraia TODOS os campos e informações relevantes.
+              text: `Analise este documento e:
+
+1. Crie um RESUMO executivo do documento (2-3 frases explicando o tipo de documento, valor total se houver, e partes envolvidas)
+2. Extraia TODOS os campos e informações relevantes
 
 Se for uma nota fiscal/invoice, extraia campos como:
 - Número da nota/invoice
