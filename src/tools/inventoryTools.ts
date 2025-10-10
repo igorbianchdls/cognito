@@ -154,7 +154,7 @@ export const calculateInventoryMetrics = tool({
       .describe('Métricas a calcular')
   }),
 
-  execute: async ({ product_id, date_range_days = 90, metrics }) => {
+  execute: async ({ product_id, date_range_days = 90, metrics = ['turnover', 'coverage', 'stockout_rate', 'valor_imobilizado'] }) => {
     try {
       const dataInicial = new Date();
       dataInicial.setDate(dataInicial.getDate() - date_range_days);
