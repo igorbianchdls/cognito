@@ -4711,7 +4711,6 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   periodo_dias={(tool.output as CalculateInventoryMetricsToolOutput).periodo_dias}
                   data_inicial={(tool.output as CalculateInventoryMetricsToolOutput).data_inicial}
                   metricas={(tool.output as CalculateInventoryMetricsToolOutput).metricas}
-                  error={(tool.output as CalculateInventoryMetricsToolOutput).error}
                 />
               )}
             </div>
@@ -4743,7 +4742,6 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   movimentacoes_por_periodo={(tool.output as AnalyzeStockMovementTrendsToolOutput).movimentacoes_por_periodo}
                   previsao_proximo_periodo={(tool.output as AnalyzeStockMovementTrendsToolOutput).previsao_proximo_periodo}
                   insights={(tool.output as AnalyzeStockMovementTrendsToolOutput).insights}
-                  error={(tool.output as AnalyzeStockMovementTrendsToolOutput).error}
                 />
               )}
             </div>
