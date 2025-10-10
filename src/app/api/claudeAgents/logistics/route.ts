@@ -1,6 +1,15 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
-import { getLogisticsData } from '@/tools/logisticsTools';
+import {
+  getLogisticsData,
+  calculateDeliveryPerformance,
+  analyzeCarrierBenchmark,
+  analyzeShippingCostStructure,
+  analyzeReverseLogisticsTrends,
+  optimizePackageDimensions,
+  detectDeliveryAnomalies,
+  forecastDeliveryCosts
+} from '@/tools/logisticsTools';
 
 export const maxDuration = 300;
 
@@ -303,7 +312,14 @@ Seja sempre orientado a dados, priorize eficiência operacional e redução de c
       messages: convertToModelMessages(messages),
 
       tools: {
-        getLogisticsData
+        getLogisticsData,
+        calculateDeliveryPerformance,
+        analyzeCarrierBenchmark,
+        analyzeShippingCostStructure,
+        analyzeReverseLogisticsTrends,
+        optimizePackageDimensions,
+        detectDeliveryAnomalies,
+        forecastDeliveryCosts
       }
     });
 
