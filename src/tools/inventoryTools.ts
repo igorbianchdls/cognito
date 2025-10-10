@@ -188,7 +188,7 @@ export const calculateInventoryMetrics = tool({
       if (errorEst) throw errorEst;
 
       // Calcular métricas
-      const resultados: Record<string, any> = {};
+      const resultados: Record<string, unknown> = {};
 
       // TURNOVER (Giro de Estoque)
       if (metrics.includes('turnover')) {
@@ -648,7 +648,14 @@ export const compareChannelPerformance = tool({
       if (errorMov) throw errorMov;
 
       // Agrupar por canal
-      const canais: Record<string, any> = {};
+      const canais: Record<string, {
+        channel_id: string;
+        total_estoque: number;
+        valor_estoque: number;
+        produtos: number;
+        saidas_30d: number;
+        precos?: Array<{ product_id: string; preco: number }>;
+      }> = {};
 
       estoqueCanais?.forEach(estoque => {
         const channelId = estoque.channel_id;
@@ -698,7 +705,7 @@ export const compareChannelPerformance = tool({
           : '0.00';
 
         const precoMedio = canal.precos && canal.precos.length > 0
-          ? canal.precos.reduce((sum: number, p: any) => sum + (p.preco || 0), 0) / canal.precos.length
+          ? canal.precos.reduce((sum, p) => sum + (p.preco || 0), 0) / canal.precos.length
           : 0;
 
         return {
@@ -807,7 +814,7 @@ export const generateABCAnalysis = tool({
       });
 
       // Criar array e ordenar pelo critério escolhido
-      let produtos = Object.entries(produtosAgrupados).map(([productId, dados]) => ({
+      const produtos = Object.entries(produtosAgrupados).map(([productId, dados]) => ({
         product_id: productId,
         valor: dados.valor,
         quantidade: dados.quantidade,
@@ -938,7 +945,19 @@ export const detectAnomalies = tool({
       });
 
       // Detectar anomalias
-      const anomalias: any[] = [];
+      const anomalias: Array<{
+        product_id: string;
+        tipo_anomalia: string;
+        quantidade_anomala?: number;
+        media_esperada?: string;
+        desvio_padrao?: string;
+        z_score?: string;
+        severidade: string;
+        recomendacao: string;
+        max_estoque?: number;
+        min_estoque?: number;
+        diferenca?: number;
+      }> = [];
 
       Object.entries(movPorProduto).forEach(([productId, quantidades]) => {
         if (quantidades.length < 3) return; // Precisa de pelo menos 3 movimentações
@@ -947,7 +966,7 @@ export const detectAnomalies = tool({
         const variancia = quantidades.reduce((sum, q) => sum + Math.pow(q - media, 2), 0) / quantidades.length;
         const desvioPadrao = Math.sqrt(variancia);
 
-        quantidades.forEach((quantidade, index) => {
+        quantidades.forEach((quantidade) => {
           const zScore = desvioPadrao > 0 ? Math.abs((quantidade - media) / desvioPadrao) : 0;
 
           if (zScore > threshold) {
