@@ -5083,10 +5083,9 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   success={(tool.output as AnalyzeAudienceGrowthToolOutput).success}
                   message={(tool.output as AnalyzeAudienceGrowthToolOutput).message}
                   periodo_dias={(tool.output as AnalyzeAudienceGrowthToolOutput).periodo_dias}
-                  plataforma={(tool.output as AnalyzeAudienceGrowthToolOutput).plataforma}
                   crescimento={(tool.output as AnalyzeAudienceGrowthToolOutput).crescimento}
-                  historico_semanal={(tool.output as AnalyzeAudienceGrowthToolOutput).historico_semanal}
                   previsao={(tool.output as AnalyzeAudienceGrowthToolOutput).previsao}
+                  historico_semanal={(tool.output as AnalyzeAudienceGrowthToolOutput).historico_semanal}
                 />
               )}
             </div>
