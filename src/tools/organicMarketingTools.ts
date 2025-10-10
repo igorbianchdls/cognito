@@ -151,24 +151,21 @@ export const analyzeContentPerformance = tool({
       const dataInicialStr = dataInicial.toISOString().split('T')[0];
 
       // Buscar publicações
-      let queryPublicacoes = supabase
+      const { data: publicacoes, error: errorPub } = await supabase
         .schema('marketing_organico')
         .from('publicacoes')
         .select('*')
         .eq('status', 'publicado')
         .gte('publicado_em', dataInicialStr);
 
-      const { data: publicacoes, error: errorPub } = await queryPublicacoes;
       if (errorPub) throw errorPub;
 
       // Buscar métricas
-      let queryMetricas = supabase
+      const { data: metricas, error: errorMetr } = await supabase
         .schema('marketing_organico')
         .from('metricas_publicacoes')
         .select('*')
         .gte('registrado_em', dataInicialStr);
-
-      const { data: metricas, error: errorMetr } = await queryMetricas;
       if (errorMetr) throw errorMetr;
 
       if (!publicacoes || publicacoes.length === 0) {
