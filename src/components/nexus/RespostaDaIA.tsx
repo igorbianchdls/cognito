@@ -87,6 +87,13 @@ import TopContentResult from '../tools/organic-marketing/TopContentResult';
 import ContentMixResult from '../tools/organic-marketing/ContentMixResult';
 import ForecastEngagementResult from '../tools/organic-marketing/ForecastEngagementResult';
 import ContentROIResult from '../tools/organic-marketing/ContentROIResult';
+import TrafficOverviewResult from '../tools/web-analytics/TrafficOverviewResult';
+import TrafficSourcesResult from '../tools/web-analytics/TrafficSourcesResult';
+import ConversionFunnelResult from '../tools/web-analytics/ConversionFunnelResult';
+import TopLandingPagesResult from '../tools/web-analytics/TopLandingPagesResult';
+import DevicePerformanceResult from '../tools/web-analytics/DevicePerformanceResult';
+import TrafficAnomaliesResult from '../tools/web-analytics/TrafficAnomaliesResult';
+import UserBehaviorResult from '../tools/web-analytics/UserBehaviorResult';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -1535,6 +1542,129 @@ type CalculateContentROIToolOutput = {
     valor_retorno: string;
     custo_por_alcance: string;
     custo_por_engagement: string;
+    classificacao: string;
+  };
+};
+
+type AnalyzeTrafficOverviewToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  metricas?: {
+    total_sessoes: number;
+    total_usuarios: number;
+    total_pageviews: number;
+    bounce_rate: string;
+    avg_duration_seconds: number;
+    avg_duration_minutos: string;
+    pages_per_session: string;
+    return_visitor_rate: string;
+    classificacao: string;
+  };
+};
+
+type CompareTrafficSourcesToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  total_fontes?: number;
+  melhor_fonte?: string;
+  pior_fonte?: string;
+  fontes?: Array<{
+    fonte: string;
+    sessoes: number;
+    percentual_trafego: string;
+    pages_per_session: string;
+    avg_duration_seconds: number;
+    conversoes: number;
+    conversion_rate: string;
+    quality_score: string;
+    classificacao: string;
+  }>;
+};
+
+type AnalyzeConversionFunnelToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  total_steps?: number;
+  conversion_rate?: string;
+  steps?: Array<{
+    step: number;
+    event_name: string;
+    usuarios: number;
+    drop_off: string;
+  }>;
+  gargalos?: string[];
+};
+
+type IdentifyTopLandingPagesToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  total_paginas?: number;
+  top_pages?: Array<{
+    pagina: string;
+    pageviews: number;
+  }>;
+  worst_pages?: Array<{
+    pagina: string;
+    pageviews: number;
+  }>;
+};
+
+type AnalyzeDevicePerformanceToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  devices?: Array<{
+    device_type: string;
+    sessoes: number;
+    percentual: string;
+    avg_duration: number;
+    avg_pageviews: string;
+  }>;
+  top_browsers?: Array<{
+    browser: string;
+    sessoes: number;
+    percentual: string;
+  }>;
+};
+
+type DetectTrafficAnomaliesToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  sensitivity?: number;
+  estatisticas?: {
+    media_sessoes_dia: number;
+    desvio_padrao: number;
+  };
+  total_anomalias?: number;
+  bot_rate?: string;
+  anomalias?: Array<{
+    data: string;
+    sessoes: number;
+    media: number;
+    z_score: string;
+    tipo: string;
+    severidade: string;
+  }>;
+  red_flags?: string[];
+};
+
+type AnalyzeUserBehaviorToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  comportamento?: {
+    total_visitantes: number;
+    novos_visitantes: number;
+    visitantes_recorrentes: number;
+    percentual_novos: string;
+    percentual_recorrentes: string;
+    frequencia_media_visitas: string;
+    engagement_rate: string;
     classificacao: string;
   };
 };
@@ -5188,6 +5318,181 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   custos={(tool.output as CalculateContentROIToolOutput).custos}
                   resultados={(tool.output as CalculateContentROIToolOutput).resultados}
                   roi={(tool.output as CalculateContentROIToolOutput).roi}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-analyzeTrafficOverview') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-analyzeTrafficOverview" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <TrafficOverviewResult
+                  success={(tool.output as AnalyzeTrafficOverviewToolOutput).success}
+                  message={(tool.output as AnalyzeTrafficOverviewToolOutput).message}
+                  periodo_dias={(tool.output as AnalyzeTrafficOverviewToolOutput).periodo_dias}
+                  metricas={(tool.output as AnalyzeTrafficOverviewToolOutput).metricas}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-compareTrafficSources') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-compareTrafficSources" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <TrafficSourcesResult
+                  success={(tool.output as CompareTrafficSourcesToolOutput).success}
+                  message={(tool.output as CompareTrafficSourcesToolOutput).message}
+                  periodo_dias={(tool.output as CompareTrafficSourcesToolOutput).periodo_dias}
+                  total_fontes={(tool.output as CompareTrafficSourcesToolOutput).total_fontes}
+                  melhor_fonte={(tool.output as CompareTrafficSourcesToolOutput).melhor_fonte}
+                  pior_fonte={(tool.output as CompareTrafficSourcesToolOutput).pior_fonte}
+                  fontes={(tool.output as CompareTrafficSourcesToolOutput).fontes}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-analyzeConversionFunnel') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-analyzeConversionFunnel" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <ConversionFunnelResult
+                  success={(tool.output as AnalyzeConversionFunnelToolOutput).success}
+                  message={(tool.output as AnalyzeConversionFunnelToolOutput).message}
+                  periodo_dias={(tool.output as AnalyzeConversionFunnelToolOutput).periodo_dias}
+                  total_steps={(tool.output as AnalyzeConversionFunnelToolOutput).total_steps}
+                  conversion_rate={(tool.output as AnalyzeConversionFunnelToolOutput).conversion_rate}
+                  steps={(tool.output as AnalyzeConversionFunnelToolOutput).steps}
+                  gargalos={(tool.output as AnalyzeConversionFunnelToolOutput).gargalos}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-identifyTopLandingPages') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-identifyTopLandingPages" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <TopLandingPagesResult
+                  success={(tool.output as IdentifyTopLandingPagesToolOutput).success}
+                  message={(tool.output as IdentifyTopLandingPagesToolOutput).message}
+                  periodo_dias={(tool.output as IdentifyTopLandingPagesToolOutput).periodo_dias}
+                  total_paginas={(tool.output as IdentifyTopLandingPagesToolOutput).total_paginas}
+                  top_pages={(tool.output as IdentifyTopLandingPagesToolOutput).top_pages}
+                  worst_pages={(tool.output as IdentifyTopLandingPagesToolOutput).worst_pages}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-analyzeDevicePerformance') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-analyzeDevicePerformance" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <DevicePerformanceResult
+                  success={(tool.output as AnalyzeDevicePerformanceToolOutput).success}
+                  message={(tool.output as AnalyzeDevicePerformanceToolOutput).message}
+                  periodo_dias={(tool.output as AnalyzeDevicePerformanceToolOutput).periodo_dias}
+                  devices={(tool.output as AnalyzeDevicePerformanceToolOutput).devices}
+                  top_browsers={(tool.output as AnalyzeDevicePerformanceToolOutput).top_browsers}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-detectTrafficAnomalies') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-detectTrafficAnomalies" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <TrafficAnomaliesResult
+                  success={(tool.output as DetectTrafficAnomaliesToolOutput).success}
+                  message={(tool.output as DetectTrafficAnomaliesToolOutput).message}
+                  periodo_dias={(tool.output as DetectTrafficAnomaliesToolOutput).periodo_dias}
+                  sensitivity={(tool.output as DetectTrafficAnomaliesToolOutput).sensitivity}
+                  estatisticas={(tool.output as DetectTrafficAnomaliesToolOutput).estatisticas}
+                  total_anomalias={(tool.output as DetectTrafficAnomaliesToolOutput).total_anomalias}
+                  bot_rate={(tool.output as DetectTrafficAnomaliesToolOutput).bot_rate}
+                  anomalias={(tool.output as DetectTrafficAnomaliesToolOutput).anomalias}
+                  red_flags={(tool.output as DetectTrafficAnomaliesToolOutput).red_flags}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-analyzeUserBehavior') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-analyzeUserBehavior" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <UserBehaviorResult
+                  success={(tool.output as AnalyzeUserBehaviorToolOutput).success}
+                  message={(tool.output as AnalyzeUserBehaviorToolOutput).message}
+                  periodo_dias={(tool.output as AnalyzeUserBehaviorToolOutput).periodo_dias}
+                  comportamento={(tool.output as AnalyzeUserBehaviorToolOutput).comportamento}
                 />
               )}
             </div>
