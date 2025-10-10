@@ -2,6 +2,7 @@ import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import { getContasAReceber, getContasAPagar, calculateDateRange } from '@/tools/financialTools';
 import { calcularFluxoCaixa } from '@/tools/fluxoCaixaTools';
+import { getMovimentos, createMovimento } from '@/tools/movimentosTools';
 
 export const maxDuration = 300;
 
@@ -33,11 +34,14 @@ Auxiliar gestores financeiros e controllers a:
 - Analisar contas a receber pendentes, pagas e vencidas
 - Gerenciar contas a pagar por fornecedor e categoria
 - Calcular projeções de fluxo de caixa (7, 30, 90 dias)
+- Analisar movimentos financeiros efetivados (extrato interno)
+- Registrar movimentos avulsos (taxas, rendimentos, transferências)
 - Identificar padrões de pagamento de clientes e fornecedores
 - Calcular KPIs financeiros (DSO, DPO, aging, inadimplência)
 - Prever riscos de inadimplência e problemas de liquidez
 - Sugerir ações de cobrança, negociação e priorização de pagamentos
 - Otimizar fluxo de caixa e capital de giro
+- Preparar dados para conciliação bancária
 
 # 🛠️ Suas Ferramentas
 
@@ -111,6 +115,70 @@ Auxiliar gestores financeiros e controllers a:
 - Use esta tool primeiro para calcular as datas quando o usuário pedir períodos relativos ("últimos X dias", "mês passado", etc)
 - Depois use as datas retornadas (\`data_inicial\` e \`data_final\`) como parâmetros \`data_emissao_de\` e \`data_emissao_ate\` nas tools getContasAReceber ou getContasAPagar
 - A tool sempre usa a data atual do servidor, então "hoje" é sempre preciso
+
+## 💳 MOVIMENTOS FINANCEIROS
+**getMovimentos** - Busca movimentos financeiros que realmente aconteceram (transações efetivadas)
+
+**Diferença importante:**
+- **Contas a pagar/receber** = Planejamento (o que você DEVE pagar/receber)
+- **Movimentos** = Realização (o que REALMENTE foi pago/recebido)
+
+**Parâmetros:**
+- \`limit\`: número de resultados (padrão: 50)
+- \`conta_id\`: filtrar por conta bancária (opcional)
+- \`tipo\`: 'entrada' | 'saída' (opcional)
+- \`data_inicial\`: data inicial YYYY-MM-DD (opcional)
+- \`data_final\`: data final YYYY-MM-DD (opcional)
+- \`categoria_id\`: filtrar por categoria (opcional)
+- \`valor_minimo\`: valor mínimo em reais (opcional)
+- \`valor_maximo\`: valor máximo em reais (opcional)
+
+**Retorna:**
+- Lista de movimentos
+- \`total_entradas\`: soma de todas entradas
+- \`total_saidas\`: soma de todas saídas
+- \`saldo_liquido\`: entradas - saídas
+
+**Quando usar:**
+- Ver extrato interno do sistema
+- Calcular saldo real de uma conta
+- Preparar conciliação bancária (comparar com extrato do banco)
+- Analisar movimentações já efetivadas
+
+**Exemplos:**
+- "Mostre movimentos da conta Itaú em outubro" → \`getMovimentos({ conta_id: 'itau-123', data_inicial: '2025-10-01', data_final: '2025-10-31' })\`
+- "Saídas acima de R$ 1000 nos últimos 30 dias" → \`getMovimentos({ tipo: 'saída', valor_minimo: 1000, data_inicial: '...', data_final: '...' })\`
+- "Saldo de movimentos do mês atual" → Primeiro use \`calculateDateRange({ periodo: 'mes_atual' })\`, depois use as datas em \`getMovimentos\`
+
+## ➕ CRIAR MOVIMENTO AVULSO
+**createMovimento** - Registra movimento financeiro que NÃO está vinculado a conta a pagar/receber
+
+**Quando usar:**
+- Taxas bancárias descobertas (tarifa, manutenção)
+- IOF, impostos automáticos
+- Transferências entre contas próprias
+- Rendimentos de poupança/investimentos
+- Estornos de compras
+- Qualquer movimento avulso não planejado
+
+**Parâmetros obrigatórios:**
+- \`conta_id\`: ID da conta bancária
+- \`tipo\`: 'entrada' | 'saída'
+- \`valor\`: número positivo (tipo define se soma ou subtrai)
+- \`data\`: data YYYY-MM-DD
+
+**Parâmetros opcionais:**
+- \`categoria_id\`: categoria (ex: taxas-bancarias, rendimentos)
+- \`descricao\`: descrição livre
+- \`conta_a_pagar_id\`: se vinculado a pagamento (raro)
+- \`conta_a_receber_id\`: se vinculado a recebimento (raro)
+
+**Exemplos:**
+- "Registrar taxa bancária de R$ 25 do dia 05/10" → \`createMovimento({ conta_id: 'itau-123', tipo: 'saída', valor: 25, data: '2025-10-05', categoria_id: 'taxas-bancarias', descricao: 'Tarifa manutenção' })\`
+- "Criar movimento de rendimento de R$ 150" → \`createMovimento({ conta_id: 'itau-123', tipo: 'entrada', valor: 150, data: '2025-10-01', categoria_id: 'rendimentos', descricao: 'Rendimento poupança' })\`
+- "Registrar transferência de R$ 5000 para outra conta" → \`createMovimento({ conta_id: 'itau-123', tipo: 'saída', valor: 5000, data: '2025-10-08', descricao: 'Transferência para Bradesco' })\`
+
+**IMPORTANTE:** Use createMovimento apenas para movimentos avulsos. Para pagamentos/recebimentos planejados, use contas a pagar/receber que geram movimentos automaticamente quando marcadas como "pago".
 
 # 📐 Framework de Análise Financeira
 
@@ -269,7 +337,9 @@ Seja sempre profissional, orientado a dados e ofereça insights acionáveis. Pri
         getContasAReceber,
         getContasAPagar,
         calcularFluxoCaixa,
-        calculateDateRange
+        calculateDateRange,
+        getMovimentos,
+        createMovimento
       }
     });
 
