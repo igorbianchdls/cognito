@@ -27,7 +27,7 @@ export interface AppData {
 export const categories = [
   'All',
   'Fors',
-  'sss', 
+  's', 
   'LnPs',
   'ApGes',
   'Componnts',
