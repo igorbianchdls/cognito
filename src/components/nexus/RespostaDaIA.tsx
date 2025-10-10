@@ -1518,6 +1518,176 @@ type CalcularBurnRateToolOutput = {
   message?: string;
 };
 
+// Inventory Tools Output Types
+type CalculateInventoryMetricsToolOutput = {
+  success: boolean;
+  message: string;
+  product_id?: string;
+  periodo_dias?: number;
+  data_inicial?: string;
+  metricas?: {
+    turnover?: {
+      ratio: string;
+      classificacao: string;
+      saidas_periodo: number;
+      estoque_medio: number;
+    };
+    coverage?: {
+      dias: string;
+      classificacao: string;
+      estoque_atual: number;
+      demanda_diaria: string;
+    };
+    stockout_rate?: {
+      percentual: string;
+      classificacao: string;
+      itens_esgotados: number;
+      total_itens: number;
+    };
+    valor_imobilizado?: {
+      total: string;
+      moeda: string;
+      itens_computados: number;
+      observacao: string;
+    };
+  };
+  error?: string;
+};
+
+type AnalyzeStockMovementTrendsToolOutput = {
+  success: boolean;
+  message: string;
+  product_id?: string;
+  periodo_analise?: string;
+  dias_analisados?: number;
+  tendencia?: string;
+  slope_tendencia?: string;
+  media_saidas_por_periodo?: string;
+  total_periodos?: number;
+  movimentacoes_por_periodo?: Record<string, { entradas: number; saidas: number; ajustes: number }>;
+  previsao_proximo_periodo?: string;
+  insights?: string;
+  error?: string;
+};
+
+type ForecastRestockNeedsToolOutput = {
+  success: boolean;
+  message: string;
+  forecast_days?: number;
+  confidence_level?: string;
+  produtos_com_necessidade_reposicao?: number;
+  criticos?: number;
+  previsoes?: Array<{
+    product_id: string;
+    channel_id: string;
+    estoque_atual: number;
+    consumo_diario_medio: string;
+    dias_ate_ruptura: string;
+    necessita_reposicao: boolean;
+    quantidade_sugerida: number;
+    urgencia: 'CRÍTICO' | 'ALTO' | 'MÉDIO' | 'BAIXO';
+    data_ruptura_estimada: string;
+  }>;
+  error?: string;
+};
+
+type IdentifySlowMovingItemsToolOutput = {
+  success: boolean;
+  message: string;
+  criterio_dias?: number;
+  valor_minimo_filtro?: number;
+  total_slow_moving_items?: number;
+  valor_total_imobilizado?: string;
+  slow_moving_items?: Array<{
+    product_id: string;
+    channel_id: string;
+    quantidade_estoque: number;
+    valor_unitario: string;
+    valor_total_imobilizado: string;
+    dias_sem_movimentacao: string;
+    recomendacao: string;
+  }>;
+  error?: string;
+};
+
+type CompareChannelPerformanceToolOutput = {
+  success: boolean;
+  message: string;
+  metric?: string;
+  product_id?: string;
+  melhor_canal?: string;
+  pior_canal?: string;
+  canais?: Array<{
+    channel_id: string;
+    total_estoque: number;
+    valor_estoque: string;
+    produtos: number;
+    saidas_30d: number;
+    turnover_anual: string;
+    preco_medio: string;
+  }>;
+  error?: string;
+};
+
+type GenerateABCAnalysisToolOutput = {
+  success: boolean;
+  message: string;
+  criteria?: string;
+  period_days?: number;
+  total_produtos?: number;
+  distribuicao?: {
+    classe_a: {
+      produtos: number;
+      percentual_produtos: string;
+      contribuicao_valor: string;
+      recomendacao: string;
+    };
+    classe_b: {
+      produtos: number;
+      percentual_produtos: string;
+      contribuicao_valor: string;
+      recomendacao: string;
+    };
+    classe_c: {
+      produtos: number;
+      percentual_produtos: string;
+      contribuicao_valor: string;
+      recomendacao: string;
+    };
+  };
+  produtos_classificados?: Array<{
+    product_id: string;
+    valor: number;
+    quantidade: number;
+    margem: number;
+    percentual_acumulado: string;
+    classe_abc: 'A' | 'B' | 'C';
+  }>;
+  error?: string;
+};
+
+type DetectAnomaliesToolOutput = {
+  success: boolean;
+  message: string;
+  sensitivity?: string;
+  total_anomalias?: number;
+  anomalias_alta_severidade?: number;
+  anomalias?: Array<{
+    product_id: string;
+    tipo_anomalia: string;
+    quantidade_anomala?: number;
+    media_esperada?: string;
+    desvio_padrao?: string;
+    z_score?: string;
+    severidade: string;
+    recomendacao: string;
+    max_estoque?: number;
+    min_estoque?: number;
+    diferenca?: number;
+  }>;
+  error?: string;
+};
+
 type CalcularRunwayToolInput = {
   saldo_atual: number;
   considerar_receitas?: boolean;
@@ -4533,7 +4703,17 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
-              {tool.state === 'output-available' && tool.output && <CalculateMetricsResult {...tool.output} />}
+              {tool.state === 'output-available' && tool.output && (
+                <CalculateMetricsResult
+                  success={(tool.output as CalculateInventoryMetricsToolOutput).success}
+                  message={(tool.output as CalculateInventoryMetricsToolOutput).message}
+                  product_id={(tool.output as CalculateInventoryMetricsToolOutput).product_id}
+                  periodo_dias={(tool.output as CalculateInventoryMetricsToolOutput).periodo_dias}
+                  data_inicial={(tool.output as CalculateInventoryMetricsToolOutput).data_inicial}
+                  metricas={(tool.output as CalculateInventoryMetricsToolOutput).metricas}
+                  error={(tool.output as CalculateInventoryMetricsToolOutput).error}
+                />
+              )}
             </div>
           );
         }
@@ -4549,7 +4729,23 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
-              {tool.state === 'output-available' && tool.output && <TrendsAnalysisResult {...tool.output} />}
+              {tool.state === 'output-available' && tool.output && (
+                <TrendsAnalysisResult
+                  success={(tool.output as AnalyzeStockMovementTrendsToolOutput).success}
+                  message={(tool.output as AnalyzeStockMovementTrendsToolOutput).message}
+                  product_id={(tool.output as AnalyzeStockMovementTrendsToolOutput).product_id}
+                  periodo_analise={(tool.output as AnalyzeStockMovementTrendsToolOutput).periodo_analise}
+                  dias_analisados={(tool.output as AnalyzeStockMovementTrendsToolOutput).dias_analisados}
+                  tendencia={(tool.output as AnalyzeStockMovementTrendsToolOutput).tendencia}
+                  slope_tendencia={(tool.output as AnalyzeStockMovementTrendsToolOutput).slope_tendencia}
+                  media_saidas_por_periodo={(tool.output as AnalyzeStockMovementTrendsToolOutput).media_saidas_por_periodo}
+                  total_periodos={(tool.output as AnalyzeStockMovementTrendsToolOutput).total_periodos}
+                  movimentacoes_por_periodo={(tool.output as AnalyzeStockMovementTrendsToolOutput).movimentacoes_por_periodo}
+                  previsao_proximo_periodo={(tool.output as AnalyzeStockMovementTrendsToolOutput).previsao_proximo_periodo}
+                  insights={(tool.output as AnalyzeStockMovementTrendsToolOutput).insights}
+                  error={(tool.output as AnalyzeStockMovementTrendsToolOutput).error}
+                />
+              )}
             </div>
           );
         }
@@ -4565,7 +4761,17 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
-              {tool.state === 'output-available' && tool.output && <RestockForecastResult {...tool.output} />}
+              {tool.state === 'output-available' && tool.output && (
+                <RestockForecastResult
+                  success={(tool.output as ForecastRestockNeedsToolOutput).success}
+                  message={(tool.output as ForecastRestockNeedsToolOutput).message}
+                  forecast_days={(tool.output as ForecastRestockNeedsToolOutput).forecast_days}
+                  confidence_level={(tool.output as ForecastRestockNeedsToolOutput).confidence_level}
+                  produtos_com_necessidade_reposicao={(tool.output as ForecastRestockNeedsToolOutput).produtos_com_necessidade_reposicao}
+                  criticos={(tool.output as ForecastRestockNeedsToolOutput).criticos}
+                  previsoes={(tool.output as ForecastRestockNeedsToolOutput).previsoes}
+                />
+              )}
             </div>
           );
         }
@@ -4581,7 +4787,17 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
-              {tool.state === 'output-available' && tool.output && <SlowMovingItemsResult {...tool.output} />}
+              {tool.state === 'output-available' && tool.output && (
+                <SlowMovingItemsResult
+                  success={(tool.output as IdentifySlowMovingItemsToolOutput).success}
+                  message={(tool.output as IdentifySlowMovingItemsToolOutput).message}
+                  criterio_dias={(tool.output as IdentifySlowMovingItemsToolOutput).criterio_dias}
+                  valor_minimo_filtro={(tool.output as IdentifySlowMovingItemsToolOutput).valor_minimo_filtro}
+                  total_slow_moving_items={(tool.output as IdentifySlowMovingItemsToolOutput).total_slow_moving_items}
+                  valor_total_imobilizado={(tool.output as IdentifySlowMovingItemsToolOutput).valor_total_imobilizado}
+                  slow_moving_items={(tool.output as IdentifySlowMovingItemsToolOutput).slow_moving_items}
+                />
+              )}
             </div>
           );
         }
@@ -4597,7 +4813,17 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
-              {tool.state === 'output-available' && tool.output && <ChannelComparisonResult {...tool.output} />}
+              {tool.state === 'output-available' && tool.output && (
+                <ChannelComparisonResult
+                  success={(tool.output as CompareChannelPerformanceToolOutput).success}
+                  message={(tool.output as CompareChannelPerformanceToolOutput).message}
+                  metric={(tool.output as CompareChannelPerformanceToolOutput).metric}
+                  product_id={(tool.output as CompareChannelPerformanceToolOutput).product_id}
+                  melhor_canal={(tool.output as CompareChannelPerformanceToolOutput).melhor_canal}
+                  pior_canal={(tool.output as CompareChannelPerformanceToolOutput).pior_canal}
+                  canais={(tool.output as CompareChannelPerformanceToolOutput).canais}
+                />
+              )}
             </div>
           );
         }
@@ -4613,7 +4839,17 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
-              {tool.state === 'output-available' && tool.output && <ABCAnalysisResult {...tool.output} />}
+              {tool.state === 'output-available' && tool.output && (
+                <ABCAnalysisResult
+                  success={(tool.output as GenerateABCAnalysisToolOutput).success}
+                  message={(tool.output as GenerateABCAnalysisToolOutput).message}
+                  criteria={(tool.output as GenerateABCAnalysisToolOutput).criteria}
+                  period_days={(tool.output as GenerateABCAnalysisToolOutput).period_days}
+                  total_produtos={(tool.output as GenerateABCAnalysisToolOutput).total_produtos}
+                  distribuicao={(tool.output as GenerateABCAnalysisToolOutput).distribuicao}
+                  produtos_classificados={(tool.output as GenerateABCAnalysisToolOutput).produtos_classificados}
+                />
+              )}
             </div>
           );
         }
@@ -4629,7 +4865,16 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
-              {tool.state === 'output-available' && tool.output && <AnomaliesResult {...tool.output} />}
+              {tool.state === 'output-available' && tool.output && (
+                <AnomaliesResult
+                  success={(tool.output as DetectAnomaliesToolOutput).success}
+                  message={(tool.output as DetectAnomaliesToolOutput).message}
+                  sensitivity={(tool.output as DetectAnomaliesToolOutput).sensitivity}
+                  total_anomalias={(tool.output as DetectAnomaliesToolOutput).total_anomalias}
+                  anomalias_alta_severidade={(tool.output as DetectAnomaliesToolOutput).anomalias_alta_severidade}
+                  anomalias={(tool.output as DetectAnomaliesToolOutput).anomalias}
+                />
+              )}
             </div>
           );
         }
