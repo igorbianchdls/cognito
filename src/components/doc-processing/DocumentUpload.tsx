@@ -1,9 +1,9 @@
 'use client';
 
 import { useRef } from 'react';
-import { Upload, FileText, Loader2 } from 'lucide-react';
+import { Upload, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import PDFViewer from './PDFViewer';
 
 interface DocumentUploadProps {
   onFileUpload: (file: File) => void;
@@ -77,34 +77,28 @@ export default function DocumentUpload({
           </Button>
         </div>
       ) : (
-        // File Preview
-        <Card className="flex-1 flex flex-col items-center justify-center">
-          <CardContent className="flex flex-col items-center gap-4 pt-6">
-            {isProcessing ? (
-              <>
-                <Loader2 className="w-16 h-16 text-gray-400 animate-spin" />
-                <p className="text-lg font-medium text-gray-900">Processing document...</p>
-                <p className="text-sm text-gray-600">{uploadedFile.name}</p>
-              </>
-            ) : (
-              <>
-                <FileText className="w-16 h-16 text-green-600" />
-                <p className="text-lg font-medium text-gray-900">Document Uploaded</p>
-                <p className="text-sm text-gray-600">{uploadedFile.name}</p>
-                <p className="text-xs text-gray-500">
-                  {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
-                </p>
+        // PDF Viewer
+        <div className="flex-1 flex flex-col">
+          {isProcessing ? (
+            <div className="flex-1 flex flex-col items-center justify-center bg-white rounded-lg">
+              <Loader2 className="w-16 h-16 text-gray-400 animate-spin" />
+              <p className="text-lg font-medium text-gray-900 mt-4">Processing document...</p>
+              <p className="text-sm text-gray-600 mt-2">{uploadedFile.name}</p>
+            </div>
+          ) : (
+            <div className="flex-1 flex flex-col">
+              <PDFViewer file={uploadedFile} />
+              <div className="mt-4 flex justify-center">
                 <Button
                   onClick={triggerFileSelect}
                   variant="outline"
-                  className="mt-4"
                 >
                   Upload Different File
                 </Button>
-              </>
-            )}
-          </CardContent>
-        </Card>
+              </div>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
