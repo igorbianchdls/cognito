@@ -23,7 +23,8 @@ import {
   FileText,
   Package,
   ArrowUpRight,
-  Activity
+  Activity,
+  DollarSign
 } from 'lucide-react';
 import { FormEvent, useState } from 'react';
 import type { ChatStatus } from 'ai';
@@ -66,6 +67,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
   'ecommerceSalesAgent': TrendingUp,
   'webAnalyticsAgent': Activity,
   'logisticsAgent': Package,
+  'paidTrafficAgent': DollarSign,
   'gestorDeComprasAgent': Package,
   'gestorDeProjetosAgent': Wrench,
   'funcionariosAgent': Users,
@@ -91,6 +93,7 @@ const models = [
   { id: 'ecommerceSalesAgent', name: 'E-commerce Sales Agent', icon: iconMap['ecommerceSalesAgent'] },
   { id: 'webAnalyticsAgent', name: 'Web Analytics Agent', icon: iconMap['webAnalyticsAgent'] },
   { id: 'logisticsAgent', name: 'Logistics Agent', icon: iconMap['logisticsAgent'] },
+  { id: 'paidTrafficAgent', name: 'Paid Traffic Agent', icon: iconMap['paidTrafficAgent'] },
   { id: 'gestorDeComprasAgent', name: 'Gestor de Compras', icon: iconMap['gestorDeComprasAgent'] },
   { id: 'gestorDeProjetosAgent', name: 'Gestor de Projetos', icon: iconMap['gestorDeProjetosAgent'] },
   { id: 'funcionariosAgent', name: 'Funcionários Agent', icon: iconMap['funcionariosAgent'] },
@@ -172,6 +175,7 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
                 case 'ecommerceSalesAgent': return 'E-commerce Sales Agent';
                 case 'webAnalyticsAgent': return 'Web Analytics Agent';
                 case 'logisticsAgent': return 'Logistics Agent';
+                case 'paidTrafficAgent': return 'Paid Traffic Agent';
                 case 'gestorDeComprasAgent': return 'Gestor de Compras';
                 case 'gestorDeProjetosAgent': return 'Gestor de Projetos';
                 case 'funcionariosAgent': return 'Funcionários Agent';
