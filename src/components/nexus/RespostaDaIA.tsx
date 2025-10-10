@@ -73,6 +73,13 @@ import SlowMovingItemsResult from '../tools/inventory/SlowMovingItemsResult';
 import ChannelComparisonResult from '../tools/inventory/ChannelComparisonResult';
 import ABCAnalysisResult from '../tools/inventory/ABCAnalysisResult';
 import AnomaliesResult from '../tools/inventory/AnomaliesResult';
+import DeliveryPerformanceResult from '../tools/logistics/DeliveryPerformanceResult';
+import CarrierBenchmarkResult from '../tools/logistics/CarrierBenchmarkResult';
+import ShippingCostStructureResult from '../tools/logistics/ShippingCostStructureResult';
+import ReverseLogisticsTrendsResult from '../tools/logistics/ReverseLogisticsTrendsResult';
+import OptimizePackageDimensionsResult from '../tools/logistics/OptimizePackageDimensionsResult';
+import DetectDeliveryAnomaliesResult from '../tools/logistics/DetectDeliveryAnomaliesResult';
+import ForecastDeliveryCostsResult from '../tools/logistics/ForecastDeliveryCostsResult';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -1189,6 +1196,180 @@ type GetLogisticsDataToolOutput = {
   }>;
   message: string;
   error?: string;
+};
+
+type CalculateDeliveryPerformanceToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  transportadora_id?: string;
+  total_envios?: number;
+  envios_entregues?: number;
+  on_time_delivery?: {
+    rate: string;
+    entregas_no_prazo: number;
+    entregas_atrasadas: number;
+    classificacao: string;
+  };
+  delivery_time?: {
+    average_days: string;
+    min_days: string;
+    max_days: string;
+    classificacao: string;
+  };
+  first_attempt_success?: {
+    rate: string;
+    classificacao: string;
+  };
+  lead_time?: {
+    average_hours: string;
+    classificacao: string;
+  };
+  sla_compliance?: {
+    rate: string;
+    status: string;
+  };
+  performance_geral?: {
+    score: string;
+    classificacao: string;
+  };
+};
+
+type AnalyzeCarrierBenchmarkToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  metric?: string;
+  total_transportadoras?: number;
+  melhor_transportadora?: string;
+  pior_transportadora?: string;
+  transportadoras?: Array<{
+    nome: string;
+    total_envios: number;
+    on_time_rate: string;
+    custo_medio: string;
+    cost_per_kg: string;
+    performance_score: string;
+    classificacao: string;
+    recomendacao: string;
+  }>;
+};
+
+type AnalyzeShippingCostStructureToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  custo_total?: string;
+  custo_medio_por_envio?: string;
+  cost_per_kg?: string;
+  peso_total_kg?: string;
+  shipping_cost_percentage?: {
+    percentual: string;
+    classificacao: string;
+  };
+  distribuicao_por_faixa_peso?: Array<{
+    faixa: string;
+    envios: number;
+    custo_total: string;
+    custo_medio: string;
+    percentual_volume: string;
+  }>;
+  oportunidades_economia?: string[];
+};
+
+type AnalyzeReverseLogisticsTrendsToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  return_rate?: {
+    taxa: string;
+    total_devolucoes: number;
+    total_envios: number;
+    classificacao: string;
+  };
+  impacto_financeiro?: {
+    custo_total: string;
+    custo_medio_por_devolucao: string;
+    percentual_receita_frete: string;
+  };
+  motivos_principais?: Array<{
+    motivo: string;
+    quantidade: number;
+    percentual: string;
+  }>;
+  analise_pareto?: {
+    top_3_motivos_percentual: string;
+    insight: string;
+  };
+  recomendacoes?: string[];
+};
+
+type OptimizePackageDimensionsToolOutput = {
+  success: boolean;
+  message: string;
+  transportadora_id?: string;
+  total_pacotes?: number;
+  package_efficiency?: {
+    score_medio: string;
+    classificacao: string;
+    otimizados: number;
+    desperdicando_espaco: number;
+  };
+  analise_detalhada?: Array<{
+    peso_real: string;
+    peso_volumetrico: string;
+    volume_cm3: number;
+    efficiency_score: string;
+    status: string;
+    sugestao: string;
+    cobrado: string;
+    diferenca_custo: string;
+  }>;
+  recomendacoes?: string[];
+};
+
+type DetectDeliveryAnomaliesToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  sensitivity?: string;
+  estatisticas_base?: {
+    media_dias_entrega: string;
+    desvio_padrao: string;
+    total_envios_analisados: number;
+  };
+  total_anomalias?: number;
+  anomalias_criticas?: number;
+  anomalias_altas?: number;
+  anomalias?: Array<{
+    codigo_rastreio: string;
+    dias_entrega: number;
+    z_score: number;
+    severidade: string;
+    tipo_anomalia: string;
+    recomendacao: string;
+  }>;
+  red_flags?: string[];
+};
+
+type ForecastDeliveryCostsToolOutput = {
+  success: boolean;
+  message: string;
+  forecast_days?: number;
+  lookback_days?: number;
+  historico?: {
+    media_custo_semanal: string;
+    media_volume_semanal: number;
+    tendencia: string;
+    slope: string;
+  };
+  previsao?: {
+    custo_previsto_total: string;
+    volume_previsto_envios: number;
+    custo_medio_por_envio: string;
+    periodo: string;
+  };
+  insights?: string[];
 };
 
 type GetFuncionariosDataToolOutput = {
@@ -4467,6 +4648,201 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   data={(logisticsTool.output as GetLogisticsDataToolOutput).data}
                   message={(logisticsTool.output as GetLogisticsDataToolOutput).message}
                   error={(logisticsTool.output as GetLogisticsDataToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-calculateDeliveryPerformance') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-calculateDeliveryPerformance" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <DeliveryPerformanceResult
+                  success={(tool.output as CalculateDeliveryPerformanceToolOutput).success}
+                  message={(tool.output as CalculateDeliveryPerformanceToolOutput).message}
+                  periodo_dias={(tool.output as CalculateDeliveryPerformanceToolOutput).periodo_dias}
+                  transportadora_id={(tool.output as CalculateDeliveryPerformanceToolOutput).transportadora_id}
+                  total_envios={(tool.output as CalculateDeliveryPerformanceToolOutput).total_envios}
+                  envios_entregues={(tool.output as CalculateDeliveryPerformanceToolOutput).envios_entregues}
+                  on_time_delivery={(tool.output as CalculateDeliveryPerformanceToolOutput).on_time_delivery}
+                  delivery_time={(tool.output as CalculateDeliveryPerformanceToolOutput).delivery_time}
+                  first_attempt_success={(tool.output as CalculateDeliveryPerformanceToolOutput).first_attempt_success}
+                  lead_time={(tool.output as CalculateDeliveryPerformanceToolOutput).lead_time}
+                  sla_compliance={(tool.output as CalculateDeliveryPerformanceToolOutput).sla_compliance}
+                  performance_geral={(tool.output as CalculateDeliveryPerformanceToolOutput).performance_geral}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-analyzeCarrierBenchmark') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-analyzeCarrierBenchmark" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <CarrierBenchmarkResult
+                  success={(tool.output as AnalyzeCarrierBenchmarkToolOutput).success}
+                  message={(tool.output as AnalyzeCarrierBenchmarkToolOutput).message}
+                  periodo_dias={(tool.output as AnalyzeCarrierBenchmarkToolOutput).periodo_dias}
+                  metric={(tool.output as AnalyzeCarrierBenchmarkToolOutput).metric}
+                  total_transportadoras={(tool.output as AnalyzeCarrierBenchmarkToolOutput).total_transportadoras}
+                  melhor_transportadora={(tool.output as AnalyzeCarrierBenchmarkToolOutput).melhor_transportadora}
+                  pior_transportadora={(tool.output as AnalyzeCarrierBenchmarkToolOutput).pior_transportadora}
+                  transportadoras={(tool.output as AnalyzeCarrierBenchmarkToolOutput).transportadoras}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-analyzeShippingCostStructure') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-analyzeShippingCostStructure" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <ShippingCostStructureResult
+                  success={(tool.output as AnalyzeShippingCostStructureToolOutput).success}
+                  message={(tool.output as AnalyzeShippingCostStructureToolOutput).message}
+                  periodo_dias={(tool.output as AnalyzeShippingCostStructureToolOutput).periodo_dias}
+                  custo_total={(tool.output as AnalyzeShippingCostStructureToolOutput).custo_total}
+                  custo_medio_por_envio={(tool.output as AnalyzeShippingCostStructureToolOutput).custo_medio_por_envio}
+                  cost_per_kg={(tool.output as AnalyzeShippingCostStructureToolOutput).cost_per_kg}
+                  peso_total_kg={(tool.output as AnalyzeShippingCostStructureToolOutput).peso_total_kg}
+                  shipping_cost_percentage={(tool.output as AnalyzeShippingCostStructureToolOutput).shipping_cost_percentage}
+                  distribuicao_por_faixa_peso={(tool.output as AnalyzeShippingCostStructureToolOutput).distribuicao_por_faixa_peso}
+                  oportunidades_economia={(tool.output as AnalyzeShippingCostStructureToolOutput).oportunidades_economia}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-analyzeReverseLogisticsTrends') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-analyzeReverseLogisticsTrends" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <ReverseLogisticsTrendsResult
+                  success={(tool.output as AnalyzeReverseLogisticsTrendsToolOutput).success}
+                  message={(tool.output as AnalyzeReverseLogisticsTrendsToolOutput).message}
+                  periodo_dias={(tool.output as AnalyzeReverseLogisticsTrendsToolOutput).periodo_dias}
+                  return_rate={(tool.output as AnalyzeReverseLogisticsTrendsToolOutput).return_rate}
+                  impacto_financeiro={(tool.output as AnalyzeReverseLogisticsTrendsToolOutput).impacto_financeiro}
+                  motivos_principais={(tool.output as AnalyzeReverseLogisticsTrendsToolOutput).motivos_principais}
+                  analise_pareto={(tool.output as AnalyzeReverseLogisticsTrendsToolOutput).analise_pareto}
+                  recomendacoes={(tool.output as AnalyzeReverseLogisticsTrendsToolOutput).recomendacoes}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-optimizePackageDimensions') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-optimizePackageDimensions" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <OptimizePackageDimensionsResult
+                  success={(tool.output as OptimizePackageDimensionsToolOutput).success}
+                  message={(tool.output as OptimizePackageDimensionsToolOutput).message}
+                  transportadora_id={(tool.output as OptimizePackageDimensionsToolOutput).transportadora_id}
+                  total_pacotes={(tool.output as OptimizePackageDimensionsToolOutput).total_pacotes}
+                  package_efficiency={(tool.output as OptimizePackageDimensionsToolOutput).package_efficiency}
+                  analise_detalhada={(tool.output as OptimizePackageDimensionsToolOutput).analise_detalhada}
+                  recomendacoes={(tool.output as OptimizePackageDimensionsToolOutput).recomendacoes}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-detectDeliveryAnomalies') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-detectDeliveryAnomalies" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <DetectDeliveryAnomaliesResult
+                  success={(tool.output as DetectDeliveryAnomaliesToolOutput).success}
+                  message={(tool.output as DetectDeliveryAnomaliesToolOutput).message}
+                  periodo_dias={(tool.output as DetectDeliveryAnomaliesToolOutput).periodo_dias}
+                  sensitivity={(tool.output as DetectDeliveryAnomaliesToolOutput).sensitivity}
+                  estatisticas_base={(tool.output as DetectDeliveryAnomaliesToolOutput).estatisticas_base}
+                  total_anomalias={(tool.output as DetectDeliveryAnomaliesToolOutput).total_anomalias}
+                  anomalias_criticas={(tool.output as DetectDeliveryAnomaliesToolOutput).anomalias_criticas}
+                  anomalias_altas={(tool.output as DetectDeliveryAnomaliesToolOutput).anomalias_altas}
+                  anomalias={(tool.output as DetectDeliveryAnomaliesToolOutput).anomalias}
+                  red_flags={(tool.output as DetectDeliveryAnomaliesToolOutput).red_flags}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-forecastDeliveryCosts') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-forecastDeliveryCosts" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <ForecastDeliveryCostsResult
+                  success={(tool.output as ForecastDeliveryCostsToolOutput).success}
+                  message={(tool.output as ForecastDeliveryCostsToolOutput).message}
+                  forecast_days={(tool.output as ForecastDeliveryCostsToolOutput).forecast_days}
+                  lookback_days={(tool.output as ForecastDeliveryCostsToolOutput).lookback_days}
+                  historico={(tool.output as ForecastDeliveryCostsToolOutput).historico}
+                  previsao={(tool.output as ForecastDeliveryCostsToolOutput).previsao}
+                  insights={(tool.output as ForecastDeliveryCostsToolOutput).insights}
                 />
               )}
             </div>
