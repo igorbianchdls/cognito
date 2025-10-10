@@ -61,6 +61,11 @@ import AnalyticsDataTable from '../tools/AnalyticsDataTable';
 import ComprasDataTable from '../tools/ComprasDataTable';
 import ProjetosDataTable from '../tools/ProjetosDataTable';
 import FuncionariosDataTable from '../tools/FuncionariosDataTable';
+import RevenueMetricsResult from '../tools/RevenueMetricsResult';
+import CustomerMetricsResult from '../tools/CustomerMetricsResult';
+import ProductPerformanceResult from '../tools/ProductPerformanceResult';
+import CouponEffectivenessResult from '../tools/CouponEffectivenessResult';
+import ChannelAnalysisResult from '../tools/ChannelAnalysisResult';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -923,6 +928,210 @@ type GetEcommerceSalesDataToolOutput = {
   }>;
   message: string;
   error?: string;
+};
+
+type GetRevenueMetricsToolInput = {
+  data_de: string;
+  data_ate: string;
+  comparar_com_periodo_anterior?: boolean;
+  channel_id?: string;
+};
+
+type GetRevenueMetricsToolOutput = {
+  success: boolean;
+  message: string;
+  error?: string;
+  data: {
+    periodo: { data_de: string; data_ate: string };
+    receita_total: number;
+    numero_pedidos: number;
+    aov: number;
+    desconto_total: number;
+    frete_total: number;
+    receita_liquida: number;
+    comparacao?: {
+      periodo_anterior: { data_de: string; data_ate: string };
+      receita_anterior: number;
+      pedidos_anterior: number;
+      aov_anterior: number;
+      crescimento_receita_percentual: number;
+      crescimento_pedidos_percentual: number;
+      crescimento_aov_percentual: number;
+    };
+  } | null;
+};
+
+type GetCustomerMetricsToolInput = {
+  data_de: string;
+  data_ate: string;
+  top_clientes_limit?: number;
+};
+
+type GetCustomerMetricsToolOutput = {
+  success: boolean;
+  message: string;
+  error?: string;
+  data: {
+    periodo: { data_de: string; data_ate: string };
+    total_clientes: number;
+    ltv_medio: number;
+    taxa_recompra_percentual: number;
+    clientes_com_recompra: number;
+    segmentacao_periodo: {
+      novos_clientes: number;
+      clientes_recorrentes: number;
+      total_clientes_periodo: number;
+    };
+    top_clientes: Array<{
+      customer_id: string;
+      total_pedidos: number;
+      total_gasto: number;
+      primeiro_pedido: string;
+      ultimo_pedido: string;
+    }>;
+  } | null;
+};
+
+type GetProductPerformanceToolInput = {
+  data_de: string;
+  data_ate: string;
+  top_products_limit?: number;
+  categoria?: string;
+};
+
+type GetProductPerformanceToolOutput = {
+  success: boolean;
+  message: string;
+  error?: string;
+  data: {
+    periodo: { data_de: string; data_ate: string };
+    resumo: {
+      total_produtos: number;
+      produtos_com_vendas: number;
+      unidades_vendidas_total: number;
+      receita_total: number;
+      margem_media_percentual: number;
+    };
+    top_produtos_por_receita: Array<{
+      product_id: string;
+      name: string;
+      sku: string;
+      category: string;
+      price: number;
+      cost: number;
+      stock_quantity: number;
+      unidades_vendidas: number;
+      receita_total: number;
+      margem_percentual: number;
+      sell_through_rate: number;
+      devolucoes: number;
+    }>;
+    produtos_baixo_sell_through: Array<{
+      product_id: string;
+      name: string;
+      sku: string;
+      category: string;
+      price: number;
+      cost: number;
+      stock_quantity: number;
+      unidades_vendidas: number;
+      receita_total: number;
+      margem_percentual: number;
+      sell_through_rate: number;
+      devolucoes: number;
+    }>;
+  } | null;
+};
+
+type GetCouponEffectivenessToolInput = {
+  data_de: string;
+  data_ate: string;
+};
+
+type GetCouponEffectivenessToolOutput = {
+  success: boolean;
+  message: string;
+  error?: string;
+  data: {
+    periodo: { data_de: string; data_ate: string };
+    resumo: {
+      total_pedidos: number;
+      pedidos_com_cupom: number;
+      pedidos_sem_cupom: number;
+      taxa_uso_cupons_percentual: number;
+      receita_com_cupom: number;
+      receita_sem_cupom: number;
+      desconto_total_concedido: number;
+      aov_com_cupom: number;
+      aov_sem_cupom: number;
+      impacto_aov_percentual: number;
+      roi_medio_percentual: number;
+    };
+    top_cupons_por_uso: Array<{
+      coupon_id: string;
+      coupon_code?: string;
+      coupon_type?: string;
+      coupon_value?: number;
+      vezes_usado: number;
+      receita_gerada: number;
+      desconto_concedido: number;
+      aov: number;
+    }>;
+    top_cupons_por_receita: Array<{
+      coupon_id: string;
+      coupon_code?: string;
+      coupon_type?: string;
+      coupon_value?: number;
+      vezes_usado: number;
+      receita_gerada: number;
+      desconto_concedido: number;
+      aov: number;
+    }>;
+  } | null;
+};
+
+type GetChannelAnalysisToolInput = {
+  data_de: string;
+  data_ate: string;
+};
+
+type GetChannelAnalysisToolOutput = {
+  success: boolean;
+  message: string;
+  error?: string;
+  data: {
+    periodo: { data_de: string; data_ate: string };
+    resumo: {
+      total_canais: number;
+      receita_total: number;
+      pedidos_totais: number;
+      aov_geral: number;
+    };
+    canais_performance: Array<{
+      channel_id: string;
+      channel_name: string;
+      channel_type: string;
+      numero_pedidos: number;
+      receita_total: number;
+      aov: number;
+      desconto_total: number;
+      frete_total: number;
+      percentual_receita?: number;
+      percentual_pedidos?: number;
+    }>;
+    melhor_canal: {
+      name: string;
+      receita: number;
+      pedidos: number;
+      aov: number;
+    } | null;
+    pior_canal: {
+      name: string;
+      receita: number;
+      pedidos: number;
+      aov: number;
+    } | null;
+  } | null;
 };
 
 type GetLogisticsDataToolInput = {
@@ -2025,6 +2234,26 @@ type NexusToolUIPart = ToolUIPart<{
   calcularRunway: {
     input: CalcularRunwayToolInput;
     output: CalcularRunwayToolOutput;
+  };
+  getRevenueMetrics: {
+    input: GetRevenueMetricsToolInput;
+    output: GetRevenueMetricsToolOutput;
+  };
+  getCustomerMetrics: {
+    input: GetCustomerMetricsToolInput;
+    output: GetCustomerMetricsToolOutput;
+  };
+  getProductPerformance: {
+    input: GetProductPerformanceToolInput;
+    output: GetProductPerformanceToolOutput;
+  };
+  getCouponEffectiveness: {
+    input: GetCouponEffectivenessToolInput;
+    output: GetCouponEffectivenessToolOutput;
+  };
+  getChannelAnalysis: {
+    input: GetChannelAnalysisToolInput;
+    output: GetChannelAnalysisToolOutput;
   };
 }>;
 
@@ -3861,6 +4090,171 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   data={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).data}
                   message={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).message}
                   error={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getRevenueMetrics') {
+          const revenueTool = part as NexusToolUIPart;
+          const callId = revenueTool.toolCallId;
+          const shouldBeOpen = revenueTool.state === 'output-available' || revenueTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getRevenueMetrics" state={revenueTool.state} />
+                <ToolContent>
+                  {revenueTool.input && (
+                    <ToolInput input={revenueTool.input} />
+                  )}
+                  {revenueTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={revenueTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {revenueTool.state === 'output-available' && (
+                <RevenueMetricsResult
+                  success={(revenueTool.output as GetRevenueMetricsToolOutput).success}
+                  data={(revenueTool.output as GetRevenueMetricsToolOutput).data}
+                  message={(revenueTool.output as GetRevenueMetricsToolOutput).message}
+                  error={(revenueTool.output as GetRevenueMetricsToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getCustomerMetrics') {
+          const customerTool = part as NexusToolUIPart;
+          const callId = customerTool.toolCallId;
+          const shouldBeOpen = customerTool.state === 'output-available' || customerTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getCustomerMetrics" state={customerTool.state} />
+                <ToolContent>
+                  {customerTool.input && (
+                    <ToolInput input={customerTool.input} />
+                  )}
+                  {customerTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={customerTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {customerTool.state === 'output-available' && (
+                <CustomerMetricsResult
+                  success={(customerTool.output as GetCustomerMetricsToolOutput).success}
+                  data={(customerTool.output as GetCustomerMetricsToolOutput).data}
+                  message={(customerTool.output as GetCustomerMetricsToolOutput).message}
+                  error={(customerTool.output as GetCustomerMetricsToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getProductPerformance') {
+          const productTool = part as NexusToolUIPart;
+          const callId = productTool.toolCallId;
+          const shouldBeOpen = productTool.state === 'output-available' || productTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getProductPerformance" state={productTool.state} />
+                <ToolContent>
+                  {productTool.input && (
+                    <ToolInput input={productTool.input} />
+                  )}
+                  {productTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={productTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {productTool.state === 'output-available' && (
+                <ProductPerformanceResult
+                  success={(productTool.output as GetProductPerformanceToolOutput).success}
+                  data={(productTool.output as GetProductPerformanceToolOutput).data}
+                  message={(productTool.output as GetProductPerformanceToolOutput).message}
+                  error={(productTool.output as GetProductPerformanceToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getCouponEffectiveness') {
+          const couponTool = part as NexusToolUIPart;
+          const callId = couponTool.toolCallId;
+          const shouldBeOpen = couponTool.state === 'output-available' || couponTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getCouponEffectiveness" state={couponTool.state} />
+                <ToolContent>
+                  {couponTool.input && (
+                    <ToolInput input={couponTool.input} />
+                  )}
+                  {couponTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={couponTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {couponTool.state === 'output-available' && (
+                <CouponEffectivenessResult
+                  success={(couponTool.output as GetCouponEffectivenessToolOutput).success}
+                  data={(couponTool.output as GetCouponEffectivenessToolOutput).data}
+                  message={(couponTool.output as GetCouponEffectivenessToolOutput).message}
+                  error={(couponTool.output as GetCouponEffectivenessToolOutput).error}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getChannelAnalysis') {
+          const channelTool = part as NexusToolUIPart;
+          const callId = channelTool.toolCallId;
+          const shouldBeOpen = channelTool.state === 'output-available' || channelTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getChannelAnalysis" state={channelTool.state} />
+                <ToolContent>
+                  {channelTool.input && (
+                    <ToolInput input={channelTool.input} />
+                  )}
+                  {channelTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={channelTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {channelTool.state === 'output-available' && (
+                <ChannelAnalysisResult
+                  success={(channelTool.output as GetChannelAnalysisToolOutput).success}
+                  data={(channelTool.output as GetChannelAnalysisToolOutput).data}
+                  message={(channelTool.output as GetChannelAnalysisToolOutput).message}
+                  error={(channelTool.output as GetChannelAnalysisToolOutput).error}
                 />
               )}
             </div>
