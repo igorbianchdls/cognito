@@ -94,6 +94,13 @@ import TopLandingPagesResult from '../tools/web-analytics/TopLandingPagesResult'
 import DevicePerformanceResult from '../tools/web-analytics/DevicePerformanceResult';
 import TrafficAnomaliesResult from '../tools/web-analytics/TrafficAnomaliesResult';
 import UserBehaviorResult from '../tools/web-analytics/UserBehaviorResult';
+import CampaignROASResult from '../tools/paid-traffic/CampaignROASResult';
+import AdsPlatformsResult from '../tools/paid-traffic/AdsPlatformsResult';
+import CreativePerformanceResult from '../tools/paid-traffic/CreativePerformanceResult';
+import TopAdsResult from '../tools/paid-traffic/TopAdsResult';
+import SpendingTrendsResult from '../tools/paid-traffic/SpendingTrendsResult';
+import CostMetricsResult from '../tools/paid-traffic/CostMetricsResult';
+import AdPerformanceForecastResult from '../tools/paid-traffic/AdPerformanceForecastResult';
 
 interface ReasoningPart {
   type: 'reasoning';
@@ -1666,6 +1673,131 @@ type AnalyzeUserBehaviorToolOutput = {
     frequencia_media_visitas: string;
     engagement_rate: string;
     classificacao: string;
+  };
+};
+
+type AnalyzeCampaignROASToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  plataforma?: string;
+  total_campanhas?: number;
+  melhor_campanha?: string;
+  campanhas?: Array<{
+    campanha_id: string;
+    gasto: string;
+    receita: string;
+    conversoes: number;
+    roas: string;
+    custo_por_conversao: string;
+    ctr: string;
+    classificacao: string;
+  }>;
+};
+
+type CompareAdsPlatformsToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  total_plataformas?: number;
+  melhor_plataforma?: string;
+  pior_plataforma?: string;
+  plataformas?: Array<{
+    plataforma: string;
+    gasto: string;
+    receita: string;
+    conversoes: number;
+    roas: string;
+    ctr: string;
+    conversion_rate: string;
+    classificacao: string;
+  }>;
+};
+
+type AnalyzeCreativePerformanceToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  total_criativos?: number;
+  status?: {
+    aprovados: number;
+    rascunhos: number;
+    em_revisao: number;
+    rejeitados: number;
+    taxa_aprovacao: string;
+  };
+};
+
+type IdentifyTopAdsToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  plataforma?: string;
+  total_analisados?: number;
+  top_anuncios?: Array<{
+    anuncio_id: string;
+    plataforma: string;
+    gasto: string;
+    receita: string;
+    conversoes: number;
+    roas: string;
+    ctr: string;
+    custo_por_conversao: string;
+  }>;
+};
+
+type AnalyzeSpendingTrendsToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  plataforma?: string;
+  estatisticas?: {
+    gasto_medio_dia: string;
+    gasto_maximo: string;
+    gasto_minimo: string;
+    tendencia: string;
+  };
+  gastos_diarios?: Array<{
+    data: string;
+    gasto: string;
+    receita: string;
+  }>;
+};
+
+type CalculateCostMetricsToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  plataforma?: string;
+  metricas?: {
+    total_gasto: string;
+    total_impressoes: number;
+    total_cliques: number;
+    total_conversoes: number;
+    cpm: string;
+    cpc: string;
+    cpa: string;
+    ctr: string;
+    classificacao_eficiencia: string;
+  };
+};
+
+type ForecastAdPerformanceToolOutput = {
+  success: boolean;
+  message: string;
+  lookback_days?: number;
+  forecast_days?: number;
+  plataforma?: string;
+  historico?: {
+    gasto_medio_dia: string;
+    conversoes_medio_dia: string;
+    roas_medio: string;
+  };
+  previsao?: {
+    gasto_previsto: string;
+    conversoes_previstas: number;
+    receita_prevista: string;
+    roas_esperado: string;
   };
 };
 
@@ -5493,6 +5625,182 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   message={(tool.output as AnalyzeUserBehaviorToolOutput).message}
                   periodo_dias={(tool.output as AnalyzeUserBehaviorToolOutput).periodo_dias}
                   comportamento={(tool.output as AnalyzeUserBehaviorToolOutput).comportamento}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-analyzeCampaignROAS') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-analyzeCampaignROAS" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <CampaignROASResult
+                  success={(tool.output as AnalyzeCampaignROASToolOutput).success}
+                  message={(tool.output as AnalyzeCampaignROASToolOutput).message}
+                  periodo_dias={(tool.output as AnalyzeCampaignROASToolOutput).periodo_dias}
+                  plataforma={(tool.output as AnalyzeCampaignROASToolOutput).plataforma}
+                  total_campanhas={(tool.output as AnalyzeCampaignROASToolOutput).total_campanhas}
+                  melhor_campanha={(tool.output as AnalyzeCampaignROASToolOutput).melhor_campanha}
+                  campanhas={(tool.output as AnalyzeCampaignROASToolOutput).campanhas}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-compareAdsPlatforms') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-compareAdsPlatforms" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <AdsPlatformsResult
+                  success={(tool.output as CompareAdsPlatformsToolOutput).success}
+                  message={(tool.output as CompareAdsPlatformsToolOutput).message}
+                  periodo_dias={(tool.output as CompareAdsPlatformsToolOutput).periodo_dias}
+                  total_plataformas={(tool.output as CompareAdsPlatformsToolOutput).total_plataformas}
+                  melhor_plataforma={(tool.output as CompareAdsPlatformsToolOutput).melhor_plataforma}
+                  pior_plataforma={(tool.output as CompareAdsPlatformsToolOutput).pior_plataforma}
+                  plataformas={(tool.output as CompareAdsPlatformsToolOutput).plataformas}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-analyzeCreativePerformance') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-analyzeCreativePerformance" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <CreativePerformanceResult
+                  success={(tool.output as AnalyzeCreativePerformanceToolOutput).success}
+                  message={(tool.output as AnalyzeCreativePerformanceToolOutput).message}
+                  periodo_dias={(tool.output as AnalyzeCreativePerformanceToolOutput).periodo_dias}
+                  total_criativos={(tool.output as AnalyzeCreativePerformanceToolOutput).total_criativos}
+                  status={(tool.output as AnalyzeCreativePerformanceToolOutput).status}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-identifyTopAds') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-identifyTopAds" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <TopAdsResult
+                  success={(tool.output as IdentifyTopAdsToolOutput).success}
+                  message={(tool.output as IdentifyTopAdsToolOutput).message}
+                  periodo_dias={(tool.output as IdentifyTopAdsToolOutput).periodo_dias}
+                  plataforma={(tool.output as IdentifyTopAdsToolOutput).plataforma}
+                  total_analisados={(tool.output as IdentifyTopAdsToolOutput).total_analisados}
+                  top_anuncios={(tool.output as IdentifyTopAdsToolOutput).top_anuncios}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-analyzeSpendingTrends') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-analyzeSpendingTrends" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <SpendingTrendsResult
+                  success={(tool.output as AnalyzeSpendingTrendsToolOutput).success}
+                  message={(tool.output as AnalyzeSpendingTrendsToolOutput).message}
+                  periodo_dias={(tool.output as AnalyzeSpendingTrendsToolOutput).periodo_dias}
+                  plataforma={(tool.output as AnalyzeSpendingTrendsToolOutput).plataforma}
+                  estatisticas={(tool.output as AnalyzeSpendingTrendsToolOutput).estatisticas}
+                  gastos_diarios={(tool.output as AnalyzeSpendingTrendsToolOutput).gastos_diarios}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-calculateCostMetrics') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-calculateCostMetrics" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <CostMetricsResult
+                  success={(tool.output as CalculateCostMetricsToolOutput).success}
+                  message={(tool.output as CalculateCostMetricsToolOutput).message}
+                  periodo_dias={(tool.output as CalculateCostMetricsToolOutput).periodo_dias}
+                  plataforma={(tool.output as CalculateCostMetricsToolOutput).plataforma}
+                  metricas={(tool.output as CalculateCostMetricsToolOutput).metricas}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-forecastAdPerformance') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-forecastAdPerformance" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <AdPerformanceForecastResult
+                  success={(tool.output as ForecastAdPerformanceToolOutput).success}
+                  message={(tool.output as ForecastAdPerformanceToolOutput).message}
+                  lookback_days={(tool.output as ForecastAdPerformanceToolOutput).lookback_days}
+                  forecast_days={(tool.output as ForecastAdPerformanceToolOutput).forecast_days}
+                  plataforma={(tool.output as ForecastAdPerformanceToolOutput).plataforma}
+                  historico={(tool.output as ForecastAdPerformanceToolOutput).historico}
+                  previsao={(tool.output as ForecastAdPerformanceToolOutput).previsao}
                 />
               )}
             </div>
