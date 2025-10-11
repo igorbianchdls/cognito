@@ -76,6 +76,14 @@ const contratoSchema = baseSchema.extend({
   objetoDoContrato: z.string().optional().describe('Objeto do contrato'),
 });
 
+// Schema para uma transação individual do extrato
+const transacaoExtratoSchema = z.object({
+  data: z.string().describe('Data da transação (formato DD/MM/YYYY)'),
+  descricao: z.string().describe('Descrição da transação'),
+  valor: z.string().describe('Valor da transação (use número negativo para débitos, positivo para créditos)'),
+  tipo: z.enum(['credito', 'debito']).describe('Tipo: "credito" para entradas, "debito" para saídas'),
+});
+
 // Schema para Extrato Bancário
 const extratoBancarioSchema = baseSchema.extend({
   documentType: z.literal('Extrato Bancário'),
@@ -88,6 +96,7 @@ const extratoBancarioSchema = baseSchema.extend({
   saldoFinal: z.string().optional().describe('Saldo final'),
   totalDeCreditos: z.string().optional().describe('Total de créditos'),
   totalDeDebitos: z.string().optional().describe('Total de débitos'),
+  transacoes: z.array(transacaoExtratoSchema).optional().describe('Array com todas as transações individuais do extrato'),
 });
 
 // Schema para Guia de Imposto
@@ -188,9 +197,15 @@ function convertToFieldsArray(extractedData: z.infer<typeof extractionSchema>) {
     confidence: 1,
   });
 
-  // Iterar sobre as propriedades do objeto (exceto summary e documentType)
+  // Extrair transações se existirem (para extrato bancário)
+  let transacoes: Array<{ data: string; descricao: string; valor: string; tipo: string }> | undefined;
+  if ('transacoes' in extractedData && extractedData.transacoes) {
+    transacoes = extractedData.transacoes;
+  }
+
+  // Iterar sobre as propriedades do objeto (exceto summary, documentType e transacoes)
   Object.entries(extractedData).forEach(([key, value]) => {
-    if (key !== 'summary' && key !== 'documentType' && value) {
+    if (key !== 'summary' && key !== 'documentType' && key !== 'transacoes' && value) {
       const label = fieldLabels[key] || key;
       fields.push({
         key: label,
@@ -203,6 +218,7 @@ function convertToFieldsArray(extractedData: z.infer<typeof extractionSchema>) {
   return {
     summary: extractedData.summary,
     fields,
+    transacoes, // Retornar transações separadamente
   };
 }
 
@@ -320,6 +336,14 @@ Crie um resumo executivo em 2-3 frases (tipo, valor, partes envolvidas, finalida
 - saldoFinal: Saldo final
 - totalDeCreditos: Total de créditos
 - totalDeDebitos: Total de débitos
+- transacoes: Array com TODAS as transações individuais do extrato (OBRIGATÓRIO)
+  * Cada transação deve ter:
+    - data: Data da transação (formato DD/MM/YYYY)
+    - descricao: Descrição/histórico da transação
+    - valor: Valor numérico (negativo para débitos, positivo para créditos)
+    - tipo: "credito" para entradas/depósitos, "debito" para saídas/pagamentos
+  * EXTRAIA TODAS as linhas de movimentação que encontrar no extrato
+  * Não omita nenhuma transação, mesmo que pareça pequena ou irrelevante
 
 **Para "Guia de Imposto":**
 - tipoDeGuia: Tipo de guia (DAS, DARF, GPS, etc)

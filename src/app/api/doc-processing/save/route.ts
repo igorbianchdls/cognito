@@ -40,7 +40,7 @@ export async function POST(req: Request) {
   console.log('💾 DOC SAVE: Request recebido');
 
   try {
-    const { documentType, fields, summary } = await req.json();
+    const { documentType, fields, summary, transacoes } = await req.json();
 
     if (!documentType) {
       return Response.json({ error: 'Tipo de documento não fornecido' }, { status: 400 });
@@ -143,15 +143,57 @@ export async function POST(req: Request) {
       throw specificError;
     }
 
+    // ETAPA 3: Se for extrato bancário com transações, inserir em transacoes_extrato
+    let transacoesInseridas = 0;
+    if (documentType === 'Extrato Bancário' && transacoes && Array.isArray(transacoes) && transacoes.length > 0) {
+      console.log('💾 DOC SAVE: Inserindo', transacoes.length, 'transações...');
+
+      const extratoId = specificDoc?.[0]?.id;
+      if (!extratoId) {
+        console.error('💾 DOC SAVE: ID do extrato não encontrado');
+        throw new Error('ID do extrato não encontrado para inserir transações');
+      }
+
+      // Preparar dados das transações para inserção
+      const transacoesData = transacoes.map((t: { data: string; descricao: string; valor: string; tipo: string }) => ({
+        extrato_id: extratoId,
+        data: t.data,
+        descricao: t.descricao,
+        valor: t.valor,
+        tipo: t.tipo,
+        conciliado: false, // Padrão: não conciliado
+      }));
+
+      // Inserir todas as transações de uma vez
+      const { data: transacoesResult, error: transacoesError } = await supabase
+        .from('gestaodocumentos.transacoes_extrato')
+        .insert(transacoesData)
+        .select();
+
+      if (transacoesError) {
+        console.error('💾 DOC SAVE: Erro ao inserir transações:', transacoesError);
+        // Não reverter o extrato, mas logar o erro
+        console.warn('💾 DOC SAVE: Extrato salvo, mas transações falharam');
+      } else {
+        transacoesInseridas = transacoesResult?.length || 0;
+        console.log('💾 DOC SAVE: ', transacoesInseridas, 'transações inseridas com sucesso!');
+      }
+    }
+
     console.log('💾 DOC SAVE: Documento salvo com sucesso!');
+
+    const successMessage = transacoesInseridas > 0
+      ? `Documento ${documentType} salvo com sucesso! ${transacoesInseridas} transações inseridas.`
+      : `Documento ${documentType} salvo com sucesso!`;
 
     return Response.json({
       success: true,
       data: {
         master: masterDoc[0],
         specific: specificDoc?.[0],
+        transacoesInseridas,
       },
-      message: `Documento ${documentType} salvo com sucesso!`,
+      message: successMessage,
     });
   } catch (error) {
     console.error('💾 DOC SAVE: Erro:', error);

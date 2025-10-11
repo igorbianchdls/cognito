@@ -18,11 +18,19 @@ interface ExtractedField {
   confidence?: number;
 }
 
+interface Transacao {
+  data: string;
+  descricao: string;
+  valor: string;
+  tipo: 'credito' | 'debito';
+}
+
 interface FieldsPanelProps {
   hasDocument: boolean;
   isProcessing: boolean;
   extractedFields?: ExtractedField[];
   summary?: string;
+  transacoes?: Transacao[];
 }
 
 // Mapeamento de campos específicos por tipo de documento
@@ -127,13 +135,15 @@ const colorOptions = [
   'bg-indigo-500',
 ];
 
-export default function FieldsPanel({ hasDocument, isProcessing, extractedFields, summary }: FieldsPanelProps) {
+export default function FieldsPanel({ hasDocument, isProcessing, extractedFields, summary, transacoes }: FieldsPanelProps) {
   // Estado local para gerenciar valores editáveis dos campos
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   // Estado para rastrear o tipo de documento selecionado
   const [documentType, setDocumentType] = useState<string>('');
   // Estado de salvamento
   const [isSaving, setIsSaving] = useState(false);
+  // Estado para armazenar transações extraídas
+  const [extractedTransacoes, setExtractedTransacoes] = useState<Transacao[]>([]);
 
   // Atualizar valores quando novos campos forem extraídos
   useEffect(() => {
@@ -155,6 +165,13 @@ export default function FieldsPanel({ hasDocument, isProcessing, extractedFields
 
     setFieldValues(newValues);
   }, [extractedFields]);
+
+  // Atualizar transações quando forem extraídas
+  useEffect(() => {
+    if (transacoes && transacoes.length > 0) {
+      setExtractedTransacoes(transacoes);
+    }
+  }, [transacoes]);
 
   // Função para atualizar valor de um campo específico
   const handleFieldChange = (key: string, value: string) => {
@@ -210,16 +227,28 @@ export default function FieldsPanel({ hasDocument, isProcessing, extractedFields
     setIsSaving(true);
 
     try {
+      const requestBody: {
+        documentType: string;
+        fields: typeof fieldsToSave;
+        summary?: string;
+        transacoes?: Transacao[];
+      } = {
+        documentType,
+        fields: fieldsToSave,
+        summary,
+      };
+
+      // Incluir transações se for extrato bancário
+      if (documentType === 'Extrato Bancário' && extractedTransacoes.length > 0) {
+        requestBody.transacoes = extractedTransacoes;
+      }
+
       const response = await fetch('/api/doc-processing/save', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          documentType,
-          fields: fieldsToSave,
-          summary,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
@@ -312,6 +341,48 @@ export default function FieldsPanel({ hasDocument, isProcessing, extractedFields
               ))}
             </div>
           </div>
+
+          {/* Transações Section - Only for Extrato Bancário */}
+          {documentType === 'Extrato Bancário' && extractedTransacoes.length > 0 && (
+            <div className="mt-6">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                Transações Extraídas ({extractedTransacoes.length})
+              </h3>
+              <div className="bg-white rounded-lg overflow-hidden border border-gray-200">
+                {/* Header da tabela */}
+                <div className="grid grid-cols-[120px_1fr_150px_100px] gap-4 px-4 py-3 bg-gray-50 border-b border-gray-200 font-semibold text-sm text-gray-700">
+                  <div>Data</div>
+                  <div>Descrição</div>
+                  <div className="text-right">Valor</div>
+                  <div className="text-center">Tipo</div>
+                </div>
+                {/* Linhas de transações */}
+                {extractedTransacoes.map((transacao, index) => (
+                  <div
+                    key={index}
+                    className="grid grid-cols-[120px_1fr_150px_100px] gap-4 px-4 py-3 border-b border-gray-100 hover:bg-gray-50 transition-colors text-sm"
+                  >
+                    <div className="text-gray-700">{transacao.data}</div>
+                    <div className="text-gray-900 truncate">{transacao.descricao}</div>
+                    <div className={`text-right font-medium ${
+                      transacao.tipo === 'credito' ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {transacao.valor}
+                    </div>
+                    <div className="text-center">
+                      <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
+                        transacao.tipo === 'credito'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-red-100 text-red-700'
+                      }`}>
+                        {transacao.tipo === 'credito' ? 'Crédito' : 'Débito'}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -22,17 +22,26 @@ interface ExtractedField {
   confidence?: number;
 }
 
+interface Transacao {
+  data: string;
+  descricao: string;
+  valor: string;
+  tipo: 'credito' | 'debito';
+}
+
 export default function DocProcessingPage() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [extractedFields, setExtractedFields] = useState<ExtractedField[]>([]);
   const [summary, setSummary] = useState<string>('');
+  const [transacoes, setTransacoes] = useState<Transacao[]>([]);
 
   const handleFileUpload = async (file: File) => {
     setUploadedFile(file);
     setIsProcessing(true);
     setExtractedFields([]); // Limpar campos anteriores
     setSummary(''); // Limpar resumo anterior
+    setTransacoes([]); // Limpar transações anteriores
 
     try {
       console.log('📄 Enviando arquivo para extração...');
@@ -52,9 +61,11 @@ export default function DocProcessingPage() {
       const data = await response.json();
       console.log('📄 Resumo:', data.summary);
       console.log('📄 Campos extraídos:', data.fields?.length);
+      console.log('📄 Transações extraídas:', data.transacoes?.length || 0);
 
       setSummary(data.summary || '');
       setExtractedFields(data.fields || []);
+      setTransacoes(data.transacoes || []);
     } catch (error) {
       console.error('📄 Erro ao extrair dados:', error);
       alert('Erro ao processar documento. Tente novamente.');
@@ -115,6 +126,7 @@ export default function DocProcessingPage() {
                       isProcessing={isProcessing}
                       extractedFields={extractedFields}
                       summary={summary}
+                      transacoes={transacoes}
                     />
                   </div>
                 </Panel>
