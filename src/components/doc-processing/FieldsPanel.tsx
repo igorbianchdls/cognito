@@ -73,17 +73,17 @@ export default function FieldsPanel({ hasDocument, isProcessing, extractedFields
         <div className="p-4">
           <div className="bg-white rounded-lg overflow-hidden border border-gray-200">
             {/* Fields */}
-            <div className="divide-y divide-gray-200">
+            <div>
               {fields.map((field, index) => (
                 <div
                   key={index}
                   className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 transition-colors group"
                 >
                   {/* Color indicator */}
-                  <div className={`w-1 h-6 ${field.color} rounded flex-shrink-0`}></div>
+                  <div className={`w-2 h-6 ${field.color} rounded-md flex-shrink-0`}></div>
 
                   {/* Key */}
-                  <span className="text-sm text-gray-700 w-[200px] flex-shrink-0">{field.key}</span>
+                  <span className="text-sm text-gray-700 font-semibold w-[200px] flex-shrink-0">{field.key}</span>
 
                   {/* Value Input */}
                   <Input
