@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { MoreVertical } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
@@ -42,13 +43,21 @@ const mockFields = [
   { key: 'Total de impostos', value: '', color: 'bg-green-500' },
 ];
 
-// Opções de tipos de documento
+// Opções de tipos de documento - Principais documentos usados por PMEs brasileiras
 const tiposDocumento = [
-  'NF-e',
-  'NFS-e',
-  'Boleto',
+  'NF-e (Nota Fiscal Eletrônica)',
+  'NFS-e (Nota Fiscal de Serviço)',
+  'NFC-e (Nota Fiscal ao Consumidor)',
+  'CT-e (Conhecimento de Transporte)',
+  'Boleto Bancário',
   'Recibo',
   'Fatura',
+  'Duplicata',
+  'Nota de Débito',
+  'Nota de Crédito',
+  'Ordem de Compra',
+  'Pedido de Venda',
+  'Carnê',
   'Conta de Luz',
   'Conta de Água',
   'Conta de Telefone',
@@ -56,7 +65,13 @@ const tiposDocumento = [
   'Guia de Imposto (DAS)',
   'Guia de Imposto (DARF)',
   'Guia de Imposto (GPS)',
+  'Guia de INSS',
+  'Guia de FGTS',
   'Contrato',
+  'Acordo Comercial',
+  'Proposta Comercial',
+  'Extrato Bancário',
+  'Comprovante de Pagamento',
   'Outro',
 ];
 
@@ -74,19 +89,35 @@ const colorOptions = [
 ];
 
 export default function FieldsPanel({ hasDocument, isProcessing, extractedFields, summary }: FieldsPanelProps) {
-  // Usar mockFields como template fixo e preencher com valores extraídos se disponíveis
-  const fields = mockFields.map((mockField) => {
-    // Tentar encontrar valor extraído correspondente (match case-insensitive)
-    const extracted = extractedFields?.find(
-      (ef) => ef.key.toLowerCase().replace(/\s/g, '') === mockField.key.toLowerCase().replace(/\s/g, '')
-    );
+  // Estado local para gerenciar valores editáveis dos campos
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
 
-    return {
-      key: mockField.key,
-      value: extracted?.value || mockField.value, // Usar valor do mock se não houver extraído
-      color: mockField.color,
-    };
-  });
+  // Atualizar valores quando novos campos forem extraídos
+  useEffect(() => {
+    const newValues: Record<string, string> = {};
+    mockFields.forEach((mockField) => {
+      const extracted = extractedFields?.find(
+        (ef) => ef.key.toLowerCase().replace(/\s/g, '') === mockField.key.toLowerCase().replace(/\s/g, '')
+      );
+      newValues[mockField.key] = extracted?.value || mockField.value;
+    });
+    setFieldValues(newValues);
+  }, [extractedFields]);
+
+  // Função para atualizar valor de um campo específico
+  const handleFieldChange = (key: string, value: string) => {
+    setFieldValues((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  // Usar mockFields como template fixo e preencher com valores do estado
+  const fields = mockFields.map((mockField) => ({
+    key: mockField.key,
+    value: fieldValues[mockField.key] || mockField.value,
+    color: mockField.color,
+  }));
 
   return (
     <div className="h-full flex flex-col">
@@ -114,7 +145,10 @@ export default function FieldsPanel({ hasDocument, isProcessing, extractedFields
 
                   {/* Value - Select for Tipo de documento, Input for others */}
                   {field.key === 'Tipo de documento' ? (
-                    <Select value={field.value} disabled>
+                    <Select
+                      value={field.value}
+                      onValueChange={(value) => handleFieldChange(field.key, value)}
+                    >
                       <SelectTrigger className="flex-1 bg-white">
                         <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
