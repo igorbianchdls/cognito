@@ -64,7 +64,7 @@ export default function DocumentUpload({
           onClick={triggerFileSelect}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
-          className="flex-1 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center gap-4 cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all bg-transparent"
+          className="flex-1 rounded-lg flex flex-col items-center justify-center gap-4 cursor-pointer hover:bg-gray-50 transition-all bg-transparent"
         >
           <Upload className="w-16 h-16 text-gray-400" />
           <div className="text-center">
