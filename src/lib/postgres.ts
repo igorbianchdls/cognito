@@ -1,8 +1,10 @@
-import type { Pool } from 'pg';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const { Pool } = require('pg');
+import { createRequire } from 'module';
+import type { Pool as PoolType } from 'pg';
 
-let pgPool: Pool | null = null;
+const require = createRequire(import.meta.url);
+const { Pool } = require('pg') as { Pool: new (...args: unknown[]) => PoolType };
+
+let pgPool: PoolType | null = null;
 
 function getPool() {
   if (!process.env.SUPABASE_DB_URL) {
