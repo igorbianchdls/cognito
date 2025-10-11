@@ -28,6 +28,7 @@ export default function HandsontablePage() {
   const [cellBgColor, setCellBgColor] = useState('#ffffff');
   const [cellTextColor, setCellTextColor] = useState('#1e293b');
   const [fontSize, setFontSize] = useState(14);
+  const [fontFamily, setFontFamily] = useState<'geist' | 'inter'>('geist');
   const [headerBgColor, setHeaderBgColor] = useState('#334155');
   const [headerTextColor, setHeaderTextColor] = useState('#ffffff');
   const [borderColor, setBorderColor] = useState('#e2e8f0');
@@ -39,6 +40,7 @@ export default function HandsontablePage() {
       background-color: ${cellBgColor} !important;
       color: ${cellTextColor} !important;
       font-size: ${fontSize}px !important;
+      font-family: var(--font-${fontFamily === 'geist' ? 'geist-sans' : 'inter'}) !important;
       border-color: ${borderColor} !important;
     }
 
@@ -47,6 +49,7 @@ export default function HandsontablePage() {
       color: ${headerTextColor} !important;
       font-weight: 600 !important;
       font-size: ${fontSize}px !important;
+      font-family: var(--font-${fontFamily === 'geist' ? 'geist-sans' : 'inter'}) !important;
       border-color: ${borderColor} !important;
     }
 
@@ -138,6 +141,36 @@ export default function HandsontablePage() {
                   onChange={(e) => setFontSize(Number(e.target.value))}
                   className="w-full"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
+                  Família da Fonte
+                </label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="fontFamily"
+                      value="geist"
+                      checked={fontFamily === 'geist'}
+                      onChange={(e) => setFontFamily(e.target.value as 'geist' | 'inter')}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm">Geist</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="fontFamily"
+                      value="inter"
+                      checked={fontFamily === 'inter'}
+                      onChange={(e) => setFontFamily(e.target.value as 'geist' | 'inter')}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm">Inter</span>
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -235,6 +268,7 @@ export default function HandsontablePage() {
                   setCellBgColor('#ffffff');
                   setCellTextColor('#1e293b');
                   setFontSize(14);
+                  setFontFamily('geist');
                   setHeaderBgColor('#334155');
                   setHeaderTextColor('#ffffff');
                   setBorderColor('#e2e8f0');
