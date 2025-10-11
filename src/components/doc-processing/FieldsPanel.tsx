@@ -77,23 +77,23 @@ export default function FieldsPanel({ hasDocument, isProcessing, extractedFields
               {fields.map((field, index) => (
                 <div
                   key={index}
-                  className="grid grid-cols-[auto,200px,1fr,auto] gap-4 px-4 py-3 items-center hover:bg-gray-50 transition-colors group"
+                  className="flex items-center gap-4 px-4 py-3 hover:bg-gray-50 transition-colors group"
                 >
                   {/* Color indicator */}
-                  <div className={`w-1 h-6 ${field.color} rounded`}></div>
+                  <div className={`w-1 h-6 ${field.color} rounded flex-shrink-0`}></div>
 
                   {/* Key */}
-                  <span className="text-sm text-gray-700">{field.key}</span>
+                  <span className="text-sm text-gray-700 w-[200px] flex-shrink-0">{field.key}</span>
 
                   {/* Value Input */}
                   <Input
                     value={field.value}
                     readOnly
-                    className="bg-white"
+                    className="bg-white flex-1"
                   />
 
                   {/* Actions */}
-                  <button className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-600 hover:text-gray-900">
+                  <button className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-600 hover:text-gray-900 flex-shrink-0">
                     <MoreVertical className="w-4 h-4" />
                   </button>
                 </div>
