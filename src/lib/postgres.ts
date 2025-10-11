@@ -1,8 +1,6 @@
-import pg from 'pg';
+import { Pool } from 'pg';
 
-const { Pool } = pg;
-
-let pool: pg.Pool | null = null;
+let pool: InstanceType<typeof Pool> | null = null;
 
 function getPool() {
   if (!process.env.SUPABASE_DB_URL) {
