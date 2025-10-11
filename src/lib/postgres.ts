@@ -1,4 +1,6 @@
-import { Pool } from 'pg';
+import type { Pool } from 'pg';
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { Pool } = require('pg');
 
 let pgPool: Pool | null = null;
 
