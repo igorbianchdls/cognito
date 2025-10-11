@@ -5,9 +5,9 @@ const { Pool } = require('pg') as typeof import('pg');
 
 /**
  * Type representing a row returned from a PostgreSQL query
- * Each row is an object with string keys and any type of value
+ * Each row is an object with string keys and unknown type values
  */
-export type QueryRow = Record<string, any>;
+export type QueryRow = Record<string, unknown>;
 
 type PgPoolInstance = InstanceType<typeof Pool>;
 
