@@ -105,7 +105,7 @@ export default function DocProcessingPage() {
                   </div>
                 </Panel>
 
-                <PanelResizeHandle className="w-1 bg-gray-200 hover:bg-gray-300 transition-colors" />
+                <PanelResizeHandle className="w-px bg-gray-200 hover:bg-gray-300 transition-colors" />
 
                 {/* Right Panel - Extracted Fields */}
                 <Panel defaultSize={50} minSize={30}>
