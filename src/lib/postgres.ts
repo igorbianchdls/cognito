@@ -26,7 +26,7 @@ export async function runQuery<T = unknown>(sql: string, params?: unknown[]) {
   const pool = getPool();
   const client = await pool.connect();
   try {
-    const result = await client.query<T>(sql, params);
+    const result = await client.query(sql, params);
     return result.rows;
   } finally {
     client.release();
