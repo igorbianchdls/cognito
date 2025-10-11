@@ -130,6 +130,7 @@
     "next": "15.4.5",
     "papaparse": "^5.5.3",
     "pdfjs-dist": "^5.4.296",
+    "pg": "^8.16.3",
     "platejs": "^49.2.21",
     "react": "19.1.0",
     "react-day-picker": "^9.9.0",
