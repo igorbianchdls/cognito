@@ -2,6 +2,13 @@
 
 import { MoreVertical } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface ExtractedField {
   key: string;
@@ -33,6 +40,24 @@ const mockFields = [
   { key: 'Descrição/Observações', value: '', color: 'bg-gray-700' },
   { key: 'Status do documento', value: '', color: 'bg-yellow-500' },
   { key: 'Total de impostos', value: '', color: 'bg-green-500' },
+];
+
+// Opções de tipos de documento
+const tiposDocumento = [
+  'NF-e',
+  'NFS-e',
+  'Boleto',
+  'Recibo',
+  'Fatura',
+  'Conta de Luz',
+  'Conta de Água',
+  'Conta de Telefone',
+  'Conta de Internet',
+  'Guia de Imposto (DAS)',
+  'Guia de Imposto (DARF)',
+  'Guia de Imposto (GPS)',
+  'Contrato',
+  'Outro',
 ];
 
 // Cores para os indicadores dos campos
@@ -87,12 +112,27 @@ export default function FieldsPanel({ hasDocument, isProcessing, extractedFields
                   {/* Key */}
                   <span className="text-sm text-gray-700 font-semibold w-[200px] flex-shrink-0">{field.key}</span>
 
-                  {/* Value Input */}
-                  <Input
-                    value={field.value}
-                    readOnly
-                    className="bg-white flex-1"
-                  />
+                  {/* Value - Select for Tipo de documento, Input for others */}
+                  {field.key === 'Tipo de documento' ? (
+                    <Select value={field.value} disabled>
+                      <SelectTrigger className="flex-1 bg-white">
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {tiposDocumento.map((tipo) => (
+                          <SelectItem key={tipo} value={tipo}>
+                            {tipo}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      value={field.value}
+                      readOnly
+                      className="bg-white flex-1"
+                    />
+                  )}
 
                   {/* Actions */}
                   <button className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-600 hover:text-gray-900 flex-shrink-0">
