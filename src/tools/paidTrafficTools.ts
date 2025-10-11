@@ -300,20 +300,42 @@ export const compareAdsPlatforms = tool({
     date_range_days: z.number().default(30).describe('Período de análise em dias'),
   }),
   execute: async ({ date_range_days = 30 }) => {
+    let sqlQuery: string | undefined;
     try {
       const dataInicio = new Date();
       dataInicio.setDate(dataInicio.getDate() - date_range_days);
+      const dataInicioISODate = dataInicio.toISOString().split('T')[0];
 
-      const { data: metricas } = await supabase
+      sqlQuery = `
+SELECT
+  plataforma,
+  SUM(gasto) AS total_gasto,
+  SUM(receita) AS total_receita,
+  SUM(conversao) AS total_conversoes,
+  SUM(impressoes) AS total_impressoes,
+  SUM(cliques) AS total_cliques,
+  CASE WHEN SUM(gasto) = 0 THEN 0 ELSE SUM(receita) / SUM(gasto) END AS roas
+FROM trafego_pago.metricas_anuncios
+WHERE data >= '${dataInicioISODate}'
+GROUP BY plataforma
+ORDER BY roas DESC;
+      `.trim();
+
+      const { data: metricas, error } = await supabase
         .schema('trafego_pago')
         .from('metricas_anuncios')
         .select('*')
-        .gte('data', dataInicio.toISOString().split('T')[0]);
+        .gte('data', dataInicioISODate);
+
+      if (error) {
+        throw error;
+      }
 
       if (!metricas || metricas.length === 0) {
         return {
           success: false,
-          message: 'Nenhuma métrica encontrada'
+          message: 'Nenhuma métrica encontrada',
+          sql_query: sqlQuery
         };
       }
 
@@ -372,14 +394,16 @@ export const compareAdsPlatforms = tool({
         total_plataformas: plataformasArray.length,
         melhor_plataforma: plataformasArray[0]?.plataforma,
         pior_plataforma: plataformasArray[plataformasArray.length - 1]?.plataforma,
-        plataformas: plataformasArray
+        plataformas: plataformasArray,
+        sql_query: sqlQuery
       };
 
     } catch (error) {
       console.error('ERRO compareAdsPlatforms:', error);
       return {
         success: false,
-        message: `Erro ao comparar plataformas: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+        message: `Erro ao comparar plataformas: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        sql_query: sqlQuery
       };
     }
   }

@@ -1702,6 +1702,7 @@ type CompareAdsPlatformsToolOutput = {
   total_plataformas?: number;
   melhor_plataforma?: string;
   pior_plataforma?: string;
+  sql_query?: string;
   plataformas?: Array<{
     plataforma: string;
     gasto: string;
@@ -5677,6 +5678,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   melhor_plataforma={(tool.output as CompareAdsPlatformsToolOutput).melhor_plataforma}
                   pior_plataforma={(tool.output as CompareAdsPlatformsToolOutput).pior_plataforma}
                   plataformas={(tool.output as CompareAdsPlatformsToolOutput).plataformas}
+                  sql_query={(tool.output as CompareAdsPlatformsToolOutput).sql_query}
                 />
               )}
             </div>
