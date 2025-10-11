@@ -103,16 +103,6 @@ const fieldsByDocumentType: Record<string, Array<{ key: string; value: string; c
     { key: 'Prazo de entrega', value: '', color: 'bg-yellow-500' },
     { key: 'Condições de pagamento', value: '', color: 'bg-indigo-500' },
   ],
-  'Pedido de Venda': [
-    { key: 'Número do pedido', value: '', color: 'bg-blue-500' },
-    { key: 'Data', value: '', color: 'bg-purple-500' },
-    { key: 'Cliente', value: '', color: 'bg-pink-500' },
-    { key: 'CNPJ/CPF Cliente', value: '', color: 'bg-pink-500' },
-    { key: 'Itens/Produtos', value: '', color: 'bg-gray-700' },
-    { key: 'Valor total', value: '', color: 'bg-green-500' },
-    { key: 'Forma de pagamento', value: '', color: 'bg-indigo-500' },
-    { key: 'Status', value: '', color: 'bg-yellow-500' },
-  ],
   'Contrato': [
     { key: 'Número do contrato', value: '', color: 'bg-blue-500' },
     { key: 'Contratante', value: '', color: 'bg-orange-500' },
@@ -121,26 +111,6 @@ const fieldsByDocumentType: Record<string, Array<{ key: string; value: string; c
     { key: 'Data de término', value: '', color: 'bg-purple-500' },
     { key: 'Valor', value: '', color: 'bg-green-500' },
     { key: 'Objeto do contrato', value: '', color: 'bg-gray-700' },
-  ],
-  'Conta a Pagar': [
-    { key: 'Número/Referência', value: '', color: 'bg-blue-500' },
-    { key: 'Fornecedor/Credor', value: '', color: 'bg-orange-500' },
-    { key: 'Data de emissão', value: '', color: 'bg-purple-500' },
-    { key: 'Data de vencimento', value: '', color: 'bg-purple-500' },
-    { key: 'Valor', value: '', color: 'bg-green-500' },
-    { key: 'Categoria', value: '', color: 'bg-indigo-500' },
-    { key: 'Status', value: '', color: 'bg-yellow-500' },
-    { key: 'Observações', value: '', color: 'bg-gray-700' },
-  ],
-  'Conta a Receber': [
-    { key: 'Número/Referência', value: '', color: 'bg-blue-500' },
-    { key: 'Cliente/Devedor', value: '', color: 'bg-pink-500' },
-    { key: 'Data de emissão', value: '', color: 'bg-purple-500' },
-    { key: 'Data de vencimento', value: '', color: 'bg-purple-500' },
-    { key: 'Valor', value: '', color: 'bg-green-500' },
-    { key: 'Forma de pagamento', value: '', color: 'bg-indigo-500' },
-    { key: 'Status', value: '', color: 'bg-yellow-500' },
-    { key: 'Observações', value: '', color: 'bg-gray-700' },
   ],
   'Extrato Bancário': [
     { key: 'Banco', value: '', color: 'bg-blue-500' },
@@ -173,14 +143,6 @@ const fieldsByDocumentType: Record<string, Array<{ key: string; value: string; c
     { key: 'Forma de pagamento', value: '', color: 'bg-indigo-500' },
     { key: 'Referência', value: '', color: 'bg-gray-700' },
   ],
-  'Outro': [
-    { key: 'Número do documento', value: '', color: 'bg-blue-500' },
-    { key: 'Data', value: '', color: 'bg-purple-500' },
-    { key: 'Valor', value: '', color: 'bg-green-500' },
-    { key: 'Emissor', value: '', color: 'bg-orange-500' },
-    { key: 'Destinatário', value: '', color: 'bg-pink-500' },
-    { key: 'Descrição', value: '', color: 'bg-gray-700' },
-  ],
 };
 
 // Opções de tipos de documento - Principais documentos usados por PMEs brasileiras
@@ -192,14 +154,10 @@ const tiposDocumento = [
   'Fatura',
   'Duplicata',
   'Ordem de Compra',
-  'Pedido de Venda',
   'Contrato',
-  'Conta a Pagar',
-  'Conta a Receber',
   'Extrato Bancário',
   'Guia de Imposto',
   'Comprovante de Pagamento',
-  'Outro',
 ];
 
 // Cores para os indicadores dos campos
