@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     console.log('💾 DOC SAVE: Campos:', fields.length);
 
     // Converter array de campos para objeto
-    const documentData: Record<string, any> = {
+    const documentData: Record<string, string | undefined> = {
       tipo_documento: documentType,
       resumo: summary,
     };
