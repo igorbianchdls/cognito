@@ -114,6 +114,25 @@ export async function fetchSupabaseTable(tableName: string) {
       } else if (table === 'treinamentos') {
         orderColumn = 'id_treinamento';
       }
+    } else if (schema === 'gestaodocumentos') {
+      // gestaodocumentos - ordenação específica por tabela
+      if (table === 'documentos') {
+        orderColumn = 'criado_em';
+      } else if (table === 'notas_fiscais') {
+        orderColumn = 'data_emissao';
+      } else if (table === 'recibos') {
+        orderColumn = 'data';
+      } else if (table === 'faturas') {
+        orderColumn = 'data_emissao';
+      } else if (table === 'duplicatas') {
+        orderColumn = 'data_emissao';
+      } else if (table === 'contratos') {
+        orderColumn = 'data_inicio';
+      } else if (table === 'extratos_bancarios') {
+        orderColumn = 'periodo_data_inicial';
+      } else if (table === 'guias_imposto') {
+        orderColumn = 'data_vencimento';
+      }
     }
 
     if (schema) {
@@ -1153,6 +1172,856 @@ export const documentosColumns: ColDef[] = [
     editable: true,
     sortable: true,
     filter: 'agTextColumnFilter'
+  }
+];
+
+// ========================================
+// GESTÃO DE DOCUMENTOS - Schema: gestaodocumentos
+// ========================================
+
+// Configurações de colunas para Documentos (Gestão de Documentos - Tabela Mestre)
+export const documentosGestaoColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'tipo_documento',
+    headerName: 'Tipo',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    cellStyle: { fontWeight: 'bold' }
+  },
+  {
+    field: 'numero_documento',
+    headerName: 'Número',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'data_emissao',
+    headerName: 'Data Emissão',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'valor_total',
+    headerName: 'Valor Total',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value && params.value !== 0) return '';
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value);
+    },
+    cellStyle: { fontWeight: 'bold', color: '#2e7d32' }
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    width: 110,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    cellStyle: (params) => {
+      const status = String(params.value || '').toLowerCase();
+      if (status === 'ativo' || status === 'pago') return { color: '#2e7d32', fontWeight: 'bold' };
+      if (status === 'cancelado') return { color: '#c62828', fontWeight: 'bold' };
+      if (status === 'pendente') return { color: '#f57c00', fontWeight: 'bold' };
+      return { color: '#000000', fontWeight: 'normal' };
+    }
+  },
+  {
+    field: 'descricao',
+    headerName: 'Descrição',
+    width: 300,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'arquivo_pdf_url',
+    headerName: 'PDF URL',
+    width: 300,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'arquivo_xml_url',
+    headerName: 'XML URL',
+    width: 300,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'observacoes',
+    headerName: 'Observações',
+    width: 250,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'criado_em',
+    headerName: 'Criado em',
+    width: 150,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Notas Fiscais
+export const notasFiscaisColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'documento_id',
+    headerName: 'Documento ID',
+    width: 280,
+    editable: false,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'numero',
+    headerName: 'Número',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'serie',
+    headerName: 'Série',
+    width: 90,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'chave_acesso',
+    headerName: 'Chave de Acesso',
+    width: 350,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'cfop',
+    headerName: 'CFOP',
+    width: 100,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'emitente',
+    headerName: 'Emitente',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'cnpj_emitente',
+    headerName: 'CNPJ Emitente',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace' }
+  },
+  {
+    field: 'destinatario',
+    headerName: 'Destinatário',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'cnpj_destinatario',
+    headerName: 'CNPJ Destinatário',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace' }
+  },
+  {
+    field: 'valor_total',
+    headerName: 'Valor Total',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value && params.value !== 0) return '';
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value);
+    },
+    cellStyle: { fontWeight: 'bold', color: '#2e7d32' }
+  },
+  {
+    field: 'total_impostos',
+    headerName: 'Total Impostos',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value && params.value !== 0) return '';
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value);
+    },
+    cellStyle: { color: '#c62828' }
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    width: 110,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true
+  }
+];
+
+// Configurações de colunas para Recibos
+export const recibosColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'documento_id',
+    headerName: 'Documento ID',
+    width: 280,
+    editable: false,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'numero',
+    headerName: 'Número',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'data',
+    headerName: 'Data',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'valor',
+    headerName: 'Valor',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value && params.value !== 0) return '';
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value);
+    },
+    cellStyle: { fontWeight: 'bold', color: '#2e7d32' }
+  },
+  {
+    field: 'recebedor',
+    headerName: 'Recebedor',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'cpf_recebedor',
+    headerName: 'CPF Recebedor',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace' }
+  },
+  {
+    field: 'pagador',
+    headerName: 'Pagador',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'cpf_pagador',
+    headerName: 'CPF Pagador',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace' }
+  },
+  {
+    field: 'descricao',
+    headerName: 'Descrição',
+    width: 300,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  }
+];
+
+// Configurações de colunas para Faturas
+export const faturasColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'documento_id',
+    headerName: 'Documento ID',
+    width: 280,
+    editable: false,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'numero',
+    headerName: 'Número',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'data_emissao',
+    headerName: 'Data Emissão',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'data_vencimento',
+    headerName: 'Data Vencimento',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'cliente',
+    headerName: 'Cliente',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'cpf_cliente',
+    headerName: 'CPF/CNPJ Cliente',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace' }
+  },
+  {
+    field: 'valor_total',
+    headerName: 'Valor Total',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value && params.value !== 0) return '';
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value);
+    },
+    cellStyle: { fontWeight: 'bold', color: '#2e7d32' }
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    width: 110,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'observacoes',
+    headerName: 'Observações',
+    width: 250,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  }
+];
+
+// Configurações de colunas para Duplicatas
+export const duplicatasColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'documento_id',
+    headerName: 'Documento ID',
+    width: 280,
+    editable: false,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'numero',
+    headerName: 'Número',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'data_emissao',
+    headerName: 'Data Emissão',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'data_vencimento',
+    headerName: 'Data Vencimento',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'sacado',
+    headerName: 'Sacado',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'cpf_sacado',
+    headerName: 'CPF/CNPJ Sacado',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace' }
+  },
+  {
+    field: 'valor',
+    headerName: 'Valor',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value && params.value !== 0) return '';
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value);
+    },
+    cellStyle: { fontWeight: 'bold', color: '#2e7d32' }
+  },
+  {
+    field: 'praca_pagamento',
+    headerName: 'Praça de Pagamento',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  }
+];
+
+// Configurações de colunas para Contratos
+export const contratosGestaoColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'documento_id',
+    headerName: 'Documento ID',
+    width: 280,
+    editable: false,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'numero',
+    headerName: 'Número',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'contratante',
+    headerName: 'Contratante',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'contratado',
+    headerName: 'Contratado',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'data_inicio',
+    headerName: 'Data Início',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'data_termino',
+    headerName: 'Data Término',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'valor',
+    headerName: 'Valor',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value && params.value !== 0) return '';
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value);
+    },
+    cellStyle: { fontWeight: 'bold', color: '#2e7d32' }
+  },
+  {
+    field: 'objeto',
+    headerName: 'Objeto',
+    width: 300,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  }
+];
+
+// Configurações de colunas para Extratos Bancários
+export const extratosBancariosColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'documento_id',
+    headerName: 'Documento ID',
+    width: 280,
+    editable: false,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'banco',
+    headerName: 'Banco',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'agencia',
+    headerName: 'Agência',
+    width: 100,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'conta',
+    headerName: 'Conta',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace' }
+  },
+  {
+    field: 'data_inicial',
+    headerName: 'Data Inicial',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'data_final',
+    headerName: 'Data Final',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'saldo_inicial',
+    headerName: 'Saldo Inicial',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value && params.value !== 0) return '';
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value);
+    }
+  },
+  {
+    field: 'saldo_final',
+    headerName: 'Saldo Final',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value && params.value !== 0) return '';
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value);
+    },
+    cellStyle: { fontWeight: 'bold' }
+  },
+  {
+    field: 'total_creditos',
+    headerName: 'Total Créditos',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value && params.value !== 0) return '';
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value);
+    },
+    cellStyle: { color: '#2e7d32' }
+  },
+  {
+    field: 'total_debitos',
+    headerName: 'Total Débitos',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value && params.value !== 0) return '';
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value);
+    },
+    cellStyle: { color: '#c62828' }
+  }
+];
+
+// Configurações de colunas para Guias de Imposto
+export const guiasImpostoColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'documento_id',
+    headerName: 'Documento ID',
+    width: 280,
+    editable: false,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'tipo_guia',
+    headerName: 'Tipo de Guia',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    cellStyle: { fontWeight: 'bold' }
+  },
+  {
+    field: 'codigo_barras',
+    headerName: 'Código de Barras',
+    width: 350,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace', fontSize: '0.85em' }
+  },
+  {
+    field: 'periodo_apuracao',
+    headerName: 'Período de Apuração',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'data_vencimento',
+    headerName: 'Data Vencimento',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'contribuinte',
+    headerName: 'Contribuinte',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'cpf_cnpj',
+    headerName: 'CPF/CNPJ',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace' }
+  },
+  {
+    field: 'valor_principal',
+    headerName: 'Valor Principal',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value && params.value !== 0) return '';
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value);
+    }
+  },
+  {
+    field: 'multa_juros',
+    headerName: 'Multa/Juros',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value && params.value !== 0) return '';
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value);
+    },
+    cellStyle: { color: '#c62828' }
+  },
+  {
+    field: 'valor_total',
+    headerName: 'Valor Total',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value && params.value !== 0) return '';
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value);
+    },
+    cellStyle: { fontWeight: 'bold', color: '#2e7d32' }
   }
 ];
 
@@ -6772,5 +7641,77 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     columnDefs: desligamentosColumns,
     icon: '🚪',
     category: 'Gestão de Funcionários'
+  },
+  {
+    id: 'documentos-gestao-documentos',
+    name: 'Documentos',
+    description: 'Registro centralizado de todos os documentos',
+    tableName: 'gestaodocumentos.documentos',
+    columnDefs: documentosGestaoColumns,
+    icon: '📄',
+    category: 'Gestão de Documentos'
+  },
+  {
+    id: 'documentos-notas-fiscais',
+    name: 'Notas Fiscais',
+    description: 'Detalhes de notas fiscais eletrônicas',
+    tableName: 'gestaodocumentos.notas_fiscais',
+    columnDefs: notasFiscaisColumns,
+    icon: '🧾',
+    category: 'Gestão de Documentos'
+  },
+  {
+    id: 'documentos-recibos',
+    name: 'Recibos',
+    description: 'Recibos de pagamentos e serviços',
+    tableName: 'gestaodocumentos.recibos',
+    columnDefs: recibosColumns,
+    icon: '🧾',
+    category: 'Gestão de Documentos'
+  },
+  {
+    id: 'documentos-faturas',
+    name: 'Faturas',
+    description: 'Faturas emitidas e recebidas',
+    tableName: 'gestaodocumentos.faturas',
+    columnDefs: faturasColumns,
+    icon: '💵',
+    category: 'Gestão de Documentos'
+  },
+  {
+    id: 'documentos-duplicatas',
+    name: 'Duplicatas',
+    description: 'Duplicatas e títulos a pagar/receber',
+    tableName: 'gestaodocumentos.duplicatas',
+    columnDefs: duplicatasColumns,
+    icon: '💳',
+    category: 'Gestão de Documentos'
+  },
+  {
+    id: 'documentos-contratos',
+    name: 'Contratos',
+    description: 'Contratos e acordos comerciais',
+    tableName: 'gestaodocumentos.contratos',
+    columnDefs: contratosGestaoColumns,
+    icon: '📝',
+    category: 'Gestão de Documentos'
+  },
+  {
+    id: 'documentos-extratos-bancarios',
+    name: 'Extratos Bancários',
+    description: 'Extratos bancários e movimentações',
+    tableName: 'gestaodocumentos.extratos_bancarios',
+    columnDefs: extratosBancariosColumns,
+    icon: '🏦',
+    category: 'Gestão de Documentos'
+  },
+  {
+    id: 'documentos-guias-imposto',
+    name: 'Guias de Imposto',
+    description: 'Guias de pagamento de impostos e tributos',
+    tableName: 'gestaodocumentos.guias_imposto',
+    columnDefs: guiasImpostoColumns,
+    icon: '📋',
+    category: 'Gestão de Documentos'
   }
 ];
