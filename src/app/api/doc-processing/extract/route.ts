@@ -48,27 +48,83 @@ export async function POST(req: Request) {
             },
             {
               type: 'text',
-              text: `Analise este documento e:
+              text: `Analise este documento fiscal/financeiro brasileiro e:
 
-1. Crie um RESUMO executivo do documento (2-3 frases explicando o tipo de documento, valor total se houver, e partes envolvidas)
-2. Extraia TODOS os campos e informações relevantes
+1. **IDENTIFIQUE o tipo de documento**: NF-e (Nota Fiscal Eletrônica), NFS-e (Nota Fiscal de Serviço), Boleto Bancário, Recibo, Fatura, Conta de Serviço, Guia de Imposto, ou outro tipo
 
-Se for uma nota fiscal/invoice, extraia campos como:
-- Número da nota/invoice
+2. **RESUMA** o documento em 2-3 frases (tipo, valor, partes envolvidas, finalidade)
+
+3. **EXTRAIA os campos relevantes** baseado no tipo detectado:
+
+**Para NF-e (Nota Fiscal Eletrônica):**
+- Tipo de documento: "NF-e"
+- Número do documento
+- Série
+- Chave de acesso (44 dígitos)
 - Data de emissão
-- Valor total e subtotais
-- Impostos (ICMS, IPI, PIS, COFINS, ISS, etc)
-- Informações do emitente (nome, CNPJ/CPF, endereço, email, telefone)
-- Informações do destinatário (nome, CNPJ/CPF, endereço, email, telefone)
-- Descrição de produtos/serviços
-- Condições de pagamento
-- Chave de acesso (se houver)
-- Qualquer outro campo relevante
+- Valor total
+- Total de impostos (ICMS + IPI + PIS + COFINS somados)
+- Nome do emitente
+- CNPJ/CPF do emitente
+- Nome do destinatário
+- CNPJ/CPF do destinatário
+- Descrição/Observações (principais produtos/serviços)
+- Status do documento (Normal, Cancelada, etc)
 
-Para cada campo extraído, forneça:
-- key: nome descritivo do campo em português
-- value: valor extraído
-- confidence: seu nível de confiança (0 a 1)`,
+**Para NFS-e (Nota Fiscal de Serviço):**
+- Tipo de documento: "NFS-e"
+- Número do documento
+- Data de emissão
+- Valor total
+- Total de impostos (ISS principalmente)
+- Nome do emitente (prestador)
+- CNPJ/CPF do emitente
+- Nome do destinatário (tomador)
+- CNPJ/CPF do destinatário
+- Descrição/Observações (descrição do serviço)
+
+**Para Boleto Bancário:**
+- Tipo de documento: "Boleto"
+- Número do documento (nosso número ou número do boleto)
+- Código de barras (linha digitável completa)
+- Data de emissão
+- Data de vencimento
+- Valor total
+- Nome do emitente (beneficiário/cedente)
+- CNPJ/CPF do emitente
+- Nome do destinatário (pagador/sacado)
+- CNPJ/CPF do destinatário
+- Status do documento (se indicado: Pago, Vencido, etc)
+
+**Para Recibo:**
+- Tipo de documento: "Recibo"
+- Número do documento (se houver)
+- Data de emissão
+- Valor total
+- Nome do emitente (quem recebeu o pagamento)
+- CPF/CNPJ do emitente
+- Nome do destinatário (quem pagou)
+- CPF/CNPJ do destinatário
+- Descrição/Observações (referente a quê)
+
+**Para Fatura/Conta (Luz, Água, Telefone, Internet, etc):**
+- Tipo de documento: "Fatura" ou específico "Conta de Luz", "Conta de Água", etc
+- Número do documento (número da fatura)
+- Data de emissão
+- Data de vencimento
+- Valor total
+- Código de barras (para pagamento)
+- Nome do emitente (prestador do serviço)
+- CNPJ do emitente
+- Nome do destinatário (cliente)
+- CPF/CNPJ do destinatário
+- Descrição/Observações (período de referência, consumo, etc)
+
+**IMPORTANTE:**
+- Retorne APENAS os campos que conseguir extrair com confiança
+- Não invente valores - se não encontrar, não retorne o campo
+- Use nomes de campos EXATAMENTE como especificado acima
+- Para cada campo: key (nome do campo), value (valor extraído), confidence (0 a 1)`,
             },
           ],
         },

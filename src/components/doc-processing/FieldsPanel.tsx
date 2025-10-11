@@ -16,21 +16,23 @@ interface FieldsPanelProps {
   summary?: string;
 }
 
-// Dados de exemplo hardcoded (depois vamos substituir por dados da IA)
+// Campos genéricos para documentos fiscais brasileiros (NF-e, Boletos, Recibos, Faturas)
 const mockFields = [
-  { key: 'Invoice id', value: '1234567890', color: 'bg-purple-500' },
-  { key: 'Invoice date', value: '2022-08-07', color: 'bg-purple-500' },
-  { key: 'Payment terms', value: 'Net 30', color: 'bg-gray-700' },
-  { key: 'Supplier address', value: '800 Bellevue Way NE Bellevue, WA 98004', color: 'bg-teal-500' },
-  { key: 'Supplier email', value: 'support@super.ai', color: 'bg-pink-500' },
-  { key: 'Supplier name', value: 'Super.AI', color: 'bg-yellow-500' },
-  { key: 'Supplier phone', value: '+123-456-7890', color: 'bg-pink-500' },
-  { key: 'Receiver address', value: '123 Anywhere St., Any City, ST 12345', color: 'bg-orange-500' },
-  { key: 'Receiver email', value: 'hello@reallygreatsite.com', color: 'bg-pink-500' },
-  { key: 'Receiver name', value: 'Marceline Anderson', color: 'bg-yellow-500' },
-  { key: 'Receiver phone', value: '+123-456-7890', color: 'bg-pink-500' },
-  { key: 'Net amount', value: '1,735', color: 'bg-teal-500' },
-  { key: 'Total amount', value: '1,680', color: 'bg-teal-500' },
+  { key: 'Tipo de documento', value: '', color: 'bg-purple-500' },
+  { key: 'Número do documento', value: '', color: 'bg-blue-500' },
+  { key: 'Série', value: '', color: 'bg-indigo-500' },
+  { key: 'Chave de acesso', value: '', color: 'bg-teal-500' },
+  { key: 'Código de barras', value: '', color: 'bg-teal-500' },
+  { key: 'Data de emissão', value: '', color: 'bg-purple-500' },
+  { key: 'Data de vencimento', value: '', color: 'bg-purple-500' },
+  { key: 'Valor total', value: '', color: 'bg-green-500' },
+  { key: 'Nome do emitente', value: '', color: 'bg-orange-500' },
+  { key: 'CNPJ/CPF do emitente', value: '', color: 'bg-orange-500' },
+  { key: 'Nome do destinatário', value: '', color: 'bg-pink-500' },
+  { key: 'CNPJ/CPF do destinatário', value: '', color: 'bg-pink-500' },
+  { key: 'Descrição/Observações', value: '', color: 'bg-gray-700' },
+  { key: 'Status do documento', value: '', color: 'bg-yellow-500' },
+  { key: 'Total de impostos', value: '', color: 'bg-green-500' },
 ];
 
 // Cores para os indicadores dos campos
