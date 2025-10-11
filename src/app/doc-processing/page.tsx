@@ -26,11 +26,13 @@ export default function DocProcessingPage() {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [extractedFields, setExtractedFields] = useState<ExtractedField[]>([]);
+  const [summary, setSummary] = useState<string>('');
 
   const handleFileUpload = async (file: File) => {
     setUploadedFile(file);
     setIsProcessing(true);
     setExtractedFields([]); // Limpar campos anteriores
+    setSummary(''); // Limpar resumo anterior
 
     try {
       console.log('📄 Enviando arquivo para extração...');
@@ -48,8 +50,10 @@ export default function DocProcessingPage() {
       }
 
       const data = await response.json();
+      console.log('📄 Resumo:', data.summary);
       console.log('📄 Campos extraídos:', data.fields?.length);
 
+      setSummary(data.summary || '');
       setExtractedFields(data.fields || []);
     } catch (error) {
       console.error('📄 Erro ao extrair dados:', error);
@@ -110,6 +114,7 @@ export default function DocProcessingPage() {
                       hasDocument={!!uploadedFile}
                       isProcessing={isProcessing}
                       extractedFields={extractedFields}
+                      summary={summary}
                     />
                   </div>
                 </Panel>

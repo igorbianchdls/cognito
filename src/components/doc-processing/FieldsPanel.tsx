@@ -1,6 +1,7 @@
 'use client';
 
-import { MoreVertical } from 'lucide-react';
+import { MoreVertical, FileText } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface ExtractedField {
   key: string;
@@ -12,6 +13,7 @@ interface FieldsPanelProps {
   hasDocument: boolean;
   isProcessing: boolean;
   extractedFields?: ExtractedField[];
+  summary?: string;
 }
 
 // Dados de exemplo hardcoded (depois vamos substituir por dados da IA)
@@ -44,7 +46,7 @@ const colorOptions = [
   'bg-indigo-500',
 ];
 
-export default function FieldsPanel({ hasDocument, isProcessing, extractedFields }: FieldsPanelProps) {
+export default function FieldsPanel({ hasDocument, isProcessing, extractedFields, summary }: FieldsPanelProps) {
   // Usar campos extraídos se disponíveis, senão usar mock
   const fields = extractedFields && extractedFields.length > 0
     ? extractedFields.map((field, index) => ({
@@ -86,6 +88,22 @@ export default function FieldsPanel({ hasDocument, isProcessing, extractedFields
 
       {/* Fields List */}
       <div className="flex-1 overflow-auto">
+        {/* Summary Card */}
+        {summary && (
+          <div className="p-4">
+            <Card className="bg-blue-50 border-blue-200">
+              <CardContent className="pt-6">
+                <div className="flex items-start gap-3">
+                  <FileText className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h3 className="text-sm font-semibold text-blue-900 mb-1">Resumo do Documento</h3>
+                    <p className="text-sm text-blue-800">{summary}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
         <div className="p-4">
           <div className="bg-white rounded-lg overflow-hidden border border-gray-200">
             {/* Table Header */}
