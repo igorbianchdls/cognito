@@ -88,11 +88,11 @@ const documentosTables = [
 export function NavGestao() {
   const router = useRouter()
   const pathname = usePathname()
-  const [isFinanceiraOpen, setIsFinanceiraOpen] = useState(false)
-  const [isProjetosOpen, setIsProjetosOpen] = useState(false)
-  const [isVendasOpen, setIsVendasOpen] = useState(false)
-  const [isFuncionariosOpen, setIsFuncionariosOpen] = useState(false)
-  const [isDocumentosOpen, setIsDocumentosOpen] = useState(false)
+  const [isFinanceiraOpen, setIsFinanceiraOpen] = useState(pathname.startsWith('/gestao/financeira'))
+  const [isProjetosOpen, setIsProjetosOpen] = useState(pathname.startsWith('/gestao/projetos'))
+  const [isVendasOpen, setIsVendasOpen] = useState(pathname.startsWith('/gestao/vendas'))
+  const [isFuncionariosOpen, setIsFuncionariosOpen] = useState(pathname.startsWith('/gestao/funcionarios'))
+  const [isDocumentosOpen, setIsDocumentosOpen] = useState(pathname.startsWith('/gestao/documentos'))
 
   return (
     <SidebarGroup>
