@@ -39,7 +39,7 @@ export default function PDFViewer({ file }: PDFViewerProps) {
 
   return (
     <div className="h-full flex flex-col bg-gray-50">
-      {/* PDF Document */}
+      {/* PDF Document - ocupa espaço restante */}
       <div className="flex-1 overflow-hidden flex items-center justify-center p-4">
         <Document
           file={file}
@@ -60,15 +60,14 @@ export default function PDFViewer({ file }: PDFViewerProps) {
             pageNumber={pageNumber}
             renderTextLayer={true}
             renderAnnotationLayer={true}
-            className="shadow-lg"
-            width={Math.min(window.innerWidth * 0.4, 800)}
+            className="shadow-lg max-h-full"
           />
         </Document>
       </div>
 
-      {/* Navigation Controls */}
+      {/* Navigation Controls - altura fixa sempre visível */}
       {!loading && numPages > 0 && (
-        <div className="border-t border-gray-200 bg-white py-3 px-4 flex items-center justify-between w-full">
+        <div className="h-[60px] shrink-0 border-t border-gray-200 bg-white px-4 flex items-center justify-between">
           <Button
             onClick={goToPrevPage}
             disabled={pageNumber <= 1}
