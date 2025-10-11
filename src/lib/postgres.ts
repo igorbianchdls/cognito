@@ -1,4 +1,5 @@
 import { createRequire } from 'module';
+import type { QueryResultRow } from 'pg';
 
 const require = createRequire(import.meta.url);
 const { Pool } = require('pg') as typeof import('pg');
@@ -22,11 +23,14 @@ function getPool() {
   return pgPool;
 }
 
-export async function runQuery<T = unknown>(sql: string, params?: unknown[]) {
+export async function runQuery<T extends QueryResultRow = QueryResultRow>(
+  sql: string,
+  params?: unknown[]
+): Promise<T[]> {
   const pool = getPool();
   const client = await pool.connect();
   try {
-    const result = await client.query(sql, params);
+    const result = await client.query<T>(sql, params);
     return result.rows;
   } finally {
     client.release();

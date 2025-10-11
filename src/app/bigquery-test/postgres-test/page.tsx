@@ -68,7 +68,7 @@ async function fetchSample() {
 
   const rawRows = await runQuery<RawRow>(sql);
 
-  return rawRows.map<Row>((row) => ({
+  return rawRows.map((row): Row => ({
     plataforma: row.plataforma,
     contas_vinculadas: Number(row.contas_vinculadas ?? 0),
     campanhas_vinculadas: Number(row.campanhas_vinculadas ?? 0),
