@@ -89,7 +89,7 @@ export default async function PostgresTestPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
-                  {rows.map((row) => (
+                  {rows.map((row: Row) => (
                     <tr key={row.plataforma ?? 'N/A'} className="text-slate-100">
                       <td className="px-4 py-3 font-medium">{row.plataforma ?? 'Desconhecida'}</td>
                       <td className="px-4 py-3 text-right">{row.contas_vinculadas ?? 0}</td>
