@@ -24,24 +24,164 @@ interface FieldsPanelProps {
   summary?: string;
 }
 
-// Campos genéricos para documentos fiscais brasileiros (NF-e, Boletos, Recibos, Faturas)
-const mockFields = [
-  { key: 'Tipo de documento', value: '', color: 'bg-purple-500' },
-  { key: 'Número do documento', value: '', color: 'bg-blue-500' },
-  { key: 'Série', value: '', color: 'bg-indigo-500' },
-  { key: 'Chave de acesso', value: '', color: 'bg-teal-500' },
-  { key: 'Código de barras', value: '', color: 'bg-teal-500' },
-  { key: 'Data de emissão', value: '', color: 'bg-purple-500' },
-  { key: 'Data de vencimento', value: '', color: 'bg-purple-500' },
-  { key: 'Valor total', value: '', color: 'bg-green-500' },
-  { key: 'Nome do emitente', value: '', color: 'bg-orange-500' },
-  { key: 'CNPJ/CPF do emitente', value: '', color: 'bg-orange-500' },
-  { key: 'Nome do destinatário', value: '', color: 'bg-pink-500' },
-  { key: 'CNPJ/CPF do destinatário', value: '', color: 'bg-pink-500' },
-  { key: 'Descrição/Observações', value: '', color: 'bg-gray-700' },
-  { key: 'Status do documento', value: '', color: 'bg-yellow-500' },
-  { key: 'Total de impostos', value: '', color: 'bg-green-500' },
-];
+// Mapeamento de campos específicos por tipo de documento
+const fieldsByDocumentType: Record<string, Array<{ key: string; value: string; color: string }>> = {
+  'Nota Fiscal (NF-e)': [
+    { key: 'Número da NF-e', value: '', color: 'bg-blue-500' },
+    { key: 'Série', value: '', color: 'bg-indigo-500' },
+    { key: 'Chave de acesso', value: '', color: 'bg-teal-500' },
+    { key: 'Data de emissão', value: '', color: 'bg-purple-500' },
+    { key: 'CFOP', value: '', color: 'bg-yellow-500' },
+    { key: 'Emitente', value: '', color: 'bg-orange-500' },
+    { key: 'CNPJ/CPF Emitente', value: '', color: 'bg-orange-500' },
+    { key: 'Destinatário', value: '', color: 'bg-pink-500' },
+    { key: 'CNPJ/CPF Destinatário', value: '', color: 'bg-pink-500' },
+    { key: 'Valor total', value: '', color: 'bg-green-500' },
+    { key: 'Total de impostos', value: '', color: 'bg-green-500' },
+    { key: 'Status', value: '', color: 'bg-yellow-500' },
+  ],
+  'Nota Fiscal de Serviço (NFS-e)': [
+    { key: 'Número da NFS-e', value: '', color: 'bg-blue-500' },
+    { key: 'Código de verificação', value: '', color: 'bg-teal-500' },
+    { key: 'Data de emissão', value: '', color: 'bg-purple-500' },
+    { key: 'Prestador', value: '', color: 'bg-orange-500' },
+    { key: 'CNPJ/CPF Prestador', value: '', color: 'bg-orange-500' },
+    { key: 'Tomador', value: '', color: 'bg-pink-500' },
+    { key: 'CNPJ/CPF Tomador', value: '', color: 'bg-pink-500' },
+    { key: 'Descrição do serviço', value: '', color: 'bg-gray-700' },
+    { key: 'Valor do serviço', value: '', color: 'bg-green-500' },
+    { key: 'ISS', value: '', color: 'bg-green-500' },
+  ],
+  'Boleto': [
+    { key: 'Código de barras', value: '', color: 'bg-teal-500' },
+    { key: 'Linha digitável', value: '', color: 'bg-teal-500' },
+    { key: 'Nosso número', value: '', color: 'bg-blue-500' },
+    { key: 'Data de vencimento', value: '', color: 'bg-purple-500' },
+    { key: 'Data de emissão', value: '', color: 'bg-purple-500' },
+    { key: 'Valor do documento', value: '', color: 'bg-green-500' },
+    { key: 'Beneficiário', value: '', color: 'bg-orange-500' },
+    { key: 'CNPJ/CPF Beneficiário', value: '', color: 'bg-orange-500' },
+    { key: 'Pagador', value: '', color: 'bg-pink-500' },
+    { key: 'CNPJ/CPF Pagador', value: '', color: 'bg-pink-500' },
+  ],
+  'Recibo': [
+    { key: 'Número do recibo', value: '', color: 'bg-blue-500' },
+    { key: 'Data', value: '', color: 'bg-purple-500' },
+    { key: 'Valor', value: '', color: 'bg-green-500' },
+    { key: 'Recebedor', value: '', color: 'bg-orange-500' },
+    { key: 'CPF/CNPJ Recebedor', value: '', color: 'bg-orange-500' },
+    { key: 'Pagador', value: '', color: 'bg-pink-500' },
+    { key: 'CPF/CNPJ Pagador', value: '', color: 'bg-pink-500' },
+    { key: 'Descrição/Referente a', value: '', color: 'bg-gray-700' },
+  ],
+  'Fatura': [
+    { key: 'Número da fatura', value: '', color: 'bg-blue-500' },
+    { key: 'Data de emissão', value: '', color: 'bg-purple-500' },
+    { key: 'Data de vencimento', value: '', color: 'bg-purple-500' },
+    { key: 'Cliente', value: '', color: 'bg-pink-500' },
+    { key: 'CNPJ/CPF Cliente', value: '', color: 'bg-pink-500' },
+    { key: 'Valor total', value: '', color: 'bg-green-500' },
+    { key: 'Status', value: '', color: 'bg-yellow-500' },
+    { key: 'Observações', value: '', color: 'bg-gray-700' },
+  ],
+  'Duplicata': [
+    { key: 'Número da duplicata', value: '', color: 'bg-blue-500' },
+    { key: 'Data de emissão', value: '', color: 'bg-purple-500' },
+    { key: 'Data de vencimento', value: '', color: 'bg-purple-500' },
+    { key: 'Sacado', value: '', color: 'bg-pink-500' },
+    { key: 'CNPJ/CPF Sacado', value: '', color: 'bg-pink-500' },
+    { key: 'Valor', value: '', color: 'bg-green-500' },
+    { key: 'Praça de pagamento', value: '', color: 'bg-indigo-500' },
+  ],
+  'Ordem de Compra': [
+    { key: 'Número da OC', value: '', color: 'bg-blue-500' },
+    { key: 'Data', value: '', color: 'bg-purple-500' },
+    { key: 'Fornecedor', value: '', color: 'bg-orange-500' },
+    { key: 'CNPJ Fornecedor', value: '', color: 'bg-orange-500' },
+    { key: 'Itens/Descrição', value: '', color: 'bg-gray-700' },
+    { key: 'Valor total', value: '', color: 'bg-green-500' },
+    { key: 'Prazo de entrega', value: '', color: 'bg-yellow-500' },
+    { key: 'Condições de pagamento', value: '', color: 'bg-indigo-500' },
+  ],
+  'Pedido de Venda': [
+    { key: 'Número do pedido', value: '', color: 'bg-blue-500' },
+    { key: 'Data', value: '', color: 'bg-purple-500' },
+    { key: 'Cliente', value: '', color: 'bg-pink-500' },
+    { key: 'CNPJ/CPF Cliente', value: '', color: 'bg-pink-500' },
+    { key: 'Itens/Produtos', value: '', color: 'bg-gray-700' },
+    { key: 'Valor total', value: '', color: 'bg-green-500' },
+    { key: 'Forma de pagamento', value: '', color: 'bg-indigo-500' },
+    { key: 'Status', value: '', color: 'bg-yellow-500' },
+  ],
+  'Contrato': [
+    { key: 'Número do contrato', value: '', color: 'bg-blue-500' },
+    { key: 'Contratante', value: '', color: 'bg-orange-500' },
+    { key: 'Contratado', value: '', color: 'bg-pink-500' },
+    { key: 'Data de início', value: '', color: 'bg-purple-500' },
+    { key: 'Data de término', value: '', color: 'bg-purple-500' },
+    { key: 'Valor', value: '', color: 'bg-green-500' },
+    { key: 'Objeto do contrato', value: '', color: 'bg-gray-700' },
+  ],
+  'Conta a Pagar': [
+    { key: 'Número/Referência', value: '', color: 'bg-blue-500' },
+    { key: 'Fornecedor/Credor', value: '', color: 'bg-orange-500' },
+    { key: 'Data de emissão', value: '', color: 'bg-purple-500' },
+    { key: 'Data de vencimento', value: '', color: 'bg-purple-500' },
+    { key: 'Valor', value: '', color: 'bg-green-500' },
+    { key: 'Categoria', value: '', color: 'bg-indigo-500' },
+    { key: 'Status', value: '', color: 'bg-yellow-500' },
+    { key: 'Observações', value: '', color: 'bg-gray-700' },
+  ],
+  'Conta a Receber': [
+    { key: 'Número/Referência', value: '', color: 'bg-blue-500' },
+    { key: 'Cliente/Devedor', value: '', color: 'bg-pink-500' },
+    { key: 'Data de emissão', value: '', color: 'bg-purple-500' },
+    { key: 'Data de vencimento', value: '', color: 'bg-purple-500' },
+    { key: 'Valor', value: '', color: 'bg-green-500' },
+    { key: 'Forma de pagamento', value: '', color: 'bg-indigo-500' },
+    { key: 'Status', value: '', color: 'bg-yellow-500' },
+    { key: 'Observações', value: '', color: 'bg-gray-700' },
+  ],
+  'Extrato Bancário': [
+    { key: 'Banco', value: '', color: 'bg-blue-500' },
+    { key: 'Agência', value: '', color: 'bg-indigo-500' },
+    { key: 'Conta', value: '', color: 'bg-indigo-500' },
+    { key: 'Período (Data inicial)', value: '', color: 'bg-purple-500' },
+    { key: 'Período (Data final)', value: '', color: 'bg-purple-500' },
+    { key: 'Saldo inicial', value: '', color: 'bg-green-500' },
+    { key: 'Saldo final', value: '', color: 'bg-green-500' },
+    { key: 'Total de créditos', value: '', color: 'bg-teal-500' },
+    { key: 'Total de débitos', value: '', color: 'bg-red-500' },
+  ],
+  'Guia de Imposto': [
+    { key: 'Tipo de guia', value: '', color: 'bg-yellow-500' },
+    { key: 'Código de barras', value: '', color: 'bg-teal-500' },
+    { key: 'Período de apuração', value: '', color: 'bg-purple-500' },
+    { key: 'Data de vencimento', value: '', color: 'bg-purple-500' },
+    { key: 'Contribuinte', value: '', color: 'bg-orange-500' },
+    { key: 'CNPJ/CPF', value: '', color: 'bg-orange-500' },
+    { key: 'Valor principal', value: '', color: 'bg-green-500' },
+    { key: 'Multa/Juros', value: '', color: 'bg-red-500' },
+    { key: 'Valor total', value: '', color: 'bg-green-500' },
+  ],
+  'Comprovante de Pagamento': [
+    { key: 'Número do comprovante', value: '', color: 'bg-blue-500' },
+    { key: 'Data do pagamento', value: '', color: 'bg-purple-500' },
+    { key: 'Pagador', value: '', color: 'bg-orange-500' },
+    { key: 'Beneficiário', value: '', color: 'bg-pink-500' },
+    { key: 'Valor pago', value: '', color: 'bg-green-500' },
+    { key: 'Forma de pagamento', value: '', color: 'bg-indigo-500' },
+    { key: 'Referência', value: '', color: 'bg-gray-700' },
+  ],
+  'Outro': [
+    { key: 'Número do documento', value: '', color: 'bg-blue-500' },
+    { key: 'Data', value: '', color: 'bg-purple-500' },
+    { key: 'Valor', value: '', color: 'bg-green-500' },
+    { key: 'Emissor', value: '', color: 'bg-orange-500' },
+    { key: 'Destinatário', value: '', color: 'bg-pink-500' },
+    { key: 'Descrição', value: '', color: 'bg-gray-700' },
+  ],
+};
 
 // Opções de tipos de documento - Principais documentos usados por PMEs brasileiras
 const tiposDocumento = [
@@ -55,6 +195,8 @@ const tiposDocumento = [
   'Pedido de Venda',
   'Contrato',
   'Conta a Pagar',
+  'Conta a Receber',
+  'Extrato Bancário',
   'Guia de Imposto',
   'Comprovante de Pagamento',
   'Outro',
@@ -76,16 +218,27 @@ const colorOptions = [
 export default function FieldsPanel({ hasDocument, isProcessing, extractedFields, summary }: FieldsPanelProps) {
   // Estado local para gerenciar valores editáveis dos campos
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
+  // Estado para rastrear o tipo de documento selecionado
+  const [documentType, setDocumentType] = useState<string>('');
 
   // Atualizar valores quando novos campos forem extraídos
   useEffect(() => {
     const newValues: Record<string, string> = {};
-    mockFields.forEach((mockField) => {
-      const extracted = extractedFields?.find(
-        (ef) => ef.key.toLowerCase().replace(/\s/g, '') === mockField.key.toLowerCase().replace(/\s/g, '')
-      );
-      newValues[mockField.key] = extracted?.value || mockField.value;
+
+    // Primeiro, tentar encontrar o tipo de documento nos campos extraídos
+    const extractedType = extractedFields?.find(
+      (ef) => ef.key.toLowerCase().replace(/\s/g, '') === 'tipodedocumento'.replace(/\s/g, '')
+    );
+
+    if (extractedType?.value && tiposDocumento.includes(extractedType.value)) {
+      setDocumentType(extractedType.value);
+    }
+
+    // Preencher valores dos campos baseado nos campos extraídos
+    extractedFields?.forEach((extracted) => {
+      newValues[extracted.key] = extracted.value;
     });
+
     setFieldValues(newValues);
   }, [extractedFields]);
 
@@ -97,12 +250,28 @@ export default function FieldsPanel({ hasDocument, isProcessing, extractedFields
     }));
   };
 
-  // Usar mockFields como template fixo e preencher com valores do estado
-  const fields = mockFields.map((mockField) => ({
-    key: mockField.key,
-    value: fieldValues[mockField.key] || mockField.value,
-    color: mockField.color,
-  }));
+  // Função para atualizar tipo de documento
+  const handleDocumentTypeChange = (value: string) => {
+    setDocumentType(value);
+    setFieldValues({}); // Limpar valores ao mudar tipo
+  };
+
+  // Obter campos baseados no tipo de documento selecionado
+  const getFieldsForType = () => {
+    if (!documentType || !fieldsByDocumentType[documentType]) {
+      return [];
+    }
+    return fieldsByDocumentType[documentType];
+  };
+
+  // Campos a serem exibidos: sempre mostrar "Tipo de documento" + campos específicos do tipo
+  const fields = [
+    { key: 'Tipo de documento', value: documentType, color: 'bg-purple-500' },
+    ...getFieldsForType().map((field) => ({
+      ...field,
+      value: fieldValues[field.key] || field.value,
+    })),
+  ];
 
   return (
     <div className="h-full flex flex-col">
@@ -132,7 +301,7 @@ export default function FieldsPanel({ hasDocument, isProcessing, extractedFields
                   {field.key === 'Tipo de documento' ? (
                     <Select
                       value={field.value}
-                      onValueChange={(value) => handleFieldChange(field.key, value)}
+                      onValueChange={handleDocumentTypeChange}
                     >
                       <SelectTrigger className="flex-1 bg-white">
                         <SelectValue placeholder="Selecione o tipo" />
