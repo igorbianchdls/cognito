@@ -24,7 +24,7 @@ interface AdsPlatformsResultProps {
   }>;
 }
 
-interface PlatformRow {
+type PlatformRow = Record<string, unknown> & {
   rank: number;
   plataforma: string;
   gasto: string;
@@ -34,7 +34,7 @@ interface PlatformRow {
   ctr: string;
   conversion_rate: string;
   classificacao: string;
-}
+};
 
 const getClassificationBadgeClasses = (classification: string) => {
   const value = classification.toLowerCase();
