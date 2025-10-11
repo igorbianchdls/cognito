@@ -2,16 +2,28 @@ import { runQuery } from '@/lib/postgres';
 
 export const dynamic = 'force-dynamic';
 
+type RawRow = {
+  plataforma: string | null;
+  contas_vinculadas: number | string | null;
+  campanhas_vinculadas: number | string | null;
+  gasto_total: number | string | null;
+  receita_total: number | string | null;
+  conversoes_total: number | string | null;
+  roas: number | string | null;
+  taxa_conversao_percent: number | string | null;
+  ctr_percent: number | string | null;
+};
+
 type Row = {
   plataforma: string | null;
-  contas_vinculadas: number | null;
-  campanhas_vinculadas: number | null;
-  gasto_total: number | null;
-  receita_total: number | null;
-  conversoes_total: number | null;
-  roas: number | null;
-  taxa_conversao_percent: number | null;
-  ctr_percent: number | null;
+  contas_vinculadas: number;
+  campanhas_vinculadas: number;
+  gasto_total: number;
+  receita_total: number;
+  conversoes_total: number;
+  roas: number;
+  taxa_conversao_percent: number;
+  ctr_percent: number;
 };
 
 async function fetchSample() {
@@ -47,14 +59,26 @@ async function fetchSample() {
       sum(receita) as receita_total,
       sum(conversao) as conversoes_total,
       case when sum(gasto) > 0 then sum(receita) / sum(gasto) else 0 end as roas,
-      case when sum(cliques) > 0 then (sum(conversao)::numeric / sum(cliques)) * 100 else 0 end as taxa_conversao_percent,
-      case when sum(impressao) > 0 then (sum(cliques)::numeric / sum(impressao)) * 100 else 0 end as ctr_percent
+      case when sum(cliques) > 0 then (sum(conversao)::numeric / nullif(sum(cliques), 0)) * 100 else 0 end as taxa_conversao_percent,
+      case when sum(impressao) > 0 then (sum(cliques)::numeric / nullif(sum(impressao), 0)) * 100 else 0 end as ctr_percent
     from base
     group by 1
     order by roas desc;
   `;
 
-  return runQuery<Row>(sql);
+  const rawRows = await runQuery<RawRow>(sql);
+
+  return rawRows.map<Row>((row) => ({
+    plataforma: row.plataforma,
+    contas_vinculadas: Number(row.contas_vinculadas ?? 0),
+    campanhas_vinculadas: Number(row.campanhas_vinculadas ?? 0),
+    gasto_total: Number(row.gasto_total ?? 0),
+    receita_total: Number(row.receita_total ?? 0),
+    conversoes_total: Number(row.conversoes_total ?? 0),
+    roas: Number(row.roas ?? 0),
+    taxa_conversao_percent: Number(row.taxa_conversao_percent ?? 0),
+    ctr_percent: Number(row.ctr_percent ?? 0),
+  }));
 }
 
 export default async function PostgresTestPage() {
@@ -89,7 +113,7 @@ export default async function PostgresTestPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
-                  {rows.map((row: Row) => (
+                  {rows.map((row) => (
                     <tr key={row.plataforma ?? 'N/A'} className="text-slate-100">
                       <td className="px-4 py-3 font-medium">{row.plataforma ?? 'Desconhecida'}</td>
                       <td className="px-4 py-3 text-right">{row.contas_vinculadas ?? 0}</td>
