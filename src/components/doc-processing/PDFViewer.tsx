@@ -40,7 +40,7 @@ export default function PDFViewer({ file }: PDFViewerProps) {
   return (
     <div className="h-full flex flex-col bg-gray-50">
       {/* PDF Document - ocupa espaço restante */}
-      <div className="flex-1 overflow-hidden flex items-center justify-center p-4">
+      <div className="flex-1 overflow-hidden flex items-center justify-center">
         <Document
           file={file}
           onLoadSuccess={onDocumentLoadSuccess}
