@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MoreVertical } from 'lucide-react';
+import { MoreVertical, Save, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -131,6 +132,8 @@ export default function FieldsPanel({ hasDocument, isProcessing, extractedFields
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   // Estado para rastrear o tipo de documento selecionado
   const [documentType, setDocumentType] = useState<string>('');
+  // Estado de salvamento
+  const [isSaving, setIsSaving] = useState(false);
 
   // Atualizar valores quando novos campos forem extraídos
   useEffect(() => {
@@ -184,11 +187,79 @@ export default function FieldsPanel({ hasDocument, isProcessing, extractedFields
     })),
   ];
 
+  // Função para salvar documento no banco de dados
+  const handleSaveDocument = async () => {
+    if (!documentType) {
+      alert('Por favor, selecione o tipo de documento antes de salvar.');
+      return;
+    }
+
+    // Converter campos para o formato esperado pela API
+    const fieldsToSave = fields
+      .filter((field) => field.key !== 'Tipo de documento' && field.value)
+      .map((field) => ({
+        key: field.key,
+        value: field.value,
+      }));
+
+    if (fieldsToSave.length === 0) {
+      alert('Nenhum campo preenchido para salvar.');
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const response = await fetch('/api/doc-processing/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          documentType,
+          fields: fieldsToSave,
+          summary,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao salvar documento');
+      }
+
+      alert(data.message || 'Documento salvo com sucesso!');
+    } catch (error) {
+      console.error('Erro ao salvar documento:', error);
+      alert(error instanceof Error ? error.message : 'Erro ao salvar documento');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-gray-900">FIELDS</h2>
+        <Button
+          onClick={handleSaveDocument}
+          disabled={!documentType || isSaving}
+          size="sm"
+          className="gap-2"
+        >
+          {isSaving ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Salvando...
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4" />
+              Salvar no Sistema
+            </>
+          )}
+        </Button>
       </div>
 
       {/* Fields List */}
