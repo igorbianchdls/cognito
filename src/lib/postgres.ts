@@ -1,7 +1,5 @@
-import { createRequire } from 'module';
-
-const require = createRequire(import.meta.url);
-const { Pool } = require('pg') as typeof import('pg');
+import { Pool } from 'pg';
+import type { PoolClient, QueryResult } from 'pg';
 
 /**
  * Type representing a row returned from a PostgreSQL query
@@ -9,18 +7,16 @@ const { Pool } = require('pg') as typeof import('pg');
  */
 export type QueryRow = Record<string, unknown>;
 
-type PgPoolInstance = InstanceType<typeof Pool>;
-
-let pgPool: PgPoolInstance | null = null;
+let pgPool: Pool | null = null;
 
 /**
  * Gets or creates a PostgreSQL connection pool to Supabase.
  * Uses a singleton pattern to reuse the same pool across requests.
  *
- * @returns {PgPoolInstance} PostgreSQL connection pool
+ * @returns {Pool} PostgreSQL connection pool
  * @throws {Error} If SUPABASE_DB_URL is not configured
  */
-function getPool(): PgPoolInstance {
+function getPool(): Pool {
   // Validate environment variable
   if (!process.env.SUPABASE_DB_URL) {
     throw new Error(
@@ -82,14 +78,14 @@ export async function runQuery<T extends QueryRow = QueryRow>(
   queryTimeout: number = 30000
 ): Promise<T[]> {
   const pool = getPool();
-  const client = await pool.connect();
+  const client: PoolClient = await pool.connect();
 
   try {
     // Set statement timeout for this query
     await client.query(`SET statement_timeout = ${queryTimeout}`);
 
     // Execute the query
-    const result = await client.query<T>(sql, params);
+    const result: QueryResult<T> = await client.query<T>(sql, params);
 
     return result.rows;
   } catch (error) {
@@ -150,7 +146,7 @@ export async function closePool(): Promise<void> {
  */
 export async function checkConnection(): Promise<boolean> {
   try {
-    const result = await runQuery('SELECT 1 as health');
+    const result = await runQuery<{ health: number }>('SELECT 1 as health');
     return result.length > 0 && result[0].health === 1;
   } catch (error) {
     console.error('Database health check failed:', error);
