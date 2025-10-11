@@ -132,6 +132,8 @@ export async function fetchSupabaseTable(tableName: string) {
         orderColumn = 'periodo_data_inicial';
       } else if (table === 'guias_imposto') {
         orderColumn = 'data_vencimento';
+      } else if (table === 'transacoes_extrato') {
+        orderColumn = 'data';
       }
     }
 
@@ -2022,6 +2024,106 @@ export const guiasImpostoColumns: ColDef[] = [
       return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value);
     },
     cellStyle: { fontWeight: 'bold', color: '#2e7d32' }
+  }
+];
+
+// Configurações de colunas para Transações de Extrato (Gestão de Documentos)
+export const transacoesExtratoColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'extrato_id',
+    headerName: 'Extrato ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'data',
+    headerName: 'Data',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'descricao',
+    headerName: 'Descrição',
+    width: 300,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'valor',
+    headerName: 'Valor',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(params.value);
+    }
+  },
+  {
+    field: 'tipo',
+    headerName: 'Tipo',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    enablePivot: true,
+    cellStyle: (params) => {
+      const tipo = String(params.value || '').toLowerCase();
+      return tipo === 'credito' || tipo === 'crédito'
+        ? { color: '#2e7d32', fontWeight: 'bold' }
+        : { color: '#c62828', fontWeight: 'bold' };
+    }
+  },
+  {
+    field: 'conciliado',
+    headerName: 'Conciliado',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    valueFormatter: (params) => {
+      return params.value ? 'Sim' : 'Não';
+    },
+    cellStyle: (params) => {
+      return params.value
+        ? { color: '#2e7d32', fontWeight: 'bold' }
+        : { color: '#f57c00', fontWeight: 'bold' };
+    }
+  },
+  {
+    field: 'criado_em',
+    headerName: 'Criado em',
+    width: 150,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
   }
 ];
 
@@ -7712,6 +7814,15 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     tableName: 'gestaodocumentos.guias_imposto',
     columnDefs: guiasImpostoColumns,
     icon: '📋',
+    category: 'Gestão de Documentos'
+  },
+  {
+    id: 'documentos-transacoes-extrato',
+    name: 'Transações de Extrato',
+    description: 'Transações detalhadas dos extratos bancários',
+    tableName: 'gestaodocumentos.transacoes_extrato',
+    columnDefs: transacoesExtratoColumns,
+    icon: '💰',
     category: 'Gestão de Documentos'
   }
 ];
