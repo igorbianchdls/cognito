@@ -89,17 +89,7 @@ export default function DocumentUpload({
               <p className="text-sm text-gray-600 mt-2">{uploadedFile.name}</p>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col">
-              <PDFViewer file={uploadedFile} />
-              <div className="mt-4 flex justify-center">
-                <Button
-                  onClick={triggerFileSelect}
-                  variant="outline"
-                >
-                  Upload Different File
-                </Button>
-              </div>
-            </div>
+            <PDFViewer file={uploadedFile} />
           )}
         </div>
       )}

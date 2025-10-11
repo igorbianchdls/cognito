@@ -96,7 +96,7 @@ export default function DocProcessingPage() {
               <PanelGroup direction="horizontal">
                 {/* Left Panel - Document Upload/Viewer */}
                 <Panel defaultSize={50} minSize={30}>
-                  <div className="h-full p-6 overflow-auto bg-gray-50">
+                  <div className="h-full overflow-hidden bg-gray-50">
                     <DocumentUpload
                       onFileUpload={handleFileUpload}
                       uploadedFile={uploadedFile}
