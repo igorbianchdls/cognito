@@ -40,18 +40,6 @@ const fieldsByDocumentType: Record<string, Array<{ key: string; value: string; c
     { key: 'Total de impostos', value: '', color: 'bg-green-500' },
     { key: 'Status', value: '', color: 'bg-yellow-500' },
   ],
-  'Nota Fiscal de Serviço (NFS-e)': [
-    { key: 'Número da NFS-e', value: '', color: 'bg-blue-500' },
-    { key: 'Código de verificação', value: '', color: 'bg-teal-500' },
-    { key: 'Data de emissão', value: '', color: 'bg-purple-500' },
-    { key: 'Prestador', value: '', color: 'bg-orange-500' },
-    { key: 'CNPJ/CPF Prestador', value: '', color: 'bg-orange-500' },
-    { key: 'Tomador', value: '', color: 'bg-pink-500' },
-    { key: 'CNPJ/CPF Tomador', value: '', color: 'bg-pink-500' },
-    { key: 'Descrição do serviço', value: '', color: 'bg-gray-700' },
-    { key: 'Valor do serviço', value: '', color: 'bg-green-500' },
-    { key: 'ISS', value: '', color: 'bg-green-500' },
-  ],
   'Recibo': [
     { key: 'Número do recibo', value: '', color: 'bg-blue-500' },
     { key: 'Data', value: '', color: 'bg-purple-500' },
@@ -112,28 +100,17 @@ const fieldsByDocumentType: Record<string, Array<{ key: string; value: string; c
     { key: 'Multa/Juros', value: '', color: 'bg-red-500' },
     { key: 'Valor total', value: '', color: 'bg-green-500' },
   ],
-  'Comprovante de Pagamento': [
-    { key: 'Número do comprovante', value: '', color: 'bg-blue-500' },
-    { key: 'Data do pagamento', value: '', color: 'bg-purple-500' },
-    { key: 'Pagador', value: '', color: 'bg-orange-500' },
-    { key: 'Beneficiário', value: '', color: 'bg-pink-500' },
-    { key: 'Valor pago', value: '', color: 'bg-green-500' },
-    { key: 'Forma de pagamento', value: '', color: 'bg-indigo-500' },
-    { key: 'Referência', value: '', color: 'bg-gray-700' },
-  ],
 };
 
 // Opções de tipos de documento - Principais documentos usados por PMEs brasileiras
 const tiposDocumento = [
   'Nota Fiscal (NF-e)',
-  'Nota Fiscal de Serviço (NFS-e)',
   'Recibo',
   'Fatura',
   'Duplicata',
   'Contrato',
   'Extrato Bancário',
   'Guia de Imposto',
-  'Comprovante de Pagamento',
 ];
 
 // Cores para os indicadores dos campos
