@@ -1,6 +1,6 @@
 "use client"
 
-import { ChevronRight, DollarSign, FolderKanban, ShoppingCart, Users } from "lucide-react"
+import { ChevronRight, DollarSign, FileText, FolderKanban, ShoppingCart, Users } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
 
@@ -72,6 +72,19 @@ const funcionariosTables = [
   { name: "Desligamentos", route: "/gestao/funcionarios/desligamentos" },
 ]
 
+// Tabelas do schema gestaodocumentos
+const documentosTables = [
+  { name: "Documentos", route: "/gestao/documentos/documentos" },
+  { name: "Notas Fiscais", route: "/gestao/documentos/notas-fiscais" },
+  { name: "Recibos", route: "/gestao/documentos/recibos" },
+  { name: "Faturas", route: "/gestao/documentos/faturas" },
+  { name: "Duplicatas", route: "/gestao/documentos/duplicatas" },
+  { name: "Contratos", route: "/gestao/documentos/contratos" },
+  { name: "Extratos Bancários", route: "/gestao/documentos/extratos-bancarios" },
+  { name: "Guias de Imposto", route: "/gestao/documentos/guias-imposto" },
+  { name: "Transações de Extrato", route: "/gestao/documentos/transacoes-extrato" },
+]
+
 export function NavGestao() {
   const router = useRouter()
   const pathname = usePathname()
@@ -79,6 +92,7 @@ export function NavGestao() {
   const [isProjetosOpen, setIsProjetosOpen] = useState(false)
   const [isVendasOpen, setIsVendasOpen] = useState(false)
   const [isFuncionariosOpen, setIsFuncionariosOpen] = useState(false)
+  const [isDocumentosOpen, setIsDocumentosOpen] = useState(false)
 
   return (
     <SidebarGroup>
@@ -194,6 +208,37 @@ export function NavGestao() {
             <CollapsibleContent>
               <SidebarMenuSub>
                 {funcionariosTables.map((table) => (
+                  <SidebarMenuSubItem key={table.route}>
+                    <SidebarMenuSubButton
+                      onClick={() => router.push(table.route)}
+                      isActive={pathname === table.route}
+                    >
+                      <span>{table.name}</span>
+                    </SidebarMenuSubButton>
+                  </SidebarMenuSubItem>
+                ))}
+              </SidebarMenuSub>
+            </CollapsibleContent>
+          </SidebarMenuItem>
+        </Collapsible>
+
+        {/* Documentos */}
+        <Collapsible
+          open={isDocumentosOpen}
+          onOpenChange={setIsDocumentosOpen}
+          className="group/collapsible"
+        >
+          <SidebarMenuItem>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton tooltip="Documentos">
+                <FileText />
+                <span>Documentos</span>
+                <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarMenuSub>
+                {documentosTables.map((table) => (
                   <SidebarMenuSubItem key={table.route}>
                     <SidebarMenuSubButton
                       onClick={() => router.push(table.route)}
