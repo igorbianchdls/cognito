@@ -67,7 +67,7 @@ export default function PDFViewer({ file }: PDFViewerProps) {
 
       {/* Navigation Controls */}
       {!loading && numPages > 0 && (
-        <div className="border-t border-gray-200 bg-white px-4 py-3 flex items-center justify-between">
+        <div className="border-t border-gray-200 bg-white py-3 flex items-center justify-between">
           <Button
             onClick={goToPrevPage}
             disabled={pageNumber <= 1}
