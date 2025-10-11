@@ -1,7 +1,6 @@
 'use client';
 
-import { MoreVertical, FileText } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { MoreVertical } from 'lucide-react';
 
 interface ExtractedField {
   key: string;
@@ -47,37 +46,19 @@ const colorOptions = [
 ];
 
 export default function FieldsPanel({ hasDocument, isProcessing, extractedFields, summary }: FieldsPanelProps) {
-  // Usar campos extraídos se disponíveis, senão usar mock
-  const fields = extractedFields && extractedFields.length > 0
-    ? extractedFields.map((field, index) => ({
-        key: field.key,
-        value: field.value,
-        color: colorOptions[index % colorOptions.length],
-      }))
-    : mockFields;
-  if (!hasDocument) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center text-gray-500">
-          <p className="text-lg font-medium">No document uploaded</p>
-          <p className="text-sm mt-2">Upload a document to see extracted fields</p>
-        </div>
-      </div>
+  // Usar mockFields como template fixo e preencher com valores extraídos se disponíveis
+  const fields = mockFields.map((mockField) => {
+    // Tentar encontrar valor extraído correspondente (match case-insensitive)
+    const extracted = extractedFields?.find(
+      (ef) => ef.key.toLowerCase().replace(/\s/g, '') === mockField.key.toLowerCase().replace(/\s/g, '')
     );
-  }
 
-  if (isProcessing) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center text-gray-400">
-          <div className="animate-pulse">
-            <p className="text-lg font-medium">Extracting fields...</p>
-            <p className="text-sm mt-2">Please wait</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+    return {
+      key: mockField.key,
+      value: extracted?.value || (isProcessing ? '...' : ''),
+      color: mockField.color,
+    };
+  });
 
   return (
     <div className="h-full flex flex-col">
@@ -88,22 +69,6 @@ export default function FieldsPanel({ hasDocument, isProcessing, extractedFields
 
       {/* Fields List */}
       <div className="flex-1 overflow-auto">
-        {/* Summary Card */}
-        {summary && (
-          <div className="p-4">
-            <Card className="bg-blue-50 border-blue-200">
-              <CardContent className="pt-6">
-                <div className="flex items-start gap-3">
-                  <FileText className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h3 className="text-sm font-semibold text-blue-900 mb-1">Resumo do Documento</h3>
-                    <p className="text-sm text-blue-800">{summary}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
         <div className="p-4">
           <div className="bg-white rounded-lg overflow-hidden border border-gray-200">
             {/* Table Header */}
