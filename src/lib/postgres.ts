@@ -1,10 +1,13 @@
 import { createRequire } from 'module';
-import type { Pool as PoolType } from 'pg';
+import type { Pool } from 'pg';
+import type { PoolConfig } from 'pg';
 
 const require = createRequire(import.meta.url);
-const { Pool } = require('pg') as { Pool: new (...args: unknown[]) => PoolType };
 
-let pgPool: PoolType | null = null;
+type PoolConstructor = new (config?: string | PoolConfig | undefined) => Pool;
+const { Pool: PoolCtor } = require('pg') as { Pool: PoolConstructor };
+
+let pgPool: Pool | null = null;
 
 function getPool() {
   if (!process.env.SUPABASE_DB_URL) {
@@ -12,7 +15,7 @@ function getPool() {
   }
 
   if (!pgPool) {
-    pgPool = new Pool({
+    pgPool = new PoolCtor({
       connectionString: process.env.SUPABASE_DB_URL,
       max: 5 // small pool; pgBouncer handles larger pooling
     });
