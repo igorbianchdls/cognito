@@ -46,10 +46,12 @@ interface MarketingRecord {
 interface OrganicMarketingDataTableProps {
   success: boolean;
   count: number;
-  data: MarketingRecord[];
+  rows: MarketingRecord[];
   table: string;
   message: string;
   error?: string;
+  sql_query?: string;
+  sql_params?: string;
 }
 
 const getPlataformaColor = (plataforma?: string) => {
@@ -73,7 +75,9 @@ const getStatusColor = (status?: string) => {
   }
 };
 
-export default function OrganicMarketingDataTable({ success, count, data, table, message, error }: OrganicMarketingDataTableProps) {
+export default function OrganicMarketingDataTable({ success, count, rows, table, message, error, sql_query }: OrganicMarketingDataTableProps) {
+  const data = useMemo(() => rows ?? [], [rows]);
+
   const columns: ColumnDef<MarketingRecord>[] = useMemo(() => {
     const baseColumns: ColumnDef<MarketingRecord>[] = [
       {
@@ -117,6 +121,22 @@ export default function OrganicMarketingDataTable({ success, count, data, table,
     if (table === 'publicacoes') {
       return [
         ...baseColumns,
+        {
+          accessorKey: 'nome_conta',
+          header: 'Conta',
+          cell: ({ row }) => {
+            const nome = row.getValue<string | undefined>('nome_conta');
+            return nome ? <span className="font-medium">{nome}</span> : '-';
+          },
+        },
+        {
+          accessorKey: 'plataforma',
+          header: 'Plataforma',
+          cell: ({ row }) => {
+            const plataforma = row.getValue<string | undefined>('plataforma');
+            return plataforma ? <Badge className={getPlataformaColor(plataforma)}>{plataforma}</Badge> : '-';
+          },
+        },
         {
           accessorKey: 'titulo',
           header: 'Título',
@@ -163,6 +183,30 @@ export default function OrganicMarketingDataTable({ success, count, data, table,
     if (table === 'metricas_publicacoes') {
       return [
         ...baseColumns,
+        {
+          accessorKey: 'nome_conta',
+          header: 'Conta',
+          cell: ({ row }) => {
+            const nome = row.getValue<string | undefined>('nome_conta');
+            return nome ? <span className="font-medium">{nome}</span> : '-';
+          },
+        },
+        {
+          accessorKey: 'plataforma',
+          header: 'Plataforma',
+          cell: ({ row }) => {
+            const plataforma = row.getValue<string | undefined>('plataforma');
+            return plataforma ? <Badge className={getPlataformaColor(plataforma)}>{plataforma}</Badge> : '-';
+          },
+        },
+        {
+          accessorKey: 'titulo',
+          header: 'Título',
+          cell: ({ row }) => {
+            const titulo = row.getValue<string | undefined>('titulo');
+            return titulo ? <span className="max-w-xs truncate block font-medium">{titulo}</span> : '-';
+          },
+        },
         {
           accessorKey: 'curtidas',
           header: ({ column }) => (
@@ -243,6 +287,22 @@ export default function OrganicMarketingDataTable({ success, count, data, table,
     if (table === 'resumos_conta') {
       return [
         ...baseColumns,
+        {
+          accessorKey: 'nome_conta',
+          header: 'Conta',
+          cell: ({ row }) => {
+            const nome = row.getValue<string | undefined>('nome_conta');
+            return nome ? <span className="font-medium">{nome}</span> : '-';
+          },
+        },
+        {
+          accessorKey: 'plataforma',
+          header: 'Plataforma',
+          cell: ({ row }) => {
+            const plataforma = row.getValue<string | undefined>('plataforma');
+            return plataforma ? <Badge className={getPlataformaColor(plataforma)}>{plataforma}</Badge> : '-';
+          },
+        },
         {
           accessorKey: 'seguidores',
           header: ({ column }) => (
@@ -328,6 +388,7 @@ export default function OrganicMarketingDataTable({ success, count, data, table,
       error={error}
       exportFileName={`organic_marketing_${table}`}
       pageSize={20}
+      sqlQuery={sql_query}
     />
   );
 }

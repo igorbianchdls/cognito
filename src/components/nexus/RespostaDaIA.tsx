@@ -730,7 +730,7 @@ type GetOrganicMarketingDataToolOutput = {
   success: boolean;
   count: number;
   table: string;
-  data: Array<{
+  rows: Array<{
     id: string | number;
     plataforma?: string;
     status?: string;
@@ -757,6 +757,8 @@ type GetOrganicMarketingDataToolOutput = {
   }>;
   message: string;
   error?: string;
+  sql_query?: string;
+  sql_params?: string;
 };
 
 type GetPaidTrafficDataToolInput = {
@@ -4254,9 +4256,10 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   success={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).success}
                   count={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).count}
                   table={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).table}
-                  data={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).data}
+                  rows={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).rows}
                   message={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).message}
                   error={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).error}
+                  sql_query={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).sql_query}
                 />
               )}
             </div>

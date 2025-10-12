@@ -1,12 +1,6 @@
 import { z } from 'zod';
 import { tool } from 'ai';
-import { createClient } from '@supabase/supabase-js';
 import { runQuery } from '@/lib/postgres';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 type OrganicMetricRow = {
   plataforma: string | null;
@@ -20,67 +14,291 @@ type OrganicMetricRow = {
   ctr_percent: number | string | null;
 };
 
-const ORGANIC_METRICS_SQL = `
-WITH base AS (
+const formatSqlParams = (params: unknown[]) => (params.length ? JSON.stringify(params) : '[]');
+
+const ORGANIC_PLATFORM_METRICS_BASE_SQL = `
+WITH metricas AS (
   SELECT
-    ma.gasto,
-    ma.receita,
-    ma.conversao,
-    ma.cliques,
-    ma.impressao,
-    ma.plataforma AS plataforma_metricas,
-    ap.plataforma AS plataforma_anuncio,
-    co.plataforma AS plataforma_conta,
-    COALESCE(co.id, ma.conta_ads_id) AS conta_relacionada_id,
-    c.id AS campanha_relacionada_id
-  FROM trafego_pago.metricas_anuncios ma
-  LEFT JOIN trafego_pago.anuncios_publicados ap
-    ON ap.id = ma.anuncio_publicado_id
-  LEFT JOIN trafego_pago.grupos_de_anuncios ga
-    ON ga.id = ap.grupo_id
-  LEFT JOIN trafego_pago.campanhas c
-    ON c.id = ga.campanha_id
-  LEFT JOIN trafego_pago.contas_ads co
-    ON co.id = COALESCE(ma.conta_ads_id, c.conta_ads_id)
-  WHERE ma.data >= CURRENT_DATE - ($1::int) * INTERVAL '1 day'
+    cs.plataforma,
+    cs.id AS conta_social_id,
+    p.id AS publicacao_id,
+    COALESCE(m.curtidas, 0) AS curtidas,
+    COALESCE(m.comentarios, 0) AS comentarios,
+    COALESCE(m.compartilhamentos, 0) AS compartilhamentos,
+    COALESCE(m.salvamentos, 0) AS salvamentos,
+    COALESCE(m.visualizacoes, 0) AS visualizacoes,
+    COALESCE(m.alcance, 0) AS alcance
+  FROM marketing_organico.metricas_publicacoes m
+  JOIN marketing_organico.publicacoes p ON p.id = m.publicacao_id
+  JOIN marketing_organico.contas_sociais cs ON cs.id = p.conta_social_id
+  WHERE m.registrado_em >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
 )
 SELECT
-  COALESCE(plataforma_conta, plataforma_anuncio, plataforma_metricas, 'Desconhecida') AS plataforma,
-  COUNT(DISTINCT conta_relacionada_id) AS contas_vinculadas,
-  COUNT(DISTINCT campanha_relacionada_id) AS campanhas_vinculadas,
-  SUM(gasto) AS gasto_total,
-  SUM(receita) AS receita_total,
-  SUM(conversao) AS conversoes_total,
-  CASE WHEN SUM(gasto) > 0 THEN SUM(receita) / SUM(gasto) ELSE 0 END AS roas,
-  CASE WHEN SUM(cliques) > 0 THEN (SUM(conversao)::numeric / NULLIF(SUM(cliques), 0)) * 100 ELSE 0 END AS taxa_conversao_percent,
-  CASE WHEN SUM(impressao) > 0 THEN (SUM(cliques)::numeric / NULLIF(SUM(impressao), 0)) * 100 ELSE 0 END AS ctr_percent
-FROM base
-GROUP BY 1
-ORDER BY roas DESC;
-`.trim();
+  plataforma,
+  COUNT(DISTINCT conta_social_id) AS contas_vinculadas,
+  COUNT(DISTINCT publicacao_id) AS campanhas_vinculadas,
+  SUM(alcance) AS gasto_total,
+  SUM(visualizacoes) AS receita_total,
+  SUM(curtidas) AS conversoes_total,
+  CASE WHEN SUM(alcance) > 0 THEN SUM(visualizacoes)::numeric / SUM(alcance) ELSE 0 END AS roas,
+  CASE WHEN SUM(visualizacoes) > 0 THEN (SUM(curtidas)::numeric / SUM(visualizacoes)) * 100 ELSE 0 END AS taxa_conversao_percent,
+  CASE WHEN SUM(alcance) > 0 THEN (SUM(comentarios + compartilhamentos + salvamentos)::numeric / SUM(alcance)) * 100 ELSE 0 END AS ctr_percent
+FROM metricas
+GROUP BY plataforma
+`;
 
-async function fetchOrganicMetrics(rangeDays: number): Promise<OrganicMetricRow[]> {
-  return runQuery<OrganicMetricRow>(ORGANIC_METRICS_SQL, [rangeDays]);
-}
+type PlatformMetricsOrder =
+  | 'roas_desc'
+  | 'engajamento_desc'
+  | 'alcance_desc'
+  | 'conversoes_desc'
+  | 'campanhas_desc'
+  | 'contas_desc';
 
-function genericSuccessMessage(rows: OrganicMetricRow[], label?: string) {
-  const prefix = label ? `${label}: ` : '';
+const PLATFORM_METRICS_ORDER_MAP: Record<PlatformMetricsOrder, string> = {
+  roas_desc: 'roas DESC NULLS LAST',
+  engajamento_desc: 'taxa_conversao_percent DESC NULLS LAST',
+  alcance_desc: 'gasto_total DESC NULLS LAST',
+  conversoes_desc: 'conversoes_total DESC NULLS LAST',
+  campanhas_desc: 'campanhas_vinculadas DESC NULLS LAST',
+  contas_desc: 'contas_vinculadas DESC NULLS LAST',
+};
+
+const buildPlatformMetricsQuery = (
+  rangeDays: number,
+  limit: number,
+  order: PlatformMetricsOrder,
+) => {
+  const orderClause = PLATFORM_METRICS_ORDER_MAP[order] ?? PLATFORM_METRICS_ORDER_MAP.roas_desc;
+  const sql = `${ORGANIC_PLATFORM_METRICS_BASE_SQL}
+ORDER BY ${orderClause}
+LIMIT $2`;
+  return { sql, params: [rangeDays, limit] as unknown[] };
+};
+
+async function buildPlatformMetricsResponse(
+  rangeDays: number,
+  label: string,
+  options: { order?: PlatformMetricsOrder; limit?: number } = {},
+) {
+  const limit = options.limit ?? 10;
+  const order = options.order ?? 'roas_desc';
+  const { sql, params } = buildPlatformMetricsQuery(rangeDays, limit, order);
+  const rows = await runQuery<OrganicMetricRow>(sql, params);
+
   if (!rows.length) {
-    return `${prefix}⚠️ Nenhum registro encontrado na consulta base`;
+    return {
+      success: false,
+      message: `⚠️ Nenhum registro encontrado para ${label.toLowerCase()}`,
+      periodo_dias: rangeDays,
+      data: [],
+      sql_query: sql,
+      sql_params: formatSqlParams(params),
+    };
   }
-  return `${prefix}✅ ${rows.length} registros retornados pela consulta base`;
-}
 
-async function buildGenericResponse(rangeDays: number, label: string) {
-  const rows = await fetchOrganicMetrics(rangeDays);
   return {
     success: true,
-    message: genericSuccessMessage(rows, label),
+    message: `✅ ${rows.length} registros analisados (${label})`,
     periodo_dias: rangeDays,
     data: rows,
-    sql_query: ORGANIC_METRICS_SQL
+    sql_query: sql,
+    sql_params: formatSqlParams(params),
   };
 }
+
+type BaseFilters = {
+  limit: number;
+  plataforma?: string;
+  status?: string;
+  tipo_post?: string;
+  data_de?: string;
+  data_ate?: string;
+  engajamento_minimo?: number;
+  curtidas_minimo?: number;
+};
+
+type QueryBuilder = (filters: BaseFilters) => { sql: string; params: unknown[] };
+
+const buildSelectQuery = (
+  table: string,
+  columns: string[],
+  filters: BaseFilters,
+  options: {
+    dateColumn?: { from?: string; to?: string };
+    additional?: (ctx: { clauses: string[]; addParam: (value: unknown) => string }) => void;
+    joins?: string;
+    orderBy?: string;
+    orderDirection?: 'ASC' | 'DESC';
+    filterColumns?: Partial<Record<'plataforma' | 'status' | 'tipo_post', string>>;
+  } = {},
+) => {
+  const clauses: string[] = [];
+  const params: unknown[] = [];
+
+  const addParam = (value: unknown) => {
+    params.push(value);
+    return `$${params.length}`;
+  };
+
+  const plataformaColumn = options.filterColumns?.plataforma ?? (columns.includes('plataforma') ? 'plataforma' : undefined);
+  if (filters.plataforma && plataformaColumn) {
+    clauses.push(`${plataformaColumn} = ${addParam(filters.plataforma)}`);
+  }
+
+  const statusColumn = options.filterColumns?.status ?? (columns.includes('status') ? 'status' : undefined);
+  if (filters.status && statusColumn) {
+    clauses.push(`${statusColumn} = ${addParam(filters.status)}`);
+  }
+
+  const tipoPostColumn = options.filterColumns?.tipo_post ?? (columns.includes('tipo_post') ? 'tipo_post' : undefined);
+  if (filters.tipo_post && tipoPostColumn) {
+    clauses.push(`${tipoPostColumn} = ${addParam(filters.tipo_post)}`);
+  }
+
+  if (options.dateColumn?.from && filters.data_de) {
+    clauses.push(`${options.dateColumn.from} >= ${addParam(filters.data_de)}`);
+  }
+
+  if (filters.data_ate) {
+    const toColumn = options.dateColumn?.to ?? options.dateColumn?.from;
+    if (toColumn) {
+      clauses.push(`${toColumn} <= ${addParam(filters.data_ate)}`);
+    }
+  }
+
+  options.additional?.({ clauses, addParam });
+
+  const limitPlaceholder = addParam(filters.limit);
+  const whereClause = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+  const orderBy = options.orderBy ?? columns[0];
+  const direction = options.orderDirection ?? 'DESC';
+
+  const joinsClause = options.joins ? `\n${options.joins}` : '';
+  const whereLine = whereClause ? `\n${whereClause}` : '';
+  const sql = `
+    SELECT ${columns.join(', ')}
+    FROM ${table}${joinsClause}${whereLine}
+    ORDER BY ${orderBy} ${direction}
+    LIMIT ${limitPlaceholder}
+  `.trim();
+
+  return { sql, params };
+};
+
+const organicQueryBuilders: Record<'contas_sociais' | 'publicacoes' | 'metricas_publicacoes' | 'resumos_conta', QueryBuilder> = {
+  contas_sociais: (filters) =>
+    buildSelectQuery(
+      'marketing_organico.contas_sociais cs',
+      ['cs.id', 'cs.plataforma', 'cs.nome_conta', 'cs.conectado_em'],
+      filters,
+      {
+        orderBy: 'cs.conectado_em',
+        orderDirection: 'DESC',
+        dateColumn: { from: 'cs.conectado_em' },
+        filterColumns: {
+          plataforma: 'cs.plataforma',
+        },
+      },
+    ),
+  publicacoes: (filters) =>
+    buildSelectQuery(
+      'marketing_organico.publicacoes p',
+      [
+        'p.id',
+        'p.conta_social_id',
+        'cs.nome_conta AS nome_conta',
+        'cs.plataforma AS plataforma',
+        'p.titulo',
+        'p.hook',
+        'p.tipo_post',
+        'p.status',
+        'p.publicado_em',
+        'p.criado_em',
+      ],
+      filters,
+      {
+        joins: 'JOIN marketing_organico.contas_sociais cs ON cs.id = p.conta_social_id',
+        orderBy: 'p.publicado_em',
+        dateColumn: { from: 'p.publicado_em' },
+        filterColumns: {
+          plataforma: 'cs.plataforma',
+          status: 'p.status',
+          tipo_post: 'p.tipo_post',
+        },
+      },
+    ),
+  metricas_publicacoes: (filters) =>
+    buildSelectQuery(
+      'marketing_organico.metricas_publicacoes m',
+      [
+        'm.id',
+        'm.publicacao_id',
+        'p.titulo',
+        'cs.nome_conta AS nome_conta',
+        'cs.plataforma AS plataforma',
+        'm.curtidas',
+        'm.comentarios',
+        'm.compartilhamentos',
+        'm.visualizacoes',
+        'm.alcance',
+        'm.salvamentos',
+        'm.taxa_engajamento',
+        'm.registrado_em',
+      ],
+      filters,
+      {
+        joins:
+          'JOIN marketing_organico.publicacoes p ON p.id = m.publicacao_id\n' +
+          'JOIN marketing_organico.contas_sociais cs ON cs.id = p.conta_social_id',
+        orderBy: 'm.registrado_em',
+        dateColumn: { from: 'm.registrado_em' },
+        additional: ({ clauses, addParam }) => {
+          if (filters.engajamento_minimo !== undefined) {
+            clauses.push(`m.taxa_engajamento >= ${addParam(filters.engajamento_minimo)}`);
+          }
+          if (filters.curtidas_minimo !== undefined) {
+            clauses.push(`m.curtidas >= ${addParam(filters.curtidas_minimo)}`);
+          }
+        },
+        filterColumns: {
+          plataforma: 'cs.plataforma',
+          status: 'p.status',
+          tipo_post: 'p.tipo_post',
+        },
+      },
+    ),
+  resumos_conta: (filters) =>
+    buildSelectQuery(
+      'marketing_organico.resumos_conta rc',
+      [
+        'rc.id',
+        'rc.conta_social_id',
+        'cs.nome_conta AS nome_conta',
+        'cs.plataforma AS plataforma',
+        'rc.seguidores',
+        'rc.seguindo',
+        'rc.total_publicacoes',
+        'rc.alcance_total',
+        'rc.taxa_engajamento',
+        'rc.registrado_em',
+      ],
+      filters,
+      {
+        joins: 'JOIN marketing_organico.contas_sociais cs ON cs.id = rc.conta_social_id',
+        orderBy: 'rc.registrado_em',
+        dateColumn: { from: 'rc.registrado_em' },
+        additional: ({ clauses, addParam }) => {
+          if (filters.engajamento_minimo !== undefined) {
+            clauses.push(`rc.taxa_engajamento >= ${addParam(filters.engajamento_minimo)}`);
+          }
+        },
+        filterColumns: {
+          plataforma: 'cs.plataforma',
+        },
+      },
+    ),
+};
 
 export const getOrganicMarketingData = tool({
   description: 'Busca dados de marketing orgânico (contas sociais, publicações, métricas)',
@@ -116,84 +334,47 @@ export const getOrganicMarketingData = tool({
     data_de,
     data_ate,
     engajamento_minimo,
-    curtidas_minimo
+    curtidas_minimo,
   }) => {
+    const normalizedLimit = typeof limit === 'number' ? limit : 20;
+    const filters: BaseFilters = {
+      limit: normalizedLimit,
+      plataforma,
+      status,
+      tipo_post,
+      data_de,
+      data_ate,
+      engajamento_minimo,
+      curtidas_minimo,
+    };
+
+    const builder = organicQueryBuilders[table];
+    const { sql, params } = builder(filters);
+
     try {
-      let query = supabase
-        .schema('marketing_organico')
-        .from(table)
-        .select('*');
-
-      if (plataforma && table === 'contas_sociais') {
-        query = query.eq('plataforma', plataforma);
-      }
-
-      if (status && table === 'publicacoes') {
-        query = query.eq('status', status);
-      }
-
-      if (tipo_post && table === 'publicacoes') {
-        query = query.eq('tipo_post', tipo_post);
-      }
-
-      if (data_de) {
-        let dateColumn = 'criado_em';
-        if (table === 'contas_sociais') dateColumn = 'conectado_em';
-        else if (table === 'metricas_publicacoes' || table === 'resumos_conta') dateColumn = 'registrado_em';
-        else if (table === 'publicacoes') dateColumn = 'publicado_em';
-
-        query = query.gte(dateColumn, data_de);
-      }
-
-      if (data_ate) {
-        let dateColumn = 'criado_em';
-        if (table === 'contas_sociais') dateColumn = 'conectado_em';
-        else if (table === 'metricas_publicacoes' || table === 'resumos_conta') dateColumn = 'registrado_em';
-        else if (table === 'publicacoes') dateColumn = 'publicado_em';
-
-        query = query.lte(dateColumn, data_ate);
-      }
-
-      if (engajamento_minimo !== undefined && (table === 'metricas_publicacoes' || table === 'resumos_conta')) {
-        query = query.gte('taxa_engajamento', engajamento_minimo);
-      }
-
-      if (curtidas_minimo !== undefined && table === 'metricas_publicacoes') {
-        query = query.gte('curtidas', curtidas_minimo);
-      }
-
-      let orderColumn = 'criado_em';
-      if (table === 'contas_sociais') orderColumn = 'conectado_em';
-      else if (table === 'metricas_publicacoes' || table === 'resumos_conta') orderColumn = 'registrado_em';
-      else if (table === 'publicacoes') orderColumn = 'criado_em';
-
-      query = query
-        .order(orderColumn, { ascending: false })
-        .limit(limit ?? 20);
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
       return {
         success: true,
-        count: (data || []).length,
+        count: rows.length,
         table,
-        message: `✅ ${(data || []).length} registros encontrados em ${table}`,
-        data: data || []
+        rows,
+        message: `✅ ${rows.length} registros encontrados em ${table}`,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
-
     } catch (error) {
       console.error('ERRO getOrganicMarketingData:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: `❌ Erro ao buscar dados de ${table}`,
         table,
-        data: []
+        rows: [],
+        message: `❌ Erro ao buscar dados de ${table}`,
+        error: error instanceof Error ? error.message : String(error),
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
     }
-  }
+  },
 });
 
 export const analyzeContentPerformance = tool({
@@ -207,7 +388,10 @@ export const analyzeContentPerformance = tool({
 
   execute: async ({ date_range_days = 30, plataforma: _plataforma }) => {
     try {
-      return await buildGenericResponse(date_range_days, 'Performance de conteúdo');
+      return await buildPlatformMetricsResponse(date_range_days, 'Performance de conteúdo', {
+        order: 'roas_desc',
+        limit: 10,
+      });
     } catch (error) {
       console.error('ERRO analyzeContentPerformance:', error);
       return {
@@ -228,7 +412,10 @@ export const comparePlatformPerformance = tool({
 
   execute: async ({ date_range_days = 30 }) => {
     try {
-      return await buildGenericResponse(date_range_days, 'Benchmark de plataformas');
+      return await buildPlatformMetricsResponse(date_range_days, 'Benchmark de plataformas', {
+        order: 'alcance_desc',
+        limit: 20,
+      });
     } catch (error) {
       console.error('ERRO comparePlatformPerformance:', error);
       return {
@@ -249,7 +436,10 @@ export const analyzeAudienceGrowth = tool({
 
   execute: async ({ date_range_days = 30 }) => {
     try {
-      return await buildGenericResponse(date_range_days, 'Crescimento de audiência');
+      return await buildPlatformMetricsResponse(date_range_days, 'Crescimento de audiência', {
+        order: 'contas_desc',
+        limit: 20,
+      });
     } catch (error) {
       console.error('ERRO analyzeAudienceGrowth:', error);
       return {
@@ -270,9 +460,13 @@ export const identifyTopContent = tool({
       .describe('Período de análise em dias (padrão: 30)')
   }),
 
-  execute: async ({ limit: _limit = 10, date_range_days = 30 }) => {
+  execute: async ({ limit = 10, date_range_days = 30 }) => {
     try {
-      return await buildGenericResponse(date_range_days, 'Top conteúdos');
+      const safeLimit = Math.max(1, Math.min(limit, 50));
+      return await buildPlatformMetricsResponse(date_range_days, 'Top conteúdos', {
+        order: 'conversoes_desc',
+        limit: safeLimit,
+      });
     } catch (error) {
       console.error('ERRO identifyTopContent:', error);
       return {
@@ -293,7 +487,10 @@ export const analyzeContentMix = tool({
 
   execute: async ({ date_range_days = 30 }) => {
     try {
-      return await buildGenericResponse(date_range_days, 'Mix de conteúdo');
+      return await buildPlatformMetricsResponse(date_range_days, 'Mix de conteúdo', {
+        order: 'campanhas_desc',
+        limit: 25,
+      });
     } catch (error) {
       console.error('ERRO analyzeContentMix:', error);
       return {
@@ -316,7 +513,10 @@ export const forecastEngagement = tool({
 
   execute: async ({ forecast_days: _forecast = 14, lookback_days = 30 }) => {
     try {
-      return await buildGenericResponse(lookback_days, 'Previsão de engajamento');
+      return await buildPlatformMetricsResponse(lookback_days, 'Previsão de engajamento', {
+        order: 'engajamento_desc',
+        limit: 15,
+      });
     } catch (error) {
       console.error('ERRO forecastEngagement:', error);
       return {
@@ -339,7 +539,10 @@ export const calculateContentROI = tool({
 
   execute: async ({ date_range_days = 30, custo_producao_por_post: _custo = 50 }) => {
     try {
-      return await buildGenericResponse(date_range_days, 'ROI de conteúdo');
+      return await buildPlatformMetricsResponse(date_range_days, 'ROI de conteúdo', {
+        order: 'roas_desc',
+        limit: 20,
+      });
     } catch (error) {
       console.error('ERRO calculateContentROI:', error);
       return {
