@@ -18,7 +18,7 @@ import {
   Download,
   CheckCircle,
   AlertCircle,
-  Table,
+  Table as TableIcon,
   Code,
   type LucideIcon
 } from 'lucide-react';
@@ -170,7 +170,7 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
           {sqlQuery && (
             <>
               <ArtifactAction
-                icon={Table}
+                icon={TableIcon}
                 tooltip="Ver tabela"
                 variant={viewMode === 'table' ? 'default' : 'outline'}
                 onClick={() => setViewMode('table')}
