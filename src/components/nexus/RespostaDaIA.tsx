@@ -55,7 +55,7 @@ import FinancialDataTable from '../tools/FinancialDataTable';
 import OrganicMarketingDataTable from '../tools/OrganicMarketingDataTable';
 import PaidTrafficDataTable from '../tools/PaidTrafficDataTable';
 import InventoryDataTable from '../tools/InventoryDataTable';
-import EcommerceSalesDataTable from '../tools/EcommerceSalesDataTable';
+import EcommerceSalesDataTable, { type EcommerceDailySalesRow } from '../tools/EcommerceSalesDataTable';
 import LogisticsDataTable from '../tools/LogisticsDataTable';
 import AnalyticsDataTable from '../tools/AnalyticsDataTable';
 import ComprasDataTable from '../tools/ComprasDataTable';
@@ -900,7 +900,10 @@ type EcommerceGenericToolOutput = {
   error?: string;
 };
 
-type GetEcommerceSalesDataToolOutput = EcommerceGenericToolOutput;
+type GetEcommerceSalesDataToolOutput = EcommerceGenericToolOutput & {
+  rows?: EcommerceDailySalesRow[];
+  data?: EcommerceDailySalesRow[];
+};
 
 type GetRevenueMetricsToolInput = {
   data_de: string;
@@ -4328,7 +4331,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               {ecommerceTool.state === 'output-available' && (
                 <EcommerceSalesDataTable
                   success={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).success}
-                  data={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).data}
+                  rows={((ecommerceTool.output as GetEcommerceSalesDataToolOutput).rows ?? (ecommerceTool.output as GetEcommerceSalesDataToolOutput).data ?? []) as EcommerceDailySalesRow[]}
                   message={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).message}
                   periodo_dias={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).periodo_dias}
                   sql_query={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).sql_query}

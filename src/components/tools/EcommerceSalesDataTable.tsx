@@ -24,9 +24,12 @@ interface EcommerceSalesDataTableProps {
   message: string;
   periodo_dias?: number;
   rows?: DailySalesRow[];
+  data?: DailySalesRow[];
   sql_query?: string;
   sql_params?: string;
 }
+
+export type EcommerceDailySalesRow = DailySalesRow;
 
 const formatCurrency = (value: number) =>
   value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -36,9 +39,10 @@ export default function EcommerceSalesDataTable({
   message,
   periodo_dias,
   rows,
+  data,
   sql_query,
 }: EcommerceSalesDataTableProps) {
-  const data = rows ?? [];
+  const tableRows = rows ?? data ?? [];
 
   const columns: ColumnDef<DailySalesRow>[] = useMemo(
     () => [
@@ -104,14 +108,14 @@ export default function EcommerceSalesDataTable({
 
   return (
     <ArtifactDataTable
-      data={data}
+      data={tableRows}
       columns={columns}
       title="Resumo de Vendas"
       icon={ShoppingCart}
       iconColor="text-slate-600"
       message={subtitle}
       success={success}
-      count={data.length}
+      count={tableRows.length}
       exportFileName="ecommerce_sales_daily"
       sqlQuery={sql_query}
     />
