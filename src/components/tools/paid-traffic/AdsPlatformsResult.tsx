@@ -201,6 +201,7 @@ export default function AdsPlatformsResult({
         seriesLabel="ROAS"
         title="ROAS por Plataforma"
         subtitle="Compara o retorno sobre investimento das plataformas analisadas"
+        containerClassName="min-h-[320px]"
         axisBottom={{
           tickRotation: -25,
           legend: 'Plataforma',
