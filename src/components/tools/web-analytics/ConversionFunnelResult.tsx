@@ -1,7 +1,17 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, TrendingDown, Filter, AlertCircle } from 'lucide-react';
+import { useMemo } from 'react';
+import { ColumnDef } from '@tanstack/react-table';
+import { Target } from 'lucide-react';
+import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+
+interface ConversionFunnelRow {
+  step: number;
+  event_name: string;
+  sessoes: number;
+  drop_off_percent: string;
+  conversion_rate_percent: string;
+}
 
 interface ConversionFunnelResultProps {
   success: boolean;
@@ -9,13 +19,11 @@ interface ConversionFunnelResultProps {
   periodo_dias?: number;
   total_steps?: number;
   conversion_rate?: string;
-  steps?: Array<{
-    step: number;
-    event_name: string;
-    usuarios: number;
-    drop_off: string;
-  }>;
+  steps?: ConversionFunnelRow[];
   gargalos?: string[];
+  rows?: ConversionFunnelRow[];
+  sql_query?: string;
+  sql_params?: string;
 }
 
 export default function ConversionFunnelResult({
@@ -25,131 +33,85 @@ export default function ConversionFunnelResult({
   total_steps,
   conversion_rate,
   steps,
-  gargalos
+  gargalos,
+  rows,
+  sql_query,
 }: ConversionFunnelResultProps) {
-  if (!success) {
-    return (
-      <Card className="border-red-200 bg-red-50">
-        <CardHeader>
-          <CardTitle className="text-red-700 flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5" />
-            Erro na Análise de Funil
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-red-600">{message}</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const data = rows ?? steps ?? [];
+
+  const meta = [
+    total_steps ? `${total_steps} etapas` : null,
+    periodo_dias ? `${periodo_dias} dias` : null,
+    conversion_rate ? `Conversão final: ${conversion_rate}` : null,
+  ]
+    .filter(Boolean)
+    .join(' • ');
+
+  const columns: ColumnDef<ConversionFunnelRow>[] = useMemo(
+    () => [
+      {
+        accessorKey: 'step',
+        header: '#',
+        cell: ({ row }) => (
+          <span className="font-semibold text-slate-500">
+            #{row.original.step}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'event_name',
+        header: 'Evento',
+        cell: ({ row }) => (
+          <span className="font-medium text-foreground">
+            {row.original.event_name}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'sessoes',
+        header: 'Sessões',
+        cell: ({ row }) => (
+          <span className="font-semibold text-indigo-600">
+            {row.original.sessoes.toLocaleString('pt-BR')}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'drop_off_percent',
+        header: 'Drop-off',
+        cell: ({ row }) => (
+          <span className="text-rose-600 font-medium">
+            {row.original.drop_off_percent}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'conversion_rate_percent',
+        header: 'Conversão acumulada',
+        cell: ({ row }) => row.original.conversion_rate_percent,
+      },
+    ],
+    [],
+  );
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <Card className="border-purple-200 bg-purple-50">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-lg text-purple-900">🎯 Funil de Conversão</h3>
-              <p className="text-sm text-purple-700 mt-1">
-                {total_steps} steps • Período: {periodo_dias} dias
-              </p>
-            </div>
-            <Filter className="h-8 w-8 text-purple-600" />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Taxa de Conversão */}
-      <Card className="border-2 border-green-300 bg-green-50">
-        <CardContent className="pt-6">
-          <div className="text-center">
-            <p className="text-sm text-gray-600">Taxa de Conversão Final</p>
-            <p className="text-5xl font-bold text-green-700 mt-2">{conversion_rate}</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Steps do Funil */}
-      {steps && steps.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <TrendingDown className="h-5 w-5 text-blue-600" />
-              Steps do Funil
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {steps.map((step, idx) => {
-                const dropOffValue = parseFloat(step.drop_off);
-                const isGargalo = dropOffValue > 50;
-
-                return (
-                  <div
-                    key={idx}
-                    className={`p-4 rounded-lg border-2 ${isGargalo ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${isGargalo ? 'bg-red-600' : 'bg-purple-600'}`}>
-                          {step.step}
-                        </div>
-                        <div>
-                          <p className="font-semibold text-lg">{step.event_name}</p>
-                          <p className="text-sm text-gray-600">{step.usuarios.toLocaleString()} usuários</p>
-                        </div>
-                      </div>
-
-                      {idx > 0 && (
-                        <div className="text-right">
-                          <p className={`text-2xl font-bold ${isGargalo ? 'text-red-700' : 'text-gray-700'}`}>
-                            {step.drop_off}
-                          </p>
-                          <p className="text-xs text-gray-500">drop-off</p>
-                        </div>
-                      )}
-                    </div>
-
-                    {idx > 0 && (
-                      <div className="mt-2">
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div
-                            className={`h-2 rounded-full ${isGargalo ? 'bg-red-600' : 'bg-green-600'}`}
-                            style={{ width: `${100 - dropOffValue}%` }}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Gargalos */}
-      {gargalos && gargalos.length > 0 && (
-        <Card className="bg-red-50 border-red-200">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-red-600" />
-              ⚠️ Gargalos Identificados
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {gargalos.map((gargalo, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-sm">
-                  <span className="text-red-600 font-bold">→</span>
-                  <span className="flex-1 text-red-900 font-medium">{gargalo}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+    <ArtifactDataTable
+      data={data}
+      columns={columns}
+      title="Funil de Conversão"
+      icon={Target}
+      message={
+        meta
+          ? `${message}${gargalos?.length ? ` • Gargalos: ${gargalos.join(', ')}` : ''} • ${meta}`
+          : gargalos?.length
+            ? `${message} • Gargalos: ${gargalos.join(', ')}`
+            : message
+      }
+      success={success}
+      count={data.length}
+      iconColor="text-fuchsia-600"
+      exportFileName="conversion_funnel"
+      sqlQuery={sql_query}
+    />
   );
 }

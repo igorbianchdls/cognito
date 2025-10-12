@@ -1225,6 +1225,16 @@ type AnalyzeTrafficOverviewToolOutput = {
     return_visitor_rate: string;
     classificacao: string;
   };
+  rows?: Array<{
+    data: string;
+    sessoes: number;
+    usuarios: number;
+    pageviews: number;
+    avg_duration_seconds: number;
+    bounce_rate_percent: number;
+  }>;
+  sql_query?: string;
+  sql_params?: string;
 };
 
 type CompareTrafficSourcesToolOutput = {
@@ -1245,6 +1255,8 @@ type CompareTrafficSourcesToolOutput = {
     quality_score: string;
     classificacao: string;
   }>;
+  sql_query?: string;
+  sql_params?: string;
 };
 
 type AnalyzeConversionFunnelToolOutput = {
@@ -1256,10 +1268,20 @@ type AnalyzeConversionFunnelToolOutput = {
   steps?: Array<{
     step: number;
     event_name: string;
-    usuarios: number;
-    drop_off: string;
+    sessoes: number;
+    drop_off_percent: string;
+    conversion_rate_percent: string;
   }>;
   gargalos?: string[];
+  rows?: Array<{
+    step: number;
+    event_name: string;
+    sessoes: number;
+    drop_off_percent: string;
+    conversion_rate_percent: string;
+  }>;
+  sql_query?: string;
+  sql_params?: string;
 };
 
 type IdentifyTopLandingPagesToolOutput = {
@@ -1267,32 +1289,30 @@ type IdentifyTopLandingPagesToolOutput = {
   message: string;
   periodo_dias?: number;
   total_paginas?: number;
-  top_pages?: Array<{
+  rows?: Array<{
+    categoria: string;
     pagina: string;
     pageviews: number;
+    rank: number;
   }>;
-  worst_pages?: Array<{
-    pagina: string;
-    pageviews: number;
-  }>;
+  sql_query?: string;
+  sql_params?: string;
 };
 
 type AnalyzeDevicePerformanceToolOutput = {
   success: boolean;
   message: string;
   periodo_dias?: number;
-  devices?: Array<{
-    device_type: string;
+  rows?: Array<{
+    tipo: string;
+    segmento: string;
     sessoes: number;
-    percentual: string;
-    avg_duration: number;
-    avg_pageviews: string;
+    percentual: number;
+    avg_duration_seconds: number;
+    avg_pageviews: number;
   }>;
-  top_browsers?: Array<{
-    browser: string;
-    sessoes: number;
-    percentual: string;
-  }>;
+  sql_query?: string;
+  sql_params?: string;
 };
 
 type DetectTrafficAnomaliesToolOutput = {
@@ -1314,7 +1334,17 @@ type DetectTrafficAnomaliesToolOutput = {
     tipo: string;
     severidade: string;
   }>;
+  rows?: Array<{
+    data: string;
+    sessoes: number;
+    media: number;
+    z_score: string;
+    tipo: string;
+    severidade: string;
+  }>;
   red_flags?: string[];
+  sql_query?: string;
+  sql_params?: string;
 };
 
 type AnalyzeUserBehaviorToolOutput = {
@@ -1331,6 +1361,13 @@ type AnalyzeUserBehaviorToolOutput = {
     engagement_rate: string;
     classificacao: string;
   };
+  rows?: Array<{
+    metrica: string;
+    valor: number | string;
+    percentual: string;
+  }>;
+  sql_query?: string;
+  sql_params?: string;
 };
 
 type AnalyzeCampaignROASToolOutput = {
@@ -4981,6 +5018,8 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   message={(tool.output as AnalyzeTrafficOverviewToolOutput).message}
                   periodo_dias={(tool.output as AnalyzeTrafficOverviewToolOutput).periodo_dias}
                   metricas={(tool.output as AnalyzeTrafficOverviewToolOutput).metricas}
+                  rows={(tool.output as AnalyzeTrafficOverviewToolOutput).rows}
+                  sql_query={(tool.output as AnalyzeTrafficOverviewToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5007,6 +5046,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   melhor_fonte={(tool.output as CompareTrafficSourcesToolOutput).melhor_fonte}
                   pior_fonte={(tool.output as CompareTrafficSourcesToolOutput).pior_fonte}
                   fontes={(tool.output as CompareTrafficSourcesToolOutput).fontes}
+                  sql_query={(tool.output as CompareTrafficSourcesToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5033,6 +5073,8 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   conversion_rate={(tool.output as AnalyzeConversionFunnelToolOutput).conversion_rate}
                   steps={(tool.output as AnalyzeConversionFunnelToolOutput).steps}
                   gargalos={(tool.output as AnalyzeConversionFunnelToolOutput).gargalos}
+                  rows={(tool.output as AnalyzeConversionFunnelToolOutput).rows}
+                  sql_query={(tool.output as AnalyzeConversionFunnelToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5056,8 +5098,8 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   message={(tool.output as IdentifyTopLandingPagesToolOutput).message}
                   periodo_dias={(tool.output as IdentifyTopLandingPagesToolOutput).periodo_dias}
                   total_paginas={(tool.output as IdentifyTopLandingPagesToolOutput).total_paginas}
-                  top_pages={(tool.output as IdentifyTopLandingPagesToolOutput).top_pages}
-                  worst_pages={(tool.output as IdentifyTopLandingPagesToolOutput).worst_pages}
+                  rows={(tool.output as IdentifyTopLandingPagesToolOutput).rows}
+                  sql_query={(tool.output as IdentifyTopLandingPagesToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5080,8 +5122,8 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   success={(tool.output as AnalyzeDevicePerformanceToolOutput).success}
                   message={(tool.output as AnalyzeDevicePerformanceToolOutput).message}
                   periodo_dias={(tool.output as AnalyzeDevicePerformanceToolOutput).periodo_dias}
-                  devices={(tool.output as AnalyzeDevicePerformanceToolOutput).devices}
-                  top_browsers={(tool.output as AnalyzeDevicePerformanceToolOutput).top_browsers}
+                  rows={(tool.output as AnalyzeDevicePerformanceToolOutput).rows}
+                  sql_query={(tool.output as AnalyzeDevicePerformanceToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5110,6 +5152,8 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   bot_rate={(tool.output as DetectTrafficAnomaliesToolOutput).bot_rate}
                   anomalias={(tool.output as DetectTrafficAnomaliesToolOutput).anomalias}
                   red_flags={(tool.output as DetectTrafficAnomaliesToolOutput).red_flags}
+                  rows={(tool.output as DetectTrafficAnomaliesToolOutput).rows}
+                  sql_query={(tool.output as DetectTrafficAnomaliesToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5133,6 +5177,8 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   message={(tool.output as AnalyzeUserBehaviorToolOutput).message}
                   periodo_dias={(tool.output as AnalyzeUserBehaviorToolOutput).periodo_dias}
                   comportamento={(tool.output as AnalyzeUserBehaviorToolOutput).comportamento}
+                  rows={(tool.output as AnalyzeUserBehaviorToolOutput).rows}
+                  sql_query={(tool.output as AnalyzeUserBehaviorToolOutput).sql_query}
                 />
               )}
             </div>

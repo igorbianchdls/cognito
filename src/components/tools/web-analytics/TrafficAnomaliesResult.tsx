@@ -1,7 +1,18 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, AlertCircle, TrendingUp, TrendingDown } from 'lucide-react';
+import { useMemo } from 'react';
+import { ColumnDef } from '@tanstack/react-table';
+import { AlertTriangle } from 'lucide-react';
+import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+
+interface TrafficAnomalyRow {
+  data: string;
+  sessoes: number;
+  media: number;
+  z_score: string;
+  tipo: string;
+  severidade: string;
+}
 
 interface TrafficAnomaliesResultProps {
   success: boolean;
@@ -14,15 +25,11 @@ interface TrafficAnomaliesResultProps {
   };
   total_anomalias?: number;
   bot_rate?: string;
-  anomalias?: Array<{
-    data: string;
-    sessoes: number;
-    media: number;
-    z_score: string;
-    tipo: string;
-    severidade: string;
-  }>;
+  anomalias?: TrafficAnomalyRow[];
   red_flags?: string[];
+  rows?: TrafficAnomalyRow[];
+  sql_query?: string;
+  sql_params?: string;
 }
 
 export default function TrafficAnomaliesResult({
@@ -33,144 +40,104 @@ export default function TrafficAnomaliesResult({
   estatisticas,
   total_anomalias,
   bot_rate,
-  anomalias,
-  red_flags
+  red_flags,
+  rows,
+  sql_query,
 }: TrafficAnomaliesResultProps) {
-  if (!success) {
-    return (
-      <Card className="border-red-200 bg-red-50">
-        <CardHeader>
-          <CardTitle className="text-red-700 flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5" />
-            Erro na Detecção de Anomalias
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-red-600">{message}</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const data = rows ?? [];
 
-  const getSeverityColor = (severity: string) => {
-    if (severity === 'CRÍTICA') return 'border-red-500 bg-red-100 text-red-800';
-    return 'border-orange-400 bg-orange-100 text-orange-800';
-  };
+  const details = [
+    periodo_dias ? `${periodo_dias} dias analisados` : null,
+    sensitivity ? `Sensibilidade Z = ${sensitivity}` : null,
+    estatisticas ? `Média: ${estatisticas.media_sessoes_dia} • Desvio: ${estatisticas.desvio_padrao}` : null,
+    bot_rate ? `Tráfego bot: ${bot_rate}` : null,
+    total_anomalias !== undefined ? `${total_anomalias} anomalias` : null,
+  ]
+    .filter(Boolean)
+    .join(' • ');
+
+  const columns: ColumnDef<TrafficAnomalyRow>[] = useMemo(
+    () => [
+      {
+        accessorKey: 'data',
+        header: 'Data',
+        cell: ({ row }) => new Date(row.original.data).toLocaleDateString('pt-BR'),
+      },
+      {
+        accessorKey: 'sessoes',
+        header: 'Sessões',
+        cell: ({ row }) => (
+          <span className="font-semibold text-indigo-600">
+            {row.original.sessoes.toLocaleString('pt-BR')}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'media',
+        header: 'Média',
+        cell: ({ row }) => row.original.media.toLocaleString('pt-BR'),
+      },
+      {
+        accessorKey: 'z_score',
+        header: 'Z-score',
+        cell: ({ row }) => (
+          <span className="font-semibold text-rose-600">
+            {row.original.z_score}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'tipo',
+        header: 'Tipo',
+        cell: ({ row }) => (
+          <span className="uppercase tracking-wide text-slate-600">
+            {row.original.tipo}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'severidade',
+        header: 'Severidade',
+        cell: ({ row }) => (
+          <span
+            className={`rounded-full px-2 py-0.5 text-xs font-semibold uppercase tracking-wide ${
+              row.original.severidade === 'CRÍTICA'
+                ? 'bg-red-100 text-red-700 border border-red-300'
+                : 'bg-amber-100 text-amber-700 border border-amber-300'
+            }`}
+          >
+            {row.original.severidade}
+          </span>
+        ),
+      },
+    ],
+    [],
+  );
+
+  const warningList = red_flags?.length ? (
+    <ul className="mt-2 space-y-1 text-sm text-rose-600">
+      {red_flags.map(flag => (
+        <li key={flag} className="flex items-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+          {flag}
+        </li>
+      ))}
+    </ul>
+  ) : null;
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <Card className="border-orange-200 bg-orange-50">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-lg text-orange-900">⚠️ Detecção de Anomalias</h3>
-              <p className="text-sm text-orange-700 mt-1">
-                {total_anomalias} anomalias detectadas • Período: {periodo_dias} dias • Sensibilidade: {sensitivity}σ
-              </p>
-            </div>
-            <AlertCircle className="h-8 w-8 text-orange-600" />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Estatísticas Base */}
-      {estatisticas && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <p className="text-sm text-gray-600">Média Sessões/Dia</p>
-                <p className="text-3xl font-bold mt-2">{estatisticas.media_sessoes_dia.toLocaleString()}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <p className="text-sm text-gray-600">Desvio Padrão</p>
-                <p className="text-3xl font-bold mt-2">{estatisticas.desvio_padrao.toLocaleString()}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <p className="text-sm text-gray-600">Bot Rate</p>
-                <p className="text-3xl font-bold mt-2">{bot_rate}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Red Flags */}
-      {red_flags && red_flags.length > 0 && (
-        <Card className="bg-red-50 border-red-300 border-2">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-red-600" />
-              🚨 Red Flags
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="space-y-2">
-              {red_flags.map((flag, idx) => (
-                <li key={idx} className="flex items-start gap-2 text-sm">
-                  <span className="text-red-600 font-bold">⚠️</span>
-                  <span className="flex-1 text-red-900 font-medium">{flag}</span>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Anomalias Detectadas */}
-      {anomalias && anomalias.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">📊 Anomalias Detectadas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {anomalias.map((anomalia, idx) => (
-                <div
-                  key={idx}
-                  className={`p-4 rounded-lg border-2 ${getSeverityColor(anomalia.severidade)}`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      {anomalia.tipo === 'Pico' ? (
-                        <TrendingUp className="h-6 w-6 text-green-600" />
-                      ) : (
-                        <TrendingDown className="h-6 w-6 text-red-600" />
-                      )}
-                      <div>
-                        <p className="font-semibold text-lg">{anomalia.data}</p>
-                        <p className="text-sm">
-                          {anomalia.sessoes.toLocaleString()} sessões (média: {anomalia.media.toLocaleString()})
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className={`px-3 py-1 rounded-full text-xs font-bold ${getSeverityColor(anomalia.severidade)}`}>
-                        {anomalia.severidade}
-                      </p>
-                      <p className="text-sm mt-1">
-                        Z-score: <span className="font-bold">{anomalia.z_score}</span>
-                      </p>
-                      <p className="text-xs text-gray-600">{anomalia.tipo}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+    <ArtifactDataTable
+      data={data}
+      columns={columns}
+      title="Anomalias de Tráfego"
+      icon={AlertTriangle}
+      message={details ? `${message} • ${details}` : message}
+      success={success}
+      count={data.length}
+      iconColor="text-rose-600"
+      exportFileName="traffic_anomalies"
+      sqlQuery={sql_query}
+      chartRenderer={() => warningList}
+    />
   );
 }
