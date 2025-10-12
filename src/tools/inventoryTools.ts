@@ -265,6 +265,10 @@ export const calculateInventoryMetrics = tool({
         rows: series,
         sql_query: fluxoSql,
         sql_params: formatSqlParams([range]),
+        sql_queries: [
+          { name: 'snapshot', sql: snapshotSql, params: [] },
+          { name: 'fluxo', sql: fluxoSql, params: [range] },
+        ],
       };
     } catch (error) {
       console.error('ERRO calculateInventoryMetrics:', error);
@@ -698,6 +702,11 @@ export const detectAnomalies = tool({
         rows: anomalies,
         sql_query: sql,
         sql_params: formatSqlParams([range]),
+        sql_queries: [
+          { name: 'series_saidas', sql, params: [range] },
+          { name: 'estoque_negativo', sql: stockNegativoSql, params: [] },
+          { name: 'reservado_maior_que_disponivel', sql: reservadoMaiorSql, params: [] },
+        ],
       };
     } catch (error) {
       console.error('ERRO detectAnomalies (inventory):', error);
