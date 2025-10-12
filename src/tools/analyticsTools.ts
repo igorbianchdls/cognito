@@ -9,10 +9,10 @@ const ANALYTICS_TABLES = [
   'eventos',
   'itens_transacao',
   'metas',
-  'propriedades_analytics',
+  'propriedades',
   'propriedades_visitante',
   'sessoes',
-  'transacoes_analytics',
+  'transacoes',
   'visitantes',
 ] as const;
 
@@ -25,51 +25,51 @@ const MIN_LIMIT = 1;
 const TABLE_ORDER_COLUMNS: Record<AnalyticsTable, string> = {
   agregado_diario_por_fonte: 'data',
   agregado_diario_por_pagina: 'data',
-  consentimentos_visitante: 'consent_timestamp',
-  eventos: 'event_timestamp',
+  consentimentos_visitante: 'timestamp_consentimento',
+  eventos: 'timestamp_evento',
   itens_transacao: 'id',
   metas: 'id',
-  propriedades_analytics: 'created_at',
-  propriedades_visitante: 'created_at',
-  sessoes: 'session_start',
-  transacoes_analytics: 'transaction_timestamp',
-  visitantes: 'last_seen',
+  propriedades: 'created_at',
+  propriedades_visitante: 'updated_at',
+  sessoes: 'timestamp_inicio_sessao',
+  transacoes: 'timestamp_transacao',
+  visitantes: 'ultima_visita_timestamp',
 };
 
 const TABLE_DATE_COLUMNS: Partial<Record<AnalyticsTable, { from: string; to?: string }>> = {
   agregado_diario_por_fonte: { from: 'data' },
   agregado_diario_por_pagina: { from: 'data' },
-  consentimentos_visitante: { from: 'consent_timestamp' },
-  eventos: { from: 'event_timestamp' },
+  consentimentos_visitante: { from: 'timestamp_consentimento' },
+  eventos: { from: 'timestamp_evento' },
   itens_transacao: { from: 'created_at' },
   metas: { from: 'created_at' },
-  propriedades_analytics: { from: 'created_at', to: 'updated_at' },
-  propriedades_visitante: { from: 'created_at', to: 'updated_at' },
-  sessoes: { from: 'session_start', to: 'session_end' },
-  transacoes_analytics: { from: 'transaction_timestamp' },
-  visitantes: { from: 'first_seen', to: 'last_seen' },
+  propriedades: { from: 'created_at' },
+  propriedades_visitante: { from: 'updated_at' },
+  sessoes: { from: 'timestamp_inicio_sessao', to: 'timestamp_fim_sessao' },
+  transacoes: { from: 'timestamp_transacao' },
+  visitantes: { from: 'primeira_visita_timestamp', to: 'ultima_visita_timestamp' },
 };
 
 const VISITOR_FILTER_TABLES = new Set<AnalyticsTable>([
   'sessoes',
-  'eventos',
   'propriedades_visitante',
   'consentimentos_visitante',
+  'transacoes',
 ]);
 
 const SESSION_FILTER_TABLES = new Set<AnalyticsTable>([
   'eventos',
-  'transacoes_analytics',
+  'transacoes',
 ]);
 
 const FONTE_COLUMN_BY_TABLE: Partial<Record<AnalyticsTable, string>> = {
-  agregado_diario_por_fonte: 'fonte',
+  agregado_diario_por_fonte: 'utm_source',
   sessoes: 'utm_source',
 };
 
 const PAGINA_COLUMN_BY_TABLE: Partial<Record<AnalyticsTable, string>> = {
-  agregado_diario_por_pagina: 'pagina',
-  eventos: 'page_url',
+  agregado_diario_por_pagina: 'url_pagina',
+  eventos: 'url_pagina',
 };
 
 const EVENT_NAME_TABLES = new Set<AnalyticsTable>(['eventos']);
@@ -124,11 +124,13 @@ const buildGetAnalyticsDataQuery = (args: {
   };
 
   if (visitor_id && VISITOR_FILTER_TABLES.has(table)) {
-    pushCondition('visitor_id =', visitor_id);
+    // All supported tables use 'id_visitante' for visitor reference
+    pushCondition('id_visitante =', visitor_id);
   }
 
   if (session_id && SESSION_FILTER_TABLES.has(table)) {
-    pushCondition('session_id =', session_id);
+    // eventos/transacoes use 'id_sessao'
+    pushCondition('id_sessao =', session_id);
   }
 
   if (fonte) {
@@ -150,7 +152,7 @@ const buildGetAnalyticsDataQuery = (args: {
   }
 
   if (event_name && EVENT_NAME_TABLES.has(table)) {
-    pushCondition('event_name =', event_name);
+    pushCondition('nome_evento =', event_name);
   }
 
   const dateColumns = TABLE_DATE_COLUMNS[table];
@@ -188,9 +190,9 @@ export const getAnalyticsData = tool({
     table: z.enum(ANALYTICS_TABLES).describe('Tabela a consultar'),
     limit: z.number().default(DEFAULT_LIMIT).describe('Número máximo de resultados'),
     visitor_id: z.string().optional()
-      .describe('Filtrar por ID do visitante (para sessoes, eventos, propriedades_visitante, consentimentos_visitante)'),
+      .describe('Filtrar por ID do visitante (para sessoes, propriedades_visitante, consentimentos_visitante, transacoes)'),
     session_id: z.string().optional()
-      .describe('Filtrar por ID da sessão (para eventos, transacoes_analytics)'),
+      .describe('Filtrar por ID da sessão (para eventos, transacoes)'),
     fonte: z.string().optional()
       .describe('Filtrar por fonte de tráfego (para agregado_diario_por_fonte, sessoes)'),
     pagina: z.string().optional()
@@ -237,123 +239,88 @@ export const getAnalyticsData = tool({
     }
   },
 });
-
+// Visão geral de tráfego: sessões, usuários, pageviews, bounce e duração por dia
 export const analyzeTrafficOverview = tool({
-  description: 'Analisa visão geral de tráfego: sessões, usuários, pageviews, bounce rate, duração média, tendências',
+  description: 'Consolida sessões/usuários/pageviews por dia, calcula bounce rate e duração média',
   inputSchema: z.object({
     date_range_days: z.number().default(30).describe('Período de análise em dias'),
   }),
   execute: async ({ date_range_days = 30 }) => {
     const range = Math.min(Math.max(Math.trunc(date_range_days), 1), 365);
 
-    const filteredSessionsCte = `
-      WITH filtered_sessions AS (
-        SELECT
-          session_id,
-          visitor_id,
-          session_start,
-          COALESCE(duration_seconds, 0) AS duration_seconds,
-          COALESCE(pages_viewed, 0) AS pages_viewed,
-          CASE WHEN COALESCE(pages_viewed, 0) <= 1 THEN 1 ELSE 0 END AS bounced
-        FROM gestaoanalytics.sessoes
-        WHERE session_start >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
-          AND (eh_bot IS DISTINCT FROM TRUE)
-      )
-    `;
-
     const overviewSql = `
-      ${filteredSessionsCte}
-      SELECT
-        DATE(session_start) AS dia,
-        COUNT(*) AS sessoes,
-        COUNT(DISTINCT visitor_id) AS usuarios,
-        SUM(pages_viewed) AS pageviews,
-        SUM(duration_seconds) AS total_duration_seconds,
-        ROUND(AVG(duration_seconds)::numeric, 2) AS avg_duration_seconds,
-        SUM(bounced) AS bounced_sessions,
-        ROUND((SUM(bounced)::numeric / NULLIF(COUNT(*), 0)) * 100, 2) AS bounce_rate_percent
-      FROM filtered_sessions
-      GROUP BY dia
-      ORDER BY dia DESC
+      WITH sessoes_filtradas AS (
+        SELECT
+          id,
+          id_visitante,
+          (timestamp_inicio_sessao)::date AS dia,
+          timestamp_inicio_sessao,
+          timestamp_fim_sessao
+        FROM gestaoanalytics.sessoes
+        WHERE (timestamp_inicio_sessao)::date >= CURRENT_DATE - ($1::int - 1)
+          AND (eh_bot IS DISTINCT FROM TRUE)
+      ),
+      pageviews_por_sessao AS (
+        SELECT e.id_sessao,
+               COUNT(*) FILTER (
+                 WHERE LOWER(COALESCE(e.nome_evento, '')) = 'page_view'
+                    OR LOWER(COALESCE(e.tipo_evento, '')) = 'page_view'
+               ) AS pageviews
+        FROM gestaoanalytics.eventos e
+        WHERE (e.timestamp_evento)::date >= CURRENT_DATE - ($1::int - 1)
+        GROUP BY e.id_sessao
+      ),
+      duracoes AS (
+        SELECT s.id,
+               EXTRACT(EPOCH FROM (s.timestamp_fim_sessao - s.timestamp_inicio_sessao)) AS duracao_seg
+        FROM gestaoanalytics.sessoes s
+        WHERE (s.timestamp_inicio_sessao)::date >= CURRENT_DATE - ($1::int - 1)
+      )
+      SELECT sf.dia,
+             COUNT(*) AS sessoes,
+             COUNT(DISTINCT sf.id_visitante) AS usuarios,
+             COALESCE(SUM(COALESCE(pv.pageviews, 0)), 0) AS pageviews,
+             ROUND(AVG(NULLIF(d.duracao_seg, 0))::numeric, 2) AS avg_duration_seconds,
+             ROUND(
+               CASE WHEN COUNT(*) = 0 THEN 0
+                    ELSE (SUM(CASE WHEN COALESCE(pv.pageviews, 0) <= 1 THEN 1 ELSE 0 END)::numeric / COUNT(*)) * 100
+               END, 2
+             ) AS bounce_rate_percent
+      FROM sessoes_filtradas sf
+      LEFT JOIN pageviews_por_sessao pv ON pv.id_sessao = sf.id
+      LEFT JOIN duracoes d ON d.id = sf.id
+      GROUP BY sf.dia
+      ORDER BY sf.dia
     `;
 
-    const totalsSql = `
-      ${filteredSessionsCte}
+    const returnSql = `
+      WITH base AS (
+        SELECT DISTINCT s.id_visitante
+        FROM gestaoanalytics.sessoes s
+        WHERE (s.timestamp_inicio_sessao)::date >= CURRENT_DATE - ($1::int - 1)
+          AND (s.eh_bot IS DISTINCT FROM TRUE)
+      )
       SELECT
-        COUNT(*) AS total_sessoes,
-        COUNT(DISTINCT visitor_id) AS total_usuarios,
-        SUM(pages_viewed) AS total_pageviews,
-        SUM(duration_seconds) AS total_duration_seconds,
-        SUM(bounced) AS total_bounced
-      FROM filtered_sessions
-    `;
-
-    const visitorsSql = `
-      SELECT
-        COUNT(*) FILTER (WHERE COALESCE(total_sessions, 0) > 1) AS visitantes_recorrentes,
-        COUNT(*) AS total_visitantes
-      FROM gestaoanalytics.visitantes
-      WHERE first_seen >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+        (SELECT COUNT(*) FROM base) AS total_visitantes,
+        (SELECT COUNT(*) FROM gestaoanalytics.visitantes v
+          WHERE v.id IN (SELECT id_visitante FROM base)
+            AND (v.primeira_visita_timestamp)::date < CURRENT_DATE - ($1::int - 1)
+        ) AS visitantes_retornando
     `;
 
     try {
       const rows = await runQuery<{
         dia: string;
-        sessoes: string | number;
-        usuarios: string | number;
-        pageviews: string | number;
-        total_duration_seconds: string | number;
-        avg_duration_seconds: string | number;
-        bounced_sessions: string | number;
-        bounce_rate_percent: string | number;
+        sessoes: string | number | null;
+        usuarios: string | number | null;
+        pageviews: string | number | null;
+        avg_duration_seconds: string | number | null;
+        bounce_rate_percent: string | number | null;
       }>(overviewSql, [range]);
 
-      const totals = (await runQuery<{
-        total_sessoes: string | number | null;
-        total_usuarios: string | number | null;
-        total_pageviews: string | number | null;
-        total_duration_seconds: string | number | null;
-        total_bounced: string | number | null;
-      }>(totalsSql, [range]))[0] ?? {
-        total_sessoes: 0,
-        total_usuarios: 0,
-        total_pageviews: 0,
-        total_duration_seconds: 0,
-        total_bounced: 0,
-      };
+      const ret = (await runQuery<{ total_visitantes: string | number | null; visitantes_retornando: string | number | null }>(returnSql, [range]))[0] ?? { total_visitantes: 0, visitantes_retornando: 0 };
 
-      const visitorStats = (await runQuery<{
-        visitantes_recorrentes: string | number | null;
-        total_visitantes: string | number | null;
-      }>(visitorsSql, [range]))[0] ?? {
-        visitantes_recorrentes: 0,
-        total_visitantes: 0,
-      };
-
-      const totalSessions = Number(totals.total_sessoes ?? 0);
-      const totalUsers = Number(totals.total_usuarios ?? 0);
-      const totalPageviews = Number(totals.total_pageviews ?? 0);
-      const totalDurationSeconds = Number(totals.total_duration_seconds ?? 0);
-      const totalBounced = Number(totals.total_bounced ?? 0);
-
-      const avgDurationSeconds = totalSessions > 0 ? totalDurationSeconds / totalSessions : 0;
-      const pagesPerSession = totalSessions > 0 ? totalPageviews / totalSessions : 0;
-      const bounceRate = totalSessions > 0 ? (totalBounced / totalSessions) * 100 : 0;
-
-      const totalVisitors = Number(visitorStats.total_visitantes ?? 0);
-      const returningVisitors = Number(visitorStats.visitantes_recorrentes ?? 0);
-      const returnRate = totalVisitors > 0 ? (returningVisitors / totalVisitors) * 100 : 0;
-
-      let classificacao = 'Ruim';
-      if (bounceRate < 60 && avgDurationSeconds > 120 && pagesPerSession > 3) {
-        classificacao = 'Excelente';
-      } else if (bounceRate < 70 && avgDurationSeconds > 90 && pagesPerSession > 2.5) {
-        classificacao = 'Bom';
-      } else if (bounceRate < 80 && avgDurationSeconds > 60) {
-        classificacao = 'Regular';
-      }
-
-      const tableRows = rows.map(row => ({
+      const tableRows = rows.map((row) => ({
         data: row.dia,
         sessoes: Number(row.sessoes ?? 0),
         usuarios: Number(row.usuarios ?? 0),
@@ -361,6 +328,29 @@ export const analyzeTrafficOverview = tool({
         avg_duration_seconds: Number(row.avg_duration_seconds ?? 0),
         bounce_rate_percent: Number(row.bounce_rate_percent ?? 0),
       }));
+
+      const totalSessions = tableRows.reduce((a, r) => a + r.sessoes, 0);
+      const totalUsers = tableRows.reduce((a, r) => a + r.usuarios, 0);
+      const totalPageviews = tableRows.reduce((a, r) => a + r.pageviews, 0);
+      const avgDurationSeconds = tableRows.length
+        ? tableRows.reduce((a, r) => a + r.avg_duration_seconds, 0) / tableRows.length
+        : 0;
+      const bounceRate = tableRows.length
+        ? tableRows.reduce((a, r) => a + r.bounce_rate_percent, 0) / tableRows.length
+        : 0;
+      const pagesPerSession = totalSessions > 0 ? totalPageviews / totalSessions : 0;
+      const returnRate = Number(ret.total_visitantes ?? 0) > 0
+        ? (Number(ret.visitantes_retornando ?? 0) / Number(ret.total_visitantes ?? 0)) * 100
+        : 0;
+
+      let classificacao = 'Baixo';
+      if (pagesPerSession >= 3 && avgDurationSeconds >= 120 && bounceRate <= 50) {
+        classificacao = 'Excelente';
+      } else if (pagesPerSession >= 2 && avgDurationSeconds >= 60 && bounceRate <= 65) {
+        classificacao = 'Bom';
+      } else if (pagesPerSession >= 1.5 && avgDurationSeconds >= 45 && bounceRate <= 75) {
+        classificacao = 'Regular';
+      }
 
       return {
         success: true,
@@ -400,40 +390,49 @@ export const compareTrafficSources = tool({
     const range = Math.min(Math.max(Math.trunc(date_range_days), 1), 365);
 
     const sql = `
-      WITH sessoes AS (
+      WITH sessoes_filtradas AS (
         SELECT
-          COALESCE(NULLIF(utm_source, ''), 'direct') AS fonte,
-          COUNT(*) AS sessoes,
-          SUM(COALESCE(pages_viewed, 0)) AS pageviews,
-          SUM(COALESCE(duration_seconds, 0)) AS total_duration,
-          SUM(CASE WHEN COALESCE(pages_viewed, 0) <= 1 THEN 1 ELSE 0 END) AS bounced
+          id,
+          id_visitante,
+          COALESCE(NULLIF(utm_source, ''), 'Direto') AS fonte,
+          timestamp_inicio_sessao
         FROM gestaoanalytics.sessoes
-        WHERE session_start >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+        WHERE (timestamp_inicio_sessao)::date >= CURRENT_DATE - ($1::int - 1)
           AND (eh_bot IS DISTINCT FROM TRUE)
-        GROUP BY 1
       ),
-      transacoes AS (
-        SELECT
-          COALESCE(NULLIF(s.utm_source, ''), 'direct') AS fonte,
-          COUNT(*) AS conversoes
-        FROM gestaoanalytics.transacoes_analytics t
-        JOIN gestaoanalytics.sessoes s ON s.id = t.session_id
-        WHERE t.transaction_timestamp >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
-        GROUP BY 1
+      pv AS (
+        SELECT e.id_sessao,
+               COUNT(*) FILTER (
+                 WHERE LOWER(COALESCE(e.nome_evento, '')) = 'page_view'
+                    OR LOWER(COALESCE(e.tipo_evento, '')) = 'page_view'
+               ) AS pageviews
+        FROM gestaoanalytics.eventos e
+        WHERE (e.timestamp_evento)::date >= CURRENT_DATE - ($1::int - 1)
+        GROUP BY e.id_sessao
+      ),
+      dur AS (
+        SELECT s.id,
+               EXTRACT(EPOCH FROM (s.timestamp_fim_sessao - s.timestamp_inicio_sessao)) AS duracao_seg
+        FROM gestaoanalytics.sessoes s
+        WHERE (s.timestamp_inicio_sessao)::date >= CURRENT_DATE - ($1::int - 1)
+      ),
+      tx AS (
+        SELECT t.id, t.id_sessao
+        FROM gestaoanalytics.transacoes t
+        WHERE (t.timestamp_transacao)::date >= CURRENT_DATE - ($1::int - 1)
       )
       SELECT
         s.fonte,
-        s.sessoes,
-        s.pageviews,
-        s.total_duration,
-        s.bounced,
-        COALESCE(t.conversoes, 0) AS conversoes,
-        ROUND((COALESCE(t.conversoes, 0)::numeric / NULLIF(s.sessoes, 0)) * 100, 2) AS conversion_rate_percent,
-        ROUND((s.pageviews::numeric / NULLIF(s.sessoes, 0)), 2) AS pages_per_session,
-        ROUND((s.total_duration::numeric / NULLIF(s.sessoes, 0)), 2) AS avg_duration_seconds
-      FROM sessoes s
-      LEFT JOIN transacoes t ON t.fonte = s.fonte
-      ORDER BY s.sessoes DESC
+        COUNT(*) AS sessoes,
+        SUM(COALESCE(pv.pageviews, 0)) AS pageviews,
+        ROUND(AVG(NULLIF(dur.duracao_seg, 0))::numeric, 2) AS avg_duration_seconds,
+        COUNT(DISTINCT tx.id) AS conversoes
+      FROM sessoes_filtradas s
+      LEFT JOIN pv ON pv.id_sessao = s.id
+      LEFT JOIN dur ON dur.id = s.id
+      LEFT JOIN tx ON tx.id_sessao = s.id
+      GROUP BY s.fonte
+      ORDER BY COUNT(*) DESC
     `;
 
     try {
@@ -441,12 +440,8 @@ export const compareTrafficSources = tool({
         fonte: string | null;
         sessoes: string | number | null;
         pageviews: string | number | null;
-        total_duration: string | number | null;
-        bounced: string | number | null;
-        conversoes: string | number | null;
-        conversion_rate_percent: string | number | null;
-        pages_per_session: string | number | null;
         avg_duration_seconds: string | number | null;
+        conversoes: string | number | null;
       }>(sql, [range]);
 
       if (!rows.length) {
@@ -465,12 +460,10 @@ export const compareTrafficSources = tool({
         const pageviews = Number(row.pageviews ?? 0);
         const conversoes = Number(row.conversoes ?? 0);
         const avgDuration = Number(row.avg_duration_seconds ?? 0);
-        const pagesPerSession = Number(row.pages_per_session ?? 0);
-        const conversionRate = Number(row.conversion_rate_percent ?? 0);
+        const pagesPerSession = sessoes > 0 ? pageviews / sessoes : 0;
+        const conversionRate = sessoes > 0 ? (conversoes / sessoes) * 100 : 0;
 
-        const qualityScore = sessoes > 0
-          ? ((conversionRate * 100) + (pagesPerSession * 10) + (avgDuration * 0.01)) / sessoes
-          : 0;
+        const qualityScore = (conversionRate * 1) + (pagesPerSession * 10) + (avgDuration * 0.01);
 
         let classificacao = 'Baixa';
         if (qualityScore > 15) classificacao = 'Excelente';
@@ -487,14 +480,13 @@ export const compareTrafficSources = tool({
           conversion_rate: `${conversionRate.toFixed(2)}%`,
           quality_score: qualityScore.toFixed(2),
           classificacao,
-        };
+      };
       });
-
       const sorted = [...fontes].sort((a, b) => Number(b.quality_score) - Number(a.quality_score));
 
       return {
         success: true,
-        message: `Análise de ${sorted.length} fontes de tráfego`,
+        message: `Análise de ${sorted.length} fontes de tráfego` ,
         periodo_dias: range,
         total_fontes: sorted.length,
         melhor_fonte: sorted[0]?.fonte,
@@ -531,19 +523,19 @@ export const analyzeConversionFunnel = tool({
 
     const sql = `
       SELECT
-        event_name,
-        COUNT(DISTINCT session_id) AS sessoes
+        nome_evento,
+        COUNT(DISTINCT id_sessao) AS sessoes
       FROM gestaoanalytics.eventos
-      WHERE event_timestamp >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
-        AND event_name = ANY($2::text[])
-      GROUP BY event_name
-      ORDER BY array_position($2::text[], event_name)
+      WHERE timestamp_evento >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+        AND nome_evento = ANY($2::text[])
+      GROUP BY nome_evento
+      ORDER BY array_position($2::text[], nome_evento)
     `;
 
     try {
-      const rows = await runQuery<{ event_name: string; sessoes: string | number }>(sql, [range, funnel_events]);
+      const rows = await runQuery<{ nome_evento: string; sessoes: string | number }>(sql, [range, funnel_events]);
       const counts = new Map<string, number>();
-      rows.forEach(row => counts.set(row.event_name, Number(row.sessoes ?? 0)));
+      rows.forEach(row => counts.set(row.nome_evento, Number(row.sessoes ?? 0)));
 
       const steps = funnel_events.map((eventName, index) => {
         const sessions = counts.get(eventName) ?? 0;
@@ -608,11 +600,11 @@ export const identifyTopLandingPages = tool({
     const sql = `
       WITH aggregated AS (
         SELECT
-          pagina,
-          SUM(pageviews) AS pageviews
+          url_pagina AS pagina,
+          SUM(total_visualizacoes) AS pageviews
         FROM gestaoanalytics.agregado_diario_por_pagina
         WHERE data >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
-        GROUP BY pagina
+        GROUP BY url_pagina
       ),
       top AS (
         SELECT 'Top' AS categoria, pagina, pageviews, ROW_NUMBER() OVER (ORDER BY pageviews DESC) AS rank
@@ -679,17 +671,25 @@ export const analyzeDevicePerformance = tool({
     const range = Math.min(Math.max(Math.trunc(date_range_days), 1), 365);
 
     const sql = `
-      WITH session_props AS (
+      WITH sessoes_filtradas AS (
         SELECT
-          COALESCE(NULLIF(p.device_type, ''), 'Desconhecido') AS device_type,
-          COALESCE(NULLIF(p.browser, ''), 'Desconhecido') AS browser,
-          COALESCE(s.duration_seconds, 0) AS duration_seconds,
-          COALESCE(s.pages_viewed, 0) AS pages_viewed
-        FROM gestaoanalytics.sessoes s
-        LEFT JOIN gestaoanalytics.propriedades_visitante p
-          ON p.visitor_id = s.visitor_id
-        WHERE s.session_start >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
-          AND (s.eh_bot IS DISTINCT FROM TRUE)
+          id,
+          COALESCE(NULLIF(tipo_dispositivo, ''), 'Desconhecido') AS device_type,
+          COALESCE(NULLIF(navegador, ''), 'Desconhecido') AS browser,
+          EXTRACT(EPOCH FROM (timestamp_fim_sessao - timestamp_inicio_sessao)) AS duracao_seg
+        FROM gestaoanalytics.sessoes
+        WHERE (timestamp_inicio_sessao)::date >= CURRENT_DATE - ($1::int - 1)
+          AND (eh_bot IS DISTINCT FROM TRUE)
+      ),
+      pv AS (
+        SELECT e.id_sessao,
+               COUNT(*) FILTER (
+                 WHERE LOWER(COALESCE(e.nome_evento, '')) = 'page_view'
+                    OR LOWER(COALESCE(e.tipo_evento, '')) = 'page_view'
+               ) AS pageviews
+        FROM gestaoanalytics.eventos e
+        WHERE (e.timestamp_evento)::date >= CURRENT_DATE - ($1::int - 1)
+        GROUP BY e.id_sessao
       ),
       device_stats AS (
         SELECT
@@ -697,10 +697,11 @@ export const analyzeDevicePerformance = tool({
           device_type AS segmento,
           COUNT(*) AS sessoes,
           ROUND((COUNT(*)::numeric / NULLIF(SUM(COUNT(*)) OVER (), 0)) * 100, 2) AS percentual,
-          ROUND((SUM(duration_seconds)::numeric / NULLIF(COUNT(*), 0)), 2) AS avg_duration_seconds,
-          ROUND((SUM(pages_viewed)::numeric / NULLIF(COUNT(*), 0)), 2) AS avg_pageviews,
+          ROUND(AVG(NULLIF(sf.duracao_seg, 0))::numeric, 2) AS avg_duration_seconds,
+          ROUND(AVG(COALESCE(pv.pageviews, 0))::numeric, 2) AS avg_pageviews,
           0 AS rank
-        FROM session_props
+        FROM sessoes_filtradas sf
+        LEFT JOIN pv ON pv.id_sessao = sf.id
         GROUP BY device_type
       ),
       browser_stats AS (
@@ -709,10 +710,11 @@ export const analyzeDevicePerformance = tool({
           browser AS segmento,
           COUNT(*) AS sessoes,
           ROUND((COUNT(*)::numeric / NULLIF(SUM(COUNT(*)) OVER (), 0)) * 100, 2) AS percentual,
-          ROUND((SUM(duration_seconds)::numeric / NULLIF(COUNT(*), 0)), 2) AS avg_duration_seconds,
-          ROUND((SUM(pages_viewed)::numeric / NULLIF(COUNT(*), 0)), 2) AS avg_pageviews,
+          ROUND(AVG(NULLIF(sf.duracao_seg, 0))::numeric, 2) AS avg_duration_seconds,
+          ROUND(AVG(COALESCE(pv.pageviews, 0))::numeric, 2) AS avg_pageviews,
           ROW_NUMBER() OVER (ORDER BY COUNT(*) DESC) AS rank
-        FROM session_props
+        FROM sessoes_filtradas sf
+        LEFT JOIN pv ON pv.id_sessao = sf.id
         GROUP BY browser
       )
       SELECT * FROM device_stats
@@ -770,12 +772,13 @@ export const detectTrafficAnomalies = tool({
 
     const trafficSql = `
       SELECT
-        data,
-        SUM(sessoes) AS sessoes
-      FROM gestaoanalytics.agregado_diario_por_fonte
-      WHERE data >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
-      GROUP BY data
-      ORDER BY data
+        (timestamp_inicio_sessao)::date AS data,
+        COUNT(*) AS sessoes
+      FROM gestaoanalytics.sessoes
+      WHERE (timestamp_inicio_sessao)::date >= CURRENT_DATE - ($1::int - 1)
+        AND (eh_bot IS DISTINCT FROM TRUE)
+      GROUP BY (timestamp_inicio_sessao)::date
+      ORDER BY (timestamp_inicio_sessao)::date
     `;
 
     const botSql = `
@@ -783,7 +786,7 @@ export const detectTrafficAnomalies = tool({
         COUNT(*) FILTER (WHERE eh_bot IS TRUE) AS bot_sessions,
         COUNT(*) AS total_sessions
       FROM gestaoanalytics.sessoes
-      WHERE session_start >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+      WHERE (timestamp_inicio_sessao)::date >= CURRENT_DATE - ($1::int - 1)
     `;
 
     try {
@@ -875,33 +878,54 @@ export const analyzeUserBehavior = tool({
     const range = Math.min(Math.max(Math.trunc(date_range_days), 1), 365);
 
     const sql = `
-      WITH visitantes_filtrados AS (
-        SELECT
-          visitor_id,
-          COALESCE(total_sessions, 0) AS total_sessions
-        FROM gestaoanalytics.visitantes
-        WHERE first_seen >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+      WITH visitantes_periodo AS (
+        SELECT DISTINCT s.id_visitante
+        FROM gestaoanalytics.sessoes s
+        WHERE (s.timestamp_inicio_sessao)::date >= CURRENT_DATE - ($1::int - 1)
+          AND (s.eh_bot IS DISTINCT FROM TRUE)
       ),
-      sessoes_filtradas AS (
-        SELECT
-          visitor_id,
-          session_id
-        FROM gestaoanalytics.sessoes
-        WHERE session_start >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
-          AND (eh_bot IS DISTINCT FROM TRUE)
+      novos AS (
+        SELECT COUNT(*) AS novos
+        FROM gestaoanalytics.visitantes v
+        WHERE v.id IN (SELECT id_visitante FROM visitantes_periodo)
+          AND (v.primeira_visita_timestamp)::date >= CURRENT_DATE - ($1::int - 1)
       ),
-      eventos_filtrados AS (
-        SELECT DISTINCT session_id
-        FROM gestaoanalytics.eventos
-        WHERE event_timestamp >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+      recorrentes AS (
+        SELECT COUNT(*) AS recorrentes
+        FROM gestaoanalytics.visitantes v
+        WHERE v.id IN (SELECT id_visitante FROM visitantes_periodo)
+          AND (v.primeira_visita_timestamp)::date < CURRENT_DATE - ($1::int - 1)
+      ),
+      sessoes_total AS (
+        SELECT COUNT(*) AS total
+        FROM gestaoanalytics.sessoes s
+        WHERE (s.timestamp_inicio_sessao)::date >= CURRENT_DATE - ($1::int - 1)
+          AND (s.eh_bot IS DISTINCT FROM TRUE)
+      ),
+      sessoes_eventos AS (
+        SELECT COUNT(DISTINCT s.id) AS total
+        FROM gestaoanalytics.sessoes s
+        JOIN gestaoanalytics.eventos e ON e.id_sessao = s.id
+        WHERE (s.timestamp_inicio_sessao)::date >= CURRENT_DATE - ($1::int - 1)
+          AND (s.eh_bot IS DISTINCT FROM TRUE)
+      ),
+      freq AS (
+        SELECT AVG(cnt)::numeric AS media
+        FROM (
+          SELECT s.id_visitante, COUNT(*) AS cnt
+          FROM gestaoanalytics.sessoes s
+          WHERE (s.timestamp_inicio_sessao)::date >= CURRENT_DATE - ($1::int - 1)
+            AND (s.eh_bot IS DISTINCT FROM TRUE)
+          GROUP BY s.id_visitante
+        ) t
       )
       SELECT
-        (SELECT COUNT(*) FROM visitantes_filtrados) AS total_visitantes,
-        (SELECT COUNT(*) FROM visitantes_filtrados WHERE total_sessions <= 1) AS novos_visitantes,
-        (SELECT COUNT(*) FROM visitantes_filtrados WHERE total_sessions > 1) AS visitantes_recorrentes,
-        (SELECT AVG(total_sessions)::numeric FROM visitantes_filtrados) AS frequencia_media,
-        (SELECT COUNT(*) FROM sessoes_filtradas) AS total_sessoes,
-        (SELECT COUNT(*) FROM eventos_filtrados) AS sessoes_com_evento
+        (SELECT COUNT(*) FROM visitantes_periodo) AS total_visitantes,
+        (SELECT novos FROM novos) AS novos_visitantes,
+        (SELECT recorrentes FROM recorrentes) AS visitantes_recorrentes,
+        (SELECT media FROM freq) AS frequencia_media,
+        (SELECT total FROM sessoes_total) AS total_sessoes,
+        (SELECT total FROM sessoes_eventos) AS sessoes_com_evento
     `;
 
     try {
