@@ -85,10 +85,11 @@ interface AnalyticsRecord {
 interface AnalyticsDataTableProps {
   success: boolean;
   count: number;
-  data: AnalyticsRecord[];
+  rows?: AnalyticsRecord[];
   table: string;
   message: string;
   error?: string;
+  sql_query?: string;
 }
 
 const getBooleanColor = (value?: boolean) => {
