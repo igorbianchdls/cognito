@@ -1787,174 +1787,30 @@ type CalcularBurnRateToolOutput = {
 };
 
 // Inventory Tools Output Types
-type CalculateInventoryMetricsToolOutput = {
+type InventoryMetricsRow = OrganicMetricsRow;
+
+type InventoryGenericToolOutput = {
   success: boolean;
   message: string;
-  product_id?: string;
   periodo_dias?: number;
-  data_inicial?: string;
-  metricas?: {
-    turnover?: {
-      ratio: string;
-      classificacao: string;
-      saidas_periodo: number;
-      estoque_medio: number;
-    };
-    coverage?: {
-      dias: string;
-      classificacao: string;
-      estoque_atual: number;
-      demanda_diaria: string;
-    };
-    stockout_rate?: {
-      percentual: string;
-      classificacao: string;
-      itens_esgotados: number;
-      total_itens: number;
-    };
-    valor_imobilizado?: {
-      total: string;
-      moeda: string;
-      itens_computados: number;
-      observacao: string;
-    };
-  };
+  data?: InventoryMetricsRow[];
+  sql_query?: string;
   error?: string;
 };
 
-type AnalyzeStockMovementTrendsToolOutput = {
-  success: boolean;
-  message: string;
-  product_id?: string;
-  periodo_analise?: string;
-  dias_analisados?: number;
-  tendencia?: string;
-  slope_tendencia?: string;
-  media_saidas_por_periodo?: string;
-  total_periodos?: number;
-  movimentacoes_por_periodo?: Record<string, { entradas: number; saidas: number; ajustes: number }>;
-  previsao_proximo_periodo?: string;
-  insights?: string;
-  error?: string;
-};
+type CalculateInventoryMetricsToolOutput = InventoryGenericToolOutput;
 
-type ForecastRestockNeedsToolOutput = {
-  success: boolean;
-  message: string;
-  forecast_days?: number;
-  confidence_level?: string;
-  produtos_com_necessidade_reposicao?: number;
-  criticos?: number;
-  previsoes?: Array<{
-    product_id: string;
-    channel_id: string;
-    estoque_atual: number;
-    consumo_diario_medio: string;
-    dias_ate_ruptura: string;
-    necessita_reposicao: boolean;
-    quantidade_sugerida: number;
-    urgencia: 'CRÍTICO' | 'ALTO' | 'MÉDIO' | 'BAIXO';
-    data_ruptura_estimada: string;
-  }>;
-  error?: string;
-};
+type AnalyzeStockMovementTrendsToolOutput = InventoryGenericToolOutput;
 
-type IdentifySlowMovingItemsToolOutput = {
-  success: boolean;
-  message: string;
-  criterio_dias?: number;
-  valor_minimo_filtro?: number;
-  total_slow_moving_items?: number;
-  valor_total_imobilizado?: string;
-  slow_moving_items?: Array<{
-    product_id: string;
-    channel_id: string;
-    quantidade_estoque: number;
-    valor_unitario: string;
-    valor_total_imobilizado: string;
-    dias_sem_movimentacao: string;
-    recomendacao: string;
-  }>;
-  error?: string;
-};
+type ForecastRestockNeedsToolOutput = InventoryGenericToolOutput;
 
-type CompareChannelPerformanceToolOutput = {
-  success: boolean;
-  message: string;
-  metric?: string;
-  product_id?: string;
-  melhor_canal?: string;
-  pior_canal?: string;
-  canais?: Array<{
-    channel_id: string;
-    total_estoque: number;
-    valor_estoque: string;
-    produtos: number;
-    saidas_30d: number;
-    turnover_anual: string;
-    preco_medio: string;
-  }>;
-  error?: string;
-};
+type IdentifySlowMovingItemsToolOutput = InventoryGenericToolOutput;
 
-type GenerateABCAnalysisToolOutput = {
-  success: boolean;
-  message: string;
-  criteria?: string;
-  period_days?: number;
-  total_produtos?: number;
-  distribuicao?: {
-    classe_a: {
-      produtos: number;
-      percentual_produtos: string;
-      contribuicao_valor: string;
-      recomendacao: string;
-    };
-    classe_b: {
-      produtos: number;
-      percentual_produtos: string;
-      contribuicao_valor: string;
-      recomendacao: string;
-    };
-    classe_c: {
-      produtos: number;
-      percentual_produtos: string;
-      contribuicao_valor: string;
-      recomendacao: string;
-    };
-  };
-  produtos_classificados?: Array<{
-    product_id: string;
-    valor: number;
-    quantidade: number;
-    margem: number;
-    percentual_acumulado: string;
-    classe_abc: 'A' | 'B' | 'C';
-  }>;
-  error?: string;
-};
+type CompareChannelPerformanceToolOutput = InventoryGenericToolOutput;
 
-type DetectAnomaliesToolOutput = {
-  success: boolean;
-  message: string;
-  sensitivity?: string;
-  total_anomalias?: number;
-  anomalias_alta_severidade?: number;
-  anomalias?: Array<{
-    product_id: string;
-    tipo_anomalia: string;
-    quantidade_anomala?: number;
-    media_esperada?: string;
-    desvio_padrao?: string;
-    z_score?: string;
-    severidade: string;
-    recomendacao: string;
-    max_estoque?: number;
-    min_estoque?: number;
-    diferenca?: number;
-  }>;
-  error?: string;
-};
+type GenerateABCAnalysisToolOutput = InventoryGenericToolOutput;
+
+type DetectAnomaliesToolOutput = InventoryGenericToolOutput;
 
 type CalcularRunwayToolInput = {
   saldo_atual: number;
@@ -5694,10 +5550,9 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 <CalculateMetricsResult
                   success={(tool.output as CalculateInventoryMetricsToolOutput).success}
                   message={(tool.output as CalculateInventoryMetricsToolOutput).message}
-                  product_id={(tool.output as CalculateInventoryMetricsToolOutput).product_id}
                   periodo_dias={(tool.output as CalculateInventoryMetricsToolOutput).periodo_dias}
-                  data_inicial={(tool.output as CalculateInventoryMetricsToolOutput).data_inicial}
-                  metricas={(tool.output as CalculateInventoryMetricsToolOutput).metricas}
+                  data={(tool.output as CalculateInventoryMetricsToolOutput).data}
+                  sql_query={(tool.output as CalculateInventoryMetricsToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5719,16 +5574,9 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 <TrendsAnalysisResult
                   success={(tool.output as AnalyzeStockMovementTrendsToolOutput).success}
                   message={(tool.output as AnalyzeStockMovementTrendsToolOutput).message}
-                  product_id={(tool.output as AnalyzeStockMovementTrendsToolOutput).product_id}
-                  periodo_analise={(tool.output as AnalyzeStockMovementTrendsToolOutput).periodo_analise}
-                  dias_analisados={(tool.output as AnalyzeStockMovementTrendsToolOutput).dias_analisados}
-                  tendencia={(tool.output as AnalyzeStockMovementTrendsToolOutput).tendencia}
-                  slope_tendencia={(tool.output as AnalyzeStockMovementTrendsToolOutput).slope_tendencia}
-                  media_saidas_por_periodo={(tool.output as AnalyzeStockMovementTrendsToolOutput).media_saidas_por_periodo}
-                  total_periodos={(tool.output as AnalyzeStockMovementTrendsToolOutput).total_periodos}
-                  movimentacoes_por_periodo={(tool.output as AnalyzeStockMovementTrendsToolOutput).movimentacoes_por_periodo}
-                  previsao_proximo_periodo={(tool.output as AnalyzeStockMovementTrendsToolOutput).previsao_proximo_periodo}
-                  insights={(tool.output as AnalyzeStockMovementTrendsToolOutput).insights}
+                  periodo_dias={(tool.output as AnalyzeStockMovementTrendsToolOutput).periodo_dias}
+                  data={(tool.output as AnalyzeStockMovementTrendsToolOutput).data}
+                  sql_query={(tool.output as AnalyzeStockMovementTrendsToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5750,11 +5598,9 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 <RestockForecastResult
                   success={(tool.output as ForecastRestockNeedsToolOutput).success}
                   message={(tool.output as ForecastRestockNeedsToolOutput).message}
-                  forecast_days={(tool.output as ForecastRestockNeedsToolOutput).forecast_days}
-                  confidence_level={(tool.output as ForecastRestockNeedsToolOutput).confidence_level}
-                  produtos_com_necessidade_reposicao={(tool.output as ForecastRestockNeedsToolOutput).produtos_com_necessidade_reposicao}
-                  criticos={(tool.output as ForecastRestockNeedsToolOutput).criticos}
-                  previsoes={(tool.output as ForecastRestockNeedsToolOutput).previsoes}
+                  periodo_dias={(tool.output as ForecastRestockNeedsToolOutput).periodo_dias}
+                  data={(tool.output as ForecastRestockNeedsToolOutput).data}
+                  sql_query={(tool.output as ForecastRestockNeedsToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5776,11 +5622,9 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 <SlowMovingItemsResult
                   success={(tool.output as IdentifySlowMovingItemsToolOutput).success}
                   message={(tool.output as IdentifySlowMovingItemsToolOutput).message}
-                  criterio_dias={(tool.output as IdentifySlowMovingItemsToolOutput).criterio_dias}
-                  valor_minimo_filtro={(tool.output as IdentifySlowMovingItemsToolOutput).valor_minimo_filtro}
-                  total_slow_moving_items={(tool.output as IdentifySlowMovingItemsToolOutput).total_slow_moving_items}
-                  valor_total_imobilizado={(tool.output as IdentifySlowMovingItemsToolOutput).valor_total_imobilizado}
-                  slow_moving_items={(tool.output as IdentifySlowMovingItemsToolOutput).slow_moving_items}
+                  periodo_dias={(tool.output as IdentifySlowMovingItemsToolOutput).periodo_dias}
+                  data={(tool.output as IdentifySlowMovingItemsToolOutput).data}
+                  sql_query={(tool.output as IdentifySlowMovingItemsToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5802,11 +5646,9 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 <ChannelComparisonResult
                   success={(tool.output as CompareChannelPerformanceToolOutput).success}
                   message={(tool.output as CompareChannelPerformanceToolOutput).message}
-                  metric={(tool.output as CompareChannelPerformanceToolOutput).metric}
-                  product_id={(tool.output as CompareChannelPerformanceToolOutput).product_id}
-                  melhor_canal={(tool.output as CompareChannelPerformanceToolOutput).melhor_canal}
-                  pior_canal={(tool.output as CompareChannelPerformanceToolOutput).pior_canal}
-                  canais={(tool.output as CompareChannelPerformanceToolOutput).canais}
+                  periodo_dias={(tool.output as CompareChannelPerformanceToolOutput).periodo_dias}
+                  data={(tool.output as CompareChannelPerformanceToolOutput).data}
+                  sql_query={(tool.output as CompareChannelPerformanceToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5828,11 +5670,9 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 <ABCAnalysisResult
                   success={(tool.output as GenerateABCAnalysisToolOutput).success}
                   message={(tool.output as GenerateABCAnalysisToolOutput).message}
-                  criteria={(tool.output as GenerateABCAnalysisToolOutput).criteria}
-                  period_days={(tool.output as GenerateABCAnalysisToolOutput).period_days}
-                  total_produtos={(tool.output as GenerateABCAnalysisToolOutput).total_produtos}
-                  distribuicao={(tool.output as GenerateABCAnalysisToolOutput).distribuicao}
-                  produtos_classificados={(tool.output as GenerateABCAnalysisToolOutput).produtos_classificados}
+                  periodo_dias={(tool.output as GenerateABCAnalysisToolOutput).periodo_dias}
+                  data={(tool.output as GenerateABCAnalysisToolOutput).data}
+                  sql_query={(tool.output as GenerateABCAnalysisToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5854,10 +5694,9 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 <AnomaliesResult
                   success={(tool.output as DetectAnomaliesToolOutput).success}
                   message={(tool.output as DetectAnomaliesToolOutput).message}
-                  sensitivity={(tool.output as DetectAnomaliesToolOutput).sensitivity}
-                  total_anomalias={(tool.output as DetectAnomaliesToolOutput).total_anomalias}
-                  anomalias_alta_severidade={(tool.output as DetectAnomaliesToolOutput).anomalias_alta_severidade}
-                  anomalias={(tool.output as DetectAnomaliesToolOutput).anomalias}
+                  periodo_dias={(tool.output as DetectAnomaliesToolOutput).periodo_dias}
+                  data={(tool.output as DetectAnomaliesToolOutput).data}
+                  sql_query={(tool.output as DetectAnomaliesToolOutput).sql_query}
                 />
               )}
             </div>
