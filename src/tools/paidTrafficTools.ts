@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { tool } from 'ai';
 import { createClient } from '@supabase/supabase-js';
+import { runQuery } from '@/lib/postgres';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -300,38 +301,61 @@ export const compareAdsPlatforms = tool({
     date_range_days: z.number().default(30).describe('Período de análise em dias'),
   }),
   execute: async ({ date_range_days = 30 }) => {
-    let sqlQuery: string | undefined;
-    try {
-      const dataInicio = new Date();
-      dataInicio.setDate(dataInicio.getDate() - date_range_days);
-      const dataInicioISODate = dataInicio.toISOString().split('T')[0];
-
-      sqlQuery = `
+    const sqlQuery = `
+WITH base AS (
+  SELECT
+    ma.gasto,
+    ma.receita,
+    ma.conversao,
+    ma.cliques,
+    ma.impressao,
+    ma.plataforma AS plataforma_metricas,
+    ap.plataforma AS plataforma_anuncio,
+    co.plataforma AS plataforma_conta,
+    COALESCE(co.id, ma.conta_ads_id) AS conta_relacionada_id,
+    c.id AS campanha_relacionada_id
+  FROM trafego_pago.metricas_anuncios ma
+  LEFT JOIN trafego_pago.anuncios_publicados ap
+    ON ap.id = ma.anuncio_publicado_id
+  LEFT JOIN trafego_pago.grupos_de_anuncios ga
+    ON ga.id = ap.grupo_id
+  LEFT JOIN trafego_pago.campanhas c
+    ON c.id = ga.campanha_id
+  LEFT JOIN trafego_pago.contas_ads co
+    ON co.id = COALESCE(ma.conta_ads_id, c.conta_ads_id)
+  WHERE ma.data >= current_date - ($1::int) * INTERVAL '1 day'
+)
 SELECT
-  plataforma,
-  SUM(gasto) AS total_gasto,
-  SUM(receita) AS total_receita,
-  SUM(conversao) AS total_conversoes,
-  SUM(impressoes) AS total_impressoes,
-  SUM(cliques) AS total_cliques,
-  CASE WHEN SUM(gasto) = 0 THEN 0 ELSE SUM(receita) / SUM(gasto) END AS roas
-FROM trafego_pago.metricas_anuncios
-WHERE data >= '${dataInicioISODate}'
-GROUP BY plataforma
+  COALESCE(plataforma_conta, plataforma_anuncio, plataforma_metricas, 'Desconhecida') AS plataforma,
+  COUNT(DISTINCT conta_relacionada_id) AS contas_vinculadas,
+  COUNT(DISTINCT campanha_relacionada_id) AS campanhas_vinculadas,
+  SUM(gasto) AS gasto_total,
+  SUM(receita) AS receita_total,
+  SUM(conversao) AS conversoes_total,
+  CASE WHEN SUM(gasto) > 0 THEN SUM(receita) / SUM(gasto) ELSE 0 END AS roas,
+  CASE WHEN SUM(cliques) > 0 THEN (SUM(conversao)::numeric / NULLIF(SUM(cliques), 0)) * 100 ELSE 0 END AS taxa_conversao_percent,
+  CASE WHEN SUM(impressao) > 0 THEN (SUM(cliques)::numeric / NULLIF(SUM(impressao), 0)) * 100 ELSE 0 END AS ctr_percent
+FROM base
+GROUP BY 1
 ORDER BY roas DESC;
-      `.trim();
+    `.trim();
 
-      const { data: metricas, error } = await supabase
-        .schema('trafego_pago')
-        .from('metricas_anuncios')
-        .select('*')
-        .gte('data', dataInicioISODate);
+    type RawPlatformRow = {
+      plataforma: string | null;
+      contas_vinculadas: number | string | null;
+      campanhas_vinculadas: number | string | null;
+      gasto_total: number | string | null;
+      receita_total: number | string | null;
+      conversoes_total: number | string | null;
+      roas: number | string | null;
+      taxa_conversao_percent: number | string | null;
+      ctr_percent: number | string | null;
+    };
 
-      if (error) {
-        throw error;
-      }
+    try {
+      const rawRows = await runQuery<RawPlatformRow>(sqlQuery, [date_range_days]);
 
-      if (!metricas || metricas.length === 0) {
+      if (!rawRows || rawRows.length === 0) {
         return {
           success: false,
           message: 'Nenhuma métrica encontrada',
@@ -339,53 +363,30 @@ ORDER BY roas DESC;
         };
       }
 
-      const plataformas = new Map();
-
-      for (const metrica of metricas) {
-        const plat = metrica.plataforma || 'Desconhecida';
-
-        if (!plataformas.has(plat)) {
-          plataformas.set(plat, {
-            gasto: 0,
-            receita: 0,
-            conversoes: 0,
-            impressoes: 0,
-            cliques: 0
-          });
-        }
-
-        const stats = plataformas.get(plat);
-        stats.gasto += metrica.gasto || 0;
-        stats.receita += metrica.receita || 0;
-        stats.conversoes += metrica.conversao || 0;
-        stats.impressoes += metrica.impressoes || 0;
-        stats.cliques += metrica.cliques || 0;
-      }
-
-      const plataformasArray = [];
-      for (const [plataforma, stats] of plataformas.entries()) {
-        const roas = stats.gasto > 0 ? stats.receita / stats.gasto : 0;
-        const ctr = stats.impressoes > 0 ? (stats.cliques / stats.impressoes) * 100 : 0;
-        const conversion_rate = stats.cliques > 0 ? (stats.conversoes / stats.cliques) * 100 : 0;
+      const plataformasArray = rawRows.map((row) => {
+        const gastoTotal = Number(row.gasto_total ?? 0);
+        const receitaTotal = Number(row.receita_total ?? 0);
+        const conversoesTotal = Number(row.conversoes_total ?? 0);
+        const roasValue = Number(row.roas ?? 0);
+        const ctrValue = Number(row.ctr_percent ?? 0);
+        const conversionRateValue = Number(row.taxa_conversao_percent ?? 0);
 
         let classificacao = 'Baixa';
-        if (roas >= 3) classificacao = 'Excelente';
-        else if (roas >= 2) classificacao = 'Boa';
-        else if (roas >= 1) classificacao = 'Regular';
+        if (roasValue >= 3) classificacao = 'Excelente';
+        else if (roasValue >= 2) classificacao = 'Boa';
+        else if (roasValue >= 1) classificacao = 'Regular';
 
-        plataformasArray.push({
-          plataforma,
-          gasto: stats.gasto.toFixed(2),
-          receita: stats.receita.toFixed(2),
-          conversoes: stats.conversoes,
-          roas: roas.toFixed(2),
-          ctr: ctr.toFixed(2) + '%',
-          conversion_rate: conversion_rate.toFixed(2) + '%',
+        return {
+          plataforma: row.plataforma ?? 'Desconhecida',
+          gasto: gastoTotal.toFixed(2),
+          receita: receitaTotal.toFixed(2),
+          conversoes: conversoesTotal,
+          roas: roasValue.toFixed(2),
+          ctr: `${ctrValue.toFixed(2)}%`,
+          conversion_rate: `${conversionRateValue.toFixed(2)}%`,
           classificacao
-        });
-      }
-
-      plataformasArray.sort((a, b) => parseFloat(b.roas) - parseFloat(a.roas));
+        };
+      });
 
       return {
         success: true,
@@ -397,7 +398,6 @@ ORDER BY roas DESC;
         plataformas: plataformasArray,
         sql_query: sqlQuery
       };
-
     } catch (error) {
       console.error('ERRO compareAdsPlatforms:', error);
       return {
