@@ -295,7 +295,10 @@ export const getPaidTrafficData = tool({
   execute: async (filters) => {
     const { table, limit, ...rest } = filters;
     const builder = paidTrafficQueryBuilders[table];
-    const { sql, params } = builder({ limit, ...rest });
+    const { sql, params } = builder({
+      limit: typeof limit === 'number' ? limit : 20,
+      ...rest,
+    });
 
     try {
       const rows = await runQuery<Record<string, unknown>>(sql, params);
