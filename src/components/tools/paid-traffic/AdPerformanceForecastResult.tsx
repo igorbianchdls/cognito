@@ -1,7 +1,17 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, LineChart, Calendar, TrendingUp } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import { ColumnDef } from '@tanstack/react-table';
+import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import { BarChart } from '@/components/charts/BarChart';
+import { LineChart } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface AdPerformanceForecastResultProps {
   success: boolean;
@@ -22,6 +32,89 @@ interface AdPerformanceForecastResultProps {
   };
 }
 
+type ForecastRow = {
+  categoria: string;
+  indicador: string;
+  valor: string;
+};
+
+const METRIC_OPTIONS = [
+  {
+    value: 'gasto',
+    label: 'Gasto',
+    axisLabel: 'Gasto (R$)',
+    description: 'Compara gasto histórico médio com o valor previsto.',
+    historicoExtractor: (historico: AdPerformanceForecastResultProps['historico']) =>
+      historico ? parseCurrency(historico.gasto_medio_dia) : 0,
+    previsaoExtractor: (previsao: AdPerformanceForecastResultProps['previsao']) =>
+      previsao ? parseCurrency(previsao.gasto_previsto) : 0,
+    historicoFormatter: (value: number) =>
+      value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+    previsaoFormatter: (value: number) =>
+      value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+  },
+  {
+    value: 'receita',
+    label: 'Receita',
+    axisLabel: 'Receita (R$)',
+    description: 'Receita prevista versus média histórica (gasto * ROAS).',
+    historicoExtractor: (historico) => {
+      if (!historico) return 0;
+      const gasto = parseCurrency(historico.gasto_medio_dia);
+      const roas = parseNumeric(historico.roas_medio);
+      return gasto * roas;
+    },
+    previsaoExtractor: (previsao) =>
+      previsao ? parseCurrency(previsao.receita_prevista) : 0,
+    historicoFormatter: (value: number) =>
+      value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+    previsaoFormatter: (value: number) =>
+      value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+  },
+  {
+    value: 'conversoes',
+    label: 'Conversões',
+    axisLabel: 'Conversões',
+    description: 'Comparação entre conversões diárias médias e previstas.',
+    historicoExtractor: (historico) =>
+      historico ? parseNumeric(historico.conversoes_medio_dia) : 0,
+    previsaoExtractor: (previsao) =>
+      previsao ? Number(previsao.conversoes_previstas ?? 0) : 0,
+    historicoFormatter: (value: number) => value.toLocaleString('pt-BR', { maximumFractionDigits: 1 }),
+    previsaoFormatter: (value: number) => value.toLocaleString('pt-BR', { maximumFractionDigits: 0 }),
+  },
+  {
+    value: 'roas',
+    label: 'ROAS',
+    axisLabel: 'ROAS (x)',
+    description: 'ROAS médio histórico comparado com o esperado.',
+    historicoExtractor: (historico) =>
+      historico ? parseNumeric(historico.roas_medio) : 0,
+    previsaoExtractor: (previsao) =>
+      previsao ? parseNumeric(previsao.roas_esperado) : 0,
+    historicoFormatter: (value: number) => `${value.toFixed(2)}x`,
+    previsaoFormatter: (value: number) => `${value.toFixed(2)}x`,
+  },
+] as const;
+
+type MetricOption = (typeof METRIC_OPTIONS)[number];
+type MetricKey = MetricOption['value'];
+
+function parseCurrency(value: string | undefined): number {
+  if (!value) return 0;
+  const normalized = value.replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
+  const parsed = Number.parseFloat(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function parseNumeric(value: string | number | undefined): number {
+  if (typeof value === 'number') return value;
+  if (!value) return 0;
+  const normalized = value.replace(/\s/g, '').replace(',', '.').replace('x', '');
+  const parsed = Number.parseFloat(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 export default function AdPerformanceForecastResult({
   success,
   message,
@@ -29,138 +122,188 @@ export default function AdPerformanceForecastResult({
   forecast_days,
   plataforma,
   historico,
-  previsao
+  previsao,
 }: AdPerformanceForecastResultProps) {
-  if (!success) {
+  const [selectedMetric, setSelectedMetric] = useState<MetricKey>('gasto');
+
+  const tableData: ForecastRow[] = useMemo(() => {
+    const rows: ForecastRow[] = [];
+
+    if (historico) {
+      rows.push(
+        {
+          categoria: 'Histórico (média diária)',
+          indicador: 'Gasto médio por dia',
+          valor: `R$ ${historico.gasto_medio_dia}`,
+        },
+        {
+          categoria: 'Histórico (média diária)',
+          indicador: 'Conversões médias por dia',
+          valor: historico.conversoes_medio_dia,
+        },
+        {
+          categoria: 'Histórico (média diária)',
+          indicador: 'ROAS médio',
+          valor: `${historico.roas_medio}x`,
+        }
+      );
+    }
+
+    if (previsao) {
+      rows.push(
+        {
+          categoria: `Previsão (${forecast_days ?? 0} dias)`,
+          indicador: 'Gasto previsto',
+          valor: `R$ ${previsao.gasto_previsto}`,
+        },
+        {
+          categoria: `Previsão (${forecast_days ?? 0} dias)`,
+          indicador: 'Receita prevista',
+          valor: `R$ ${previsao.receita_prevista}`,
+        },
+        {
+          categoria: `Previsão (${forecast_days ?? 0} dias)`,
+          indicador: 'Conversões previstas',
+          valor: previsao.conversoes_previstas.toLocaleString('pt-BR'),
+        },
+        {
+          categoria: `Previsão (${forecast_days ?? 0} dias)`,
+          indicador: 'ROAS esperado',
+          valor: `${previsao.roas_esperado}x`,
+        },
+        {
+          categoria: `Previsão (${forecast_days ?? 0} dias)`,
+          indicador: 'Retorno líquido estimado',
+          valor: `R$ ${(parseCurrency(previsao.receita_prevista) - parseCurrency(previsao.gasto_previsto)).toFixed(2)}`,
+        }
+      );
+    }
+
+    return rows;
+  }, [forecast_days, historico, previsao]);
+
+  const columns: ColumnDef<ForecastRow>[] = useMemo(() => [
+    {
+      accessorKey: 'categoria',
+      header: 'Categoria',
+      cell: ({ row }) => <span className="text-xs font-medium uppercase text-muted-foreground">{row.original.categoria}</span>,
+    },
+    {
+      accessorKey: 'indicador',
+      header: 'Indicador',
+      cell: ({ row }) => <span className="font-medium text-slate-800">{row.original.indicador}</span>,
+    },
+    {
+      accessorKey: 'valor',
+      header: 'Valor',
+      cell: ({ row }) => <span className="block text-right text-slate-700">{row.original.valor}</span>,
+    },
+  ], []);
+
+  const selectedMetricConfig = useMemo<MetricOption>(() => {
+    return METRIC_OPTIONS.find((option) => option.value === selectedMetric) ?? METRIC_OPTIONS[0];
+  }, [selectedMetric]);
+
+  const chartData = useMemo(() => {
+    const historicoValue = selectedMetricConfig.historicoExtractor(historico);
+    const previsaoValue = selectedMetricConfig.previsaoExtractor(previsao);
+
+    return [
+      { x: 'Histórico', y: historicoValue },
+      { x: 'Previsão', y: previsaoValue },
+    ];
+  }, [historico, previsao, selectedMetricConfig]);
+
+  const chartRenderer = useCallback(() => {
+    const hasValues = chartData.some((point) => Number.isFinite(point.y) && point.y !== 0);
+
+    if (!hasValues) {
+      return (
+        <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center text-sm text-muted-foreground">
+          Não há dados suficientes para gerar a projeção gráfica.
+        </div>
+      );
+    }
+
     return (
-      <Card className="border-red-200 bg-red-50">
-        <CardHeader>
-          <CardTitle className="text-red-700 flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5" />
-            Erro na Previsão de Performance
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-red-600">{message}</p>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-slate-700">Métrica projetada</p>
+            <p className="text-xs text-muted-foreground">
+              Compare valores médios históricos com as estimativas futuras.
+            </p>
+          </div>
+          <Select value={selectedMetric} onValueChange={(value) => setSelectedMetric(value as MetricKey)}>
+            <SelectTrigger size="sm" className="min-w-[220px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {METRIC_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-3">
+          <div className="h-[320px] w-full">
+            <BarChart
+              data={chartData}
+              seriesLabel={selectedMetricConfig.label}
+              title={`${selectedMetricConfig.label}: Histórico vs. Previsão`}
+              subtitle={selectedMetricConfig.description}
+              containerClassName="h-full"
+              axisBottom={{
+                tickRotation: 0,
+                legend: 'Período',
+                legendOffset: 36,
+              }}
+              axisLeft={{
+                legend: selectedMetricConfig.axisLabel,
+                legendOffset: -60,
+                format: (value: string | number) => {
+                  const numericValue = typeof value === 'number' ? value : Number.parseFloat(value);
+                  return selectedMetricConfig.previsaoFormatter(numericValue);
+                },
+              }}
+              colors={{ scheme: 'category10' }}
+              padding={0.5}
+              enableLabel
+              labelFormat={(value: number) => selectedMetricConfig.previsaoFormatter(value)}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            As projeções consideram o comportamento médio dos últimos {lookback_days ?? 0} dias.
+          </p>
+        </div>
+      </div>
     );
-  }
+  }, [chartData, lookback_days, selectedMetric, selectedMetricConfig]);
+
+  const plataformaTexto = plataforma?.trim() ? plataforma : 'Todas as plataformas';
+  const periodoHistorico = lookback_days ? `${lookback_days} dias` : 'período histórico não informado';
+  const periodoPrevisao = forecast_days ? `${forecast_days} dias` : 'previsão não informada';
+
+  const summaryMessage = success
+    ? `${message} • Plataforma: ${plataformaTexto} • Histórico considerado: ${periodoHistorico} • Janela de previsão: ${periodoPrevisao}`
+    : message;
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <Card className="border-violet-200 bg-violet-50">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-lg text-violet-900">🔮 Previsão de Performance</h3>
-              <p className="text-sm text-violet-700 mt-1">
-                Plataforma: {plataforma} • Análise: {lookback_days} dias • Previsão: {forecast_days} dias
-              </p>
-            </div>
-            <LineChart className="h-8 w-8 text-violet-600" />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Histórico */}
-      {historico && (
-        <Card className="border-blue-200 bg-blue-50">
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-blue-600" />
-              Dados Históricos ({lookback_days} dias)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center">
-                <p className="text-sm text-blue-600">Gasto Médio/Dia</p>
-                <p className="text-2xl font-bold text-blue-700 mt-1">R$ {historico.gasto_medio_dia}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-blue-600">Conversões Média/Dia</p>
-                <p className="text-2xl font-bold text-blue-700 mt-1">{historico.conversoes_medio_dia}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-blue-600">ROAS Médio</p>
-                <p className="text-2xl font-bold text-blue-700 mt-1">{historico.roas_medio}x</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Previsão */}
-      {previsao && (
-        <>
-          <Card className="border-2 border-violet-300 bg-gradient-to-br from-violet-50 to-purple-50">
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-violet-600" />
-                Projeção para Próximos {forecast_days} Dias
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-4 bg-red-50 rounded-lg border-2 border-red-300">
-                  <p className="text-sm text-red-600 font-medium">Gasto Previsto</p>
-                  <p className="text-2xl font-bold text-red-700 mt-2">R$ {previsao.gasto_previsto}</p>
-                </div>
-
-                <div className="p-4 bg-green-50 rounded-lg border-2 border-green-300">
-                  <p className="text-sm text-green-600 font-medium">Receita Prevista</p>
-                  <p className="text-2xl font-bold text-green-700 mt-2">R$ {previsao.receita_prevista}</p>
-                </div>
-
-                <div className="p-4 bg-blue-50 rounded-lg border-2 border-blue-300">
-                  <p className="text-sm text-blue-600 font-medium">Conversões</p>
-                  <p className="text-2xl font-bold text-blue-700 mt-2">{previsao.conversoes_previstas}</p>
-                </div>
-
-                <div className="p-4 bg-purple-50 rounded-lg border-2 border-purple-300">
-                  <p className="text-sm text-purple-600 font-medium">ROAS Esperado</p>
-                  <p className="text-2xl font-bold text-purple-700 mt-2">{previsao.roas_esperado}x</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* ROI Calculation */}
-          <Card className="bg-gray-50">
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <p className="text-sm text-gray-600">Retorno Líquido Estimado</p>
-                <p className="text-4xl font-bold text-gray-800 mt-2">
-                  R$ {(parseFloat(previsao.receita_prevista) - parseFloat(previsao.gasto_previsto)).toFixed(2)}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">(receita prevista - gasto previsto)</p>
-              </div>
-            </CardContent>
-          </Card>
-        </>
-      )}
-
-      {/* Insights */}
-      <Card className="bg-gradient-to-br from-violet-50 to-indigo-50 border-violet-200">
-        <CardContent className="pt-6">
-          <div className="space-y-2 text-sm">
-            <p className="font-semibold text-violet-900">💡 Recomendações:</p>
-            {previsao && parseFloat(previsao.roas_esperado) >= 3 && (
-              <p className="text-gray-700">🚀 ROAS esperado excelente! Considere aumentar o budget para escalar resultados.</p>
-            )}
-            {previsao && parseFloat(previsao.roas_esperado) < 2 && (
-              <p className="text-gray-700">⚠️ ROAS esperado baixo. Revise campanhas antes de investir mais.</p>
-            )}
-            {previsao && previsao.conversoes_previstas < 10 && (
-              <p className="text-gray-700">⚠️ Poucas conversões previstas. Considere otimizar funil ou aumentar orçamento.</p>
-            )}
-            <p className="text-gray-700">📊 Esta previsão é baseada na média histórica. Monitore diariamente para ajustes.</p>
-            <p className="text-gray-700">🎯 Use esta projeção para planejamento de budget e definição de metas realistas.</p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <ArtifactDataTable<ForecastRow>
+      data={tableData}
+      columns={columns}
+      title="Previsão de Performance"
+      icon={LineChart}
+      iconColor="text-violet-600"
+      message={summaryMessage}
+      success={success}
+      count={tableData.length}
+      exportFileName="paid-traffic-forecast"
+      pageSize={Math.min(10, Math.max(tableData.length, 6))}
+      chartRenderer={chartRenderer}
+    />
   );
 }

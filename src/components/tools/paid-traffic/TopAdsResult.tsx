@@ -1,7 +1,17 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, Trophy, Zap } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import { ColumnDef } from '@tanstack/react-table';
+import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import { BarChart } from '@/components/charts/BarChart';
+import { Trophy } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface TopAdsResultProps {
   success: boolean;
@@ -21,132 +31,313 @@ interface TopAdsResultProps {
   }>;
 }
 
+type AdRow = {
+  rank: number;
+  anuncio: string;
+  plataforma: string;
+  gasto: string;
+  receita: string;
+  conversoes: number;
+  roas: string;
+  ctr: string;
+  custo_por_conversao: string;
+};
+
+const METRIC_OPTIONS = [
+  {
+    value: 'roas',
+    label: 'ROAS',
+    axisLabel: 'ROAS (x)',
+    description: 'Retorno sobre investimento por anúncio.',
+    formatter: (value: number) => `${value.toFixed(2)}x`,
+  },
+  {
+    value: 'gasto',
+    label: 'Gasto',
+    axisLabel: 'Gasto (R$)',
+    description: 'Investimento destinado ao anúncio.',
+    formatter: (value: number) =>
+      value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+  },
+  {
+    value: 'receita',
+    label: 'Receita',
+    axisLabel: 'Receita (R$)',
+    description: 'Receita atribuída ao anúncio.',
+    formatter: (value: number) =>
+      value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+  },
+  {
+    value: 'conversoes',
+    label: 'Conversões',
+    axisLabel: 'Conversões',
+    description: 'Conversões geradas por anúncio.',
+    formatter: (value: number) => value.toLocaleString('pt-BR', { maximumFractionDigits: 0 }),
+  },
+  {
+    value: 'custo_por_conversao',
+    label: 'Custo por Conversão',
+    axisLabel: 'Custo por Conversão (R$)',
+    description: 'Custo médio de cada conversão.',
+    formatter: (value: number) =>
+      value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+  },
+  {
+    value: 'ctr',
+    label: 'CTR',
+    axisLabel: 'CTR (%)',
+    description: 'Taxa de cliques por impressão.',
+    formatter: (value: number) => `${value.toFixed(2)}%`,
+  },
+] as const;
+
+type MetricOption = (typeof METRIC_OPTIONS)[number];
+type MetricKey = MetricOption['value'];
+
+const parseNumericValue = (value: unknown): number => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const compact = value.replace(/\s/g, '');
+    let sanitized = compact.replace(/[^0-9,.-]/g, '');
+
+    if (sanitized.includes('.') && sanitized.includes(',')) {
+      const lastComma = sanitized.lastIndexOf(',');
+      const lastDot = sanitized.lastIndexOf('.');
+      if (lastComma > lastDot) {
+        sanitized = sanitized.replace(/\./g, '').replace(',', '.');
+      } else {
+        sanitized = sanitized.replace(/,/g, '');
+      }
+    } else {
+      sanitized = sanitized.replace(',', '.');
+    }
+
+    const parsed = Number.parseFloat(sanitized);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  return 0;
+};
+
 export default function TopAdsResult({
   success,
   message,
   periodo_dias,
   plataforma,
   total_analisados,
-  top_anuncios
+  top_anuncios,
 }: TopAdsResultProps) {
-  if (!success) {
-    return (
-      <Card className="border-red-200 bg-red-50">
-        <CardHeader>
-          <CardTitle className="text-red-700 flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5" />
-            Erro na Identificação de Top Anúncios
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-red-600">{message}</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const [selectedMetric, setSelectedMetric] = useState<MetricKey>('roas');
 
-  const getMedalEmoji = (position: number) => {
-    if (position === 0) return '🥇';
-    if (position === 1) return '🥈';
-    if (position === 2) return '🥉';
-    return '🏅';
-  };
+  const tableData: AdRow[] = useMemo(() => {
+    if (!top_anuncios || top_anuncios.length === 0) return [];
+
+    return top_anuncios.map((anuncio, idx) => ({
+      rank: idx + 1,
+      anuncio: anuncio.anuncio_id ?? `Anúncio ${idx + 1}`,
+      plataforma: anuncio.plataforma || 'Desconhecida',
+      gasto: anuncio.gasto,
+      receita: anuncio.receita,
+      conversoes: anuncio.conversoes,
+      roas: anuncio.roas,
+      ctr: anuncio.ctr,
+      custo_por_conversao: anuncio.custo_por_conversao,
+    }));
+  }, [top_anuncios]);
+
+  const columns: ColumnDef<AdRow>[] = useMemo(() => [
+    {
+      accessorKey: 'rank',
+      header: '#',
+      cell: ({ row }) => (
+        <span className="font-semibold text-muted-foreground">#{row.original.rank}</span>
+      ),
+      enableSorting: false,
+      size: 40,
+    },
+    {
+      accessorKey: 'anuncio',
+      header: 'Anúncio',
+      cell: ({ row }) => <span className="font-medium">{row.original.anuncio}</span>,
+    },
+    {
+      accessorKey: 'plataforma',
+      header: 'Plataforma',
+      cell: ({ row }) => (
+        <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
+          {row.original.plataforma}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'gasto',
+      header: 'Gasto (R$)',
+      cell: ({ row }) => (
+        <span className="block text-right font-semibold text-rose-600">R$ {row.original.gasto}</span>
+      ),
+    },
+    {
+      accessorKey: 'receita',
+      header: 'Receita (R$)',
+      cell: ({ row }) => (
+        <span className="block text-right font-semibold text-emerald-600">R$ {row.original.receita}</span>
+      ),
+    },
+    {
+      accessorKey: 'conversoes',
+      header: 'Conversões',
+      cell: ({ row }) => (
+        <span className="block text-right">{row.original.conversoes.toLocaleString('pt-BR')}</span>
+      ),
+    },
+    {
+      accessorKey: 'roas',
+      header: 'ROAS',
+      cell: ({ row }) => (
+        <span className="block text-right font-semibold text-purple-600">{row.original.roas}x</span>
+      ),
+    },
+    {
+      accessorKey: 'ctr',
+      header: 'CTR',
+      cell: ({ row }) => <span className="block text-right">{row.original.ctr}</span>,
+    },
+    {
+      accessorKey: 'custo_por_conversao',
+      header: 'Custo/Conv.',
+      cell: ({ row }) => (
+        <span className="block text-right">R$ {row.original.custo_por_conversao}</span>
+      ),
+    },
+  ], []);
+
+  const metricValuesByAd = useMemo(() => {
+    if (tableData.length === 0) return [];
+
+    return tableData.map((row) => ({
+      label: row.anuncio,
+      metrics: {
+        roas: parseNumericValue(row.roas),
+        gasto: parseNumericValue(row.gasto),
+        receita: parseNumericValue(row.receita),
+        conversoes: parseNumericValue(row.conversoes),
+        custo_por_conversao: parseNumericValue(row.custo_por_conversao),
+        ctr: parseNumericValue(row.ctr),
+      } satisfies Record<MetricKey, number>,
+    }));
+  }, [tableData]);
+
+  const selectedMetricConfig = useMemo<MetricOption>(() => {
+    return METRIC_OPTIONS.find((option) => option.value === selectedMetric) ?? METRIC_OPTIONS[0];
+  }, [selectedMetric]);
+
+  const chartData = useMemo(
+    () =>
+      metricValuesByAd.map(({ label, metrics }) => ({
+        x: label,
+        y: metrics[selectedMetric] ?? 0,
+      })),
+    [metricValuesByAd, selectedMetric]
+  );
+
+  const formatForMetric = useCallback(
+    (value: number) => {
+      const safeValue = Number.isFinite(value) ? value : 0;
+      return selectedMetricConfig.formatter(safeValue);
+    },
+    [selectedMetricConfig]
+  );
+
+  const chartRenderer = useCallback(() => {
+    if (!chartData.length) {
+      return (
+        <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center text-sm text-muted-foreground">
+          Não há dados suficientes para gerar o gráfico agora.
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-slate-700">Métrica do gráfico</p>
+            <p className="text-xs text-muted-foreground">
+              Compare os principais anúncios pela métrica desejada.
+            </p>
+          </div>
+          <Select value={selectedMetric} onValueChange={(value) => setSelectedMetric(value as MetricKey)}>
+            <SelectTrigger size="sm" className="min-w-[200px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {METRIC_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-3">
+          <div className="h-[360px] w-full">
+            <BarChart
+              data={chartData}
+              seriesLabel={selectedMetricConfig.label}
+              title={`${selectedMetricConfig.label} por Anúncio`}
+              subtitle={selectedMetricConfig.description}
+              containerClassName="h-full"
+              axisBottom={{
+                tickRotation: -25,
+                legend: 'Anúncio',
+                legendOffset: 36,
+              }}
+              axisLeft={{
+                legend: selectedMetricConfig.axisLabel,
+                legendOffset: -60,
+                format: (value: string | number) =>
+                  formatForMetric(typeof value === 'number' ? value : Number.parseFloat(value)),
+              }}
+              colors={{ scheme: 'set2' }}
+              padding={0.3}
+              enableLabel
+              labelFormat={(value: number) => formatForMetric(value)}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Dados consolidados a partir do resultado do agente de tráfego pago.
+          </p>
+        </div>
+      </div>
+    );
+  }, [chartData, formatForMetric, selectedMetric, selectedMetricConfig]);
+
+  const periodoTexto = periodo_dias ? `${periodo_dias} dias` : 'período não informado';
+  const plataformaTexto = plataforma?.trim() ? plataforma : 'Todas as plataformas';
+  const totalTop = tableData.length;
+  const analisadosTexto = total_analisados ?? totalTop;
+
+  const summaryMessage = success
+    ? `${message} • Top ${totalTop} anúncios de ${analisadosTexto} avaliados • Plataforma: ${plataformaTexto} • Período: ${periodoTexto}`
+    : message;
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <Card className="border-amber-200 bg-amber-50">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-lg text-amber-900">🥇 Top Anúncios</h3>
-              <p className="text-sm text-amber-700 mt-1">
-                Top {top_anuncios?.length} de {total_analisados} anúncios • Plataforma: {plataforma} • Período: {periodo_dias} dias
-              </p>
-            </div>
-            <Trophy className="h-8 w-8 text-amber-600" />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Top Anúncios */}
-      {top_anuncios && top_anuncios.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Zap className="h-5 w-5 text-amber-600" />
-              Melhores Anúncios (por ROAS)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {top_anuncios.map((ad, idx) => {
-                const roasValue = parseFloat(ad.roas);
-                const isTopThree = idx < 3;
-
-                return (
-                  <div
-                    key={idx}
-                    className={`p-4 rounded-lg border-2 ${isTopThree ? 'border-amber-300 bg-amber-50' : 'border-gray-200'}`}
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <span className="text-3xl">{getMedalEmoji(idx)}</span>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-semibold text-lg">{ad.anuncio_id}</p>
-                            <span className="px-2 py-1 bg-gray-100 rounded text-xs font-medium text-gray-600">
-                              {ad.plataforma}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-600">{ad.conversoes} conversões</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className={`text-3xl font-bold ${roasValue >= 3 ? 'text-green-700' : roasValue >= 2 ? 'text-blue-700' : 'text-yellow-700'}`}>
-                          {ad.roas}x
-                        </p>
-                        <p className="text-xs text-gray-500">ROAS</p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                      <div>
-                        <p className="text-gray-500">Gasto</p>
-                        <p className="font-semibold">R$ {ad.gasto}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Receita</p>
-                        <p className="font-semibold">R$ {ad.receita}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Custo/Conv.</p>
-                        <p className="font-semibold">R$ {ad.custo_por_conversao}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">CTR</p>
-                        <p className="font-semibold">{ad.ctr}</p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Insights */}
-      <Card className="bg-gradient-to-br from-amber-50 to-yellow-50 border-amber-200">
-        <CardContent className="pt-6">
-          <div className="space-y-2 text-sm">
-            <p className="font-semibold text-amber-900">💡 Dicas:</p>
-            <p className="text-gray-700">🚀 Escale o budget dos anúncios com ROAS acima de 3x</p>
-            <p className="text-gray-700">🎯 Analise criativos e copy dos top performers para replicar sucesso</p>
-            <p className="text-gray-700">📊 Compare públicos dos melhores anúncios para identificar padrões</p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <ArtifactDataTable<AdRow>
+      data={tableData}
+      columns={columns}
+      title="Ranking de Anúncios"
+      icon={Trophy}
+      iconColor="text-amber-600"
+      message={summaryMessage}
+      success={success}
+      count={tableData.length}
+      exportFileName="paid-traffic-top-ads"
+      pageSize={Math.min(10, Math.max(tableData.length, 5))}
+      chartRenderer={chartRenderer}
+    />
   );
 }

@@ -1,7 +1,17 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, Palette, CheckCircle, XCircle, Clock, FileEdit } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import { ColumnDef } from '@tanstack/react-table';
+import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import { BarChart } from '@/components/charts/BarChart';
+import { Palette } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface CreativePerformanceResultProps {
   success: boolean;
@@ -17,129 +27,232 @@ interface CreativePerformanceResultProps {
   };
 }
 
+type CreativeRow = {
+  status: string;
+  quantidade: number;
+  percentual: string;
+};
+
+const METRIC_OPTIONS = [
+  {
+    value: 'quantidade',
+    label: 'Quantidade',
+    axisLabel: 'Quantidade',
+    description: 'Número absoluto de criativos por status.',
+    formatter: (value: number) => value.toLocaleString('pt-BR', { maximumFractionDigits: 0 }),
+  },
+  {
+    value: 'percentual',
+    label: 'Percentual',
+    axisLabel: 'Percentual (%)',
+    description: 'Percentual de criativos em cada status.',
+    formatter: (value: number) => `${value.toFixed(2)}%`,
+  },
+] as const;
+
+type MetricOption = (typeof METRIC_OPTIONS)[number];
+type MetricKey = MetricOption['value'];
+
+const parsePercent = (value: string | number | undefined): number => {
+  if (typeof value === 'number') return value;
+  if (!value) return 0;
+
+  const normalized = value.replace(/\s/g, '').replace('%', '').replace(',', '.');
+  const parsed = Number.parseFloat(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
 export default function CreativePerformanceResult({
   success,
   message,
   periodo_dias,
   total_criativos,
-  status
+  status,
 }: CreativePerformanceResultProps) {
-  if (!success) {
-    return (
-      <Card className="border-red-200 bg-red-50">
-        <CardHeader>
-          <CardTitle className="text-red-700 flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5" />
-            Erro na Análise de Criativos
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-red-600">{message}</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const [selectedMetric, setSelectedMetric] = useState<MetricKey>('quantidade');
 
-  const taxaAprovacao = status ? parseFloat(status.taxa_aprovacao) : 0;
+  const tableData: CreativeRow[] = useMemo(() => {
+    if (!status || !total_criativos || total_criativos === 0) return [];
+
+    const total = total_criativos;
+
+    const rows: CreativeRow[] = [
+      {
+        status: 'Aprovados',
+        quantidade: status.aprovados,
+        percentual: `${((status.aprovados / total) * 100).toFixed(2)}%`,
+      },
+      {
+        status: 'Rascunhos',
+        quantidade: status.rascunhos,
+        percentual: `${((status.rascunhos / total) * 100).toFixed(2)}%`,
+      },
+      {
+        status: 'Em Revisão',
+        quantidade: status.em_revisao,
+        percentual: `${((status.em_revisao / total) * 100).toFixed(2)}%`,
+      },
+      {
+        status: 'Rejeitados',
+        quantidade: status.rejeitados,
+        percentual: `${((status.rejeitados / total) * 100).toFixed(2)}%`,
+      },
+    ];
+
+    rows.push({
+      status: 'Taxa de Aprovação',
+      quantidade: status.aprovados,
+      percentual: status.taxa_aprovacao,
+    });
+
+    return rows;
+  }, [status, total_criativos]);
+
+  const columns: ColumnDef<CreativeRow>[] = useMemo(() => [
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <span className="font-medium">{row.original.status}</span>,
+    },
+    {
+      accessorKey: 'quantidade',
+      header: 'Quantidade',
+      cell: ({ row }) => (
+        <span className="block text-right font-semibold text-slate-700">
+          {row.original.quantidade.toLocaleString('pt-BR')}
+        </span>
+      ),
+    },
+    {
+      accessorKey: 'percentual',
+      header: 'Percentual',
+      cell: ({ row }) => (
+        <span className="block text-right text-slate-600">{row.original.percentual}</span>
+      ),
+    },
+  ], []);
+
+  const metricValuesByStatus = useMemo(() => {
+    if (!status || tableData.length === 0) return [];
+
+    return tableData
+      .filter((row) => row.status !== 'Taxa de Aprovação')
+      .map((row) => ({
+        label: row.status,
+        metrics: {
+          quantidade: row.quantidade,
+          percentual: parsePercent(row.percentual),
+        } satisfies Record<MetricKey, number>,
+      }));
+  }, [status, tableData]);
+
+  const selectedMetricConfig = useMemo<MetricOption>(() => {
+    return METRIC_OPTIONS.find((option) => option.value === selectedMetric) ?? METRIC_OPTIONS[0];
+  }, [selectedMetric]);
+
+  const chartData = useMemo(
+    () =>
+      metricValuesByStatus.map(({ label, metrics }) => ({
+        x: label,
+        y: metrics[selectedMetric] ?? 0,
+      })),
+    [metricValuesByStatus, selectedMetric]
+  );
+
+  const formatForMetric = useCallback(
+    (value: number) => {
+      const safeValue = Number.isFinite(value) ? value : 0;
+      return selectedMetricConfig.formatter(safeValue);
+    },
+    [selectedMetricConfig]
+  );
+
+  const chartRenderer = useCallback(() => {
+    if (!chartData.length) {
+      return (
+        <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center text-sm text-muted-foreground">
+          Não há dados suficientes para gerar o gráfico agora.
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-slate-700">Métrica do gráfico</p>
+            <p className="text-xs text-muted-foreground">
+              Compare o mix de criativos por volume ou percentual.
+            </p>
+          </div>
+          <Select value={selectedMetric} onValueChange={(value) => setSelectedMetric(value as MetricKey)}>
+            <SelectTrigger size="sm" className="min-w-[200px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {METRIC_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-3">
+          <div className="h-[320px] w-full">
+            <BarChart
+              data={chartData}
+              seriesLabel={selectedMetricConfig.label}
+              title={`Distribuição de Criativos (${selectedMetricConfig.label})`}
+              subtitle={selectedMetricConfig.description}
+              containerClassName="h-full"
+              axisBottom={{
+                tickRotation: -25,
+                legend: 'Status',
+                legendOffset: 36,
+              }}
+              axisLeft={{
+                legend: selectedMetricConfig.axisLabel,
+                legendOffset: -60,
+                format: (value: string | number) =>
+                  formatForMetric(typeof value === 'number' ? value : Number.parseFloat(value)),
+              }}
+              colors={{ scheme: 'pastel1' }}
+              padding={0.4}
+              enableLabel
+              labelFormat={(value: number) => formatForMetric(value)}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            A taxa de aprovação considera criativos aprovados sobre o total produzido no período.
+          </p>
+        </div>
+      </div>
+    );
+  }, [chartData, formatForMetric, selectedMetric, selectedMetricConfig]);
+
+  const periodoTexto = periodo_dias ? `${periodo_dias} dias` : 'período não informado';
+  const totalTexto = total_criativos ?? 0;
+  const taxaAprovacao = status ? status.taxa_aprovacao : '0%';
+
+  const summaryMessage = success
+    ? `${message} • Período: ${periodoTexto} • Total de criativos: ${totalTexto} • Taxa de aprovação: ${taxaAprovacao}`
+    : message;
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <Card className="border-pink-200 bg-pink-50">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-lg text-pink-900">🎨 Performance de Criativos</h3>
-              <p className="text-sm text-pink-700 mt-1">
-                {total_criativos} criativos • Período: {periodo_dias} dias
-              </p>
-            </div>
-            <Palette className="h-8 w-8 text-pink-600" />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Taxa de Aprovação */}
-      {status && (
-        <>
-          <Card className={`border-2 ${taxaAprovacao >= 70 ? 'border-green-300 bg-green-50' : taxaAprovacao >= 50 ? 'border-yellow-300 bg-yellow-50' : 'border-red-300 bg-red-50'}`}>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <p className="text-sm text-gray-600">Taxa de Aprovação</p>
-                <p className={`text-5xl font-bold mt-2 ${taxaAprovacao >= 70 ? 'text-green-700' : taxaAprovacao >= 50 ? 'text-yellow-700' : 'text-red-700'}`}>
-                  {status.taxa_aprovacao}
-                </p>
-                <p className="text-sm text-gray-500 mt-1">
-                  {status.aprovados} de {total_criativos} aprovados
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Status Breakdown */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Status dos Criativos</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-4 bg-green-50 rounded-lg border-2 border-green-300">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CheckCircle className="h-5 w-5 text-green-600" />
-                    <p className="font-semibold text-green-900">Aprovados</p>
-                  </div>
-                  <p className="text-3xl font-bold text-green-700">{status.aprovados}</p>
-                </div>
-
-                <div className="p-4 bg-gray-50 rounded-lg border-2 border-gray-300">
-                  <div className="flex items-center gap-2 mb-2">
-                    <FileEdit className="h-5 w-5 text-gray-600" />
-                    <p className="font-semibold text-gray-900">Rascunhos</p>
-                  </div>
-                  <p className="text-3xl font-bold text-gray-700">{status.rascunhos}</p>
-                </div>
-
-                <div className="p-4 bg-blue-50 rounded-lg border-2 border-blue-300">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Clock className="h-5 w-5 text-blue-600" />
-                    <p className="font-semibold text-blue-900">Em Revisão</p>
-                  </div>
-                  <p className="text-3xl font-bold text-blue-700">{status.em_revisao}</p>
-                </div>
-
-                <div className="p-4 bg-red-50 rounded-lg border-2 border-red-300">
-                  <div className="flex items-center gap-2 mb-2">
-                    <XCircle className="h-5 w-5 text-red-600" />
-                    <p className="font-semibold text-red-900">Rejeitados</p>
-                  </div>
-                  <p className="text-3xl font-bold text-red-700">{status.rejeitados}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Insights */}
-          <Card className="bg-gradient-to-br from-pink-50 to-purple-50 border-pink-200">
-            <CardContent className="pt-6">
-              <div className="space-y-2 text-sm">
-                <p className="font-semibold text-pink-900">💡 Insights:</p>
-                {taxaAprovacao >= 70 && (
-                  <p className="text-gray-700">✅ Excelente taxa de aprovação! Seus criativos estão bem alinhados.</p>
-                )}
-                {taxaAprovacao < 50 && (
-                  <p className="text-gray-700">⚠️ Taxa de aprovação baixa. Revise compliance e diretrizes das plataformas.</p>
-                )}
-                {status.rejeitados > total_criativos! * 0.2 && (
-                  <p className="text-gray-700">⚠️ Mais de 20% de criativos rejeitados. Considere ajustar copy e imagens.</p>
-                )}
-                {status.em_revisao > status.aprovados && (
-                  <p className="text-gray-700">⏳ Muitos criativos em revisão. Acompanhe para aprovar rapidamente.</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </>
-      )}
-    </div>
+    <ArtifactDataTable<CreativeRow>
+      data={tableData}
+      columns={columns}
+      title="Performance de Criativos"
+      icon={Palette}
+      iconColor="text-pink-600"
+      message={summaryMessage}
+      success={success}
+      count={tableData.length}
+      exportFileName="paid-traffic-creatives"
+      pageSize={Math.min(10, Math.max(tableData.length, 5))}
+      chartRenderer={chartRenderer}
+    />
   );
 }

@@ -1,7 +1,17 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, DollarSign, BarChart3 } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import { ColumnDef } from '@tanstack/react-table';
+import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import { BarChart } from '@/components/charts/BarChart';
+import { Gauge } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface CostMetricsResultProps {
   success: boolean;
@@ -21,170 +31,280 @@ interface CostMetricsResultProps {
   };
 }
 
+type MetricRow = {
+  indicador: string;
+  valor: string;
+  categoria: 'visao_geral' | 'custos_unitarios';
+};
+
+const BENCHMARKS = {
+  cpm: 25, // referência média para plataformas sociais
+  cpc: 2, // CPC esperado em campanhas bem otimizadas
+  cpa: 100, // Meta genérica para conversões (ajuste conforme negócio)
+  ctr: 2, // CTR saudável (%)
+} as const;
+
+const METRIC_OPTIONS = [
+  {
+    value: 'cpm',
+    label: 'CPM',
+    axisLabel: 'CPM (R$)',
+    description: 'Custo por mil impressões. Menor é melhor.',
+    benchmark: BENCHMARKS.cpm,
+    extractor: (metricas: CostMetricsResultProps['metricas']) =>
+      metricas ? parseCurrency(metricas.cpm) : 0,
+    formatter: (value: number) =>
+      value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+  },
+  {
+    value: 'cpc',
+    label: 'CPC',
+    axisLabel: 'CPC (R$)',
+    description: 'Custo por clique. Indicador de eficiência do tráfego.',
+    benchmark: BENCHMARKS.cpc,
+    extractor: (metricas) =>
+      metricas ? parseCurrency(metricas.cpc) : 0,
+    formatter: (value: number) =>
+      value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+  },
+  {
+    value: 'cpa',
+    label: 'CPA',
+    axisLabel: 'CPA (R$)',
+    description: 'Custo por aquisição. Mostra quanto custa converter.',
+    benchmark: BENCHMARKS.cpa,
+    extractor: (metricas) =>
+      metricas ? parseCurrency(metricas.cpa) : 0,
+    formatter: (value: number) =>
+      value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+  },
+  {
+    value: 'ctr',
+    label: 'CTR',
+    axisLabel: 'CTR (%)',
+    description: 'Taxa de cliques. Indica relevância do anúncio.',
+    benchmark: BENCHMARKS.ctr,
+    extractor: (metricas) =>
+      metricas ? parsePercentage(metricas.ctr) : 0,
+    formatter: (value: number) => `${value.toFixed(2)}%`,
+  },
+] as const;
+
+type MetricOption = (typeof METRIC_OPTIONS)[number];
+type MetricKey = MetricOption['value'];
+
+function parseCurrency(value: string | undefined): number {
+  if (!value) return 0;
+  const normalized = value.replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
+  const parsed = Number.parseFloat(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function parsePercentage(value: string | undefined): number {
+  if (!value) return 0;
+  const normalized = value.replace(/\s/g, '').replace('%', '').replace(',', '.');
+  const parsed = Number.parseFloat(normalized);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 export default function CostMetricsResult({
   success,
   message,
   periodo_dias,
   plataforma,
-  metricas
+  metricas,
 }: CostMetricsResultProps) {
-  if (!success) {
-    return (
-      <Card className="border-red-200 bg-red-50">
-        <CardHeader>
-          <CardTitle className="text-red-700 flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5" />
-            Erro no Cálculo de Métricas
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-red-600">{message}</p>
-        </CardContent>
-      </Card>
-    );
-  }
+  const [selectedMetric, setSelectedMetric] = useState<MetricKey>('cpm');
 
-  const getClassificationColor = (classification: string) => {
-    if (classification === 'Excelente') return 'text-green-600 bg-green-100 border-green-300';
-    if (classification === 'Boa') return 'text-blue-600 bg-blue-100 border-blue-300';
-    if (classification === 'Regular') return 'text-yellow-600 bg-yellow-100 border-yellow-300';
-    return 'text-red-600 bg-red-100 border-red-300';
-  };
+  const tableData: MetricRow[] = useMemo(() => {
+    if (!metricas) return [];
+
+    const overview: MetricRow[] = [
+      {
+        indicador: 'Gasto Total',
+        valor: `R$ ${metricas.total_gasto}`,
+        categoria: 'visao_geral',
+      },
+      {
+        indicador: 'Impressões',
+        valor: metricas.total_impressoes.toLocaleString('pt-BR'),
+        categoria: 'visao_geral',
+      },
+      {
+        indicador: 'Cliques',
+        valor: metricas.total_cliques.toLocaleString('pt-BR'),
+        categoria: 'visao_geral',
+      },
+      {
+        indicador: 'Conversões',
+        valor: metricas.total_conversoes.toLocaleString('pt-BR'),
+        categoria: 'visao_geral',
+      },
+    ];
+
+    const unitCosts: MetricRow[] = [
+      {
+        indicador: 'CPM',
+        valor: `R$ ${metricas.cpm}`,
+        categoria: 'custos_unitarios',
+      },
+      {
+        indicador: 'CPC',
+        valor: `R$ ${metricas.cpc}`,
+        categoria: 'custos_unitarios',
+      },
+      {
+        indicador: 'CPA',
+        valor: `R$ ${metricas.cpa}`,
+        categoria: 'custos_unitarios',
+      },
+      {
+        indicador: 'CTR',
+        valor: `${metricas.ctr}`,
+        categoria: 'custos_unitarios',
+      },
+      {
+        indicador: 'Classificação de Eficiência',
+        valor: metricas.classificacao_eficiencia,
+        categoria: 'custos_unitarios',
+      },
+    ];
+
+    return [...overview, ...unitCosts];
+  }, [metricas]);
+
+  const columns: ColumnDef<MetricRow>[] = useMemo(() => [
+    {
+      accessorKey: 'indicador',
+      header: 'Indicador',
+      cell: ({ row }) => <span className="font-medium">{row.original.indicador}</span>,
+    },
+    {
+      accessorKey: 'valor',
+      header: 'Valor',
+      cell: ({ row }) => <span className="block text-right text-slate-700">{row.original.valor}</span>,
+    },
+  ], []);
+
+  const selectedMetricConfig = useMemo<MetricOption>(() => {
+    return METRIC_OPTIONS.find((option) => option.value === selectedMetric) ?? METRIC_OPTIONS[0];
+  }, [selectedMetric]);
+
+  const chartData = useMemo(() => {
+    if (!metricas) return [];
+
+    const atual = selectedMetricConfig.extractor(metricas);
+    const benchmark = selectedMetricConfig.benchmark;
+
+    return [
+      { x: 'Atual', y: atual },
+      { x: 'Benchmark', y: benchmark },
+    ];
+  }, [metricas, selectedMetricConfig]);
+
+  const formatValue = useCallback(
+    (value: number) => selectedMetricConfig.formatter(value),
+    [selectedMetricConfig]
+  );
+
+  const chartRenderer = useCallback(() => {
+    if (!metricas) {
+      return (
+        <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center text-sm text-muted-foreground">
+          Nenhuma métrica disponível para calcular o gráfico.
+        </div>
+      );
+    }
+
+    const hasValues = chartData.some((point) => Number.isFinite(point.y) && point.y !== 0);
+
+    if (!hasValues) {
+      return (
+        <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center text-sm text-muted-foreground">
+          Valores insuficientes para gerar a comparação.
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-slate-700">Métrica comparada</p>
+            <p className="text-xs text-muted-foreground">
+              Veja como o desempenho atual se posiciona em relação a um benchmark de mercado.
+            </p>
+          </div>
+          <Select value={selectedMetric} onValueChange={(value) => setSelectedMetric(value as MetricKey)}>
+            <SelectTrigger size="sm" className="min-w-[220px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {METRIC_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-3">
+          <div className="h-[320px] w-full">
+            <BarChart
+              data={chartData}
+              seriesLabel={selectedMetricConfig.label}
+              title={`${selectedMetricConfig.label}: Atual vs Benchmark`}
+              subtitle={selectedMetricConfig.description}
+              containerClassName="h-full"
+              axisBottom={{
+                tickRotation: 0,
+                legend: 'Fonte',
+                legendOffset: 36,
+              }}
+              axisLeft={{
+                legend: selectedMetricConfig.axisLabel,
+                legendOffset: -60,
+                format: (value: string | number) => {
+                  const numeric = typeof value === 'number' ? value : Number.parseFloat(value);
+                  return formatValue(numeric);
+                },
+              }}
+              colors={{ scheme: 'accent' }}
+              padding={0.45}
+              enableLabel
+              labelFormat={(value: number) => formatValue(value)}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Benchmarks utilizados: CPM ≈ R$ {BENCHMARKS.cpm}, CPC ≈ R$ {BENCHMARKS.cpc}, CPA ≈ R$ {BENCHMARKS.cpa}, CTR ≈ {BENCHMARKS.ctr}%.
+          </p>
+        </div>
+      </div>
+    );
+  }, [chartData, formatValue, metricas, selectedMetric, selectedMetricConfig]);
+
+  const periodoTexto = periodo_dias ? `${periodo_dias} dias` : 'período não informado';
+  const plataformaTexto = plataforma?.trim() ? plataforma : 'Todas as plataformas';
+  const classificacao = metricas?.classificacao_eficiencia ?? 'Sem classificação';
+
+  const summaryMessage = success
+    ? `${message} • Plataforma: ${plataformaTexto} • Período: ${periodoTexto} • Classificação de eficiência: ${classificacao}`
+    : message;
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <Card className="border-cyan-200 bg-cyan-50">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-lg text-cyan-900">💵 Métricas de Custo</h3>
-              <p className="text-sm text-cyan-700 mt-1">
-                Plataforma: {plataforma} • Período: {periodo_dias} dias
-              </p>
-            </div>
-            <DollarSign className="h-8 w-8 text-cyan-600" />
-          </div>
-        </CardContent>
-      </Card>
-
-      {metricas && (
-        <>
-          {/* Classificação de Eficiência */}
-          <Card className={`border-2 ${getClassificationColor(metricas.classificacao_eficiencia)}`}>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <p className="text-sm text-gray-600">Classificação de Eficiência</p>
-                <p className="text-5xl font-bold mt-2">{metricas.classificacao_eficiencia}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Overview */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <BarChart3 className="h-5 w-5 text-cyan-600" />
-                Visão Geral
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center">
-                  <p className="text-sm text-gray-600">Gasto Total</p>
-                  <p className="text-2xl font-bold text-gray-800 mt-1">R$ {metricas.total_gasto}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-gray-600">Impressões</p>
-                  <p className="text-2xl font-bold text-gray-800 mt-1">{metricas.total_impressoes.toLocaleString()}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-gray-600">Cliques</p>
-                  <p className="text-2xl font-bold text-gray-800 mt-1">{metricas.total_cliques.toLocaleString()}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-sm text-gray-600">Conversões</p>
-                  <p className="text-2xl font-bold text-gray-800 mt-1">{metricas.total_conversoes}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Métricas de Custo */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Custos Unitários</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="p-4 bg-purple-50 rounded-lg border-2 border-purple-300">
-                  <p className="text-sm text-purple-600 font-medium">CPM</p>
-                  <p className="text-xs text-purple-500 mb-2">Custo por Mil Impressões</p>
-                  <p className="text-2xl font-bold text-purple-700">R$ {metricas.cpm}</p>
-                </div>
-
-                <div className="p-4 bg-blue-50 rounded-lg border-2 border-blue-300">
-                  <p className="text-sm text-blue-600 font-medium">CPC</p>
-                  <p className="text-xs text-blue-500 mb-2">Custo por Clique</p>
-                  <p className="text-2xl font-bold text-blue-700">R$ {metricas.cpc}</p>
-                </div>
-
-                <div className="p-4 bg-orange-50 rounded-lg border-2 border-orange-300">
-                  <p className="text-sm text-orange-600 font-medium">CPA</p>
-                  <p className="text-xs text-orange-500 mb-2">Custo por Aquisição</p>
-                  <p className="text-2xl font-bold text-orange-700">R$ {metricas.cpa}</p>
-                </div>
-
-                <div className="p-4 bg-green-50 rounded-lg border-2 border-green-300">
-                  <p className="text-sm text-green-600 font-medium">CTR</p>
-                  <p className="text-xs text-green-500 mb-2">Taxa de Cliques</p>
-                  <p className="text-2xl font-bold text-green-700">{metricas.ctr}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Benchmarks */}
-          <Card className="bg-gradient-to-br from-cyan-50 to-blue-50 border-cyan-200">
-            <CardContent className="pt-6">
-              <div className="space-y-2 text-sm">
-                <p className="font-semibold text-cyan-900">📊 Benchmarks de Mercado:</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  <div>
-                    <p className="text-gray-700"><strong>CPM:</strong> Meta R$10-30 | Google Display R$5-15</p>
-                    <p className="text-gray-700"><strong>CPC:</strong> Meta R$0.50-2 | Google R$1-5</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-700"><strong>CPA:</strong> E-commerce R$20-50 | SaaS R$100-300</p>
-                    <p className="text-gray-700"><strong>CTR:</strong> Meta 1-2% = Bom | Google 3-5% = Bom</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Insights */}
-          <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200">
-            <CardContent className="pt-6">
-              <div className="space-y-2 text-sm">
-                <p className="font-semibold text-purple-900">💡 Insights:</p>
-                {metricas.classificacao_eficiencia === 'Excelente' && (
-                  <p className="text-gray-700">✅ Eficiência excelente! Suas métricas estão otimizadas.</p>
-                )}
-                {metricas.classificacao_eficiencia === 'Baixa' && (
-                  <p className="text-gray-700">⚠️ Eficiência baixa. Revise segmentação e criativos para reduzir custos.</p>
-                )}
-                {parseFloat(metricas.ctr) < 1 && (
-                  <p className="text-gray-700">⚠️ CTR baixo. Teste novos criativos e copy mais atrativos.</p>
-                )}
-                {parseFloat(metricas.cpa) > 200 && (
-                  <p className="text-gray-700">⚠️ CPA alto. Otimize landing page e funil de conversão.</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </>
-      )}
-    </div>
+    <ArtifactDataTable<MetricRow>
+      data={tableData}
+      columns={columns}
+      title="Métricas de Custo"
+      icon={Gauge}
+      iconColor="text-cyan-600"
+      message={summaryMessage}
+      success={success}
+      count={tableData.length}
+      exportFileName="paid-traffic-cost-metrics"
+      pageSize={Math.min(10, Math.max(tableData.length, 6))}
+      chartRenderer={chartRenderer}
+    />
   );
 }

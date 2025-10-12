@@ -1,7 +1,17 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import { ColumnDef } from '@tanstack/react-table';
+import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import { BarChart } from '@/components/charts/BarChart';
+import { Activity } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface SpendingTrendsResultProps {
   success: boolean;
@@ -21,146 +31,255 @@ interface SpendingTrendsResultProps {
   }>;
 }
 
+type TrendRow = {
+  data: string;
+  gasto: string;
+  receita: string;
+  roas: string;
+};
+
+const METRIC_OPTIONS = [
+  {
+    value: 'gasto',
+    label: 'Gasto Diário',
+    axisLabel: 'Gasto (R$)',
+    description: 'Investimento diário em mídia paga.',
+    formatter: (value: number) =>
+      value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+  },
+  {
+    value: 'receita',
+    label: 'Receita Diária',
+    axisLabel: 'Receita (R$)',
+    description: 'Receita atribuída por dia.',
+    formatter: (value: number) =>
+      value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
+  },
+  {
+    value: 'roas',
+    label: 'ROAS Diário',
+    axisLabel: 'ROAS (x)',
+    description: 'Retorno sobre investimento calculado diariamente.',
+    formatter: (value: number) => `${value.toFixed(2)}x`,
+  },
+] as const;
+
+type MetricOption = (typeof METRIC_OPTIONS)[number];
+type MetricKey = MetricOption['value'];
+
+const parseNumericValue = (value: unknown): number => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    const compact = value.replace(/\s/g, '');
+    let sanitized = compact.replace(/[^0-9,.-]/g, '');
+
+    if (sanitized.includes('.') && sanitized.includes(',')) {
+      const lastComma = sanitized.lastIndexOf(',');
+      const lastDot = sanitized.lastIndexOf('.');
+      if (lastComma > lastDot) {
+        sanitized = sanitized.replace(/\./g, '').replace(',', '.');
+      } else {
+        sanitized = sanitized.replace(/,/g, '');
+      }
+    } else {
+      sanitized = sanitized.replace(',', '.');
+    }
+
+    const parsed = Number.parseFloat(sanitized);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+
+  return 0;
+};
+
+const formatDateLabel = (isoDate: string) => {
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return isoDate;
+  return date.toLocaleDateString('pt-BR');
+};
+
 export default function SpendingTrendsResult({
   success,
   message,
   periodo_dias,
   plataforma,
   estatisticas,
-  gastos_diarios
+  gastos_diarios,
 }: SpendingTrendsResultProps) {
-  if (!success) {
+  const [selectedMetric, setSelectedMetric] = useState<MetricKey>('gasto');
+
+  const tableData: TrendRow[] = useMemo(() => {
+    if (!gastos_diarios || gastos_diarios.length === 0) return [];
+
+    return gastos_diarios.map((registro) => {
+      const gastoValue = parseNumericValue(registro.gasto);
+      const receitaValue = parseNumericValue(registro.receita);
+      const roas = gastoValue > 0 ? receitaValue / gastoValue : 0;
+
+      return {
+        data: formatDateLabel(registro.data),
+        gasto: registro.gasto,
+        receita: registro.receita,
+        roas: `${roas.toFixed(2)}`,
+      };
+    });
+  }, [gastos_diarios]);
+
+  const columns: ColumnDef<TrendRow>[] = useMemo(() => [
+    {
+      accessorKey: 'data',
+      header: 'Data',
+      cell: ({ row }) => <span className="font-medium">{row.original.data}</span>,
+    },
+    {
+      accessorKey: 'gasto',
+      header: 'Gasto (R$)',
+      cell: ({ row }) => (
+        <span className="block text-right font-semibold text-slate-700">R$ {row.original.gasto}</span>
+      ),
+    },
+    {
+      accessorKey: 'receita',
+      header: 'Receita (R$)',
+      cell: ({ row }) => (
+        <span className="block text-right font-semibold text-emerald-600">R$ {row.original.receita}</span>
+      ),
+    },
+    {
+      accessorKey: 'roas',
+      header: 'ROAS',
+      cell: ({ row }) => (
+        <span className="block text-right font-semibold text-purple-600">{row.original.roas}x</span>
+      ),
+    },
+  ], []);
+
+  const metricValuesByDay = useMemo(() => {
+    if (tableData.length === 0) return [];
+
+    return tableData.map((row) => ({
+      label: row.data,
+      metrics: {
+        gasto: parseNumericValue(row.gasto),
+        receita: parseNumericValue(row.receita),
+        roas: parseNumericValue(row.roas),
+      } satisfies Record<MetricKey, number>,
+    }));
+  }, [tableData]);
+
+  const selectedMetricConfig = useMemo<MetricOption>(() => {
+    return METRIC_OPTIONS.find((option) => option.value === selectedMetric) ?? METRIC_OPTIONS[0];
+  }, [selectedMetric]);
+
+  const chartData = useMemo(
+    () =>
+      metricValuesByDay.map(({ label, metrics }) => ({
+        x: label,
+        y: metrics[selectedMetric] ?? 0,
+      })),
+    [metricValuesByDay, selectedMetric]
+  );
+
+  const formatForMetric = useCallback(
+    (value: number) => {
+      const safeValue = Number.isFinite(value) ? value : 0;
+      return selectedMetricConfig.formatter(safeValue);
+    },
+    [selectedMetricConfig]
+  );
+
+  const chartRenderer = useCallback(() => {
+    if (!chartData.length) {
+      return (
+        <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center text-sm text-muted-foreground">
+          Não há registros suficientes para gerar o gráfico.
+        </div>
+      );
+    }
+
     return (
-      <Card className="border-red-200 bg-red-50">
-        <CardHeader>
-          <CardTitle className="text-red-700 flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5" />
-            Erro na Análise de Tendências
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-red-600">{message}</p>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-slate-700">Métrica do gráfico</p>
+            <p className="text-xs text-muted-foreground">
+              Visualize a tendência diária de gasto, receita ou ROAS.
+            </p>
+          </div>
+          <Select value={selectedMetric} onValueChange={(value) => setSelectedMetric(value as MetricKey)}>
+            <SelectTrigger size="sm" className="min-w-[200px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {METRIC_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-3">
+          <div className="h-[360px] w-full">
+            <BarChart
+              data={chartData}
+              seriesLabel={selectedMetricConfig.label}
+              title={`${selectedMetricConfig.label} por Dia`}
+              subtitle={selectedMetricConfig.description}
+              containerClassName="h-full"
+              axisBottom={{
+                tickRotation: -45,
+                legend: 'Data',
+                legendOffset: 48,
+              }}
+              axisLeft={{
+                legend: selectedMetricConfig.axisLabel,
+                legendOffset: -60,
+                format: (value: string | number) =>
+                  formatForMetric(typeof value === 'number' ? value : Number.parseFloat(value)),
+              }}
+              colors={{ scheme: 'nivo' }}
+              padding={0.2}
+              enableLabel={false}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Os valores exibidos correspondem aos registros retornados pela consulta SQL.
+          </p>
+        </div>
+      </div>
     );
-  }
+  }, [chartData, formatForMetric, selectedMetric, selectedMetricConfig]);
 
-  const getTrendIcon = (tendencia: string) => {
-    if (tendencia === 'Crescente') return <TrendingUp className="h-6 w-6 text-green-600" />;
-    if (tendencia === 'Decrescente') return <TrendingDown className="h-6 w-6 text-red-600" />;
-    return <Minus className="h-6 w-6 text-gray-600" />;
-  };
+  const periodoTexto = periodo_dias ? `${periodo_dias} dias` : 'período não informado';
+  const plataformaTexto = plataforma?.trim() ? plataforma : 'Todas as plataformas';
+  const tendencia = estatisticas?.tendencia ?? 'Sem tendência calculada';
+  const gastoMedio = estatisticas?.gasto_medio_dia
+    ? `Gasto médio/dia: R$ ${estatisticas.gasto_medio_dia}`
+    : 'Gasto médio não informado';
+  const totalRegistros = tableData.length;
 
-  const getTrendColor = (tendencia: string) => {
-    if (tendencia === 'Crescente') return 'border-green-300 bg-green-50 text-green-700';
-    if (tendencia === 'Decrescente') return 'border-red-300 bg-red-50 text-red-700';
-    return 'border-gray-300 bg-gray-50 text-gray-700';
-  };
+  const summaryMessage = success
+    ? `${message} • Plataforma: ${plataformaTexto} • Período analisado: ${periodoTexto} • Tendência: ${tendencia} • ${gastoMedio} • Registros: ${totalRegistros}`
+    : message;
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <Card className="border-indigo-200 bg-indigo-50">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-semibold text-lg text-indigo-900">📈 Tendências de Gasto</h3>
-              <p className="text-sm text-indigo-700 mt-1">
-                Plataforma: {plataforma} • Período: {periodo_dias} dias
-              </p>
-            </div>
-            {estatisticas && getTrendIcon(estatisticas.tendencia)}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Tendência */}
-      {estatisticas && (
-        <>
-          <Card className={`border-2 ${getTrendColor(estatisticas.tendencia)}`}>
-            <CardContent className="pt-6">
-              <div className="text-center">
-                <p className="text-sm text-gray-600">Tendência Geral</p>
-                <p className="text-5xl font-bold mt-2">{estatisticas.tendencia}</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Estatísticas */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Estatísticas de Gasto</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="p-4 bg-blue-50 rounded-lg border-2 border-blue-300">
-                  <p className="text-sm text-blue-600 font-medium">Gasto Médio/Dia</p>
-                  <p className="text-3xl font-bold text-blue-700 mt-1">R$ {estatisticas.gasto_medio_dia}</p>
-                </div>
-
-                <div className="p-4 bg-red-50 rounded-lg border-2 border-red-300">
-                  <p className="text-sm text-red-600 font-medium">Gasto Máximo</p>
-                  <p className="text-3xl font-bold text-red-700 mt-1">R$ {estatisticas.gasto_maximo}</p>
-                </div>
-
-                <div className="p-4 bg-green-50 rounded-lg border-2 border-green-300">
-                  <p className="text-sm text-green-600 font-medium">Gasto Mínimo</p>
-                  <p className="text-3xl font-bold text-green-700 mt-1">R$ {estatisticas.gasto_minimo}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </>
-      )}
-
-      {/* Gastos Diários */}
-      {gastos_diarios && gastos_diarios.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Gastos Diários (últimos registros)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {gastos_diarios.slice(-15).reverse().map((dia, idx) => {
-                const gastoValue = parseFloat(dia.gasto);
-                const receitaValue = parseFloat(dia.receita);
-                const roas = gastoValue > 0 ? receitaValue / gastoValue : 0;
-
-                return (
-                  <div key={idx} className="p-3 bg-gray-50 rounded-lg border flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold">{new Date(dia.data).toLocaleDateString('pt-BR')}</p>
-                      <p className="text-xs text-gray-600">ROAS: {roas.toFixed(2)}x</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-gray-800">R$ {dia.gasto}</p>
-                      <p className="text-xs text-gray-600">Receita: R$ {dia.receita}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Insights */}
-      <Card className="bg-gradient-to-br from-indigo-50 to-blue-50 border-indigo-200">
-        <CardContent className="pt-6">
-          <div className="space-y-2 text-sm">
-            <p className="font-semibold text-indigo-900">💡 Insights:</p>
-            {estatisticas?.tendencia === 'Crescente' && (
-              <p className="text-gray-700">📈 Gasto crescente. Verifique se ROAS está acompanhando o aumento.</p>
-            )}
-            {estatisticas?.tendencia === 'Decrescente' && (
-              <p className="text-gray-700">📉 Gasto decrescente. Analise se é estratégico ou há problemas nas campanhas.</p>
-            )}
-            {estatisticas?.tendencia === 'Estável' && (
-              <p className="text-gray-700">✅ Gasto estável. Mantenha monitoramento para otimizações contínuas.</p>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <ArtifactDataTable<TrendRow>
+      data={tableData}
+      columns={columns}
+      title="Tendências de Gasto"
+      icon={Activity}
+      iconColor="text-indigo-600"
+      message={summaryMessage}
+      success={success}
+      count={tableData.length}
+      exportFileName="paid-traffic-spending-trends"
+      pageSize={Math.min(15, Math.max(tableData.length, 8))}
+      chartRenderer={chartRenderer}
+    />
   );
 }
