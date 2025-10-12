@@ -52,6 +52,8 @@ import InventoryList from '../tools/InventoryList';
 import ContasAPagarList, { type ContaAPagarRow } from '../tools/ContasAPagarList';
 import FluxoCaixaResult, { type FluxoCaixaRow } from '../tools/FluxoCaixaResult';
 import FinancialDataTable from '../tools/FinancialDataTable';
+import GenericResultTable from '../tools/GenericResultTable';
+import { BarChart3, DollarSign, LineChart, TrendingUp, AlertTriangle } from 'lucide-react';
 import OrganicMarketingDataTable from '../tools/OrganicMarketingDataTable';
 import PaidTrafficDataTable from '../tools/PaidTrafficDataTable';
 import InventoryDataTable from '../tools/InventoryDataTable';
@@ -3953,13 +3955,15 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {contasAReceberTool.state === 'output-available' && (
-                <ContasAReceberTable
+                <GenericResultTable
+                  title="Contas a Receber"
+                  icon={DollarSign}
+                  iconColor="text-emerald-600"
                   success={(contasAReceberTool.output as GetContasAReceberToolOutput).success}
-                  count={(contasAReceberTool.output as GetContasAReceberToolOutput).count}
-                  rows={((contasAReceberTool.output as GetContasAReceberToolOutput).rows ?? []) as ContaReceberRow[]}
                   message={(contasAReceberTool.output as GetContasAReceberToolOutput).message}
+                  rows={((contasAReceberTool.output as GetContasAReceberToolOutput).rows ?? []) as Array<Record<string, unknown>>}
+                  count={(contasAReceberTool.output as GetContasAReceberToolOutput).count}
                   sql_query={(contasAReceberTool.output as GetContasAReceberToolOutput).sql_query}
-                  error={undefined}
                 />
               )}
             </div>
@@ -4090,12 +4094,15 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {financialDataTool.state === 'output-available' && (
-                <FinancialDataTable
+                <GenericResultTable
+                  title="Dados Financeiros"
+                  icon={DollarSign}
+                  iconColor="text-green-600"
                   success={(financialDataTool.output as GetFinancialDataToolOutput).success}
-                  count={(financialDataTool.output as GetFinancialDataToolOutput).count}
-                  data={(financialDataTool.output as GetFinancialDataToolOutput).data}
                   message={(financialDataTool.output as GetFinancialDataToolOutput).message}
-                  error={(financialDataTool.output as GetFinancialDataToolOutput).error}
+                  rows={(financialDataTool.output as GetFinancialDataToolOutput).data as Array<Record<string, unknown>>}
+                  count={(financialDataTool.output as GetFinancialDataToolOutput).count}
+                  sql_query={(financialDataTool.output as GetFinancialDataToolOutput).sql_query}
                 />
               )}
             </div>
@@ -4159,11 +4166,14 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {contasAPagarTool.state === 'output-available' && (
-                <ContasAPagarList
+                <GenericResultTable
+                  title="Contas a Pagar"
+                  icon={DollarSign}
+                  iconColor="text-red-600"
                   success={(contasAPagarTool.output as GetContasAPagarToolOutput).success}
-                  count={(contasAPagarTool.output as GetContasAPagarToolOutput).count}
-                  rows={((contasAPagarTool.output as GetContasAPagarToolOutput).rows ?? []) as ContaAPagarRow[]}
                   message={(contasAPagarTool.output as GetContasAPagarToolOutput).message}
+                  rows={((contasAPagarTool.output as GetContasAPagarToolOutput).rows ?? []) as Array<Record<string, unknown>>}
+                  count={(contasAPagarTool.output as GetContasAPagarToolOutput).count}
                   sql_query={(contasAPagarTool.output as GetContasAPagarToolOutput).sql_query}
                 />
               )}
@@ -4262,6 +4272,141 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   message={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).message}
                   error={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).error}
                   sql_query={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-cashflowOverview') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-cashflowOverview" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <GenericResultTable
+                  title="Fluxo de Caixa"
+                  icon={TrendingUp}
+                  iconColor="text-green-600"
+                  success={(tool.output as any).success}
+                  message={(tool.output as any).message}
+                  rows={(tool.output as any).rows as Array<Record<string, unknown>>}
+                  sql_query={(tool.output as any).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-accountsAgingReceivables' || part.type === 'tool-accountsAgingPayables') {
+          const tool = part as NexusToolUIPart;
+          const title = part.type === 'tool-accountsAgingReceivables' ? 'Aging Contas a Receber' : 'Aging Contas a Pagar';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <GenericResultTable
+                  title={title}
+                  icon={BarChart3}
+                  iconColor="text-blue-600"
+                  success={(tool.output as any).success}
+                  message={(tool.output as any).message}
+                  rows={(tool.output as any).rows as Array<Record<string, unknown>>}
+                  sql_query={(tool.output as any).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-receivablesForecast' || part.type === 'tool-payablesSchedule') {
+          const tool = part as NexusToolUIPart;
+          const title = part.type === 'tool-receivablesForecast' ? 'Previsão de Recebimentos' : 'Cronograma de Pagamentos';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <GenericResultTable
+                  title={title}
+                  icon={LineChart}
+                  iconColor="text-indigo-600"
+                  success={(tool.output as any).success}
+                  message={(tool.output as any).message}
+                  rows={(tool.output as any).rows as Array<Record<string, unknown>>}
+                  sql_query={(tool.output as any).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-expenseBreakdownByCategory' || part.type === 'tool-profitabilityByCategory') {
+          const tool = part as NexusToolUIPart;
+          const title = part.type === 'tool-expenseBreakdownByCategory' ? 'Despesas por Categoria' : 'Resultado por Categoria';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <GenericResultTable
+                  title={title}
+                  icon={BarChart3}
+                  iconColor="text-amber-600"
+                  success={(tool.output as any).success}
+                  message={(tool.output as any).message}
+                  rows={(tool.output as any).rows as Array<Record<string, unknown>>}
+                  sql_query={(tool.output as any).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-bankReconciliationStatus' || part.type === 'tool-detectFinancialAnomalies') {
+          const tool = part as NexusToolUIPart;
+          const title = part.type === 'tool-bankReconciliationStatus' ? 'Conciliação Bancária' : 'Anomalias Financeiras';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <GenericResultTable
+                  title={title}
+                  icon={AlertTriangle}
+                  iconColor="text-rose-600"
+                  success={(tool.output as any).success}
+                  message={(tool.output as any).message}
+                  rows={(tool.output as any).rows as Array<Record<string, unknown>>}
+                  sql_query={(tool.output as any).sql_query}
+                  sql_queries={(tool.output as any).sql_queries}
                 />
               )}
             </div>
