@@ -58,13 +58,13 @@ const METRIC_OPTIONS = [
     label: 'Receita',
     axisLabel: 'Receita (R$)',
     description: 'Receita prevista versus média histórica (gasto * ROAS).',
-    historicoExtractor: (historico) => {
+    historicoExtractor: (historico: AdPerformanceForecastResultProps['historico']) => {
       if (!historico) return 0;
       const gasto = parseCurrency(historico.gasto_medio_dia);
       const roas = parseNumeric(historico.roas_medio);
       return gasto * roas;
     },
-    previsaoExtractor: (previsao) =>
+    previsaoExtractor: (previsao: AdPerformanceForecastResultProps['previsao']) =>
       previsao ? parseCurrency(previsao.receita_prevista) : 0,
     historicoFormatter: (value: number) =>
       value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
@@ -76,9 +76,9 @@ const METRIC_OPTIONS = [
     label: 'Conversões',
     axisLabel: 'Conversões',
     description: 'Comparação entre conversões diárias médias e previstas.',
-    historicoExtractor: (historico) =>
+    historicoExtractor: (historico: AdPerformanceForecastResultProps['historico']) =>
       historico ? parseNumeric(historico.conversoes_medio_dia) : 0,
-    previsaoExtractor: (previsao) =>
+    previsaoExtractor: (previsao: AdPerformanceForecastResultProps['previsao']) =>
       previsao ? Number(previsao.conversoes_previstas ?? 0) : 0,
     historicoFormatter: (value: number) => value.toLocaleString('pt-BR', { maximumFractionDigits: 1 }),
     previsaoFormatter: (value: number) => value.toLocaleString('pt-BR', { maximumFractionDigits: 0 }),
@@ -88,9 +88,9 @@ const METRIC_OPTIONS = [
     label: 'ROAS',
     axisLabel: 'ROAS (x)',
     description: 'ROAS médio histórico comparado com o esperado.',
-    historicoExtractor: (historico) =>
+    historicoExtractor: (historico: AdPerformanceForecastResultProps['historico']) =>
       historico ? parseNumeric(historico.roas_medio) : 0,
-    previsaoExtractor: (previsao) =>
+    previsaoExtractor: (previsao: AdPerformanceForecastResultProps['previsao']) =>
       previsao ? parseNumeric(previsao.roas_esperado) : 0,
     historicoFormatter: (value: number) => `${value.toFixed(2)}x`,
     previsaoFormatter: (value: number) => `${value.toFixed(2)}x`,
