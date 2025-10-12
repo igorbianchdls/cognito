@@ -184,21 +184,14 @@ export default function AdsPlatformsResult({
         columns={columns}
         title="Benchmark de Plataformas"
         icon={BarChart3}
-        iconColor="text-purple-600"
-        message={success ? tableMessage : message}
-        success={success}
-        count={tableData.length}
-        exportFileName="paid-traffic-platforms"
-        pageSize={Math.min(10, Math.max(tableData.length, 5))}
-      />
-      {sql_query && (
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-          <p className="mb-2 text-sm font-medium text-slate-700">SQL executada</p>
-          <pre className="max-h-64 overflow-auto whitespace-pre-wrap break-words font-mono text-xs text-slate-800">
-            {sql_query}
-          </pre>
-        </div>
-      )}
+      iconColor="text-purple-600"
+      message={success ? tableMessage : message}
+      success={success}
+      count={tableData.length}
+      exportFileName="paid-traffic-platforms"
+      pageSize={Math.min(10, Math.max(tableData.length, 5))}
+      sqlQuery={sql_query}
+    />
     </div>
   );
 }
