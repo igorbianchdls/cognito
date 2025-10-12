@@ -1393,165 +1393,34 @@ type ForecastDeliveryCostsToolOutput = {
   insights?: string[];
 };
 
-type AnalyzeContentPerformanceToolOutput = {
+type OrganicMetricsRow = {
+  plataforma: string | null;
+  contas_vinculadas: number | string | null;
+  campanhas_vinculadas: number | string | null;
+  gasto_total: number | string | null;
+  receita_total: number | string | null;
+  conversoes_total: number | string | null;
+  roas: number | string | null;
+  taxa_conversao_percent: number | string | null;
+  ctr_percent: number | string | null;
+};
+
+type OrganicGenericToolOutput = {
   success: boolean;
   message: string;
   periodo_dias?: number;
-  plataforma?: string;
-  metricas_gerais?: {
-    total_posts: number;
-    total_curtidas: number;
-    total_comentarios: number;
-    total_compartilhamentos: number;
-    total_visualizacoes: number;
-    total_alcance: number;
-    engagement_total: number;
-    engagement_rate: string;
-    alcance_medio_por_post: string;
-    classificacao: string;
-  };
-  performance_por_tipo?: Array<{
-    tipo: string;
-    total_posts: number;
-    engagement_total: number;
-    alcance_total: number;
-    engagement_medio_por_post: string;
-    engagement_rate: string;
-  }>;
+  data?: OrganicMetricsRow[];
+  sql_query?: string;
+  error?: string;
 };
 
-type ComparePlatformPerformanceToolOutput = {
-  success: boolean;
-  message: string;
-  periodo_dias?: number;
-  total_plataformas?: number;
-  melhor_plataforma?: string;
-  pior_plataforma?: string;
-  plataformas?: Array<{
-    plataforma: string;
-    contas_ativas: number;
-    total_seguidores: number;
-    total_publicacoes: number;
-    total_alcance: number;
-    engagement_total: number;
-    engagement_rate: string;
-    alcance_medio_por_post: string;
-    classificacao: string;
-    recomendacao: string;
-  }>;
-};
-
-type AnalyzeAudienceGrowthToolOutput = {
-  success: boolean;
-  message: string;
-  periodo_dias?: number;
-  crescimento?: {
-    seguidores_inicial: number;
-    seguidores_final: number;
-    crescimento_total: number;
-    taxa_crescimento: string;
-    crescimento_medio_semanal: number;
-    classificacao: string;
-  };
-  previsao?: {
-    seguidores_previstos_4_semanas: number;
-    crescimento_esperado: number;
-  };
-  historico_semanal?: Array<{
-    periodo: string;
-    seguidores: number;
-    data: string;
-  }>;
-};
-
-type IdentifyTopContentToolOutput = {
-  success: boolean;
-  message: string;
-  periodo_dias?: number;
-  total_analisados?: number;
-  top_posts?: Array<{
-    publicacao_id: string;
-    titulo: string;
-    tipo_post: string;
-    plataforma: string;
-    publicado_em: string;
-    curtidas: number;
-    comentarios: number;
-    compartilhamentos: number;
-    visualizacoes: number;
-    alcance: number;
-    engagement_total: number;
-    engagement_rate: string;
-    virality_score: string;
-    classificacao: string;
-  }>;
-};
-
-type AnalyzeContentMixToolOutput = {
-  success: boolean;
-  message: string;
-  periodo_dias?: number;
-  total_posts?: number;
-  frequencia?: {
-    posts_por_dia: string;
-    posts_por_semana: string;
-    dias_com_postagem: number;
-    dias_sem_postagem: number;
-    consistencia: string;
-    classificacao: string;
-  };
-  distribuicao_por_tipo?: Array<{
-    tipo: string;
-    quantidade: number;
-    percentual: string;
-  }>;
-  recomendacoes?: string[];
-};
-
-type ForecastEngagementToolOutput = {
-  success: boolean;
-  message: string;
-  forecast_days?: number;
-  lookback_days?: number;
-  historico?: {
-    media_engagement_semanal: number;
-    media_alcance_semanal: number;
-    tendencia: string;
-    slope: string;
-  };
-  previsao?: {
-    engagement_previsto_total: number;
-    alcance_previsto_total: number;
-    engagement_rate_previsto: string;
-    periodo: string;
-  };
-  insights?: string[];
-};
-
-type CalculateContentROIToolOutput = {
-  success: boolean;
-  message: string;
-  periodo_dias?: number;
-  total_posts?: number;
-  custos?: {
-    custo_por_post: string;
-    custo_total: string;
-  };
-  resultados?: {
-    total_alcance: number;
-    total_engagement: number;
-    valor_alcance: string;
-    valor_engagement: string;
-    valor_total_gerado: string;
-  };
-  roi?: {
-    percentual: string;
-    valor_retorno: string;
-    custo_por_alcance: string;
-    custo_por_engagement: string;
-    classificacao: string;
-  };
-};
+type AnalyzeContentPerformanceToolOutput = OrganicGenericToolOutput;
+type ComparePlatformPerformanceToolOutput = OrganicGenericToolOutput;
+type AnalyzeAudienceGrowthToolOutput = OrganicGenericToolOutput;
+type IdentifyTopContentToolOutput = OrganicGenericToolOutput;
+type AnalyzeContentMixToolOutput = OrganicGenericToolOutput;
+type ForecastEngagementToolOutput = OrganicGenericToolOutput;
+type CalculateContentROIToolOutput = OrganicGenericToolOutput;
 
 type AnalyzeTrafficOverviewToolOutput = {
   success: boolean;
@@ -5295,9 +5164,8 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   success={(tool.output as AnalyzeContentPerformanceToolOutput).success}
                   message={(tool.output as AnalyzeContentPerformanceToolOutput).message}
                   periodo_dias={(tool.output as AnalyzeContentPerformanceToolOutput).periodo_dias}
-                  plataforma={(tool.output as AnalyzeContentPerformanceToolOutput).plataforma}
-                  metricas_gerais={(tool.output as AnalyzeContentPerformanceToolOutput).metricas_gerais}
-                  performance_por_tipo={(tool.output as AnalyzeContentPerformanceToolOutput).performance_por_tipo}
+                  data={(tool.output as AnalyzeContentPerformanceToolOutput).data}
+                  sql_query={(tool.output as AnalyzeContentPerformanceToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5320,10 +5188,8 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   success={(tool.output as ComparePlatformPerformanceToolOutput).success}
                   message={(tool.output as ComparePlatformPerformanceToolOutput).message}
                   periodo_dias={(tool.output as ComparePlatformPerformanceToolOutput).periodo_dias}
-                  total_plataformas={(tool.output as ComparePlatformPerformanceToolOutput).total_plataformas}
-                  melhor_plataforma={(tool.output as ComparePlatformPerformanceToolOutput).melhor_plataforma}
-                  pior_plataforma={(tool.output as ComparePlatformPerformanceToolOutput).pior_plataforma}
-                  plataformas={(tool.output as ComparePlatformPerformanceToolOutput).plataformas}
+                  data={(tool.output as ComparePlatformPerformanceToolOutput).data}
+                  sql_query={(tool.output as ComparePlatformPerformanceToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5346,9 +5212,8 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   success={(tool.output as AnalyzeAudienceGrowthToolOutput).success}
                   message={(tool.output as AnalyzeAudienceGrowthToolOutput).message}
                   periodo_dias={(tool.output as AnalyzeAudienceGrowthToolOutput).periodo_dias}
-                  crescimento={(tool.output as AnalyzeAudienceGrowthToolOutput).crescimento}
-                  previsao={(tool.output as AnalyzeAudienceGrowthToolOutput).previsao}
-                  historico_semanal={(tool.output as AnalyzeAudienceGrowthToolOutput).historico_semanal}
+                  data={(tool.output as AnalyzeAudienceGrowthToolOutput).data}
+                  sql_query={(tool.output as AnalyzeAudienceGrowthToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5371,8 +5236,8 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   success={(tool.output as IdentifyTopContentToolOutput).success}
                   message={(tool.output as IdentifyTopContentToolOutput).message}
                   periodo_dias={(tool.output as IdentifyTopContentToolOutput).periodo_dias}
-                  total_analisados={(tool.output as IdentifyTopContentToolOutput).total_analisados}
-                  top_posts={(tool.output as IdentifyTopContentToolOutput).top_posts}
+                  data={(tool.output as IdentifyTopContentToolOutput).data}
+                  sql_query={(tool.output as IdentifyTopContentToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5395,10 +5260,8 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   success={(tool.output as AnalyzeContentMixToolOutput).success}
                   message={(tool.output as AnalyzeContentMixToolOutput).message}
                   periodo_dias={(tool.output as AnalyzeContentMixToolOutput).periodo_dias}
-                  total_posts={(tool.output as AnalyzeContentMixToolOutput).total_posts}
-                  frequencia={(tool.output as AnalyzeContentMixToolOutput).frequencia}
-                  distribuicao_por_tipo={(tool.output as AnalyzeContentMixToolOutput).distribuicao_por_tipo}
-                  recomendacoes={(tool.output as AnalyzeContentMixToolOutput).recomendacoes}
+                  data={(tool.output as AnalyzeContentMixToolOutput).data}
+                  sql_query={(tool.output as AnalyzeContentMixToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5420,11 +5283,9 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 <ForecastEngagementResult
                   success={(tool.output as ForecastEngagementToolOutput).success}
                   message={(tool.output as ForecastEngagementToolOutput).message}
-                  forecast_days={(tool.output as ForecastEngagementToolOutput).forecast_days}
-                  lookback_days={(tool.output as ForecastEngagementToolOutput).lookback_days}
-                  historico={(tool.output as ForecastEngagementToolOutput).historico}
-                  previsao={(tool.output as ForecastEngagementToolOutput).previsao}
-                  insights={(tool.output as ForecastEngagementToolOutput).insights}
+                  periodo_dias={(tool.output as ForecastEngagementToolOutput).periodo_dias}
+                  data={(tool.output as ForecastEngagementToolOutput).data}
+                  sql_query={(tool.output as ForecastEngagementToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5447,10 +5308,8 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   success={(tool.output as CalculateContentROIToolOutput).success}
                   message={(tool.output as CalculateContentROIToolOutput).message}
                   periodo_dias={(tool.output as CalculateContentROIToolOutput).periodo_dias}
-                  total_posts={(tool.output as CalculateContentROIToolOutput).total_posts}
-                  custos={(tool.output as CalculateContentROIToolOutput).custos}
-                  resultados={(tool.output as CalculateContentROIToolOutput).resultados}
-                  roi={(tool.output as CalculateContentROIToolOutput).roi}
+                  data={(tool.output as CalculateContentROIToolOutput).data}
+                  sql_query={(tool.output as CalculateContentROIToolOutput).sql_query}
                 />
               )}
             </div>
