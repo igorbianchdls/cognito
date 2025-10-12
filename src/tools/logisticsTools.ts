@@ -1,25 +1,146 @@
 import { z } from 'zod';
 import { tool } from 'ai';
-import { createClient } from '@supabase/supabase-js';
+import { runQuery } from '@/lib/postgres';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const LOGISTICS_TABLES = [
+  'envios',
+  'eventos_rastreio',
+  'logistica_reversa',
+  'pacotes',
+  'transportadoras',
+] as const;
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+type LogisticsTable = (typeof LOGISTICS_TABLES)[number];
+
+const DEFAULT_LIMIT = 20;
+const MIN_LIMIT = 1;
+const MAX_LIMIT = 500;
+
+const TABLE_DATE_COLUMNS: Partial<Record<LogisticsTable, { from: string; to?: string }>> = {
+  envios: { from: 'data_postagem', to: 'data_postagem' },
+  eventos_rastreio: { from: 'data_evento', to: 'data_evento' },
+  logistica_reversa: { from: 'data_solicitacao', to: 'data_solicitacao' },
+  pacotes: { from: 'created_at', to: 'created_at' },
+  transportadoras: { from: 'created_at', to: 'created_at' },
+};
+
+const TABLE_ORDER_COLUMNS: Record<LogisticsTable, string> = {
+  envios: 'data_postagem',
+  eventos_rastreio: 'data_evento',
+  logistica_reversa: 'data_solicitacao',
+  pacotes: 'created_at',
+  transportadoras: 'nome',
+};
+
+const normalizeLimit = (limit?: number) => {
+  if (typeof limit !== 'number' || Number.isNaN(limit)) {
+    return DEFAULT_LIMIT;
+  }
+  return Math.min(Math.max(Math.trunc(limit), MIN_LIMIT), MAX_LIMIT);
+};
+
+const formatSqlParams = (params: unknown[]) => (params.length ? JSON.stringify(params) : '[]');
+
+const buildLogisticsDataQuery = (args: {
+  table: LogisticsTable;
+  limit: number;
+  status_atual?: string;
+  transportadora_id?: string;
+  codigo_rastreio?: string;
+  order_id?: string;
+  ativo?: boolean;
+  data_de?: string;
+  data_ate?: string;
+}) => {
+  const {
+    table,
+    limit,
+    status_atual,
+    transportadora_id,
+    codigo_rastreio,
+    order_id,
+    ativo,
+    data_de,
+    data_ate,
+  } = args;
+
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+  let index = 1;
+
+  const push = (clause: string, value: unknown) => {
+    conditions.push(`${clause} $${index}`);
+    params.push(value);
+    index += 1;
+  };
+
+  if (status_atual && (table === 'envios' || table === 'logistica_reversa')) {
+    push('status_atual =', status_atual);
+  }
+
+  if (transportadora_id && (table === 'envios' || table === 'pacotes')) {
+    push('transportadora_id =', transportadora_id);
+  }
+
+  if (codigo_rastreio) {
+    push('codigo_rastreio =', codigo_rastreio);
+  }
+
+  if (order_id && (table === 'envios' || table === 'logistica_reversa')) {
+    push('order_id =', order_id);
+  }
+
+  if (typeof ativo === 'boolean' && table === 'transportadoras') {
+    push('ativo =', ativo);
+  }
+
+  const dateColumns = TABLE_DATE_COLUMNS[table];
+  if (data_de && dateColumns?.from) {
+    push(`${dateColumns.from} >=`, data_de);
+  }
+
+  if (data_ate) {
+    const column = dateColumns?.to ?? dateColumns?.from;
+    if (column) {
+      push(`${column} <=`, data_ate);
+    }
+  }
+
+  const limitIndex = index;
+  params.push(limit);
+
+  const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+  const orderBy = TABLE_ORDER_COLUMNS[table] ?? 'created_at';
+
+  const sql = `
+    SELECT *
+    FROM gestaologistica.${table}
+    ${whereClause}
+    ORDER BY ${orderBy} DESC
+    LIMIT $${limitIndex}
+  `.trim();
+
+  return { sql, params };
+};
+
+const buildTransportadoraFilterClause = (transportadoraId?: string) =>
+  transportadoraId ? 'AND transportadora_id = $2' : '';
+
+const buildTransportadoraParam = (transportadoraId?: string) =>
+  transportadoraId ? [transportadoraId] : [null];
+
+const computeClassification = (value: number, thresholds: { excellent: number; good: number; warning: number }) => {
+  if (value >= thresholds.excellent) return 'Excelente';
+  if (value >= thresholds.good) return 'Bom';
+  if (value >= thresholds.warning) return 'Atenção';
+  return 'Crítico';
+};
 
 export const getLogisticsData = tool({
   description: 'Busca dados de gestão logística (envios, rastreamento, logística reversa, pacotes, transportadoras)',
   inputSchema: z.object({
-    table: z.enum([
-      'envios',
-      'eventos_rastreio',
-      'logistica_reversa',
-      'pacotes',
-      'transportadoras'
-    ]).describe('Tabela a consultar'),
-    limit: z.number().default(20).describe('Número máximo de resultados'),
-
-    // Filtros específicos
+    table: z.enum(LOGISTICS_TABLES).describe('Tabela a consultar'),
+    limit: z.number().default(DEFAULT_LIMIT).describe('Número máximo de resultados'),
     status_atual: z.string().optional()
       .describe('Filtrar por status atual (para envios, logistica_reversa)'),
     transportadora_id: z.string().optional()
@@ -30,1004 +151,862 @@ export const getLogisticsData = tool({
       .describe('Filtrar por ID do pedido (para envios, logistica_reversa)'),
     ativo: z.boolean().optional()
       .describe('Filtrar por status ativo (para transportadoras)'),
-
-    // Filtros de data
     data_de: z.string().optional()
       .describe('Data inicial (formato YYYY-MM-DD)'),
     data_ate: z.string().optional()
       .describe('Data final (formato YYYY-MM-DD)'),
   }),
-
-  execute: async ({
-    table,
-    limit,
-    status_atual,
-    transportadora_id,
-    codigo_rastreio,
-    order_id,
-    ativo,
-    data_de,
-    data_ate
-  }) => {
+  execute: async (input) => {
     try {
-      let query = supabase
-        .schema('gestaologistica')
-        .from(table)
-        .select('*');
-
-      // FILTRO 1: Status atual
-      if (status_atual && (table === 'envios' || table === 'logistica_reversa')) {
-        query = query.eq('status_atual', status_atual);
-      }
-
-      // FILTRO 2: Transportadora ID
-      if (transportadora_id && (table === 'envios' || table === 'pacotes')) {
-        query = query.eq('transportadora_id', transportadora_id);
-      }
-
-      // FILTRO 3: Código de rastreio
-      if (codigo_rastreio) {
-        if (table === 'envios') {
-          query = query.eq('codigo_rastreio', codigo_rastreio);
-        } else if (table === 'eventos_rastreio') {
-          query = query.eq('codigo_rastreio', codigo_rastreio);
-        }
-      }
-
-      // FILTRO 4: Order ID
-      if (order_id && (table === 'envios' || table === 'logistica_reversa')) {
-        query = query.eq('order_id', order_id);
-      }
-
-      // FILTRO 5: Ativo (para transportadoras)
-      if (ativo !== undefined && table === 'transportadoras') {
-        query = query.eq('ativo', ativo);
-      }
-
-      // FILTRO 6: Range de datas
-      if (data_de) {
-        let dateColumn = 'created_at';
-        if (table === 'envios') dateColumn = 'data_postagem';
-        else if (table === 'eventos_rastreio') dateColumn = 'data_evento';
-        else if (table === 'logistica_reversa') dateColumn = 'data_solicitacao';
-
-        query = query.gte(dateColumn, data_de);
-      }
-
-      if (data_ate) {
-        let dateColumn = 'created_at';
-        if (table === 'envios') dateColumn = 'data_postagem';
-        else if (table === 'eventos_rastreio') dateColumn = 'data_evento';
-        else if (table === 'logistica_reversa') dateColumn = 'data_solicitacao';
-
-        query = query.lte(dateColumn, data_ate);
-      }
-
-      // Ordenação dinâmica por tabela
-      let orderColumn = 'created_at';
-      const ascending = false;
-
-      if (table === 'envios') {
-        orderColumn = 'data_postagem';
-      } else if (table === 'eventos_rastreio') {
-        orderColumn = 'data_evento';
-      } else if (table === 'logistica_reversa') {
-        orderColumn = 'data_solicitacao';
-      } else if (table === 'pacotes') {
-        orderColumn = 'id';
-      } else if (table === 'transportadoras') {
-        orderColumn = 'nome';
-      }
-
-      query = query
-        .order(orderColumn, { ascending })
-        .limit(limit ?? 20);
-
-      const { data, error } = await query;
-
-      if (error) throw error;
+      const limit = normalizeLimit(input.limit);
+      const { sql, params } = buildLogisticsDataQuery({ ...input, limit });
+      const data = await runQuery<Record<string, unknown>>(sql, params);
 
       return {
         success: true,
-        count: (data || []).length,
-        table: table,
-        message: `✅ ${(data || []).length} registros encontrados em ${table}`,
-        data: data || []
+        count: data.length,
+        table: input.table,
+        message: `✅ ${data.length} registros encontrados em ${input.table}`,
+        data,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
-
     } catch (error) {
       console.error('ERRO getLogisticsData:', error);
       return {
         success: false,
+        message: `❌ Erro ao buscar dados de ${input.table}`,
+        table: input.table,
         error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: `❌ Erro ao buscar dados de ${table}`,
-        table: table,
-        data: []
+        data: [],
       };
     }
-  }
+  },
 });
 
-// ============================================
-// TOOL 2: Calcular Performance de Entregas
-// ============================================
 export const calculateDeliveryPerformance = tool({
-  description: 'Calcula métricas de performance de entregas: on-time rate, tempo médio, success rate, lead time',
+  description: 'Calcula métricas de performance de entregas: SLA, tempo médio, lead time e sucesso na primeira tentativa',
   inputSchema: z.object({
-    date_range_days: z.number().default(30)
-      .describe('Período de análise em dias (padrão: 30)'),
-    transportadora_id: z.string().optional()
-      .describe('Filtrar por transportadora específica (opcional)')
+    date_range_days: z.number().default(30).describe('Período de análise em dias'),
+    transportadora_id: z.string().optional().describe('Filtrar por transportadora específica'),
   }),
-
   execute: async ({ date_range_days = 30, transportadora_id }) => {
+    const range = Math.min(Math.max(Math.trunc(date_range_days), 1), 365);
+
+    const summarySql = `
+      WITH filtered_envios AS (
+        SELECT
+          id,
+          transportadora_id,
+          codigo_rastreio,
+          data_postagem,
+          data_prevista_entrega,
+          data_entrega,
+          created_at,
+          custo_frete,
+          peso_kg
+        FROM gestaologistica.envios
+        WHERE data_postagem >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+          ${transportadora_id ? 'AND transportadora_id = $2' : ''}
+      )
+      SELECT
+        COUNT(*) AS total_envios,
+        COUNT(*) FILTER (WHERE data_entrega IS NOT NULL) AS entregues,
+        COUNT(*) FILTER (WHERE data_entrega IS NOT NULL AND data_entrega <= data_prevista_entrega) AS entregues_no_prazo,
+        AVG(EXTRACT(EPOCH FROM (data_entrega - data_postagem)) / 86400.0) FILTER (WHERE data_entrega IS NOT NULL) AS avg_delivery_days,
+        MIN(EXTRACT(EPOCH FROM (data_entrega - data_postagem)) / 86400.0) FILTER (WHERE data_entrega IS NOT NULL) AS min_delivery_days,
+        MAX(EXTRACT(EPOCH FROM (data_entrega - data_postagem)) / 86400.0) FILTER (WHERE data_entrega IS NOT NULL) AS max_delivery_days,
+        AVG(EXTRACT(EPOCH FROM (data_postagem - created_at)) / 3600.0) AS avg_lead_hours,
+        SUM(custo_frete) AS custo_total,
+        SUM(peso_kg) AS peso_total
+      FROM filtered_envios
+    `;
+
+    const attemptSql = `
+      WITH filtered_envios AS (
+        SELECT
+          id,
+          codigo_rastreio,
+          data_entrega,
+          data_prevista_entrega
+        FROM gestaologistica.envios
+        WHERE data_postagem >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+          ${transportadora_id ? 'AND transportadora_id = $2' : ''}
+      )
+      SELECT
+        COUNT(*) FILTER (WHERE data_entrega IS NOT NULL) AS entregues,
+        COUNT(*) FILTER (
+          WHERE data_entrega IS NOT NULL
+            AND EXISTS (
+              SELECT 1
+              FROM gestaologistica.eventos_rastreio er
+              WHERE er.codigo_rastreio = fe.codigo_rastreio
+                AND er.descricao ILIKE '%tentativa%'
+            )
+        ) AS entregas_com_tentativa
+      FROM filtered_envios fe
+    `;
+
+    const params = transportadora_id ? [range, transportadora_id] : [range];
+
     try {
-      const dataInicial = new Date();
-      dataInicial.setDate(dataInicial.getDate() - date_range_days);
-      const dataInicialStr = dataInicial.toISOString().split('T')[0];
+      const summary = (await runQuery<{
+        total_envios: string | number | null;
+        entregues: string | number | null;
+        entregues_no_prazo: string | number | null;
+        avg_delivery_days: string | number | null;
+        min_delivery_days: string | number | null;
+        max_delivery_days: string | number | null;
+        avg_lead_hours: string | number | null;
+        custo_total: string | number | null;
+        peso_total: string | number | null;
+      }>(summarySql, params))[0] ?? {
+        total_envios: 0,
+        entregues: 0,
+        entregues_no_prazo: 0,
+        avg_delivery_days: null,
+        min_delivery_days: null,
+        max_delivery_days: null,
+        avg_lead_hours: null,
+        custo_total: 0,
+        peso_total: 0,
+      };
 
-      let query = supabase
-        .schema('gestaologistica')
-        .from('envios')
-        .select('*')
-        .gte('data_postagem', dataInicialStr);
+      const attempts = (await runQuery<{
+        entregues: string | number | null;
+        entregas_com_tentativa: string | number | null;
+      }>(attemptSql, params))[0] ?? {
+        entregues: 0,
+        entregas_com_tentativa: 0,
+      };
 
-      if (transportadora_id) {
-        query = query.eq('transportadora_id', transportadora_id);
-      }
+      const totalEnvios = Number(summary.total_envios ?? 0);
+      const delivered = Number(summary.entregues ?? 0);
+      const onTime = Number(summary.entregues_no_prazo ?? 0);
+      const avgDeliveryDays = Number(summary.avg_delivery_days ?? 0);
+      const minDeliveryDays = Number(summary.min_delivery_days ?? 0);
+      const maxDeliveryDays = Number(summary.max_delivery_days ?? 0);
+      const avgLeadHours = Number(summary.avg_lead_hours ?? 0);
+      const costoTotal = Number(summary.custo_total ?? 0);
+      const totalPeso = Number(summary.peso_total ?? 0);
+      const entreguesTentativa = Number(attempts.entregas_com_tentativa ?? 0);
 
-      const { data: envios, error } = await query;
-      if (error) throw error;
-
-      if (!envios || envios.length === 0) {
-        return {
-          success: true,
-          message: '⚠️ Nenhum envio encontrado no período',
-          total_envios: 0
-        };
-      }
-
-      // 1. ON-TIME DELIVERY RATE
-      const enviosEntregues = envios.filter(e => e.data_entrega);
-      const enviosNoPrazo = enviosEntregues.filter(e => {
-        const dataEntrega = new Date(e.data_entrega);
-        const dataPrevista = new Date(e.data_prevista_entrega);
-        return dataEntrega <= dataPrevista;
-      });
-      const onTimeRate = enviosEntregues.length > 0
-        ? (enviosNoPrazo.length / enviosEntregues.length) * 100
+      const onTimeRate = delivered > 0 ? (onTime / delivered) * 100 : 0;
+      const firstAttemptRate = delivered > 0
+        ? ((delivered - entreguesTentativa) / delivered) * 100
         : 0;
+      const leadClassification = avgLeadHours <= 24
+        ? 'Excelente (same-day)'
+        : avgLeadHours <= 48
+          ? 'Bom (até 48h)'
+          : avgLeadHours <= 72
+            ? 'Atenção'
+            : 'Crítico';
 
-      // 2. AVERAGE DELIVERY TIME
-      const temposEntrega = enviosEntregues.map(e => {
-        const dataEntrega = new Date(e.data_entrega);
-        const dataPostagem = new Date(e.data_postagem);
-        return (dataEntrega.getTime() - dataPostagem.getTime()) / (1000 * 60 * 60 * 24);
-      });
-      const avgDeliveryTime = temposEntrega.length > 0
-        ? temposEntrega.reduce((a, b) => a + b, 0) / temposEntrega.length
-        : 0;
+      const performanceScore = Number(
+        (
+          (onTimeRate * 0.5) +
+          (firstAttemptRate * 0.3) +
+          (Math.min(100, Math.max(0, (100 - Math.max(0, avgDeliveryDays - 2) * 10))) * 0.2)
+        ).toFixed(2),
+      );
 
-      // 3. FIRST ATTEMPT SUCCESS (estimado por ausência de múltiplos eventos)
-      const firstAttemptSuccess = 85; // Placeholder - precisa de dados de tentativas
+      const rows = [
+        {
+          metric: 'On-time delivery rate',
+          value: `${onTimeRate.toFixed(2)}%`,
+          benchmark: 'Meta: ≥ 95%',
+          classification: computeClassification(onTimeRate, { excellent: 95, good: 90, warning: 85 }),
+          detail: `${onTime} entregas no prazo em ${delivered} concluídas`,
+        },
+        {
+          metric: 'Average delivery time',
+          value: `${avgDeliveryDays.toFixed(1)} dias`,
+          benchmark: 'Meta: ≤ SLA contratado',
+          classification: avgDeliveryDays <= 3 ? 'Rápido' : avgDeliveryDays <= 7 ? 'Normal' : 'Lento',
+          detail: `Mín ${minDeliveryDays.toFixed(1)} • Máx ${maxDeliveryDays.toFixed(1)} dias`,
+        },
+        {
+          metric: 'First attempt success',
+          value: `${firstAttemptRate.toFixed(2)}%`,
+          benchmark: 'Meta: ≥ 85%',
+          classification: computeClassification(firstAttemptRate, { excellent: 90, good: 85, warning: 75 }),
+          detail: `${delivered - entreguesTentativa} entregas sem tentativa adicional`,
+        },
+        {
+          metric: 'Average lead time',
+          value: `${avgLeadHours.toFixed(1)} h`,
+          benchmark: 'Meta: < 24h',
+          classification: leadClassification,
+          detail: 'Tempo entre criação do pedido e postagem',
+        },
+        {
+          metric: 'Total shipping cost',
+          value: `R$ ${costoTotal.toFixed(2)}`,
+          benchmark: totalEnvios > 0
+            ? `Ticket médio: R$ ${(costoTotal / totalEnvios).toFixed(2)}`
+            : 'Ticket médio: R$ 0,00',
+          classification: 'Informativo',
+          detail: totalPeso > 0
+            ? `Custo por kg: R$ ${(costoTotal / totalPeso).toFixed(2)}`
+            : 'Sem dados de peso',
+        },
+        {
+          metric: 'Performance score',
+          value: `${performanceScore.toFixed(1)}`,
+          benchmark: 'Meta: ≥ 90',
+          classification: computeClassification(performanceScore, { excellent: 90, good: 80, warning: 70 }),
+          detail: 'Score ponderado (On-time 50% + 1ª tentativa 30% + qualidade 20%)',
+        },
+      ];
 
-      // 4. LEAD TIME (tempo de processamento até postagem)
-      const leadTimes = envios.map(e => {
-        const dataPostagem = new Date(e.data_postagem);
-        const dataPedido = new Date(e.created_at);
-        return (dataPostagem.getTime() - dataPedido.getTime()) / (1000 * 60 * 60 * 24);
-      });
-      const avgLeadTime = leadTimes.reduce((a, b) => a + b, 0) / leadTimes.length;
-
-      // 5. SLA COMPLIANCE
-      const slaCompliance = onTimeRate;
-
-      // CLASSIFICAÇÃO
-      const classificacao = onTimeRate >= 95 ? 'Excelente'
-        : onTimeRate >= 90 ? 'Bom'
-        : onTimeRate >= 85 ? 'Atenção'
-        : 'Crítico';
+      const combinedSql = `${summarySql}\n\n-- Auxiliar: tentativas\n${attemptSql}`;
 
       return {
         success: true,
-        message: `✅ Análise de performance concluída (${date_range_days} dias)`,
-        periodo_dias: date_range_days,
-        transportadora_id: transportadora_id || 'TODAS',
-        total_envios: envios.length,
-        envios_entregues: enviosEntregues.length,
-
-        on_time_delivery: {
-          rate: onTimeRate.toFixed(2) + '%',
-          entregas_no_prazo: enviosNoPrazo.length,
-          entregas_atrasadas: enviosEntregues.length - enviosNoPrazo.length,
-          classificacao: onTimeRate >= 95 ? 'Excelente' : onTimeRate >= 90 ? 'Bom' : 'Crítico'
+        message: `Performance logística avaliada nos últimos ${range} dias`,
+        periodo_dias: range,
+        transportadora_id: transportadora_id ?? 'TODAS',
+        totals: {
+          total_envios: totalEnvios,
+          entregues: delivered,
+          on_time: onTime,
         },
-
-        delivery_time: {
-          average_days: avgDeliveryTime.toFixed(1),
-          min_days: Math.min(...temposEntrega).toFixed(1),
-          max_days: Math.max(...temposEntrega).toFixed(1),
-          classificacao: avgDeliveryTime <= 3 ? 'Rápido' : avgDeliveryTime <= 7 ? 'Normal' : 'Lento'
-        },
-
-        first_attempt_success: {
-          rate: firstAttemptSuccess + '%',
-          classificacao: firstAttemptSuccess >= 85 ? 'Bom' : 'Precisa Melhorar'
-        },
-
-        lead_time: {
-          average_hours: (avgLeadTime * 24).toFixed(1),
-          classificacao: avgLeadTime < 1 ? 'Excelente (Same-Day)' : avgLeadTime < 2 ? 'Bom' : 'Lento'
-        },
-
-        sla_compliance: {
-          rate: slaCompliance.toFixed(2) + '%',
-          status: slaCompliance >= 95 ? 'Cumprindo SLA' : 'Abaixo do SLA'
-        },
-
-        performance_geral: {
-          score: ((onTimeRate + firstAttemptSuccess) / 2).toFixed(1),
-          classificacao: classificacao
-        }
+        rows,
+        sql_query: combinedSql,
+        sql_params: formatSqlParams(params),
       };
-
     } catch (error) {
       console.error('ERRO calculateDeliveryPerformance:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: '❌ Erro ao calcular performance de entregas'
+        message: `Erro ao calcular performance de entregas: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
-  }
+  },
 });
 
-// ============================================
-// TOOL 3: Analisar Benchmark de Transportadoras
-// ============================================
 export const analyzeCarrierBenchmark = tool({
   description: 'Compara performance e custos entre transportadoras, gera ranking e recomendações',
   inputSchema: z.object({
-    date_range_days: z.number().default(30)
-      .describe('Período de análise em dias (padrão: 30)'),
-    metric: z.enum(['performance', 'cost', 'balanced']).default('balanced')
-      .describe('Critério de ranking: performance, custo ou balanceado')
+    date_range_days: z.number().default(30).describe('Período de análise em dias'),
   }),
+  execute: async ({ date_range_days = 30 }) => {
+    const range = Math.min(Math.max(Math.trunc(date_range_days), 1), 365);
 
-  execute: async ({ date_range_days = 30, metric = 'balanced' }) => {
+    const sql = `
+      WITH filtered_envios AS (
+        SELECT
+          e.id,
+          e.transportadora_id,
+          e.codigo_rastreio,
+          e.data_postagem,
+          e.data_prevista_entrega,
+          e.data_entrega,
+          e.custo_frete,
+          e.peso_kg
+        FROM gestaologistica.envios e
+        WHERE e.data_postagem >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+      ),
+      agg AS (
+        SELECT
+          fe.transportadora_id,
+          COUNT(*) AS total_envios,
+          COUNT(*) FILTER (WHERE fe.data_entrega IS NOT NULL) AS entregues,
+          COUNT(*) FILTER (
+            WHERE fe.data_entrega IS NOT NULL
+              AND fe.data_entrega <= fe.data_prevista_entrega
+          ) AS entregues_no_prazo,
+          AVG(EXTRACT(EPOCH FROM (fe.data_entrega - fe.data_postagem)) / 86400.0) FILTER (WHERE fe.data_entrega IS NOT NULL) AS avg_delivery_days,
+          SUM(fe.custo_frete) AS custo_total,
+          SUM(fe.peso_kg) AS peso_total,
+          SUM(
+            CASE
+              WHEN fe.data_entrega IS NOT NULL
+                AND EXISTS (
+                  SELECT 1
+                  FROM gestaologistica.eventos_rastreio er
+                  WHERE er.codigo_rastreio = fe.codigo_rastreio
+                    AND er.descricao ILIKE '%tentativa%'
+                )
+              THEN 1 ELSE 0
+            END
+          ) AS entregas_com_tentativa
+        FROM filtered_envios fe
+        GROUP BY fe.transportadora_id
+      )
+      SELECT
+        COALESCE(t.nome, agg.transportadora_id) AS transportadora,
+        agg.total_envios,
+        agg.entregues,
+        agg.entregues_no_prazo,
+        agg.avg_delivery_days,
+        agg.custo_total,
+        agg.peso_total,
+        agg.entregas_com_tentativa
+      FROM agg
+      LEFT JOIN gestaologistica.transportadoras t
+        ON t.id = agg.transportadora_id
+      WHERE agg.total_envios > 0
+      ORDER BY agg.total_envios DESC
+    `;
+
     try {
-      const dataInicial = new Date();
-      dataInicial.setDate(dataInicial.getDate() - date_range_days);
-      const dataInicialStr = dataInicial.toISOString().split('T')[0];
+      const rowsRaw = await runQuery<{
+        transportadora: string | null;
+        total_envios: string | number | null;
+        entregues: string | number | null;
+        entregues_no_prazo: string | number | null;
+        avg_delivery_days: string | number | null;
+        custo_total: string | number | null;
+        peso_total: string | number | null;
+        entregas_com_tentativa: string | number | null;
+      }>(sql, [range]);
 
-      // Buscar envios
-      const { data: envios, error: errorEnvios } = await supabase
-        .schema('gestaologistica')
-        .from('envios')
-        .select('*')
-        .gte('data_postagem', dataInicialStr);
+      const rows = rowsRaw.map((row) => {
+        const totalEnvios = Number(row.total_envios ?? 0);
+        const entregues = Number(row.entregues ?? 0);
+        const onTime = Number(row.entregues_no_prazo ?? 0);
+        const custoTotal = Number(row.custo_total ?? 0);
+        const pesoTotal = Number(row.peso_total ?? 0);
+        const tentativas = Number(row.entregas_com_tentativa ?? 0);
+        const avgDelivery = Number(row.avg_delivery_days ?? 0);
 
-      if (errorEnvios) throw errorEnvios;
+        const onTimeRate = entregues > 0 ? (onTime / entregues) * 100 : 0;
+        const firstAttemptRate = entregues > 0 ? ((entregues - tentativas) / entregues) * 100 : 0;
+        const custoMedioEnvio = totalEnvios > 0 ? custoTotal / totalEnvios : 0;
+        const custoPorKg = pesoTotal > 0 ? custoTotal / pesoTotal : 0;
+        const performanceScore = Number(
+          (
+            (onTimeRate * 0.5) +
+            (firstAttemptRate * 0.3) +
+            (Math.max(0, 100 - Math.max(0, avgDelivery - 2) * 10) * 0.2)
+          ).toFixed(2),
+        );
 
-      // Buscar transportadoras
-      const { data: transportadoras, error: errorTrans } = await supabase
-        .schema('gestaologistica')
-        .from('transportadoras')
-        .select('*');
-
-      if (errorTrans) throw errorTrans;
-
-      // Agrupar por transportadora
-      const benchmark: Record<string, {
-        nome: string;
-        total_envios: number;
-        entregas_no_prazo: number;
-        on_time_rate: number;
-        custo_total: number;
-        custo_medio: number;
-        cost_per_kg: number;
-        peso_total: number;
-        performance_score: number;
-      }> = {};
-
-      envios?.forEach(envio => {
-        const transId = envio.transportadora_id;
-        if (!benchmark[transId]) {
-          const trans = transportadoras?.find(t => t.id === transId);
-          benchmark[transId] = {
-            nome: trans?.nome || transId,
-            total_envios: 0,
-            entregas_no_prazo: 0,
-            on_time_rate: 0,
-            custo_total: 0,
-            custo_medio: 0,
-            cost_per_kg: 0,
-            peso_total: 0,
-            performance_score: 0
-          };
-        }
-
-        benchmark[transId].total_envios++;
-        benchmark[transId].custo_total += envio.custo_frete || 0;
-        benchmark[transId].peso_total += envio.peso_kg || 0;
-
-        if (envio.data_entrega) {
-          const dataEntrega = new Date(envio.data_entrega);
-          const dataPrevista = new Date(envio.data_prevista_entrega);
-          if (dataEntrega <= dataPrevista) {
-            benchmark[transId].entregas_no_prazo++;
-          }
-        }
-      });
-
-      // Calcular métricas
-      const resultados = Object.values(benchmark).map(trans => {
-        trans.on_time_rate = trans.total_envios > 0
-          ? (trans.entregas_no_prazo / trans.total_envios) * 100
-          : 0;
-        trans.custo_medio = trans.total_envios > 0
-          ? trans.custo_total / trans.total_envios
-          : 0;
-        trans.cost_per_kg = trans.peso_total > 0
-          ? trans.custo_total / trans.peso_total
-          : 0;
-
-        // Performance Score (on-time 50% + 1st attempt 30% + quality 20%)
-        const firstAttempt = 85; // Placeholder
-        const quality = 95; // Placeholder
-        trans.performance_score =
-          (trans.on_time_rate * 0.5) + (firstAttempt * 0.3) + (quality * 0.2);
-
-        return trans;
-      });
-
-      // Ordenar por critério
-      if (metric === 'performance') {
-        resultados.sort((a, b) => b.performance_score - a.performance_score);
-      } else if (metric === 'cost') {
-        resultados.sort((a, b) => a.custo_medio - b.custo_medio);
-      } else { // balanced
-        resultados.sort((a, b) => {
-          const scoreA = (b.performance_score / 100) * (1 / (a.custo_medio + 1));
-          const scoreB = (a.performance_score / 100) * (1 / (b.custo_medio + 1));
-          return scoreB - scoreA;
-        });
-      }
-
-      const melhor = resultados[0];
-      const pior = resultados[resultados.length - 1];
+        return {
+          transportadora: row.transportadora ?? 'N/D',
+          total_envios: totalEnvios,
+          entregues,
+          on_time_rate: Number(onTimeRate.toFixed(2)),
+          first_attempt_rate: Number(firstAttemptRate.toFixed(2)),
+          avg_delivery_days: Number(avgDelivery.toFixed(2)),
+          custo_total: Number(custoTotal.toFixed(2)),
+          custo_medio_envio: Number(custoMedioEnvio.toFixed(2)),
+          custo_por_kg: Number(custoPorKg.toFixed(2)),
+          performance_score: performanceScore,
+          classificacao: computeClassification(performanceScore, { excellent: 90, good: 80, warning: 70 }),
+        };
+      }).sort((a, b) => b.performance_score - a.performance_score);
 
       return {
         success: true,
-        message: `✅ Benchmark de ${resultados.length} transportadoras concluído`,
-        periodo_dias: date_range_days,
-        metric: metric,
-        total_transportadoras: resultados.length,
-        melhor_transportadora: melhor?.nome,
-        pior_transportadora: pior?.nome,
-        transportadoras: resultados.map(t => ({
-          nome: t.nome,
-          total_envios: t.total_envios,
-          on_time_rate: t.on_time_rate.toFixed(2) + '%',
-          custo_medio: t.custo_medio.toFixed(2),
-          cost_per_kg: t.cost_per_kg.toFixed(2),
-          performance_score: t.performance_score.toFixed(1),
-          classificacao: t.performance_score >= 90 ? 'Excelente'
-            : t.performance_score >= 80 ? 'Boa'
-            : t.performance_score >= 70 ? 'Regular'
-            : 'Ruim',
-          recomendacao: t === melhor ? 'Priorizar uso - melhor performance'
-            : t === pior ? 'Renegociar contrato ou substituir'
-            : 'Manter monitoramento'
-        }))
+        message: `Benchmark de transportadoras (${rows.length} avaliadas)`,
+        periodo_dias: range,
+        rows,
+        sql_query: sql,
+        sql_params: formatSqlParams([range]),
       };
-
     } catch (error) {
       console.error('ERRO analyzeCarrierBenchmark:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: '❌ Erro ao analisar benchmark de transportadoras'
+        message: `Erro ao comparar transportadoras: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
-  }
+  },
 });
 
-// ============================================
-// TOOL 4: Analisar Estrutura de Custos de Frete
-// ============================================
 export const analyzeShippingCostStructure = tool({
-  description: 'Analisa custos de frete por faixa de peso, região e % do pedido, identifica oportunidades de economia',
+  description: 'Análise da estrutura de custos de frete por faixa de peso e ticket médio',
   inputSchema: z.object({
-    date_range_days: z.number().default(30)
-      .describe('Período de análise em dias (padrão: 30)')
+    date_range_days: z.number().default(30).describe('Período de análise em dias'),
   }),
-
   execute: async ({ date_range_days = 30 }) => {
+    const range = Math.min(Math.max(Math.trunc(date_range_days), 1), 365);
+
+    const sql = `
+      WITH filtered_envios AS (
+        SELECT
+          data_postagem,
+          custo_frete,
+          peso_kg
+        FROM gestaologistica.envios
+        WHERE data_postagem >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+          AND custo_frete IS NOT NULL
+          AND peso_kg IS NOT NULL
+      )
+      SELECT
+        CASE
+          WHEN peso_kg < 1 THEN '0 - 1 kg'
+          WHEN peso_kg < 5 THEN '1 - 5 kg'
+          WHEN peso_kg < 10 THEN '5 - 10 kg'
+          WHEN peso_kg < 20 THEN '10 - 20 kg'
+          ELSE '20+ kg'
+        END AS faixa_peso,
+        COUNT(*) AS total_envios,
+        SUM(custo_frete) AS custo_total,
+        AVG(custo_frete) AS custo_medio_envio,
+        SUM(peso_kg) AS peso_total,
+        AVG(custo_frete / NULLIF(peso_kg, 0)) AS custo_medio_por_kg
+      FROM filtered_envios
+      GROUP BY faixa_peso
+      ORDER BY
+        MIN(peso_kg)
+    `;
+
     try {
-      const dataInicial = new Date();
-      dataInicial.setDate(dataInicial.getDate() - date_range_days);
-      const dataInicialStr = dataInicial.toISOString().split('T')[0];
+      const rows = await runQuery<{
+        faixa_peso: string;
+        total_envios: string | number;
+        custo_total: string | number;
+        custo_medio_envio: string | number;
+        peso_total: string | number;
+        custo_medio_por_kg: string | number;
+      }>(sql, [range]);
 
-      const { data: envios, error } = await supabase
-        .schema('gestaologistica')
-        .from('envios')
-        .select('*')
-        .gte('data_postagem', dataInicialStr);
-
-      if (error) throw error;
-
-      if (!envios || envios.length === 0) {
-        return {
-          success: true,
-          message: '⚠️ Nenhum envio encontrado no período',
-          custo_total: 0
-        };
-      }
-
-      // Custo Total
-      const custoTotal = envios.reduce((sum, e) => sum + (e.custo_frete || 0), 0);
-      const custoMedio = custoTotal / envios.length;
-      const pesoTotal = envios.reduce((sum, e) => sum + (e.peso_kg || 0), 0);
-      const costPerKg = pesoTotal > 0 ? custoTotal / pesoTotal : 0;
-
-      // Distribuição por faixa de peso
-      const faixasPeso: Record<string, { envios: number; custo: number }> = {
-        '0-1kg': { envios: 0, custo: 0 },
-        '1-5kg': { envios: 0, custo: 0 },
-        '5-10kg': { envios: 0, custo: 0 },
-        '10-30kg': { envios: 0, custo: 0 },
-        '>30kg': { envios: 0, custo: 0 }
-      };
-
-      envios.forEach(e => {
-        const peso = e.peso_kg || 0;
-        const custo = e.custo_frete || 0;
-
-        if (peso <= 1) {
-          faixasPeso['0-1kg'].envios++;
-          faixasPeso['0-1kg'].custo += custo;
-        } else if (peso <= 5) {
-          faixasPeso['1-5kg'].envios++;
-          faixasPeso['1-5kg'].custo += custo;
-        } else if (peso <= 10) {
-          faixasPeso['5-10kg'].envios++;
-          faixasPeso['5-10kg'].custo += custo;
-        } else if (peso <= 30) {
-          faixasPeso['10-30kg'].envios++;
-          faixasPeso['10-30kg'].custo += custo;
-        } else {
-          faixasPeso['>30kg'].envios++;
-          faixasPeso['>30kg'].custo += custo;
-        }
-      });
-
-      // Shipping cost % (assumindo valor médio de pedido R$ 200)
-      const valorMedioPedido = 200;
-      const shippingCostPercentage = (custoMedio / valorMedioPedido) * 100;
-
-      // Oportunidades de economia
-      const oportunidades = [];
-      if (shippingCostPercentage > 15) {
-        oportunidades.push('Custo de frete > 15% do pedido - renegociar tarifas');
-      }
-      if (costPerKg > 5) {
-        oportunidades.push('Cost per kg acima da média - buscar transportadoras mais competitivas');
-      }
-      Object.entries(faixasPeso).forEach(([faixa, dados]) => {
-        const custoMedioFaixa = dados.envios > 0 ? dados.custo / dados.envios : 0;
-        if (custoMedioFaixa > custoMedio * 1.3) {
-          oportunidades.push(`Faixa ${faixa} com custo 30% acima da média - otimizar embalagens`);
-        }
-      });
+      const formatted = rows.map(row => ({
+        faixa_peso: row.faixa_peso,
+        total_envios: Number(row.total_envios ?? 0),
+        custo_total: Number(row.custo_total ?? 0).toFixed(2),
+        custo_medio_envio: Number(row.custo_medio_envio ?? 0).toFixed(2),
+        peso_total: Number(row.peso_total ?? 0).toFixed(2),
+        custo_medio_por_kg: Number(row.custo_medio_por_kg ?? 0).toFixed(2),
+      }));
 
       return {
         success: true,
-        message: `✅ Análise de custos concluída (${date_range_days} dias)`,
-        periodo_dias: date_range_days,
-
-        custo_total: custoTotal.toFixed(2),
-        custo_medio_por_envio: custoMedio.toFixed(2),
-        cost_per_kg: costPerKg.toFixed(2),
-        peso_total_kg: pesoTotal.toFixed(2),
-
-        shipping_cost_percentage: {
-          percentual: shippingCostPercentage.toFixed(2) + '%',
-          classificacao: shippingCostPercentage < 10 ? 'Ótimo' :
-                         shippingCostPercentage < 15 ? 'Bom' : 'Alto - Requer Ação'
-        },
-
-        distribuicao_por_faixa_peso: Object.entries(faixasPeso).map(([faixa, dados]) => ({
-          faixa: faixa,
-          envios: dados.envios,
-          custo_total: dados.custo.toFixed(2),
-          custo_medio: dados.envios > 0 ? (dados.custo / dados.envios).toFixed(2) : '0.00',
-          percentual_volume: ((dados.envios / envios.length) * 100).toFixed(1) + '%'
-        })),
-
-        oportunidades_economia: oportunidades.length > 0 ? oportunidades : ['Estrutura de custos otimizada']
+        message: 'Estrutura de custo por faixa de peso',
+        periodo_dias: range,
+        rows: formatted,
+        sql_query: sql,
+        sql_params: formatSqlParams([range]),
       };
-
     } catch (error) {
       console.error('ERRO analyzeShippingCostStructure:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: '❌ Erro ao analisar estrutura de custos'
+        message: `Erro ao analisar custo de frete: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
-  }
+  },
 });
 
-// ============================================
-// TOOL 5: Analisar Tendências de Logística Reversa
-// ============================================
 export const analyzeReverseLogisticsTrends = tool({
-  description: 'Analisa devoluções: taxa, motivos principais (pareto), impacto financeiro e recomendações',
+  description: 'Mapeia tendências de logística reversa por data e motivo',
   inputSchema: z.object({
-    date_range_days: z.number().default(60)
-      .describe('Período de análise em dias (padrão: 60)')
+    date_range_days: z.number().default(30).describe('Período de análise em dias'),
   }),
+  execute: async ({ date_range_days = 30 }) => {
+    const range = Math.min(Math.max(Math.trunc(date_range_days), 1), 365);
 
-  execute: async ({ date_range_days = 60 }) => {
+    const sqlTimeline = `
+      WITH filtered AS (
+        SELECT
+          data_solicitacao::date AS dia,
+          status_atual,
+          motivo
+        FROM gestaologistica.logistica_reversa
+        WHERE data_solicitacao >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+      )
+      SELECT
+        dia,
+        COUNT(*) AS total,
+        COUNT(*) FILTER (WHERE status_atual ILIKE 'conclu%') AS concluidas,
+        COUNT(*) FILTER (WHERE status_atual ILIKE 'pend%') AS pendentes
+      FROM filtered
+      GROUP BY dia
+      ORDER BY dia DESC
+    `;
+
+    const sqlMotivos = `
+      WITH filtered AS (
+        SELECT
+          motivo
+        FROM gestaologistica.logistica_reversa
+        WHERE data_solicitacao >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+      )
+      SELECT
+        COALESCE(NULLIF(motivo, ''), 'Não informado') AS motivo,
+        COUNT(*) AS total
+      FROM filtered
+      GROUP BY motivo
+      ORDER BY total DESC
+      LIMIT 10
+    `;
+
     try {
-      const dataInicial = new Date();
-      dataInicial.setDate(dataInicial.getDate() - date_range_days);
-      const dataInicialStr = dataInicial.toISOString().split('T')[0];
+      const timeline = await runQuery<{
+        dia: string;
+        total: string | number;
+        concluidas: string | number;
+        pendentes: string | number;
+      }>(sqlTimeline, [range]);
 
-      // Buscar devoluções
-      const { data: devolucoes, error: errorDev } = await supabase
-        .schema('gestaologistica')
-        .from('logistica_reversa')
-        .select('*')
-        .gte('data_solicitacao', dataInicialStr);
+      const reasons = await runQuery<{
+        motivo: string;
+        total: string | number;
+      }>(sqlMotivos, [range]);
 
-      if (errorDev) throw errorDev;
+      const rows = [
+        ...timeline.map(row => {
+          const total = Number(row.total ?? 0);
+          const concluidas = Number(row.concluidas ?? 0);
+          const pendentes = Number(row.pendentes ?? 0);
+          return {
+            categoria: 'Timeline',
+            chave: row.dia,
+            total,
+            concluidas,
+            pendentes,
+            taxa_conclusao: total > 0 ? `${((concluidas / total) * 100).toFixed(2)}%` : '0%',
+          };
+        }),
+        ...reasons.map((row, index) => ({
+          categoria: 'Motivo',
+          chave: `${index + 1}º ${row.motivo}`,
+          total: Number(row.total ?? 0),
+          concluidas: null,
+          pendentes: null,
+          taxa_conclusao: null,
+        })),
+      ];
 
-      // Buscar envios para calcular taxa
-      const { data: envios, error: errorEnv } = await supabase
-        .schema('gestaologistica')
-        .from('envios')
-        .select('*')
-        .gte('data_postagem', dataInicialStr);
-
-      if (errorEnv) throw errorEnv;
-
-      const totalDevolucoes = devolucoes?.length || 0;
-      const totalEnvios = envios?.length || 0;
-      const returnRate = totalEnvios > 0 ? (totalDevolucoes / totalEnvios) * 100 : 0;
-
-      // Análise de motivos (Pareto)
-      const motivosCont: Record<string, number> = {};
-      devolucoes?.forEach(dev => {
-        const motivo = dev.motivo || 'Não informado';
-        motivosCont[motivo] = (motivosCont[motivo] || 0) + 1;
-      });
-
-      const motivosOrdenados = Object.entries(motivosCont)
-        .map(([motivo, count]) => ({
-          motivo,
-          quantidade: count,
-          percentual: ((count / totalDevolucoes) * 100).toFixed(1) + '%'
-        }))
-        .sort((a, b) => b.quantidade - a.quantidade);
-
-      // Custo estimado (assumindo R$ 25 por devolução)
-      const custoMedioDevolucao = 25;
-      const custoTotal = totalDevolucoes * custoMedioDevolucao;
-
-      // Recomendações
-      const recomendacoes = [];
-      if (returnRate > 10) {
-        recomendacoes.push('Taxa de devolução ALTA (>10%) - investigar causas raiz urgentemente');
-      }
-      if (motivosOrdenados[0]?.motivo.includes('defeito') || motivosOrdenados[0]?.motivo.includes('danificado')) {
-        recomendacoes.push('Principal motivo: defeitos - melhorar QC e embalagem');
-      }
-      if (motivosOrdenados[0]?.motivo.includes('arrependimento') || motivosOrdenados[0]?.motivo.includes('desistência')) {
-        recomendacoes.push('Principal motivo: arrependimento - melhorar descrição de produtos');
-      }
-      if (returnRate < 5) {
-        recomendacoes.push('Taxa de devolução saudável (<5%) - manter processos atuais');
-      }
+      const combinedSql = `${sqlTimeline}\n\n-- Top motivos\n${sqlMotivos}`;
 
       return {
         success: true,
-        message: `✅ Análise de logística reversa concluída (${date_range_days} dias)`,
-        periodo_dias: date_range_days,
-
-        return_rate: {
-          taxa: returnRate.toFixed(2) + '%',
-          total_devolucoes: totalDevolucoes,
-          total_envios: totalEnvios,
-          classificacao: returnRate < 5 ? 'Ótimo' :
-                        returnRate < 10 ? 'Aceitável' : 'Alto - Requer Atenção'
-        },
-
-        impacto_financeiro: {
-          custo_total: custoTotal.toFixed(2),
-          custo_medio_por_devolucao: custoMedioDevolucao.toFixed(2),
-          percentual_receita_frete: 'N/A' // Placeholder
-        },
-
-        motivos_principais: motivosOrdenados.slice(0, 5),
-
-        analise_pareto: {
-          top_3_motivos_percentual: motivosOrdenados.slice(0, 3).reduce((sum, m) =>
-            sum + parseFloat(m.percentual), 0).toFixed(1) + '%',
-          insight: motivosOrdenados.length > 0
-            ? `${motivosOrdenados[0].motivo} representa ${motivosOrdenados[0].percentual} das devoluções`
-            : 'Sem dados suficientes'
-        },
-
-        recomendacoes: recomendacoes
+        message: 'Logística reversa: timeline e principais motivos',
+        periodo_dias: range,
+        rows,
+        sql_query: combinedSql,
+        sql_params: formatSqlParams([range]),
       };
-
     } catch (error) {
       console.error('ERRO analyzeReverseLogisticsTrends:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: '❌ Erro ao analisar logística reversa'
+        message: `Erro ao analisar logística reversa: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
-  }
+  },
 });
 
-// ============================================
-// TOOL 6: Otimizar Dimensões de Pacotes
-// ============================================
 export const optimizePackageDimensions = tool({
-  description: 'Analisa cubagem: peso volumétrico vs real, package efficiency, sugestões de redimensionamento',
+  description: 'Avalia eficiência de cubagem e sugere otimizações de embalagem',
   inputSchema: z.object({
-    transportadora_id: z.string().optional()
-      .describe('Filtrar por transportadora (opcional)')
+    include_examples: z.boolean().default(false).describe('Retornar exemplos de pacotes com baixa eficiência'),
   }),
+  execute: async ({ include_examples = false }) => {
+    const summarySql = `
+      SELECT
+        COALESCE(t.nome, p.transportadora_id) AS transportadora,
+        COUNT(*) AS total_pacotes,
+        AVG(p.peso_kg) AS peso_medio,
+        AVG((p.altura_cm * p.largura_cm * p.comprimento_cm) / 6000.0) AS peso_volumetrico_medio,
+        AVG(p.peso_kg / NULLIF((p.altura_cm * p.largura_cm * p.comprimento_cm) / 6000.0, 0)) AS eficiencia_media,
+        PERCENTILE_CONT(0.1) WITHIN GROUP (ORDER BY p.peso_kg / NULLIF((p.altura_cm * p.largura_cm * p.comprimento_cm) / 6000.0, 0)) AS eficiencia_p10,
+        PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY p.peso_kg / NULLIF((p.altura_cm * p.largura_cm * p.comprimento_cm) / 6000.0, 0)) AS eficiencia_p90
+      FROM gestaologistica.pacotes p
+      LEFT JOIN gestaologistica.transportadoras t ON t.id = p.transportadora_id
+      WHERE p.peso_kg IS NOT NULL
+        AND p.altura_cm IS NOT NULL
+        AND p.largura_cm IS NOT NULL
+        AND p.comprimento_cm IS NOT NULL
+      GROUP BY transportadora
+      ORDER BY eficiencia_media ASC
+    `;
 
-  execute: async ({ transportadora_id }) => {
+    const examplesSql = `
+      SELECT
+        transportadora_id,
+        peso_kg,
+        altura_cm,
+        largura_cm,
+        comprimento_cm,
+        (peso_kg / NULLIF((altura_cm * largura_cm * comprimento_cm) / 6000.0, 0)) AS eficiencia
+      FROM gestaologistica.pacotes
+      WHERE peso_kg IS NOT NULL
+        AND altura_cm IS NOT NULL
+        AND largura_cm IS NOT NULL
+        AND comprimento_cm IS NOT NULL
+      ORDER BY eficiencia ASC
+      LIMIT 5
+    `;
+
     try {
-      let query = supabase
-        .schema('gestaologistica')
-        .from('pacotes')
-        .select('*');
+      const summaryRows = await runQuery<{
+        transportadora: string;
+        total_pacotes: string | number;
+        peso_medio: string | number;
+        peso_volumetrico_medio: string | number;
+        eficiencia_media: string | number;
+        eficiencia_p10: string | number;
+        eficiencia_p90: string | number;
+      }>(summarySql);
 
-      if (transportadora_id) {
-        query = query.eq('transportadora_id', transportadora_id);
+      const formatted = summaryRows.map(row => ({
+        transportadora: row.transportadora ?? 'N/D',
+        total_pacotes: Number(row.total_pacotes ?? 0),
+        peso_medio: Number(row.peso_medio ?? 0).toFixed(2),
+        peso_volumetrico_medio: Number(row.peso_volumetrico_medio ?? 0).toFixed(2),
+        eficiencia_media: Number(row.eficiencia_media ?? 0).toFixed(2),
+        eficiencia_p10: Number(row.eficiencia_p10 ?? 0).toFixed(2),
+        eficiencia_p90: Number(row.eficiencia_p90 ?? 0).toFixed(2),
+        classificacao: Number(row.eficiencia_media ?? 0) >= 0.8 ? 'Boa' : Number(row.eficiencia_media ?? 0) >= 0.6 ? 'Atenção' : 'Crítica',
+      }));
+
+      let exemplos: Array<Record<string, unknown>> | undefined;
+      if (include_examples) {
+        const exampleRows = await runQuery<{
+          transportadora_id: string | null;
+          peso_kg: string | number;
+          altura_cm: string | number;
+          largura_cm: string | number;
+          comprimento_cm: string | number;
+          eficiencia: string | number | null;
+        }>(examplesSql);
+
+        exemplos = exampleRows.map(row => ({
+          transportadora_id: row.transportadora_id ?? 'N/D',
+          peso_kg: Number(row.peso_kg ?? 0).toFixed(2),
+          dimensoes_cm: `${Number(row.altura_cm ?? 0).toFixed(1)} x ${Number(row.largura_cm ?? 0).toFixed(1)} x ${Number(row.comprimento_cm ?? 0).toFixed(1)}`,
+          eficiencia: row.eficiencia !== null ? Number(row.eficiencia).toFixed(2) : '0.00',
+        }));
       }
 
-      const { data: pacotes, error } = await query.limit(100);
-      if (error) throw error;
-
-      if (!pacotes || pacotes.length === 0) {
-        return {
-          success: true,
-          message: '⚠️ Nenhum pacote encontrado',
-          total_pacotes: 0
-        };
-      }
-
-      // Fator divisor padrão: 6000 (cm³/kg)
-      const fatorDivisor = 6000;
-
-      const analise = pacotes.map(p => {
-        const pesoReal = p.peso_kg || 0;
-        const volume = (p.altura_cm || 0) * (p.largura_cm || 0) * (p.comprimento_cm || 0);
-        const pesoVolumetrico = volume / fatorDivisor;
-        const efficiency = pesoVolumetrico > 0 ? (pesoReal / pesoVolumetrico) * 100 : 100;
-
-        const status = efficiency >= 80 ? 'Otimizado'
-          : efficiency >= 50 ? 'Aceitável'
-          : 'Desperdiçando espaço';
-
-        const sugestao = efficiency < 50
-          ? `Reduzir dimensões - embalagem ${Math.round((1 - efficiency / 100) * 100)}% maior que necessário`
-          : efficiency < 80
-          ? 'Considerar embalagens menores'
-          : 'Dimensões otimizadas';
-
-        return {
-          peso_real: pesoReal.toFixed(2),
-          peso_volumetrico: pesoVolumetrico.toFixed(2),
-          volume_cm3: volume,
-          efficiency_score: efficiency.toFixed(1) + '%',
-          status,
-          sugestao,
-          cobrado: pesoVolumetrico > pesoReal ? 'Volumétrico' : 'Real',
-          diferenca_custo: pesoVolumetrico > pesoReal
-            ? ((pesoVolumetrico - pesoReal) * 5).toFixed(2) // Assumindo R$ 5/kg
-            : '0.00'
-        };
-      });
-
-      const mediaEfficiency = analise.reduce((sum, a) =>
-        sum + parseFloat(a.efficiency_score), 0) / analise.length;
-
-      const desperdicandoEspaco = analise.filter(a => parseFloat(a.efficiency_score) < 50).length;
-      const otimizados = analise.filter(a => parseFloat(a.efficiency_score) >= 80).length;
+      const combinedSql = include_examples ? `${summarySql}\n\n-- Exemplos\n${examplesSql}` : summarySql;
 
       return {
         success: true,
-        message: `✅ Análise de ${pacotes.length} pacotes concluída`,
-        transportadora_id: transportadora_id || 'TODAS',
-        total_pacotes: pacotes.length,
-
-        package_efficiency: {
-          score_medio: mediaEfficiency.toFixed(1) + '%',
-          classificacao: mediaEfficiency >= 70 ? 'Boa' : mediaEfficiency >= 50 ? 'Regular' : 'Ruim',
-          otimizados: otimizados,
-          desperdicando_espaco: desperdicandoEspaco
-        },
-
-        analise_detalhada: analise.slice(0, 20),
-
-        recomendacoes: [
-          desperdicandoEspaco > pacotes.length * 0.3
-            ? `${desperdicandoEspaco} pacotes (${Math.round(desperdicandoEspaco / pacotes.length * 100)}%) desperdiçando espaço - padronizar embalagens`
-            : 'Maioria dos pacotes bem dimensionados',
-          mediaEfficiency < 70
-            ? 'Efficiency médio baixo - revisar tipos de embalagem disponíveis'
-            : 'Efficiency satisfatório'
-        ]
+        message: 'Eficiência de cubagem por transportadora',
+        rows: formatted,
+        low_efficiency_examples: exemplos,
+        sql_query: combinedSql,
+        sql_params: formatSqlParams([]),
       };
-
     } catch (error) {
       console.error('ERRO optimizePackageDimensions:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: '❌ Erro ao otimizar dimensões de pacotes'
+        message: `Erro ao analisar pacotes: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
-  }
+  },
 });
 
-// ============================================
-// TOOL 7: Detectar Anomalias em Entregas
-// ============================================
 export const detectDeliveryAnomalies = tool({
-  description: 'Detecta atrasos críticos (z-score), rotas problemáticas e red flags usando análise estatística',
+  description: 'Detecta anomalias em atraso de entregas usando z-score diário',
   inputSchema: z.object({
-    sensitivity: z.enum(['low', 'medium', 'high']).default('medium')
-      .describe('Sensibilidade: low (z > 3), medium (z > 2), high (z > 1.5)'),
-    date_range_days: z.number().default(30)
-      .describe('Período de análise em dias (padrão: 30)')
+    date_range_days: z.number().default(60).describe('Período de análise em dias'),
+    sensitivity: z.number().default(2).describe('Sensibilidade do Z-score (padrão: 2)'),
   }),
+  execute: async ({ date_range_days = 60, sensitivity = 2 }) => {
+    const range = Math.min(Math.max(Math.trunc(date_range_days), 7), 365);
 
-  execute: async ({ sensitivity = 'medium', date_range_days = 30 }) => {
+    const sql = `
+      WITH filtered_envios AS (
+        SELECT
+          data_postagem::date AS dia,
+          data_entrega,
+          data_prevista_entrega
+        FROM gestaologistica.envios
+        WHERE data_postagem >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+      )
+      SELECT
+        dia,
+        COUNT(*) AS total_envios,
+        COUNT(*) FILTER (WHERE data_entrega IS NOT NULL) AS entregues,
+        COUNT(*) FILTER (
+          WHERE data_entrega IS NOT NULL
+            AND data_entrega > data_prevista_entrega
+        ) AS atrasados
+      FROM filtered_envios
+      GROUP BY dia
+      ORDER BY dia
+    `;
+
     try {
-      const dataInicial = new Date();
-      dataInicial.setDate(dataInicial.getDate() - date_range_days);
-      const dataInicialStr = dataInicial.toISOString().split('T')[0];
+      const rows = await runQuery<{
+        dia: string;
+        total_envios: string | number | null;
+        entregues: string | number | null;
+        atrasados: string | number | null;
+      }>(sql, [range]);
 
-      const { data: envios, error } = await supabase
-        .schema('gestaologistica')
-        .from('envios')
-        .select('*')
-        .gte('data_postagem', dataInicialStr);
-
-      if (error) throw error;
-
-      if (!envios || envios.length === 0) {
+      if (!rows.length) {
         return {
-          success: true,
-          message: '⚠️ Nenhum envio encontrado',
-          anomalias: []
+          success: false,
+          message: 'Nenhum envio encontrado para análise de anomalias',
+          sql_query: sql,
+          sql_params: formatSqlParams([range]),
         };
       }
 
-      // Calcular tempo de entrega para cada envio
-      const temposEntrega = envios
-        .filter(e => e.data_entrega)
-        .map(e => {
-          const dataEntrega = new Date(e.data_entrega);
-          const dataPostagem = new Date(e.data_postagem);
-          return {
-            envio: e,
-            dias: (dataEntrega.getTime() - dataPostagem.getTime()) / (1000 * 60 * 60 * 24)
-          };
-        });
-
-      if (temposEntrega.length < 3) {
-        return {
-          success: true,
-          message: 'Dados insuficientes para análise estatística',
-          anomalias: []
-        };
-      }
-
-      // Calcular média e desvio padrão
-      const media = temposEntrega.reduce((sum, t) => sum + t.dias, 0) / temposEntrega.length;
-      const variancia = temposEntrega.reduce((sum, t) =>
-        sum + Math.pow(t.dias - media, 2), 0) / temposEntrega.length;
-      const desvioPadrao = Math.sqrt(variancia);
-
-      // Threshold baseado na sensibilidade
-      const thresholds: Record<string, number> = {
-        low: 3.0,
-        medium: 2.0,
-        high: 1.5
-      };
-      const threshold = thresholds[sensitivity];
-
-      // Detectar anomalias
-      const anomalias: Array<{
-        codigo_rastreio: string;
-        dias_entrega: number;
-        z_score: number;
-        severidade: string;
-        tipo_anomalia: string;
-        recomendacao: string;
-      }> = [];
-
-      temposEntrega.forEach(({ envio, dias }) => {
-        const zScore = desvioPadrao > 0 ? Math.abs((dias - media) / desvioPadrao) : 0;
-
-        if (zScore > threshold) {
-          const severidade = zScore > 3 ? 'CRÍTICA' : zScore > 2 ? 'ALTA' : 'MÉDIA';
-          const tipoAnomalia = dias > media ? 'ATRASO_SIGNIFICATIVO' : 'ENTREGA_SUSPEITAMENTE_RÁPIDA';
-
-          anomalias.push({
-            codigo_rastreio: envio.codigo_rastreio,
-            dias_entrega: parseFloat(dias.toFixed(1)),
-            z_score: parseFloat(zScore.toFixed(2)),
-            severidade,
-            tipo_anomalia: tipoAnomalia,
-            recomendacao: tipoAnomalia === 'ATRASO_SIGNIFICATIVO'
-              ? 'Investigar causa do atraso - possível problema com transportadora ou rota'
-              : 'Verificar se dados estão corretos'
-          });
-        }
+      const ratios = rows.map(row => {
+        const total = Number(row.entregues ?? 0);
+        const atrasos = Number(row.atrasados ?? 0);
+        return total > 0 ? atrasos / total : 0;
       });
 
-      // Ordenar por severidade
-      anomalias.sort((a, b) => b.z_score - a.z_score);
+      const mean = ratios.reduce((acc, v) => acc + v, 0) / ratios.length;
+      const variance = ratios.reduce((acc, v) => acc + Math.pow(v - mean, 2), 0) / ratios.length;
+      const stdDev = Math.sqrt(variance);
+
+      const anomalies = rows.map((row, index) => {
+        const entregues = Number(row.entregues ?? 0);
+        const atrasados = Number(row.atrasados ?? 0);
+        const ratio = entregues > 0 ? atrasados / entregues : 0;
+        const zScore = stdDev > 0 ? (ratio - mean) / stdDev : 0;
+
+        return {
+          data: row.dia,
+          entregues,
+          atrasados,
+          atraso_percentual: `${(ratio * 100).toFixed(2)}%`,
+          z_score: Number(zScore.toFixed(2)),
+          severidade: Math.abs(zScore) > sensitivity * 1.5 ? 'Crítica' : Math.abs(zScore) > sensitivity ? 'Alta' : 'Normal',
+        };
+      });
+
+      const flagged = anomalies.filter(row => Math.abs(row.z_score) > sensitivity);
 
       return {
         success: true,
-        message: `✅ ${anomalias.length} anomalias detectadas (sensibilidade: ${sensitivity})`,
-        periodo_dias: date_range_days,
-        sensitivity: sensitivity,
-
-        estatisticas_base: {
-          media_dias_entrega: media.toFixed(1),
-          desvio_padrao: desvioPadrao.toFixed(1),
-          total_envios_analisados: temposEntrega.length
-        },
-
-        total_anomalias: anomalias.length,
-        anomalias_criticas: anomalias.filter(a => a.severidade === 'CRÍTICA').length,
-        anomalias_altas: anomalias.filter(a => a.severidade === 'ALTA').length,
-
-        anomalias: anomalias.slice(0, 50),
-
-        red_flags: [
-          anomalias.filter(a => a.severidade === 'CRÍTICA').length > 5
-            ? `${anomalias.filter(a => a.severidade === 'CRÍTICA').length} atrasos críticos - ação urgente necessária`
-            : null,
-          anomalias.length > temposEntrega.length * 0.1
-            ? 'Mais de 10% dos envios com anomalias - revisar processo logístico'
-            : null
-        ].filter(Boolean)
+        message: `${flagged.length} dias com anomalias de atraso detectados`,
+        periodo_dias: range,
+        sensitivity,
+        rows: anomalies,
+        sql_query: sql,
+        sql_params: formatSqlParams([range]),
       };
-
     } catch (error) {
       console.error('ERRO detectDeliveryAnomalies:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: '❌ Erro ao detectar anomalias'
+        message: `Erro ao detectar anomalias de entrega: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
-  }
+  },
 });
 
-// ============================================
-// TOOL 8: Prever Custos de Entrega
-// ============================================
+const simpleLinearRegression = (points: Array<{ x: number; y: number }>) => {
+  const n = points.length;
+  if (n === 0) {
+    return { slope: 0, intercept: 0 };
+  }
+  const sumX = points.reduce((acc, p) => acc + p.x, 0);
+  const sumY = points.reduce((acc, p) => acc + p.y, 0);
+  const sumXY = points.reduce((acc, p) => acc + p.x * p.y, 0);
+  const sumX2 = points.reduce((acc, p) => acc + p.x * p.x, 0);
+
+  const denominator = (n * sumX2) - (sumX * sumX);
+  if (denominator === 0) {
+    return { slope: 0, intercept: sumY / n };
+  }
+
+  const slope = ((n * sumXY) - (sumX * sumY)) / denominator;
+  const intercept = (sumY - (slope * sumX)) / n;
+  return { slope, intercept };
+};
+
 export const forecastDeliveryCosts = tool({
-  description: 'Projeta custos futuros baseado em histórico, identifica sazonalidade e tendências',
+  description: 'Projeção de custos de frete baseada em tendência linear dos últimos 60 dias',
   inputSchema: z.object({
-    forecast_days: z.number().default(30)
-      .describe('Quantos dias prever no futuro (padrão: 30)'),
-    lookback_days: z.number().default(90)
-      .describe('Dias de histórico para análise (padrão: 90)')
+    date_range_days: z.number().default(60).describe('Histórico em dias para calcular a tendência'),
+    forecast_days: z.number().default(7).describe('Quantidade de dias a prever'),
   }),
+  execute: async ({ date_range_days = 60, forecast_days = 7 }) => {
+    const history = Math.min(Math.max(Math.trunc(date_range_days), 14), 365);
+    const forecastHorizon = Math.min(Math.max(Math.trunc(forecast_days), 1), 30);
 
-  execute: async ({ forecast_days = 30, lookback_days = 90 }) => {
+    const sql = `
+      SELECT
+        data_postagem::date AS dia,
+        SUM(custo_frete) AS custo_total,
+        SUM(peso_kg) AS peso_total,
+        COUNT(*) AS envios
+      FROM gestaologistica.envios
+      WHERE data_postagem >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+      GROUP BY dia
+      ORDER BY dia
+    `;
+
     try {
-      const dataInicial = new Date();
-      dataInicial.setDate(dataInicial.getDate() - lookback_days);
-      const dataInicialStr = dataInicial.toISOString().split('T')[0];
+      const historical = await runQuery<{
+        dia: string;
+        custo_total: string | number;
+        peso_total: string | number;
+        envios: string | number;
+      }>(sql, [history]);
 
-      const { data: envios, error } = await supabase
-        .schema('gestaologistica')
-        .from('envios')
-        .select('*')
-        .gte('data_postagem', dataInicialStr)
-        .order('data_postagem', { ascending: true });
-
-      if (error) throw error;
-
-      if (!envios || envios.length === 0) {
+      if (historical.length < 2) {
         return {
-          success: true,
-          message: '⚠️ Dados insuficientes para previsão',
-          custo_previsto: 0
+          success: false,
+          message: 'Histórico insuficiente para previsão de custos',
+          sql_query: sql,
+          sql_params: formatSqlParams([history]),
         };
       }
 
-      // Agrupar por semana
-      const custoPorSemana: Record<string, { custo: number; volume: number }> = {};
+      const points = historical.map((row, index) => ({
+        x: index + 1,
+        y: Number(row.custo_total ?? 0),
+        dia: row.dia,
+        envios: Number(row.envios ?? 0),
+        peso_total: Number(row.peso_total ?? 0),
+      }));
 
-      envios.forEach(envio => {
-        const data = new Date(envio.data_postagem);
-        const semana = Math.floor(data.getTime() / (7 * 24 * 60 * 60 * 1000));
-        const semanaKey = `Semana ${semana}`;
+      const regression = simpleLinearRegression(points.map(({ x, y }) => ({ x, y })));
 
-        if (!custoPorSemana[semanaKey]) {
-          custoPorSemana[semanaKey] = { custo: 0, volume: 0 };
-        }
-
-        custoPorSemana[semanaKey].custo += envio.custo_frete || 0;
-        custoPorSemana[semanaKey].volume++;
+      const forecastRows = Array.from({ length: forecastHorizon }, (_, idx) => {
+        const x = points.length + idx + 1;
+        const projectedCost = Math.max(0, regression.intercept + regression.slope * x);
+        return {
+          periodo: `D+${idx + 1}`,
+          custo_previsto: Number(projectedCost.toFixed(2)),
+        };
       });
 
-      const semanas = Object.values(custoPorSemana);
-      const mediaCustoSemanal = semanas.reduce((sum, s) => sum + s.custo, 0) / semanas.length;
-      const mediaVolumeSemanal = semanas.reduce((sum, s) => sum + s.volume, 0) / semanas.length;
+      const lastPoint = points[points.length - 1];
 
-      // Regressão linear simples para tendência
-      const n = semanas.length;
-      const somaX = (n * (n + 1)) / 2;
-      const somaY = semanas.reduce((sum, s) => sum + s.custo, 0);
-      const somaXY = semanas.reduce((sum, s, i) => sum + (i + 1) * s.custo, 0);
-      const somaX2 = (n * (n + 1) * (2 * n + 1)) / 6;
+      const rows = [
+        {
+          categoria: 'Histórico',
+          periodo: `${points.length} dias`,
+          custo_previsto: points.reduce((acc, point) => acc + point.y, 0) / points.length,
+          detalhe: 'Custo médio diário',
+        },
+        ...forecastRows.map(row => ({
+          categoria: 'Forecast',
+          periodo: row.periodo,
+          custo_previsto: row.custo_previsto,
+          detalhe: `Projeção linear (inclinação ${regression.slope.toFixed(2)})`,
+        })),
+      ];
 
-      const slope = (n * somaXY - somaX * somaY) / (n * somaX2 - somaX * somaX);
-      const tendencia = slope > 50 ? 'crescente' : slope < -50 ? 'decrescente' : 'estável';
-
-      // Projeção
-      const semanasPrevisao = Math.ceil(forecast_days / 7);
-      const custoPrevisto = mediaCustoSemanal * semanasPrevisao;
-      const volumePrevisto = Math.round(mediaVolumeSemanal * semanasPrevisao);
+      const summary = {
+        custo_medio_diario: points.reduce((acc, point) => acc + point.y, 0) / points.length,
+        ultimo_custo: lastPoint.y,
+        slope: regression.slope,
+      };
 
       return {
         success: true,
-        message: `✅ Previsão de custos para ${forecast_days} dias concluída`,
-        forecast_days: forecast_days,
-        lookback_days: lookback_days,
-
-        historico: {
-          media_custo_semanal: mediaCustoSemanal.toFixed(2),
-          media_volume_semanal: Math.round(mediaVolumeSemanal),
-          tendencia: tendencia,
-          slope: slope.toFixed(2)
-        },
-
-        previsao: {
-          custo_previsto_total: custoPrevisto.toFixed(2),
-          volume_previsto_envios: volumePrevisto,
-          custo_medio_por_envio: volumePrevisto > 0 ? (custoPrevisto / volumePrevisto).toFixed(2) : '0.00',
-          periodo: `próximos ${forecast_days} dias (${semanasPrevisao} semanas)`
-        },
-
-        insights: [
-          tendencia === 'crescente'
-            ? `Custos em crescimento - esperado aumento de ${(slope * semanasPrevisao).toFixed(2)} nas próximas semanas`
-            : tendencia === 'decrescente'
-            ? 'Custos em queda - otimizações surtindo efeito'
-            : 'Custos estáveis - manter processos atuais',
-          `Budget recomendado: R$ ${(custoPrevisto * 1.1).toFixed(2)} (10% margem de segurança)`
-        ]
+        message: `Previsão de custo de frete para os próximos ${forecastHorizon} dias`,
+        periodo_dias: history,
+        forecast_dias: forecastHorizon,
+        rows,
+        summary,
+        sql_query: sql,
+        sql_params: formatSqlParams([history]),
       };
-
     } catch (error) {
       console.error('ERRO forecastDeliveryCosts:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: '❌ Erro ao prever custos de entrega'
+        message: `Erro ao prever custos de entrega: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
-  }
+  },
 });
