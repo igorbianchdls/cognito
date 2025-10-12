@@ -74,19 +74,31 @@ const buildLogisticsDataQuery = (args: {
     index += 1;
   };
 
-  if (status_atual && (table === 'envios' || table === 'logistica_reversa')) {
-    push('status_atual =', status_atual);
+  if (status_atual) {
+    if (table === 'envios') {
+      push('status_atual =', status_atual);
+    } else if (table === 'logistica_reversa') {
+      // Na reversa a coluna é 'status'
+      push('status =', status_atual);
+    }
   }
 
-  if (transportadora_id && (table === 'envios' || table === 'pacotes')) {
+  if (transportadora_id && (table === 'envios' || table === 'pacotes' || table === 'logistica_reversa')) {
     push('transportadora_id =', transportadora_id);
   }
 
   if (codigo_rastreio) {
-    push('codigo_rastreio =', codigo_rastreio);
+    if (table === 'envios') {
+      push('codigo_rastreio =', codigo_rastreio);
+    } else if (table === 'eventos_rastreio') {
+      // eventos_rastreio não possui 'codigo_rastreio'; filtra via envio_id
+      conditions.push(`envio_id IN (SELECT id FROM gestaologistica.envios WHERE codigo_rastreio = $${index})`);
+      params.push(codigo_rastreio);
+      index += 1;
+    }
   }
 
-  if (order_id && (table === 'envios' || table === 'logistica_reversa')) {
+  if (order_id && table === 'envios') {
     push('order_id =', order_id);
   }
 
@@ -160,14 +172,15 @@ export const getLogisticsData = tool({
     try {
       const limit = normalizeLimit(input.limit);
       const { sql, params } = buildLogisticsDataQuery({ ...input, limit });
-      const data = await runQuery<Record<string, unknown>>(sql, params);
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
 
       return {
         success: true,
-        count: data.length,
+        count: rows.length,
         table: input.table,
-        message: `✅ ${data.length} registros encontrados em ${input.table}`,
-        data,
+        message: `✅ ${rows.length} registros encontrados em ${input.table}`,
+        rows,
+        data: rows,
         sql_query: sql,
         sql_params: formatSqlParams(params),
       };
@@ -178,6 +191,7 @@ export const getLogisticsData = tool({
         message: `❌ Erro ao buscar dados de ${input.table}`,
         table: input.table,
         error: error instanceof Error ? error.message : JSON.stringify(error),
+        rows: [],
         data: [],
       };
     }
@@ -198,27 +212,24 @@ export const calculateDeliveryPerformance = tool({
         SELECT
           id,
           transportadora_id,
-          codigo_rastreio,
           data_postagem,
-          data_prevista_entrega,
-          data_entrega,
+          data_estimada_entrega,
+          data_entrega_real,
           created_at,
           custo_frete,
-          peso_kg
         FROM gestaologistica.envios
         WHERE data_postagem >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
           ${transportadora_id ? 'AND transportadora_id = $2' : ''}
       )
       SELECT
         COUNT(*) AS total_envios,
-        COUNT(*) FILTER (WHERE data_entrega IS NOT NULL) AS entregues,
-        COUNT(*) FILTER (WHERE data_entrega IS NOT NULL AND data_entrega <= data_prevista_entrega) AS entregues_no_prazo,
-        AVG(EXTRACT(EPOCH FROM (data_entrega - data_postagem)) / 86400.0) FILTER (WHERE data_entrega IS NOT NULL) AS avg_delivery_days,
-        MIN(EXTRACT(EPOCH FROM (data_entrega - data_postagem)) / 86400.0) FILTER (WHERE data_entrega IS NOT NULL) AS min_delivery_days,
-        MAX(EXTRACT(EPOCH FROM (data_entrega - data_postagem)) / 86400.0) FILTER (WHERE data_entrega IS NOT NULL) AS max_delivery_days,
+        COUNT(*) FILTER (WHERE data_entrega_real IS NOT NULL) AS entregues,
+        COUNT(*) FILTER (WHERE data_entrega_real IS NOT NULL AND data_entrega_real <= data_estimada_entrega) AS entregues_no_prazo,
+        AVG(EXTRACT(EPOCH FROM (data_entrega_real - data_postagem)) / 86400.0) FILTER (WHERE data_entrega_real IS NOT NULL) AS avg_delivery_days,
+        MIN(EXTRACT(EPOCH FROM (data_entrega_real - data_postagem)) / 86400.0) FILTER (WHERE data_entrega_real IS NOT NULL) AS min_delivery_days,
+        MAX(EXTRACT(EPOCH FROM (data_entrega_real - data_postagem)) / 86400.0) FILTER (WHERE data_entrega_real IS NOT NULL) AS max_delivery_days,
         AVG(EXTRACT(EPOCH FROM (data_postagem - created_at)) / 3600.0) AS avg_lead_hours,
-        SUM(custo_frete) AS custo_total,
-        SUM(peso_kg) AS peso_total
+        SUM(custo_frete) AS custo_total
       FROM filtered_envios
     `;
 
@@ -226,22 +237,21 @@ export const calculateDeliveryPerformance = tool({
       WITH filtered_envios AS (
         SELECT
           id,
-          codigo_rastreio,
-          data_entrega,
-          data_prevista_entrega
+          data_entrega_real,
+          data_estimada_entrega
         FROM gestaologistica.envios
         WHERE data_postagem >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
           ${transportadora_id ? 'AND transportadora_id = $2' : ''}
       )
       SELECT
-        COUNT(*) FILTER (WHERE data_entrega IS NOT NULL) AS entregues,
+        COUNT(*) FILTER (WHERE data_entrega_real IS NOT NULL) AS entregues,
         COUNT(*) FILTER (
-          WHERE data_entrega IS NOT NULL
+          WHERE data_entrega_real IS NOT NULL
             AND EXISTS (
               SELECT 1
               FROM gestaologistica.eventos_rastreio er
-              WHERE er.codigo_rastreio = fe.codigo_rastreio
-                AND er.descricao ILIKE '%tentativa%'
+              WHERE er.envio_id = fe.id
+                AND (er.mensagem ILIKE '%tentativa%' OR er.status ILIKE '%tentativa%')
             )
         ) AS entregas_com_tentativa
       FROM filtered_envios fe
@@ -259,7 +269,6 @@ export const calculateDeliveryPerformance = tool({
         max_delivery_days: string | number | null;
         avg_lead_hours: string | number | null;
         custo_total: string | number | null;
-        peso_total: string | number | null;
       }>(summarySql, params))[0] ?? {
         total_envios: 0,
         entregues: 0,
@@ -269,7 +278,6 @@ export const calculateDeliveryPerformance = tool({
         max_delivery_days: null,
         avg_lead_hours: null,
         custo_total: 0,
-        peso_total: 0,
       };
 
       const attempts = (await runQuery<{
@@ -288,7 +296,7 @@ export const calculateDeliveryPerformance = tool({
       const maxDeliveryDays = Number(summary.max_delivery_days ?? 0);
       const avgLeadHours = Number(summary.avg_lead_hours ?? 0);
       const costoTotal = Number(summary.custo_total ?? 0);
-      const totalPeso = Number(summary.peso_total ?? 0);
+      const totalPeso = 0; // não disponível diretamente aqui
       const entreguesTentativa = Number(attempts.entregas_com_tentativa ?? 0);
 
       const onTimeRate = delivered > 0 ? (onTime / delivered) * 100 : 0;
@@ -375,6 +383,10 @@ export const calculateDeliveryPerformance = tool({
         rows,
         sql_query: combinedSql,
         sql_params: formatSqlParams(params),
+        sql_queries: [
+          { name: 'resumo_envios', sql: summarySql, params },
+          { name: 'tentativas_entrega', sql: attemptSql, params },
+        ],
       };
     } catch (error) {
       console.error('ERRO calculateDeliveryPerformance:', error);
@@ -399,12 +411,10 @@ export const analyzeCarrierBenchmark = tool({
         SELECT
           e.id,
           e.transportadora_id,
-          e.codigo_rastreio,
           e.data_postagem,
-          e.data_prevista_entrega,
-          e.data_entrega,
+          e.data_estimada_entrega,
+          e.data_entrega_real,
           e.custo_frete,
-          e.peso_kg
         FROM gestaologistica.envios e
         WHERE e.data_postagem >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
       ),
@@ -412,22 +422,21 @@ export const analyzeCarrierBenchmark = tool({
         SELECT
           fe.transportadora_id,
           COUNT(*) AS total_envios,
-          COUNT(*) FILTER (WHERE fe.data_entrega IS NOT NULL) AS entregues,
+          COUNT(*) FILTER (WHERE fe.data_entrega_real IS NOT NULL) AS entregues,
           COUNT(*) FILTER (
-            WHERE fe.data_entrega IS NOT NULL
-              AND fe.data_entrega <= fe.data_prevista_entrega
+            WHERE fe.data_entrega_real IS NOT NULL
+              AND fe.data_entrega_real <= fe.data_estimada_entrega
           ) AS entregues_no_prazo,
-          AVG(EXTRACT(EPOCH FROM (fe.data_entrega - fe.data_postagem)) / 86400.0) FILTER (WHERE fe.data_entrega IS NOT NULL) AS avg_delivery_days,
+          AVG(EXTRACT(EPOCH FROM (fe.data_entrega_real - fe.data_postagem)) / 86400.0) FILTER (WHERE fe.data_entrega_real IS NOT NULL) AS avg_delivery_days,
           SUM(fe.custo_frete) AS custo_total,
-          SUM(fe.peso_kg) AS peso_total,
           SUM(
             CASE
-              WHEN fe.data_entrega IS NOT NULL
+              WHEN fe.data_entrega_real IS NOT NULL
                 AND EXISTS (
                   SELECT 1
                   FROM gestaologistica.eventos_rastreio er
-                  WHERE er.codigo_rastreio = fe.codigo_rastreio
-                    AND er.descricao ILIKE '%tentativa%'
+                  WHERE er.envio_id = fe.id
+                    AND (er.mensagem ILIKE '%tentativa%' OR er.status ILIKE '%tentativa%')
                 )
               THEN 1 ELSE 0
             END
@@ -442,7 +451,6 @@ export const analyzeCarrierBenchmark = tool({
         agg.entregues_no_prazo,
         agg.avg_delivery_days,
         agg.custo_total,
-        agg.peso_total,
         agg.entregas_com_tentativa
       FROM agg
       LEFT JOIN gestaologistica.transportadoras t
@@ -526,14 +534,12 @@ export const analyzeShippingCostStructure = tool({
     const range = Math.min(Math.max(Math.trunc(date_range_days), 1), 365);
 
     const sql = `
-      WITH filtered_envios AS (
+      WITH pac AS (
         SELECT
-          data_postagem,
-          custo_frete,
-          peso_kg
-        FROM gestaologistica.envios
-        WHERE data_postagem >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
-          AND custo_frete IS NOT NULL
+          peso_kg,
+          created_at
+        FROM gestaologistica.pacotes
+        WHERE created_at >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
           AND peso_kg IS NOT NULL
       )
       SELECT
@@ -544,15 +550,11 @@ export const analyzeShippingCostStructure = tool({
           WHEN peso_kg < 20 THEN '10 - 20 kg'
           ELSE '20+ kg'
         END AS faixa_peso,
-        COUNT(*) AS total_envios,
-        SUM(custo_frete) AS custo_total,
-        AVG(custo_frete) AS custo_medio_envio,
-        SUM(peso_kg) AS peso_total,
-        AVG(custo_frete / NULLIF(peso_kg, 0)) AS custo_medio_por_kg
-      FROM filtered_envios
+        COUNT(*) AS total_pacotes,
+        AVG(peso_kg) AS peso_medio
+      FROM pac
       GROUP BY faixa_peso
-      ORDER BY
-        MIN(peso_kg)
+      ORDER BY MIN(peso_kg)
     `;
 
     try {
@@ -604,7 +606,7 @@ export const analyzeReverseLogisticsTrends = tool({
       WITH filtered AS (
         SELECT
           data_solicitacao::date AS dia,
-          status_atual,
+          status,
           motivo
         FROM gestaologistica.logistica_reversa
         WHERE data_solicitacao >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
@@ -612,8 +614,8 @@ export const analyzeReverseLogisticsTrends = tool({
       SELECT
         dia,
         COUNT(*) AS total,
-        COUNT(*) FILTER (WHERE status_atual ILIKE 'conclu%') AS concluidas,
-        COUNT(*) FILTER (WHERE status_atual ILIKE 'pend%') AS pendentes
+        COUNT(*) FILTER (WHERE status ILIKE 'conclu%') AS concluidas,
+        COUNT(*) FILTER (WHERE status ILIKE 'pend%') AS pendentes
       FROM filtered
       GROUP BY dia
       ORDER BY dia DESC
@@ -681,6 +683,10 @@ export const analyzeReverseLogisticsTrends = tool({
         rows,
         sql_query: combinedSql,
         sql_params: formatSqlParams([range]),
+        sql_queries: [
+          { name: 'timeline', sql: sqlTimeline, params: [range] },
+          { name: 'motivos', sql: sqlMotivos, params: [range] },
+        ],
       };
     } catch (error) {
       console.error('ERRO analyzeReverseLogisticsTrends:', error);
@@ -703,15 +709,15 @@ export const optimizePackageDimensions = tool({
         COALESCE(t.nome, p.transportadora_id) AS transportadora,
         COUNT(*) AS total_pacotes,
         AVG(p.peso_kg) AS peso_medio,
-        AVG((p.altura_cm * p.largura_cm * p.comprimento_cm) / 6000.0) AS peso_volumetrico_medio,
-        AVG(p.peso_kg / NULLIF((p.altura_cm * p.largura_cm * p.comprimento_cm) / 6000.0, 0)) AS eficiencia_media,
-        PERCENTILE_CONT(0.1) WITHIN GROUP (ORDER BY p.peso_kg / NULLIF((p.altura_cm * p.largura_cm * p.comprimento_cm) / 6000.0, 0)) AS eficiencia_p10,
-        PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY p.peso_kg / NULLIF((p.altura_cm * p.largura_cm * p.comprimento_cm) / 6000.0, 0)) AS eficiencia_p90
+        AVG((p.altura_cm * COALESCE(p.largura_cm, p.lar_cm) * p.comprimento_cm) / 6000.0) AS peso_volumetrico_medio,
+        AVG(p.peso_kg / NULLIF((p.altura_cm * COALESCE(p.largura_cm, p.lar_cm) * p.comprimento_cm) / 6000.0, 0)) AS eficiencia_media,
+        PERCENTILE_CONT(0.1) WITHIN GROUP (ORDER BY p.peso_kg / NULLIF((p.altura_cm * COALESCE(p.largura_cm, p.lar_cm) * p.comprimento_cm) / 6000.0, 0)) AS eficiencia_p10,
+        PERCENTILE_CONT(0.9) WITHIN GROUP (ORDER BY p.peso_kg / NULLIF((p.altura_cm * COALESCE(p.largura_cm, p.lar_cm) * p.comprimento_cm) / 6000.0, 0)) AS eficiencia_p90
       FROM gestaologistica.pacotes p
       LEFT JOIN gestaologistica.transportadoras t ON t.id = p.transportadora_id
       WHERE p.peso_kg IS NOT NULL
         AND p.altura_cm IS NOT NULL
-        AND p.largura_cm IS NOT NULL
+        AND (p.largura_cm IS NOT NULL OR p.lar_cm IS NOT NULL)
         AND p.comprimento_cm IS NOT NULL
       GROUP BY transportadora
       ORDER BY eficiencia_media ASC
@@ -722,13 +728,13 @@ export const optimizePackageDimensions = tool({
         transportadora_id,
         peso_kg,
         altura_cm,
-        largura_cm,
+        COALESCE(largura_cm, lar_cm) AS largura_cm,
         comprimento_cm,
-        (peso_kg / NULLIF((altura_cm * largura_cm * comprimento_cm) / 6000.0, 0)) AS eficiencia
+        (peso_kg / NULLIF((altura_cm * COALESCE(largura_cm, lar_cm) * comprimento_cm) / 6000.0, 0)) AS eficiencia
       FROM gestaologistica.pacotes
       WHERE peso_kg IS NOT NULL
         AND altura_cm IS NOT NULL
-        AND largura_cm IS NOT NULL
+        AND (largura_cm IS NOT NULL OR lar_cm IS NOT NULL)
         AND comprimento_cm IS NOT NULL
       ORDER BY eficiencia ASC
       LIMIT 5
@@ -808,18 +814,18 @@ export const detectDeliveryAnomalies = tool({
       WITH filtered_envios AS (
         SELECT
           data_postagem::date AS dia,
-          data_entrega,
-          data_prevista_entrega
+          data_entrega_real,
+          data_estimada_entrega
         FROM gestaologistica.envios
         WHERE data_postagem >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
       )
       SELECT
         dia,
         COUNT(*) AS total_envios,
-        COUNT(*) FILTER (WHERE data_entrega IS NOT NULL) AS entregues,
+        COUNT(*) FILTER (WHERE data_entrega_real IS NOT NULL) AS entregues,
         COUNT(*) FILTER (
-          WHERE data_entrega IS NOT NULL
-            AND data_entrega > data_prevista_entrega
+          WHERE data_entrega_real IS NOT NULL
+            AND data_entrega_real > data_estimada_entrega
         ) AS atrasados
       FROM filtered_envios
       GROUP BY dia
