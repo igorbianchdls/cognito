@@ -62,7 +62,7 @@ const METRIC_OPTIONS = [
     axisLabel: 'CPC (R$)',
     description: 'Custo por clique. Indicador de eficiência do tráfego.',
     benchmark: BENCHMARKS.cpc,
-    extractor: (metricas) =>
+    extractor: (metricas: CostMetricsResultProps['metricas']) =>
       metricas ? parseCurrency(metricas.cpc) : 0,
     formatter: (value: number) =>
       value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
@@ -73,7 +73,7 @@ const METRIC_OPTIONS = [
     axisLabel: 'CPA (R$)',
     description: 'Custo por aquisição. Mostra quanto custa converter.',
     benchmark: BENCHMARKS.cpa,
-    extractor: (metricas) =>
+    extractor: (metricas: CostMetricsResultProps['metricas']) =>
       metricas ? parseCurrency(metricas.cpa) : 0,
     formatter: (value: number) =>
       value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
@@ -84,7 +84,7 @@ const METRIC_OPTIONS = [
     axisLabel: 'CTR (%)',
     description: 'Taxa de cliques. Indica relevância do anúncio.',
     benchmark: BENCHMARKS.ctr,
-    extractor: (metricas) =>
+    extractor: (metricas: CostMetricsResultProps['metricas']) =>
       metricas ? parsePercentage(metricas.ctr) : 0,
     formatter: (value: number) => `${value.toFixed(2)}%`,
   },
