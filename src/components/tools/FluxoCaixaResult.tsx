@@ -5,7 +5,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Activity } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 
-interface FluxoCaixaRow extends Record<string, unknown> {
+export interface FluxoCaixaRow extends Record<string, unknown> {
   categoria: string;
   origem: string;
   valor: number;

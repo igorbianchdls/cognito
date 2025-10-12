@@ -50,7 +50,7 @@ import ReceiptsList from '../tools/ReceiptsList';
 import NotasFiscaisList from '../tools/NotasFiscaisList';
 import InventoryList from '../tools/InventoryList';
 import ContasAPagarList, { type ContaAPagarRow } from '../tools/ContasAPagarList';
-import FluxoCaixaResult from '../tools/FluxoCaixaResult';
+import FluxoCaixaResult, { type FluxoCaixaRow } from '../tools/FluxoCaixaResult';
 import FinancialDataTable from '../tools/FinancialDataTable';
 import OrganicMarketingDataTable from '../tools/OrganicMarketingDataTable';
 import PaidTrafficDataTable from '../tools/PaidTrafficDataTable';
@@ -1708,7 +1708,7 @@ type CalcularFluxoCaixaToolOutput = {
   success: boolean;
   periodo_dias: number;
   saldo_inicial: number;
-  rows: Array<Record<string, unknown>>;
+  rows: FluxoCaixaRow[];
   summary: {
     entradas_previstas: number;
     saidas_previstas: number;
@@ -5457,7 +5457,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   success={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).success}
                   periodo_dias={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).periodo_dias}
                   saldo_inicial={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).saldo_inicial}
-                  rows={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).rows}
+                  rows={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).rows as FluxoCaixaRow[]}
                   summary={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).summary}
                   message={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).message}
                   sql_query={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).sql_query}
