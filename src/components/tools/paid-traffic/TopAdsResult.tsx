@@ -21,6 +21,7 @@ interface TopAdsResultProps {
   total_analisados?: number;
   top_anuncios?: Array<{
     anuncio_id: string;
+    titulo?: string;
     plataforma: string;
     gasto: string;
     receita: string;
@@ -28,6 +29,7 @@ interface TopAdsResultProps {
     roas: string;
     ctr: string;
     custo_por_conversao: string;
+    classificacao?: string;
   }>;
 }
 
@@ -41,6 +43,7 @@ type AdRow = {
   roas: string;
   ctr: string;
   custo_por_conversao: string;
+  classificacao: string;
 };
 
 const METRIC_OPTIONS = [
@@ -137,7 +140,10 @@ export default function TopAdsResult({
 
     return top_anuncios.map((anuncio, idx) => ({
       rank: idx + 1,
-      anuncio: anuncio.anuncio_id ?? `Anúncio ${idx + 1}`,
+      anuncio:
+        anuncio.titulo?.trim() && anuncio.titulo.length > 0
+          ? anuncio.titulo
+          : anuncio.anuncio_id ?? `Anúncio ${idx + 1}`,
       plataforma: anuncio.plataforma || 'Desconhecida',
       gasto: anuncio.gasto,
       receita: anuncio.receita,
@@ -145,6 +151,7 @@ export default function TopAdsResult({
       roas: anuncio.roas,
       ctr: anuncio.ctr,
       custo_por_conversao: anuncio.custo_por_conversao,
+      classificacao: anuncio.classificacao || 'Não classificado',
     }));
   }, [top_anuncios]);
 
@@ -210,6 +217,15 @@ export default function TopAdsResult({
       header: 'Custo/Conv.',
       cell: ({ row }) => (
         <span className="block text-right">R$ {row.original.custo_por_conversao}</span>
+      ),
+    },
+    {
+      accessorKey: 'classificacao',
+      header: 'Classificação',
+      cell: ({ row }) => (
+        <span className="rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-xs font-semibold text-slate-600">
+          {row.original.classificacao}
+        </span>
       ),
     },
   ], []);

@@ -779,7 +779,7 @@ type GetPaidTrafficDataToolOutput = {
   success: boolean;
   count: number;
   table: string;
-  data: Array<{
+  rows: Array<{
     id: string | number;
     plataforma?: string;
     nome_conta?: string;
@@ -826,6 +826,8 @@ type GetPaidTrafficDataToolOutput = {
   }>;
   message: string;
   error?: string;
+  sql_query?: string;
+  sql_params?: string;
 };
 
 type GetInventoryDataToolInput = {
@@ -1330,6 +1332,10 @@ type AnalyzeCampaignROASToolOutput = {
   melhor_campanha?: string;
   campanhas?: Array<{
     campanha_id: string;
+    campanha_identificador?: string | null;
+    campanha_nome?: string;
+    campanha_status?: string;
+    objetivo?: string;
     gasto: string;
     receita: string;
     conversoes: number;
@@ -1338,6 +1344,8 @@ type AnalyzeCampaignROASToolOutput = {
     ctr: string;
     classificacao: string;
   }>;
+  sql_query?: string;
+  sql_params?: string;
 };
 
 type CompareAdsPlatformsToolOutput = {
@@ -1382,6 +1390,7 @@ type IdentifyTopAdsToolOutput = {
   total_analisados?: number;
   top_anuncios?: Array<{
     anuncio_id: string;
+    titulo: string;
     plataforma: string;
     gasto: string;
     receita: string;
@@ -1389,7 +1398,10 @@ type IdentifyTopAdsToolOutput = {
     roas: string;
     ctr: string;
     custo_por_conversao: string;
+    classificacao: string;
   }>;
+  sql_query?: string;
+  sql_params?: string;
 };
 
 type AnalyzeSpendingTrendsToolOutput = {
@@ -1408,6 +1420,8 @@ type AnalyzeSpendingTrendsToolOutput = {
     gasto: string;
     receita: string;
   }>;
+  sql_query?: string;
+  sql_params?: string;
 };
 
 type CalculateCostMetricsToolOutput = {
@@ -1426,6 +1440,8 @@ type CalculateCostMetricsToolOutput = {
     ctr: string;
     classificacao_eficiencia: string;
   };
+  sql_query?: string;
+  sql_params?: string;
 };
 
 type ForecastAdPerformanceToolOutput = {
@@ -1445,6 +1461,8 @@ type ForecastAdPerformanceToolOutput = {
     receita_prevista: string;
     roas_esperado: string;
   };
+  sql_query?: string;
+  sql_params?: string;
 };
 
 type GetFuncionariosDataToolOutput = {
@@ -4271,9 +4289,10 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   success={(paidTrafficTool.output as GetPaidTrafficDataToolOutput).success}
                   count={(paidTrafficTool.output as GetPaidTrafficDataToolOutput).count}
                   table={(paidTrafficTool.output as GetPaidTrafficDataToolOutput).table}
-                  data={(paidTrafficTool.output as GetPaidTrafficDataToolOutput).data}
+                  rows={(paidTrafficTool.output as GetPaidTrafficDataToolOutput).rows}
                   message={(paidTrafficTool.output as GetPaidTrafficDataToolOutput).message}
                   error={(paidTrafficTool.output as GetPaidTrafficDataToolOutput).error}
+                  sql_query={(paidTrafficTool.output as GetPaidTrafficDataToolOutput).sql_query}
                 />
               )}
             </div>

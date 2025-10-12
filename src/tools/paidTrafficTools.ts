@@ -1,12 +1,270 @@
 import { z } from 'zod';
 import { tool } from 'ai';
-import { createClient } from '@supabase/supabase-js';
 import { runQuery } from '@/lib/postgres';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const formatSqlParams = (params: unknown[]) => (params.length ? JSON.stringify(params) : '[]');
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+type PaidTrafficTable =
+  | 'contas_ads'
+  | 'campanhas'
+  | 'grupos_de_anuncios'
+  | 'anuncios_criacao'
+  | 'anuncios_colaboradores'
+  | 'anuncios_publicados'
+  | 'metricas_anuncios'
+  | 'resumos_campanhas';
+
+type BaseFilters = {
+  limit: number;
+  plataforma?: string;
+  status?: string;
+  criativo_status?: string;
+  objetivo?: string;
+  data_de?: string;
+  data_ate?: string;
+  roas_minimo?: number;
+  gasto_minimo?: number;
+  gasto_maximo?: number;
+  conversoes_minimo?: number;
+  ctr_minimo?: number;
+};
+
+type QueryBuilder = (filters: BaseFilters) => { sql: string; params: unknown[] };
+
+type BuildOptions = {
+  orderBy?: string;
+  orderDirection?: 'ASC' | 'DESC';
+  dateColumn?: { from?: string; to?: string };
+  additional?: (ctx: { clauses: string[]; addParam: (value: unknown) => string }) => void;
+};
+
+const buildSelectQuery = (
+  table: PaidTrafficTable,
+  columns: string[],
+  filters: BaseFilters,
+  options: BuildOptions = {},
+) => {
+  const clauses: string[] = [];
+  const params: unknown[] = [];
+
+  const addParam = (value: unknown) => {
+    params.push(value);
+    return `$${params.length}`;
+  };
+
+  if (filters.plataforma && columns.includes('plataforma')) {
+    clauses.push(`plataforma = ${addParam(filters.plataforma)}`);
+  }
+
+  if (filters.status && columns.includes('status')) {
+    clauses.push(`status = ${addParam(filters.status)}`);
+  }
+
+  if (filters.criativo_status && columns.includes('criativo_status')) {
+    clauses.push(`criativo_status = ${addParam(filters.criativo_status)}`);
+  }
+
+  if (filters.objetivo && columns.includes('objetivo')) {
+    clauses.push(`objetivo = ${addParam(filters.objetivo)}`);
+  }
+
+  if (options.dateColumn?.from && filters.data_de) {
+    clauses.push(`${options.dateColumn.from} >= ${addParam(filters.data_de)}`);
+  }
+
+  if (filters.data_ate) {
+    const dateToColumn = options.dateColumn?.to ?? options.dateColumn?.from;
+    if (dateToColumn) {
+      clauses.push(`${dateToColumn} <= ${addParam(filters.data_ate)}`);
+    }
+  }
+
+  options.additional?.({ clauses, addParam });
+
+  const limitPlaceholder = addParam(filters.limit);
+  const whereClause = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+  const orderBy = options.orderBy ?? columns[0];
+  const orderDirection = options.orderDirection ?? 'DESC';
+
+  const sql = `
+    SELECT ${columns.join(', ')}
+    FROM trafego_pago.${table}
+    ${whereClause}
+    ORDER BY ${orderBy} ${orderDirection}
+    LIMIT ${limitPlaceholder}
+  `.trim();
+
+  return { sql, params };
+};
+
+const paidTrafficQueryBuilders: Record<PaidTrafficTable, QueryBuilder> = {
+  contas_ads: (filters) =>
+    buildSelectQuery(
+      'contas_ads',
+      [
+        'id',
+        'plataforma',
+        'nome_conta',
+        'conectado_em',
+        'status',
+        'budget_mensal',
+        'moeda',
+        'ultima_sync',
+      ],
+      filters,
+      { orderBy: 'conectado_em', orderDirection: 'DESC' },
+    ),
+  campanhas: (filters) =>
+    buildSelectQuery(
+      'campanhas',
+      [
+        'id',
+        'conta_ads_id',
+        'nome',
+        'objetivo',
+        'status',
+        'inicio',
+        'fim',
+        'orcamento_total',
+        'orcamento_diario',
+        'moeda',
+        'publico_alvo',
+        'created_at',
+        'updated_at',
+      ],
+      filters,
+      { orderBy: 'inicio', orderDirection: 'DESC', dateColumn: { from: 'inicio', to: 'fim' } },
+    ),
+  grupos_de_anuncios: (filters) =>
+    buildSelectQuery(
+      'grupos_de_anuncios',
+      [
+        'id',
+        'campanha_id',
+        'nome',
+        'status',
+        'publico_alvo',
+        'budget_diario',
+        'lance',
+        'criado_em',
+        'atualizado_em',
+      ],
+      filters,
+      { orderBy: 'criado_em', orderDirection: 'DESC', dateColumn: { from: 'criado_em', to: 'atualizado_em' } },
+    ),
+  anuncios_criacao: (filters) =>
+    buildSelectQuery(
+      'anuncios_criacao',
+      [
+        'id',
+        'grupo_id',
+        'titulo',
+        'hook',
+        'expansao_hook',
+        'copy_completo',
+        'legenda',
+        'criativo_status',
+        'criado_por',
+        'atualizado_por',
+        'criado_em',
+        'atualizado_em',
+      ],
+      filters,
+      { orderBy: 'criado_em', orderDirection: 'DESC', dateColumn: { from: 'criado_em', to: 'atualizado_em' } },
+    ),
+  anuncios_colaboradores: (filters) =>
+    buildSelectQuery(
+      'anuncios_colaboradores',
+      ['id', 'anuncio_criacao_id', 'usuario_id', 'acao', 'comentario', 'registrado_em'],
+      filters,
+      { orderBy: 'registrado_em', orderDirection: 'DESC', dateColumn: { from: 'registrado_em' } },
+    ),
+  anuncios_publicados: (filters) =>
+    buildSelectQuery(
+      'anuncios_publicados',
+      [
+        'id',
+        'anuncio_criacao_id',
+        'conta_ads_id',
+        'grupo_id',
+        'anuncio_id_plataforma',
+        'titulo',
+        'descricao',
+        'publicado_em',
+        'status',
+        'orcamento_diario',
+        'gasto_total',
+        'criativo_id',
+      ],
+      filters,
+      { orderBy: 'publicado_em', orderDirection: 'DESC', dateColumn: { from: 'publicado_em' } },
+    ),
+  metricas_anuncios: (filters) =>
+    buildSelectQuery(
+      'metricas_anuncios',
+      [
+        'id',
+        'anuncio_id',
+        'anuncio_publicado_id',
+        'campanha_id',
+        'plataforma',
+        'data',
+        'impressao',
+        'cliques',
+        'ctr',
+        'cpc',
+        'conversao',
+        'cpa',
+        'gasto',
+        'receita',
+        'roas',
+        'cpm_real',
+        'engajamento',
+        'criado_em',
+      ],
+      filters,
+      {
+        orderBy: 'data',
+        orderDirection: 'DESC',
+        dateColumn: { from: 'data' },
+        additional: ({ clauses, addParam }) => {
+          if (filters.roas_minimo !== undefined) {
+            clauses.push(`roas >= ${addParam(filters.roas_minimo)}`);
+          }
+          if (filters.gasto_minimo !== undefined) {
+            clauses.push(`gasto >= ${addParam(filters.gasto_minimo)}`);
+          }
+          if (filters.gasto_maximo !== undefined) {
+            clauses.push(`gasto <= ${addParam(filters.gasto_maximo)}`);
+          }
+          if (filters.conversoes_minimo !== undefined) {
+            clauses.push(`conversao >= ${addParam(filters.conversoes_minimo)}`);
+          }
+          if (filters.ctr_minimo !== undefined) {
+            clauses.push(`ctr >= ${addParam(filters.ctr_minimo)}`);
+          }
+        },
+      },
+    ),
+  resumos_campanhas: (filters) =>
+    buildSelectQuery(
+      'resumos_campanhas',
+      [
+        'id',
+        'campanha_id',
+        'total_gasto',
+        'total_cliques',
+        'total_conversoes',
+        'ctr_medio',
+        'cpc_medio',
+        'cpa_medio',
+        'roas_medio',
+        'registrado_em',
+      ],
+      filters,
+      { orderBy: 'registrado_em', orderDirection: 'DESC', dateColumn: { from: 'registrado_em' } },
+    ),
+};
 
 export const getPaidTrafficData = tool({
   description: 'Busca dados de tráfego pago (contas ads, campanhas, anúncios, métricas)',
@@ -19,181 +277,50 @@ export const getPaidTrafficData = tool({
       'anuncios_colaboradores',
       'anuncios_publicados',
       'metricas_anuncios',
-      'resumos_campanhas'
-    ]).describe('Tabela a consultar'),
-    limit: z.number().default(20).describe('Número máximo de resultados'),
-
-    // Filtros de plataforma
-    plataforma: z.enum(['Google', 'Meta', 'Facebook', 'TikTok', 'LinkedIn']).optional()
-      .describe('Filtrar por plataforma (para contas_ads, anuncios_publicados, metricas_anuncios)'),
-
-    // Filtros de status
-    status: z.enum(['ativa', 'ativo', 'pausada', 'pausado', 'encerrada', 'encerrado', 'rejeitado']).optional()
-      .describe('Filtrar por status (para campanhas, grupos_de_anuncios, anuncios_publicados)'),
-    criativo_status: z.enum(['aprovado', 'rascunho', 'em_revisao', 'rejeitado']).optional()
-      .describe('Filtrar por status criativo (para anuncios_criacao)'),
-
-    // Filtros de campanha
-    objetivo: z.string().optional()
-      .describe('Filtrar por objetivo da campanha (para campanhas)'),
-
-    // Filtros de data
-    data_de: z.string().optional()
-      .describe('Data inicial (formato YYYY-MM-DD)'),
-    data_ate: z.string().optional()
-      .describe('Data final (formato YYYY-MM-DD)'),
-
-    // Filtros de performance (para metricas_anuncios)
-    roas_minimo: z.number().optional()
-      .describe('ROAS mínimo (ex: 2.0 = 2x)'),
-    gasto_minimo: z.number().optional()
-      .describe('Gasto mínimo em reais'),
-    gasto_maximo: z.number().optional()
-      .describe('Gasto máximo em reais'),
-    conversoes_minimo: z.number().optional()
-      .describe('Número mínimo de conversões'),
-    ctr_minimo: z.number().optional()
-      .describe('CTR mínimo (0-1, ex: 0.05 = 5%)'),
+      'resumos_campanhas',
+    ]),
+    limit: z.number().default(20),
+    plataforma: z.enum(['Google', 'Meta', 'Facebook', 'TikTok', 'LinkedIn']).optional(),
+    status: z.enum(['ativa', 'ativo', 'pausada', 'pausado', 'encerrada', 'encerrado', 'rejeitado']).optional(),
+    criativo_status: z.enum(['aprovado', 'rascunho', 'em_revisao', 'rejeitado']).optional(),
+    objetivo: z.string().optional(),
+    data_de: z.string().optional(),
+    data_ate: z.string().optional(),
+    roas_minimo: z.number().optional(),
+    gasto_minimo: z.number().optional(),
+    gasto_maximo: z.number().optional(),
+    conversoes_minimo: z.number().optional(),
+    ctr_minimo: z.number().optional(),
   }),
+  execute: async (filters) => {
+    const { table, limit, ...rest } = filters;
+    const builder = paidTrafficQueryBuilders[table];
+    const { sql, params } = builder({ limit, ...rest });
 
-  execute: async ({
-    table,
-    limit,
-    plataforma,
-    status,
-    criativo_status,
-    objetivo,
-    data_de,
-    data_ate,
-    roas_minimo,
-    gasto_minimo,
-    gasto_maximo,
-    conversoes_minimo,
-    ctr_minimo
-  }) => {
     try {
-      let query = supabase
-        .schema('trafego_pago')
-        .from(table)
-        .select('*');
-
-      // FILTRO 1: Plataforma
-      if (plataforma && (table === 'contas_ads' || table === 'anuncios_publicados' || table === 'metricas_anuncios')) {
-        query = query.eq('plataforma', plataforma);
-      }
-
-      // FILTRO 2: Status (campanhas, grupos, anuncios publicados)
-      if (status && (table === 'campanhas' || table === 'grupos_de_anuncios' || table === 'anuncios_publicados')) {
-        query = query.eq('status', status);
-      }
-
-      // FILTRO 3: Status criativo (anuncios_criacao)
-      if (criativo_status && table === 'anuncios_criacao') {
-        query = query.eq('criativo_status', criativo_status);
-      }
-
-      // FILTRO 4: Objetivo (campanhas)
-      if (objetivo && table === 'campanhas') {
-        query = query.eq('objetivo', objetivo);
-      }
-
-      // FILTRO 5: Range de datas
-      if (data_de) {
-        let dateColumn = 'criado_em';
-        if (table === 'contas_ads') dateColumn = 'conectado_em';
-        else if (table === 'campanhas') dateColumn = 'inicio';
-        else if (table === 'anuncios_criacao') dateColumn = 'criado_em';
-        else if (table === 'anuncios_colaboradores' || table === 'resumos_campanhas') dateColumn = 'registrado_em';
-        else if (table === 'anuncios_publicados') dateColumn = 'publicado_em';
-        else if (table === 'metricas_anuncios') dateColumn = 'data';
-
-        query = query.gte(dateColumn, data_de);
-      }
-
-      if (data_ate) {
-        let dateColumn = 'criado_em';
-        if (table === 'contas_ads') dateColumn = 'conectado_em';
-        else if (table === 'campanhas') dateColumn = 'fim';
-        else if (table === 'anuncios_criacao') dateColumn = 'criado_em';
-        else if (table === 'anuncios_colaboradores' || table === 'resumos_campanhas') dateColumn = 'registrado_em';
-        else if (table === 'anuncios_publicados') dateColumn = 'publicado_em';
-        else if (table === 'metricas_anuncios') dateColumn = 'data';
-
-        query = query.lte(dateColumn, data_ate);
-      }
-
-      // FILTRO 6: ROAS mínimo (metricas_anuncios)
-      if (roas_minimo !== undefined && table === 'metricas_anuncios') {
-        query = query.gte('roas', roas_minimo);
-      }
-
-      // FILTRO 7: Gasto mínimo (metricas_anuncios)
-      if (gasto_minimo !== undefined && table === 'metricas_anuncios') {
-        query = query.gte('gasto', gasto_minimo);
-      }
-
-      // FILTRO 8: Gasto máximo (metricas_anuncios)
-      if (gasto_maximo !== undefined && table === 'metricas_anuncios') {
-        query = query.lte('gasto', gasto_maximo);
-      }
-
-      // FILTRO 9: Conversões mínimas (metricas_anuncios)
-      if (conversoes_minimo !== undefined && table === 'metricas_anuncios') {
-        query = query.gte('conversao', conversoes_minimo);
-      }
-
-      // FILTRO 10: CTR mínimo (metricas_anuncios)
-      if (ctr_minimo !== undefined && table === 'metricas_anuncios') {
-        query = query.gte('ctr', ctr_minimo);
-      }
-
-      // Ordenação dinâmica por tabela
-      let orderColumn = 'criado_em';
-      const ascending = false;
-
-      if (table === 'contas_ads') {
-        orderColumn = 'conectado_em';
-      } else if (table === 'campanhas') {
-        orderColumn = 'inicio';
-      } else if (table === 'grupos_de_anuncios') {
-        orderColumn = 'id';
-      } else if (table === 'anuncios_criacao') {
-        orderColumn = 'criado_em';
-      } else if (table === 'anuncios_colaboradores' || table === 'resumos_campanhas') {
-        orderColumn = 'registrado_em';
-      } else if (table === 'anuncios_publicados') {
-        orderColumn = 'publicado_em';
-      } else if (table === 'metricas_anuncios') {
-        orderColumn = 'data';
-      }
-
-      query = query
-        .order(orderColumn, { ascending })
-        .limit(limit ?? 20);
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
       return {
         success: true,
-        count: (data || []).length,
-        table: table,
-        message: `✅ ${(data || []).length} registros encontrados em ${table}`,
-        data: data || []
+        table,
+        count: rows.length,
+        rows,
+        message: `✅ ${rows.length} registros encontrados em ${table}`,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
-
     } catch (error) {
       console.error('ERRO getPaidTrafficData:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : JSON.stringify(error),
+        table,
+        rows: [],
         message: `❌ Erro ao buscar dados de ${table}`,
-        table: table,
-        data: []
+        error: error instanceof Error ? error.message : String(error),
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
     }
-  }
+  },
 });
 
 export const analyzeCampaignROAS = tool({
@@ -203,93 +330,127 @@ export const analyzeCampaignROAS = tool({
     plataforma: z.enum(['Google', 'Meta', 'Facebook', 'TikTok', 'LinkedIn']).optional().describe('Filtrar por plataforma'),
   }),
   execute: async ({ date_range_days = 30, plataforma }) => {
+    const sql = `
+WITH metricas AS (
+  SELECT
+    ma.campanha_id,
+    COALESCE(c.nome, 'Sem campanha') AS campanha_nome,
+    COALESCE(c.status, 'desconhecido') AS campanha_status,
+    COALESCE(c.objetivo, 'não informado') AS objetivo,
+    SUM(ma.gasto) AS gasto_total,
+    SUM(ma.receita) AS receita_total,
+    SUM(ma.conversao) AS conversoes_total,
+    SUM(ma.impressao) AS impressoes_total,
+    SUM(ma.cliques) AS cliques_total
+  FROM trafego_pago.metricas_anuncios ma
+  LEFT JOIN trafego_pago.campanhas c ON c.id = ma.campanha_id
+  WHERE ma.data >= current_date - ($1::int - 1) * INTERVAL '1 day'
+    AND ($2::text IS NULL OR ma.plataforma = $2)
+  GROUP BY ma.campanha_id, c.nome, c.status, c.objetivo
+)
+SELECT
+  campanha_id,
+  campanha_nome,
+  campanha_status,
+  objetivo,
+  gasto_total,
+  receita_total,
+  conversoes_total,
+  impressoes_total,
+  cliques_total,
+  CASE WHEN gasto_total > 0 THEN receita_total / gasto_total ELSE 0 END AS roas,
+  CASE WHEN conversoes_total > 0 THEN gasto_total / conversoes_total ELSE 0 END AS cpa,
+  CASE WHEN impressoes_total > 0 THEN (cliques_total::numeric / impressoes_total) * 100 ELSE 0 END AS ctr
+FROM metricas
+ORDER BY roas DESC, gasto_total DESC
+LIMIT $3;
+    `.trim();
+
+    type CampaignAggRow = {
+      campanha_id: string | null;
+      campanha_nome: string;
+      campanha_status: string;
+      objetivo: string;
+      gasto_total: number | null;
+      receita_total: number | null;
+      conversoes_total: number | null;
+      impressoes_total: number | null;
+      cliques_total: number | null;
+      roas: number | null;
+      cpa: number | null;
+      ctr: number | null;
+    };
+
+    const params = [date_range_days, plataforma ?? null, 100];
+
     try {
-      const dataInicio = new Date();
-      dataInicio.setDate(dataInicio.getDate() - date_range_days);
+      const rows = await runQuery<CampaignAggRow>(sql, params);
 
-      let query = supabase
-        .schema('trafego_pago')
-        .from('metricas_anuncios')
-        .select('*')
-        .gte('data', dataInicio.toISOString().split('T')[0]);
-
-      if (plataforma) {
-        query = query.eq('plataforma', plataforma);
-      }
-
-      const { data: metricas } = await query;
-
-      if (!metricas || metricas.length === 0) {
+      if (!rows.length) {
         return {
           success: false,
-          message: 'Nenhuma métrica encontrada no período'
+          message: 'Nenhuma métrica encontrada no período',
+          periodo_dias: date_range_days,
+          plataforma: plataforma ?? 'Todas',
+          campanhas: [],
+          sql_query: sql,
+          sql_params: formatSqlParams(params),
         };
       }
 
-      // Agrupar por campanha
-      const campanhas = new Map();
-
-      for (const metrica of metricas) {
-        const campanha_id = metrica.campanha_id;
-
-        if (!campanhas.has(campanha_id)) {
-          campanhas.set(campanha_id, {
-            gasto: 0,
-            receita: 0,
-            conversoes: 0,
-            impressoes: 0,
-            cliques: 0
-          });
-        }
-
-        const stats = campanhas.get(campanha_id);
-        stats.gasto += metrica.gasto || 0;
-        stats.receita += metrica.receita || 0;
-        stats.conversoes += metrica.conversao || 0;
-        stats.impressoes += metrica.impressoes || 0;
-        stats.cliques += metrica.cliques || 0;
-      }
-
-      const campanhasArray = [];
-      for (const [campanha_id, stats] of campanhas.entries()) {
-        const roas = stats.gasto > 0 ? stats.receita / stats.gasto : 0;
-        const custo_por_conversao = stats.conversoes > 0 ? stats.gasto / stats.conversoes : 0;
-        const ctr = stats.impressoes > 0 ? (stats.cliques / stats.impressoes) * 100 : 0;
+     const campanhas = rows.map((row) => {
+       const gasto = Number(row.gasto_total ?? 0);
+       const receita = Number(row.receita_total ?? 0);
+       const conversoes = Number(row.conversoes_total ?? 0);
+       const roas = Number(row.roas ?? 0);
+       const cpa = Number(row.cpa ?? 0);
+       const ctr = Number(row.ctr ?? 0);
+        const campanhaLabel = row.campanha_nome?.trim()
+          ? row.campanha_nome
+          : row.campanha_id ?? 'Sem campanha';
 
         let classificacao = 'Ruim';
         if (roas >= 4) classificacao = 'Excelente';
         else if (roas >= 2.5) classificacao = 'Bom';
         else if (roas >= 1.5) classificacao = 'Regular';
 
-        campanhasArray.push({
-          campanha_id,
-          gasto: stats.gasto.toFixed(2),
-          receita: stats.receita.toFixed(2),
-          conversoes: stats.conversoes,
+        return {
+          campanha_id: campanhaLabel,
+          campanha_identificador: row.campanha_id,
+          campanha_nome: row.campanha_nome,
+          campanha_status: row.campanha_status,
+          objetivo: row.objetivo,
+          gasto: gasto.toFixed(2),
+          receita: receita.toFixed(2),
+          conversoes,
           roas: roas.toFixed(2),
-          custo_por_conversao: custo_por_conversao.toFixed(2),
-          ctr: ctr.toFixed(2) + '%',
-          classificacao
-        });
-      }
-
-      campanhasArray.sort((a, b) => parseFloat(b.roas) - parseFloat(a.roas));
+          custo_por_conversao: cpa.toFixed(2),
+          ctr: `${ctr.toFixed(2)}%`,
+          classificacao,
+        };
+      });
 
       return {
         success: true,
-        message: `Análise de ${campanhasArray.length} campanhas`,
+        message: `Análise de ${campanhas.length} campanhas`,
         periodo_dias: date_range_days,
-        plataforma: plataforma || 'Todas',
-        total_campanhas: campanhasArray.length,
-        melhor_campanha: campanhasArray[0]?.campanha_id,
-        campanhas: campanhasArray
+        plataforma: plataforma ?? 'Todas',
+        total_campanhas: campanhas.length,
+        melhor_campanha: campanhas[0]?.campanha_id,
+        campanhas,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
-
     } catch (error) {
       console.error('ERRO analyzeCampaignROAS:', error);
       return {
         success: false,
-        message: `Erro ao analisar ROAS: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+        message: `Erro ao analisar ROAS: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        periodo_dias: date_range_days,
+        plataforma: plataforma ?? 'Todas',
+        campanhas: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
     }
   }
@@ -353,7 +514,8 @@ ORDER BY roas DESC;
     };
 
     try {
-      const rawRows = await runQuery<RawPlatformRow>(sqlQuery, [date_range_days]);
+      const params = [date_range_days];
+      const rawRows = await runQuery<RawPlatformRow>(sqlQuery, params);
 
       if (!rawRows || rawRows.length === 0) {
         return {
@@ -396,14 +558,16 @@ ORDER BY roas DESC;
         melhor_plataforma: plataformasArray[0]?.plataforma,
         pior_plataforma: plataformasArray[plataformasArray.length - 1]?.plataforma,
         plataformas: plataformasArray,
-        sql_query: sqlQuery
+        sql_query: sqlQuery,
+        sql_params: formatSqlParams(params)
       };
     } catch (error) {
       console.error('ERRO compareAdsPlatforms:', error);
       return {
         success: false,
         message: `Erro ao comparar plataformas: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
-        sql_query: sqlQuery
+        sql_query: sqlQuery,
+        sql_params: formatSqlParams([date_range_days])
       };
     }
   }
@@ -415,29 +579,37 @@ export const analyzeCreativePerformance = tool({
     date_range_days: z.number().default(30).describe('Período de análise em dias'),
   }),
   execute: async ({ date_range_days = 30 }) => {
+    const sql = `
+      SELECT
+        criativo_status,
+        COUNT(*) AS total
+      FROM trafego_pago.anuncios_criacao
+      WHERE criado_em >= current_date - ($1::int - 1) * INTERVAL '1 day'
+      GROUP BY criativo_status
+    `.trim();
+
     try {
-      const dataInicio = new Date();
-      dataInicio.setDate(dataInicio.getDate() - date_range_days);
+      const rows = await runQuery<{ criativo_status: string | null; total: number }>(sql, [date_range_days]);
 
-      const { data: criativos } = await supabase
-        .schema('trafego_pago')
-        .from('anuncios_criacao')
-        .select('*')
-        .gte('criado_em', dataInicio.toISOString());
-
-      if (!criativos || criativos.length === 0) {
+      if (!rows.length) {
         return {
           success: false,
-          message: 'Nenhum criativo encontrado'
+          message: 'Nenhum criativo encontrado',
+          periodo_dias: date_range_days,
+          status: {},
+          sql_query: sql,
+          sql_params: formatSqlParams([date_range_days]),
         };
       }
 
-      const total = criativos.length;
-      const aprovados = criativos.filter(c => c.criativo_status === 'aprovado').length;
-      const rascunhos = criativos.filter(c => c.criativo_status === 'rascunho').length;
-      const em_revisao = criativos.filter(c => c.criativo_status === 'em_revisao').length;
-      const rejeitados = criativos.filter(c => c.criativo_status === 'rejeitado').length;
+      const total = rows.reduce((acc, row) => acc + Number(row.total ?? 0), 0);
+      const countByStatus = (status: string) =>
+        rows.find((row) => (row.criativo_status ?? '').toLowerCase() === status)?.total ?? 0;
 
+      const aprovados = countByStatus('aprovado');
+      const rascunhos = countByStatus('rascunho');
+      const emRevisao = countByStatus('em_revisao');
+      const rejeitados = countByStatus('rejeitado');
       const taxa_aprovacao = total > 0 ? (aprovados / total) * 100 : 0;
 
       return {
@@ -448,17 +620,22 @@ export const analyzeCreativePerformance = tool({
         status: {
           aprovados,
           rascunhos,
-          em_revisao,
+          em_revisao: emRevisao,
           rejeitados,
-          taxa_aprovacao: taxa_aprovacao.toFixed(2) + '%'
-        }
+          taxa_aprovacao: `${taxa_aprovacao.toFixed(2)}%`,
+        },
+        sql_query: sql,
+        sql_params: formatSqlParams([date_range_days]),
       };
-
     } catch (error) {
       console.error('ERRO analyzeCreativePerformance:', error);
       return {
         success: false,
-        message: `Erro ao analisar criativos: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+        message: `Erro ao analisar criativos: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        periodo_dias: date_range_days,
+        status: {},
+        sql_query: sql,
+        sql_params: formatSqlParams([date_range_days]),
       };
     }
   }
@@ -472,90 +649,121 @@ export const identifyTopAds = tool({
     plataforma: z.enum(['Google', 'Meta', 'Facebook', 'TikTok', 'LinkedIn']).optional().describe('Filtrar por plataforma'),
   }),
   execute: async ({ date_range_days = 30, limit = 10, plataforma }) => {
+    const sql = `
+      WITH base AS (
+        SELECT
+          ma.anuncio_id,
+          COALESCE(ap.titulo, 'Sem título') AS anuncio_titulo,
+          ma.plataforma,
+          SUM(ma.gasto) AS gasto_total,
+          SUM(ma.receita) AS receita_total,
+          SUM(ma.conversao) AS conversoes_total,
+          SUM(ma.impressao) AS impressoes_total,
+          SUM(ma.cliques) AS cliques_total
+        FROM trafego_pago.metricas_anuncios ma
+        LEFT JOIN trafego_pago.anuncios_publicados ap ON ap.id = ma.anuncio_publicado_id
+        WHERE ma.data >= current_date - ($1::int - 1) * INTERVAL '1 day'
+          AND ma.conversao >= 1
+          AND ($2::text IS NULL OR ma.plataforma = $2)
+        GROUP BY ma.anuncio_id, ap.titulo, ma.plataforma
+      )
+      SELECT
+        anuncio_id,
+        anuncio_titulo,
+        plataforma,
+        gasto_total,
+        receita_total,
+        conversoes_total,
+        impressoes_total,
+        cliques_total,
+        CASE WHEN gasto_total > 0 THEN receita_total / gasto_total ELSE 0 END AS roas,
+        CASE WHEN conversoes_total > 0 THEN gasto_total / conversoes_total ELSE 0 END AS cpa,
+        CASE WHEN impressoes_total > 0 THEN (cliques_total::numeric / impressoes_total) * 100 ELSE 0 END AS ctr
+      FROM base
+      ORDER BY roas DESC, conversoes_total DESC
+      LIMIT $3;
+    `.trim();
+
+    type TopAdRow = {
+      anuncio_id: string | null;
+      anuncio_titulo: string | null;
+      plataforma: string | null;
+      gasto_total: number | null;
+      receita_total: number | null;
+      conversoes_total: number | null;
+      impressoes_total: number | null;
+      cliques_total: number | null;
+      roas: number | null;
+      cpa: number | null;
+      ctr: number | null;
+    };
+
+    const params = [date_range_days, plataforma ?? null, limit];
+
     try {
-      const dataInicio = new Date();
-      dataInicio.setDate(dataInicio.getDate() - date_range_days);
+      const rows = await runQuery<TopAdRow>(sql, params);
 
-      let query = supabase
-        .schema('trafego_pago')
-        .from('metricas_anuncios')
-        .select('*')
-        .gte('data', dataInicio.toISOString().split('T')[0])
-        .gte('conversao', 1);
-
-      if (plataforma) {
-        query = query.eq('plataforma', plataforma);
-      }
-
-      const { data: metricas } = await query;
-
-      if (!metricas || metricas.length === 0) {
+      if (!rows.length) {
         return {
           success: false,
-          message: 'Nenhum anúncio com conversões encontrado'
+          message: 'Nenhum anúncio com conversões encontrado',
+          periodo_dias: date_range_days,
+          plataforma: plataforma ?? 'Todas',
+          top_anuncios: [],
+          total_analisados: 0,
+          sql_query: sql,
+          sql_params: formatSqlParams(params),
         };
       }
 
-      const anuncios = new Map();
+      const anuncios = rows.map((row) => {
+        const gasto = Number(row.gasto_total ?? 0);
+        const receita = Number(row.receita_total ?? 0);
+        const conversoes = Number(row.conversoes_total ?? 0);
+        const roas = Number(row.roas ?? 0);
+        const ctr = Number(row.ctr ?? 0);
+        const cpa = Number(row.cpa ?? 0);
 
-      for (const metrica of metricas) {
-        const anuncio_id = metrica.anuncio_id;
+        let classificacao = 'Baixa';
+        if (roas >= 4) classificacao = 'Excelente';
+        else if (roas >= 2.5) classificacao = 'Boa';
+        else if (roas >= 1.5) classificacao = 'Regular';
 
-        if (!anuncios.has(anuncio_id)) {
-          anuncios.set(anuncio_id, {
-            plataforma: metrica.plataforma,
-            gasto: 0,
-            receita: 0,
-            conversoes: 0,
-            impressoes: 0,
-            cliques: 0
-          });
-        }
-
-        const stats = anuncios.get(anuncio_id);
-        stats.gasto += metrica.gasto || 0;
-        stats.receita += metrica.receita || 0;
-        stats.conversoes += metrica.conversao || 0;
-        stats.impressoes += metrica.impressoes || 0;
-        stats.cliques += metrica.cliques || 0;
-      }
-
-      const anunciosArray = [];
-      for (const [anuncio_id, stats] of anuncios.entries()) {
-        const roas = stats.gasto > 0 ? stats.receita / stats.gasto : 0;
-        const ctr = stats.impressoes > 0 ? (stats.cliques / stats.impressoes) * 100 : 0;
-        const custo_por_conversao = stats.conversoes > 0 ? stats.gasto / stats.conversoes : 0;
-
-        anunciosArray.push({
-          anuncio_id,
-          plataforma: stats.plataforma,
-          gasto: stats.gasto.toFixed(2),
-          receita: stats.receita.toFixed(2),
-          conversoes: stats.conversoes,
+        return {
+          anuncio_id: row.anuncio_id ?? 'sem-anuncio',
+          titulo: row.anuncio_titulo ?? 'Sem título',
+          plataforma: row.plataforma ?? 'Desconhecida',
+          gasto: gasto.toFixed(2),
+          receita: receita.toFixed(2),
+          conversoes,
           roas: roas.toFixed(2),
-          ctr: ctr.toFixed(2) + '%',
-          custo_por_conversao: custo_por_conversao.toFixed(2)
-        });
-      }
-
-      anunciosArray.sort((a, b) => parseFloat(b.roas) - parseFloat(a.roas));
-
-      const top = anunciosArray.slice(0, limit);
+          ctr: `${ctr.toFixed(2)}%`,
+          custo_por_conversao: cpa.toFixed(2),
+          classificacao,
+        };
+      });
 
       return {
         success: true,
-        message: `Top ${top.length} anúncios identificados`,
+        message: `Top ${anuncios.length} anúncios identificados`,
         periodo_dias: date_range_days,
-        plataforma: plataforma || 'Todas',
-        total_analisados: anunciosArray.length,
-        top_anuncios: top
+        plataforma: plataforma ?? 'Todas',
+        total_analisados: anuncios.length,
+        top_anuncios: anuncios,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
-
     } catch (error) {
       console.error('ERRO identifyTopAds:', error);
       return {
         success: false,
-        message: `Erro ao identificar top anúncios: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+        message: `Erro ao identificar top anúncios: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        periodo_dias: date_range_days,
+        plataforma: plataforma ?? 'Todas',
+        top_anuncios: [],
+        total_analisados: 0,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
     }
   }
@@ -568,86 +776,87 @@ export const analyzeSpendingTrends = tool({
     plataforma: z.enum(['Google', 'Meta', 'Facebook', 'TikTok', 'LinkedIn']).optional().describe('Filtrar por plataforma'),
   }),
   execute: async ({ date_range_days = 30, plataforma }) => {
+    const sql = `
+      SELECT
+        data::date AS dia,
+        SUM(gasto) AS gasto_total,
+        SUM(receita) AS receita_total
+      FROM trafego_pago.metricas_anuncios
+      WHERE data >= current_date - ($1::int - 1) * INTERVAL '1 day'
+        AND ($2::text IS NULL OR plataforma = $2)
+      GROUP BY dia
+      ORDER BY dia ASC
+    `.trim();
+
+    const params = [date_range_days, plataforma ?? null];
+
     try {
-      const dataInicio = new Date();
-      dataInicio.setDate(dataInicio.getDate() - date_range_days);
+      const rows = await runQuery<{ dia: string; gasto_total: number | null; receita_total: number | null }>(
+        sql,
+        params,
+      );
 
-      let query = supabase
-        .schema('trafego_pago')
-        .from('metricas_anuncios')
-        .select('data, gasto, receita')
-        .gte('data', dataInicio.toISOString().split('T')[0]);
-
-      if (plataforma) {
-        query = query.eq('plataforma', plataforma);
-      }
-
-      const { data: metricas } = await query;
-
-      if (!metricas || metricas.length === 0) {
+      if (!rows.length) {
         return {
           success: false,
-          message: 'Nenhuma métrica encontrada'
+          message: 'Nenhuma métrica encontrada',
+          periodo_dias: date_range_days,
+          plataforma: plataforma ?? 'Todas',
+          gastos_diarios: [],
+          estatisticas: {},
+          sql_query: sql,
+          sql_params: formatSqlParams(params),
         };
       }
 
-      const gastosPorDia = new Map();
+      const gastosDiarios = rows.map((row) => ({
+        data: row.dia,
+        gasto: Number(row.gasto_total ?? 0).toFixed(2),
+        receita: Number(row.receita_total ?? 0).toFixed(2),
+      }));
 
-      for (const metrica of metricas) {
-        const data = metrica.data;
-        if (!gastosPorDia.has(data)) {
-          gastosPorDia.set(data, { gasto: 0, receita: 0 });
-        }
-        const stats = gastosPorDia.get(data);
-        stats.gasto += metrica.gasto || 0;
-        stats.receita += metrica.receita || 0;
-      }
-
-      const gastosDiarios = [];
-      for (const [data, stats] of gastosPorDia.entries()) {
-        gastosDiarios.push({
-          data,
-          gasto: stats.gasto.toFixed(2),
-          receita: stats.receita.toFixed(2)
-        });
-      }
-
-      gastosDiarios.sort((a, b) => a.data.localeCompare(b.data));
-
-      const gastos = gastosDiarios.map(d => parseFloat(d.gasto));
-      const media = gastos.reduce((a, b) => a + b, 0) / gastos.length;
-      const max = Math.max(...gastos);
-      const min = Math.min(...gastos);
+      const gastosValores = rows.map((row) => Number(row.gasto_total ?? 0));
+      const media = gastosValores.reduce((acc, val) => acc + val, 0) / gastosValores.length;
+      const max = Math.max(...gastosValores);
+      const min = Math.min(...gastosValores);
 
       let tendencia = 'Estável';
-      if (gastos.length >= 7) {
-        const primeira_semana = gastos.slice(0, 7).reduce((a, b) => a + b, 0) / 7;
-        const ultima_semana = gastos.slice(-7).reduce((a, b) => a + b, 0) / 7;
-        const variacao = ((ultima_semana - primeira_semana) / primeira_semana) * 100;
-
-        if (variacao > 10) tendencia = 'Crescente';
-        else if (variacao < -10) tendencia = 'Decrescente';
+      if (gastosValores.length >= 7) {
+        const primeiraSemana = gastosValores.slice(0, 7).reduce((acc, val) => acc + val, 0) / 7;
+        const ultimaSemana = gastosValores.slice(-7).reduce((acc, val) => acc + val, 0) / 7;
+        if (primeiraSemana !== 0) {
+          const variacao = ((ultimaSemana - primeiraSemana) / primeiraSemana) * 100;
+          if (variacao > 10) tendencia = 'Crescente';
+          else if (variacao < -10) tendencia = 'Decrescente';
+        }
       }
 
       return {
         success: true,
         message: `Análise de gastos: ${gastosDiarios.length} dias`,
         periodo_dias: date_range_days,
-        plataforma: plataforma || 'Todas',
+        plataforma: plataforma ?? 'Todas',
         estatisticas: {
           gasto_medio_dia: media.toFixed(2),
           gasto_maximo: max.toFixed(2),
           gasto_minimo: min.toFixed(2),
-          tendencia
+          tendencia,
         },
-        gastos_diarios: gastosDiarios
+        gastos_diarios: gastosDiarios,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
-
     } catch (error) {
       console.error('ERRO analyzeSpendingTrends:', error);
       return {
         success: false,
-        message: `Erro ao analisar tendências: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+        message: `Erro ao analisar tendências: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        periodo_dias: date_range_days,
+        plataforma: plataforma ?? 'Todas',
+        gastos_diarios: [],
+        estatisticas: {},
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
     }
   }
@@ -660,40 +869,43 @@ export const calculateCostMetrics = tool({
     plataforma: z.enum(['Google', 'Meta', 'Facebook', 'TikTok', 'LinkedIn']).optional().describe('Filtrar por plataforma'),
   }),
   execute: async ({ date_range_days = 30, plataforma }) => {
+    const sql = `
+      SELECT
+        SUM(gasto) AS total_gasto,
+        SUM(impressao) AS total_impressoes,
+        SUM(cliques) AS total_cliques,
+        SUM(conversao) AS total_conversoes
+      FROM trafego_pago.metricas_anuncios
+      WHERE data >= current_date - ($1::int - 1) * INTERVAL '1 day'
+        AND ($2::text IS NULL OR plataforma = $2)
+    `.trim();
+
+    const params = [date_range_days, plataforma ?? null];
+
     try {
-      const dataInicio = new Date();
-      dataInicio.setDate(dataInicio.getDate() - date_range_days);
+      const [row] = await runQuery<{
+        total_gasto: number | null;
+        total_impressoes: number | null;
+        total_cliques: number | null;
+        total_conversoes: number | null;
+      }>(sql, params);
 
-      let query = supabase
-        .schema('trafego_pago')
-        .from('metricas_anuncios')
-        .select('*')
-        .gte('data', dataInicio.toISOString().split('T')[0]);
-
-      if (plataforma) {
-        query = query.eq('plataforma', plataforma);
-      }
-
-      const { data: metricas } = await query;
-
-      if (!metricas || metricas.length === 0) {
+      if (!row) {
         return {
           success: false,
-          message: 'Nenhuma métrica encontrada'
+          message: 'Nenhuma métrica encontrada',
+          periodo_dias: date_range_days,
+          plataforma: plataforma ?? 'Todas',
+          metricas: {},
+          sql_query: sql,
+          sql_params: formatSqlParams(params),
         };
       }
 
-      let total_gasto = 0;
-      let total_impressoes = 0;
-      let total_cliques = 0;
-      let total_conversoes = 0;
-
-      for (const metrica of metricas) {
-        total_gasto += metrica.gasto || 0;
-        total_impressoes += metrica.impressoes || 0;
-        total_cliques += metrica.cliques || 0;
-        total_conversoes += metrica.conversao || 0;
-      }
+      const total_gasto = Number(row.total_gasto ?? 0);
+      const total_impressoes = Number(row.total_impressoes ?? 0);
+      const total_cliques = Number(row.total_cliques ?? 0);
+      const total_conversoes = Number(row.total_conversoes ?? 0);
 
       const cpm = total_impressoes > 0 ? (total_gasto / total_impressoes) * 1000 : 0;
       const cpc = total_cliques > 0 ? total_gasto / total_cliques : 0;
@@ -707,9 +919,9 @@ export const calculateCostMetrics = tool({
 
       return {
         success: true,
-        message: `Métricas de custo calculadas`,
+        message: 'Métricas de custo calculadas',
         periodo_dias: date_range_days,
-        plataforma: plataforma || 'Todas',
+        plataforma: plataforma ?? 'Todas',
         metricas: {
           total_gasto: total_gasto.toFixed(2),
           total_impressoes,
@@ -718,16 +930,22 @@ export const calculateCostMetrics = tool({
           cpm: cpm.toFixed(2),
           cpc: cpc.toFixed(2),
           cpa: cpa.toFixed(2),
-          ctr: ctr.toFixed(2) + '%',
-          classificacao_eficiencia
-        }
+          ctr: `${ctr.toFixed(2)}%`,
+          classificacao_eficiencia,
+        },
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
-
     } catch (error) {
       console.error('ERRO calculateCostMetrics:', error);
       return {
         success: false,
-        message: `Erro ao calcular métricas: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+        message: `Erro ao calcular métricas: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        periodo_dias: date_range_days,
+        plataforma: plataforma ?? 'Todas',
+        metricas: {},
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
     }
   }
@@ -741,41 +959,50 @@ export const forecastAdPerformance = tool({
     plataforma: z.enum(['Google', 'Meta', 'Facebook', 'TikTok', 'LinkedIn']).optional().describe('Filtrar por plataforma'),
   }),
   execute: async ({ lookback_days = 30, forecast_days = 7, plataforma }) => {
+    const sql = `
+      SELECT
+        data::date AS dia,
+        SUM(gasto) AS gasto_total,
+        SUM(receita) AS receita_total,
+        SUM(conversao) AS conversoes_total
+      FROM trafego_pago.metricas_anuncios
+      WHERE data >= current_date - ($1::int - 1) * INTERVAL '1 day'
+        AND ($2::text IS NULL OR plataforma = $2)
+      GROUP BY dia
+      ORDER BY dia ASC
+    `.trim();
+
+    const params = [lookback_days, plataforma ?? null];
+
     try {
-      const dataInicio = new Date();
-      dataInicio.setDate(dataInicio.getDate() - lookback_days);
+      const rows = await runQuery<{
+        dia: string;
+        gasto_total: number | null;
+        receita_total: number | null;
+        conversoes_total: number | null;
+      }>(sql, params);
 
-      let query = supabase
-        .schema('trafego_pago')
-        .from('metricas_anuncios')
-        .select('*')
-        .gte('data', dataInicio.toISOString().split('T')[0]);
-
-      if (plataforma) {
-        query = query.eq('plataforma', plataforma);
-      }
-
-      const { data: metricas } = await query;
-
-      if (!metricas || metricas.length === 0) {
+      if (!rows.length) {
         return {
           success: false,
-          message: 'Dados insuficientes para previsão'
+          message: 'Dados insuficientes para previsão',
+          lookback_days,
+          forecast_days,
+          plataforma: plataforma ?? 'Todas',
+          historico: {},
+          previsao: {},
+          sql_query: sql,
+          sql_params: formatSqlParams(params),
         };
       }
 
-      let total_gasto = 0;
-      let total_receita = 0;
-      let total_conversoes = 0;
+      const total_gasto = rows.reduce((acc, row) => acc + Number(row.gasto_total ?? 0), 0);
+      const total_receita = rows.reduce((acc, row) => acc + Number(row.receita_total ?? 0), 0);
+      const total_conversoes = rows.reduce((acc, row) => acc + Number(row.conversoes_total ?? 0), 0);
 
-      for (const metrica of metricas) {
-        total_gasto += metrica.gasto || 0;
-        total_receita += metrica.receita || 0;
-        total_conversoes += metrica.conversao || 0;
-      }
-
-      const gasto_medio_dia = total_gasto / lookback_days;
-      const conversoes_medio_dia = total_conversoes / lookback_days;
+      const diasConsiderados = Math.max(1, Math.min(rows.length, lookback_days));
+      const gasto_medio_dia = total_gasto / diasConsiderados;
+      const conversoes_medio_dia = total_conversoes / diasConsiderados;
       const roas_medio = total_gasto > 0 ? total_receita / total_gasto : 0;
 
       const gasto_previsto = gasto_medio_dia * forecast_days;
@@ -787,25 +1014,33 @@ export const forecastAdPerformance = tool({
         message: `Previsão para ${forecast_days} dias`,
         lookback_days,
         forecast_days,
-        plataforma: plataforma || 'Todas',
+        plataforma: plataforma ?? 'Todas',
         historico: {
           gasto_medio_dia: gasto_medio_dia.toFixed(2),
           conversoes_medio_dia: conversoes_medio_dia.toFixed(2),
-          roas_medio: roas_medio.toFixed(2)
+          roas_medio: roas_medio.toFixed(2),
         },
         previsao: {
           gasto_previsto: gasto_previsto.toFixed(2),
           conversoes_previstas,
           receita_prevista: receita_prevista.toFixed(2),
-          roas_esperado: roas_medio.toFixed(2)
-        }
+          roas_esperado: roas_medio.toFixed(2),
+        },
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
-
     } catch (error) {
       console.error('ERRO forecastAdPerformance:', error);
       return {
         success: false,
-        message: `Erro ao prever performance: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+        message: `Erro ao prever performance: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        lookback_days,
+        forecast_days,
+        plataforma: plataforma ?? 'Todas',
+        historico: {},
+        previsao: {},
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
     }
   }

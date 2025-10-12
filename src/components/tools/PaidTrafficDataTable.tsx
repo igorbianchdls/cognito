@@ -71,10 +71,12 @@ interface PaidTrafficRecord {
 interface PaidTrafficDataTableProps {
   success: boolean;
   count: number;
-  data: PaidTrafficRecord[];
+  rows: PaidTrafficRecord[];
   table: string;
   message: string;
   error?: string;
+  sql_query?: string;
+  sql_params?: string;
 }
 
 const getPlataformaColor = (plataforma?: string) => {
@@ -126,7 +128,9 @@ const getRoasColor = (roas?: number) => {
   return 'text-red-600';
 };
 
-export default function PaidTrafficDataTable({ success, count, data, table, message, error }: PaidTrafficDataTableProps) {
+export default function PaidTrafficDataTable({ success, count, rows, table, message, error, sql_query }: PaidTrafficDataTableProps) {
+  const data = useMemo(() => rows ?? [], [rows]);
+
   const columns: ColumnDef<PaidTrafficRecord>[] = useMemo(() => {
     const baseColumns: ColumnDef<PaidTrafficRecord>[] = [
       {
@@ -559,6 +563,7 @@ export default function PaidTrafficDataTable({ success, count, data, table, mess
       error={error}
       exportFileName={`paid_traffic_${table}`}
       pageSize={20}
+      sqlQuery={sql_query}
     />
   );
 }
