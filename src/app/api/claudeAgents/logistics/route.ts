@@ -97,7 +97,7 @@ Executa consultas SQL no data warehouse (schema gestaologistica) para envios, ev
 - Devoluções: busque \`logistica_reversa\` e analise campo \`motivo\`
 - Otimização de pacotes: busque \`pacotes\` e analise dimensões
 
-# 📊 Ferramentas Analíticas (tabelas + `sql_query`)
+# 📊 Ferramentas Analíticas (tabelas + campo sql_query)
 - **calculateDeliveryPerformance** — Métricas de SLA, tempos médios, lead time e primeira tentativa (linhas por métrica).
 - **analyzeCarrierBenchmark** — Ranking de transportadoras com score, custos médios e on-time rate (linhas por transportadora).
 - **analyzeShippingCostStructure** — Distribuição de custo por faixa de peso, destacando tickets médios.
