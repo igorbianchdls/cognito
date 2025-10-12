@@ -2,12 +2,12 @@
 
 import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
-import { CreditCard } from 'lucide-react';
+import { HandCoins } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 
-interface ContaAPagarRow extends Record<string, unknown> {
+interface ContaReceberRow extends Record<string, unknown> {
   id: string;
-  fornecedor: string;
+  cliente: string;
   categoria?: string;
   valor_total: number;
   valor_pago?: number;
@@ -17,11 +17,12 @@ interface ContaAPagarRow extends Record<string, unknown> {
   data_vencimento?: string;
 }
 
-interface ContasAPagarListProps {
+interface ContasAReceberTableProps {
   success: boolean;
   count: number;
-  rows: ContaAPagarRow[];
+  rows: ContaReceberRow[];
   message: string;
+  error?: string;
   sql_query?: string;
 }
 
@@ -30,22 +31,23 @@ const formatCurrency = (value?: number) =>
     ? value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
     : '—';
 
-export default function ContasAPagarList({
+export default function ContasAReceberTable({
   success,
   count,
   rows,
   message,
+  error,
   sql_query,
-}: ContasAPagarListProps) {
-  const dataRows = useMemo(() => rows || [], [rows]);
+}: ContasAReceberTableProps) {
+  const data = useMemo(() => rows || [], [rows]);
 
-  const columns: ColumnDef<ContaAPagarRow>[] = useMemo(
+  const columns: ColumnDef<ContaReceberRow>[] = useMemo(
     () => [
       {
-        accessorKey: 'fornecedor',
-        header: 'Fornecedor',
+        accessorKey: 'cliente',
+        header: 'Cliente',
         cell: ({ row }) => (
-          <span className="font-medium text-foreground">{row.original.fornecedor}</span>
+          <span className="font-medium text-foreground">{row.original.cliente}</span>
         ),
       },
       {
@@ -63,13 +65,18 @@ export default function ContasAPagarList({
         ),
       },
       {
+        accessorKey: 'valor_pago',
+        header: 'Valor recebido',
+        cell: ({ row }) => formatCurrency(row.original.valor_pago),
+      },
+      {
         accessorKey: 'valor_pendente',
         header: 'Pendente',
-        cell: ({ row }) => {
-          const value = row.original.valor_pendente ?? 0;
-          const className = value > 0 ? 'text-amber-600 font-semibold' : 'text-emerald-600 font-semibold';
-          return <span className={className}>{formatCurrency(value)}</span>;
-        },
+        cell: ({ row }) => (
+          <span className={row.original.valor_pendente && row.original.valor_pendente > 0 ? 'text-amber-600 font-semibold' : 'text-emerald-600 font-semibold'}>
+            {formatCurrency(row.original.valor_pendente)}
+          </span>
+        ),
       },
       {
         accessorKey: 'status',
@@ -94,15 +101,16 @@ export default function ContasAPagarList({
 
   return (
     <ArtifactDataTable
-      data={dataRows}
+      data={data}
       columns={columns}
-      title="Contas a Pagar"
-      icon={CreditCard}
-      iconColor="text-rose-600"
+      title="Contas a Receber"
+      icon={HandCoins}
+      iconColor="text-emerald-600"
       message={message}
       success={success}
       count={count}
-      exportFileName="contas_a_pagar"
+      error={error}
+      exportFileName="contas_a_receber"
       sqlQuery={sql_query}
     />
   );

@@ -1,234 +1,127 @@
 import { z } from 'zod';
 import { tool } from 'ai';
-import { createClient } from '@supabase/supabase-js';
+import { runQuery } from '@/lib/postgres';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const formatSqlParams = (params: unknown[]) =>
+  params.length ? JSON.stringify(params) : '[]';
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+const normalizePeriodo = (dias: number) => {
+  const allowed = [7, 30, 90];
+  if (allowed.includes(dias)) return dias;
+  if (dias < 7) return 7;
+  if (dias > 90) return 90;
+  // fallback para o mais próximo
+  return allowed.reduce((prev, curr) =>
+    Math.abs(curr - dias) < Math.abs(prev - dias) ? curr : prev,
+  30);
+};
 
-// Tool 1: Calcular Fluxo de Caixa por periodo
 export const calcularFluxoCaixa = tool({
-  description: 'Calcula projecoes de fluxo de caixa com precisao matematica para um periodo especifico (7, 30 ou 90 dias)',
+  description: 'Calcula projeções de fluxo de caixa (entradas, saídas e saldo projetado) para 7, 30 ou 90 dias.',
   inputSchema: z.object({
-    dias: z.number().describe('Periodo de projecao em dias (7, 30, 90)'),
-    saldo_inicial: z.number().optional().describe('Saldo inicial em caixa (opcional)')
+    dias: z.number().describe('Período de projeção em dias (recomendado: 7, 30 ou 90)'),
+    saldo_inicial: z.number().optional().describe('Saldo inicial em caixa'),
   }),
   execute: async ({ dias, saldo_inicial = 0 }) => {
     try {
-      const hoje = new Date();
-      const dataLimite = new Date(hoje);
-      dataLimite.setDate(dataLimite.getDate() + dias);
+      const periodo = normalizePeriodo(dias);
 
-      // Buscar contas a receber pendentes
-      const { data: entradas, error: errorEntradas } = await supabase
-        .from('invoices')
-        .select('*')
-        .in('status', ['pendente', 'vencido']);
+      const fluxoSql = `
+        WITH periodo AS (
+          SELECT
+            CURRENT_DATE AS hoje,
+            CURRENT_DATE + ($1::int) * INTERVAL '1 day' AS limite
+        ),
+        receber AS (
+          SELECT
+            SUM(CASE WHEN COALESCE(cr.data_vencimento, CURRENT_DATE) <= periodo.limite THEN COALESCE(cr.valor, 0) ELSE 0 END) AS previstas,
+            SUM(CASE WHEN COALESCE(cr.data_vencimento, CURRENT_DATE) < periodo.hoje THEN COALESCE(cr.valor, 0) ELSE 0 END) AS vencidas,
+            COUNT(*) FILTER (WHERE cr.status IN ('pendente', 'vencido')) AS total
+          FROM gestaofinanceira.contas_a_receber cr, periodo
+          WHERE cr.status IN ('pendente', 'vencido')
+        ),
+        pagar AS (
+          SELECT
+            SUM(CASE WHEN COALESCE(cp.data_vencimento, CURRENT_DATE) <= periodo.limite THEN COALESCE(cp.valor, 0) ELSE 0 END) AS previstas,
+            SUM(CASE WHEN COALESCE(cp.data_vencimento, CURRENT_DATE) < periodo.hoje THEN COALESCE(cp.valor, 0) ELSE 0 END) AS vencidas,
+            COUNT(*) FILTER (WHERE cp.status IN ('pendente', 'vencido')) AS total
+          FROM gestaofinanceira.contas_a_pagar cp, periodo
+          WHERE cp.status IN ('pendente', 'vencido')
+        )
+        SELECT
+          COALESCE(receber.previstas, 0) AS entradas_previstas,
+          COALESCE(receber.vencidas, 0) AS entradas_vencidas,
+          COALESCE(receber.total, 0) AS total_receber,
+          COALESCE(pagar.previstas, 0) AS saidas_previstas,
+          COALESCE(pagar.vencidas, 0) AS saidas_vencidas,
+          COALESCE(pagar.total, 0) AS total_pagar
+        FROM receber, pagar;
+      `.trim();
 
-      if (errorEntradas) throw errorEntradas;
+      const [fluxo] = await runQuery<{
+        entradas_previstas: number | null;
+        entradas_vencidas: number | null;
+        total_receber: number | null;
+        saidas_previstas: number | null;
+        saidas_vencidas: number | null;
+        total_pagar: number | null;
+      }>(fluxoSql, [periodo]);
 
-      // Buscar contas a pagar pendentes
-      const { data: saidas, error: errorSaidas } = await supabase
-        .from('accounts_payable')
-        .select('*')
-        .in('status', ['pendente', 'vencido']);
+      const entradasPrevistas = Number(fluxo?.entradas_previstas ?? 0);
+      const entradasVencidas = Number(fluxo?.entradas_vencidas ?? 0);
+      const totalReceber = Number(fluxo?.total_receber ?? 0);
 
-      if (errorSaidas) throw errorSaidas;
+      const saidasPrevistas = Number(fluxo?.saidas_previstas ?? 0);
+      const saidasVencidas = Number(fluxo?.saidas_vencidas ?? 0);
+      const totalPagar = Number(fluxo?.total_pagar ?? 0);
 
-      // CALCULOS MATEMATICOS PRECISOS (TypeScript, nao IA)
-      const entradasFiltradas = (entradas || [])
-        .filter(c => {
-          if (!c.data_vencimento) return false;
-          const vencimento = new Date(c.data_vencimento);
-          return vencimento <= dataLimite;
-        });
+      const saldoProjetado = saldo_inicial + entradasPrevistas - saidasPrevistas;
 
-      const saidasFiltradas = (saidas || [])
-        .filter(c => {
-          if (!c.data_vencimento) return false;
-          const vencimento = new Date(c.data_vencimento);
-          return vencimento <= dataLimite;
-        });
-
-      const entradasNoPeriodo = entradasFiltradas.reduce((sum, c) => sum + (c.valor_pendente || 0), 0);
-      const saidasNoPeriodo = saidasFiltradas.reduce((sum, c) => sum + (c.valor_pendente || 0), 0);
-
-      const saldoProjetado = saldo_inicial + entradasNoPeriodo - saidasNoPeriodo;
-
-      // Contar contas vencidas
-      const entradasVencidas = (entradas || [])
-        .filter(c => c.status === 'vencido')
-        .reduce((sum, c) => sum + (c.valor_pendente || 0), 0);
-
-      const saidasVencidas = (saidas || [])
-        .filter(c => c.status === 'vencido')
-        .reduce((sum, c) => sum + (c.valor_pendente || 0), 0);
+      const rows = [
+        {
+          categoria: 'Entradas previstas',
+          origem: 'contas_a_receber',
+          valor: entradasPrevistas,
+          valor_vencido: entradasVencidas,
+          quantidade: totalReceber,
+        },
+        {
+          categoria: 'Saídas previstas',
+          origem: 'contas_a_pagar',
+          valor: saidasPrevistas,
+          valor_vencido: saidasVencidas,
+          quantidade: totalPagar,
+        },
+        {
+          categoria: 'Saldo projetado',
+          origem: 'projecao',
+          valor: saldoProjetado,
+          valor_vencido: null,
+          quantidade: null,
+        },
+      ];
 
       return {
         success: true,
-        periodo_dias: dias,
+        periodo_dias: periodo,
         saldo_inicial,
-        entradas_previstas: entradasNoPeriodo,
-        saidas_previstas: saidasNoPeriodo,
-        saldo_projetado: saldoProjetado,
-        status_fluxo: saldoProjetado >= 0 ? 'positivo' : 'deficit',
-        entradas_vencidas: entradasVencidas,
-        saidas_vencidas: saidasVencidas,
-        total_contas_receber: entradas?.length || 0,
-        total_contas_pagar: saidas?.length || 0,
-        // Detalhes das contas para auditoria
-        detalhes_entradas: entradasFiltradas.map(c => ({
-          numero_fatura: c.numero_fatura,
-          cliente: c.cliente_nome,
-          valor_pendente: c.valor_pendente,
-          vencimento: c.data_vencimento
-        })),
-        detalhes_saidas: saidasFiltradas.map(c => ({
-          numero_conta: c.numero_conta,
-          fornecedor: c.fornecedor_nome,
-          valor_pendente: c.valor_pendente,
-          vencimento: c.data_vencimento
-        }))
+        rows,
+        summary: {
+          entradas_previstas: entradasPrevistas,
+          saidas_previstas: saidasPrevistas,
+          saldo_projetado: saldoProjetado,
+          entradas_vencidas: entradasVencidas,
+          saidas_vencidas: saidasVencidas,
+        },
+        sql_query: fluxoSql,
+        sql_params: formatSqlParams([periodo]),
       };
     } catch (error) {
+      console.error('ERRO calcularFluxoCaixa:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-        message: 'Erro ao calcular fluxo de caixa'
+        message: `Erro ao calcular fluxo de caixa: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
-  }
-});
-
-// Tool 2: Calcular Burn Rate (taxa de queima de caixa)
-export const calcularBurnRate = tool({
-  description: 'Calcula o burn rate (gasto medio diario e mensal) baseado nas contas pagas nos ultimos 30 dias',
-  inputSchema: z.object({
-    dias_analise: z.number().default(30).describe('Periodo de analise em dias (padrao: 30)')
-  }),
-  execute: async ({ dias_analise = 30 }) => {
-    try {
-      const hoje = new Date();
-      const dataInicio = new Date(hoje);
-      dataInicio.setDate(dataInicio.getDate() - dias_analise);
-
-      // Buscar contas a pagar pagas no periodo
-      const { data: contasPagas, error } = await supabase
-        .from('accounts_payable')
-        .select('*')
-        .eq('status', 'pago')
-        .gte('updated_at', dataInicio.toISOString());
-
-      if (error) throw error;
-
-      // CALCULOS MATEMATICOS PRECISOS
-      const totalGasto = (contasPagas || [])
-        .reduce((sum, c) => sum + (c.valor_total || 0), 0);
-
-      const burnRateDiario = totalGasto / dias_analise;
-      const burnRateMensal = burnRateDiario * 30;
-      const burnRateAnual = burnRateMensal * 12;
-
-      // Calcular por categoria
-      const gastoPorCategoria: Record<string, number> = {};
-      (contasPagas || []).forEach(conta => {
-        const categoria = conta.categoria || 'Sem Categoria';
-        gastoPorCategoria[categoria] = (gastoPorCategoria[categoria] || 0) + (conta.valor_total || 0);
-      });
-
-      return {
-        success: true,
-        periodo_dias: dias_analise,
-        total_gasto: totalGasto,
-        burn_rate_diario: burnRateDiario,
-        burn_rate_mensal: burnRateMensal,
-        burn_rate_anual: burnRateAnual,
-        gasto_por_categoria: gastoPorCategoria,
-        total_contas_pagas: contasPagas?.length || 0
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-        message: 'Erro ao calcular burn rate'
-      };
-    }
-  }
-});
-
-// Tool 3: Calcular Runway (quantos meses de caixa restam)
-export const calcularRunway = tool({
-  description: 'Calcula o runway (quantos meses de caixa restam) baseado no saldo atual e burn rate',
-  inputSchema: z.object({
-    saldo_atual: z.number().describe('Saldo atual em caixa'),
-    considerar_receitas: z.boolean().default(false).describe('Considerar receitas previstas no calculo')
-  }),
-  execute: async ({ saldo_atual, considerar_receitas = false }) => {
-    try {
-      // Calcular burn rate dos ultimos 30 dias
-      const hoje = new Date();
-      const dataInicio = new Date(hoje);
-      dataInicio.setDate(dataInicio.getDate() - 30);
-
-      const { data: contasPagas } = await supabase
-        .from('accounts_payable')
-        .select('*')
-        .eq('status', 'pago')
-        .gte('updated_at', dataInicio.toISOString());
-
-      const totalGasto = (contasPagas || [])
-        .reduce((sum, c) => sum + (c.valor_total || 0), 0);
-
-      const burnRateMensal = (totalGasto / 30) * 30;
-
-      let receitasMensais = 0;
-      if (considerar_receitas) {
-        const { data: contasRecebidas } = await supabase
-          .from('invoices')
-          .select('*')
-          .eq('status', 'pago')
-          .gte('updated_at', dataInicio.toISOString());
-
-        const totalRecebido = (contasRecebidas || [])
-          .reduce((sum, c) => sum + (c.valor_total || 0), 0);
-
-        receitasMensais = (totalRecebido / 30) * 30;
-      }
-
-      // CALCULOS MATEMATICOS PRECISOS
-      const queimaMensal = burnRateMensal - receitasMensais;
-      const runwayMeses = queimaMensal > 0 ? saldo_atual / queimaMensal : Infinity;
-      const runwayDias = queimaMensal > 0 ? (saldo_atual / (queimaMensal / 30)) : Infinity;
-
-      // Calcular data estimada de esgotamento
-      let dataEsgotamento = null;
-      if (runwayDias !== Infinity) {
-        const dataEsgot = new Date(hoje);
-        dataEsgot.setDate(dataEsgot.getDate() + Math.floor(runwayDias));
-        dataEsgotamento = dataEsgot.toISOString().split('T')[0];
-      }
-
-      return {
-        success: true,
-        saldo_atual,
-        burn_rate_mensal: burnRateMensal,
-        receitas_mensais: receitasMensais,
-        queima_liquida_mensal: queimaMensal,
-        runway_meses: runwayMeses === Infinity ? 'Indefinido' : runwayMeses,
-        runway_dias: runwayDias === Infinity ? 'Indefinido' : Math.floor(runwayDias),
-        data_esgotamento: dataEsgotamento,
-        status_saude: runwayMeses === Infinity ? 'excelente' :
-                      runwayMeses > 12 ? 'excelente' :
-                      runwayMeses > 6 ? 'bom' :
-                      runwayMeses > 3 ? 'alerta' : 'critico'
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Erro desconhecido',
-        message: 'Erro ao calcular runway'
-      };
-    }
-  }
+  },
 });

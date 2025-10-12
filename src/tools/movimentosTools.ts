@@ -1,32 +1,22 @@
 import { z } from 'zod';
 import { tool } from 'ai';
-import { createClient } from '@supabase/supabase-js';
+import { runQuery } from '@/lib/postgres';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseKey);
+const formatSqlParams = (params: unknown[]) =>
+  params.length ? JSON.stringify(params) : '[]';
 
 export const getMovimentos = tool({
-  description: 'Busca movimentos financeiros (entradas e saídas) registrados no sistema. Use para ver extrato interno, calcular saldos e preparar conciliação bancária.',
+  description: 'Consulta movimentos financeiros efetivados (entradas/saídas) com filtros opcionais.',
   inputSchema: z.object({
     limit: z.number().default(50).describe('Número máximo de resultados'),
-    conta_id: z.string().optional()
-      .describe('Filtrar por ID da conta bancária'),
-    tipo: z.enum(['entrada', 'saída']).optional()
-      .describe('Filtrar por tipo de movimento'),
-    data_inicial: z.string().optional()
-      .describe('Data inicial (formato YYYY-MM-DD)'),
-    data_final: z.string().optional()
-      .describe('Data final (formato YYYY-MM-DD)'),
-    categoria_id: z.string().optional()
-      .describe('Filtrar por ID da categoria'),
-    valor_minimo: z.number().optional()
-      .describe('Valor mínimo em reais'),
-    valor_maximo: z.number().optional()
-      .describe('Valor máximo em reais'),
+    conta_id: z.string().optional().describe('Filtrar por ID da conta bancária'),
+    tipo: z.enum(['entrada', 'saída']).optional().describe('Filtrar por tipo'),
+    data_inicial: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
+    data_final: z.string().optional().describe('Data final (YYYY-MM-DD)'),
+    categoria_id: z.string().optional().describe('Filtrar por categoria'),
+    valor_minimo: z.number().optional().describe('Valor mínimo'),
+    valor_maximo: z.number().optional().describe('Valor máximo'),
   }),
-
   execute: async ({
     limit,
     conta_id,
@@ -35,113 +25,117 @@ export const getMovimentos = tool({
     data_final,
     categoria_id,
     valor_minimo,
-    valor_maximo
+    valor_maximo,
   }) => {
     try {
-      let query = supabase
-        .schema('gestaofinanceira')
-        .from('movimentos')
-        .select('*');
+      const conditions: string[] = [];
+      const params: unknown[] = [];
+      let paramIndex = 1;
 
-      // FILTRO 1: Conta bancária
-      if (conta_id) {
-        query = query.eq('conta_id', conta_id);
-      }
+      const pushCondition = (clause: string, value: unknown) => {
+        conditions.push(`${clause} $${paramIndex}`);
+        params.push(value);
+        paramIndex += 1;
+      };
 
-      // FILTRO 2: Tipo de movimento
-      if (tipo) {
-        query = query.eq('tipo', tipo);
-      }
+      if (conta_id) pushCondition('conta_id =', conta_id);
+      if (tipo) pushCondition('tipo =', tipo);
+      if (data_inicial) pushCondition('data >=', data_inicial);
+      if (data_final) pushCondition('data <=', data_final);
+      if (categoria_id) pushCondition('categoria_id =', categoria_id);
+      if (valor_minimo !== undefined) pushCondition('valor >=', valor_minimo);
+      if (valor_maximo !== undefined) pushCondition('valor <=', valor_maximo);
 
-      // FILTRO 3: Data inicial
-      if (data_inicial) {
-        query = query.gte('data', data_inicial);
-      }
+      const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
-      // FILTRO 4: Data final
-      if (data_final) {
-        query = query.lte('data', data_final);
-      }
+      const listSql = `
+        SELECT
+          id,
+          conta_id,
+          categoria_id,
+          tipo,
+          valor,
+          data,
+          descricao,
+          conta_a_pagar_id,
+          conta_a_receber_id,
+          created_at
+        FROM gestaofinanceira.movimentos
+        ${whereClause}
+        ORDER BY data DESC
+        LIMIT $${paramIndex}
+      `.trim();
 
-      // FILTRO 5: Categoria
-      if (categoria_id) {
-        query = query.eq('categoria_id', categoria_id);
-      }
+      const listParams = [...params, limit ?? 50];
 
-      // FILTRO 6: Valor mínimo
-      if (valor_minimo !== undefined) {
-        query = query.gte('valor', valor_minimo);
-      }
+      const rows = await runQuery<{
+        id: string;
+        conta_id: string;
+        categoria_id: string | null;
+        tipo: 'entrada' | 'saída';
+        valor: number;
+        data: string;
+        descricao: string | null;
+        conta_a_pagar_id: string | null;
+        conta_a_receber_id: string | null;
+        created_at: string | null;
+      }>(listSql, listParams);
 
-      // FILTRO 7: Valor máximo
-      if (valor_maximo !== undefined) {
-        query = query.lte('valor', valor_maximo);
-      }
+      const aggSql = `
+        SELECT
+          SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE 0 END) AS total_entradas,
+          SUM(CASE WHEN tipo = 'saída' THEN valor ELSE 0 END) AS total_saidas,
+          COUNT(*) AS total_movimentos
+        FROM gestaofinanceira.movimentos
+        ${whereClause}
+      `.trim();
 
-      // Ordenação padrão por data (mais recente primeiro)
-      query = query
-        .order('data', { ascending: false })
-        .limit(limit ?? 50);
+      const [agg] = await runQuery<{
+        total_entradas: number | null;
+        total_saidas: number | null;
+        total_movimentos: number | null;
+      }>(aggSql, params);
 
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      // Calcular totais
-      const movimentos = data || [];
-      const totalEntradas = movimentos
-        .filter(m => m.tipo === 'entrada')
-        .reduce((sum, m) => sum + (m.valor || 0), 0);
-
-      const totalSaidas = movimentos
-        .filter(m => m.tipo === 'saída')
-        .reduce((sum, m) => sum + (m.valor || 0), 0);
-
+      const totalEntradas = Number(agg?.total_entradas ?? 0);
+      const totalSaidas = Number(agg?.total_saidas ?? 0);
       const saldoLiquido = totalEntradas - totalSaidas;
 
       return {
         success: true,
-        count: movimentos.length,
-        total_entradas: totalEntradas,
-        total_saidas: totalSaidas,
-        saldo_liquido: saldoLiquido,
-        message: `✅ ${movimentos.length} movimentos encontrados (Entradas: R$ ${totalEntradas.toFixed(2)} | Saídas: R$ ${totalSaidas.toFixed(2)} | Saldo: R$ ${saldoLiquido.toFixed(2)})`,
-        data: movimentos
+        rows,
+        totals: {
+          total_entradas: totalEntradas,
+          total_saidas: totalSaidas,
+          saldo_liquido: saldoLiquido,
+          total_movimentos: Number(agg?.total_movimentos ?? rows.length),
+        },
+        message: `Movimentos encontrados: ${rows.length} (Entradas: ${totalEntradas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} | Saídas: ${totalSaidas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
+        sql_query: `${listSql}\n\n-- Totais\n${aggSql}`,
+        sql_params: formatSqlParams(listParams),
       };
-
     } catch (error) {
       console.error('ERRO getMovimentos:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: `❌ Erro ao buscar movimentos`,
-        data: []
+        message: `Erro ao buscar movimentos: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        rows: [],
       };
     }
-  }
+  },
 });
 
 export const createMovimento = tool({
-  description: 'Cria um novo movimento financeiro no sistema (entrada ou saída). Use para registrar taxas bancárias, IOF, transferências, rendimentos ou qualquer movimento avulso que não está vinculado a contas a pagar/receber.',
+  description: 'Cria um movimento financeiro (entrada ou saída) manualmente registrado no sistema.',
   inputSchema: z.object({
-    conta_id: z.string()
-      .describe('ID da conta bancária (obrigatório)'),
-    tipo: z.enum(['entrada', 'saída'])
-      .describe('Tipo de movimento: entrada (recebimento) ou saída (pagamento)'),
-    valor: z.number().positive()
-      .describe('Valor em reais (sempre positivo, o tipo define se é entrada ou saída)'),
-    data: z.string()
-      .describe('Data do movimento (formato YYYY-MM-DD)'),
-    categoria_id: z.string().optional()
-      .describe('ID da categoria (ex: taxas-bancarias, rendimentos, impostos)'),
-    descricao: z.string().optional()
-      .describe('Descrição do movimento'),
-    conta_a_pagar_id: z.string().optional()
-      .describe('ID da conta a pagar (se vinculado a pagamento)'),
-    conta_a_receber_id: z.string().optional()
-      .describe('ID da conta a receber (se vinculado a recebimento)'),
+    conta_id: z.string().describe('ID da conta bancária'),
+    tipo: z.enum(['entrada', 'saída']).describe('Tipo de movimento'),
+    valor: z.number().positive().describe('Valor em reais'),
+    data: z.string().describe('Data do movimento (YYYY-MM-DD)'),
+    categoria_id: z.string().optional().describe('Categoria (opcional)'),
+    descricao: z.string().optional().describe('Descrição do movimento'),
+    conta_a_pagar_id: z.string().optional().describe('Vínculo com conta a pagar'),
+    conta_a_receber_id: z.string().optional().describe('Vínculo com conta a receber'),
   }),
-
   execute: async ({
     conta_id,
     tipo,
@@ -150,54 +144,67 @@ export const createMovimento = tool({
     categoria_id,
     descricao,
     conta_a_pagar_id,
-    conta_a_receber_id
+    conta_a_receber_id,
   }) => {
     try {
-      // Validação: não pode ter ambos vinculados
       if (conta_a_pagar_id && conta_a_receber_id) {
-        throw new Error('Movimento não pode estar vinculado a conta a pagar E conta a receber ao mesmo tempo');
+        throw new Error('O movimento não pode referenciar conta a pagar e a receber ao mesmo tempo');
       }
 
-      const movimento = {
+      const insertSql = `
+        INSERT INTO gestaofinanceira.movimentos
+          (conta_id, categoria_id, tipo, valor, data, descricao, conta_a_pagar_id, conta_a_receber_id)
+        VALUES
+          ($1, $2, $3, $4, $5, $6, $7, $8)
+        RETURNING *
+      `.trim();
+
+      const [movimento] = await runQuery<{
+        id: string;
+        conta_id: string;
+        categoria_id: string | null;
+        tipo: 'entrada' | 'saída';
+        valor: number;
+        data: string;
+        descricao: string | null;
+        conta_a_pagar_id: string | null;
+        conta_a_receber_id: string | null;
+        created_at: string | null;
+      }>(insertSql, [
         conta_id,
+        categoria_id ?? null,
         tipo,
         valor,
         data,
-        categoria_id: categoria_id || null,
-        descricao: descricao || null,
-        conta_a_pagar_id: conta_a_pagar_id || null,
-        conta_a_receber_id: conta_a_receber_id || null,
-      };
+        descricao ?? null,
+        conta_a_pagar_id ?? null,
+        conta_a_receber_id ?? null,
+      ]);
 
-      const { data: novoMovimento, error } = await supabase
-        .schema('gestaofinanceira')
-        .from('movimentos')
-        .insert(movimento)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const tipoFormatado = tipo === 'entrada' ? 'Entrada' : 'Saída';
-      const valorFormatado = new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL'
-      }).format(valor);
+      const valorFormatado = valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
       return {
         success: true,
-        message: `✅ Movimento criado com sucesso: ${tipoFormatado} de ${valorFormatado} em ${data}`,
-        data: novoMovimento
+        message: `Movimento ${tipo === 'entrada' ? 'de entrada' : 'de saída'} registrado (${valorFormatado}) em ${data}`,
+        movimento,
+        sql_query: insertSql,
+        sql_params: formatSqlParams([
+          conta_id,
+          categoria_id ?? null,
+          tipo,
+          valor,
+          data,
+          descricao ?? null,
+          conta_a_pagar_id ?? null,
+          conta_a_receber_id ?? null,
+        ]),
       };
-
     } catch (error) {
       console.error('ERRO createMovimento:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: `❌ Erro ao criar movimento`,
-        data: null
+        message: `Erro ao criar movimento: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
-  }
+  },
 });

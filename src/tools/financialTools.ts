@@ -1,11 +1,95 @@
 import { z } from 'zod';
 import { tool } from 'ai';
-import { createClient } from '@supabase/supabase-js';
+import { runQuery } from '@/lib/postgres';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const formatSqlParams = (params: unknown[]) =>
+  params.length ? JSON.stringify(params) : '[]';
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+type AccountsFilters = {
+  limit?: number;
+  status?: 'pendente' | 'pago' | 'vencido' | 'cancelado';
+  entidade_id?: string;
+  categoria_id?: string;
+  vence_em_dias?: number;
+  venceu_ha_dias?: number;
+  valor_minimo?: number;
+  valor_maximo?: number;
+  data_emissao_de?: string;
+  data_emissao_ate?: string;
+};
+
+const buildAccountsQuery = (table: 'contas_a_receber' | 'contas_a_pagar', filters: AccountsFilters) => {
+  const {
+    limit = 20,
+    status,
+    entidade_id,
+    categoria_id,
+    vence_em_dias,
+    venceu_ha_dias,
+    valor_minimo,
+    valor_maximo,
+    data_emissao_de,
+    data_emissao_ate,
+  } = filters;
+
+  const conditions: string[] = [];
+  const params: unknown[] = [];
+  let index = 1;
+
+  const push = (clause: string, value: unknown) => {
+    conditions.push(`${clause} $${index}`);
+    params.push(value);
+    index += 1;
+  };
+
+  if (status) push('status =', status);
+  if (entidade_id) push(table === 'contas_a_receber' ? 'cliente_id =' : 'fornecedor_id =', entidade_id);
+  if (categoria_id) push('categoria_id =', categoria_id);
+  if (valor_minimo !== undefined) push('valor >=', valor_minimo);
+  if (valor_maximo !== undefined) push('valor <=', valor_maximo);
+
+  if (vence_em_dias !== undefined) {
+    conditions.push(`data_vencimento BETWEEN CURRENT_DATE AND CURRENT_DATE + ($${index}::int) * INTERVAL '1 day'`);
+    params.push(vence_em_dias);
+    index += 1;
+  }
+
+  if (venceu_ha_dias !== undefined) {
+    conditions.push(`data_vencimento BETWEEN CURRENT_DATE - ($${index}::int) * INTERVAL '1 day' AND CURRENT_DATE - INTERVAL '1 day'`);
+    params.push(venceu_ha_dias);
+    index += 1;
+  }
+
+  if (data_emissao_de) push('data_emissao >=', data_emissao_de);
+  if (data_emissao_ate) push('data_emissao <=', data_emissao_ate);
+
+  const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  const listSql = `
+    SELECT *
+    FROM gestaofinanceira.${table}
+    ${whereClause}
+    ORDER BY data_vencimento ASC, data_emissao ASC
+    LIMIT $${index}
+  `.trim();
+
+  const totalsSql = `
+    SELECT
+      SUM(valor) AS total_valor,
+      COUNT(*) AS total_registros
+    FROM gestaofinanceira.${table}
+    ${whereClause}
+  `.trim();
+
+  const paramsWithLimit = [...params, limit];
+
+  return {
+    listSql,
+    totalsSql,
+    params,
+    paramsWithLimit,
+  };
+};
 
 export const getContasAReceber = tool({
   description: 'Busca contas a receber (clientes, receitas) com filtros avançados',
@@ -31,106 +115,56 @@ export const getContasAReceber = tool({
       .describe('Data final de emissão (formato YYYY-MM-DD)'),
   }),
 
-  execute: async ({
-    limit,
-    status,
-    cliente_id,
-    categoria_id,
-    vence_em_dias,
-    venceu_ha_dias,
-    valor_minimo,
-    valor_maximo,
-    data_emissao_de,
-    data_emissao_ate
-  }) => {
+  execute: async (filters) => {
     try {
-      let query = supabase
-        .schema('gestaofinanceira')
-        .from('contas_a_receber')
-        .select('*');
+      const { listSql, totalsSql, params, paramsWithLimit } = buildAccountsQuery('contas_a_receber', {
+        ...filters,
+        entidade_id: filters.cliente_id,
+      });
 
-      // FILTRO 1: Status
-      if (status) {
-        query = query.eq('status', status);
-      }
+      const rowsRaw = await runQuery<Record<string, unknown>>(listSql, paramsWithLimit);
+      const [totals] = await runQuery<{
+        total_valor: number | null;
+        total_registros: number | null;
+      }>(totalsSql, params);
 
-      // FILTRO 2: Cliente
-      if (cliente_id) {
-        query = query.eq('cliente_id', cliente_id);
-      }
+      const totalValor = Number(totals?.total_valor ?? 0);
+      const count = rowsRaw.length;
 
-      // FILTRO 3: Categoria
-      if (categoria_id) {
-        query = query.eq('categoria_id', categoria_id);
-      }
+      const rows = rowsRaw.map(row => {
+        const rawTotal = (row as { valor_total?: number; valor?: number }).valor_total ?? (row as { valor?: number }).valor ?? 0;
+        const valorTotal = Number(rawTotal);
+        const valorPago = Number((row as { valor_pago?: number }).valor_pago ?? 0);
+        const valorPendente = Number((row as { valor_pendente?: number }).valor_pendente ?? Math.max(0, valorTotal - valorPago));
+        const clienteNome = (row as { cliente_nome?: string; cliente?: string; cliente_id?: string }).cliente_nome
+          ?? (row as { cliente?: string }).cliente
+          ?? (row as { cliente_id?: string }).cliente_id
+          ?? 'Sem cliente';
 
-      // FILTRO 4: Valor mínimo
-      if (valor_minimo !== undefined) {
-        query = query.gte('valor', valor_minimo);
-      }
-
-      // FILTRO 5: Valor máximo
-      if (valor_maximo !== undefined) {
-        query = query.lte('valor', valor_maximo);
-      }
-
-      // FILTRO 6: Vencimento futuro (próximos X dias)
-      if (vence_em_dias !== undefined) {
-        const hoje = new Date();
-        const dataLimite = new Date();
-        dataLimite.setDate(dataLimite.getDate() + vence_em_dias);
-        query = query
-          .gte('data_vencimento', hoje.toISOString().split('T')[0])
-          .lte('data_vencimento', dataLimite.toISOString().split('T')[0]);
-      }
-
-      // FILTRO 7: Vencido nos últimos X dias
-      if (venceu_ha_dias !== undefined) {
-        const hoje = new Date();
-        const dataLimite = new Date();
-        dataLimite.setDate(dataLimite.getDate() - venceu_ha_dias);
-        query = query
-          .gte('data_vencimento', dataLimite.toISOString().split('T')[0])
-          .lt('data_vencimento', hoje.toISOString().split('T')[0]);
-      }
-
-      // FILTRO 8: Data de emissão inicial
-      if (data_emissao_de) {
-        query = query.gte('criado_em', data_emissao_de);
-      }
-
-      // FILTRO 9: Data de emissão final
-      if (data_emissao_ate) {
-        query = query.lte('criado_em', data_emissao_ate);
-      }
-
-      // Ordenação padrão por data de vencimento (mais urgente primeiro)
-      query = query
-        .order('data_vencimento', { ascending: true })
-        .limit(limit ?? 20);
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      // Calcular totais
-      const totalValor = (data || []).reduce((sum, item) => sum + (item.valor || 0), 0);
+        return {
+          ...row,
+          cliente: clienteNome,
+          valor_total: valorTotal,
+          valor_pago: valorPago,
+          valor_pendente: valorPendente,
+        };
+      });
 
       return {
         success: true,
-        count: (data || []).length,
+        count,
         total_valor: totalValor,
-        message: `✅ ${(data || []).length} contas a receber encontradas (Total: R$ ${totalValor.toFixed(2)})`,
-        data: data || []
+        rows,
+        message: `Encontradas ${count} contas a receber (Total: ${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
+        sql_query: `${listSql}\n\n-- Totais\n${totalsSql}`,
+        sql_params: formatSqlParams(paramsWithLimit),
       };
-
     } catch (error) {
       console.error('ERRO getContasAReceber:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: `❌ Erro ao buscar contas a receber`,
-        data: []
+        rows: [],
+        message: `❌ Erro ao buscar contas a receber: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
   }
@@ -160,106 +194,56 @@ export const getContasAPagar = tool({
       .describe('Data final de emissão (formato YYYY-MM-DD)'),
   }),
 
-  execute: async ({
-    limit,
-    status,
-    fornecedor_id,
-    categoria_id,
-    vence_em_dias,
-    venceu_ha_dias,
-    valor_minimo,
-    valor_maximo,
-    data_emissao_de,
-    data_emissao_ate
-  }) => {
+  execute: async (filters) => {
     try {
-      let query = supabase
-        .schema('gestaofinanceira')
-        .from('contas_a_pagar')
-        .select('*');
+      const { listSql, totalsSql, params, paramsWithLimit } = buildAccountsQuery('contas_a_pagar', {
+        ...filters,
+        entidade_id: filters.fornecedor_id,
+      });
 
-      // FILTRO 1: Status
-      if (status) {
-        query = query.eq('status', status);
-      }
+      const rowsRaw = await runQuery<Record<string, unknown>>(listSql, paramsWithLimit);
+      const [totals] = await runQuery<{
+        total_valor: number | null;
+        total_registros: number | null;
+      }>(totalsSql, params);
 
-      // FILTRO 2: Fornecedor
-      if (fornecedor_id) {
-        query = query.eq('fornecedor_id', fornecedor_id);
-      }
+      const totalValor = Number(totals?.total_valor ?? 0);
+      const count = rowsRaw.length;
 
-      // FILTRO 3: Categoria
-      if (categoria_id) {
-        query = query.eq('categoria_id', categoria_id);
-      }
+      const rows = rowsRaw.map(row => {
+        const rawTotal = (row as { valor_total?: number; valor?: number }).valor_total ?? (row as { valor?: number }).valor ?? 0;
+        const valorTotal = Number(rawTotal);
+        const valorPago = Number((row as { valor_pago?: number }).valor_pago ?? 0);
+        const valorPendente = Number((row as { valor_pendente?: number }).valor_pendente ?? Math.max(0, valorTotal - valorPago));
+        const fornecedorNome = (row as { fornecedor_nome?: string; fornecedor?: string; fornecedor_id?: string }).fornecedor_nome
+          ?? (row as { fornecedor?: string }).fornecedor
+          ?? (row as { fornecedor_id?: string }).fornecedor_id
+          ?? 'Sem fornecedor';
 
-      // FILTRO 4: Valor mínimo
-      if (valor_minimo !== undefined) {
-        query = query.gte('valor', valor_minimo);
-      }
-
-      // FILTRO 5: Valor máximo
-      if (valor_maximo !== undefined) {
-        query = query.lte('valor', valor_maximo);
-      }
-
-      // FILTRO 6: Vencimento futuro (próximos X dias)
-      if (vence_em_dias !== undefined) {
-        const hoje = new Date();
-        const dataLimite = new Date();
-        dataLimite.setDate(dataLimite.getDate() + vence_em_dias);
-        query = query
-          .gte('data_vencimento', hoje.toISOString().split('T')[0])
-          .lte('data_vencimento', dataLimite.toISOString().split('T')[0]);
-      }
-
-      // FILTRO 7: Vencido nos últimos X dias
-      if (venceu_ha_dias !== undefined) {
-        const hoje = new Date();
-        const dataLimite = new Date();
-        dataLimite.setDate(dataLimite.getDate() - venceu_ha_dias);
-        query = query
-          .gte('data_vencimento', dataLimite.toISOString().split('T')[0])
-          .lt('data_vencimento', hoje.toISOString().split('T')[0]);
-      }
-
-      // FILTRO 8: Data de emissão inicial
-      if (data_emissao_de) {
-        query = query.gte('criado_em', data_emissao_de);
-      }
-
-      // FILTRO 9: Data de emissão final
-      if (data_emissao_ate) {
-        query = query.lte('criado_em', data_emissao_ate);
-      }
-
-      // Ordenação padrão por data de vencimento (mais urgente primeiro)
-      query = query
-        .order('data_vencimento', { ascending: true })
-        .limit(limit ?? 20);
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      // Calcular totais
-      const totalValor = (data || []).reduce((sum, item) => sum + (item.valor || 0), 0);
+        return {
+          ...row,
+          fornecedor: fornecedorNome,
+          valor_total: valorTotal,
+          valor_pago: valorPago,
+          valor_pendente: valorPendente,
+        };
+      });
 
       return {
         success: true,
-        count: (data || []).length,
+        count,
         total_valor: totalValor,
-        message: `✅ ${(data || []).length} contas a pagar encontradas (Total: R$ ${totalValor.toFixed(2)})`,
-        data: data || []
+        rows,
+        message: `Encontradas ${count} contas a pagar (Total: ${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
+        sql_query: `${listSql}\n\n-- Totais\n${totalsSql}`,
+        sql_params: formatSqlParams(paramsWithLimit),
       };
-
     } catch (error) {
       console.error('ERRO getContasAPagar:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: `❌ Erro ao buscar contas a pagar`,
-        data: []
+        rows: [],
+        message: `❌ Erro ao buscar contas a pagar: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
   }

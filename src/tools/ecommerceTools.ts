@@ -2,210 +2,501 @@ import { z } from 'zod';
 import { tool } from 'ai';
 import { runQuery } from '@/lib/postgres';
 
-const ECOMMERCE_METRICS_SQL = `
-WITH base AS (
-  SELECT
-    ma.gasto,
-    ma.receita,
-    ma.conversao,
-    ma.cliques,
-    ma.impressao,
-    ma.plataforma AS plataforma_metricas,
-    ap.plataforma AS plataforma_anuncio,
-    co.plataforma AS plataforma_conta,
-    COALESCE(co.id, ma.conta_ads_id) AS conta_relacionada_id,
-    c.id AS campanha_relacionada_id
-  FROM trafego_pago.metricas_anuncios ma
-  LEFT JOIN trafego_pago.anuncios_publicados ap
-    ON ap.id = ma.anuncio_publicado_id
-  LEFT JOIN trafego_pago.grupos_de_anuncios ga
-    ON ga.id = ap.grupo_id
-  LEFT JOIN trafego_pago.campanhas c
-    ON c.id = ga.campanha_id
-  LEFT JOIN trafego_pago.contas_ads co
-    ON co.id = COALESCE(ma.conta_ads_id, c.conta_ads_id)
-  WHERE ma.data >= CURRENT_DATE - ($1::int) * INTERVAL '1 day'
-)
-SELECT
-  COALESCE(plataforma_conta, plataforma_anuncio, plataforma_metricas, 'Desconhecida') AS plataforma,
-  COUNT(DISTINCT conta_relacionada_id) AS contas_vinculadas,
-  COUNT(DISTINCT campanha_relacionada_id) AS campanhas_vinculadas,
-  SUM(gasto) AS gasto_total,
-  SUM(receita) AS receita_total,
-  SUM(conversao) AS conversoes_total,
-  CASE WHEN SUM(gasto) > 0 THEN SUM(receita) / SUM(gasto) ELSE 0 END AS roas,
-  CASE WHEN SUM(cliques) > 0 THEN (SUM(conversao)::numeric / NULLIF(SUM(cliques), 0)) * 100 ELSE 0 END AS taxa_conversao_percent,
-  CASE WHEN SUM(impressao) > 0 THEN (SUM(cliques)::numeric / NULLIF(SUM(impressao), 0)) * 100 ELSE 0 END AS ctr_percent
-FROM base
-GROUP BY 1
-ORDER BY roas DESC;
-`.trim();
+const DEFAULT_RANGE = 30;
+const MIN_RANGE = 1;
+const MAX_RANGE = 365;
 
-export type EcommerceMetricRow = {
-  plataforma: string | null;
-  contas_vinculadas: number | string | null;
-  campanhas_vinculadas: number | string | null;
-  gasto_total: number | string | null;
-  receita_total: number | string | null;
-  conversoes_total: number | string | null;
-  roas: number | string | null;
-  taxa_conversao_percent: number | string | null;
-  ctr_percent: number | string | null;
+const normalizeRange = (value?: number) => {
+  if (typeof value !== 'number' || Number.isNaN(value)) {
+    return DEFAULT_RANGE;
+  }
+  return Math.min(Math.max(Math.trunc(value), MIN_RANGE), MAX_RANGE);
 };
 
-async function fetchEcommerceMetrics(rangeDays: number): Promise<EcommerceMetricRow[]> {
-  return runQuery<EcommerceMetricRow>(ECOMMERCE_METRICS_SQL, [rangeDays]);
-}
-
-function buildMessage(rows: EcommerceMetricRow[], context: string) {
-  const prefix = context ? `${context}: ` : '';
-  if (!rows.length) {
-    return `${prefix}⚠️ Nenhum registro retornado pela consulta base.`;
-  }
-  return `${prefix}✅ ${rows.length} registros encontrados na consulta base.`;
-}
-
-async function buildGenericResponse(rangeDays: number, label: string) {
-  const rows = await fetchEcommerceMetrics(rangeDays);
-  return {
-    success: true,
-    message: buildMessage(rows, label),
-    periodo_dias: rangeDays,
-    data: rows,
-    sql_query: ECOMMERCE_METRICS_SQL
-  };
-}
+const formatSqlParams = (params: unknown[]) =>
+  params.length ? JSON.stringify(params) : '[]';
 
 export const getEcommerceSalesData = tool({
-  description: 'Busca dados brutos do e-commerce (consulta base simplificada).',
+  description: 'Resumo diário de pedidos, receita e devoluções do e-commerce.',
   inputSchema: z.object({
-    date_range_days: z.number().default(30)
-      .describe('Período em dias a ser analisado'),
-    table: z.string().optional()
-      .describe('Mantido por compatibilidade, atualmente ignorado'),
-    limit: z.number().default(20).describe('Mantido por compatibilidade, atualmente ignorado')
+    date_range_days: z.number().default(DEFAULT_RANGE)
+      .describe('Período em dias para analisar pedidos e devoluções'),
   }),
-  execute: async ({ date_range_days = 30 }) => {
+  execute: async ({ date_range_days = DEFAULT_RANGE }) => {
+    const range = normalizeRange(date_range_days);
+
+    const sql = `
+      WITH orders AS (
+        SELECT
+          order_date::date AS dia,
+          COUNT(*) AS pedidos,
+          SUM(subtotal) AS subtotal_total,
+          SUM(discount) AS desconto_total,
+          SUM(shipping_cost) AS frete_total,
+          SUM(total) AS receita_total
+        FROM vendasecommerce.orders
+        WHERE order_date >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+        GROUP BY order_date::date
+      ),
+      returns AS (
+        SELECT
+          r.return_date::date AS dia,
+          COUNT(*) AS devolucoes,
+          SUM(r.refund_amount) AS valor_reembolsado
+        FROM vendasecommerce.returns r
+        WHERE r.return_date >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+        GROUP BY r.return_date::date
+      )
+      SELECT
+        o.dia,
+        o.pedidos,
+        o.subtotal_total AS subtotal_total,
+        o.desconto_total AS desconto_total,
+        o.frete_total AS frete_total,
+        o.receita_total AS receita_total,
+        COALESCE(r.devolucoes, 0) AS devolucoes,
+        COALESCE(r.valor_reembolsado, 0) AS valor_reembolsado,
+        CASE WHEN o.pedidos > 0 THEN o.receita_total / o.pedidos ELSE 0 END AS ticket_medio,
+        CASE WHEN o.pedidos > 0 THEN ((o.pedidos - COALESCE(r.devolucoes, 0))::numeric / o.pedidos) * 100 ELSE 100 END AS fulfillment_rate_percent,
+        o.receita_total - COALESCE(r.valor_reembolsado, 0) AS receita_liquida
+      FROM orders o
+      LEFT JOIN returns r ON r.dia = o.dia
+      ORDER BY o.dia DESC;
+    `.trim();
+
     try {
-      return await buildGenericResponse(date_range_days, 'Dados de e-commerce');
+      const rows = await runQuery<{
+        dia: string;
+        pedidos: number;
+        subtotal_total: number;
+        desconto_total: number;
+        frete_total: number;
+        receita_total: number;
+        devolucoes: number;
+        valor_reembolsado: number;
+        ticket_medio: number;
+        fulfillment_rate_percent: number;
+        receita_liquida: number;
+      }>(sql, [range]);
+
+      return {
+        success: true,
+        message: `Resumo diário de vendas para os últimos ${range} dias`,
+        periodo_dias: range,
+        rows,
+        sql_query: sql,
+        sql_params: formatSqlParams([range]),
+      };
     } catch (error) {
       console.error('ERRO getEcommerceSalesData:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: '❌ Erro ao buscar dados de e-commerce'
+        message: `Erro ao buscar dados de e-commerce: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
-  }
+  },
 });
 
 export const getRevenueMetrics = tool({
-  description: 'Calcula métricas de receita (modo simplificado).',
+  description: 'Métricas de receita por canal de venda.',
   inputSchema: z.object({
-    date_range_days: z.number().default(30)
-      .describe('Período em dias a ser analisado'),
-    data_de: z.string().optional(),
-    data_ate: z.string().optional(),
-    comparar_com_periodo_anterior: z.boolean().optional(),
-    channel_id: z.string().optional()
+    date_range_days: z.number().default(DEFAULT_RANGE)
+      .describe('Período em dias para analisar receita por canal'),
   }),
-  execute: async ({ date_range_days = 30 }) => {
+  execute: async ({ date_range_days = DEFAULT_RANGE }) => {
+    const range = normalizeRange(date_range_days);
+
+    const sql = `
+      WITH orders AS (
+        SELECT
+          channel_id,
+          COUNT(*) AS pedidos,
+          SUM(total) AS receita_total,
+          SUM(subtotal) AS subtotal_total,
+          SUM(discount) AS desconto_total,
+          SUM(shipping_cost) AS frete_total,
+          COUNT(DISTINCT customer_id) AS clientes_unicos
+        FROM vendasecommerce.orders
+        WHERE order_date >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+        GROUP BY channel_id
+      ),
+      returns AS (
+        SELECT
+          o.channel_id,
+          COUNT(*) AS devolucoes,
+          SUM(r.refund_amount) AS valor_reembolsado
+        FROM vendasecommerce.returns r
+        JOIN vendasecommerce.orders o ON o.id = r.order_id
+        WHERE r.return_date >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+        GROUP BY o.channel_id
+      ),
+      totals AS (
+        SELECT SUM(receita_total) AS receita_geral FROM orders
+      )
+      SELECT
+        COALESCE(c.name, 'Sem canal') AS canal,
+        o.pedidos,
+        o.receita_total,
+        o.subtotal_total,
+        o.desconto_total,
+        o.frete_total,
+        o.clientes_unicos,
+        COALESCE(r.devolucoes, 0) AS devolucoes,
+        COALESCE(r.valor_reembolsado, 0) AS valor_reembolsado,
+        CASE WHEN o.pedidos > 0 THEN o.receita_total / o.pedidos ELSE 0 END AS ticket_medio,
+        CASE WHEN o.clientes_unicos > 0 THEN o.receita_total / o.clientes_unicos ELSE 0 END AS receita_por_cliente,
+        CASE WHEN totals.receita_geral > 0 THEN (o.receita_total / totals.receita_geral) * 100 ELSE 0 END AS participacao_receita_percent
+      FROM orders o
+      LEFT JOIN returns r ON r.channel_id = o.channel_id
+      LEFT JOIN vendasecommerce.channels c ON c.id = o.channel_id
+      CROSS JOIN totals
+      ORDER BY o.receita_total DESC;
+    `.trim();
+
     try {
-      return await buildGenericResponse(date_range_days, 'Métricas de receita');
+      const rows = await runQuery<{
+        canal: string;
+        pedidos: number;
+        receita_total: number;
+        subtotal_total: number;
+        desconto_total: number;
+        frete_total: number;
+        clientes_unicos: number;
+        devolucoes: number;
+        valor_reembolsado: number;
+        ticket_medio: number;
+        receita_por_cliente: number;
+        participacao_receita_percent: number;
+      }>(sql, [range]);
+
+      return {
+        success: true,
+        message: `Métricas de receita por canal (${range} dias)`,
+        periodo_dias: range,
+        rows,
+        sql_query: sql,
+        sql_params: formatSqlParams([range]),
+      };
     } catch (error) {
       console.error('ERRO getRevenueMetrics:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: '❌ Erro ao calcular métricas de receita'
+        message: `Erro ao calcular métricas de receita: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
-  }
+  },
 });
 
 export const getCustomerMetrics = tool({
-  description: 'Calcula métricas de clientes (modo simplificado).',
+  description: 'Segmentação de clientes por valor e frequência de compra.',
   inputSchema: z.object({
-    date_range_days: z.number().default(30)
-      .describe('Período em dias a ser analisado'),
-    data_de: z.string().optional(),
-    data_ate: z.string().optional(),
-    top_clientes_limit: z.number().optional()
+    date_range_days: z.number().default(DEFAULT_RANGE)
+      .describe('Período de referência para identificação de clientes recentes'),
   }),
-  execute: async ({ date_range_days = 30 }) => {
+  execute: async ({ date_range_days = DEFAULT_RANGE }) => {
+    const range = normalizeRange(date_range_days);
+
+    const sql = `
+      WITH clientes AS (
+        SELECT
+          id,
+          total_spent,
+          total_orders,
+          CASE
+            WHEN total_spent >= 5000 THEN 'Alta receita'
+            WHEN total_spent >= 2000 THEN 'Crescimento'
+            WHEN total_spent >= 500 THEN 'Emergentes'
+            ELSE 'Novos'
+          END AS segmento,
+          CASE
+            WHEN total_orders > 1 THEN 1
+            ELSE 0
+          END AS recorrente
+        FROM vendasecommerce.customers
+      )
+      SELECT
+        segmento,
+        COUNT(*) AS clientes,
+        ROUND(COUNT(*)::numeric / NULLIF(SUM(COUNT(*)) OVER (), 0) * 100, 2) AS percentual_clientes,
+        SUM(total_spent) AS receita_total,
+        AVG(total_spent) AS ticket_medio_cliente,
+        AVG(total_orders) AS pedidos_medios,
+        SUM(recorrente) AS clientes_recorrentes
+      FROM clientes
+      GROUP BY segmento
+      ORDER BY receita_total DESC;
+    `.trim();
+
     try {
-      return await buildGenericResponse(date_range_days, 'Métricas de clientes');
+      const rows = await runQuery<{
+        segmento: string;
+        clientes: number;
+        percentual_clientes: number;
+        receita_total: number;
+        ticket_medio_cliente: number;
+        pedidos_medios: number;
+        clientes_recorrentes: number;
+      }>(sql);
+
+      return {
+        success: true,
+        message: 'Segmentação por perfil de clientes',
+        periodo_dias: range,
+        rows,
+        sql_query: sql,
+        sql_params: formatSqlParams([]),
+      };
     } catch (error) {
       console.error('ERRO getCustomerMetrics:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: '❌ Erro ao calcular métricas de clientes'
+        message: `Erro ao calcular métricas de clientes: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
-  }
+  },
 });
 
 export const getProductPerformance = tool({
-  description: 'Analisa performance de produtos (modo simplificado).',
+  description: 'Top produtos por receita e unidades vendidas.',
   inputSchema: z.object({
-    date_range_days: z.number().default(30)
-      .describe('Período em dias a ser analisado'),
-    category: z.string().optional(),
-    top_products_limit: z.number().optional()
+    date_range_days: z.number().default(DEFAULT_RANGE)
+      .describe('Período em dias para analisar performance dos produtos'),
+    limit: z.number().default(20)
+      .describe('Número máximo de produtos a retornar'),
   }),
-  execute: async ({ date_range_days = 30 }) => {
+  execute: async ({ date_range_days = DEFAULT_RANGE, limit = 20 }) => {
+    const range = normalizeRange(date_range_days);
+    const top = Math.min(Math.max(Math.trunc(limit), 1), 100);
+
+    const sql = `
+      WITH filtro_pedidos AS (
+        SELECT id
+        FROM vendasecommerce.orders
+        WHERE order_date >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+      ),
+      itens AS (
+        SELECT
+          oi.product_id,
+          SUM(oi.quantity) AS unidades_vendidas,
+          SUM(oi.subtotal) AS receita_total,
+          AVG(oi.unit_price) AS preco_medio
+        FROM vendasecommerce.order_items oi
+        JOIN filtro_pedidos f ON f.id = oi.order_id
+        GROUP BY oi.product_id
+      )
+      SELECT
+        COALESCE(p.name, 'Produto sem nome') AS produto,
+        p.sku,
+        p.category,
+        itens.unidades_vendidas,
+        itens.receita_total,
+        itens.preco_medio,
+        COALESCE(p.stock_quantity, 0) AS estoque_atual,
+        CASE
+          WHEN COALESCE(p.stock_quantity, 0) > 0
+            THEN ROUND((itens.unidades_vendidas::numeric / p.stock_quantity) * 100, 2)
+          ELSE NULL
+        END AS sell_through_percent
+      FROM itens
+      LEFT JOIN vendasecommerce.products p ON p.id = itens.product_id
+      ORDER BY itens.receita_total DESC
+      LIMIT $2;
+    `.trim();
+
     try {
-      return await buildGenericResponse(date_range_days, 'Performance de produtos');
+      const rows = await runQuery<{
+        produto: string;
+        sku: string | null;
+        category: string | null;
+        unidades_vendidas: number;
+        receita_total: number;
+        preco_medio: number;
+        estoque_atual: number;
+        sell_through_percent: number | null;
+      }>(sql, [range, top]);
+
+      return {
+        success: true,
+        message: `Top ${rows.length} produtos por receita (${range} dias)`,
+        periodo_dias: range,
+        rows,
+        sql_query: sql,
+        sql_params: formatSqlParams([range, top]),
+      };
     } catch (error) {
       console.error('ERRO getProductPerformance:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: '❌ Erro ao analisar performance de produtos'
+        message: `Erro ao analisar performance de produtos: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
-  }
+  },
 });
 
 export const getCouponEffectiveness = tool({
-  description: 'Avalia cupons e promoções (modo simplificado).',
+  description: 'Efetividade dos cupons de desconto.',
   inputSchema: z.object({
-    date_range_days: z.number().default(30)
-      .describe('Período em dias a ser analisado'),
-    coupon_code: z.string().optional()
+    date_range_days: z.number().default(DEFAULT_RANGE)
+      .describe('Período em dias para analisar pedidos com cupons'),
   }),
-  execute: async ({ date_range_days = 30 }) => {
+  execute: async ({ date_range_days = DEFAULT_RANGE }) => {
+    const range = normalizeRange(date_range_days);
+
+    const sql = `
+      WITH pedidos_com_cupom AS (
+        SELECT
+          o.coupon_id,
+          COUNT(*) AS pedidos,
+          SUM(o.total) AS receita_bruta,
+          SUM(o.discount) AS desconto_total
+        FROM vendasecommerce.orders o
+        WHERE o.order_date >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+          AND o.coupon_id IS NOT NULL
+        GROUP BY o.coupon_id
+      )
+      SELECT
+        c.code,
+        c.discount_type,
+        c.discount_value,
+        c.valid_from,
+        c.valid_until,
+        c.usage_limit,
+        c.times_used,
+        COALESCE(p.pedidos, 0) AS pedidos_periodo,
+        COALESCE(p.receita_bruta, 0) AS receita_associada,
+        COALESCE(p.desconto_total, 0) AS desconto_concedido,
+        CASE
+          WHEN COALESCE(c.usage_limit, 0) > 0
+            THEN ROUND((c.times_used::numeric / c.usage_limit) * 100, 2)
+          ELSE NULL
+        END AS utilizacao_total_percent
+      FROM vendasecommerce.coupons c
+      LEFT JOIN pedidos_com_cupom p ON p.coupon_id = c.id
+      ORDER BY COALESCE(p.receita_bruta, 0) DESC, c.times_used DESC;
+    `.trim();
+
     try {
-      return await buildGenericResponse(date_range_days, 'Efetividade de cupons');
+      const rows = await runQuery<{
+        code: string;
+        discount_type: string;
+        discount_value: number;
+        valid_from: string | null;
+        valid_until: string | null;
+        usage_limit: number | null;
+        times_used: number;
+        pedidos_periodo: number;
+        receita_associada: number;
+        desconto_concedido: number;
+        utilizacao_total_percent: number | null;
+      }>(sql, [range]);
+
+      return {
+        success: true,
+        message: `Efetividade dos cupons (${range} dias)`,
+        periodo_dias: range,
+        rows,
+        sql_query: sql,
+        sql_params: formatSqlParams([range]),
+      };
     } catch (error) {
       console.error('ERRO getCouponEffectiveness:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: '❌ Erro ao analisar cupons'
+        message: `Erro ao analisar cupons: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
-  }
+  },
 });
 
 export const getChannelAnalysis = tool({
-  description: 'Compara canais de venda (modo simplificado).',
+  description: 'Análise detalhada de canais de venda.',
   inputSchema: z.object({
-    date_range_days: z.number().default(30)
-      .describe('Período em dias a ser analisado'),
-    channel_id: z.string().optional()
+    date_range_days: z.number().default(DEFAULT_RANGE)
+      .describe('Período em dias para analisar canais'),
   }),
-  execute: async ({ date_range_days = 30 }) => {
+  execute: async ({ date_range_days = DEFAULT_RANGE }) => {
+    const range = normalizeRange(date_range_days);
+
+    const sql = `
+      WITH orders AS (
+        SELECT
+          o.channel_id,
+          COUNT(*) AS pedidos,
+          SUM(o.total) AS receita_total,
+          SUM(o.shipping_cost) AS frete_total,
+          SUM(o.discount) AS desconto_total,
+          COUNT(DISTINCT o.customer_id) AS clientes_unicos
+        FROM vendasecommerce.orders o
+        WHERE o.order_date >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+        GROUP BY o.channel_id
+      ),
+      returns AS (
+        SELECT
+          o.channel_id,
+          COUNT(*) AS devolucoes,
+          SUM(r.refund_amount) AS valor_reembolsado
+        FROM vendasecommerce.returns r
+        JOIN vendasecommerce.orders o ON o.id = r.order_id
+        WHERE r.return_date >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+        GROUP BY o.channel_id
+      ),
+      payments AS (
+        SELECT
+          o.channel_id,
+          SUM(CASE WHEN p.status = 'paid' THEN p.amount ELSE 0 END) AS receita_confirmada
+        FROM vendasecommerce.payments p
+        JOIN vendasecommerce.orders o ON o.id = p.order_id
+        WHERE p.payment_date >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
+        GROUP BY o.channel_id
+      )
+      SELECT
+        COALESCE(c.name, 'Sem canal') AS canal,
+        o.pedidos,
+        o.receita_total,
+        COALESCE(pay.receita_confirmada, 0) AS receita_confirmada,
+        o.desconto_total,
+        o.frete_total,
+        o.clientes_unicos,
+        COALESCE(r.devolucoes, 0) AS devolucoes,
+        CASE WHEN o.pedidos > 0 THEN o.receita_total / o.pedidos ELSE 0 END AS ticket_medio,
+        CASE WHEN o.clientes_unicos > 0 THEN o.pedidos::numeric / o.clientes_unicos ELSE 0 END AS pedidos_por_cliente,
+        CASE WHEN o.pedidos > 0 THEN COALESCE(r.devolucoes, 0)::numeric / o.pedidos * 100 ELSE 0 END AS taxa_devolucao_percent
+      FROM orders o
+      LEFT JOIN returns r ON r.channel_id = o.channel_id
+      LEFT JOIN payments pay ON pay.channel_id = o.channel_id
+      LEFT JOIN vendasecommerce.channels c ON c.id = o.channel_id
+      ORDER BY o.receita_total DESC;
+    `.trim();
+
     try {
-      return await buildGenericResponse(date_range_days, 'Análise de canais');
+      const rows = await runQuery<{
+        canal: string;
+        pedidos: number;
+        receita_total: number;
+        receita_confirmada: number;
+        desconto_total: number;
+        frete_total: number;
+        clientes_unicos: number;
+        devolucoes: number;
+        ticket_medio: number;
+        pedidos_por_cliente: number;
+        taxa_devolucao_percent: number;
+      }>(sql, [range]);
+
+      return {
+        success: true,
+        message: `Análise de canais (${range} dias)`,
+        periodo_dias: range,
+        rows,
+        sql_query: sql,
+        sql_params: formatSqlParams([range]),
+      };
     } catch (error) {
       console.error('ERRO getChannelAnalysis:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: '❌ Erro ao analisar canais'
+        message: `Erro ao analisar canais: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
-  }
+  },
 });

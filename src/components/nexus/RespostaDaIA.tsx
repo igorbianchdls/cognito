@@ -45,7 +45,7 @@ import ContentCreationSuccess from '../tools/ContentCreationSuccess';
 import SalesCallsList from '../tools/SalesCallsList';
 import RHCandidatesList from '../tools/RHCandidatesList';
 import ServiceOrdersList from '../tools/ServiceOrdersList';
-import ContasAReceberList from '../tools/ContasAReceberList';
+import ContasAReceberTable from '../tools/ContasAReceberTable';
 import ReceiptsList from '../tools/ReceiptsList';
 import NotasFiscaisList from '../tools/NotasFiscaisList';
 import InventoryList from '../tools/InventoryList';
@@ -574,26 +574,10 @@ type GetContasAReceberToolInput = {
 type GetContasAReceberToolOutput = {
   success: boolean;
   count: number;
-  data: Array<{
-    id: string;
-    numero_fatura: string;
-    cliente_nome: string;
-    cliente_email?: string;
-    valor_total: number;
-    valor_pago?: number;
-    valor_pendente?: number;
-    data_emissao?: string;
-    data_vencimento?: string;
-    data_pagamento?: string;
-    status?: string;
-    itens_descricao?: string;
-    metodo_pagamento?: string;
-    nota_fiscal_url?: string;
-    observacoes?: string;
-    created_at?: string;
-  }>;
+  total_valor: number;
+  rows: Array<Record<string, unknown>>;
   message: string;
-  error?: string;
+  sql_query?: string;
 };
 
 type GetReceiptsToolInput = {
@@ -1680,37 +1664,10 @@ type GetContasAPagarToolInput = {
 type GetContasAPagarToolOutput = {
   success: boolean;
   count: number;
-  data: Array<{
-    id: string;
-    numero_conta: string;
-    fornecedor_nome: string;
-    fornecedor_cnpj?: string;
-    valor_total: number;
-    valor_pago?: number;
-    valor_pendente?: number;
-    data_emissao?: string;
-    data_vencimento?: string;
-    status?: string;
-    categoria?: string;
-    centro_custo?: string;
-    descricao?: string;
-    forma_pagamento?: string;
-    banco_conta?: string;
-    numero_documento?: string;
-    observacoes?: string;
-    historico_pagamentos?: Array<{
-      data: string;
-      valor: number;
-      forma_pagamento: string;
-      observacoes?: string;
-    }>;
-    motivo_cancelamento?: string;
-    data_cancelamento?: string;
-    created_at?: string;
-    updated_at?: string;
-  }>;
+  total_valor: number;
+  rows: Array<Record<string, unknown>>;
   message: string;
-  error?: string;
+  sql_query?: string;
 };
 
 type CalculateDateRangeToolInput = {
@@ -1737,28 +1694,16 @@ type CalcularFluxoCaixaToolOutput = {
   success: boolean;
   periodo_dias: number;
   saldo_inicial: number;
-  entradas_previstas: number;
-  saidas_previstas: number;
-  saldo_projetado: number;
-  status_fluxo: string;
-  entradas_vencidas: number;
-  saidas_vencidas: number;
-  total_contas_receber: number;
-  total_contas_pagar: number;
-  error?: string;
+  rows: Array<Record<string, unknown>>;
+  summary: {
+    entradas_previstas: number;
+    saidas_previstas: number;
+    saldo_projetado: number;
+    entradas_vencidas: number;
+    saidas_vencidas: number;
+  };
   message?: string;
-  detalhes_entradas?: Array<{
-    numero_fatura: string;
-    cliente: string;
-    valor_pendente: number;
-    vencimento: string;
-  }>;
-  detalhes_saidas?: Array<{
-    numero_conta: string;
-    fornecedor: string;
-    valor_pendente: number;
-    vencimento: string;
-  }>;
+  sql_query?: string;
 };
 
 type CalcularBurnRateToolInput = {
@@ -3972,12 +3917,13 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {contasAReceberTool.state === 'output-available' && (
-                <ContasAReceberList
+                <ContasAReceberTable
                   success={(contasAReceberTool.output as GetContasAReceberToolOutput).success}
                   count={(contasAReceberTool.output as GetContasAReceberToolOutput).count}
-                  data={(contasAReceberTool.output as GetContasAReceberToolOutput).data}
+                  rows={(contasAReceberTool.output as GetContasAReceberToolOutput).rows}
                   message={(contasAReceberTool.output as GetContasAReceberToolOutput).message}
-                  error={(contasAReceberTool.output as GetContasAReceberToolOutput).error}
+                  sql_query={(contasAReceberTool.output as GetContasAReceberToolOutput).sql_query}
+                  error={undefined}
                 />
               )}
             </div>
@@ -4142,12 +4088,13 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {contasAReceberTool.state === 'output-available' && (
-                <FinancialDataTable
+                <ContasAReceberTable
                   success={(contasAReceberTool.output as GetContasAReceberToolOutput).success}
                   count={(contasAReceberTool.output as GetContasAReceberToolOutput).count}
-                  data={(contasAReceberTool.output as GetContasAReceberToolOutput).data}
+                  rows={(contasAReceberTool.output as GetContasAReceberToolOutput).rows}
                   message={(contasAReceberTool.output as GetContasAReceberToolOutput).message}
-                  error={(contasAReceberTool.output as GetContasAReceberToolOutput).error}
+                  sql_query={(contasAReceberTool.output as GetContasAReceberToolOutput).sql_query}
+                  error={undefined}
                 />
               )}
             </div>
@@ -5460,9 +5407,9 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 <ContasAPagarList
                   success={(contasAPagarTool.output as GetContasAPagarToolOutput).success}
                   count={(contasAPagarTool.output as GetContasAPagarToolOutput).count}
-                  data={(contasAPagarTool.output as GetContasAPagarToolOutput).data}
+                  rows={(contasAPagarTool.output as GetContasAPagarToolOutput).rows}
                   message={(contasAPagarTool.output as GetContasAPagarToolOutput).message}
-                  error={(contasAPagarTool.output as GetContasAPagarToolOutput).error}
+                  sql_query={(contasAPagarTool.output as GetContasAPagarToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5495,18 +5442,10 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   success={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).success}
                   periodo_dias={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).periodo_dias}
                   saldo_inicial={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).saldo_inicial}
-                  entradas_previstas={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).entradas_previstas}
-                  saidas_previstas={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).saidas_previstas}
-                  saldo_projetado={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).saldo_projetado}
-                  status_fluxo={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).status_fluxo}
-                  entradas_vencidas={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).entradas_vencidas}
-                  saidas_vencidas={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).saidas_vencidas}
-                  total_contas_receber={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).total_contas_receber}
-                  total_contas_pagar={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).total_contas_pagar}
-                  error={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).error}
+                  rows={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).rows}
+                  summary={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).summary}
                   message={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).message}
-                  detalhes_entradas={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).detalhes_entradas}
-                  detalhes_saidas={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).detalhes_saidas}
+                  sql_query={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).sql_query}
                 />
               )}
             </div>
