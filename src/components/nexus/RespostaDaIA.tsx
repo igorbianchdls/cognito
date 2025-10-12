@@ -904,66 +904,18 @@ type GetEcommerceSalesDataToolInput = {
   data_ate?: string;
 };
 
-type GetEcommerceSalesDataToolOutput = {
+type EcommerceMetricsRow = OrganicMetricsRow;
+
+type EcommerceGenericToolOutput = {
   success: boolean;
-  count: number;
-  table: string;
-  data: Array<{
-    id: string;
-    name?: string;
-    type?: string;
-    is_active?: boolean;
-    config?: unknown;
-    code?: string;
-    discount_value?: number;
-    discount_type?: string;
-    valid_from?: string;
-    valid_until?: string;
-    usage_limit?: number;
-    times_used?: number;
-    email?: string;
-    first_name?: string;
-    last_name?: string;
-    phone?: string;
-    total_spent?: number;
-    total_orders?: number;
-    customer_id?: string;
-    points?: number;
-    earned_date?: string;
-    expiry_date?: string;
-    reward_name?: string;
-    points_required?: number;
-    description?: string;
-    order_id?: string;
-    product_id?: string;
-    quantity?: number;
-    unit_price?: number;
-    subtotal?: number;
-    channel_id?: string;
-    status?: string;
-    order_date?: string;
-    total_value?: number;
-    shipping_cost?: number;
-    discount?: number;
-    amount?: number;
-    payment_method?: string;
-    payment_date?: string;
-    transaction_id?: string;
-    sku?: string;
-    price?: number;
-    stock_quantity?: number;
-    category?: string;
-    return_date?: string;
-    reason?: string;
-    refund_amount?: number;
-    return_status?: string;
-    criado_em?: string;
-    updated_at?: string;
-    [key: string]: unknown;
-  }>;
   message: string;
+  periodo_dias?: number;
+  data?: EcommerceMetricsRow[];
+  sql_query?: string;
   error?: string;
 };
+
+type GetEcommerceSalesDataToolOutput = EcommerceGenericToolOutput;
 
 type GetRevenueMetricsToolInput = {
   data_de: string;
@@ -972,29 +924,7 @@ type GetRevenueMetricsToolInput = {
   channel_id?: string;
 };
 
-type GetRevenueMetricsToolOutput = {
-  success: boolean;
-  message: string;
-  error?: string;
-  data: {
-    periodo: { data_de: string; data_ate: string };
-    receita_total: number;
-    numero_pedidos: number;
-    aov: number;
-    desconto_total: number;
-    frete_total: number;
-    receita_liquida: number;
-    comparacao?: {
-      periodo_anterior: { data_de: string; data_ate: string };
-      receita_anterior: number;
-      pedidos_anterior: number;
-      aov_anterior: number;
-      crescimento_receita_percentual: number;
-      crescimento_pedidos_percentual: number;
-      crescimento_aov_percentual: number;
-    };
-  } | null;
-};
+type GetRevenueMetricsToolOutput = EcommerceGenericToolOutput;
 
 type GetCustomerMetricsToolInput = {
   data_de: string;
@@ -1002,30 +932,7 @@ type GetCustomerMetricsToolInput = {
   top_clientes_limit?: number;
 };
 
-type GetCustomerMetricsToolOutput = {
-  success: boolean;
-  message: string;
-  error?: string;
-  data: {
-    periodo: { data_de: string; data_ate: string };
-    total_clientes: number;
-    ltv_medio: number;
-    taxa_recompra_percentual: number;
-    clientes_com_recompra: number;
-    segmentacao_periodo: {
-      novos_clientes: number;
-      clientes_recorrentes: number;
-      total_clientes_periodo: number;
-    };
-    top_clientes: Array<{
-      customer_id: string;
-      total_pedidos: number;
-      total_gasto: number;
-      primeiro_pedido: string;
-      ultimo_pedido: string;
-    }>;
-  } | null;
-};
+type GetCustomerMetricsToolOutput = EcommerceGenericToolOutput;
 
 type GetProductPerformanceToolInput = {
   data_de: string;
@@ -1034,140 +941,21 @@ type GetProductPerformanceToolInput = {
   categoria?: string;
 };
 
-type GetProductPerformanceToolOutput = {
-  success: boolean;
-  message: string;
-  error?: string;
-  data: {
-    periodo: { data_de: string; data_ate: string };
-    resumo: {
-      total_produtos: number;
-      produtos_com_vendas: number;
-      unidades_vendidas_total: number;
-      receita_total: number;
-      margem_media_percentual: number;
-    };
-    top_produtos_por_receita: Array<{
-      product_id: string;
-      name: string;
-      sku: string;
-      category: string;
-      price: number;
-      cost: number;
-      stock_quantity: number;
-      unidades_vendidas: number;
-      receita_total: number;
-      margem_percentual: number;
-      sell_through_rate: number;
-      devolucoes: number;
-    }>;
-    produtos_baixo_sell_through: Array<{
-      product_id: string;
-      name: string;
-      sku: string;
-      category: string;
-      price: number;
-      cost: number;
-      stock_quantity: number;
-      unidades_vendidas: number;
-      receita_total: number;
-      margem_percentual: number;
-      sell_through_rate: number;
-      devolucoes: number;
-    }>;
-  } | null;
-};
+type GetProductPerformanceToolOutput = EcommerceGenericToolOutput;
 
 type GetCouponEffectivenessToolInput = {
   data_de: string;
   data_ate: string;
 };
 
-type GetCouponEffectivenessToolOutput = {
-  success: boolean;
-  message: string;
-  error?: string;
-  data: {
-    periodo: { data_de: string; data_ate: string };
-    resumo: {
-      total_pedidos: number;
-      pedidos_com_cupom: number;
-      pedidos_sem_cupom: number;
-      taxa_uso_cupons_percentual: number;
-      receita_com_cupom: number;
-      receita_sem_cupom: number;
-      desconto_total_concedido: number;
-      aov_com_cupom: number;
-      aov_sem_cupom: number;
-      impacto_aov_percentual: number;
-      roi_medio_percentual: number;
-    };
-    top_cupons_por_uso: Array<{
-      coupon_id: string;
-      coupon_code?: string;
-      coupon_type?: string;
-      coupon_value?: number;
-      vezes_usado: number;
-      receita_gerada: number;
-      desconto_concedido: number;
-      aov: number;
-    }>;
-    top_cupons_por_receita: Array<{
-      coupon_id: string;
-      coupon_code?: string;
-      coupon_type?: string;
-      coupon_value?: number;
-      vezes_usado: number;
-      receita_gerada: number;
-      desconto_concedido: number;
-      aov: number;
-    }>;
-  } | null;
-};
+type GetCouponEffectivenessToolOutput = EcommerceGenericToolOutput;
 
 type GetChannelAnalysisToolInput = {
   data_de: string;
   data_ate: string;
 };
 
-type GetChannelAnalysisToolOutput = {
-  success: boolean;
-  message: string;
-  error?: string;
-  data: {
-    periodo: { data_de: string; data_ate: string };
-    resumo: {
-      total_canais: number;
-      receita_total: number;
-      pedidos_totais: number;
-      aov_geral: number;
-    };
-    canais_performance: Array<{
-      channel_id: string;
-      channel_name: string;
-      channel_type: string;
-      numero_pedidos: number;
-      receita_total: number;
-      aov: number;
-      desconto_total: number;
-      frete_total: number;
-      percentual_receita?: number;
-      percentual_pedidos?: number;
-    }>;
-    melhor_canal: {
-      name: string;
-      receita: number;
-      pedidos: number;
-      aov: number;
-    } | null;
-    pior_canal: {
-      name: string;
-      receita: number;
-      pedidos: number;
-      aov: number;
-    } | null;
-  } | null;
-};
+type GetChannelAnalysisToolOutput = EcommerceGenericToolOutput;
 
 type GetLogisticsDataToolInput = {
   table: 'envios' | 'eventos_rastreio' | 'logistica_reversa' | 'pacotes' | 'transportadoras';
@@ -4742,11 +4530,10 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               {ecommerceTool.state === 'output-available' && (
                 <EcommerceSalesDataTable
                   success={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).success}
-                  count={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).count}
-                  table={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).table}
                   data={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).data}
                   message={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).message}
-                  error={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).error}
+                  periodo_dias={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).periodo_dias}
+                  sql_query={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).sql_query}
                 />
               )}
             </div>
@@ -4777,9 +4564,10 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               {revenueTool.state === 'output-available' && (
                 <RevenueMetricsResult
                   success={(revenueTool.output as GetRevenueMetricsToolOutput).success}
-                  data={(revenueTool.output as GetRevenueMetricsToolOutput).data}
                   message={(revenueTool.output as GetRevenueMetricsToolOutput).message}
-                  error={(revenueTool.output as GetRevenueMetricsToolOutput).error}
+                  periodo_dias={(revenueTool.output as GetRevenueMetricsToolOutput).periodo_dias}
+                  data={(revenueTool.output as GetRevenueMetricsToolOutput).data}
+                  sql_query={(revenueTool.output as GetRevenueMetricsToolOutput).sql_query}
                 />
               )}
             </div>
@@ -4810,9 +4598,10 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               {customerTool.state === 'output-available' && (
                 <CustomerMetricsResult
                   success={(customerTool.output as GetCustomerMetricsToolOutput).success}
-                  data={(customerTool.output as GetCustomerMetricsToolOutput).data}
                   message={(customerTool.output as GetCustomerMetricsToolOutput).message}
-                  error={(customerTool.output as GetCustomerMetricsToolOutput).error}
+                  periodo_dias={(customerTool.output as GetCustomerMetricsToolOutput).periodo_dias}
+                  data={(customerTool.output as GetCustomerMetricsToolOutput).data}
+                  sql_query={(customerTool.output as GetCustomerMetricsToolOutput).sql_query}
                 />
               )}
             </div>
@@ -4843,9 +4632,10 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               {productTool.state === 'output-available' && (
                 <ProductPerformanceResult
                   success={(productTool.output as GetProductPerformanceToolOutput).success}
-                  data={(productTool.output as GetProductPerformanceToolOutput).data}
                   message={(productTool.output as GetProductPerformanceToolOutput).message}
-                  error={(productTool.output as GetProductPerformanceToolOutput).error}
+                  periodo_dias={(productTool.output as GetProductPerformanceToolOutput).periodo_dias}
+                  data={(productTool.output as GetProductPerformanceToolOutput).data}
+                  sql_query={(productTool.output as GetProductPerformanceToolOutput).sql_query}
                 />
               )}
             </div>
@@ -4876,9 +4666,10 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               {couponTool.state === 'output-available' && (
                 <CouponEffectivenessResult
                   success={(couponTool.output as GetCouponEffectivenessToolOutput).success}
-                  data={(couponTool.output as GetCouponEffectivenessToolOutput).data}
                   message={(couponTool.output as GetCouponEffectivenessToolOutput).message}
-                  error={(couponTool.output as GetCouponEffectivenessToolOutput).error}
+                  periodo_dias={(couponTool.output as GetCouponEffectivenessToolOutput).periodo_dias}
+                  data={(couponTool.output as GetCouponEffectivenessToolOutput).data}
+                  sql_query={(couponTool.output as GetCouponEffectivenessToolOutput).sql_query}
                 />
               )}
             </div>
@@ -4909,9 +4700,10 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               {channelTool.state === 'output-available' && (
                 <ChannelAnalysisResult
                   success={(channelTool.output as GetChannelAnalysisToolOutput).success}
-                  data={(channelTool.output as GetChannelAnalysisToolOutput).data}
                   message={(channelTool.output as GetChannelAnalysisToolOutput).message}
-                  error={(channelTool.output as GetChannelAnalysisToolOutput).error}
+                  periodo_dias={(channelTool.output as GetChannelAnalysisToolOutput).periodo_dias}
+                  data={(channelTool.output as GetChannelAnalysisToolOutput).data}
+                  sql_query={(channelTool.output as GetChannelAnalysisToolOutput).sql_query}
                 />
               )}
             </div>
