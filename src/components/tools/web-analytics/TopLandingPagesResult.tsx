@@ -5,7 +5,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Bookmark } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 
-interface LandingPageRow {
+interface LandingPageRow extends Record<string, unknown> {
   categoria: string;
   pagina: string;
   pageviews: number;

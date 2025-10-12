@@ -5,7 +5,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { TrendingUp, Gauge } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 
-interface TrafficOverviewRow {
+interface TrafficOverviewRow extends Record<string, unknown> {
   data: string;
   sessoes: number;
   usuarios: number;

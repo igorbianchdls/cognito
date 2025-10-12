@@ -5,7 +5,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Users } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 
-interface BehaviorRow {
+interface BehaviorRow extends Record<string, unknown> {
   metrica: string;
   valor: number | string;
   percentual: string;

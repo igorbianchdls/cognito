@@ -5,7 +5,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { MonitorSmartphone } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 
-interface DevicePerformanceRow {
+interface DevicePerformanceRow extends Record<string, unknown> {
   tipo: string;
   segmento: string;
   sessoes: number;

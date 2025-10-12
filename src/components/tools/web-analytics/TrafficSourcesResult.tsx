@@ -5,7 +5,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { BarChart3, Award } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 
-interface TrafficSourceRow {
+interface TrafficSourceRow extends Record<string, unknown> {
   fonte: string;
   sessoes: number;
   percentual_trafego: string;

@@ -5,7 +5,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { AlertTriangle } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 
-interface TrafficAnomalyRow {
+interface TrafficAnomalyRow extends Record<string, unknown> {
   data: string;
   sessoes: number;
   media: number;

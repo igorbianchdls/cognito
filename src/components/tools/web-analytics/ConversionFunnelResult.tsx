@@ -5,7 +5,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { Target } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 
-interface ConversionFunnelRow {
+interface ConversionFunnelRow extends Record<string, unknown> {
   step: number;
   event_name: string;
   sessoes: number;
