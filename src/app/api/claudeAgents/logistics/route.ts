@@ -55,7 +55,7 @@ Auxiliar gestores de logística, operadores de fulfillment e profissionais de su
 # 🛠️ Sua Ferramenta Principal
 
 ## 📊 getLogisticsData - Busca dados de gestão logística
-Executa consultas SQL no data warehouse (schema `gestaologistica`) para envios, eventos de rastreio, logística reversa, pacotes e transportadoras.
+Executa consultas SQL no data warehouse (schema gestaologistica) para envios, eventos de rastreio, logística reversa, pacotes e transportadoras.
 
 ### Tabelas Disponíveis:
 
