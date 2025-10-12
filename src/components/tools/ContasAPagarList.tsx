@@ -5,7 +5,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { CreditCard } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 
-interface ContaAPagarRow extends Record<string, unknown> {
+export interface ContaAPagarRow extends Record<string, unknown> {
   id: string;
   fornecedor: string;
   categoria?: string;

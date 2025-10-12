@@ -5,7 +5,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { HandCoins } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 
-interface ContaReceberRow extends Record<string, unknown> {
+export interface ContaReceberRow extends Record<string, unknown> {
   id: string;
   cliente: string;
   categoria?: string;

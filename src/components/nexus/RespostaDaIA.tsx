@@ -45,11 +45,11 @@ import ContentCreationSuccess from '../tools/ContentCreationSuccess';
 import SalesCallsList from '../tools/SalesCallsList';
 import RHCandidatesList from '../tools/RHCandidatesList';
 import ServiceOrdersList from '../tools/ServiceOrdersList';
-import ContasAReceberTable from '../tools/ContasAReceberTable';
+import ContasAReceberTable, { type ContaReceberRow } from '../tools/ContasAReceberTable';
 import ReceiptsList from '../tools/ReceiptsList';
 import NotasFiscaisList from '../tools/NotasFiscaisList';
 import InventoryList from '../tools/InventoryList';
-import ContasAPagarList from '../tools/ContasAPagarList';
+import ContasAPagarList, { type ContaAPagarRow } from '../tools/ContasAPagarList';
 import FluxoCaixaResult from '../tools/FluxoCaixaResult';
 import FinancialDataTable from '../tools/FinancialDataTable';
 import OrganicMarketingDataTable from '../tools/OrganicMarketingDataTable';
@@ -575,9 +575,10 @@ type GetContasAReceberToolOutput = {
   success: boolean;
   count: number;
   total_valor: number;
-  rows: Array<Record<string, unknown>>;
+  rows: ContaReceberRow[] | Array<Record<string, unknown>>;
   message: string;
   sql_query?: string;
+  error?: string;
 };
 
 type GetReceiptsToolInput = {
@@ -1665,9 +1666,11 @@ type GetContasAPagarToolOutput = {
   success: boolean;
   count: number;
   total_valor: number;
-  rows: Array<Record<string, unknown>>;
+  rows: ContaAPagarRow[] | Array<Record<string, unknown>>;
+  data?: ContaAPagarRow[] | Array<Record<string, unknown>>;
   message: string;
   sql_query?: string;
+  error?: string;
 };
 
 type CalculateDateRangeToolInput = {
@@ -3920,7 +3923,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 <ContasAReceberTable
                   success={(contasAReceberTool.output as GetContasAReceberToolOutput).success}
                   count={(contasAReceberTool.output as GetContasAReceberToolOutput).count}
-                  rows={(contasAReceberTool.output as GetContasAReceberToolOutput).rows}
+                  rows={((contasAReceberTool.output as GetContasAReceberToolOutput).rows ?? []) as ContaReceberRow[]}
                   message={(contasAReceberTool.output as GetContasAReceberToolOutput).message}
                   sql_query={(contasAReceberTool.output as GetContasAReceberToolOutput).sql_query}
                   error={undefined}
@@ -4091,7 +4094,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 <ContasAReceberTable
                   success={(contasAReceberTool.output as GetContasAReceberToolOutput).success}
                   count={(contasAReceberTool.output as GetContasAReceberToolOutput).count}
-                  rows={(contasAReceberTool.output as GetContasAReceberToolOutput).rows}
+                  rows={((contasAReceberTool.output as GetContasAReceberToolOutput).rows ?? []) as ContaReceberRow[]}
                   message={(contasAReceberTool.output as GetContasAReceberToolOutput).message}
                   sql_query={(contasAReceberTool.output as GetContasAReceberToolOutput).sql_query}
                   error={undefined}
@@ -4126,7 +4129,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 <FinancialDataTable
                   success={(contasAPagarTool.output as GetContasAPagarToolOutput).success}
                   count={(contasAPagarTool.output as GetContasAPagarToolOutput).count}
-                  data={(contasAPagarTool.output as GetContasAPagarToolOutput).data}
+                  data={(contasAPagarTool.output as GetContasAPagarToolOutput).data ?? (contasAPagarTool.output as GetContasAPagarToolOutput).rows}
                   message={(contasAPagarTool.output as GetContasAPagarToolOutput).message}
                   error={(contasAPagarTool.output as GetContasAPagarToolOutput).error}
                 />
@@ -5407,7 +5410,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 <ContasAPagarList
                   success={(contasAPagarTool.output as GetContasAPagarToolOutput).success}
                   count={(contasAPagarTool.output as GetContasAPagarToolOutput).count}
-                  rows={(contasAPagarTool.output as GetContasAPagarToolOutput).rows}
+                  rows={((contasAPagarTool.output as GetContasAPagarToolOutput).rows ?? []) as ContaAPagarRow[]}
                   message={(contasAPagarTool.output as GetContasAPagarToolOutput).message}
                   sql_query={(contasAPagarTool.output as GetContasAPagarToolOutput).sql_query}
                 />
