@@ -61,7 +61,7 @@ import AnalyticsDataTable from '../tools/AnalyticsDataTable';
 import ComprasDataTable from '../tools/ComprasDataTable';
 import ProjetosDataTable from '../tools/ProjetosDataTable';
 import FuncionariosDataTable from '../tools/FuncionariosDataTable';
-import RevenueMetricsResult from '../tools/RevenueMetricsResult';
+import RevenueMetricsResult, { type RevenueMetricsRow } from '../tools/RevenueMetricsResult';
 import CustomerMetricsResult from '../tools/CustomerMetricsResult';
 import ProductPerformanceResult from '../tools/ProductPerformanceResult';
 import CouponEffectivenessResult from '../tools/CouponEffectivenessResult';
@@ -912,7 +912,15 @@ type GetRevenueMetricsToolInput = {
   channel_id?: string;
 };
 
-type GetRevenueMetricsToolOutput = EcommerceGenericToolOutput;
+type GetRevenueMetricsToolOutput = {
+  success: boolean;
+  message: string;
+  periodo_dias?: number;
+  data?: RevenueMetricsRow[];
+  rows?: RevenueMetricsRow[];
+  sql_query?: string;
+  error?: string;
+};
 
 type GetCustomerMetricsToolInput = {
   data_de: string;
@@ -4368,6 +4376,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   message={(revenueTool.output as GetRevenueMetricsToolOutput).message}
                   periodo_dias={(revenueTool.output as GetRevenueMetricsToolOutput).periodo_dias}
                   data={(revenueTool.output as GetRevenueMetricsToolOutput).data}
+                  rows={(revenueTool.output as GetRevenueMetricsToolOutput).rows}
                   sql_query={(revenueTool.output as GetRevenueMetricsToolOutput).sql_query}
                 />
               )}

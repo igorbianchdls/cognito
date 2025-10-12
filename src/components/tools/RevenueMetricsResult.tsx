@@ -5,19 +5,19 @@ import { ColumnDef } from '@tanstack/react-table';
 import { BarChart3 } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 
-interface RevenueMetricsRow extends Record<string, unknown> {
-  canal?: string;
-  pedidos?: number;
-  receita_total?: number;
-  subtotal_total?: number;
-  desconto_total?: number;
-  frete_total?: number;
-  clientes_unicos?: number;
-  devolucoes?: number;
-  valor_reembolsado?: number;
-  ticket_medio?: number;
-  receita_por_cliente?: number;
-  participacao_receita_percent?: number;
+export interface RevenueMetricsRow extends Record<string, unknown> {
+  canal?: string | null;
+  pedidos?: number | string | null;
+  receita_total?: number | string | null;
+  subtotal_total?: number | string | null;
+  desconto_total?: number | string | null;
+  frete_total?: number | string | null;
+  clientes_unicos?: number | string | null;
+  devolucoes?: number | string | null;
+  valor_reembolsado?: number | string | null;
+  ticket_medio?: number | string | null;
+  receita_por_cliente?: number | string | null;
+  participacao_receita_percent?: number | string | null;
 }
 
 interface RevenueMetricsResultProps {
@@ -30,15 +30,17 @@ interface RevenueMetricsResultProps {
   error?: string;
 }
 
-const formatCurrency = (value?: number) =>
-  typeof value === 'number'
-    ? value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-    : '—';
-
-const formatPercent = (value?: number) =>
-  typeof value === 'number'
-    ? `${value.toFixed(2)}%`
-    : '—';
+const toNumber = (value: number | string | null | undefined): number => {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : 0;
+  }
+  if (typeof value === 'string') {
+    const normalized = value.replace(/\s/g, '').replace(/\./g, '').replace(',', '.');
+    const parsed = Number.parseFloat(normalized);
+    return Number.isFinite(parsed) ? parsed : 0;
+  }
+  return 0;
+};
 
 export default function RevenueMetricsResult({
   success,
@@ -54,55 +56,78 @@ export default function RevenueMetricsResult({
     [data, rows],
   );
 
-  const columns: ColumnDef<RevenueMetricsRow>[] = useMemo(
+  const normalizedRows = useMemo(
+    () =>
+      tableData.map((row, index) => ({
+        index,
+        canal: row.canal ?? 'Sem canal',
+        pedidos: toNumber(row.pedidos),
+        receita_total: toNumber(row.receita_total),
+        subtotal_total: toNumber(row.subtotal_total),
+        desconto_total: toNumber(row.desconto_total),
+        frete_total: toNumber(row.frete_total),
+        clientes_unicos: toNumber(row.clientes_unicos),
+        devolucoes: toNumber(row.devolucoes),
+        valor_reembolsado: toNumber(row.valor_reembolsado),
+        ticket_medio: toNumber(row.ticket_medio),
+        receita_por_cliente: toNumber(row.receita_por_cliente),
+        participacao_receita_percent: toNumber(row.participacao_receita_percent),
+      })),
+    [tableData],
+  );
+
+  const columns: ColumnDef<(typeof normalizedRows)[number]>[] = useMemo(
     () => [
       {
         accessorKey: 'canal',
         header: 'Canal',
         cell: ({ row }) => (
           <span className="font-medium text-foreground">
-            {row.original.canal ?? 'Sem canal'}
+            {row.original.canal}
           </span>
         ),
       },
       {
         accessorKey: 'pedidos',
         header: 'Pedidos',
-        cell: ({ row }) => row.original.pedidos?.toLocaleString('pt-BR') ?? '0',
+        cell: ({ row }) => row.original.pedidos.toLocaleString('pt-BR'),
       },
       {
         accessorKey: 'receita_total',
         header: 'Receita',
         cell: ({ row }) => (
           <span className="font-semibold text-emerald-600">
-            {formatCurrency(row.original.receita_total)}
+            {row.original.receita_total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
           </span>
         ),
       },
       {
         accessorKey: 'devolucoes',
         header: 'Devoluções',
-        cell: ({ row }) => row.original.devolucoes?.toLocaleString('pt-BR') ?? '0',
+        cell: ({ row }) => row.original.devolucoes.toLocaleString('pt-BR'),
       },
       {
         accessorKey: 'valor_reembolsado',
         header: 'Reembolsado',
-        cell: ({ row }) => formatCurrency(row.original.valor_reembolsado),
+        cell: ({ row }) =>
+          row.original.valor_reembolsado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
       },
       {
         accessorKey: 'ticket_medio',
         header: 'Ticket Médio',
-        cell: ({ row }) => formatCurrency(row.original.ticket_medio),
+        cell: ({ row }) =>
+          row.original.ticket_medio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
       },
       {
         accessorKey: 'receita_por_cliente',
         header: 'Receita por Cliente',
-        cell: ({ row }) => formatCurrency(row.original.receita_por_cliente),
+        cell: ({ row }) =>
+          row.original.receita_por_cliente.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
       },
       {
         accessorKey: 'participacao_receita_percent',
         header: '% Receita',
-        cell: ({ row }) => formatPercent(row.original.participacao_receita_percent),
+        cell: ({ row }) => `${row.original.participacao_receita_percent.toFixed(2)}%`,
       },
     ],
     [],
@@ -112,14 +137,14 @@ export default function RevenueMetricsResult({
 
   return (
     <ArtifactDataTable
-      data={tableData as RevenueMetricsRow[]}
+      data={normalizedRows}
       columns={columns}
       title="Métricas de Receita por Canal"
       icon={BarChart3}
       iconColor="text-indigo-600"
       message={subtitle}
       success={success}
-      count={tableData.length}
+      count={normalizedRows.length}
       error={error}
       sqlQuery={sql_query}
       exportFileName="ecommerce_revenue_metrics"
