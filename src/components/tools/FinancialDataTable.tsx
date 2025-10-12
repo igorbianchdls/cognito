@@ -7,7 +7,7 @@ import { ArrowUpDown, DollarSign } from 'lucide-react';
 import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 
-interface FinancialRecord {
+export interface FinancialRecord {
   id: string | number;
   valor?: number;
   status?: string;

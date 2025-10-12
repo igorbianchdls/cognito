@@ -4126,12 +4126,12 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {contasAPagarTool.state === 'output-available' && (
-                <FinancialDataTable
+                <ContasAPagarList
                   success={(contasAPagarTool.output as GetContasAPagarToolOutput).success}
                   count={(contasAPagarTool.output as GetContasAPagarToolOutput).count}
-                  data={(contasAPagarTool.output as GetContasAPagarToolOutput).data ?? (contasAPagarTool.output as GetContasAPagarToolOutput).rows}
+                  rows={((contasAPagarTool.output as GetContasAPagarToolOutput).rows ?? []) as ContaAPagarRow[]}
                   message={(contasAPagarTool.output as GetContasAPagarToolOutput).message}
-                  error={(contasAPagarTool.output as GetContasAPagarToolOutput).error}
+                  sql_query={(contasAPagarTool.output as GetContasAPagarToolOutput).sql_query}
                 />
               )}
             </div>
