@@ -123,7 +123,9 @@ const formatDuration = (seconds?: number) => {
   return `${minutes}m ${secs}s`;
 };
 
-export default function AnalyticsDataTable({ success, count, data, table, message, error }: AnalyticsDataTableProps) {
+export default function AnalyticsDataTable({ success, count, rows, table, message, error, sql_query }: AnalyticsDataTableProps) {
+  const data = useMemo(() => rows ?? [], [rows]);
+
   const columns: ColumnDef<AnalyticsRecord>[] = useMemo(() => {
     const baseColumns: ColumnDef<AnalyticsRecord>[] = [
       {
@@ -489,6 +491,7 @@ export default function AnalyticsDataTable({ success, count, data, table, messag
       count={count}
       error={error}
       exportFileName={`analytics_${table}`}
+      sqlQuery={sql_query}
     />
   );
 }

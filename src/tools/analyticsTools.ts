@@ -205,17 +205,21 @@ export const getAnalyticsData = tool({
       .describe('Data final (formato YYYY-MM-DD)'),
   }),
   execute: async (input) => {
+    let sql: string | null = null;
+    let params: unknown[] = [];
     try {
       const limit = normalizeLimit(input.limit);
-      const { sql, params } = buildGetAnalyticsDataQuery({ ...input, limit });
-      const data = await runQuery<Record<string, unknown>>(sql, params);
+      const query = buildGetAnalyticsDataQuery({ ...input, limit });
+      sql = query.sql;
+      params = query.params;
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
 
       return {
         success: true,
-        count: data.length,
+        count: rows.length,
         table: input.table,
-        message: `✅ ${data.length} registros encontrados em ${input.table}`,
-        data,
+        message: `✅ ${rows.length} registros encontrados em ${input.table}`,
+        rows,
         sql_query: sql,
         sql_params: formatSqlParams(params),
       };
@@ -226,7 +230,9 @@ export const getAnalyticsData = tool({
         table: input.table,
         message: `❌ Erro ao buscar dados de ${input.table}`,
         error: error instanceof Error ? error.message : JSON.stringify(error),
-        data: [],
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
     }
   },

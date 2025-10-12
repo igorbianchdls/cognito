@@ -1632,7 +1632,7 @@ type GetAnalyticsDataToolOutput = {
   success: boolean;
   count: number;
   table: string;
-  data: Array<{
+  rows: Array<{
     id: string;
     data?: string;
     fonte?: string;
@@ -1684,6 +1684,8 @@ type GetAnalyticsDataToolOutput = {
   }>;
   message: string;
   error?: string;
+  sql_query?: string;
+  sql_params?: string;
 };
 
 type GetContasAPagarToolInput = {
@@ -5410,9 +5412,10 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   success={(analyticsTool.output as GetAnalyticsDataToolOutput).success}
                   count={(analyticsTool.output as GetAnalyticsDataToolOutput).count}
                   table={(analyticsTool.output as GetAnalyticsDataToolOutput).table}
-                  data={(analyticsTool.output as GetAnalyticsDataToolOutput).data}
+                  rows={(analyticsTool.output as GetAnalyticsDataToolOutput).rows}
                   message={(analyticsTool.output as GetAnalyticsDataToolOutput).message}
                   error={(analyticsTool.output as GetAnalyticsDataToolOutput).error}
+                  sql_query={(analyticsTool.output as GetAnalyticsDataToolOutput).sql_query}
                 />
               )}
             </div>
