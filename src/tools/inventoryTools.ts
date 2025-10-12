@@ -697,7 +697,7 @@ export const detectAnomalies = tool({
         message: `${anomalies.length} anomalias em saídas detectadas`,
         periodo_dias: range,
         sensitivity: threshold,
-        anomalias,
+        anomalias: anomalies,
         red_flags,
         rows: anomalies,
         sql_query: sql,
