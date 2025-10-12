@@ -1,8 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import { BarChart } from '@/components/charts/BarChart';
 import { BarChart3 } from 'lucide-react';
 
 interface AdsPlatformsResultProps {
@@ -177,6 +178,47 @@ export default function AdsPlatformsResult({
     return `Período analisado: ${periodoTexto} • Total de plataformas: ${totalTexto} • Melhor: ${melhorTexto} • Pior: ${piorTexto}`;
   }, [periodo_dias, total_plataformas, melhor_plataforma, pior_plataforma, tableData.length]);
 
+  const chartData = useMemo(() => {
+    if (!plataformas || plataformas.length === 0) return [];
+
+    return plataformas.map((plat) => {
+      const label = plat.plataforma?.trim() ? plat.plataforma : 'Não informada';
+      const roasNumber = Number.parseFloat((plat.roas || '0').replace(',', '.'));
+
+      return {
+        x: label,
+        y: Number.isFinite(roasNumber) ? roasNumber : 0,
+      };
+    });
+  }, [plataformas]);
+
+  const chartRenderer = useCallback(() => {
+    if (!chartData.length) return null;
+
+    return (
+      <BarChart
+        data={chartData}
+        seriesLabel="ROAS"
+        title="ROAS por Plataforma"
+        subtitle="Compara o retorno sobre investimento das plataformas analisadas"
+        axisBottom={{
+          tickRotation: -25,
+          legend: 'Plataforma',
+          legendOffset: 36,
+        }}
+        axisLeft={{
+          legend: 'ROAS (x)',
+          legendOffset: -60,
+          format: (value: string | number) => `${Number(value).toFixed(1)}x`,
+        }}
+        colors={{ scheme: 'nivo' }}
+        padding={0.3}
+        enableLabel
+        labelFormat={(value: number) => `${value.toFixed(1)}x`}
+      />
+    );
+  }, [chartData]);
+
   return (
     <div className="space-y-4">
       <ArtifactDataTable
@@ -191,6 +233,7 @@ export default function AdsPlatformsResult({
       exportFileName="paid-traffic-platforms"
       pageSize={Math.min(10, Math.max(tableData.length, 5))}
       sqlQuery={sql_query}
+      chartRenderer={chartRenderer}
     />
     </div>
   );

@@ -11,6 +11,7 @@ import {
 } from '@/components/ai-elements/artifact';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 import {
   ChevronLeft,
   ChevronRight,
@@ -20,9 +21,10 @@ import {
   AlertCircle,
   Table as TableIcon,
   Code,
+  BarChart3,
   type LucideIcon
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   ColumnDef,
   flexRender,
@@ -57,6 +59,9 @@ interface ArtifactDataTableProps<TData> {
 
   // SQL utilizada para os dados, quando disponível
   sqlQuery?: string;
+
+  // Renderizador opcional de gráfico
+  chartRenderer?: (rows: TData[]) => ReactNode;
 }
 
 export default function ArtifactDataTable<TData extends Record<string, unknown>>({
@@ -72,18 +77,31 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
   exportFileName = 'data',
   pageSize = 10,
   sqlQuery,
+  chartRenderer,
 }: ArtifactDataTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [copied, setCopied] = useState(false);
-  const [viewMode, setViewMode] = useState<'table' | 'sql'>('table');
+  const [viewMode, setViewMode] = useState<'table' | 'sql' | 'chart'>('table');
 
   useEffect(() => {
-    if (!sqlQuery) {
+    if (!sqlQuery && viewMode === 'sql') {
       setViewMode('table');
     }
-  }, [sqlQuery]);
+  }, [sqlQuery, viewMode]);
+
+  useEffect(() => {
+    if (!chartRenderer && viewMode === 'chart') {
+      setViewMode('table');
+    }
+  }, [chartRenderer, viewMode]);
 
   const isSqlView = useMemo(() => viewMode === 'sql' && Boolean(sqlQuery), [viewMode, sqlQuery]);
+  const isChartView = useMemo(() => viewMode === 'chart' && Boolean(chartRenderer), [viewMode, chartRenderer]);
+  const chartContent = useMemo(() => {
+    if (!chartRenderer) return null;
+    return chartRenderer(data);
+  }, [chartRenderer, data]);
+  const hasAlternativeView = Boolean(sqlQuery || chartRenderer);
 
   const reactTable = useReactTable({
     data,
@@ -167,21 +185,44 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
         </div>
 
         <ArtifactActions>
+          {hasAlternativeView && (
+            <ArtifactAction
+              icon={TableIcon}
+              tooltip="Ver tabela"
+              variant="ghost"
+              size="icon"
+              className={cn(
+                'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70',
+                viewMode === 'table' ? 'bg-slate-200/80 text-slate-900' : ''
+              )}
+              onClick={() => setViewMode('table')}
+            />
+          )}
           {sqlQuery && (
-            <>
-              <ArtifactAction
-                icon={TableIcon}
-                tooltip="Ver tabela"
-                variant={viewMode === 'table' ? 'default' : 'outline'}
-                onClick={() => setViewMode('table')}
-              />
-              <ArtifactAction
-                icon={Code}
-                tooltip="Ver SQL"
-                variant={viewMode === 'sql' ? 'default' : 'outline'}
-                onClick={() => setViewMode('sql')}
-              />
-            </>
+            <ArtifactAction
+              icon={Code}
+              tooltip="Ver SQL"
+              variant="ghost"
+              size="icon"
+              className={cn(
+                'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70',
+                viewMode === 'sql' ? 'bg-slate-200/80 text-slate-900' : ''
+              )}
+              onClick={() => setViewMode('sql')}
+            />
+          )}
+          {chartRenderer && (
+            <ArtifactAction
+              icon={BarChart3}
+              tooltip="Ver gráfico"
+              variant="ghost"
+              size="icon"
+              className={cn(
+                'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70',
+                viewMode === 'chart' ? 'bg-slate-200/80 text-slate-900' : ''
+              )}
+              onClick={() => setViewMode('chart')}
+            />
           )}
           <ArtifactAction
             icon={copied ? CheckCircle : Copy}
@@ -197,7 +238,7 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
         </ArtifactActions>
       </ArtifactHeader>
 
-      <ArtifactContent className={isSqlView ? "p-4" : "p-0"}>
+      <ArtifactContent className={cn(isSqlView || isChartView ? "p-4" : "p-0")}>
         {isSqlView ? (
           <div className="space-y-3">
             <textarea
@@ -207,6 +248,17 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
             />
             <p className="text-xs text-muted-foreground">
               SQL executada para gerar os dados acima.
+            </p>
+          </div>
+        ) : isChartView ? (
+          <div className="space-y-3">
+            {chartContent ?? (
+              <div className="rounded-md border border-dashed border-slate-300 p-6 text-center text-sm text-muted-foreground">
+                Não foi possível renderizar o gráfico para estes dados.
+              </div>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Visualização gerada automaticamente a partir da mesma consulta.
             </p>
           </div>
         ) : (
