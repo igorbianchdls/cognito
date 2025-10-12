@@ -196,27 +196,29 @@ export default function AdsPlatformsResult({
     if (!chartData.length) return null;
 
     return (
-      <BarChart
-        data={chartData}
-        seriesLabel="ROAS"
-        title="ROAS por Plataforma"
-        subtitle="Compara o retorno sobre investimento das plataformas analisadas"
-        containerClassName="min-h-[320px]"
-        axisBottom={{
-          tickRotation: -25,
-          legend: 'Plataforma',
-          legendOffset: 36,
-        }}
-        axisLeft={{
-          legend: 'ROAS (x)',
-          legendOffset: -60,
-          format: (value: string | number) => `${Number(value).toFixed(1)}x`,
-        }}
-        colors={{ scheme: 'nivo' }}
-        padding={0.3}
-        enableLabel
-        labelFormat={(value: number) => `${value.toFixed(1)}x`}
-      />
+      <div className="h-[360px] w-full">
+        <BarChart
+          data={chartData}
+          seriesLabel="ROAS"
+          title="ROAS por Plataforma"
+          subtitle="Compara o retorno sobre investimento das plataformas analisadas"
+          containerClassName="h-full"
+          axisBottom={{
+            tickRotation: -25,
+            legend: 'Plataforma',
+            legendOffset: 36,
+          }}
+          axisLeft={{
+            legend: 'ROAS (x)',
+            legendOffset: -60,
+            format: (value: string | number) => `${Number(value).toFixed(1)}x`,
+          }}
+          colors={{ scheme: 'nivo' }}
+          padding={0.3}
+          enableLabel
+          labelFormat={(value: number) => `${value.toFixed(1)}x`}
+        />
+      </div>
     );
   }, [chartData]);
 
