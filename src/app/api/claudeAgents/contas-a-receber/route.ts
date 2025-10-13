@@ -1,6 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
-import { getContasAReceber, getContasAPagar, calculateDateRange } from '@/tools/financialTools';
+import { getContasAReceber, getContasAPagar, calculateDateRange, situacaoOperacionalContas, alertaAumentoAnormalDespesas, atrasosInadimplencia } from '@/tools/financialTools';
 import { calcularFluxoCaixa } from '@/tools/fluxoCaixaTools';
 import { getMovimentos, createMovimento } from '@/tools/movimentosTools';
 
@@ -339,7 +339,11 @@ Seja sempre profissional, orientado a dados e ofereça insights acionáveis. Pri
         calcularFluxoCaixa,
         calculateDateRange,
         getMovimentos,
-        createMovimento
+        createMovimento,
+        // Novas ferramentas
+        situacaoOperacionalContas,
+        alertaAumentoAnormalDespesas,
+        atrasosInadimplencia,
       }
     });
 

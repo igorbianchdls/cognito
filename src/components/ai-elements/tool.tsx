@@ -109,6 +109,10 @@ export const ToolHeader = ({
           'tool-atrasosCriticosDeteccaoAnomalias': 'Atrasos críticos — detecção de anomalias',
           'tool-logisticaReversaDevolucoes': 'Logística reversa (devoluções)',
           'tool-rankingEficienciaPorCentro': 'Ranking de eficiência por centro',
+          // Finance (novos nomes)
+          'tool-situacaoOperacionalContas': 'Situação operacional — pagar x receber',
+          'tool-alertaAumentoAnormalDespesas': 'Alerta de aumento de despesas',
+          'tool-atrasosInadimplencia': 'Atrasos e inadimplência',
         };
         return labels[type] ?? type.replace('tool-', '');
       })()}</span>

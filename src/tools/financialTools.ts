@@ -731,6 +731,127 @@ export const bankReconciliationStatus = tool({
   },
 });
 
+// === Novas tools: Contas a Pagar e Receber ===
+
+export const situacaoOperacionalContas = tool({
+  description: 'Resumo operacional de contas a pagar e a receber no período',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+  }),
+  execute: async ({ data_de, data_ate }) => {
+    const sql = `
+SELECT
+  CASE WHEN tipo = 'pagar' THEN 'Contas a Pagar' ELSE 'Contas a Receber' END AS tipo_conta,
+  COUNT(*) AS total,
+  SUM(valor) AS valor_total,
+  SUM(CASE WHEN status = 'pendente' THEN valor ELSE 0 END) AS valor_pendente,
+  SUM(CASE WHEN status IN ('pago','recebido') THEN valor ELSE 0 END) AS valor_pago
+FROM (
+  SELECT 'pagar' AS tipo, valor, status, data_vencimento
+  FROM gestaofinanceira.contas_a_pagar
+  WHERE data_vencimento >= $1::date AND data_vencimento < ($2::date + INTERVAL '1 day')
+  UNION ALL
+  SELECT 'receber', valor, status, data_vencimento
+  FROM gestaofinanceira.contas_a_receber
+  WHERE data_vencimento >= $1::date AND data_vencimento < ($2::date + INTERVAL '1 day')
+) sub
+GROUP BY tipo_conta
+ORDER BY tipo_conta`;
+    const params = [data_de, data_ate] as unknown[];
+    try {
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `Situação operacional (${data_de} a ${data_ate})`,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    } catch (error) {
+      console.error('ERRO situacaoOperacionalContas:', error);
+      return { success: false, message: 'Erro na situação operacional', rows: [], sql_query: sql, sql_params: formatSqlParams(params) };
+    }
+  },
+});
+
+export const alertaAumentoAnormalDespesas = tool({
+  description: 'Detecta variações anormais de despesas mensais (contas a pagar)',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+  }),
+  execute: async ({ data_de, data_ate }) => {
+    const sql = `
+WITH mensal AS (
+  SELECT
+    DATE_TRUNC('month', data_vencimento) AS mes,
+    SUM(valor) AS total_despesas
+  FROM gestaofinanceira.contas_a_pagar
+  WHERE data_vencimento >= $1::date AND data_vencimento < ($2::date + INTERVAL '1 day')
+  GROUP BY 1
+),
+media_geral AS (
+  SELECT AVG(total_despesas) AS media_mensal FROM mensal
+)
+SELECT
+  TO_CHAR(m.mes, 'YYYY-MM') AS mes,
+  ROUND(m.total_despesas::numeric, 2) AS despesas_mes,
+  ROUND(media_geral.media_mensal::numeric, 2) AS media_geral,
+  ROUND(((m.total_despesas - media_geral.media_mensal) / NULLIF(media_geral.media_mensal,0)) * 100, 1) AS variacao_pct,
+  CASE
+    WHEN ((m.total_despesas - media_geral.media_mensal) / NULLIF(media_geral.media_mensal,0)) * 100 > 25 THEN '🚨 Despesa anômala'
+    WHEN ((m.total_despesas - media_geral.media_mensal) / NULLIF(media_geral.media_mensal,0)) * 100 > 10 THEN '⚠️ Tendência de aumento'
+    ELSE '✅ Normal'
+  END AS alerta
+FROM mensal m, media_geral
+ORDER BY m.mes`;
+    const params = [data_de, data_ate] as unknown[];
+    try {
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return { success: true, message: `Despesas mensais (${data_de} a ${data_ate})`, rows, count: rows.length, sql_query: sql, sql_params: formatSqlParams(params) };
+    } catch (error) {
+      console.error('ERRO alertaAumentoAnormalDespesas:', error);
+      return { success: false, message: 'Erro no alerta de despesas', rows: [], sql_query: sql, sql_params: formatSqlParams(params) };
+    }
+  },
+});
+
+export const atrasosInadimplencia = tool({
+  description: 'Monitoramento de atrasos e inadimplência em pagar/receber',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+  }),
+  execute: async ({ data_de, data_ate }) => {
+    const sql = `
+SELECT
+  'A Pagar' AS tipo,
+  COUNT(*) FILTER (WHERE data_pagamento IS NULL AND data_vencimento < CURRENT_DATE) AS qtd_atrasadas,
+  ROUND(SUM(valor) FILTER (WHERE data_pagamento IS NULL AND data_vencimento < CURRENT_DATE)::numeric, 2) AS valor_atrasado
+FROM gestaofinanceira.contas_a_pagar
+WHERE data_vencimento >= $1::date AND data_vencimento < ($2::date + INTERVAL '1 day')
+
+UNION ALL
+
+SELECT
+  'A Receber' AS tipo,
+  COUNT(*) FILTER (WHERE data_recebimento IS NULL AND data_vencimento < CURRENT_DATE) AS qtd_atrasadas,
+  ROUND(SUM(valor) FILTER (WHERE data_recebimento IS NULL AND data_vencimento < CURRENT_DATE)::numeric, 2) AS valor_atrasado
+FROM gestaofinanceira.contas_a_receber
+WHERE data_vencimento >= $1::date AND data_vencimento < ($2::date + INTERVAL '1 day')`;
+    const params = [data_de, data_ate] as unknown[];
+    try {
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return { success: true, message: `Atrasos e inadimplência (${data_de} a ${data_ate})`, rows, count: rows.length, sql_query: sql, sql_params: formatSqlParams(params) };
+    } catch (error) {
+      console.error('ERRO atrasosInadimplencia:', error);
+      return { success: false, message: 'Erro no monitoramento de atrasos/inadimplência', rows: [], sql_query: sql, sql_params: formatSqlParams(params) };
+    }
+  },
+});
+
 export const detectFinancialAnomalies = tool({
   description: 'Detecta anomalias em saídas diárias (z-score) e riscos financeiros',
   inputSchema: z.object({ date_range_days: z.number().default(60), sensitivity: z.number().default(2), diff_threshold: z.number().default(1000) }),
