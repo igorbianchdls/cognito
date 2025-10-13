@@ -165,10 +165,15 @@ export default function DesempenhoGeralDoSiteResult({
         sqlQuery={sql_query}
         chartRenderer={() => {
           if (!data.length) return null;
-          const sample = data[0] as Record<string, unknown>;
-          const numericKeys = Object.keys(sample).filter((k) => typeof (sample as any)[k] === 'number');
           const xKey = 'data';
-          const valueKeys = numericKeys.filter((k) => k !== xKey);
+          // Métricas conhecidas do dataset desta tela
+          const valueKeys = [
+            'sessoes',
+            'usuarios',
+            'pageviews',
+            'avg_duration_seconds',
+            'bounce_rate_percent',
+          ];
           const metricLabels: Record<string, string> = {
             sessoes: 'Sessões',
             usuarios: 'Usuários',
@@ -178,7 +183,7 @@ export default function DesempenhoGeralDoSiteResult({
           };
           return (
             <ChartSwitcher
-              rows={data}
+              rows={data as Array<Record<string, unknown>>}
               options={{
                 xKey,
                 valueKeys,
