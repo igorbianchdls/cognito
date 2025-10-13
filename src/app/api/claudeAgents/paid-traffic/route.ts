@@ -8,7 +8,11 @@ import {
   analyzeSpendingTrends,
   calculateCostMetrics,
   forecastAdPerformance,
-  analiseDeCampanhas
+  analiseDeCampanhas,
+  desempenhoPorGrupoDeAnuncio,
+  desempenhoPorDiaDaSemana,
+  deteccaoAnomaliasROAS,
+  deteccaoAnomaliasTaxaConversao
 } from '@/tools/paidTrafficTools';
 
 export const maxDuration = 300;
@@ -278,7 +282,11 @@ Seja sempre orientado a dados, priorize maximização de ROAS e otimização con
         analyzeSpendingTrends,
         calculateCostMetrics,
         forecastAdPerformance,
-        analiseDeCampanhas
+        analiseDeCampanhas,
+        desempenhoPorGrupoDeAnuncio,
+        desempenhoPorDiaDaSemana,
+        deteccaoAnomaliasROAS,
+        deteccaoAnomaliasTaxaConversao
       }
     });
 

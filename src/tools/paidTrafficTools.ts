@@ -1078,3 +1078,180 @@ ORDER BY total_gasto DESC;`.trim();
     }
   }
 });
+
+// Desempenho por Grupo de Anúncio (campanha de ad sets)
+export const desempenhoPorGrupoDeAnuncio = tool({
+  description: 'Desempenho agregado por grupo de anúncio (grupo/plataforma) com métricas derivadas',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+    plataforma: z.enum(['Google', 'Meta', 'Facebook', 'TikTok', 'LinkedIn']).optional().describe('Filtrar uma plataforma específica'),
+    limit: z.number().default(50),
+  }),
+  execute: async ({ data_de, data_ate, plataforma, limit = 50 }) => {
+    const sql = `
+SELECT 
+  COALESCE(ga.nome, 'Sem grupo') AS grupo,
+  ca.plataforma,
+  SUM(m.impressao) AS total_impressoes,
+  SUM(m.cliques) AS total_cliques,
+  SUM(m.conversao) AS total_conversoes,
+  ROUND(SUM(m.gasto), 2) AS total_gasto,
+  ROUND(SUM(m.receita), 2) AS total_receita,
+  ROUND(SUM(m.cliques)::numeric / NULLIF(SUM(m.impressao), 0) * 100, 2) AS ctr,
+  ROUND(SUM(m.conversao)::numeric / NULLIF(SUM(m.cliques), 0) * 100, 2) AS taxa_conversao,
+  ROUND(SUM(m.gasto)::numeric / NULLIF(SUM(m.cliques), 0), 2) AS cpc,
+  ROUND(SUM(m.gasto)::numeric / NULLIF(SUM(m.conversao), 0), 2) AS cpa,
+  ROUND(SUM(m.receita)::numeric / NULLIF(SUM(m.gasto), 0), 2) AS roas,
+  ROUND(SUM(m.receita)::numeric - SUM(m.gasto), 2) AS lucro,
+  ROUND((SUM(m.gasto)::numeric / NULLIF(SUM(m.impressao), 0)) * 1000, 2) AS cpm,
+  ROUND(SUM(m.receita)::numeric / NULLIF(SUM(m.conversao), 0), 2) AS ticket_medio
+FROM trafego_pago.metricas_anuncios m
+JOIN trafego_pago.anuncios_publicados ap ON m.anuncio_publicado_id = ap.id
+JOIN trafego_pago.grupos_de_anuncios ga ON ap.grupo_id = ga.id
+JOIN trafego_pago.contas_ads ca ON ap.conta_ads_id = ca.id
+WHERE m.data BETWEEN $1::date AND $2::date
+  AND ($3::text IS NULL OR ca.plataforma = $3)
+GROUP BY ga.nome, ca.plataforma
+ORDER BY total_gasto DESC
+LIMIT $4;`.trim();
+
+    try {
+      const params = [data_de, data_ate, plataforma ?? null, limit];
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return { success: true, message: `Desempenho de ${rows.length} grupo(s)`, count: rows.length, rows, sql_query: sql, sql_params: formatSqlParams(params) };
+    } catch (error) {
+      return { success: false, message: `Erro ao analisar grupos: ${error instanceof Error ? error.message : 'Erro desconhecido'}`, rows: [], sql_query: sql, sql_params: formatSqlParams([data_de, data_ate, plataforma ?? null, limit]) };
+    }
+  }
+});
+
+// Desempenho por Dia da Semana
+export const desempenhoPorDiaDaSemana = tool({
+  description: 'Desempenho agregado por dia da semana (plataforma) com métricas derivadas',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+    plataforma: z.enum(['Google', 'Meta', 'Facebook', 'TikTok', 'LinkedIn']).optional().describe('Filtrar uma plataforma específica'),
+  }),
+  execute: async ({ data_de, data_ate, plataforma }) => {
+    const sql = `
+SELECT 
+  EXTRACT(DOW FROM m.data)::int AS dia_semana,
+  TO_CHAR(m.data::date, 'Dy') AS dia_label,
+  ca.plataforma,
+  SUM(m.impressao) AS total_impressoes,
+  SUM(m.cliques) AS total_cliques,
+  SUM(m.conversao) AS total_conversoes,
+  ROUND(SUM(m.gasto), 2) AS total_gasto,
+  ROUND(SUM(m.receita), 2) AS total_receita,
+  ROUND(SUM(m.cliques)::numeric / NULLIF(SUM(m.impressao), 0) * 100, 2) AS ctr,
+  ROUND(SUM(m.conversao)::numeric / NULLIF(SUM(m.cliques), 0) * 100, 2) AS taxa_conversao,
+  ROUND(SUM(m.gasto)::numeric / NULLIF(SUM(m.cliques), 0), 2) AS cpc,
+  ROUND(SUM(m.gasto)::numeric / NULLIF(SUM(m.conversao), 0), 2) AS cpa,
+  ROUND(SUM(m.receita)::numeric / NULLIF(SUM(m.gasto), 0), 2) AS roas
+FROM trafego_pago.metricas_anuncios m
+JOIN trafego_pago.anuncios_publicados ap ON m.anuncio_publicado_id = ap.id
+JOIN trafego_pago.contas_ads ca ON ap.conta_ads_id = ca.id
+WHERE m.data BETWEEN $1::date AND $2::date
+  AND ($3::text IS NULL OR ca.plataforma = $3)
+GROUP BY 1, 2, ca.plataforma
+ORDER BY dia_semana ASC;`.trim();
+
+    try {
+      const params = [data_de, data_ate, plataforma ?? null];
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return { success: true, message: `Desempenho por dia da semana (${rows.length} linhas)`, count: rows.length, rows, sql_query: sql, sql_params: formatSqlParams(params) };
+    } catch (error) {
+      return { success: false, message: `Erro ao analisar por dia da semana: ${error instanceof Error ? error.message : 'Erro desconhecido'}`, rows: [], sql_query: sql, sql_params: formatSqlParams([data_de, data_ate, plataforma ?? null]) };
+    }
+  }
+});
+
+// Detecção de Anomalias de ROAS (por dia)
+export const deteccaoAnomaliasROAS = tool({
+  description: 'Detecta anomalias de ROAS por dia usando z-score',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+    plataforma: z.enum(['Google', 'Meta', 'Facebook', 'TikTok', 'LinkedIn']).optional().describe('Filtrar uma plataforma específica'),
+    zscore_limite: z.number().default(2.0),
+  }),
+  execute: async ({ data_de, data_ate, plataforma, zscore_limite = 2.0 }) => {
+    const sql = `
+WITH daily AS (
+  SELECT m.data::date AS dia,
+         SUM(m.gasto) AS gasto,
+         SUM(m.receita) AS receita,
+         CASE WHEN SUM(m.gasto) > 0 THEN SUM(m.receita) / SUM(m.gasto) ELSE 0 END AS roas
+  FROM trafego_pago.metricas_anuncios m
+  JOIN trafego_pago.anuncios_publicados ap ON m.anuncio_publicado_id = ap.id
+  JOIN trafego_pago.contas_ads ca ON ap.conta_ads_id = ca.id
+  WHERE m.data BETWEEN $1::date AND $2::date
+    AND ($3::text IS NULL OR ca.plataforma = $3)
+  GROUP BY 1
+), stats AS (
+  SELECT AVG(roas) AS media, STDDEV_SAMP(roas) AS desvio FROM daily
+)
+SELECT d.dia,
+       d.roas,
+       s.media,
+       s.desvio,
+       CASE WHEN s.desvio > 0 THEN (d.roas - s.media) / s.desvio ELSE 0 END AS zscore,
+       CASE WHEN s.desvio > 0 AND ABS((d.roas - s.media) / s.desvio) > $4 THEN TRUE ELSE FALSE END AS anomalia
+FROM daily d CROSS JOIN stats s
+ORDER BY d.dia;`.trim();
+
+    try {
+      const params = [data_de, data_ate, plataforma ?? null, zscore_limite];
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return { success: true, message: `Análise de ${rows.length} dia(s)`, count: rows.length, rows, sql_query: sql, sql_params: formatSqlParams(params) };
+    } catch (error) {
+      return { success: false, message: `Erro ao detectar anomalias ROAS: ${error instanceof Error ? error.message : 'Erro desconhecido'}`, rows: [], sql_query: sql, sql_params: formatSqlParams([data_de, data_ate, plataforma ?? null, zscore_limite]) };
+    }
+  }
+});
+
+// Detecção de Anomalias na Taxa de Conversão (por dia)
+export const deteccaoAnomaliasTaxaConversao = tool({
+  description: 'Detecta anomalias de taxa de conversão por dia usando z-score',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+    plataforma: z.enum(['Google', 'Meta', 'Facebook', 'TikTok', 'LinkedIn']).optional().describe('Filtrar uma plataforma específica'),
+    zscore_limite: z.number().default(2.0),
+  }),
+  execute: async ({ data_de, data_ate, plataforma, zscore_limite = 2.0 }) => {
+    const sql = `
+WITH daily AS (
+  SELECT m.data::date AS dia,
+         SUM(m.cliques) AS cliques,
+         SUM(m.conversao) AS conversoes,
+         CASE WHEN SUM(m.cliques) > 0 THEN (SUM(m.conversao)::numeric / SUM(m.cliques)) * 100 ELSE 0 END AS taxa_conversao
+  FROM trafego_pago.metricas_anuncios m
+  JOIN trafego_pago.anuncios_publicados ap ON m.anuncio_publicado_id = ap.id
+  JOIN trafego_pago.contas_ads ca ON ap.conta_ads_id = ca.id
+  WHERE m.data BETWEEN $1::date AND $2::date
+    AND ($3::text IS NULL OR ca.plataforma = $3)
+  GROUP BY 1
+), stats AS (
+  SELECT AVG(taxa_conversao) AS media, STDDEV_SAMP(taxa_conversao) AS desvio FROM daily
+)
+SELECT d.dia,
+       d.taxa_conversao,
+       s.media,
+       s.desvio,
+       CASE WHEN s.desvio > 0 THEN (d.taxa_conversao - s.media) / s.desvio ELSE 0 END AS zscore,
+       CASE WHEN s.desvio > 0 AND ABS((d.taxa_conversao - s.media) / s.desvio) > $4 THEN TRUE ELSE FALSE END AS anomalia
+FROM daily d CROSS JOIN stats s
+ORDER BY d.dia;`.trim();
+
+    try {
+      const params = [data_de, data_ate, plataforma ?? null, zscore_limite];
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return { success: true, message: `Análise de ${rows.length} dia(s)`, count: rows.length, rows, sql_query: sql, sql_params: formatSqlParams(params) };
+    } catch (error) {
+      return { success: false, message: `Erro ao detectar anomalias Tx Conversão: ${error instanceof Error ? error.message : 'Erro desconhecido'}`, rows: [], sql_query: sql, sql_params: formatSqlParams([data_de, data_ate, plataforma ?? null, zscore_limite]) };
+    }
+  }
+});

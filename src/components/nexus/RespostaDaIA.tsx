@@ -100,6 +100,10 @@ import UserBehaviorResult from '../tools/web-analytics/UserBehaviorResult';
 import CampaignROASResult from '../tools/paid-traffic/CampaignROASResult';
 import AdsPlatformsResult from '../tools/paid-traffic/AdsPlatformsResult';
 import CreativeAdsPerformanceResult from '../tools/paid-traffic/CreativeAdsPerformanceResult';
+import DesempenhoPorGrupoDeAnuncioResult from '../tools/paid-traffic/DesempenhoPorGrupoDeAnuncioResult';
+import DesempenhoPorDiaDaSemanaResult from '../tools/paid-traffic/DesempenhoPorDiaDaSemanaResult';
+import DeteccaoAnomaliasROASResult from '../tools/paid-traffic/DeteccaoAnomaliasROASResult';
+import DeteccaoAnomaliasTaxaConversaoResult from '../tools/paid-traffic/DeteccaoAnomaliasTaxaConversaoResult';
 import TopAdsResult from '../tools/paid-traffic/TopAdsResult';
 import SpendingTrendsResult from '../tools/paid-traffic/SpendingTrendsResult';
 import CostMetricsResult from '../tools/paid-traffic/CostMetricsResult';
@@ -5329,6 +5333,102 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   pior_plataforma={(tool.output as CompareAdsPlatformsToolOutput).pior_plataforma}
                   plataformas={(tool.output as CompareAdsPlatformsToolOutput).plataformas}
                   sql_query={(tool.output as CompareAdsPlatformsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-desempenhoPorGrupoDeAnuncio') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-desempenhoPorGrupoDeAnuncio" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <DesempenhoPorGrupoDeAnuncioResult
+                  success={(tool.output as { success: boolean }).success}
+                  message={(tool.output as { message: string }).message}
+                  rows={(tool.output as { rows?: Array<Record<string, unknown>> }).rows}
+                  count={(tool.output as { count?: number }).count}
+                  sql_query={(tool.output as { sql_query?: string }).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-desempenhoPorDiaDaSemana') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-desempenhoPorDiaDaSemana" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <DesempenhoPorDiaDaSemanaResult
+                  success={(tool.output as { success: boolean }).success}
+                  message={(tool.output as { message: string }).message}
+                  rows={(tool.output as { rows?: Array<Record<string, unknown>> }).rows}
+                  count={(tool.output as { count?: number }).count}
+                  sql_query={(tool.output as { sql_query?: string }).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-deteccaoAnomaliasROAS') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-deteccaoAnomaliasROAS" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <DeteccaoAnomaliasROASResult
+                  success={(tool.output as { success: boolean }).success}
+                  message={(tool.output as { message: string }).message}
+                  rows={(tool.output as { rows?: Array<Record<string, unknown>> }).rows}
+                  count={(tool.output as { count?: number }).count}
+                  sql_query={(tool.output as { sql_query?: string }).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-deteccaoAnomaliasTaxaConversao') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-deteccaoAnomaliasTaxaConversao" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <DeteccaoAnomaliasTaxaConversaoResult
+                  success={(tool.output as { success: boolean }).success}
+                  message={(tool.output as { message: string }).message}
+                  rows={(tool.output as { rows?: Array<Record<string, unknown>> }).rows}
+                  count={(tool.output as { count?: number }).count}
+                  sql_query={(tool.output as { sql_query?: string }).sql_query}
                 />
               )}
             </div>
