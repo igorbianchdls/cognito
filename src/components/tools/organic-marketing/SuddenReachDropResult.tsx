@@ -35,20 +35,32 @@ export default function SuddenReachDropResult({ success, message, rows = [], cou
     })) as ColumnDef<Row>[];
   }, [data]);
 
-  const chartRenderer = () => (
-    <ChartSwitcher
-      rows={data}
-      options={{
-        xKey: (data.some(r => typeof r.data === 'string') ? 'data' : 'data'),
-        valueKeys: ['alcance','alcance_dia_anterior','variacao_pct'],
-        metricLabels: { alcance: 'Alcance', alcance_dia_anterior: 'Alcance (D-1)', variacao_pct: 'Variação (%)' },
-        title: 'Queda súbita de alcance',
-        xLegend: 'Dia',
-        yLegend: 'Valor',
-        initialChartType: 'line',
-      }}
-    />
-  );
+  const chartRenderer = () => {
+    const sample = data[0] || {};
+    const candidates = ['impressoes','z_score','alcance','alcance_dia_anterior','variacao_pct'];
+    const valueKeys = candidates.filter((k) => k in sample);
+    const metricLabels: Record<string, string> = {
+      impressoes: 'Impressões',
+      z_score: 'Z-score',
+      alcance: 'Alcance',
+      alcance_dia_anterior: 'Alcance (D-1)',
+      variacao_pct: 'Variação (%)',
+    };
+    return (
+      <ChartSwitcher
+        rows={data}
+        options={{
+          xKey: (data.some(r => typeof r.data === 'string') ? 'data' : 'data'),
+          valueKeys: valueKeys.length ? valueKeys : ['impressoes'],
+          metricLabels,
+          title: 'Queda súbita de alcance',
+          xLegend: 'Dia',
+          yLegend: 'Valor',
+          initialChartType: 'line',
+        }}
+      />
+    );
+  };
 
   return (
     <ArtifactDataTable<Row>
@@ -67,4 +79,3 @@ export default function SuddenReachDropResult({ success, message, rows = [], cou
     />
   );
 }
-

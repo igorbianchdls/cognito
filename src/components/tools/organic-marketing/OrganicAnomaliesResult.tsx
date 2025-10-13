@@ -35,20 +35,34 @@ export default function OrganicAnomaliesResult({ success, message, rows = [], co
     })) as ColumnDef<Row>[];
   }, [data]);
 
-  const chartRenderer = () => (
-    <ChartSwitcher
-      rows={data}
-      options={{
-        xKey: (data.some(r => typeof r.data === 'string') ? 'data' : 'data'),
-        valueKeys: ['valor','media_7d','zscore'],
-        metricLabels: { valor: 'Valor', media_7d: 'Média 7d', zscore: 'Z-score' },
-        title: 'Detecção de anomalias',
-        xLegend: 'Dia',
-        yLegend: 'Valor',
-        initialChartType: 'line',
-      }}
-    />
-  );
+  const chartRenderer = () => {
+    const sample = data[0] || {};
+    const candidates = ['valor','media_7d','zscore','engajamento_pct','media','desvio','z_score'];
+    const valueKeys = candidates.filter((k) => k in sample);
+    const metricLabels: Record<string, string> = {
+      valor: 'Valor',
+      media_7d: 'Média 7d',
+      zscore: 'Z-score',
+      engajamento_pct: 'Engajamento (%)',
+      media: 'Média',
+      desvio: 'Desvio',
+      z_score: 'Z-score',
+    };
+    return (
+      <ChartSwitcher
+        rows={data}
+        options={{
+          xKey: (data.some(r => typeof r.data === 'string') ? 'data' : 'data'),
+          valueKeys: valueKeys.length ? valueKeys : ['valor'],
+          metricLabels,
+          title: 'Detecção de anomalias',
+          xLegend: 'Dia',
+          yLegend: 'Valor',
+          initialChartType: 'line',
+        }}
+      />
+    );
+  };
 
   return (
     <ArtifactDataTable<Row>
@@ -67,4 +81,3 @@ export default function OrganicAnomaliesResult({ success, message, rows = [], co
     />
   );
 }
-

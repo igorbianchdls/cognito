@@ -38,8 +38,8 @@ export default function EngagementByDayHourResult({ success, message, rows = [],
       rows={data}
       options={{
         xKey: (data.some(r => r.hora !== undefined) ? 'hora' : (data.some(r => r.dia_semana !== undefined) ? 'dia_semana' : 'hora')),
-        valueKeys: ['engajamento'],
-        metricLabels: { engajamento: 'Engajamento' },
+        valueKeys: ['engajamento_pct'],
+        metricLabels: { engajamento_pct: 'Engajamento (%)' },
         title: 'Engajamento por dia/horário',
         xLegend: 'Tempo',
         yLegend: 'Valor',
@@ -65,4 +65,3 @@ export default function EngagementByDayHourResult({ success, message, rows = [],
     />
   );
 }
-

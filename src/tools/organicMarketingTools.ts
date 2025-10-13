@@ -606,21 +606,38 @@ export const engajamentoPorDiaHora = tool({
     data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
   }),
   execute: async ({ data_de, data_ate }) => {
-    const de = new Date(data_de);
-    const ate = new Date(data_ate);
-    const ms = 24 * 60 * 60 * 1000;
-    const diff = Math.max(1, Math.floor((ate.getTime() - de.getTime()) / ms) + 1);
+    const sql = `
+SELECT 
+  cs.plataforma,
+  TO_CHAR(mp.registrado_em, 'Day') AS dia_semana,
+  DATE_PART('hour', mp.registrado_em) AS hora,
+  ROUND(SUM(mp.curtidas + mp.comentarios + mp.compartilhamentos)::numeric / NULLIF(SUM(mp.impressoes), 0) * 100, 2) AS engajamento_pct
+FROM marketing_organico.metricas_publicacoes mp
+JOIN marketing_organico.publicacoes p ON mp.publicacao_id = p.id
+JOIN marketing_organico.contas_sociais cs ON p.conta_social_id = cs.id
+WHERE mp.registrado_em >= $1::date AND mp.registrado_em < ($2::date + INTERVAL '1 day')
+GROUP BY cs.plataforma, dia_semana, hora
+ORDER BY cs.plataforma, dia_semana, hora`;
+    const params = [data_de, data_ate] as unknown[];
     try {
-      return await buildPlatformMetricsResponse(diff, 'Engajamento por dia/horário', {
-        order: 'engajamento_desc',
-        limit: 15,
-      });
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `✅ ${rows.length} linhas (Engajamento por dia/horário)`,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
     } catch (error) {
       console.error('ERRO engajamentoPorDiaHora:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: '❌ Erro ao gerar Engajamento por dia/horário'
+        message: '❌ Erro ao gerar Engajamento por dia/horário',
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
     }
   }
@@ -633,21 +650,61 @@ export const detectarAnomaliasPerformance = tool({
     data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
   }),
   execute: async ({ data_de, data_ate }) => {
-    const de = new Date(data_de);
-    const ate = new Date(data_ate);
-    const ms = 24 * 60 * 60 * 1000;
-    const diff = Math.max(1, Math.floor((ate.getTime() - de.getTime()) / ms) + 1);
+    const sql = `
+WITH base AS (
+  SELECT
+    cs.plataforma,
+    DATE(mp.registrado_em) AS dia,
+    ROUND(SUM(mp.curtidas + mp.comentarios + mp.compartilhamentos)::numeric / NULLIF(SUM(mp.impressoes), 0) * 100, 2) AS engajamento_pct
+  FROM marketing_organico.metricas_publicacoes mp
+  JOIN marketing_organico.publicacoes p ON mp.publicacao_id = p.id
+  JOIN marketing_organico.contas_sociais cs ON p.conta_social_id = cs.id
+  WHERE mp.registrado_em >= $1::date AND mp.registrado_em < ($2::date + INTERVAL '1 day')
+  GROUP BY cs.plataforma, dia
+),
+estatisticas AS (
+  SELECT
+    plataforma,
+    AVG(engajamento_pct) AS media,
+    STDDEV_POP(engajamento_pct) AS desvio
+  FROM base
+  GROUP BY plataforma
+)
+SELECT
+  b.plataforma,
+  b.dia,
+  b.engajamento_pct,
+  e.media,
+  e.desvio,
+  ROUND((b.engajamento_pct - e.media) / NULLIF(e.desvio, 0), 2) AS z_score,
+  CASE 
+    WHEN (b.engajamento_pct - e.media) / NULLIF(e.desvio, 0) > 2 THEN '📈 Pico de engajamento'
+    WHEN (b.engajamento_pct - e.media) / NULLIF(e.desvio, 0) < -2 THEN '🚨 Queda de engajamento'
+  END AS alerta
+FROM base b
+JOIN estatisticas e ON b.plataforma = e.plataforma
+WHERE ABS((b.engajamento_pct - e.media) / NULLIF(e.desvio, 0)) > 2
+ORDER BY b.dia DESC`;
+    const params = [data_de, data_ate] as unknown[];
     try {
-      return await buildPlatformMetricsResponse(diff, 'Detecção de anomalias', {
-        order: 'engajamento_desc',
-        limit: 20,
-      });
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `✅ ${rows.length} linhas (Detecção de anomalias de engajamento)`,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
     } catch (error) {
       console.error('ERRO detectarAnomaliasPerformance:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: '❌ Erro ao detectar anomalias de performance'
+        message: '❌ Erro ao detectar anomalias de performance',
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
     }
   }
@@ -660,21 +717,59 @@ export const detectarQuedaSubitaAlcance = tool({
     data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
   }),
   execute: async ({ data_de, data_ate }) => {
-    const de = new Date(data_de);
-    const ate = new Date(data_ate);
-    const ms = 24 * 60 * 60 * 1000;
-    const diff = Math.max(1, Math.floor((ate.getTime() - de.getTime()) / ms) + 1);
+    const sql = `
+WITH diario AS (
+  SELECT 
+    cs.plataforma,
+    DATE(mp.registrado_em) AS dia,
+    SUM(mp.impressoes) AS impressoes
+  FROM marketing_organico.metricas_publicacoes mp
+  JOIN marketing_organico.publicacoes p ON mp.publicacao_id = p.id
+  JOIN marketing_organico.contas_sociais cs ON p.conta_social_id = cs.id
+  WHERE mp.registrado_em >= $1::date AND mp.registrado_em < ($2::date + INTERVAL '1 day')
+  GROUP BY cs.plataforma, dia
+),
+estatisticas AS (
+  SELECT 
+    plataforma,
+    AVG(impressoes) AS media,
+    STDDEV_POP(impressoes) AS desvio
+  FROM diario
+  GROUP BY plataforma
+)
+SELECT 
+  d.plataforma,
+  d.dia,
+  d.impressoes,
+  ROUND((d.impressoes - e.media) / NULLIF(e.desvio, 0), 2) AS z_score,
+  CASE 
+    WHEN (d.impressoes - e.media) / NULLIF(e.desvio, 0) < -2 THEN '🚨 Queda de alcance detectada'
+    WHEN (d.impressoes - e.media) / NULLIF(e.desvio, 0) > 2 THEN '📈 Pico de alcance'
+  END AS alerta
+FROM diario d
+JOIN estatisticas e ON e.plataforma = d.plataforma
+WHERE ABS((d.impressoes - e.media) / NULLIF(e.desvio, 0)) > 2
+ORDER BY d.dia DESC`;
+    const params = [data_de, data_ate] as unknown[];
     try {
-      return await buildPlatformMetricsResponse(diff, 'Queda súbita de alcance', {
-        order: 'alcance_desc',
-        limit: 20,
-      });
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `✅ ${rows.length} linhas (Queda súbita de alcance)`,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
     } catch (error) {
       console.error('ERRO detectarQuedaSubitaAlcance:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: '❌ Erro ao detectar queda súbita de alcance'
+        message: '❌ Erro ao detectar queda súbita de alcance',
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
     }
   }
