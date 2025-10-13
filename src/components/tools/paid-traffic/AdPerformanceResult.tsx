@@ -72,21 +72,21 @@ export default function AdPerformanceResult({ success, message, rows = [], count
     return rows.map((r) => ({
       campanha: String(r.campanha ?? ''),
       plataforma: String(r.plataforma ?? ''),
-      total_impressoes: r.total_impressoes ?? 0,
-      total_cliques: r.total_cliques ?? 0,
-      total_conversoes: r.total_conversoes ?? 0,
-      total_gasto: r.total_gasto ?? 0,
-      total_receita: r.total_receita ?? 0,
-      ctr: r.ctr ?? 0,
-      taxa_conversao: r.taxa_conversao ?? 0,
-      cpc: r.cpc ?? 0,
-      cpa: r.cpa ?? 0,
-      roas: r.roas ?? 0,
-      lucro: r.lucro ?? 0,
-      cpm: r.cpm ?? 0,
-      ticket_medio: r.ticket_medio ?? 0,
-      frequencia_media: r.frequencia_media ?? 0,
-      engajamento_total: r.engajamento_total ?? 0,
+      total_impressoes: parseNum(r.total_impressoes),
+      total_cliques: parseNum(r.total_cliques),
+      total_conversoes: parseNum(r.total_conversoes),
+      total_gasto: parseNum(r.total_gasto),
+      total_receita: parseNum(r.total_receita),
+      ctr: parseNum(r.ctr),
+      taxa_conversao: parseNum(r.taxa_conversao),
+      cpc: parseNum(r.cpc),
+      cpa: parseNum(r.cpa),
+      roas: parseNum(r.roas),
+      lucro: parseNum(r.lucro),
+      cpm: parseNum(r.cpm),
+      ticket_medio: parseNum(r.ticket_medio),
+      frequencia_media: parseNum(r.frequencia_media),
+      engajamento_total: parseNum(r.engajamento_total),
     }));
   }, [rows]);
 
@@ -197,4 +197,3 @@ export default function AdPerformanceResult({ success, message, rows = [], count
     />
   );
 }
-
