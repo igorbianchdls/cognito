@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Target } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import { ChartSwitcher } from '@/components/charts/ChartSwitcher';
 
 interface ConversionFunnelRow extends Record<string, unknown> {
   step: number;
@@ -112,6 +113,32 @@ export default function EtapasDoFunilGeralResult({
       iconColor="text-fuchsia-600"
       exportFileName="conversion_funnel"
       sqlQuery={sql_query}
+      chartRenderer={() => {
+        // Transforma linha agregada em série por etapa
+        const single = (data && data.length === 1) ? (data[0] as Record<string, unknown>) : null;
+        const hasPivot = single && ('visualizacoes' in single || 'adicionados' in single || 'checkouts' in single || 'compras' in single);
+        const series = hasPivot ? [
+          { etapa: 'Visualizações', valor: Number(single?.visualizacoes ?? 0) },
+          { etapa: 'Adicionados', valor: Number(single?.adicionados ?? 0) },
+          { etapa: 'Checkouts', valor: Number(single?.checkouts ?? 0) },
+          { etapa: 'Compras', valor: Number(single?.compras ?? 0) },
+        ] : (data as Array<Record<string, unknown>>);
+        const isTransformed = Array.isArray(series) && 'etapa' in (series[0] || {});
+        return (
+          <ChartSwitcher
+            rows={series as Array<Record<string, unknown>>}
+            options={{
+              xKey: isTransformed ? 'etapa' : 'event_name',
+              valueKeys: isTransformed ? ['valor'] : ['sessoes'],
+              metricLabels: { valor: 'Sessões', sessoes: 'Sessões' },
+              title: 'Etapas do funil',
+              xLegend: 'Etapa',
+              yLegend: 'Sessões',
+              initialChartType: 'bar',
+            }}
+          />
+        );
+      }}
     />
   );
 }

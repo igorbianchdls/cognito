@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Bookmark } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import { ChartSwitcher } from '@/components/charts/ChartSwitcher';
 
 interface LandingPageRow extends Record<string, unknown> {
   categoria: string;
@@ -101,6 +102,34 @@ export default function ContribuicaoPorPaginaResult({
       iconColor="text-amber-600"
       exportFileName="contribuicao_por_pagina"
       sqlQuery={sql_query}
+      chartRenderer={() => {
+        if (!data.length) return null;
+        const sample = data[0] as Record<string, unknown>;
+        const xKey = ('url_pagina' in sample) ? 'url_pagina' : ('pagina' in sample ? 'pagina' : 'url_pagina');
+        const candidates = ['receita','sessoes','transacoes','receita_por_visita','pageviews'];
+        const valueKeys = candidates.filter((k) => k in sample);
+        const metricLabels: Record<string,string> = {
+          receita: 'Receita',
+          sessoes: 'Sessões',
+          transacoes: 'Transações',
+          receita_por_visita: 'Receita por visita',
+          pageviews: 'Pageviews',
+        };
+        return (
+          <ChartSwitcher
+            rows={data}
+            options={{
+              xKey,
+              valueKeys,
+              metricLabels,
+              title: 'Top páginas por receita/sessões',
+              xLegend: 'Página',
+              yLegend: 'Valor',
+              initialChartType: 'bar',
+            }}
+          />
+        );
+      }}
     />
   );
 }

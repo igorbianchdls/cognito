@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { BarChart3, Award } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import { ChartSwitcher } from '@/components/charts/ChartSwitcher';
 
 interface TrafficSourceRow extends Record<string, unknown> {
   fonte: string;
@@ -131,29 +132,37 @@ export default function DesempenhoPorCanalResult({
       iconColor="text-indigo-600"
       exportFileName="desempenho_por_canal"
       sqlQuery={sql_query}
-      chartRenderer={(rows) => {
-        const topThree = rows.slice(0, 3);
-        if (!topThree.length) return null;
-
+      chartRenderer={() => {
+        if (!data.length) return null;
+        const sample = data[0] as Record<string, unknown>;
+        const xKey = (['canal_trafego','utm_source','fonte'] as const).find((k) => k in sample) || 'canal_trafego';
+        const candidates = ['receita_total','sessoes','visitantes','conversoes','taxa_conversao_pct','receita_por_sessao','receita_por_usuario','pages_per_session','avg_duration_seconds','quality_score'];
+        const valueKeys = candidates.filter((k) => k in sample);
+        const metricLabels: Record<string, string> = {
+          receita_total: 'Receita',
+          sessoes: 'Sessões',
+          visitantes: 'Visitantes',
+          conversoes: 'Conversões',
+          taxa_conversao_pct: 'Taxa de conversão (%)',
+          receita_por_sessao: 'Receita/sessão',
+          receita_por_usuario: 'Receita/usuário',
+          pages_per_session: 'Páginas/sessão',
+          avg_duration_seconds: 'Duração (s)',
+          quality_score: 'Quality score',
+        };
         return (
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
-              <Award className="h-4 w-4 text-amber-500" />
-              Top 3 fontes por quality score
-            </div>
-            <ul className="space-y-1 text-sm">
-              {topThree.map((row, index) => (
-                <li key={row.fonte} className="flex items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2">
-                  <span className="font-medium text-slate-800">
-                    #{index + 1} {row.fonte}
-                  </span>
-                  <span className="text-sm text-indigo-600 font-semibold">
-                    {row.quality_score}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <ChartSwitcher
+            rows={data}
+            options={{
+              xKey,
+              valueKeys,
+              metricLabels,
+              title: 'Comparativo por canal',
+              xLegend: 'Canal',
+              yLegend: 'Valor',
+              initialChartType: 'bar',
+            }}
+          />
         );
       }}
     />

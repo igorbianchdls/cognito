@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { MonitorSmartphone } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import { ChartSwitcher } from '@/components/charts/ChartSwitcher';
 
 interface DevicePerformanceRow extends Record<string, unknown> {
   tipo: string;
@@ -96,6 +97,36 @@ export default function DesempenhoMobileVsDesktopResult({
       iconColor="text-cyan-600"
       exportFileName="device_performance"
       sqlQuery={sql_query}
+      chartRenderer={() => {
+        if (!data.length) return null;
+        const sample = data[0] as Record<string, unknown>;
+        const xKey = (['tipo','segmento','navegador','sistema_operacional','tipo_dispositivo'] as const).find((k) => k in sample) || 'tipo';
+        const candidates = ['sessoes','percentual','avg_duration_seconds','avg_pageviews','duracao_media','taxa_conversao','receita_total'];
+        const valueKeys = candidates.filter((k) => k in sample);
+        const metricLabels: Record<string,string> = {
+          sessoes: 'Sessões',
+          percentual: 'Participação (%)',
+          avg_duration_seconds: 'Duração (s)',
+          avg_pageviews: 'Páginas/Sessão',
+          duracao_media: 'Duração (min)',
+          taxa_conversao: 'Conversão (%)',
+          receita_total: 'Receita',
+        };
+        return (
+          <ChartSwitcher
+            rows={data}
+            options={{
+              xKey,
+              valueKeys,
+              metricLabels,
+              title: 'Comparativo por dispositivo/segmento',
+              xLegend: 'Segmento',
+              yLegend: 'Valor',
+              initialChartType: 'bar',
+            }}
+          />
+        );
+      }}
     />
   );
 }

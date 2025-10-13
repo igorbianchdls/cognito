@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Users } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import { ChartSwitcher } from '@/components/charts/ChartSwitcher';
 
 interface BehaviorRow extends Record<string, unknown> {
   metrica: string;
@@ -99,6 +100,20 @@ export default function VisitantesRecorrentesResult({
       iconColor="text-sky-600"
       exportFileName="user_behavior"
       sqlQuery={sql_query}
+      chartRenderer={() => (
+        <ChartSwitcher
+          rows={data as Array<Record<string, unknown>>}
+          options={{
+            xKey: 'metrica',
+            valueKeys: ['valor'],
+            metricLabels: { valor: 'Valor' },
+            title: 'Indicadores de recorrência',
+            xLegend: 'Métrica',
+            yLegend: 'Valor',
+            initialChartType: 'bar',
+          }}
+        />
+      )}
     />
   );
 }

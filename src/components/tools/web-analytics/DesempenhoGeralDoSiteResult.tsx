@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { TrendingUp, Gauge } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import { ChartSwitcher } from '@/components/charts/ChartSwitcher';
 
 interface TrafficOverviewRow extends Record<string, unknown> {
   data: string;
@@ -162,6 +163,34 @@ export default function DesempenhoGeralDoSiteResult({
         iconColor="text-blue-600"
         exportFileName="desempenho_geral_site"
         sqlQuery={sql_query}
+        chartRenderer={() => {
+          if (!data.length) return null;
+          const sample = data[0] as Record<string, unknown>;
+          const numericKeys = Object.keys(sample).filter((k) => typeof (sample as any)[k] === 'number');
+          const xKey = 'data';
+          const valueKeys = numericKeys.filter((k) => k !== xKey);
+          const metricLabels: Record<string, string> = {
+            sessoes: 'Sessões',
+            usuarios: 'Usuários',
+            pageviews: 'Pageviews',
+            avg_duration_seconds: 'Duração média (s)',
+            bounce_rate_percent: 'Bounce (%)',
+          };
+          return (
+            <ChartSwitcher
+              rows={data}
+              options={{
+                xKey,
+                valueKeys,
+                metricLabels,
+                title: 'Métricas diárias',
+                xLegend: 'Dia',
+                yLegend: 'Valor',
+                initialChartType: 'line',
+              }}
+            />
+          );
+        }}
       />
     </div>
   );

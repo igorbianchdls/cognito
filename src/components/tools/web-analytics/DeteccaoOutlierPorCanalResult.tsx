@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { AlertTriangle } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import { ChartSwitcher } from '@/components/charts/ChartSwitcher';
 
 interface TrafficAnomalyRow extends Record<string, unknown> {
   data: string;
@@ -137,7 +138,35 @@ export default function DeteccaoOutlierPorCanalResult({
       iconColor="text-rose-600"
       exportFileName="outliers_por_canal"
       sqlQuery={sql_query}
-      chartRenderer={() => warningList}
+      chartRenderer={() => {
+        if (!data.length) return warningList;
+        const sample = data[0] as Record<string, unknown>;
+        const xKey = ('dia' in sample) ? 'dia' : ('data' in sample ? 'data' : 'dia');
+        const candidates = ['z_receita','z_sessoes','z_transacoes'];
+        const valueKeys = candidates.filter((k) => k in sample);
+        const metricLabels: Record<string,string> = {
+          z_receita: 'Z (receita)',
+          z_sessoes: 'Z (sessões)',
+          z_transacoes: 'Z (transações)',
+        };
+        return (
+          <div className="space-y-4">
+            <ChartSwitcher
+              rows={data}
+              options={{
+                xKey,
+                valueKeys,
+                metricLabels,
+                title: 'Z-score por canal (diário)',
+                xLegend: 'Dia',
+                yLegend: 'Z-score',
+                initialChartType: 'line',
+              }}
+            />
+            {warningList}
+          </div>
+        );
+      }}
     />
   );
 }
