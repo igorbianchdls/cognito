@@ -62,6 +62,9 @@ import OrganicMarketingDataTable from '../tools/OrganicMarketingDataTable';
 import PaidTrafficDataTable from '../tools/PaidTrafficDataTable';
 import InventoryDataTable from '../tools/InventoryDataTable';
 import TopProdutosReceitaLiquidaTable, { type TopProdutosRow } from '../tools/TopProdutosReceitaLiquidaTable';
+import ReceitaPorCanalResult, { type ReceitaPorCanalRow } from '../tools/ecommerce/ReceitaPorCanalResult';
+import MixReceitaPorCategoriaResult, { type MixCategoriaRow } from '../tools/ecommerce/MixReceitaPorCategoriaResult';
+import TicketMedioVendasResult, { type TicketMedioRow } from '../tools/ecommerce/TicketMedioVendasResult';
 import LogisticsDataTable from '../tools/LogisticsDataTable';
 import AnalyticsDataTable from '../tools/AnalyticsDataTable';
 import ComprasDataTable from '../tools/ComprasDataTable';
@@ -957,6 +960,21 @@ type GetProductPerformanceToolInput = {
 };
 
 type GetProductPerformanceToolOutput = EcommerceGenericToolOutput;
+
+type GetReceitaPorCanalToolOutput = EcommerceGenericToolOutput & {
+  rows?: ReceitaPorCanalRow[];
+  data?: ReceitaPorCanalRow[];
+};
+
+type GetMixReceitaPorCategoriaToolOutput = EcommerceGenericToolOutput & {
+  rows?: MixCategoriaRow[];
+  data?: MixCategoriaRow[];
+};
+
+type GetTicketMedioVendasToolOutput = EcommerceGenericToolOutput & {
+  rows?: TicketMedioRow[];
+  data?: TicketMedioRow[];
+};
 
 type GetCouponEffectivenessToolInput = {
   data_de: string;
@@ -4331,6 +4349,93 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   message={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).message}
                   error={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).error}
                   sql_query={(organicMarketingTool.output as GetOrganicMarketingDataToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getReceitaPorCanal') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getReceitaPorCanal" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <ReceitaPorCanalResult
+                  success={(tool.output as GetReceitaPorCanalToolOutput).success}
+                  message={(tool.output as GetReceitaPorCanalToolOutput).message}
+                  rows={(tool.output as GetReceitaPorCanalToolOutput).rows}
+                  data={(tool.output as GetReceitaPorCanalToolOutput).data}
+                  sql_query={(tool.output as GetReceitaPorCanalToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getMixReceitaPorCategoria') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getMixReceitaPorCategoria" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <MixReceitaPorCategoriaResult
+                  success={(tool.output as GetMixReceitaPorCategoriaToolOutput).success}
+                  message={(tool.output as GetMixReceitaPorCategoriaToolOutput).message}
+                  rows={(tool.output as GetMixReceitaPorCategoriaToolOutput).rows}
+                  data={(tool.output as GetMixReceitaPorCategoriaToolOutput).data}
+                  sql_query={(tool.output as GetMixReceitaPorCategoriaToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getTicketMedioVendas') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getTicketMedioVendas" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <TicketMedioVendasResult
+                  success={(tool.output as GetTicketMedioVendasToolOutput).success}
+                  message={(tool.output as GetTicketMedioVendasToolOutput).message}
+                  rows={(tool.output as GetTicketMedioVendasToolOutput).rows}
+                  data={(tool.output as GetTicketMedioVendasToolOutput).data}
+                  sql_query={(tool.output as GetTicketMedioVendasToolOutput).sql_query}
                 />
               )}
             </div>

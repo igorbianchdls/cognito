@@ -187,6 +187,157 @@ export const getSalesCalls = tool({
   },
 });
 
+export const getReceitaPorCanal = tool({
+  description: 'Receita líquida por canal com pedidos (rateio proporcional de desconto/frete).',
+  inputSchema: z.object({}).optional(),
+  execute: async () => {
+    const sql = `
+      WITH itens AS (
+        SELECT
+          p.id                                   AS pedido_id,
+          COALESCE(p.canal, 'Sem canal')         AS canal,
+          (i.quantidade * i.preco_unitario)      AS receita_bruta_item,
+          COALESCE(p.desconto,0)                 AS desconto_pedido,
+          COALESCE(p.frete,0)                    AS frete_pedido,
+          SUM(i.quantidade * i.preco_unitario) OVER (PARTITION BY p.id) AS soma_bruta_pedido
+        FROM gestaovendas.pedidos p
+        JOIN gestaovendas.itens_pedido i ON i.pedido_id = p.id
+      ),
+      itens_rateado AS (
+        SELECT
+          canal,
+          receita_bruta_item,
+          CASE WHEN soma_bruta_pedido > 0
+               THEN receita_bruta_item / soma_bruta_pedido
+               ELSE 0 END                        AS peso,
+          desconto_pedido,
+          frete_pedido,
+          pedido_id
+        FROM itens
+      )
+      SELECT
+        canal,
+        SUM(receita_bruta_item - desconto_pedido * peso + frete_pedido * peso) AS receita_liquida,
+        COUNT(DISTINCT pedido_id)                                              AS pedidos
+      FROM itens_rateado
+      GROUP BY canal
+      ORDER BY receita_liquida DESC;
+    `.trim();
+
+    try {
+      const rows = await runQuery<{
+        canal: string;
+        receita_liquida: number;
+        pedidos: number;
+      }>(sql);
+
+      return {
+        success: true,
+        message: 'Receita por canal',
+        rows,
+        sql_query: sql,
+        sql_params: '[]',
+      };
+    } catch (error) {
+      console.error('ERRO getReceitaPorCanal:', error);
+      return { success: false, message: 'Erro ao calcular receita por canal' };
+    }
+  },
+});
+
+export const getMixReceitaPorCategoria = tool({
+  description: 'Mix de receita por categoria e participação % (rateio proporcional).',
+  inputSchema: z.object({}).optional(),
+  execute: async () => {
+    const sql = `
+      WITH itens AS (
+        SELECT
+          p.id                                   AS pedido_id,
+          pr.categoria_id,
+          (i.quantidade * i.preco_unitario)      AS receita_bruta_item,
+          COALESCE(p.desconto,0)                 AS desconto_pedido,
+          COALESCE(p.frete,0)                    AS frete_pedido,
+          SUM(i.quantidade * i.preco_unitario) OVER (PARTITION BY p.id) AS soma_bruta_pedido
+        FROM gestaovendas.pedidos p
+        JOIN gestaovendas.itens_pedido i   ON i.pedido_id = p.id
+        JOIN gestaocatalogo.produtos pr    ON pr.id       = i.produto_id
+      ),
+      itens_rateado AS (
+        SELECT
+          categoria_id,
+          receita_bruta_item,
+          CASE WHEN soma_bruta_pedido > 0
+               THEN receita_bruta_item / soma_bruta_pedido
+               ELSE 0 END                        AS peso,
+          desconto_pedido,
+          frete_pedido
+        FROM itens
+      )
+      SELECT
+        COALESCE(cat.nome, 'Sem categoria') AS categoria,
+        SUM(receita_bruta_item - desconto_pedido * peso + frete_pedido * peso) AS receita,
+        100.0 * SUM(receita_bruta_item - desconto_pedido * peso + frete_pedido * peso)
+              / NULLIF(SUM(SUM(receita_bruta_item - desconto_pedido * peso + frete_pedido * peso)) OVER (), 0) AS pct_receita
+      FROM itens_rateado ir
+      LEFT JOIN gestaocatalogo.categorias cat ON cat.id = ir.categoria_id
+      GROUP BY categoria
+      ORDER BY receita DESC;
+    `.trim();
+
+    try {
+      const rows = await runQuery<{
+        categoria: string;
+        receita: number;
+        pct_receita: number;
+      }>(sql);
+
+      return {
+        success: true,
+        message: 'Mix de receita por categoria',
+        rows,
+        sql_query: sql,
+        sql_params: '[]',
+      };
+    } catch (error) {
+      console.error('ERRO getMixReceitaPorCategoria:', error);
+      return { success: false, message: 'Erro ao calcular mix por categoria' };
+    }
+  },
+});
+
+export const getTicketMedioVendas = tool({
+  description: 'Ticket médio de vendas (pedidos, receita total e ticket médio).',
+  inputSchema: z.object({}).optional(),
+  execute: async () => {
+    const sql = `
+      SELECT
+        COUNT(*) AS pedidos,
+        SUM(total_liquido) AS receita,
+        ROUND(SUM(total_liquido)::numeric / NULLIF(COUNT(*),0), 2) AS ticket_medio
+      FROM gestaovendas.pedidos;
+    `.trim();
+
+    try {
+      const rows = await runQuery<{
+        pedidos: number;
+        receita: number;
+        ticket_medio: number;
+      }>(sql);
+
+      return {
+        success: true,
+        message: 'Ticket médio de vendas',
+        rows,
+        sql_query: sql,
+        sql_params: '[]',
+      };
+    } catch (error) {
+      console.error('ERRO getTicketMedioVendas:', error);
+      return { success: false, message: 'Erro ao calcular ticket médio' };
+    }
+  },
+});
+
 export const getRevenueMetrics = tool({
   description: 'Métricas de receita por canal de venda.',
   inputSchema: z.object({

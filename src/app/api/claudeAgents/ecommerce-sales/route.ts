@@ -1,6 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
-import { getTopProdutosReceitaLiquida } from '@/tools/salesTools';
+import { getTopProdutosReceitaLiquida, getReceitaPorCanal, getMixReceitaPorCategoria, getTicketMedioVendas } from '@/tools/salesTools';
 
 export const maxDuration = 300;
 
@@ -48,6 +48,24 @@ Calcula a receita líquida por produto rateando desconto e frete do pedido propo
 
 ### Saída:
 - produto_id, sku, nome_produto, qtd (unidades), receita_liquida
+
+## 📊 getReceitaPorCanal - Receita por canal
+Calcula a receita líquida por canal (rateio proporcional) e a quantidade de pedidos.
+
+### Saída:
+- canal, receita_liquida, pedidos
+
+## 📊 getMixReceitaPorCategoria - Mix por categoria
+Retorna a receita por categoria e a participação percentual na receita total.
+
+### Saída:
+- categoria, receita, pct_receita
+
+## 📊 getTicketMedioVendas - Ticket médio
+Retorna contagem de pedidos, receita total e ticket médio.
+
+### Saída:
+- pedidos, receita, ticket_medio
 
 # 📐 KPIs E MÉTRICAS PRINCIPAIS
 
@@ -245,7 +263,10 @@ Seja sempre orientado a dados, priorize crescimento sustentável e rentabilidade
       messages: convertToModelMessages(messages),
 
       tools: {
-        getTopProdutosReceitaLiquida
+        getTopProdutosReceitaLiquida,
+        getReceitaPorCanal,
+        getMixReceitaPorCategoria,
+        getTicketMedioVendas
       }
     });
 
