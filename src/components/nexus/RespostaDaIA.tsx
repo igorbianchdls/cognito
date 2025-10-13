@@ -1708,6 +1708,16 @@ type GetContasAPagarToolOutput = {
   error?: string;
 };
 
+// Tipo genérico para saídas tabulares usadas no GenericResultTable
+type GenericRowsToolOutput = {
+  success: boolean;
+  message: string;
+  rows?: Array<Record<string, unknown>>;
+  count?: number;
+  sql_query?: string;
+  sql_queries?: Array<{ name?: string; sql: string; params?: unknown[] }>;
+};
+
 type CalculateDateRangeToolInput = {
   periodo: 'ultimos_dias' | 'proximos_dias' | 'mes_atual' | 'mes_passado' | 'ano_atual' | 'ano_passado';
   quantidade_dias?: number;
@@ -4193,7 +4203,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 <ToolHeader type="tool-calculateDateRange" state={calculateDateRangeTool.state} />
                 <ToolContent>
                   {calculateDateRangeTool.input && (
-                    <ToolInput input={calculateDateRangeTool.input} />
+                    <ToolInput input={calculateDateRangeTool.input as CalculateDateRangeToolInput} />
                   )}
                   {calculateDateRangeTool.state === 'output-error' && (
                     <ToolOutput
@@ -4294,10 +4304,10 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   title="Fluxo de Caixa"
                   icon={TrendingUp}
                   iconColor="text-green-600"
-                  success={(tool.output as any).success}
-                  message={(tool.output as any).message}
-                  rows={(tool.output as any).rows as Array<Record<string, unknown>>}
-                  sql_query={(tool.output as any).sql_query}
+                  success={(tool.output as GenericRowsToolOutput).success}
+                  message={(tool.output as GenericRowsToolOutput).message}
+                  rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
+                  sql_query={(tool.output as GenericRowsToolOutput).sql_query}
                 />
               )}
             </div>
@@ -4321,10 +4331,10 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   title={title}
                   icon={BarChart3}
                   iconColor="text-blue-600"
-                  success={(tool.output as any).success}
-                  message={(tool.output as any).message}
-                  rows={(tool.output as any).rows as Array<Record<string, unknown>>}
-                  sql_query={(tool.output as any).sql_query}
+                  success={(tool.output as GenericRowsToolOutput).success}
+                  message={(tool.output as GenericRowsToolOutput).message}
+                  rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
+                  sql_query={(tool.output as GenericRowsToolOutput).sql_query}
                 />
               )}
             </div>
@@ -4348,10 +4358,10 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   title={title}
                   icon={LineChart}
                   iconColor="text-indigo-600"
-                  success={(tool.output as any).success}
-                  message={(tool.output as any).message}
-                  rows={(tool.output as any).rows as Array<Record<string, unknown>>}
-                  sql_query={(tool.output as any).sql_query}
+                  success={(tool.output as GenericRowsToolOutput).success}
+                  message={(tool.output as GenericRowsToolOutput).message}
+                  rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
+                  sql_query={(tool.output as GenericRowsToolOutput).sql_query}
                 />
               )}
             </div>
@@ -4375,10 +4385,10 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   title={title}
                   icon={BarChart3}
                   iconColor="text-amber-600"
-                  success={(tool.output as any).success}
-                  message={(tool.output as any).message}
-                  rows={(tool.output as any).rows as Array<Record<string, unknown>>}
-                  sql_query={(tool.output as any).sql_query}
+                  success={(tool.output as GenericRowsToolOutput).success}
+                  message={(tool.output as GenericRowsToolOutput).message}
+                  rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
+                  sql_query={(tool.output as GenericRowsToolOutput).sql_query}
                 />
               )}
             </div>
@@ -4402,11 +4412,11 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   title={title}
                   icon={AlertTriangle}
                   iconColor="text-rose-600"
-                  success={(tool.output as any).success}
-                  message={(tool.output as any).message}
-                  rows={(tool.output as any).rows as Array<Record<string, unknown>>}
-                  sql_query={(tool.output as any).sql_query}
-                  sql_queries={(tool.output as any).sql_queries}
+                  success={(tool.output as GenericRowsToolOutput).success}
+                  message={(tool.output as GenericRowsToolOutput).message}
+                  rows={(tool.output as GenericRowsToolOutput).rows as Array<Record<string, unknown>>}
+                  sql_query={(tool.output as GenericRowsToolOutput).sql_query}
+                  sql_queries={(tool.output as GenericRowsToolOutput).sql_queries}
                 />
               )}
             </div>
