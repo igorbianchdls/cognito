@@ -74,6 +74,7 @@ export const ToolHeader = ({
       <WrenchIcon className="size-4 text-muted-foreground" />
       <span className="font-medium text-sm">{(() => {
         const labels: Record<string, string> = {
+          'tool-getTopProdutosReceitaLiquida': 'Top produtos por receita líquida',
           // Novos nomes (PT-BR)
           'tool-desempenhoPorConta': 'Desempenho por conta',
           'tool-desempenhoPorPlataforma': 'Desempenho por plataforma',

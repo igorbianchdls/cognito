@@ -1,7 +1,7 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, hasToolCall, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
-import { getEcommerceSalesData } from '@/tools/ecommerceTools';
+import { getTopProdutosReceitaLiquida } from '@/tools/salesTools';
 import { getLogisticsData } from '@/tools/logisticsTools';
 import { getAnalyticsData } from '@/tools/analyticsTools';
 
@@ -58,8 +58,8 @@ Execute os steps sequencialmente. Não pule etapas.
 
 Você também tem acesso a ferramentas para buscar dados diretamente do Supabase:
 
-## 📊 getEcommerceSalesData - Dados de Vendas E-commerce
-Busca dados de vendas e-commerce (canais, cupons, clientes, pedidos, produtos, devoluções)
+## 📊 getTopProdutosReceitaLiquida - Top 20 produtos por receita líquida
+Calcula receita líquida por produto com rateio proporcional de desconto e frete do pedido.
 
 **Tabelas disponíveis:**
 - **channels** - Canais de venda
@@ -158,7 +158,7 @@ Busca dados de analytics web (sessões, eventos, visitantes, transações, métr
       executarSQLComDados: bigqueryTools.executarSQLComDados,
       gerarInsights: bigqueryTools.gerarInsights,
       gerarAlertas: bigqueryTools.gerarAlertas,
-      getEcommerceSalesData,
+      getTopProdutosReceitaLiquida,
       getLogisticsData,
       getAnalyticsData,
     },

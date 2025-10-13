@@ -61,7 +61,7 @@ import AnaliseDeCampanhas from '../tools/paid-traffic/analiseDeCampanhas';
 import OrganicMarketingDataTable from '../tools/OrganicMarketingDataTable';
 import PaidTrafficDataTable from '../tools/PaidTrafficDataTable';
 import InventoryDataTable from '../tools/InventoryDataTable';
-import EcommerceSalesDataTable, { type EcommerceDailySalesRow } from '../tools/EcommerceSalesDataTable';
+import TopProdutosReceitaLiquidaTable, { type TopProdutosRow } from '../tools/TopProdutosReceitaLiquidaTable';
 import LogisticsDataTable from '../tools/LogisticsDataTable';
 import AnalyticsDataTable from '../tools/AnalyticsDataTable';
 import ComprasDataTable from '../tools/ComprasDataTable';
@@ -919,9 +919,9 @@ type EcommerceGenericToolOutput = {
   error?: string;
 };
 
-type GetEcommerceSalesDataToolOutput = EcommerceGenericToolOutput & {
-  rows?: EcommerceDailySalesRow[];
-  data?: EcommerceDailySalesRow[];
+type GetTopProdutosReceitaLiquidaToolOutput = EcommerceGenericToolOutput & {
+  rows?: TopProdutosRow[];
+  data?: TopProdutosRow[];
 };
 
 type GetRevenueMetricsToolInput = {
@@ -4612,7 +4612,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
-        if (part.type === 'tool-getEcommerceSalesData') {
+        if (part.type === 'tool-getTopProdutosReceitaLiquida') {
           const ecommerceTool = part as NexusToolUIPart;
           const callId = ecommerceTool.toolCallId;
           const shouldBeOpen = ecommerceTool.state === 'output-available' || ecommerceTool.state === 'output-error';
@@ -4620,7 +4620,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           return (
             <div key={callId}>
               <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="tool-getEcommerceSalesData" state={ecommerceTool.state} />
+                <ToolHeader type="tool-getTopProdutosReceitaLiquida" state={ecommerceTool.state} />
                 <ToolContent>
                   {ecommerceTool.input && (
                     <ToolInput input={ecommerceTool.input} />
@@ -4634,12 +4634,11 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {ecommerceTool.state === 'output-available' && (
-                <EcommerceSalesDataTable
-                  success={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).success}
-                  rows={((ecommerceTool.output as GetEcommerceSalesDataToolOutput).rows ?? (ecommerceTool.output as GetEcommerceSalesDataToolOutput).data ?? []) as EcommerceDailySalesRow[]}
-                  message={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).message}
-                  periodo_dias={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).periodo_dias}
-                  sql_query={(ecommerceTool.output as GetEcommerceSalesDataToolOutput).sql_query}
+                <TopProdutosReceitaLiquidaTable
+                  success={(ecommerceTool.output as GetTopProdutosReceitaLiquidaToolOutput).success}
+                  rows={((ecommerceTool.output as GetTopProdutosReceitaLiquidaToolOutput).rows ?? (ecommerceTool.output as GetTopProdutosReceitaLiquidaToolOutput).data ?? []) as TopProdutosRow[]}
+                  message={(ecommerceTool.output as GetTopProdutosReceitaLiquidaToolOutput).message}
+                  sql_query={(ecommerceTool.output as GetTopProdutosReceitaLiquidaToolOutput).sql_query}
                 />
               )}
             </div>

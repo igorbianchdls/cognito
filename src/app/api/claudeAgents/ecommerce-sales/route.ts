@@ -1,6 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
-import { getEcommerceSalesData } from '@/tools/ecommerceTools';
+import { getTopProdutosReceitaLiquida } from '@/tools/salesTools';
 
 export const maxDuration = 300;
 
@@ -39,70 +39,15 @@ Auxiliar gestores de e-commerce, analistas de vendas e profissionais de marketin
 
 # 🛠️ Sua Ferramenta Principal
 
-## 📊 getEcommerceSalesData - Busca dados de vendas e-commerce
-Busca dados de vendas e-commerce do Supabase (canais, cupons, clientes, pedidos, produtos, devoluções)
+## 📊 getTopProdutosReceitaLiquida - Top 20 produtos por receita líquida
+Calcula a receita líquida por produto rateando desconto e frete do pedido proporcionalmente ao valor bruto do item.
 
-### Tabelas Disponíveis:
+### Bases utilizadas:
+- gestaovendas.pedidos, gestaovendas.itens_pedido
+- gestaocatalogo.produtos
 
-**1. channels** - Canais de venda
-- Campos: id, name, type, is_active, config, criado_em
-- Use para: analisar performance por canal, identificar canais ativos
-
-**2. coupons** - Cupons de desconto
-- Campos: id, code, discount_type, discount_value, valid_from, valid_until, usage_limit, times_used, criado_em
-- Use para: analisar efetividade de cupons, calcular ROI de promoções
-
-**3. customers** - Clientes
-- Campos: id, email, first_name, last_name, phone, total_spent, total_orders, criado_em
-- Use para: segmentação de clientes, análise de LTV, identificar high-value customers
-
-**4. loyalty_points** - Pontos de fidelidade
-- Campos: id, customer_id, points, earned_date, expiry_date, criado_em
-- Use para: análise do programa de fidelidade, engagement
-
-**5. loyalty_rewards** - Recompensas de fidelidade
-- Campos: id, reward_name, points_required, description, criado_em
-- Use para: avaliar atração de recompensas
-
-**6. order_items** - Itens dos pedidos
-- Campos: id, order_id, product_id, quantity, unit_price, subtotal, criado_em
-- Use para: análise de produtos mais vendidos, tickets médios
-
-**7. orders** - Pedidos
-- Campos: id, customer_id, channel_id, status, order_date, total_value, shipping_cost, discount, criado_em
-- Use para: análise de vendas, conversão, receita
-
-**8. payments** - Pagamentos
-- Campos: id, order_id, customer_id, amount, payment_method, payment_date, transaction_id, status, criado_em
-- Use para: análise de métodos de pagamento, taxa de aprovação
-
-**9. products** - Produtos
-- Campos: id, name, sku, price, stock_quantity, category, criado_em
-- Use para: análise de produtos, pricing strategy
-
-**10. returns** - Devoluções
-- Campos: id, order_id, return_date, reason, refund_amount, return_status, criado_em
-- Use para: taxa de devolução, análise de motivos
-
-### Parâmetros disponíveis:
-- \`table\` (obrigatório) - Tabela a consultar
-- \`limit\` (padrão: 20) - Número máximo de resultados
-- \`is_active\` (boolean) - Filtrar por status ativo (channels)
-- \`status\` (string) - Filtrar por status (orders, returns, payments)
-- \`customer_id\` (string) - Filtrar por cliente
-- \`channel_id\` (string) - Filtrar por canal
-- \`product_id\` (string) - Filtrar por produto
-- \`order_id\` (string) - Filtrar por pedido
-- \`valor_minimo/valor_maximo\` (number) - Filtrar por valor (orders, payments)
-- \`data_de/data_ate\` (YYYY-MM-DD) - Filtrar por período
-
-### Quando usar:
-- Análise de vendas: busque \`orders\` por período
-- Performance de produtos: busque \`order_items\` e cruze com \`products\`
-- Análise de clientes: busque \`customers\` com \`total_spent\` alto
-- Efetividade de cupons: busque \`coupons\` e analise \`times_used\`
-- Taxa de conversão por canal: busque \`orders\` por \`channel_id\`
-- Taxa de devolução: compare \`returns\` com \`orders\`
+### Saída:
+- produto_id, sku, nome_produto, qtd (unidades), receita_liquida
 
 # 📐 KPIs E MÉTRICAS PRINCIPAIS
 
@@ -300,7 +245,7 @@ Seja sempre orientado a dados, priorize crescimento sustentável e rentabilidade
       messages: convertToModelMessages(messages),
 
       tools: {
-        getEcommerceSalesData
+        getTopProdutosReceitaLiquida
       }
     });
 
