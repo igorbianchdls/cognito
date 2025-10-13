@@ -98,6 +98,7 @@ import DesempenhoMobileVsDesktopResult from '../tools/web-analytics/DesempenhoMo
 import DeteccaoOutlierPorCanalResult from '../tools/web-analytics/DeteccaoOutlierPorCanalResult';
 import VisitantesRecorrentesResult from '../tools/web-analytics/VisitantesRecorrentesResult';
 import DesempenhoPorDiaHoraResult from '../tools/web-analytics/DesempenhoPorDiaHoraResult';
+import LtvMedioResult from '../tools/web-analytics/LtvMedioResult';
 import CampaignROASResult from '../tools/paid-traffic/CampaignROASResult';
 import AdsPlatformsResult from '../tools/paid-traffic/AdsPlatformsResult';
 import CreativeAdsPerformanceResult from '../tools/paid-traffic/CreativeAdsPerformanceResult';
