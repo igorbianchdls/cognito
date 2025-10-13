@@ -8,7 +8,11 @@ import {
   analyzeReverseLogisticsTrends,
   optimizePackageDimensions,
   detectDeliveryAnomalies,
-  forecastDeliveryCosts
+  forecastDeliveryCosts,
+  desempenhoEntregasGeral,
+  eficienciaPorStatus,
+  eficienciaOperacionalPorCD,
+  perfilPacotesPorTransportadora,
 } from '@/tools/logisticsTools';
 
 export const maxDuration = 300;
@@ -329,13 +333,19 @@ Seja sempre orientado a dados, priorize eficiência operacional e redução de c
 
       tools: {
         getLogisticsData,
+        // Novas tools PT-BR
+        desempenhoEntregasGeral,
+        eficienciaPorStatus,
+        eficienciaOperacionalPorCD,
+        perfilPacotesPorTransportadora,
+        // Tools existentes (mantidas por compatibilidade)
         calculateDeliveryPerformance,
         analyzeCarrierBenchmark,
         analyzeShippingCostStructure,
         analyzeReverseLogisticsTrends,
         optimizePackageDimensions,
         detectDeliveryAnomalies,
-        forecastDeliveryCosts
+        forecastDeliveryCosts,
       }
     });
 

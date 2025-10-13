@@ -1016,3 +1016,177 @@ export const forecastDeliveryCosts = tool({
     }
   },
 });
+
+// ===== Novas tools (PT-BR) com queries solicitadas =====
+
+export const desempenhoEntregasGeral = tool({
+  description: 'Desempenho geral de entregas por transportadora no período',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+  }),
+  execute: async ({ data_de, data_ate }) => {
+    const sql = `
+SELECT
+  t.nome AS transportadora,
+  COUNT(e.id) AS total_envios,
+  ROUND(AVG(EXTRACT(EPOCH FROM (e.data_entrega_real - e.data_postagem)) / 86400)::numeric, 2) AS prazo_medio_dias,
+  ROUND(AVG(EXTRACT(EPOCH FROM (e.data_entrega_real - e.data_estimada_entrega)) / 86400)::numeric, 2) AS atraso_medio_dias,
+  SUM(CASE WHEN e.data_entrega_real > e.data_estimada_entrega THEN 1 ELSE 0 END)::int AS entregas_atrasadas,
+  ROUND(SUM(CASE WHEN e.data_entrega_real > e.data_estimada_entrega THEN 1 ELSE 0 END)::numeric / COUNT(e.id) * 100, 2) AS pct_atraso,
+  ROUND(SUM(e.custo_frete)::numeric, 2) AS custo_total_frete
+FROM gestaologistica.envios e
+LEFT JOIN gestaologistica.transportadoras t ON t.id = e.transportadora_id
+WHERE e.data_postagem >= $1::date AND e.data_postagem < ($2::date + INTERVAL '1 day')
+GROUP BY t.nome
+ORDER BY atraso_medio_dias DESC`;
+    const params = [data_de, data_ate] as unknown[];
+    try {
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `✅ Desempenho geral de entregas (${data_de} a ${data_ate})`,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: '❌ Erro ao obter desempenho geral de entregas',
+        error: error instanceof Error ? error.message : String(error),
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    }
+  },
+});
+
+export const eficienciaPorStatus = tool({
+  description: 'Eficiência de entregas por status (quantidade e tempo médio no status) no período',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+  }),
+  execute: async ({ data_de, data_ate }) => {
+    const sql = `
+SELECT
+  e.status_atual,
+  COUNT(e.id) AS total,
+  ROUND(AVG(EXTRACT(EPOCH FROM (COALESCE(e.data_entrega_real, NOW()) - e.data_postagem)) / 86400)::numeric, 1) AS dias_medio_no_status
+FROM gestaologistica.envios e
+WHERE e.data_postagem >= $1::date AND e.data_postagem < ($2::date + INTERVAL '1 day')
+GROUP BY e.status_atual
+ORDER BY total DESC`;
+    const params = [data_de, data_ate] as unknown[];
+    try {
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `✅ Eficiência por status (${data_de} a ${data_ate})`,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: '❌ Erro ao obter eficiência por status',
+        error: error instanceof Error ? error.message : String(error),
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    }
+  },
+});
+
+export const eficienciaOperacionalPorCD = tool({
+  description: 'Eficiência operacional por centro de distribuição (prazo, custo, atraso) no período',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+  }),
+  execute: async ({ data_de, data_ate }) => {
+    const sql = `
+SELECT
+  cd.nome AS centro_distribuicao,
+  COUNT(e.id) AS total_envios,
+  ROUND(AVG(EXTRACT(EPOCH FROM (e.data_entrega_real - e.data_postagem)) / 86400)::numeric, 2) AS prazo_medio_dias,
+  ROUND(SUM(e.custo_frete)::numeric, 2) AS custo_total,
+  ROUND(SUM(e.custo_frete)::numeric / COUNT(e.id), 2) AS custo_medio_por_envio,
+  ROUND(SUM(CASE WHEN e.data_entrega_real > e.data_estimada_entrega THEN 1 ELSE 0 END)::numeric / COUNT(e.id) * 100, 2) AS pct_atraso
+FROM gestaologistica.envios e
+LEFT JOIN gestaoestoque.centros_distribuicao cd ON cd.id = e.centro_distribuicao_id
+WHERE e.data_postagem >= $1::date AND e.data_postagem < ($2::date + INTERVAL '1 day')
+GROUP BY cd.nome
+ORDER BY custo_medio_por_envio DESC`;
+    const params = [data_de, data_ate] as unknown[];
+    try {
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `✅ Eficiência por CD (${data_de} a ${data_ate})`,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: '❌ Erro ao obter eficiência por CD',
+        error: error instanceof Error ? error.message : String(error),
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    }
+  },
+});
+
+export const perfilPacotesPorTransportadora = tool({
+  description: 'Perfil de pacotes por transportadora (peso médio, volume médio, valor declarado)',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+  }),
+  execute: async ({ data_de, data_ate }) => {
+    const sql = `
+SELECT
+  t.nome AS transportadora,
+  ROUND(AVG(p.peso_kg)::numeric, 2) AS peso_medio_kg,
+  ROUND(AVG(p.altura_cm * p.largura_cm * p.comprimento_cm / 1000000.0)::numeric, 3) AS volume_medio_m3,
+  ROUND(SUM(p.valor_declarado)::numeric, 2) AS valor_total_declarado
+FROM gestaologistica.pacotes p
+JOIN gestaologistica.envios e ON e.id = p.envio_id
+JOIN gestaologistica.transportadoras t ON t.id = e.transportadora_id
+WHERE e.data_postagem >= $1::date AND e.data_postagem < ($2::date + INTERVAL '1 day')
+GROUP BY t.nome
+ORDER BY peso_medio_kg DESC`;
+    const params = [data_de, data_ate] as unknown[];
+    try {
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `✅ Perfil de pacotes por transportadora (${data_de} a ${data_ate})`,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: '❌ Erro ao obter perfil de pacotes por transportadora',
+        error: error instanceof Error ? error.message : String(error),
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    }
+  },
+});

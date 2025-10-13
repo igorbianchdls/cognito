@@ -83,6 +83,10 @@ import ReverseLogisticsTrendsResult from '../tools/logistics/ReverseLogisticsTre
 import OptimizePackageDimensionsResult from '../tools/logistics/OptimizePackageDimensionsResult';
 import DetectDeliveryAnomaliesResult from '../tools/logistics/DetectDeliveryAnomaliesResult';
 import ForecastDeliveryCostsResult from '../tools/logistics/ForecastDeliveryCostsResult';
+import DesempenhoEntregasGeralResult from '../tools/logistics/DesempenhoEntregasGeralResult';
+import EficienciaPorStatusResult from '../tools/logistics/EficienciaPorStatusResult';
+import EficienciaOperacionalPorCDResult from '../tools/logistics/EficienciaOperacionalPorCDResult';
+import PerfilPacotesPorTransportadoraResult from '../tools/logistics/PerfilPacotesPorTransportadoraResult';
 import AccountPerformanceResult from '../tools/organic-marketing/AccountPerformanceResult';
 import PlatformPerformanceResult from '../tools/organic-marketing/PlatformPerformanceResult';
 import PostFormatPerformanceResult from '../tools/organic-marketing/PostFormatPerformanceResult';
@@ -4967,6 +4971,98 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   metricas={(tool.output as AnalyzeTrafficOverviewToolOutput).metricas}
                   rows={(tool.output as AnalyzeTrafficOverviewToolOutput).rows}
                   sql_query={(tool.output as AnalyzeTrafficOverviewToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-desempenhoEntregasGeral') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-desempenhoEntregasGeral" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <DesempenhoEntregasGeralResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-eficienciaPorStatus') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-eficienciaPorStatus" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <EficienciaPorStatusResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-eficienciaOperacionalPorCD') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-eficienciaOperacionalPorCD" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <EficienciaOperacionalPorCDResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-perfilPacotesPorTransportadora') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-perfilPacotesPorTransportadora" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <PerfilPacotesPorTransportadoraResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
                 />
               )}
             </div>

@@ -101,6 +101,11 @@ export const ToolHeader = ({
           'tool-ltvMedio': 'LTV médio',
           'tool-deteccaoOutlierPorCanal': 'Detecção de outlier por canal',
           'tool-visitantesRecorrentes': 'Visitantes recorrentes',
+          // Logistics (novos nomes)
+          'tool-desempenhoEntregasGeral': 'Desempenho de entregas (geral)',
+          'tool-eficienciaPorStatus': 'Eficiência por status',
+          'tool-eficienciaOperacionalPorCD': 'Eficiência por CD',
+          'tool-perfilPacotesPorTransportadora': 'Perfil de pacotes por transportadora',
         };
         return labels[type] ?? type.replace('tool-', '');
       })()}</span>
