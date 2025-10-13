@@ -99,7 +99,7 @@ import TrafficAnomaliesResult from '../tools/web-analytics/TrafficAnomaliesResul
 import UserBehaviorResult from '../tools/web-analytics/UserBehaviorResult';
 import CampaignROASResult from '../tools/paid-traffic/CampaignROASResult';
 import AdsPlatformsResult from '../tools/paid-traffic/AdsPlatformsResult';
-import CreativePerformanceResult from '../tools/paid-traffic/CreativePerformanceResult';
+import CreativeAdsPerformanceResult from '../tools/paid-traffic/CreativeAdsPerformanceResult';
 import TopAdsResult from '../tools/paid-traffic/TopAdsResult';
 import SpendingTrendsResult from '../tools/paid-traffic/SpendingTrendsResult';
 import CostMetricsResult from '../tools/paid-traffic/CostMetricsResult';
@@ -5373,12 +5373,12 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && tool.output && (
-                <CreativePerformanceResult
-                  success={(tool.output as AnalyzeCreativePerformanceToolOutput).success}
-                  message={(tool.output as AnalyzeCreativePerformanceToolOutput).message}
-                  periodo_dias={(tool.output as AnalyzeCreativePerformanceToolOutput).periodo_dias}
-                  total_criativos={(tool.output as AnalyzeCreativePerformanceToolOutput).total_criativos}
-                  status={(tool.output as AnalyzeCreativePerformanceToolOutput).status}
+                <CreativeAdsPerformanceResult
+                  success={(tool.output as unknown as { success: boolean }).success}
+                  message={(tool.output as unknown as { message: string }).message}
+                  rows={(tool.output as unknown as { rows?: Array<Record<string, unknown>> }).rows}
+                  count={(tool.output as unknown as { count?: number }).count}
+                  sql_query={(tool.output as unknown as { sql_query?: string }).sql_query}
                 />
               )}
             </div>
