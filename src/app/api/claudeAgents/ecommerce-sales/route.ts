@@ -1,6 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
-import { getTopProdutosReceitaLiquida, getReceitaPorCanal, getMixReceitaPorCategoria, getTicketMedioVendas } from '@/tools/salesTools';
+import { getTopProdutosReceitaLiquida, getReceitaPorCanal, getMixReceitaPorCategoria, getTicketMedioVendas, getCurvaABCPorReceita, getTopClientesPorReceita } from '@/tools/salesTools';
 
 export const maxDuration = 300;
 
@@ -66,6 +66,18 @@ Retorna contagem de pedidos, receita total e ticket médio.
 
 ### Saída:
 - pedidos, receita, ticket_medio
+
+## 📊 getCurvaABCPorReceita - Curva ABC por receita
+Classifica produtos nas classes A (até 80% da receita), B (80–95%), C (restante) usando receita rateada por item.
+
+### Saída:
+- produto_id, sku, nome_produto, receita, classe_abc
+
+## 📊 getTopClientesPorReceita - Top clientes por receita
+Lista clientes por receita total consolidada em pedidos, com pedidos e ticket médio.
+
+### Saída:
+- cliente_id, nome_cliente, pedidos, receita, ticket_medio
 
 # 📐 KPIs E MÉTRICAS PRINCIPAIS
 
@@ -266,7 +278,9 @@ Seja sempre orientado a dados, priorize crescimento sustentável e rentabilidade
         getTopProdutosReceitaLiquida,
         getReceitaPorCanal,
         getMixReceitaPorCategoria,
-        getTicketMedioVendas
+        getTicketMedioVendas,
+        getCurvaABCPorReceita,
+        getTopClientesPorReceita
       }
     });
 

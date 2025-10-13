@@ -78,6 +78,8 @@ export const ToolHeader = ({
           'tool-getReceitaPorCanal': 'Receita por canal',
           'tool-getMixReceitaPorCategoria': 'Mix de receita por categoria',
           'tool-getTicketMedioVendas': 'Ticket médio de vendas',
+          'tool-getCurvaABCPorReceita': 'Curva ABC por receita',
+          'tool-getTopClientesPorReceita': 'Top clientes por receita',
           // Novos nomes (PT-BR)
           'tool-desempenhoPorConta': 'Desempenho por conta',
           'tool-desempenhoPorPlataforma': 'Desempenho por plataforma',

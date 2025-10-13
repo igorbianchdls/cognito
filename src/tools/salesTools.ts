@@ -338,6 +338,134 @@ export const getTicketMedioVendas = tool({
   },
 });
 
+export const getCurvaABCPorReceita = tool({
+  description: 'Curva ABC por receita (classificação A/B/C por 80%/95%).',
+  inputSchema: z.object({
+    data_de: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().optional().describe('Data final (YYYY-MM-DD)'),
+  }).optional(),
+  execute: async ({ data_de, data_ate } = {}) => {
+    const sql = `
+      WITH itens AS (
+        SELECT
+          p.id AS pedido_id,
+          i.produto_id,
+          (i.quantidade * i.preco_unitario) AS bruto_item,
+          COALESCE(p.desconto,0)            AS desc_pedido,
+          COALESCE(p.frete,0)               AS frete_pedido,
+          SUM(i.quantidade * i.preco_unitario) OVER (PARTITION BY p.id) AS bruto_pedido
+        FROM gestaovendas.pedidos p
+        JOIN gestaovendas.itens_pedido i ON i.pedido_id = p.id
+        WHERE ($1::date IS NULL OR p.criado_em::date >= $1::date)
+          AND ($2::date IS NULL OR p.criado_em::date <= $2::date)
+      ),
+      rateado AS (
+        SELECT
+          produto_id,
+          bruto_item
+            - desc_pedido * CASE WHEN bruto_pedido>0 THEN bruto_item/bruto_pedido ELSE 0 END
+            + frete_pedido * CASE WHEN bruto_pedido>0 THEN bruto_item/bruto_pedido ELSE 0 END
+            AS receita_item
+        FROM itens
+      ),
+      agg AS (
+        SELECT produto_id, SUM(receita_item) AS receita
+        FROM rateado
+        GROUP BY 1
+      ),
+      ord AS (
+        SELECT
+          a.*,
+          a.receita / NULLIF(SUM(a.receita) OVER (),0)                  AS pct,
+          SUM(a.receita) OVER (ORDER BY a.receita DESC)
+            / NULLIF(SUM(a.receita) OVER (),0)                          AS pct_acum
+        FROM agg a
+      )
+      SELECT
+        o.produto_id,
+        pr.sku,
+        pr.nome AS nome_produto,
+        o.receita,
+        CASE
+          WHEN o.pct_acum <= 0.80 THEN 'A'
+          WHEN o.pct_acum <= 0.95 THEN 'B'
+          ELSE 'C'
+        END AS classe_abc
+      FROM ord o
+      JOIN gestaocatalogo.produtos pr ON pr.id = o.produto_id
+      ORDER BY o.receita DESC;
+    `.trim();
+
+    try {
+      const rows = await runQuery<{
+        produto_id: number;
+        sku: string | null;
+        nome_produto: string;
+        receita: number;
+        classe_abc: 'A' | 'B' | 'C';
+      }>(sql, [data_de ?? null, data_ate ?? null]);
+
+      return {
+        success: true,
+        message: 'Curva ABC por Receita',
+        rows,
+        sql_query: sql,
+        sql_params: formatSqlParams([data_de ?? null, data_ate ?? null]),
+      };
+    } catch (error) {
+      console.error('ERRO getCurvaABCPorReceita:', error);
+      return { success: false, message: 'Erro ao calcular Curva ABC por receita' };
+    }
+  },
+});
+
+export const getTopClientesPorReceita = tool({
+  description: 'Top clientes por receita (usa totais consolidados do pedido).',
+  inputSchema: z.object({
+    data_de: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().optional().describe('Data final (YYYY-MM-DD)'),
+    limit: z.number().int().min(1).max(1000).default(50)
+  }).optional(),
+  execute: async ({ data_de, data_ate, limit = 50 } = {}) => {
+    const sql = `
+      SELECT
+        p.cliente_id,
+        c.nome            AS nome_cliente,
+        COUNT(*)          AS pedidos,
+        SUM(p.total_liquido) AS receita,
+        ROUND(AVG(p.total_liquido)::numeric,2) AS ticket_medio
+      FROM gestaovendas.pedidos p
+      LEFT JOIN gestaovendas.clientes c ON c.id = p.cliente_id
+      WHERE ($1::date IS NULL OR p.criado_em::date >= $1::date)
+        AND ($2::date IS NULL OR p.criado_em::date <= $2::date)
+      GROUP BY 1,2
+      ORDER BY receita DESC
+      LIMIT $3::int;
+    `.trim();
+
+    try {
+      const rows = await runQuery<{
+        cliente_id: number | null;
+        nome_cliente: string | null;
+        pedidos: number;
+        receita: number;
+        ticket_medio: number;
+      }>(sql, [data_de ?? null, data_ate ?? null, limit]);
+
+      return {
+        success: true,
+        message: `Top clientes por receita (limite ${limit})`,
+        rows,
+        sql_query: sql,
+        sql_params: formatSqlParams([data_de ?? null, data_ate ?? null, limit]),
+      };
+    } catch (error) {
+      console.error('ERRO getTopClientesPorReceita:', error);
+      return { success: false, message: 'Erro ao calcular top clientes por receita' };
+    }
+  },
+});
+
 export const getRevenueMetrics = tool({
   description: 'Métricas de receita por canal de venda.',
   inputSchema: z.object({

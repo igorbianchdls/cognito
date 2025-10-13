@@ -65,6 +65,8 @@ import TopProdutosReceitaLiquidaTable, { type TopProdutosRow } from '../tools/To
 import ReceitaPorCanalResult, { type ReceitaPorCanalRow } from '../tools/ecommerce/ReceitaPorCanalResult';
 import MixReceitaPorCategoriaResult, { type MixCategoriaRow } from '../tools/ecommerce/MixReceitaPorCategoriaResult';
 import TicketMedioVendasResult, { type TicketMedioRow } from '../tools/ecommerce/TicketMedioVendasResult';
+import CurvaABCPorReceitaResult, { type CurvaABCRow } from '../tools/ecommerce/CurvaABCPorReceitaResult';
+import TopClientesPorReceitaResult, { type TopClienteRow } from '../tools/ecommerce/TopClientesPorReceitaResult';
 import LogisticsDataTable from '../tools/LogisticsDataTable';
 import AnalyticsDataTable from '../tools/AnalyticsDataTable';
 import ComprasDataTable from '../tools/ComprasDataTable';
@@ -974,6 +976,16 @@ type GetMixReceitaPorCategoriaToolOutput = EcommerceGenericToolOutput & {
 type GetTicketMedioVendasToolOutput = EcommerceGenericToolOutput & {
   rows?: TicketMedioRow[];
   data?: TicketMedioRow[];
+};
+
+type GetCurvaABCPorReceitaToolOutput = EcommerceGenericToolOutput & {
+  rows?: CurvaABCRow[];
+  data?: CurvaABCRow[];
+};
+
+type GetTopClientesPorReceitaToolOutput = EcommerceGenericToolOutput & {
+  rows?: TopClienteRow[];
+  data?: TopClienteRow[];
 };
 
 type GetCouponEffectivenessToolInput = {
@@ -4436,6 +4448,64 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   rows={(tool.output as GetTicketMedioVendasToolOutput).rows}
                   data={(tool.output as GetTicketMedioVendasToolOutput).data}
                   sql_query={(tool.output as GetTicketMedioVendasToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getCurvaABCPorReceita') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getCurvaABCPorReceita" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <CurvaABCPorReceitaResult
+                  success={(tool.output as GetCurvaABCPorReceitaToolOutput).success}
+                  message={(tool.output as GetCurvaABCPorReceitaToolOutput).message}
+                  rows={(tool.output as GetCurvaABCPorReceitaToolOutput).rows}
+                  data={(tool.output as GetCurvaABCPorReceitaToolOutput).data}
+                  sql_query={(tool.output as GetCurvaABCPorReceitaToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getTopClientesPorReceita') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getTopClientesPorReceita" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <TopClientesPorReceitaResult
+                  success={(tool.output as GetTopClientesPorReceitaToolOutput).success}
+                  message={(tool.output as GetTopClientesPorReceitaToolOutput).message}
+                  rows={(tool.output as GetTopClientesPorReceitaToolOutput).rows}
+                  data={(tool.output as GetTopClientesPorReceitaToolOutput).data}
+                  sql_query={(tool.output as GetTopClientesPorReceitaToolOutput).sql_query}
                 />
               )}
             </div>
