@@ -14,7 +14,7 @@ interface Props {
   sql_query?: string;
 }
 
-type Row = Record<string, unknown> & { dia?: string; taxa_conversao?: number; zscore?: number; anomalia?: boolean };
+type Row = Record<string, unknown> & { semana?: string; total_conversoes?: number | string; semana_anterior?: number | string; variacao_pct?: number | string; alerta?: string };
 
 export default function DeteccaoAnomaliasTaxaConversaoResult({ success, message, rows = [], count, sql_query }: Props) {
   const data: Row[] = useMemo(() => rows as Row[], [rows]);
@@ -33,11 +33,11 @@ export default function DeteccaoAnomaliasTaxaConversaoResult({ success, message,
     <ChartSwitcher
       rows={data}
       options={{
-        xKey: 'dia',
-        valueKeys: ['taxa_conversao','zscore'],
-        metricLabels: { taxa_conversao: 'Taxa de Conversão (%)', zscore: 'Z-Score' },
-        title: 'Anomalias na Taxa de Conversão (Z-Score)',
-        xLegend: 'Dia',
+        xKey: 'semana',
+        valueKeys: ['total_conversoes','semana_anterior','variacao_pct'],
+        metricLabels: { total_conversoes: 'Conversões', semana_anterior: 'Conversões (semana anterior)', variacao_pct: 'Variação (%)' },
+        title: 'Anomalias na Taxa de Conversão (Semana a Semana)',
+        xLegend: 'Semana',
         yLegend: 'Valor',
         initialChartType: 'line',
       }}
@@ -61,4 +61,3 @@ export default function DeteccaoAnomaliasTaxaConversaoResult({ success, message,
     />
   );
 }
-

@@ -1090,14 +1090,17 @@ export const desempenhoPorGrupoDeAnuncio = tool({
   }),
   execute: async ({ data_de, data_ate, plataforma, limit = 50 }) => {
     const sql = `
-SELECT 
-  COALESCE(ga.nome, 'Sem grupo') AS grupo,
+SELECT
+  c.nome AS campanha,
+  ga.nome AS grupo_de_anuncios,
   ca.plataforma,
+
   SUM(m.impressao) AS total_impressoes,
   SUM(m.cliques) AS total_cliques,
   SUM(m.conversao) AS total_conversoes,
   ROUND(SUM(m.gasto), 2) AS total_gasto,
   ROUND(SUM(m.receita), 2) AS total_receita,
+
   ROUND(SUM(m.cliques)::numeric / NULLIF(SUM(m.impressao), 0) * 100, 2) AS ctr,
   ROUND(SUM(m.conversao)::numeric / NULLIF(SUM(m.cliques), 0) * 100, 2) AS taxa_conversao,
   ROUND(SUM(m.gasto)::numeric / NULLIF(SUM(m.cliques), 0), 2) AS cpc,
@@ -1105,14 +1108,20 @@ SELECT
   ROUND(SUM(m.receita)::numeric / NULLIF(SUM(m.gasto), 0), 2) AS roas,
   ROUND(SUM(m.receita)::numeric - SUM(m.gasto), 2) AS lucro,
   ROUND((SUM(m.gasto)::numeric / NULLIF(SUM(m.impressao), 0)) * 1000, 2) AS cpm,
-  ROUND(SUM(m.receita)::numeric / NULLIF(SUM(m.conversao), 0), 2) AS ticket_medio
+  ROUND(SUM(m.receita)::numeric / NULLIF(SUM(m.conversao), 0), 2) AS ticket_medio,
+  ROUND(AVG(m.frequencia), 2) AS frequencia_media,
+  COALESCE(SUM(m.likes) + SUM(m.comentarios) + SUM(m.compartilhamentos) + SUM(m.salvos), 0) AS engajamento_total
+
 FROM trafego_pago.metricas_anuncios m
 JOIN trafego_pago.anuncios_publicados ap ON m.anuncio_publicado_id = ap.id
 JOIN trafego_pago.grupos_de_anuncios ga ON ap.grupo_id = ga.id
+JOIN trafego_pago.campanhas c ON ga.campanha_id = c.id
 JOIN trafego_pago.contas_ads ca ON ap.conta_ads_id = ca.id
+
 WHERE m.data BETWEEN $1::date AND $2::date
   AND ($3::text IS NULL OR ca.plataforma = $3)
-GROUP BY ga.nome, ca.plataforma
+
+GROUP BY c.nome, ga.nome, ca.plataforma
 ORDER BY total_gasto DESC
 LIMIT $4;`.trim();
 
@@ -1137,26 +1146,30 @@ export const desempenhoPorDiaDaSemana = tool({
   execute: async ({ data_de, data_ate, plataforma }) => {
     const sql = `
 SELECT 
-  EXTRACT(DOW FROM m.data)::int AS dia_semana,
-  TO_CHAR(m.data::date, 'Dy') AS dia_label,
   ca.plataforma,
-  SUM(m.impressao) AS total_impressoes,
-  SUM(m.cliques) AS total_cliques,
-  SUM(m.conversao) AS total_conversoes,
+  TRIM(TO_CHAR(m.data, 'Day')) AS dia_semana,
   ROUND(SUM(m.gasto), 2) AS total_gasto,
   ROUND(SUM(m.receita), 2) AS total_receita,
-  ROUND(SUM(m.cliques)::numeric / NULLIF(SUM(m.impressao), 0) * 100, 2) AS ctr,
-  ROUND(SUM(m.conversao)::numeric / NULLIF(SUM(m.cliques), 0) * 100, 2) AS taxa_conversao,
-  ROUND(SUM(m.gasto)::numeric / NULLIF(SUM(m.cliques), 0), 2) AS cpc,
+  SUM(m.conversao) AS total_conversoes,
+  ROUND(SUM(m.receita) / NULLIF(SUM(m.gasto), 0), 2) AS roas,
   ROUND(SUM(m.gasto)::numeric / NULLIF(SUM(m.conversao), 0), 2) AS cpa,
-  ROUND(SUM(m.receita)::numeric / NULLIF(SUM(m.gasto), 0), 2) AS roas
+  ROUND(SUM(m.conversao)::numeric / NULLIF(SUM(m.cliques), 0) * 100, 2) AS taxa_conversao
 FROM trafego_pago.metricas_anuncios m
 JOIN trafego_pago.anuncios_publicados ap ON m.anuncio_publicado_id = ap.id
 JOIN trafego_pago.contas_ads ca ON ap.conta_ads_id = ca.id
 WHERE m.data BETWEEN $1::date AND $2::date
   AND ($3::text IS NULL OR ca.plataforma = $3)
-GROUP BY 1, 2, ca.plataforma
-ORDER BY dia_semana ASC;`.trim();
+GROUP BY ca.plataforma, dia_semana
+ORDER BY ca.plataforma, 
+         CASE TRIM(TO_CHAR(m.data, 'Day'))
+            WHEN 'Monday' THEN 1
+            WHEN 'Tuesday' THEN 2
+            WHEN 'Wednesday' THEN 3
+            WHEN 'Thursday' THEN 4
+            WHEN 'Friday' THEN 5
+            WHEN 'Saturday' THEN 6
+            WHEN 'Sunday' THEN 7
+         END;`.trim();
 
     try {
       const params = [data_de, data_ate, plataforma ?? null];

@@ -14,7 +14,7 @@ interface Props {
   sql_query?: string;
 }
 
-type Row = Record<string, unknown> & { dia?: string; roas?: number; zscore?: number; anomalia?: boolean };
+type Row = Record<string, unknown> & { data?: string; roas_dia?: number | string; media_7d?: number | string; variacao_pct?: number | string; alerta?: string };
 
 export default function DeteccaoAnomaliasROASResult({ success, message, rows = [], count, sql_query }: Props) {
   const data: Row[] = useMemo(() => rows as Row[], [rows]);
@@ -33,10 +33,10 @@ export default function DeteccaoAnomaliasROASResult({ success, message, rows = [
     <ChartSwitcher
       rows={data}
       options={{
-        xKey: 'dia',
-        valueKeys: ['roas','zscore'],
-        metricLabels: { roas: 'ROAS', zscore: 'Z-Score' },
-        title: 'Anomalias de ROAS (Z-Score)',
+        xKey: 'data',
+        valueKeys: ['roas_dia','media_7d','variacao_pct'],
+        metricLabels: { roas_dia: 'ROAS do dia', media_7d: 'Média 7d', variacao_pct: 'Variação (%)' },
+        title: 'Anomalias de ROAS (Variação vs Média 7d)',
         xLegend: 'Dia',
         yLegend: 'Valor',
         initialChartType: 'line',
@@ -61,4 +61,3 @@ export default function DeteccaoAnomaliasROASResult({ success, message, rows = [
     />
   );
 }
-

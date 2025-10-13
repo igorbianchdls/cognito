@@ -31,9 +31,9 @@ export default function DesempenhoPorGrupoDeAnuncioResult({ success, message, ro
 
   const chartRenderer = () => (
     <ChartSwitcher
-      rows={data.map(r => ({ ...r, grupo: r.plataforma ? `${r.grupo ?? ''} (${r.plataforma})` : (r.grupo ?? '') }))}
+      rows={data.map(r => ({ ...r, grupo_de_anuncios: r.plataforma ? `${r.grupo_de_anuncios ?? ''} (${r.plataforma})` : (r.grupo_de_anuncios ?? '') }))}
       options={{
-        xKey: 'grupo',
+        xKey: 'grupo_de_anuncios',
         valueKeys: [
           'total_impressoes','total_cliques','total_conversoes','total_gasto','total_receita',
           'ctr','taxa_conversao','cpc','cpa','roas','lucro','cpm','ticket_medio'
@@ -68,4 +68,3 @@ export default function DesempenhoPorGrupoDeAnuncioResult({ success, message, ro
     />
   );
 }
-

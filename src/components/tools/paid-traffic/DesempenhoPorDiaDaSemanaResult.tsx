@@ -31,9 +31,9 @@ export default function DesempenhoPorDiaDaSemanaResult({ success, message, rows 
 
   const chartRenderer = () => (
     <ChartSwitcher
-      rows={data.map(r => ({ ...r, dia: r.dia_label ?? String(r.dia_semana ?? '') }))}
+      rows={data}
       options={{
-        xKey: 'dia',
+        xKey: 'dia_semana',
         valueKeys: ['total_impressoes','total_cliques','total_conversoes','total_gasto','total_receita','ctr','taxa_conversao','cpc','cpa','roas'],
         metricLabels: {
           total_impressoes: 'Impressões', total_cliques: 'Cliques', total_conversoes: 'Conversões',
@@ -64,4 +64,3 @@ export default function DesempenhoPorDiaDaSemanaResult({ success, message, rows 
     />
   );
 }
-
