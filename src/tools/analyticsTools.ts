@@ -1014,3 +1014,51 @@ export const analyzeUserBehavior = tool({
     }
   },
 });
+
+// ===== Novos nomes (PT-BR) mapeando ferramentas existentes =====
+// Mantemos a lógica atual e apenas expomos nomes em português para o agente e a UI
+
+export const desempenhoGeralDoSite = analyzeTrafficOverview;
+export const desempenhoPorCanal = compareTrafficSources;
+export const etapasDoFunilGeral = analyzeConversionFunnel;
+export const desempenhoMobileVsDesktop = analyzeDevicePerformance;
+export const contribuicaoPorPagina = identifyTopLandingPages;
+export const deteccaoOutlierPorCanal = detectTrafficAnomalies;
+export const visitantesRecorrentes = analyzeUserBehavior;
+
+// Novas tools (placeholders) – queries serão aplicadas na próxima etapa
+export const desempenhoPorDiaHora = tool({
+  description: 'Desempenho por dia e hora (placeholder – será implementado com query na próxima etapa)',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+  }),
+  execute: async ({ data_de, data_ate }) => {
+    return {
+      success: true,
+      message: `Desempenho por dia e hora (${data_de} a ${data_ate})`,
+      rows: [],
+      count: 0,
+      sql_query: undefined,
+      sql_params: undefined,
+    };
+  },
+});
+
+export const ltvMedio = tool({
+  description: 'LTV médio (placeholder – será implementado com query na próxima etapa)',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+  }),
+  execute: async ({ data_de, data_ate }) => {
+    return {
+      success: true,
+      message: `LTV médio (${data_de} a ${data_ate})`,
+      rows: [],
+      count: 0,
+      sql_query: undefined,
+      sql_params: undefined,
+    };
+  },
+});

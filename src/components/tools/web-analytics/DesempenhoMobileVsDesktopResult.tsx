@@ -25,7 +25,7 @@ interface DevicePerformanceResultProps {
 
 const formatNumber = (value: number) => value.toLocaleString('pt-BR');
 
-export default function DevicePerformanceResult({
+export default function DesempenhoMobileVsDesktopResult({
   success,
   message,
   periodo_dias,

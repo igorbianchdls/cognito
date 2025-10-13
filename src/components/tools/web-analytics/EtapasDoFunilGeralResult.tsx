@@ -26,7 +26,7 @@ interface ConversionFunnelResultProps {
   sql_params?: string;
 }
 
-export default function ConversionFunnelResult({
+export default function EtapasDoFunilGeralResult({
   success,
   message,
   periodo_dias,

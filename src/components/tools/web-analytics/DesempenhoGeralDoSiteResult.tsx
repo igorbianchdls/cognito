@@ -43,7 +43,7 @@ const formatDuration = (seconds: number) => {
   return `${minutes}m ${secs}s`;
 };
 
-export default function TrafficOverviewResult({
+export default function DesempenhoGeralDoSiteResult({
   success,
   message,
   periodo_dias,
@@ -154,13 +154,13 @@ export default function TrafficOverviewResult({
       <ArtifactDataTable
         data={data}
         columns={columns}
-        title="Visão Geral de Tráfego"
+        title="Desempenho geral do site"
         icon={TrendingUp}
         message={summary ? `${message} • ${summary}` : message}
         success={success}
         count={data.length}
         iconColor="text-blue-600"
-        exportFileName="traffic_overview"
+        exportFileName="desempenho_geral_site"
         sqlQuery={sql_query}
       />
     </div>

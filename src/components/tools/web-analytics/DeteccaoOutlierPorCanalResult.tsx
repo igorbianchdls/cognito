@@ -32,7 +32,7 @@ interface TrafficAnomaliesResultProps {
   sql_params?: string;
 }
 
-export default function TrafficAnomaliesResult({
+export default function DeteccaoOutlierPorCanalResult({
   success,
   message,
   periodo_dias,
@@ -129,13 +129,13 @@ export default function TrafficAnomaliesResult({
     <ArtifactDataTable
       data={data}
       columns={columns}
-      title="Anomalias de Tráfego"
+      title="Detecção de outlier por canal"
       icon={AlertTriangle}
       message={details ? `${message} • ${details}` : message}
       success={success}
       count={data.length}
       iconColor="text-rose-600"
-      exportFileName="traffic_anomalies"
+      exportFileName="outliers_por_canal"
       sqlQuery={sql_query}
       chartRenderer={() => warningList}
     />

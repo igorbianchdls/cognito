@@ -91,6 +91,16 @@ export const ToolHeader = ({
           'tool-forecastEngagement': 'Engajamento por dia da semana e horário',
           'tool-calculateContentROI': 'Detecção de anomalia (pico/queda de performance)',
           'tool-analyzeAudienceGrowth': 'Anomalia por queda súbita de alcance',
+          // Web Analytics (novos nomes)
+          'tool-desempenhoGeralDoSite': 'Desempenho geral do site',
+          'tool-desempenhoPorCanal': 'Desempenho por canal',
+          'tool-etapasDoFunilGeral': 'Etapas do funil (geral)',
+          'tool-desempenhoPorDiaHora': 'Desempenho por dia e hora',
+          'tool-desempenhoMobileVsDesktop': 'Desempenho Mobile vs desktop',
+          'tool-contribuicaoPorPagina': 'Contribuição por página',
+          'tool-ltvMedio': 'LTV médio',
+          'tool-deteccaoOutlierPorCanal': 'Detecção de outlier por canal',
+          'tool-visitantesRecorrentes': 'Visitantes recorrentes',
         };
         return labels[type] ?? type.replace('tool-', '');
       })()}</span>

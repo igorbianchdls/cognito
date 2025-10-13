@@ -90,13 +90,14 @@ import PublicationRankingResult from '../tools/organic-marketing/PublicationRank
 import EngagementByDayHourResult from '../tools/organic-marketing/EngagementByDayHourResult';
 import OrganicAnomaliesResult from '../tools/organic-marketing/OrganicAnomaliesResult';
 import SuddenReachDropResult from '../tools/organic-marketing/SuddenReachDropResult';
-import TrafficOverviewResult from '../tools/web-analytics/TrafficOverviewResult';
-import TrafficSourcesResult from '../tools/web-analytics/TrafficSourcesResult';
-import ConversionFunnelResult from '../tools/web-analytics/ConversionFunnelResult';
-import TopLandingPagesResult from '../tools/web-analytics/TopLandingPagesResult';
-import DevicePerformanceResult from '../tools/web-analytics/DevicePerformanceResult';
-import TrafficAnomaliesResult from '../tools/web-analytics/TrafficAnomaliesResult';
-import UserBehaviorResult from '../tools/web-analytics/UserBehaviorResult';
+import DesempenhoGeralDoSiteResult from '../tools/web-analytics/DesempenhoGeralDoSiteResult';
+import DesempenhoPorCanalResult from '../tools/web-analytics/DesempenhoPorCanalResult';
+import EtapasDoFunilGeralResult from '../tools/web-analytics/EtapasDoFunilGeralResult';
+import ContribuicaoPorPaginaResult from '../tools/web-analytics/ContribuicaoPorPaginaResult';
+import DesempenhoMobileVsDesktopResult from '../tools/web-analytics/DesempenhoMobileVsDesktopResult';
+import DeteccaoOutlierPorCanalResult from '../tools/web-analytics/DeteccaoOutlierPorCanalResult';
+import VisitantesRecorrentesResult from '../tools/web-analytics/VisitantesRecorrentesResult';
+import DesempenhoPorDiaHoraResult from '../tools/web-analytics/DesempenhoPorDiaHoraResult';
 import CampaignROASResult from '../tools/paid-traffic/CampaignROASResult';
 import AdsPlatformsResult from '../tools/paid-traffic/AdsPlatformsResult';
 import CreativeAdsPerformanceResult from '../tools/paid-traffic/CreativeAdsPerformanceResult';
@@ -4946,19 +4947,19 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
 
         // (Removidos: cases antigos das tools de orgânico)
 
-        if (part.type === 'tool-analyzeTrafficOverview') {
+        if (part.type === 'tool-desempenhoGeralDoSite' || part.type === 'tool-analyzeTrafficOverview') {
           const tool = part as NexusToolUIPart;
           return (
             <div key={tool.toolCallId}>
               <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-analyzeTrafficOverview" state={tool.state} />
+                <ToolHeader type="tool-desempenhoGeralDoSite" state={tool.state} />
                 <ToolContent>
                   {tool.input && <ToolInput input={tool.input} />}
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && tool.output && (
-                <TrafficOverviewResult
+                <DesempenhoGeralDoSiteResult
                   success={(tool.output as AnalyzeTrafficOverviewToolOutput).success}
                   message={(tool.output as AnalyzeTrafficOverviewToolOutput).message}
                   periodo_dias={(tool.output as AnalyzeTrafficOverviewToolOutput).periodo_dias}
@@ -5140,19 +5141,19 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
-        if (part.type === 'tool-compareTrafficSources') {
+        if (part.type === 'tool-desempenhoPorCanal' || part.type === 'tool-compareTrafficSources') {
           const tool = part as NexusToolUIPart;
           return (
             <div key={tool.toolCallId}>
               <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-compareTrafficSources" state={tool.state} />
+                <ToolHeader type="tool-desempenhoPorCanal" state={tool.state} />
                 <ToolContent>
                   {tool.input && <ToolInput input={tool.input} />}
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && tool.output && (
-                <TrafficSourcesResult
+                <DesempenhoPorCanalResult
                   success={(tool.output as CompareTrafficSourcesToolOutput).success}
                   message={(tool.output as CompareTrafficSourcesToolOutput).message}
                   periodo_dias={(tool.output as CompareTrafficSourcesToolOutput).periodo_dias}
@@ -5167,19 +5168,19 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
-        if (part.type === 'tool-analyzeConversionFunnel') {
+        if (part.type === 'tool-etapasDoFunilGeral' || part.type === 'tool-analyzeConversionFunnel') {
           const tool = part as NexusToolUIPart;
           return (
             <div key={tool.toolCallId}>
               <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-analyzeConversionFunnel" state={tool.state} />
+                <ToolHeader type="tool-etapasDoFunilGeral" state={tool.state} />
                 <ToolContent>
                   {tool.input && <ToolInput input={tool.input} />}
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && tool.output && (
-                <ConversionFunnelResult
+                <EtapasDoFunilGeralResult
                   success={(tool.output as AnalyzeConversionFunnelToolOutput).success}
                   message={(tool.output as AnalyzeConversionFunnelToolOutput).message}
                   periodo_dias={(tool.output as AnalyzeConversionFunnelToolOutput).periodo_dias}
@@ -5195,19 +5196,19 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
-        if (part.type === 'tool-identifyTopLandingPages') {
+        if (part.type === 'tool-contribuicaoPorPagina' || part.type === 'tool-identifyTopLandingPages') {
           const tool = part as NexusToolUIPart;
           return (
             <div key={tool.toolCallId}>
               <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-identifyTopLandingPages" state={tool.state} />
+                <ToolHeader type="tool-contribuicaoPorPagina" state={tool.state} />
                 <ToolContent>
                   {tool.input && <ToolInput input={tool.input} />}
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && tool.output && (
-                <TopLandingPagesResult
+                <ContribuicaoPorPaginaResult
                   success={(tool.output as IdentifyTopLandingPagesToolOutput).success}
                   message={(tool.output as IdentifyTopLandingPagesToolOutput).message}
                   periodo_dias={(tool.output as IdentifyTopLandingPagesToolOutput).periodo_dias}
@@ -5220,19 +5221,19 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
-        if (part.type === 'tool-analyzeDevicePerformance') {
+        if (part.type === 'tool-desempenhoMobileVsDesktop' || part.type === 'tool-analyzeDevicePerformance') {
           const tool = part as NexusToolUIPart;
           return (
             <div key={tool.toolCallId}>
               <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-analyzeDevicePerformance" state={tool.state} />
+                <ToolHeader type="tool-desempenhoMobileVsDesktop" state={tool.state} />
                 <ToolContent>
                   {tool.input && <ToolInput input={tool.input} />}
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && tool.output && (
-                <DevicePerformanceResult
+                <DesempenhoMobileVsDesktopResult
                   success={(tool.output as AnalyzeDevicePerformanceToolOutput).success}
                   message={(tool.output as AnalyzeDevicePerformanceToolOutput).message}
                   periodo_dias={(tool.output as AnalyzeDevicePerformanceToolOutput).periodo_dias}
@@ -5244,19 +5245,19 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
-        if (part.type === 'tool-detectTrafficAnomalies') {
+        if (part.type === 'tool-deteccaoOutlierPorCanal' || part.type === 'tool-detectTrafficAnomalies') {
           const tool = part as NexusToolUIPart;
           return (
             <div key={tool.toolCallId}>
               <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-detectTrafficAnomalies" state={tool.state} />
+                <ToolHeader type="tool-deteccaoOutlierPorCanal" state={tool.state} />
                 <ToolContent>
                   {tool.input && <ToolInput input={tool.input} />}
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && tool.output && (
-                <TrafficAnomaliesResult
+                <DeteccaoOutlierPorCanalResult
                   success={(tool.output as DetectTrafficAnomaliesToolOutput).success}
                   message={(tool.output as DetectTrafficAnomaliesToolOutput).message}
                   periodo_dias={(tool.output as DetectTrafficAnomaliesToolOutput).periodo_dias}
@@ -5274,25 +5275,48 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
-        if (part.type === 'tool-analyzeUserBehavior') {
+        if (part.type === 'tool-visitantesRecorrentes' || part.type === 'tool-analyzeUserBehavior') {
           const tool = part as NexusToolUIPart;
           return (
             <div key={tool.toolCallId}>
               <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-analyzeUserBehavior" state={tool.state} />
+                <ToolHeader type="tool-visitantesRecorrentes" state={tool.state} />
                 <ToolContent>
                   {tool.input && <ToolInput input={tool.input} />}
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && tool.output && (
-                <UserBehaviorResult
+                <VisitantesRecorrentesResult
                   success={(tool.output as AnalyzeUserBehaviorToolOutput).success}
                   message={(tool.output as AnalyzeUserBehaviorToolOutput).message}
                   periodo_dias={(tool.output as AnalyzeUserBehaviorToolOutput).periodo_dias}
                   comportamento={(tool.output as AnalyzeUserBehaviorToolOutput).comportamento}
                   rows={(tool.output as AnalyzeUserBehaviorToolOutput).rows}
                   sql_query={(tool.output as AnalyzeUserBehaviorToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-desempenhoPorDiaHora') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-desempenhoPorDiaHora" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <DesempenhoPorDiaHoraResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
                 />
               )}
             </div>

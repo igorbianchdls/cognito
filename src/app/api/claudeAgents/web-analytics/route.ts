@@ -2,13 +2,15 @@ import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import {
   getAnalyticsData,
-  analyzeTrafficOverview,
-  compareTrafficSources,
-  analyzeConversionFunnel,
-  identifyTopLandingPages,
-  analyzeDevicePerformance,
-  detectTrafficAnomalies,
-  analyzeUserBehavior
+  desempenhoGeralDoSite,
+  desempenhoPorCanal,
+  etapasDoFunilGeral,
+  desempenhoPorDiaHora,
+  desempenhoMobileVsDesktop,
+  contribuicaoPorPagina,
+  ltvMedio,
+  deteccaoOutlierPorCanal,
+  visitantesRecorrentes
 } from '@/tools/analyticsTools';
 
 export const maxDuration = 300;
@@ -362,13 +364,15 @@ Seja sempre orientado a dados, priorize otimização de conversão e melhoria co
 
       tools: {
         getAnalyticsData,
-        analyzeTrafficOverview,
-        compareTrafficSources,
-        analyzeConversionFunnel,
-        identifyTopLandingPages,
-        analyzeDevicePerformance,
-        detectTrafficAnomalies,
-        analyzeUserBehavior
+        desempenhoGeralDoSite,
+        desempenhoPorCanal,
+        etapasDoFunilGeral,
+        desempenhoPorDiaHora,
+        desempenhoMobileVsDesktop,
+        contribuicaoPorPagina,
+        ltvMedio,
+        deteccaoOutlierPorCanal,
+        visitantesRecorrentes
       }
     });
 

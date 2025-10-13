@@ -31,7 +31,7 @@ interface TrafficSourcesResultProps {
 
 const formatNumber = (value: number) => value.toLocaleString('pt-BR');
 
-export default function TrafficSourcesResult({
+export default function DesempenhoPorCanalResult({
   success,
   message,
   periodo_dias,
@@ -123,13 +123,13 @@ export default function TrafficSourcesResult({
     <ArtifactDataTable
       data={data}
       columns={columns}
-      title="Fontes de Tráfego"
+      title="Desempenho por canal"
       icon={BarChart3}
       message={metaInfo ? `${message} • ${metaInfo}` : message}
       success={success}
       count={data.length}
       iconColor="text-indigo-600"
-      exportFileName="traffic_sources"
+      exportFileName="desempenho_por_canal"
       sqlQuery={sql_query}
       chartRenderer={(rows) => {
         const topThree = rows.slice(0, 3);

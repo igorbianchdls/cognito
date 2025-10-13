@@ -24,7 +24,7 @@ interface TopLandingPagesResultProps {
 
 const formatNumber = (value: number) => value.toLocaleString('pt-BR');
 
-export default function TopLandingPagesResult({
+export default function ContribuicaoPorPaginaResult({
   success,
   message,
   periodo_dias,
@@ -93,13 +93,13 @@ export default function TopLandingPagesResult({
     <ArtifactDataTable
       data={data}
       columns={columns}
-      title="Landing Pages em Destaque"
+      title="Contribuição por página"
       icon={Bookmark}
       message={meta ? `${message} • ${meta}` : message}
       success={success}
       count={data.length}
       iconColor="text-amber-600"
-      exportFileName="landing_pages_ranking"
+      exportFileName="contribuicao_por_pagina"
       sqlQuery={sql_query}
     />
   );

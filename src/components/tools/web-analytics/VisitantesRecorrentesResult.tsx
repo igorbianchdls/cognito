@@ -37,7 +37,7 @@ const formatNumber = (value: number | string) => {
   return value;
 };
 
-export default function UserBehaviorResult({
+export default function VisitantesRecorrentesResult({
   success,
   message,
   periodo_dias,
