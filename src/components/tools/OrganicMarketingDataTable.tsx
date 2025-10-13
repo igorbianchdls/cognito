@@ -1,6 +1,7 @@
 'use client';
 
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import { ChartSwitcher } from '@/components/charts/ChartSwitcher';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowUpDown, TrendingUp } from 'lucide-react';
@@ -375,6 +376,76 @@ export default function OrganicMarketingDataTable({ success, count, rows, table,
     return baseColumns;
   }, [table]);
 
+  const chartRenderer = () => {
+    // Escolhe eixo X e métricas conforme a tabela
+    let xKey: string = 'id';
+    let valueKeys: string[] = [];
+    let metricLabels: Record<string, string> = {};
+
+    if (table === 'contas_sociais') {
+      xKey = 'nome_conta';
+      valueKeys = ['seguidores', 'seguindo', 'total_publicacoes'];
+      metricLabels = {
+        seguidores: 'Seguidores',
+        seguindo: 'Seguindo',
+        total_publicacoes: 'Total de posts',
+      };
+    } else if (table === 'publicacoes') {
+      xKey = 'titulo';
+      valueKeys = ['curtidas', 'comentarios', 'compartilhamentos', 'visualizacoes', 'alcance', 'taxa_engajamento'];
+      metricLabels = {
+        curtidas: 'Curtidas',
+        comentarios: 'Comentários',
+        compartilhamentos: 'Compartilhamentos',
+        visualizacoes: 'Visualizações',
+        alcance: 'Alcance',
+        taxa_engajamento: 'Taxa de engajamento',
+      };
+    } else if (table === 'metricas_publicacoes') {
+      xKey = 'titulo';
+      valueKeys = ['curtidas', 'comentarios', 'compartilhamentos', 'visualizacoes', 'alcance', 'taxa_engajamento'];
+      metricLabels = {
+        curtidas: 'Curtidas',
+        comentarios: 'Comentários',
+        compartilhamentos: 'Compartilhamentos',
+        visualizacoes: 'Visualizações',
+        alcance: 'Alcance',
+        taxa_engajamento: 'Taxa de engajamento',
+      };
+    } else if (table === 'resumos_conta') {
+      xKey = 'nome_conta';
+      valueKeys = ['seguidores', 'seguindo', 'total_publicacoes', 'alcance_total', 'taxa_engajamento'];
+      metricLabels = {
+        seguidores: 'Seguidores',
+        seguindo: 'Seguindo',
+        total_publicacoes: 'Total de posts',
+        alcance_total: 'Alcance total',
+        taxa_engajamento: 'Taxa de engajamento',
+      };
+    } else {
+      // fallback: tenta detectar primeiras colunas numéricas
+      const sample = data[0] as Record<string, unknown> | undefined;
+      xKey = sample ? Object.keys(sample).find((k) => typeof sample[k] !== 'number') || 'id' : 'id';
+      valueKeys = sample ? Object.keys(sample).filter((k) => typeof sample[k] === 'number') : [];
+      metricLabels = Object.fromEntries(valueKeys.map((k) => [k, k.replace(/_/g, ' ')]));
+    }
+
+    return (
+      <ChartSwitcher
+        rows={data}
+        options={{
+          xKey,
+          valueKeys,
+          metricLabels,
+          title: 'Visualização de métricas',
+          xLegend: xKey,
+          yLegend: 'Valor',
+          initialChartType: table === 'metricas_publicacoes' ? 'bar' : 'bar',
+        }}
+      />
+    );
+  };
+
   return (
     <ArtifactDataTable
       data={data}
@@ -389,6 +460,7 @@ export default function OrganicMarketingDataTable({ success, count, rows, table,
       exportFileName={`organic_marketing_${table}`}
       pageSize={20}
       sqlQuery={sql_query}
+      chartRenderer={chartRenderer}
     />
   );
 }
