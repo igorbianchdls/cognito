@@ -1160,6 +1160,16 @@ type OrganicGenericToolOutput = {
   error?: string;
 };
 
+// Generic output for tools that return dynamic rows with SQL metadata
+type RowsToolOutput = {
+  success: boolean;
+  message: string;
+  rows?: Array<Record<string, unknown>>;
+  count?: number;
+  sql_query?: string;
+  sql_params?: string;
+};
+
 type AnalyzeContentPerformanceToolOutput = OrganicGenericToolOutput;
 type ComparePlatformPerformanceToolOutput = OrganicGenericToolOutput;
 type AnalyzeAudienceGrowthToolOutput = OrganicGenericToolOutput;
@@ -4975,11 +4985,11 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {tool.state === 'output-available' && tool.output && (
                 <AccountPerformanceResult
-                  success={(tool.output as any).success}
-                  message={(tool.output as any).message}
-                  rows={(tool.output as any).rows}
-                  count={(tool.output as any).count}
-                  sql_query={(tool.output as any).sql_query}
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
                 />
               )}
             </div>
@@ -4999,11 +5009,11 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {tool.state === 'output-available' && tool.output && (
                 <PlatformPerformanceResult
-                  success={(tool.output as any).success}
-                  message={(tool.output as any).message}
-                  rows={(tool.output as any).rows}
-                  count={(tool.output as any).count}
-                  sql_query={(tool.output as any).sql_query}
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5023,11 +5033,11 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {tool.state === 'output-available' && tool.output && (
                 <PostFormatPerformanceResult
-                  success={(tool.output as any).success}
-                  message={(tool.output as any).message}
-                  rows={(tool.output as any).rows}
-                  count={(tool.output as any).count}
-                  sql_query={(tool.output as any).sql_query}
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5047,11 +5057,11 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {tool.state === 'output-available' && tool.output && (
                 <PublicationRankingResult
-                  success={(tool.output as any).success}
-                  message={(tool.output as any).message}
-                  rows={(tool.output as any).rows}
-                  count={(tool.output as any).count}
-                  sql_query={(tool.output as any).sql_query}
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5071,11 +5081,11 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {tool.state === 'output-available' && tool.output && (
                 <EngagementByDayHourResult
-                  success={(tool.output as any).success}
-                  message={(tool.output as any).message}
-                  rows={(tool.output as any).rows}
-                  count={(tool.output as any).count}
-                  sql_query={(tool.output as any).sql_query}
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5095,11 +5105,11 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {tool.state === 'output-available' && tool.output && (
                 <OrganicAnomaliesResult
-                  success={(tool.output as any).success}
-                  message={(tool.output as any).message}
-                  rows={(tool.output as any).rows}
-                  count={(tool.output as any).count}
-                  sql_query={(tool.output as any).sql_query}
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5119,11 +5129,11 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {tool.state === 'output-available' && tool.output && (
                 <SuddenReachDropResult
-                  success={(tool.output as any).success}
-                  message={(tool.output as any).message}
-                  rows={(tool.output as any).rows}
-                  count={(tool.output as any).count}
-                  sql_query={(tool.output as any).sql_query}
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
                 />
               )}
             </div>
