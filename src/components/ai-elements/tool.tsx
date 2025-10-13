@@ -106,6 +106,9 @@ export const ToolHeader = ({
           'tool-eficienciaPorStatus': 'Eficiência por status',
           'tool-eficienciaOperacionalPorCD': 'Eficiência por CD',
           'tool-perfilPacotesPorTransportadora': 'Perfil de pacotes por transportadora',
+          'tool-atrasosCriticosDeteccaoAnomalias': 'Atrasos críticos — detecção de anomalias',
+          'tool-logisticaReversaDevolucoes': 'Logística reversa (devoluções)',
+          'tool-rankingEficienciaPorCentro': 'Ranking de eficiência por centro',
         };
         return labels[type] ?? type.replace('tool-', '');
       })()}</span>

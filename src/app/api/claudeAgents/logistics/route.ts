@@ -13,6 +13,9 @@ import {
   eficienciaPorStatus,
   eficienciaOperacionalPorCD,
   perfilPacotesPorTransportadora,
+  atrasosCriticosDeteccaoAnomalias,
+  logisticaReversaDevolucoes,
+  rankingEficienciaPorCentro,
 } from '@/tools/logisticsTools';
 
 export const maxDuration = 300;
@@ -338,6 +341,9 @@ Seja sempre orientado a dados, priorize eficiência operacional e redução de c
         eficienciaPorStatus,
         eficienciaOperacionalPorCD,
         perfilPacotesPorTransportadora,
+        atrasosCriticosDeteccaoAnomalias,
+        logisticaReversaDevolucoes,
+        rankingEficienciaPorCentro,
         // Tools existentes (mantidas por compatibilidade)
         calculateDeliveryPerformance,
         analyzeCarrierBenchmark,

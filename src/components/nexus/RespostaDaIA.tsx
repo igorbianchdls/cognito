@@ -87,6 +87,9 @@ import DesempenhoEntregasGeralResult from '../tools/logistics/DesempenhoEntregas
 import EficienciaPorStatusResult from '../tools/logistics/EficienciaPorStatusResult';
 import EficienciaOperacionalPorCDResult from '../tools/logistics/EficienciaOperacionalPorCDResult';
 import PerfilPacotesPorTransportadoraResult from '../tools/logistics/PerfilPacotesPorTransportadoraResult';
+import AtrasosCriticosDeteccaoAnomaliasResult from '../tools/logistics/AtrasosCriticosDeteccaoAnomaliasResult';
+import LogisticaReversaDevolucoesResult from '../tools/logistics/LogisticaReversaDevolucoesResult';
+import RankingEficienciaPorCentroResult from '../tools/logistics/RankingEficienciaPorCentroResult';
 import AccountPerformanceResult from '../tools/organic-marketing/AccountPerformanceResult';
 import PlatformPerformanceResult from '../tools/organic-marketing/PlatformPerformanceResult';
 import PostFormatPerformanceResult from '../tools/organic-marketing/PostFormatPerformanceResult';
@@ -5059,6 +5062,75 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {tool.state === 'output-available' && tool.output && (
                 <PerfilPacotesPorTransportadoraResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-atrasosCriticosDeteccaoAnomalias') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-atrasosCriticosDeteccaoAnomalias" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <AtrasosCriticosDeteccaoAnomaliasResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-logisticaReversaDevolucoes') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-logisticaReversaDevolucoes" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <LogisticaReversaDevolucoesResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-rankingEficienciaPorCentro') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-rankingEficienciaPorCentro" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <RankingEficienciaPorCentroResult
                   success={(tool.output as RowsToolOutput).success}
                   message={(tool.output as RowsToolOutput).message}
                   rows={(tool.output as RowsToolOutput).rows}

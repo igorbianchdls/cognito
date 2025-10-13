@@ -1190,3 +1190,148 @@ ORDER BY peso_medio_kg DESC`;
     }
   },
 });
+
+// === Novas tools (set 2) ===
+
+export const atrasosCriticosDeteccaoAnomalias = tool({
+  description: 'Lista envios com atrasos críticos (> 3 dias) e detalhes por transportadora/CD',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+  }),
+  execute: async ({ data_de, data_ate }) => {
+    const sql = `
+SELECT
+  t.nome AS transportadora,
+  cd.nome AS centro_distribuicao,
+  e.codigo_rastreio,
+  e.status_atual,
+  e.data_postagem::date AS data_postagem,
+  e.data_estimada_entrega,
+  e.data_entrega_real,
+  ROUND(EXTRACT(EPOCH FROM (e.data_entrega_real - e.data_estimada_entrega)) / 86400, 1) AS dias_atraso
+FROM gestaologistica.envios e
+LEFT JOIN gestaologistica.transportadoras t ON t.id = e.transportadora_id
+LEFT JOIN gestaoestoque.centros_distribuicao cd ON cd.id = e.centro_distribuicao_id
+WHERE e.data_postagem >= $1::date AND e.data_postagem < ($2::date + INTERVAL '1 day')
+  AND e.data_entrega_real > e.data_estimada_entrega
+  AND EXTRACT(EPOCH FROM (e.data_entrega_real - e.data_estimada_entrega)) / 86400 > 3
+ORDER BY dias_atraso DESC`;
+    const params = [data_de, data_ate] as unknown[];
+    try {
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `✅ Atrasos críticos detectados (${data_de} a ${data_ate})`,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: '❌ Erro ao obter atrasos críticos',
+        error: error instanceof Error ? error.message : String(error),
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    }
+  },
+});
+
+export const logisticaReversaDevolucoes = tool({
+  description: 'Resumo de logística reversa por transportadora e CD de retorno',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+  }),
+  execute: async ({ data_de, data_ate }) => {
+    const sql = `
+SELECT
+  t.nome AS transportadora,
+  cd.nome AS centro_distribuicao_retorno,
+  COUNT(lr.id) AS total_reversas,
+  ROUND(AVG(EXTRACT(EPOCH FROM (lr.data_recebimento - lr.created_at)) / 86400)::numeric, 2) AS prazo_medio_retorno_dias,
+  ROUND(SUM(CASE WHEN lr.status != 'Concluída' THEN 1 ELSE 0 END)::numeric / COUNT(lr.id) * 100, 1) AS pct_pendentes
+FROM gestaologistica.logistica_reversa lr
+LEFT JOIN gestaologistica.transportadoras t ON t.id = lr.transportadora_id
+LEFT JOIN gestaoestoque.centros_distribuicao cd ON cd.id = lr.centro_distribuicao_id_retorno
+WHERE lr.data_solicitacao >= $1::date AND lr.data_solicitacao < ($2::date + INTERVAL '1 day')
+GROUP BY t.nome, cd.nome
+ORDER BY total_reversas DESC`;
+    const params = [data_de, data_ate] as unknown[];
+    try {
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `✅ Logística reversa (devoluções) — ${data_de} a ${data_ate}`,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: '❌ Erro ao obter logística reversa (devoluções)',
+        error: error instanceof Error ? error.message : String(error),
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    }
+  },
+});
+
+export const rankingEficienciaPorCentro = tool({
+  description: 'Ranking de eficiência logística por centro de distribuição',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+  }),
+  execute: async ({ data_de, data_ate }) => {
+    const sql = `
+WITH metricas AS (
+  SELECT
+    cd.nome AS centro_distribuicao,
+    ROUND(AVG(EXTRACT(EPOCH FROM (e.data_entrega_real - e.data_postagem)) / 86400)::numeric, 2) AS prazo_medio,
+    ROUND(SUM(CASE WHEN e.data_entrega_real > e.data_estimada_entrega THEN 1 ELSE 0 END)::numeric / COUNT(e.id) * 100, 2) AS pct_atraso,
+    ROUND(SUM(e.custo_frete)::numeric / COUNT(e.id), 2) AS custo_medio_envio
+  FROM gestaologistica.envios e
+  LEFT JOIN gestaoestoque.centros_distribuicao cd ON cd.id = e.centro_distribuicao_id
+  WHERE e.data_postagem >= $1::date AND e.data_postagem < ($2::date + INTERVAL '1 day')
+  GROUP BY cd.nome
+)
+SELECT
+  centro_distribuicao,
+  prazo_medio,
+  pct_atraso,
+  custo_medio_envio,
+  ROUND(100 / (1 + prazo_medio + (pct_atraso / 10) + (custo_medio_envio / 20)), 2) AS indice_eficiencia
+FROM metricas
+ORDER BY indice_eficiencia DESC`;
+    const params = [data_de, data_ate] as unknown[];
+    try {
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `✅ Ranking de eficiência por centro (${data_de} a ${data_ate})`,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: '❌ Erro ao obter ranking de eficiência por centro',
+        error: error instanceof Error ? error.message : String(error),
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    }
+  },
+});
