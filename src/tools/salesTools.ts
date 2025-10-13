@@ -84,6 +84,109 @@ export const getTopProdutosReceitaLiquida = tool({
   },
 });
 
+export const getSalesCalls = tool({
+  description: 'Busca calls de vendas gravadas com filtros opcionais (status, vendedor, limite).',
+  inputSchema: z.object({
+    limit: z.number().int().min(1).max(100).default(10),
+    status: z.enum(['prospecting', 'qualification', 'proposal', 'negotiation', 'closed-won', 'closed-lost']).optional(),
+    sales_rep: z.string().optional(),
+  }),
+  execute: async ({ limit = 10, status, sales_rep }) => {
+    // Verifica existência da tabela gestaovendas.calls
+    const existsSql = `
+      SELECT 1
+      FROM information_schema.tables
+      WHERE table_schema = 'gestaovendas'
+        AND table_name = 'calls'
+      LIMIT 1;
+    `;
+
+    try {
+      const existsRows = await runQuery<Record<string, unknown>>(existsSql);
+      const tableExists = existsRows.length > 0;
+
+      if (!tableExists) {
+        return {
+          success: true,
+          count: 0,
+          data: [],
+          message: 'Nenhuma call encontrada (tabela gestaovendas.calls não existe)'
+        };
+      }
+
+      const sql = `
+        SELECT
+          id::text AS id,
+          call_date,
+          duration_minutes,
+          client_name,
+          client_company,
+          sales_rep,
+          transcription,
+          summary,
+          key_points,
+          objections_identified,
+          objections_handled,
+          sentiment_score,
+          engagement_score,
+          close_probability,
+          next_steps,
+          follow_up_date,
+          status,
+          deal_value,
+          notes,
+          created_at
+        FROM gestaovendas.calls
+        WHERE ($1::text IS NULL OR status = $1::text)
+          AND ($2::text IS NULL OR sales_rep ILIKE '%' || $2::text || '%')
+        ORDER BY call_date DESC NULLS LAST, created_at DESC NULLS LAST
+        LIMIT $3::int;
+      `;
+
+      const rows = await runQuery<{
+        id: string;
+        call_date?: string;
+        duration_minutes?: number;
+        client_name: string;
+        client_company?: string;
+        sales_rep: string;
+        transcription?: string;
+        summary?: string;
+        key_points?: string;
+        objections_identified?: string;
+        objections_handled?: string;
+        sentiment_score?: number;
+        engagement_score?: number;
+        close_probability?: number;
+        next_steps?: string;
+        follow_up_date?: string;
+        status?: string;
+        deal_value?: number;
+        notes?: string;
+        created_at?: string;
+      }>(sql, [status ?? null, sales_rep ?? null, limit]);
+
+      return {
+        success: true,
+        count: rows.length,
+        data: rows,
+        message: `Calls de vendas (${rows.length})`,
+        sql_query: sql,
+        sql_params: JSON.stringify([status ?? null, sales_rep ?? null, limit]),
+      };
+    } catch (error) {
+      console.error('ERRO getSalesCalls:', error);
+      return {
+        success: false,
+        count: 0,
+        data: [],
+        message: 'Erro ao buscar calls de vendas',
+        error: error instanceof Error ? error.message : 'Erro desconhecido',
+      };
+    }
+  },
+});
+
 export const getRevenueMetrics = tool({
   description: 'Métricas de receita por canal de venda.',
   inputSchema: z.object({
