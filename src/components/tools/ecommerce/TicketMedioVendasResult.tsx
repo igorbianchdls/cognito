@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import { ChartSwitcher } from '@/components/charts/ChartSwitcher';
 import { DollarSign } from 'lucide-react';
 
 export type TicketMedioRow = {
@@ -45,25 +46,30 @@ export default function TicketMedioVendasResult({ success, message, rows, data, 
       count={tableRows.length}
       exportFileName="ticket_medio_vendas"
       sqlQuery={sql_query}
-      enableAutoChart={true}
-      chartOptions={{
-        xKey: 'metric',
-        valueKeys: ['valor'],
-        metricLabels: { valor: 'Valor' },
-        initialChartType: 'bar',
-        title: 'Resumo de Vendas',
-        xLegend: 'Métrica',
-        transform: (rows) => {
-          const r = rows?.[0] as unknown as TicketMedioRow | undefined;
-          if (!r) return [] as Array<{ metric: string; valor: number }>;
-          return [
-            { metric: 'Ticket Médio', valor: r.ticket_medio },
-            { metric: 'Receita', valor: r.receita },
-            { metric: 'Pedidos', valor: r.pedidos },
-          ] as Array<{ metric: string; valor: number }>;
-        },
+      enableAutoChart={false}
+      chartRenderer={(rows) => {
+        const r = rows?.[0];
+        const metrics = r
+          ? [
+              { metric: 'Ticket Médio', valor: r.ticket_medio },
+              { metric: 'Receita', valor: r.receita },
+              { metric: 'Pedidos', valor: r.pedidos },
+            ]
+          : [] as Array<{ metric: string; valor: number }>;
+        return (
+          <ChartSwitcher
+            rows={metrics}
+            options={{
+              xKey: 'metric',
+              valueKeys: ['valor'],
+              metricLabels: { valor: 'Valor' },
+              initialChartType: 'bar',
+              title: 'Resumo de Vendas',
+              xLegend: 'Métrica',
+            }}
+          />
+        );
       }}
     />
   );
 }
-
