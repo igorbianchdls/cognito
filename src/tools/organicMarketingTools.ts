@@ -381,103 +381,237 @@ export const getOrganicMarketingData = tool({
 // ===== Novas tools com nomes solicitados (mantendo consultas atuais) =====
 
 export const desempenhoPorConta = tool({
-  description: 'Desempenho por conta (placeholder – consulta atual agregada por plataforma)',
+  description: 'Desempenho por conta (filtrado por data_de/data_ate)',
   inputSchema: z.object({
-    date_range_days: z.number().default(30).describe('Período de análise em dias (padrão: 30)')
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
   }),
-  execute: async ({ date_range_days = 30 }) => {
+  execute: async ({ data_de, data_ate }) => {
+    const sql = `
+SELECT
+  cs.nome_conta,
+  cs.plataforma,
+  SUM(mp.impressoes) AS total_impressoes,
+  SUM(mp.visualizacoes) AS total_visualizacoes,
+  SUM(mp.curtidas) AS total_curtidas,
+  SUM(mp.comentarios) AS total_comentarios,
+  SUM(mp.compartilhamentos) AS total_compartilhamentos,
+
+  ROUND(SUM(mp.curtidas + mp.comentarios + mp.compartilhamentos)::numeric / NULLIF(SUM(mp.impressoes), 0) * 100, 2) AS taxa_engajamento_total,
+  ROUND(SUM(mp.visualizacoes)::numeric / NULLIF(SUM(mp.impressoes), 0) * 100, 2) AS taxa_view,
+  ROUND(SUM(mp.compartilhamentos)::numeric / NULLIF(SUM(mp.curtidas + mp.comentarios + mp.compartilhamentos), 0) * 100, 2) AS taxa_viralizacao,
+
+  ROUND(AVG(mp.curtidas), 2) AS media_curtidas_post,
+  ROUND(AVG(mp.comentarios), 2) AS media_comentarios_post,
+  ROUND(AVG(mp.visualizacoes), 2) AS media_views_post
+
+FROM marketing_organico.metricas_publicacoes mp
+JOIN marketing_organico.publicacoes p ON mp.publicacao_id = p.id
+JOIN marketing_organico.contas_sociais cs ON p.conta_social_id = cs.id
+WHERE mp.registrado_em >= $1::date AND mp.registrado_em < ($2::date + INTERVAL '1 day')
+GROUP BY cs.nome_conta, cs.plataforma
+ORDER BY taxa_engajamento_total DESC`;
+    const params = [data_de, data_ate] as unknown[];
     try {
-      return await buildPlatformMetricsResponse(date_range_days, 'Desempenho por conta', {
-        order: 'roas_desc',
-        limit: 10,
-      });
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `✅ ${rows.length} registros analisados (Desempenho por conta)`,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
     } catch (error) {
       console.error('ERRO desempenhoPorConta:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: '❌ Erro ao gerar Desempenho por conta'
+        message: '❌ Erro ao gerar Desempenho por conta',
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
     }
   }
 });
 
 export const desempenhoPorPlataforma = tool({
-  description: 'Desempenho por plataforma (placeholder – mesma base de comparação atual)',
+  description: 'Desempenho por plataforma (filtrado por data_de/data_ate)',
   inputSchema: z.object({
-    date_range_days: z.number().default(30).describe('Período de análise em dias (padrão: 30)')
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
   }),
-  execute: async ({ date_range_days = 30 }) => {
+  execute: async ({ data_de, data_ate }) => {
+    const sql = `
+SELECT 
+  cs.plataforma,
+  COUNT(DISTINCT p.id) AS total_posts,
+  SUM(mp.curtidas) AS total_curtidas,
+  SUM(mp.comentarios) AS total_comentarios,
+  SUM(mp.compartilhamentos) AS total_compartilhamentos,
+  SUM(mp.visualizacoes) AS total_visualizacoes,
+  SUM(mp.impressoes) AS total_impressoes,
+  
+  ROUND(SUM(mp.curtidas)::numeric / NULLIF(SUM(mp.impressoes), 0) * 100, 2) AS taxa_like,
+  ROUND(SUM(mp.comentarios)::numeric / NULLIF(SUM(mp.impressoes), 0) * 100, 2) AS taxa_comentario,
+  ROUND(SUM(mp.compartilhamentos)::numeric / NULLIF(SUM(mp.impressoes), 0) * 100, 2) AS taxa_compartilhamento,
+  ROUND(SUM(mp.visualizacoes)::numeric / NULLIF(SUM(mp.impressoes), 0) * 100, 2) AS taxa_view,
+  
+  ROUND(SUM(mp.curtidas + mp.comentarios + mp.compartilhamentos)::numeric / NULLIF(SUM(mp.impressoes), 0) * 100, 2) AS taxa_engajamento_total,
+  ROUND(AVG((mp.curtidas + mp.comentarios + mp.compartilhamentos)::numeric / NULLIF(mp.impressoes, 0)) * 100, 2) AS taxa_engajamento_media_post,
+  
+  ROUND(AVG(mp.curtidas), 2) AS media_curtidas,
+  ROUND(AVG(mp.comentarios), 2) AS media_comentarios,
+  ROUND(AVG(mp.compartilhamentos), 2) AS media_compartilhamentos,
+  ROUND(AVG(mp.visualizacoes), 2) AS media_visualizacoes
+FROM marketing_organico.metricas_publicacoes mp
+JOIN marketing_organico.publicacoes p ON mp.publicacao_id = p.id
+JOIN marketing_organico.contas_sociais cs ON p.conta_social_id = cs.id
+WHERE mp.registrado_em >= $1::date AND mp.registrado_em < ($2::date + INTERVAL '1 day')
+GROUP BY cs.plataforma
+ORDER BY taxa_engajamento_total DESC`;
+    const params = [data_de, data_ate] as unknown[];
     try {
-      return await buildPlatformMetricsResponse(date_range_days, 'Desempenho por plataforma', {
-        order: 'alcance_desc',
-        limit: 20,
-      });
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `✅ ${rows.length} registros analisados (Desempenho por plataforma)`,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
     } catch (error) {
       console.error('ERRO desempenhoPorPlataforma:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: '❌ Erro ao gerar Desempenho por plataforma'
+        message: '❌ Erro ao gerar Desempenho por plataforma',
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
     }
   }
 });
 
 export const desempenhoPorFormatoPost = tool({
-  description: 'Desempenho por formato de post (placeholder – consulta padrão)',
+  description: 'Desempenho por formato de post (filtrado por data_de/data_ate)',
   inputSchema: z.object({
-    date_range_days: z.number().default(30).describe('Período de análise em dias (padrão: 30)')
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
   }),
-  execute: async ({ date_range_days = 30 }) => {
+  execute: async ({ data_de, data_ate }) => {
+    const sql = `
+SELECT 
+  cs.plataforma,
+  p.tipo_post,
+  COUNT(DISTINCT p.id) AS total_posts,
+  SUM(mp.visualizacoes) AS total_visualizacoes,
+  SUM(mp.impressoes) AS total_impressoes,
+  ROUND(SUM(mp.visualizacoes)::numeric / NULLIF(SUM(mp.impressoes), 0) * 100, 2) AS taxa_view,
+  ROUND(SUM(mp.curtidas + mp.comentarios + mp.compartilhamentos)::numeric / NULLIF(SUM(mp.impressoes), 0) * 100, 2) AS engajamento_pct,
+  ROUND(SUM(mp.compartilhamentos)::numeric / NULLIF(SUM(mp.visualizacoes), 0) * 100, 2) AS taxa_compart_view,
+  ROUND(SUM(mp.comentarios)::numeric / NULLIF(SUM(mp.curtidas), 0) * 100, 2) AS taxa_conversa_like
+FROM marketing_organico.metricas_publicacoes mp
+JOIN marketing_organico.publicacoes p ON mp.publicacao_id = p.id
+JOIN marketing_organico.contas_sociais cs ON p.conta_social_id = cs.id
+WHERE mp.registrado_em >= $1::date AND mp.registrado_em < ($2::date + INTERVAL '1 day')
+GROUP BY cs.plataforma, p.tipo_post
+ORDER BY engajamento_pct DESC`;
+    const params = [data_de, data_ate] as unknown[];
     try {
-      return await buildPlatformMetricsResponse(date_range_days, 'Desempenho por formato de post', {
-        order: 'campanhas_desc',
-        limit: 25,
-      });
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `✅ ${rows.length} registros analisados (Desempenho por formato de post)`,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
     } catch (error) {
       console.error('ERRO desempenhoPorFormatoPost:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: '❌ Erro ao gerar Desempenho por formato de post'
+        message: '❌ Erro ao gerar Desempenho por formato de post',
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
     }
   }
 });
 
 export const rankingPorPublicacao = tool({
-  description: 'Ranking por publicação (placeholder – usa consulta agregada atual)',
+  description: 'Ranking por publicação (filtrado por data_de/data_ate)',
   inputSchema: z.object({
-    limit: z.number().default(10).describe('Número de registros a destacar'),
-    date_range_days: z.number().default(30).describe('Período de análise em dias (padrão: 30)')
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+    limit: z.number().default(20).describe('Número de registros a destacar'),
   }),
-  execute: async ({ limit = 10, date_range_days = 30 }) => {
+  execute: async ({ data_de, data_ate, limit = 20 }) => {
+    const safeLimit = Math.max(1, Math.min(limit, 100));
+    const sql = `
+SELECT
+  cs.plataforma,
+  p.titulo,
+  p.tipo_post,
+  ROUND(SUM(mp.impressoes), 0) AS impressoes,
+  ROUND(SUM(mp.visualizacoes), 0) AS visualizacoes,
+  SUM(mp.curtidas) AS curtidas,
+  SUM(mp.comentarios) AS comentarios,
+  SUM(mp.compartilhamentos) AS compartilhamentos,
+  ROUND(SUM(mp.curtidas + mp.comentarios + mp.compartilhamentos)::numeric / NULLIF(SUM(mp.impressoes), 0) * 100, 2) AS engajamento_pct,
+  ROUND(SUM(mp.compartilhamentos)::numeric / NULLIF(SUM(mp.visualizacoes), 0) * 100, 2) AS taxa_viralizacao,
+  ROUND(SUM(mp.comentarios)::numeric / NULLIF(SUM(mp.curtidas), 0) * 100, 2) AS taxa_conversa
+FROM marketing_organico.metricas_publicacoes mp
+JOIN marketing_organico.publicacoes p ON mp.publicacao_id = p.id
+JOIN marketing_organico.contas_sociais cs ON p.conta_social_id = cs.id
+WHERE mp.registrado_em >= $1::date AND mp.registrado_em < ($2::date + INTERVAL '1 day')
+GROUP BY cs.plataforma, p.titulo, p.tipo_post
+ORDER BY engajamento_pct DESC
+LIMIT $3`;
+    const params = [data_de, data_ate, safeLimit] as unknown[];
     try {
-      const safeLimit = Math.max(1, Math.min(limit, 50));
-      return await buildPlatformMetricsResponse(date_range_days, 'Ranking por publicação', {
-        order: 'conversoes_desc',
-        limit: safeLimit,
-      });
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `✅ ${rows.length} registros analisados (Ranking por publicação)` ,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
     } catch (error) {
       console.error('ERRO rankingPorPublicacao:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : JSON.stringify(error),
-        message: '❌ Erro ao gerar Ranking por publicação'
+        message: '❌ Erro ao gerar Ranking por publicação',
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
       };
     }
   }
 });
 
 export const engajamentoPorDiaHora = tool({
-  description: 'Engajamento por dia da semana e horário (placeholder – consulta padrão)',
+  description: 'Engajamento por dia da semana e horário (placeholder)',
   inputSchema: z.object({
-    date_range_days: z.number().default(30).describe('Período de análise em dias (padrão: 30)')
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
   }),
-  execute: async ({ date_range_days = 30 }) => {
+  execute: async ({ data_de, data_ate }) => {
+    const de = new Date(data_de);
+    const ate = new Date(data_ate);
+    const ms = 24 * 60 * 60 * 1000;
+    const diff = Math.max(1, Math.floor((ate.getTime() - de.getTime()) / ms) + 1);
     try {
-      return await buildPlatformMetricsResponse(date_range_days, 'Engajamento por dia/horário', {
+      return await buildPlatformMetricsResponse(diff, 'Engajamento por dia/horário', {
         order: 'engajamento_desc',
         limit: 15,
       });
@@ -493,13 +627,18 @@ export const engajamentoPorDiaHora = tool({
 });
 
 export const detectarAnomaliasPerformance = tool({
-  description: 'Detecção de anomalia (picos/quedas) (placeholder – consulta padrão)',
+  description: 'Detecção de anomalia (picos/quedas) (placeholder)',
   inputSchema: z.object({
-    date_range_days: z.number().default(30).describe('Período de análise em dias (padrão: 30)')
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
   }),
-  execute: async ({ date_range_days = 30 }) => {
+  execute: async ({ data_de, data_ate }) => {
+    const de = new Date(data_de);
+    const ate = new Date(data_ate);
+    const ms = 24 * 60 * 60 * 1000;
+    const diff = Math.max(1, Math.floor((ate.getTime() - de.getTime()) / ms) + 1);
     try {
-      return await buildPlatformMetricsResponse(date_range_days, 'Detecção de anomalias', {
+      return await buildPlatformMetricsResponse(diff, 'Detecção de anomalias', {
         order: 'engajamento_desc',
         limit: 20,
       });
@@ -515,13 +654,18 @@ export const detectarAnomaliasPerformance = tool({
 });
 
 export const detectarQuedaSubitaAlcance = tool({
-  description: 'Anomalia por queda súbita de alcance (placeholder – consulta padrão)',
+  description: 'Anomalia por queda súbita de alcance (placeholder)',
   inputSchema: z.object({
-    date_range_days: z.number().default(30).describe('Período de análise em dias (padrão: 30)')
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
   }),
-  execute: async ({ date_range_days = 30 }) => {
+  execute: async ({ data_de, data_ate }) => {
+    const de = new Date(data_de);
+    const ate = new Date(data_ate);
+    const ms = 24 * 60 * 60 * 1000;
+    const diff = Math.max(1, Math.floor((ate.getTime() - de.getTime()) / ms) + 1);
     try {
-      return await buildPlatformMetricsResponse(date_range_days, 'Queda súbita de alcance', {
+      return await buildPlatformMetricsResponse(diff, 'Queda súbita de alcance', {
         order: 'alcance_desc',
         limit: 20,
       });
