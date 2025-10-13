@@ -49,6 +49,25 @@ export async function fetchSupabaseTable(tableName: string) {
     } else if (schema === 'gestaoestoque') {
       // gestaoestoque - todas as tabelas usam created_at
       orderColumn = 'created_at';
+    } else if (schema === 'estoque') {
+      // estoque - ordenar por coluna existente apropriada
+      if (table === 'lancamentos') {
+        orderColumn = 'ocorreu_em';
+      } else if (table === 'reservas' || table === 'depositos') {
+        orderColumn = 'criado_em';
+      } else if (table === 'saldos' || table === 'disponivel_para_venda') {
+        // Tabelas sem ID: ordenar por produto_id
+        orderColumn = 'produto_id';
+      } else {
+        orderColumn = 'id';
+      }
+    } else if (schema === 'gestaovendas') {
+      // gestaovendas - ordenar por timestamps quando disponíveis
+      if (table === 'pagamentos' || table === 'pedidos') {
+        orderColumn = 'criado_em';
+      } else {
+        orderColumn = 'id';
+      }
     } else if (schema === 'gestaologistica') {
       // gestaologistica - ordenação específica por tabela
       if (table === 'envios') {
@@ -7824,5 +7843,103 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     columnDefs: transacoesExtratoColumns,
     icon: '💰',
     category: 'Gestão de Documentos'
+  },
+
+  // ============================================
+  // GESTÃO DE VENDAS - Schema: gestaovendas
+  // ============================================
+  {
+    id: 'vendas-pedidos',
+    name: 'Pedidos',
+    description: 'Pedidos de venda',
+    tableName: 'gestaovendas.pedidos',
+    columnDefs: [],
+    icon: '🧾',
+    category: 'Gestão de Vendas'
+  },
+  {
+    id: 'vendas-itens-pedido',
+    name: 'Itens de Pedido',
+    description: 'Itens dos pedidos de venda',
+    tableName: 'gestaovendas.itens_pedido',
+    columnDefs: [],
+    icon: '📦',
+    category: 'Gestão de Vendas'
+  },
+  {
+    id: 'vendas-pagamentos',
+    name: 'Pagamentos',
+    description: 'Pagamentos dos pedidos',
+    tableName: 'gestaovendas.pagamentos',
+    columnDefs: [],
+    icon: '💳',
+    category: 'Gestão de Vendas'
+  },
+  {
+    id: 'vendas-clientes',
+    name: 'Clientes',
+    description: 'Cadastro de clientes',
+    tableName: 'gestaovendas.clientes',
+    columnDefs: [],
+    icon: '👤',
+    category: 'Gestão de Vendas'
+  },
+  {
+    id: 'vendas-enderecos-clientes',
+    name: 'Endereços de Clientes',
+    description: 'Endereços associados aos clientes',
+    tableName: 'gestaovendas.enderecos_clientes',
+    columnDefs: [],
+    icon: '🏠',
+    category: 'Gestão de Vendas'
+  },
+
+  // ============================================
+  // ESTOQUE - Schema: estoque
+  // ============================================
+  {
+    id: 'estoque-depositos',
+    name: 'Depósitos',
+    description: 'Locais de estocagem',
+    tableName: 'estoque.depositos',
+    columnDefs: [],
+    icon: '🏬',
+    category: 'Estoque'
+  },
+  {
+    id: 'estoque-disponivel-venda',
+    name: 'Disponível para Venda',
+    description: 'Saldo disponível por produto e depósito',
+    tableName: 'estoque.disponivel_para_venda',
+    columnDefs: [],
+    icon: '🟢',
+    category: 'Estoque'
+  },
+  {
+    id: 'estoque-lancamentos',
+    name: 'Lançamentos',
+    description: 'Movimentações de estoque (entradas/saídas)',
+    tableName: 'estoque.lancamentos',
+    columnDefs: [],
+    icon: '🔄',
+    category: 'Estoque'
+  },
+  {
+    id: 'estoque-reservas',
+    name: 'Reservas',
+    description: 'Reservas vinculadas a pedidos e itens',
+    tableName: 'estoque.reservas',
+    columnDefs: [],
+    icon: '📌',
+    category: 'Estoque'
+  },
+  {
+    id: 'estoque-saldos',
+    name: 'Saldos',
+    description: 'Saldos por produto e depósito',
+    tableName: 'estoque.saldos',
+    columnDefs: [],
+    icon: '⚖️',
+    category: 'Estoque'
   }
 ];
