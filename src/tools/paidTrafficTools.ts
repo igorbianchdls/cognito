@@ -1023,8 +1023,9 @@ export const analiseDeCampanhas = tool({
   inputSchema: z.object({
     data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
     data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+    plataforma: z.enum(['Google', 'Meta', 'Facebook', 'TikTok', 'LinkedIn']).optional().describe('Filtrar uma plataforma específica'),
   }),
-  execute: async ({ data_de, data_ate }) => {
+  execute: async ({ data_de, data_ate, plataforma }) => {
     const sql = `
 SELECT 
   c.nome AS campanha,
@@ -1053,11 +1054,12 @@ JOIN trafego_pago.campanhas c ON ga.campanha_id = c.id
 JOIN trafego_pago.contas_ads ca ON ap.conta_ads_id = ca.id
 
 WHERE m.data BETWEEN $1::date AND $2::date
+  AND ($3::text IS NULL OR ca.plataforma = $3)
 GROUP BY c.nome, ca.plataforma
 ORDER BY total_gasto DESC;`.trim();
 
     try {
-      const params = [data_de, data_ate];
+      const params = [data_de, data_ate, plataforma ?? null];
       const rows = await runQuery<Record<string, unknown>>(sql, params);
       return {
         success: true,
