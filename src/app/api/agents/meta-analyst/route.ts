@@ -2,7 +2,16 @@ import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import * as bigqueryTools from '@/tools/apps/bigquery';
 import * as visualizationTools from '@/tools/apps/visualization';
-import { getOrganicMarketingData } from '@/tools/organicMarketingTools';
+import { 
+  getOrganicMarketingData,
+  desempenhoPorConta,
+  desempenhoPorPlataforma,
+  desempenhoPorFormatoPost,
+  rankingPorPublicacao,
+  engajamentoPorDiaHora,
+  detectarAnomaliasPerformance,
+  detectarQuedaSubitaAlcance,
+} from '@/tools/organicMarketingTools';
 import { getPaidTrafficData } from '@/tools/paidTrafficTools';
 
 export const maxDuration = 300;
@@ -194,6 +203,13 @@ Trabalhe em português e forneça insights estratégicos para otimização de ca
       gerarGrafico: visualizationTools.gerarGrafico,
       // Marketing Orgânico (Supabase)
       getOrganicMarketingData,
+      desempenhoPorConta,
+      desempenhoPorPlataforma,
+      desempenhoPorFormatoPost,
+      rankingPorPublicacao,
+      engajamentoPorDiaHora,
+      detectarAnomaliasPerformance,
+      detectarQuedaSubitaAlcance,
       // Tráfego Pago (Supabase)
       getPaidTrafficData,
       // Code execution para análises avançadas Meta Ads

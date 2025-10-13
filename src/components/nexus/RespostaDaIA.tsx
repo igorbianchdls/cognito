@@ -90,6 +90,13 @@ import TopContentResult from '../tools/organic-marketing/TopContentResult';
 import ContentMixResult from '../tools/organic-marketing/ContentMixResult';
 import ForecastEngagementResult from '../tools/organic-marketing/ForecastEngagementResult';
 import ContentROIResult from '../tools/organic-marketing/ContentROIResult';
+import AccountPerformanceResult from '../tools/organic-marketing/AccountPerformanceResult';
+import PlatformPerformanceResult from '../tools/organic-marketing/PlatformPerformanceResult';
+import PostFormatPerformanceResult from '../tools/organic-marketing/PostFormatPerformanceResult';
+import PublicationRankingResult from '../tools/organic-marketing/PublicationRankingResult';
+import EngagementByDayHourResult from '../tools/organic-marketing/EngagementByDayHourResult';
+import OrganicAnomaliesResult from '../tools/organic-marketing/OrganicAnomaliesResult';
+import SuddenReachDropResult from '../tools/organic-marketing/SuddenReachDropResult';
 import TrafficOverviewResult from '../tools/web-analytics/TrafficOverviewResult';
 import TrafficSourcesResult from '../tools/web-analytics/TrafficSourcesResult';
 import ConversionFunnelResult from '../tools/web-analytics/ConversionFunnelResult';
@@ -5121,6 +5128,175 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   metricas={(tool.output as AnalyzeTrafficOverviewToolOutput).metricas}
                   rows={(tool.output as AnalyzeTrafficOverviewToolOutput).rows}
                   sql_query={(tool.output as AnalyzeTrafficOverviewToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        // Novas tools de Marketing Orgânico (nomes em PT-BR)
+        if (part.type === 'tool-desempenhoPorConta') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-desempenhoPorConta" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <AccountPerformanceResult
+                  success={(tool.output as AnalyzeContentPerformanceToolOutput).success}
+                  message={(tool.output as AnalyzeContentPerformanceToolOutput).message}
+                  periodo_dias={(tool.output as AnalyzeContentPerformanceToolOutput).periodo_dias}
+                  data={(tool.output as AnalyzeContentPerformanceToolOutput).data}
+                  sql_query={(tool.output as AnalyzeContentPerformanceToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-desempenhoPorPlataforma') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-desempenhoPorPlataforma" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <PlatformPerformanceResult
+                  success={(tool.output as ComparePlatformPerformanceToolOutput).success}
+                  message={(tool.output as ComparePlatformPerformanceToolOutput).message}
+                  periodo_dias={(tool.output as ComparePlatformPerformanceToolOutput).periodo_dias}
+                  data={(tool.output as ComparePlatformPerformanceToolOutput).data}
+                  sql_query={(tool.output as ComparePlatformPerformanceToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-desempenhoPorFormatoPost') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-desempenhoPorFormatoPost" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <PostFormatPerformanceResult
+                  success={(tool.output as AnalyzeContentMixToolOutput).success}
+                  message={(tool.output as AnalyzeContentMixToolOutput).message}
+                  periodo_dias={(tool.output as AnalyzeContentMixToolOutput).periodo_dias}
+                  data={(tool.output as AnalyzeContentMixToolOutput).data}
+                  sql_query={(tool.output as AnalyzeContentMixToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-rankingPorPublicacao') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-rankingPorPublicacao" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <PublicationRankingResult
+                  success={(tool.output as IdentifyTopContentToolOutput).success}
+                  message={(tool.output as IdentifyTopContentToolOutput).message}
+                  periodo_dias={(tool.output as IdentifyTopContentToolOutput).periodo_dias}
+                  data={(tool.output as IdentifyTopContentToolOutput).data}
+                  sql_query={(tool.output as IdentifyTopContentToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-engajamentoPorDiaHora') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-engajamentoPorDiaHora" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <EngagementByDayHourResult
+                  success={(tool.output as ForecastEngagementToolOutput).success}
+                  message={(tool.output as ForecastEngagementToolOutput).message}
+                  periodo_dias={(tool.output as ForecastEngagementToolOutput).periodo_dias}
+                  data={(tool.output as ForecastEngagementToolOutput).data}
+                  sql_query={(tool.output as ForecastEngagementToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-detectarAnomaliasPerformance') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-detectarAnomaliasPerformance" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <OrganicAnomaliesResult
+                  success={(tool.output as AnalyzeContentPerformanceToolOutput).success}
+                  message={(tool.output as AnalyzeContentPerformanceToolOutput).message}
+                  periodo_dias={(tool.output as AnalyzeContentPerformanceToolOutput).periodo_dias}
+                  data={(tool.output as AnalyzeContentPerformanceToolOutput).data}
+                  sql_query={(tool.output as AnalyzeContentPerformanceToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-detectarQuedaSubitaAlcance') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-detectarQuedaSubitaAlcance" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <SuddenReachDropResult
+                  success={(tool.output as AnalyzeAudienceGrowthToolOutput).success}
+                  message={(tool.output as AnalyzeAudienceGrowthToolOutput).message}
+                  periodo_dias={(tool.output as AnalyzeAudienceGrowthToolOutput).periodo_dias}
+                  data={(tool.output as AnalyzeAudienceGrowthToolOutput).data}
+                  sql_query={(tool.output as AnalyzeAudienceGrowthToolOutput).sql_query}
                 />
               )}
             </div>

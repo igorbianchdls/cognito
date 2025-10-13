@@ -553,3 +553,161 @@ export const calculateContentROI = tool({
     }
   }
 });
+
+// ===== Novas tools com nomes solicitados (mantendo consultas atuais) =====
+
+export const desempenhoPorConta = tool({
+  description: 'Desempenho por conta (placeholder – consulta atual agregada por plataforma)',
+  inputSchema: z.object({
+    date_range_days: z.number().default(30).describe('Período de análise em dias (padrão: 30)')
+  }),
+  execute: async ({ date_range_days = 30 }) => {
+    try {
+      return await buildPlatformMetricsResponse(date_range_days, 'Desempenho por conta', {
+        order: 'roas_desc',
+        limit: 10,
+      });
+    } catch (error) {
+      console.error('ERRO desempenhoPorConta:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : JSON.stringify(error),
+        message: '❌ Erro ao gerar Desempenho por conta'
+      };
+    }
+  }
+});
+
+export const desempenhoPorPlataforma = tool({
+  description: 'Desempenho por plataforma (placeholder – mesma base de comparação atual)',
+  inputSchema: z.object({
+    date_range_days: z.number().default(30).describe('Período de análise em dias (padrão: 30)')
+  }),
+  execute: async ({ date_range_days = 30 }) => {
+    try {
+      return await buildPlatformMetricsResponse(date_range_days, 'Desempenho por plataforma', {
+        order: 'alcance_desc',
+        limit: 20,
+      });
+    } catch (error) {
+      console.error('ERRO desempenhoPorPlataforma:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : JSON.stringify(error),
+        message: '❌ Erro ao gerar Desempenho por plataforma'
+      };
+    }
+  }
+});
+
+export const desempenhoPorFormatoPost = tool({
+  description: 'Desempenho por formato de post (placeholder – consulta padrão)',
+  inputSchema: z.object({
+    date_range_days: z.number().default(30).describe('Período de análise em dias (padrão: 30)')
+  }),
+  execute: async ({ date_range_days = 30 }) => {
+    try {
+      return await buildPlatformMetricsResponse(date_range_days, 'Desempenho por formato de post', {
+        order: 'campanhas_desc',
+        limit: 25,
+      });
+    } catch (error) {
+      console.error('ERRO desempenhoPorFormatoPost:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : JSON.stringify(error),
+        message: '❌ Erro ao gerar Desempenho por formato de post'
+      };
+    }
+  }
+});
+
+export const rankingPorPublicacao = tool({
+  description: 'Ranking por publicação (placeholder – usa consulta agregada atual)',
+  inputSchema: z.object({
+    limit: z.number().default(10).describe('Número de registros a destacar'),
+    date_range_days: z.number().default(30).describe('Período de análise em dias (padrão: 30)')
+  }),
+  execute: async ({ limit = 10, date_range_days = 30 }) => {
+    try {
+      const safeLimit = Math.max(1, Math.min(limit, 50));
+      return await buildPlatformMetricsResponse(date_range_days, 'Ranking por publicação', {
+        order: 'conversoes_desc',
+        limit: safeLimit,
+      });
+    } catch (error) {
+      console.error('ERRO rankingPorPublicacao:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : JSON.stringify(error),
+        message: '❌ Erro ao gerar Ranking por publicação'
+      };
+    }
+  }
+});
+
+export const engajamentoPorDiaHora = tool({
+  description: 'Engajamento por dia da semana e horário (placeholder – consulta padrão)',
+  inputSchema: z.object({
+    date_range_days: z.number().default(30).describe('Período de análise em dias (padrão: 30)')
+  }),
+  execute: async ({ date_range_days = 30 }) => {
+    try {
+      return await buildPlatformMetricsResponse(date_range_days, 'Engajamento por dia/horário', {
+        order: 'engajamento_desc',
+        limit: 15,
+      });
+    } catch (error) {
+      console.error('ERRO engajamentoPorDiaHora:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : JSON.stringify(error),
+        message: '❌ Erro ao gerar Engajamento por dia/horário'
+      };
+    }
+  }
+});
+
+export const detectarAnomaliasPerformance = tool({
+  description: 'Detecção de anomalia (picos/quedas) (placeholder – consulta padrão)',
+  inputSchema: z.object({
+    date_range_days: z.number().default(30).describe('Período de análise em dias (padrão: 30)')
+  }),
+  execute: async ({ date_range_days = 30 }) => {
+    try {
+      return await buildPlatformMetricsResponse(date_range_days, 'Detecção de anomalias', {
+        order: 'engajamento_desc',
+        limit: 20,
+      });
+    } catch (error) {
+      console.error('ERRO detectarAnomaliasPerformance:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : JSON.stringify(error),
+        message: '❌ Erro ao detectar anomalias de performance'
+      };
+    }
+  }
+});
+
+export const detectarQuedaSubitaAlcance = tool({
+  description: 'Anomalia por queda súbita de alcance (placeholder – consulta padrão)',
+  inputSchema: z.object({
+    date_range_days: z.number().default(30).describe('Período de análise em dias (padrão: 30)')
+  }),
+  execute: async ({ date_range_days = 30 }) => {
+    try {
+      return await buildPlatformMetricsResponse(date_range_days, 'Queda súbita de alcance', {
+        order: 'alcance_desc',
+        limit: 20,
+      });
+    } catch (error) {
+      console.error('ERRO detectarQuedaSubitaAlcance:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : JSON.stringify(error),
+        message: '❌ Erro ao detectar queda súbita de alcance'
+      };
+    }
+  }
+});

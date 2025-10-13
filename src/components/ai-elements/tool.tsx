@@ -72,7 +72,28 @@ export const ToolHeader = ({
   >
     <div className="flex items-center gap-2">
       <WrenchIcon className="size-4 text-muted-foreground" />
-      <span className="font-medium text-sm">{type.replace('tool-', '')}</span>
+      <span className="font-medium text-sm">{(() => {
+        const labels: Record<string, string> = {
+          // Novos nomes (PT-BR)
+          'tool-desempenhoPorConta': 'Desempenho por conta',
+          'tool-desempenhoPorPlataforma': 'Desempenho por plataforma',
+          'tool-desempenhoPorFormatoPost': 'Desempenho por formato de post',
+          'tool-rankingPorPublicacao': 'Ranking por publicação',
+          'tool-engajamentoPorDiaHora': 'Engajamento por dia da semana e horário',
+          'tool-detectarAnomaliasPerformance': 'Detecção de anomalia (pico/queda de performance)',
+          'tool-detectarQuedaSubitaAlcance': 'Anomalia por queda súbita de alcance',
+
+          // Mapear ids antigos → rótulos novos (compat)
+          'tool-analyzeContentPerformance': 'Desempenho por conta',
+          'tool-comparePlatformPerformance': 'Desempenho por plataforma',
+          'tool-analyzeContentMix': 'Desempenho por formato de post',
+          'tool-identifyTopContent': 'Ranking por publicação',
+          'tool-forecastEngagement': 'Engajamento por dia da semana e horário',
+          'tool-calculateContentROI': 'Detecção de anomalia (pico/queda de performance)',
+          'tool-analyzeAudienceGrowth': 'Anomalia por queda súbita de alcance',
+        };
+        return labels[type] ?? type.replace('tool-', '');
+      })()}</span>
       {getStatusBadge(state)}
     </div>
     <ChevronDownIcon className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
