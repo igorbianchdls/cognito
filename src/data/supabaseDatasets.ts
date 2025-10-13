@@ -154,6 +154,13 @@ export async function fetchSupabaseTable(tableName: string) {
       } else if (table === 'transacoes_extrato') {
         orderColumn = 'data';
       }
+    } else if (schema === 'gestaocatalogo') {
+      // gestaocatalogo - ordenação simples por chave
+      if (table === 'unidades_medida') {
+        orderColumn = 'codigo';
+      } else {
+        orderColumn = 'id';
+      }
     }
 
     if (schema) {
@@ -7174,96 +7181,6 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     category: 'Gestão de Projetos'
   },
   {
-    id: 'ecommerce-channels',
-    name: 'Canais de Venda',
-    description: 'Canais de venda (marketplace, site, app)',
-    tableName: 'vendasecommerce.channels',
-    columnDefs: channelsColumns,
-    icon: '📱',
-    category: 'Vendas E-commerce'
-  },
-  {
-    id: 'ecommerce-coupons',
-    name: 'Cupons',
-    description: 'Cupons de desconto',
-    tableName: 'vendasecommerce.coupons',
-    columnDefs: couponsColumns,
-    icon: '🎫',
-    category: 'Vendas E-commerce'
-  },
-  {
-    id: 'ecommerce-customers',
-    name: 'Clientes',
-    description: 'Cadastro de clientes do e-commerce',
-    tableName: 'vendasecommerce.customers',
-    columnDefs: customersColumns,
-    icon: '👤',
-    category: 'Vendas E-commerce'
-  },
-  {
-    id: 'ecommerce-loyalty-points',
-    name: 'Pontos de Fidelidade',
-    description: 'Saldo de pontos dos clientes',
-    tableName: 'vendasecommerce.loyalty_points',
-    columnDefs: loyaltyPointsColumns,
-    icon: '⭐',
-    category: 'Vendas E-commerce'
-  },
-  {
-    id: 'ecommerce-loyalty-rewards',
-    name: 'Recompensas',
-    description: 'Catálogo de recompensas para resgate',
-    tableName: 'vendasecommerce.loyalty_rewards',
-    columnDefs: loyaltyRewardsColumns,
-    icon: '🎁',
-    category: 'Vendas E-commerce'
-  },
-  {
-    id: 'ecommerce-order-items',
-    name: 'Itens de Pedido',
-    description: 'Produtos dos pedidos',
-    tableName: 'vendasecommerce.order_items',
-    columnDefs: orderItemsColumns,
-    icon: '📦',
-    category: 'Vendas E-commerce'
-  },
-  {
-    id: 'ecommerce-orders',
-    name: 'Pedidos',
-    description: 'Pedidos de venda',
-    tableName: 'vendasecommerce.orders',
-    columnDefs: ordersColumns,
-    icon: '🛒',
-    category: 'Vendas E-commerce'
-  },
-  {
-    id: 'ecommerce-payments',
-    name: 'Pagamentos',
-    description: 'Transações de pagamento',
-    tableName: 'vendasecommerce.payments',
-    columnDefs: paymentsColumns,
-    icon: '💳',
-    category: 'Vendas E-commerce'
-  },
-  {
-    id: 'ecommerce-products',
-    name: 'Produtos',
-    description: 'Catálogo de produtos',
-    tableName: 'vendasecommerce.products',
-    columnDefs: productsColumns,
-    icon: '🏷️',
-    category: 'Vendas E-commerce'
-  },
-  {
-    id: 'ecommerce-returns',
-    name: 'Devoluções',
-    description: 'Solicitações de devolução e reembolso',
-    tableName: 'vendasecommerce.returns',
-    columnDefs: returnsColumns,
-    icon: '↩️',
-    category: 'Vendas E-commerce'
-  },
-  {
     id: 'supply-warehouses',
     name: 'Armazéns',
     description: 'Armazéns e centros de distribuição',
@@ -7442,55 +7359,6 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     columnDefs: resumosCampanhasColumns,
     icon: '📈',
     category: 'Tráfego Pago'
-  },
-
-  // ============================================
-  // GESTÃO DE ESTOQUE - Schema: gestaoestoque
-  // ============================================
-  {
-    id: 'estoque-centros-distribuicao',
-    name: 'Centros de Distribuição',
-    description: 'Gestão de centros de distribuição',
-    tableName: 'gestaoestoque.centros_distribuicao',
-    columnDefs: centrosDistribuicaoColumns,
-    icon: '🏭',
-    category: 'Gestão de Estoque'
-  },
-  {
-    id: 'estoque-estoque-canal',
-    name: 'Estoque por Canal',
-    description: 'Controle de estoque por canal de venda',
-    tableName: 'gestaoestoque.estoque_canal',
-    columnDefs: estoqueCanaisColumns,
-    icon: '📊',
-    category: 'Gestão de Estoque'
-  },
-  {
-    id: 'estoque-integracoes-canais',
-    name: 'Integrações de Canais',
-    description: 'Configuração de integrações com canais',
-    tableName: 'gestaoestoque.integracoes_canais',
-    columnDefs: integracoesCanaisColumns,
-    icon: '🔗',
-    category: 'Gestão de Estoque'
-  },
-  {
-    id: 'estoque-movimentacoes',
-    name: 'Movimentações de Estoque',
-    description: 'Histórico de entradas e saídas',
-    tableName: 'gestaoestoque.movimentacoes_estoque',
-    columnDefs: movimentacoesEstoqueColumns,
-    icon: '📋',
-    category: 'Gestão de Estoque'
-  },
-  {
-    id: 'estoque-precos-canais',
-    name: 'Preços por Canal',
-    description: 'Gestão de preços por canal de venda',
-    tableName: 'gestaoestoque.precos_canais',
-    columnDefs: precosCanalColumns,
-    icon: '💰',
-    category: 'Gestão de Estoque'
   },
 
   // ============================================
@@ -7941,5 +7809,63 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     columnDefs: [],
     icon: '⚖️',
     category: 'Estoque'
+  },
+
+  // ============================================
+  // GESTÃO DE CATÁLOGO - Schema: gestaocatalogo
+  // ============================================
+  {
+    id: 'catalogo-categorias',
+    name: 'Categorias',
+    description: 'Categorias hierárquicas de produtos',
+    tableName: 'gestaocatalogo.categorias',
+    columnDefs: [],
+    icon: '🗂️',
+    category: 'Gestão de Catálogo'
+  },
+  {
+    id: 'catalogo-marcas',
+    name: 'Marcas',
+    description: 'Cadastro de marcas',
+    tableName: 'gestaocatalogo.marcas',
+    columnDefs: [],
+    icon: '🏷️',
+    category: 'Gestão de Catálogo'
+  },
+  {
+    id: 'catalogo-produtos',
+    name: 'Produtos',
+    description: 'Dados mestre de produtos',
+    tableName: 'gestaocatalogo.produtos',
+    columnDefs: [],
+    icon: '📦',
+    category: 'Gestão de Catálogo'
+  },
+  {
+    id: 'catalogo-produtos-codigos-barras',
+    name: 'Códigos de Barras',
+    description: 'GTIN/EAN por produto',
+    tableName: 'gestaocatalogo.produtos_codigos_barras',
+    columnDefs: [],
+    icon: '🔖',
+    category: 'Gestão de Catálogo'
+  },
+  {
+    id: 'catalogo-produtos-imagens',
+    name: 'Imagens de Produtos',
+    description: 'URLs de imagens dos produtos',
+    tableName: 'gestaocatalogo.produtos_imagens',
+    columnDefs: [],
+    icon: '🖼️',
+    category: 'Gestão de Catálogo'
+  },
+  {
+    id: 'catalogo-unidades-medida',
+    name: 'Unidades de Medida',
+    description: 'Unidades e códigos de medida',
+    tableName: 'gestaocatalogo.unidades_medida',
+    columnDefs: [],
+    icon: '📏',
+    category: 'Gestão de Catálogo'
   }
 ];
