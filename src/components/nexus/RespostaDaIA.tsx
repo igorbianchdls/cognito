@@ -703,17 +703,13 @@ type GetFinancialDataToolInput = {
 type GetFinancialDataToolOutput = {
   success: boolean;
   count: number;
-  data: Array<{
-    id: string | number;
-    valor?: number;
-    status?: string;
-    data_vencimento?: string;
-    data_emissao?: string;
-    descricao?: string;
-    [key: string]: unknown;
-  }>;
+  table?: string;
+  data: Array<Record<string, unknown>>;
+  rows?: Array<Record<string, unknown>>;
   message: string;
   error?: string;
+  sql_query?: string;
+  sql_params?: string;
 };
 
 type GetOrganicMarketingDataToolInput = {
