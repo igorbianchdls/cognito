@@ -25,6 +25,7 @@ import {
   type LucideIcon
 } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { ChartSwitcher, type ChartSwitcherOptions } from '@/components/charts/ChartSwitcher';
 import {
   ColumnDef,
   flexRender,
@@ -62,6 +63,13 @@ interface ArtifactDataTableProps<TData> {
 
   // Renderizador opcional de gráfico
   chartRenderer?: (rows: TData[]) => ReactNode;
+
+  // Gráfico automático (fallback) quando não houver chartRenderer
+  enableAutoChart?: boolean;
+  chartOptions?: ChartSwitcherOptions<TData> & {
+    // Permite ocultar o switcher para casos específicos
+    disableSwitcherUI?: boolean;
+  };
 }
 
 export default function ArtifactDataTable<TData extends Record<string, unknown>>({
@@ -78,6 +86,8 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
   pageSize = 10,
   sqlQuery,
   chartRenderer,
+  enableAutoChart = true,
+  chartOptions,
 }: ArtifactDataTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [copied, setCopied] = useState(false);
@@ -95,13 +105,24 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
     }
   }, [chartRenderer, viewMode]);
 
+  const canAutoChart = enableAutoChart && !chartRenderer && Array.isArray(data) && data.length > 0;
   const isSqlView = useMemo(() => viewMode === 'sql' && Boolean(sqlQuery), [viewMode, sqlQuery]);
-  const isChartView = useMemo(() => viewMode === 'chart' && Boolean(chartRenderer), [viewMode, chartRenderer]);
+  const isChartView = useMemo(() => viewMode === 'chart' && Boolean(chartRenderer || canAutoChart), [viewMode, chartRenderer, canAutoChart]);
   const chartContent = useMemo(() => {
-    if (!chartRenderer) return null;
-    return chartRenderer(data);
-  }, [chartRenderer, data]);
-  const hasAlternativeView = Boolean(sqlQuery || chartRenderer);
+    if (chartRenderer) return chartRenderer(data);
+    if (canAutoChart) {
+      return (
+        <ChartSwitcher
+          rows={data}
+          options={{
+            ...chartOptions,
+          }}
+        />
+      );
+    }
+    return null;
+  }, [chartRenderer, data, canAutoChart, chartOptions]);
+  const hasAlternativeView = Boolean(sqlQuery || chartRenderer || canAutoChart);
 
   const reactTable = useReactTable({
     data,
@@ -211,7 +232,7 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
               onClick={() => setViewMode('sql')}
             />
           )}
-          {chartRenderer && (
+          {(chartRenderer || canAutoChart) && (
             <ArtifactAction
               icon={BarChart3}
               tooltip="Ver gráfico"

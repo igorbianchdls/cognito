@@ -262,6 +262,8 @@ export default function Page() {
           setPendingAnalysisData(analysisMessage);
         }
       }
+
+      // (removido: handler específico de paid-traffic para evitar acoplamento na página /nexus)
     };
 
     window.addEventListener('message', handleMessage);

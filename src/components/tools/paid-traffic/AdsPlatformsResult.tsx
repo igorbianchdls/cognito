@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+// Removed date controls to keep UI simple
 
 interface AdsPlatformsResultProps {
   success: boolean;
@@ -107,6 +108,7 @@ export default function AdsPlatformsResult({
   sql_query
 }: AdsPlatformsResultProps) {
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>('roas');
+  // No date controls here to avoid complexity in /nexus
 
   const tableData: PlatformRow[] = useMemo(() => {
     if (!plataformas || plataformas.length === 0) return [] as PlatformRow[];
@@ -189,25 +191,25 @@ export default function AdsPlatformsResult({
 
     return (
       <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-medium text-slate-700">Métrica do gráfico</p>
-            <p className="text-xs text-muted-foreground">
-              Compare as plataformas pela métrica desejada.
-            </p>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div>
+              <p className="text-sm font-medium text-slate-700">Métrica do gráfico</p>
+              <p className="text-xs text-muted-foreground">Compare as plataformas pela métrica desejada.</p>
+            </div>
+            <Select value={selectedMetric} onValueChange={(value) => setSelectedMetric(value as MetricKey)}>
+              <SelectTrigger size="sm" className="min-w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {METRIC_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          <Select value={selectedMetric} onValueChange={(value) => setSelectedMetric(value as MetricKey)}>
-            <SelectTrigger size="sm" className="min-w-[200px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {METRIC_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
 
         <div className="space-y-3">
