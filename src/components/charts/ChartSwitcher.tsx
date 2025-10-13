@@ -138,6 +138,8 @@ export function ChartSwitcher<T extends Record<string, unknown>>({
             seriesLabel={effectiveSeriesLabel}
             title={title}
             subtitle={subtitle}
+            containerClassName="h-full"
+            containerBorderAccentColor="transparent"
             axisBottom={{ legend: effectiveXLegend, legendOffset: 36, tickRotation: -25 }}
             axisLeft={{ legend: effectiveYLegend, legendOffset: -60 }}
             enableLabel
@@ -150,6 +152,8 @@ export function ChartSwitcher<T extends Record<string, unknown>>({
             seriesLabel={effectiveSeriesLabel}
             title={title}
             subtitle={subtitle}
+            containerClassName="h-full"
+            containerBorderAccentColor="transparent"
             axisBottom={{ legend: effectiveXLegend, legendOffset: 36, tickRotation: -25 }}
             axisLeft={{ legend: effectiveYLegend, legendOffset: -60 }}
             enablePoints
@@ -163,6 +167,8 @@ export function ChartSwitcher<T extends Record<string, unknown>>({
             yColumn="y"
             title={title}
             subtitle={subtitle}
+            containerClassName="h-full"
+            containerBorderAccentColor="transparent"
             axisBottom={{ legend: effectiveXLegend, legendOffset: 36, tickRotation: -25 }}
             axisLeft={{ legend: effectiveYLegend, legendOffset: -60 }}
             enableArea
@@ -175,10 +181,11 @@ export function ChartSwitcher<T extends Record<string, unknown>>({
             data={chartData}
             title={title}
             subtitle={subtitle}
+            containerClassName="h-full"
+            containerBorderAccentColor="transparent"
           />
         )}
       </div>
     </div>
   );
 }
-
