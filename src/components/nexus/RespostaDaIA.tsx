@@ -54,7 +54,7 @@ import FluxoCaixaResult, { type FluxoCaixaRow } from '../tools/FluxoCaixaResult'
 // import FinancialDataTable from '../tools/FinancialDataTable';
 import GenericResultTable from '../tools/GenericResultTable';
 import { BarChart3, DollarSign, LineChart, TrendingUp, AlertTriangle } from 'lucide-react';
-import AdPerformanceResult from '../tools/paid-traffic/AdPerformanceResult';
+import AnaliseDeCampanhas from '../tools/paid-traffic/analiseDeCampanhas';
 import OrganicMarketingDataTable from '../tools/OrganicMarketingDataTable';
 import PaidTrafficDataTable from '../tools/PaidTrafficDataTable';
 import InventoryDataTable from '../tools/InventoryDataTable';
@@ -1711,16 +1711,25 @@ type GetContasAPagarToolOutput = {
   message: string;
   sql_query?: string;
   error?: string;
-};
+  };
 
-type AnalyzeAdPerformanceToolOutput = {
-  success: boolean;
-  message: string;
-  count?: number;
-  rows?: Array<Record<string, unknown>>;
-  sql_query?: string;
-  sql_params?: string;
-};
+  type AnalyzeAdPerformanceToolOutput = {
+    success: boolean;
+    message: string;
+    count?: number;
+    rows?: Array<Record<string, unknown>>;
+    sql_query?: string;
+    sql_params?: string;
+  };
+
+  type AnaliseDeCampanhasToolOutput = {
+    success: boolean;
+    message: string;
+    count?: number;
+    rows?: Array<Record<string, unknown>>;
+    sql_query?: string;
+    sql_params?: string;
+  };
 
 // Tipo genérico para saídas tabulares usadas no GenericResultTable
 type GenericRowsToolOutput = {
@@ -5326,28 +5335,31 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
-        if (part.type === 'tool-analyzeAdPerformance') {
+        if (part.type === 'tool-analiseDeCampanhas') {
           const tool = part as NexusToolUIPart;
           return (
             <div key={tool.toolCallId}>
               <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-analyzeAdPerformance" state={tool.state} />
+                <ToolHeader type="tool-analiseDeCampanhas" state={tool.state} />
                 <ToolContent>
                   {tool.input && <ToolInput input={tool.input} />}
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && tool.output && (
-                <AdPerformanceResult
-                  success={(tool.output as AnalyzeAdPerformanceToolOutput).success}
-                  message={(tool.output as AnalyzeAdPerformanceToolOutput).message}
-                  rows={(tool.output as AnalyzeAdPerformanceToolOutput).rows as Array<Record<string, unknown>>}
-                  count={(tool.output as AnalyzeAdPerformanceToolOutput).count}
+                <AnaliseDeCampanhas
+                  success={(tool.output as AnaliseDeCampanhasToolOutput).success}
+                  message={(tool.output as AnaliseDeCampanhasToolOutput).message}
+                  rows={(tool.output as AnaliseDeCampanhasToolOutput).rows}
+                  count={(tool.output as AnaliseDeCampanhasToolOutput).count}
+                  sql_query={(tool.output as AnaliseDeCampanhasToolOutput).sql_query}
                 />
               )}
             </div>
           );
         }
+
+        
 
         if (part.type === 'tool-analyzeCreativePerformance') {
           const tool = part as NexusToolUIPart;

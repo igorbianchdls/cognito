@@ -1,16 +1,15 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
-  import {
-    getPaidTrafficData,
-    analyzeCampaignROAS,
-    compareAdsPlatforms,
-    analyzeCreativePerformance,
-    identifyTopAds,
-    analyzeSpendingTrends,
-    calculateCostMetrics,
-    forecastAdPerformance,
-    analyzeAdPerformance
-  } from '@/tools/paidTrafficTools';
+import {
+  getPaidTrafficData,
+  compareAdsPlatforms,
+  analyzeCreativePerformance,
+  identifyTopAds,
+  analyzeSpendingTrends,
+  calculateCostMetrics,
+  forecastAdPerformance,
+  analiseDeCampanhas
+} from '@/tools/paidTrafficTools';
 
 export const maxDuration = 300;
 
@@ -62,13 +61,12 @@ Busca dados de tráfego pago do Supabase (contas ads, campanhas, anúncios, mét
 - **metricas_anuncios**: Métricas diárias (gasto, ROAS, CTR, conversões)
 - **resumos_campanhas**: Resumos consolidados
 
-## 💰 analyzeCampaignROAS - Análise de ROAS por Campanha
-Analisa retorno sobre investimento de cada campanha
-- ROAS por campanha
-- Custo por conversão
-- CTR médio
-- Classificação de performance
-- Ranking de melhores campanhas
+## 📊 analiseDeCampanhas - Análise de Campanhas (Campanha/Plataforma)
+Analisa campanhas agregadas por campanha + plataforma com métricas derivadas:
+- Impressões, Cliques, Conversões, Gasto, Receita
+- CTR, Taxa de Conversão, CPC, CPA, ROAS, Lucro, CPM, Ticket Médio
+- Frequência média, Engajamento total
+Use com: { data_de: 'YYYY-MM-DD', data_ate: 'YYYY-MM-DD' }
 
 ## 🏆 compareAdsPlatforms - Benchmark de Plataformas
 Compara performance entre Google, Meta, TikTok, LinkedIn
@@ -274,14 +272,13 @@ Seja sempre orientado a dados, priorize maximização de ROAS e otimização con
 
       tools: {
         getPaidTrafficData,
-        analyzeCampaignROAS,
         compareAdsPlatforms,
         analyzeCreativePerformance,
         identifyTopAds,
         analyzeSpendingTrends,
         calculateCostMetrics,
         forecastAdPerformance,
-        analyzeAdPerformance
+        analiseDeCampanhas
       }
     });
 
