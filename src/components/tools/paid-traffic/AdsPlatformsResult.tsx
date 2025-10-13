@@ -4,7 +4,8 @@ import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { BarChart3 } from 'lucide-react';
-// Removed local metric/chart selectors to keep UI simple; using ArtifactDataTable auto-chart
+import { ChartSwitcher } from '@/components/charts/ChartSwitcher';
+// Gráfico renderizado na UI da tool usando componente reutilizável (ChartSwitcher)
 
 interface AdsPlatformsResultProps {
   success: boolean;
@@ -88,26 +89,11 @@ export default function AdsPlatformsResult({
     return `Total de plataformas: ${totalTexto} • Melhor: ${melhorTexto} • Pior: ${piorTexto}`;
   }, [total_plataformas, melhor_plataforma, pior_plataforma, tableData.length]);
 
-  // (sem mapeamento de métricas local)
-
-  // Chart rendering is delegated to ArtifactDataTable auto-chart
-
-  return (
-    <div className="space-y-4">
-      <ArtifactDataTable
-        data={tableData}
-        columns={columns}
-        title="Benchmark de Plataformas"
-        icon={BarChart3}
-      iconColor="text-purple-600"
-      message={success ? tableMessage : message}
-      success={success}
-      count={tableData.length}
-      exportFileName="paid-traffic-platforms"
-      pageSize={Math.min(10, Math.max(tableData.length, 5))}
-      sqlQuery={sql_query}
-      enableAutoChart
-      chartOptions={{
+  // Gráfico na UI da tool usando ChartSwitcher
+  const chartRenderer = () => (
+    <ChartSwitcher
+      rows={tableData}
+      options={{
         xKey: 'plataforma',
         valueKeys: [
           'total_impressoes',
@@ -138,6 +124,24 @@ export default function AdsPlatformsResult({
         yLegend: 'Valor',
         initialChartType: 'bar',
       }}
+    />
+  );
+
+  return (
+    <div className="space-y-4">
+      <ArtifactDataTable
+        data={tableData}
+        columns={columns}
+        title="Benchmark de Plataformas"
+        icon={BarChart3}
+      iconColor="text-purple-600"
+      message={success ? tableMessage : message}
+      success={success}
+      count={tableData.length}
+      exportFileName="paid-traffic-platforms"
+      pageSize={Math.min(10, Math.max(tableData.length, 5))}
+      sqlQuery={sql_query}
+      chartRenderer={chartRenderer}
     />
     </div>
   );

@@ -99,13 +99,13 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
     }
   }, [sqlQuery, viewMode]);
 
+  const canAutoChart = enableAutoChart && !chartRenderer && Array.isArray(data) && data.length > 0;
+
   useEffect(() => {
-    if (!chartRenderer && viewMode === 'chart') {
+    if (!chartRenderer && !canAutoChart && viewMode === 'chart') {
       setViewMode('table');
     }
-  }, [chartRenderer, viewMode]);
-
-  const canAutoChart = enableAutoChart && !chartRenderer && Array.isArray(data) && data.length > 0;
+  }, [chartRenderer, canAutoChart, viewMode]);
   const isSqlView = useMemo(() => viewMode === 'sql' && Boolean(sqlQuery), [viewMode, sqlQuery]);
   const isChartView = useMemo(() => viewMode === 'chart' && Boolean(chartRenderer || canAutoChart), [viewMode, chartRenderer, canAutoChart]);
   const chartContent = useMemo(() => {
