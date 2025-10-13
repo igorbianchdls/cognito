@@ -460,109 +460,79 @@ LIMIT $3;
 });
 
 export const compareAdsPlatforms = tool({
-  description: 'Compara performance entre plataformas: gasto, ROAS, CTR, conversões',
+  description: 'Compara performance entre plataformas dentro de um intervalo de datas',
   inputSchema: z.object({
-    date_range_days: z.number().default(30).describe('Período de análise em dias'),
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+    plataforma: z.enum(['Google', 'Meta', 'Facebook', 'TikTok', 'LinkedIn']).optional().describe('Filtrar uma plataforma específica'),
   }),
-  execute: async ({ date_range_days = 30 }) => {
+  execute: async ({ data_de, data_ate, plataforma }) => {
     const sqlQuery = `
-WITH base AS (
-  SELECT
-    ma.gasto,
-    ma.receita,
-    ma.conversao,
-    ma.cliques,
-    ma.impressao,
-    ma.plataforma AS plataforma_metricas,
-    ap.plataforma AS plataforma_anuncio,
-    co.plataforma AS plataforma_conta,
-    COALESCE(co.id, ma.conta_ads_id) AS conta_relacionada_id,
-    c.id AS campanha_relacionada_id
-  FROM trafego_pago.metricas_anuncios ma
-  LEFT JOIN trafego_pago.anuncios_publicados ap
-    ON ap.id = ma.anuncio_publicado_id
-  LEFT JOIN trafego_pago.grupos_de_anuncios ga
-    ON ga.id = ap.grupo_id
-  LEFT JOIN trafego_pago.campanhas c
-    ON c.id = ga.campanha_id
-  LEFT JOIN trafego_pago.contas_ads co
-    ON co.id = COALESCE(ma.conta_ads_id, c.conta_ads_id)
-  WHERE ma.data >= current_date - ($1::int) * INTERVAL '1 day'
-)
-SELECT
-  COALESCE(plataforma_conta, plataforma_anuncio, plataforma_metricas, 'Desconhecida') AS plataforma,
-  COUNT(DISTINCT conta_relacionada_id) AS contas_vinculadas,
-  COUNT(DISTINCT campanha_relacionada_id) AS campanhas_vinculadas,
-  SUM(gasto) AS gasto_total,
-  SUM(receita) AS receita_total,
-  SUM(conversao) AS conversoes_total,
-  CASE WHEN SUM(gasto) > 0 THEN SUM(receita) / SUM(gasto) ELSE 0 END AS roas,
-  CASE WHEN SUM(cliques) > 0 THEN (SUM(conversao)::numeric / NULLIF(SUM(cliques), 0)) * 100 ELSE 0 END AS taxa_conversao_percent,
-  CASE WHEN SUM(impressao) > 0 THEN (SUM(cliques)::numeric / NULLIF(SUM(impressao), 0)) * 100 ELSE 0 END AS ctr_percent
-FROM base
-GROUP BY 1
-ORDER BY roas DESC;
+SELECT 
+  ca.plataforma,
+
+  -- Valores absolutos
+  SUM(m.impressao) AS total_impressoes,
+  SUM(m.cliques) AS total_cliques,
+  SUM(m.conversao) AS total_conversoes,
+  ROUND(SUM(m.gasto), 2) AS total_gasto,
+  ROUND(SUM(m.receita), 2) AS total_receita,
+
+  -- Métricas derivadas
+  ROUND(SUM(m.cliques)::numeric / NULLIF(SUM(m.impressao), 0) * 100, 2) AS ctr,         -- taxa de cliques
+  ROUND(SUM(m.gasto)::numeric / NULLIF(SUM(m.cliques), 0), 2) AS cpc,                   -- custo por clique
+  ROUND(SUM(m.gasto)::numeric / NULLIF(SUM(m.conversao), 0), 2) AS cpa,                 -- custo por aquisição
+  ROUND(SUM(m.receita)::numeric / NULLIF(SUM(m.gasto), 0), 2) AS roas,                  -- retorno sobre gasto
+  ROUND(SUM(m.receita)::numeric - SUM(m.gasto), 2) AS lucro                             -- lucro bruto (opcional)
+  
+FROM trafego_pago.metricas_anuncios m
+JOIN trafego_pago.anuncios_publicados ap ON m.anuncio_publicado_id = ap.id
+JOIN trafego_pago.contas_ads ca ON ap.conta_ads_id = ca.id
+WHERE m.data BETWEEN $1::date AND $2::date
+  AND ($3::text IS NULL OR ca.plataforma = $3)
+GROUP BY ca.plataforma
+ORDER BY total_gasto DESC;
     `.trim();
 
-    type RawPlatformRow = {
+    type Row = {
       plataforma: string | null;
-      contas_vinculadas: number | string | null;
-      campanhas_vinculadas: number | string | null;
-      gasto_total: number | string | null;
-      receita_total: number | string | null;
-      conversoes_total: number | string | null;
+      total_impressoes: number | string | null;
+      total_cliques: number | string | null;
+      total_conversoes: number | string | null;
+      total_gasto: number | string | null;
+      total_receita: number | string | null;
+      ctr: number | string | null;
+      cpc: number | string | null;
+      cpa: number | string | null;
       roas: number | string | null;
-      taxa_conversao_percent: number | string | null;
-      ctr_percent: number | string | null;
+      lucro: number | string | null;
     };
 
     try {
-      const params = [date_range_days];
-      const rawRows = await runQuery<RawPlatformRow>(sqlQuery, params);
+      const params = [data_de, data_ate, plataforma ?? null];
+      const rows = await runQuery<Row>(sqlQuery, params);
 
-      if (!rawRows || rawRows.length === 0) {
+      if (!rows || rows.length === 0) {
         return {
           success: false,
           message: 'Nenhuma métrica encontrada',
-          sql_query: sqlQuery
+          sql_query: sqlQuery,
+          sql_params: formatSqlParams(params),
         };
       }
 
-      const plataformasArray = rawRows.map((row) => {
-        const gastoTotal = Number(row.gasto_total ?? 0);
-        const receitaTotal = Number(row.receita_total ?? 0);
-        const conversoesTotal = Number(row.conversoes_total ?? 0);
-        const roasValue = Number(row.roas ?? 0);
-        const ctrValue = Number(row.ctr_percent ?? 0);
-        const conversionRateValue = Number(row.taxa_conversao_percent ?? 0);
-
-        let classificacao = 'Baixa';
-        if (roasValue >= 3) classificacao = 'Excelente';
-        else if (roasValue >= 2) classificacao = 'Boa';
-        else if (roasValue >= 1) classificacao = 'Regular';
-
-        return {
-          plataforma: row.plataforma ?? 'Desconhecida',
-          gasto: gastoTotal.toFixed(2),
-          receita: receitaTotal.toFixed(2),
-          conversoes: conversoesTotal,
-          roas: roasValue.toFixed(2),
-          ctr: `${ctrValue.toFixed(2)}%`,
-          conversion_rate: `${conversionRateValue.toFixed(2)}%`,
-          classificacao
-        };
-      });
+      // Melhor/pior plataforma por ROAS (opcional, não afeta a tabela)
+      const byRoas = [...rows].sort((a, b) => Number(b.roas ?? 0) - Number(a.roas ?? 0));
 
       return {
         success: true,
-        message: `Análise de ${plataformasArray.length} plataformas`,
-        periodo_dias: date_range_days,
-        total_plataformas: plataformasArray.length,
-        melhor_plataforma: plataformasArray[0]?.plataforma,
-        pior_plataforma: plataformasArray[plataformasArray.length - 1]?.plataforma,
-        plataformas: plataformasArray,
+        message: `Análise de ${rows.length} plataformas`,
+        total_plataformas: rows.length,
+        melhor_plataforma: byRoas[0]?.plataforma ?? undefined,
+        pior_plataforma: byRoas[byRoas.length - 1]?.plataforma ?? undefined,
+        plataformas: rows,
         sql_query: sqlQuery,
-        sql_params: formatSqlParams(params)
+        sql_params: formatSqlParams(params),
       };
     } catch (error) {
       console.error('ERRO compareAdsPlatforms:', error);
@@ -570,7 +540,7 @@ ORDER BY roas DESC;
         success: false,
         message: `Erro ao comparar plataformas: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         sql_query: sqlQuery,
-        sql_params: formatSqlParams([date_range_days])
+        sql_params: formatSqlParams([data_de, data_ate, plataforma ?? null]),
       };
     }
   }

@@ -1357,14 +1357,17 @@ type CompareAdsPlatformsToolOutput = {
   pior_plataforma?: string;
   sql_query?: string;
   plataformas?: Array<{
-    plataforma: string;
-    gasto: string;
-    receita: string;
-    conversoes: number;
-    roas: string;
-    ctr: string;
-    conversion_rate: string;
-    classificacao: string;
+    plataforma: string | null;
+    total_impressoes: number | string | null;
+    total_cliques: number | string | null;
+    total_conversoes: number | string | null;
+    total_gasto: number | string | null;
+    total_receita: number | string | null;
+    ctr: number | string | null;
+    cpc: number | string | null;
+    cpa: number | string | null;
+    roas: number | string | null;
+    lucro: number | string | null;
   }>;
 };
 

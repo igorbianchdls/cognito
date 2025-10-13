@@ -22,92 +22,47 @@ interface AdsPlatformsResultProps {
   pior_plataforma?: string;
   sql_query?: string;
   plataformas?: Array<{
-    plataforma: string;
-    gasto: string;
-    receita: string;
-    conversoes: number;
-    roas: string;
-    ctr: string;
-    conversion_rate: string;
-    classificacao: string;
+    plataforma: string | null;
+    total_impressoes: number | string | null;
+    total_cliques: number | string | null;
+    total_conversoes: number | string | null;
+    total_gasto: number | string | null;
+    total_receita: number | string | null;
+    ctr: number | string | null;
+    cpc: number | string | null;
+    cpa: number | string | null;
+    roas: number | string | null;
+    lucro: number | string | null;
   }>;
 }
 
 type PlatformRow = Record<string, unknown> & {
-  rank: number;
-  plataforma: string;
-  gasto: string;
-  receita: string;
-  conversoes: number;
-  roas: string;
-  ctr: string;
-  conversion_rate: string;
-  classificacao: string;
+  plataforma: string | null;
+  total_impressoes: number | string | null;
+  total_cliques: number | string | null;
+  total_conversoes: number | string | null;
+  total_gasto: number | string | null;
+  total_receita: number | string | null;
+  ctr: number | string | null;
+  cpc: number | string | null;
+  cpa: number | string | null;
+  roas: number | string | null;
+  lucro: number | string | null;
 };
 
-const getClassificationBadgeClasses = (classification: string) => {
-  const value = classification.toLowerCase();
-
-  if (value === 'excelente') {
-    return 'text-green-600 bg-green-100 border-green-300';
-  }
-
-  if (value === 'boa') {
-    return 'text-blue-600 bg-blue-100 border-blue-300';
-  }
-
-  if (value === 'regular') {
-    return 'text-yellow-600 bg-yellow-100 border-yellow-300';
-  }
-
-  return 'text-red-600 bg-red-100 border-red-300';
-};
+// (Sem classificação na resposta da query)
 
 const METRIC_OPTIONS = [
-  {
-    value: 'roas',
-    label: 'ROAS',
-    axisLabel: 'ROAS (x)',
-    description: 'Mostra o retorno sobre o investimento de mídia em cada plataforma.',
-    formatter: (value: number) => `${value.toFixed(2)}x`,
-  },
-  {
-    value: 'gasto',
-    label: 'Gasto Total',
-    axisLabel: 'Gasto (R$)',
-    description: 'Quanto foi investido em mídia paga por plataforma.',
-    formatter: (value: number) =>
-      value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
-  },
-  {
-    value: 'receita',
-    label: 'Receita Total',
-    axisLabel: 'Receita (R$)',
-    description: 'Receita atribuída às campanhas em cada plataforma.',
-    formatter: (value: number) =>
-      value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }),
-  },
-  {
-    value: 'conversoes',
-    label: 'Conversões',
-    axisLabel: 'Conversões',
-    description: 'Número de conversões atribuídas à plataforma.',
-    formatter: (value: number) => value.toLocaleString('pt-BR', { maximumFractionDigits: 0 }),
-  },
-  {
-    value: 'ctr',
-    label: 'CTR',
-    axisLabel: 'CTR (%)',
-    description: 'Taxa de cliques sobre impressões em cada plataforma.',
-    formatter: (value: number) => `${value.toFixed(2)}%`,
-  },
-  {
-    value: 'conversion_rate',
-    label: 'Taxa de Conversão',
-    axisLabel: 'Taxa de Conversão (%)',
-    description: 'Percentual de cliques que geraram conversão.',
-    formatter: (value: number) => `${value.toFixed(2)}%`,
-  },
+  { value: 'roas', label: 'roas', axisLabel: 'roas', description: 'Retorno sobre gasto', formatter: (v: number) => v.toFixed(2) },
+  { value: 'total_gasto', label: 'total_gasto', axisLabel: 'total_gasto', description: 'Soma do gasto', formatter: (v: number) => v.toFixed(2) },
+  { value: 'total_receita', label: 'total_receita', axisLabel: 'total_receita', description: 'Soma da receita', formatter: (v: number) => v.toFixed(2) },
+  { value: 'total_conversoes', label: 'total_conversoes', axisLabel: 'total_conversoes', description: 'Soma das conversões', formatter: (v: number) => v.toFixed(0) },
+  { value: 'total_impressoes', label: 'total_impressoes', axisLabel: 'total_impressoes', description: 'Soma das impressões', formatter: (v: number) => v.toFixed(0) },
+  { value: 'total_cliques', label: 'total_cliques', axisLabel: 'total_cliques', description: 'Soma dos cliques', formatter: (v: number) => v.toFixed(0) },
+  { value: 'ctr', label: 'ctr', axisLabel: 'ctr', description: 'Taxa de cliques', formatter: (v: number) => v.toFixed(2) },
+  { value: 'cpc', label: 'cpc', axisLabel: 'cpc', description: 'Custo por clique', formatter: (v: number) => v.toFixed(2) },
+  { value: 'cpa', label: 'cpa', axisLabel: 'cpa', description: 'Custo por aquisição', formatter: (v: number) => v.toFixed(2) },
+  { value: 'lucro', label: 'lucro', axisLabel: 'lucro', description: 'Lucro bruto', formatter: (v: number) => v.toFixed(2) },
 ] as const;
 
 type MetricOption = (typeof METRIC_OPTIONS)[number];
@@ -154,133 +109,50 @@ export default function AdsPlatformsResult({
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>('roas');
 
   const tableData: PlatformRow[] = useMemo(() => {
-    if (!plataformas || plataformas.length === 0) return [];
-
-    return plataformas.map((plat, idx) => ({
-      rank: idx + 1,
-      plataforma: plat.plataforma?.trim() ? plat.plataforma : 'Não informada',
-      gasto: plat.gasto,
-      receita: plat.receita,
-      conversoes: plat.conversoes,
-      roas: plat.roas,
-      ctr: plat.ctr,
-      conversion_rate: plat.conversion_rate,
-      classificacao: plat.classificacao || 'Não classificada',
-    }));
+    if (!plataformas || plataformas.length === 0) return [] as PlatformRow[];
+    return plataformas as unknown as PlatformRow[];
   }, [plataformas]);
 
   const columns: ColumnDef<PlatformRow>[] = useMemo(() => [
-    {
-      accessorKey: 'rank',
-      header: '#',
-      cell: ({ row }) => (
-        <span className="font-semibold text-sm text-muted-foreground">
-          #{row.original.rank}
-        </span>
-      ),
-      enableSorting: false,
-      size: 40,
-    },
-    {
-      accessorKey: 'plataforma',
-      header: 'Plataforma',
-      cell: ({ row }) => (
-        <span className="font-medium text-foreground">
-          {row.original.plataforma}
-        </span>
-      ),
-    },
-    {
-      accessorKey: 'gasto',
-      header: 'Gasto (R$)',
-      cell: ({ row }) => (
-        <span className="block text-right font-semibold text-rose-600">
-          R$ {row.original.gasto}
-        </span>
-      ),
-    },
-    {
-      accessorKey: 'receita',
-      header: 'Receita (R$)',
-      cell: ({ row }) => (
-        <span className="block text-right font-semibold text-green-600">
-          R$ {row.original.receita}
-        </span>
-      ),
-    },
-    {
-      accessorKey: 'conversoes',
-      header: 'Conversões',
-      cell: ({ row }) => (
-        <span className="block text-right font-medium">
-          {row.original.conversoes.toLocaleString('pt-BR')}
-        </span>
-      ),
-    },
-    {
-      accessorKey: 'roas',
-      header: 'ROAS',
-      cell: ({ row }) => (
-        <span className="block text-right font-semibold text-purple-600">
-          {row.original.roas}x
-        </span>
-      ),
-    },
-    {
-      accessorKey: 'ctr',
-      header: 'CTR',
-      cell: ({ row }) => (
-        <span className="block text-right">
-          {row.original.ctr}
-        </span>
-      ),
-    },
-    {
-      accessorKey: 'conversion_rate',
-      header: 'Taxa de Conversão',
-      cell: ({ row }) => (
-        <span className="block text-right">
-          {row.original.conversion_rate}
-        </span>
-      ),
-    },
-    {
-      accessorKey: 'classificacao',
-      header: 'Classificação',
-      cell: ({ row }) => (
-        <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getClassificationBadgeClasses(row.original.classificacao)}`}>
-          {row.original.classificacao}
-        </span>
-      ),
-      enableSorting: false,
-    },
+    { accessorKey: 'plataforma', header: 'plataforma', cell: ({ row }) => <span>{String(row.getValue('plataforma') ?? '')}</span> },
+    { accessorKey: 'total_impressoes', header: 'total_impressoes', cell: ({ row }) => <span className="block text-right">{String(row.getValue('total_impressoes') ?? '')}</span> },
+    { accessorKey: 'total_cliques', header: 'total_cliques', cell: ({ row }) => <span className="block text-right">{String(row.getValue('total_cliques') ?? '')}</span> },
+    { accessorKey: 'total_conversoes', header: 'total_conversoes', cell: ({ row }) => <span className="block text-right">{String(row.getValue('total_conversoes') ?? '')}</span> },
+    { accessorKey: 'total_gasto', header: 'total_gasto', cell: ({ row }) => <span className="block text-right">{String(row.getValue('total_gasto') ?? '')}</span> },
+    { accessorKey: 'total_receita', header: 'total_receita', cell: ({ row }) => <span className="block text-right">{String(row.getValue('total_receita') ?? '')}</span> },
+    { accessorKey: 'ctr', header: 'ctr', cell: ({ row }) => <span className="block text-right">{String(row.getValue('ctr') ?? '')}</span> },
+    { accessorKey: 'cpc', header: 'cpc', cell: ({ row }) => <span className="block text-right">{String(row.getValue('cpc') ?? '')}</span> },
+    { accessorKey: 'cpa', header: 'cpa', cell: ({ row }) => <span className="block text-right">{String(row.getValue('cpa') ?? '')}</span> },
+    { accessorKey: 'roas', header: 'roas', cell: ({ row }) => <span className="block text-right">{String(row.getValue('roas') ?? '')}</span> },
+    { accessorKey: 'lucro', header: 'lucro', cell: ({ row }) => <span className="block text-right">{String(row.getValue('lucro') ?? '')}</span> },
   ], []);
 
   const tableMessage = useMemo(() => {
-    const periodoTexto = periodo_dias ? `${periodo_dias} dias` : 'período não informado';
     const totalTexto = total_plataformas ?? tableData.length;
     const melhorTexto = melhor_plataforma?.trim() ? melhor_plataforma : 'Sem destaque';
     const piorTexto = pior_plataforma?.trim() ? pior_plataforma : 'Sem destaque';
 
-    return `Período analisado: ${periodoTexto} • Total de plataformas: ${totalTexto} • Melhor: ${melhorTexto} • Pior: ${piorTexto}`;
-  }, [periodo_dias, total_plataformas, melhor_plataforma, pior_plataforma, tableData.length]);
+    return `Total de plataformas: ${totalTexto} • Melhor: ${melhorTexto} • Pior: ${piorTexto}`;
+  }, [total_plataformas, melhor_plataforma, pior_plataforma, tableData.length]);
 
   const platformMetricData = useMemo(() => {
-    if (!plataformas || plataformas.length === 0) return [];
-
+    if (!plataformas || plataformas.length === 0) return [] as Array<{ label: string; metrics: Record<MetricKey, number> }>;
     return plataformas.map((plat) => {
-      const label = plat.plataforma?.trim() ? plat.plataforma : 'Não informada';
-
+      const label = (typeof plat.plataforma === 'string' && plat.plataforma.trim()) ? plat.plataforma : 'Não informada';
       return {
         label,
         metrics: {
           roas: parseNumericValue(plat.roas),
-          gasto: parseNumericValue(plat.gasto),
-          receita: parseNumericValue(plat.receita),
-          conversoes: parseNumericValue(plat.conversoes),
+          total_gasto: parseNumericValue(plat.total_gasto),
+          total_receita: parseNumericValue(plat.total_receita),
+          total_conversoes: parseNumericValue(plat.total_conversoes),
+          total_impressoes: parseNumericValue(plat.total_impressoes),
+          total_cliques: parseNumericValue(plat.total_cliques),
           ctr: parseNumericValue(plat.ctr),
-          conversion_rate: parseNumericValue(plat.conversion_rate),
-        } satisfies Record<MetricKey, number>,
+          cpc: parseNumericValue(plat.cpc),
+          cpa: parseNumericValue(plat.cpa),
+          lucro: parseNumericValue(plat.lucro),
+        } as Record<MetricKey, number>,
       };
     });
   }, [plataformas]);
