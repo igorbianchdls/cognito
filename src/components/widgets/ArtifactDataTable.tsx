@@ -36,7 +36,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-interface ArtifactDataTableProps<TData> {
+interface ArtifactDataTableProps<TData extends Record<string, unknown>> {
   // Dados da tabela
   data: TData[];
   columns: ColumnDef<TData>[];
