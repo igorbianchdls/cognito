@@ -1018,30 +1018,221 @@ export const analyzeUserBehavior = tool({
 // ===== Novos nomes (PT-BR) mapeando ferramentas existentes =====
 // Mantemos a lógica atual e apenas expomos nomes em português para o agente e a UI
 
-export const desempenhoGeralDoSite = analyzeTrafficOverview;
-export const desempenhoPorCanal = compareTrafficSources;
-export const etapasDoFunilGeral = analyzeConversionFunnel;
-export const desempenhoMobileVsDesktop = analyzeDevicePerformance;
-export const contribuicaoPorPagina = identifyTopLandingPages;
-export const deteccaoOutlierPorCanal = detectTrafficAnomalies;
-export const visitantesRecorrentes = analyzeUserBehavior;
-
-// Novas tools (placeholders) – queries serão aplicadas na próxima etapa
-export const desempenhoPorDiaHora = tool({
-  description: 'Desempenho por dia e hora (placeholder – será implementado com query na próxima etapa)',
+export const desempenhoGeralDoSite = tool({
+  description: 'KPIs gerais do site (sessões, usuários, engajamento, conversão, receita) no período',
   inputSchema: z.object({
     data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
     data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
   }),
   execute: async ({ data_de, data_ate }) => {
-    return {
-      success: true,
-      message: `Desempenho por dia e hora (${data_de} a ${data_ate})`,
-      rows: [],
-      count: 0,
-      sql_query: undefined,
-      sql_params: undefined,
-    };
+    const sql = `
+WITH base AS (
+  SELECT
+    s.id AS sessao_id,
+    s.id_visitante,
+    COUNT(e.id) AS total_eventos,
+    COUNT(DISTINCT e.url_pagina) AS paginas_vistas,
+    EXTRACT(EPOCH FROM (s.timestamp_fim_sessao - s.timestamp_inicio_sessao)) / 60 AS duracao_min,
+    CASE WHEN t.id IS NOT NULL THEN 1 ELSE 0 END AS houve_conversao,
+    COALESCE(t.valor_total, 0) AS receita
+  FROM gestaoanalytics.sessoes s
+  LEFT JOIN gestaoanalytics.eventos e ON e.id_sessao = s.id
+  LEFT JOIN gestaoanalytics.transacoes t ON t.id_sessao = s.id
+  WHERE s.timestamp_inicio_sessao >= $1::date AND s.timestamp_inicio_sessao < ($2::date + INTERVAL '1 day')
+  GROUP BY s.id, s.id_visitante, s.timestamp_inicio_sessao, s.timestamp_fim_sessao, t.id, t.valor_total
+)
+SELECT
+  COUNT(DISTINCT sessao_id) AS total_sessoes,
+  COUNT(DISTINCT id_visitante) AS visitantes_unicos,
+  ROUND(AVG(paginas_vistas), 2) AS paginas_por_sessao,
+  ROUND(AVG(duracao_min), 2) AS duracao_media_min,
+  ROUND(SUM(CASE WHEN total_eventos = 1 THEN 1 ELSE 0 END)::numeric / NULLIF(COUNT(*), 0) * 100, 2) AS taxa_rejeicao_pct,
+  ROUND(SUM(houve_conversao)::numeric / NULLIF(COUNT(*), 0) * 100, 2) AS taxa_conversao_pct,
+  ROUND(SUM(receita), 2) AS receita_total,
+  ROUND(SUM(receita) / NULLIF(COUNT(DISTINCT id_visitante), 0), 2) AS receita_por_visitante,
+  ROUND(SUM(receita) / NULLIF(COUNT(*), 0), 2) AS receita_por_sessao
+FROM base`;
+    const params = [data_de, data_ate] as unknown[];
+    try {
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `✅ Desempenho geral do site (${data_de} a ${data_ate})`,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: '❌ Erro ao obter desempenho geral do site',
+        error: error instanceof Error ? error.message : String(error),
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    }
+  },
+});
+
+export const desempenhoPorCanal = tool({
+  description: 'Desempenho por canal/utm_source/dispositivo no período',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+  }),
+  execute: async ({ data_de, data_ate }) => {
+    const sql = `
+WITH analitico AS (
+  SELECT
+    s.canal_trafego,
+    s.utm_source,
+    s.tipo_dispositivo,
+    COUNT(DISTINCT s.id) AS sessoes,
+    COUNT(DISTINCT s.id_visitante) AS visitantes,
+    SUM(CASE WHEN t.id IS NOT NULL THEN 1 ELSE 0 END) AS conversoes,
+    SUM(COALESCE(t.valor_total, 0)) AS receita,
+    ROUND(SUM(CASE WHEN t.id IS NOT NULL THEN 1 ELSE 0 END)::numeric / NULLIF(COUNT(DISTINCT s.id), 0) * 100, 2) AS taxa_conversao_pct
+  FROM gestaoanalytics.sessoes s
+  LEFT JOIN gestaoanalytics.transacoes t ON t.id_sessao = s.id
+  WHERE s.timestamp_inicio_sessao >= $1::date AND s.timestamp_inicio_sessao < ($2::date + INTERVAL '1 day')
+  GROUP BY s.canal_trafego, s.utm_source, s.tipo_dispositivo
+)
+SELECT 
+  canal_trafego,
+  utm_source,
+  tipo_dispositivo,
+  sessoes,
+  visitantes,
+  conversoes,
+  ROUND(conversoes::numeric / NULLIF(sessoes, 0) * 100, 2) AS taxa_conversao_pct,
+  ROUND(receita, 2) AS receita_total,
+  ROUND(receita / NULLIF(sessoes, 0), 2) AS receita_por_sessao,
+  ROUND(receita / NULLIF(visitantes, 0), 2) AS receita_por_usuario
+FROM analitico
+ORDER BY receita_total DESC`;
+    const params = [data_de, data_ate] as unknown[];
+    try {
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `✅ Desempenho por canal (${data_de} a ${data_ate})`,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: '❌ Erro ao obter desempenho por canal',
+        error: error instanceof Error ? error.message : String(error),
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    }
+  },
+});
+
+export const etapasDoFunilGeral = tool({
+  description: 'Etapas do funil geral com taxa de fim de funil no período',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+  }),
+  execute: async ({ data_de, data_ate }) => {
+    const sql = `
+WITH funil AS (
+  SELECT 
+    CASE
+      WHEN e.nome_evento ILIKE '%view%' THEN 'view_product'
+      WHEN e.nome_evento ILIKE '%cart%' THEN 'add_to_cart'
+      WHEN e.nome_evento ILIKE '%checkout%' THEN 'begin_checkout'
+      WHEN e.nome_evento ILIKE '%purchase%' OR e.nome_evento ILIKE '%buy%' THEN 'purchase'
+    END AS etapa,
+    COUNT(DISTINCT e.id_sessao) AS sessoes
+  FROM gestaoanalytics.eventos e
+  WHERE e.timestamp_evento >= $1::date AND e.timestamp_evento < ($2::date + INTERVAL '1 day')
+  GROUP BY 1
+)
+SELECT
+  COALESCE(MAX(CASE WHEN f.etapa = 'view_product' THEN f.sessoes END), 0) AS visualizacoes,
+  COALESCE(MAX(CASE WHEN f.etapa = 'add_to_cart' THEN f.sessoes END), 0) AS adicionados,
+  COALESCE(MAX(CASE WHEN f.etapa = 'begin_checkout' THEN f.sessoes END), 0) AS checkouts,
+  COALESCE(MAX(CASE WHEN f.etapa = 'purchase' THEN f.sessoes END), 0) AS compras,
+  ROUND(
+    MAX(CASE WHEN f.etapa = 'purchase' THEN f.sessoes END)::numeric 
+    / NULLIF(MAX(CASE WHEN f.etapa = 'view_product' THEN f.sessoes END), 0) * 100, 
+    2
+  ) AS taxa_fim_funil_pct
+FROM funil f`;
+    const params = [data_de, data_ate] as unknown[];
+    try {
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `✅ Etapas do funil (geral) (${data_de} a ${data_ate})`,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: '❌ Erro ao obter etapas do funil',
+        error: error instanceof Error ? error.message : String(error),
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    }
+  },
+});
+
+// Novas tools (placeholders) – queries serão aplicadas na próxima etapa
+export const desempenhoPorDiaHora = tool({
+  description: 'Desempenho por dia e hora (sessões, receita, taxa de conversão) no período',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+  }),
+  execute: async ({ data_de, data_ate }) => {
+    const sql = `
+SELECT 
+  TO_CHAR(s.timestamp_inicio_sessao, 'Day') AS dia_semana,
+  DATE_PART('hour', s.timestamp_inicio_sessao) AS hora,
+  COUNT(DISTINCT s.id) AS sessoes,
+  ROUND(SUM(t.valor_total), 2) AS receita,
+  ROUND(COUNT(DISTINCT t.id)::numeric / NULLIF(COUNT(DISTINCT s.id), 0) * 100, 2) AS taxa_conversao
+FROM gestaoanalytics.sessoes s
+LEFT JOIN gestaoanalytics.transacoes t ON t.id_sessao = s.id
+WHERE s.timestamp_inicio_sessao >= $1::date AND s.timestamp_inicio_sessao < ($2::date + INTERVAL '1 day')
+GROUP BY dia_semana, hora
+ORDER BY hora`;
+    const params = [data_de, data_ate] as unknown[];
+    try {
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `✅ Desempenho por dia e hora (${data_de} a ${data_ate})`,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: '❌ Erro ao obter desempenho por dia e hora',
+        error: error instanceof Error ? error.message : String(error),
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    }
   },
 });
 
