@@ -1236,6 +1236,12 @@ ORDER BY hora`;
   },
 });
 
+// Alias temporários para manter compatibilidade até migrarmos todas as queries
+export const desempenhoMobileVsDesktop = analyzeDevicePerformance;
+export const contribuicaoPorPagina = identifyTopLandingPages;
+export const deteccaoOutlierPorCanal = detectTrafficAnomalies;
+export const visitantesRecorrentes = analyzeUserBehavior;
+
 export const ltvMedio = tool({
   description: 'LTV médio (placeholder – será implementado com query na próxima etapa)',
   inputSchema: z.object({
