@@ -545,68 +545,65 @@ ORDER BY total_gasto DESC;
 });
 
 export const analyzeCreativePerformance = tool({
-  description: 'Analisa performance de criativos: aprovação, CTR, conversões por tipo',
+  description: 'Desempenho por anúncio (título/plataforma) com métricas derivadas',
   inputSchema: z.object({
-    date_range_days: z.number().default(30).describe('Período de análise em dias'),
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+    plataforma: z.enum(['Google', 'Meta', 'Facebook', 'TikTok', 'LinkedIn']).optional().describe('Filtrar uma plataforma específica'),
+    limit: z.number().default(20).describe('Limite de linhas (default 20)'),
   }),
-  execute: async ({ date_range_days = 30 }) => {
+  execute: async ({ data_de, data_ate, plataforma, limit = 20 }) => {
     const sql = `
-      SELECT
-        criativo_status,
-        COUNT(*) AS total
-      FROM trafego_pago.anuncios_criacao
-      WHERE criado_em >= current_date - ($1::int - 1) * INTERVAL '1 day'
-      GROUP BY criativo_status
-    `.trim();
+SELECT 
+  ap.titulo AS anuncio,
+  ca.plataforma,
+  SUM(m.impressao) AS total_impressoes,
+  SUM(m.cliques) AS total_cliques,
+  SUM(m.conversao) AS total_conversoes,
+  ROUND(SUM(m.gasto), 2) AS total_gasto,
+  ROUND(SUM(m.receita), 2) AS total_receita,
+
+  ROUND(SUM(m.cliques)::numeric / NULLIF(SUM(m.impressao), 0) * 100, 2) AS ctr,
+  ROUND(SUM(m.conversao)::numeric / NULLIF(SUM(m.cliques), 0) * 100, 2) AS taxa_conversao,
+  ROUND(SUM(m.gasto)::numeric / NULLIF(SUM(m.cliques), 0), 2) AS cpc,
+  ROUND(SUM(m.gasto)::numeric / NULLIF(SUM(m.conversao), 0), 2) AS cpa,
+  ROUND(SUM(m.receita)::numeric / NULLIF(SUM(m.gasto), 0), 2) AS roas,
+  ROUND(SUM(m.receita)::numeric - SUM(m.gasto), 2) AS lucro,
+  ROUND((SUM(m.gasto)::numeric / NULLIF(SUM(m.impressao), 0)) * 1000, 2) AS cpm,
+  ROUND(SUM(m.receita)::numeric / NULLIF(SUM(m.conversao), 0), 2) AS ticket_medio,
+  ROUND(AVG(m.frequencia), 2) AS frequencia_media,
+  COALESCE(SUM(m.likes) + SUM(m.comentarios) + SUM(m.compartilhamentos) + SUM(m.salvos), 0) AS engajamento_total
+
+FROM trafego_pago.metricas_anuncios m
+JOIN trafego_pago.anuncios_publicados ap ON m.anuncio_publicado_id = ap.id
+JOIN trafego_pago.contas_ads ca ON ap.conta_ads_id = ca.id
+
+WHERE m.data BETWEEN $1::date AND $2::date
+  AND ($3::text IS NULL OR ca.plataforma = $3)
+
+GROUP BY ap.titulo, ca.plataforma
+ORDER BY roas DESC
+LIMIT $4;`.trim();
 
     try {
-      const rows = await runQuery<{ criativo_status: string | null; total: number }>(sql, [date_range_days]);
-
-      if (!rows.length) {
-        return {
-          success: false,
-          message: 'Nenhum criativo encontrado',
-          periodo_dias: date_range_days,
-          status: {},
-          sql_query: sql,
-          sql_params: formatSqlParams([date_range_days]),
-        };
-      }
-
-      const total = rows.reduce((acc, row) => acc + Number(row.total ?? 0), 0);
-      const countByStatus = (status: string) =>
-        rows.find((row) => (row.criativo_status ?? '').toLowerCase() === status)?.total ?? 0;
-
-      const aprovados = countByStatus('aprovado');
-      const rascunhos = countByStatus('rascunho');
-      const emRevisao = countByStatus('em_revisao');
-      const rejeitados = countByStatus('rejeitado');
-      const taxa_aprovacao = total > 0 ? (aprovados / total) * 100 : 0;
-
+      const params = [data_de, data_ate, plataforma ?? null, limit];
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
       return {
         success: true,
-        message: `Análise de ${total} criativos`,
-        periodo_dias: date_range_days,
-        total_criativos: total,
-        status: {
-          aprovados,
-          rascunhos,
-          em_revisao: emRevisao,
-          rejeitados,
-          taxa_aprovacao: `${taxa_aprovacao.toFixed(2)}%`,
-        },
+        message: `Desempenho de ${rows.length} anúncio(s)`,
+        count: rows.length,
+        rows,
         sql_query: sql,
-        sql_params: formatSqlParams([date_range_days]),
+        sql_params: formatSqlParams(params),
       };
     } catch (error) {
       console.error('ERRO analyzeCreativePerformance:', error);
       return {
         success: false,
-        message: `Erro ao analisar criativos: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
-        periodo_dias: date_range_days,
-        status: {},
+        message: `Erro ao analisar anúncios: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        rows: [],
         sql_query: sql,
-        sql_params: formatSqlParams([date_range_days]),
+        sql_params: formatSqlParams([data_de, data_ate, plataforma ?? null, limit]),
       };
     }
   }
