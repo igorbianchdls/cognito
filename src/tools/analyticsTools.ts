@@ -1237,25 +1237,293 @@ ORDER BY hora`;
 });
 
 // Alias temporários para manter compatibilidade até migrarmos todas as queries
-export const desempenhoMobileVsDesktop = analyzeDevicePerformance;
-export const contribuicaoPorPagina = identifyTopLandingPages;
-export const deteccaoOutlierPorCanal = detectTrafficAnomalies;
-export const visitantesRecorrentes = analyzeUserBehavior;
-
-export const ltvMedio = tool({
-  description: 'LTV médio (placeholder – será implementado com query na próxima etapa)',
+export const desempenhoMobileVsDesktop = tool({
+  description: 'Comparativo por dispositivo, SO e navegador no período',
   inputSchema: z.object({
     data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
     data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
   }),
   execute: async ({ data_de, data_ate }) => {
-    return {
-      success: true,
-      message: `LTV médio (${data_de} a ${data_ate})`,
-      rows: [],
-      count: 0,
-      sql_query: undefined,
-      sql_params: undefined,
-    };
+    const sql = `
+SELECT 
+  s.tipo_dispositivo,
+  s.sistema_operacional,
+  s.navegador,
+  COUNT(DISTINCT s.id) AS sessoes,
+  ROUND(AVG(EXTRACT(EPOCH FROM (s.timestamp_fim_sessao - s.timestamp_inicio_sessao)) / 60), 2) AS duracao_media,
+  ROUND(COUNT(DISTINCT t.id)::numeric / NULLIF(COUNT(DISTINCT s.id), 0) * 100, 2) AS taxa_conversao,
+  ROUND(SUM(t.valor_total), 2) AS receita_total
+FROM gestaoanalytics.sessoes s
+LEFT JOIN gestaoanalytics.transacoes t ON t.id_sessao = s.id
+WHERE s.timestamp_inicio_sessao >= $1::date AND s.timestamp_inicio_sessao < ($2::date + INTERVAL '1 day')
+GROUP BY s.tipo_dispositivo, s.sistema_operacional, s.navegador
+ORDER BY receita_total DESC`;
+    const params = [data_de, data_ate] as unknown[];
+    try {
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `✅ Desempenho Mobile vs desktop (${data_de} a ${data_ate})`,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: '❌ Erro ao obter desempenho Mobile vs desktop',
+        error: error instanceof Error ? error.message : String(error),
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    }
+  },
+});
+
+export const contribuicaoPorPagina = tool({
+  description: 'Contribuição por página (sessões, transações, receita e receita por visita)',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+    limit: z.number().default(20).describe('Número de páginas a retornar'),
+  }),
+  execute: async ({ data_de, data_ate, limit = 20 }) => {
+    const safeLimit = Math.max(1, Math.min(500, Math.trunc(limit)));
+    const sql = `
+SELECT 
+  e.url_pagina,
+  COUNT(DISTINCT e.id_sessao) AS sessoes,
+  COUNT(DISTINCT t.id) AS transacoes,
+  ROUND(SUM(t.valor_total), 2) AS receita,
+  ROUND(SUM(t.valor_total) / NULLIF(COUNT(DISTINCT e.id_sessao), 0), 2) AS receita_por_visita
+FROM gestaoanalytics.eventos e
+LEFT JOIN gestaoanalytics.transacoes t ON e.id_sessao = t.id_sessao
+WHERE e.timestamp_evento >= $1::date AND e.timestamp_evento < ($2::date + INTERVAL '1 day')
+GROUP BY e.url_pagina
+ORDER BY receita DESC
+LIMIT $3`;
+    const params = [data_de, data_ate, safeLimit] as unknown[];
+    try {
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `✅ Contribuição por página (${data_de} a ${data_ate})`,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: '❌ Erro ao obter contribuição por página',
+        error: error instanceof Error ? error.message : String(error),
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    }
+  },
+});
+export const deteccaoOutlierPorCanal = tool({
+  description: 'Detecção de outliers por canal (z-score por receita, com z de sessões e transações)',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+  }),
+  execute: async ({ data_de, data_ate }) => {
+    const sql = `
+WITH diario AS (
+  SELECT 
+    s.canal_trafego,
+    DATE(s.timestamp_inicio_sessao) AS dia,
+    COUNT(DISTINCT s.id) AS sessoes,
+    COUNT(DISTINCT t.id) AS transacoes,
+    SUM(COALESCE(t.valor_total, 0)) AS receita
+  FROM gestaoanalytics.sessoes s
+  LEFT JOIN gestaoanalytics.transacoes t ON t.id_sessao = s.id
+  WHERE s.timestamp_inicio_sessao >= $1::date AND s.timestamp_inicio_sessao < ($2::date + INTERVAL '1 day')
+  GROUP BY s.canal_trafego, dia
+),
+stats AS (
+  SELECT
+    canal_trafego,
+    AVG(sessoes) AS media_sessoes,
+    STDDEV_POP(sessoes) AS desvio_sessoes,
+    AVG(transacoes) AS media_transacoes,
+    STDDEV_POP(transacoes) AS desvio_transacoes,
+    AVG(receita) AS media_receita,
+    STDDEV_POP(receita) AS desvio_receita
+  FROM diario
+  GROUP BY canal_trafego
+)
+SELECT 
+  d.canal_trafego,
+  d.dia,
+  ROUND((d.sessoes - s.media_sessoes) / NULLIF(s.desvio_sessoes, 0), 2) AS z_sessoes,
+  ROUND((d.transacoes - s.media_transacoes) / NULLIF(s.desvio_transacoes, 0), 2) AS z_transacoes,
+  ROUND((d.receita - s.media_receita) / NULLIF(s.desvio_receita, 0), 2) AS z_receita,
+  CASE 
+    WHEN (d.receita - s.media_receita) / NULLIF(s.desvio_receita, 0) > 2 THEN '📈 Pico de receita'
+    WHEN (d.receita - s.media_receita) / NULLIF(s.desvio_receita, 0) < -2 THEN '🚨 Queda de receita'
+  END AS alerta
+FROM diario d
+JOIN stats s ON d.canal_trafego = s.canal_trafego
+WHERE ABS((d.receita - s.media_receita) / NULLIF(s.desvio_receita, 0)) > 2
+ORDER BY d.dia DESC`;
+    const params = [data_de, data_ate] as unknown[];
+    try {
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `✅ Outliers por canal (${data_de} a ${data_ate})`,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: '❌ Erro ao detectar outliers por canal',
+        error: error instanceof Error ? error.message : String(error),
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    }
+  },
+});
+
+export const visitantesRecorrentes = tool({
+  description: 'Taxa de recorrência de visitantes no período',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+  }),
+  execute: async ({ data_de, data_ate }) => {
+    const sql = `
+WITH visitas AS (
+  SELECT 
+    id_visitante,
+    COUNT(*) AS sessoes
+  FROM gestaoanalytics.sessoes
+  WHERE timestamp_inicio_sessao >= $1::date AND timestamp_inicio_sessao < ($2::date + INTERVAL '1 day')
+  GROUP BY id_visitante
+)
+SELECT 
+  COUNT(*) AS total_visitantes,
+  COUNT(CASE WHEN sessoes > 1 THEN 1 END) AS visitantes_recorrentes,
+  ROUND(COUNT(CASE WHEN sessoes > 1 THEN 1 END)::numeric / NULLIF(COUNT(*), 0) * 100, 2) AS taxa_recorrencia_pct
+FROM visitas`;
+    const params = [data_de, data_ate] as unknown[];
+    try {
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      // Constrói linhas de resumo para tabela
+      const row0 = rows[0] || { total_visitantes: 0, visitantes_recorrentes: 0, taxa_recorrencia_pct: 0 };
+      const total = Number(row0.total_visitantes || 0);
+      const recorrentes = Number(row0.visitantes_recorrentes || 0);
+      const taxa = Number(row0.taxa_recorrencia_pct || 0);
+      const tableRows = [
+        { metrica: 'Total de visitantes', valor: total, percentual: '-' },
+        { metrica: 'Visitantes recorrentes', valor: recorrentes, percentual: `${(total ? (recorrentes/total)*100 : 0).toFixed(2)}%` },
+        { metrica: 'Taxa de recorrência', valor: taxa, percentual: `${taxa.toFixed(2)}%` },
+      ];
+      // período em dias (aproximado)
+      const diffDays = Math.max(1, Math.floor((new Date(data_ate).getTime() - new Date(data_de).getTime()) / (24*3600*1000)) + 1);
+      return {
+        success: true,
+        message: `✅ Visitantes recorrentes (${data_de} a ${data_ate})`,
+        periodo_dias: diffDays,
+        comportamento: {
+          total_visitantes: total,
+          novos_visitantes: total - recorrentes,
+          visitantes_recorrentes: recorrentes,
+          percentual_novos: total ? `${(((total - recorrentes)/total)*100).toFixed(2)}%` : '0%',
+          percentual_recorrentes: `${taxa.toFixed(2)}%`,
+          frequencia_media_visitas: '-',
+          engagement_rate: '-',
+          classificacao: taxa >= 30 ? 'Bom' : 'Regular',
+        },
+        rows: tableRows,
+        count: tableRows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      } as unknown as AnalyzeUserBehaviorToolOutput; // compat com UI atual
+    } catch (error) {
+      return {
+        success: false,
+        message: '❌ Erro ao calcular visitantes recorrentes',
+        error: error instanceof Error ? error.message : String(error),
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    }
+  },
+});
+
+export const ltvMedio = tool({
+  description: 'LTV médio por canal no período',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+  }),
+  execute: async ({ data_de, data_ate }) => {
+    const sql = `
+WITH clientes AS (
+  SELECT 
+    s.canal_trafego,
+    s.id_visitante AS id_visitante,
+    SUM(t.valor_total) AS receita_cliente
+  FROM gestaoanalytics.transacoes t
+  JOIN gestaoanalytics.sessoes s ON s.id = t.id_sessao
+  WHERE t.timestamp_transacao >= $1::date AND t.timestamp_transacao < ($2::date + INTERVAL '1 day')
+  GROUP BY s.canal_trafego, s.id_visitante
+)
+SELECT 
+  canal_trafego,
+  COUNT(DISTINCT id_visitante) AS clientes_unicos,
+  ROUND(AVG(receita_cliente), 2) AS ltv_medio,
+  ROUND(SUM(receita_cliente), 2) AS receita_total,
+  CASE 
+    WHEN canal_trafego ILIKE '%pago%' THEN 25
+    WHEN canal_trafego ILIKE '%meta%' THEN 30
+    WHEN canal_trafego ILIKE '%google%' THEN 20
+    ELSE 0
+  END AS custo_aquisicao_medio,
+  ROUND(AVG(receita_cliente) - 
+        CASE 
+          WHEN canal_trafego ILIKE '%pago%' THEN 25
+          WHEN canal_trafego ILIKE '%meta%' THEN 30
+          WHEN canal_trafego ILIKE '%google%' THEN 20
+          ELSE 0
+        END, 2) AS margem_liquida_estim
+FROM clientes
+GROUP BY canal_trafego
+ORDER BY ltv_medio DESC`;
+    const params = [data_de, data_ate] as unknown[];
+    try {
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      return {
+        success: true,
+        message: `✅ LTV médio por canal (${data_de} a ${data_ate})`,
+        rows,
+        count: rows.length,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: '❌ Erro ao obter LTV médio',
+        error: error instanceof Error ? error.message : String(error),
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    }
   },
 });
