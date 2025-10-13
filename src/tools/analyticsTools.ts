@@ -1451,7 +1451,7 @@ FROM visitas`;
         count: tableRows.length,
         sql_query: sql,
         sql_params: formatSqlParams(params),
-      } as unknown as AnalyzeUserBehaviorToolOutput; // compat com UI atual
+      };
     } catch (error) {
       return {
         success: false,
