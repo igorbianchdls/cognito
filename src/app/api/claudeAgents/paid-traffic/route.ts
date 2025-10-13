@@ -1,15 +1,16 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
-import {
-  getPaidTrafficData,
-  analyzeCampaignROAS,
-  compareAdsPlatforms,
-  analyzeCreativePerformance,
-  identifyTopAds,
-  analyzeSpendingTrends,
-  calculateCostMetrics,
-  forecastAdPerformance
-} from '@/tools/paidTrafficTools';
+  import {
+    getPaidTrafficData,
+    analyzeCampaignROAS,
+    compareAdsPlatforms,
+    analyzeCreativePerformance,
+    identifyTopAds,
+    analyzeSpendingTrends,
+    calculateCostMetrics,
+    forecastAdPerformance,
+    analyzeAdPerformance
+  } from '@/tools/paidTrafficTools';
 
 export const maxDuration = 300;
 
@@ -279,7 +280,8 @@ Seja sempre orientado a dados, priorize maximização de ROAS e otimização con
         identifyTopAds,
         analyzeSpendingTrends,
         calculateCostMetrics,
-        forecastAdPerformance
+        forecastAdPerformance,
+        analyzeAdPerformance
       }
     });
 

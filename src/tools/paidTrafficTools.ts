@@ -327,117 +327,89 @@ export const getPaidTrafficData = tool({
 });
 
 export const analyzeCampaignROAS = tool({
-  description: 'Analisa ROI/ROAS por campanha: gasto, receita, conversões, custo por conversão',
+  description: 'Análise de campanhas (campanha/plataforma) com métricas derivadas',
   inputSchema: z.object({
-    date_range_days: z.number().default(30).describe('Período de análise em dias'),
-    plataforma: z.enum(['Google', 'Meta', 'Facebook', 'TikTok', 'LinkedIn']).optional().describe('Filtrar por plataforma'),
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
   }),
-  execute: async ({ date_range_days = 30, plataforma }) => {
+  execute: async ({ data_de, data_ate }) => {
     const sql = `
-WITH metricas AS (
-  SELECT
-    ma.campanha_id,
-    COALESCE(c.nome, 'Sem campanha') AS campanha_nome,
-    COALESCE(c.status, 'desconhecido') AS campanha_status,
-    COALESCE(c.objetivo, 'não informado') AS objetivo,
-    SUM(ma.gasto) AS gasto_total,
-    SUM(ma.receita) AS receita_total,
-    SUM(ma.conversao) AS conversoes_total,
-    SUM(ma.impressao) AS impressoes_total,
-    SUM(ma.cliques) AS cliques_total
-  FROM trafego_pago.metricas_anuncios ma
-  LEFT JOIN trafego_pago.campanhas c ON c.id = ma.campanha_id
-  WHERE ma.data >= current_date - ($1::int - 1) * INTERVAL '1 day'
-    AND ($2::text IS NULL OR ma.plataforma = $2)
-  GROUP BY ma.campanha_id, c.nome, c.status, c.objetivo
-)
-SELECT
-  campanha_id,
-  campanha_nome,
-  campanha_status,
-  objetivo,
-  gasto_total,
-  receita_total,
-  conversoes_total,
-  impressoes_total,
-  cliques_total,
-  CASE WHEN gasto_total > 0 THEN receita_total / gasto_total ELSE 0 END AS roas,
-  CASE WHEN conversoes_total > 0 THEN gasto_total / conversoes_total ELSE 0 END AS cpa,
-  CASE WHEN impressoes_total > 0 THEN (cliques_total::numeric / impressoes_total) * 100 ELSE 0 END AS ctr
-FROM metricas
-ORDER BY roas DESC, gasto_total DESC
-LIMIT $3;
-    `.trim();
+SELECT 
+  c.nome AS campanha,
+  ca.plataforma,
+  SUM(m.impressao) AS total_impressoes,
+  SUM(m.cliques) AS total_cliques,
+  SUM(m.conversao) AS total_conversoes,
+  ROUND(SUM(m.gasto), 2) AS total_gasto,
+  ROUND(SUM(m.receita), 2) AS total_receita,
 
-    type CampaignAggRow = {
-      campanha_id: string | null;
-      campanha_nome: string;
-      campanha_status: string;
-      objetivo: string;
-      gasto_total: number | null;
-      receita_total: number | null;
-      conversoes_total: number | null;
-      impressoes_total: number | null;
-      cliques_total: number | null;
-      roas: number | null;
-      cpa: number | null;
-      ctr: number | null;
+  ROUND(SUM(m.cliques)::numeric / NULLIF(SUM(m.impressao), 0) * 100, 2) AS ctr,
+  ROUND(SUM(m.conversao)::numeric / NULLIF(SUM(m.cliques), 0) * 100, 2) AS taxa_conversao,
+  ROUND(SUM(m.gasto)::numeric / NULLIF(SUM(m.cliques), 0), 2) AS cpc,
+  ROUND(SUM(m.gasto)::numeric / NULLIF(SUM(m.conversao), 0), 2) AS cpa,
+  ROUND(SUM(m.receita)::numeric / NULLIF(SUM(m.gasto), 0), 2) AS roas,
+  ROUND(SUM(m.receita)::numeric - SUM(m.gasto), 2) AS lucro,
+  ROUND((SUM(m.gasto)::numeric / NULLIF(SUM(m.impressao), 0)) * 1000, 2) AS cpm,
+  ROUND(SUM(m.receita)::numeric / NULLIF(SUM(m.conversao), 0), 2) AS ticket_medio,
+  ROUND(AVG(m.frequencia), 2) AS frequencia_media,
+  COALESCE(SUM(m.likes) + SUM(m.comentarios) + SUM(m.compartilhamentos) + SUM(m.salvos), 0) AS engajamento_total
+
+FROM trafego_pago.metricas_anuncios m
+JOIN trafego_pago.anuncios_publicados ap ON m.anuncio_publicado_id = ap.id
+JOIN trafego_pago.grupos_de_anuncios ga ON ap.grupo_id = ga.id
+JOIN trafego_pago.campanhas c ON ga.campanha_id = c.id
+JOIN trafego_pago.contas_ads ca ON ap.conta_ads_id = ca.id
+
+WHERE m.data BETWEEN $1::date AND $2::date
+GROUP BY c.nome, ca.plataforma
+ORDER BY total_gasto DESC;`.trim();
+
+    type Row = {
+      campanha: string | null;
+      plataforma: string | null;
+      total_impressoes: number | string | null;
+      total_cliques: number | string | null;
+      total_conversoes: number | string | null;
+      total_gasto: number | string | null;
+      total_receita: number | string | null;
+      ctr: number | string | null;
+      taxa_conversao: number | string | null;
+      cpc: number | string | null;
+      cpa: number | string | null;
+      roas: number | string | null;
+      lucro: number | string | null;
+      cpm: number | string | null;
+      ticket_medio: number | string | null;
+      frequencia_media: number | string | null;
+      engajamento_total: number | string | null;
     };
 
-    const params = [date_range_days, plataforma ?? null, 100];
-
     try {
-      const rows = await runQuery<CampaignAggRow>(sql, params);
+      const params = [data_de, data_ate];
+      const rows = await runQuery<Row>(sql, params);
 
-      if (!rows.length) {
+      const campanhas = rows.map((r) => {
+        const campanhaPlataforma = `${r.campanha ?? 'Sem campanha'}${r.plataforma ? ` (${r.plataforma})` : ''}`;
         return {
-          success: false,
-          message: 'Nenhuma métrica encontrada no período',
-          periodo_dias: date_range_days,
-          plataforma: plataforma ?? 'Todas',
-          campanhas: [],
-          sql_query: sql,
-          sql_params: formatSqlParams(params),
-        };
-      }
-
-     const campanhas = rows.map((row) => {
-       const gasto = Number(row.gasto_total ?? 0);
-       const receita = Number(row.receita_total ?? 0);
-       const conversoes = Number(row.conversoes_total ?? 0);
-       const roas = Number(row.roas ?? 0);
-       const cpa = Number(row.cpa ?? 0);
-       const ctr = Number(row.ctr ?? 0);
-        const campanhaLabel = row.campanha_nome?.trim()
-          ? row.campanha_nome
-          : row.campanha_id ?? 'Sem campanha';
-
-        let classificacao = 'Ruim';
-        if (roas >= 4) classificacao = 'Excelente';
-        else if (roas >= 2.5) classificacao = 'Bom';
-        else if (roas >= 1.5) classificacao = 'Regular';
-
-        return {
-          campanha_id: campanhaLabel,
-          campanha_identificador: row.campanha_id,
-          campanha_nome: row.campanha_nome,
-          campanha_status: row.campanha_status,
-          objetivo: row.objetivo,
-          gasto: gasto.toFixed(2),
-          receita: receita.toFixed(2),
-          conversoes,
-          roas: roas.toFixed(2),
-          custo_por_conversao: cpa.toFixed(2),
-          ctr: `${ctr.toFixed(2)}%`,
-          classificacao,
+          campanha_id: campanhaPlataforma,
+          gasto: String(r.total_gasto ?? 0),
+          receita: String(r.total_receita ?? 0),
+          conversoes: Number(r.total_conversoes ?? 0),
+          roas: String(r.roas ?? 0),
+          custo_por_conversao: String(r.cpa ?? 0),
+          ctr: `${Number(r.ctr ?? 0).toFixed(2)}%`,
+          // Novas métricas (para UI ampliada)
+          cpc: String(r.cpc ?? 0),
+          cpm: String(r.cpm ?? 0),
+          taxa_conversao: String(r.taxa_conversao ?? 0),
+          ticket_medio: String(r.ticket_medio ?? 0),
+          lucro: String(r.lucro ?? 0),
         };
       });
 
       return {
         success: true,
-        message: `Análise de ${campanhas.length} campanhas`,
-        periodo_dias: date_range_days,
-        plataforma: plataforma ?? 'Todas',
+        message: `Análise de ${campanhas.length} linhas (campanha/plataforma)`,
         total_campanhas: campanhas.length,
         melhor_campanha: campanhas[0]?.campanha_id,
         campanhas,
@@ -448,12 +420,10 @@ LIMIT $3;
       console.error('ERRO analyzeCampaignROAS:', error);
       return {
         success: false,
-        message: `Erro ao analisar ROAS: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
-        periodo_dias: date_range_days,
-        plataforma: plataforma ?? 'Todas',
+        message: `Erro ao analisar campanhas: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         campanhas: [],
         sql_query: sql,
-        sql_params: formatSqlParams(params),
+        sql_params: formatSqlParams([data_de, data_ate]),
       };
     }
   }
@@ -1017,4 +987,98 @@ export const forecastAdPerformance = tool({
       };
     }
   }
+});
+
+// Desempenho por anúncio (agrupado por campanha e plataforma) — conforme SQL fornecida
+export const analyzeAdPerformance = tool({
+  description: 'Analisa desempenho por campanha e plataforma com métricas derivadas',
+  inputSchema: z.object({
+    data_de: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().describe('Data final (YYYY-MM-DD)'),
+  }),
+  execute: async ({ data_de, data_ate }) => {
+    const sql = `
+SELECT 
+  c.nome AS campanha,
+  ca.plataforma,
+  SUM(m.impressao) AS total_impressoes,
+  SUM(m.cliques) AS total_cliques,
+  SUM(m.conversao) AS total_conversoes,
+  ROUND(SUM(m.gasto), 2) AS total_gasto,
+  ROUND(SUM(m.receita), 2) AS total_receita,
+
+  -- métricas derivadas
+  ROUND(SUM(m.cliques)::numeric / NULLIF(SUM(m.impressao), 0) * 100, 2) AS ctr,
+  ROUND(SUM(m.conversao)::numeric / NULLIF(SUM(m.cliques), 0) * 100, 2) AS taxa_conversao,
+  ROUND(SUM(m.gasto)::numeric / NULLIF(SUM(m.cliques), 0), 2) AS cpc,
+  ROUND(SUM(m.gasto)::numeric / NULLIF(SUM(m.conversao), 0), 2) AS cpa,
+  ROUND(SUM(m.receita)::numeric / NULLIF(SUM(m.gasto), 0), 2) AS roas,
+  ROUND(SUM(m.receita)::numeric - SUM(m.gasto), 2) AS lucro,
+  ROUND((SUM(m.gasto)::numeric / NULLIF(SUM(m.impressao), 0)) * 1000, 2) AS cpm,
+  ROUND(SUM(m.receita)::numeric / NULLIF(SUM(m.conversao), 0), 2) AS ticket_medio,
+  ROUND(AVG(m.frequencia), 2) AS frequencia_media,
+  COALESCE(SUM(m.likes) + SUM(m.comentarios) + SUM(m.compartilhamentos) + SUM(m.salvos), 0) AS engajamento_total
+
+FROM trafego_pago.metricas_anuncios m
+JOIN trafego_pago.anuncios_publicados ap ON m.anuncio_publicado_id = ap.id
+JOIN trafego_pago.grupos_de_anuncios ga ON ap.grupo_id = ga.id
+JOIN trafego_pago.campanhas c ON ga.campanha_id = c.id
+JOIN trafego_pago.contas_ads ca ON ap.conta_ads_id = ca.id
+
+WHERE m.data BETWEEN $1::date AND $2::date
+GROUP BY c.nome, ca.plataforma
+ORDER BY total_gasto DESC;`.trim();
+
+    type Row = {
+      campanha: string | null;
+      plataforma: string | null;
+      total_impressoes: number | string | null;
+      total_cliques: number | string | null;
+      total_conversoes: number | string | null;
+      total_gasto: number | string | null;
+      total_receita: number | string | null;
+      ctr: number | string | null;
+      taxa_conversao: number | string | null;
+      cpc: number | string | null;
+      cpa: number | string | null;
+      roas: number | string | null;
+      lucro: number | string | null;
+      cpm: number | string | null;
+      ticket_medio: number | string | null;
+      frequencia_media: number | string | null;
+      engajamento_total: number | string | null;
+    };
+
+    try {
+      const params = [data_de, data_ate];
+      const rows = await runQuery<Row>(sql, params);
+      if (!rows || rows.length === 0) {
+        return {
+          success: false,
+          message: 'Nenhum desempenho encontrado para o período informado',
+          rows: [],
+          sql_query: sql,
+          sql_params: formatSqlParams(params),
+        };
+      }
+
+      return {
+        success: true,
+        message: `Desempenho agregado para ${rows.length} linha(s)`,
+        count: rows.length,
+        rows,
+        sql_query: sql,
+        sql_params: formatSqlParams(params),
+      };
+    } catch (error) {
+      console.error('ERRO analyzeAdPerformance:', error);
+      return {
+        success: false,
+        message: `Erro ao analisar desempenho: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        rows: [],
+        sql_query: sql,
+        sql_params: formatSqlParams([data_de, data_ate]),
+      };
+    }
+  },
 });

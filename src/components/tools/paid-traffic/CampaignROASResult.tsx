@@ -4,6 +4,9 @@ import { useCallback, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { BarChart } from '@/components/charts/BarChart';
+import { LineChart } from '@/components/charts/LineChart';
+import { AreaChart } from '@/components/charts/AreaChart';
+import { PieChart } from '@/components/charts/PieChart';
 import { Target } from 'lucide-react';
 import {
   Select,
@@ -41,6 +44,12 @@ type CampaignRow = {
   roas: string;
   custo_por_conversao: string;
   ctr: string;
+  // métricas extras opcionais
+  cpc?: string;
+  cpm?: string;
+  taxa_conversao?: string;
+  ticket_medio?: string;
+  lucro?: string;
   classificacao: string;
 };
 
@@ -90,6 +99,11 @@ const METRIC_OPTIONS = [
     description: 'Taxa de cliques das campanhas.',
     formatter: (value: number) => `${value.toFixed(2)}%`,
   },
+  { value: 'cpc', label: 'CPC', axisLabel: 'CPC (R$)', description: 'Custo por clique.', formatter: (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) },
+  { value: 'cpm', label: 'CPM', axisLabel: 'CPM (R$)', description: 'Custo por mil impressões.', formatter: (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) },
+  { value: 'taxa_conversao', label: 'Taxa de Conversão', axisLabel: 'Taxa de Conversão (%)', description: 'Conversões/Clques.', formatter: (v: number) => `${v.toFixed(2)}%` },
+  { value: 'ticket_medio', label: 'Ticket Médio', axisLabel: 'Ticket Médio (R$)', description: 'Receita por conversão.', formatter: (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) },
+  { value: 'lucro', label: 'Lucro', axisLabel: 'Lucro (R$)', description: 'Receita - gasto.', formatter: (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) },
 ] as const;
 
 type MetricOption = (typeof METRIC_OPTIONS)[number];
@@ -133,6 +147,15 @@ const parseNumericValue = (value: unknown): number => {
   return 0;
 };
 
+// helper para puxar métricas extras se existirem
+const campaignaExtra = (c: Record<string, unknown>) => ({
+  cpc: (c as Record<string, unknown>).cpc as string | undefined,
+  cpm: (c as Record<string, unknown>).cpm as string | undefined,
+  taxa_conversao: (c as Record<string, unknown>).taxa_conversao as string | undefined,
+  ticket_medio: (c as Record<string, unknown>).ticket_medio as string | undefined,
+  lucro: (c as Record<string, unknown>).lucro as string | undefined,
+});
+
 export default function CampaignROASResult({
   success,
   message,
@@ -143,6 +166,7 @@ export default function CampaignROASResult({
   campanhas,
 }: CampaignROASResultProps) {
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>('roas');
+  const [chartType, setChartType] = useState<'bar' | 'line' | 'area' | 'pie'>('bar');
 
   const tableData: CampaignRow[] = useMemo(() => {
     if (!campanhas || campanhas.length === 0) return [];
@@ -156,9 +180,20 @@ export default function CampaignROASResult({
       roas: campanha.roas,
       custo_por_conversao: campanha.custo_por_conversao,
       ctr: campanha.ctr,
+      // métricas extras se vierem no payload
+      ...(campaignaExtra(campanha)),
       classificacao: campanha.classificacao || 'Não classificada',
     }));
   }, [campanhas]);
+
+  // helper para puxar métricas extras se existirem
+  const campaignaExtra = (c: Record<string, unknown>) => ({
+    cpc: (c as Record<string, unknown>).cpc as string | undefined,
+    cpm: (c as Record<string, unknown>).cpm as string | undefined,
+    taxa_conversao: (c as Record<string, unknown>).taxa_conversao as string | undefined,
+    ticket_medio: (c as Record<string, unknown>).ticket_medio as string | undefined,
+    lucro: (c as Record<string, unknown>).lucro as string | undefined,
+  });
 
   const columns: ColumnDef<CampaignRow>[] = useMemo(() => [
     {
@@ -243,6 +278,11 @@ export default function CampaignROASResult({
         conversoes: parseNumericValue(row.conversoes),
         custo_por_conversao: parseNumericValue(row.custo_por_conversao),
         ctr: parseNumericValue(row.ctr),
+        cpc: parseNumericValue((row as unknown as Record<string, unknown>).cpc),
+        cpm: parseNumericValue((row as unknown as Record<string, unknown>).cpm),
+        taxa_conversao: parseNumericValue((row as unknown as Record<string, unknown>).taxa_conversao),
+        ticket_medio: parseNumericValue((row as unknown as Record<string, unknown>).ticket_medio),
+        lucro: parseNumericValue((row as unknown as Record<string, unknown>).lucro),
       } satisfies Record<MetricKey, number>,
     }));
   }, [tableData]);
@@ -286,44 +326,87 @@ export default function CampaignROASResult({
               Visualize as campanhas pela métrica desejada.
             </p>
           </div>
-          <Select value={selectedMetric} onValueChange={(value) => setSelectedMetric(value as MetricKey)}>
-            <SelectTrigger size="sm" className="min-w-[200px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {METRIC_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-3">
+            <Select value={selectedMetric} onValueChange={(value) => setSelectedMetric(value as MetricKey)}>
+              <SelectTrigger size="sm" className="min-w-[200px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {METRIC_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={chartType} onValueChange={(v) => setChartType(v as typeof chartType)}>
+              <SelectTrigger size="sm" className="min-w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="bar">Bar</SelectItem>
+                <SelectItem value="line">Line</SelectItem>
+                <SelectItem value="area">Area</SelectItem>
+                <SelectItem value="pie">Pie</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div className="space-y-3">
           <div className="h-[360px] w-full">
-            <BarChart
-              data={chartData}
-              seriesLabel={selectedMetricConfig.label}
-              title={`${selectedMetricConfig.label} por Campanha`}
-              subtitle={selectedMetricConfig.description}
-              containerClassName="h-full"
-              axisBottom={{
-                tickRotation: -25,
-                legend: 'Campanha',
-                legendOffset: 36,
-              }}
-              axisLeft={{
-                legend: selectedMetricConfig.axisLabel,
-                legendOffset: -60,
-                format: (value: string | number) =>
-                  formatForMetric(typeof value === 'number' ? value : Number.parseFloat(value)),
-              }}
-              colors={{ scheme: 'paired' }}
-              padding={0.3}
-              enableLabel
-              labelFormat={(value: number) => formatForMetric(value)}
-            />
+            {chartType === 'bar' && (
+              <BarChart
+                data={chartData}
+                seriesLabel={selectedMetricConfig.label}
+                title={`${selectedMetricConfig.label} por Campanha`}
+                subtitle={selectedMetricConfig.description}
+                containerClassName="h-full"
+                axisBottom={{ tickRotation: -25, legend: 'Campanha', legendOffset: 36 }}
+                axisLeft={{ legend: selectedMetricConfig.axisLabel, legendOffset: -60, format: (v: string | number) => formatForMetric(typeof v === 'number' ? v : Number.parseFloat(v)) }}
+                colors={{ scheme: 'paired' }}
+                padding={0.3}
+                enableLabel
+                labelFormat={(value: number) => formatForMetric(value)}
+              />
+            )}
+            {chartType === 'line' && (
+              <LineChart
+                data={chartData}
+                seriesLabel={selectedMetricConfig.label}
+                title={`${selectedMetricConfig.label} por Campanha`}
+                subtitle={selectedMetricConfig.description}
+                containerClassName="h-full"
+                axisBottom={{ tickRotation: -25, legend: 'Campanha', legendOffset: 36 }}
+                axisLeft={{ legend: selectedMetricConfig.axisLabel, legendOffset: -60 }}
+                enablePoints
+                curve="monotoneX"
+              />
+            )}
+            {chartType === 'area' && (
+              <AreaChart
+                data={chartData}
+                xColumn="x"
+                yColumn="y"
+                title={`${selectedMetricConfig.label} por Campanha`}
+                subtitle={selectedMetricConfig.description}
+                containerClassName="h-full"
+                axisBottom={{ legend: 'Campanha', legendOffset: 36, tickRotation: -25 }}
+                axisLeft={{ legend: selectedMetricConfig.axisLabel, legendOffset: -60 }}
+                enableArea
+                areaOpacity={0.25}
+                curve="monotoneX"
+              />
+            )}
+            {chartType === 'pie' && (
+              <PieChart
+                data={chartData}
+                title={`${selectedMetricConfig.label} por Campanha`}
+                subtitle={selectedMetricConfig.description}
+                containerClassName="h-full"
+              />
+            )}
           </div>
           <p className="text-xs text-muted-foreground">
             Valores calculados a partir do mesmo conjunto de dados apresentado na tabela.

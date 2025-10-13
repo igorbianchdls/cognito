@@ -1342,6 +1342,11 @@ type AnalyzeCampaignROASToolOutput = {
     roas: string;
     custo_por_conversao: string;
     ctr: string;
+    cpc?: string;
+    cpm?: string;
+    taxa_conversao?: string;
+    ticket_medio?: string;
+    lucro?: string;
     classificacao: string;
   }>;
   sql_query?: string;
@@ -1705,6 +1710,15 @@ type GetContasAPagarToolOutput = {
   message: string;
   sql_query?: string;
   error?: string;
+};
+
+type AnalyzeAdPerformanceToolOutput = {
+  success: boolean;
+  message: string;
+  count?: number;
+  rows?: Array<Record<string, unknown>>;
+  sql_query?: string;
+  sql_params?: string;
 };
 
 // Tipo genérico para saídas tabulares usadas no GenericResultTable
@@ -5305,6 +5319,29 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   pior_plataforma={(tool.output as CompareAdsPlatformsToolOutput).pior_plataforma}
                   plataformas={(tool.output as CompareAdsPlatformsToolOutput).plataformas}
                   sql_query={(tool.output as CompareAdsPlatformsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-analyzeAdPerformance') {
+          const tool = part as NexusToolUIPart;
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
+                <ToolHeader type="tool-analyzeAdPerformance" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && tool.output && (
+                <AdPerformanceResult
+                  success={(tool.output as AnalyzeAdPerformanceToolOutput).success}
+                  message={(tool.output as AnalyzeAdPerformanceToolOutput).message}
+                  rows={(tool.output as AnalyzeAdPerformanceToolOutput).rows as Array<Record<string, unknown>>}
+                  count={(tool.output as AnalyzeAdPerformanceToolOutput).count}
                 />
               )}
             </div>
