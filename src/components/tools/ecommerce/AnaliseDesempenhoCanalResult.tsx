@@ -5,7 +5,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { PieChart } from 'lucide-react';
 
-export type MixCategoriaRow = {
+export type AnaliseDesempenhoCanalRow = {
   categoria: string;
   receita: number;
   pct_receita: number;
@@ -14,18 +14,18 @@ export type MixCategoriaRow = {
 interface Props {
   success: boolean;
   message: string;
-  rows?: MixCategoriaRow[];
-  data?: MixCategoriaRow[];
+  rows?: AnaliseDesempenhoCanalRow[];
+  data?: AnaliseDesempenhoCanalRow[];
   sql_query?: string;
 }
 
 const formatCurrency = (value: number) =>
   value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-export default function MixReceitaPorCategoriaResult({ success, message, rows, data, sql_query }: Props) {
+export default function AnaliseDesempenhoCanalResult({ success, message, rows, data, sql_query }: Props) {
   const tableRows = rows ?? data ?? [];
 
-  const columns: ColumnDef<MixCategoriaRow>[] = useMemo(() => [
+  const columns: ColumnDef<AnaliseDesempenhoCanalRow>[] = useMemo(() => [
     { accessorKey: 'categoria', header: 'Categoria' },
     { accessorKey: 'receita', header: 'Receita', cell: ({ row }) => (
       <span className="font-semibold text-emerald-600">{formatCurrency(row.original.receita)}</span>
@@ -34,16 +34,16 @@ export default function MixReceitaPorCategoriaResult({ success, message, rows, d
   ], []);
 
   return (
-    <ArtifactDataTable<MixCategoriaRow>
+    <ArtifactDataTable<AnaliseDesempenhoCanalRow>
       data={tableRows}
       columns={columns}
-      title="Mix de Receita por Categoria"
+      title="Análise de Desempenho por Canal de Venda (A Visão de Rentabilidade)"
       icon={PieChart}
       iconColor="text-purple-600"
       message={message}
       success={success}
       count={tableRows.length}
-      exportFileName="mix_receita_categoria"
+      exportFileName="analise_desempenho_canal"
       sqlQuery={sql_query}
       enableAutoChart={true}
       chartOptions={{
@@ -54,10 +54,9 @@ export default function MixReceitaPorCategoriaResult({ success, message, rows, d
           pct_receita: '% Receita',
         },
         initialChartType: 'pie',
-        title: 'Distribuição de Receita por Categoria',
+        title: 'Análise de Desempenho por Canal de Venda (A Visão de Rentabilidade)',
         xLegend: 'Categoria',
       }}
     />
   );
 }
-

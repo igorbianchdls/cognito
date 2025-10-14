@@ -6,7 +6,7 @@ import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { ChartSwitcher } from '@/components/charts/ChartSwitcher';
 import { DollarSign } from 'lucide-react';
 
-export type TicketMedioRow = {
+export type AnalisePerformanceCategoriaRow = {
   pedidos: number;
   receita: number;
   ticket_medio: number;
@@ -15,17 +15,17 @@ export type TicketMedioRow = {
 interface Props {
   success: boolean;
   message: string;
-  rows?: TicketMedioRow[];
-  data?: TicketMedioRow[];
+  rows?: AnalisePerformanceCategoriaRow[];
+  data?: AnalisePerformanceCategoriaRow[];
   sql_query?: string;
 }
 
 const currency = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-export default function TicketMedioVendasResult({ success, message, rows, data, sql_query }: Props) {
+export default function AnalisePerformanceCategoriaResult({ success, message, rows, data, sql_query }: Props) {
   const tableRows = rows ?? data ?? [];
 
-  const columns: ColumnDef<TicketMedioRow>[] = useMemo(() => [
+  const columns: ColumnDef<AnalisePerformanceCategoriaRow>[] = useMemo(() => [
     { accessorKey: 'pedidos', header: 'Pedidos', cell: ({ row }) => row.original.pedidos.toLocaleString('pt-BR') },
     { accessorKey: 'receita', header: 'Receita', cell: ({ row }) => currency(row.original.receita) },
     { accessorKey: 'ticket_medio', header: 'Ticket Médio', cell: ({ row }) => (
@@ -35,16 +35,16 @@ export default function TicketMedioVendasResult({ success, message, rows, data, 
 
   // Para charts, normalizamos em pares métrica/valor a partir da primeira linha
   return (
-    <ArtifactDataTable<TicketMedioRow>
+    <ArtifactDataTable<AnalisePerformanceCategoriaRow>
       data={tableRows}
       columns={columns}
-      title="Ticket Médio de Vendas"
+      title="Análise de Performance por Categoria de Produto (A Visão Estratégica)"
       icon={DollarSign}
       iconColor="text-emerald-600"
       message={message}
       success={success}
       count={tableRows.length}
-      exportFileName="ticket_medio_vendas"
+      exportFileName="analise_performance_categoria"
       sqlQuery={sql_query}
       enableAutoChart={false}
       chartRenderer={(rows) => {
@@ -64,7 +64,7 @@ export default function TicketMedioVendasResult({ success, message, rows, data, 
               valueKeys: ['valor'],
               metricLabels: { valor: 'Valor' },
               initialChartType: 'bar',
-              title: 'Resumo de Vendas',
+              title: 'Análise de Performance por Categoria',
               xLegend: 'Métrica',
             }}
           />

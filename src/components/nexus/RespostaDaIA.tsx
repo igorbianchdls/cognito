@@ -62,9 +62,9 @@ import OrganicMarketingDataTable from '../tools/OrganicMarketingDataTable';
 import PaidTrafficDataTable from '../tools/PaidTrafficDataTable';
 import InventoryDataTable from '../tools/InventoryDataTable';
 import TopProdutosReceitaLiquidaTable, { type TopProdutosRow } from '../tools/TopProdutosReceitaLiquidaTable';
-import ReceitaPorCanalResult, { type ReceitaPorCanalRow } from '../tools/ecommerce/ReceitaPorCanalResult';
-import MixReceitaPorCategoriaResult, { type MixCategoriaRow } from '../tools/ecommerce/MixReceitaPorCategoriaResult';
-import TicketMedioVendasResult, { type TicketMedioRow } from '../tools/ecommerce/TicketMedioVendasResult';
+import DesempenhoVendasMensalResult, { type DesempenhoVendasMensalRow } from '../tools/ecommerce/DesempenhoVendasMensalResult';
+import AnaliseDesempenhoCanalResult, { type AnaliseDesempenhoCanalRow } from '../tools/ecommerce/AnaliseDesempenhoCanalResult';
+import AnalisePerformanceCategoriaResult, { type AnalisePerformanceCategoriaRow } from '../tools/ecommerce/AnalisePerformanceCategoriaResult';
 import CurvaABCPorReceitaResult, { type CurvaABCRow } from '../tools/ecommerce/CurvaABCPorReceitaResult';
 import TopClientesPorReceitaResult, { type TopClienteRow } from '../tools/ecommerce/TopClientesPorReceitaResult';
 import LogisticsDataTable from '../tools/LogisticsDataTable';
@@ -4384,7 +4384,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && (
-                <ReceitaPorCanalResult
+                <DesempenhoVendasMensalResult
                   success={(tool.output as GetReceitaPorCanalToolOutput).success}
                   message={(tool.output as GetReceitaPorCanalToolOutput).message}
                   rows={(tool.output as GetReceitaPorCanalToolOutput).rows}
@@ -4413,7 +4413,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && (
-                <MixReceitaPorCategoriaResult
+                <AnaliseDesempenhoCanalResult
                   success={(tool.output as GetMixReceitaPorCategoriaToolOutput).success}
                   message={(tool.output as GetMixReceitaPorCategoriaToolOutput).message}
                   rows={(tool.output as GetMixReceitaPorCategoriaToolOutput).rows}
@@ -4442,7 +4442,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && (
-                <TicketMedioVendasResult
+                <AnalisePerformanceCategoriaResult
                   success={(tool.output as GetTicketMedioVendasToolOutput).success}
                   message={(tool.output as GetTicketMedioVendasToolOutput).message}
                   rows={(tool.output as GetTicketMedioVendasToolOutput).rows}
