@@ -3,9 +3,9 @@ import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import {
   avaliacaoCustoInventario,
   calculateInventoryMetrics,
-  analyzeStockMovementTrends,
-  forecastRestockNeeds,
-  identifySlowMovingItems,
+  abcDetalhadaProduto,
+  analiseDOS,
+  abcResumoGerencial,
   desempenhoPorDepositoExpedicoes,
   analiseGiroEstoque,
   detectAnomalies
@@ -59,17 +59,14 @@ Auxiliar gestores de estoque, compradores e controllers a:
 - Métricas: turnover, coverage, stockout_rate, valor_imobilizado
 - Use para: "Calcule o giro de estoque", "Qual a cobertura?", "Taxa de ruptura?"
 
-**3. analyzeStockMovementTrends** ⭐ - Analisa tendências e sazonalidade
-- Períodos: daily, weekly, monthly
-- Use para: "Qual a tendência?", "Demanda está crescendo?", "Padrões sazonais?"
+**3. abcDetalhadaProduto** ⭐ - ABC detalhada por produto (receita acumulada)
+- Use para: "Quais SKUs classe A?", "Contribuição acumulada"
 
-**4. forecastRestockNeeds** ⭐ - Prevê necessidades de reposição
-- Urgência: CRÍTICO, ALTO, MÉDIO, BAIXO
-- Use para: "O que precisa repor?", "Quando vai esgotar?", "Previsão de ruptura?"
+**4. analiseDOS** ⭐ - Dias de Estoque (DOS)
+- Use para: "Quantos dias cada SKU dura?", "Risco de ruptura?"
 
-**5. identifySlowMovingItems** - Identifica dead stock
-- Critério: dias sem movimentação
-- Use para: "Produtos parados?", "Dead stock?", "Itens de baixo giro?"
+**5. abcResumoGerencial** - Resumo gerencial da ABC
+- Use para: "Distribuição por classe", "% receita e SKUs por A/B/C"
 
 **6. desempenhoPorDepositoExpedicoes** - Desempenho por depósito (expedições)
 - Métricas: pacotes, itens enviados, ticket médio dos pedidos
@@ -268,9 +265,9 @@ Seja sempre orientado a dados, priorize eficiência operacional e saúde finance
       tools: {
         avaliacaoCustoInventario,
         calculateInventoryMetrics,
-        analyzeStockMovementTrends,
-        forecastRestockNeeds,
-        identifySlowMovingItems,
+        abcDetalhadaProduto,
+        analiseDOS,
+        abcResumoGerencial,
         desempenhoPorDepositoExpedicoes,
         analiseGiroEstoque,
         detectAnomalies

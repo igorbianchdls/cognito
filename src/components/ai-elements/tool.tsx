@@ -83,6 +83,9 @@ export const ToolHeader = ({
           'tool-avaliacaoCustoInventario': 'Avaliação de custo do inventário',
           'tool-analiseGiroEstoque': 'Giro de estoque',
           'tool-desempenhoPorDepositoExpedicoes': 'Desempenho por depósito (expedições)',
+          'tool-analiseDOS': 'Dias de Estoque (DOS)',
+          'tool-abcDetalhadaProduto': 'ABC detalhada por produto',
+          'tool-abcResumoGerencial': 'Resumo gerencial da ABC',
           'tool-getTopClientesPorReceita': 'Top clientes por receita',
           // Novos nomes (PT-BR)
           'tool-desempenhoPorConta': 'Desempenho por conta',

@@ -275,179 +275,205 @@ export const calculateInventoryMetrics = tool({
   },
 });
 
-export const analyzeStockMovementTrends = tool({
-  description: 'Analisa tendências de movimentação de estoque por período e tipo',
-  inputSchema: z.object({
-    product_id: z.string().optional(),
-    period: z.enum(['daily', 'weekly', 'monthly']).default('weekly'),
-    lookback_days: z.number().default(30),
-  }),
-  execute: async ({ product_id, period = 'weekly', lookback_days = 30 }) => {
-    const range = Math.min(Math.max(Math.trunc(lookback_days), 1), 365);
-    const truncUnit = period === 'daily' ? 'day' : period === 'monthly' ? 'month' : 'week';
-
+export const abcDetalhadaProduto = tool({
+  description: 'Classificação ABC detalhada por produto (receita acumulada).',
+  inputSchema: z.object({}).optional(),
+  execute: async () => {
     const sql = `
-      SELECT
-        date_trunc($1, created_at) AS periodo,
-        LOWER(type) AS tipo,
-        SUM(quantity) AS quantidade
-      FROM gestaoestoque.movimentacoes_estoque
-      WHERE created_at::date >= CURRENT_DATE - ($2::int - 1)
-        ${product_id ? 'AND product_id = $3' : ''}
-      GROUP BY periodo, tipo
-      ORDER BY periodo, tipo
-    `;
-
-    const params: unknown[] = [truncUnit, range];
-    if (product_id) params.push(product_id);
-
-    try {
-      const rows = await runQuery<{ periodo: string; tipo: string | null; quantidade: string | number | null }>(sql, params);
-      const formatted = rows.map(r => ({
-        periodo: r.periodo,
-        tipo: r.tipo ?? 'desconhecido',
-        quantidade: Number(r.quantidade ?? 0),
-      }));
-
-      return {
-        success: true,
-        message: `Tendências de ${period} nos últimos ${range} dias` ,
-        periodo_dias: range,
-        rows: formatted,
-        sql_query: sql,
-        sql_params: formatSqlParams(params),
-      };
-    } catch (error) {
-      console.error('ERRO analyzeStockMovementTrends:', error);
-      return {
-        success: false,
-        message: `❌ Erro ao analisar movimentações: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
-      };
-    }
-  },
-});
-
-export const forecastRestockNeeds = tool({
-  description: 'Prevê necessidades de reposição por produto com base no consumo médio diário',
-  inputSchema: z.object({
-    forecast_days: z.number().default(30).describe('Dias de cobertura desejada'),
-    lookback_days: z.number().default(30).describe('Período para média de saídas'),
-    confidence_level: z.enum(['low', 'medium', 'high']).default('medium').optional(),
-  }),
-  execute: async ({ forecast_days = 30, lookback_days = 30 }) => {
-    const range = Math.min(Math.max(Math.trunc(lookback_days), 1), 365);
-    const sql = `
-      WITH outflow AS (
-        SELECT product_id,
-               SUM(CASE WHEN LOWER(type) IN ('saida','out') THEN quantity ELSE 0 END) AS saidas_periodo
-        FROM gestaoestoque.movimentacoes_estoque
-        WHERE created_at::date >= CURRENT_DATE - ($1::int - 1)
-        GROUP BY product_id
+      WITH receita_por_produto AS (
+        SELECT
+          ip.produto_id,
+          SUM(ip.quantidade * ip.preco_unitario) AS receita_produto
+        FROM gestaovendas.itens_pedido ip
+        JOIN gestaovendas.pedidos p ON ip.pedido_id = p.id
+        WHERE p.status != 'CANCELADO'
+        GROUP BY ip.produto_id
+        HAVING SUM(ip.quantidade * ip.preco_unitario) > 0
       ),
-      stock AS (
-        SELECT product_id,
-               SUM(quantity_available - quantity_reserved) AS on_hand
-        FROM gestaoestoque.estoque_canal
-        GROUP BY product_id
+      contribuicao_acumulada AS (
+        SELECT
+          produto_id,
+          receita_produto,
+          SUM(receita_produto) OVER () AS receita_geral_total,
+          SUM(receita_produto) OVER (ORDER BY receita_produto DESC) AS receita_acumulada
+        FROM receita_por_produto
       )
-      SELECT s.product_id,
-             COALESCE(s.on_hand, 0) AS on_hand,
-             ROUND(COALESCE(o.saidas_periodo,0)::numeric / NULLIF($1::int, 0), 2) AS media_saida_dia,
-             CASE
-               WHEN COALESCE(o.saidas_periodo,0) = 0 THEN NULL
-               ELSE ROUND(COALESCE(s.on_hand,0)::numeric / NULLIF((COALESCE(o.saidas_periodo,0)::numeric / NULLIF($1::int,1)),0), 1)
-             END AS cobertura_dias,
-             GREATEST(($2::int - COALESCE(ROUND(COALESCE(s.on_hand,0)::numeric / NULLIF((COALESCE(o.saidas_periodo,0)::numeric / NULLIF($1::int,1)),0), 0), 0)), 0) AS sugerido_repor
-      FROM stock s
-      LEFT JOIN outflow o USING (product_id)
-      WHERE COALESCE(s.on_hand, 0) >= 0
-      ORDER BY sugerido_repor DESC NULLS LAST
-    `;
+      SELECT
+        p.nome,
+        pv.sku,
+        ca.receita_produto,
+        (ca.receita_produto / ca.receita_geral_total) * 100 AS percentual_da_receita_total,
+        (ca.receita_acumulada / ca.receita_geral_total) * 100 AS percentual_acumulado,
+        CASE
+          WHEN (ca.receita_acumulada / ca.receita_geral_total) * 100 <= 80 THEN 'A'
+          WHEN (ca.receita_acumulada / ca.receita_geral_total) * 100 <= 95 THEN 'B'
+          ELSE 'C'
+        END AS curva_abc
+      FROM contribuicao_acumulada ca
+      JOIN gestaocatalogo.produto_variacoes pv ON ca.produto_id = pv.id
+      JOIN gestaocatalogo.produtos p ON pv.produto_pai_id = p.id
+      ORDER BY ca.receita_produto DESC;
+    `.trim();
 
     try {
       const rows = await runQuery<{
-        product_id: string;
-        on_hand: string | number | null;
-        media_saida_dia: string | number | null;
-        cobertura_dias: string | number | null;
-        sugerido_repor: string | number | null;
-      }>(sql, [range, forecast_days]);
-
-      const formatted = rows.map(r => ({
-        product_id: r.product_id,
-        on_hand: Number(r.on_hand ?? 0),
-        media_saida_dia: Number(r.media_saida_dia ?? 0),
-        cobertura_dias: r.cobertura_dias !== null ? Number(r.cobertura_dias) : null,
-        sugerido_repor: r.sugerido_repor !== null ? Number(r.sugerido_repor) : null,
-      }));
+        nome: string;
+        sku: string | null;
+        receita_produto: number;
+        percentual_da_receita_total: number;
+        percentual_acumulado: number;
+        curva_abc: string;
+      }>(sql);
 
       return {
         success: true,
-        message: `Necessidades de reposição considerando ${range} dias de histórico e meta de ${forecast_days} dias`,
-        periodo_dias: range,
-        rows: formatted,
+        message: 'ABC detalhada por produto',
+        rows,
         sql_query: sql,
-        sql_params: formatSqlParams([range, forecast_days]),
+        sql_params: formatSqlParams([]),
       };
     } catch (error) {
-      console.error('ERRO forecastRestockNeeds:', error);
+      console.error('ERRO abcDetalhadaProduto:', error);
       return {
         success: false,
-        message: `❌ Erro ao prever reposição: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        message: '❌ Erro na ABC detalhada por produto',
       };
     }
   },
 });
 
-export const identifySlowMovingItems = tool({
-  description: 'Identifica itens com estoque parado (sem movimentos recentes) e saldo em mãos',
-  inputSchema: z.object({
-    min_days_no_movement: z.number().default(90),
-    min_on_hand: z.number().default(0),
-  }),
-  execute: async ({ min_days_no_movement = 90, min_on_hand = 0 }) => {
+export const analiseDOS = tool({
+  description: 'Dias de Estoque (DOS): estoque disponível vs média de vendas diárias (60 dias).',
+  inputSchema: z.object({}).optional(),
+  execute: async () => {
     const sql = `
-      WITH last_mv AS (
-        SELECT product_id, MAX(created_at)::date AS ultima_mov
-        FROM gestaoestoque.movimentacoes_estoque
-        GROUP BY product_id
+      WITH vendas_diarias AS (
+        SELECT
+          ip.produto_id,
+          SUM(ip.quantidade) / 60.0 AS media_vendas_diaria
+        FROM gestaovendas.itens_pedido ip
+        JOIN gestaovendas.pedidos p ON ip.pedido_id = p.id
+        WHERE p.data_pedido >= (CURRENT_DATE - INTERVAL '60 days')
+          AND p.status != 'CANCELADO'
+        GROUP BY ip.produto_id
       ),
-      stock AS (
-        SELECT product_id,
-               SUM(quantity_available - quantity_reserved) AS on_hand
-        FROM gestaoestoque.estoque_canal
-        GROUP BY product_id
+      estoque_disponivel AS (
+        SELECT
+          produto_variacao_id,
+          SUM(quantidade_fisica - quantidade_reservada) AS disponivel
+        FROM estoque.saldos
+        GROUP BY produto_variacao_id
       )
-      SELECT s.product_id, COALESCE(s.on_hand,0) AS on_hand, lm.ultima_mov,
-             (CURRENT_DATE - lm.ultima_mov) AS dias_sem_mov
-      FROM stock s
-      LEFT JOIN last_mv lm USING (product_id)
-      WHERE COALESCE(s.on_hand,0) > $1
-        AND (lm.ultima_mov IS NULL OR (CURRENT_DATE - lm.ultima_mov) >= $2)
-      ORDER BY dias_sem_mov DESC NULLS LAST, on_hand DESC
-    `;
+      SELECT
+        p.nome,
+        pv.sku,
+        ed.disponivel AS estoque_atual,
+        vd.media_vendas_diaria,
+        CASE
+          WHEN vd.media_vendas_diaria > 0 THEN ROUND(ed.disponivel / vd.media_vendas_diaria, 1)
+          ELSE NULL
+        END AS dias_de_estoque_restantes
+      FROM vendas_diarias vd
+      JOIN estoque_disponivel ed ON vd.produto_id = ed.produto_variacao_id
+      JOIN gestaocatalogo.produto_variacoes pv ON vd.produto_id = pv.id
+      JOIN gestaocatalogo.produtos p ON pv.produto_pai_id = p.id
+      WHERE ed.disponivel > 0
+      ORDER BY dias_de_estoque_restantes ASC
+      LIMIT 15;
+    `.trim();
 
     try {
-      const rows = await runQuery<{ product_id: string; on_hand: string | number | null; ultima_mov: string | null; dias_sem_mov: string | number | null }>(sql, [min_on_hand, min_days_no_movement]);
-      const formatted = rows.map(r => ({
-        product_id: r.product_id,
-        on_hand: Number(r.on_hand ?? 0),
-        ultima_mov: r.ultima_mov,
-        dias_sem_mov: r.dias_sem_mov !== null ? Number(r.dias_sem_mov) : null,
-      }));
+      const rows = await runQuery<{
+        nome: string;
+        sku: string | null;
+        estoque_atual: number;
+        media_vendas_diaria: number;
+        dias_de_estoque_restantes: number | null;
+      }>(sql);
 
       return {
         success: true,
-        message: `Itens com mais de ${min_days_no_movement} dias sem movimento e saldo > ${min_on_hand}`,
-        rows: formatted,
+        message: 'Dias de Estoque (DOS) — produtos críticos',
+        rows,
         sql_query: sql,
-        sql_params: formatSqlParams([min_on_hand, min_days_no_movement]),
+        sql_params: formatSqlParams([]),
       };
     } catch (error) {
-      console.error('ERRO identifySlowMovingItems:', error);
+      console.error('ERRO analiseDOS:', error);
       return {
         success: false,
-        message: `❌ Erro ao identificar itens de baixo giro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        message: '❌ Erro ao calcular DOS',
+      };
+    }
+  },
+});
+
+export const abcResumoGerencial = tool({
+  description: 'Resumo gerencial da Curva ABC (distribuição de SKUs e receita por classe).',
+  inputSchema: z.object({}).optional(),
+  execute: async () => {
+    const sql = `
+      WITH receita_por_produto AS (
+        SELECT
+          ip.produto_id,
+          SUM(ip.quantidade * ip.preco_unitario) AS receita_produto
+        FROM gestaovendas.itens_pedido ip
+        JOIN gestaovendas.pedidos p ON ip.pedido_id = p.id
+        WHERE p.status != 'CANCELADO'
+        GROUP BY ip.produto_id
+        HAVING SUM(ip.quantidade * ip.preco_unitario) > 0
+      ),
+      contribuicao_acumulada AS (
+        SELECT
+          produto_id,
+          receita_produto,
+          SUM(receita_produto) OVER () AS receita_geral_total,
+          SUM(receita_produto) OVER (ORDER BY receita_produto DESC) AS receita_acumulada
+        FROM receita_por_produto
+      ),
+      produtos_classificados AS (
+        SELECT
+          produto_id,
+          receita_produto,
+          CASE
+            WHEN (receita_acumulada / receita_geral_total) * 100 <= 80 THEN 'A'
+            WHEN (receita_acumulada / receita_geral_total) * 100 <= 95 THEN 'B'
+            ELSE 'C'
+          END AS curva_abc
+        FROM contribuicao_acumulada
+      )
+      SELECT
+        curva_abc,
+        COUNT(produto_id) AS numero_de_skus,
+        (COUNT(produto_id)::numeric / (SELECT COUNT(*) FROM produtos_classificados)::numeric) * 100 AS percentual_de_skus,
+        SUM(receita_produto) AS receita_total_da_curva,
+        (SUM(receita_produto) / (SELECT SUM(receita_produto) FROM produtos_classificados)) * 100 AS percentual_da_receita_total
+      FROM produtos_classificados
+      GROUP BY curva_abc
+      ORDER BY curva_abc;
+    `.trim();
+
+    try {
+      const rows = await runQuery<{
+        curva_abc: string;
+        numero_de_skus: number;
+        percentual_de_skus: number;
+        receita_total_da_curva: number;
+        percentual_da_receita_total: number;
+      }>(sql);
+
+      return {
+        success: true,
+        message: 'Resumo gerencial da Curva ABC',
+        rows,
+        sql_query: sql,
+        sql_params: formatSqlParams([]),
+      };
+    } catch (error) {
+      console.error('ERRO abcResumoGerencial:', error);
+      return {
+        success: false,
+        message: '❌ Erro no resumo da Curva ABC',
       };
     }
   },
