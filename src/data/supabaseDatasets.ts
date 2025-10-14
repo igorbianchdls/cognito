@@ -53,11 +53,20 @@ export async function fetchSupabaseTable(tableName: string) {
       // estoque - ordenar por coluna existente apropriada
       if (table === 'lancamentos') {
         orderColumn = 'ocorreu_em';
-      } else if (table === 'reservas' || table === 'depositos') {
+      } else if (table === 'reservas') {
         orderColumn = 'criado_em';
       } else if (table === 'saldos' || table === 'disponivel_para_venda') {
         // Tabelas sem ID: ordenar por produto_id
         orderColumn = 'produto_id';
+      } else {
+        orderColumn = 'id';
+      }
+    } else if (schema === 'armazem') {
+      // armazem - ordenação específica por tabela
+      if (table === 'depositos' || table === 'recebimentos' || table === 'transferencias') {
+        orderColumn = 'criado_em';
+      } else if (table === 'enderecos' || table === 'recebimentos_itens' || table === 'transferencias_itens') {
+        orderColumn = 'id';
       } else {
         orderColumn = 'id';
       }
@@ -7025,6 +7034,182 @@ export const desligamentosColumns: ColDef[] = [
   { field: 'motivo', headerName: 'Motivo', width: 400, editable: true, sortable: true, filter: 'agTextColumnFilter' }
 ];
 
+// ============================================
+// ARMAZÉM - Schema: armazem
+// ============================================
+
+// Configurações de colunas para Depósitos (Armazém)
+export const armazemDepositosColumns: ColDef[] = [
+  { field: 'id', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'codigo', headerName: 'Código', width: 120, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'nome', headerName: 'Nome', width: 200, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'tipo', headerName: 'Tipo', width: 150, editable: true, sortable: true, filter: 'agSetColumnFilter' },
+  { field: 'cidade', headerName: 'Cidade', width: 150, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'estado', headerName: 'Estado', width: 80, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'cep', headerName: 'CEP', width: 110, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'ativo', headerName: 'Ativo', width: 100, editable: true, sortable: true, filter: 'agSetColumnFilter', cellRenderer: (params: any) => params.value ? '✓' : '✗' },
+  { field: 'criado_em', headerName: 'Criado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
+  { field: 'atualizado_em', headerName: 'Atualizado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' }
+];
+
+// Configurações de colunas para Endereços
+export const armazemEnderecosColumns: ColDef[] = [
+  { field: 'id', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'deposito_id', headerName: 'Depósito ID', width: 120, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'codigo', headerName: 'Código', width: 150, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'tipo', headerName: 'Tipo', width: 150, editable: true, sortable: true, filter: 'agSetColumnFilter' }
+];
+
+// Configurações de colunas para Recebimentos
+export const armazemRecebimentosColumns: ColDef[] = [
+  { field: 'id', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'deposito_id', headerName: 'Depósito ID', width: 120, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'fornecedor_id', headerName: 'Fornecedor ID', width: 140, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'status', headerName: 'Status', width: 150, editable: true, sortable: true, filter: 'agSetColumnFilter', cellStyle: (params) => params.value === 'CONCLUIDO' ? { color: '#2e7d32', fontWeight: 'bold' } : { color: '#ed6c02', fontWeight: 'bold' } },
+  { field: 'data_prevista', headerName: 'Data Prevista', width: 150, editable: true, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
+  { field: 'criado_em', headerName: 'Criado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
+  { field: 'atualizado_em', headerName: 'Atualizado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' }
+];
+
+// Configurações de colunas para Recebimentos Itens
+export const armazemRecebimentosItensColumns: ColDef[] = [
+  { field: 'id', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'recebimento_id', headerName: 'Recebimento ID', width: 150, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'produto_variacao_id', headerName: 'Produto Variação ID', width: 180, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'quantidade_prevista', headerName: 'Qtd Prevista', width: 140, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? Number(params.value).toLocaleString('pt-BR', { minimumFractionDigits: 3 }) : '' },
+  { field: 'quantidade_recebida', headerName: 'Qtd Recebida', width: 140, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? Number(params.value).toLocaleString('pt-BR', { minimumFractionDigits: 3 }) : '' }
+];
+
+// Configurações de colunas para Transferências
+export const armazemTransferenciasColumns: ColDef[] = [
+  { field: 'id', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'deposito_origem_id', headerName: 'Depósito Origem', width: 160, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'deposito_destino_id', headerName: 'Depósito Destino', width: 160, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'status', headerName: 'Status', width: 150, editable: true, sortable: true, filter: 'agSetColumnFilter', cellStyle: (params) => params.value === 'CONCLUIDO' ? { color: '#2e7d32', fontWeight: 'bold' } : { color: '#ed6c02', fontWeight: 'bold' } },
+  { field: 'data_envio', headerName: 'Data Envio', width: 150, editable: true, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
+  { field: 'data_recebimento', headerName: 'Data Recebimento', width: 170, editable: true, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
+  { field: 'criado_em', headerName: 'Criado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
+  { field: 'atualizado_em', headerName: 'Atualizado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' }
+];
+
+// Configurações de colunas para Transferências Itens
+export const armazemTransferenciasItensColumns: ColDef[] = [
+  { field: 'id', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'transferencia_id', headerName: 'Transferência ID', width: 150, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'produto_variacao_id', headerName: 'Produto Variação ID', width: 180, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'quantidade_enviada', headerName: 'Qtd Enviada', width: 140, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? Number(params.value).toLocaleString('pt-BR', { minimumFractionDigits: 3 }) : '' }
+];
+
+// ============================================
+// ESTOQUE - Schema: estoque
+// ============================================
+
+// Configurações de colunas para Disponível para Venda
+export const estoqueDisponivelParaVendaColumns: ColDef[] = [
+  { field: 'produto_variacao_id', headerName: 'Produto Variação ID', width: 180, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'deposito_id', headerName: 'Depósito ID', width: 120, editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'deposito_nome', headerName: 'Depósito', width: 200, editable: false, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'sku', headerName: 'SKU', width: 150, editable: false, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'quantidade_disponivel', headerName: 'Qtd Disponível', width: 150, editable: false, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? Number(params.value).toLocaleString('pt-BR', { minimumFractionDigits: 3 }) : '', cellStyle: { textAlign: 'right', fontWeight: 'bold', color: '#2e7d32' } }
+];
+
+// Configurações de colunas para Lançamentos
+export const estoqueLancamentosColumns: ColDef[] = [
+  { field: 'id', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'ocorreu_em', headerName: 'Ocorreu em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleString('pt-BR') : '' },
+  { field: 'produto_variacao_id', headerName: 'Produto Variação ID', width: 180, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'deposito_id', headerName: 'Depósito ID', width: 120, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'endereco_id', headerName: 'Endereço ID', width: 120, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'tipo_movimento', headerName: 'Tipo Movimento', width: 150, editable: true, sortable: true, filter: 'agSetColumnFilter', cellStyle: { fontWeight: 'bold' } },
+  { field: 'quantidade_delta', headerName: 'Quantidade', width: 130, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? Number(params.value).toLocaleString('pt-BR', { minimumFractionDigits: 3 }) : '', cellStyle: (params) => params.value > 0 ? { color: '#2e7d32', fontWeight: 'bold' } : { color: '#d32f2f', fontWeight: 'bold' } },
+  { field: 'ref_tabela', headerName: 'Ref Tabela', width: 150, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'ref_id', headerName: 'Ref ID', width: 100, editable: true, sortable: true, filter: 'agNumberColumnFilter' }
+];
+
+// Configurações de colunas para Reservas
+export const estoqueReservasColumns: ColDef[] = [
+  { field: 'id', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'item_pedido_id', headerName: 'Item Pedido ID', width: 140, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'produto_variacao_id', headerName: 'Produto Variação ID', width: 180, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'deposito_id', headerName: 'Depósito ID', width: 120, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'quantidade_reservada', headerName: 'Qtd Reservada', width: 150, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? Number(params.value).toLocaleString('pt-BR', { minimumFractionDigits: 3 }) : '' },
+  { field: 'status', headerName: 'Status', width: 120, editable: true, sortable: true, filter: 'agSetColumnFilter', cellStyle: (params) => params.value === 'ATIVA' ? { color: '#2e7d32', fontWeight: 'bold' } : { color: '#757575', fontWeight: 'bold' } },
+  { field: 'criado_em', headerName: 'Criado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' }
+];
+
+// Configurações de colunas para Saldos
+export const estoqueSaldosColumns: ColDef[] = [
+  { field: 'produto_variacao_id', headerName: 'Produto Variação ID', width: 180, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'deposito_id', headerName: 'Depósito ID', width: 120, editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'quantidade_fisica', headerName: 'Qtd Física', width: 130, editable: false, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? Number(params.value).toLocaleString('pt-BR', { minimumFractionDigits: 3 }) : '', cellStyle: { textAlign: 'right', fontWeight: 'bold' } },
+  { field: 'quantidade_reservada', headerName: 'Qtd Reservada', width: 150, editable: false, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? Number(params.value).toLocaleString('pt-BR', { minimumFractionDigits: 3 }) : '', cellStyle: { textAlign: 'right', fontWeight: 'bold', color: '#ed6c02' } }
+];
+
+// ============================================
+// GESTÃO DE CATÁLOGO - Schema: gestaocatalogo
+// ============================================
+
+// Configurações de colunas para Atributos
+export const gestaocatalogoAtributosColumns: ColDef[] = [
+  { field: 'id', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'nome', headerName: 'Nome', width: 300, editable: true, sortable: true, filter: 'agTextColumnFilter' }
+];
+
+// Configurações de colunas para Categorias
+export const gestaocatalogoCategoriasColumns: ColDef[] = [
+  { field: 'id', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'nome', headerName: 'Nome', width: 250, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'parent_id', headerName: 'Categoria Pai ID', width: 160, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'ativo', headerName: 'Ativo', width: 100, editable: true, sortable: true, filter: 'agSetColumnFilter', cellRenderer: (params: any) => params.value ? '✓' : '✗' },
+  { field: 'criado_em', headerName: 'Criado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
+  { field: 'atualizado_em', headerName: 'Atualizado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' }
+];
+
+// Configurações de colunas para Marcas
+export const gestaocatalogoMarcasColumns: ColDef[] = [
+  { field: 'id', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'nome', headerName: 'Nome', width: 250, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'ativo', headerName: 'Ativo', width: 100, editable: true, sortable: true, filter: 'agSetColumnFilter', cellRenderer: (params: any) => params.value ? '✓' : '✗' },
+  { field: 'criado_em', headerName: 'Criado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
+  { field: 'atualizado_em', headerName: 'Atualizado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' }
+];
+
+// Configurações de colunas para Produtos
+export const gestaocatalogoProdutosColumns: ColDef[] = [
+  { field: 'id', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'nome', headerName: 'Nome', width: 300, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'descricao', headerName: 'Descrição', width: 400, editable: true, sortable: true, filter: 'agTextColumnFilter', wrapText: true, autoHeight: true },
+  { field: 'categoria_id', headerName: 'Categoria ID', width: 140, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'marca_id', headerName: 'Marca ID', width: 120, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'ativo', headerName: 'Ativo', width: 100, editable: true, sortable: true, filter: 'agSetColumnFilter', cellRenderer: (params: any) => params.value ? '✓' : '✗' },
+  { field: 'criado_em', headerName: 'Criado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
+  { field: 'atualizado_em', headerName: 'Atualizado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' }
+];
+
+// Configurações de colunas para Produto Variações
+export const gestaocatalogoProdutoVariacoesColumns: ColDef[] = [
+  { field: 'id', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'produto_pai_id', headerName: 'Produto Pai ID', width: 140, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'sku', headerName: 'SKU', width: 150, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'gtin_ean', headerName: 'GTIN/EAN', width: 150, editable: true, sortable: true, filter: 'agTextColumnFilter' },
+  { field: 'preco_base', headerName: 'Preço Base', width: 130, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? Number(params.value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '' },
+  { field: 'preco_promocional', headerName: 'Preço Promocional', width: 170, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? Number(params.value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '' },
+  { field: 'peso_kg', headerName: 'Peso (kg)', width: 110, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? Number(params.value).toFixed(3) : '' },
+  { field: 'altura_cm', headerName: 'Altura (cm)', width: 120, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? Number(params.value).toFixed(2) : '' },
+  { field: 'largura_cm', headerName: 'Largura (cm)', width: 130, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? Number(params.value).toFixed(2) : '' },
+  { field: 'profundidade_cm', headerName: 'Profundidade (cm)', width: 160, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? Number(params.value).toFixed(2) : '' },
+  { field: 'ativo', headerName: 'Ativo', width: 100, editable: true, sortable: true, filter: 'agSetColumnFilter', cellRenderer: (params: any) => params.value ? '✓' : '✗' },
+  { field: 'criado_em', headerName: 'Criado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
+  { field: 'atualizado_em', headerName: 'Atualizado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' }
+];
+
+// Configurações de colunas para Produtos Imagens
+export const gestaocatalogoProdutosImagensColumns: ColDef[] = [
+  { field: 'id', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'produto_pai_id', headerName: 'Produto Pai ID', width: 140, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
+  { field: 'variacao_id', headerName: 'Variação ID', width: 130, editable: true, sortable: true, filter: 'agNumberColumnFilter' }
+];
+
 export interface SupabaseDatasetConfig {
   id: string;
   name: string;
@@ -7763,23 +7948,72 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
   },
 
   // ============================================
-  // ESTOQUE - Schema: estoque
+  // ARMAZÉM - Schema: armazem
   // ============================================
   {
-    id: 'estoque-depositos',
+    id: 'armazem-depositos',
     name: 'Depósitos',
-    description: 'Locais de estocagem',
-    tableName: 'estoque.depositos',
-    columnDefs: [],
+    description: 'Locais físicos de armazenagem',
+    tableName: 'armazem.depositos',
+    columnDefs: armazemDepositosColumns,
     icon: '🏬',
-    category: 'Estoque'
+    category: 'Armazém'
   },
+  {
+    id: 'armazem-enderecos',
+    name: 'Endereços',
+    description: 'Endereços de picking e armazenagem',
+    tableName: 'armazem.enderecos',
+    columnDefs: armazemEnderecosColumns,
+    icon: '📍',
+    category: 'Armazém'
+  },
+  {
+    id: 'armazem-recebimentos',
+    name: 'Recebimentos',
+    description: 'Recebimentos de mercadorias',
+    tableName: 'armazem.recebimentos',
+    columnDefs: armazemRecebimentosColumns,
+    icon: '📥',
+    category: 'Armazém'
+  },
+  {
+    id: 'armazem-recebimentos-itens',
+    name: 'Itens de Recebimento',
+    description: 'Itens dos recebimentos de mercadorias',
+    tableName: 'armazem.recebimentos_itens',
+    columnDefs: armazemRecebimentosItensColumns,
+    icon: '📦',
+    category: 'Armazém'
+  },
+  {
+    id: 'armazem-transferencias',
+    name: 'Transferências',
+    description: 'Transferências entre depósitos',
+    tableName: 'armazem.transferencias',
+    columnDefs: armazemTransferenciasColumns,
+    icon: '🔄',
+    category: 'Armazém'
+  },
+  {
+    id: 'armazem-transferencias-itens',
+    name: 'Itens de Transferência',
+    description: 'Itens das transferências entre depósitos',
+    tableName: 'armazem.transferencias_itens',
+    columnDefs: armazemTransferenciasItensColumns,
+    icon: '📋',
+    category: 'Armazém'
+  },
+
+  // ============================================
+  // ESTOQUE - Schema: estoque
+  // ============================================
   {
     id: 'estoque-disponivel-venda',
     name: 'Disponível para Venda',
     description: 'Saldo disponível por produto e depósito',
     tableName: 'estoque.disponivel_para_venda',
-    columnDefs: [],
+    columnDefs: estoqueDisponivelParaVendaColumns,
     icon: '🟢',
     category: 'Estoque'
   },
@@ -7788,7 +8022,7 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     name: 'Lançamentos',
     description: 'Movimentações de estoque (entradas/saídas)',
     tableName: 'estoque.lancamentos',
-    columnDefs: [],
+    columnDefs: estoqueLancamentosColumns,
     icon: '🔄',
     category: 'Estoque'
   },
@@ -7797,7 +8031,7 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     name: 'Reservas',
     description: 'Reservas vinculadas a pedidos e itens',
     tableName: 'estoque.reservas',
-    columnDefs: [],
+    columnDefs: estoqueReservasColumns,
     icon: '📌',
     category: 'Estoque'
   },
@@ -7806,7 +8040,7 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     name: 'Saldos',
     description: 'Saldos por produto e depósito',
     tableName: 'estoque.saldos',
-    columnDefs: [],
+    columnDefs: estoqueSaldosColumns,
     icon: '⚖️',
     category: 'Estoque'
   },
@@ -7815,11 +8049,20 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
   // GESTÃO DE CATÁLOGO - Schema: gestaocatalogo
   // ============================================
   {
+    id: 'catalogo-atributos',
+    name: 'Atributos',
+    description: 'Atributos de produtos (cor, tamanho, etc)',
+    tableName: 'gestaocatalogo.atributos',
+    columnDefs: gestaocatalogoAtributosColumns,
+    icon: '🎨',
+    category: 'Gestão de Catálogo'
+  },
+  {
     id: 'catalogo-categorias',
     name: 'Categorias',
     description: 'Categorias hierárquicas de produtos',
     tableName: 'gestaocatalogo.categorias',
-    columnDefs: [],
+    columnDefs: gestaocatalogoCategoriasColumns,
     icon: '🗂️',
     category: 'Gestão de Catálogo'
   },
@@ -7828,7 +8071,7 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     name: 'Marcas',
     description: 'Cadastro de marcas',
     tableName: 'gestaocatalogo.marcas',
-    columnDefs: [],
+    columnDefs: gestaocatalogoMarcasColumns,
     icon: '🏷️',
     category: 'Gestão de Catálogo'
   },
@@ -7837,8 +8080,17 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     name: 'Produtos',
     description: 'Dados mestre de produtos',
     tableName: 'gestaocatalogo.produtos',
-    columnDefs: [],
+    columnDefs: gestaocatalogoProdutosColumns,
     icon: '📦',
+    category: 'Gestão de Catálogo'
+  },
+  {
+    id: 'catalogo-produto-variacoes',
+    name: 'Variações de Produtos',
+    description: 'SKUs, preços e dimensões das variações',
+    tableName: 'gestaocatalogo.produto_variacoes',
+    columnDefs: gestaocatalogoProdutoVariacoesColumns,
+    icon: '🔢',
     category: 'Gestão de Catálogo'
   },
   {
@@ -7855,7 +8107,7 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     name: 'Imagens de Produtos',
     description: 'URLs de imagens dos produtos',
     tableName: 'gestaocatalogo.produtos_imagens',
-    columnDefs: [],
+    columnDefs: gestaocatalogoProdutosImagensColumns,
     icon: '🖼️',
     category: 'Gestão de Catálogo'
   },
