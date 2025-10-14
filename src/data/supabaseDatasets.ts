@@ -170,6 +170,9 @@ export async function fetchSupabaseTable(tableName: string) {
       } else {
         orderColumn = 'id';
       }
+    } else if (schema === 'entidades') {
+      // entidades - todas as tabelas usam criado_em
+      orderColumn = 'criado_em';
     }
 
     if (schema) {
@@ -7210,6 +7213,487 @@ export const gestaocatalogoProdutosImagensColumns: ColDef[] = [
   { field: 'variacao_id', headerName: 'Variação ID', width: 130, editable: true, sortable: true, filter: 'agNumberColumnFilter' }
 ];
 
+// ============================================
+// ENTIDADES - Schema: entidades
+// ============================================
+
+// Configurações de colunas para Clientes
+export const clientesColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'nome_razao_social',
+    headerName: 'Nome / Razão Social',
+    width: 250,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'nome_fantasia',
+    headerName: 'Nome Fantasia',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'cpf_cnpj',
+    headerName: 'CPF/CNPJ',
+    width: 160,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const cleanValue = params.value.replace(/\D/g, '');
+      if (cleanValue.length === 11) {
+        // CPF: XXX.XXX.XXX-XX
+        return cleanValue.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+      } else if (cleanValue.length === 14) {
+        // CNPJ: XX.XXX.XXX/XXXX-XX
+        return cleanValue.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+      }
+      return params.value;
+    }
+  },
+  {
+    field: 'email',
+    headerName: 'Email',
+    width: 220,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'telefone',
+    headerName: 'Telefone',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const cleanValue = params.value.replace(/\D/g, '');
+      if (cleanValue.length === 11) {
+        // Celular: (XX) XXXXX-XXXX
+        return cleanValue.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+      } else if (cleanValue.length === 10) {
+        // Fixo: (XX) XXXX-XXXX
+        return cleanValue.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+      }
+      return params.value;
+    }
+  },
+  {
+    field: 'endereco_logradouro',
+    headerName: 'Logradouro',
+    width: 250,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'endereco_numero',
+    headerName: 'Número',
+    width: 100,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'endereco_complemento',
+    headerName: 'Complemento',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'endereco_bairro',
+    headerName: 'Bairro',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'endereco_cidade',
+    headerName: 'Cidade',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'endereco_uf',
+    headerName: 'UF',
+    width: 80,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    valueFormatter: (params) => params.value ? String(params.value).toUpperCase() : ''
+  },
+  {
+    field: 'endereco_cep',
+    headerName: 'CEP',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const cleanValue = params.value.replace(/\D/g, '');
+      if (cleanValue.length === 8) {
+        return cleanValue.replace(/(\d{5})(\d{3})/, '$1-$2');
+      }
+      return params.value;
+    }
+  },
+  {
+    field: 'criado_em',
+    headerName: 'Criado em',
+    width: 170,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : ''
+  }
+];
+
+// Configurações de colunas para Fornecedores (Entidades)
+export const entidadesFornecedoresColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'nome_razao_social',
+    headerName: 'Nome / Razão Social',
+    width: 250,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'nome_fantasia',
+    headerName: 'Nome Fantasia',
+    width: 200,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'cpf_cnpj',
+    headerName: 'CPF/CNPJ',
+    width: 160,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const cleanValue = params.value.replace(/\D/g, '');
+      if (cleanValue.length === 11) {
+        return cleanValue.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+      } else if (cleanValue.length === 14) {
+        return cleanValue.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+      }
+      return params.value;
+    }
+  },
+  {
+    field: 'inscricao_estadual',
+    headerName: 'Inscrição Estadual',
+    width: 160,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'inscricao_municipal',
+    headerName: 'Inscrição Municipal',
+    width: 160,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'email',
+    headerName: 'Email',
+    width: 220,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'telefone',
+    headerName: 'Telefone',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const cleanValue = params.value.replace(/\D/g, '');
+      if (cleanValue.length === 11) {
+        return cleanValue.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+      } else if (cleanValue.length === 10) {
+        return cleanValue.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+      }
+      return params.value;
+    }
+  },
+  {
+    field: 'endereco_logradouro',
+    headerName: 'Logradouro',
+    width: 250,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'endereco_numero',
+    headerName: 'Número',
+    width: 100,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'endereco_complemento',
+    headerName: 'Complemento',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'endereco_bairro',
+    headerName: 'Bairro',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'endereco_cidade',
+    headerName: 'Cidade',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'endereco_uf',
+    headerName: 'UF',
+    width: 80,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    valueFormatter: (params) => params.value ? String(params.value).toUpperCase() : ''
+  },
+  {
+    field: 'endereco_cep',
+    headerName: 'CEP',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const cleanValue = params.value.replace(/\D/g, '');
+      if (cleanValue.length === 8) {
+        return cleanValue.replace(/(\d{5})(\d{3})/, '$1-$2');
+      }
+      return params.value;
+    }
+  },
+  {
+    field: 'criado_em',
+    headerName: 'Criado em',
+    width: 170,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : ''
+  }
+];
+
+// Configurações de colunas para Funcionários (Entidades)
+export const entidadesFuncionariosColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'nome_razao_social',
+    headerName: 'Nome',
+    width: 250,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'cpf',
+    headerName: 'CPF',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const cleanValue = params.value.replace(/\D/g, '');
+      if (cleanValue.length === 11) {
+        return cleanValue.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+      }
+      return params.value;
+    }
+  },
+  {
+    field: 'email',
+    headerName: 'Email',
+    width: 220,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'telefone',
+    headerName: 'Telefone',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const cleanValue = params.value.replace(/\D/g, '');
+      if (cleanValue.length === 11) {
+        return cleanValue.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+      } else if (cleanValue.length === 10) {
+        return cleanValue.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+      }
+      return params.value;
+    }
+  },
+  {
+    field: 'cargo',
+    headerName: 'Cargo',
+    width: 160,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    enablePivot: true
+  },
+  {
+    field: 'departamento',
+    headerName: 'Departamento',
+    width: 160,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    enablePivot: true
+  },
+  {
+    field: 'endereco_logradouro',
+    headerName: 'Logradouro',
+    width: 250,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'endereco_numero',
+    headerName: 'Número',
+    width: 100,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'endereco_complemento',
+    headerName: 'Complemento',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'endereco_bairro',
+    headerName: 'Bairro',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'endereco_cidade',
+    headerName: 'Cidade',
+    width: 180,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'endereco_uf',
+    headerName: 'UF',
+    width: 80,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    valueFormatter: (params) => params.value ? String(params.value).toUpperCase() : ''
+  },
+  {
+    field: 'endereco_cep',
+    headerName: 'CEP',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      const cleanValue = params.value.replace(/\D/g, '');
+      if (cleanValue.length === 8) {
+        return cleanValue.replace(/(\d{5})(\d{3})/, '$1-$2');
+      }
+      return params.value;
+    }
+  },
+  {
+    field: 'criado_em',
+    headerName: 'Criado em',
+    width: 170,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : ''
+  }
+];
+
 export interface SupabaseDatasetConfig {
   id: string;
   name: string;
@@ -8119,5 +8603,36 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     columnDefs: [],
     icon: '📏',
     category: 'Gestão de Catálogo'
+  },
+
+  // ============================================
+  // ENTIDADES - Schema: entidades
+  // ============================================
+  {
+    id: 'entidades-clientes',
+    name: 'Clientes',
+    description: 'Cadastro de clientes pessoa física e jurídica',
+    tableName: 'entidades.clientes',
+    columnDefs: clientesColumns,
+    icon: '👥',
+    category: 'Entidades'
+  },
+  {
+    id: 'entidades-fornecedores',
+    name: 'Fornecedores',
+    description: 'Cadastro de fornecedores e suas informações fiscais',
+    tableName: 'entidades.fornecedores',
+    columnDefs: entidadesFornecedoresColumns,
+    icon: '🏭',
+    category: 'Entidades'
+  },
+  {
+    id: 'entidades-funcionarios',
+    name: 'Funcionários',
+    description: 'Cadastro de funcionários e colaboradores',
+    tableName: 'entidades.funcionarios',
+    columnDefs: entidadesFuncionariosColumns,
+    icon: '👔',
+    category: 'Entidades'
   }
 ];
