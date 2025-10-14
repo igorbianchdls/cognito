@@ -483,6 +483,14 @@ export const contasAPagarColumns: ColDef[] = [
     filter: 'agTextColumnFilter'
   },
   {
+    field: 'centro_custo_id',
+    headerName: 'Centro de Custo ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
     field: 'documento_id',
     headerName: 'Documento ID',
     width: 280,
@@ -600,6 +608,14 @@ export const contasAReceberColumns: ColDef[] = [
   {
     field: 'conta_id',
     headerName: 'Conta ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'centro_custo_id',
+    headerName: 'Centro de Custo ID',
     width: 280,
     editable: true,
     sortable: true,
@@ -2302,6 +2318,298 @@ export const entidadesColumns: ColDef[] = [
     sortable: true,
     filter: 'agTextColumnFilter',
     cellStyle: { fontFamily: 'monospace' }
+  },
+  {
+    field: 'criado_em',
+    headerName: 'Criado em',
+    width: 150,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Centros de Custo (Gestão Financeira)
+export const centrosCustoColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'nome',
+    headerName: 'Nome',
+    width: 250,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    enableRowGroup: true
+  },
+  {
+    field: 'codigo',
+    headerName: 'Código',
+    width: 120,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter',
+    cellStyle: { fontFamily: 'monospace' }
+  },
+  {
+    field: 'ativo',
+    headerName: 'Ativo',
+    width: 100,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    cellRenderer: (params: ICellRendererParams) => params.value ? '✓' : '✗',
+    cellStyle: (params) => {
+      return params.value
+        ? { color: '#2e7d32', fontWeight: 'bold' }
+        : { color: '#c62828', fontWeight: 'bold' };
+    }
+  },
+  {
+    field: 'criado_em',
+    headerName: 'Criado em',
+    width: 150,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Orçamentos (Gestão Financeira)
+export const orcamentosColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'centro_custo_id',
+    headerName: 'Centro de Custo ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'categoria_id',
+    headerName: 'Categoria ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'periodo',
+    headerName: 'Período',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'valor_planejado',
+    headerName: 'Valor Planejado (R$)',
+    width: 160,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(params.value);
+    },
+    cellStyle: { fontWeight: 'bold', color: '#1976d2' }
+  },
+  {
+    field: 'criado_em',
+    headerName: 'Criado em',
+    width: 150,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Relatórios de Despesa (Gestão Financeira)
+export const relatoriosDespesaColumns: ColDef[] = [
+  {
+    field: 'id',
+    headerName: 'ID',
+    width: 280,
+    pinned: 'left',
+    editable: false,
+    sortable: true
+  },
+  {
+    field: 'solicitante_id',
+    headerName: 'Solicitante ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'aprovador_id',
+    headerName: 'Aprovador ID',
+    width: 280,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'data_submissao',
+    headerName: 'Data Submissão',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'periodo_referencia',
+    headerName: 'Período Referência',
+    width: 160,
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'valor_total_solicitado',
+    headerName: 'Valor Total (R$)',
+    width: 160,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(params.value);
+    },
+    cellStyle: { fontWeight: 'bold' }
+  },
+  {
+    field: 'status_relatorio',
+    headerName: 'Status',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agSetColumnFilter',
+    enableRowGroup: true,
+    cellStyle: (params) => {
+      const status = String(params.value || '').toLowerCase();
+      if (status.includes('aprovado')) return { color: '#2e7d32', fontWeight: 'bold' };
+      if (status.includes('pendente')) return { color: '#f57c00', fontWeight: 'bold' };
+      if (status.includes('rejeitado')) return { color: '#c62828', fontWeight: 'bold' };
+      return undefined;
+    }
+  },
+  {
+    field: 'data_aprovacao',
+    headerName: 'Data Aprovação',
+    width: 140,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'criado_em',
+    headerName: 'Criado em',
+    width: 150,
+    editable: false,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleString('pt-BR');
+    }
+  }
+];
+
+// Configurações de colunas para Saldos Base (Gestão Financeira)
+export const saldosBaseColumns: ColDef[] = [
+  {
+    field: 'conta_id',
+    headerName: 'Conta ID',
+    width: 280,
+    pinned: 'left',
+    editable: true,
+    sortable: true,
+    filter: 'agTextColumnFilter'
+  },
+  {
+    field: 'data_base',
+    headerName: 'Data Base',
+    width: 130,
+    editable: true,
+    sortable: true,
+    filter: 'agDateColumnFilter',
+    valueFormatter: (params) => {
+      if (!params.value) return '';
+      return new Date(params.value).toLocaleDateString('pt-BR');
+    }
+  },
+  {
+    field: 'saldo_base',
+    headerName: 'Saldo Base (R$)',
+    width: 150,
+    editable: true,
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    enableValue: true,
+    aggFunc: 'sum',
+    valueFormatter: (params) => {
+      if (params.value == null) return '';
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(params.value);
+    },
+    cellStyle: (params) => {
+      const saldo = params.value || 0;
+      return saldo < 0
+        ? { color: '#c62828', fontWeight: 'bold' }
+        : { color: '#2e7d32', fontWeight: 'bold' };
+    }
   },
   {
     field: 'criado_em',
@@ -7760,15 +8068,6 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     category: 'Gestão Financeira'
   },
   {
-    id: 'gestao-contratos',
-    name: 'Contratos',
-    description: 'Contratos recorrentes e parcelados',
-    tableName: 'gestaofinanceira.contratos',
-    columnDefs: contratosColumns,
-    icon: '📝',
-    category: 'Gestão Financeira'
-  },
-  {
     id: 'gestao-documento-itens',
     name: 'Documento Itens',
     description: 'Itens de documentos fiscais',
@@ -7778,21 +8077,39 @@ export const SUPABASE_DATASETS: SupabaseDatasetConfig[] = [
     category: 'Gestão Financeira'
   },
   {
-    id: 'gestao-documentos',
-    name: 'Documentos Fiscais',
-    description: 'Notas fiscais e documentos',
-    tableName: 'gestaofinanceira.documentos',
-    columnDefs: documentosColumns,
-    icon: '🧾',
+    id: 'gestao-centros-custo',
+    name: 'Centros de Custo',
+    description: 'Centros de custo para rastreamento de despesas',
+    tableName: 'gestaofinanceira.centros_custo',
+    columnDefs: centrosCustoColumns,
+    icon: '🎯',
     category: 'Gestão Financeira'
   },
   {
-    id: 'gestao-entidades',
-    name: 'Entidades',
-    description: 'Cadastro de clientes e fornecedores',
-    tableName: 'gestaofinanceira.entidades',
-    columnDefs: entidadesColumns,
-    icon: '🏢',
+    id: 'gestao-orcamentos',
+    name: 'Orçamentos',
+    description: 'Planejamento orçamentário por categoria e centro de custo',
+    tableName: 'gestaofinanceira.orcamentos',
+    columnDefs: orcamentosColumns,
+    icon: '📈',
+    category: 'Gestão Financeira'
+  },
+  {
+    id: 'gestao-relatorios-despesa',
+    name: 'Relatórios de Despesa',
+    description: 'Relatórios de reembolso e despesas de funcionários',
+    tableName: 'gestaofinanceira.relatorios_despesa',
+    columnDefs: relatoriosDespesaColumns,
+    icon: '📝',
+    category: 'Gestão Financeira'
+  },
+  {
+    id: 'gestao-saldos-base',
+    name: 'Saldos Base',
+    description: 'Saldos iniciais das contas bancárias',
+    tableName: 'gestaofinanceira.saldos_base',
+    columnDefs: saldosBaseColumns,
+    icon: '💵',
     category: 'Gestão Financeira'
   },
   {
