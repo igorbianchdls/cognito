@@ -79,6 +79,10 @@ export const ToolHeader = ({
           'tool-analiseDesempenhoCanalVenda': 'Desempenho por canal (rentabilidade)',
           'tool-analisePerformanceCategoria': 'Performance por categoria',
           'tool-analiseLTVcliente': 'LTV por cliente',
+          // Inventory (novos nomes)
+          'tool-avaliacaoCustoInventario': 'Avaliação de custo do inventário',
+          'tool-analiseGiroEstoque': 'Giro de estoque',
+          'tool-desempenhoPorDepositoExpedicoes': 'Desempenho por depósito (expedições)',
           'tool-getTopClientesPorReceita': 'Top clientes por receita',
           // Novos nomes (PT-BR)
           'tool-desempenhoPorConta': 'Desempenho por conta',

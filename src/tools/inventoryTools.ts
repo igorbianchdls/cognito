@@ -132,49 +132,44 @@ const buildGetInventoryDataQuery = (args: {
   return { sql, params };
 };
 
-export const getInventoryData = tool({
-  description: 'Busca dados de gestão de estoque (centros, estoque por canal, movimentações, preços).',
-  inputSchema: z.object({
-    table: z.enum(INVENTORY_TABLES).describe('Tabela a consultar'),
-    limit: z.number().default(DEFAULT_LIMIT).describe('Número máximo de resultados'),
-    ativo: z.boolean().optional(),
-    product_id: z.string().optional(),
-    channel_id: z.string().optional(),
-    tipo: z.string().optional(),
-    quantidade_minima: z.number().optional(),
-    quantidade_maxima: z.number().optional(),
-    data_de: z.string().optional(),
-    data_ate: z.string().optional(),
-  }),
-  execute: async (input) => {
-    let sql: string | null = null;
-    let params: unknown[] = [];
+export const avaliacaoCustoInventario = tool({
+  description: 'Avaliação do Estoque: Custo Total por Depósito e Categoria.',
+  inputSchema: z.object({}).optional(),
+  execute: async () => {
+    const sql = `
+      SELECT
+        d.nome AS deposito,
+        COALESCE(cat.nome, 'Sem Categoria') AS categoria,
+        SUM(s.quantidade_fisica * pv.preco_base) AS valor_total_em_estoque
+      FROM estoque.saldos s
+      JOIN armazem.depositos d ON s.deposito_id = d.id
+      JOIN gestaocatalogo.produto_variacoes pv ON s.produto_variacao_id = pv.id
+      JOIN gestaocatalogo.produtos p ON pv.produto_pai_id = p.id
+      LEFT JOIN gestaocatalogo.categorias cat ON p.categoria_id = cat.id
+      WHERE s.quantidade_fisica > 0
+      GROUP BY d.nome, cat.nome
+      ORDER BY d.nome, valor_total_em_estoque DESC;
+    `.trim();
+
     try {
-      const limit = normalizeLimit(input.limit);
-      const query = buildGetInventoryDataQuery({ ...input, limit, table: input.table });
-      sql = query.sql;
-      params = query.params;
-      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      const rows = await runQuery<{
+        deposito: string;
+        categoria: string | null;
+        valor_total_em_estoque: number;
+      }>(sql);
 
       return {
         success: true,
-        count: rows.length,
-        table: input.table,
-        message: `✅ ${rows.length} registros encontrados em ${input.table}`,
+        message: 'Avaliação do estoque por depósito e categoria',
         rows,
         sql_query: sql,
-        sql_params: formatSqlParams(params),
+        sql_params: formatSqlParams([]),
       };
     } catch (error) {
-      console.error('ERRO getInventoryData:', error);
+      console.error('ERRO avaliacaoCustoInventario:', error);
       return {
         success: false,
-        table: input.table,
-        message: `❌ Erro ao buscar dados de ${input.table}`,
-        error: error instanceof Error ? error.message : JSON.stringify(error),
-        rows: [],
-        sql_query: sql,
-        sql_params: formatSqlParams(params),
+        message: '❌ Erro na avaliação de custo do inventário',
       };
     }
   },
@@ -458,165 +453,109 @@ export const identifySlowMovingItems = tool({
   },
 });
 
-export const compareChannelPerformance = tool({
-  description: 'Compara performance por canal: saldo disponível, reservado, consumo médio e cobertura',
-  inputSchema: z.object({
-    date_range_days: z.number().default(30),
-  }),
-  execute: async ({ date_range_days = 30 }) => {
-    const range = Math.min(Math.max(Math.trunc(date_range_days), 1), 365);
+export const desempenhoPorDepositoExpedicoes = tool({
+  description: 'Desempenho por Depósito (origem das expedições).',
+  inputSchema: z.object({}).optional(),
+  execute: async () => {
     const sql = `
-      WITH stock AS (
-        SELECT channel_id,
-               SUM(quantity_available) AS disponivel,
-               SUM(quantity_reserved) AS reservado
-        FROM gestaoestoque.estoque_canal
-        GROUP BY channel_id
-      ),
-      outflow AS (
-        SELECT channel_id,
-               SUM(CASE WHEN LOWER(type) IN ('saida','out') THEN quantity ELSE 0 END) AS saidas_periodo
-        FROM gestaoestoque.movimentacoes_estoque
-        WHERE created_at::date >= CURRENT_DATE - ($1::int - 1)
-        GROUP BY channel_id
-      )
-      SELECT s.channel_id,
-             COALESCE(s.disponivel,0) AS disponivel,
-             COALESCE(s.reservado,0) AS reservado,
-             COALESCE(o.saidas_periodo,0) AS saidas_periodo,
-             ROUND(COALESCE(o.saidas_periodo,0)::numeric / NULLIF($1::int, 0), 2) AS media_saida_dia,
-             CASE
-               WHEN COALESCE(o.saidas_periodo,0) = 0 THEN NULL
-               ELSE ROUND(COALESCE(s.disponivel,0)::numeric / NULLIF((COALESCE(o.saidas_periodo,0)::numeric / NULLIF($1::int,1)),0), 1)
-             END AS cobertura_dias
-      FROM stock s
-      LEFT JOIN outflow o USING (channel_id)
-      ORDER BY disponivel DESC
-    `;
+      SELECT
+        d.nome AS deposito_de_origem,
+        COUNT(DISTINCT ex.id) AS total_pacotes_enviados,
+        SUM(ei.quantidade) AS total_itens_enviados,
+        AVG(p.valor_total) AS ticket_medio_dos_pedidos
+      FROM logistica.expedicoes ex
+      JOIN logistica.expedicoes_itens ei ON ex.id = ei.expedicao_id
+      JOIN armazem.depositos d ON ex.deposito_id = d.id
+      JOIN gestaovendas.pedidos p ON ex.pedido_id = p.id
+      GROUP BY d.nome
+      ORDER BY total_itens_enviados DESC;
+    `.trim();
 
     try {
       const rows = await runQuery<{
-        channel_id: string;
-        disponivel: string | number | null;
-        reservado: string | number | null;
-        saidas_periodo: string | number | null;
-        media_saida_dia: string | number | null;
-        cobertura_dias: string | number | null;
-      }>(sql, [range]);
-
-      const formatted = rows.map(r => ({
-        channel_id: r.channel_id,
-        disponivel: Number(r.disponivel ?? 0),
-        reservado: Number(r.reservado ?? 0),
-        saidas_periodo: Number(r.saidas_periodo ?? 0),
-        media_saida_dia: Number(r.media_saida_dia ?? 0),
-        cobertura_dias: r.cobertura_dias !== null ? Number(r.cobertura_dias) : null,
-      }));
+        deposito_de_origem: string;
+        total_pacotes_enviados: number;
+        total_itens_enviados: number;
+        ticket_medio_dos_pedidos: number;
+      }>(sql);
 
       return {
         success: true,
-        message: `Comparativo por canal nos últimos ${range} dias` ,
-        periodo_dias: range,
-        rows: formatted,
+        message: 'Desempenho por Depósito (expedições)',
+        rows,
         sql_query: sql,
-        sql_params: formatSqlParams([range]),
+        sql_params: formatSqlParams([]),
       };
     } catch (error) {
-      console.error('ERRO compareChannelPerformance:', error);
+      console.error('ERRO desempenhoPorDepositoExpedicoes:', error);
       return {
         success: false,
-        message: `❌ Erro ao comparar canais: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        message: '❌ Erro ao analisar desempenho por depósito',
       };
     }
   },
 });
 
-export const generateABCAnalysis = tool({
-  description: 'Gera análise ABC por produto, com base em valor (ou quantidade) de saídas no período',
+export const analiseGiroEstoque = tool({
+  description: 'Análise de Giro de Estoque (vendas vs estoque atual).',
   inputSchema: z.object({
-    criteria: z.enum(['value', 'quantity']).default('value'),
-    period_days: z.number().default(90),
-  }),
-  execute: async ({ criteria = 'value', period_days = 90 }) => {
-    const range = Math.min(Math.max(Math.trunc(period_days), 1), 365);
+    period_months: z.number().int().min(1).max(24).default(6)
+      .describe('Número de meses para calcular vendas no período'),
+  }).optional(),
+  execute: async ({ period_months = 6 } = {}) => {
     const sql = `
-      WITH outflow AS (
-        SELECT product_id, SUM(CASE WHEN LOWER(type) IN ('saida','out') THEN quantity ELSE 0 END) AS qtd_saida
-        FROM gestaoestoque.movimentacoes_estoque
-        WHERE created_at::date >= CURRENT_DATE - ($1::int - 1)
-        GROUP BY product_id
+      WITH vendas_no_periodo AS (
+        SELECT
+          ip.produto_id,
+          SUM(ip.quantidade) AS unidades_vendidas
+        FROM gestaovendas.itens_pedido ip
+        JOIN gestaovendas.pedidos p ON ip.pedido_id = p.id
+        WHERE p.data_pedido >= (CURRENT_DATE - ($1::int || ' months')::interval)
+        GROUP BY ip.produto_id
       ),
-      last_price AS (
-        SELECT DISTINCT ON (product_id) product_id, price
-        FROM gestaoestoque.precos_canais
-        WHERE start_date::date <= CURRENT_DATE
-        ORDER BY product_id, COALESCE(end_date, NOW()) DESC, start_date DESC
-      ),
-      valor AS (
-        SELECT o.product_id,
-               o.qtd_saida,
-               COALESCE(lp.price, 0) AS preco_ref,
-               (o.qtd_saida * COALESCE(lp.price, 0)) AS valor_saida
-        FROM outflow o
-        LEFT JOIN last_price lp USING (product_id)
-      ),
-      base AS (
-        SELECT product_id,
-               qtd_saida,
-               preco_ref,
-               valor_saida,
-               CASE WHEN $2 = 'quantity' THEN qtd_saida ELSE valor_saida END AS chave
-        FROM valor
-      ),
-      ranked AS (
-        SELECT b.*, 
-               SUM(chave) OVER () AS total_valor,
-               SUM(chave) OVER (ORDER BY chave DESC ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS acumulado
-        FROM base b
+      estoque_medio AS (
+        SELECT
+          produto_variacao_id,
+          SUM(quantidade_fisica) AS estoque_atual
+        FROM estoque.saldos
+        GROUP BY produto_variacao_id
       )
-      SELECT product_id, qtd_saida, preco_ref, valor_saida,
-             ROUND((acumulado::numeric / NULLIF(total_valor,0)) * 100, 2) AS pct_acumulado,
-             CASE
-               WHEN acumulado / NULLIF(total_valor,0) <= 0.8 THEN 'A'
-               WHEN acumulado / NULLIF(total_valor,0) <= 0.95 THEN 'B'
-               ELSE 'C'
-             END AS classe_abc
-      FROM ranked
-      ORDER BY valor_saida DESC NULLS LAST
-    `;
+      SELECT
+        p.nome,
+        pv.sku,
+        v.unidades_vendidas,
+        e.estoque_atual,
+        ROUND(v.unidades_vendidas / NULLIF(e.estoque_atual, 0), 2) AS giro_de_estoque
+      FROM vendas_no_periodo v
+      JOIN estoque_medio e ON v.produto_id = e.produto_variacao_id
+      JOIN gestaocatalogo.produto_variacoes pv ON v.produto_id = pv.id
+      JOIN gestaocatalogo.produtos p ON pv.produto_pai_id = p.id
+      WHERE e.estoque_atual > 0
+      ORDER BY giro_de_estoque DESC
+      LIMIT 15;
+    `.trim();
 
     try {
       const rows = await runQuery<{
-        product_id: string;
-        qtd_saida: string | number | null;
-        preco_ref: string | number | null;
-        valor_saida: string | number | null;
-        pct_acumulado: string | number | null;
-        classe_abc: string;
-      }>(sql, [range, criteria]);
-
-      const formatted = rows.map(r => ({
-        product_id: r.product_id,
-        qtd_saida: Number(r.qtd_saida ?? 0),
-        preco_ref: Number(r.preco_ref ?? 0),
-        valor_saida: Number(r.valor_saida ?? 0),
-        pct_acumulado: Number(r.pct_acumulado ?? 0),
-        classe_abc: r.classe_abc,
-      }));
+        nome: string;
+        sku: string | null;
+        unidades_vendidas: number;
+        estoque_atual: number;
+        giro_de_estoque: number;
+      }>(sql, [period_months]);
 
       return {
         success: true,
-        message: `Análise ABC por ${criteria} nos últimos ${range} dias` ,
-        periodo_dias: range,
-        rows: formatted,
+        message: `Giro de estoque (vendas últimos ${period_months} meses)`,
+        rows,
         sql_query: sql,
-        sql_params: formatSqlParams([range, criteria]),
+        sql_params: formatSqlParams([period_months]),
       };
     } catch (error) {
-      console.error('ERRO generateABCAnalysis:', error);
+      console.error('ERRO analiseGiroEstoque:', error);
       return {
         success: false,
-        message: `❌ Erro ao gerar análise ABC: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        message: '❌ Erro ao calcular giro de estoque',
       };
     }
   },

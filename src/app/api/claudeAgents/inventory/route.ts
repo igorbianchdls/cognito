@@ -1,13 +1,13 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import {
-  getInventoryData,
+  avaliacaoCustoInventario,
   calculateInventoryMetrics,
   analyzeStockMovementTrends,
   forecastRestockNeeds,
   identifySlowMovingItems,
-  compareChannelPerformance,
-  generateABCAnalysis,
+  desempenhoPorDepositoExpedicoes,
+  analiseGiroEstoque,
   detectAnomalies
 } from '@/tools/inventoryTools';
 
@@ -49,9 +49,9 @@ Auxiliar gestores de estoque, compradores e controllers a:
 
 ## 📊 FERRAMENTAS DE CONSULTA
 
-**1. getInventoryData** - Busca dados brutos de gestão de estoque
-- Tabelas: centros_distribuicao, estoque_canal, integracoes_canais, movimentacoes_estoque, precos_canais
-- Use para: Consultar dados específicos, verificar registros individuais
+**1. avaliacaoCustoInventario** - Custo total por depósito e categoria
+- Base: estoque.saldos × preço base da variação
+- Use para: Avaliar valor imobilizado por depósito/categoria
 
 ## 📈 FERRAMENTAS ANALÍTICAS (USE ESTAS PARA ANÁLISES!)
 
@@ -71,13 +71,13 @@ Auxiliar gestores de estoque, compradores e controllers a:
 - Critério: dias sem movimentação
 - Use para: "Produtos parados?", "Dead stock?", "Itens de baixo giro?"
 
-**6. compareChannelPerformance** - Compara canais
-- Métricas: stock_level, turnover, price_variance
-- Use para: "Qual canal vende mais?", "Diferença de preços entre canais?"
+**6. desempenhoPorDepositoExpedicoes** - Desempenho por depósito (expedições)
+- Métricas: pacotes, itens enviados, ticket médio dos pedidos
+- Use para: "Quais depósitos mais expedem?", "Média por pedido?"
 
-**7. generateABCAnalysis** - Classificação ABC automática
-- Critérios: value, quantity, margin
-- Use para: "Análise ABC", "Produtos classe A?", "Curva de Pareto?"
+**7. analiseGiroEstoque** - Giro de estoque (vendas ÷ estoque atual)
+- Parâmetros: período em meses (default 6)
+- Use para: "Quais produtos giram mais?", "Risco de obsolescência?"
 
 **8. detectAnomalies** - Detecta movimentações suspeitas
 - Sensibilidade: low, medium, high
@@ -266,13 +266,13 @@ Seja sempre orientado a dados, priorize eficiência operacional e saúde finance
       messages: convertToModelMessages(messages),
 
       tools: {
-        getInventoryData,
+        avaliacaoCustoInventario,
         calculateInventoryMetrics,
         analyzeStockMovementTrends,
         forecastRestockNeeds,
         identifySlowMovingItems,
-        compareChannelPerformance,
-        generateABCAnalysis,
+        desempenhoPorDepositoExpedicoes,
+        analiseGiroEstoque,
         detectAnomalies
       }
     });

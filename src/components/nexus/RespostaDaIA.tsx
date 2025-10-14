@@ -4963,6 +4963,38 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
+        if (part.type === 'tool-avaliacaoCustoInventario') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-avaliacaoCustoInventario" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <GenericResultTable
+                  title="Avaliação de Custo do Inventário"
+                  icon={BarChart3}
+                  iconColor="text-slate-700"
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
         if (part.type === 'tool-getTopProdutosReceitaLiquida') {
           const ecommerceTool = part as NexusToolUIPart;
           const callId = ecommerceTool.toolCallId;
@@ -6544,48 +6576,54 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
-        if (part.type === 'tool-compareChannelPerformance') {
+        if (part.type === 'tool-desempenhoPorDepositoExpedicoes') {
           const tool = part as NexusToolUIPart;
           return (
             <div key={tool.toolCallId}>
               <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-compareChannelPerformance" state={tool.state} />
+                <ToolHeader type="tool-desempenhoPorDepositoExpedicoes" state={tool.state} />
                 <ToolContent>
                   {tool.input && <ToolInput input={tool.input} />}
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && tool.output && (
-                <ChannelComparisonResult
-                  success={(tool.output as CompareChannelPerformanceToolOutput).success}
-                  message={(tool.output as CompareChannelPerformanceToolOutput).message}
-                  periodo_dias={(tool.output as CompareChannelPerformanceToolOutput).periodo_dias}
-                  data={(tool.output as CompareChannelPerformanceToolOutput).data}
-                  sql_query={(tool.output as CompareChannelPerformanceToolOutput).sql_query}
+                <GenericResultTable
+                  title="Desempenho por Depósito (Expedições)"
+                  icon={BarChart3}
+                  iconColor="text-amber-600"
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
                 />
               )}
             </div>
           );
         }
 
-        if (part.type === 'tool-generateABCAnalysis') {
+        if (part.type === 'tool-analiseGiroEstoque') {
           const tool = part as NexusToolUIPart;
           return (
             <div key={tool.toolCallId}>
               <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-generateABCAnalysis" state={tool.state} />
+                <ToolHeader type="tool-analiseGiroEstoque" state={tool.state} />
                 <ToolContent>
                   {tool.input && <ToolInput input={tool.input} />}
                   {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && tool.output && (
-                <ABCAnalysisResult
-                  success={(tool.output as GenerateABCAnalysisToolOutput).success}
-                  message={(tool.output as GenerateABCAnalysisToolOutput).message}
-                  periodo_dias={(tool.output as GenerateABCAnalysisToolOutput).periodo_dias}
-                  data={(tool.output as GenerateABCAnalysisToolOutput).data}
-                  sql_query={(tool.output as GenerateABCAnalysisToolOutput).sql_query}
+                <GenericResultTable
+                  title="Giro de Estoque"
+                  icon={TrendingUp}
+                  iconColor="text-emerald-600"
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
                 />
               )}
             </div>
