@@ -1,4 +1,4 @@
-import { ColDef } from 'ag-grid-community';
+import { ColDef, ICellRendererParams } from 'ag-grid-community';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -7047,7 +7047,7 @@ export const armazemDepositosColumns: ColDef[] = [
   { field: 'cidade', headerName: 'Cidade', width: 150, editable: true, sortable: true, filter: 'agTextColumnFilter' },
   { field: 'estado', headerName: 'Estado', width: 80, editable: true, sortable: true, filter: 'agTextColumnFilter' },
   { field: 'cep', headerName: 'CEP', width: 110, editable: true, sortable: true, filter: 'agTextColumnFilter' },
-  { field: 'ativo', headerName: 'Ativo', width: 100, editable: true, sortable: true, filter: 'agSetColumnFilter', cellRenderer: (params: any) => params.value ? '✓' : '✗' },
+  { field: 'ativo', headerName: 'Ativo', width: 100, editable: true, sortable: true, filter: 'agSetColumnFilter', cellRenderer: (params: ICellRendererParams) => params.value ? '✓' : '✗' },
   { field: 'criado_em', headerName: 'Criado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
   { field: 'atualizado_em', headerName: 'Atualizado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' }
 ];
@@ -7160,7 +7160,7 @@ export const gestaocatalogoCategoriasColumns: ColDef[] = [
   { field: 'id', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
   { field: 'nome', headerName: 'Nome', width: 250, editable: true, sortable: true, filter: 'agTextColumnFilter' },
   { field: 'parent_id', headerName: 'Categoria Pai ID', width: 160, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
-  { field: 'ativo', headerName: 'Ativo', width: 100, editable: true, sortable: true, filter: 'agSetColumnFilter', cellRenderer: (params: any) => params.value ? '✓' : '✗' },
+  { field: 'ativo', headerName: 'Ativo', width: 100, editable: true, sortable: true, filter: 'agSetColumnFilter', cellRenderer: (params: ICellRendererParams) => params.value ? '✓' : '✗' },
   { field: 'criado_em', headerName: 'Criado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
   { field: 'atualizado_em', headerName: 'Atualizado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' }
 ];
@@ -7169,7 +7169,7 @@ export const gestaocatalogoCategoriasColumns: ColDef[] = [
 export const gestaocatalogoMarcasColumns: ColDef[] = [
   { field: 'id', headerName: 'ID', width: 100, pinned: 'left', editable: false, sortable: true, filter: 'agNumberColumnFilter' },
   { field: 'nome', headerName: 'Nome', width: 250, editable: true, sortable: true, filter: 'agTextColumnFilter' },
-  { field: 'ativo', headerName: 'Ativo', width: 100, editable: true, sortable: true, filter: 'agSetColumnFilter', cellRenderer: (params: any) => params.value ? '✓' : '✗' },
+  { field: 'ativo', headerName: 'Ativo', width: 100, editable: true, sortable: true, filter: 'agSetColumnFilter', cellRenderer: (params: ICellRendererParams) => params.value ? '✓' : '✗' },
   { field: 'criado_em', headerName: 'Criado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
   { field: 'atualizado_em', headerName: 'Atualizado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' }
 ];
@@ -7181,7 +7181,7 @@ export const gestaocatalogoProdutosColumns: ColDef[] = [
   { field: 'descricao', headerName: 'Descrição', width: 400, editable: true, sortable: true, filter: 'agTextColumnFilter', wrapText: true, autoHeight: true },
   { field: 'categoria_id', headerName: 'Categoria ID', width: 140, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
   { field: 'marca_id', headerName: 'Marca ID', width: 120, editable: true, sortable: true, filter: 'agNumberColumnFilter' },
-  { field: 'ativo', headerName: 'Ativo', width: 100, editable: true, sortable: true, filter: 'agSetColumnFilter', cellRenderer: (params: any) => params.value ? '✓' : '✗' },
+  { field: 'ativo', headerName: 'Ativo', width: 100, editable: true, sortable: true, filter: 'agSetColumnFilter', cellRenderer: (params: ICellRendererParams) => params.value ? '✓' : '✗' },
   { field: 'criado_em', headerName: 'Criado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
   { field: 'atualizado_em', headerName: 'Atualizado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' }
 ];
@@ -7198,7 +7198,7 @@ export const gestaocatalogoProdutoVariacoesColumns: ColDef[] = [
   { field: 'altura_cm', headerName: 'Altura (cm)', width: 120, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? Number(params.value).toFixed(2) : '' },
   { field: 'largura_cm', headerName: 'Largura (cm)', width: 130, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? Number(params.value).toFixed(2) : '' },
   { field: 'profundidade_cm', headerName: 'Profundidade (cm)', width: 160, editable: true, sortable: true, filter: 'agNumberColumnFilter', valueFormatter: (params) => params.value ? Number(params.value).toFixed(2) : '' },
-  { field: 'ativo', headerName: 'Ativo', width: 100, editable: true, sortable: true, filter: 'agSetColumnFilter', cellRenderer: (params: any) => params.value ? '✓' : '✗' },
+  { field: 'ativo', headerName: 'Ativo', width: 100, editable: true, sortable: true, filter: 'agSetColumnFilter', cellRenderer: (params: ICellRendererParams) => params.value ? '✓' : '✗' },
   { field: 'criado_em', headerName: 'Criado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' },
   { field: 'atualizado_em', headerName: 'Atualizado em', width: 170, editable: false, sortable: true, filter: 'agDateColumnFilter', valueFormatter: (params) => params.value ? new Date(params.value).toLocaleDateString('pt-BR') : '' }
 ];
