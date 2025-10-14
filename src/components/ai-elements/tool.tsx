@@ -76,9 +76,9 @@ export const ToolHeader = ({
         const labels: Record<string, string> = {
           'tool-getTopProdutosReceitaLiquida': 'Top produtos por receita líquida',
           'tool-getDesempenhoVendasMensal': 'Desempenho de Vendas Mensal',
-          'tool-getMixReceitaPorCategoria': 'Mix de receita por categoria',
-          'tool-getTicketMedioVendas': 'Ticket médio de vendas',
-          'tool-getCurvaABCPorReceita': 'Curva ABC por receita',
+          'tool-analiseDesempenhoCanalVenda': 'Desempenho por canal (rentabilidade)',
+          'tool-analisePerformanceCategoria': 'Performance por categoria',
+          'tool-analiseLTVcliente': 'LTV por cliente',
           'tool-getTopClientesPorReceita': 'Top clientes por receita',
           // Novos nomes (PT-BR)
           'tool-desempenhoPorConta': 'Desempenho por conta',

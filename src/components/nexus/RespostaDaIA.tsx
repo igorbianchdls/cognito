@@ -65,7 +65,8 @@ import TopProdutosReceitaLiquidaTable, { type TopProdutosRow } from '../tools/To
 import DesempenhoVendasMensalResult, { type DesempenhoVendasMensalRow } from '../tools/ecommerce/DesempenhoVendasMensalResult';
 import AnaliseDesempenhoCanalResult, { type AnaliseDesempenhoCanalRow } from '../tools/ecommerce/AnaliseDesempenhoCanalResult';
 import AnalisePerformanceCategoriaResult, { type AnalisePerformanceCategoriaRow } from '../tools/ecommerce/AnalisePerformanceCategoriaResult';
-import CurvaABCPorReceitaResult, { type CurvaABCRow } from '../tools/ecommerce/CurvaABCPorReceitaResult';
+import DesempenhoCanalVendaResult, { type DesempenhoCanalVendaRow } from '../tools/ecommerce/DesempenhoCanalVendaResult';
+import LTVClienteResult, { type LTVClienteRow } from '../tools/ecommerce/LTVClienteResult';
 import TopClientesPorReceitaResult, { type TopClienteRow } from '../tools/ecommerce/TopClientesPorReceitaResult';
 import ValorVidaClienteResult, { type ValorVidaClienteRow } from '../tools/ecommerce/ValorVidaClienteResult';
 import ClientesNovosRecorrentesResult, { type ClientesNovosRecorrentesRow } from '../tools/ecommerce/ClientesNovosRecorrentesResult';
@@ -973,19 +974,19 @@ type GetReceitaPorCanalToolOutput = EcommerceGenericToolOutput & {
   data?: DesempenhoVendasMensalRow[];
 };
 
-type GetMixReceitaPorCategoriaToolOutput = EcommerceGenericToolOutput & {
-  rows?: AnaliseDesempenhoCanalRow[];
-  data?: AnaliseDesempenhoCanalRow[];
+type AnaliseDesempenhoCanalVendaToolOutput = EcommerceGenericToolOutput & {
+  rows?: DesempenhoCanalVendaRow[];
+  data?: DesempenhoCanalVendaRow[];
 };
 
-type GetTicketMedioVendasToolOutput = EcommerceGenericToolOutput & {
+type AnalisePerformanceCategoriaToolOutput = EcommerceGenericToolOutput & {
   rows?: AnalisePerformanceCategoriaRow[];
   data?: AnalisePerformanceCategoriaRow[];
 };
 
-type GetCurvaABCPorReceitaToolOutput = EcommerceGenericToolOutput & {
-  rows?: CurvaABCRow[];
-  data?: CurvaABCRow[];
+type AnaliseLTVClienteToolOutput = EcommerceGenericToolOutput & {
+  rows?: LTVClienteRow[];
+  data?: LTVClienteRow[];
 };
 
 type GetTopClientesPorReceitaToolOutput = EcommerceGenericToolOutput & {
@@ -4426,7 +4427,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
-        if (part.type === 'tool-getMixReceitaPorCategoria') {
+        if (part.type === 'tool-analiseDesempenhoCanalVenda') {
           const tool = part as NexusToolUIPart;
           const callId = tool.toolCallId;
           const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
@@ -4434,7 +4435,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           return (
             <div key={callId}>
               <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="tool-getMixReceitaPorCategoria" state={tool.state} />
+                <ToolHeader type="tool-analiseDesempenhoCanalVenda" state={tool.state} />
                 <ToolContent>
                   {tool.input && <ToolInput input={tool.input} />}
                   {tool.state === 'output-error' && (
@@ -4443,19 +4444,19 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && (
-                <AnaliseDesempenhoCanalResult
-                  success={(tool.output as GetMixReceitaPorCategoriaToolOutput).success}
-                  message={(tool.output as GetMixReceitaPorCategoriaToolOutput).message}
-                  rows={(tool.output as GetMixReceitaPorCategoriaToolOutput).rows}
-                  data={(tool.output as GetMixReceitaPorCategoriaToolOutput).data}
-                  sql_query={(tool.output as GetMixReceitaPorCategoriaToolOutput).sql_query}
+                <DesempenhoCanalVendaResult
+                  success={(tool.output as AnaliseDesempenhoCanalVendaToolOutput).success}
+                  message={(tool.output as AnaliseDesempenhoCanalVendaToolOutput).message}
+                  rows={(tool.output as AnaliseDesempenhoCanalVendaToolOutput).rows}
+                  data={(tool.output as AnaliseDesempenhoCanalVendaToolOutput).data}
+                  sql_query={(tool.output as AnaliseDesempenhoCanalVendaToolOutput).sql_query}
                 />
               )}
             </div>
           );
         }
 
-        if (part.type === 'tool-getTicketMedioVendas') {
+        if (part.type === 'tool-analisePerformanceCategoria') {
           const tool = part as NexusToolUIPart;
           const callId = tool.toolCallId;
           const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
@@ -4463,7 +4464,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           return (
             <div key={callId}>
               <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="tool-getTicketMedioVendas" state={tool.state} />
+                <ToolHeader type="tool-analisePerformanceCategoria" state={tool.state} />
                 <ToolContent>
                   {tool.input && <ToolInput input={tool.input} />}
                   {tool.state === 'output-error' && (
@@ -4473,18 +4474,18 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {tool.state === 'output-available' && (
                 <AnalisePerformanceCategoriaResult
-                  success={(tool.output as GetTicketMedioVendasToolOutput).success}
-                  message={(tool.output as GetTicketMedioVendasToolOutput).message}
-                  rows={(tool.output as GetTicketMedioVendasToolOutput).rows}
-                  data={(tool.output as GetTicketMedioVendasToolOutput).data}
-                  sql_query={(tool.output as GetTicketMedioVendasToolOutput).sql_query}
+                  success={(tool.output as AnalisePerformanceCategoriaToolOutput).success}
+                  message={(tool.output as AnalisePerformanceCategoriaToolOutput).message}
+                  rows={(tool.output as AnalisePerformanceCategoriaToolOutput).rows}
+                  data={(tool.output as AnalisePerformanceCategoriaToolOutput).data}
+                  sql_query={(tool.output as AnalisePerformanceCategoriaToolOutput).sql_query}
                 />
               )}
             </div>
           );
         }
 
-        if (part.type === 'tool-getCurvaABCPorReceita') {
+        if (part.type === 'tool-analiseLTVcliente') {
           const tool = part as NexusToolUIPart;
           const callId = tool.toolCallId;
           const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
@@ -4492,7 +4493,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           return (
             <div key={callId}>
               <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="tool-getCurvaABCPorReceita" state={tool.state} />
+                <ToolHeader type="tool-analiseLTVcliente" state={tool.state} />
                 <ToolContent>
                   {tool.input && <ToolInput input={tool.input} />}
                   {tool.state === 'output-error' && (
@@ -4501,12 +4502,12 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && (
-                <CurvaABCPorReceitaResult
-                  success={(tool.output as GetCurvaABCPorReceitaToolOutput).success}
-                  message={(tool.output as GetCurvaABCPorReceitaToolOutput).message}
-                  rows={(tool.output as GetCurvaABCPorReceitaToolOutput).rows}
-                  data={(tool.output as GetCurvaABCPorReceitaToolOutput).data}
-                  sql_query={(tool.output as GetCurvaABCPorReceitaToolOutput).sql_query}
+                <LTVClienteResult
+                  success={(tool.output as AnaliseLTVClienteToolOutput).success}
+                  message={(tool.output as AnaliseLTVClienteToolOutput).message}
+                  rows={(tool.output as AnaliseLTVClienteToolOutput).rows}
+                  data={(tool.output as AnaliseLTVClienteToolOutput).data}
+                  sql_query={(tool.output as AnaliseLTVClienteToolOutput).sql_query}
                 />
               )}
             </div>

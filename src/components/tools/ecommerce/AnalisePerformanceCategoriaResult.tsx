@@ -7,9 +7,11 @@ import { ChartSwitcher } from '@/components/charts/ChartSwitcher';
 import { DollarSign } from 'lucide-react';
 
 export type AnalisePerformanceCategoriaRow = {
-  pedidos: number;
-  receita: number;
-  ticket_medio: number;
+  categoria: string;
+  receita_total: number;
+  total_unidades_vendidas: number;
+  pedidos_distintos: number;
+  preco_medio_do_item: number;
 };
 
 interface Props {
@@ -26,11 +28,13 @@ export default function AnalisePerformanceCategoriaResult({ success, message, ro
   const tableRows = rows ?? data ?? [];
 
   const columns: ColumnDef<AnalisePerformanceCategoriaRow>[] = useMemo(() => [
-    { accessorKey: 'pedidos', header: 'Pedidos', cell: ({ row }) => row.original.pedidos.toLocaleString('pt-BR') },
-    { accessorKey: 'receita', header: 'Receita', cell: ({ row }) => currency(row.original.receita) },
-    { accessorKey: 'ticket_medio', header: 'Ticket Médio', cell: ({ row }) => (
-      <span className="font-semibold text-emerald-600">{currency(row.original.ticket_medio)}</span>
+    { accessorKey: 'categoria', header: 'Categoria' },
+    { accessorKey: 'total_unidades_vendidas', header: 'Unidades', cell: ({ row }) => row.original.total_unidades_vendidas.toLocaleString('pt-BR') },
+    { accessorKey: 'pedidos_distintos', header: 'Pedidos', cell: ({ row }) => row.original.pedidos_distintos.toLocaleString('pt-BR') },
+    { accessorKey: 'receita_total', header: 'Receita Total', cell: ({ row }) => (
+      <span className="font-semibold text-emerald-600">{currency(row.original.receita_total)}</span>
     ) },
+    { accessorKey: 'preco_medio_do_item', header: 'Preço Médio do Item', cell: ({ row }) => currency(row.original.preco_medio_do_item) },
   ], []);
 
   // Para charts, normalizamos em pares métrica/valor a partir da primeira linha
@@ -48,24 +52,26 @@ export default function AnalisePerformanceCategoriaResult({ success, message, ro
       sqlQuery={sql_query}
       enableAutoChart={false}
       chartRenderer={(rows) => {
-        const r = rows?.[0];
-        const metrics = r
-          ? [
-              { metric: 'Ticket Médio', valor: r.ticket_medio },
-              { metric: 'Receita', valor: r.receita },
-              { metric: 'Pedidos', valor: r.pedidos },
-            ]
-          : [] as Array<{ metric: string; valor: number }>;
+        const metrics = (rows ?? []).map((r) => ({
+          categoria: r.categoria,
+          receita_total: r.receita_total,
+          pedidos: r.pedidos_distintos,
+          unidades: r.total_unidades_vendidas,
+        }));
         return (
           <ChartSwitcher
-            rows={metrics}
+            rows={metrics as Array<{ categoria: string; receita_total: number; pedidos: number; unidades: number }>}
             options={{
-              xKey: 'metric',
-              valueKeys: ['valor'],
-              metricLabels: { valor: 'Valor' },
+              xKey: 'categoria',
+              valueKeys: ['receita_total', 'pedidos', 'unidades'],
+              metricLabels: {
+                receita_total: 'Receita (R$)',
+                pedidos: 'Pedidos',
+                unidades: 'Unidades',
+              },
               initialChartType: 'bar',
-              title: 'Análise de Performance por Categoria',
-              xLegend: 'Métrica',
+              title: 'Performance por Categoria',
+              xLegend: 'Categoria',
             }}
           />
         );

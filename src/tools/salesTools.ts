@@ -47,7 +47,7 @@ export const getTopProdutosReceitaLiquida = tool({
 
       return {
         success: true,
-        message: 'Top 20 produtos por receita líquida',
+        message: 'Top 10 Produtos Mais Rentáveis',
         rows,
         sql_query: sql,
         sql_params: formatSqlParams([]),
@@ -210,176 +210,144 @@ export const getDesempenhoVendasMensal = tool({
   },
 });
 
-export const getMixReceitaPorCategoria = tool({
-  description: 'Mix de receita por categoria e participação % (rateio proporcional).',
+export const analiseDesempenhoCanalVenda = tool({
+  description: 'Análise de Desempenho por Canal de Venda (rentabilidade por canal).',
   inputSchema: z.object({}).optional(),
   execute: async () => {
     const sql = `
-      WITH itens AS (
-        SELECT
-          p.id                                   AS pedido_id,
-          pr.categoria_id,
-          (i.quantidade * i.preco_unitario)      AS receita_bruta_item,
-          COALESCE(p.desconto,0)                 AS desconto_pedido,
-          COALESCE(p.frete,0)                    AS frete_pedido,
-          SUM(i.quantidade * i.preco_unitario) OVER (PARTITION BY p.id) AS soma_bruta_pedido
-        FROM gestaovendas.pedidos p
-        JOIN gestaovendas.itens_pedido i   ON i.pedido_id = p.id
-        JOIN gestaocatalogo.produtos pr    ON pr.id       = i.produto_id
-      ),
-      itens_rateado AS (
-        SELECT
-          categoria_id,
-          receita_bruta_item,
-          CASE WHEN soma_bruta_pedido > 0
-               THEN receita_bruta_item / soma_bruta_pedido
-               ELSE 0 END                        AS peso,
-          desconto_pedido,
-          frete_pedido
-        FROM itens
-      )
       SELECT
-        COALESCE(cat.nome, 'Sem categoria') AS categoria,
-        SUM(receita_bruta_item - desconto_pedido * peso + frete_pedido * peso) AS receita,
-        100.0 * SUM(receita_bruta_item - desconto_pedido * peso + frete_pedido * peso)
-              / NULLIF(SUM(SUM(receita_bruta_item - desconto_pedido * peso + frete_pedido * peso)) OVER (), 0) AS pct_receita
-      FROM itens_rateado ir
-      LEFT JOIN gestaocatalogo.categorias cat ON cat.id = ir.categoria_id
+        cv.nome AS canal,
+        COUNT(p.id) AS total_pedidos,
+        SUM(p.valor_total) AS receita_bruta,
+        SUM(p.valor_total) / COUNT(p.id) AS ticket_medio,
+        SUM(
+          CASE
+            WHEN cm.taxa_comissao_percentual > 0 THEN p.valor_produtos * (cm.taxa_comissao_percentual / 100.0)
+            ELSE 0
+          END
+        ) AS comissao_marketplace_estimada,
+        SUM(p.valor_total) - SUM(
+          CASE
+            WHEN cm.taxa_comissao_percentual > 0 THEN p.valor_produtos * (cm.taxa_comissao_percentual / 100.0)
+            ELSE 0
+          END
+        ) AS receita_liquida_estimada
+      FROM gestaovendas.pedidos p
+      JOIN gestaovendas.canais_venda cv ON p.canal_venda_id = cv.id
+      LEFT JOIN gestaovendas.configuracoes_marketplace cm ON cv.id = cm.canal_venda_id
+      WHERE p.status != 'CANCELADO'
+      GROUP BY cv.nome
+      ORDER BY receita_liquida_estimada DESC;
+    `.trim();
+
+    try {
+      const rows = await runQuery<{
+        canal: string;
+        total_pedidos: number;
+        receita_bruta: number;
+        ticket_medio: number;
+        comissao_marketplace_estimada: number;
+        receita_liquida_estimada: number;
+      }>(sql);
+
+      return {
+        success: true,
+        message: 'Análise de Desempenho por Canal de Venda (Rentabilidade)',
+        rows,
+        sql_query: sql,
+        sql_params: '[]',
+      };
+    } catch (error) {
+      console.error('ERRO analiseDesempenhoCanalVenda:', error);
+      return { success: false, message: 'Erro ao analisar desempenho por canal de venda' };
+    }
+  },
+});
+
+export const analisePerformanceCategoria = tool({
+  description: 'Análise de Performance por Categoria de Produto (visão estratégica).',
+  inputSchema: z.object({}).optional(),
+  execute: async () => {
+    const sql = `
+      SELECT
+        COALESCE(cat.nome, 'Sem Categoria') AS categoria,
+        SUM(ip.quantidade * ip.preco_unitario) AS receita_total,
+        SUM(ip.quantidade) AS total_unidades_vendidas,
+        COUNT(DISTINCT ip.pedido_id) AS pedidos_distintos,
+        AVG(ip.preco_unitario) AS preco_medio_do_item
+      FROM gestaovendas.itens_pedido ip
+      JOIN gestaocatalogo.produto_variacoes pv ON ip.produto_id = pv.id
+      JOIN gestaocatalogo.produtos p ON pv.produto_pai_id = p.id
+      LEFT JOIN gestaocatalogo.categorias cat ON p.categoria_id = cat.id
       GROUP BY categoria
-      ORDER BY receita DESC;
+      ORDER BY receita_total DESC;
     `.trim();
 
     try {
       const rows = await runQuery<{
         categoria: string;
-        receita: number;
-        pct_receita: number;
+        receita_total: number;
+        total_unidades_vendidas: number;
+        pedidos_distintos: number;
+        preco_medio_do_item: number;
       }>(sql);
 
       return {
         success: true,
-        message: 'Mix de receita por categoria',
+        message: 'Análise de Performance por Categoria de Produto',
         rows,
         sql_query: sql,
         sql_params: '[]',
       };
     } catch (error) {
-      console.error('ERRO getMixReceitaPorCategoria:', error);
-      return { success: false, message: 'Erro ao calcular mix por categoria' };
+      console.error('ERRO analisePerformanceCategoria:', error);
+      return { success: false, message: 'Erro ao analisar performance por categoria' };
     }
   },
 });
 
-export const getTicketMedioVendas = tool({
-  description: 'Ticket médio de vendas (pedidos, receita total e ticket médio).',
+export const analiseLTVcliente = tool({
+  description: 'Análise de LTV por cliente (total gasto, pedidos, ticket médio e datas).',
   inputSchema: z.object({}).optional(),
   execute: async () => {
     const sql = `
       SELECT
-        COUNT(*) AS pedidos,
-        SUM(total_liquido) AS receita,
-        ROUND(SUM(total_liquido)::numeric / NULLIF(COUNT(*),0), 2) AS ticket_medio
-      FROM gestaovendas.pedidos;
+        c.nome,
+        c.email,
+        SUM(p.valor_total) AS ltv_total_gasto,
+        COUNT(p.id) AS total_de_pedidos,
+        AVG(p.valor_total) AS ticket_medio_cliente,
+        MIN(p.data_pedido)::date AS data_primeira_compra,
+        MAX(p.data_pedido)::date AS data_ultima_compra
+      FROM gestaovendas.pedidos p
+      JOIN gestaovendas.clientes c ON p.cliente_id = c.id
+      WHERE p.status != 'CANCELADO'
+      GROUP BY c.id, c.nome, c.email
+      ORDER BY ltv_total_gasto DESC
+      LIMIT 10;
     `.trim();
 
     try {
       const rows = await runQuery<{
-        pedidos: number;
-        receita: number;
-        ticket_medio: number;
+        nome: string;
+        email: string;
+        ltv_total_gasto: number;
+        total_de_pedidos: number;
+        ticket_medio_cliente: number;
+        data_primeira_compra: string;
+        data_ultima_compra: string;
       }>(sql);
 
       return {
         success: true,
-        message: 'Ticket médio de vendas',
+        message: 'Análise de LTV por Cliente',
         rows,
         sql_query: sql,
         sql_params: '[]',
       };
     } catch (error) {
-      console.error('ERRO getTicketMedioVendas:', error);
-      return { success: false, message: 'Erro ao calcular ticket médio' };
-    }
-  },
-});
-
-export const getCurvaABCPorReceita = tool({
-  description: 'Curva ABC por receita (classificação A/B/C por 80%/95%).',
-  inputSchema: z.object({
-    data_de: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
-    data_ate: z.string().optional().describe('Data final (YYYY-MM-DD)'),
-  }).optional(),
-  execute: async ({ data_de, data_ate } = {}) => {
-    const sql = `
-      WITH itens AS (
-        SELECT
-          p.id AS pedido_id,
-          i.produto_id,
-          (i.quantidade * i.preco_unitario) AS bruto_item,
-          COALESCE(p.desconto,0)            AS desc_pedido,
-          COALESCE(p.frete,0)               AS frete_pedido,
-          SUM(i.quantidade * i.preco_unitario) OVER (PARTITION BY p.id) AS bruto_pedido
-        FROM gestaovendas.pedidos p
-        JOIN gestaovendas.itens_pedido i ON i.pedido_id = p.id
-        WHERE ($1::date IS NULL OR p.criado_em::date >= $1::date)
-          AND ($2::date IS NULL OR p.criado_em::date <= $2::date)
-      ),
-      rateado AS (
-        SELECT
-          produto_id,
-          bruto_item
-            - desc_pedido * CASE WHEN bruto_pedido>0 THEN bruto_item/bruto_pedido ELSE 0 END
-            + frete_pedido * CASE WHEN bruto_pedido>0 THEN bruto_item/bruto_pedido ELSE 0 END
-            AS receita_item
-        FROM itens
-      ),
-      agg AS (
-        SELECT produto_id, SUM(receita_item) AS receita
-        FROM rateado
-        GROUP BY 1
-      ),
-      ord AS (
-        SELECT
-          a.*,
-          a.receita / NULLIF(SUM(a.receita) OVER (),0)                  AS pct,
-          SUM(a.receita) OVER (ORDER BY a.receita DESC)
-            / NULLIF(SUM(a.receita) OVER (),0)                          AS pct_acum
-        FROM agg a
-      )
-      SELECT
-        o.produto_id,
-        pr.sku,
-        pr.nome AS nome_produto,
-        o.receita,
-        CASE
-          WHEN o.pct_acum <= 0.80 THEN 'A'
-          WHEN o.pct_acum <= 0.95 THEN 'B'
-          ELSE 'C'
-        END AS classe_abc
-      FROM ord o
-      JOIN gestaocatalogo.produtos pr ON pr.id = o.produto_id
-      ORDER BY o.receita DESC;
-    `.trim();
-
-    try {
-      const rows = await runQuery<{
-        produto_id: number;
-        sku: string | null;
-        nome_produto: string;
-        receita: number;
-        classe_abc: 'A' | 'B' | 'C';
-      }>(sql, [data_de ?? null, data_ate ?? null]);
-
-      return {
-        success: true,
-        message: 'Curva ABC por Receita',
-        rows,
-        sql_query: sql,
-        sql_params: formatSqlParams([data_de ?? null, data_ate ?? null]),
-      };
-    } catch (error) {
-      console.error('ERRO getCurvaABCPorReceita:', error);
-      return { success: false, message: 'Erro ao calcular Curva ABC por receita' };
+      console.error('ERRO analiseLTVcliente:', error);
+      return { success: false, message: 'Erro ao analisar LTV por cliente' };
     }
   },
 });

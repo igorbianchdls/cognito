@@ -1,6 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
-import { getTopProdutosReceitaLiquida, getDesempenhoVendasMensal, getMixReceitaPorCategoria, getTicketMedioVendas, getCurvaABCPorReceita, getTopClientesPorReceita } from '@/tools/salesTools';
+import { getTopProdutosReceitaLiquida, getDesempenhoVendasMensal, analiseDesempenhoCanalVenda, analisePerformanceCategoria, analiseLTVcliente, getTopClientesPorReceita } from '@/tools/salesTools';
 
 export const maxDuration = 300;
 
@@ -55,20 +55,20 @@ Agrega por mês: receita total, total de pedidos, ticket médio e itens por pedi
 ### Saída:
 - canal, receita_liquida, pedidos
 
-## 📊 getMixReceitaPorCategoria - Mix por categoria
-Retorna a receita por categoria e a participação percentual na receita total.
+## 📊 analiseDesempenhoCanalVenda - Desempenho por canal (rentabilidade)
+Retorna pedidos, receita bruta, ticket, comissão estimada e receita líquida por canal.
 
 ### Saída:
 - categoria, receita, pct_receita
 
-## 📊 getTicketMedioVendas - Ticket médio
-Retorna contagem de pedidos, receita total e ticket médio.
+## 📊 analisePerformanceCategoria - Performance por categoria
+Retorna receita, unidades, pedidos e preço médio por categoria.
 
 ### Saída:
 - pedidos, receita, ticket_medio
 
-## 📊 getCurvaABCPorReceita - Curva ABC por receita
-Classifica produtos nas classes A (até 80% da receita), B (80–95%), C (restante) usando receita rateada por item.
+## 📊 analiseLTVcliente - LTV por cliente
+Lista clientes com LTV total, total de pedidos, ticket médio e datas da 1ª e última compra.
 
 ### Saída:
 - produto_id, sku, nome_produto, receita, classe_abc
@@ -277,9 +277,9 @@ Seja sempre orientado a dados, priorize crescimento sustentável e rentabilidade
       tools: {
         getTopProdutosReceitaLiquida,
         getDesempenhoVendasMensal,
-        getMixReceitaPorCategoria,
-        getTicketMedioVendas,
-        getCurvaABCPorReceita,
+        analiseDesempenhoCanalVenda,
+        analisePerformanceCategoria,
+        analiseLTVcliente,
         getTopClientesPorReceita
       }
     });
