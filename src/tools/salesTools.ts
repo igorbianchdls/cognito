@@ -541,71 +541,49 @@ export const analiseClientesNovosRecorrentes = tool({
 });
 
 export const analisePerformanceLancamento = tool({
-  description: 'Análise de Performance de Lançamento de Coleção.',
+  description: 'Análise de Performance de Lançamento de Coleção (por tipo de coleção).',
   inputSchema: z.object({
-    date_range_days: z.number().default(DEFAULT_RANGE)
-      .describe('Período em dias para analisar performance dos produtos'),
-    limit: z.number().default(20)
-      .describe('Número máximo de produtos a retornar'),
-  }),
-  execute: async ({ date_range_days = DEFAULT_RANGE, limit = 20 }) => {
-    const range = normalizeRange(date_range_days);
-    const top = Math.min(Math.max(Math.trunc(limit), 1), 100);
-
+    mes_lancamento: z.string().default('2025-05-01')
+      .describe('Mês do lançamento (YYYY-MM-01)'),
+    id_limite_colecao: z.number().int().default(24)
+      .describe('IDs > id_limite_colecao são considerados Nova Coleção'),
+  }).optional(),
+  execute: async ({ mes_lancamento = '2025-05-01', id_limite_colecao = 24 } = {}) => {
     const sql = `
-      WITH filtro_pedidos AS (
-        SELECT id
-        FROM vendasecommerce.orders
-        WHERE order_date >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
-      ),
-      itens AS (
+      WITH itens_de_mes AS (
         SELECT
-          oi.product_id,
-          SUM(oi.quantity) AS unidades_vendidas,
-          SUM(oi.subtotal) AS receita_total,
-          AVG(oi.unit_price) AS preco_medio
-        FROM vendasecommerce.order_items oi
-        JOIN filtro_pedidos f ON f.id = oi.order_id
-        GROUP BY oi.product_id
+          ip.produto_id,
+          (ip.quantidade * ip.preco_unitario) AS receita_item
+        FROM gestaovendas.itens_pedido ip
+        JOIN gestaovendas.pedidos p ON ip.pedido_id = p.id
+        WHERE DATE_TRUNC('month', p.data_pedido)::date = $1::date
+          AND p.status != 'CANCELADO'
       )
       SELECT
-        COALESCE(p.name, 'Produto sem nome') AS produto,
-        p.sku,
-        p.category,
-        itens.unidades_vendidas,
-        itens.receita_total,
-        itens.preco_medio,
-        COALESCE(p.stock_quantity, 0) AS estoque_atual,
         CASE
-          WHEN COALESCE(p.stock_quantity, 0) > 0
-            THEN ROUND((itens.unidades_vendidas::numeric / p.stock_quantity) * 100, 2)
-          ELSE NULL
-        END AS sell_through_percent
-      FROM itens
-      LEFT JOIN vendasecommerce.products p ON p.id = itens.product_id
-      ORDER BY itens.receita_total DESC
-      LIMIT $2;
+          WHEN produto_id > $2::int THEN 'Nova Coleção (Lançamento)'
+          ELSE 'Coleção Antiga'
+        END AS tipo_colecao,
+        SUM(receita_item) AS receita_total_no_mes,
+        COUNT(*) AS total_itens_vendidos
+      FROM itens_de_mes
+      GROUP BY tipo_colecao
+      ORDER BY receita_total_no_mes DESC;
     `.trim();
 
     try {
       const rows = await runQuery<{
-        produto: string;
-        sku: string | null;
-        category: string | null;
-        unidades_vendidas: number;
-        receita_total: number;
-        preco_medio: number;
-        estoque_atual: number;
-        sell_through_percent: number | null;
-      }>(sql, [range, top]);
+        tipo_colecao: string;
+        receita_total_no_mes: number;
+        total_itens_vendidos: number;
+      }>(sql, [mes_lancamento, id_limite_colecao]);
 
       return {
         success: true,
-        message: `Top ${rows.length} produtos por receita (${range} dias)`,
-        periodo_dias: range,
+        message: `Performance de Lançamento (${mes_lancamento})`,
         rows,
         sql_query: sql,
-        sql_params: formatSqlParams([range, top]),
+        sql_params: formatSqlParams([mes_lancamento, id_limite_colecao]),
       };
     } catch (error) {
       console.error('ERRO analisePerformanceLancamento:', error);
