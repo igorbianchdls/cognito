@@ -67,6 +67,11 @@ import AnaliseDesempenhoCanalResult, { type AnaliseDesempenhoCanalRow } from '..
 import AnalisePerformanceCategoriaResult, { type AnalisePerformanceCategoriaRow } from '../tools/ecommerce/AnalisePerformanceCategoriaResult';
 import CurvaABCPorReceitaResult, { type CurvaABCRow } from '../tools/ecommerce/CurvaABCPorReceitaResult';
 import TopClientesPorReceitaResult, { type TopClienteRow } from '../tools/ecommerce/TopClientesPorReceitaResult';
+import ValorVidaClienteResult, { type ValorVidaClienteRow } from '../tools/ecommerce/ValorVidaClienteResult';
+import ClientesNovosRecorrentesResult, { type ClientesNovosRecorrentesRow } from '../tools/ecommerce/ClientesNovosRecorrentesResult';
+import PerformanceLancamentoResult, { type PerformanceLancamentoRow } from '../tools/ecommerce/PerformanceLancamentoResult';
+import CestaComprasResult, { type CestaComprasRow } from '../tools/ecommerce/CestaComprasResult';
+import VendasPorEstadoResult, { type VendasPorEstadoRow } from '../tools/ecommerce/VendasPorEstadoResult';
 import LogisticsDataTable from '../tools/LogisticsDataTable';
 import AnalyticsDataTable from '../tools/AnalyticsDataTable';
 import ComprasDataTable from '../tools/ComprasDataTable';
@@ -986,6 +991,31 @@ type GetCurvaABCPorReceitaToolOutput = EcommerceGenericToolOutput & {
 type GetTopClientesPorReceitaToolOutput = EcommerceGenericToolOutput & {
   rows?: TopClienteRow[];
   data?: TopClienteRow[];
+};
+
+type AnaliseValorVidaClienteToolOutput = EcommerceGenericToolOutput & {
+  rows?: ValorVidaClienteRow[];
+  data?: ValorVidaClienteRow[];
+};
+
+type AnaliseClientesNovosRecorrentesToolOutput = EcommerceGenericToolOutput & {
+  rows?: ClientesNovosRecorrentesRow[];
+  data?: ClientesNovosRecorrentesRow[];
+};
+
+type AnalisePerformanceLancamentoToolOutput = EcommerceGenericToolOutput & {
+  rows?: PerformanceLancamentoRow[];
+  data?: PerformanceLancamentoRow[];
+};
+
+type AnaliseCestaComprasToolOutput = EcommerceGenericToolOutput & {
+  rows?: CestaComprasRow[];
+  data?: CestaComprasRow[];
+};
+
+type AnaliseVendasPorEstadoToolOutput = EcommerceGenericToolOutput & {
+  rows?: VendasPorEstadoRow[];
+  data?: VendasPorEstadoRow[];
 };
 
 type GetCouponEffectivenessToolInput = {
@@ -4506,6 +4536,151 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   rows={(tool.output as GetTopClientesPorReceitaToolOutput).rows}
                   data={(tool.output as GetTopClientesPorReceitaToolOutput).data}
                   sql_query={(tool.output as GetTopClientesPorReceitaToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-analiseValorVidaCliente') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-analiseValorVidaCliente" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <ValorVidaClienteResult
+                  success={(tool.output as AnaliseValorVidaClienteToolOutput).success}
+                  message={(tool.output as AnaliseValorVidaClienteToolOutput).message}
+                  rows={(tool.output as AnaliseValorVidaClienteToolOutput).rows}
+                  data={(tool.output as AnaliseValorVidaClienteToolOutput).data}
+                  sql_query={(tool.output as AnaliseValorVidaClienteToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-analiseClientesNovosRecorrentes') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-analiseClientesNovosRecorrentes" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <ClientesNovosRecorrentesResult
+                  success={(tool.output as AnaliseClientesNovosRecorrentesToolOutput).success}
+                  message={(tool.output as AnaliseClientesNovosRecorrentesToolOutput).message}
+                  rows={(tool.output as AnaliseClientesNovosRecorrentesToolOutput).rows}
+                  data={(tool.output as AnaliseClientesNovosRecorrentesToolOutput).data}
+                  sql_query={(tool.output as AnaliseClientesNovosRecorrentesToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-analisePerformanceLancamento') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-analisePerformanceLancamento" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <PerformanceLancamentoResult
+                  success={(tool.output as AnalisePerformanceLancamentoToolOutput).success}
+                  message={(tool.output as AnalisePerformanceLancamentoToolOutput).message}
+                  rows={(tool.output as AnalisePerformanceLancamentoToolOutput).rows}
+                  data={(tool.output as AnalisePerformanceLancamentoToolOutput).data}
+                  sql_query={(tool.output as AnalisePerformanceLancamentoToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-analiseCestaCompras') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-analiseCestaCompras" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <CestaComprasResult
+                  success={(tool.output as AnaliseCestaComprasToolOutput).success}
+                  message={(tool.output as AnaliseCestaComprasToolOutput).message}
+                  rows={(tool.output as AnaliseCestaComprasToolOutput).rows}
+                  data={(tool.output as AnaliseCestaComprasToolOutput).data}
+                  sql_query={(tool.output as AnaliseCestaComprasToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-analiseVendasPorEstado') {
+          const tool = part as NexusToolUIPart;
+          const callId = tool.toolCallId;
+          const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-analiseVendasPorEstado" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && (
+                    <ToolOutput output={null} errorText={tool.errorText} />
+                  )}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <VendasPorEstadoResult
+                  success={(tool.output as AnaliseVendasPorEstadoToolOutput).success}
+                  message={(tool.output as AnaliseVendasPorEstadoToolOutput).message}
+                  rows={(tool.output as AnaliseVendasPorEstadoToolOutput).rows}
+                  data={(tool.output as AnaliseVendasPorEstadoToolOutput).data}
+                  sql_query={(tool.output as AnaliseVendasPorEstadoToolOutput).sql_query}
                 />
               )}
             </div>

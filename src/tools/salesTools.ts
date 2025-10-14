@@ -466,8 +466,8 @@ export const getTopClientesPorReceita = tool({
   },
 });
 
-export const getRevenueMetrics = tool({
-  description: 'Métricas de receita por canal de venda.',
+export const analiseValorVidaCliente = tool({
+  description: 'Análise de Valor de Vida do Cliente (LTV - Lifetime Value).',
   inputSchema: z.object({
     date_range_days: z.number().default(DEFAULT_RANGE)
       .describe('Período em dias para analisar receita por canal'),
@@ -547,17 +547,17 @@ export const getRevenueMetrics = tool({
         sql_params: formatSqlParams([range]),
       };
     } catch (error) {
-      console.error('ERRO getRevenueMetrics:', error);
+      console.error('ERRO analiseValorVidaCliente:', error);
       return {
         success: false,
-        message: `Erro ao calcular métricas de receita: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        message: `Erro ao calcular valor de vida do cliente: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
   },
 });
 
-export const getCustomerMetrics = tool({
-  description: 'Segmentação de clientes por valor e frequência de compra.',
+export const analiseClientesNovosRecorrentes = tool({
+  description: 'Análise de Clientes Novos vs. Recorrentes.',
   inputSchema: z.object({
     date_range_days: z.number().default(DEFAULT_RANGE)
       .describe('Período de referência para identificação de clientes recentes'),
@@ -616,17 +616,17 @@ export const getCustomerMetrics = tool({
         sql_params: formatSqlParams([]),
       };
     } catch (error) {
-      console.error('ERRO getCustomerMetrics:', error);
+      console.error('ERRO analiseClientesNovosRecorrentes:', error);
       return {
         success: false,
-        message: `Erro ao calcular métricas de clientes: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        message: `Erro ao analisar clientes novos vs. recorrentes: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
   },
 });
 
-export const getProductPerformance = tool({
-  description: 'Top produtos por receita e unidades vendidas.',
+export const analisePerformanceLancamento = tool({
+  description: 'Análise de Performance de Lançamento de Coleção.',
   inputSchema: z.object({
     date_range_days: z.number().default(DEFAULT_RANGE)
       .describe('Período em dias para analisar performance dos produtos'),
@@ -693,17 +693,17 @@ export const getProductPerformance = tool({
         sql_params: formatSqlParams([range, top]),
       };
     } catch (error) {
-      console.error('ERRO getProductPerformance:', error);
+      console.error('ERRO analisePerformanceLancamento:', error);
       return {
         success: false,
-        message: `Erro ao analisar performance de produtos: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        message: `Erro ao analisar performance de lançamento: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
   },
 });
 
-export const getCouponEffectiveness = tool({
-  description: 'Efetividade dos cupons de desconto.',
+export const analiseCestaCompras = tool({
+  description: 'Análise de Cesta de Compras (Produtos Comprados Juntos).',
   inputSchema: z.object({
     date_range_days: z.number().default(DEFAULT_RANGE)
       .describe('Período em dias para analisar pedidos com cupons'),
@@ -768,17 +768,17 @@ export const getCouponEffectiveness = tool({
         sql_params: formatSqlParams([range]),
       };
     } catch (error) {
-      console.error('ERRO getCouponEffectiveness:', error);
+      console.error('ERRO analiseCestaCompras:', error);
       return {
         success: false,
-        message: `Erro ao analisar cupons: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        message: `Erro ao analisar cesta de compras: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
   },
 });
 
-export const getChannelAnalysis = tool({
-  description: 'Análise detalhada de canais de venda.',
+export const analiseVendasPorEstado = tool({
+  description: 'Análise de Vendas por Estado (Visão Geográfica).',
   inputSchema: z.object({
     date_range_days: z.number().default(DEFAULT_RANGE)
       .describe('Período em dias para analisar canais'),
@@ -861,10 +861,10 @@ export const getChannelAnalysis = tool({
         sql_params: formatSqlParams([range]),
       };
     } catch (error) {
-      console.error('ERRO getChannelAnalysis:', error);
+      console.error('ERRO analiseVendasPorEstado:', error);
       return {
         success: false,
-        message: `Erro ao analisar canais: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        message: `Erro ao analisar vendas por estado: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
   },
