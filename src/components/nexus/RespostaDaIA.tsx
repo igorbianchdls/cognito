@@ -964,18 +964,18 @@ type GetProductPerformanceToolInput = {
 type GetProductPerformanceToolOutput = EcommerceGenericToolOutput;
 
 type GetReceitaPorCanalToolOutput = EcommerceGenericToolOutput & {
-  rows?: ReceitaPorCanalRow[];
-  data?: ReceitaPorCanalRow[];
+  rows?: DesempenhoVendasMensalRow[];
+  data?: DesempenhoVendasMensalRow[];
 };
 
 type GetMixReceitaPorCategoriaToolOutput = EcommerceGenericToolOutput & {
-  rows?: MixCategoriaRow[];
-  data?: MixCategoriaRow[];
+  rows?: AnaliseDesempenhoCanalRow[];
+  data?: AnaliseDesempenhoCanalRow[];
 };
 
 type GetTicketMedioVendasToolOutput = EcommerceGenericToolOutput & {
-  rows?: TicketMedioRow[];
-  data?: TicketMedioRow[];
+  rows?: AnalisePerformanceCategoriaRow[];
+  data?: AnalisePerformanceCategoriaRow[];
 };
 
 type GetCurvaABCPorReceitaToolOutput = EcommerceGenericToolOutput & {
