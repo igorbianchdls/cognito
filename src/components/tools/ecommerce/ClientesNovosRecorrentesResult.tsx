@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { ColumnDef } from '@tantml:function_calls';
+import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { Users } from 'lucide-react';
 
