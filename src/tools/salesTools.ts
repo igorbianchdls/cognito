@@ -491,59 +491,41 @@ export const analiseValorVidaCliente = tool({
 
 export const analiseClientesNovosRecorrentes = tool({
   description: 'Análise de Clientes Novos vs. Recorrentes.',
-  inputSchema: z.object({
-    date_range_days: z.number().default(DEFAULT_RANGE)
-      .describe('Período de referência para identificação de clientes recentes'),
-  }),
-  execute: async ({ date_range_days = DEFAULT_RANGE }) => {
-    const range = normalizeRange(date_range_days);
-
+  inputSchema: z.object({}).optional(),
+  execute: async () => {
     const sql = `
-      WITH clientes AS (
+      WITH ranked_orders AS (
         SELECT
           id,
-          total_spent,
-          total_orders,
-          CASE
-            WHEN total_spent >= 5000 THEN 'Alta receita'
-            WHEN total_spent >= 2000 THEN 'Crescimento'
-            WHEN total_spent >= 500 THEN 'Emergentes'
-            ELSE 'Novos'
-          END AS segmento,
-          CASE
-            WHEN total_orders > 1 THEN 1
-            ELSE 0
-          END AS recorrente
-        FROM vendasecommerce.customers
+          cliente_id,
+          valor_total,
+          ROW_NUMBER() OVER (PARTITION BY cliente_id ORDER BY data_pedido ASC) AS ranking_do_pedido
+        FROM gestaovendas.pedidos
+        WHERE status != 'CANCELADO'
       )
       SELECT
-        segmento,
-        COUNT(*) AS clientes,
-        ROUND(COUNT(*)::numeric / NULLIF(SUM(COUNT(*)) OVER (), 0) * 100, 2) AS percentual_clientes,
-        SUM(total_spent) AS receita_total,
-        AVG(total_spent) AS ticket_medio_cliente,
-        AVG(total_orders) AS pedidos_medios,
-        SUM(recorrente) AS clientes_recorrentes
-      FROM clientes
-      GROUP BY segmento
-      ORDER BY receita_total DESC;
+        CASE
+          WHEN ranking_do_pedido = 1 THEN 'Novo Cliente'
+          ELSE 'Cliente Recorrente'
+        END AS tipo_de_cliente,
+        COUNT(id) AS total_de_pedidos,
+        SUM(valor_total) AS receita_total,
+        AVG(valor_total) AS ticket_medio
+      FROM ranked_orders
+      GROUP BY tipo_de_cliente;
     `.trim();
 
     try {
       const rows = await runQuery<{
-        segmento: string;
-        clientes: number;
-        percentual_clientes: number;
+        tipo_de_cliente: string;
+        total_de_pedidos: number;
         receita_total: number;
-        ticket_medio_cliente: number;
-        pedidos_medios: number;
-        clientes_recorrentes: number;
+        ticket_medio: number;
       }>(sql);
 
       return {
         success: true,
-        message: 'Segmentação por perfil de clientes',
-        periodo_dias: range,
+        message: 'Análise de Clientes Novos vs. Recorrentes',
         rows,
         sql_query: sql,
         sql_params: formatSqlParams([]),
@@ -637,68 +619,41 @@ export const analisePerformanceLancamento = tool({
 
 export const analiseCestaCompras = tool({
   description: 'Análise de Cesta de Compras (Produtos Comprados Juntos).',
-  inputSchema: z.object({
-    date_range_days: z.number().default(DEFAULT_RANGE)
-      .describe('Período em dias para analisar pedidos com cupons'),
-  }),
-  execute: async ({ date_range_days = DEFAULT_RANGE }) => {
-    const range = normalizeRange(date_range_days);
-
+  inputSchema: z.object({}).optional(),
+  execute: async () => {
     const sql = `
-      WITH pedidos_com_cupom AS (
-        SELECT
-          o.coupon_id,
-          COUNT(*) AS pedidos,
-          SUM(o.total) AS receita_bruta,
-          SUM(o.discount) AS desconto_total
-        FROM vendasecommerce.orders o
-        WHERE o.order_date >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
-          AND o.coupon_id IS NOT NULL
-        GROUP BY o.coupon_id
+      WITH produto_nomes AS (
+        SELECT v.id, p.nome
+        FROM gestaocatalogo.produto_variacoes v
+        JOIN gestaocatalogo.produtos p ON v.produto_pai_id = p.id
       )
       SELECT
-        c.code,
-        c.discount_type,
-        c.discount_value,
-        c.valid_from,
-        c.valid_until,
-        c.usage_limit,
-        c.times_used,
-        COALESCE(p.pedidos, 0) AS pedidos_periodo,
-        COALESCE(p.receita_bruta, 0) AS receita_associada,
-        COALESCE(p.desconto_total, 0) AS desconto_concedido,
-        CASE
-          WHEN COALESCE(c.usage_limit, 0) > 0
-            THEN ROUND((c.times_used::numeric / c.usage_limit) * 100, 2)
-          ELSE NULL
-        END AS utilizacao_total_percent
-      FROM vendasecommerce.coupons c
-      LEFT JOIN pedidos_com_cupom p ON p.coupon_id = c.id
-      ORDER BY COALESCE(p.receita_bruta, 0) DESC, c.times_used DESC;
+        pn1.nome AS produto_A,
+        pn2.nome AS produto_B,
+        COUNT(DISTINCT item1.pedido_id) AS vezes_comprados_juntos
+      FROM gestaovendas.itens_pedido AS item1
+      JOIN gestaovendas.itens_pedido AS item2
+        ON item1.pedido_id = item2.pedido_id AND item1.produto_id < item2.produto_id
+      JOIN produto_nomes pn1 ON item1.produto_id = pn1.id
+      JOIN produto_nomes pn2 ON item2.produto_id = pn2.id
+      GROUP BY produto_A, produto_B
+      ORDER BY vezes_comprados_juntos DESC
+      LIMIT 10;
     `.trim();
 
     try {
       const rows = await runQuery<{
-        code: string;
-        discount_type: string;
-        discount_value: number;
-        valid_from: string | null;
-        valid_until: string | null;
-        usage_limit: number | null;
-        times_used: number;
-        pedidos_periodo: number;
-        receita_associada: number;
-        desconto_concedido: number;
-        utilizacao_total_percent: number | null;
-      }>(sql, [range]);
+        produto_A: string;
+        produto_B: string;
+        vezes_comprados_juntos: number;
+      }>(sql);
 
       return {
         success: true,
-        message: `Efetividade dos cupons (${range} dias)`,
-        periodo_dias: range,
+        message: 'Produtos frequentemente comprados juntos',
         rows,
         sql_query: sql,
-        sql_params: formatSqlParams([range]),
+        sql_params: formatSqlParams([]),
       };
     } catch (error) {
       console.error('ERRO analiseCestaCompras:', error);
@@ -712,86 +667,35 @@ export const analiseCestaCompras = tool({
 
 export const analiseVendasPorEstado = tool({
   description: 'Análise de Vendas por Estado (Visão Geográfica).',
-  inputSchema: z.object({
-    date_range_days: z.number().default(DEFAULT_RANGE)
-      .describe('Período em dias para analisar canais'),
-  }),
-  execute: async ({ date_range_days = DEFAULT_RANGE }) => {
-    const range = normalizeRange(date_range_days);
-
+  inputSchema: z.object({}).optional(),
+  execute: async () => {
     const sql = `
-      WITH orders AS (
-        SELECT
-          o.channel_id,
-          COUNT(*) AS pedidos,
-          SUM(o.total) AS receita_total,
-          SUM(o.shipping_cost) AS frete_total,
-          SUM(o.discount) AS desconto_total,
-          COUNT(DISTINCT o.customer_id) AS clientes_unicos
-        FROM vendasecommerce.orders o
-        WHERE o.order_date >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
-        GROUP BY o.channel_id
-      ),
-      returns AS (
-        SELECT
-          o.channel_id,
-          COUNT(*) AS devolucoes,
-          SUM(r.refund_amount) AS valor_reembolsado
-        FROM vendasecommerce.returns r
-        JOIN vendasecommerce.orders o ON o.id = r.order_id
-        WHERE r.return_date >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
-        GROUP BY o.channel_id
-      ),
-      payments AS (
-        SELECT
-          o.channel_id,
-          SUM(CASE WHEN p.status = 'paid' THEN p.amount ELSE 0 END) AS receita_confirmada
-        FROM vendasecommerce.payments p
-        JOIN vendasecommerce.orders o ON o.id = p.order_id
-        WHERE p.payment_date >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
-        GROUP BY o.channel_id
-      )
       SELECT
-        COALESCE(c.name, 'Sem canal') AS canal,
-        o.pedidos,
-        o.receita_total,
-        COALESCE(pay.receita_confirmada, 0) AS receita_confirmada,
-        o.desconto_total,
-        o.frete_total,
-        o.clientes_unicos,
-        COALESCE(r.devolucoes, 0) AS devolucoes,
-        CASE WHEN o.pedidos > 0 THEN o.receita_total / o.pedidos ELSE 0 END AS ticket_medio,
-        CASE WHEN o.clientes_unicos > 0 THEN o.pedidos::numeric / o.clientes_unicos ELSE 0 END AS pedidos_por_cliente,
-        CASE WHEN o.pedidos > 0 THEN COALESCE(r.devolucoes, 0)::numeric / o.pedidos * 100 ELSE 0 END AS taxa_devolucao_percent
-      FROM orders o
-      LEFT JOIN returns r ON r.channel_id = o.channel_id
-      LEFT JOIN payments pay ON pay.channel_id = o.channel_id
-      LEFT JOIN vendasecommerce.channels c ON c.id = o.channel_id
-      ORDER BY o.receita_total DESC;
+        ec.estado,
+        SUM(p.valor_total) AS receita_total,
+        COUNT(p.id) AS total_pedidos,
+        COUNT(DISTINCT p.cliente_id) AS clientes_distintos
+      FROM gestaovendas.pedidos p
+      JOIN gestaovendas.enderecos_clientes ec ON p.endereco_entrega_id = ec.id
+      WHERE p.status != 'CANCELADO'
+      GROUP BY ec.estado
+      ORDER BY receita_total DESC;
     `.trim();
 
     try {
       const rows = await runQuery<{
-        canal: string;
-        pedidos: number;
+        estado: string;
         receita_total: number;
-        receita_confirmada: number;
-        desconto_total: number;
-        frete_total: number;
-        clientes_unicos: number;
-        devolucoes: number;
-        ticket_medio: number;
-        pedidos_por_cliente: number;
-        taxa_devolucao_percent: number;
-      }>(sql, [range]);
+        total_pedidos: number;
+        clientes_distintos: number;
+      }>(sql);
 
       return {
         success: true,
-        message: `Análise de canais (${range} dias)`,
-        periodo_dias: range,
+        message: 'Vendas por Estado (Visão Geográfica)',
         rows,
         sql_query: sql,
-        sql_params: formatSqlParams([range]),
+        sql_params: formatSqlParams([]),
       };
     } catch (error) {
       console.error('ERRO analiseVendasPorEstado:', error);

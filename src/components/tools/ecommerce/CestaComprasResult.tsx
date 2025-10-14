@@ -6,17 +6,9 @@ import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { ShoppingCart } from 'lucide-react';
 
 export type CestaComprasRow = {
-  code: string;
-  discount_type: string;
-  discount_value: number;
-  valid_from: string | null;
-  valid_until: string | null;
-  usage_limit: number | null;
-  times_used: number;
-  pedidos_periodo: number;
-  receita_associada: number;
-  desconto_concedido: number;
-  utilizacao_total_percent: number | null;
+  produto_A: string;
+  produto_B: string;
+  vezes_comprados_juntos: number;
 };
 
 interface Props {
@@ -33,18 +25,9 @@ export default function CestaComprasResult({ success, message, rows, data, sql_q
   const tableRows = rows ?? data ?? [];
 
   const columns: ColumnDef<CestaComprasRow>[] = useMemo(() => [
-    { accessorKey: 'code', header: 'Código' },
-    { accessorKey: 'discount_type', header: 'Tipo' },
-    { accessorKey: 'discount_value', header: 'Valor Desconto', cell: ({ row }) => currency(row.original.discount_value) },
-    { accessorKey: 'times_used', header: 'Usos', cell: ({ row }) => row.original.times_used.toLocaleString('pt-BR') },
-    { accessorKey: 'pedidos_periodo', header: 'Pedidos', cell: ({ row }) => row.original.pedidos_periodo.toLocaleString('pt-BR') },
-    { accessorKey: 'receita_associada', header: 'Receita Associada', cell: ({ row }) => (
-      <span className="font-semibold text-emerald-600">{currency(row.original.receita_associada)}</span>
-    ) },
-    { accessorKey: 'desconto_concedido', header: 'Desconto Concedido', cell: ({ row }) => currency(row.original.desconto_concedido) },
-    { accessorKey: 'utilizacao_total_percent', header: '% Utilização', cell: ({ row }) =>
-      row.original.utilizacao_total_percent !== null ? `${row.original.utilizacao_total_percent.toFixed(2)}%` : 'N/A'
-    },
+    { accessorKey: 'produto_A', header: 'Produto A' },
+    { accessorKey: 'produto_B', header: 'Produto B' },
+    { accessorKey: 'vezes_comprados_juntos', header: 'Comprados Juntos (Pedidos)', cell: ({ row }) => row.original.vezes_comprados_juntos.toLocaleString('pt-BR') },
   ], []);
 
   return (
@@ -61,15 +44,18 @@ export default function CestaComprasResult({ success, message, rows, data, sql_q
       sqlQuery={sql_query}
       enableAutoChart={true}
       chartOptions={{
-        xKey: 'code',
-        valueKeys: ['receita_associada', 'pedidos_periodo'],
+        xKey: 'par',
+        valueKeys: ['vezes_comprados_juntos'],
         metricLabels: {
-          receita_associada: 'Receita Associada (R$)',
-          pedidos_periodo: 'Pedidos no Período',
+          vezes_comprados_juntos: 'Pedidos com o Par',
         },
         initialChartType: 'bar',
-        title: 'Análise de Cesta de Compras',
-        xLegend: 'Código do Cupom',
+        title: 'Produtos Comprados Juntos',
+        xLegend: 'Par de Produtos',
+        transform: (rows) => rows.map(r => ({
+          ...r,
+          par: `${r.produto_A} × ${r.produto_B}`,
+        })) as unknown as CestaComprasRow[],
       }}
     />
   );

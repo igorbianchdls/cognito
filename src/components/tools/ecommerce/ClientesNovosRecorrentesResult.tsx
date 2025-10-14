@@ -6,13 +6,10 @@ import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { Users } from 'lucide-react';
 
 export type ClientesNovosRecorrentesRow = {
-  segmento: string;
-  clientes: number;
-  percentual_clientes: number;
+  tipo_de_cliente: string; // 'Novo Cliente' | 'Cliente Recorrente'
+  total_de_pedidos: number;
   receita_total: number;
-  ticket_medio_cliente: number;
-  pedidos_medios: number;
-  clientes_recorrentes: number;
+  ticket_medio: number;
 };
 
 interface Props {
@@ -29,15 +26,12 @@ export default function ClientesNovosRecorrentesResult({ success, message, rows,
   const tableRows = rows ?? data ?? [];
 
   const columns: ColumnDef<ClientesNovosRecorrentesRow>[] = useMemo(() => [
-    { accessorKey: 'segmento', header: 'Segmento' },
-    { accessorKey: 'clientes', header: 'Clientes', cell: ({ row }) => row.original.clientes.toLocaleString('pt-BR') },
-    { accessorKey: 'percentual_clientes', header: '% Clientes', cell: ({ row }) => `${row.original.percentual_clientes.toFixed(2)}%` },
-    { accessorKey: 'clientes_recorrentes', header: 'Recorrentes', cell: ({ row }) => (
-      <span className="font-semibold text-purple-600">{row.original.clientes_recorrentes.toLocaleString('pt-BR')}</span>
+    { accessorKey: 'tipo_de_cliente', header: 'Tipo de Cliente' },
+    { accessorKey: 'total_de_pedidos', header: 'Pedidos', cell: ({ row }) => row.original.total_de_pedidos.toLocaleString('pt-BR') },
+    { accessorKey: 'receita_total', header: 'Receita Total', cell: ({ row }) => (
+      <span className="font-semibold text-emerald-600">{currency(row.original.receita_total)}</span>
     ) },
-    { accessorKey: 'receita_total', header: 'Receita Total', cell: ({ row }) => currency(row.original.receita_total) },
-    { accessorKey: 'ticket_medio_cliente', header: 'Ticket Médio/Cliente', cell: ({ row }) => currency(row.original.ticket_medio_cliente) },
-    { accessorKey: 'pedidos_medios', header: 'Pedidos Médios', cell: ({ row }) => row.original.pedidos_medios.toFixed(2) },
+    { accessorKey: 'ticket_medio', header: 'Ticket Médio', cell: ({ row }) => currency(row.original.ticket_medio) },
   ], []);
 
   return (
@@ -54,16 +48,16 @@ export default function ClientesNovosRecorrentesResult({ success, message, rows,
       sqlQuery={sql_query}
       enableAutoChart={true}
       chartOptions={{
-        xKey: 'segmento',
-        valueKeys: ['clientes', 'clientes_recorrentes', 'receita_total'],
+        xKey: 'tipo_de_cliente',
+        valueKeys: ['total_de_pedidos', 'receita_total', 'ticket_medio'],
         metricLabels: {
-          clientes: 'Total Clientes',
-          clientes_recorrentes: 'Clientes Recorrentes',
-          receita_total: 'Receita Total (R$)',
+          total_de_pedidos: 'Pedidos',
+          receita_total: 'Receita (R$)',
+          ticket_medio: 'Ticket Médio (R$)',
         },
         initialChartType: 'bar',
-        title: 'Análise de Clientes Novos vs. Recorrentes',
-        xLegend: 'Segmento',
+        title: 'Clientes Novos vs. Recorrentes',
+        xLegend: 'Tipo de Cliente',
       }}
     />
   );

@@ -6,17 +6,10 @@ import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { MapPin } from 'lucide-react';
 
 export type VendasPorEstadoRow = {
-  canal: string;
-  pedidos: number;
+  estado: string;
   receita_total: number;
-  receita_confirmada: number;
-  desconto_total: number;
-  frete_total: number;
-  clientes_unicos: number;
-  devolucoes: number;
-  ticket_medio: number;
-  pedidos_por_cliente: number;
-  taxa_devolucao_percent: number;
+  total_pedidos: number;
+  clientes_distintos: number;
 };
 
 interface Props {
@@ -33,16 +26,12 @@ export default function VendasPorEstadoResult({ success, message, rows, data, sq
   const tableRows = rows ?? data ?? [];
 
   const columns: ColumnDef<VendasPorEstadoRow>[] = useMemo(() => [
-    { accessorKey: 'canal', header: 'Canal/Estado' },
-    { accessorKey: 'pedidos', header: 'Pedidos', cell: ({ row }) => row.original.pedidos.toLocaleString('pt-BR') },
+    { accessorKey: 'estado', header: 'Estado' },
+    { accessorKey: 'total_pedidos', header: 'Pedidos', cell: ({ row }) => row.original.total_pedidos.toLocaleString('pt-BR') },
+    { accessorKey: 'clientes_distintos', header: 'Clientes', cell: ({ row }) => row.original.clientes_distintos.toLocaleString('pt-BR') },
     { accessorKey: 'receita_total', header: 'Receita Total', cell: ({ row }) => (
       <span className="font-semibold text-emerald-600">{currency(row.original.receita_total)}</span>
     ) },
-    { accessorKey: 'receita_confirmada', header: 'Receita Confirmada', cell: ({ row }) => currency(row.original.receita_confirmada) },
-    { accessorKey: 'clientes_unicos', header: 'Clientes Únicos', cell: ({ row }) => row.original.clientes_unicos.toLocaleString('pt-BR') },
-    { accessorKey: 'ticket_medio', header: 'Ticket Médio', cell: ({ row }) => currency(row.original.ticket_medio) },
-    { accessorKey: 'devolucoes', header: 'Devoluções', cell: ({ row }) => row.original.devolucoes.toLocaleString('pt-BR') },
-    { accessorKey: 'taxa_devolucao_percent', header: '% Devolução', cell: ({ row }) => `${row.original.taxa_devolucao_percent.toFixed(2)}%` },
   ], []);
 
   return (
@@ -59,16 +48,16 @@ export default function VendasPorEstadoResult({ success, message, rows, data, sq
       sqlQuery={sql_query}
       enableAutoChart={true}
       chartOptions={{
-        xKey: 'canal',
-        valueKeys: ['receita_total', 'pedidos', 'clientes_unicos'],
+        xKey: 'estado',
+        valueKeys: ['receita_total', 'total_pedidos', 'clientes_distintos'],
         metricLabels: {
           receita_total: 'Receita Total (R$)',
-          pedidos: 'Pedidos',
-          clientes_unicos: 'Clientes Únicos',
+          total_pedidos: 'Pedidos',
+          clientes_distintos: 'Clientes',
         },
         initialChartType: 'bar',
         title: 'Vendas por Estado',
-        xLegend: 'Canal/Estado',
+        xLegend: 'Estado',
       }}
     />
   );
