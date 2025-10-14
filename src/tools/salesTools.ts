@@ -17,45 +17,23 @@ const formatSqlParams = (params: unknown[]) =>
   params.length ? JSON.stringify(params) : '[]';
 
 export const getTopProdutosReceitaLiquida = tool({
-  description: 'Top 20 produtos por receita líquida (gestaovendas + gestaocatalogo).',
+  description: 'Top 10 Produtos Mais Rentáveis (visão essencial).',
   inputSchema: z.object({}).optional(),
   execute: async () => {
     const sql = `
-      WITH itens AS (
-        SELECT
-          p.id                                   AS pedido_id,
-          i.produto_id,
-          (i.quantidade * i.preco_unitario)      AS receita_bruta_item,
-          i.quantidade,
-          COALESCE(p.desconto,0)                 AS desconto_pedido,
-          COALESCE(p.frete,0)                    AS frete_pedido,
-          SUM(i.quantidade * i.preco_unitario) OVER (PARTITION BY p.id) AS soma_bruta_pedido
-        FROM gestaovendas.pedidos p
-        JOIN gestaovendas.itens_pedido i ON i.pedido_id = p.id
-      ),
-      itens_rateado AS (
-        SELECT
-          produto_id,
-          quantidade,
-          receita_bruta_item,
-          CASE WHEN soma_bruta_pedido > 0
-               THEN receita_bruta_item / soma_bruta_pedido
-               ELSE 0 END                        AS peso,
-          desconto_pedido,
-          frete_pedido
-        FROM itens
-      )
       SELECT
-        ir.produto_id,
-        pr.sku,
-        pr.nome AS nome_produto,
-        SUM(ir.quantidade) AS qtd,
-        SUM(ir.receita_bruta_item - ir.desconto_pedido * ir.peso + ir.frete_pedido * ir.peso) AS receita_liquida
-      FROM itens_rateado ir
-      JOIN gestaocatalogo.produtos pr ON pr.id = ir.produto_id
-      GROUP BY ir.produto_id, pr.sku, pr.nome
+        pv.id AS produto_id,
+        pv.sku,
+        p.nome AS nome_produto,
+        SUM(ip.quantidade) AS qtd,
+        SUM(ip.quantidade * ip.preco_unitario) AS receita_liquida,
+        COUNT(DISTINCT ip.pedido_id) AS pedidos_distintos
+      FROM gestaovendas.itens_pedido ip
+      JOIN gestaocatalogo.produto_variacoes pv ON ip.produto_id = pv.id
+      JOIN gestaocatalogo.produtos p ON pv.produto_pai_id = p.id
+      GROUP BY pv.id, p.nome, pv.sku
       ORDER BY receita_liquida DESC
-      LIMIT 20;
+      LIMIT 10;
     `.trim();
 
     try {
@@ -187,60 +165,47 @@ export const getSalesCalls = tool({
   },
 });
 
-export const getReceitaPorCanal = tool({
-  description: 'Receita líquida por canal com pedidos (rateio proporcional de desconto/frete).',
+export const getDesempenhoVendasMensal = tool({
+  description: 'Desempenho mensal de vendas: receita total, pedidos, ticket médio e itens por pedido.',
   inputSchema: z.object({}).optional(),
   execute: async () => {
     const sql = `
-      WITH itens AS (
-        SELECT
-          p.id                                   AS pedido_id,
-          COALESCE(p.canal, 'Sem canal')         AS canal,
-          (i.quantidade * i.preco_unitario)      AS receita_bruta_item,
-          COALESCE(p.desconto,0)                 AS desconto_pedido,
-          COALESCE(p.frete,0)                    AS frete_pedido,
-          SUM(i.quantidade * i.preco_unitario) OVER (PARTITION BY p.id) AS soma_bruta_pedido
-        FROM gestaovendas.pedidos p
-        JOIN gestaovendas.itens_pedido i ON i.pedido_id = p.id
-      ),
-      itens_rateado AS (
-        SELECT
-          canal,
-          receita_bruta_item,
-          CASE WHEN soma_bruta_pedido > 0
-               THEN receita_bruta_item / soma_bruta_pedido
-               ELSE 0 END                        AS peso,
-          desconto_pedido,
-          frete_pedido,
-          pedido_id
-        FROM itens
+      WITH itens_por_pedido AS (
+        SELECT pedido_id, SUM(quantidade) AS total_itens
+        FROM gestaovendas.itens_pedido
+        GROUP BY pedido_id
       )
       SELECT
-        canal,
-        SUM(receita_bruta_item - desconto_pedido * peso + frete_pedido * peso) AS receita_liquida,
-        COUNT(DISTINCT pedido_id)                                              AS pedidos
-      FROM itens_rateado
-      GROUP BY canal
-      ORDER BY receita_liquida DESC;
+        DATE_TRUNC('month', p.criado_em)::date AS mes,
+        SUM(p.total_liquido) AS receita_total,
+        COUNT(p.id) AS total_pedidos,
+        ROUND(SUM(p.total_liquido)::numeric / NULLIF(COUNT(p.id), 0), 2) AS ticket_medio,
+        ROUND(SUM(ip.total_itens)::numeric / NULLIF(COUNT(p.id), 0), 2) AS itens_por_pedido
+      FROM gestaovendas.pedidos p
+      LEFT JOIN itens_por_pedido ip ON ip.pedido_id = p.id
+      GROUP BY mes
+      ORDER BY mes ASC;
     `.trim();
 
     try {
       const rows = await runQuery<{
-        canal: string;
-        receita_liquida: number;
-        pedidos: number;
+        mes: string;
+        receita_total: number;
+        total_pedidos: number;
+        ticket_medio: number;
+        itens_por_pedido: number;
       }>(sql);
 
       return {
         success: true,
-        message: 'Receita por canal',
+        message: 'Desempenho de Vendas Mensal',
         rows,
         sql_query: sql,
         sql_params: '[]',
       };
     } catch (error) {
-      console.error('ERRO getReceitaPorCanal:', error);
-      return { success: false, message: 'Erro ao calcular receita por canal' };
+      console.error('ERRO getDesempenhoVendasMensal:', error);
+      return { success: false, message: 'Erro ao calcular desempenho mensal de vendas' };
     }
   },
 });

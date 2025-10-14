@@ -75,7 +75,7 @@ export const ToolHeader = ({
       <span className="font-medium text-sm">{(() => {
         const labels: Record<string, string> = {
           'tool-getTopProdutosReceitaLiquida': 'Top produtos por receita líquida',
-          'tool-getReceitaPorCanal': 'Receita por canal',
+          'tool-getDesempenhoVendasMensal': 'Desempenho de Vendas Mensal',
           'tool-getMixReceitaPorCategoria': 'Mix de receita por categoria',
           'tool-getTicketMedioVendas': 'Ticket médio de vendas',
           'tool-getCurvaABCPorReceita': 'Curva ABC por receita',

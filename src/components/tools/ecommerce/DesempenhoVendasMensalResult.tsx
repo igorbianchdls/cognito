@@ -6,9 +6,11 @@ import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { BarChart3 } from 'lucide-react';
 
 export type DesempenhoVendasMensalRow = {
-  canal: string;
-  receita_liquida: number;
-  pedidos: number;
+  mes: string; // YYYY-MM-01
+  receita_total: number;
+  total_pedidos: number;
+  ticket_medio: number;
+  itens_por_pedido: number;
 };
 
 interface Props {
@@ -26,11 +28,13 @@ export default function DesempenhoVendasMensalResult({ success, message, rows, d
   const tableRows = rows ?? data ?? [];
 
   const columns: ColumnDef<DesempenhoVendasMensalRow>[] = useMemo(() => [
-    { accessorKey: 'canal', header: 'Canal' },
-    { accessorKey: 'pedidos', header: 'Pedidos', cell: ({ row }) => row.original.pedidos.toLocaleString('pt-BR') },
-    { accessorKey: 'receita_liquida', header: 'Receita Líquida', cell: ({ row }) => (
-      <span className="font-semibold text-emerald-600">{formatCurrency(row.original.receita_liquida)}</span>
+    { accessorKey: 'mes', header: 'Mês', cell: ({ row }) => new Date(row.original.mes).toLocaleDateString('pt-BR', { year: 'numeric', month: 'short' }) },
+    { accessorKey: 'total_pedidos', header: 'Pedidos', cell: ({ row }) => row.original.total_pedidos.toLocaleString('pt-BR') },
+    { accessorKey: 'receita_total', header: 'Receita Total', cell: ({ row }) => (
+      <span className="font-semibold text-emerald-600">{formatCurrency(row.original.receita_total)}</span>
     ) },
+    { accessorKey: 'ticket_medio', header: 'Ticket Médio', cell: ({ row }) => formatCurrency(row.original.ticket_medio) },
+    { accessorKey: 'itens_por_pedido', header: 'Itens por Pedido', cell: ({ row }) => row.original.itens_por_pedido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
   ], []);
 
   return (
@@ -47,15 +51,17 @@ export default function DesempenhoVendasMensalResult({ success, message, rows, d
       sqlQuery={sql_query}
       enableAutoChart={true}
       chartOptions={{
-        xKey: 'canal',
-        valueKeys: ['receita_liquida', 'pedidos'],
+        xKey: 'mes',
+        valueKeys: ['receita_total', 'total_pedidos', 'ticket_medio', 'itens_por_pedido'],
         metricLabels: {
-          receita_liquida: 'Receita Líquida (R$)',
-          pedidos: 'Pedidos',
+          receita_total: 'Receita Total (R$)',
+          total_pedidos: 'Pedidos',
+          ticket_medio: 'Ticket Médio (R$)',
+          itens_por_pedido: 'Itens por Pedido',
         },
         initialChartType: 'bar',
         title: 'Desempenho de Vendas Mensal (O Pulso do Negócio)',
-        xLegend: 'Canal',
+        xLegend: 'Mês',
       }}
     />
   );

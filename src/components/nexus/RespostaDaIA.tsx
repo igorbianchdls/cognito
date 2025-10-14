@@ -4397,7 +4397,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
-        if (part.type === 'tool-getReceitaPorCanal') {
+        if (part.type === 'tool-getDesempenhoVendasMensal') {
           const tool = part as NexusToolUIPart;
           const callId = tool.toolCallId;
           const shouldBeOpen = tool.state === 'output-available' || tool.state === 'output-error';
@@ -4405,7 +4405,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           return (
             <div key={callId}>
               <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="tool-getReceitaPorCanal" state={tool.state} />
+                <ToolHeader type="tool-getDesempenhoVendasMensal" state={tool.state} />
                 <ToolContent>
                   {tool.input && <ToolInput input={tool.input} />}
                   {tool.state === 'output-error' && (
