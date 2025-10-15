@@ -5,6 +5,18 @@ import { runQuery } from '@/lib/postgres';
 const formatSqlParams = (params: unknown[]) =>
   params.length ? JSON.stringify(params) : '[]';
 
+// Mapeia status da API (minúscula) para o enum do banco (primeira letra maiúscula)
+const mapStatusToEnum = (status?: string): string | undefined => {
+  if (!status) return undefined;
+  const map: Record<string, string> = {
+    'pendente': 'Pendente',
+    'pago': 'Pago',
+    'vencido': 'Atrasado',
+    'cancelado': 'Cancelado',
+  };
+  return map[status.toLowerCase()] || status;
+};
+
 export const getContasAReceber = tool({
   description: 'Busca contas a receber (clientes, receitas) com filtros avançados',
   inputSchema: z.object({
@@ -52,7 +64,7 @@ export const getContasAReceber = tool({
         index += 1;
       };
 
-      if (status) push('cr.status =', status);
+      if (status) push('cr.status =', mapStatusToEnum(status));
       if (cliente_id) push('cr.cliente_id =', cliente_id);
       if (categoria_id) push('cr.categoria_id =', categoria_id);
       if (valor_minimo !== undefined) push('cr.valor >=', valor_minimo);
@@ -149,10 +161,6 @@ export const getContasAPagar = tool({
       .describe('Valor mínimo em reais'),
     valor_maximo: z.number().optional()
       .describe('Valor máximo em reais'),
-    data_emissao_de: z.string().optional()
-      .describe('Data inicial de emissão (formato YYYY-MM-DD)'),
-    data_emissao_ate: z.string().optional()
-      .describe('Data final de emissão (formato YYYY-MM-DD)'),
   }),
 
   execute: async ({
@@ -164,8 +172,6 @@ export const getContasAPagar = tool({
     venceu_ha_dias,
     valor_minimo,
     valor_maximo,
-    data_emissao_de,
-    data_emissao_ate,
   }) => {
     try {
       const conditions: string[] = [];
@@ -178,7 +184,7 @@ export const getContasAPagar = tool({
         index += 1;
       };
 
-      if (status) push('cp.status =', status);
+      if (status) push('cp.status =', mapStatusToEnum(status));
       if (fornecedor_id) push('cp.fornecedor_id =', fornecedor_id);
       if (categoria_id) push('cp.categoria_id =', categoria_id);
       if (valor_minimo !== undefined) push('cp.valor >=', valor_minimo);
@@ -195,9 +201,6 @@ export const getContasAPagar = tool({
         params.push(venceu_ha_dias);
         index += 1;
       }
-
-      if (data_emissao_de) push('cp.data_emissao >=', data_emissao_de);
-      if (data_emissao_ate) push('cp.data_emissao <=', data_emissao_ate);
 
       const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
@@ -655,7 +658,7 @@ export const analisarInadimplencia = tool({
             data_vencimento::date AS venc,
             'A Receber' AS tipo_conta
           FROM gestaofinanceira.contas_a_receber
-          WHERE status = 'pendente'
+          WHERE status = 'Pendente'
         ),
         base_pagar AS (
           SELECT
@@ -665,7 +668,7 @@ export const analisarInadimplencia = tool({
             data_vencimento::date AS venc,
             'A Pagar' AS tipo_conta
           FROM gestaofinanceira.contas_a_pagar
-          WHERE status = 'pendente'
+          WHERE status = 'Pendente'
         ),
         combined AS (
           ${tipo === 'pagar' ? '-- ' : ''}SELECT * FROM base_receber
@@ -710,8 +713,8 @@ export const analisarInadimplencia = tool({
 
       const totalSql = `
         SELECT
-          SUM(CASE WHEN status = 'pendente' THEN valor ELSE 0 END) AS total_inadimplencia,
-          COUNT(CASE WHEN status = 'pendente' AND data_vencimento < CURRENT_DATE THEN 1 END) AS total_vencidas
+          SUM(CASE WHEN status = 'Pendente' THEN valor ELSE 0 END) AS total_inadimplencia,
+          COUNT(CASE WHEN status = 'Pendente' AND data_vencimento < CURRENT_DATE THEN 1 END) AS total_vencidas
         FROM (
           ${tipo === 'pagar' ? '-- ' : ''}SELECT valor, status, data_vencimento FROM gestaofinanceira.contas_a_receber
           ${tipo === 'ambos' ? 'UNION ALL' : ''}
