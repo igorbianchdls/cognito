@@ -1,8 +1,12 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
-import { getContasAReceber, getContasAPagar, calculateDateRange, situacaoOperacionalContas, alertaAumentoAnormalDespesas, atrasosInadimplencia } from '@/tools/financialTools';
+import { getContasAReceber, getContasAPagar, calculateDateRange } from '@/tools/financialTools';
 import { calcularFluxoCaixa } from '@/tools/fluxoCaixaTools';
-import { getMovimentos, createMovimento } from '@/tools/movimentosTools';
+import { getMovimentos } from '@/tools/movimentosTools';
+import { getTransacoesExtrato } from '@/tools/transacoesExtratoTools';
+import { obterSaldoBancario } from '@/tools/saldoBancarioTools';
+import { obterDespesasPorCentroCusto } from '@/tools/despesasCentroCustoTools';
+import { analisarInadimplencia } from '@/tools/inadimplenciaTools';
 
 export const maxDuration = 300;
 
@@ -31,17 +35,17 @@ export async function POST(req: Request) {
 
 # 🎯 Sua Missão
 Auxiliar gestores financeiros e controllers a:
-- Analisar contas a receber pendentes, pagas e vencidas
-- Gerenciar contas a pagar por fornecedor e categoria
+- Analisar contas a receber e a pagar com filtros avançados
 - Calcular projeções de fluxo de caixa (7, 30, 90 dias)
-- Analisar movimentos financeiros efetivados (extrato interno)
-- Registrar movimentos avulsos (taxas, rendimentos, transferências)
-- Identificar padrões de pagamento de clientes e fornecedores
+- Monitorar movimentos financeiros efetivados (extrato interno)
+- Consultar transações documentadas e histórico de operações
+- Visualizar saldos bancários e distribuição de recursos
+- Analisar despesas por centro de custo e departamento
+- Avaliar inadimplência por faixas de atraso (aging analysis)
+- Identificar padrões de pagamento e riscos de liquidez
 - Calcular KPIs financeiros (DSO, DPO, aging, inadimplência)
-- Prever riscos de inadimplência e problemas de liquidez
-- Sugerir ações de cobrança, negociação e priorização de pagamentos
+- Sugerir ações de cobrança e priorização de pagamentos
 - Otimizar fluxo de caixa e capital de giro
-- Preparar dados para conciliação bancária
 
 # 🛠️ Suas Ferramentas
 
@@ -150,35 +154,58 @@ Auxiliar gestores financeiros e controllers a:
 - "Saídas acima de R$ 1000 nos últimos 30 dias" → \`getMovimentos({ tipo: 'saída', valor_minimo: 1000, data_inicial: '...', data_final: '...' })\`
 - "Saldo de movimentos do mês atual" → Primeiro use \`calculateDateRange({ periodo: 'mes_atual' })\`, depois use as datas em \`getMovimentos\`
 
-## ➕ CRIAR MOVIMENTO AVULSO
-**createMovimento** - Registra movimento financeiro que NÃO está vinculado a conta a pagar/receber
+## 📄 TRANSAÇÕES E EXTRATO
+**getTransacoesExtrato** - Consulta transações documentadas e extrato do sistema de gestão de documentos
+
+**Parâmetros:**
+- \`limit\`: número de resultados (padrão: 50)
+- \`data_inicial\`: data inicial YYYY-MM-DD (opcional)
+- \`data_final\`: data final YYYY-MM-DD (opcional)
+- \`tipo\`: filtrar por tipo de transação (opcional)
+- \`status\`: filtrar por status (opcional)
 
 **Quando usar:**
-- Taxas bancárias descobertas (tarifa, manutenção)
-- IOF, impostos automáticos
-- Transferências entre contas próprias
-- Rendimentos de poupança/investimentos
-- Estornos de compras
-- Qualquer movimento avulso não planejado
+- Ver histórico completo de transações documentadas
+- Análise de padrões transacionais
+- Auditoria de operações financeiras
+
+## 🏦 SALDOS BANCÁRIOS
+**obterSaldoBancario** - Obtém saldos atuais de todas as contas bancárias
+
+**Parâmetros:**
+- \`incluir_inativas\`: incluir contas inativas (padrão: false)
+- \`tipo_conta\`: filtrar por tipo (corrente, poupança, etc) (opcional)
+
+**Quando usar:**
+- Ver posição de caixa consolidada
+- Análise de liquidez imediata
+- Distribuição de recursos entre contas
+
+## 💰 DESPESAS POR CENTRO DE CUSTO
+**obterDespesasPorCentroCusto** - Analisa despesas agrupadas por centro de custo
 
 **Parâmetros obrigatórios:**
-- \`conta_id\`: ID da conta bancária
-- \`tipo\`: 'entrada' | 'saída'
-- \`valor\`: número positivo (tipo define se soma ou subtrai)
-- \`data\`: data YYYY-MM-DD
+- \`data_inicial\`: data inicial YYYY-MM-DD
+- \`data_final\`: data final YYYY-MM-DD
 
 **Parâmetros opcionais:**
-- \`categoria_id\`: categoria (ex: taxas-bancarias, rendimentos)
-- \`descricao\`: descrição livre
-- \`conta_a_pagar_id\`: se vinculado a pagamento (raro)
-- \`conta_a_receber_id\`: se vinculado a recebimento (raro)
+- \`limit\`: número máximo de centros (padrão: 20)
 
-**Exemplos:**
-- "Registrar taxa bancária de R$ 25 do dia 05/10" → \`createMovimento({ conta_id: 'itau-123', tipo: 'saída', valor: 25, data: '2025-10-05', categoria_id: 'taxas-bancarias', descricao: 'Tarifa manutenção' })\`
-- "Criar movimento de rendimento de R$ 150" → \`createMovimento({ conta_id: 'itau-123', tipo: 'entrada', valor: 150, data: '2025-10-01', categoria_id: 'rendimentos', descricao: 'Rendimento poupança' })\`
-- "Registrar transferência de R$ 5000 para outra conta" → \`createMovimento({ conta_id: 'itau-123', tipo: 'saída', valor: 5000, data: '2025-10-08', descricao: 'Transferência para Bradesco' })\`
+**Quando usar:**
+- Análise de custos por departamento/projeto
+- Identificar áreas com maior consumo
+- Planejamento orçamentário
 
-**IMPORTANTE:** Use createMovimento apenas para movimentos avulsos. Para pagamentos/recebimentos planejados, use contas a pagar/receber que geram movimentos automaticamente quando marcadas como "pago".
+## ⚠️ ANÁLISE DE INADIMPLÊNCIA
+**analisarInadimplencia** - Analisa inadimplência por faixas de atraso (aging)
+
+**Parâmetros:**
+- \`tipo\`: 'receber' | 'pagar' | 'ambos' (padrão: 'ambos')
+
+**Quando usar:**
+- Avaliar risco de inadimplência
+- Priorizar ações de cobrança
+- Análise de aging detalhado
 
 # 📐 Framework de Análise Financeira
 
@@ -339,11 +366,10 @@ Seja sempre profissional, orientado a dados e ofereça insights acionáveis. Pri
         calcularFluxoCaixa,
         calculateDateRange,
         getMovimentos,
-        createMovimento,
-        // Novas ferramentas
-        situacaoOperacionalContas,
-        alertaAumentoAnormalDespesas,
-        atrasosInadimplencia,
+        getTransacoesExtrato,
+        obterSaldoBancario,
+        obterDespesasPorCentroCusto,
+        analisarInadimplencia,
       }
     });
 

@@ -56,6 +56,13 @@ import AtrasosInadimplenciaResult from '../tools/finance/AtrasosInadimplenciaRes
 import FluxoCaixaResult, { type FluxoCaixaRow } from '../tools/FluxoCaixaResult';
 // import FinancialDataTable from '../tools/FinancialDataTable';
 import GenericResultTable from '../tools/GenericResultTable';
+import ContasAReceberResult from '../tools/ContasAReceberResult';
+import ContasAPagarResult from '../tools/ContasAPagarResult';
+import MovimentosResult from '../tools/MovimentosResult';
+import TransacoesExtratoResult from '../tools/TransacoesExtratoResult';
+import SaldoBancarioResult from '../tools/SaldoBancarioResult';
+import DespesasCentroCustoResult from '../tools/DespesasCentroCustoResult';
+import InadimplenciaResult from '../tools/InadimplenciaResult';
 import { BarChart3, DollarSign, LineChart, TrendingUp, AlertTriangle } from 'lucide-react';
 import AnaliseDeCampanhas from '../tools/paid-traffic/analiseDeCampanhas';
 import OrganicMarketingDataTable from '../tools/OrganicMarketingDataTable';
@@ -4075,15 +4082,8 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {contasAReceberTool.state === 'output-available' && (
-                <GenericResultTable
-                  title="Contas a Receber"
-                  icon={DollarSign}
-                  iconColor="text-emerald-600"
-                  success={(contasAReceberTool.output as GetContasAReceberToolOutput).success}
-                  message={(contasAReceberTool.output as GetContasAReceberToolOutput).message}
-                  rows={((contasAReceberTool.output as GetContasAReceberToolOutput).rows ?? []) as Array<Record<string, unknown>>}
-                  count={(contasAReceberTool.output as GetContasAReceberToolOutput).count}
-                  sql_query={(contasAReceberTool.output as GetContasAReceberToolOutput).sql_query}
+                <ContasAReceberResult
+                  result={contasAReceberTool.output as GetContasAReceberToolOutput}
                 />
               )}
             </div>
@@ -6431,12 +6431,8 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {contasAPagarTool.state === 'output-available' && (
-                <ContasAPagarList
-                  success={(contasAPagarTool.output as GetContasAPagarToolOutput).success}
-                  count={(contasAPagarTool.output as GetContasAPagarToolOutput).count}
-                  rows={((contasAPagarTool.output as GetContasAPagarToolOutput).rows ?? []) as ContaAPagarRow[]}
-                  message={(contasAPagarTool.output as GetContasAPagarToolOutput).message}
-                  sql_query={(contasAPagarTool.output as GetContasAPagarToolOutput).sql_query}
+                <ContasAPagarResult
+                  result={contasAPagarTool.output as GetContasAPagarToolOutput}
                 />
               )}
             </div>
@@ -6466,13 +6462,157 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {fluxoCaixaTool.state === 'output-available' && (
                 <FluxoCaixaResult
-                  success={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).success}
-                  periodo_dias={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).periodo_dias}
-                  saldo_inicial={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).saldo_inicial}
-                  rows={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).rows as FluxoCaixaRow[]}
-                  summary={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).summary}
-                  message={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).message}
-                  sql_query={(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput).sql_query}
+                  result={fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getMovimentos') {
+          const movimentosTool = part as NexusToolUIPart;
+          const callId = movimentosTool.toolCallId;
+          const shouldBeOpen = movimentosTool.state === 'output-available' || movimentosTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getMovimentos" state={movimentosTool.state} />
+                <ToolContent>
+                  {movimentosTool.input && (
+                    <ToolInput input={movimentosTool.input} />
+                  )}
+                  {movimentosTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={movimentosTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {movimentosTool.state === 'output-available' && (
+                <MovimentosResult
+                  result={movimentosTool.output as any}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getTransacoesExtrato') {
+          const transacoesTool = part as NexusToolUIPart;
+          const callId = transacoesTool.toolCallId;
+          const shouldBeOpen = transacoesTool.state === 'output-available' || transacoesTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getTransacoesExtrato" state={transacoesTool.state} />
+                <ToolContent>
+                  {transacoesTool.input && (
+                    <ToolInput input={transacoesTool.input} />
+                  )}
+                  {transacoesTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={transacoesTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {transacoesTool.state === 'output-available' && (
+                <TransacoesExtratoResult
+                  result={transacoesTool.output as any}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-obterSaldoBancario') {
+          const saldoTool = part as NexusToolUIPart;
+          const callId = saldoTool.toolCallId;
+          const shouldBeOpen = saldoTool.state === 'output-available' || saldoTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-obterSaldoBancario" state={saldoTool.state} />
+                <ToolContent>
+                  {saldoTool.input && (
+                    <ToolInput input={saldoTool.input} />
+                  )}
+                  {saldoTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={saldoTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {saldoTool.state === 'output-available' && (
+                <SaldoBancarioResult
+                  result={saldoTool.output as any}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-obterDespesasPorCentroCusto') {
+          const despesasTool = part as NexusToolUIPart;
+          const callId = despesasTool.toolCallId;
+          const shouldBeOpen = despesasTool.state === 'output-available' || despesasTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-obterDespesasPorCentroCusto" state={despesasTool.state} />
+                <ToolContent>
+                  {despesasTool.input && (
+                    <ToolInput input={despesasTool.input} />
+                  )}
+                  {despesasTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={despesasTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {despesasTool.state === 'output-available' && (
+                <DespesasCentroCustoResult
+                  result={despesasTool.output as any}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-analisarInadimplencia') {
+          const inadimplenciaTool = part as NexusToolUIPart;
+          const callId = inadimplenciaTool.toolCallId;
+          const shouldBeOpen = inadimplenciaTool.state === 'output-available' || inadimplenciaTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-analisarInadimplencia" state={inadimplenciaTool.state} />
+                <ToolContent>
+                  {inadimplenciaTool.input && (
+                    <ToolInput input={inadimplenciaTool.input} />
+                  )}
+                  {inadimplenciaTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={inadimplenciaTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {inadimplenciaTool.state === 'output-available' && (
+                <InadimplenciaResult
+                  result={inadimplenciaTool.output as any}
                 />
               )}
             </div>
