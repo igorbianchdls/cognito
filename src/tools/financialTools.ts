@@ -718,14 +718,14 @@ export const getTransacoesExtrato = tool({
     data_inicial: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
     data_final: z.string().optional().describe('Data final (YYYY-MM-DD)'),
     tipo: z.string().optional().describe('Filtrar por tipo de transação'),
-    status: z.string().optional().describe('Filtrar por status'),
+    conciliado: z.boolean().optional().describe('Filtrar por status de conciliação'),
   }),
   execute: async ({
-    limit,
+    limit = 50,
     data_inicial,
     data_final,
     tipo,
-    status,
+    conciliado,
   }) => {
     try {
       const conditions: string[] = [];
@@ -738,57 +738,45 @@ export const getTransacoesExtrato = tool({
         paramIndex += 1;
       };
 
-      if (data_inicial) pushCondition('data >=', data_inicial);
-      if (data_final) pushCondition('data <=', data_final);
-      if (tipo) pushCondition('tipo =', tipo);
-      if (status) pushCondition('status =', status);
+      if (data_inicial) pushCondition('te.data >=', data_inicial);
+      if (data_final) pushCondition('te.data <=', data_final);
+      if (tipo) pushCondition('te.tipo =', tipo);
+      if (conciliado !== undefined) pushCondition('te.conciliado =', conciliado);
 
       const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
-      const listSql = `
+      const sql = `
         SELECT
-          id,
-          data,
-          descricao,
-          tipo,
-          valor,
-          status,
-          created_at
-        FROM gestaodocumentos.transacoes
+          eb.banco,
+          eb.conta,
+          te.data AS data_transacao,
+          te.descricao,
+          te.valor,
+          te.tipo,
+          te.conciliado
+        FROM
+          gestaodocumentos.transacoes_extrato AS te
+          JOIN gestaodocumentos.extratos_bancarios AS eb ON te.extrato_id = eb.documento_id
         ${whereClause}
-        ORDER BY data DESC
+        ORDER BY
+          te.data DESC
         LIMIT $${paramIndex}
       `.trim();
 
-      const listParams = [...params, limit ?? 50];
+      const paramsWithLimit = [...params, limit];
 
-      const rows = await runQuery<Record<string, unknown>>(listSql, listParams);
+      const rows = await runQuery<Record<string, unknown>>(sql, paramsWithLimit);
 
-      const aggSql = `
-        SELECT
-          COUNT(*) AS total_transacoes,
-          SUM(valor) AS total_valor
-        FROM gestaodocumentos.transacoes
-        ${whereClause}
-      `.trim();
-
-      const [agg] = await runQuery<{
-        total_transacoes: number | null;
-        total_valor: number | null;
-      }>(aggSql, params);
-
-      const totalValor = Number(agg?.total_valor ?? 0);
-      const totalTransacoes = Number(agg?.total_transacoes ?? rows.length);
+      const totalValor = rows.reduce((sum, row) => sum + Number(row.valor || 0), 0);
 
       return {
         success: true,
         rows,
         count: rows.length,
         total_valor: totalValor,
-        total_transacoes: totalTransacoes,
         message: `Encontradas ${rows.length} transações (Total: ${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
-        sql_query: `${listSql}\n\n-- Totais\n${aggSql}`,
-        sql_params: formatSqlParams(listParams),
+        sql_query: sql,
+        sql_params: formatSqlParams(paramsWithLimit),
       };
     } catch (error) {
       console.error('ERRO getTransacoesExtrato:', error);
@@ -807,7 +795,7 @@ export const getTransacoesExtrato = tool({
 // ============================================================================
 
 export const obterSaldoBancario = tool({
-  description: 'Obtém saldos atuais de todas as contas bancárias com distribuição por tipo',
+  description: 'Obtém saldos atuais de todas as contas bancárias',
   inputSchema: z.object({
     incluir_inativas: z.boolean().default(false).describe('Incluir contas inativas'),
     tipo_conta: z.string().optional().describe('Filtrar por tipo de conta (corrente, poupança, etc)'),
@@ -835,56 +823,28 @@ export const obterSaldoBancario = tool({
 
       const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
-      const listSql = `
+      const sql = `
         SELECT
-          id,
           nome,
-          banco,
-          agencia,
-          numero_conta,
-          tipo,
-          saldo,
-          ativa
-        FROM gestaofinanceira.contas
+          saldo
+        FROM
+          gestaofinanceira.contas
         ${whereClause}
-        ORDER BY saldo DESC
+        ORDER BY
+          nome
       `.trim();
 
-      const rows = await runQuery<Record<string, unknown>>(listSql, params);
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
 
-      const aggSql = `
-        SELECT
-          SUM(saldo) AS saldo_total,
-          COUNT(*) AS total_contas,
-          SUM(CASE WHEN saldo > 0 THEN saldo ELSE 0 END) AS saldo_positivo,
-          SUM(CASE WHEN saldo < 0 THEN saldo ELSE 0 END) AS saldo_negativo
-        FROM gestaofinanceira.contas
-        ${whereClause}
-      `.trim();
-
-      const [agg] = await runQuery<{
-        saldo_total: number | null;
-        total_contas: number | null;
-        saldo_positivo: number | null;
-        saldo_negativo: number | null;
-      }>(aggSql, params);
-
-      const saldoTotal = Number(agg?.saldo_total ?? 0);
-      const saldoPositivo = Number(agg?.saldo_positivo ?? 0);
-      const saldoNegativo = Number(agg?.saldo_negativo ?? 0);
+      const saldoTotal = rows.reduce((sum, row) => sum + Number(row.saldo || 0), 0);
 
       return {
         success: true,
         rows,
         count: rows.length,
-        totals: {
-          saldo_total: saldoTotal,
-          saldo_positivo: saldoPositivo,
-          saldo_negativo: saldoNegativo,
-          total_contas: Number(agg?.total_contas ?? rows.length),
-        },
+        saldo_total: saldoTotal,
         message: `${rows.length} contas bancárias (Saldo total: ${saldoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
-        sql_query: `${listSql}\n\n-- Totais\n${aggSql}`,
+        sql_query: sql,
         sql_params: formatSqlParams(params),
       };
     } catch (error) {
