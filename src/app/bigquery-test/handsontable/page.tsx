@@ -303,23 +303,19 @@ export default function HandsontablePage() {
               manualColumnFreeze={true}
               hiddenColumns={{ indicators: true }}
               filters={true}
-              dropdownMenu={{
-                items: [
-                  'filter_by_condition',
-                  'filter_by_value',
-                  'filter_action_bar',
-                  'separator',
-                  'undo',
-                  'redo',
-                  'clear_column',
-                  'alignment',
-                  'separator',
-                  'freeze_column',
-                  'unfreeze_column',
-                  'hidden_columns_hide',
-                  'hidden_columns_show',
-                ],
-              }}
+              dropdownMenu={[
+                'filter_by_condition',
+                'filter_by_value',
+                'filter_action_bar',
+                'undo',
+                'redo',
+                'clear_column',
+                'alignment',
+                'freeze_column',
+                'unfreeze_column',
+                'hidden_columns_hide',
+                'hidden_columns_show',
+              ]}
               multiColumnSorting={true}
               className="htCenter htMiddle"
               stretchH="all"
