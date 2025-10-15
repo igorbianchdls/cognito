@@ -1,7 +1,17 @@
+import { useMemo } from 'react';
+import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
-import { inadimplenciaColumns, type InadimplenciaRow } from '@/components/columns/inadimplenciaColumns';
 import { AlertTriangle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+
+export type InadimplenciaRow = {
+  faixa?: string;
+  tipo?: string;
+  quantidade?: number;
+  valor_total?: number;
+  percentual?: number;
+  [key: string]: unknown;
+};
 
 type AnalisarInadimplenciaOutput = {
   success: boolean;
@@ -17,6 +27,55 @@ type AnalisarInadimplenciaOutput = {
 };
 
 export default function InadimplenciaResult({ result }: { result: AnalisarInadimplenciaOutput }) {
+  const columns: ColumnDef<InadimplenciaRow>[] = useMemo(() => [
+    {
+      accessorKey: 'faixa',
+      header: 'Faixa/Tipo',
+      cell: ({ row }) => {
+        const faixa = row.original.faixa || row.original.tipo || '-';
+        return <div className="font-medium">{faixa}</div>;
+      },
+    },
+    {
+      accessorKey: 'quantidade',
+      header: 'Quantidade',
+      cell: ({ row }) => {
+        const qtd = row.original.quantidade || 0;
+        return <div className="text-center font-medium">{qtd}</div>;
+      },
+    },
+    {
+      accessorKey: 'valor_total',
+      header: 'Valor Total',
+      cell: ({ row }) => {
+        const valor = row.original.valor_total || 0;
+        return (
+          <div className="font-bold text-red-600">
+            {Number(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: 'percentual',
+      header: '% do Total',
+      cell: ({ row }) => {
+        const percentual = row.original.percentual || 0;
+        return (
+          <div className="flex items-center gap-2">
+            <div className="flex-1 bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-red-600 h-2 rounded-full"
+                style={{ width: `${Math.min(Number(percentual), 100)}%` }}
+              />
+            </div>
+            <span className="font-medium text-sm w-12 text-right">{Number(percentual).toFixed(1)}%</span>
+          </div>
+        );
+      },
+    },
+  ], []);
+
   const chartRenderer = (rows: InadimplenciaRow[]) => {
     const chartData = rows.map(row => ({
       faixa: row.faixa || row.tipo || '-',
@@ -49,7 +108,7 @@ export default function InadimplenciaResult({ result }: { result: AnalisarInadim
   return (
     <ArtifactDataTable
       data={result.rows}
-      columns={inadimplenciaColumns}
+      columns={columns}
       title="Análise de Inadimplência"
       icon={AlertTriangle}
       iconColor="text-red-600"

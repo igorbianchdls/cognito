@@ -50,11 +50,7 @@ import ReceiptsList from '../tools/ReceiptsList';
 import NotasFiscaisList from '../tools/NotasFiscaisList';
 import InventoryList from '../tools/InventoryList';
 import ContasAPagarList, { type ContaAPagarRow } from '../tools/ContasAPagarList';
-import SituacaoOperacionalContasResult from '../tools/finance/SituacaoOperacionalContasResult';
-import AlertaAumentoAnormalDespesasResult from '../tools/finance/AlertaAumentoAnormalDespesasResult';
-import AtrasosInadimplenciaResult from '../tools/finance/AtrasosInadimplenciaResult';
 import FluxoCaixaResult, { type FluxoCaixaRow } from '../tools/FluxoCaixaResult';
-// import FinancialDataTable from '../tools/FinancialDataTable';
 import GenericResultTable from '../tools/GenericResultTable';
 import ContasAReceberResult from '../tools/ContasAReceberResult';
 import ContasAPagarResult from '../tools/ContasAPagarResult';
@@ -4682,75 +4678,6 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   rows={(tool.output as AnaliseVendasPorEstadoToolOutput).rows}
                   data={(tool.output as AnaliseVendasPorEstadoToolOutput).data}
                   sql_query={(tool.output as AnaliseVendasPorEstadoToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-situacaoOperacionalContas') {
-          const tool = part as NexusToolUIPart;
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-situacaoOperacionalContas" state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && tool.output && (
-                <SituacaoOperacionalContasResult
-                  success={(tool.output as RowsToolOutput).success}
-                  message={(tool.output as RowsToolOutput).message}
-                  rows={(tool.output as RowsToolOutput).rows}
-                  sql_query={(tool.output as RowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-alertaAumentoAnormalDespesas') {
-          const tool = part as NexusToolUIPart;
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-alertaAumentoAnormalDespesas" state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && tool.output && (
-                <AlertaAumentoAnormalDespesasResult
-                  success={(tool.output as RowsToolOutput).success}
-                  message={(tool.output as RowsToolOutput).message}
-                  rows={(tool.output as RowsToolOutput).rows}
-                  sql_query={(tool.output as RowsToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-atrasosInadimplencia') {
-          const tool = part as NexusToolUIPart;
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-atrasosInadimplencia" state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && tool.output && (
-                <AtrasosInadimplenciaResult
-                  success={(tool.output as RowsToolOutput).success}
-                  message={(tool.output as RowsToolOutput).message}
-                  rows={(tool.output as RowsToolOutput).rows}
-                  sql_query={(tool.output as RowsToolOutput).sql_query}
                 />
               )}
             </div>

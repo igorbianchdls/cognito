@@ -1,6 +1,6 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
-import { getContasAReceber, getContasAPagar, calculateDateRange } from '@/tools/financialTools';
+import { getContasAReceber, getContasAPagar } from '@/tools/financialTools';
 import { calcularFluxoCaixa } from '@/tools/fluxoCaixaTools';
 import { getMovimentos } from '@/tools/movimentosTools';
 import { getTransacoesExtrato } from '@/tools/transacoesExtratoTools';
@@ -364,7 +364,6 @@ Seja sempre profissional, orientado a dados e ofereça insights acionáveis. Pri
         getContasAReceber,
         getContasAPagar,
         calcularFluxoCaixa,
-        calculateDateRange,
         getMovimentos,
         getTransacoesExtrato,
         obterSaldoBancario,

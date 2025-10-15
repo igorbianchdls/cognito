@@ -1,8 +1,21 @@
+import { useMemo } from 'react';
+import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
-import { movimentosColumns, type MovimentoRow } from '@/components/columns/movimentosColumns';
 import { ArrowLeftRight } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
+
+export type MovimentoRow = {
+  id?: string;
+  data?: string;
+  tipo?: string;
+  valor?: number;
+  descricao?: string;
+  categoria?: string;
+  conta?: string;
+  conta_id?: string;
+  [key: string]: unknown;
+};
 
 type GetMovimentosOutput = {
   success: boolean;
@@ -19,6 +32,72 @@ type GetMovimentosOutput = {
 };
 
 export default function MovimentosResult({ result }: { result: GetMovimentosOutput }) {
+  const columns: ColumnDef<MovimentoRow>[] = useMemo(() => [
+    {
+      accessorKey: 'data',
+      header: 'Data',
+      cell: ({ row }) => {
+        const data = row.original.data;
+        if (!data) return '-';
+        return new Date(data).toLocaleDateString('pt-BR');
+      },
+    },
+    {
+      accessorKey: 'tipo',
+      header: 'Tipo',
+      cell: ({ row }) => {
+        const tipo = row.original.tipo || '-';
+        const colors: Record<string, string> = {
+          entrada: 'bg-green-100 text-green-800',
+          saida: 'bg-red-100 text-red-800',
+        };
+        return (
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[tipo.toLowerCase()] || 'bg-gray-100 text-gray-800'}`}>
+            {tipo}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: 'descricao',
+      header: 'Descrição',
+      cell: ({ row }) => {
+        const desc = row.original.descricao || '-';
+        return <div className="text-sm">{desc}</div>;
+      },
+    },
+    {
+      accessorKey: 'categoria',
+      header: 'Categoria',
+      cell: ({ row }) => {
+        const cat = row.original.categoria || '-';
+        return <div className="text-sm text-muted-foreground">{cat}</div>;
+      },
+    },
+    {
+      accessorKey: 'valor',
+      header: 'Valor',
+      cell: ({ row }) => {
+        const valor = row.original.valor || 0;
+        const tipo = row.original.tipo || '';
+        const colorClass = tipo.toLowerCase() === 'entrada' ? 'text-green-600' : 'text-red-600';
+        return (
+          <div className={`font-bold ${colorClass}`}>
+            {Number(valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: 'conta',
+      header: 'Conta',
+      cell: ({ row }) => {
+        const conta = row.original.conta || row.original.conta_id || '-';
+        return <div className="text-sm">{conta}</div>;
+      },
+    },
+  ], []);
+
   const chartRenderer = (rows: MovimentoRow[]) => {
     // Group by date and accumulate
     const dateMap = new Map<string, { entradas: number; saidas: number }>();
@@ -74,7 +153,7 @@ export default function MovimentosResult({ result }: { result: GetMovimentosOutp
   return (
     <ArtifactDataTable
       data={result.rows}
-      columns={movimentosColumns}
+      columns={columns}
       title="Movimentos Financeiros"
       icon={ArrowLeftRight}
       iconColor="text-purple-600"
