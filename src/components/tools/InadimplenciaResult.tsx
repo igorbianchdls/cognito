@@ -13,7 +13,7 @@ export type InadimplenciaRow = {
   [key: string]: unknown;
 };
 
-type AnalisarInadimplenciaOutput = {
+export type AnalisarInadimplenciaOutput = {
   success: boolean;
   rows: InadimplenciaRow[];
   count: number;

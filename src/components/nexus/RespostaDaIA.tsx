@@ -54,11 +54,11 @@ import FluxoCaixaResult, { type FluxoCaixaRow } from '../tools/FluxoCaixaResult'
 import GenericResultTable from '../tools/GenericResultTable';
 import ContasAReceberResult from '../tools/ContasAReceberResult';
 import ContasAPagarResult from '../tools/ContasAPagarResult';
-import MovimentosResult from '../tools/MovimentosResult';
-import TransacoesExtratoResult from '../tools/TransacoesExtratoResult';
-import SaldoBancarioResult from '../tools/SaldoBancarioResult';
-import DespesasCentroCustoResult from '../tools/DespesasCentroCustoResult';
-import InadimplenciaResult from '../tools/InadimplenciaResult';
+import MovimentosResult, { type GetMovimentosOutput } from '../tools/MovimentosResult';
+import TransacoesExtratoResult, { type GetTransacoesExtratoOutput } from '../tools/TransacoesExtratoResult';
+import SaldoBancarioResult, { type ObterSaldoBancarioOutput } from '../tools/SaldoBancarioResult';
+import DespesasCentroCustoResult, { type ObterDespesasPorCentroCustoOutput } from '../tools/DespesasCentroCustoResult';
+import InadimplenciaResult, { type AnalisarInadimplenciaOutput } from '../tools/InadimplenciaResult';
 import { BarChart3, DollarSign, LineChart, TrendingUp, AlertTriangle } from 'lucide-react';
 import AnaliseDeCampanhas from '../tools/paid-traffic/analiseDeCampanhas';
 import OrganicMarketingDataTable from '../tools/OrganicMarketingDataTable';
@@ -6419,7 +6419,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {movimentosTool.state === 'output-available' && (
                 <MovimentosResult
-                  result={movimentosTool.output as any}
+                  result={movimentosTool.output as GetMovimentosOutput}
                 />
               )}
             </div>
@@ -6449,7 +6449,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {transacoesTool.state === 'output-available' && (
                 <TransacoesExtratoResult
-                  result={transacoesTool.output as any}
+                  result={transacoesTool.output as GetTransacoesExtratoOutput}
                 />
               )}
             </div>
@@ -6479,7 +6479,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {saldoTool.state === 'output-available' && (
                 <SaldoBancarioResult
-                  result={saldoTool.output as any}
+                  result={saldoTool.output as ObterSaldoBancarioOutput}
                 />
               )}
             </div>
@@ -6509,7 +6509,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {despesasTool.state === 'output-available' && (
                 <DespesasCentroCustoResult
-                  result={despesasTool.output as any}
+                  result={despesasTool.output as ObterDespesasPorCentroCustoOutput}
                 />
               )}
             </div>
@@ -6539,7 +6539,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {inadimplenciaTool.state === 'output-available' && (
                 <InadimplenciaResult
-                  result={inadimplenciaTool.output as any}
+                  result={inadimplenciaTool.output as AnalisarInadimplenciaOutput}
                 />
               )}
             </div>

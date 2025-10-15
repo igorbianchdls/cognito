@@ -15,7 +15,7 @@ export type DespesaCentroCustoRow = {
   [key: string]: unknown;
 };
 
-type ObterDespesasPorCentroCustoOutput = {
+export type ObterDespesasPorCentroCustoOutput = {
   success: boolean;
   rows: DespesaCentroCustoRow[];
   count: number;

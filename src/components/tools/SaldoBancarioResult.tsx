@@ -16,7 +16,7 @@ export type SaldoBancarioRow = {
   [key: string]: unknown;
 };
 
-type ObterSaldoBancarioOutput = {
+export type ObterSaldoBancarioOutput = {
   success: boolean;
   rows: SaldoBancarioRow[];
   count: number;

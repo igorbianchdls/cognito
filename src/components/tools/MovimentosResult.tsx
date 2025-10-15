@@ -17,7 +17,7 @@ export type MovimentoRow = {
   [key: string]: unknown;
 };
 
-type GetMovimentosOutput = {
+export type GetMovimentosOutput = {
   success: boolean;
   rows: MovimentoRow[];
   totals?: {

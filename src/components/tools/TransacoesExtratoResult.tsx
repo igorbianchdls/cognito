@@ -15,7 +15,7 @@ export type TransacaoExtratoRow = {
   [key: string]: unknown;
 };
 
-type GetTransacoesExtratoOutput = {
+export type GetTransacoesExtratoOutput = {
   success: boolean;
   rows: TransacaoExtratoRow[];
   count: number;
