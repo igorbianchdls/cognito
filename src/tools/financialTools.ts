@@ -273,104 +273,142 @@ const normalizePeriodo = (dias: number) => {
 };
 
 export const calcularFluxoCaixa = tool({
-  description: 'Calcula projeções de fluxo de caixa (entradas, saídas e saldo projetado) para 7, 30 ou 90 dias.',
+  description: 'Calcula fluxo de caixa diário (saldo inicial por contas + movimentos) entre um período informado.',
   inputSchema: z.object({
-    dias: z.number().describe('Período de projeção em dias (recomendado: 7, 30 ou 90)'),
-    saldo_inicial: z.number().optional().describe('Saldo inicial em caixa'),
+    data_inicial: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
+    data_final: z.string().optional().describe('Data final exclusiva (YYYY-MM-DD)'),
+    dias: z.number().optional().describe('Período em dias (fallback quando datas não são fornecidas)'),
+    saldo_inicial: z.number().optional().describe('Ignorado; saldo inicial é calculado do banco'),
   }),
-  execute: async ({ dias, saldo_inicial = 0 }) => {
+  execute: async ({ data_inicial, data_final, dias, saldo_inicial: _ignored }) => {
     try {
-      const periodo = normalizePeriodo(dias);
+      const fmt = (d: Date) => d.toISOString().slice(0, 10);
+      const addDays = (d: Date, n: number) => {
+        const c = new Date(d.getTime());
+        c.setDate(c.getDate() + n);
+        return c;
+      };
+
+      let startDate: string;
+      let endDate: string;
+      if (data_inicial && data_final) {
+        startDate = data_inicial;
+        endDate = data_final;
+      } else {
+        const baseDias = normalizePeriodo(typeof dias === 'number' ? dias : 30);
+        const today = new Date();
+        startDate = fmt(today);
+        endDate = fmt(addDays(today, baseDias));
+      }
 
       const fluxoSql = `
-        WITH periodo AS (
-          SELECT
-            CURRENT_DATE AS hoje,
-            CURRENT_DATE + ($1::int) * INTERVAL '1 day' AS limite
+        WITH params AS (
+          SELECT $1::date AS start_date, $2::date AS end_date
         ),
-        receber AS (
-          SELECT
-            SUM(CASE WHEN COALESCE(cr.data_vencimento, CURRENT_DATE) <= periodo.limite THEN COALESCE(cr.valor, 0) ELSE 0 END) AS previstas,
-            SUM(CASE WHEN COALESCE(cr.data_vencimento, CURRENT_DATE) < periodo.hoje THEN COALESCE(cr.valor, 0) ELSE 0 END) AS vencidas,
-            COUNT(*) FILTER (WHERE cr.status IN ('pendente', 'vencido')) AS total
-          FROM gestaofinanceira.contas_a_receber cr, periodo
-          WHERE cr.status IN ('pendente', 'vencido')
+        latest_base AS (
+          SELECT sb.conta_id, sb.data_base, sb.saldo_base
+          FROM gestaofinanceira.saldos_base sb
+          JOIN (
+            SELECT conta_id, MAX(data_base) AS data_base
+            FROM gestaofinanceira.saldos_base, params p
+            WHERE data_base <= p.start_date
+            GROUP BY conta_id
+          ) mx USING (conta_id, data_base)
         ),
-        pagar AS (
+        saldo_inicial_por_conta AS (
           SELECT
-            SUM(CASE WHEN COALESCE(cp.data_vencimento, CURRENT_DATE) <= periodo.limite THEN COALESCE(cp.valor, 0) ELSE 0 END) AS previstas,
-            SUM(CASE WHEN COALESCE(cp.data_vencimento, CURRENT_DATE) < periodo.hoje THEN COALESCE(cp.valor, 0) ELSE 0 END) AS vencidas,
-            COUNT(*) FILTER (WHERE cp.status IN ('pendente', 'vencido')) AS total
-          FROM gestaofinanceira.contas_a_pagar cp, periodo
-          WHERE cp.status IN ('pendente', 'vencido')
+            lb.conta_id,
+            lb.saldo_base
+            + COALESCE((
+                SELECT SUM(m.valor)
+                FROM gestaofinanceira.movimentos m, params p
+                WHERE m.conta_id = lb.conta_id
+                  AND m.data > lb.data_base
+                  AND m.data < p.start_date
+              ), 0) AS saldo_inicial
+          FROM latest_base lb
+        ),
+        saldo_inicial_total AS (
+          SELECT COALESCE(SUM(saldo_inicial), 0) AS saldo_inicial
+          FROM saldo_inicial_por_conta
+        ),
+        movs_mes AS (
+          SELECT
+            m.data::date AS data,
+            SUM(CASE WHEN m.valor > 0 THEN m.valor ELSE 0 END) AS entradas,
+            SUM(CASE WHEN m.valor < 0 THEN m.valor ELSE 0 END) AS saidas
+          FROM gestaofinanceira.movimentos m, params p
+          WHERE m.data >= p.start_date
+            AND m.data <  p.end_date
+          GROUP BY m.data::date
+        ),
+        fluxo AS (
+          SELECT
+            data,
+            entradas,
+            saidas,
+            (COALESCE(entradas,0) + COALESCE(saidas,0)) AS saldo_dia
+          FROM movs_mes
         )
         SELECT
-          COALESCE(receber.previstas, 0) AS entradas_previstas,
-          COALESCE(receber.vencidas, 0) AS entradas_vencidas,
-          COALESCE(receber.total, 0) AS total_receber,
-          COALESCE(pagar.previstas, 0) AS saidas_previstas,
-          COALESCE(pagar.vencidas, 0) AS saidas_vencidas,
-          COALESCE(pagar.total, 0) AS total_pagar
-        FROM receber, pagar;
+          p.start_date AS data,
+          0::numeric    AS entradas,
+          0::numeric    AS saidas,
+          0::numeric    AS saldo_dia,
+          sit.saldo_inicial AS saldo_acumulado
+        FROM params p
+        CROSS JOIN saldo_inicial_total sit
+        UNION ALL
+        SELECT
+          f.data,
+          f.entradas,
+          f.saidas,
+          f.saldo_dia,
+          sit.saldo_inicial + SUM(f.saldo_dia) OVER (ORDER BY f.data) AS saldo_acumulado
+        FROM fluxo f
+        CROSS JOIN saldo_inicial_total sit
+        ORDER BY data
       `.trim();
 
-      const [fluxo] = await runQuery<{
-        entradas_previstas: number | null;
-        entradas_vencidas: number | null;
-        total_receber: number | null;
-        saidas_previstas: number | null;
-        saidas_vencidas: number | null;
-        total_pagar: number | null;
-      }>(fluxoSql, [periodo]);
+      type TimeseriesRow = {
+        data: string;
+        entradas: number | null;
+        saidas: number | null;
+        saldo_dia: number | null;
+        saldo_acumulado: number | null;
+      };
 
-      const entradasPrevistas = Number(fluxo?.entradas_previstas ?? 0);
-      const entradasVencidas = Number(fluxo?.entradas_vencidas ?? 0);
-      const totalReceber = Number(fluxo?.total_receber ?? 0);
+      const timeseries = await runQuery<TimeseriesRow>(fluxoSql, [startDate, endDate]);
 
-      const saidasPrevistas = Number(fluxo?.saidas_previstas ?? 0);
-      const saidasVencidas = Number(fluxo?.saidas_vencidas ?? 0);
-      const totalPagar = Number(fluxo?.total_pagar ?? 0);
-
-      const saldoProjetado = saldo_inicial + entradasPrevistas - saidasPrevistas;
+      const saldoInicial = Number(timeseries[0]?.saldo_acumulado ?? 0);
+      const totalEntradas = timeseries.reduce((s, r) => s + Number(r.entradas ?? 0), 0);
+      const totalSaidasAbs = timeseries.reduce((s, r) => s + Math.abs(Number(r.saidas ?? 0)), 0);
+      const saldoProjetado = Number(timeseries[timeseries.length - 1]?.saldo_acumulado ?? saldoInicial);
 
       const rows = [
-        {
-          categoria: 'Entradas previstas',
-          origem: 'contas_a_receber',
-          valor: entradasPrevistas,
-          valor_vencido: entradasVencidas,
-          quantidade: totalReceber,
-        },
-        {
-          categoria: 'Saídas previstas',
-          origem: 'contas_a_pagar',
-          valor: saidasPrevistas,
-          valor_vencido: saidasVencidas,
-          quantidade: totalPagar,
-        },
-        {
-          categoria: 'Saldo projetado',
-          origem: 'projecao',
-          valor: saldoProjetado,
-          valor_vencido: null,
-          quantidade: null,
-        },
+        { categoria: 'Saldo inicial', origem: 'saldos_base+movimentos', valor: saldoInicial },
+        { categoria: 'Entradas no período', origem: 'movimentos', valor: totalEntradas },
+        { categoria: 'Saídas no período', origem: 'movimentos', valor: totalSaidasAbs },
+        { categoria: 'Saldo projetado', origem: 'acumulado', valor: saldoProjetado },
       ];
+
+      const diffDays = Math.max(0, Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)));
 
       return {
         success: true,
-        periodo_dias: periodo,
-        saldo_inicial,
+        periodo_dias: diffDays,
+        saldo_inicial: saldoInicial,
         rows,
+        timeseries,
         summary: {
-          entradas_previstas: entradasPrevistas,
-          saidas_previstas: saidasPrevistas,
+          entradas_previstas: totalEntradas,
+          saidas_previstas: totalSaidasAbs,
           saldo_projetado: saldoProjetado,
-          entradas_vencidas: entradasVencidas,
-          saidas_vencidas: saidasVencidas,
+          entradas_vencidas: 0,
+          saidas_vencidas: 0,
         },
         sql_query: fluxoSql,
-        sql_params: formatSqlParams([periodo]),
+        sql_params: formatSqlParams([startDate, endDate]),
       };
     } catch (error) {
       console.error('ERRO calcularFluxoCaixa:', error);
@@ -422,45 +460,51 @@ export const getMovimentos = tool({
       if (conta_id) pushCondition('conta_id =', conta_id);
       if (tipo) pushCondition('tipo =', tipo);
       if (data_inicial) pushCondition('data >=', data_inicial);
-      if (data_final) pushCondition('data <=', data_final);
+      // Use exclusive upper bound for data_final (como no exemplo fornecido)
+      if (data_final) pushCondition('data <', data_final);
       if (categoria_id) pushCondition('categoria_id =', categoria_id);
       if (valor_minimo !== undefined) pushCondition('valor >=', valor_minimo);
       if (valor_maximo !== undefined) pushCondition('valor <=', valor_maximo);
 
       const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+      const whereClauseList = conditions.length
+        ? `WHERE ${conditions.map(c => c.replace(/^(\w+)/, 'm.$1')).join(' AND ')}`
+        : '';
 
       const listSql = `
         SELECT
-          id,
-          conta_id,
-          categoria_id,
-          tipo,
-          valor,
-          data,
-          descricao,
-          conta_a_pagar_id,
-          conta_a_receber_id,
-          created_at
-        FROM gestaofinanceira.movimentos
-        ${whereClause}
-        ORDER BY data DESC
+          m.data,
+          m.valor,
+          m.tipo AS tipo,
+          m.descricao AS descricao,
+          c.nome                  AS conta,
+          cat.nome                AS categoria,
+          cat.tipo                AS tipo_categoria,
+          COALESCE(cc.nome, '—')  AS centro_custo,
+          CASE
+            WHEN cap.id IS NOT NULL THEN cap.descricao
+            WHEN car.id IS NOT NULL THEN car.descricao
+            ELSE 'Lançamento'
+          END                     AS referencia,
+          CASE
+            WHEN cap.id IS NOT NULL THEN 'pago'
+            WHEN car.id IS NOT NULL THEN 'pago'
+            ELSE 'lançamento direto'
+          END                     AS origem
+        FROM gestaofinanceira.movimentos m
+        JOIN gestaofinanceira.contas            c   ON c.id  = m.conta_id
+        JOIN gestaofinanceira.categorias        cat ON cat.id = m.categoria_id
+        LEFT JOIN gestaofinanceira.centros_custo cc  ON cc.id  = m.centro_custo_id
+        LEFT JOIN gestaofinanceira.contas_a_pagar   cap ON cap.id = m.conta_a_pagar_id
+        LEFT JOIN gestaofinanceira.contas_a_receber car ON car.id = m.conta_a_receber_id
+        ${whereClauseList}
+        ORDER BY m.data DESC, m.valor DESC
         LIMIT $${paramIndex}
       `.trim();
 
       const listParams = [...params, limit ?? 50];
 
-      const rows = await runQuery<{
-        id: string;
-        conta_id: string;
-        categoria_id: string | null;
-        tipo: 'entrada' | 'saída';
-        valor: number;
-        data: string;
-        descricao: string | null;
-        conta_a_pagar_id: string | null;
-        conta_a_receber_id: string | null;
-        created_at: string | null;
-      }>(listSql, listParams);
+      const rows = await runQuery<Record<string, unknown>>(listSql, listParams);
 
       const aggSql = `
         SELECT
@@ -715,8 +759,8 @@ export const getTransacoesExtrato = tool({
   description: 'Consulta transações documentadas e extrato bancário do sistema de gestão de documentos',
   inputSchema: z.object({
     limit: z.number().default(50).describe('Número máximo de resultados'),
-    data_inicial: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
-    data_final: z.string().optional().describe('Data final (YYYY-MM-DD)'),
+    data_inicial: z.string().optional().describe('Data inicial de emissão do extrato (YYYY-MM-DD)'),
+    data_final: z.string().optional().describe('Data final exclusiva de emissão do extrato (YYYY-MM-DD)'),
     tipo: z.string().optional().describe('Filtrar por tipo de transação'),
     conciliado: z.boolean().optional().describe('Filtrar por status de conciliação'),
   }),
@@ -738,28 +782,35 @@ export const getTransacoesExtrato = tool({
         paramIndex += 1;
       };
 
-      if (data_inicial) pushCondition('te.data >=', data_inicial);
-      if (data_final) pushCondition('te.data <=', data_final);
-      if (tipo) pushCondition('te.tipo =', tipo);
-      if (conciliado !== undefined) pushCondition('te.conciliado =', conciliado);
+      // Filtros por emissão do documento de extrato
+      if (data_inicial) pushCondition('d.data_emissao >=', data_inicial);
+      if (data_final) pushCondition('d.data_emissao <', data_final); // limite superior exclusivo
+      // Filtros da transação
+      if (tipo) pushCondition('t.tipo =', tipo);
+      if (conciliado !== undefined) pushCondition('t.conciliado =', conciliado);
 
       const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
       const sql = `
         SELECT
-          eb.banco,
-          eb.conta,
-          te.data AS data_transacao,
-          te.descricao,
-          te.valor,
-          te.tipo,
-          te.conciliado
-        FROM
-          gestaodocumentos.transacoes_extrato AS te
-          JOIN gestaodocumentos.extratos_bancarios AS eb ON te.extrato_id = eb.documento_id
+          d.numero_documento              AS documento,
+          d.data_emissao                  AS extrato_emissao,
+          ex.banco,
+          ex.agencia,
+          ex.conta,
+          t.data                          AS data,
+          t.descricao                     AS descricao,
+          t.valor                         AS valor,
+          t.tipo                          AS tipo,
+          CASE WHEN t.conciliado THEN 'concluido' ELSE 'pendente' END AS status,
+          CASE WHEN t.conciliado THEN 'sim' ELSE 'não' END AS transacao_conciliado
+        FROM gestaodocumentos.documentos d
+        JOIN gestaodocumentos.extratos_bancarios ex
+          ON ex.documento_id = d.id
+        LEFT JOIN gestaodocumentos.transacoes_extrato t
+          ON t.extrato_id = ex.documento_id
         ${whereClause}
-        ORDER BY
-          te.data DESC
+        ORDER BY d.data_emissao DESC, t.data NULLS LAST, t.valor DESC
         LIMIT $${paramIndex}
       `.trim();
 

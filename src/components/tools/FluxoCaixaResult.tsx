@@ -18,6 +18,13 @@ interface FluxoCaixaResultProps {
   periodo_dias?: number;
   saldo_inicial?: number;
   rows?: FluxoCaixaRow[];
+  timeseries?: {
+    data: string;
+    entradas: number | null;
+    saidas: number | null;
+    saldo_dia: number | null;
+    saldo_acumulado: number | null;
+  }[];
   summary?: {
     entradas_previstas: number;
     saidas_previstas: number;
@@ -39,6 +46,7 @@ export default function FluxoCaixaResult({
   periodo_dias,
   saldo_inicial,
   rows,
+  timeseries,
   summary,
   message,
   sql_query,
@@ -105,18 +113,68 @@ export default function FluxoCaixaResult({
 
   const subtitle = subtitleParts.join(' • ');
 
+  // Tabela secundária de série temporal (se presente)
+  const timeseriesData = timeseries ?? [];
+  const timeseriesColumns: ColumnDef<(typeof timeseriesData)[number]>[] = useMemo(
+    () => [
+      {
+        accessorKey: 'data',
+        header: 'Data',
+        cell: ({ row }) => new Date(row.original.data).toLocaleDateString('pt-BR'),
+      },
+      {
+        accessorKey: 'entradas',
+        header: 'Entradas',
+        cell: ({ row }) => formatCurrency(row.original.entradas ?? 0),
+      },
+      {
+        accessorKey: 'saidas',
+        header: 'Saídas',
+        cell: ({ row }) => formatCurrency(row.original.saidas ?? 0),
+      },
+      {
+        accessorKey: 'saldo_dia',
+        header: 'Saldo do dia',
+        cell: ({ row }) => formatCurrency(row.original.saldo_dia ?? 0),
+      },
+      {
+        accessorKey: 'saldo_acumulado',
+        header: 'Saldo acumulado',
+        cell: ({ row }) => formatCurrency(row.original.saldo_acumulado ?? 0),
+      },
+    ],
+    [],
+  );
+
   return (
-    <ArtifactDataTable
-      data={data}
-      columns={columns}
-      title="Projeção de Fluxo de Caixa"
-      icon={Activity}
-      iconColor="text-blue-600"
-      message={subtitle}
-      success={success}
-      count={data.length}
-      exportFileName="fluxo_caixa"
-      sqlQuery={sql_query}
-    />
+    <div className="flex flex-col gap-6">
+      <ArtifactDataTable
+        data={data}
+        columns={columns}
+        title="Projeção de Fluxo de Caixa"
+        icon={Activity}
+        iconColor="text-blue-600"
+        message={subtitle}
+        success={success}
+        count={data.length}
+        exportFileName="fluxo_caixa"
+        sqlQuery={sql_query}
+      />
+
+      {timeseriesData.length > 0 && (
+        <ArtifactDataTable
+          data={timeseriesData}
+          columns={timeseriesColumns}
+          title="Movimentação Diária (Acumulado)"
+          icon={Activity}
+          iconColor="text-blue-600"
+          message={`Período com ${timeseriesData.length - 1} dias (exclui linha de saldo inicial)`}
+          success={true}
+          count={timeseriesData.length}
+          exportFileName="fluxo_caixa_timeseries"
+          sqlQuery={sql_query}
+        />
+      )}
+    </div>
   );
 }
