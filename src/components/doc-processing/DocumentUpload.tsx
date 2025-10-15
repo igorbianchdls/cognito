@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { Upload, Loader2 } from 'lucide-react';
+import { Upload, Loader2, FileText, Receipt, Landmark } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -61,19 +61,44 @@ export default function DocumentUpload({
 
   return (
     <div className="h-full flex flex-col">
-      {/* Tipo de Documento - obrigatório antes do upload */}
+      {/* Header branco com seletor de tipo (obrigatório) */}
       <div className="mb-3 px-1">
-        <div className="text-sm font-medium text-gray-700 mb-1">Tipo de documento</div>
-        <Select value={documentType} onValueChange={onDocumentTypeChange}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Selecione: Fatura, Extrato ou Nota Fiscal" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Fatura">Fatura</SelectItem>
-            <SelectItem value="Extrato Bancário">Extrato Bancário</SelectItem>
-            <SelectItem value="Nota Fiscal (NF-e)">Nota Fiscal (NF-e)</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-3 flex items-center justify-between">
+          <div className="flex flex-col">
+            <div className="text-sm font-semibold text-gray-900">Tipo de documento</div>
+            <div className="text-xs text-gray-500">Selecione antes de enviar o PDF</div>
+          </div>
+          <div className="ml-3">
+            <Select value={documentType} onValueChange={onDocumentTypeChange}>
+              <SelectTrigger className="md:w-64 w-full">
+                <SelectValue placeholder="Fatura, Extrato ou NF-e" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Fatura">
+                  <div className="flex items-center gap-2">
+                    <Receipt className="w-4 h-4 text-gray-600" />
+                    <span>Fatura</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="Extrato Bancário">
+                  <div className="flex items-center gap-2">
+                    <Landmark className="w-4 h-4 text-gray-600" />
+                    <span>Extrato Bancário</span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="Nota Fiscal (NF-e)">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-gray-600" />
+                    <span>Nota Fiscal (NF-e)</span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        {!documentType && (
+          <div className="text-xs text-red-600 mt-2 px-1">Seleção obrigatória para habilitar o upload.</div>
+        )}
       </div>
       <input
         ref={fileInputRef}
@@ -96,9 +121,7 @@ export default function DocumentUpload({
             <p className="text-lg font-medium text-gray-700">
               Upload Document
             </p>
-            <p className="text-sm text-gray-500 mt-1">
-              Selecione o tipo acima e arraste um PDF aqui, ou clique para escolher
-            </p>
+            <p className="text-sm text-gray-500 mt-1">Selecione o tipo acima e arraste um PDF aqui, ou clique para escolher</p>
           </div>
           <Button>
             Select File
