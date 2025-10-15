@@ -49,11 +49,10 @@ import ContasAReceberTable, { type ContaReceberRow } from '../tools/ContasAReceb
 import ReceiptsList from '../tools/ReceiptsList';
 import NotasFiscaisList from '../tools/NotasFiscaisList';
 import InventoryList from '../tools/InventoryList';
-import ContasAPagarList, { type ContaAPagarRow } from '../tools/ContasAPagarList';
 import FluxoCaixaResult, { type FluxoCaixaRow } from '../tools/FluxoCaixaResult';
 import GenericResultTable from '../tools/GenericResultTable';
 import ContasAReceberResult from '../tools/ContasAReceberResult';
-import ContasAPagarResult from '../tools/ContasAPagarResult';
+import ContasAPagarResult, { type ContaPagarRow } from '../tools/ContasAPagarResult';
 import MovimentosResult, { type GetMovimentosOutput } from '../tools/MovimentosResult';
 import TransacoesExtratoResult, { type GetTransacoesExtratoOutput } from '../tools/TransacoesExtratoResult';
 import SaldoBancarioResult, { type ObterSaldoBancarioOutput } from '../tools/SaldoBancarioResult';
@@ -1796,8 +1795,8 @@ type GetContasAPagarToolOutput = {
   success: boolean;
   count: number;
   total_valor: number;
-  rows: ContaAPagarRow[] | Array<Record<string, unknown>>;
-  data?: ContaAPagarRow[] | Array<Record<string, unknown>>;
+  rows: ContaPagarRow[] | Array<Record<string, unknown>>;
+  data?: ContaPagarRow[] | Array<Record<string, unknown>>;
   message: string;
   sql_query?: string;
   error?: string;
