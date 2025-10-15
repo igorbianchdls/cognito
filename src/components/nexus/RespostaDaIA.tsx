@@ -45,7 +45,7 @@ import ContentCreationSuccess from '../tools/ContentCreationSuccess';
 import SalesCallsList from '../tools/SalesCallsList';
 import RHCandidatesList from '../tools/RHCandidatesList';
 import ServiceOrdersList from '../tools/ServiceOrdersList';
-import ContasAReceberTable, { type ContaReceberRow } from '../tools/ContasAReceberTable';
+import { type ContaReceberRow } from '../tools/ContasAReceberTable';
 import ReceiptsList from '../tools/ReceiptsList';
 import NotasFiscaisList from '../tools/NotasFiscaisList';
 import InventoryList from '../tools/InventoryList';
@@ -4218,78 +4218,6 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   rows={(financialDataTool.output as GetFinancialDataToolOutput).data as Array<Record<string, unknown>>}
                   count={(financialDataTool.output as GetFinancialDataToolOutput).count}
                   sql_query={(financialDataTool.output as GetFinancialDataToolOutput).sql_query}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-getContasAReceber') {
-          const contasAReceberTool = part as NexusToolUIPart;
-          const callId = contasAReceberTool.toolCallId;
-          const shouldBeOpen = contasAReceberTool.state === 'output-available' || contasAReceberTool.state === 'output-error';
-
-          return (
-            <div key={callId}>
-              <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="tool-getContasAReceber" state={contasAReceberTool.state} />
-                <ToolContent>
-                  {contasAReceberTool.input && (
-                    <ToolInput input={contasAReceberTool.input} />
-                  )}
-                  {contasAReceberTool.state === 'output-error' && (
-                    <ToolOutput
-                      output={null}
-                      errorText={contasAReceberTool.errorText}
-                    />
-                  )}
-                </ToolContent>
-              </Tool>
-              {contasAReceberTool.state === 'output-available' && (
-                <ContasAReceberTable
-                  success={(contasAReceberTool.output as GetContasAReceberToolOutput).success}
-                  count={(contasAReceberTool.output as GetContasAReceberToolOutput).count}
-                  rows={((contasAReceberTool.output as GetContasAReceberToolOutput).rows ?? []) as ContaReceberRow[]}
-                  message={(contasAReceberTool.output as GetContasAReceberToolOutput).message}
-                  sql_query={(contasAReceberTool.output as GetContasAReceberToolOutput).sql_query}
-                  error={undefined}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-getContasAPagar') {
-          const contasAPagarTool = part as NexusToolUIPart;
-          const callId = contasAPagarTool.toolCallId;
-          const shouldBeOpen = contasAPagarTool.state === 'output-available' || contasAPagarTool.state === 'output-error';
-
-          return (
-            <div key={callId}>
-              <Tool defaultOpen={shouldBeOpen}>
-                <ToolHeader type="tool-getContasAPagar" state={contasAPagarTool.state} />
-                <ToolContent>
-                  {contasAPagarTool.input && (
-                    <ToolInput input={contasAPagarTool.input} />
-                  )}
-                  {contasAPagarTool.state === 'output-error' && (
-                    <ToolOutput
-                      output={null}
-                      errorText={contasAPagarTool.errorText}
-                    />
-                  )}
-                </ToolContent>
-              </Tool>
-              {contasAPagarTool.state === 'output-available' && (
-                <GenericResultTable
-                  title="Contas a Pagar"
-                  icon={DollarSign}
-                  iconColor="text-red-600"
-                  success={(contasAPagarTool.output as GetContasAPagarToolOutput).success}
-                  message={(contasAPagarTool.output as GetContasAPagarToolOutput).message}
-                  rows={((contasAPagarTool.output as GetContasAPagarToolOutput).rows ?? []) as Array<Record<string, unknown>>}
-                  count={(contasAPagarTool.output as GetContasAPagarToolOutput).count}
-                  sql_query={(contasAPagarTool.output as GetContasAPagarToolOutput).sql_query}
                 />
               )}
             </div>
