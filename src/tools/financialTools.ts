@@ -846,54 +846,102 @@ export const getTransacoesExtrato = tool({
 // ============================================================================
 
 export const obterSaldoBancario = tool({
-  description: 'Obtém saldos atuais de todas as contas bancárias',
+  description: 'Obtém saldos atuais (as-of) por conta a partir de saldos_base + movimentos, com linha TOTAL.',
   inputSchema: z.object({
+    asof: z.string().optional().describe('Data de referência (YYYY-MM-DD). Default: hoje'),
     incluir_inativas: z.boolean().default(false).describe('Incluir contas inativas'),
     tipo_conta: z.string().optional().describe('Filtrar por tipo de conta (corrente, poupança, etc)'),
   }),
   execute: async ({
+    asof,
     incluir_inativas,
     tipo_conta,
   }) => {
     try {
-      const conditions: string[] = [];
       const params: unknown[] = [];
       let paramIndex = 1;
 
-      const pushCondition = (clause: string, value: unknown) => {
-        conditions.push(`${clause} $${paramIndex}`);
-        params.push(value);
-        paramIndex += 1;
-      };
+      // As-of date (obrigatório no SQL, default hoje)
+      const asOfDate = asof ?? new Date().toISOString().slice(0, 10);
+      params.push(asOfDate);
+      paramIndex += 1; // $1 consumido por asof
 
+      // Condições para contas (aplicadas dentro de saldo_por_conta)
+      const contaConds: string[] = [];
       if (!incluir_inativas) {
-        conditions.push('ativa = TRUE');
+        contaConds.push('c.ativa = TRUE');
       }
-
-      if (tipo_conta) pushCondition('tipo =', tipo_conta);
-
-      const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+      if (tipo_conta) {
+        contaConds.push(`c.tipo = $${paramIndex}`);
+        params.push(tipo_conta);
+        paramIndex += 1;
+      }
+      const whereContas = contaConds.length ? `WHERE ${contaConds.join(' AND ')}` : '';
 
       const sql = `
+        WITH params AS (
+          SELECT $1::date AS asof
+        ),
+        latest_base AS (
+          SELECT sb.conta_id, sb.data_base, sb.saldo_base
+          FROM gestaofinanceira.saldos_base sb
+          JOIN (
+            SELECT conta_id, MAX(data_base) AS data_base
+            FROM gestaofinanceira.saldos_base, params p
+            WHERE data_base <= p.asof
+            GROUP BY conta_id
+          ) mx USING (conta_id, data_base)
+        ),
+        saldo_por_conta AS (
+          SELECT
+            c.nome AS nome,
+            COALESCE(lb.saldo_base, 0)
+            + COALESCE((
+                SELECT SUM(m.valor)
+                FROM gestaofinanceira.movimentos m, params p
+                WHERE m.conta_id = c.id
+                  AND (lb.data_base IS NULL OR m.data > lb.data_base)
+                  AND m.data <= p.asof
+              ), 0) AS saldo
+          FROM gestaofinanceira.contas c
+          LEFT JOIN latest_base lb ON lb.conta_id = c.id
+          ${whereContas}
+        )
         SELECT
-          nome,
-          saldo
-        FROM
-          gestaofinanceira.contas
-        ${whereClause}
-        ORDER BY
-          nome
+          COALESCE(spc.nome, 'TOTAL') AS nome,
+          SUM(spc.saldo)              AS saldo,
+          p.asof                      AS data_referencia
+        FROM saldo_por_conta spc
+        CROSS JOIN params p
+        GROUP BY ROLLUP (spc.nome), p.asof
+        ORDER BY CASE WHEN COALESCE(spc.nome, 'TOTAL') = 'TOTAL' THEN 1 ELSE 0 END,
+                 spc.nome
       `.trim();
 
-      const rows = await runQuery<Record<string, unknown>>(sql, params);
+      const rowsAll = await runQuery<{
+        nome: string | null;
+        saldo: number | null;
+        data_referencia: string;
+      }>(sql, params);
 
-      const saldoTotal = rows.reduce((sum, row) => sum + Number(row.saldo || 0), 0);
+      // Separar linha TOTAL e linhas por conta
+      const totalRow = rowsAll.find(r => (r.nome ?? 'TOTAL') === 'TOTAL');
+      const rows = rowsAll.filter(r => (r.nome ?? 'TOTAL') !== 'TOTAL');
+
+      const saldoTotal = Number(totalRow?.saldo ?? 0);
+      const saldoPositivo = rows.reduce((s, r) => s + (Number(r.saldo ?? 0) > 0 ? Number(r.saldo ?? 0) : 0), 0);
+      const saldoNegativo = rows.reduce((s, r) => s + (Number(r.saldo ?? 0) < 0 ? Number(r.saldo ?? 0) : 0), 0);
 
       return {
         success: true,
         rows,
         count: rows.length,
-        saldo_total: saldoTotal,
+        totals: {
+          saldo_total: saldoTotal,
+          saldo_positivo: saldoPositivo,
+          saldo_negativo: saldoNegativo,
+          total_contas: rows.length,
+        },
         message: `${rows.length} contas bancárias (Saldo total: ${saldoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
         sql_query: sql,
         sql_params: formatSqlParams(params),
@@ -918,7 +966,7 @@ export const obterDespesasPorCentroCusto = tool({
   description: 'Analisa despesas agrupadas por centro de custo com totais e percentuais',
   inputSchema: z.object({
     data_inicial: z.string().describe('Data inicial (YYYY-MM-DD)'),
-    data_final: z.string().describe('Data final (YYYY-MM-DD)'),
+    data_final: z.string().describe('Data final exclusiva (YYYY-MM-DD)'),
     limit: z.number().default(20).describe('Número máximo de centros de custo'),
   }),
   execute: async ({
@@ -939,7 +987,7 @@ export const obterDespesasPorCentroCusto = tool({
           ROUND(
             (SUM(cp.valor) * 100.0 / NULLIF(
               (SELECT SUM(valor) FROM gestaofinanceira.contas_a_pagar
-               WHERE data_vencimento BETWEEN $1 AND $2),
+               WHERE data_vencimento >= $1 AND data_vencimento < $2),
               0
             )),
             2
@@ -947,7 +995,7 @@ export const obterDespesasPorCentroCusto = tool({
         FROM gestaofinanceira.centros_custo cc
         LEFT JOIN gestaofinanceira.contas_a_pagar cp
           ON cp.centro_custo_id = cc.id
-          AND cp.data_vencimento BETWEEN $1 AND $2
+          AND cp.data_vencimento >= $1 AND cp.data_vencimento < $2
         WHERE cc.ativo = TRUE
         GROUP BY cc.id, cc.nome, cc.codigo
         HAVING SUM(cp.valor) > 0
@@ -962,7 +1010,7 @@ export const obterDespesasPorCentroCusto = tool({
           SUM(valor) AS total_geral,
           COUNT(*) AS total_despesas
         FROM gestaofinanceira.contas_a_pagar
-        WHERE data_vencimento BETWEEN $1 AND $2
+        WHERE data_vencimento >= $1 AND data_vencimento < $2
       `.trim();
 
       const [totals] = await runQuery<{
