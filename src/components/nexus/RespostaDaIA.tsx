@@ -6389,7 +6389,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {fluxoCaixaTool.state === 'output-available' && (
                 <FluxoCaixaResult
-                  result={fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput}
+                  {...(fluxoCaixaTool.output as CalcularFluxoCaixaToolOutput)}
                 />
               )}
             </div>
