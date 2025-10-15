@@ -287,9 +287,29 @@ export async function POST(req: Request) {
     console.log('📄 DOC EXTRACTION: Tipo selecionado (forçado):', documentType);
 
     // Converter objeto estruturado para formato de array de campos
-    // Garante que o documentType do objeto corresponda ao selecionado
-    const withType = { ...(result.object as any), documentType } as z.infer<typeof extractionSchema>;
-    const responseData = convertToFieldsArray(withType);
+    // Garante que o documentType corresponda ao selecionado, com tipos explícitos
+    type NF = z.infer<typeof notaFiscalSchema>;
+    type EX = z.infer<typeof extratoBancarioSchema>;
+    type FT = z.infer<typeof faturaSchema>;
+    type Allowed = NF | EX | FT;
+
+    let withType: Allowed;
+    switch (documentType) {
+      case 'Nota Fiscal (NF-e)':
+        withType = { ...(result.object as NF), documentType };
+        break;
+      case 'Extrato Bancário':
+        withType = { ...(result.object as EX), documentType };
+        break;
+      case 'Fatura':
+        withType = { ...(result.object as FT), documentType };
+        break;
+      default:
+        // Já validado antes; fallback para satisfazer type checker
+        withType = result.object as Allowed;
+    }
+
+    const responseData = convertToFieldsArray(withType as z.infer<typeof extractionSchema>);
 
     console.log('📄 DOC EXTRACTION: Campos extraídos:', responseData.fields?.length);
 
