@@ -35,8 +35,13 @@ export default function DocProcessingPage() {
   const [extractedFields, setExtractedFields] = useState<ExtractedField[]>([]);
   const [summary, setSummary] = useState<string>('');
   const [transacoes, setTransacoes] = useState<Transacao[]>([]);
+  const [selectedDocType, setSelectedDocType] = useState<string>('');
 
   const handleFileUpload = async (file: File) => {
+    if (!selectedDocType) {
+      alert('Selecione o tipo de documento (Fatura, Extrato Bancário ou Nota Fiscal) antes de fazer upload.');
+      return;
+    }
     setUploadedFile(file);
     setIsProcessing(true);
     setExtractedFields([]); // Limpar campos anteriores
@@ -48,6 +53,7 @@ export default function DocProcessingPage() {
 
       const formData = new FormData();
       formData.append('file', file);
+      formData.append('documentType', selectedDocType);
 
       const response = await fetch('/api/doc-processing/extract', {
         method: 'POST',
@@ -112,6 +118,8 @@ export default function DocProcessingPage() {
                       onFileUpload={handleFileUpload}
                       uploadedFile={uploadedFile}
                       isProcessing={isProcessing}
+                      documentType={selectedDocType}
+                      onDocumentTypeChange={setSelectedDocType}
                     />
                   </div>
                 </Panel>

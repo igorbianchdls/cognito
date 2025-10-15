@@ -4,6 +4,13 @@ import { useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { Upload, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 // Import PDFViewer dinamicamente para evitar erro de SSR
 const PDFViewer = dynamic(() => import('./PDFViewer'), { ssr: false });
@@ -12,12 +19,16 @@ interface DocumentUploadProps {
   onFileUpload: (file: File) => void;
   uploadedFile: File | null;
   isProcessing: boolean;
+  documentType: string;
+  onDocumentTypeChange: (value: string) => void;
 }
 
 export default function DocumentUpload({
   onFileUpload,
   uploadedFile,
-  isProcessing
+  isProcessing,
+  documentType,
+  onDocumentTypeChange
 }: DocumentUploadProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -50,6 +61,20 @@ export default function DocumentUpload({
 
   return (
     <div className="h-full flex flex-col">
+      {/* Tipo de Documento - obrigatório antes do upload */}
+      <div className="mb-3 px-1">
+        <div className="text-sm font-medium text-gray-700 mb-1">Tipo de documento</div>
+        <Select value={documentType} onValueChange={onDocumentTypeChange}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Selecione: Fatura, Extrato ou Nota Fiscal" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Fatura">Fatura</SelectItem>
+            <SelectItem value="Extrato Bancário">Extrato Bancário</SelectItem>
+            <SelectItem value="Nota Fiscal (NF-e)">Nota Fiscal (NF-e)</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       <input
         ref={fileInputRef}
         type="file"
@@ -72,7 +97,7 @@ export default function DocumentUpload({
               Upload Document
             </p>
             <p className="text-sm text-gray-500 mt-1">
-              Drag and drop a PDF file here, or click to browse
+              Selecione o tipo acima e arraste um PDF aqui, ou clique para escolher
             </p>
           </div>
           <Button>

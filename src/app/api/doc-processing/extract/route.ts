@@ -113,7 +113,7 @@ const guiaDeImpostoSchema = baseSchema.extend({
   valorTotal: z.string().optional().describe('Valor total'),
 });
 
-// Union discriminada de todos os schemas
+// Union discriminada de todos os schemas (mantido para typing utilitário)
 const extractionSchema = z.discriminatedUnion('documentType', [
   notaFiscalSchema,
   reciboSchema,
@@ -228,9 +228,16 @@ export async function POST(req: Request) {
   try {
     const formData = await req.formData();
     const file = formData.get('file') as File;
+    const documentType = (formData.get('documentType') as string | null) || '';
 
     if (!file) {
       return Response.json({ error: 'No file provided' }, { status: 400 });
+    }
+
+    // Validar tipo selecionado (agora obrigatório, sem auto-detecção)
+    const allowedTypes = ['Fatura', 'Extrato Bancário', 'Nota Fiscal (NF-e)'];
+    if (!documentType || !allowedTypes.includes(documentType)) {
+      return Response.json({ error: 'documentType inválido ou ausente' }, { status: 400 });
     }
 
     console.log('📄 DOC EXTRACTION: Processando arquivo:', file.name);
@@ -241,138 +248,48 @@ export async function POST(req: Request) {
 
     console.log('📄 DOC EXTRACTION: Enviando para Claude Vision via AI SDK...');
 
-    // Chamar Claude Vision usando AI SDK com generateObject
+    // Escolher schema e prompt conforme seleção do usuário
+    let schema: z.ZodTypeAny;
+    let instructions: string;
+
+    switch (documentType) {
+      case 'Nota Fiscal (NF-e)':
+        schema = notaFiscalSchema;
+        instructions = `Você é um extrator de dados para Nota Fiscal (NF-e) brasileira. Extraia APENAS os campos do schema a seguir quando estiverem claramente presentes e confiáveis. Resuma o documento em 2-3 frases.`;
+        break;
+      case 'Extrato Bancário':
+        schema = extratoBancarioSchema;
+        instructions = `Você é um extrator de dados para Extrato Bancário brasileiro. Extraia todas as transações do extrato (cada linha de movimentação). Se não encontrar algum campo, omita. O campo transacoes deve conter todas as movimentações com data (DD/MM/YYYY), descricao, valor (negativo para débito, positivo para crédito) e tipo (credito|debito). Inclua também um resumo executivo em 2-3 frases.`;
+        break;
+      case 'Fatura':
+        schema = faturaSchema;
+        instructions = `Você é um extrator de dados para Fatura. Extraia os campos pertinentes ao schema (emitente/cliente, datas, valores, status, observações) quando presentes com segurança e inclua um resumo executivo em 2-3 frases.`;
+        break;
+      default:
+        return Response.json({ error: 'documentType não suportado' }, { status: 400 });
+    }
+
+    // Chamar Claude Vision com prompt específico
     const result = await generateObject({
       model: anthropic('claude-3-5-sonnet-20241022'),
       messages: [
         {
           role: 'user',
           content: [
-            {
-              type: 'file',
-              data: buffer,
-              mediaType: 'application/pdf',
-            },
-            {
-              type: 'text',
-              text: `Analise este documento fiscal/financeiro brasileiro e extraia os dados estruturados.
-
-**PASSO 1: IDENTIFIQUE o tipo de documento**
-
-Identifique qual dos seguintes tipos:
-- "Nota Fiscal (NF-e)"
-- "Recibo"
-- "Fatura"
-- "Duplicata"
-- "Contrato"
-- "Extrato Bancário"
-- "Guia de Imposto"
-
-**PASSO 2: RESUMA o documento**
-
-Crie um resumo executivo em 2-3 frases (tipo, valor, partes envolvidas, finalidade).
-
-**PASSO 3: EXTRAIA os campos específicos do tipo detectado**
-
-**Para "Nota Fiscal (NF-e)":**
-- numeroDaNFe: Número da NF-e
-- serie: Série
-- chaveDeAcesso: Chave de acesso (44 dígitos)
-- dataDeEmissao: Data de emissão
-- cfop: CFOP
-- emitente: Nome do emitente
-- cnpjCpfEmitente: CNPJ/CPF do emitente
-- destinatario: Nome do destinatário
-- cnpjCpfDestinatario: CNPJ/CPF do destinatário
-- valorTotal: Valor total
-- totalDeImpostos: Total de impostos
-- status: Status do documento
-
-**Para "Recibo":**
-- numeroDoRecibo: Número do recibo
-- data: Data
-- valor: Valor
-- recebedor: Nome do recebedor
-- cpfCnpjRecebedor: CPF/CNPJ do recebedor
-- pagador: Nome do pagador
-- cpfCnpjPagador: CPF/CNPJ do pagador
-- descricaoReferenteA: Descrição/Referente a
-
-**Para "Fatura":**
-- numeroDaFatura: Número da fatura
-- dataDeEmissao: Data de emissão
-- dataDeVencimento: Data de vencimento
-- cliente: Nome do cliente
-- cnpjCpfCliente: CNPJ/CPF do cliente
-- valorTotal: Valor total
-- status: Status
-- observacoes: Observações
-
-**Para "Duplicata":**
-- numeroDaDuplicata: Número da duplicata
-- dataDeEmissao: Data de emissão
-- dataDeVencimento: Data de vencimento
-- sacado: Nome do sacado
-- cnpjCpfSacado: CNPJ/CPF do sacado
-- valor: Valor
-- pracaDePagamento: Praça de pagamento
-
-**Para "Contrato":**
-- numeroDoContrato: Número do contrato
-- contratante: Nome do contratante
-- contratado: Nome do contratado
-- dataDeInicio: Data de início
-- dataDeTermino: Data de término
-- valor: Valor
-- objetoDoContrato: Objeto do contrato
-
-**Para "Extrato Bancário":**
-- banco: Nome do banco
-- agencia: Agência
-- conta: Conta
-- periodoDataInicial: Período - Data inicial
-- periodoDataFinal: Período - Data final
-- saldoInicial: Saldo inicial
-- saldoFinal: Saldo final
-- totalDeCreditos: Total de créditos
-- totalDeDebitos: Total de débitos
-- transacoes: Array com TODAS as transações individuais do extrato (OBRIGATÓRIO)
-  * Cada transação deve ter:
-    - data: Data da transação (formato DD/MM/YYYY)
-    - descricao: Descrição/histórico da transação
-    - valor: Valor numérico (negativo para débitos, positivo para créditos)
-    - tipo: "credito" para entradas/depósitos, "debito" para saídas/pagamentos
-  * EXTRAIA TODAS as linhas de movimentação que encontrar no extrato
-  * Não omita nenhuma transação, mesmo que pareça pequena ou irrelevante
-
-**Para "Guia de Imposto":**
-- tipoDeGuia: Tipo de guia (DAS, DARF, GPS, etc)
-- codigoDeBarras: Código de barras
-- periodoDeApuracao: Período de apuração
-- dataDeVencimento: Data de vencimento
-- contribuinte: Nome do contribuinte
-- cnpjCpf: CNPJ/CPF
-- valorPrincipal: Valor principal
-- multaJuros: Multa/Juros
-- valorTotal: Valor total
-
-**IMPORTANTE:**
-- Use EXATAMENTE o documentType correspondente (ex: "Nota Fiscal (NF-e)", "Recibo", etc)
-- Retorne APENAS os campos que conseguir extrair com confiança
-- Se não encontrar um campo, simplesmente omita (todos são opcionais)
-- Não invente valores
-- Use os nomes de campo EXATAMENTE como especificados acima (camelCase)`,
-            },
+            { type: 'file', data: buffer, mediaType: 'application/pdf' },
+            { type: 'text', text: instructions },
           ],
         },
       ],
-      schema: extractionSchema,
+      schema,
     });
 
-    console.log('📄 DOC EXTRACTION: Tipo detectado:', result.object.documentType);
+    console.log('📄 DOC EXTRACTION: Tipo selecionado (forçado):', documentType);
 
     // Converter objeto estruturado para formato de array de campos
-    const responseData = convertToFieldsArray(result.object);
+    // Garante que o documentType do objeto corresponda ao selecionado
+    const withType = { ...(result.object as any), documentType } as z.infer<typeof extractionSchema>;
+    const responseData = convertToFieldsArray(withType);
 
     console.log('📄 DOC EXTRACTION: Campos extraídos:', responseData.fields?.length);
 
