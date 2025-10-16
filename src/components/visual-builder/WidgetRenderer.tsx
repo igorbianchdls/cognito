@@ -492,6 +492,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
           </div>
         </div>
       );
+      break;
   }
 
   // Render the SQL Modal
@@ -507,7 +508,7 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
   // Return the widget content with modal
   return (
     <>
-      {/* The switch statement above already returns the widget content */}
+      {widgetContent}
       {sqlModal}
     </>
   );
