@@ -1049,3 +1049,87 @@ export const obterDespesasPorCentroCusto = tool({
     }
   },
 });
+
+// ============================================================================
+// ANÁLISE DE MOVIMENTOS POR CENTRO DE CUSTO E CATEGORIA
+// ============================================================================
+
+export const analisarMovimentosPorCentroCusto = tool({
+  description: 'Analisa movimentos financeiros efetivados agrupados por centro de custo e categoria, mostrando tipo (Receita/Despesa) e totais',
+  inputSchema: z.object({
+    data_inicial: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_final: z.string().describe('Data final exclusiva (YYYY-MM-DD)'),
+    limit: z.number().default(100).describe('Número máximo de resultados'),
+  }),
+  execute: async ({
+    data_inicial,
+    data_final,
+    limit,
+  }) => {
+    try {
+      const params: unknown[] = [data_inicial, data_final, limit];
+
+      const sql = `
+        SELECT
+          COALESCE(cc.nome, '— sem CC —') AS centro_custo,
+          cat.nome AS categoria,
+          cat.tipo AS tipo_categoria,
+          SUM(m.valor) AS total
+        FROM gestaofinanceira.movimentos m
+        JOIN gestaofinanceira.categorias cat ON cat.id = m.categoria_id
+        LEFT JOIN gestaofinanceira.centros_custo cc ON cc.id = m.centro_custo_id
+        WHERE m.data >= $1 AND m.data < $2
+        GROUP BY COALESCE(cc.nome, '— sem CC —'), cat.nome, cat.tipo
+        ORDER BY centro_custo, tipo_categoria, total DESC NULLS LAST
+        LIMIT $3
+      `.trim();
+
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
+
+      const totalSql = `
+        SELECT
+          SUM(CASE WHEN valor > 0 THEN valor ELSE 0 END) AS total_entradas,
+          SUM(CASE WHEN valor < 0 THEN ABS(valor) ELSE 0 END) AS total_saidas,
+          COUNT(*) AS total_linhas
+        FROM gestaofinanceira.movimentos
+        WHERE data >= $1 AND data < $2
+      `.trim();
+
+      const [totals] = await runQuery<{
+        total_entradas: number | null;
+        total_saidas: number | null;
+        total_linhas: number | null;
+      }>(totalSql, [data_inicial, data_final]);
+
+      const totalEntradas = Number(totals?.total_entradas ?? 0);
+      const totalSaidas = Number(totals?.total_saidas ?? 0);
+
+      return {
+        success: true,
+        rows,
+        count: rows.length,
+        totals: {
+          total_entradas: totalEntradas,
+          total_saidas: totalSaidas,
+          saldo_liquido: totalEntradas - totalSaidas,
+          total_linhas: Number(totals?.total_linhas ?? 0),
+        },
+        periodo: {
+          data_inicial,
+          data_final,
+        },
+        message: `${rows.length} agrupamentos encontrados (Entradas: ${totalEntradas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} | Saídas: ${totalSaidas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
+        sql_query: `${sql}\n\n-- Totais\n${totalSql}`,
+        sql_params: formatSqlParams(params),
+      };
+    } catch (error) {
+      console.error('ERRO analisarMovimentosPorCentroCusto:', error);
+      return {
+        success: false,
+        message: `Erro ao analisar movimentos por centro de custo: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        rows: [],
+        count: 0,
+      };
+    }
+  },
+});

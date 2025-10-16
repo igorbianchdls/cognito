@@ -54,6 +54,7 @@ import GenericResultTable from '../tools/GenericResultTable';
 import ContasAReceberResult from '../tools/ContasAReceberResult';
 import ContasAPagarResult, { type ContaPagarRow } from '../tools/ContasAPagarResult';
 import MovimentosResult, { type GetMovimentosOutput } from '../tools/MovimentosResult';
+import MovimentosPorCentroCustoResult, { type GetMovimentosPorCentroCustoOutput } from '../tools/MovimentosPorCentroCustoResult';
 import TransacoesExtratoResult, { type GetTransacoesExtratoOutput } from '../tools/TransacoesExtratoResult';
 import SaldoBancarioResult, { type ObterSaldoBancarioOutput } from '../tools/SaldoBancarioResult';
 import DespesasCentroCustoResult, { type ObterDespesasPorCentroCustoOutput } from '../tools/DespesasCentroCustoResult';
@@ -6347,6 +6348,36 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               {movimentosTool.state === 'output-available' && (
                 <MovimentosResult
                   result={movimentosTool.output as GetMovimentosOutput}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-analisarMovimentosPorCentroCusto') {
+          const movimentosCCTool = part as NexusToolUIPart;
+          const callId = movimentosCCTool.toolCallId;
+          const shouldBeOpen = movimentosCCTool.state === 'output-available' || movimentosCCTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-analisarMovimentosPorCentroCusto" state={movimentosCCTool.state} />
+                <ToolContent>
+                  {movimentosCCTool.input && (
+                    <ToolInput input={movimentosCCTool.input} />
+                  )}
+                  {movimentosCCTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={movimentosCCTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {movimentosCCTool.state === 'output-available' && (
+                <MovimentosPorCentroCustoResult
+                  result={movimentosCCTool.output as GetMovimentosPorCentroCustoOutput}
                 />
               )}
             </div>
