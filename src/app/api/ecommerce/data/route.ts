@@ -84,8 +84,11 @@ export async function GET(req: NextRequest) {
           JOIN gestaovendas.pedidos p ON p.id = ip.pedido_id
           JOIN gestaocatalogo.produto_variacoes pv ON ip.produto_id = pv.id
           JOIN gestaocatalogo.produtos prod ON pv.produto_pai_id = prod.id
-          WHERE ($1::date IS NULL OR p.criado_em::date >= $1::date)
-            AND ($2::date IS NULL OR p.criado_em::date <= $2::date)
+          WHERE (
+            $1::date IS NULL OR COALESCE(p.data_pedido::date, p.criado_em::date) >= $1::date
+          ) AND (
+            $2::date IS NULL OR COALESCE(p.data_pedido::date, p.criado_em::date) <= $2::date
+          )
           GROUP BY pv.id, prod.nome, pv.sku
           ORDER BY receita_liquida DESC
           LIMIT $3::int;
