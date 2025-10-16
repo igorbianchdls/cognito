@@ -494,29 +494,19 @@ export const getMovimentos = tool({
           m.data,
           m.valor,
           CASE WHEN m.valor > 0 THEN 'entrada' ELSE 'saída' END AS tipo,
-          m.descricao AS descricao,
-          c.nome                  AS conta,
-          cat.nome                AS categoria,
-          cat.tipo                AS tipo_categoria,
-          COALESCE(cc.nome, '—')  AS centro_custo,
-          CASE
-            WHEN cap.id IS NOT NULL THEN cap.descricao
-            WHEN car.id IS NOT NULL THEN car.descricao
-            ELSE 'Lançamento'
-          END                     AS referencia,
-          CASE
-            WHEN cap.id IS NOT NULL THEN 'pago'
-            WHEN car.id IS NOT NULL THEN 'pago'
-            ELSE 'lançamento direto'
-          END                     AS origem
+          m.descricao,
+          c.nome                               AS conta,
+          cat.nome                             AS categoria,
+          cc.nome                              AS centro_custo,
+          COALESCE(ap.descricao, ar.descricao) AS origem_titulo
         FROM gestaofinanceira.movimentos m
-        JOIN gestaofinanceira.contas            c   ON c.id  = m.conta_id
-        JOIN gestaofinanceira.categorias        cat ON cat.id = m.categoria_id
-        LEFT JOIN gestaofinanceira.centros_custo cc  ON cc.id  = m.centro_custo_id
-        LEFT JOIN gestaofinanceira.contas_a_pagar   cap ON cap.id = m.conta_a_pagar_id
-        LEFT JOIN gestaofinanceira.contas_a_receber car ON car.id = m.conta_a_receber_id
+        JOIN gestaofinanceira.contas         c   ON c.id  = m.conta_id
+        JOIN gestaofinanceira.categorias     cat ON cat.id = m.categoria_id
+        LEFT JOIN gestaofinanceira.centros_custo    cc ON cc.id = m.centro_custo_id
+        LEFT JOIN gestaofinanceira.contas_a_pagar   ap ON ap.id = m.conta_a_pagar_id
+        LEFT JOIN gestaofinanceira.contas_a_receber ar ON ar.id = m.conta_a_receber_id
         ${whereClauseList}
-        ORDER BY m.data DESC, m.valor DESC
+        ORDER BY m.data, m.id
         LIMIT $${paramIndex}
       `.trim();
 
