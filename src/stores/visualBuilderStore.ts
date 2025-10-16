@@ -94,7 +94,7 @@ const initialCode = `{
       "title": "💰 Gasto Total",
       "dataSource": {
         "schema": "trafego_pago",
-        "table": "metricas_anuncios",
+        "table": "vw_ads_data",
         "x": "gasto",
         "aggregation": "SUM"
       },
@@ -118,7 +118,7 @@ const initialCode = `{
       "title": "📈 Impressões ao Longo do Tempo",
       "dataSource": {
         "schema": "trafego_pago",
-        "table": "metricas_anuncios",
+        "table": "vw_ads_data",
         "x": "data",
         "y": "impressao",
         "aggregation": "SUM"
@@ -143,7 +143,7 @@ const initialCode = `{
       "title": "📊 Impressões ao Longo do Tempo (Barras)",
       "dataSource": {
         "schema": "trafego_pago",
-        "table": "metricas_anuncios",
+        "table": "vw_ads_data",
         "x": "data",
         "y": "impressao",
         "aggregation": "SUM"
@@ -167,7 +167,7 @@ const initialCode = `{
       "title": "📱 Conversões por Dispositivo",
       "dataSource": {
         "schema": "trafego_pago",
-        "table": "metricas_anuncios",
+        "table": "vw_ads_data",
         "x": "dispositivo",
         "y": "conversao",
         "aggregation": "SUM"
@@ -192,7 +192,7 @@ const initialCode = `{
       "title": "🎯 ROAS Médio",
       "dataSource": {
         "schema": "trafego_pago",
-        "table": "metricas_anuncios",
+        "table": "vw_ads_data",
         "x": "roas",
         "aggregation": "AVG"
       },
