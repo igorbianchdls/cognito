@@ -23,7 +23,7 @@ export const getTopProdutosReceitaLiquida = tool({
     data_ate: z.string().optional().describe('Data final (YYYY-MM-DD ou vazio)'),
     limit: z.number().int().min(1).max(1000).default(20)
   }),
-  execute: async ({ data_de, data_ate, limit = 20 }) => {
+  execute: async ({ data_de, data_ate, limit = 20 } = {}) => {
     const sql = `
       SELECT
         pv.id AS produto_id,
@@ -178,7 +178,7 @@ export const getDesempenhoVendasMensal = tool({
     data_de: z.string().optional().describe('Data inicial (YYYY-MM-DD ou vazio)'),
     data_ate: z.string().optional().describe('Data final (YYYY-MM-DD ou vazio)'),
   }),
-  execute: async ({ data_de, data_ate }) => {
+  execute: async ({ data_de, data_ate } = {}) => {
     const sql = `
       WITH itens_por_pedido AS (
         SELECT pedido_id, SUM(quantidade) AS total_itens
@@ -228,7 +228,7 @@ export const analiseDesempenhoCanalVenda = tool({
     data_de: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
     data_ate: z.string().optional().describe('Data final (YYYY-MM-DD)'),
   }),
-  execute: async ({ data_de, data_ate }) => {
+  execute: async ({ data_de, data_ate } = {}) => {
     const sql = `
       SELECT
         cv.nome AS canal,
@@ -282,9 +282,12 @@ export const analiseDesempenhoCanalVenda = tool({
 });
 
 export const analisePerformanceCategoria = tool({
-  description: 'Análise de Performance por Categoria de Produto (visão estratégica).',
-  inputSchema: z.object({}),
-  execute: async ({ data_de, data_ate }) => {
+  description: 'Análise de Performance por Categoria de Produto (visão estratégica). Suporta período (data_de, data_ate).',
+  inputSchema: z.object({
+    data_de: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().optional().describe('Data final (YYYY-MM-DD)'),
+  }),
+  execute: async ({ data_de, data_ate } = {}) => {
     const sql = `
       SELECT
         COALESCE(cat.nome, 'Sem Categoria') AS categoria,
@@ -332,7 +335,7 @@ export const analiseLTVcliente = tool({
     data_de: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
     data_ate: z.string().optional().describe('Data final (YYYY-MM-DD)'),
   }),
-  execute: async ({ data_de, data_ate }) => {
+  execute: async ({ data_de, data_ate } = {}) => {
     const sql = `
       SELECT
         c.nome,
