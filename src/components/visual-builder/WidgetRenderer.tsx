@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Database } from 'lucide-react';
 import { BarChart } from '@/components/charts/BarChart';
 import { LineChart } from '@/components/charts/LineChart';
 import { PieChart } from '@/components/charts/PieChart';
@@ -9,6 +10,7 @@ import { KPICard } from '@/components/widgets/KPICard';
 import InsightsCard from '@/components/widgets/InsightsCard';
 import AlertasCard from '@/components/widgets/AlertasCard';
 import RecomendacoesCard from '@/components/widgets/RecomendacoesCard';
+import SQLModal from './SQLModal';
 import type { Widget } from '../visual-builder/ConfigParser';
 import type { GlobalFilters } from '@/stores/visualBuilderStore';
 
@@ -35,6 +37,8 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
   const [data, setData] = useState<WidgetData>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sqlQuery, setSqlQuery] = useState<string | null>(null);
+  const [showSQLModal, setShowSQLModal] = useState(false);
 
   // 🔄 Component initialization log
   console.log('🔄 WidgetRenderer mounted:', {
@@ -103,10 +107,12 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
 
         if (result.success) {
           setData(result.data);
+          setSqlQuery(result.sql_query || null);
           console.log(`✅ Widget data set successfully:`, {
             widgetId: widget.id,
             totalRecords: result.totalRecords,
-            dataSet: result.data
+            dataSet: result.data,
+            sqlQuery: result.sql_query
           });
         } else {
           throw new Error(result.error || 'API request failed');
@@ -212,6 +218,24 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
     );
   }
 
+  // SQL Debug Button - only show for widgets that have SQL queries
+  const renderSQLButton = () => {
+    if (!sqlQuery || !needsBigQueryData(widget.type)) return null;
+    
+    return (
+      <button
+        onClick={() => setShowSQLModal(true)}
+        className="absolute top-2 right-2 z-10 p-1.5 bg-white/90 hover:bg-white border border-gray-200 rounded-md shadow-sm hover:shadow-md transition-all duration-200 group"
+        title="Ver SQL gerado"
+      >
+        <Database className="w-4 h-4 text-gray-600 group-hover:text-blue-600" />
+      </button>
+    );
+  };
+
+  // Store widget content
+  let widgetContent;
+
   switch (widget.type) {
     case 'bar':
       // Debug: Log glass effect and modern CSS props being passed
@@ -233,8 +257,9 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         }
       });
 
-      return (
-        <div className="h-full w-full p-2">
+      widgetContent = (
+        <div className="h-full w-full p-2 relative">
+          {renderSQLButton()}
           <BarChart
             {...commonChartProps}
             {...(widget.barConfig?.styling || {})}
@@ -292,10 +317,12 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
           />
         </div>
       );
+      break;
 
     case 'line':
-      return (
-        <div className="h-full w-full p-2">
+      widgetContent = (
+        <div className="h-full w-full p-2 relative">
+          {renderSQLButton()}
           <LineChart
             {...commonChartProps}
             {...(widget.lineConfig?.styling || {})}
@@ -322,10 +349,12 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
           />
         </div>
       );
+      break;
 
     case 'pie':
-      return (
-        <div className="h-full w-full p-2">
+      widgetContent = (
+        <div className="h-full w-full p-2 relative">
+          {renderSQLButton()}
           <PieChart
             {...commonChartProps}
             {...(widget.pieConfig?.styling || {})}
@@ -349,10 +378,12 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
           />
         </div>
       );
+      break;
 
     case 'area':
-      return (
-        <div className="h-full w-full p-2">
+      widgetContent = (
+        <div className="h-full w-full p-2 relative">
+          {renderSQLButton()}
           <AreaChart
             {...commonChartProps}
             {...(widget.areaConfig?.styling || {})}
@@ -380,10 +411,12 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
           />
         </div>
       );
+      break;
 
     case 'kpi':
-      return (
-        <div className="h-full w-full p-2">
+      widgetContent = (
+        <div className="h-full w-full p-2 relative">
+          {renderSQLButton()}
           <KPICard
             name={widget.title}
             currentValue={kpiValue}
@@ -397,9 +430,10 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
           />
         </div>
       );
+      break;
 
     case 'insights':
-      return (
+      widgetContent = (
         <div className="h-full w-full p-2">
           <InsightsCard
             title={widget.title}
@@ -413,9 +447,10 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
           />
         </div>
       );
+      break;
 
     case 'alerts':
-      return (
+      widgetContent = (
         <div className="h-full w-full p-2">
           <AlertasCard
             title={widget.title}
@@ -429,9 +464,10 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
           />
         </div>
       );
+      break;
 
     case 'recommendations':
-      return (
+      widgetContent = (
         <div className="h-full w-full p-2">
           <RecomendacoesCard
             title={widget.title}
@@ -445,9 +481,10 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
           />
         </div>
       );
+      break;
 
     default:
-      return (
+      widgetContent = (
         <div className="h-full w-full p-2 flex items-center justify-center bg-gray-100 rounded">
           <div className="text-center text-gray-500">
             <div className="text-2xl mb-2">❓</div>
@@ -456,4 +493,22 @@ export default function WidgetRenderer({ widget, globalFilters }: WidgetRenderer
         </div>
       );
   }
+
+  // Render the SQL Modal
+  const sqlModal = (
+    <SQLModal
+      isOpen={showSQLModal}
+      onClose={() => setShowSQLModal(false)}
+      sqlQuery={sqlQuery || ''}
+      widgetTitle={widget.title}
+    />
+  );
+
+  // Return the widget content with modal
+  return (
+    <>
+      {/* The switch statement above already returns the widget content */}
+      {sqlModal}
+    </>
+  );
 }
