@@ -93,10 +93,11 @@ export default function TopProdutosReceitaLiquidaTable({
         showDateFilter: true,
         onDateRangeChange: async ({ from, to }) => {
           try {
-            const params = new URLSearchParams({ action: 'top-produtos' });
+            const params = new URLSearchParams();
             if (from) params.set('data_de', from);
             if (to) params.set('data_ate', to);
-            const res = await fetch(`/api/ecommerce/data?${params.toString()}`);
+            params.set('limit', '20');
+            const res = await fetch(`/api/ecommerce/tools/top-produtos?${params.toString()}`, { cache: 'no-store' });
             if (!res.ok) return;
             const json = await res.json();
             if (json?.success && Array.isArray(json.rows)) {

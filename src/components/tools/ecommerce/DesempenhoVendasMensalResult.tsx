@@ -71,10 +71,10 @@ export default function DesempenhoVendasMensalResult({ success, message, rows, d
         showDateFilter: true,
         onDateRangeChange: async ({ from, to }) => {
           try {
-            const params = new URLSearchParams({ action: 'desempenho-mensal' });
+            const params = new URLSearchParams();
             if (from) params.set('data_de', from);
             if (to) params.set('data_ate', to);
-            const res = await fetch(`/api/ecommerce/data?${params.toString()}`);
+            const res = await fetch(`/api/ecommerce/tools/desempenho-mensal?${params.toString()}`, { cache: 'no-store' });
             if (!res.ok) return;
             const json = await res.json();
             if (json?.success && Array.isArray(json.rows)) {
