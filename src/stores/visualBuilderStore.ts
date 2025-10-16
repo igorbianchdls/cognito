@@ -133,6 +133,31 @@ const initialCode = `{
       }
     },
     {
+      "id": "impressoes_tempo_bar",
+      "type": "bar",
+      "position": { "x": 0, "y": 8, "w": 6, "h": 4 },
+      "row": "2",
+      "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
+      "order": 5,
+      "heightPx": 280,
+      "title": "📊 Impressões ao Longo do Tempo (Barras)",
+      "dataSource": {
+        "schema": "trafego_pago",
+        "table": "metricas_anuncios",
+        "x": "data",
+        "y": "impressao",
+        "aggregation": "SUM"
+      },
+      "barConfig": {
+        "styling": {
+          "showLegend": false,
+          "showGrid": true,
+          "translateY": 0,
+          "marginBottom": 40
+        }
+      }
+    },
+    {
       "id": "conversoes_por_dispositivo",
       "type": "pie",
       "position": { "x": 9, "y": 0, "w": 3, "h": 4 },
@@ -183,10 +208,10 @@ const initialCode = `{
     {
       "id": "insights1",
       "type": "insights",
-      "position": { "x": 0, "y": 8, "w": 4, "h": 6 },
+      "position": { "x": 0, "y": 12, "w": 4, "h": 6 },
       "row": "3",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
-      "order": 6,
+      "order": 7,
       "heightPx": 400,
       "title": "💡 Insights de Tráfego",
       "insightsConfig": {
@@ -199,10 +224,10 @@ const initialCode = `{
     {
       "id": "alerts1",
       "type": "alerts",
-      "position": { "x": 4, "y": 8, "w": 4, "h": 6 },
+      "position": { "x": 4, "y": 12, "w": 4, "h": 6 },
       "row": "3",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
-      "order": 7,
+      "order": 8,
       "heightPx": 400,
       "title": "⚠️ Alertas de Performance",
       "alertsConfig": {
@@ -216,10 +241,10 @@ const initialCode = `{
     {
       "id": "recommendations1",
       "type": "recommendations",
-      "position": { "x": 8, "y": 8, "w": 4, "h": 6 },
+      "position": { "x": 8, "y": 12, "w": 4, "h": 6 },
       "row": "3",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
-      "order": 8,
+      "order": 9,
       "heightPx": 400,
       "title": "🎯 Otimizações Sugeridas",
       "recommendationsConfig": {
