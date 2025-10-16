@@ -79,6 +79,21 @@ export default function Page() {
       console.log(`${selectedAgent.toUpperCase()} terminou:`, message);
       setAllMessages(prev => [...prev, { ...message, agent: selectedAgent }]);
     },
+    onError: (error) => {
+      try {
+        const text = (error && (error as Error).message) ? (error as Error).message : String(error);
+        console.error('🚨 Nexus chat error:', error);
+        const assistantErrorMessage = {
+          id: `error-${Date.now()}`,
+          role: 'assistant' as const,
+          parts: [{ type: 'text' as const, text: `Erro no agente (${selectedAgent}): ${text}` }],
+          agent: selectedAgent,
+        };
+        setAllMessages(prev => [...prev, assistantErrorMessage]);
+      } catch (e) {
+        console.error('🚨 Failed to report error to chat UI:', e);
+      }
+    },
   });
 
   // Combinar histórico + streaming atual (sem duplicatas)

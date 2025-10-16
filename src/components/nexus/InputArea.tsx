@@ -91,7 +91,8 @@ const models = [
   { id: 'receiptsAgent', name: 'Receipts Agent', icon: iconMap['receiptsAgent'] },
   { id: 'nfeAgent', name: 'Invoice Agent', icon: iconMap['nfeAgent'] },
   { id: 'inventoryAgent', name: 'Inventory Agent', icon: iconMap['inventoryAgent'] },
-  { id: 'ecommerceSalesAgent', name: 'E-commerce Sales Agent', icon: iconMap['ecommerceSalesAgent'] },
+  // Removido antigo para evitar confusão com o novo agente V2
+  // { id: 'ecommerceSalesAgent', name: 'E-commerce Sales Agent', icon: iconMap['ecommerceSalesAgent'] },
   { id: 'ecommerceSalesAgentV2', name: 'Agente de Vendas E-commerce', icon: iconMap['ecommerceSalesAgentV2'] },
   { id: 'webAnalyticsAgent', name: 'Web Analytics Agent', icon: iconMap['webAnalyticsAgent'] },
   { id: 'logisticsAgent', name: 'Logistics Agent', icon: iconMap['logisticsAgent'] },
