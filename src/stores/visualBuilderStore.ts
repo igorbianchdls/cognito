@@ -7,6 +7,19 @@ import type { Widget, GridConfig, ParseResult } from '@/components/visual-builde
 // Re-export types for use in other components
 export type { Widget, GridConfig } from '@/components/visual-builder/ConfigParser'
 
+// Tipos para filtros globais
+export type DateRangeType = 'last_7_days' | 'last_30_days' | 'last_90_days' | 'current_month' | 'last_month' | 'custom';
+
+export interface DateRangeFilter {
+  type: DateRangeType;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface GlobalFilters {
+  dateRange: DateRangeFilter;
+}
+
 // Estado da store
 interface VisualBuilderState {
   widgets: Widget[]
@@ -14,6 +27,7 @@ interface VisualBuilderState {
   code: string
   parseErrors: ParseResult['errors']
   isValid: boolean
+  globalFilters: GlobalFilters
 }
 
 const initialCode = `{
@@ -227,7 +241,12 @@ const initialState: VisualBuilderState = {
   gridConfig: initialParseResult.gridConfig,
   code: initialCode,
   parseErrors: initialParseResult.errors,
-  isValid: initialParseResult.isValid
+  isValid: initialParseResult.isValid,
+  globalFilters: {
+    dateRange: {
+      type: 'last_30_days'
+    }
+  }
 }
 
 const STORAGE_KEY = 'cognito_visual_builder_state'
@@ -339,7 +358,12 @@ export const visualBuilderActions = {
       gridConfig: parseResult.gridConfig,
       code: initialCode,
       parseErrors: parseResult.errors,
-      isValid: parseResult.isValid
+      isValid: parseResult.isValid,
+      globalFilters: {
+        dateRange: {
+          type: 'last_30_days'
+        }
+      }
     })
   },
 
@@ -388,6 +412,32 @@ export const visualBuilderActions = {
       ...currentState,
       widgets: updatedWidgets,
       code: newCode
+    })
+  },
+
+  // Atualizar filtros globais
+  updateGlobalFilters: (filters: GlobalFilters) => {
+    const currentState = $visualBuilderState.get()
+    
+    console.log('🔍 Visual Builder: Updating global filters', filters)
+    
+    $visualBuilderState.set({
+      ...currentState,
+      globalFilters: filters
+    })
+  },
+
+  // Resetar filtros globais
+  resetGlobalFilters: () => {
+    const currentState = $visualBuilderState.get()
+    
+    $visualBuilderState.set({
+      ...currentState,
+      globalFilters: {
+        dateRange: {
+          type: 'last_30_days'
+        }
+      }
     })
   }
 }

@@ -7,10 +7,12 @@ import { CSS } from '@dnd-kit/utilities';
 import WidgetRenderer from './WidgetRenderer';
 import WidgetEditorModal from './WidgetEditorModal';
 import type { Widget, GridConfig, LayoutRow, WidgetSpan } from './ConfigParser';
+import type { GlobalFilters } from '@/stores/visualBuilderStore';
 
 interface ResponsiveGridCanvasProps {
   widgets: Widget[];
   gridConfig: GridConfig;
+  globalFilters?: GlobalFilters;
   viewportMode?: 'desktop' | 'tablet' | 'mobile';
   onLayoutChange?: (widgets: Widget[]) => void;
 }
@@ -21,10 +23,11 @@ interface DraggableWidgetProps {
   spanClasses: string;
   spanValue: number;
   minHeight: string;
+  globalFilters?: GlobalFilters;
   onEdit: (widget: Widget) => void;
 }
 
-function DraggableWidget({ widget, spanClasses, spanValue, minHeight, onEdit }: DraggableWidgetProps) {
+function DraggableWidget({ widget, spanClasses, spanValue, minHeight, globalFilters, onEdit }: DraggableWidgetProps) {
   const {
     attributes,
     listeners,
@@ -80,13 +83,13 @@ function DraggableWidget({ widget, spanClasses, spanValue, minHeight, onEdit }: 
           </button>
         </div>
 
-        <WidgetRenderer widget={widget} />
+        <WidgetRenderer widget={widget} globalFilters={globalFilters} />
       </div>
     </div>
   );
 }
 
-export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode = 'desktop', onLayoutChange }: ResponsiveGridCanvasProps) {
+export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode = 'desktop', onLayoutChange }: ResponsiveGridCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
 
@@ -400,6 +403,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, viewportMode
                             spanClasses={getSpanClasses()}
                             spanValue={getSpanValue(widget)}
                             minHeight={getWidgetHeight(widget)}
+                            globalFilters={globalFilters}
                             onEdit={handleEditWidget}
                           />
                         ))}

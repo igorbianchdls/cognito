@@ -10,6 +10,7 @@ import InsightsCard from '@/components/widgets/InsightsCard';
 import AlertasCard from '@/components/widgets/AlertasCard';
 import RecomendacoesCard from '@/components/widgets/RecomendacoesCard';
 import type { Widget } from '../visual-builder/ConfigParser';
+import type { GlobalFilters } from '@/stores/visualBuilderStore';
 
 // Define chart data types
 type ChartDataPoint = {
@@ -27,9 +28,10 @@ type WidgetData = ChartDataPoint[] | KPIData | null;
 
 interface WidgetRendererProps {
   widget: Widget;
+  globalFilters?: GlobalFilters;
 }
 
-export default function WidgetRenderer({ widget }: WidgetRendererProps) {
+export default function WidgetRenderer({ widget, globalFilters }: WidgetRendererProps) {
   const [data, setData] = useState<WidgetData>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,11 +72,13 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
         // 📤 API request log
         const requestPayload = {
           type: widget.type,
-          dataSource: widget.dataSource
+          dataSource: widget.dataSource,
+          filters: globalFilters
         };
         console.log('📤 Making API request:', {
           url: '/api/dashboard-supabase',
-          payload: requestPayload
+          payload: requestPayload,
+          globalFilters: globalFilters
         });
 
         // Chamar API route - SOMENTE Supabase
@@ -118,7 +122,7 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
     };
 
     fetchData();
-  }, [widget.id, widget.dataSource, widget.type]);
+  }, [widget.id, widget.dataSource, widget.type, globalFilters]); // Re-executar quando widget ou filtros mudarem
 
   // Type guard function for KPI data
   const isKPIData = (data: WidgetData): data is KPIData => {

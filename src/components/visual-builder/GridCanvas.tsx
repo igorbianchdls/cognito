@@ -4,6 +4,7 @@ import { useRef, useState, useEffect } from 'react';
 import { Responsive } from 'react-grid-layout';
 import WidgetRenderer from './WidgetRenderer';
 import type { Widget, GridConfig } from './ConfigParser';
+import type { GlobalFilters } from '@/stores/visualBuilderStore';
 
 const ResponsiveGridLayout = Responsive;
 
@@ -35,10 +36,11 @@ const useContainerDimensions = (ref: React.RefObject<HTMLDivElement | null>) => 
 interface GridCanvasProps {
   widgets: Widget[];
   gridConfig: GridConfig;
+  globalFilters?: GlobalFilters;
   onLayoutChange?: (widgets: Widget[]) => void;
 }
 
-export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: GridCanvasProps) {
+export default function GridCanvas({ widgets, gridConfig, globalFilters, onLayoutChange }: GridCanvasProps) {
   // Extract theme colors from gridConfig
   const backgroundColor = gridConfig.backgroundColor || '#ffffff';
   const borderColor = gridConfig.borderColor || '#e5e7eb';
@@ -171,7 +173,7 @@ export default function GridCanvas({ widgets, gridConfig, onLayoutChange }: Grid
           >
             {widgets.map((widget) => (
               <div key={widget.id}>
-                <WidgetRenderer widget={widget} />
+                <WidgetRenderer widget={widget} globalFilters={globalFilters} />
               </div>
             ))}
           </ResponsiveGridLayout>

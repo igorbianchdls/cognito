@@ -1,16 +1,95 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { runQuery } from '@/lib/postgres';
+import type { DateRangeFilter } from '@/stores/visualBuilderStore';
 
 // Tipo para dados retornados do Supabase
 type SupabaseRowData = Record<string, unknown>;
 
+// Helper function to calculate date range
+function calculateDateRange(filter: DateRangeFilter): { startDate: string, endDate: string } {
+  const today = new Date();
+  const formatDate = (date: Date) => date.toISOString().split('T')[0];
+  
+  switch (filter.type) {
+    case 'last_7_days':
+      const weekAgo = new Date(today);
+      weekAgo.setDate(today.getDate() - 7);
+      return {
+        startDate: formatDate(weekAgo),
+        endDate: formatDate(today)
+      };
+      
+    case 'last_30_days':
+      const monthAgo = new Date(today);
+      monthAgo.setDate(today.getDate() - 30);
+      return {
+        startDate: formatDate(monthAgo),
+        endDate: formatDate(today)
+      };
+      
+    case 'last_90_days':
+      const quarterAgo = new Date(today);
+      quarterAgo.setDate(today.getDate() - 90);
+      return {
+        startDate: formatDate(quarterAgo),
+        endDate: formatDate(today)
+      };
+      
+    case 'current_month':
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      return {
+        startDate: formatDate(firstDay),
+        endDate: formatDate(today)
+      };
+      
+    case 'last_month':
+      const lastMonthStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+      return {
+        startDate: formatDate(lastMonthStart),
+        endDate: formatDate(lastMonthEnd)
+      };
+      
+    case 'custom':
+      const customMonthAgo = new Date(today);
+      customMonthAgo.setDate(today.getDate() - 30);
+      return {
+        startDate: filter.startDate || formatDate(customMonthAgo),
+        endDate: filter.endDate || formatDate(today)
+      };
+      
+    default:
+      const defaultMonthAgo = new Date(today);
+      defaultMonthAgo.setDate(today.getDate() - 30);
+      return {
+        startDate: formatDate(defaultMonthAgo),
+        endDate: formatDate(today)
+      };
+  }
+}
+
 // Função para gerar SQL PostgreSQL automaticamente
-const generatePostgreSQLQuery = (tipo: string, x: string, y: string, tabela: string, agregacao?: string, schema = 'trafego_pago'): string => {
+const generatePostgreSQLQuery = (
+  tipo: string, 
+  x: string, 
+  y: string, 
+  tabela: string, 
+  agregacao?: string, 
+  schema = 'trafego_pago',
+  dateFilter?: DateRangeFilter
+): string => {
   const defaultAgregacao = tipo === 'pie' ? 'COUNT' : 'SUM';
   const funcaoAgregacao = agregacao || defaultAgregacao;
 
   // Build qualified table name for PostgreSQL
   const qualifiedTable = `"${schema}"."${tabela}"`;
+
+  // Build date filter condition
+  let dateCondition = '';
+  if (dateFilter) {
+    const { startDate, endDate } = calculateDateRange(dateFilter);
+    dateCondition = ` AND "data" >= '${startDate}' AND "data" <= '${endDate}'`;
+  }
 
   switch (tipo) {
     case 'bar':
@@ -18,24 +97,24 @@ const generatePostgreSQLQuery = (tipo: string, x: string, y: string, tabela: str
     case 'horizontal-bar':
     case 'area':
       if (funcaoAgregacao === 'COUNT') {
-        return `SELECT "${x}", COUNT(*) as count FROM ${qualifiedTable} GROUP BY "${x}" ORDER BY "${x}" LIMIT 50`;
+        return `SELECT "${x}", COUNT(*) as count FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY "${x}" LIMIT 50`;
       }
-      return `SELECT "${x}", ${funcaoAgregacao}("${y}") as value FROM ${qualifiedTable} GROUP BY "${x}" ORDER BY "${x}" LIMIT 50`;
+      return `SELECT "${x}", ${funcaoAgregacao}("${y}") as value FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY "${x}" LIMIT 50`;
     
     case 'pie':
       if (funcaoAgregacao === 'COUNT') {
-        return `SELECT "${x}", COUNT(*) as count FROM ${qualifiedTable} GROUP BY "${x}" ORDER BY count DESC LIMIT 10`;
+        return `SELECT "${x}", COUNT(*) as count FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY count DESC LIMIT 10`;
       }
-      return `SELECT "${x}", ${funcaoAgregacao}("${y}") as value FROM ${qualifiedTable} GROUP BY "${x}" ORDER BY value DESC LIMIT 10`;
+      return `SELECT "${x}", ${funcaoAgregacao}("${y}") as value FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY value DESC LIMIT 10`;
     
     case 'kpi':
       if (funcaoAgregacao === 'COUNT') {
-        return `SELECT COUNT(*) as total FROM ${qualifiedTable}`;
+        return `SELECT COUNT(*) as total FROM ${qualifiedTable} WHERE 1=1${dateCondition}`;
       }
-      return `SELECT ${funcaoAgregacao}("${y}") as total FROM ${qualifiedTable}`;
+      return `SELECT ${funcaoAgregacao}("${y}") as total FROM ${qualifiedTable} WHERE 1=1${dateCondition}`;
     
     default:
-      return `SELECT "${x}", "${y}" FROM ${qualifiedTable} LIMIT 50`;
+      return `SELECT "${x}", "${y}" FROM ${qualifiedTable} WHERE 1=1${dateCondition} LIMIT 50`;
   }
 };
 
@@ -59,14 +138,16 @@ export async function POST(request: NextRequest) {
 
   try {
     // Parse request body
-    const { type, dataSource } = await request.json();
+    const { type, dataSource, filters } = await request.json();
     const { table, x, y, aggregation, schema = 'trafego_pago' } = dataSource;
+    const dateFilter = filters?.dateRange;
 
     // 📥 Request received log
     console.log('📥 API /dashboard-supabase called with:', {
       type,
       dataSource,
-      parsedFields: { table, x, y, aggregation, schema }
+      filters,
+      parsedFields: { table, x, y, aggregation, schema, dateFilter }
     });
 
     // Check if SUPABASE_DB_URL is configured
@@ -79,7 +160,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         data: mockData,
-        sql_query: `-- Mock data: SUPABASE_DB_URL not configured\n-- Would execute: ${generatePostgreSQLQuery(type, x, y || 'impressao', table, aggregation, schema)}`,
+        sql_query: `-- Mock data: SUPABASE_DB_URL not configured\n-- Would execute: ${generatePostgreSQLQuery(type, x, y || 'impressao', table, aggregation, schema, dateFilter)}`,
         totalRecords: Array.isArray(mockData) ? mockData.length : 1,
         metadata: {
           generatedAt: new Date().toISOString(),
@@ -92,12 +173,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Gerar SQL automaticamente para PostgreSQL
-    const sqlQuery = generatePostgreSQLQuery(type, x, y || 'impressao', table, aggregation, schema);
+    const sqlQuery = generatePostgreSQLQuery(type, x, y || 'impressao', table, aggregation, schema, dateFilter);
 
     // 🔍 SQL generation log
     console.log('🔍 Generated PostgreSQL:', {
       sqlQuery,
-      inputs: { type, x, y: y || 'impressao', table, aggregation, schema },
+      inputs: { type, x, y: y || 'impressao', table, aggregation, schema, dateFilter },
       defaultAggregation: type === 'pie' ? 'COUNT' : 'SUM'
     });
 

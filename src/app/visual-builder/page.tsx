@@ -6,13 +6,15 @@ import Link from 'next/link';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import GridCanvas from '@/components/visual-builder/GridCanvas';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
+import FilterHeader from '@/components/visual-builder/FilterHeader';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
-import type { Widget } from '@/stores/visualBuilderStore';
+import type { Widget, GlobalFilters } from '@/stores/visualBuilderStore';
 
 export default function VisualBuilderPage() {
   const visualBuilderState = useStore($visualBuilderState);
   const [activeTab, setActiveTab] = useState<'editor' | 'dashboard' | 'responsive'>('editor');
   const [viewportMode, setViewportMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  const [isFilterLoading, setIsFilterLoading] = useState(false);
 
   // Initialize store on mount
   useEffect(() => {
@@ -29,6 +31,16 @@ export default function VisualBuilderPage() {
 
   const handleLayoutChange = (updatedWidgets: Widget[]) => {
     visualBuilderActions.updateWidgets(updatedWidgets);
+  };
+
+  const handleFilterChange = (filters: GlobalFilters) => {
+    setIsFilterLoading(true);
+    visualBuilderActions.updateGlobalFilters(filters);
+    
+    // Simulate loading time for better UX
+    setTimeout(() => {
+      setIsFilterLoading(false);
+    }, 1000);
   };
 
   return (
@@ -118,14 +130,24 @@ export default function VisualBuilderPage() {
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
           <div className="h-full bg-gray-50">
-            <div className="p-4 border-b border-gray-200 bg-white">
-              <h2 className="text-lg font-semibold text-gray-900">Live Dashboard</h2>
-              <p className="text-sm text-gray-600">Real-time visualization with BigQuery data</p>
+            <div className="border-b border-gray-200 bg-white">
+              <div className="p-4">
+                <h2 className="text-lg font-semibold text-gray-900">Live Dashboard</h2>
+                <p className="text-sm text-gray-600">Real-time visualization with Supabase data</p>
+              </div>
+              
+              {/* Filtros Globais */}
+              <FilterHeader
+                currentFilter={visualBuilderState.globalFilters.dateRange}
+                onFilterChange={(dateRange) => handleFilterChange({ dateRange })}
+                isLoading={isFilterLoading}
+              />
             </div>
-            <div className="h-[calc(100%-73px)] p-6 overflow-auto">
+            <div className="h-[calc(100%-146px)] p-6 overflow-auto">
               <GridCanvas
                 widgets={visualBuilderState.widgets}
                 gridConfig={visualBuilderState.gridConfig}
+                globalFilters={visualBuilderState.globalFilters}
                 onLayoutChange={handleLayoutChange}
               />
             </div>
@@ -190,6 +212,7 @@ export default function VisualBuilderPage() {
               <ResponsiveGridCanvas
                 widgets={visualBuilderState.widgets}
                 gridConfig={visualBuilderState.gridConfig}
+                globalFilters={visualBuilderState.globalFilters}
                 viewportMode={viewportMode}
                 onLayoutChange={handleLayoutChange}
               />
