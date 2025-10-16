@@ -620,9 +620,9 @@ export const identifyTopAds = tool({
     const sql = `
       WITH base AS (
         SELECT
-          ma.anuncio_id,
+          ap.id AS anuncio_id,
           COALESCE(ap.titulo, 'Sem título') AS anuncio_titulo,
-          ma.plataforma,
+          ca.plataforma,
           SUM(ma.gasto) AS gasto_total,
           SUM(ma.receita) AS receita_total,
           SUM(ma.conversao) AS conversoes_total,
@@ -630,10 +630,11 @@ export const identifyTopAds = tool({
           SUM(ma.cliques) AS cliques_total
         FROM trafego_pago.metricas_anuncios ma
         LEFT JOIN trafego_pago.anuncios_publicados ap ON ap.id = ma.anuncio_publicado_id
+        LEFT JOIN trafego_pago.contas_ads ca ON ap.conta_ads_id = ca.id
         WHERE ma.data >= current_date - ($1::int - 1) * INTERVAL '1 day'
           AND ma.conversao >= 1
-          AND ($2::text IS NULL OR ma.plataforma = $2)
-        GROUP BY ma.anuncio_id, ap.titulo, ma.plataforma
+          AND ($2::text IS NULL OR ca.plataforma = $2)
+        GROUP BY ap.id, ap.titulo, ca.plataforma
       )
       SELECT
         anuncio_id,
