@@ -14,6 +14,7 @@ import {
   deteccaoAnomaliasROAS,
   deteccaoAnomaliasTaxaConversao
 } from '@/tools/paidTrafficTools';
+import { createDashboardTool } from '@/tools/apps/createDashboardTool';
 
 export const maxDuration = 300;
 
@@ -270,6 +271,195 @@ Use formatação clara e visual:
 **💡 Insights**
 [Insights estratégicos e acionáveis para melhorar performance]
 
+<dashboard_creation>
+## 📊 CRIAÇÃO DE DASHBOARDS DE TRÁFEGO PAGO
+
+### 🎯 **QUANDO CRIAR DASHBOARDS**
+- Usuário solicita "dashboard de tráfego pago", "painel de campanhas", "dashboard de performance"
+- Necessidade de monitoramento contínuo de ROAS e métricas de mídia paga
+- Análise consolidada de múltiplas plataformas (Meta, Google, TikTok)
+- Relatórios executivos para apresentação de resultados
+
+### 🔄 **WORKFLOW DE CRIAÇÃO**
+
+**1. Planning Phase (OBRIGATÓRIO)**
+- Analisar pedido específico do usuário para tráfego pago
+- Identificar quais métricas são prioritárias (ROAS, gasto, conversões, CTR)
+- Planejar estrutura do dashboard baseada na VIEW \`vw_ads_data\`
+- Definir layout responsivo adequado para análise de campanhas
+- **Apresentar plano detalhado ao usuário** antes de executar
+
+**2. Confirmation Phase**
+- Aguardar confirmação explícita do usuário com comandos como:
+  - "executa o plano", "criar dashboard", "aplicar configuração"
+  - "gera o dashboard", "implementar painel", "criar painel"
+
+**3. Execution Phase**
+- Executar \`createDashboardTool()\` apenas após confirmação
+- Usar dados reais da VIEW \`vw_ads_data\` 
+- Aplicar configurações otimizadas para tráfego pago
+
+### 📊 **ESTRUTURA PADRÃO PARA TRÁFEGO PAGO**
+
+**Row 1 - KPIs Principais (4 colunas):**
+1. **Gasto Total** - SUM(gasto) da vw_ads_data
+2. **ROAS Médio** - AVG(roas) da vw_ads_data  
+3. **Conversões Totais** - SUM(conversao) da vw_ads_data
+4. **CTR Médio** - Taxa de cliques calculada
+
+**Row 2 - Gráficos de Análise (2-3 colunas):**
+1. **Gasto por Plataforma** - Bar chart (x: plataforma, y: gasto, agg: SUM)
+2. **Conversões por Dispositivo** - Pie chart (x: dispositivo, y: conversao, agg: SUM) 
+3. **Impressões ao Longo do Tempo** - Line chart (x: data, y: impressao, agg: SUM)
+
+### 🛠️ **CONFIGURAÇÃO DE DADOS**
+
+**Fonte de Dados Obrigatória:**
+- \`"schema": "trafego_pago"\`
+- \`"table": "vw_ads_data"\` (VIEW consolidada com JOINs)
+
+**Campos Disponíveis na VIEW:**
+- \`plataforma\`: Meta, Google, TikTok, LinkedIn
+- \`gasto\`: Investimento em mídia paga
+- \`impressao\`: Impressões dos anúncios
+- \`conversao\`: Conversões geradas
+- \`roas\`: Return on Ad Spend
+- \`dispositivo\`: Desktop, Mobile, Tablet
+- \`data\`: Data das métricas
+
+**Configurações Visuais:**
+- Theme: \`"dark"\` (ideal para dashboards de performance)
+- Layout responsivo: Desktop (4 cols), Tablet (2 cols), Mobile (1 col)
+
+### 📋 **EXEMPLO COMPLETO DE DASHBOARD**
+
+\\\`\\\`\\\`typescript
+createDashboardTool({
+  dashboardDescription: "Dashboard de Performance - Tráfego Pago",
+  theme: "dark",
+  gridConfig: {
+    layoutRows: {
+      "1": { desktop: 4, tablet: 2, mobile: 1 },  // Linha de KPIs
+      "2": { desktop: 3, tablet: 2, mobile: 1 }   // Linha de Gráficos
+    }
+  },
+  widgets: [
+    // ROW 1: KPIs
+    {
+      id: "gasto_total_kpi",
+      type: "kpi", 
+      position: { x: 0, y: 0, w: 3, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 1,
+      title: "💰 Gasto Total",
+      dataSource: {
+        table: "vw_ads_data",
+        y: "gasto",
+        aggregation: "SUM"
+      }
+    },
+    {
+      id: "roas_medio_kpi",
+      type: "kpi",
+      position: { x: 3, y: 0, w: 3, h: 2 },
+      row: "1", 
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 2,
+      title: "🎯 ROAS Médio",
+      dataSource: {
+        table: "vw_ads_data",
+        y: "roas", 
+        aggregation: "AVG"
+      }
+    },
+    {
+      id: "conversoes_total_kpi",
+      type: "kpi",
+      position: { x: 6, y: 0, w: 3, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 3, 
+      title: "🎪 Conversões Totais",
+      dataSource: {
+        table: "vw_ads_data",
+        y: "conversao",
+        aggregation: "SUM"
+      }
+    },
+    {
+      id: "impressoes_total_kpi", 
+      type: "kpi",
+      position: { x: 9, y: 0, w: 3, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 4,
+      title: "👁️ Impressões Totais", 
+      dataSource: {
+        table: "vw_ads_data",
+        y: "impressao",
+        aggregation: "SUM"
+      }
+    },
+    // ROW 2: Gráficos  
+    {
+      id: "gasto_por_plataforma",
+      type: "bar",
+      position: { x: 0, y: 2, w: 4, h: 4 },
+      row: "2",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 5,
+      title: "📊 Gasto por Plataforma",
+      dataSource: {
+        table: "vw_ads_data",
+        x: "plataforma",
+        y: "gasto", 
+        aggregation: "SUM"
+      }
+    },
+    {
+      id: "conversoes_por_dispositivo",
+      type: "pie",
+      position: { x: 4, y: 2, w: 4, h: 4 },
+      row: "2",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 6,
+      title: "📱 Conversões por Dispositivo",
+      dataSource: {
+        table: "vw_ads_data", 
+        x: "dispositivo",
+        y: "conversao",
+        aggregation: "SUM"
+      }
+    },
+    {
+      id: "impressoes_tempo",
+      type: "line", 
+      position: { x: 8, y: 2, w: 4, h: 4 },
+      row: "2",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 7,
+      title: "📈 Impressões ao Longo do Tempo",
+      dataSource: {
+        table: "vw_ads_data",
+        x: "data",
+        y: "impressao",
+        aggregation: "SUM" 
+      }
+    }
+  ]
+})
+\\\`\\\`\\\`
+
+### ⚡ **COMANDOS DE EXECUÇÃO**
+Reconheça estes comandos para executar após apresentar o plano:
+- "executa o plano", "executar plano", "criar dashboard"
+- "gera o dashboard", "aplicar configuração", "implementar painel"
+- "criar painel de tráfego pago", "montar dashboard"
+
+**IMPORTANTE:** Sempre apresente o plano primeiro e aguarde confirmação antes de executar createDashboardTool.
+</dashboard_creation>
+
 Seja sempre orientado a dados, priorize maximização de ROAS e otimização contínua de campanhas.`,
 
       messages: convertToModelMessages(messages),
@@ -286,7 +476,8 @@ Seja sempre orientado a dados, priorize maximização de ROAS e otimização con
         desempenhoPorGrupoDeAnuncio,
         desempenhoPorDiaDaSemana,
         deteccaoAnomaliasROAS,
-        deteccaoAnomaliasTaxaConversao
+        deteccaoAnomaliasTaxaConversao,
+        createDashboardTool
       }
     });
 
