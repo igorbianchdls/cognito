@@ -1,11 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { BarChart3 } from 'lucide-react';
-import { ChartSwitcher } from '@/components/charts/ChartSwitcher';
-// Gráfico renderizado na UI da tool usando componente reutilizável (ChartSwitcher)
 
 interface AdsPlatformsResultProps {
   success: boolean;
@@ -60,12 +58,16 @@ export default function AdsPlatformsResult({
   plataformas,
   sql_query
 }: AdsPlatformsResultProps) {
-  // No chart-specific local state; chart type dropdown is provided by ArtifactDataTable auto-chart
+  const initialRows = plataformas ?? [];
+  const [tableRows, setTableRows] = useState<PlatformRow[]>(initialRows as unknown as PlatformRow[]);
+
+  useEffect(() => {
+    setTableRows(initialRows as unknown as PlatformRow[]);
+  }, [plataformas]);
 
   const tableData: PlatformRow[] = useMemo(() => {
-    if (!plataformas || plataformas.length === 0) return [] as PlatformRow[];
-    return plataformas as unknown as PlatformRow[];
-  }, [plataformas]);
+    return tableRows;
+  }, [tableRows]);
 
   const columns: ColumnDef<PlatformRow>[] = useMemo(() => [
     { accessorKey: 'plataforma', header: 'plataforma', cell: ({ row }) => <span>{String(row.getValue('plataforma') ?? '')}</span> },
@@ -89,44 +91,6 @@ export default function AdsPlatformsResult({
     return `Total de plataformas: ${totalTexto} • Melhor: ${melhorTexto} • Pior: ${piorTexto}`;
   }, [total_plataformas, melhor_plataforma, pior_plataforma, tableData.length]);
 
-  // Gráfico na UI da tool usando ChartSwitcher
-  const chartRenderer = () => (
-    <ChartSwitcher
-      rows={tableData}
-      options={{
-        xKey: 'plataforma',
-        valueKeys: [
-          'total_impressoes',
-          'total_cliques',
-          'total_conversoes',
-          'total_gasto',
-          'total_receita',
-          'ctr',
-          'cpc',
-          'cpa',
-          'roas',
-          'lucro',
-        ],
-        metricLabels: {
-          total_impressoes: 'Impressões',
-          total_cliques: 'Cliques',
-          total_conversoes: 'Conversões',
-          total_gasto: 'Gasto',
-          total_receita: 'Receita',
-          ctr: 'CTR',
-          cpc: 'CPC',
-          cpa: 'CPA',
-          roas: 'ROAS',
-          lucro: 'Lucro',
-        },
-        title: 'Métricas por Plataforma',
-        xLegend: 'Plataforma',
-        yLegend: 'Valor',
-        initialChartType: 'bar',
-      }}
-    />
-  );
-
   return (
     <div className="space-y-4">
       <ArtifactDataTable
@@ -134,15 +98,61 @@ export default function AdsPlatformsResult({
         columns={columns}
         title="Benchmark de Plataformas"
         icon={BarChart3}
-      iconColor="text-purple-600"
-      message={success ? tableMessage : message}
-      success={success}
-      count={tableData.length}
-      exportFileName="paid-traffic-platforms"
-      pageSize={Math.min(10, Math.max(tableData.length, 5))}
-      sqlQuery={sql_query}
-      chartRenderer={chartRenderer}
-    />
+        iconColor="text-purple-600"
+        message={success ? tableMessage : message}
+        success={success}
+        count={tableData.length}
+        exportFileName="paid-traffic-platforms"
+        pageSize={Math.min(10, Math.max(tableData.length, 5))}
+        sqlQuery={sql_query}
+        enableAutoChart={true}
+        chartOptions={{
+          xKey: 'plataforma',
+          valueKeys: [
+            'total_impressoes',
+            'total_cliques',
+            'total_conversoes',
+            'total_gasto',
+            'total_receita',
+            'ctr',
+            'cpc',
+            'cpa',
+            'roas',
+            'lucro',
+          ],
+          metricLabels: {
+            total_impressoes: 'Impressões',
+            total_cliques: 'Cliques',
+            total_conversoes: 'Conversões',
+            total_gasto: 'Gasto (R$)',
+            total_receita: 'Receita (R$)',
+            ctr: 'CTR (%)',
+            cpc: 'CPC (R$)',
+            cpa: 'CPA (R$)',
+            roas: 'ROAS',
+            lucro: 'Lucro (R$)',
+          },
+          initialChartType: 'bar',
+          title: 'Métricas por Plataforma',
+          xLegend: 'Plataforma',
+          showDateFilter: true,
+          onDateRangeChange: async ({ from, to }) => {
+            try {
+              const params = new URLSearchParams();
+              if (from) params.set('data_de', from);
+              if (to) params.set('data_ate', to);
+              const res = await fetch(`/api/tools/paid-traffic/compare-platforms?${params.toString()}`, { cache: 'no-store' });
+              if (!res.ok) return;
+              const json = await res.json();
+              if (json?.success && Array.isArray(json.plataformas)) {
+                setTableRows(json.plataformas as PlatformRow[]);
+              }
+            } catch (e) {
+              console.error('Erro ao buscar comparação de plataformas por período:', e);
+            }
+          }
+        }}
+      />
     </div>
   );
 }
