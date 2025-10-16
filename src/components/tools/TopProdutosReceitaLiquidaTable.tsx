@@ -97,7 +97,7 @@ export default function TopProdutosReceitaLiquidaTable({
             if (from) params.set('data_de', from);
             if (to) params.set('data_ate', to);
             params.set('limit', '20');
-            const res = await fetch(`/api/ecommerce/tools/top-produtos?${params.toString()}`, { cache: 'no-store' });
+            const res = await fetch(`/api/tools/ecommerce/top-produtos?${params.toString()}`, { cache: 'no-store' });
             if (!res.ok) return;
             const json = await res.json();
             if (json?.success && Array.isArray(json.rows)) {

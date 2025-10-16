@@ -21,3 +21,4 @@ export async function GET(req: NextRequest) {
     return Response.json({ success: false, message: 'Erro interno', error: error instanceof Error ? error.message : 'Erro desconhecido' }, { status: 500 });
   }
 }
+
