@@ -90,7 +90,6 @@ export default function TopProdutosReceitaLiquidaTable({
                 ? String(r.sku)
                 : String(r.produto_id),
           })),
-        ,
         showDateFilter: true,
         onDateRangeChange: async ({ from, to }) => {
           try {
