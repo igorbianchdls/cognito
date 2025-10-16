@@ -44,6 +44,8 @@ const agents = [
   { id: 'nfeAgent', name: 'Invoice Agent', icon: 'N', color: 'text-emerald-600' },
   { id: 'inventoryAgent', name: 'Inventory Agent', icon: 'I', color: 'text-blue-600' },
   { id: 'funcionariosAgent', name: 'Funcionários Agent', icon: 'F', color: 'text-purple-600' },
+  { id: 'paidTrafficAgent', name: 'Paid Traffic', icon: 'P', color: 'text-indigo-600' },
+  { id: 'organicMarketingAgent', name: 'Organic Marketing', icon: 'O', color: 'text-pink-600' },
 ];
 
 // Dropdown elegante que aparece quando o usuário digita "/" no input

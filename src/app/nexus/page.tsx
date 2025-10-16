@@ -64,6 +64,7 @@ export default function Page() {
       case 'webAnalyticsAgent': return '/api/claudeAgents/web-analytics';
       case 'logisticsAgent': return '/api/claudeAgents/logistics';
       case 'paidTrafficAgent': return '/api/claudeAgents/paid-traffic';
+      case 'organicMarketingAgent': return '/api/claudeAgents/organic-marketing';
       case 'gestorDeComprasAgent': return '/api/claudeAgents/gestor-de-compras';
       case 'gestorDeProjetosAgent': return '/api/claudeAgents/gestor-de-projetos';
       case 'funcionariosAgent': return '/api/claudeAgents/funcionarios';
