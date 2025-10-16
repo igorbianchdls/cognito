@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { BarChart3 } from 'lucide-react';
@@ -25,7 +25,9 @@ interface Props {
 const currency = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export default function TopClientesPorReceitaResult({ success, message, rows, data, sql_query }: Props) {
-  const tableRows = rows ?? data ?? [];
+  const initialRows = rows ?? data ?? [];
+  const [tableRows, setTableRows] = useState<TopClienteRow[]>(initialRows);
+  useEffect(() => { setTableRows(initialRows); }, [rows, data]);
 
   const columns: ColumnDef<TopClienteRow>[] = useMemo(() => [
     { accessorKey: 'cliente_id', header: 'Cliente ID' },
@@ -60,6 +62,21 @@ export default function TopClientesPorReceitaResult({ success, message, rows, da
         },
         title: 'Receita por Cliente',
         xLegend: 'Cliente',
+        showDateFilter: true,
+        onDateRangeChange: async ({ from, to }) => {
+          try {
+            const params = new URLSearchParams();
+            if (from) params.set('data_de', from);
+            if (to) params.set('data_ate', to);
+            params.set('limit', '50');
+            const res = await fetch(`/api/tools/ecommerce/top-clientes?${params.toString()}`, { cache: 'no-store' });
+            if (!res.ok) return;
+            const json = await res.json();
+            if (json?.success && Array.isArray(json.rows)) setTableRows(json.rows as TopClienteRow[]);
+          } catch (e) {
+            console.error('Erro ao buscar Top Clientes por período:', e);
+          }
+        }
       }}
     />
   );

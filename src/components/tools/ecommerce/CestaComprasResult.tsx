@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { ShoppingCart } from 'lucide-react';
@@ -22,7 +22,9 @@ interface Props {
 const currency = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export default function CestaComprasResult({ success, message, rows, data, sql_query }: Props) {
-  const tableRows = rows ?? data ?? [];
+  const initialRows = rows ?? data ?? [];
+  const [tableRows, setTableRows] = useState<CestaComprasRow[]>(initialRows);
+  useEffect(() => { setTableRows(initialRows); }, [rows, data]);
 
   const columns: ColumnDef<CestaComprasRow>[] = useMemo(() => [
     { accessorKey: 'produto_A', header: 'Produto A' },
@@ -56,6 +58,20 @@ export default function CestaComprasResult({ success, message, rows, data, sql_q
           ...r,
           par: `${r.produto_A} × ${r.produto_B}`,
         })) as unknown as CestaComprasRow[],
+        showDateFilter: true,
+        onDateRangeChange: async ({ from, to }) => {
+          try {
+            const params = new URLSearchParams();
+            if (from) params.set('data_de', from);
+            if (to) params.set('data_ate', to);
+            const res = await fetch(`/api/tools/ecommerce/cesta-compras?${params.toString()}`, { cache: 'no-store' });
+            if (!res.ok) return;
+            const json = await res.json();
+            if (json?.success && Array.isArray(json.rows)) setTableRows(json.rows as CestaComprasRow[]);
+          } catch (e) {
+            console.error('Erro ao buscar Cesta de Compras por período:', e);
+          }
+        }
       }}
     />
   );

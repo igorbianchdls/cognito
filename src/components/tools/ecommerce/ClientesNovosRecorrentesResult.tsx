@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { Users } from 'lucide-react';
@@ -23,7 +23,9 @@ interface Props {
 const currency = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export default function ClientesNovosRecorrentesResult({ success, message, rows, data, sql_query }: Props) {
-  const tableRows = rows ?? data ?? [];
+  const initialRows = rows ?? data ?? [];
+  const [tableRows, setTableRows] = useState<ClientesNovosRecorrentesRow[]>(initialRows);
+  useEffect(() => { setTableRows(initialRows); }, [rows, data]);
 
   const columns: ColumnDef<ClientesNovosRecorrentesRow>[] = useMemo(() => [
     { accessorKey: 'tipo_de_cliente', header: 'Tipo de Cliente' },
@@ -58,6 +60,20 @@ export default function ClientesNovosRecorrentesResult({ success, message, rows,
         initialChartType: 'bar',
         title: 'Clientes Novos vs. Recorrentes',
         xLegend: 'Tipo de Cliente',
+        showDateFilter: true,
+        onDateRangeChange: async ({ from, to }) => {
+          try {
+            const params = new URLSearchParams();
+            if (from) params.set('data_de', from);
+            if (to) params.set('data_ate', to);
+            const res = await fetch(`/api/tools/ecommerce/clientes-novos-recorrentes?${params.toString()}`, { cache: 'no-store' });
+            if (!res.ok) return;
+            const json = await res.json();
+            if (json?.success && Array.isArray(json.rows)) setTableRows(json.rows as ClientesNovosRecorrentesRow[]);
+          } catch (e) {
+            console.error('Erro ao buscar Clientes Novos vs Recorrentes por período:', e);
+          }
+        }
       }}
     />
   );

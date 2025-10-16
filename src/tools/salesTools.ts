@@ -223,9 +223,12 @@ export const getDesempenhoVendasMensal = tool({
 });
 
 export const analiseDesempenhoCanalVenda = tool({
-  description: 'Análise de Desempenho por Canal de Venda (rentabilidade por canal).',
-  inputSchema: z.object({}),
-  execute: async () => {
+  description: 'Análise de Desempenho por Canal de Venda (rentabilidade por canal). Suporta período (data_de, data_ate).',
+  inputSchema: z.object({
+    data_de: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().optional().describe('Data final (YYYY-MM-DD)'),
+  }),
+  execute: async ({ data_de, data_ate }) => {
     const sql = `
       SELECT
         cv.nome AS canal,
@@ -248,6 +251,8 @@ export const analiseDesempenhoCanalVenda = tool({
       JOIN gestaovendas.canais_venda cv ON p.canal_venda_id = cv.id
       LEFT JOIN gestaovendas.configuracoes_marketplace cm ON cv.id = cm.canal_venda_id
       WHERE p.status != 'CANCELADO'
+        AND ($1::date IS NULL OR COALESCE(p.data_pedido::date, p.criado_em::date) >= $1::date)
+        AND ($2::date IS NULL OR COALESCE(p.data_pedido::date, p.criado_em::date) <= $2::date)
       GROUP BY cv.nome
       ORDER BY receita_liquida_estimada DESC;
     `.trim();
@@ -260,14 +265,14 @@ export const analiseDesempenhoCanalVenda = tool({
         ticket_medio: number;
         comissao_marketplace_estimada: number;
         receita_liquida_estimada: number;
-      }>(sql);
+      }>(sql, [data_de ?? null, data_ate ?? null]);
 
       return {
         success: true,
         message: 'Análise de Desempenho por Canal de Venda (Rentabilidade)',
         rows,
         sql_query: sql,
-        sql_params: '[]',
+        sql_params: formatSqlParams([data_de ?? null, data_ate ?? null]),
       };
     } catch (error) {
       console.error('ERRO analiseDesempenhoCanalVenda:', error);
@@ -279,7 +284,7 @@ export const analiseDesempenhoCanalVenda = tool({
 export const analisePerformanceCategoria = tool({
   description: 'Análise de Performance por Categoria de Produto (visão estratégica).',
   inputSchema: z.object({}),
-  execute: async () => {
+  execute: async ({ data_de, data_ate }) => {
     const sql = `
       SELECT
         COALESCE(cat.nome, 'Sem Categoria') AS categoria,
@@ -288,9 +293,12 @@ export const analisePerformanceCategoria = tool({
         COUNT(DISTINCT ip.pedido_id) AS pedidos_distintos,
         AVG(ip.preco_unitario) AS preco_medio_do_item
       FROM gestaovendas.itens_pedido ip
+      JOIN gestaovendas.pedidos pd ON ip.pedido_id = pd.id
       JOIN gestaocatalogo.produto_variacoes pv ON ip.produto_id = pv.id
-      JOIN gestaocatalogo.produtos p ON pv.produto_pai_id = p.id
-      LEFT JOIN gestaocatalogo.categorias cat ON p.categoria_id = cat.id
+      JOIN gestaocatalogo.produtos prod ON pv.produto_pai_id = prod.id
+      LEFT JOIN gestaocatalogo.categorias cat ON prod.categoria_id = cat.id
+      WHERE ($1::date IS NULL OR COALESCE(pd.data_pedido::date, pd.criado_em::date) >= $1::date)
+        AND ($2::date IS NULL OR COALESCE(pd.data_pedido::date, pd.criado_em::date) <= $2::date)
       GROUP BY categoria
       ORDER BY receita_total DESC;
     `.trim();
@@ -302,14 +310,14 @@ export const analisePerformanceCategoria = tool({
         total_unidades_vendidas: number;
         pedidos_distintos: number;
         preco_medio_do_item: number;
-      }>(sql);
+      }>(sql, [data_de ?? null, data_ate ?? null]);
 
       return {
         success: true,
         message: 'Análise de Performance por Categoria de Produto',
         rows,
         sql_query: sql,
-        sql_params: '[]',
+        sql_params: formatSqlParams([data_de ?? null, data_ate ?? null]),
       };
     } catch (error) {
       console.error('ERRO analisePerformanceCategoria:', error);
@@ -319,9 +327,12 @@ export const analisePerformanceCategoria = tool({
 });
 
 export const analiseLTVcliente = tool({
-  description: 'Análise de LTV por cliente (total gasto, pedidos, ticket médio e datas).',
-  inputSchema: z.object({}),
-  execute: async () => {
+  description: 'Análise de LTV por cliente (total gasto, pedidos, ticket médio e datas). Suporta período (data_de, data_ate).',
+  inputSchema: z.object({
+    data_de: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().optional().describe('Data final (YYYY-MM-DD)'),
+  }),
+  execute: async ({ data_de, data_ate }) => {
     const sql = `
       SELECT
         c.nome,
@@ -334,6 +345,8 @@ export const analiseLTVcliente = tool({
       FROM gestaovendas.pedidos p
       JOIN gestaovendas.clientes c ON p.cliente_id = c.id
       WHERE p.status != 'CANCELADO'
+        AND ($1::date IS NULL OR COALESCE(p.data_pedido::date, p.criado_em::date) >= $1::date)
+        AND ($2::date IS NULL OR COALESCE(p.data_pedido::date, p.criado_em::date) <= $2::date)
       GROUP BY c.id, c.nome, c.email
       ORDER BY ltv_total_gasto DESC
       LIMIT 10;
@@ -348,14 +361,14 @@ export const analiseLTVcliente = tool({
         ticket_medio_cliente: number;
         data_primeira_compra: string;
         data_ultima_compra: string;
-      }>(sql);
+      }>(sql, [data_de ?? null, data_ate ?? null]);
 
       return {
         success: true,
         message: 'Análise de LTV por Cliente',
         rows,
         sql_query: sql,
-        sql_params: '[]',
+        sql_params: formatSqlParams([data_de ?? null, data_ate ?? null]),
       };
     } catch (error) {
       console.error('ERRO analiseLTVcliente:', error);
@@ -502,9 +515,12 @@ export const analiseValorVidaCliente = tool({
 });
 
 export const analiseClientesNovosRecorrentes = tool({
-  description: 'Análise de Clientes Novos vs. Recorrentes.',
-  inputSchema: z.object({}).optional(),
-  execute: async () => {
+  description: 'Análise de Clientes Novos vs. Recorrentes. Suporta período (data_de, data_ate).',
+  inputSchema: z.object({
+    data_de: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().optional().describe('Data final (YYYY-MM-DD)'),
+  }).optional(),
+  execute: async ({ data_de, data_ate } = {}) => {
     const sql = `
       WITH ranked_orders AS (
         SELECT
@@ -514,6 +530,8 @@ export const analiseClientesNovosRecorrentes = tool({
           ROW_NUMBER() OVER (PARTITION BY cliente_id ORDER BY data_pedido ASC) AS ranking_do_pedido
         FROM gestaovendas.pedidos
         WHERE status != 'CANCELADO'
+          AND ($1::date IS NULL OR COALESCE(data_pedido::date, criado_em::date) >= $1::date)
+          AND ($2::date IS NULL OR COALESCE(data_pedido::date, criado_em::date) <= $2::date)
       )
       SELECT
         CASE
@@ -533,14 +551,14 @@ export const analiseClientesNovosRecorrentes = tool({
         total_de_pedidos: number;
         receita_total: number;
         ticket_medio: number;
-      }>(sql);
+      }>(sql, [data_de ?? null, data_ate ?? null]);
 
       return {
         success: true,
         message: 'Análise de Clientes Novos vs. Recorrentes',
         rows,
         sql_query: sql,
-        sql_params: formatSqlParams([]),
+        sql_params: formatSqlParams([data_de ?? null, data_ate ?? null]),
       };
     } catch (error) {
       console.error('ERRO analiseClientesNovosRecorrentes:', error);
@@ -553,49 +571,80 @@ export const analiseClientesNovosRecorrentes = tool({
 });
 
 export const analisePerformanceLancamento = tool({
-  description: 'Análise de Performance de Lançamento de Coleção (por tipo de coleção).',
+  description: 'Análise de Performance de Lançamento de Coleção (por tipo de coleção). Suporta mês ou período (data_de, data_ate).',
   inputSchema: z.object({
-    mes_lancamento: z.string().default('2025-05-01')
-      .describe('Mês do lançamento (YYYY-MM-01)'),
+    mes_lancamento: z.string().optional().describe('Mês do lançamento (YYYY-MM-01)'),
     id_limite_colecao: z.number().int().default(24)
       .describe('IDs > id_limite_colecao são considerados Nova Coleção'),
+    data_de: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().optional().describe('Data final (YYYY-MM-DD)'),
   }).optional(),
-  execute: async ({ mes_lancamento = '2025-05-01', id_limite_colecao = 24 } = {}) => {
-    const sql = `
-      WITH itens_de_mes AS (
+  execute: async ({ mes_lancamento, id_limite_colecao = 24, data_de, data_ate } = {}) => {
+    let sql: string;
+    let params: unknown[] = [];
+    if (data_de || data_ate) {
+      sql = `
+        WITH itens_periodo AS (
+          SELECT
+            ip.produto_id,
+            (ip.quantidade * ip.preco_unitario) AS receita_item
+          FROM gestaovendas.itens_pedido ip
+          JOIN gestaovendas.pedidos p ON ip.pedido_id = p.id
+          WHERE ($1::date IS NULL OR COALESCE(p.data_pedido::date, p.criado_em::date) >= $1::date)
+            AND ($2::date IS NULL OR COALESCE(p.data_pedido::date, p.criado_em::date) <= $2::date)
+            AND p.status != 'CANCELADO'
+        )
         SELECT
-          ip.produto_id,
-          (ip.quantidade * ip.preco_unitario) AS receita_item
-        FROM gestaovendas.itens_pedido ip
-        JOIN gestaovendas.pedidos p ON ip.pedido_id = p.id
-        WHERE DATE_TRUNC('month', p.data_pedido)::date = $1::date
-          AND p.status != 'CANCELADO'
-      )
-      SELECT
-        CASE
-          WHEN produto_id > $2::int THEN 'Nova Coleção (Lançamento)'
-          ELSE 'Coleção Antiga'
-        END AS tipo_colecao,
-        SUM(receita_item) AS receita_total_no_mes,
-        COUNT(*) AS total_itens_vendidos
-      FROM itens_de_mes
-      GROUP BY tipo_colecao
-      ORDER BY receita_total_no_mes DESC;
-    `.trim();
+          CASE
+            WHEN produto_id > $3::int THEN 'Nova Coleção (Lançamento)'
+            ELSE 'Coleção Antiga'
+          END AS tipo_colecao,
+          SUM(receita_item) AS receita_total_no_mes,
+          COUNT(*) AS total_itens_vendidos
+        FROM itens_periodo
+        GROUP BY tipo_colecao
+        ORDER BY receita_total_no_mes DESC;
+      `.trim();
+      params = [data_de ?? null, data_ate ?? null, id_limite_colecao];
+    } else {
+      const mes = mes_lancamento ?? '2025-05-01';
+      sql = `
+        WITH itens_de_mes AS (
+          SELECT
+            ip.produto_id,
+            (ip.quantidade * ip.preco_unitario) AS receita_item
+          FROM gestaovendas.itens_pedido ip
+          JOIN gestaovendas.pedidos p ON ip.pedido_id = p.id
+          WHERE DATE_TRUNC('month', COALESCE(p.data_pedido, p.criado_em))::date = $1::date
+            AND p.status != 'CANCELADO'
+        )
+        SELECT
+          CASE
+            WHEN produto_id > $2::int THEN 'Nova Coleção (Lançamento)'
+            ELSE 'Coleção Antiga'
+          END AS tipo_colecao,
+          SUM(receita_item) AS receita_total_no_mes,
+          COUNT(*) AS total_itens_vendidos
+        FROM itens_de_mes
+        GROUP BY tipo_colecao
+        ORDER BY receita_total_no_mes DESC;
+      `.trim();
+      params = [mes, id_limite_colecao];
+    }
 
     try {
       const rows = await runQuery<{
         tipo_colecao: string;
         receita_total_no_mes: number;
         total_itens_vendidos: number;
-      }>(sql, [mes_lancamento, id_limite_colecao]);
+      }>(sql, params);
 
       return {
         success: true,
-        message: `Performance de Lançamento (${mes_lancamento})`,
+        message: data_de || data_ate ? 'Performance de Lançamento (Período)' : `Performance de Lançamento (${mes_lancamento ?? 'mês especificado'})`,
         rows,
         sql_query: sql,
-        sql_params: formatSqlParams([mes_lancamento, id_limite_colecao]),
+        sql_params: formatSqlParams(params),
       };
     } catch (error) {
       console.error('ERRO analisePerformanceLancamento:', error);
@@ -608,9 +657,12 @@ export const analisePerformanceLancamento = tool({
 });
 
 export const analiseCestaCompras = tool({
-  description: 'Análise de Cesta de Compras (Produtos Comprados Juntos).',
-  inputSchema: z.object({}).optional(),
-  execute: async () => {
+  description: 'Análise de Cesta de Compras (Produtos Comprados Juntos). Suporta período (data_de, data_ate).',
+  inputSchema: z.object({
+    data_de: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().optional().describe('Data final (YYYY-MM-DD)'),
+  }).optional(),
+  execute: async ({ data_de, data_ate } = {}) => {
     const sql = `
       WITH produto_nomes AS (
         SELECT v.id, p.nome
@@ -624,8 +676,11 @@ export const analiseCestaCompras = tool({
       FROM gestaovendas.itens_pedido AS item1
       JOIN gestaovendas.itens_pedido AS item2
         ON item1.pedido_id = item2.pedido_id AND item1.produto_id < item2.produto_id
+      JOIN gestaovendas.pedidos pd ON pd.id = item1.pedido_id
       JOIN produto_nomes pn1 ON item1.produto_id = pn1.id
       JOIN produto_nomes pn2 ON item2.produto_id = pn2.id
+      WHERE ($1::date IS NULL OR COALESCE(pd.data_pedido::date, pd.criado_em::date) >= $1::date)
+        AND ($2::date IS NULL OR COALESCE(pd.data_pedido::date, pd.criado_em::date) <= $2::date)
       GROUP BY produto_A, produto_B
       ORDER BY vezes_comprados_juntos DESC
       LIMIT 10;
@@ -636,14 +691,14 @@ export const analiseCestaCompras = tool({
         produto_A: string;
         produto_B: string;
         vezes_comprados_juntos: number;
-      }>(sql);
+      }>(sql, [data_de ?? null, data_ate ?? null]);
 
       return {
         success: true,
         message: 'Produtos frequentemente comprados juntos',
         rows,
         sql_query: sql,
-        sql_params: formatSqlParams([]),
+        sql_params: formatSqlParams([data_de ?? null, data_ate ?? null]),
       };
     } catch (error) {
       console.error('ERRO analiseCestaCompras:', error);
@@ -656,9 +711,12 @@ export const analiseCestaCompras = tool({
 });
 
 export const analiseVendasPorEstado = tool({
-  description: 'Análise de Vendas por Estado (Visão Geográfica).',
-  inputSchema: z.object({}).optional(),
-  execute: async () => {
+  description: 'Análise de Vendas por Estado (Visão Geográfica). Suporta período (data_de, data_ate).',
+  inputSchema: z.object({
+    data_de: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
+    data_ate: z.string().optional().describe('Data final (YYYY-MM-DD)'),
+  }).optional(),
+  execute: async ({ data_de, data_ate } = {}) => {
     const sql = `
       SELECT
         ec.estado,
@@ -668,6 +726,8 @@ export const analiseVendasPorEstado = tool({
       FROM gestaovendas.pedidos p
       JOIN gestaovendas.enderecos_clientes ec ON p.endereco_entrega_id = ec.id
       WHERE p.status != 'CANCELADO'
+        AND ($1::date IS NULL OR COALESCE(p.data_pedido::date, p.criado_em::date) >= $1::date)
+        AND ($2::date IS NULL OR COALESCE(p.data_pedido::date, p.criado_em::date) <= $2::date)
       GROUP BY ec.estado
       ORDER BY receita_total DESC;
     `.trim();
@@ -678,14 +738,14 @@ export const analiseVendasPorEstado = tool({
         receita_total: number;
         total_pedidos: number;
         clientes_distintos: number;
-      }>(sql);
+      }>(sql, [data_de ?? null, data_ate ?? null]);
 
       return {
         success: true,
         message: 'Vendas por Estado (Visão Geográfica)',
         rows,
         sql_query: sql,
-        sql_params: formatSqlParams([]),
+        sql_params: formatSqlParams([data_de ?? null, data_ate ?? null]),
       };
     } catch (error) {
       console.error('ERRO analiseVendasPorEstado:', error);

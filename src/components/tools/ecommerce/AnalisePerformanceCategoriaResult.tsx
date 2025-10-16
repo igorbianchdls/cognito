@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { ChartSwitcher } from '@/components/charts/ChartSwitcher';
@@ -26,7 +26,9 @@ interface Props {
 const currency = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export default function AnalisePerformanceCategoriaResult({ success, message, rows, data, sql_query }: Props) {
-  const tableRows = rows ?? data ?? [];
+  const initialRows = rows ?? data ?? [];
+  const [tableRows, setTableRows] = useState<AnalisePerformanceCategoriaRow[]>(initialRows);
+  useEffect(() => { setTableRows(initialRows); }, [rows, data]);
 
   const columns: ColumnDef<AnalisePerformanceCategoriaRow>[] = useMemo(() => [
     { accessorKey: 'categoria', header: 'Categoria' },
@@ -73,6 +75,20 @@ export default function AnalisePerformanceCategoriaResult({ success, message, ro
               initialChartType: 'bar',
               title: 'Performance por Categoria',
               xLegend: 'Categoria',
+              showDateFilter: true,
+              onDateRangeChange: async ({ from, to }) => {
+                try {
+                  const params = new URLSearchParams();
+                  if (from) params.set('data_de', from);
+                  if (to) params.set('data_ate', to);
+                  const res = await fetch(`/api/tools/ecommerce/categorias?${params.toString()}`, { cache: 'no-store' });
+                  if (!res.ok) return;
+                  const json = await res.json();
+                  if (json?.success && Array.isArray(json.rows)) setTableRows(json.rows as AnalisePerformanceCategoriaRow[]);
+                } catch (e) {
+                  console.error('Erro ao buscar Categorias por período:', e);
+                }
+              }
             }}
           />
         );

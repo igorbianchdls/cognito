@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { MapPin } from 'lucide-react';
@@ -24,7 +24,9 @@ interface Props {
 const currency = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export default function VendasPorEstadoResult({ success, message, rows, data, sql_query }: Props) {
-  const tableRows = rows ?? data ?? [];
+  const initialRows = rows ?? data ?? [];
+  const [tableRows, setTableRows] = useState<VendasPorEstadoRow[]>(initialRows);
+  useEffect(() => { setTableRows(initialRows); }, [rows, data]);
 
   const columns: ColumnDef<VendasPorEstadoRow>[] = useMemo(() => [
     { accessorKey: 'estado', header: 'Estado' },
@@ -59,6 +61,20 @@ export default function VendasPorEstadoResult({ success, message, rows, data, sq
         initialChartType: 'bar',
         title: 'Vendas por Estado',
         xLegend: 'Estado',
+        showDateFilter: true,
+        onDateRangeChange: async ({ from, to }) => {
+          try {
+            const params = new URLSearchParams();
+            if (from) params.set('data_de', from);
+            if (to) params.set('data_ate', to);
+            const res = await fetch(`/api/tools/ecommerce/vendas-por-estado?${params.toString()}`, { cache: 'no-store' });
+            if (!res.ok) return;
+            const json = await res.json();
+            if (json?.success && Array.isArray(json.rows)) setTableRows(json.rows as VendasPorEstadoRow[]);
+          } catch (e) {
+            console.error('Erro ao buscar Vendas por Estado por período:', e);
+          }
+        }
       }}
     />
   );
