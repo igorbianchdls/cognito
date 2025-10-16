@@ -43,7 +43,7 @@ type PlatformRow = {
   lucro: number;
 };
 
-// Função auxiliar para formatar valores monetários
+// Helper function to format currency values
 const formatCurrency = (value: number): string => {
   return value.toLocaleString('pt-BR', { 
     style: 'currency', 
@@ -53,17 +53,17 @@ const formatCurrency = (value: number): string => {
   });
 };
 
-// Função auxiliar para formatar percentuais
+// Helper function to format percentage values
 const formatPercentage = (value: number): string => {
   return `${value.toFixed(2)}%`;
 };
 
-// Função auxiliar para formatar números
+// Helper function to format number values
 const formatNumber = (value: number): string => {
   return value.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
 };
 
-// Função auxiliar para formatar ROAS
+// Helper function to format ROAS values
 const formatRoas = (value: number): string => {
   return `${value.toFixed(2)}x`;
 };
@@ -95,7 +95,7 @@ export default function AdsPlatformsResult({
     }));
   }, [plataformas]);
 
-  // Colunas para a tabela
+  // Table columns definition
   const columns: ColumnDef<PlatformRow>[] = useMemo(() => [
     {
       accessorKey: 'plataforma',
@@ -108,7 +108,7 @@ export default function AdsPlatformsResult({
     },
     {
       accessorKey: 'total_impressoes',
-      header: 'Impressões',
+      header: 'Impressoes',
       cell: ({ row }) => (
         <span className="text-gray-700">
           {formatNumber(row.getValue('total_impressoes'))}
@@ -135,7 +135,7 @@ export default function AdsPlatformsResult({
     },
     {
       accessorKey: 'total_conversoes',
-      header: 'Conversões',
+      header: 'Conversoes',
       cell: ({ row }) => (
         <span className="text-green-600 font-semibold">
           {formatNumber(row.getValue('total_conversoes'))}
@@ -206,7 +206,7 @@ export default function AdsPlatformsResult({
     },
   ], []);
 
-  // Renderer de gráficos
+  // Chart renderer component
   const chartRenderer = () => (
     <ChartSwitcher
       rows={data}
@@ -220,15 +220,15 @@ export default function AdsPlatformsResult({
           total_gasto: 'Gasto Total',
           total_receita: 'Receita Total',
           roas: 'ROAS',
-          total_conversoes: 'Conversões',
-          total_impressoes: 'Impressões',
+          total_conversoes: 'Conversoes',
+          total_impressoes: 'Impressoes',
           total_cliques: 'Cliques',
           ctr: 'CTR (%)',
           cpc: 'CPC',
           cpa: 'CPA',
           lucro: 'Lucro'
         },
-        title: 'Comparação entre Plataformas de Anúncios',
+        title: 'Comparacao entre Plataformas de Anuncios',
         xLegend: 'Plataforma',
         yLegend: 'Valor',
         initialChartType: 'bar',
@@ -236,7 +236,7 @@ export default function AdsPlatformsResult({
     />
   );
 
-  // Construir mensagem customizada com insights
+  // Build enhanced message with insights
   const enhancedMessage = useMemo(() => {
     let baseMessage = message;
     
@@ -249,7 +249,7 @@ export default function AdsPlatformsResult({
     }
     
     if (periodo_dias) {
-      baseMessage += ` Período: últimos ${periodo_dias} dias.`;
+      baseMessage += ` Periodo: ultimos ${periodo_dias} dias.`;
     }
     
     return baseMessage;
@@ -259,7 +259,7 @@ export default function AdsPlatformsResult({
     <ArtifactDataTable<PlatformRow>
       data={data}
       columns={columns}
-      title="Comparação de Plataformas de Anúncios"
+      title="Comparacao de Plataformas de Anuncios"
       icon={Layers}
       iconColor="text-blue-600"
       message={enhancedMessage}
