@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { MapPin } from 'lucide-react';
+import { toBRL, toIntegerPT } from '@/lib/format';
 
 export type VendasPorEstadoRow = {
   estado: string;
@@ -27,10 +28,10 @@ export default function VendasPorEstadoResult({ success, message, rows, data, sq
 
   const columns: ColumnDef<VendasPorEstadoRow>[] = useMemo(() => [
     { accessorKey: 'estado', header: 'Estado' },
-    { accessorKey: 'total_pedidos', header: 'Pedidos', cell: ({ row }) => row.original.total_pedidos.toLocaleString('pt-BR') },
-    { accessorKey: 'clientes_distintos', header: 'Clientes', cell: ({ row }) => row.original.clientes_distintos.toLocaleString('pt-BR') },
+    { accessorKey: 'total_pedidos', header: 'Pedidos', cell: ({ row }) => toIntegerPT(row.original.total_pedidos) },
+    { accessorKey: 'clientes_distintos', header: 'Clientes', cell: ({ row }) => toIntegerPT(row.original.clientes_distintos) },
     { accessorKey: 'receita_total', header: 'Receita Total', cell: ({ row }) => (
-      <span className="font-semibold text-emerald-600">{currency(row.original.receita_total)}</span>
+      <span className="font-semibold text-emerald-600">{toBRL(row.original.receita_total)}</span>
     ) },
   ], []);
 

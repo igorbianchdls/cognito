@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { BarChart3 } from 'lucide-react';
+import { toBRL, toIntegerPT, toNumberPT } from '@/lib/format';
 
 export type DesempenhoVendasMensalRow = {
   mes: string; // YYYY-MM-01
@@ -29,12 +30,12 @@ export default function DesempenhoVendasMensalResult({ success, message, rows, d
 
   const columns: ColumnDef<DesempenhoVendasMensalRow>[] = useMemo(() => [
     { accessorKey: 'mes', header: 'Mês', cell: ({ row }) => new Date(row.original.mes).toLocaleDateString('pt-BR', { year: 'numeric', month: 'short' }) },
-    { accessorKey: 'total_pedidos', header: 'Pedidos', cell: ({ row }) => row.original.total_pedidos.toLocaleString('pt-BR') },
+    { accessorKey: 'total_pedidos', header: 'Pedidos', cell: ({ row }) => toIntegerPT(row.original.total_pedidos) },
     { accessorKey: 'receita_total', header: 'Receita Total', cell: ({ row }) => (
-      <span className="font-semibold text-emerald-600">{formatCurrency(row.original.receita_total)}</span>
+      <span className="font-semibold text-emerald-600">{toBRL(row.original.receita_total)}</span>
     ) },
-    { accessorKey: 'ticket_medio', header: 'Ticket Médio', cell: ({ row }) => formatCurrency(row.original.ticket_medio) },
-    { accessorKey: 'itens_por_pedido', header: 'Itens por Pedido', cell: ({ row }) => row.original.itens_por_pedido.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
+    { accessorKey: 'ticket_medio', header: 'Ticket Médio', cell: ({ row }) => toBRL(row.original.ticket_medio) },
+    { accessorKey: 'itens_por_pedido', header: 'Itens por Pedido', cell: ({ row }) => toNumberPT(row.original.itens_por_pedido).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) },
   ], []);
 
   return (

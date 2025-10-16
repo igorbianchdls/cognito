@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { ShoppingCart } from 'lucide-react';
+import { toBRL, toIntegerPT } from '@/lib/format';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 
 export type TopProdutosRow = {
@@ -21,9 +22,6 @@ interface TopProdutosReceitaLiquidaTableProps {
   sql_query?: string;
 }
 
-const formatCurrency = (value: number) =>
-  value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
 export default function TopProdutosReceitaLiquidaTable({
   success,
   message,
@@ -38,17 +36,13 @@ export default function TopProdutosReceitaLiquidaTable({
       { accessorKey: 'produto_id', header: 'Produto ID' },
       { accessorKey: 'sku', header: 'SKU' },
       { accessorKey: 'nome_produto', header: 'Produto' },
-      {
-        accessorKey: 'qtd',
-        header: 'Unidades',
-        cell: ({ row }) => row.original.qtd.toLocaleString('pt-BR'),
-      },
+      { accessorKey: 'qtd', header: 'Unidades', cell: ({ row }) => toIntegerPT(row.original.qtd) },
       {
         accessorKey: 'receita_liquida',
         header: 'Receita Líquida',
         cell: ({ row }) => (
           <span className="font-semibold text-emerald-600">
-            {formatCurrency(row.original.receita_liquida)}
+            {toBRL(row.original.receita_liquida)}
           </span>
         ),
       },

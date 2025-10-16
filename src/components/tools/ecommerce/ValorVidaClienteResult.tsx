@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { TrendingUp } from 'lucide-react';
+import { toBRL, toIntegerPT } from '@/lib/format';
 
 export type ValorVidaClienteRow = {
   canal: string;
@@ -35,16 +36,16 @@ export default function ValorVidaClienteResult({ success, message, rows, data, s
 
   const columns: ColumnDef<ValorVidaClienteRow>[] = useMemo(() => [
     { accessorKey: 'canal', header: 'Canal' },
-    { accessorKey: 'pedidos', header: 'Pedidos', cell: ({ row }) => row.original.pedidos.toLocaleString('pt-BR') },
-    { accessorKey: 'clientes_unicos', header: 'Clientes Únicos', cell: ({ row }) => row.original.clientes_unicos.toLocaleString('pt-BR') },
+    { accessorKey: 'pedidos', header: 'Pedidos', cell: ({ row }) => toIntegerPT(row.original.pedidos) },
+    { accessorKey: 'clientes_unicos', header: 'Clientes Únicos', cell: ({ row }) => toIntegerPT(row.original.clientes_unicos) },
     { accessorKey: 'receita_total', header: 'Receita Total', cell: ({ row }) => (
-      <span className="font-semibold text-emerald-600">{currency(row.original.receita_total)}</span>
+      <span className="font-semibold text-emerald-600">{toBRL(row.original.receita_total)}</span>
     ) },
     { accessorKey: 'receita_por_cliente', header: 'LTV (Receita/Cliente)', cell: ({ row }) => (
-      <span className="font-bold text-blue-600">{currency(row.original.receita_por_cliente)}</span>
+      <span className="font-bold text-blue-600">{toBRL(row.original.receita_por_cliente)}</span>
     ) },
-    { accessorKey: 'ticket_medio', header: 'Ticket Médio', cell: ({ row }) => currency(row.original.ticket_medio) },
-    { accessorKey: 'participacao_receita_percent', header: '% Receita', cell: ({ row }) => `${row.original.participacao_receita_percent.toFixed(2)}%` },
+    { accessorKey: 'ticket_medio', header: 'Ticket Médio', cell: ({ row }) => toBRL(row.original.ticket_medio) },
+    { accessorKey: 'participacao_receita_percent', header: '% Receita', cell: ({ row }) => `${Number(row.original.participacao_receita_percent ?? 0).toFixed(2)}%` },
   ], []);
 
   return (

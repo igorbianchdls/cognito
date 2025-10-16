@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { PieChart } from 'lucide-react';
+import { toBRL } from '@/lib/format';
 
 export type AnaliseDesempenhoCanalRow = {
   categoria: string;
@@ -28,9 +29,9 @@ export default function AnaliseDesempenhoCanalResult({ success, message, rows, d
   const columns: ColumnDef<AnaliseDesempenhoCanalRow>[] = useMemo(() => [
     { accessorKey: 'categoria', header: 'Categoria' },
     { accessorKey: 'receita', header: 'Receita', cell: ({ row }) => (
-      <span className="font-semibold text-emerald-600">{formatCurrency(row.original.receita)}</span>
+      <span className="font-semibold text-emerald-600">{toBRL(row.original.receita)}</span>
     ) },
-    { accessorKey: 'pct_receita', header: '% Receita', cell: ({ row }) => `${row.original.pct_receita.toFixed(2)}%` },
+    { accessorKey: 'pct_receita', header: '% Receita', cell: ({ row }) => `${Number(row.original.pct_receita ?? 0).toFixed(2)}%` },
   ], []);
 
   return (

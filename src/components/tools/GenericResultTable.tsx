@@ -1,6 +1,7 @@
 'use client';
 
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import { toBRL, toIntegerPT, toNumberPT } from '@/lib/format';
 import type { ColumnDef } from '@tanstack/react-table';
 import type { LucideIcon } from 'lucide-react';
 import { useMemo } from 'react';
@@ -73,15 +74,28 @@ export default function GenericResultTable({
               return `${Number(value).toFixed(2)}%`;
             }
             if (isMoneyKey(key)) {
-              return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+              return toBRL(value);
             }
             return Number(value).toLocaleString('pt-BR');
           }
 
           if (typeof value === 'string') {
+            // Money-like string
+            if (isMoneyKey(key)) {
+              return toBRL(value);
+            }
+            if (isPercentKey(key)) {
+              const n = toNumberPT(value);
+              return `${n.toFixed(2).replace('.', ',')}%`;
+            }
             if (isDateKey(key)) {
               const d = new Date(value);
               return isNaN(d.getTime()) ? value : d.toLocaleString('pt-BR');
+            }
+            // Numeric-like string => format as number
+            const n = toNumberPT(value);
+            if (!Number.isNaN(n) && Number.isFinite(n) && value !== '' && /\d/.test(value)) {
+              return toIntegerPT(n);
             }
             return value;
           }
@@ -116,4 +130,3 @@ export default function GenericResultTable({
     />
   );
 }
-

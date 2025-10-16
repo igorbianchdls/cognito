@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { Users } from 'lucide-react';
+import { toBRL, toIntegerPT } from '@/lib/format';
 
 export type LTVClienteRow = {
   nome: string;
@@ -32,11 +33,11 @@ export default function LTVClienteResult({ success, message, rows, data, sql_que
   const columns: ColumnDef<LTVClienteRow>[] = useMemo(() => [
     { accessorKey: 'nome', header: 'Nome' },
     { accessorKey: 'email', header: 'Email' },
-    { accessorKey: 'total_de_pedidos', header: 'Pedidos', cell: ({ row }) => row.original.total_de_pedidos.toLocaleString('pt-BR') },
+    { accessorKey: 'total_de_pedidos', header: 'Pedidos', cell: ({ row }) => toIntegerPT(row.original.total_de_pedidos) },
     { accessorKey: 'ltv_total_gasto', header: 'LTV Total', cell: ({ row }) => (
-      <span className="font-semibold text-emerald-600">{currency(row.original.ltv_total_gasto)}</span>
+      <span className="font-semibold text-emerald-600">{toBRL(row.original.ltv_total_gasto)}</span>
     ) },
-    { accessorKey: 'ticket_medio_cliente', header: 'Ticket Médio', cell: ({ row }) => currency(row.original.ticket_medio_cliente) },
+    { accessorKey: 'ticket_medio_cliente', header: 'Ticket Médio', cell: ({ row }) => toBRL(row.original.ticket_medio_cliente) },
     { accessorKey: 'data_primeira_compra', header: 'Primeira Compra', cell: ({ row }) => formatDate(row.original.data_primeira_compra) },
     { accessorKey: 'data_ultima_compra', header: 'Última Compra', cell: ({ row }) => formatDate(row.original.data_ultima_compra) },
   ], []);
@@ -69,4 +70,3 @@ export default function LTVClienteResult({ success, message, rows, data, sql_que
     />
   );
 }
-

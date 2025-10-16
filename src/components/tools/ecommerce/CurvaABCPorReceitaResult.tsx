@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { BarChart3 } from 'lucide-react';
+import { toBRL } from '@/lib/format';
 
 export type CurvaABCRow = {
   produto_id: number;
@@ -32,7 +33,7 @@ export default function CurvaABCPorReceitaResult({ success, message, rows, data,
     { accessorKey: 'nome_produto', header: 'Produto' },
     { accessorKey: 'classe_abc', header: 'Classe ABC' },
     { accessorKey: 'receita', header: 'Receita', cell: ({ row }) => (
-      <span className="font-semibold text-emerald-600">{currency(row.original.receita)}</span>
+      <span className="font-semibold text-emerald-600">{toBRL(row.original.receita)}</span>
     ) },
   ], []);
 
@@ -59,4 +60,3 @@ export default function CurvaABCPorReceitaResult({ success, message, rows, data,
     />
   );
 }
-

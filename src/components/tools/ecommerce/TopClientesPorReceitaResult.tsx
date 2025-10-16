@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { BarChart3 } from 'lucide-react';
+import { toBRL, toIntegerPT } from '@/lib/format';
 
 export type TopClienteRow = {
   cliente_id: number | null;
@@ -29,11 +30,11 @@ export default function TopClientesPorReceitaResult({ success, message, rows, da
   const columns: ColumnDef<TopClienteRow>[] = useMemo(() => [
     { accessorKey: 'cliente_id', header: 'Cliente ID' },
     { accessorKey: 'nome_cliente', header: 'Cliente' },
-    { accessorKey: 'pedidos', header: 'Pedidos', cell: ({ row }) => row.original.pedidos.toLocaleString('pt-BR') },
+    { accessorKey: 'pedidos', header: 'Pedidos', cell: ({ row }) => toIntegerPT(row.original.pedidos) },
     { accessorKey: 'receita', header: 'Receita', cell: ({ row }) => (
-      <span className="font-semibold text-emerald-600">{currency(row.original.receita)}</span>
+      <span className="font-semibold text-emerald-600">{toBRL(row.original.receita)}</span>
     ) },
-    { accessorKey: 'ticket_medio', header: 'Ticket Médio', cell: ({ row }) => currency(row.original.ticket_medio) },
+    { accessorKey: 'ticket_medio', header: 'Ticket Médio', cell: ({ row }) => toBRL(row.original.ticket_medio) },
   ], []);
 
   return (
@@ -63,4 +64,3 @@ export default function TopClientesPorReceitaResult({ success, message, rows, da
     />
   );
 }
-

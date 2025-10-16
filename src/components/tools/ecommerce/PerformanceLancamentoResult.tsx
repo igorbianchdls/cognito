@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { Sparkles } from 'lucide-react';
+import { toBRL, toIntegerPT } from '@/lib/format';
 
 export type PerformanceLancamentoRow = {
   tipo_colecao: string; // 'Nova Coleção (Lançamento)' | 'Coleção Antiga'
@@ -26,9 +27,9 @@ export default function PerformanceLancamentoResult({ success, message, rows, da
 
   const columns: ColumnDef<PerformanceLancamentoRow>[] = useMemo(() => [
     { accessorKey: 'tipo_colecao', header: 'Tipo de Coleção' },
-    { accessorKey: 'total_itens_vendidos', header: 'Itens Vendidos', cell: ({ row }) => row.original.total_itens_vendidos.toLocaleString('pt-BR') },
+    { accessorKey: 'total_itens_vendidos', header: 'Itens Vendidos', cell: ({ row }) => toIntegerPT(row.original.total_itens_vendidos) },
     { accessorKey: 'receita_total_no_mes', header: 'Receita no Mês', cell: ({ row }) => (
-      <span className="font-semibold text-emerald-600">{currency(row.original.receita_total_no_mes)}</span>
+      <span className="font-semibold text-emerald-600">{toBRL(row.original.receita_total_no_mes)}</span>
     ) },
   ], []);
 

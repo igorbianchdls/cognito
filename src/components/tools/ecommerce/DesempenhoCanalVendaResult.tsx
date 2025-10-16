@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { PieChart } from 'lucide-react';
+import { toBRL, toIntegerPT } from '@/lib/format';
 
 export type DesempenhoCanalVendaRow = {
   canal: string;
@@ -29,14 +30,14 @@ export default function DesempenhoCanalVendaResult({ success, message, rows, dat
 
   const columns: ColumnDef<DesempenhoCanalVendaRow>[] = useMemo(() => [
     { accessorKey: 'canal', header: 'Canal' },
-    { accessorKey: 'total_pedidos', header: 'Pedidos', cell: ({ row }) => row.original.total_pedidos.toLocaleString('pt-BR') },
+    { accessorKey: 'total_pedidos', header: 'Pedidos', cell: ({ row }) => toIntegerPT(row.original.total_pedidos) },
     { accessorKey: 'receita_bruta', header: 'Receita Bruta', cell: ({ row }) => (
-      <span className="font-semibold text-emerald-600">{currency(row.original.receita_bruta)}</span>
+      <span className="font-semibold text-emerald-600">{toBRL(row.original.receita_bruta)}</span>
     ) },
-    { accessorKey: 'ticket_medio', header: 'Ticket Médio', cell: ({ row }) => currency(row.original.ticket_medio) },
-    { accessorKey: 'comissao_marketplace_estimada', header: 'Comissão Estimada', cell: ({ row }) => currency(row.original.comissao_marketplace_estimada) },
+    { accessorKey: 'ticket_medio', header: 'Ticket Médio', cell: ({ row }) => toBRL(row.original.ticket_medio) },
+    { accessorKey: 'comissao_marketplace_estimada', header: 'Comissão Estimada', cell: ({ row }) => toBRL(row.original.comissao_marketplace_estimada) },
     { accessorKey: 'receita_liquida_estimada', header: 'Receita Líquida', cell: ({ row }) => (
-      <span className="font-semibold text-blue-600">{currency(row.original.receita_liquida_estimada)}</span>
+      <span className="font-semibold text-blue-600">{toBRL(row.original.receita_liquida_estimada)}</span>
     ) },
   ], []);
 
@@ -68,4 +69,3 @@ export default function DesempenhoCanalVendaResult({ success, message, rows, dat
     />
   );
 }
-

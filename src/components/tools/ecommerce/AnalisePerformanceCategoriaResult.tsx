@@ -5,6 +5,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { ChartSwitcher } from '@/components/charts/ChartSwitcher';
 import { DollarSign } from 'lucide-react';
+import { toBRL, toIntegerPT } from '@/lib/format';
 
 export type AnalisePerformanceCategoriaRow = {
   categoria: string;
@@ -29,12 +30,12 @@ export default function AnalisePerformanceCategoriaResult({ success, message, ro
 
   const columns: ColumnDef<AnalisePerformanceCategoriaRow>[] = useMemo(() => [
     { accessorKey: 'categoria', header: 'Categoria' },
-    { accessorKey: 'total_unidades_vendidas', header: 'Unidades', cell: ({ row }) => row.original.total_unidades_vendidas.toLocaleString('pt-BR') },
-    { accessorKey: 'pedidos_distintos', header: 'Pedidos', cell: ({ row }) => row.original.pedidos_distintos.toLocaleString('pt-BR') },
+    { accessorKey: 'total_unidades_vendidas', header: 'Unidades', cell: ({ row }) => toIntegerPT(row.original.total_unidades_vendidas) },
+    { accessorKey: 'pedidos_distintos', header: 'Pedidos', cell: ({ row }) => toIntegerPT(row.original.pedidos_distintos) },
     { accessorKey: 'receita_total', header: 'Receita Total', cell: ({ row }) => (
-      <span className="font-semibold text-emerald-600">{currency(row.original.receita_total)}</span>
+      <span className="font-semibold text-emerald-600">{toBRL(row.original.receita_total)}</span>
     ) },
-    { accessorKey: 'preco_medio_do_item', header: 'Preço Médio do Item', cell: ({ row }) => currency(row.original.preco_medio_do_item) },
+    { accessorKey: 'preco_medio_do_item', header: 'Preço Médio do Item', cell: ({ row }) => toBRL(row.original.preco_medio_do_item) },
   ], []);
 
   // Para charts, normalizamos em pares métrica/valor a partir da primeira linha
