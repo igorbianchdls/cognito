@@ -492,13 +492,12 @@ export const getMovimentos = tool({
       const listSql = `
         SELECT
           m.data,
-          m.valor,
-          CASE WHEN m.valor > 0 THEN 'entrada' ELSE 'saída' END AS tipo,
-          m.descricao,
           c.nome                               AS conta,
           cat.nome                             AS categoria,
           cc.nome                              AS centro_custo,
-          COALESCE(ap.descricao, ar.descricao) AS origem_titulo
+          m.valor,
+          COALESCE(ap.descricao, ar.descricao) AS origem_titulo,
+          CASE WHEN m.valor > 0 THEN 'entrada' ELSE 'saída' END AS tipo
         FROM gestaofinanceira.movimentos m
         JOIN gestaofinanceira.contas         c   ON c.id  = m.conta_id
         JOIN gestaofinanceira.categorias     cat ON cat.id = m.categoria_id
@@ -565,7 +564,6 @@ export const createMovimento = tool({
     valor: z.number().positive().describe('Valor em reais'),
     data: z.string().describe('Data do movimento (YYYY-MM-DD)'),
     categoria_id: z.string().optional().describe('Categoria (opcional)'),
-    descricao: z.string().optional().describe('Descrição do movimento'),
     conta_a_pagar_id: z.string().optional().describe('Vínculo com conta a pagar'),
     conta_a_receber_id: z.string().optional().describe('Vínculo com conta a receber'),
   }),
@@ -575,7 +573,6 @@ export const createMovimento = tool({
     valor,
     data,
     categoria_id,
-    descricao,
     conta_a_pagar_id,
     conta_a_receber_id,
   }) => {
@@ -589,9 +586,9 @@ export const createMovimento = tool({
 
       const insertSql = `
         INSERT INTO gestaofinanceira.movimentos
-          (conta_id, categoria_id, valor, data, descricao, conta_a_pagar_id, conta_a_receber_id)
+          (conta_id, categoria_id, valor, data, conta_a_pagar_id, conta_a_receber_id)
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7)
+          ($1, $2, $3, $4, $5, $6)
         RETURNING *
       `.trim();
 
@@ -601,7 +598,6 @@ export const createMovimento = tool({
         categoria_id: string | null;
         valor: number;
         data: string;
-        descricao: string | null;
         conta_a_pagar_id: string | null;
         conta_a_receber_id: string | null;
         created_at: string | null;
@@ -610,7 +606,6 @@ export const createMovimento = tool({
         categoria_id ?? null,
         valorSigned,
         data,
-        descricao ?? null,
         conta_a_pagar_id ?? null,
         conta_a_receber_id ?? null,
       ]);
@@ -627,7 +622,6 @@ export const createMovimento = tool({
           categoria_id ?? null,
           valorSigned,
           data,
-          descricao ?? null,
           conta_a_pagar_id ?? null,
           conta_a_receber_id ?? null,
         ]),
