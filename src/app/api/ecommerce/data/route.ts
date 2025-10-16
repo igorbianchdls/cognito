@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     const data_ate = searchParams.get('data_ate');
 
     if (!action) {
-      return Response.json<ApiResult<never>>({ success: false, message: 'Missing action' }, { status: 400 });
+      return Response.json({ success: false, message: 'Missing action' }, { status: 400 });
     }
 
     switch (action) {
@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
           itens_por_pedido: number;
         }>(sql, params);
 
-        return Response.json<ApiResult<typeof rows[number]>>({
+        return Response.json({
           success: true,
           message: 'Desempenho de Vendas Mensal',
           count: rows.length,
@@ -71,11 +71,10 @@ export async function GET(req: NextRequest) {
       // Espaço para novas ações genéricas do e-commerce (ex.: desempenho-canal, categorias, top-clientes etc.)
 
       default:
-        return Response.json<ApiResult<never>>({ success: false, message: `Ação não suportada: ${action}` }, { status: 400 });
+        return Response.json({ success: false, message: `Ação não suportada: ${action}` }, { status: 400 });
     }
   } catch (error) {
     console.error('🛒 ECOMMERCE DATA API: erro:', error);
-    return Response.json<ApiResult<never>>({ success: false, message: 'Erro interno', error: error instanceof Error ? error.message : 'Erro desconhecido' }, { status: 500 });
+    return Response.json({ success: false, message: 'Erro interno', error: error instanceof Error ? error.message : 'Erro desconhecido' }, { status: 500 });
   }
 }
-
