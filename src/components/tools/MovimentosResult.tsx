@@ -10,10 +10,11 @@ export type MovimentoRow = {
   data?: string;
   tipo?: string;
   valor?: number;
-  descricao?: string;
+  origem_titulo?: string;
   categoria?: string;
   conta?: string;
   conta_id?: string;
+  centro_custo?: string;
   [key: string]: unknown;
 };
 
@@ -59,11 +60,11 @@ export default function MovimentosResult({ result }: { result: GetMovimentosOutp
       },
     },
     {
-      accessorKey: 'descricao',
-      header: 'Descrição',
+      accessorKey: 'origem_titulo',
+      header: 'Origem',
       cell: ({ row }) => {
-        const desc = row.original.descricao || '-';
-        return <div className="text-sm">{desc}</div>;
+        const origem = row.original.origem_titulo || '-';
+        return <div className="text-sm">{origem}</div>;
       },
     },
     {
@@ -72,6 +73,14 @@ export default function MovimentosResult({ result }: { result: GetMovimentosOutp
       cell: ({ row }) => {
         const cat = row.original.categoria || '-';
         return <div className="text-sm text-muted-foreground">{cat}</div>;
+      },
+    },
+    {
+      accessorKey: 'centro_custo',
+      header: 'Centro de Custo',
+      cell: ({ row }) => {
+        const cc = row.original.centro_custo || '-';
+        return <div className="text-sm text-muted-foreground">{cc}</div>;
       },
     },
     {
