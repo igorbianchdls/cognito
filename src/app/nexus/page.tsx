@@ -60,6 +60,7 @@ export default function Page() {
       case 'nfeAgent': return '/api/claudeAgents/nfe';
       case 'inventoryAgent': return '/api/claudeAgents/inventory';
       case 'ecommerceSalesAgent': return '/api/claudeAgents/ecommerce-sales';
+      case 'ecommerceSalesAgentV2': return '/api/claudeAgents/ecommerce-sales-v2';
       case 'webAnalyticsAgent': return '/api/claudeAgents/web-analytics';
       case 'logisticsAgent': return '/api/claudeAgents/logistics';
       case 'paidTrafficAgent': return '/api/claudeAgents/paid-traffic';

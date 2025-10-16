@@ -65,6 +65,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
   'nfeAgent': FileText,
   'inventoryAgent': Package,
   'ecommerceSalesAgent': TrendingUp,
+  'ecommerceSalesAgentV2': TrendingUp,
   'webAnalyticsAgent': Activity,
   'logisticsAgent': Package,
   'paidTrafficAgent': DollarSign,
@@ -91,6 +92,7 @@ const models = [
   { id: 'nfeAgent', name: 'Invoice Agent', icon: iconMap['nfeAgent'] },
   { id: 'inventoryAgent', name: 'Inventory Agent', icon: iconMap['inventoryAgent'] },
   { id: 'ecommerceSalesAgent', name: 'E-commerce Sales Agent', icon: iconMap['ecommerceSalesAgent'] },
+  { id: 'ecommerceSalesAgentV2', name: 'Agente de Vendas E-commerce', icon: iconMap['ecommerceSalesAgentV2'] },
   { id: 'webAnalyticsAgent', name: 'Web Analytics Agent', icon: iconMap['webAnalyticsAgent'] },
   { id: 'logisticsAgent', name: 'Logistics Agent', icon: iconMap['logisticsAgent'] },
   { id: 'paidTrafficAgent', name: 'Paid Traffic Agent', icon: iconMap['paidTrafficAgent'] },
@@ -173,6 +175,7 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
                 case 'nfeAgent': return 'Invoice Agent';
                 case 'inventoryAgent': return 'Inventory Agent';
                 case 'ecommerceSalesAgent': return 'E-commerce Sales Agent';
+                case 'ecommerceSalesAgentV2': return 'Agente de Vendas E-commerce';
                 case 'webAnalyticsAgent': return 'Web Analytics Agent';
                 case 'logisticsAgent': return 'Logistics Agent';
                 case 'paidTrafficAgent': return 'Paid Traffic Agent';

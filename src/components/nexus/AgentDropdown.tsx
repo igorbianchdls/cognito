@@ -28,6 +28,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 // Lista de agentes disponíveis com suas informações visuais
 const agents = [
+  { id: 'ecommerceSalesAgentV2', name: 'Agente de Vendas E-commerce', icon: 'E', color: 'text-emerald-600' },
   { id: 'metaAnalyst', name: 'MetaAnalyst', icon: 'M', color: 'text-purple-600' },
   { id: 'amazonAdsAnalyst', name: 'AmazonAdsAnalyst', icon: 'A', color: 'text-orange-600' },
   { id: 'googleAnalyticsAnalyst', name: 'GoogleAnalyticsAnalyst', icon: 'G', color: 'text-blue-500' },

@@ -2689,6 +2689,10 @@ const getAgentInfo = (agent: string) => {
       return { initial: 'N', title: 'Invoice Agent', color: 'bg-emerald-600' };
     case 'inventoryAgent':
       return { initial: 'I', title: 'Inventory Agent', color: 'bg-blue-600' };
+    case 'ecommerceSalesAgent':
+      return { initial: 'E', title: 'E-commerce Sales Agent', color: 'bg-emerald-600' };
+    case 'ecommerceSalesAgentV2':
+      return { initial: 'E', title: 'Agente de Vendas E-commerce', color: 'bg-emerald-700' };
     default:
       return { initial: 'A', title: 'AI Assistant', color: 'bg-gray-500' };
   }
