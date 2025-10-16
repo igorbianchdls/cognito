@@ -18,7 +18,7 @@ const formatSqlParams = (params: unknown[]) =>
 
 export const getTopProdutosReceitaLiquida = tool({
   description: 'Top 10 Produtos Mais Rentáveis (visão essencial).',
-  inputSchema: z.object({}).optional(),
+  inputSchema: z.object({}),
   execute: async () => {
     const sql = `
       SELECT
@@ -167,7 +167,7 @@ export const getSalesCalls = tool({
 
 export const getDesempenhoVendasMensal = tool({
   description: 'Desempenho mensal de vendas: receita total, pedidos, ticket médio e itens por pedido.',
-  inputSchema: z.object({}).optional(),
+  inputSchema: z.object({}),
   execute: async () => {
     const sql = `
       WITH itens_por_pedido AS (
@@ -212,7 +212,7 @@ export const getDesempenhoVendasMensal = tool({
 
 export const analiseDesempenhoCanalVenda = tool({
   description: 'Análise de Desempenho por Canal de Venda (rentabilidade por canal).',
-  inputSchema: z.object({}).optional(),
+  inputSchema: z.object({}),
   execute: async () => {
     const sql = `
       SELECT
@@ -266,7 +266,7 @@ export const analiseDesempenhoCanalVenda = tool({
 
 export const analisePerformanceCategoria = tool({
   description: 'Análise de Performance por Categoria de Produto (visão estratégica).',
-  inputSchema: z.object({}).optional(),
+  inputSchema: z.object({}),
   execute: async () => {
     const sql = `
       SELECT
@@ -308,7 +308,7 @@ export const analisePerformanceCategoria = tool({
 
 export const analiseLTVcliente = tool({
   description: 'Análise de LTV por cliente (total gasto, pedidos, ticket médio e datas).',
-  inputSchema: z.object({}).optional(),
+  inputSchema: z.object({}),
   execute: async () => {
     const sql = `
       SELECT
@@ -358,7 +358,7 @@ export const getTopClientesPorReceita = tool({
     data_de: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
     data_ate: z.string().optional().describe('Data final (YYYY-MM-DD)'),
     limit: z.number().int().min(1).max(1000).default(50)
-  }).optional(),
+  }),
   execute: async ({ data_de, data_ate, limit = 50 } = {}) => {
     const sql = `
       SELECT
