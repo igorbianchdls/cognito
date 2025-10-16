@@ -31,6 +31,10 @@ export const getContasAReceber = tool({
       .describe('Contas que vencem nos próximos X dias'),
     venceu_ha_dias: z.number().optional()
       .describe('Contas vencidas nos últimos X dias'),
+    data_vencimento_de: z.string().optional()
+      .describe('Data inicial de vencimento (formato YYYY-MM-DD)'),
+    data_vencimento_ate: z.string().optional()
+      .describe('Data final de vencimento (formato YYYY-MM-DD)'),
     valor_minimo: z.number().optional()
       .describe('Valor mínimo em reais'),
     valor_maximo: z.number().optional()
@@ -48,6 +52,8 @@ export const getContasAReceber = tool({
     categoria_id,
     vence_em_dias,
     venceu_ha_dias,
+    data_vencimento_de,
+    data_vencimento_ate,
     valor_minimo,
     valor_maximo,
     data_emissao_de,
@@ -81,6 +87,9 @@ export const getContasAReceber = tool({
         params.push(venceu_ha_dias);
         index += 1;
       }
+
+      if (data_vencimento_de) push('cr.data_vencimento >=', data_vencimento_de);
+      if (data_vencimento_ate) push('cr.data_vencimento <=', data_vencimento_ate);
 
       if (data_emissao_de) push('cr.data_emissao >=', data_emissao_de);
       if (data_emissao_ate) push('cr.data_emissao <=', data_emissao_ate);
@@ -157,6 +166,10 @@ export const getContasAPagar = tool({
       .describe('Contas que vencem nos próximos X dias'),
     venceu_ha_dias: z.number().optional()
       .describe('Contas vencidas nos últimos X dias'),
+    data_vencimento_de: z.string().optional()
+      .describe('Data inicial de vencimento (formato YYYY-MM-DD)'),
+    data_vencimento_ate: z.string().optional()
+      .describe('Data final de vencimento (formato YYYY-MM-DD)'),
     valor_minimo: z.number().optional()
       .describe('Valor mínimo em reais'),
     valor_maximo: z.number().optional()
@@ -170,6 +183,8 @@ export const getContasAPagar = tool({
     categoria_id,
     vence_em_dias,
     venceu_ha_dias,
+    data_vencimento_de,
+    data_vencimento_ate,
     valor_minimo,
     valor_maximo,
   }) => {
@@ -201,6 +216,9 @@ export const getContasAPagar = tool({
         params.push(venceu_ha_dias);
         index += 1;
       }
+
+      if (data_vencimento_de) push('cp.data_vencimento >=', data_vencimento_de);
+      if (data_vencimento_ate) push('cp.data_vencimento <=', data_vencimento_ate);
 
       const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
@@ -432,7 +450,6 @@ export const getMovimentos = tool({
   inputSchema: z.object({
     limit: z.number().default(50).describe('Número máximo de resultados'),
     conta_id: z.string().optional().describe('Filtrar por ID da conta bancária'),
-    tipo: z.enum(['entrada', 'saída']).optional().describe('Filtrar por tipo'),
     data_inicial: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
     data_final: z.string().optional().describe('Data final (YYYY-MM-DD)'),
     categoria_id: z.string().optional().describe('Filtrar por categoria'),
@@ -442,7 +459,6 @@ export const getMovimentos = tool({
   execute: async ({
     limit,
     conta_id,
-    tipo,
     data_inicial,
     data_final,
     categoria_id,
@@ -461,7 +477,6 @@ export const getMovimentos = tool({
       };
 
       if (conta_id) pushCondition('conta_id =', conta_id);
-      if (tipo) pushCondition('tipo =', tipo);
       if (data_inicial) pushCondition('data >=', data_inicial);
       // Use exclusive upper bound for data_final (como no exemplo fornecido)
       if (data_final) pushCondition('data <', data_final);
@@ -478,7 +493,7 @@ export const getMovimentos = tool({
         SELECT
           m.data,
           m.valor,
-          m.tipo AS tipo,
+          CASE WHEN m.valor > 0 THEN 'entrada' ELSE 'saída' END AS tipo,
           m.descricao AS descricao,
           c.nome                  AS conta,
           cat.nome                AS categoria,
@@ -511,8 +526,8 @@ export const getMovimentos = tool({
 
       const aggSql = `
         SELECT
-          SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE 0 END) AS total_entradas,
-          SUM(CASE WHEN tipo = 'saída' THEN valor ELSE 0 END) AS total_saidas,
+          SUM(CASE WHEN valor > 0 THEN valor ELSE 0 END) AS total_entradas,
+          SUM(CASE WHEN valor < 0 THEN ABS(valor) ELSE 0 END) AS total_saidas,
           COUNT(*) AS total_movimentos
         FROM gestaofinanceira.movimentos
         ${whereClause}
@@ -579,11 +594,14 @@ export const createMovimento = tool({
         throw new Error('O movimento não pode referenciar conta a pagar e a receber ao mesmo tempo');
       }
 
+      // Convert tipo to signed valor: entrada = positive, saída = negative
+      const valorSigned = tipo === 'entrada' ? valor : -valor;
+
       const insertSql = `
         INSERT INTO gestaofinanceira.movimentos
-          (conta_id, categoria_id, tipo, valor, data, descricao, conta_a_pagar_id, conta_a_receber_id)
+          (conta_id, categoria_id, valor, data, descricao, conta_a_pagar_id, conta_a_receber_id)
         VALUES
-          ($1, $2, $3, $4, $5, $6, $7, $8)
+          ($1, $2, $3, $4, $5, $6, $7)
         RETURNING *
       `.trim();
 
@@ -591,7 +609,6 @@ export const createMovimento = tool({
         id: string;
         conta_id: string;
         categoria_id: string | null;
-        tipo: 'entrada' | 'saída';
         valor: number;
         data: string;
         descricao: string | null;
@@ -601,8 +618,7 @@ export const createMovimento = tool({
       }>(insertSql, [
         conta_id,
         categoria_id ?? null,
-        tipo,
-        valor,
+        valorSigned,
         data,
         descricao ?? null,
         conta_a_pagar_id ?? null,
@@ -619,8 +635,7 @@ export const createMovimento = tool({
         sql_params: formatSqlParams([
           conta_id,
           categoria_id ?? null,
-          tipo,
-          valor,
+          valorSigned,
           data,
           descricao ?? null,
           conta_a_pagar_id ?? null,
