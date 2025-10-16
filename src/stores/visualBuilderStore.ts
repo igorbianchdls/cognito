@@ -69,7 +69,7 @@ const initialCode = `{
       "title": "📊 Gasto por Plataforma",
       "dataSource": {
         "schema": "trafego_pago",
-        "table": "metricas_anuncios",
+        "table": "vw_ads_data",
         "x": "plataforma",
         "y": "gasto",
         "aggregation": "SUM"

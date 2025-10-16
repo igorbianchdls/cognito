@@ -93,8 +93,13 @@ const generatePostgreSQLQuery = (
 
   switch (tipo) {
     case 'bar':
-    case 'line':
     case 'horizontal-bar':
+      if (funcaoAgregacao === 'COUNT') {
+        return `SELECT "${x}", COUNT(*) as count FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY count DESC LIMIT 50`;
+      }
+      return `SELECT "${x}", ${funcaoAgregacao}("${y}") as value FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY value DESC LIMIT 50`;
+    
+    case 'line':
     case 'area':
       if (funcaoAgregacao === 'COUNT') {
         return `SELECT "${x}", COUNT(*) as count FROM ${qualifiedTable} WHERE 1=1${dateCondition} GROUP BY "${x}" ORDER BY "${x}" LIMIT 50`;
