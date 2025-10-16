@@ -68,6 +68,50 @@ export async function GET(req: NextRequest) {
         });
       }
 
+      case 'top-produtos': {
+        const limitRaw = searchParams.get('limit');
+        const limit = Number.isFinite(Number(limitRaw)) ? Number(limitRaw) : 20;
+
+        const sql = `
+          SELECT
+            pv.id AS produto_id,
+            pv.sku,
+            prod.nome AS nome_produto,
+            SUM(ip.quantidade) AS qtd,
+            SUM(ip.quantidade * ip.preco_unitario) AS receita_liquida,
+            COUNT(DISTINCT ip.pedido_id) AS pedidos_distintos
+          FROM gestaovendas.itens_pedido ip
+          JOIN gestaovendas.pedidos p ON p.id = ip.pedido_id
+          JOIN gestaocatalogo.produto_variacoes pv ON ip.produto_id = pv.id
+          JOIN gestaocatalogo.produtos prod ON pv.produto_pai_id = prod.id
+          WHERE ($1::date IS NULL OR p.criado_em::date >= $1::date)
+            AND ($2::date IS NULL OR p.criado_em::date <= $2::date)
+          GROUP BY pv.id, prod.nome, pv.sku
+          ORDER BY receita_liquida DESC
+          LIMIT $3::int;
+        `.trim();
+
+        const params = [isValidDate(data_de) ? data_de : null, isValidDate(data_ate) ? data_ate : null, limit];
+
+        const rows = await runQuery<{
+          produto_id: number;
+          sku: string | null;
+          nome_produto: string;
+          qtd: number;
+          receita_liquida: number;
+          pedidos_distintos: number;
+        }>(sql, params);
+
+        return Response.json({
+          success: true,
+          message: 'Top Produtos por Receita Líquida',
+          count: rows.length,
+          rows,
+          sql_query: sql,
+          sql_params: JSON.stringify(params),
+        });
+      }
+
       // Espaço para novas ações genéricas do e-commerce (ex.: desempenho-canal, categorias, top-clientes etc.)
 
       default:

@@ -21,6 +21,9 @@ export type ChartSwitcherOptions<T extends Record<string, unknown>> = {
   seriesLabel?: string;
   transform?: (rows: T[]) => T[];
   chartTypes?: ChartType[];
+  // Date filtering (optional)
+  showDateFilter?: boolean; // force show
+  onDateRangeChange?: (range: { from?: string; to?: string; preset?: string }) => void | Promise<void>;
 };
 
 export function ChartSwitcher<T extends Record<string, unknown>>({
@@ -42,6 +45,8 @@ export function ChartSwitcher<T extends Record<string, unknown>>({
     seriesLabel: seriesLabelProp,
     transform,
     chartTypes = ['bar', 'line', 'area', 'pie'],
+    showDateFilter = false,
+    onDateRangeChange,
   } = options;
 
   const effectiveRows = useMemo(() => (transform ? transform(rows) : rows), [rows, transform]);
@@ -76,6 +81,9 @@ export function ChartSwitcher<T extends Record<string, unknown>>({
 
   const [chartType, setChartType] = useState<ChartType>(initialChartType);
   const [metricKey, setMetricKey] = useState<string>(autoValueKeys[0] ?? '');
+  const [datePreset, setDatePreset] = useState<string>('');
+  const [customFrom, setCustomFrom] = useState<string>('');
+  const [customTo, setCustomTo] = useState<string>('');
 
   const metricLabel = metricLabels[metricKey] ?? metricKey;
   const effectiveSeriesLabel = seriesLabelProp ?? metricLabel ?? 'Valor';
@@ -127,6 +135,74 @@ export function ChartSwitcher<T extends Record<string, unknown>>({
                 ))}
               </SelectContent>
             </Select>
+          )}
+
+          {(showDateFilter || onDateRangeChange) && (
+            <>
+              <Select
+                value={datePreset}
+                onValueChange={async (v) => {
+                  setDatePreset(v);
+                  const today = new Date();
+                  const toISO = (d: Date) => d.toISOString().slice(0, 10);
+                  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                  if (onDateRangeChange) {
+                    if (v === 'all') {
+                      await onDateRangeChange({ preset: 'all' });
+                    } else if (v === '7d') {
+                      const from = new Date(today);
+                      from.setDate(today.getDate() - 6);
+                      await onDateRangeChange({ from: toISO(from), to: toISO(today), preset: '7d' });
+                    } else if (v === '30d') {
+                      const from = new Date(today);
+                      from.setDate(today.getDate() - 29);
+                      await onDateRangeChange({ from: toISO(from), to: toISO(today), preset: '30d' });
+                    } else if (v === 'this-month') {
+                      await onDateRangeChange({ from: toISO(startOfMonth), to: toISO(today), preset: 'this-month' });
+                    }
+                  }
+                }}
+              >
+                <SelectTrigger size="sm" className="min-w-[160px]">
+                  <SelectValue placeholder="Período" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7d">Últimos 7 dias</SelectItem>
+                  <SelectItem value="30d">Últimos 30 dias</SelectItem>
+                  <SelectItem value="this-month">Este mês</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="custom">Personalizado…</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {datePreset === 'custom' && (
+                <div className="flex items-center gap-2">
+                  <input
+                    type="date"
+                    value={customFrom}
+                    onChange={(e) => setCustomFrom(e.target.value)}
+                    className="h-8 rounded border border-slate-300 px-2 text-sm"
+                  />
+                  <span className="text-sm text-slate-500">até</span>
+                  <input
+                    type="date"
+                    value={customTo}
+                    onChange={(e) => setCustomTo(e.target.value)}
+                    className="h-8 rounded border border-slate-300 px-2 text-sm"
+                  />
+                  <button
+                    className="h-8 rounded bg-slate-900 px-3 text-sm text-white hover:bg-slate-800"
+                    onClick={async () => {
+                      if (onDateRangeChange) {
+                        await onDateRangeChange({ from: customFrom || undefined, to: customTo || undefined, preset: 'custom' });
+                      }
+                    }}
+                  >
+                    Aplicar
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

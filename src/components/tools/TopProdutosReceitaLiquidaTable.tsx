@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { ShoppingCart } from 'lucide-react';
 import { toBRL, toIntegerPT } from '@/lib/format';
@@ -29,7 +29,12 @@ export default function TopProdutosReceitaLiquidaTable({
   data,
   sql_query,
 }: TopProdutosReceitaLiquidaTableProps) {
-  const tableRows = rows ?? data ?? [];
+  const initialRows = rows ?? data ?? [];
+  const [tableRows, setTableRows] = useState<TopProdutosRow[]>(initialRows);
+
+  useEffect(() => {
+    setTableRows(initialRows);
+  }, [rows, data]);
 
   const columns: ColumnDef<TopProdutosRow>[] = useMemo(
     () => [
@@ -85,6 +90,23 @@ export default function TopProdutosReceitaLiquidaTable({
                 ? String(r.sku)
                 : String(r.produto_id),
           })),
+        ,
+        showDateFilter: true,
+        onDateRangeChange: async ({ from, to }) => {
+          try {
+            const params = new URLSearchParams({ action: 'top-produtos' });
+            if (from) params.set('data_de', from);
+            if (to) params.set('data_ate', to);
+            const res = await fetch(`/api/ecommerce/data?${params.toString()}`);
+            if (!res.ok) return;
+            const json = await res.json();
+            if (json?.success && Array.isArray(json.rows)) {
+              setTableRows(json.rows as TopProdutosRow[]);
+            }
+          } catch (e) {
+            console.error('Erro ao buscar Top Produtos por período:', e);
+          }
+        }
       }}
     />
   );
