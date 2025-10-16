@@ -45,18 +45,19 @@ const initialCode = `{
   },
   "widgets": [
     {
-      "id": "chart1",
+      "id": "gasto_por_plataforma",
       "type": "bar",
       "position": { "x": 0, "y": 0, "w": 6, "h": 4 },
       "row": "1",
       "span": { "desktop": 2, "tablet": 2, "mobile": 1 },
       "order": 1,
       "heightPx": 320,
-      "title": "Events by Type",
+      "title": "📊 Gasto por Plataforma",
       "dataSource": {
-        "table": "ecommerce",
-        "x": "event_name",
-        "y": "quantity",
+        "schema": "trafego_pago",
+        "table": "metricas_anuncios",
+        "x": "plataforma",
+        "y": "gasto",
         "aggregation": "SUM"
       },
       "barConfig": {
@@ -69,22 +70,23 @@ const initialCode = `{
       }
     },
     {
-      "id": "kpi1",
+      "id": "total_gasto",
       "type": "kpi",
       "position": { "x": 6, "y": 0, "w": 3, "h": 2 },
       "row": "1",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 2,
       "heightPx": 150,
-      "title": "Total Events",
+      "title": "💰 Gasto Total",
       "dataSource": {
-        "table": "ecommerce",
-        "x": "event_name",
-        "aggregation": "COUNT"
+        "schema": "trafego_pago",
+        "table": "metricas_anuncios",
+        "x": "gasto",
+        "aggregation": "SUM"
       },
       "kpiConfig": {
-        "unit": "events",
-        "target": 1000,
+        "unit": "R$",
+        "target": 50000,
         "showTarget": true,
         "trend": "increasing",
         "visualizationType": "card",
@@ -92,19 +94,20 @@ const initialCode = `{
       }
     },
     {
-      "id": "chart2",
+      "id": "impressoes_tempo",
       "type": "line",
       "position": { "x": 0, "y": 4, "w": 9, "h": 4 },
       "row": "2",
       "span": { "desktop": 1, "tablet": 2, "mobile": 1 },
       "order": 4,
       "heightPx": 280,
-      "title": "Quantity Trend",
+      "title": "📈 Impressões ao Longo do Tempo",
       "dataSource": {
-        "table": "ecommerce",
-        "x": "event_name",
-        "y": "quantity",
-        "aggregation": "AVG"
+        "schema": "trafego_pago",
+        "table": "metricas_anuncios",
+        "x": "data",
+        "y": "impressao",
+        "aggregation": "SUM"
       },
       "lineConfig": {
         "styling": {
@@ -116,17 +119,19 @@ const initialCode = `{
       }
     },
     {
-      "id": "chart3",
+      "id": "conversoes_por_dispositivo",
       "type": "pie",
       "position": { "x": 9, "y": 0, "w": 3, "h": 4 },
       "row": "1",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 3,
-      "title": "Event Distribution",
+      "title": "📱 Conversões por Dispositivo",
       "dataSource": {
-        "table": "ecommerce",
-        "x": "event_name",
-        "y": "quantity"
+        "schema": "trafego_pago",
+        "table": "metricas_anuncios",
+        "x": "dispositivo",
+        "y": "conversao",
+        "aggregation": "SUM"
       },
       "pieConfig": {
         "styling": {
@@ -138,26 +143,27 @@ const initialCode = `{
       }
     },
     {
-      "id": "chart4",
-      "type": "area",
-      "position": { "x": 9, "y": 4, "w": 3, "h": 4 },
+      "id": "roas_medio",
+      "type": "kpi",
+      "position": { "x": 9, "y": 4, "w": 3, "h": 2 },
       "row": "2",
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 5,
-      "title": "Quantity Area",
+      "heightPx": 150,
+      "title": "🎯 ROAS Médio",
       "dataSource": {
-        "table": "ecommerce",
-        "x": "event_name",
-        "y": "quantity",
+        "schema": "trafego_pago",
+        "table": "metricas_anuncios",
+        "x": "roas",
         "aggregation": "AVG"
       },
-      "areaConfig": {
-        "styling": {
-          "showLegend": false,
-          "showGrid": true,
-          "translateY": 0,
-          "marginBottom": 40
-        }
+      "kpiConfig": {
+        "unit": "x",
+        "target": 3.0,
+        "showTarget": true,
+        "trend": "increasing",
+        "visualizationType": "card",
+        "status": "on-target"
       }
     },
     {
@@ -168,7 +174,7 @@ const initialCode = `{
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 6,
       "heightPx": 400,
-      "title": "💡 Insights",
+      "title": "💡 Insights de Tráfego",
       "insightsConfig": {
         "useGlobalStore": true,
         "maxItems": 5,
@@ -184,7 +190,7 @@ const initialCode = `{
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 7,
       "heightPx": 400,
-      "title": "⚠️ Alertas",
+      "title": "⚠️ Alertas de Performance",
       "alertsConfig": {
         "useGlobalStore": true,
         "maxItems": 5,
@@ -201,7 +207,7 @@ const initialCode = `{
       "span": { "desktop": 1, "tablet": 1, "mobile": 1 },
       "order": 8,
       "heightPx": 400,
-      "title": "🎯 Recomendações",
+      "title": "🎯 Otimizações Sugeridas",
       "recommendationsConfig": {
         "useGlobalStore": true,
         "maxItems": 5,

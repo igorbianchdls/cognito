@@ -65,7 +65,7 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
       setError(null);
 
       try {
-        console.log('📊 Fetching BigQuery data for widget:', widget.id);
+        console.log('📊 Fetching Supabase data for widget:', widget.id);
 
         // 📤 API request log
         const requestPayload = {
@@ -73,12 +73,12 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
           dataSource: widget.dataSource
         };
         console.log('📤 Making API request:', {
-          url: '/api/dashboard-bigquery',
+          url: '/api/dashboard-supabase',
           payload: requestPayload
         });
 
-        // Chamar API route - SOMENTE BigQuery
-        const response = await fetch('/api/dashboard-bigquery', {
+        // Chamar API route - SOMENTE Supabase
+        const response = await fetch('/api/dashboard-supabase', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(requestPayload)
@@ -188,7 +188,7 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
       <div className="h-full w-full p-2 flex items-center justify-center bg-red-50 rounded">
         <div className="text-center text-red-600">
           <div className="text-2xl mb-2">⚠️</div>
-          <div className="text-sm font-medium mb-1">BigQuery Error</div>
+          <div className="text-sm font-medium mb-1">Supabase Error</div>
           <div className="text-xs">{error}</div>
         </div>
       </div>
@@ -202,7 +202,7 @@ export default function WidgetRenderer({ widget }: WidgetRendererProps) {
         <div className="text-center text-gray-500">
           <div className="text-2xl mb-2">📊</div>
           <div className="text-sm font-medium mb-1">No Data</div>
-          <div className="text-xs">No records found in BigQuery</div>
+          <div className="text-xs">No records found in Supabase</div>
         </div>
       </div>
     );
