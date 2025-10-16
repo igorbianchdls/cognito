@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { BarChart3 } from 'lucide-react';
@@ -26,7 +26,12 @@ const formatCurrency = (value: number) =>
   value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
 export default function DesempenhoVendasMensalResult({ success, message, rows, data, sql_query }: Props) {
-  const tableRows = rows ?? data ?? [];
+  const initialRows = rows ?? data ?? [];
+  const [tableRows, setTableRows] = useState<DesempenhoVendasMensalRow[]>(initialRows);
+
+  useEffect(() => {
+    setTableRows(initialRows);
+  }, [rows, data]);
 
   const columns: ColumnDef<DesempenhoVendasMensalRow>[] = useMemo(() => [
     { accessorKey: 'mes', header: 'Mês', cell: ({ row }) => new Date(row.original.mes).toLocaleDateString('pt-BR', { year: 'numeric', month: 'short' }) },
@@ -63,6 +68,22 @@ export default function DesempenhoVendasMensalResult({ success, message, rows, d
         initialChartType: 'bar',
         title: 'Desempenho de Vendas Mensal (O Pulso do Negócio)',
         xLegend: 'Mês',
+        showDateFilter: true,
+        onDateRangeChange: async ({ from, to }) => {
+          try {
+            const params = new URLSearchParams({ action: 'desempenho-mensal' });
+            if (from) params.set('data_de', from);
+            if (to) params.set('data_ate', to);
+            const res = await fetch(`/api/ecommerce/data?${params.toString()}`);
+            if (!res.ok) return;
+            const json = await res.json();
+            if (json?.success && Array.isArray(json.rows)) {
+              setTableRows(json.rows as DesempenhoVendasMensalRow[]);
+            }
+          } catch (e) {
+            console.error('Erro ao buscar Desempenho Mensal por período:', e);
+          }
+        },
       }}
     />
   );

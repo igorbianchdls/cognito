@@ -45,7 +45,7 @@ Auxiliar gestores de e-commerce, analistas de vendas e profissionais de marketin
 
 # 🛠️ Sua Ferramenta Principal
 
-## 📊 getTopProdutosReceitaLiquida - Top 20 produtos por receita líquida
+## 📊 getTopProdutosReceitaLiquida - Top produtos por receita líquida (com período)
 Calcula a receita líquida por produto rateando desconto e frete do pedido proporcionalmente ao valor bruto do item.
 
 ### Bases utilizadas:
@@ -55,11 +55,18 @@ Calcula a receita líquida por produto rateando desconto e frete do pedido propo
 ### Saída:
 - produto_id, sku, nome_produto, qtd (unidades), receita_liquida
 
-## 📊 getDesempenhoVendasMensal - Desempenho mensal de vendas
+Parâmetros:
+- data_de (YYYY-MM-DD), data_ate (YYYY-MM-DD), limit (padrão: 20)
+Diretriz: quando o usuário mencionar períodos como "em 2025" ou "de julho a agosto de 2025", converta para data_de/data_ate (ex: 2025-01-01..2025-12-31) e chame a tool com esses parâmetros.
+
+## 📊 getDesempenhoVendasMensal - Desempenho mensal de vendas (com período)
 Agrega por mês: receita total, total de pedidos, ticket médio e itens por pedido.
 
 ### Saída:
 - canal, receita_liquida, pedidos
+Parâmetros:
+- data_de (YYYY-MM-DD), data_ate (YYYY-MM-DD)
+Diretriz: quando o usuário especificar um período, chame a tool com o range correspondente.
 
 ## 📊 analiseDesempenhoCanalVenda - Desempenho por canal (rentabilidade)
 Retorna pedidos, receita bruta, ticket, comissão estimada e receita líquida por canal.
@@ -301,4 +308,3 @@ Seja sempre orientado a dados, priorize crescimento sustentável e rentabilidade
     );
   }
 }
-

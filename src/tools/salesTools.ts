@@ -17,23 +17,30 @@ const formatSqlParams = (params: unknown[]) =>
   params.length ? JSON.stringify(params) : '[]';
 
 export const getTopProdutosReceitaLiquida = tool({
-  description: 'Top 10 Produtos Mais Rentáveis (visão essencial).',
-  inputSchema: z.object({}),
-  execute: async () => {
+  description: 'Top produtos por receita líquida. Parâmetros: data_de (YYYY-MM-DD), data_ate (YYYY-MM-DD), limit (padrão: 20).',
+  inputSchema: z.object({
+    data_de: z.string().optional().describe('Data inicial (YYYY-MM-DD ou vazio)'),
+    data_ate: z.string().optional().describe('Data final (YYYY-MM-DD ou vazio)'),
+    limit: z.number().int().min(1).max(1000).default(20)
+  }),
+  execute: async ({ data_de, data_ate, limit = 20 }) => {
     const sql = `
       SELECT
         pv.id AS produto_id,
         pv.sku,
-        p.nome AS nome_produto,
+        prod.nome AS nome_produto,
         SUM(ip.quantidade) AS qtd,
         SUM(ip.quantidade * ip.preco_unitario) AS receita_liquida,
         COUNT(DISTINCT ip.pedido_id) AS pedidos_distintos
       FROM gestaovendas.itens_pedido ip
+      JOIN gestaovendas.pedidos p ON p.id = ip.pedido_id
       JOIN gestaocatalogo.produto_variacoes pv ON ip.produto_id = pv.id
-      JOIN gestaocatalogo.produtos p ON pv.produto_pai_id = p.id
-      GROUP BY pv.id, p.nome, pv.sku
+      JOIN gestaocatalogo.produtos prod ON pv.produto_pai_id = prod.id
+      WHERE ($1::date IS NULL OR COALESCE(p.data_pedido::date, p.criado_em::date) >= $1::date)
+        AND ($2::date IS NULL OR COALESCE(p.data_pedido::date, p.criado_em::date) <= $2::date)
+      GROUP BY pv.id, prod.nome, pv.sku
       ORDER BY receita_liquida DESC
-      LIMIT 10;
+      LIMIT $3::int;
     `.trim();
 
     try {
@@ -43,14 +50,14 @@ export const getTopProdutosReceitaLiquida = tool({
         nome_produto: string;
         qtd: number;
         receita_liquida: number;
-      }>(sql);
+      }>(sql, [data_de ?? null, data_ate ?? null, limit]);
 
       return {
         success: true,
-        message: 'Top 10 Produtos Mais Rentáveis',
+        message: 'Top Produtos por Receita Líquida',
         rows,
         sql_query: sql,
-        sql_params: formatSqlParams([]),
+        sql_params: formatSqlParams([data_de ?? null, data_ate ?? null, limit]),
       };
     } catch (error) {
       console.error('ERRO getTopProdutosReceitaLiquida:', error);
@@ -166,9 +173,12 @@ export const getSalesCalls = tool({
 });
 
 export const getDesempenhoVendasMensal = tool({
-  description: 'Desempenho mensal de vendas: receita total, pedidos, ticket médio e itens por pedido.',
-  inputSchema: z.object({}),
-  execute: async () => {
+  description: 'Desempenho mensal de vendas: receita total, pedidos, ticket médio e itens por pedido. Parâmetros: data_de, data_ate',
+  inputSchema: z.object({
+    data_de: z.string().optional().describe('Data inicial (YYYY-MM-DD ou vazio)'),
+    data_ate: z.string().optional().describe('Data final (YYYY-MM-DD ou vazio)'),
+  }),
+  execute: async ({ data_de, data_ate }) => {
     const sql = `
       WITH itens_por_pedido AS (
         SELECT pedido_id, SUM(quantidade) AS total_itens
@@ -176,13 +186,15 @@ export const getDesempenhoVendasMensal = tool({
         GROUP BY pedido_id
       )
       SELECT
-        DATE_TRUNC('month', p.criado_em)::date AS mes,
+        DATE_TRUNC('month', COALESCE(p.data_pedido, p.criado_em))::date AS mes,
         SUM(p.total_liquido) AS receita_total,
         COUNT(p.id) AS total_pedidos,
         ROUND(SUM(p.total_liquido)::numeric / NULLIF(COUNT(p.id), 0), 2) AS ticket_medio,
         ROUND(SUM(ip.total_itens)::numeric / NULLIF(COUNT(p.id), 0), 2) AS itens_por_pedido
       FROM gestaovendas.pedidos p
       LEFT JOIN itens_por_pedido ip ON ip.pedido_id = p.id
+      WHERE ($1::date IS NULL OR COALESCE(p.data_pedido::date, p.criado_em::date) >= $1::date)
+        AND ($2::date IS NULL OR COALESCE(p.data_pedido::date, p.criado_em::date) <= $2::date)
       GROUP BY mes
       ORDER BY mes ASC;
     `.trim();
@@ -194,14 +206,14 @@ export const getDesempenhoVendasMensal = tool({
         total_pedidos: number;
         ticket_medio: number;
         itens_por_pedido: number;
-      }>(sql);
+      }>(sql, [data_de ?? null, data_ate ?? null]);
 
       return {
         success: true,
         message: 'Desempenho de Vendas Mensal',
         rows,
         sql_query: sql,
-        sql_params: '[]',
+        sql_params: formatSqlParams([data_de ?? null, data_ate ?? null]),
       };
     } catch (error) {
       console.error('ERRO getDesempenhoVendasMensal:', error);

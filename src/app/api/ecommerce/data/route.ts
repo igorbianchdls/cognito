@@ -35,15 +35,15 @@ export async function GET(req: NextRequest) {
             GROUP BY pedido_id
           )
           SELECT
-            DATE_TRUNC('month', p.criado_em)::date AS mes,
+            DATE_TRUNC('month', COALESCE(p.data_pedido, p.criado_em))::date AS mes,
             SUM(p.total_liquido) AS receita_total,
             COUNT(p.id) AS total_pedidos,
             ROUND(SUM(p.total_liquido)::numeric / NULLIF(COUNT(p.id), 0), 2) AS ticket_medio,
             ROUND(SUM(ip.total_itens)::numeric / NULLIF(COUNT(p.id), 0), 2) AS itens_por_pedido
           FROM gestaovendas.pedidos p
           LEFT JOIN itens_por_pedido ip ON ip.pedido_id = p.id
-          WHERE ($1::date IS NULL OR p.criado_em::date >= $1::date)
-            AND ($2::date IS NULL OR p.criado_em::date <= $2::date)
+          WHERE ($1::date IS NULL OR COALESCE(p.data_pedido::date, p.criado_em::date) >= $1::date)
+            AND ($2::date IS NULL OR COALESCE(p.data_pedido::date, p.criado_em::date) <= $2::date)
           GROUP BY mes
           ORDER BY mes ASC;
         `.trim();
