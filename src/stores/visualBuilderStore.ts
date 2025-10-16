@@ -331,13 +331,15 @@ export const visualBuilderActions = {
     console.log('📝 Visual Builder: Updating code')
 
     const parseResult = ConfigParser.parse(code)
+    const currentState = $visualBuilderState.get()
 
     $visualBuilderState.set({
       widgets: parseResult.widgets,
       gridConfig: parseResult.gridConfig,
       code,
       parseErrors: parseResult.errors,
-      isValid: parseResult.isValid
+      isValid: parseResult.isValid,
+      globalFilters: currentState.globalFilters // Preservar filtros existentes
     })
   },
 
