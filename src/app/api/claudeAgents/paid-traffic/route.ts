@@ -20,6 +20,7 @@ export const maxDuration = 300;
 
 export async function POST(req: Request) {
   console.log('💰 PAID TRAFFIC AGENT: Request recebido!');
+  console.log('💰 Tool Call Streaming enabled: true');
 
   const { messages }: { messages: UIMessage[] } = await req.json();
 
@@ -28,6 +29,8 @@ export async function POST(req: Request) {
   try {
     const result = streamText({
       model: anthropic('claude-sonnet-4-20250514'),
+      // @ts-expect-error - toolCallStreaming is experimental feature
+      toolCallStreaming: true,
 
       // Enable Claude reasoning/thinking
       providerOptions: {
