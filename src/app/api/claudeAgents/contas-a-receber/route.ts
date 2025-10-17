@@ -11,6 +11,7 @@ import {
   analisarInadimplencia,
   analisarMovimentosPorCentroCusto
 } from '@/tools/financialTools';
+import { createDashboardTool } from '@/tools/apps/createDashboardTool';
 
 export const maxDuration = 300;
 
@@ -387,6 +388,195 @@ Use formatação clara e visual:
 **💡 Insights**
 [Padrões identificados e recomendações estratégicas]
 
+<dashboard_creation>
+## 📊 CRIAÇÃO DE DASHBOARDS FINANCEIROS
+
+### 🎯 **QUANDO CRIAR DASHBOARDS**
+- Usuário solicita "dashboard financeiro", "painel de contas", "dashboard de fluxo de caixa"
+- Necessidade de monitoramento contínuo de contas a pagar, a receber e saldo
+- Análise consolidada de movimentos financeiros e inadimplência
+- Relatórios executivos para apresentação de posição financeira
+
+### 🔄 **WORKFLOW DE CRIAÇÃO**
+
+**1. Planning Phase (OBRIGATÓRIO)**
+- Analisar pedido específico do usuário para gestão financeira
+- Identificar quais métricas são prioritárias (contas a pagar, a receber, saldo, inadimplência, centro de custo)
+- Planejar estrutura do dashboard baseada na VIEW \`view_financeiro\`
+- Definir layout responsivo adequado para análise financeira
+- **Apresentar plano detalhado ao usuário** antes de executar
+
+**2. Confirmation Phase**
+- Aguardar confirmação explícita do usuário com comandos como:
+  - "executa o plano", "criar dashboard", "aplicar configuração"
+  - "gera o dashboard", "implementar painel", "criar painel"
+
+**3. Execution Phase**
+- Executar \`createDashboardTool()\` apenas após confirmação
+- Usar dados reais da VIEW \`view_financeiro\`
+- Aplicar configurações otimizadas para análise financeira
+
+### 📊 **ESTRUTURA PADRÃO PARA DASHBOARDS FINANCEIROS**
+
+**Row 1 - KPIs Principais (4 colunas):**
+1. **Total a Receber** - SUM(conta_receber_valor) WHERE conta_receber_status = 'pendente' da view_financeiro
+2. **Total a Pagar** - SUM(conta_pagar_valor) WHERE conta_pagar_status = 'pendente' da view_financeiro
+3. **Saldo Líquido** - SUM(valor) WHERE tipo_movimento IN ('Entrada', 'Saída') da view_financeiro
+4. **Contas Vencidas** - COUNT(movimento_id) WHERE status = 'vencido' da view_financeiro
+
+**Row 2 - Gráficos de Análise (2-3 colunas):**
+1. **Movimentos por Tipo** - Bar chart (x: tipo_movimento, y: valor, agg: SUM)
+2. **Despesas por Categoria** - Pie chart (x: categoria_nome, y: valor, agg: SUM)
+3. **Saldo ao Longo do Tempo** - Line chart (x: data, y: valor, agg: SUM)
+
+### 🛠️ **CONFIGURAÇÃO DE DADOS**
+
+**Fonte de Dados Obrigatória:**
+- \`"schema": "gestaofinanceira"\`
+- \`"table": "view_financeiro"\` (VIEW consolidada com JOINs de movimentos, contas, categorias, centros de custo e conciliação)
+
+**Campos disponíveis na VIEW \`view_financeiro\`:**
+- \`movimento_id\`, \`data\`, \`valor\`, \`tipo_movimento\`: Dados do movimento (Entrada/Saída/Outros)
+- \`conta_id\`, \`conta_nome\`, \`conta_tipo\`: Informações da conta bancária
+- \`categoria_id\`, \`categoria_nome\`, \`categoria_tipo\`: Categoria financeira
+- \`centro_custo_id\`, \`centro_custo_nome\`, \`centro_custo_codigo\`: Centro de custo
+- \`conta_pagar_id\`, \`conta_pagar_descricao\`, \`conta_pagar_vencimento\`, \`conta_pagar_valor\`, \`conta_pagar_status\`: Contas a pagar
+- \`conta_receber_id\`, \`conta_receber_descricao\`, \`conta_receber_vencimento\`, \`conta_receber_valor\`, \`conta_receber_status\`: Contas a receber
+- \`conciliacao_id\`, \`data_extrato\`, \`saldo_extrato\`, \`saldo_sistema\`, \`diferenca\`, \`conciliado\`: Conciliação bancária
+
+**Configurações Visuais:**
+- Theme: \`"dark"\` (ideal para dashboards financeiros)
+- Layout responsivo: Desktop (4 cols), Tablet (2 cols), Mobile (1 col)
+
+### 📋 **EXEMPLO COMPLETO DE DASHBOARD**
+
+\\\`\\\`\\\`typescript
+createDashboardTool({
+  dashboardDescription: "Dashboard Financeiro - Contas a Pagar e Receber",
+  theme: "dark",
+  gridConfig: {
+    layoutRows: {
+      "1": { desktop: 4, tablet: 2, mobile: 1 },
+      "2": { desktop: 3, tablet: 2, mobile: 1 }
+    }
+  },
+  widgets: [
+    // ROW 1: KPIs
+    {
+      id: "total_receber_kpi",
+      type: "kpi",
+      position: { x: 0, y: 0, w: 3, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 1,
+      title: "💰 Total a Receber",
+      dataSource: {
+        table: "view_financeiro",
+        y: "conta_receber_valor",
+        aggregation: "SUM"
+      }
+    },
+    {
+      id: "total_pagar_kpi",
+      type: "kpi",
+      position: { x: 3, y: 0, w: 3, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 2,
+      title: "💸 Total a Pagar",
+      dataSource: {
+        table: "view_financeiro",
+        y: "conta_pagar_valor",
+        aggregation: "SUM"
+      }
+    },
+    {
+      id: "saldo_liquido_kpi",
+      type: "kpi",
+      position: { x: 6, y: 0, w: 3, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 3,
+      title: "📊 Saldo Líquido",
+      dataSource: {
+        table: "view_financeiro",
+        y: "valor",
+        aggregation: "SUM"
+      }
+    },
+    {
+      id: "vencidas_kpi",
+      type: "kpi",
+      position: { x: 9, y: 0, w: 3, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 4,
+      title: "⚠️ Contas Vencidas",
+      dataSource: {
+        table: "view_financeiro",
+        y: "movimento_id",
+        aggregation: "COUNT"
+      }
+    },
+    // ROW 2: Gráficos
+    {
+      id: "movimentos_por_tipo",
+      type: "bar",
+      position: { x: 0, y: 2, w: 4, h: 4 },
+      row: "2",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 5,
+      title: "📊 Movimentos por Tipo",
+      dataSource: {
+        table: "view_financeiro",
+        x: "tipo_movimento",
+        y: "valor",
+        aggregation: "SUM"
+      }
+    },
+    {
+      id: "despesas_categoria",
+      type: "pie",
+      position: { x: 4, y: 2, w: 4, h: 4 },
+      row: "2",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 6,
+      title: "💸 Despesas por Categoria",
+      dataSource: {
+        table: "view_financeiro",
+        x: "categoria_nome",
+        y: "valor",
+        aggregation: "SUM"
+      }
+    },
+    {
+      id: "saldo_tempo",
+      type: "line",
+      position: { x: 8, y: 2, w: 4, h: 4 },
+      row: "2",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 7,
+      title: "📈 Saldo ao Longo do Tempo",
+      dataSource: {
+        table: "view_financeiro",
+        x: "data",
+        y: "valor",
+        aggregation: "SUM"
+      }
+    }
+  ]
+})
+\\\`\\\`\\\`
+
+### ⚡ **COMANDOS DE EXECUÇÃO**
+Reconheça estes comandos para executar após apresentar o plano:
+- "executa o plano", "executar plano", "criar dashboard"
+- "gera o dashboard", "aplicar configuração", "implementar painel"
+- "criar painel financeiro", "montar dashboard"
+
+**IMPORTANTE:** Sempre apresente o plano primeiro e aguarde confirmação antes de executar createDashboardTool.
+</dashboard_creation>
+
 Seja sempre profissional, orientado a dados e ofereça insights acionáveis. Priorize a saúde financeira da empresa sem comprometer relacionamentos comerciais importantes.`,
 
       messages: convertToModelMessages(messages),
@@ -401,6 +591,7 @@ Seja sempre profissional, orientado a dados e ofereça insights acionáveis. Pri
         obterDespesasPorCentroCusto,
         analisarInadimplencia,
         analisarMovimentosPorCentroCusto,
+        createDashboardTool,
       }
     });
 
