@@ -69,6 +69,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
   'webAnalyticsAgent': Activity,
   'logisticsAgent': Package,
   'paidTrafficAgent': DollarSign,
+  'organicMarketingAgent': Activity,
   'gestorDeComprasAgent': Package,
   'gestorDeProjetosAgent': Wrench,
   'funcionariosAgent': Users,
@@ -97,6 +98,7 @@ const models = [
   { id: 'webAnalyticsAgent', name: 'Web Analytics Agent', icon: iconMap['webAnalyticsAgent'] },
   { id: 'logisticsAgent', name: 'Logistics Agent', icon: iconMap['logisticsAgent'] },
   { id: 'paidTrafficAgent', name: 'Paid Traffic Agent', icon: iconMap['paidTrafficAgent'] },
+  { id: 'organicMarketingAgent', name: 'Organic Marketing Agent', icon: iconMap['organicMarketingAgent'] },
   { id: 'gestorDeComprasAgent', name: 'Gestor de Compras', icon: iconMap['gestorDeComprasAgent'] },
   { id: 'gestorDeProjetosAgent', name: 'Gestor de Projetos', icon: iconMap['gestorDeProjetosAgent'] },
   { id: 'funcionariosAgent', name: 'Funcionários Agent', icon: iconMap['funcionariosAgent'] },
@@ -180,6 +182,7 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
                 case 'webAnalyticsAgent': return 'Web Analytics Agent';
                 case 'logisticsAgent': return 'Logistics Agent';
                 case 'paidTrafficAgent': return 'Paid Traffic Agent';
+                case 'organicMarketingAgent': return 'Organic Marketing Agent';
                 case 'gestorDeComprasAgent': return 'Gestor de Compras';
                 case 'gestorDeProjetosAgent': return 'Gestor de Projetos';
                 case 'funcionariosAgent': return 'Funcionários Agent';
