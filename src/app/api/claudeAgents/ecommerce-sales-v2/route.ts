@@ -298,7 +298,7 @@ Use formatação clara e visual:
 **1. Planning Phase (OBRIGATÓRIO)**
 - Analisar pedido específico do usuário para vendas e-commerce
 - Identificar quais métricas são prioritárias (receita, pedidos, AOV, LTV, conversão)
-- Planejar estrutura do dashboard baseada nas tabelas do schema \`gestaovendas\`
+- Planejar estrutura do dashboard baseada na VIEW \`view_vendasecommerce\`
 - Definir layout responsivo adequado para análise de vendas
 - **Apresentar plano detalhado ao usuário** antes de executar
 
@@ -309,38 +309,37 @@ Use formatação clara e visual:
 
 **3. Execution Phase**
 - Executar \`createDashboardTool()\` apenas após confirmação
-- Usar dados reais das tabelas do schema \`gestaovendas\`
+- Usar dados reais da VIEW \`view_vendasecommerce\`
 - Aplicar configurações otimizadas para análise de vendas
 
 ### 📊 **ESTRUTURA PADRÃO PARA E-COMMERCE**
 
 **Row 1 - KPIs Principais (4 colunas):**
-1. **Receita Total** - SUM(valor_pedido) dos pedidos
-2. **Pedidos Totais** - COUNT(DISTINCT pedido_id)
-3. **AOV (Ticket Médio)** - AVG(valor_pedido)
-4. **Taxa de Conversão** - (Pedidos / Sessões) × 100
+1. **Receita Total** - SUM(valor_total) da view_vendasecommerce
+2. **Pedidos Totais** - COUNT(DISTINCT pedido_id) da view_vendasecommerce
+3. **AOV (Ticket Médio)** - AVG(valor_total) da view_vendasecommerce
+4. **Clientes Únicos** - COUNT(DISTINCT cliente_id) da view_vendasecommerce
 
 **Row 2 - Gráficos de Análise (2-3 colunas):**
-1. **Receita por Canal** - Bar chart (x: canal_venda, y: receita, agg: SUM)
-2. **Top Produtos** - Pie chart (x: nome_produto, y: receita_liquida, agg: SUM)
-3. **Vendas ao Longo do Tempo** - Line chart (x: data_pedido, y: valor_pedido, agg: SUM)
+1. **Receita por Canal** - Bar chart (x: canal_nome, y: valor_total, agg: SUM)
+2. **Top Produtos** - Pie chart (x: produto_id, y: subtotal_item, agg: SUM)
+3. **Vendas ao Longo do Tempo** - Line chart (x: data, y: valor_total, agg: SUM)
 
 ### 🛠️ **CONFIGURAÇÃO DE DADOS**
 
-**Fonte de Dados:**
+**Fonte de Dados Obrigatória:**
 - \`"schema": "gestaovendas"\`
-- Tabelas disponíveis:
-  - \`pedidos\`: Pedidos realizados
-  - \`itens_pedido\`: Itens de cada pedido
-  - JOIN com \`gestaocatalogo.produtos\` para nome do produto
+- \`"table": "view_vendasecommerce"\` (VIEW consolidada com JOINs de pedidos, clientes, canais, pagamentos e itens)
 
-**Campos Disponíveis:**
-- \`canal_venda\`: Canal de origem (loja física, e-commerce, marketplace)
-- \`valor_pedido\`: Valor total do pedido
-- \`data_pedido\`: Data da realização
-- \`status_pedido\`: Status (pago, pendente, cancelado)
-- \`metodo_pagamento\`: Forma de pagamento
-- Via JOIN: \`nome_produto\`, \`categoria\`, \`sku\`
+**Campos disponíveis na VIEW \`view_vendasecommerce\`:**
+- \`pedido_id\`, \`numero_pedido\`, \`pedido_status\`, \`data\`: Identificadores e status do pedido
+- \`valor_produtos\`, \`valor_frete\`, \`valor_desconto\`, \`valor_total\`: Valores financeiros do pedido
+- \`cliente_id\`, \`cliente_nome\`, \`cliente_email\`, \`cliente_telefone\`: Dados do cliente
+- \`entrega_logradouro\`, \`entrega_numero\`, \`entrega_bairro\`, \`entrega_cidade\`, \`entrega_estado\`, \`entrega_cep\`: Endereço de entrega
+- \`canal_id\`, \`canal_nome\`, \`canal_tipo\`, \`canal_codigo\`: Informações do canal de venda
+- \`pagamento_id\`, \`pagamento_meio\`, \`pagamento_status\`, \`pagamento_valor\`, \`pagamento_data\`: Dados de pagamento
+- \`item_id\`, \`produto_id\`, \`quantidade\`, \`preco_unitario\`, \`desconto_item\`, \`subtotal_item\`: Itens do pedido
+- \`cupom_aplicado_id\`, \`cupom_codigo\`: Cupons aplicados
 
 **Configurações Visuais:**
 - Theme: \`"dark"\` (ideal para dashboards de vendas)
@@ -369,8 +368,8 @@ createDashboardTool({
       order: 1,
       title: "💰 Receita Total",
       dataSource: {
-        table: "pedidos",
-        y: "valor_pedido",
+        table: "view_vendasecommerce",
+        y: "valor_total",
         aggregation: "SUM"
       }
     },
@@ -383,8 +382,8 @@ createDashboardTool({
       order: 2,
       title: "📦 Total de Pedidos",
       dataSource: {
-        table: "pedidos",
-        y: "id",
+        table: "view_vendasecommerce",
+        y: "pedido_id",
         aggregation: "COUNT"
       }
     },
@@ -397,22 +396,22 @@ createDashboardTool({
       order: 3,
       title: "🎯 AOV (Ticket Médio)",
       dataSource: {
-        table: "pedidos",
-        y: "valor_pedido",
+        table: "view_vendasecommerce",
+        y: "valor_total",
         aggregation: "AVG"
       }
     },
     {
-      id: "conversao_kpi",
+      id: "clientes_kpi",
       type: "kpi",
       position: { x: 9, y: 0, w: 3, h: 2 },
       row: "1",
       span: { desktop: 1, tablet: 1, mobile: 1 },
       order: 4,
-      title: "📈 Taxa de Conversão",
+      title: "👥 Clientes Únicos",
       dataSource: {
-        table: "pedidos",
-        y: "status_pedido",
+        table: "view_vendasecommerce",
+        y: "cliente_id",
         aggregation: "COUNT"
       }
     },
@@ -426,9 +425,9 @@ createDashboardTool({
       order: 5,
       title: "📊 Receita por Canal",
       dataSource: {
-        table: "pedidos",
-        x: "canal_venda",
-        y: "valor_pedido",
+        table: "view_vendasecommerce",
+        x: "canal_nome",
+        y: "valor_total",
         aggregation: "SUM"
       }
     },
@@ -441,9 +440,9 @@ createDashboardTool({
       order: 6,
       title: "🏆 Top Produtos",
       dataSource: {
-        table: "itens_pedido",
-        x: "nome_produto",
-        y: "receita_liquida",
+        table: "view_vendasecommerce",
+        x: "produto_id",
+        y: "subtotal_item",
         aggregation: "SUM"
       }
     },
@@ -456,9 +455,9 @@ createDashboardTool({
       order: 7,
       title: "📈 Vendas ao Longo do Tempo",
       dataSource: {
-        table: "pedidos",
-        x: "data_pedido",
-        y: "valor_pedido",
+        table: "view_vendasecommerce",
+        x: "data",
+        y: "valor_total",
         aggregation: "SUM"
       }
     }

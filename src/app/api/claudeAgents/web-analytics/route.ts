@@ -373,7 +373,7 @@ Use formatação clara e visual:
 **1. Planning Phase (OBRIGATÓRIO)**
 - Analisar pedido específico do usuário para web analytics
 - Identificar quais métricas são prioritárias (sessões, bounce rate, conversão, engagement)
-- Planejar estrutura do dashboard baseada nas tabelas do schema \`analytics\`
+- Planejar estrutura do dashboard baseada na VIEW \`view_analytics\`
 - Definir layout responsivo adequado para análise de tráfego
 - **Apresentar plano detalhado ao usuário** antes de executar
 
@@ -384,41 +384,37 @@ Use formatação clara e visual:
 
 **3. Execution Phase**
 - Executar \`createDashboardTool()\` apenas após confirmação
-- Usar dados reais das tabelas do schema \`analytics\`
+- Usar dados reais da VIEW \`view_analytics\`
 - Aplicar configurações otimizadas para análise de comportamento web
 
 ### 📊 **ESTRUTURA PADRÃO PARA WEB ANALYTICS**
 
 **Row 1 - KPIs Principais (4 colunas):**
-1. **Sessões Totais** - COUNT(DISTINCT session_id) das sessoes
-2. **Usuários Únicos** - COUNT(DISTINCT visitor_id) dos visitantes
-3. **Bounce Rate** - % de sessões com apenas 1 página
-4. **Taxa de Conversão** - (Transações / Sessões) × 100
+1. **Sessões Totais** - COUNT(DISTINCT id_sessao) da view_analytics
+2. **Usuários Únicos** - COUNT(DISTINCT id_visitante) da view_analytics
+3. **Valor Transações** - SUM(valor_transacao) da view_analytics
+4. **Total de Eventos** - COUNT(evento_id) da view_analytics
 
 **Row 2 - Gráficos de Análise (2-3 colunas):**
-1. **Tráfego por Fonte** - Bar chart (x: utm_source, y: sessoes, agg: COUNT)
-2. **Sessões por Dispositivo** - Pie chart (x: device_type, y: sessoes, agg: COUNT)
-3. **Funil de Conversão** - Line chart (x: data, y: conversoes, agg: SUM)
+1. **Tráfego por Fonte** - Bar chart (x: utm_source, y: id_sessao, agg: COUNT)
+2. **Transações por Dispositivo** - Pie chart (x: tipo_dispositivo, y: valor_transacao, agg: SUM)
+3. **Eventos ao Longo do Tempo** - Line chart (x: data, y: evento_id, agg: COUNT)
 
 ### 🛠️ **CONFIGURAÇÃO DE DADOS**
 
-**Fonte de Dados:**
-- \`"schema": "analytics"\`
-- Tabelas disponíveis:
-  - \`sessoes\`: Sessões de navegação
-  - \`eventos\`: Eventos rastreados
-  - \`visitantes\`: Visitantes únicos
-  - \`transacoes_analytics\`: Transações realizadas
-  - \`agregado_diario_por_fonte\`: Métricas agregadas por fonte
-  - \`propriedades_visitante\`: Device type, browser, OS
+**Fonte de Dados Obrigatória:**
+- \`"schema": "gestaoanalytics"\`
+- \`"table": "view_analytics"\` (VIEW consolidada com JOINs de eventos, sessões, transações, itens e propriedades)
 
-**Campos Disponíveis:**
-- \`utm_source\`, \`utm_medium\`, \`utm_campaign\`: Origem do tráfego
-- \`session_id\`, \`visitor_id\`: Identificadores
-- \`duration_seconds\`, \`pages_viewed\`: Engajamento
-- \`device_type\`, \`browser\`, \`os\`: Propriedades do dispositivo
-- \`event_name\`: Tipo de evento rastreado
-- \`revenue\`: Receita por transação
+**Campos disponíveis na VIEW \`view_analytics\`:**
+- \`evento_id\`, \`data\`, \`id_sessao\`, \`id_visitante\`: Identificadores e dimensões temporais
+- \`canal_trafego\`, \`utm_source\`, \`utm_medium\`, \`utm_campaign\`: Origem do tráfego
+- \`pais\`, \`cidade\`: Geolocalização
+- \`tipo_dispositivo\`, \`navegador\`, \`sistema_operacional\`, \`eh_bot\`: Propriedades técnicas
+- \`tipo_evento\`, \`nome_evento\`, \`url_pagina\`, \`titulo_pagina\`, \`propriedades_customizadas\`: Eventos
+- \`transacao_id\`, \`valor_transacao\`, \`moeda\`, \`impostos\`, \`frete\`, \`timestamp_transacao\`: Transações
+- \`sku_produto\`, \`nome_produto\`, \`categoria_produto\`, \`preco_unitario\`, \`quantidade\`: Itens de transação
+- \`propriedade_id\`, \`nome_propriedade\`, \`url_site\`: Propriedades do site
 
 **Configurações Visuais:**
 - Theme: \`"light"\` (ideal para dashboards de analytics)
@@ -447,8 +443,8 @@ createDashboardTool({
       order: 1,
       title: "📊 Sessões Totais",
       dataSource: {
-        table: "sessoes",
-        y: "id",
+        table: "view_analytics",
+        y: "id_sessao",
         aggregation: "COUNT"
       }
     },
@@ -461,36 +457,36 @@ createDashboardTool({
       order: 2,
       title: "👥 Usuários Únicos",
       dataSource: {
-        table: "visitantes",
-        y: "visitor_id",
+        table: "view_analytics",
+        y: "id_visitante",
         aggregation: "COUNT"
       }
     },
     {
-      id: "bounce_rate_kpi",
+      id: "valor_transacoes_kpi",
       type: "kpi",
       position: { x: 6, y: 0, w: 3, h: 2 },
       row: "1",
       span: { desktop: 1, tablet: 1, mobile: 1 },
       order: 3,
-      title: "↩️ Bounce Rate",
+      title: "💰 Valor Transações",
       dataSource: {
-        table: "sessoes",
-        y: "pages_viewed",
-        aggregation: "AVG"
+        table: "view_analytics",
+        y: "valor_transacao",
+        aggregation: "SUM"
       }
     },
     {
-      id: "conversao_kpi",
+      id: "eventos_kpi",
       type: "kpi",
       position: { x: 9, y: 0, w: 3, h: 2 },
       row: "1",
       span: { desktop: 1, tablet: 1, mobile: 1 },
       order: 4,
-      title: "🎯 Taxa de Conversão",
+      title: "📈 Total de Eventos",
       dataSource: {
-        table: "transacoes_analytics",
-        y: "id",
+        table: "view_analytics",
+        y: "evento_id",
         aggregation: "COUNT"
       }
     },
@@ -504,39 +500,39 @@ createDashboardTool({
       order: 5,
       title: "🌐 Tráfego por Fonte",
       dataSource: {
-        table: "sessoes",
+        table: "view_analytics",
         x: "utm_source",
-        y: "id",
+        y: "id_sessao",
         aggregation: "COUNT"
       }
     },
     {
-      id: "sessoes_dispositivo",
+      id: "transacoes_dispositivo",
       type: "pie",
       position: { x: 4, y: 2, w: 4, h: 4 },
       row: "2",
       span: { desktop: 1, tablet: 1, mobile: 1 },
       order: 6,
-      title: "📱 Sessões por Dispositivo",
+      title: "📱 Transações por Dispositivo",
       dataSource: {
-        table: "propriedades_visitante",
-        x: "device_type",
-        y: "id",
-        aggregation: "COUNT"
+        table: "view_analytics",
+        x: "tipo_dispositivo",
+        y: "valor_transacao",
+        aggregation: "SUM"
       }
     },
     {
-      id: "funil_conversao",
+      id: "eventos_ao_longo_tempo",
       type: "line",
       position: { x: 8, y: 2, w: 4, h: 4 },
       row: "2",
       span: { desktop: 1, tablet: 1, mobile: 1 },
       order: 7,
-      title: "📈 Funil de Conversão",
+      title: "📈 Eventos ao Longo do Tempo",
       dataSource: {
-        table: "eventos",
-        x: "event_timestamp",
-        y: "id",
+        table: "view_analytics",
+        x: "data",
+        y: "evento_id",
         aggregation: "COUNT"
       }
     }
