@@ -8,6 +8,7 @@ import {
   analiseLTVcliente,
   getTopClientesPorReceita,
 } from '@/tools/salesTools';
+import { createDashboardTool } from '@/tools/apps/createDashboardTool';
 
 export const maxDuration = 300;
 
@@ -283,6 +284,197 @@ Use formatação clara e visual:
 **💡 Insights Estratégicos**
 [Padrões identificados e recomendações para crescimento]
 
+<dashboard_creation>
+## 📊 CRIAÇÃO DE DASHBOARDS DE E-COMMERCE
+
+### 🎯 **QUANDO CRIAR DASHBOARDS**
+- Usuário solicita "dashboard de vendas", "painel de e-commerce", "dashboard de receita"
+- Necessidade de monitoramento contínuo de AOV, LTV e conversão
+- Análise consolidada de produtos best-sellers e performance por canal
+- Relatórios executivos para apresentação de resultados de vendas
+
+### 🔄 **WORKFLOW DE CRIAÇÃO**
+
+**1. Planning Phase (OBRIGATÓRIO)**
+- Analisar pedido específico do usuário para vendas e-commerce
+- Identificar quais métricas são prioritárias (receita, pedidos, AOV, LTV, conversão)
+- Planejar estrutura do dashboard baseada nas tabelas do schema \`gestaovendas\`
+- Definir layout responsivo adequado para análise de vendas
+- **Apresentar plano detalhado ao usuário** antes de executar
+
+**2. Confirmation Phase**
+- Aguardar confirmação explícita do usuário com comandos como:
+  - "executa o plano", "criar dashboard", "aplicar configuração"
+  - "gera o dashboard", "implementar painel", "criar painel"
+
+**3. Execution Phase**
+- Executar \`createDashboardTool()\` apenas após confirmação
+- Usar dados reais das tabelas do schema \`gestaovendas\`
+- Aplicar configurações otimizadas para análise de vendas
+
+### 📊 **ESTRUTURA PADRÃO PARA E-COMMERCE**
+
+**Row 1 - KPIs Principais (4 colunas):**
+1. **Receita Total** - SUM(valor_pedido) dos pedidos
+2. **Pedidos Totais** - COUNT(DISTINCT pedido_id)
+3. **AOV (Ticket Médio)** - AVG(valor_pedido)
+4. **Taxa de Conversão** - (Pedidos / Sessões) × 100
+
+**Row 2 - Gráficos de Análise (2-3 colunas):**
+1. **Receita por Canal** - Bar chart (x: canal_venda, y: receita, agg: SUM)
+2. **Top Produtos** - Pie chart (x: nome_produto, y: receita_liquida, agg: SUM)
+3. **Vendas ao Longo do Tempo** - Line chart (x: data_pedido, y: valor_pedido, agg: SUM)
+
+### 🛠️ **CONFIGURAÇÃO DE DADOS**
+
+**Fonte de Dados:**
+- \`"schema": "gestaovendas"\`
+- Tabelas disponíveis:
+  - \`pedidos\`: Pedidos realizados
+  - \`itens_pedido\`: Itens de cada pedido
+  - JOIN com \`gestaocatalogo.produtos\` para nome do produto
+
+**Campos Disponíveis:**
+- \`canal_venda\`: Canal de origem (loja física, e-commerce, marketplace)
+- \`valor_pedido\`: Valor total do pedido
+- \`data_pedido\`: Data da realização
+- \`status_pedido\`: Status (pago, pendente, cancelado)
+- \`metodo_pagamento\`: Forma de pagamento
+- Via JOIN: \`nome_produto\`, \`categoria\`, \`sku\`
+
+**Configurações Visuais:**
+- Theme: \`"dark"\` (ideal para dashboards de vendas)
+- Layout responsivo: Desktop (4 cols), Tablet (2 cols), Mobile (1 col)
+
+### 📋 **EXEMPLO COMPLETO DE DASHBOARD**
+
+\\\`\\\`\\\`typescript
+createDashboardTool({
+  dashboardDescription: "Dashboard de Performance - Vendas E-commerce",
+  theme: "dark",
+  gridConfig: {
+    layoutRows: {
+      "1": { desktop: 4, tablet: 2, mobile: 1 },
+      "2": { desktop: 3, tablet: 2, mobile: 1 }
+    }
+  },
+  widgets: [
+    // ROW 1: KPIs
+    {
+      id: "receita_total_kpi",
+      type: "kpi",
+      position: { x: 0, y: 0, w: 3, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 1,
+      title: "💰 Receita Total",
+      dataSource: {
+        table: "pedidos",
+        y: "valor_pedido",
+        aggregation: "SUM"
+      }
+    },
+    {
+      id: "pedidos_total_kpi",
+      type: "kpi",
+      position: { x: 3, y: 0, w: 3, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 2,
+      title: "📦 Total de Pedidos",
+      dataSource: {
+        table: "pedidos",
+        y: "id",
+        aggregation: "COUNT"
+      }
+    },
+    {
+      id: "aov_kpi",
+      type: "kpi",
+      position: { x: 6, y: 0, w: 3, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 3,
+      title: "🎯 AOV (Ticket Médio)",
+      dataSource: {
+        table: "pedidos",
+        y: "valor_pedido",
+        aggregation: "AVG"
+      }
+    },
+    {
+      id: "conversao_kpi",
+      type: "kpi",
+      position: { x: 9, y: 0, w: 3, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 4,
+      title: "📈 Taxa de Conversão",
+      dataSource: {
+        table: "pedidos",
+        y: "status_pedido",
+        aggregation: "COUNT"
+      }
+    },
+    // ROW 2: Gráficos
+    {
+      id: "receita_por_canal",
+      type: "bar",
+      position: { x: 0, y: 2, w: 4, h: 4 },
+      row: "2",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 5,
+      title: "📊 Receita por Canal",
+      dataSource: {
+        table: "pedidos",
+        x: "canal_venda",
+        y: "valor_pedido",
+        aggregation: "SUM"
+      }
+    },
+    {
+      id: "top_produtos",
+      type: "pie",
+      position: { x: 4, y: 2, w: 4, h: 4 },
+      row: "2",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 6,
+      title: "🏆 Top Produtos",
+      dataSource: {
+        table: "itens_pedido",
+        x: "nome_produto",
+        y: "receita_liquida",
+        aggregation: "SUM"
+      }
+    },
+    {
+      id: "vendas_tempo",
+      type: "line",
+      position: { x: 8, y: 2, w: 4, h: 4 },
+      row: "2",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 7,
+      title: "📈 Vendas ao Longo do Tempo",
+      dataSource: {
+        table: "pedidos",
+        x: "data_pedido",
+        y: "valor_pedido",
+        aggregation: "SUM"
+      }
+    }
+  ]
+})
+\\\`\\\`\\\`
+
+### ⚡ **COMANDOS DE EXECUÇÃO**
+Reconheça estes comandos para executar após apresentar o plano:
+- "executa o plano", "executar plano", "criar dashboard"
+- "gera o dashboard", "aplicar configuração", "implementar painel"
+- "criar painel de vendas", "montar dashboard"
+
+**IMPORTANTE:** Sempre apresente o plano primeiro e aguarde confirmação antes de executar createDashboardTool.
+</dashboard_creation>
+
 Seja sempre orientado a dados, priorize crescimento sustentável e rentabilidade. Identifique oportunidades de otimização focando em maximizar LTV e reduzir CAC.`,
 
       messages: convertToModelMessages(messages),
@@ -294,6 +486,7 @@ Seja sempre orientado a dados, priorize crescimento sustentável e rentabilidade
         analisePerformanceCategoria,
         analiseLTVcliente,
         getTopClientesPorReceita,
+        createDashboardTool,
       },
     });
 

@@ -12,6 +12,7 @@ import {
   deteccaoOutlierPorCanal,
   visitantesRecorrentes
 } from '@/tools/analyticsTools';
+import { createDashboardTool } from '@/tools/apps/createDashboardTool';
 
 export const maxDuration = 300;
 
@@ -358,6 +359,200 @@ Use formatação clara e visual:
 **💡 Oportunidades**
 [Insights acionáveis para melhorar conversão e engagement]
 
+<dashboard_creation>
+## 📊 CRIAÇÃO DE DASHBOARDS DE WEB ANALYTICS
+
+### 🎯 **QUANDO CRIAR DASHBOARDS**
+- Usuário solicita "dashboard de analytics", "painel de tráfego", "dashboard de conversão"
+- Necessidade de monitoramento contínuo de sessões, bounce rate e funil de conversão
+- Análise consolidada de fontes de tráfego e comportamento de usuários
+- Relatórios executivos para apresentação de métricas de web analytics
+
+### 🔄 **WORKFLOW DE CRIAÇÃO**
+
+**1. Planning Phase (OBRIGATÓRIO)**
+- Analisar pedido específico do usuário para web analytics
+- Identificar quais métricas são prioritárias (sessões, bounce rate, conversão, engagement)
+- Planejar estrutura do dashboard baseada nas tabelas do schema \`analytics\`
+- Definir layout responsivo adequado para análise de tráfego
+- **Apresentar plano detalhado ao usuário** antes de executar
+
+**2. Confirmation Phase**
+- Aguardar confirmação explícita do usuário com comandos como:
+  - "executa o plano", "criar dashboard", "aplicar configuração"
+  - "gera o dashboard", "implementar painel", "criar painel"
+
+**3. Execution Phase**
+- Executar \`createDashboardTool()\` apenas após confirmação
+- Usar dados reais das tabelas do schema \`analytics\`
+- Aplicar configurações otimizadas para análise de comportamento web
+
+### 📊 **ESTRUTURA PADRÃO PARA WEB ANALYTICS**
+
+**Row 1 - KPIs Principais (4 colunas):**
+1. **Sessões Totais** - COUNT(DISTINCT session_id) das sessoes
+2. **Usuários Únicos** - COUNT(DISTINCT visitor_id) dos visitantes
+3. **Bounce Rate** - % de sessões com apenas 1 página
+4. **Taxa de Conversão** - (Transações / Sessões) × 100
+
+**Row 2 - Gráficos de Análise (2-3 colunas):**
+1. **Tráfego por Fonte** - Bar chart (x: utm_source, y: sessoes, agg: COUNT)
+2. **Sessões por Dispositivo** - Pie chart (x: device_type, y: sessoes, agg: COUNT)
+3. **Funil de Conversão** - Line chart (x: data, y: conversoes, agg: SUM)
+
+### 🛠️ **CONFIGURAÇÃO DE DADOS**
+
+**Fonte de Dados:**
+- \`"schema": "analytics"\`
+- Tabelas disponíveis:
+  - \`sessoes\`: Sessões de navegação
+  - \`eventos\`: Eventos rastreados
+  - \`visitantes\`: Visitantes únicos
+  - \`transacoes_analytics\`: Transações realizadas
+  - \`agregado_diario_por_fonte\`: Métricas agregadas por fonte
+  - \`propriedades_visitante\`: Device type, browser, OS
+
+**Campos Disponíveis:**
+- \`utm_source\`, \`utm_medium\`, \`utm_campaign\`: Origem do tráfego
+- \`session_id\`, \`visitor_id\`: Identificadores
+- \`duration_seconds\`, \`pages_viewed\`: Engajamento
+- \`device_type\`, \`browser\`, \`os\`: Propriedades do dispositivo
+- \`event_name\`: Tipo de evento rastreado
+- \`revenue\`: Receita por transação
+
+**Configurações Visuais:**
+- Theme: \`"light"\` (ideal para dashboards de analytics)
+- Layout responsivo: Desktop (4 cols), Tablet (2 cols), Mobile (1 col)
+
+### 📋 **EXEMPLO COMPLETO DE DASHBOARD**
+
+\\\`\\\`\\\`typescript
+createDashboardTool({
+  dashboardDescription: "Dashboard de Performance - Web Analytics",
+  theme: "light",
+  gridConfig: {
+    layoutRows: {
+      "1": { desktop: 4, tablet: 2, mobile: 1 },
+      "2": { desktop: 3, tablet: 2, mobile: 1 }
+    }
+  },
+  widgets: [
+    // ROW 1: KPIs
+    {
+      id: "sessoes_total_kpi",
+      type: "kpi",
+      position: { x: 0, y: 0, w: 3, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 1,
+      title: "📊 Sessões Totais",
+      dataSource: {
+        table: "sessoes",
+        y: "id",
+        aggregation: "COUNT"
+      }
+    },
+    {
+      id: "usuarios_kpi",
+      type: "kpi",
+      position: { x: 3, y: 0, w: 3, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 2,
+      title: "👥 Usuários Únicos",
+      dataSource: {
+        table: "visitantes",
+        y: "visitor_id",
+        aggregation: "COUNT"
+      }
+    },
+    {
+      id: "bounce_rate_kpi",
+      type: "kpi",
+      position: { x: 6, y: 0, w: 3, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 3,
+      title: "↩️ Bounce Rate",
+      dataSource: {
+        table: "sessoes",
+        y: "pages_viewed",
+        aggregation: "AVG"
+      }
+    },
+    {
+      id: "conversao_kpi",
+      type: "kpi",
+      position: { x: 9, y: 0, w: 3, h: 2 },
+      row: "1",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 4,
+      title: "🎯 Taxa de Conversão",
+      dataSource: {
+        table: "transacoes_analytics",
+        y: "id",
+        aggregation: "COUNT"
+      }
+    },
+    // ROW 2: Gráficos
+    {
+      id: "trafego_por_fonte",
+      type: "bar",
+      position: { x: 0, y: 2, w: 4, h: 4 },
+      row: "2",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 5,
+      title: "🌐 Tráfego por Fonte",
+      dataSource: {
+        table: "sessoes",
+        x: "utm_source",
+        y: "id",
+        aggregation: "COUNT"
+      }
+    },
+    {
+      id: "sessoes_dispositivo",
+      type: "pie",
+      position: { x: 4, y: 2, w: 4, h: 4 },
+      row: "2",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 6,
+      title: "📱 Sessões por Dispositivo",
+      dataSource: {
+        table: "propriedades_visitante",
+        x: "device_type",
+        y: "id",
+        aggregation: "COUNT"
+      }
+    },
+    {
+      id: "funil_conversao",
+      type: "line",
+      position: { x: 8, y: 2, w: 4, h: 4 },
+      row: "2",
+      span: { desktop: 1, tablet: 1, mobile: 1 },
+      order: 7,
+      title: "📈 Funil de Conversão",
+      dataSource: {
+        table: "eventos",
+        x: "event_timestamp",
+        y: "id",
+        aggregation: "COUNT"
+      }
+    }
+  ]
+})
+\\\`\\\`\\\`
+
+### ⚡ **COMANDOS DE EXECUÇÃO**
+Reconheça estes comandos para executar após apresentar o plano:
+- "executa o plano", "executar plano", "criar dashboard"
+- "gera o dashboard", "aplicar configuração", "implementar painel"
+- "criar painel de analytics", "montar dashboard"
+
+**IMPORTANTE:** Sempre apresente o plano primeiro e aguarde confirmação antes de executar createDashboardTool.
+</dashboard_creation>
+
 Seja sempre orientado a dados, priorize otimização de conversão e melhoria contínua da experiência do usuário.`,
 
       messages: convertToModelMessages(messages),
@@ -372,7 +567,8 @@ Seja sempre orientado a dados, priorize otimização de conversão e melhoria co
         contribuicaoPorPagina,
         ltvMedio,
         deteccaoOutlierPorCanal,
-        visitantesRecorrentes
+        visitantesRecorrentes,
+        createDashboardTool
       }
     });
 
