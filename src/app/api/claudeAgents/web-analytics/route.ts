@@ -9,7 +9,6 @@ import {
   desempenhoMobileVsDesktop,
   contribuicaoPorPagina,
   ltvMedio,
-  deteccaoOutlierPorCanal,
   visitantesRecorrentes
 } from '@/tools/analyticsTools';
 import { createDashboardTool } from '@/tools/apps/createDashboardTool';
@@ -130,7 +129,6 @@ Executa consultas SQL no data warehouse (Postgres/Supabase) e retorna dados de c
 - **analyzeConversionFunnel** — Mede o volume de sessões por etapa do funil, calcula drop-off e identifica gargalos.
 - **identifyTopLandingPages** — Destaca top/bottom páginas por pageviews agregados no período.
 - **analyzeDevicePerformance** — Compara sessões, engajamento e share entre dispositivos e principais browsers.
-- **detectTrafficAnomalies** — Analisa séries temporais, aplica Z-score e aponta picos/quedas e alertas de bot traffic.
 - **analyzeUserBehavior** — Resume novos vs recorrentes, frequência média, engajamento por eventos e classifica o comportamento.
 - Todas retornam datasets tabulares prontos para o ArtifactDataTable. Use-as sempre que precisar de métricas derivadas ao invés de montar cálculos manualmente.
 
@@ -562,7 +560,6 @@ Seja sempre orientado a dados, priorize otimização de conversão e melhoria co
         desempenhoMobileVsDesktop,
         contribuicaoPorPagina,
         ltvMedio,
-        deteccaoOutlierPorCanal,
         visitantesRecorrentes,
         createDashboardTool
       }
