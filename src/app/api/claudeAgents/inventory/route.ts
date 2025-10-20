@@ -7,8 +7,7 @@ import {
   analiseDOS,
   abcResumoGerencial,
   desempenhoPorDepositoExpedicoes,
-  analiseGiroEstoque,
-  detectAnomalies
+  analiseGiroEstoque
 } from '@/tools/inventoryTools';
 
 export const maxDuration = 300;
@@ -76,10 +75,6 @@ Auxiliar gestores de estoque, compradores e controllers a:
 - Parâmetros: período em meses (default 6)
 - Use para: "Quais produtos giram mais?", "Risco de obsolescência?"
 
-**8. detectAnomalies** - Detecta movimentações suspeitas
-- Sensibilidade: low, medium, high
-- Use para: "Anomalias?", "Picos anormais?", "Discrepâncias entre canais?"
-
 ## 🎯 WORKFLOW RECOMENDADO
 
 Para análises completas, USE AS FERRAMENTAS ANALÍTICAS na seguinte ordem:
@@ -90,9 +85,8 @@ Para análises completas, USE AS FERRAMENTAS ANALÍTICAS na seguinte ordem:
 4. **generateABCAnalysis** - Classificar produtos por importância
 5. **analyzeStockMovementTrends** - Entender tendências
 6. **compareChannelPerformance** - Comparar performance multi-canal
-7. **detectAnomalies** - Verificar inconsistências
 
-IMPORTANTE: Priorize usar as ferramentas analíticas (#2-#8) em vez de fazer cálculos manuais!
+IMPORTANTE: Priorize usar as ferramentas analíticas (#2-#7) em vez de fazer cálculos manuais!
 
 # 📐 Framework de Análise de Inventário
 
@@ -269,8 +263,7 @@ Seja sempre orientado a dados, priorize eficiência operacional e saúde finance
         analiseDOS,
         abcResumoGerencial,
         desempenhoPorDepositoExpedicoes,
-        analiseGiroEstoque,
-        detectAnomalies
+        analiseGiroEstoque
       }
     });
 

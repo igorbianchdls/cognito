@@ -6,9 +6,7 @@ import {
   desempenhoPorPlataforma,
   desempenhoPorFormatoPost,
   rankingPorPublicacao,
-  engajamentoPorDiaHora,
-  detectarAnomaliasPerformance,
-  detectarQuedaSubitaAlcance
+  engajamentoPorDiaHora
 } from '@/tools/organicMarketingTools';
 import { createDashboardTool } from '@/tools/apps/createDashboardTool';
 
@@ -509,8 +507,6 @@ Seja sempre orientado a dados, priorize maximização de engajamento orgânico e
         desempenhoPorFormatoPost,
         rankingPorPublicacao,
         engajamentoPorDiaHora,
-        detectarAnomaliasPerformance,
-        detectarQuedaSubitaAlcance,
         createDashboardTool
       }
     });

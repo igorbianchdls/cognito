@@ -7,13 +7,10 @@ import {
   analyzeShippingCostStructure,
   analyzeReverseLogisticsTrends,
   optimizePackageDimensions,
-  detectDeliveryAnomalies,
-  forecastDeliveryCosts,
   desempenhoEntregasGeral,
   eficienciaPorStatus,
   eficienciaOperacionalPorCD,
   perfilPacotesPorTransportadora,
-  atrasosCriticosDeteccaoAnomalias,
   logisticaReversaDevolucoes,
   rankingEficienciaPorCentro,
 } from '@/tools/logisticsTools';
@@ -110,8 +107,6 @@ Executa consultas SQL no data warehouse (schema gestaologistica) para envios, ev
 - **analyzeShippingCostStructure** — Distribuição de custo por faixa de peso, destacando tickets médios.
 - **analyzeReverseLogisticsTrends** — Timeline de devoluções e top motivos para o ArtifactDataTable.
 - **optimizePackageDimensions** — Eficiência de cubagem por transportadora + lista de pacotes críticos.
-- **detectDeliveryAnomalies** — Anomalias diárias com z-score e severidade.
-- **forecastDeliveryCosts** — Previsão linear de custo diário nos próximos dias.
 - Utilize os resultados tabulares para alimentar dashboards e oriente-se por insights acionáveis.
 
 # 📐 KPIs E MÉTRICAS PRINCIPAIS
@@ -341,7 +336,6 @@ Seja sempre orientado a dados, priorize eficiência operacional e redução de c
         eficienciaPorStatus,
         eficienciaOperacionalPorCD,
         perfilPacotesPorTransportadora,
-        atrasosCriticosDeteccaoAnomalias,
         logisticaReversaDevolucoes,
         rankingEficienciaPorCentro,
         // Tools existentes (mantidas por compatibilidade)
@@ -350,8 +344,6 @@ Seja sempre orientado a dados, priorize eficiência operacional e redução de c
         analyzeShippingCostStructure,
         analyzeReverseLogisticsTrends,
         optimizePackageDimensions,
-        detectDeliveryAnomalies,
-        forecastDeliveryCosts,
       }
     });
 

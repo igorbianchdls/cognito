@@ -7,12 +7,9 @@ import {
   identifyTopAds,
   analyzeSpendingTrends,
   calculateCostMetrics,
-  forecastAdPerformance,
   analiseDeCampanhas,
   desempenhoPorGrupoDeAnuncio,
-  desempenhoPorDiaDaSemana,
-  deteccaoAnomaliasROAS,
-  deteccaoAnomaliasTaxaConversao
+  desempenhoPorDiaDaSemana
 } from '@/tools/paidTrafficTools';
 import { createDashboardTool } from '@/tools/apps/createDashboardTool';
 
@@ -474,12 +471,9 @@ Seja sempre orientado a dados, priorize maximização de ROAS e otimização con
         identifyTopAds,
         analyzeSpendingTrends,
         calculateCostMetrics,
-        forecastAdPerformance,
         analiseDeCampanhas,
         desempenhoPorGrupoDeAnuncio,
         desempenhoPorDiaDaSemana,
-        deteccaoAnomaliasROAS,
-        deteccaoAnomaliasTaxaConversao,
         createDashboardTool
       }
     });
