@@ -1,6 +1,14 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '@/components/ui/button';
+import WeatherCard from '@/components/julius/WeatherCard';
+import Calculator from '@/components/julius/Calculator';
+import ChartGenerator from '@/components/julius/ChartGenerator';
+import BigQueryDatasetsList from '@/components/julius/BigQueryDatasetsList';
+import BigQueryTablesList from '@/components/julius/BigQueryTablesList';
+import BigQueryTableData from '@/components/julius/BigQueryTableData';
+import BigQueryChartGenerator from '@/components/julius/BigQueryChartGenerator';
+import RAGSearchResults from '@/components/julius/RAGSearchResults';
 import EmailResult from '@/components/tools/EmailResult';
 
 interface ToolCall {
@@ -77,6 +85,160 @@ export default function RespostaDaIA({ content, isLoading, toolCalls }: Resposta
                   
                   if (state === 'result' && result) {
                     switch (name) {
+                      case 'getWeather':
+                        return (
+                          <div key={id} className="my-4">
+                            <WeatherCard 
+                              location={(result.location as string) || ''} 
+                              temperature={(result.temperature as number) || 0} 
+                            />
+                          </div>
+                        );
+                      case 'calculator':
+                        return (
+                          <div key={id} className="my-4">
+                            <Calculator 
+                              expression={result.expression as string}
+                              result={result.result as number}
+                            />
+                          </div>
+                        );
+                      case 'createChart':
+                        return (
+                          <div key={id} className="my-4">
+                            <ChartGenerator 
+                              title={(result.title as string) || ''}
+                              data={(result.data as Array<{label: string; value: number}>) || []}
+                              type={(result.type as 'bar' | 'pie' | 'line') || 'bar'}
+                            />
+                          </div>
+                        );
+                      case 'getBigQueryDatasets':
+                        return (
+                          <div key={id} className="my-4">
+                            <BigQueryDatasetsList 
+                              datasets={result.datasets as Array<{
+                                id: string;
+                                friendlyName?: string;
+                                description?: string;
+                                location?: string;
+                                creationTime?: string;
+                                lastModifiedTime?: string;
+                              }>}
+                              success={result.success as boolean}
+                              error={result.error as string}
+                            />
+                          </div>
+                        );
+                      case 'getBigQueryTables':
+                        return (
+                          <div key={id} className="my-4">
+                            <BigQueryTablesList 
+                              tables={result.tables as Array<{
+                                DATASETID?: string;
+                                TABLEID?: string;
+                                PROJECTID?: string;
+                                NUMROWS?: number;
+                                NUMBYTES?: number;
+                                CREATIONTIME?: string;
+                                datasetId?: string;
+                                tableId?: string;
+                                projectId?: string;
+                                description?: string;
+                                numRows?: number;
+                                numBytes?: number;
+                                creationTime?: Date;
+                                lastModifiedTime?: Date;
+                              }>}
+                              datasetId={(result.datasetId as string) || ''}
+                              success={result.success as boolean}
+                              error={result.error as string}
+                            />
+                          </div>
+                        );
+                      case 'getBigQueryTableData':
+                        return (
+                          <div key={id} className="my-4">
+                            <BigQueryTableData 
+                              data={result.data as {
+                                data: Array<Record<string, unknown>>;
+                                totalRows: number;
+                                schema: Array<{
+                                  name: string;
+                                  type: string;
+                                  mode: string;
+                                }>;
+                                executionTime: number;
+                                bytesProcessed?: number;
+                              }}
+                              executionTime={result.executionTime as number}
+                              query={result.query as string}
+                              success={result.success as boolean}
+                              error={result.error as string}
+                            />
+                          </div>
+                        );
+                      case 'createBigQueryChart':
+                        return (
+                          <div key={id} className="my-4">
+                            <BigQueryChartGenerator 
+                              chartData={result.chartData as Array<{
+                                x: string;
+                                y: number;
+                                label: string;
+                                value: number;
+                              }>}
+                              chartType={result.chartType as 'bar' | 'line' | 'pie' | 'scatter'}
+                              xColumn={result.xColumn as string}
+                              yColumn={result.yColumn as string}
+                              title={result.title as string}
+                              query={result.query as string}
+                              executionTime={result.executionTime as number}
+                              dataCount={result.dataCount as number}
+                              success={result.success as boolean}
+                              error={result.error as string}
+                            />
+                          </div>
+                        );
+                      case 'createChartFromTable':
+                        return (
+                          <div key={id} className="my-4">
+                            <BigQueryChartGenerator 
+                              chartData={result.chartData as Array<{
+                                x: string;
+                                y: number;
+                                label: string;
+                                value: number;
+                              }>}
+                              chartType={result.chartType as 'bar' | 'line' | 'pie' | 'scatter'}
+                              xColumn={result.xColumn as string}
+                              yColumn={result.yColumn as string}
+                              title={result.title as string}
+                              dataCount={result.dataCount as number}
+                              success={result.success as boolean}
+                              error={result.error as string}
+                            />
+                          </div>
+                        );
+                      case 'ragSearch':
+                        return (
+                          <div key={id} className="my-4">
+                            <RAGSearchResults 
+                              answer={result.answer as string}
+                              sources={result.sources as Array<{
+                                content?: string;
+                                text?: string;
+                                metadata?: Record<string, unknown>;
+                                score?: number;
+                              }>}
+                              query={result.query as string}
+                              topK={result.topK as number}
+                              sourcesCount={result.sourcesCount as number}
+                              success={result.success as boolean}
+                              error={result.error as string}
+                            />
+                          </div>
+                        );
                       case 'sendEmail':
                         return (
                           <div key={id} className="my-4">

@@ -1,0 +1,201 @@
+'use client'
+
+import { useState, useEffect, useMemo } from 'react'
+import { LineChart } from '@/components/charts'
+import type { ChartData } from '@/components/charts/types'
+import type { DroppedWidget } from '@/types/apps/droppedWidget'
+import type { LineChartConfig } from '@/types/apps/chartWidgets'
+
+// Helper function to convert hex color + opacity to RGBA
+function hexToRgba(hex: string, opacity: number = 1): string {
+  // Remove # if present
+  hex = hex.replace('#', '')
+  
+  // Convert 3-digit hex to 6-digit
+  if (hex.length === 3) {
+    hex = hex.split('').map(char => char + char).join('')
+  }
+  
+  // Parse RGB values
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  
+  return `rgba(${r}, ${g}, ${b}, ${opacity})`
+}
+
+interface LineChartWidgetProps {
+  widget: DroppedWidget
+}
+
+export default function LineChartWidget({ widget }: LineChartWidgetProps) {
+  const [data, setData] = useState<ChartData[]>([])
+
+  // Initialize data based on widget config
+  useEffect(() => {
+    // Check if widget has BigQuery data
+    if (widget.bigqueryData && widget.bigqueryData.data && Array.isArray(widget.bigqueryData.data)) {
+      // Use BigQuery data from Chart Builder
+      const bigqueryData = widget.bigqueryData.data as { x: string; y: number; label: string; value: number }[]
+      const chartData = bigqueryData.map(item => ({
+        x: item.x,
+        y: item.y,
+        label: item.label,
+        value: item.value
+      }))
+      setData(chartData)
+      console.log('📈 LineChartWidget usando dados do BigQuery:', chartData)
+    } else {
+      // Use default sample data
+      const defaultData = [
+        { x: 'Jan', y: 45 },
+        { x: 'Feb', y: 52 },
+        { x: 'Mar', y: 48 },
+        { x: 'Apr', y: 61 },
+        { x: 'May', y: 55 },
+        { x: 'Jun', y: 67 },
+        { x: 'Jul', y: 72 },
+        { x: 'Aug', y: 68 },
+      ]
+      setData(defaultData)
+      console.log('📈 LineChartWidget usando dados default')
+      
+      // Simulate real-time data updates for sample data only
+      const interval = setInterval(() => {
+        setData(prevData => 
+          prevData.map(item => ({
+            ...item,
+            y: Math.floor(Math.random() * 60) + 30
+          }))
+        )
+      }, 4000)
+
+      return () => clearInterval(interval)
+    }
+  }, [widget.config, widget.bigqueryData])
+
+  // Get chart configuration with backward compatibility
+  const chartConfig = useMemo(() => {
+    let config: Partial<LineChartConfig> = {}
+    
+    // Priorizar configuração especializada (nova arquitetura)
+    if (widget.config && typeof widget.config === 'object' && widget.config.chartConfig) {
+      config = widget.config.chartConfig as LineChartConfig
+      console.log('🎯 LineChartWidget usando config.chartConfig:', config)
+    }
+    // Fallback para legacy chartConfig
+    else if (widget.chartConfig) {
+      config = widget.chartConfig as LineChartConfig
+      console.log('🎯 LineChartWidget usando chartConfig legacy:', config)
+    }
+    
+    console.log('📊 LineChartWidget final config:', config)
+    return config
+  }, [widget.config, widget.chartConfig])
+  
+  // Prepare props for LineChart
+  const chartProps = {
+    data,
+    colors: chartConfig.colors || ['#2563eb'],
+    enableGridX: chartConfig.enableGridX ?? false,
+    enableGridY: chartConfig.enableGridY ?? true,
+    // Line-specific settings
+    enablePoints: chartConfig.enablePoints ?? true,
+    pointSize: chartConfig.pointSize ?? 4,
+    lineWidth: chartConfig.lineWidth ?? 2,
+    curve: chartConfig.curve || 'cardinal',
+    enableArea: chartConfig.enableArea ?? false,
+    areaOpacity: chartConfig.areaOpacity ?? 0.2,
+    animate: chartConfig.animate ?? false,
+    motionConfig: chartConfig.motionConfig || 'gentle',
+    legends: chartConfig.legends,
+    margin: {
+      top: chartConfig.margin?.top ?? 12,
+      right: chartConfig.margin?.right ?? 12,
+      bottom: chartConfig.margin?.bottom ?? 80,
+      left: chartConfig.margin?.left ?? 50,
+    },
+    axisBottom: chartConfig.axisBottom ? {
+      tickSize: chartConfig.axisBottom.tickSize ?? 0,
+      tickPadding: chartConfig.axisBottom.tickPadding ?? 8,
+      tickRotation: chartConfig.axisBottom.tickRotation ?? 0,
+      legend: chartConfig.axisBottom.legend,
+    } : {
+      tickSize: 0,
+      tickPadding: 8,
+      tickRotation: 0,
+    },
+    axisLeft: chartConfig.axisLeft ? {
+      tickSize: chartConfig.axisLeft.tickSize ?? 0,
+      tickPadding: chartConfig.axisLeft.tickPadding ?? 8,
+      tickRotation: chartConfig.axisLeft.tickRotation ?? 0,
+      legend: chartConfig.axisLeft.legend,
+    } : {
+      tickSize: 0,
+      tickPadding: 8,
+      tickRotation: 0,
+    },
+    backgroundColor: hexToRgba(chartConfig.backgroundColor || '#fff', (chartConfig as Record<string, unknown>).backgroundOpacity as number ?? 1),
+  }
+
+  return (
+    <div className="h-full w-full flex flex-col">
+      {/* Title and Subtitle */}
+      {(chartConfig.showTitle !== false && chartConfig.title) && (
+        <div style={{ 
+          paddingTop: `${typeof chartConfig.titlePadding === 'object' ? chartConfig.titlePadding?.top ?? 8 : chartConfig.titlePadding ?? 8}px`,
+          paddingRight: `${typeof chartConfig.titlePadding === 'object' ? chartConfig.titlePadding?.right ?? 8 : chartConfig.titlePadding ?? 8}px`,
+          paddingBottom: `${typeof chartConfig.titlePadding === 'object' ? chartConfig.titlePadding?.bottom ?? 8 : chartConfig.titlePadding ?? 8}px`,
+          paddingLeft: `${typeof chartConfig.titlePadding === 'object' ? chartConfig.titlePadding?.left ?? 8 : chartConfig.titlePadding ?? 8}px`
+        }}>
+          <h3 
+            style={{
+              fontSize: `${chartConfig.titleFontSize ?? 18}px`,
+              color: chartConfig.titleColor ?? '#111827',
+              fontWeight: chartConfig.titleFontWeight ?? 700,
+              lineHeight: 1.2,
+              margin: 0,
+              textAlign: 'left'
+            }}
+          >
+            {chartConfig.title}
+          </h3>
+        </div>
+      )}
+      {(chartConfig.showSubtitle !== false && chartConfig.subtitle) && (
+        <div style={{ 
+          paddingTop: `${typeof chartConfig.subtitlePadding === 'object' ? chartConfig.subtitlePadding?.top ?? 8 : chartConfig.subtitlePadding ?? 8}px`,
+          paddingRight: `${typeof chartConfig.subtitlePadding === 'object' ? chartConfig.subtitlePadding?.right ?? 8 : chartConfig.subtitlePadding ?? 8}px`,
+          paddingBottom: `${typeof chartConfig.subtitlePadding === 'object' ? chartConfig.subtitlePadding?.bottom ?? 8 : chartConfig.subtitlePadding ?? 8}px`,
+          paddingLeft: `${typeof chartConfig.subtitlePadding === 'object' ? chartConfig.subtitlePadding?.left ?? 8 : chartConfig.subtitlePadding ?? 8}px`
+        }}>
+          <p 
+            style={{
+              fontSize: `${chartConfig.subtitleFontSize ?? 14}px`,
+              color: chartConfig.subtitleColor ?? '#6B7280',
+              fontWeight: chartConfig.subtitleFontWeight ?? 400,
+              lineHeight: 1.4,
+              margin: 0,
+              textAlign: 'left'
+            }}
+          >
+            {chartConfig.subtitle}
+          </p>
+        </div>
+      )}
+      
+      {/* Chart */}
+      <div className="flex-1">
+        <LineChart {...{
+          ...chartProps,
+          margin: {
+            top: (chartProps.margin?.top ?? 12) + (typeof chartConfig.chartPadding === 'object' ? chartConfig.chartPadding?.top ?? 0 : chartConfig.chartPadding ?? 0),
+            right: (chartProps.margin?.right ?? 8) + (typeof chartConfig.chartPadding === 'object' ? chartConfig.chartPadding?.right ?? 0 : chartConfig.chartPadding ?? 0),
+            bottom: (chartProps.margin?.bottom ?? 80) + (typeof chartConfig.chartPadding === 'object' ? chartConfig.chartPadding?.bottom ?? 0 : chartConfig.chartPadding ?? 0),
+            left: (chartProps.margin?.left ?? 8) + (typeof chartConfig.chartPadding === 'object' ? chartConfig.chartPadding?.left ?? 0 : chartConfig.chartPadding ?? 0),
+          }
+        }} />
+      </div>
+    </div>
+  )
+}
