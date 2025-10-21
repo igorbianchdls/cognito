@@ -1,0 +1,87 @@
+import { atom } from 'nanostores'
+
+export type TituloState = {
+  title: string
+  subtitle?: string
+}
+
+export type TabsOption = {
+  value: string
+  label: string
+}
+
+export type TabsState = {
+  options: TabsOption[]
+  selected: string
+}
+
+export type TabelaUIState = {
+  pageSize: number
+  showPagination: boolean
+  enableSearch: boolean
+  enableColumnToggle: boolean
+  enableRowSelection: boolean
+  selectionMode: 'single' | 'multiple'
+  stickyHeader: boolean
+  headerBg: string
+  headerText: string
+  cellText: string
+  headerFontSize: number
+  cellFontSize: number
+  defaultSortColumn?: string
+  defaultSortDirection?: 'asc' | 'desc'
+}
+
+const DEFAULT_TITULO: TituloState = {
+  title: 'Financeiro',
+  subtitle: 'Selecione uma opção para visualizar os dados',
+}
+
+const DEFAULT_TABS: TabsState = {
+  options: [
+    { value: 'visao', label: 'Visão geral' },
+    { value: 'contas', label: 'Contas' },
+    { value: 'pagamentos', label: 'Pagamentos' },
+    { value: 'recebimentos', label: 'Recebimentos' },
+  ],
+  selected: 'visao',
+}
+
+const DEFAULT_TABELA_UI: TabelaUIState = {
+  pageSize: 10,
+  showPagination: true,
+  enableSearch: true,
+  enableColumnToggle: true,
+  enableRowSelection: false,
+  selectionMode: 'single',
+  stickyHeader: false,
+  headerBg: '#f9fafb',
+  headerText: '#374151',
+  cellText: '#1f2937',
+  headerFontSize: 13,
+  cellFontSize: 13,
+  defaultSortColumn: undefined,
+  defaultSortDirection: 'asc',
+}
+
+export const $titulo = atom<TituloState>({ ...DEFAULT_TITULO })
+export const $tabs = atom<TabsState>({ ...DEFAULT_TABS })
+export const $tabelaUI = atom<TabelaUIState>({ ...DEFAULT_TABELA_UI })
+
+export const financeiroUiActions = {
+  setTitulo: (partial: Partial<TituloState>) => {
+    $titulo.set({ ...$titulo.get(), ...partial })
+  },
+  setTabs: (partial: Partial<TabsState>) => {
+    $tabs.set({ ...$tabs.get(), ...partial })
+  },
+  setTabelaUI: (partial: Partial<TabelaUIState>) => {
+    $tabelaUI.set({ ...$tabelaUI.get(), ...partial })
+  },
+  resetAll: () => {
+    $titulo.set({ ...DEFAULT_TITULO })
+    $tabs.set({ ...DEFAULT_TABS })
+    $tabelaUI.set({ ...DEFAULT_TABELA_UI })
+  },
+}
+
