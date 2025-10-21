@@ -197,7 +197,9 @@ export default function TabelaBasica<TData extends object>({ columns, data, ui, 
                 <TableRow key={row.id} data-state={row.getIsSelected() && "selected"}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} style={cellStyles}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {cell.column.columnDef.cell
+                        ? flexRender(cell.column.columnDef.cell, cell.getContext())
+                        : String(cell.getValue() ?? '')}
                     </TableCell>
                   ))}
                 </TableRow>
