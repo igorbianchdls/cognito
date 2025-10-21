@@ -5,7 +5,6 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
-  getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   SortingState,
@@ -80,12 +79,19 @@ export default function TabelaBasica<TData extends object>({ columns, data, ui, 
 
   const cols = React.useMemo(() => (selectionCol ? [selectionCol, ...columns] : columns), [selectionCol, columns])
 
+  const filteredData = React.useMemo(() => {
+    if (!ui.enableSearch || !globalFilter.trim()) return data
+    const q = globalFilter.toLowerCase()
+    return data.filter((row: any) =>
+      Object.values(row ?? {}).some((v) => String(v ?? '').toLowerCase().includes(q))
+    )
+  }, [data, ui.enableSearch, globalFilter])
+
   const table = useReactTable({
-    data,
+    data: filteredData,
     columns: cols,
     state: {
       sorting,
-      globalFilter,
       columnVisibility,
       rowSelection,
     },
@@ -93,16 +99,19 @@ export default function TabelaBasica<TData extends object>({ columns, data, ui, 
       pagination: { pageSize: ui.pageSize },
     },
     onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     enableRowSelection: ui.enableRowSelection,
     enableMultiRowSelection: ui.selectionMode === 'multiple',
   })
+
+  // Sync page size when UI changes
+  React.useEffect(() => {
+    table.setPageSize(ui.pageSize)
+  }, [ui.pageSize, table])
 
   const headerStyles: React.CSSProperties = {
     backgroundColor: ui.headerBg,
