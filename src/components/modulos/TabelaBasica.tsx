@@ -12,7 +12,7 @@ import {
   VisibilityState,
   useReactTable,
 } from "@tanstack/react-table"
-import { ChevronLeft, ChevronRight, MoreHorizontal, Check } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -30,7 +30,7 @@ import { cn } from "@/lib/utils"
 import type { TabelaUIState } from "@/stores/modulos/financeiroUiStore"
 
 export type BasicTableProps<TData extends object> = {
-  columns: ColumnDef<TData, any>[]
+  columns: ColumnDef<TData, unknown>[]
   data: TData[]
   ui: TabelaUIState
   className?: string
@@ -242,4 +242,3 @@ export default function TabelaBasica<TData extends object>({ columns, data, ui, 
       )}
     </div>
   )}
-
