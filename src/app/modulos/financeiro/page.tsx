@@ -14,10 +14,22 @@ import DataToolbar from '@/components/modulos/DataToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { LayoutDashboard, Banknote, CreditCard, ArrowDownCircle } from 'lucide-react'
-import ContaAzulIcon from '@/components/icons/ContaAzulIcon'
+import OmieIcon from '@/components/icons/OmieIcon'
+import BlingIcon from '@/components/icons/BlingIcon'
+import TinyIcon from '@/components/icons/TinyIcon'
+import TotvsIcon from '@/components/icons/TotvsIcon'
+import RdStationIcon from '@/components/icons/RdStationIcon'
 import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
 import MetaIcon from '@/components/icons/MetaIcon'
-import ShopifyIcon from '@/components/icons/ShopifyIcon'
+import GoogleAnalyticsIcon from '@/components/icons/GoogleAnalyticsIcon'
+import PipedriveIcon from '@/components/icons/PipedriveIcon'
+import SalesforceIcon from '@/components/icons/SalesforceIcon'
+import HubspotIcon from '@/components/icons/HubspotIcon'
+import ContaAzulIcon from '@/components/icons/ContaAzulIcon'
+import MercadoLivreIcon from '@/components/icons/MercadoLivreIcon'
+import ShopeeIcon from '@/components/icons/ShopeeIcon'
+import MagaluIcon from '@/components/icons/MagaluIcon'
+import AmazonIcon from '@/components/icons/AmazonIcon'
 
 type Row = TableData
 
@@ -80,64 +92,104 @@ export default function ModulosFinanceiroPage() {
         }
       case 'visao':
       default:
+        // Catálogos (4 itens por coluna)
+        const colA = [
+          { Icon: OmieIcon, name: 'Omie', category: 'Assinatura' },
+          { Icon: BlingIcon, name: 'Bling', category: 'Assinatura' },
+          { Icon: TinyIcon, name: 'Tiny', category: 'Assinatura' },
+          { Icon: TotvsIcon, name: 'Totvs', category: 'Licenças' },
+        ]
+        const colB = [
+          { Icon: RdStationIcon, name: 'RD Station', category: 'Assinatura' },
+          { Icon: GoogleAdsIcon, name: 'Google Ads', category: 'Mídia Paga - Pesquisa' },
+          { Icon: MetaIcon, name: 'Meta Ads', category: 'Mídia Paga - Social' },
+          { Icon: GoogleAnalyticsIcon, name: 'Google Analytics', category: 'Analytics' },
+        ]
+        const colC = [
+          { Icon: PipedriveIcon, name: 'Pipedrive', category: 'Assinatura' },
+          { Icon: SalesforceIcon, name: 'Salesforce', category: 'Licenças' },
+          { Icon: HubspotIcon, name: 'HubSpot', category: 'Assinatura' },
+          { Icon: ContaAzulIcon, name: 'ContaAzul', category: 'Assinatura' },
+        ]
+        const colD = [
+          { Icon: MercadoLivreIcon, name: 'Mercado Livre', category: 'Taxas de Venda' },
+          { Icon: ShopeeIcon, name: 'Shopee', category: 'Taxas de Venda' },
+          { Icon: MagaluIcon, name: 'Magalu', category: 'Taxas de Venda' },
+          { Icon: AmazonIcon, name: 'Amazon', category: 'Taxas de Venda' },
+        ]
+
         return {
           columns: [
             {
-              accessorKey: 'contaazul',
-              header: 'ContaAzul',
-              cell: () => (
-                <div className="flex items-center">
-                  <ContaAzulIcon className="h-10 w-10 mr-3" />
-                  <div>
-                    <div className="font-semibold">ContaAzul</div>
-                    <div className="text-sm text-muted-foreground">ERP Financeiro</div>
+              accessorKey: 'colA',
+              header: 'Omie',
+              cell: ({ row }) => {
+                const item = colA[row.index]
+                const Icon = item.Icon
+                return (
+                  <div className="flex items-center">
+                    <Icon className="h-10 w-10 mr-3" />
+                    <div>
+                      <div className="font-semibold">{item.name}</div>
+                      <div className="text-sm text-muted-foreground">{item.category}</div>
+                    </div>
                   </div>
-                </div>
-              ),
+                )
+              },
             },
             {
-              accessorKey: 'googleads',
-              header: 'Google Ads',
-              cell: () => (
-                <div className="flex items-center">
-                  <GoogleAdsIcon className="h-10 w-10 mr-3" />
-                  <div>
-                    <div className="font-semibold">Google Ads</div>
-                    <div className="text-sm text-muted-foreground">Tráfego Pago - Pesquisa</div>
+              accessorKey: 'colB',
+              header: 'RD Station',
+              cell: ({ row }) => {
+                const item = colB[row.index]
+                const Icon = item.Icon
+                return (
+                  <div className="flex items-center">
+                    <Icon className="h-10 w-10 mr-3" />
+                    <div>
+                      <div className="font-semibold">{item.name}</div>
+                      <div className="text-sm text-muted-foreground">{item.category}</div>
+                    </div>
                   </div>
-                </div>
-              ),
+                )
+              },
             },
             {
-              accessorKey: 'meta',
-              header: 'Meta Ads',
-              cell: () => (
-                <div className="flex items-center">
-                  <MetaIcon className="h-10 w-10 mr-3" />
-                  <div>
-                    <div className="font-semibold">Meta Ads</div>
-                    <div className="text-sm text-muted-foreground">Tráfego Pago - Social</div>
+              accessorKey: 'colC',
+              header: 'Pipedrive',
+              cell: ({ row }) => {
+                const item = colC[row.index]
+                const Icon = item.Icon
+                return (
+                  <div className="flex items-center">
+                    <Icon className="h-10 w-10 mr-3" />
+                    <div>
+                      <div className="font-semibold">{item.name}</div>
+                      <div className="text-sm text-muted-foreground">{item.category}</div>
+                    </div>
                   </div>
-                </div>
-              ),
+                )
+              },
             },
             {
-              accessorKey: 'shopify',
-              header: 'Shopify',
-              cell: () => (
-                <div className="flex items-center">
-                  <ShopifyIcon className="h-10 w-10 mr-3" />
-                  <div>
-                    <div className="font-semibold">Shopify</div>
-                    <div className="text-sm text-muted-foreground">Plataforma E-commerce</div>
+              accessorKey: 'colD',
+              header: 'Mercado Livre',
+              cell: ({ row }) => {
+                const item = colD[row.index]
+                const Icon = item.Icon
+                return (
+                  <div className="flex items-center">
+                    <Icon className="h-10 w-10 mr-3" />
+                    <div>
+                      <div className="font-semibold">{item.name}</div>
+                      <div className="text-sm text-muted-foreground">{item.category}</div>
+                    </div>
                   </div>
-                </div>
-              ),
+                )
+              },
             },
           ],
-          data: [
-            { contaazul: '', googleads: '', meta: '', shopify: '' },
-          ],
+          data: Array.from({ length: 4 }).map((_, i) => ({ colA: i, colB: i, colC: i, colD: i })),
         }
     }
   }, [tabs.selected])
