@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator"
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
 import { ChevronDown } from "lucide-react"
 
-export default function FinanceiroUiPanel() {
+export default function UiConfigPanel() {
   const titulo = useStore($titulo)
   const tabs = useStore($tabs)
   const tabela = useStore($tabelaUI)

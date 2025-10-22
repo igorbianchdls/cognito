@@ -2,7 +2,7 @@
 
 import * as React from "react"
 
-interface TituloModuloProps {
+interface PageHeaderProps {
   title: string
   subtitle?: string
   actions?: React.ReactNode
@@ -15,7 +15,7 @@ interface TituloModuloProps {
   titleLetterSpacing?: number
 }
 
-export default function TituloModulo({ title, subtitle, actions, className, titleFontFamily, titleFontSize, titleFontWeight, titleColor, titleLetterSpacing }: TituloModuloProps) {
+export default function PageHeader({ title, subtitle, actions, className, titleFontFamily, titleFontSize, titleFontWeight, titleColor, titleLetterSpacing }: PageHeaderProps) {
   return (
     <div className={`w-full px-4 pt-4 md:px-6 md:pt-6 ${className ?? ""}`}>
       <div className="flex items-start justify-between gap-3">

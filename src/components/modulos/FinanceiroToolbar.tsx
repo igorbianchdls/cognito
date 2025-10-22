@@ -7,7 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search } from "lucide-react"
 
-type FinanceiroToolbarProps = {
+type DataToolbarProps = {
   className?: string
   // Left side (no integration)
   searchPlaceholder?: string
@@ -39,7 +39,7 @@ type FinanceiroToolbarProps = {
   dateRangeWidth?: number
 }
 
-export default function FinanceiroToolbar({
+export default function DataToolbar({
   className,
   searchPlaceholder = "Search",
   dateRangePlaceholder = "Date Range",
@@ -66,7 +66,7 @@ export default function FinanceiroToolbar({
   iconSize,
   searchWidth,
   dateRangeWidth,
-}: FinanceiroToolbarProps) {
+}: DataToolbarProps) {
   return (
     <div
       className={`w-full ${className ?? ""}`}

@@ -12,7 +12,7 @@ export type Opcao = {
   rightIcon?: React.ReactNode
 }
 
-interface OpcoesTabsProps {
+interface TabsNavProps {
   options: Opcao[]
   value: string
   onValueChange: (value: string) => void
@@ -30,7 +30,7 @@ interface OpcoesTabsProps {
   activeColor?: string
 }
 
-export default function OpcoesTabs({ options, value, onValueChange, className, fontFamily, fontSize, fontWeight, color, letterSpacing, iconSize, startOffset = 0, labelOffsetY = 0, activeColor }: OpcoesTabsProps) {
+export default function TabsNav({ options, value, onValueChange, className, fontFamily, fontSize, fontWeight, color, letterSpacing, iconSize, startOffset = 0, labelOffsetY = 0, activeColor }: TabsNavProps) {
   const renderIcon = (node?: React.ReactNode) => {
     if (!node) return null
     if (React.isValidElement(node)) {
