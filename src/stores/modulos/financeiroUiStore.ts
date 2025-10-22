@@ -90,6 +90,25 @@ export type ToolbarUIState = {
   dateRangeWidth?: number
 }
 
+export type CatalogUIState = {
+  // Icon/Image
+  iconSize?: number
+  iconBorderRadius?: number
+  iconTextGap?: number
+  // Title typography
+  itemTitleFontFamily?: string
+  itemTitleFontSize?: number
+  itemTitleFontWeight?: string
+  itemTitleColor?: string
+  itemTitleLetterSpacing?: number
+  // Subtitle typography
+  itemSubtitleFontFamily?: string
+  itemSubtitleFontSize?: number
+  itemSubtitleFontWeight?: string
+  itemSubtitleColor?: string
+  itemSubtitleLetterSpacing?: number
+}
+
 const DEFAULT_TITULO: TituloState = {
   title: 'Financeiro',
   subtitle: 'Selecione uma opção para visualizar os dados',
@@ -180,6 +199,23 @@ export const DEFAULT_LAYOUT: LayoutState = {
 }
 export const $layout = atom<LayoutState>({ ...DEFAULT_LAYOUT })
 
+export const DEFAULT_CATALOG_UI: CatalogUIState = {
+  iconSize: 40,
+  iconBorderRadius: 8,
+  iconTextGap: 12,
+  itemTitleFontFamily: 'Geist',
+  itemTitleFontSize: 15,
+  itemTitleFontWeight: '600',
+  itemTitleColor: '#111827',
+  itemTitleLetterSpacing: 0,
+  itemSubtitleFontFamily: 'Geist',
+  itemSubtitleFontSize: 12,
+  itemSubtitleFontWeight: '400',
+  itemSubtitleColor: '#6b7280',
+  itemSubtitleLetterSpacing: 0,
+}
+export const $catalogUI = atom<CatalogUIState>({ ...DEFAULT_CATALOG_UI })
+
 export const financeiroUiActions = {
   setTitulo: (partial: Partial<TituloState>) => {
     $titulo.set({ ...$titulo.get(), ...partial })
@@ -196,11 +232,15 @@ export const financeiroUiActions = {
   setLayout: (partial: Partial<LayoutState>) => {
     $layout.set({ ...$layout.get(), ...partial })
   },
+  setCatalogUI: (partial: Partial<CatalogUIState>) => {
+    $catalogUI.set({ ...$catalogUI.get(), ...partial })
+  },
   resetAll: () => {
     $titulo.set({ ...DEFAULT_TITULO })
     $tabs.set({ ...DEFAULT_TABS })
     $tabelaUI.set({ ...DEFAULT_TABELA_UI })
     $toolbarUI.set({ ...DEFAULT_TOOLBAR_UI })
     $layout.set({ ...DEFAULT_LAYOUT })
+    $catalogUI.set({ ...DEFAULT_CATALOG_UI })
   },
 }

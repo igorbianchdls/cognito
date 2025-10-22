@@ -11,7 +11,7 @@ import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav from '@/components/modulos/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, $catalogUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { LayoutDashboard, Banknote, CreditCard, ArrowDownCircle } from 'lucide-react'
 import OmieIcon from '@/components/icons/OmieIcon'
@@ -39,6 +39,7 @@ export default function ModulosFinanceiroPage() {
   const tabelaUI = useStore($tabelaUI)
   const layout = useStore($layout)
   const toolbarUI = useStore($toolbarUI)
+  const catalogUI = useStore($catalogUI)
 
   const fontVar = (name?: string) => {
     if (!name) return undefined
@@ -126,12 +127,44 @@ export default function ModulosFinanceiroPage() {
               cell: ({ row }) => {
                 const item = colA[row.index]
                 const Icon = item.Icon
+                const iconSize = catalogUI.iconSize ?? 40
+                const gap = catalogUI.iconTextGap ?? 12
                 return (
                   <div className="flex items-center">
-                    <Icon className="h-10 w-10 mr-3" />
-                    <div>
-                      <div className="font-semibold">{item.name}</div>
-                      <div className="text-sm text-muted-foreground">{item.category}</div>
+                    <div
+                      className="flex items-center justify-center mr-3"
+                      style={{
+                        width: iconSize,
+                        height: iconSize,
+                        borderRadius: (catalogUI.iconBorderRadius ?? 8),
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <Icon className="w-full h-full" />
+                    </div>
+                    <div style={{ marginLeft: Math.max(0, gap - 12) }}>
+                      <div
+                        style={{
+                          fontFamily: catalogUI.itemTitleFontFamily && catalogUI.itemTitleFontFamily !== 'inherit' ? fontVar(catalogUI.itemTitleFontFamily) : undefined,
+                          fontSize: (catalogUI.itemTitleFontSize ?? 15),
+                          fontWeight: (catalogUI.itemTitleFontWeight as React.CSSProperties['fontWeight']) ?? '600',
+                          color: catalogUI.itemTitleColor ?? '#111827',
+                          letterSpacing: typeof catalogUI.itemTitleLetterSpacing === 'number' ? `${catalogUI.itemTitleLetterSpacing}px` : undefined,
+                        }}
+                      >
+                        {item.name}
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: catalogUI.itemSubtitleFontFamily && catalogUI.itemSubtitleFontFamily !== 'inherit' ? fontVar(catalogUI.itemSubtitleFontFamily) : undefined,
+                          fontSize: (catalogUI.itemSubtitleFontSize ?? 12),
+                          fontWeight: (catalogUI.itemSubtitleFontWeight as React.CSSProperties['fontWeight']) ?? '400',
+                          color: catalogUI.itemSubtitleColor ?? '#6b7280',
+                          letterSpacing: typeof catalogUI.itemSubtitleLetterSpacing === 'number' ? `${catalogUI.itemSubtitleLetterSpacing}px` : undefined,
+                        }}
+                      >
+                        {item.category}
+                      </div>
                     </div>
                   </div>
                 )
@@ -143,12 +176,44 @@ export default function ModulosFinanceiroPage() {
               cell: ({ row }) => {
                 const item = colB[row.index]
                 const Icon = item.Icon
+                const iconSize = catalogUI.iconSize ?? 40
+                const gap = catalogUI.iconTextGap ?? 12
                 return (
                   <div className="flex items-center">
-                    <Icon className="h-10 w-10 mr-3" />
-                    <div>
-                      <div className="font-semibold">{item.name}</div>
-                      <div className="text-sm text-muted-foreground">{item.category}</div>
+                    <div
+                      className="flex items-center justify-center mr-3"
+                      style={{
+                        width: iconSize,
+                        height: iconSize,
+                        borderRadius: (catalogUI.iconBorderRadius ?? 8),
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <Icon className="w-full h-full" />
+                    </div>
+                    <div style={{ marginLeft: Math.max(0, gap - 12) }}>
+                      <div
+                        style={{
+                          fontFamily: catalogUI.itemTitleFontFamily && catalogUI.itemTitleFontFamily !== 'inherit' ? fontVar(catalogUI.itemTitleFontFamily) : undefined,
+                          fontSize: (catalogUI.itemTitleFontSize ?? 15),
+                          fontWeight: (catalogUI.itemTitleFontWeight as React.CSSProperties['fontWeight']) ?? '600',
+                          color: catalogUI.itemTitleColor ?? '#111827',
+                          letterSpacing: typeof catalogUI.itemTitleLetterSpacing === 'number' ? `${catalogUI.itemTitleLetterSpacing}px` : undefined,
+                        }}
+                      >
+                        {item.name}
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: catalogUI.itemSubtitleFontFamily && catalogUI.itemSubtitleFontFamily !== 'inherit' ? fontVar(catalogUI.itemSubtitleFontFamily) : undefined,
+                          fontSize: (catalogUI.itemSubtitleFontSize ?? 12),
+                          fontWeight: (catalogUI.itemSubtitleFontWeight as React.CSSProperties['fontWeight']) ?? '400',
+                          color: catalogUI.itemSubtitleColor ?? '#6b7280',
+                          letterSpacing: typeof catalogUI.itemSubtitleLetterSpacing === 'number' ? `${catalogUI.itemSubtitleLetterSpacing}px` : undefined,
+                        }}
+                      >
+                        {item.category}
+                      </div>
                     </div>
                   </div>
                 )
@@ -160,12 +225,44 @@ export default function ModulosFinanceiroPage() {
               cell: ({ row }) => {
                 const item = colC[row.index]
                 const Icon = item.Icon
+                const iconSize = catalogUI.iconSize ?? 40
+                const gap = catalogUI.iconTextGap ?? 12
                 return (
                   <div className="flex items-center">
-                    <Icon className="h-10 w-10 mr-3" />
-                    <div>
-                      <div className="font-semibold">{item.name}</div>
-                      <div className="text-sm text-muted-foreground">{item.category}</div>
+                    <div
+                      className="flex items-center justify-center mr-3"
+                      style={{
+                        width: iconSize,
+                        height: iconSize,
+                        borderRadius: (catalogUI.iconBorderRadius ?? 8),
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <Icon className="w-full h-full" />
+                    </div>
+                    <div style={{ marginLeft: Math.max(0, gap - 12) }}>
+                      <div
+                        style={{
+                          fontFamily: catalogUI.itemTitleFontFamily && catalogUI.itemTitleFontFamily !== 'inherit' ? fontVar(catalogUI.itemTitleFontFamily) : undefined,
+                          fontSize: (catalogUI.itemTitleFontSize ?? 15),
+                          fontWeight: (catalogUI.itemTitleFontWeight as React.CSSProperties['fontWeight']) ?? '600',
+                          color: catalogUI.itemTitleColor ?? '#111827',
+                          letterSpacing: typeof catalogUI.itemTitleLetterSpacing === 'number' ? `${catalogUI.itemTitleLetterSpacing}px` : undefined,
+                        }}
+                      >
+                        {item.name}
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: catalogUI.itemSubtitleFontFamily && catalogUI.itemSubtitleFontFamily !== 'inherit' ? fontVar(catalogUI.itemSubtitleFontFamily) : undefined,
+                          fontSize: (catalogUI.itemSubtitleFontSize ?? 12),
+                          fontWeight: (catalogUI.itemSubtitleFontWeight as React.CSSProperties['fontWeight']) ?? '400',
+                          color: catalogUI.itemSubtitleColor ?? '#6b7280',
+                          letterSpacing: typeof catalogUI.itemSubtitleLetterSpacing === 'number' ? `${catalogUI.itemSubtitleLetterSpacing}px` : undefined,
+                        }}
+                      >
+                        {item.category}
+                      </div>
                     </div>
                   </div>
                 )
@@ -177,12 +274,44 @@ export default function ModulosFinanceiroPage() {
               cell: ({ row }) => {
                 const item = colD[row.index]
                 const Icon = item.Icon
+                const iconSize = catalogUI.iconSize ?? 40
+                const gap = catalogUI.iconTextGap ?? 12
                 return (
                   <div className="flex items-center">
-                    <Icon className="h-10 w-10 mr-3" />
-                    <div>
-                      <div className="font-semibold">{item.name}</div>
-                      <div className="text-sm text-muted-foreground">{item.category}</div>
+                    <div
+                      className="flex items-center justify-center mr-3"
+                      style={{
+                        width: iconSize,
+                        height: iconSize,
+                        borderRadius: (catalogUI.iconBorderRadius ?? 8),
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <Icon className="w-full h-full" />
+                    </div>
+                    <div style={{ marginLeft: Math.max(0, gap - 12) }}>
+                      <div
+                        style={{
+                          fontFamily: catalogUI.itemTitleFontFamily && catalogUI.itemTitleFontFamily !== 'inherit' ? fontVar(catalogUI.itemTitleFontFamily) : undefined,
+                          fontSize: (catalogUI.itemTitleFontSize ?? 15),
+                          fontWeight: (catalogUI.itemTitleFontWeight as React.CSSProperties['fontWeight']) ?? '600',
+                          color: catalogUI.itemTitleColor ?? '#111827',
+                          letterSpacing: typeof catalogUI.itemTitleLetterSpacing === 'number' ? `${catalogUI.itemTitleLetterSpacing}px` : undefined,
+                        }}
+                      >
+                        {item.name}
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: catalogUI.itemSubtitleFontFamily && catalogUI.itemSubtitleFontFamily !== 'inherit' ? fontVar(catalogUI.itemSubtitleFontFamily) : undefined,
+                          fontSize: (catalogUI.itemSubtitleFontSize ?? 12),
+                          fontWeight: (catalogUI.itemSubtitleFontWeight as React.CSSProperties['fontWeight']) ?? '400',
+                          color: catalogUI.itemSubtitleColor ?? '#6b7280',
+                          letterSpacing: typeof catalogUI.itemSubtitleLetterSpacing === 'number' ? `${catalogUI.itemSubtitleLetterSpacing}px` : undefined,
+                        }}
+                      >
+                        {item.category}
+                      </div>
                     </div>
                   </div>
                 )

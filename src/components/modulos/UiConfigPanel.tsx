@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useStore } from "@nanostores/react"
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from "@/stores/modulos/financeiroUiStore"
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, $catalogUI, financeiroUiActions } from "@/stores/modulos/financeiroUiStore"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -18,6 +18,7 @@ export default function UiConfigPanel() {
   const tabela = useStore($tabelaUI)
   const layout = useStore($layout)
   const toolbar = useStore($toolbarUI)
+  const catalog = useStore($catalogUI)
   const [openTitle, setOpenTitle] = React.useState(false)
   const [openTabs, setOpenTabs] = React.useState(false)
   const [openTable, setOpenTable] = React.useState(false)
@@ -33,6 +34,143 @@ export default function UiConfigPanel() {
         </div>
 
         <Separator />
+
+        {/* Itens (Imagem + Texto) */}
+        <Collapsible>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">Itens (Imagem + Texto)</span>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-7 px-2">
+                <ChevronDown className={`h-4 w-4`} />
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="mt-3 space-y-4">
+            <h4 className="text-xs font-semibold">Imagem</h4>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div>
+                <Label htmlFor="ui-item-icon-size">Tamanho (px)</Label>
+                <Input id="ui-item-icon-size" type="number" min={16} max={96}
+                  value={catalog.iconSize ?? 40}
+                  onChange={(e) => financeiroUiActions.setCatalogUI({ iconSize: Number(e.target.value || 40) })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-item-icon-radius">Arredondamento (px)</Label>
+                <Input id="ui-item-icon-radius" type="number" min={0} max={48}
+                  value={catalog.iconBorderRadius ?? 8}
+                  onChange={(e) => financeiroUiActions.setCatalogUI({ iconBorderRadius: Number(e.target.value || 8) })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-item-icon-gap">Espaço ícone-texto (px)</Label>
+                <Input id="ui-item-icon-gap" type="number" min={0} max={48}
+                  value={catalog.iconTextGap ?? 12}
+                  onChange={(e) => financeiroUiActions.setCatalogUI({ iconTextGap: Number(e.target.value || 12) })}
+                />
+              </div>
+            </div>
+
+            <h4 className="text-xs font-semibold mt-2">Título</h4>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+              <div>
+                <Label>Fonte</Label>
+                <Select value={(catalog.itemTitleFontFamily ?? 'Geist')} onValueChange={(v) => financeiroUiActions.setCatalogUI({ itemTitleFontFamily: v })}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Geist">Geist</SelectItem>
+                    <SelectItem value="Inter">Inter</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="ui-item-title-size">Tamanho</Label>
+                <Input id="ui-item-title-size" type="number" min={10} max={32}
+                  value={catalog.itemTitleFontSize ?? 15}
+                  onChange={(e) => financeiroUiActions.setCatalogUI({ itemTitleFontSize: Number(e.target.value || 15) })}
+                />
+              </div>
+              <div>
+                <Label>Peso</Label>
+                <Select value={(catalog.itemTitleFontWeight ?? '600').toString()} onValueChange={(v) => financeiroUiActions.setCatalogUI({ itemTitleFontWeight: v })}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="400">Normal (400)</SelectItem>
+                    <SelectItem value="500">Médio (500)</SelectItem>
+                    <SelectItem value="600">Semibold (600)</SelectItem>
+                    <SelectItem value="700">Bold (700)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="ui-item-title-color">Cor</Label>
+                <Input id="ui-item-title-color" type="color" value={catalog.itemTitleColor ?? '#111827'}
+                  onChange={(e) => financeiroUiActions.setCatalogUI({ itemTitleColor: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-item-title-tracking">Espaçamento</Label>
+                <Input id="ui-item-title-tracking" type="number" step={0.5} min={-5} max={20}
+                  value={catalog.itemTitleLetterSpacing ?? 0}
+                  onChange={(e) => financeiroUiActions.setCatalogUI({ itemTitleLetterSpacing: Number(e.target.value || 0) })}
+                />
+              </div>
+            </div>
+
+            <h4 className="text-xs font-semibold mt-2">Subtítulo</h4>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+              <div>
+                <Label>Fonte</Label>
+                <Select value={(catalog.itemSubtitleFontFamily ?? 'Geist')} onValueChange={(v) => financeiroUiActions.setCatalogUI({ itemSubtitleFontFamily: v })}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Geist">Geist</SelectItem>
+                    <SelectItem value="Inter">Inter</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="ui-item-subtitle-size">Tamanho</Label>
+                <Input id="ui-item-subtitle-size" type="number" min={8} max={24}
+                  value={catalog.itemSubtitleFontSize ?? 12}
+                  onChange={(e) => financeiroUiActions.setCatalogUI({ itemSubtitleFontSize: Number(e.target.value || 12) })}
+                />
+              </div>
+              <div>
+                <Label>Peso</Label>
+                <Select value={(catalog.itemSubtitleFontWeight ?? '400').toString()} onValueChange={(v) => financeiroUiActions.setCatalogUI({ itemSubtitleFontWeight: v })}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="400">Normal (400)</SelectItem>
+                    <SelectItem value="500">Médio (500)</SelectItem>
+                    <SelectItem value="600">Semibold (600)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="ui-item-subtitle-color">Cor</Label>
+                <Input id="ui-item-subtitle-color" type="color" value={catalog.itemSubtitleColor ?? '#6b7280'}
+                  onChange={(e) => financeiroUiActions.setCatalogUI({ itemSubtitleColor: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-item-subtitle-tracking">Espaçamento</Label>
+                <Input id="ui-item-subtitle-tracking" type="number" step={0.5} min={-5} max={20}
+                  value={catalog.itemSubtitleLetterSpacing ?? 0}
+                  onChange={(e) => financeiroUiActions.setCatalogUI({ itemSubtitleLetterSpacing: Number(e.target.value || 0) })}
+                />
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
 
         {/* Toolbar */}
         <Collapsible open={openToolbar} onOpenChange={setOpenToolbar}>
@@ -613,4 +751,3 @@ export default function UiConfigPanel() {
     </div>
   )
 }
-
