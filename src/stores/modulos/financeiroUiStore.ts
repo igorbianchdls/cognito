@@ -114,7 +114,7 @@ const DEFAULT_TABS: TabsState = {
   color: 'rgb(128, 128, 128)',
   letterSpacing: 0,
   iconSize: 16,
-  leftOffset: 10,
+  leftOffset: 20,
   labelOffsetY: 6,
   activeColor: 'rgb(41, 41, 41)',
   activeFontWeight: '500',
