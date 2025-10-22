@@ -123,7 +123,7 @@ export default function ModulosFinanceiroPage() {
             letterSpacing={tabs.letterSpacing}
           />
         </div>
-        <div className="flex-1 min-h-0 overflow-auto px-4 md:px-6" style={{ marginBottom: layout.mbTable }}>
+        <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
           <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
             <DataTable
               columns={columns}
