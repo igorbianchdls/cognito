@@ -108,13 +108,13 @@ const DEFAULT_TABS: TabsState = {
   selected: 'visao',
   fontFamily: 'Geist',
   fontSize: 14,
-  fontWeight: '500',
-  color: '#111827',
+  fontWeight: '400',
+  color: 'rgb(128, 128, 128)',
   letterSpacing: 0,
   iconSize: 16,
-  leftOffset: 0,
-  labelOffsetY: 0,
-  activeColor: '#111827',
+  leftOffset: 10,
+  labelOffsetY: 6,
+  activeColor: 'rgb(41, 41, 41)',
 }
 
 const DEFAULT_TABELA_UI: TabelaUIState = {
