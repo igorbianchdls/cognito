@@ -61,6 +61,7 @@ interface DataTableProps<TData extends TableData> {
   headerTextColor?: string
   rowHoverColor?: string
   borderColor?: string
+  borderWidth?: number
   fontSize?: number
   padding?: number
   // Header typography props
@@ -74,6 +75,9 @@ interface DataTableProps<TData extends TableData> {
   cellFontWeight?: string
   cellTextColor?: string
   cellLetterSpacing?: number
+  // Zebra rows
+  enableZebraStripes?: boolean
+  rowAlternateBgColor?: string
   // Search & filtering props
   enableSearch?: boolean
   enableFiltering?: boolean
@@ -129,6 +133,7 @@ export function DataTable<TData extends TableData>({
   headerTextColor = '#374151',
   rowHoverColor = '#f3f4f6',
   borderColor = '#e5e7eb',
+  borderWidth = 1,
   fontSize = 14,
   padding = 12,
   // Header typography props with defaults
@@ -142,6 +147,8 @@ export function DataTable<TData extends TableData>({
   cellFontWeight = 'normal',
   cellTextColor = '#1f2937',
   cellLetterSpacing,
+  enableZebraStripes = false,
+  rowAlternateBgColor = '#fafafa',
   // Search & filtering props with defaults
   enableSearch = true,
   // Row selection props with defaults
@@ -408,7 +415,11 @@ export function DataTable<TData extends TableData>({
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow 
                   key={headerGroup.id}
-                  style={{ backgroundColor: headerBackground }}
+                  style={{ 
+                    backgroundColor: headerBackground,
+                    borderColor,
+                    borderBottomWidth: borderWidth,
+                  }}
                 >
                   {headerGroup.headers.map((header) => {
                     return (
@@ -422,6 +433,7 @@ export function DataTable<TData extends TableData>({
                           fontSize: `${headerFontSize}px`,
                           fontFamily: headerFontFamily !== 'inherit' ? headerFontFamily : undefined,
                           fontWeight: headerFontWeight !== 'normal' ? headerFontWeight : undefined,
+                          borderColor,
                           letterSpacing: typeof headerLetterSpacing === 'number' ? `${headerLetterSpacing}px` : undefined,
                         }}
                       >
@@ -468,7 +480,12 @@ export function DataTable<TData extends TableData>({
                       newRows.has(row.index) && "bg-green-50"
                     )}
                     style={{ 
-                      '--hover-color': rowHoverColor 
+                      '--hover-color': rowHoverColor,
+                      backgroundColor: enableZebraStripes && !newRows.has(row.index)
+                        ? (row.index % 2 === 0 ? rowAlternateBgColor : undefined)
+                        : undefined,
+                      borderColor,
+                      borderBottomWidth: borderWidth,
                     } as React.CSSProperties & { '--hover-color': string }}
                     onMouseEnter={(e) => {
                       if (!newRows.has(row.index)) {
@@ -477,7 +494,8 @@ export function DataTable<TData extends TableData>({
                     }}
                     onMouseLeave={(e) => {
                       if (!newRows.has(row.index)) {
-                        e.currentTarget.style.backgroundColor = ''
+                        const base = enableZebraStripes ? (row.index % 2 === 0 ? rowAlternateBgColor : '') : ''
+                        e.currentTarget.style.backgroundColor = base
                       }
                     }}
                   >

@@ -46,6 +46,11 @@ export type TabelaUIState = {
   cellFontWeight?: string
   headerLetterSpacing?: number
   cellLetterSpacing?: number
+  // Row and border styling
+  enableZebraStripes?: boolean
+  rowAlternateBgColor?: string
+  borderColor?: string
+  borderWidth?: number
   defaultSortColumn?: string
   defaultSortDirection?: 'asc' | 'desc'
 }
@@ -100,6 +105,10 @@ const DEFAULT_TABELA_UI: TabelaUIState = {
   cellFontWeight: '400',
   headerLetterSpacing: 0,
   cellLetterSpacing: 0,
+  enableZebraStripes: true,
+  rowAlternateBgColor: '#fafafa',
+  borderColor: '#e5e7eb',
+  borderWidth: 1,
   defaultSortColumn: undefined,
   defaultSortDirection: 'asc',
 }

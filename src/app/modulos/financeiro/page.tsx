@@ -134,6 +134,10 @@ export default function ModulosFinanceiroPage() {
               cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
               cellFontWeight={tabelaUI.cellFontWeight}
               cellLetterSpacing={tabelaUI.cellLetterSpacing}
+              enableZebraStripes={tabelaUI.enableZebraStripes}
+              rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
+              borderColor={tabelaUI.borderColor}
+              borderWidth={tabelaUI.borderWidth}
               enableRowSelection={tabelaUI.enableRowSelection}
               selectionMode={tabelaUI.selectionMode}
               defaultSortColumn={tabelaUI.defaultSortColumn}

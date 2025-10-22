@@ -219,6 +219,13 @@ export default function FinanceiroUiPanel() {
               </div>
               <Switch checked={tabela.stickyHeader} onCheckedChange={(v) => financeiroUiActions.setTabelaUI({ stickyHeader: v })} />
             </div>
+            <div className="flex items-center justify-between gap-4 border rounded-md p-3">
+              <div>
+                <Label>Linhas alternadas</Label>
+                <div className="text-xs text-muted-foreground">Zebrado nas linhas</div>
+              </div>
+              <Switch checked={tabela.enableZebraStripes} onCheckedChange={(v) => financeiroUiActions.setTabelaUI({ enableZebraStripes: v })} />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -236,6 +243,12 @@ export default function FinanceiroUiPanel() {
               <Label htmlFor="ui-celltext">Cell text</Label>
               <Input id="ui-celltext" type="color" value={tabela.cellText}
                 onChange={(e) => financeiroUiActions.setTabelaUI({ cellText: e.target.value })} />
+            </div>
+            <div>
+              <Label htmlFor="ui-row-alt">Row alternada bg</Label>
+              <Input id="ui-row-alt" type="color" value={tabela.rowAlternateBgColor ?? '#fafafa'}
+                onChange={(e) => financeiroUiActions.setTabelaUI({ rowAlternateBgColor: e.target.value })}
+              />
             </div>
             <div>
               <Label>Header font family</Label>
@@ -269,6 +282,12 @@ export default function FinanceiroUiPanel() {
                   <SelectItem value="700">Bold (700)</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label htmlFor="ui-bordercolor">Border color</Label>
+              <Input id="ui-bordercolor" type="color" value={tabela.borderColor ?? '#e5e7eb'}
+                onChange={(e) => financeiroUiActions.setTabelaUI({ borderColor: e.target.value })}
+              />
             </div>
             <div>
               <Label htmlFor="ui-header-tracking">Header letter spacing</Label>
@@ -309,6 +328,13 @@ export default function FinanceiroUiPanel() {
                   <SelectItem value="700">Bold (700)</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label htmlFor="ui-borderwidth">Border width</Label>
+              <Input id="ui-borderwidth" type="number" min={0} max={8}
+                value={tabela.borderWidth ?? 1}
+                onChange={(e) => financeiroUiActions.setTabelaUI({ borderWidth: Math.max(0, Number(e.target.value || 0)) })}
+              />
             </div>
             <div>
               <Label htmlFor="ui-cell-tracking">Cell letter spacing</Label>
