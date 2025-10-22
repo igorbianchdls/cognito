@@ -25,8 +25,6 @@ export const getContasAReceber = tool({
       .describe('Filtrar por status do recebimento'),
     cliente_id: z.string().optional()
       .describe('Filtrar por ID do cliente'),
-    categoria_id: z.string().optional()
-      .describe('Filtrar por ID da categoria'),
     vence_em_dias: z.number().optional()
       .describe('Contas que vencem nos próximos X dias'),
     venceu_ha_dias: z.number().optional()
@@ -49,7 +47,6 @@ export const getContasAReceber = tool({
     limit = 20,
     status,
     cliente_id,
-    categoria_id,
     vence_em_dias,
     venceu_ha_dias,
     data_vencimento_de,
@@ -70,45 +67,46 @@ export const getContasAReceber = tool({
         index += 1;
       };
 
-      if (status) push('cr.status =', mapStatusToEnum(status));
-      if (cliente_id) push('cr.cliente_id =', cliente_id);
-      if (categoria_id) push('cr.categoria_id =', categoria_id);
-      if (valor_minimo !== undefined) push('cr.valor >=', valor_minimo);
-      if (valor_maximo !== undefined) push('cr.valor <=', valor_maximo);
+      if (status) push('car.status =', mapStatusToEnum(status));
+      if (cliente_id) push('car.cliente_id =', cliente_id);
+      if (valor_minimo !== undefined) push('car.valor_total >=', valor_minimo);
+      if (valor_maximo !== undefined) push('car.valor_total <=', valor_maximo);
 
       if (vence_em_dias !== undefined) {
-        conditions.push(`cr.data_vencimento BETWEEN CURRENT_DATE AND CURRENT_DATE + ($${index}::int) * INTERVAL '1 day'`);
+        conditions.push(`car.data_vencimento BETWEEN CURRENT_DATE AND CURRENT_DATE + ($${index}::int) * INTERVAL '1 day'`);
         params.push(vence_em_dias);
         index += 1;
       }
 
       if (venceu_ha_dias !== undefined) {
-        conditions.push(`cr.data_vencimento BETWEEN CURRENT_DATE - ($${index}::int) * INTERVAL '1 day' AND CURRENT_DATE - INTERVAL '1 day'`);
+        conditions.push(`car.data_vencimento BETWEEN CURRENT_DATE - ($${index}::int) * INTERVAL '1 day' AND CURRENT_DATE - INTERVAL '1 day'`);
         params.push(venceu_ha_dias);
         index += 1;
       }
 
-      if (data_vencimento_de) push('cr.data_vencimento >=', data_vencimento_de);
-      if (data_vencimento_ate) push('cr.data_vencimento <=', data_vencimento_ate);
+      if (data_vencimento_de) push('car.data_vencimento >=', data_vencimento_de);
+      if (data_vencimento_ate) push('car.data_vencimento <=', data_vencimento_ate);
 
-      if (data_emissao_de) push('cr.data_emissao >=', data_emissao_de);
-      if (data_emissao_ate) push('cr.data_emissao <=', data_emissao_ate);
+      if (data_emissao_de) push('car.data_emissao >=', data_emissao_de);
+      if (data_emissao_ate) push('car.data_emissao <=', data_emissao_ate);
 
       const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
       const listSql = `
         SELECT
-          cr.id,
-          cr.descricao,
-          cr.valor,
-          cr.data_vencimento,
-          cr.data_recebimento,
-          cr.status,
-          c.nome_razao_social AS nome_cliente
-        FROM gestaofinanceira.contas_a_receber AS cr
-        LEFT JOIN entidades.clientes AS c ON cr.cliente_id = c.id
+          car.id,
+          c.nome_cliente AS cliente,
+          car.descricao,
+          car.valor_total,
+          car.data_emissao,
+          car.data_vencimento,
+          car.data_recebimento,
+          car.status,
+          car.criado_em
+        FROM financeiro.contas_a_receber AS car
+        LEFT JOIN financeiro.clientes AS c ON c.id = car.cliente_id
         ${whereClause}
-        ORDER BY cr.data_vencimento DESC
+        ORDER BY car.data_vencimento DESC
         LIMIT $${index}
       `.trim();
 
@@ -116,10 +114,10 @@ export const getContasAReceber = tool({
 
       const totalsSql = `
         SELECT
-          SUM(cr.valor) AS total_valor,
+          SUM(car.valor_total) AS total_valor,
           COUNT(*) AS total_registros
-        FROM gestaofinanceira.contas_a_receber AS cr
-        LEFT JOIN entidades.clientes AS c ON cr.cliente_id = c.id
+        FROM financeiro.contas_a_receber AS car
+        LEFT JOIN financeiro.clientes AS c ON c.id = car.cliente_id
         ${whereClause}
       `.trim();
 
