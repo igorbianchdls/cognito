@@ -302,6 +302,20 @@ export default function UiConfigPanel() {
                 />
               </div>
               <div>
+                <Label htmlFor="ui-tabs-active-weight">Peso Ativo</Label>
+                <Select value={(tabs.activeFontWeight ?? '500').toString()} onValueChange={(v) => financeiroUiActions.setTabs({ activeFontWeight: v })}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="400">Normal (400)</SelectItem>
+                    <SelectItem value="500">Médio (500)</SelectItem>
+                    <SelectItem value="600">Semibold (600)</SelectItem>
+                    <SelectItem value="700">Bold (700)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
                 <Label htmlFor="ui-tabs-tracking">Espaçamento</Label>
                 <Input id="ui-tabs-tracking" type="number" step={0.01} min={-0.05} max={0.05}
                   value={tabs.letterSpacing ?? 0}

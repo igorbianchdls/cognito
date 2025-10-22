@@ -30,6 +30,7 @@ export type TabsState = {
   leftOffset?: number
   labelOffsetY?: number
   activeColor?: string
+  activeFontWeight?: string
 }
 
 export type TabelaUIState = {
@@ -115,6 +116,7 @@ const DEFAULT_TABS: TabsState = {
   leftOffset: 10,
   labelOffsetY: 6,
   activeColor: 'rgb(41, 41, 41)',
+  activeFontWeight: '500',
 }
 
 const DEFAULT_TABELA_UI: TabelaUIState = {

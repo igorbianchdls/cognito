@@ -147,6 +147,7 @@ export default function ModulosFinanceiroConfigUiPage() {
             labelOffsetY={tabs.labelOffsetY}
             startOffset={tabs.leftOffset}
             activeColor={tabs.activeColor}
+            activeFontWeight={tabs.activeFontWeight}
             className="px-0 md:px-0"
           />
         </div>

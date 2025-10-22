@@ -28,9 +28,10 @@ interface TabsNavProps {
   startOffset?: number
   labelOffsetY?: number
   activeColor?: string
+  activeFontWeight?: string
 }
 
-export default function TabsNav({ options, value, onValueChange, className, fontFamily, fontSize, fontWeight, color, letterSpacing, iconSize, startOffset = 0, labelOffsetY = 0, activeColor }: TabsNavProps) {
+export default function TabsNav({ options, value, onValueChange, className, fontFamily, fontSize, fontWeight, color, letterSpacing, iconSize, startOffset = 0, labelOffsetY = 0, activeColor, activeFontWeight }: TabsNavProps) {
   const renderIcon = (node?: React.ReactNode) => {
     if (!node) return null
     if (React.isValidElement(node)) {
@@ -64,7 +65,7 @@ export default function TabsNav({ options, value, onValueChange, className, font
                 style={{
                   fontFamily: fontFamily && fontFamily !== 'inherit' ? fontFamily : undefined,
                   fontSize: fontSize ? `${fontSize}px` : undefined,
-                  fontWeight: fontWeight && fontWeight !== '500' ? (fontWeight as React.CSSProperties['fontWeight']) : undefined,
+                  fontWeight: (opt.value === value && activeFontWeight ? activeFontWeight : fontWeight) as React.CSSProperties['fontWeight'],
                   letterSpacing: typeof letterSpacing === 'number' ? `${letterSpacing}px` : undefined,
                   paddingBottom: labelOffsetY,
                 }}
