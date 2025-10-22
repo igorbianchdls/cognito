@@ -52,39 +52,42 @@ export default function TabelaBasica<TData extends object>({ columns, data, ui, 
     }
   }, [ui.defaultSortColumn, ui.defaultSortDirection])
 
-  const selectionCol: ColumnDef<TData> | null = ui.enableRowSelection
-    ? {
-        id: "_select",
-        header: ({ table }) => (
-          <Checkbox
-            checked={
-              table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
-            }
-            onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-            aria-label="Selecionar todos"
-          />
-        ),
-        cell: ({ row }) => (
-          <Checkbox
-            checked={row.getIsSelected()}
-            onCheckedChange={(value) => row.toggleSelected(!!value)}
-            aria-label="Selecionar linha"
-          />
-        ),
-        enableSorting: false,
-        enableHiding: false,
-        size: 40,
-      }
-    : null
+  const cols = React.useMemo(() => {
+    const selCol: ColumnDef<TData> | undefined = ui.enableRowSelection
+      ? {
+          id: "_select",
+          header: ({ table }) => (
+            <Checkbox
+              checked={
+                table.getIsAllPageRowsSelected() || (table.getIsSomePageRowsSelected() && "indeterminate")
+              }
+              onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+              aria-label="Selecionar todos"
+            />
+          ),
+          cell: ({ row }) => (
+            <Checkbox
+              checked={row.getIsSelected()}
+              onCheckedChange={(value) => row.toggleSelected(!!value)}
+              aria-label="Selecionar linha"
+            />
+          ),
+          enableSorting: false,
+          enableHiding: false,
+          size: 40,
+        }
+      : undefined
 
-  const cols = React.useMemo(() => (selectionCol ? [selectionCol, ...columns] : columns), [selectionCol, columns])
+    return selCol ? [selCol, ...columns] : columns
+  }, [ui.enableRowSelection, columns])
 
   const filteredData = React.useMemo(() => {
     if (!ui.enableSearch || !globalFilter.trim()) return data
     const q = globalFilter.toLowerCase()
-    return data.filter((row: any) =>
-      Object.values(row ?? {}).some((v) => String(v ?? '').toLowerCase().includes(q))
-    )
+    return data.filter((row) => {
+      const values = Object.values(row as Record<string, unknown>)
+      return values.some((v) => String(v ?? '').toLowerCase().includes(q))
+    })
   }, [data, ui.enableSearch, globalFilter])
 
   const table = useReactTable({
