@@ -3,7 +3,9 @@
 import * as React from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { ChevronLeft, ChevronRight, Calendar, Search } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search } from "lucide-react"
 
 type FinanceiroToolbarProps = {
   className?: string
@@ -81,26 +83,33 @@ export default function FinanceiroToolbar({
       }}
     >
       <div className="flex items-center justify-between gap-3">
-        {/* Left group */}
-        <div className="flex items-center gap-6 min-w-0">
-          {/* Search with independent underline */}
-          <div className="relative min-w-[160px] w-[240px]" style={{ width: searchWidth ? `${searchWidth}px` : undefined }}>
-            <Input
-              placeholder={searchPlaceholder}
-              className="h-8 rounded-none border-0 bg-transparent px-0 py-0 text-sm shadow-none focus-visible:ring-0 focus-visible:border-transparent"
-            />
-            <Search className="absolute right-0 top-1/2 -translate-y-1/2" style={{ color: iconColor || undefined, width: iconSize ? `${iconSize}px` : undefined, height: iconSize ? `${iconSize}px` : undefined }} />
-            <div className="absolute left-0 right-0" style={{ height: typeof underlineWidth === 'number' ? `${underlineWidth}px` : undefined, backgroundColor: underlineColor || undefined, bottom: typeof underlineOffsetTop === 'number' ? -underlineOffsetTop : 0 }} />
-          </div>
+        {/* Left group (shadcn look) */}
+        <div className="flex items-center gap-3 min-w-0">
+          {/* Search Popover */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="h-8 px-3 gap-2">
+                <Search style={{ color: iconColor || undefined, width: iconSize ? `${iconSize}px` : undefined, height: iconSize ? `${iconSize}px` : undefined }} />
+                <span style={{ color: fontColor || undefined }}>{searchPlaceholder}</span>
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="start" sideOffset={6} className="p-2" style={{ width: searchWidth ? `${searchWidth}px` : undefined }}>
+              <Input placeholder={searchPlaceholder} className="h-8" />
+            </PopoverContent>
+          </Popover>
 
-          {/* Date Range with independent underline */}
-          <div className="relative" style={{ width: dateRangeWidth ? `${dateRangeWidth}px` : undefined }}>
-            <div className="h-8 inline-flex items-center gap-2 px-0 text-sm" style={{ color: fontColor || undefined }}>
-              <span>{dateRangePlaceholder}</span>
-              <Calendar className="" style={{ color: iconColor || undefined, width: iconSize ? `${iconSize}px` : undefined, height: iconSize ? `${iconSize}px` : undefined, marginLeft: typeof iconGap === 'number' ? `${iconGap}px` : undefined }} />
-            </div>
-            <div className="absolute left-0 right-0" style={{ height: typeof underlineWidth === 'number' ? `${underlineWidth}px` : undefined, backgroundColor: underlineColor || undefined, bottom: typeof underlineOffsetTop === 'number' ? -underlineOffsetTop : 0 }} />
-          </div>
+          {/* Date Range Popover */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" className="h-8 px-3 gap-2">
+                <span style={{ color: fontColor || undefined }}>{dateRangePlaceholder}</span>
+                <CalendarIcon style={{ color: iconColor || undefined, width: iconSize ? `${iconSize}px` : undefined, height: iconSize ? `${iconSize}px` : undefined, marginLeft: typeof iconGap === 'number' ? `${iconGap}px` : undefined }} />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="start" sideOffset={6} className="p-2" style={{ width: dateRangeWidth ? `${dateRangeWidth}px` : undefined }}>
+              <Calendar mode="range" numberOfMonths={2} buttonVariant="ghost" />
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Right group */}
