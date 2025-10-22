@@ -13,6 +13,8 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import FinanceiroUiPanel from '@/components/modulos/FinanceiroUiPanel'
 import FinanceiroToolbar from '@/components/modulos/FinanceiroToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
+import type { Opcao } from '@/components/modulos/OpcoesTabs'
+import { LayoutDashboard, Banknote, CreditCard, ArrowDownCircle } from 'lucide-react'
 
 type Row = TableData
 
@@ -98,6 +100,24 @@ export default function ModulosFinanceiroPage() {
     }
   }, [tabs.selected])
 
+  const tabOptions: Opcao[] = useMemo(() => {
+    const iconFor = (v: string) => {
+      switch (v) {
+        case 'visao':
+          return <LayoutDashboard className="h-4 w-4" />
+        case 'contas':
+          return <Banknote className="h-4 w-4" />
+        case 'pagamentos':
+          return <CreditCard className="h-4 w-4" />
+        case 'recebimentos':
+          return <ArrowDownCircle className="h-4 w-4" />
+        default:
+          return null
+      }
+    }
+    return tabs.options.map((opt) => ({ ...opt, icon: iconFor(opt.value) })) as Opcao[]
+  }, [tabs.options])
+
   return (
     <SidebarProvider>
       <SidebarShadcn />
@@ -115,7 +135,7 @@ export default function ModulosFinanceiroPage() {
         </div>
         <div style={{ marginBottom: layout.mbTabs }}>
           <OpcoesTabs
-            options={tabs.options}
+            options={tabOptions}
             value={tabs.selected}
             onValueChange={(v) => financeiroUiActions.setTabs({ selected: v })}
             fontFamily={fontVar(tabs.fontFamily)}
@@ -123,6 +143,7 @@ export default function ModulosFinanceiroPage() {
             fontWeight={tabs.fontWeight}
             color={tabs.color}
             letterSpacing={tabs.letterSpacing}
+            className="px-0 md:px-0"
           />
         </div>
         {/* Toolbar direita (paginador + botão) */}
