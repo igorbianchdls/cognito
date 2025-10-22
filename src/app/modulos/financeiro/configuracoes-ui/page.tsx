@@ -10,6 +10,7 @@ import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 import TituloModulo from '@/components/modulos/TituloModulo'
 import OpcoesTabs from '@/components/modulos/OpcoesTabs'
 import DataTable, { type TableData } from '@/components/widgets/Table'
+import FinanceiroUiPanel from '@/components/modulos/FinanceiroUiPanel'
 import FinanceiroToolbar from '@/components/modulos/FinanceiroToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/OpcoesTabs'
@@ -17,7 +18,7 @@ import { LayoutDashboard, Banknote, CreditCard, ArrowDownCircle } from 'lucide-r
 
 type Row = TableData
 
-export default function ModulosFinanceiroPage() {
+export default function ModulosFinanceiroConfigUiPage() {
   const titulo = useStore($titulo)
   const tabs = useStore($tabs)
   const tabelaUI = useStore($tabelaUI)
@@ -208,7 +209,9 @@ export default function ModulosFinanceiroPage() {
             </div>
           </div>
         </div>
+        <FinanceiroUiPanel />
       </SidebarInset>
     </SidebarProvider>
   )
 }
+
