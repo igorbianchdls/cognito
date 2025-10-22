@@ -83,7 +83,7 @@ export default function ModulosFinanceiroPage() {
   return (
     <SidebarProvider>
       <SidebarShadcn />
-      <SidebarInset className="h-screen flex flex-col overflow-hidden">
+      <SidebarInset className="min-h-screen flex flex-col overflow-y-auto">
         <div style={{ marginBottom: layout.mbTitle }}>
           <TituloModulo title={titulo.title} subtitle={titulo.subtitle} />
         </div>
@@ -94,7 +94,7 @@ export default function ModulosFinanceiroPage() {
             onValueChange={(v) => financeiroUiActions.setTabs({ selected: v })}
           />
         </div>
-        <div className="flex-1 min-h-0 overflow-hidden px-4 md:px-6" style={{ marginBottom: layout.mbTable }}>
+        <div className="flex-1 min-h-0 overflow-auto px-4 md:px-6" style={{ marginBottom: layout.mbTable }}>
           <div className="border rounded-md bg-background">
             <DataTable
               columns={columns}
