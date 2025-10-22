@@ -1022,13 +1022,15 @@ export const analisarInadimplencia = tool({
 // ============================================================================
 
 export const getTransacoesExtrato = tool({
-  description: 'Consulta transações documentadas e extrato bancário do sistema de gestão de documentos',
+  description: 'Consulta transações bancárias e extratos do sistema financeiro',
   inputSchema: z.object({
     limit: z.number().default(50).describe('Número máximo de resultados'),
-    data_inicial: z.string().optional().describe('Data inicial de emissão do extrato (YYYY-MM-DD)'),
-    data_final: z.string().optional().describe('Data final exclusiva de emissão do extrato (YYYY-MM-DD)'),
+    data_inicial: z.string().optional().describe('Data inicial do extrato (YYYY-MM-DD)'),
+    data_final: z.string().optional().describe('Data final do extrato (YYYY-MM-DD)'),
     tipo: z.string().optional().describe('Filtrar por tipo de transação'),
     conciliado: z.boolean().optional().describe('Filtrar por status de conciliação'),
+    conta_id: z.string().optional().describe('Filtrar por ID da conta bancária'),
+    origem: z.string().optional().describe('Filtrar por origem da transação'),
   }),
   execute: async ({
     limit = 50,
@@ -1036,6 +1038,8 @@ export const getTransacoesExtrato = tool({
     data_final,
     tipo,
     conciliado,
+    conta_id,
+    origem,
   }) => {
     try {
       const conditions: string[] = [];
@@ -1048,35 +1052,45 @@ export const getTransacoesExtrato = tool({
         paramIndex += 1;
       };
 
-      // Filtros por emissão do documento de extrato
-      if (data_inicial) pushCondition('d.data_emissao >=', data_inicial);
-      if (data_final) pushCondition('d.data_emissao <', data_final); // limite superior exclusivo
+      // Filtros por data do extrato
+      if (data_inicial) pushCondition('e.data_extrato >=', data_inicial);
+      if (data_final) pushCondition('e.data_extrato <=', data_final);
+
       // Filtros da transação
       if (tipo) pushCondition('t.tipo =', tipo);
       if (conciliado !== undefined) pushCondition('t.conciliado =', conciliado);
+      if (origem) pushCondition('t.origem =', origem);
+
+      // Filtro por conta
+      if (conta_id) pushCondition('e.conta_id =', conta_id);
 
       const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
       const sql = `
         SELECT
-          d.numero_documento              AS documento,
-          d.data_emissao                  AS extrato_emissao,
-          ex.banco,
-          ex.agencia,
-          ex.conta,
-          t.data                          AS data,
-          t.descricao                     AS descricao,
-          t.valor                         AS valor,
-          t.tipo                          AS tipo,
-          CASE WHEN t.conciliado THEN 'concluido' ELSE 'pendente' END AS status,
-          CASE WHEN t.conciliado THEN 'sim' ELSE 'não' END AS transacao_conciliado
-        FROM gestaodocumentos.documentos d
-        JOIN gestaodocumentos.extratos_bancarios ex
-          ON ex.documento_id = d.id
-        LEFT JOIN gestaodocumentos.transacoes_extrato t
-          ON t.extrato_id = ex.documento_id
+          t.id AS transacao_id,
+          e.id AS extrato_id,
+          c.nome_conta AS conta,
+          e.data_extrato,
+          t.data_transacao,
+          t.tipo,
+          t.descricao,
+          t.valor,
+          t.origem,
+          t.conciliado,
+          e.saldo_inicial,
+          e.total_creditos,
+          e.total_debitos,
+          e.saldo_final,
+          e.status AS status_extrato,
+          t.criado_em
+        FROM financeiro.transacoes_bancarias t
+        LEFT JOIN financeiro.extratos_bancarios e
+          ON e.id = t.extrato_id
+        LEFT JOIN financeiro.contas c
+          ON c.id = e.conta_id
         ${whereClause}
-        ORDER BY d.data_emissao DESC, t.data NULLS LAST, t.valor DESC
+        ORDER BY e.data_extrato NULLS LAST, t.data_transacao, t.id
         LIMIT $${paramIndex}
       `.trim();
 
