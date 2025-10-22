@@ -13,7 +13,7 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { LayoutDashboard, Wrench } from 'lucide-react'
+import { Wrench, Calendar, User, Users, List } from 'lucide-react'
 
 type Row = TableData
 
@@ -31,10 +31,13 @@ export default function ModulosServicosPage() {
     })
     financeiroUiActions.setTabs({
       options: [
-        { value: 'visao', label: 'Visão geral' },
-        { value: 'ordens', label: 'Ordens' },
+        { value: 'ordens-servico', label: 'Ordens de Serviço' },
+        { value: 'agendamentos', label: 'Agendamentos' },
+        { value: 'tecnicos', label: 'Técnicos' },
+        { value: 'clientes', label: 'Clientes' },
+        { value: 'servicos', label: 'Serviços' },
       ],
-      selected: 'visao',
+      selected: 'ordens-servico',
     })
   }, [])
 
@@ -47,30 +50,74 @@ export default function ModulosServicosPage() {
 
   const { columns, data } = useMemo((): { columns: ColumnDef<Row>[]; data: Row[] } => {
     switch (tabs.selected) {
-      case 'ordens':
+      case 'ordens-servico':
+      default:
         return {
           columns: [
             { accessorKey: 'os', header: 'OS' },
             { accessorKey: 'cliente', header: 'Cliente' },
             { accessorKey: 'data', header: 'Data' },
+            { accessorKey: 'tecnico', header: 'Técnico' },
             { accessorKey: 'status', header: 'Status' },
           ],
           data: [
-            { os: 'OS-5001', cliente: 'Cliente X', data: '2025-10-19', status: 'Em execução' },
-            { os: 'OS-5002', cliente: 'Cliente Y', data: '2025-10-22', status: 'Concluída' },
+            { os: 'OS-5001', cliente: 'Cliente X', data: '2025-10-19', tecnico: 'João', status: 'Em execução' },
+            { os: 'OS-5002', cliente: 'Cliente Y', data: '2025-10-22', tecnico: 'Maria', status: 'Concluída' },
           ],
         }
-      case 'visao':
-      default:
+      case 'agendamentos':
         return {
           columns: [
-            { accessorKey: 'indicador', header: 'Indicador' },
-            { accessorKey: 'valor', header: 'Valor' },
+            { accessorKey: 'id', header: 'ID' },
+            { accessorKey: 'data_hora', header: 'Data/Hora' },
+            { accessorKey: 'cliente', header: 'Cliente' },
+            { accessorKey: 'tecnico', header: 'Técnico' },
+            { accessorKey: 'status', header: 'Status' },
           ],
           data: [
-            { indicador: 'OS abertas', valor: 24 },
-            { indicador: 'Tempo médio (dias)', valor: 3.8 },
-            { indicador: 'Satisfação (NPS)', valor: 72 },
+            { id: 'AG-1001', data_hora: '2025-10-25 14:00', cliente: 'Cliente X', tecnico: 'João', status: 'Confirmado' },
+            { id: 'AG-1002', data_hora: '2025-10-26 09:30', cliente: 'Cliente Z', tecnico: 'Pedro', status: 'Pendente' },
+          ],
+        }
+      case 'tecnicos':
+        return {
+          columns: [
+            { accessorKey: 'nome', header: 'Nome' },
+            { accessorKey: 'especialidade', header: 'Especialidade' },
+            { accessorKey: 'regional', header: 'Regional' },
+            { accessorKey: 'os_abertas', header: 'OS Abertas' },
+            { accessorKey: 'avaliacao', header: 'Avaliação' },
+          ],
+          data: [
+            { nome: 'João', especialidade: 'Elétrica', regional: 'Sudeste', os_abertas: 3, avaliacao: 4.7 },
+            { nome: 'Maria', especialidade: 'Hidráulica', regional: 'Sul', os_abertas: 1, avaliacao: 4.9 },
+          ],
+        }
+      case 'clientes':
+        return {
+          columns: [
+            { accessorKey: 'nome', header: 'Nome' },
+            { accessorKey: 'telefone', header: 'Telefone' },
+            { accessorKey: 'cidade', header: 'Cidade' },
+            { accessorKey: 'os_abertas', header: 'OS Abertas' },
+            { accessorKey: 'ultima_os', header: 'Última OS' },
+          ],
+          data: [
+            { nome: 'Cliente X', telefone: '(11) 99999-0000', cidade: 'São Paulo', os_abertas: 1, ultima_os: '2025-10-19' },
+            { nome: 'Cliente Y', telefone: '(21) 98888-1111', cidade: 'Rio de Janeiro', os_abertas: 0, ultima_os: '2025-09-28' },
+          ],
+        }
+      case 'servicos':
+        return {
+          columns: [
+            { accessorKey: 'codigo', header: 'Código' },
+            { accessorKey: 'descricao', header: 'Descrição' },
+            { accessorKey: 'categoria', header: 'Categoria' },
+            { accessorKey: 'preco_base', header: 'Preço Base (R$)' },
+          ],
+          data: [
+            { codigo: 'SRV-001', descricao: 'Instalação elétrica', categoria: 'Elétrica', preco_base: 350 },
+            { codigo: 'SRV-002', descricao: 'Troca de registro', categoria: 'Hidráulica', preco_base: 180 },
           ],
         }
     }
@@ -79,10 +126,16 @@ export default function ModulosServicosPage() {
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
       switch (v) {
-        case 'visao':
-          return <LayoutDashboard className="h-4 w-4" />
-        case 'ordens':
+        case 'ordens-servico':
           return <Wrench className="h-4 w-4" />
+        case 'agendamentos':
+          return <Calendar className="h-4 w-4" />
+        case 'tecnicos':
+          return <User className="h-4 w-4" />
+        case 'clientes':
+          return <Users className="h-4 w-4" />
+        case 'servicos':
+          return <List className="h-4 w-4" />
         default:
           return null
       }
@@ -185,4 +238,3 @@ export default function ModulosServicosPage() {
     </SidebarProvider>
   )
 }
-

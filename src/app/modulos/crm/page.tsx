@@ -13,7 +13,7 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { LayoutDashboard, UserPlus } from 'lucide-react'
+import { Target, Megaphone, User, UserPlus, ListChecks, Building } from 'lucide-react'
 
 type Row = TableData
 
@@ -31,10 +31,14 @@ export default function ModulosCrmPage() {
     })
     financeiroUiActions.setTabs({
       options: [
-        { value: 'visao', label: 'Visão geral' },
+        { value: 'oportunidades', label: 'Oportunidades' },
+        { value: 'campanhas', label: 'Campanhas' },
+        { value: 'contatos', label: 'Contatos' },
         { value: 'leads', label: 'Leads' },
+        { value: 'atividades', label: 'Atividades' },
+        { value: 'contas', label: 'Contas' },
       ],
-      selected: 'visao',
+      selected: 'oportunidades',
     })
   }, [])
 
@@ -47,6 +51,50 @@ export default function ModulosCrmPage() {
 
   const { columns, data } = useMemo((): { columns: ColumnDef<Row>[]; data: Row[] } => {
     switch (tabs.selected) {
+      case 'oportunidades':
+      default:
+        return {
+          columns: [
+            { accessorKey: 'titulo', header: 'Título' },
+            { accessorKey: 'conta', header: 'Conta' },
+            { accessorKey: 'valor', header: 'Valor (R$)' },
+            { accessorKey: 'fase', header: 'Fase' },
+            { accessorKey: 'fechamento', header: 'Fechamento Previsto' },
+          ],
+          data: [
+            { titulo: 'Upgrade plano Enterprise', conta: 'ACME', valor: 85000, fase: 'Proposta', fechamento: '2025-11-10' },
+            { titulo: 'Implantação CRM', conta: 'Beta Ltda', valor: 32000, fase: 'Qualificação', fechamento: '2025-11-22' },
+          ],
+        }
+      case 'campanhas':
+        return {
+          columns: [
+            { accessorKey: 'nome', header: 'Nome' },
+            { accessorKey: 'canal', header: 'Canal' },
+            { accessorKey: 'inicio', header: 'Início' },
+            { accessorKey: 'fim', header: 'Fim' },
+            { accessorKey: 'status', header: 'Status' },
+            { accessorKey: 'orcamento', header: 'Orçamento (R$)' },
+          ],
+          data: [
+            { nome: 'Q4 Leads B2B', canal: 'Email', inicio: '2025-10-01', fim: '2025-12-31', status: 'Ativa', orcamento: 15000 },
+            { nome: 'Webinar CRM', canal: 'Social', inicio: '2025-11-05', fim: '2025-11-10', status: 'Planejada', orcamento: 3000 },
+          ],
+        }
+      case 'contatos':
+        return {
+          columns: [
+            { accessorKey: 'nome', header: 'Nome' },
+            { accessorKey: 'email', header: 'Email' },
+            { accessorKey: 'telefone', header: 'Telefone' },
+            { accessorKey: 'conta', header: 'Conta' },
+            { accessorKey: 'status', header: 'Status' },
+          ],
+          data: [
+            { nome: 'Paulo Nogueira', email: 'paulo@acme.com', telefone: '(11) 99999-0001', conta: 'ACME', status: 'Ativo' },
+            { nome: 'Renata Lima', email: 'renata@beta.com', telefone: '(21) 98888-2222', conta: 'Beta Ltda', status: 'Ativo' },
+          ],
+        }
       case 'leads':
         return {
           columns: [
@@ -54,23 +102,39 @@ export default function ModulosCrmPage() {
             { accessorKey: 'email', header: 'Email' },
             { accessorKey: 'origem', header: 'Origem' },
             { accessorKey: 'status', header: 'Status' },
+            { accessorKey: 'score', header: 'Score' },
           ],
           data: [
-            { nome: 'João Silva', email: 'joao@exemplo.com', origem: 'Landing', status: 'Novo' },
-            { nome: 'Maria Souza', email: 'maria@exemplo.com', origem: 'Indicação', status: 'Em qualificação' },
+            { nome: 'João Silva', email: 'joao@exemplo.com', origem: 'Landing', status: 'Novo', score: 62 },
+            { nome: 'Maria Souza', email: 'maria@exemplo.com', origem: 'Indicação', status: 'Em qualificação', score: 75 },
           ],
         }
-      case 'visao':
-      default:
+      case 'atividades':
         return {
           columns: [
-            { accessorKey: 'indicador', header: 'Indicador' },
-            { accessorKey: 'valor', header: 'Valor' },
+            { accessorKey: 'tipo', header: 'Tipo' },
+            { accessorKey: 'assunto', header: 'Assunto' },
+            { accessorKey: 'responsavel', header: 'Responsável' },
+            { accessorKey: 'data', header: 'Data' },
+            { accessorKey: 'status', header: 'Status' },
           ],
           data: [
-            { indicador: 'Leads novos (30d)', valor: 340 },
-            { indicador: 'Conversões (30d)', valor: 58 },
-            { indicador: 'Taxa de conversão', valor: 17.1 },
+            { tipo: 'Ligação', assunto: 'Follow-up proposta', responsavel: 'Ana', data: '2025-10-23', status: 'Concluída' },
+            { tipo: 'Reunião', assunto: 'Descoberta', responsavel: 'Carlos', data: '2025-10-24', status: 'Pendente' },
+          ],
+        }
+      case 'contas':
+        return {
+          columns: [
+            { accessorKey: 'conta', header: 'Conta' },
+            { accessorKey: 'segmento', header: 'Segmento' },
+            { accessorKey: 'cidade', header: 'Cidade' },
+            { accessorKey: 'pipeline', header: 'Pipeline (R$)' },
+            { accessorKey: 'status', header: 'Status' },
+          ],
+          data: [
+            { conta: 'ACME', segmento: 'Software', cidade: 'São Paulo', pipeline: 220000, status: 'Ativa' },
+            { conta: 'Beta Ltda', segmento: 'Serviços', cidade: 'Curitiba', pipeline: 95000, status: 'Ativa' },
           ],
         }
     }
@@ -79,10 +143,18 @@ export default function ModulosCrmPage() {
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
       switch (v) {
-        case 'visao':
-          return <LayoutDashboard className="h-4 w-4" />
+        case 'oportunidades':
+          return <Target className="h-4 w-4" />
+        case 'campanhas':
+          return <Megaphone className="h-4 w-4" />
+        case 'contatos':
+          return <User className="h-4 w-4" />
         case 'leads':
           return <UserPlus className="h-4 w-4" />
+        case 'atividades':
+          return <ListChecks className="h-4 w-4" />
+        case 'contas':
+          return <Building className="h-4 w-4" />
         default:
           return null
       }
@@ -185,4 +257,3 @@ export default function ModulosCrmPage() {
     </SidebarProvider>
   )
 }
-

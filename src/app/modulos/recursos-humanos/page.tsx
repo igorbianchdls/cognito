@@ -13,7 +13,7 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { LayoutDashboard, Users } from 'lucide-react'
+import { Users, Briefcase, Building } from 'lucide-react'
 
 type Row = TableData
 
@@ -31,10 +31,11 @@ export default function ModulosRecursosHumanosPage() {
     })
     financeiroUiActions.setTabs({
       options: [
-        { value: 'visao', label: 'Visão geral' },
-        { value: 'colaboradores', label: 'Colaboradores' },
+        { value: 'funcionarios', label: 'Funcionários' },
+        { value: 'cargos', label: 'Cargos' },
+        { value: 'departamentos', label: 'Departamentos' },
       ],
-      selected: 'visao',
+      selected: 'funcionarios',
     })
   }, [])
 
@@ -47,30 +48,45 @@ export default function ModulosRecursosHumanosPage() {
 
   const { columns, data } = useMemo((): { columns: ColumnDef<Row>[]; data: Row[] } => {
     switch (tabs.selected) {
-      case 'colaboradores':
+      case 'funcionarios':
+      default:
         return {
           columns: [
             { accessorKey: 'nome', header: 'Nome' },
             { accessorKey: 'cargo', header: 'Cargo' },
+            { accessorKey: 'departamento', header: 'Departamento' },
             { accessorKey: 'admissao', header: 'Admissão' },
             { accessorKey: 'status', header: 'Status' },
           ],
           data: [
-            { nome: 'Ana Lima', cargo: 'Analista RH', admissao: '2023-04-15', status: 'Ativo' },
-            { nome: 'Carlos Souza', cargo: 'Dev Frontend', admissao: '2024-02-10', status: 'Ativo' },
+            { nome: 'Ana Lima', cargo: 'Analista RH', departamento: 'RH', admissao: '2023-04-15', status: 'Ativo' },
+            { nome: 'Carlos Souza', cargo: 'Dev Frontend', departamento: 'Tecnologia', admissao: '2024-02-10', status: 'Ativo' },
           ],
         }
-      case 'visao':
-      default:
+      case 'cargos':
         return {
           columns: [
-            { accessorKey: 'indicador', header: 'Indicador' },
-            { accessorKey: 'valor', header: 'Valor' },
+            { accessorKey: 'cargo', header: 'Cargo' },
+            { accessorKey: 'nivel', header: 'Nível' },
+            { accessorKey: 'salario_base', header: 'Salário Base (R$)' },
+            { accessorKey: 'departamento', header: 'Departamento' },
           ],
           data: [
-            { indicador: 'Headcount', valor: 42 },
-            { indicador: 'Admissões (30d)', valor: 3 },
-            { indicador: 'Afastamentos (30d)', valor: 1 },
+            { cargo: 'Analista RH', nivel: 'Pleno', salario_base: 6000, departamento: 'RH' },
+            { cargo: 'Dev Frontend', nivel: 'Sênior', salario_base: 12000, departamento: 'Tecnologia' },
+          ],
+        }
+      case 'departamentos':
+        return {
+          columns: [
+            { accessorKey: 'departamento', header: 'Departamento' },
+            { accessorKey: 'gestor', header: 'Gestor' },
+            { accessorKey: 'colaboradores', header: 'Colaboradores' },
+            { accessorKey: 'orcamento', header: 'Orçamento (R$)' },
+          ],
+          data: [
+            { departamento: 'RH', gestor: 'Mariana Freitas', colaboradores: 6, orcamento: 300000 },
+            { departamento: 'Tecnologia', gestor: 'Paulo Nogueira', colaboradores: 18, orcamento: 1500000 },
           ],
         }
     }
@@ -79,10 +95,12 @@ export default function ModulosRecursosHumanosPage() {
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
       switch (v) {
-        case 'visao':
-          return <LayoutDashboard className="h-4 w-4" />
-        case 'colaboradores':
+        case 'funcionarios':
           return <Users className="h-4 w-4" />
+        case 'cargos':
+          return <Briefcase className="h-4 w-4" />
+        case 'departamentos':
+          return <Building className="h-4 w-4" />
         default:
           return null
       }
@@ -185,4 +203,3 @@ export default function ModulosRecursosHumanosPage() {
     </SidebarProvider>
   )
 }
-

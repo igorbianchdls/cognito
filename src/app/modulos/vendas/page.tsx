@@ -13,7 +13,7 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { LayoutDashboard, ShoppingCart } from 'lucide-react'
+import { ShoppingCart, Users, UserCircle, Map, Users2, LayoutGrid } from 'lucide-react'
 
 type Row = TableData
 
@@ -31,10 +31,14 @@ export default function ModulosVendasPage() {
     })
     financeiroUiActions.setTabs({
       options: [
-        { value: 'visao', label: 'Visão geral' },
         { value: 'pedidos', label: 'Pedidos' },
+        { value: 'clientes', label: 'Clientes' },
+        { value: 'vendedores', label: 'Vendedores' },
+        { value: 'territorios', label: 'Territórios' },
+        { value: 'equipes', label: 'Equipes' },
+        { value: 'canais', label: 'Canais' },
       ],
-      selected: 'visao',
+      selected: 'pedidos',
     })
   }, [])
 
@@ -48,6 +52,7 @@ export default function ModulosVendasPage() {
   const { columns, data } = useMemo((): { columns: ColumnDef<Row>[]; data: Row[] } => {
     switch (tabs.selected) {
       case 'pedidos':
+      default:
         return {
           columns: [
             { accessorKey: 'numero', header: 'Pedido' },
@@ -61,17 +66,74 @@ export default function ModulosVendasPage() {
             { numero: 'PO-2002', cliente: 'Beta Ltda', data: '2025-10-21', valor: 520.5, status: 'Em aberto' },
           ],
         }
-      case 'visao':
-      default:
+      case 'clientes':
         return {
           columns: [
-            { accessorKey: 'indicador', header: 'Indicador' },
-            { accessorKey: 'valor', header: 'Valor' },
+            { accessorKey: 'nome', header: 'Nome' },
+            { accessorKey: 'email', header: 'Email' },
+            { accessorKey: 'telefone', header: 'Telefone' },
+            { accessorKey: 'segmento', header: 'Segmento' },
+            { accessorKey: 'status', header: 'Status' },
           ],
           data: [
-            { indicador: 'Receita (30d)', valor: 45230.75 },
-            { indicador: 'Pedidos (30d)', valor: 128 },
-            { indicador: 'Ticket médio', valor: 353.36 },
+            { nome: 'João Silva', email: 'joao@exemplo.com', telefone: '(11) 99999-0000', segmento: 'B2C', status: 'Ativo' },
+            { nome: 'Maria Souza', email: 'maria@exemplo.com', telefone: '(21) 98888-1111', segmento: 'B2B', status: 'Inativo' },
+          ],
+        }
+      case 'vendedores':
+        return {
+          columns: [
+            { accessorKey: 'nome', header: 'Nome' },
+            { accessorKey: 'matricula', header: 'Matrícula' },
+            { accessorKey: 'regional', header: 'Regional' },
+            { accessorKey: 'meta', header: 'Meta (R$)' },
+            { accessorKey: 'vendas', header: 'Vendas (R$)' },
+          ],
+          data: [
+            { nome: 'Carlos Lima', matricula: 'V001', regional: 'Sudeste', meta: 50000, vendas: 43210 },
+            { nome: 'Ana Pereira', matricula: 'V002', regional: 'Sul', meta: 40000, vendas: 38900 },
+          ],
+        }
+      case 'territorios':
+        return {
+          columns: [
+            { accessorKey: 'territorio', header: 'Território' },
+            { accessorKey: 'regional', header: 'Regional' },
+            { accessorKey: 'responsavel', header: 'Responsável' },
+            { accessorKey: 'clientes', header: 'Clientes' },
+            { accessorKey: 'vendas', header: 'Vendas (R$)' },
+          ],
+          data: [
+            { territorio: 'SP Capital', regional: 'Sudeste', responsavel: 'Carlos Lima', clientes: 120, vendas: 210000 },
+            { territorio: 'PR Norte', regional: 'Sul', responsavel: 'Ana Pereira', clientes: 80, vendas: 145000 },
+          ],
+        }
+      case 'equipes':
+        return {
+          columns: [
+            { accessorKey: 'equipe', header: 'Equipe' },
+            { accessorKey: 'lider', header: 'Líder' },
+            { accessorKey: 'membros', header: 'Membros' },
+            { accessorKey: 'meta', header: 'Meta (R$)' },
+            { accessorKey: 'vendas', header: 'Vendas (R$)' },
+          ],
+          data: [
+            { equipe: 'Alpha', lider: 'Carlos Lima', membros: 5, meta: 200000, vendas: 178000 },
+            { equipe: 'Beta', lider: 'Ana Pereira', membros: 4, meta: 160000, vendas: 152000 },
+          ],
+        }
+      case 'canais':
+        return {
+          columns: [
+            { accessorKey: 'canal', header: 'Canal' },
+            { accessorKey: 'tipo', header: 'Tipo' },
+            { accessorKey: 'status', header: 'Status' },
+            { accessorKey: 'pedidos', header: 'Pedidos (30d)' },
+            { accessorKey: 'receita', header: 'Receita (R$ 30d)' },
+          ],
+          data: [
+            { canal: 'E-commerce', tipo: 'Online', status: 'Ativo', pedidos: 320, receita: 125000 },
+            { canal: 'Loja Física', tipo: 'Offline', status: 'Ativo', pedidos: 210, receita: 98000 },
           ],
         }
     }
@@ -80,10 +142,18 @@ export default function ModulosVendasPage() {
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
       switch (v) {
-        case 'visao':
-          return <LayoutDashboard className="h-4 w-4" />
         case 'pedidos':
           return <ShoppingCart className="h-4 w-4" />
+        case 'clientes':
+          return <Users className="h-4 w-4" />
+        case 'vendedores':
+          return <UserCircle className="h-4 w-4" />
+        case 'territorios':
+          return <Map className="h-4 w-4" />
+        case 'equipes':
+          return <Users2 className="h-4 w-4" />
+        case 'canais':
+          return <LayoutGrid className="h-4 w-4" />
         default:
           return null
       }
@@ -186,4 +256,3 @@ export default function ModulosVendasPage() {
     </SidebarProvider>
   )
 }
-
