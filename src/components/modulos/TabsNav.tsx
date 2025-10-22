@@ -82,3 +82,4 @@ export default function TabsNav({ options, value, onValueChange, className, font
     </div>
   )
 }
+

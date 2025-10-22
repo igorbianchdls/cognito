@@ -7,13 +7,13 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 
-import TituloModulo from '@/components/modulos/TituloModulo'
-import OpcoesTabs from '@/components/modulos/OpcoesTabs'
+import PageHeader from '@/components/modulos/PageHeader'
+import TabsNav from '@/components/modulos/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
-import FinanceiroUiPanel from '@/components/modulos/FinanceiroUiPanel'
-import FinanceiroToolbar from '@/components/modulos/FinanceiroToolbar'
+import UiConfigPanel from '@/components/modulos/UiConfigPanel'
+import DataToolbar from '@/components/modulos/DataToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
-import type { Opcao } from '@/components/modulos/OpcoesTabs'
+import type { Opcao } from '@/components/modulos/TabsNav'
 import { LayoutDashboard, Banknote, CreditCard, ArrowDownCircle } from 'lucide-react'
 
 type Row = TableData
@@ -123,7 +123,7 @@ export default function ModulosFinanceiroConfigUiPage() {
       <SidebarShadcn />
       <SidebarInset className="min-h-screen flex flex-col overflow-y-auto">
         <div style={{ marginBottom: layout.mbTitle }}>
-          <TituloModulo
+          <PageHeader
             title={titulo.title}
             subtitle={titulo.subtitle}
             titleFontFamily={fontVar(titulo.titleFontFamily)}
@@ -134,7 +134,7 @@ export default function ModulosFinanceiroConfigUiPage() {
           />
         </div>
         <div style={{ marginBottom: 0 }}>
-          <OpcoesTabs
+          <TabsNav
             options={tabOptions}
             value={tabs.selected}
             onValueChange={(v) => financeiroUiActions.setTabs({ selected: v })}
@@ -154,7 +154,7 @@ export default function ModulosFinanceiroConfigUiPage() {
         <div style={{ background: layout.contentBg, paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
           {/* Toolbar direita (paginador + botão) */}
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
-            <FinanceiroToolbar
+            <DataToolbar
               from={data.length === 0 ? 0 : 1}
               to={Math.min(tabelaUI.pageSize, data.length)}
               total={data.length}
@@ -209,9 +209,8 @@ export default function ModulosFinanceiroConfigUiPage() {
             </div>
           </div>
         </div>
-        <FinanceiroUiPanel />
+        <UiConfigPanel />
       </SidebarInset>
     </SidebarProvider>
   )
 }
-
