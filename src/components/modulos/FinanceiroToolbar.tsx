@@ -83,36 +83,24 @@ export default function FinanceiroToolbar({
       <div className="flex items-center justify-between gap-3">
         {/* Left group */}
         <div className="flex items-center gap-6 min-w-0">
-          {/* Search underlined */}
+          {/* Search with independent underline */}
           <div className="relative min-w-[160px] w-[240px]" style={{ width: searchWidth ? `${searchWidth}px` : undefined }}>
             <Input
               placeholder={searchPlaceholder}
-              className="h-8 rounded-none border-0 border-b bg-transparent px-0 py-0 text-sm shadow-none focus-visible:ring-0 focus-visible:border-transparent"
-              style={{
-                borderBottomColor: underlineColor || undefined,
-                borderBottomWidth: typeof underlineWidth === 'number' ? `${underlineWidth}px` : undefined,
-                borderBottomStyle: underlineWidth ? 'solid' : undefined,
-                paddingBottom: typeof underlineOffsetTop === 'number' ? `${underlineOffsetTop}px` : undefined,
-              }}
+              className="h-8 rounded-none border-0 bg-transparent px-0 py-0 text-sm shadow-none focus-visible:ring-0 focus-visible:border-transparent"
             />
             <Search className="absolute right-0 top-1/2 -translate-y-1/2" style={{ color: iconColor || undefined, width: iconSize ? `${iconSize}px` : undefined, height: iconSize ? `${iconSize}px` : undefined }} />
+            <div className="absolute left-0 right-0" style={{ height: typeof underlineWidth === 'number' ? `${underlineWidth}px` : undefined, backgroundColor: underlineColor || undefined, bottom: typeof underlineOffsetTop === 'number' ? -underlineOffsetTop : 0 }} />
           </div>
 
-          {/* Date Range underlined */}
-          <button
-            type="button"
-            className="h-8 inline-flex items-center gap-2 border-0 border-b px-0 text-sm"
-            style={{
-              borderBottomColor: underlineColor || undefined,
-              borderBottomWidth: typeof underlineWidth === 'number' ? `${underlineWidth}px` : undefined,
-              borderBottomStyle: underlineWidth ? 'solid' : undefined,
-              paddingBottom: typeof underlineOffsetTop === 'number' ? `${underlineOffsetTop}px` : undefined,
-              width: dateRangeWidth ? `${dateRangeWidth}px` : undefined,
-            }}
-          >
-            <span>{dateRangePlaceholder}</span>
-            <Calendar className="" style={{ color: iconColor || undefined, width: iconSize ? `${iconSize}px` : undefined, height: iconSize ? `${iconSize}px` : undefined, marginLeft: typeof iconGap === 'number' ? `${iconGap}px` : undefined }} />
-          </button>
+          {/* Date Range with independent underline */}
+          <div className="relative" style={{ width: dateRangeWidth ? `${dateRangeWidth}px` : undefined }}>
+            <div className="h-8 inline-flex items-center gap-2 px-0 text-sm" style={{ color: fontColor || undefined }}>
+              <span>{dateRangePlaceholder}</span>
+              <Calendar className="" style={{ color: iconColor || undefined, width: iconSize ? `${iconSize}px` : undefined, height: iconSize ? `${iconSize}px` : undefined, marginLeft: typeof iconGap === 'number' ? `${iconGap}px` : undefined }} />
+            </div>
+            <div className="absolute left-0 right-0" style={{ height: typeof underlineWidth === 'number' ? `${underlineWidth}px` : undefined, backgroundColor: underlineColor || undefined, bottom: typeof underlineOffsetTop === 'number' ? -underlineOffsetTop : 0 }} />
+          </div>
         </div>
 
         {/* Right group */}
