@@ -67,11 +67,13 @@ interface DataTableProps<TData extends TableData> {
   headerFontSize?: number
   headerFontFamily?: string
   headerFontWeight?: string
+  headerLetterSpacing?: number
   // Cell typography props
   cellFontSize?: number
   cellFontFamily?: string
   cellFontWeight?: string
   cellTextColor?: string
+  cellLetterSpacing?: number
   // Search & filtering props
   enableSearch?: boolean
   enableFiltering?: boolean
@@ -133,11 +135,13 @@ export function DataTable<TData extends TableData>({
   headerFontSize = 14,
   headerFontFamily = 'inherit',
   headerFontWeight = 'normal',
+  headerLetterSpacing,
   // Cell typography props with defaults
   cellFontSize = 14,
   cellFontFamily = 'inherit',
   cellFontWeight = 'normal',
   cellTextColor = '#1f2937',
+  cellLetterSpacing,
   // Search & filtering props with defaults
   enableSearch = true,
   // Row selection props with defaults
@@ -418,6 +422,7 @@ export function DataTable<TData extends TableData>({
                           fontSize: `${headerFontSize}px`,
                           fontFamily: headerFontFamily !== 'inherit' ? headerFontFamily : undefined,
                           fontWeight: headerFontWeight !== 'normal' ? headerFontWeight : undefined,
+                          letterSpacing: typeof headerLetterSpacing === 'number' ? `${headerLetterSpacing}px` : undefined,
                         }}
                       >
                         {header.isPlaceholder
@@ -506,7 +511,8 @@ export function DataTable<TData extends TableData>({
                             fontWeight: cellFontWeight !== 'normal' ? cellFontWeight : undefined,
                             color: cellTextColor,
                             backgroundColor,
-                            position: 'relative'
+                            position: 'relative',
+                            letterSpacing: typeof cellLetterSpacing === 'number' ? `${cellLetterSpacing}px` : undefined,
                           }}
                           onClick={(e) => {
                             if (editTrigger === 'click' && !isEditing) {

@@ -41,10 +41,16 @@ export default function FinanceiroUiPanel() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div>
-              <Label htmlFor="ui-title-font">Fonte</Label>
-              <Input id="ui-title-font" placeholder="inherit, Inter, etc" value={titulo.titleFontFamily ?? ''}
-                onChange={(e) => financeiroUiActions.setTitulo({ titleFontFamily: e.target.value || 'inherit' })}
-              />
+              <Label>Fonte</Label>
+              <Select value={(titulo.titleFontFamily ?? 'Geist')} onValueChange={(v) => financeiroUiActions.setTitulo({ titleFontFamily: v })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Geist">Geist</SelectItem>
+                  <SelectItem value="Inter">Inter</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="ui-title-size">Tamanho</Label>
@@ -73,6 +79,13 @@ export default function FinanceiroUiPanel() {
                 onChange={(e) => financeiroUiActions.setTitulo({ titleColor: e.target.value })}
               />
             </div>
+            <div>
+              <Label htmlFor="ui-title-tracking">Espaçamento</Label>
+              <Input id="ui-title-tracking" type="number" step={0.5} min={-5} max={20}
+                value={titulo.titleLetterSpacing ?? 0}
+                onChange={(e) => financeiroUiActions.setTitulo({ titleLetterSpacing: Number(e.target.value || 0) })}
+              />
+            </div>
           </div>
         </div>
 
@@ -98,10 +111,16 @@ export default function FinanceiroUiPanel() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div>
-              <Label htmlFor="ui-tabs-font">Fonte</Label>
-              <Input id="ui-tabs-font" placeholder="inherit, Inter, etc" value={tabs.fontFamily ?? ''}
-                onChange={(e) => financeiroUiActions.setTabs({ fontFamily: e.target.value || 'inherit' })}
-              />
+              <Label>Fonte</Label>
+              <Select value={(tabs.fontFamily ?? 'Geist')} onValueChange={(v) => financeiroUiActions.setTabs({ fontFamily: v })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Geist">Geist</SelectItem>
+                  <SelectItem value="Inter">Inter</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="ui-tabs-size">Tamanho</Label>
@@ -128,6 +147,13 @@ export default function FinanceiroUiPanel() {
               <Label htmlFor="ui-tabs-color">Cor</Label>
               <Input id="ui-tabs-color" type="color" value={tabs.color ?? '#111827'}
                 onChange={(e) => financeiroUiActions.setTabs({ color: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="ui-tabs-tracking">Espaçamento</Label>
+              <Input id="ui-tabs-tracking" type="number" step={0.5} min={-5} max={20}
+                value={tabs.letterSpacing ?? 0}
+                onChange={(e) => financeiroUiActions.setTabs({ letterSpacing: Number(e.target.value || 0) })}
               />
             </div>
           </div>
@@ -212,10 +238,16 @@ export default function FinanceiroUiPanel() {
                 onChange={(e) => financeiroUiActions.setTabelaUI({ cellText: e.target.value })} />
             </div>
             <div>
-              <Label htmlFor="ui-header-family">Header font family</Label>
-              <Input id="ui-header-family" placeholder="inherit" value={tabela.headerFontFamily ?? ''}
-                onChange={(e) => financeiroUiActions.setTabelaUI({ headerFontFamily: e.target.value || 'inherit' })}
-              />
+              <Label>Header font family</Label>
+              <Select value={(tabela.headerFontFamily ?? 'Geist')} onValueChange={(v) => financeiroUiActions.setTabelaUI({ headerFontFamily: v })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Geist">Geist</SelectItem>
+                  <SelectItem value="Inter">Inter</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="ui-headerfs">Header font size</Label>
@@ -239,10 +271,23 @@ export default function FinanceiroUiPanel() {
               </Select>
             </div>
             <div>
-              <Label htmlFor="ui-cell-family">Cell font family</Label>
-              <Input id="ui-cell-family" placeholder="inherit" value={tabela.cellFontFamily ?? ''}
-                onChange={(e) => financeiroUiActions.setTabelaUI({ cellFontFamily: e.target.value || 'inherit' })}
+              <Label htmlFor="ui-header-tracking">Header letter spacing</Label>
+              <Input id="ui-header-tracking" type="number" step={0.5} min={-5} max={20}
+                value={tabela.headerLetterSpacing ?? 0}
+                onChange={(e) => financeiroUiActions.setTabelaUI({ headerLetterSpacing: Number(e.target.value || 0) })}
               />
+            </div>
+            <div>
+              <Label>Cell font family</Label>
+              <Select value={(tabela.cellFontFamily ?? 'Geist')} onValueChange={(v) => financeiroUiActions.setTabelaUI({ cellFontFamily: v })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Geist">Geist</SelectItem>
+                  <SelectItem value="Inter">Inter</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="ui-cellfs">Cell font size</Label>
@@ -264,6 +309,13 @@ export default function FinanceiroUiPanel() {
                   <SelectItem value="700">Bold (700)</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label htmlFor="ui-cell-tracking">Cell letter spacing</Label>
+              <Input id="ui-cell-tracking" type="number" step={0.5} min={-5} max={20}
+                value={tabela.cellLetterSpacing ?? 0}
+                onChange={(e) => financeiroUiActions.setTabelaUI({ cellLetterSpacing: Number(e.target.value || 0) })}
+              />
             </div>
           </div>
         </div>

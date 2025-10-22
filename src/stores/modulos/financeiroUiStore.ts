@@ -8,6 +8,7 @@ export type TituloState = {
   titleFontSize?: number
   titleFontWeight?: string
   titleColor?: string
+  titleLetterSpacing?: number
 }
 
 export type TabsOption = {
@@ -23,6 +24,7 @@ export type TabsState = {
   fontSize?: number
   fontWeight?: string
   color?: string
+  letterSpacing?: number
 }
 
 export type TabelaUIState = {
@@ -42,6 +44,8 @@ export type TabelaUIState = {
   headerFontWeight?: string
   cellFontFamily?: string
   cellFontWeight?: string
+  headerLetterSpacing?: number
+  cellLetterSpacing?: number
   defaultSortColumn?: string
   defaultSortDirection?: 'asc' | 'desc'
 }
@@ -55,10 +59,11 @@ export type LayoutState = {
 const DEFAULT_TITULO: TituloState = {
   title: 'Financeiro',
   subtitle: 'Selecione uma opção para visualizar os dados',
-  titleFontFamily: 'inherit',
+  titleFontFamily: 'Geist',
   titleFontSize: 24,
   titleFontWeight: '600',
   titleColor: '#111827',
+  titleLetterSpacing: 0,
 }
 
 const DEFAULT_TABS: TabsState = {
@@ -69,10 +74,11 @@ const DEFAULT_TABS: TabsState = {
     { value: 'recebimentos', label: 'Recebimentos' },
   ],
   selected: 'visao',
-  fontFamily: 'inherit',
+  fontFamily: 'Geist',
   fontSize: 14,
   fontWeight: '500',
   color: '#111827',
+  letterSpacing: 0,
 }
 
 const DEFAULT_TABELA_UI: TabelaUIState = {
@@ -88,10 +94,12 @@ const DEFAULT_TABELA_UI: TabelaUIState = {
   cellText: '#1f2937',
   headerFontSize: 13,
   cellFontSize: 13,
-  headerFontFamily: 'inherit',
+  headerFontFamily: 'Geist',
   headerFontWeight: '600',
-  cellFontFamily: 'inherit',
+  cellFontFamily: 'Geist',
   cellFontWeight: '400',
+  headerLetterSpacing: 0,
+  cellLetterSpacing: 0,
   defaultSortColumn: undefined,
   defaultSortDirection: 'asc',
 }

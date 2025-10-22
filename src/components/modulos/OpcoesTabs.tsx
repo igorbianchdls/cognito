@@ -20,9 +20,10 @@ interface OpcoesTabsProps {
   fontSize?: number
   fontWeight?: string
   color?: string
+  letterSpacing?: number
 }
 
-export default function OpcoesTabs({ options, value, onValueChange, className, fontFamily, fontSize, fontWeight, color }: OpcoesTabsProps) {
+export default function OpcoesTabs({ options, value, onValueChange, className, fontFamily, fontSize, fontWeight, color, letterSpacing }: OpcoesTabsProps) {
   return (
     <div className={`w-full px-4 md:px-6 ${className ?? ""}`}>
       <Tabs value={value} onValueChange={onValueChange} className="w-full">
@@ -40,6 +41,7 @@ export default function OpcoesTabs({ options, value, onValueChange, className, f
                   fontSize: fontSize ? `${fontSize}px` : undefined,
                   fontWeight: fontWeight && fontWeight !== '500' ? (fontWeight as React.CSSProperties['fontWeight']) : undefined,
                   color: color || undefined,
+                  letterSpacing: typeof letterSpacing === 'number' ? `${letterSpacing}px` : undefined,
                 }}
               >
                 {opt.icon ? <span className="inline-flex items-center">{opt.icon}</span> : null}

@@ -21,6 +21,13 @@ export default function ModulosFinanceiroPage() {
   const tabelaUI = useStore($tabelaUI)
   const layout = useStore($layout)
 
+  const fontVar = (name?: string) => {
+    if (!name) return undefined
+    if (name === 'Inter') return 'var(--font-inter)'
+    if (name === 'Geist') return 'var(--font-geist-sans)'
+    return name
+  }
+
   const { columns, data } = useMemo((): { columns: ColumnDef<Row>[]; data: Row[] } => {
     switch (tabs.selected) {
       case 'contas':
@@ -88,10 +95,11 @@ export default function ModulosFinanceiroPage() {
           <TituloModulo
             title={titulo.title}
             subtitle={titulo.subtitle}
-            titleFontFamily={titulo.titleFontFamily}
+            titleFontFamily={fontVar(titulo.titleFontFamily)}
             titleFontSize={titulo.titleFontSize}
             titleFontWeight={titulo.titleFontWeight}
             titleColor={titulo.titleColor}
+            titleLetterSpacing={titulo.titleLetterSpacing}
           />
         </div>
         <div style={{ marginBottom: layout.mbTabs }}>
@@ -99,10 +107,11 @@ export default function ModulosFinanceiroPage() {
             options={tabs.options}
             value={tabs.selected}
             onValueChange={(v) => financeiroUiActions.setTabs({ selected: v })}
-            fontFamily={tabs.fontFamily}
+            fontFamily={fontVar(tabs.fontFamily)}
             fontSize={tabs.fontSize}
             fontWeight={tabs.fontWeight}
             color={tabs.color}
+            letterSpacing={tabs.letterSpacing}
           />
         </div>
         <div className="flex-1 min-h-0 overflow-auto px-4 md:px-6" style={{ marginBottom: layout.mbTable }}>
@@ -118,11 +127,13 @@ export default function ModulosFinanceiroPage() {
               headerTextColor={tabelaUI.headerText}
               cellTextColor={tabelaUI.cellText}
               headerFontSize={tabelaUI.headerFontSize}
-              headerFontFamily={tabelaUI.headerFontFamily}
+              headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
               headerFontWeight={tabelaUI.headerFontWeight}
+              headerLetterSpacing={tabelaUI.headerLetterSpacing}
               cellFontSize={tabelaUI.cellFontSize}
-              cellFontFamily={tabelaUI.cellFontFamily}
+              cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
               cellFontWeight={tabelaUI.cellFontWeight}
+              cellLetterSpacing={tabelaUI.cellLetterSpacing}
               enableRowSelection={tabelaUI.enableRowSelection}
               selectionMode={tabelaUI.selectionMode}
               defaultSortColumn={tabelaUI.defaultSortColumn}

@@ -12,9 +12,10 @@ interface TituloModuloProps {
   titleFontSize?: number
   titleFontWeight?: string
   titleColor?: string
+  titleLetterSpacing?: number
 }
 
-export default function TituloModulo({ title, subtitle, actions, className, titleFontFamily, titleFontSize, titleFontWeight, titleColor }: TituloModuloProps) {
+export default function TituloModulo({ title, subtitle, actions, className, titleFontFamily, titleFontSize, titleFontWeight, titleColor, titleLetterSpacing }: TituloModuloProps) {
   return (
     <div className={`w-full px-4 pt-4 md:px-6 md:pt-6 ${className ?? ""}`}>
       <div className="flex items-start justify-between gap-3">
@@ -26,6 +27,7 @@ export default function TituloModulo({ title, subtitle, actions, className, titl
               fontSize: titleFontSize ? `${titleFontSize}px` : undefined,
               fontWeight: titleFontWeight && titleFontWeight !== '600' ? (titleFontWeight as React.CSSProperties['fontWeight']) : undefined,
               color: titleColor || undefined,
+              letterSpacing: typeof titleLetterSpacing === 'number' ? `${titleLetterSpacing}px` : undefined,
             }}
           >
             {title}
