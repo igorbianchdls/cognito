@@ -29,9 +29,10 @@ interface TabsNavProps {
   labelOffsetY?: number
   activeColor?: string
   activeFontWeight?: string
+  activeBorderColor?: string
 }
 
-export default function TabsNav({ options, value, onValueChange, className, fontFamily, fontSize, fontWeight, color, letterSpacing, iconSize, startOffset = 0, labelOffsetY = 0, activeColor, activeFontWeight }: TabsNavProps) {
+export default function TabsNav({ options, value, onValueChange, className, fontFamily, fontSize, fontWeight, color, letterSpacing, iconSize, startOffset = 0, labelOffsetY = 0, activeColor, activeFontWeight, activeBorderColor }: TabsNavProps) {
   const renderIcon = (node?: React.ReactNode) => {
     if (!node) return null
     if (React.isValidElement(node)) {
@@ -59,6 +60,7 @@ export default function TabsNav({ options, value, onValueChange, className, font
               variant="underline"
               activeColor={activeColor}
               inactiveColor={color}
+              activeBorderColor={activeBorderColor}
             >
               <span
                 className="flex items-center gap-2"

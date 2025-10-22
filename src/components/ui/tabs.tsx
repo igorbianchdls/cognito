@@ -55,9 +55,10 @@ interface TabsTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonElement>
   variant?: 'default' | 'underline'
   activeColor?: string
   inactiveColor?: string
+  activeBorderColor?: string
 }
 
-export function TabsTrigger({ value, children, disabled = false, className = '', variant = 'default', activeColor, inactiveColor, style, ...rest }: TabsTriggerProps) {
+export function TabsTrigger({ value, children, disabled = false, className = '', variant = 'default', activeColor, inactiveColor, activeBorderColor, style, ...rest }: TabsTriggerProps) {
   const context = useContext(TabsContext)
   
   if (!context) {
@@ -69,13 +70,16 @@ export function TabsTrigger({ value, children, disabled = false, className = '',
     const computedStyle: React.CSSProperties = { ...(style || {}) }
     const desiredColor = isActive ? activeColor : inactiveColor
     if (desiredColor) computedStyle.color = desiredColor
+    if (isActive && activeBorderColor) {
+      computedStyle.borderBottomColor = activeBorderColor
+    }
     return (
       <button
         type="button"
         onClick={() => !disabled && context.onValueChange(value)}
         disabled={disabled}
-        className={`inline-flex items-center justify-center whitespace-nowrap px-3 py-0 text-sm font-medium border-b-2 border-transparent transition-colors rounded-none ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
-          isActive ? 'border-gray-900 text-gray-900' : 'text-gray-500 hover:text-gray-900'
+        className={`inline-flex items-center justify-center whitespace-nowrap px-3 py-0 text-sm font-medium border-b-2 transition-colors rounded-none ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+          isActive ? (activeBorderColor ? '' : 'border-gray-900') + ' text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-900'
         } ${className}`}
         style={computedStyle}
         {...rest}

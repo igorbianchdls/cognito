@@ -316,6 +316,12 @@ export default function UiConfigPanel() {
                 </Select>
               </div>
               <div>
+                <Label htmlFor="ui-tabs-active-border-color">Cor da Borda Ativa</Label>
+                <Input id="ui-tabs-active-border-color" type="color" value={tabs.activeBorderColor ?? 'rgb(41, 41, 41)'}
+                  onChange={(e) => financeiroUiActions.setTabs({ activeBorderColor: e.target.value })}
+                />
+              </div>
+              <div>
                 <Label htmlFor="ui-tabs-tracking">Espaçamento</Label>
                 <Input id="ui-tabs-tracking" type="number" step={0.01} min={-0.05} max={0.05}
                   value={tabs.letterSpacing ?? 0}

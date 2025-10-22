@@ -147,6 +147,7 @@ export default function ModulosFinanceiroPage() {
             startOffset={tabs.leftOffset}
             activeColor={tabs.activeColor}
             activeFontWeight={tabs.activeFontWeight}
+            activeBorderColor={tabs.activeBorderColor}
             className="px-0 md:px-0"
           />
         </div>
