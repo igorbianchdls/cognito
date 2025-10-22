@@ -29,9 +29,17 @@ export function Tabs({ value, onValueChange, children, className = '' }: TabsPro
 interface TabsListProps {
   children: ReactNode
   className?: string
+  variant?: 'default' | 'underline'
 }
 
-export function TabsList({ children, className = '' }: TabsListProps) {
+export function TabsList({ children, className = '', variant = 'default' }: TabsListProps) {
+  if (variant === 'underline') {
+    return (
+      <div className={`flex h-10 items-end justify-start gap-2 overflow-x-auto border-b border-gray-200 ${className}`}>
+        {children}
+      </div>
+    )
+  }
   return (
     <div className={`inline-flex h-10 items-center justify-center rounded-md bg-gray-100 p-1 text-gray-500 ${className}`}>
       {children}
@@ -44,9 +52,10 @@ interface TabsTriggerProps {
   children: ReactNode
   disabled?: boolean
   className?: string
+  variant?: 'default' | 'underline'
 }
 
-export function TabsTrigger({ value, children, disabled = false, className = '' }: TabsTriggerProps) {
+export function TabsTrigger({ value, children, disabled = false, className = '', variant = 'default' }: TabsTriggerProps) {
   const context = useContext(TabsContext)
   
   if (!context) {
@@ -54,7 +63,20 @@ export function TabsTrigger({ value, children, disabled = false, className = '' 
   }
 
   const isActive = context.value === value
-  
+  if (variant === 'underline') {
+    return (
+      <button
+        type="button"
+        onClick={() => !disabled && context.onValueChange(value)}
+        disabled={disabled}
+        className={`inline-flex items-center justify-center whitespace-nowrap px-3 py-2 text-sm font-medium border-b-2 border-transparent transition-colors rounded-none ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+          isActive ? 'border-gray-900 text-gray-900' : 'text-gray-500 hover:text-gray-900'
+        } ${className}`}
+      >
+        {children}
+      </button>
+    )
+  }
   return (
     <button
       type="button"
