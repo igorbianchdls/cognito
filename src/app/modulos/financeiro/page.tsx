@@ -14,6 +14,7 @@ import DataToolbar from '@/components/modulos/DataToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { LayoutDashboard, Banknote, CreditCard, ArrowDownCircle } from 'lucide-react'
+import ContaAzulIcon from '@/components/icons/ContaAzulIcon'
 
 type Row = TableData
 
@@ -153,6 +154,59 @@ export default function ModulosFinanceiroPage() {
         </div>
         {/* Conteúdo abaixo das tabs com cor de fundo */}
         <div style={{ background: layout.contentBg, paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
+          {/* Seção de teste: linha com 2 colunas, título/subtítulo verticais */}
+          {tabs.selected === 'visao' && (
+            <div className="px-4 md:px-6" style={{ marginBottom: 12 }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Coluna 1: imagem à esquerda, título/subtítulo empilhados */}
+                <div
+                  className="flex items-center p-3 rounded-md border bg-background"
+                  style={{ borderColor: tabelaUI.borderColor }}
+                >
+                  <ContaAzulIcon className="h-10 w-10 mr-3" />
+                  <div>
+                    <div
+                      style={{
+                        fontFamily: fontVar(titulo.titleFontFamily),
+                        fontSize: (titulo.titleFontSize || 18),
+                        fontWeight: (titulo.titleFontWeight as React.CSSProperties['fontWeight']) || '600',
+                        color: titulo.titleColor || undefined,
+                        letterSpacing: typeof titulo.titleLetterSpacing === 'number' ? `${titulo.titleLetterSpacing}px` : undefined,
+                      }}
+                    >
+                      {titulo.title}
+                    </div>
+                    {titulo.subtitle ? (
+                      <div className="text-sm text-muted-foreground">{titulo.subtitle}</div>
+                    ) : null}
+                  </div>
+                </div>
+
+                {/* Coluna 2: título/subtítulo empilhados (sem imagem) */}
+                <div
+                  className="flex items-center p-3 rounded-md border bg-background"
+                  style={{ borderColor: tabelaUI.borderColor }}
+                >
+                  <div>
+                    <div
+                      style={{
+                        fontFamily: fontVar(titulo.titleFontFamily),
+                        fontSize: (titulo.titleFontSize || 18),
+                        fontWeight: (titulo.titleFontWeight as React.CSSProperties['fontWeight']) || '600',
+                        color: titulo.titleColor || undefined,
+                        letterSpacing: typeof titulo.titleLetterSpacing === 'number' ? `${titulo.titleLetterSpacing}px` : undefined,
+                      }}
+                    >
+                      {titulo.title}
+                    </div>
+                    {titulo.subtitle ? (
+                      <div className="text-sm text-muted-foreground">{titulo.subtitle}</div>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           {/* Toolbar direita (paginador + botão) */}
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
             <DataToolbar
