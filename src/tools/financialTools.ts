@@ -158,6 +158,8 @@ export const getContasAPagar = tool({
     limit: z.number().default(20).describe('Número máximo de resultados'),
     status: z.enum(['pendente', 'pago', 'vencido', 'cancelado']).optional()
       .describe('Filtrar por status do pagamento'),
+    fornecedor_id: z.string().optional()
+      .describe('Filtrar por ID do fornecedor'),
     vence_em_dias: z.number().optional()
       .describe('Contas que vencem nos próximos X dias'),
     venceu_ha_dias: z.number().optional()
@@ -179,6 +181,7 @@ export const getContasAPagar = tool({
   execute: async ({
     limit = 20,
     status,
+    fornecedor_id,
     vence_em_dias,
     venceu_ha_dias,
     data_vencimento_de,
@@ -200,6 +203,7 @@ export const getContasAPagar = tool({
       };
 
       if (status) push('cap.status =', mapStatusToEnum(status));
+      if (fornecedor_id) push('cap.fornecedor_id =', fornecedor_id);
       if (valor_minimo !== undefined) push('cap.valor_total >=', valor_minimo);
       if (valor_maximo !== undefined) push('cap.valor_total <=', valor_maximo);
 
@@ -226,6 +230,7 @@ export const getContasAPagar = tool({
       const listSql = `
         SELECT
           cap.id,
+          f.nome_fornecedor AS fornecedor,
           cap.descricao,
           cap.valor_total,
           cap.data_emissao,
@@ -235,6 +240,7 @@ export const getContasAPagar = tool({
           cap.tipo_titulo,
           cap.criado_em
         FROM financeiro.contas_a_pagar AS cap
+        LEFT JOIN financeiro.fornecedores AS f ON f.id = cap.fornecedor_id
         ${whereClause}
         ORDER BY cap.data_vencimento DESC
         LIMIT $${index}
@@ -247,6 +253,7 @@ export const getContasAPagar = tool({
           SUM(cap.valor_total) AS total_valor,
           COUNT(*) AS total_registros
         FROM financeiro.contas_a_pagar AS cap
+        LEFT JOIN financeiro.fornecedores AS f ON f.id = cap.fornecedor_id
         ${whereClause}
       `.trim();
 
