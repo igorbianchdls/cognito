@@ -9,11 +9,11 @@ import { SidebarShadcn } from '@/components/navigation/SidebarShadcn'
 
 import TituloModulo from '@/components/modulos/TituloModulo'
 import OpcoesTabs from '@/components/modulos/OpcoesTabs'
-import TabelaBasica from '@/components/modulos/TabelaBasica'
+import DataTable, { type TableData } from '@/components/widgets/Table'
 import FinanceiroUiPanel from '@/components/modulos/FinanceiroUiPanel'
 import { $titulo, $tabs, $tabelaUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 
-type Row = { [key: string]: string | number | boolean | null | undefined }
+type Row = TableData
 
 export default function ModulosFinanceiroPage() {
   const titulo = useStore($titulo)
@@ -89,8 +89,26 @@ export default function ModulosFinanceiroPage() {
           value={tabs.selected}
           onValueChange={(v) => financeiroUiActions.setTabs({ selected: v })}
         />
-        <div className="flex-1 min-h-0 overflow-hidden">
-          <TabelaBasica columns={columns} data={data} ui={tabelaUI} />
+        <div className="flex-1 min-h-0 overflow-hidden px-4 md:px-6">
+          <div className="border rounded-md bg-background">
+            <DataTable
+              columns={columns}
+              data={data}
+              enableSearch={tabelaUI.enableSearch}
+              showColumnToggle={tabelaUI.enableColumnToggle}
+              showPagination={tabelaUI.showPagination}
+              pageSize={tabelaUI.pageSize}
+              headerBackground={tabelaUI.headerBg}
+              headerTextColor={tabelaUI.headerText}
+              cellTextColor={tabelaUI.cellText}
+              headerFontSize={tabelaUI.headerFontSize}
+              cellFontSize={tabelaUI.cellFontSize}
+              enableRowSelection={tabelaUI.enableRowSelection}
+              selectionMode={tabelaUI.selectionMode}
+              defaultSortColumn={tabelaUI.defaultSortColumn}
+              defaultSortDirection={tabelaUI.defaultSortDirection}
+            />
+          </div>
         </div>
         <FinanceiroUiPanel />
       </SidebarInset>
