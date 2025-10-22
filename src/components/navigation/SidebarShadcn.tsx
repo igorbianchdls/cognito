@@ -24,10 +24,7 @@ import ShopeeIcon from "@/components/icons/ShopeeIcon"
 import ContaAzulIcon from "@/components/icons/ContaAzulIcon"
 
 import { NavMainSimple } from "@/components/navigation/nav-main-simple"
-import { NavGestao } from "@/components/navigation/nav-gestao"
 import { NavModulos } from "@/components/navigation/nav-modulos"
-import { NavSupplyChain } from "@/components/navigation/nav-supply-chain"
-import { NavMarketing } from "@/components/navigation/nav-marketing"
 import { NavUser } from "@/components/nav-user"
 import { TeamSwitcher } from "@/components/team-switcher"
 import {
@@ -152,10 +149,8 @@ export function SidebarShadcn({ ...props }: React.ComponentProps<typeof Sidebar>
       </SidebarHeader>
       <SidebarContent>
         <NavMainSimple items={dataWithActiveState.navMain} />
-        <NavGestao />
         <NavModulos />
-        <NavSupplyChain />
-        <NavMarketing />
+        
         <SidebarGroup>
           <SidebarGroupLabel>Integrações</SidebarGroupLabel>
           <SidebarMenu>
