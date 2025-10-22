@@ -145,6 +145,7 @@ export default function ModulosFinanceiroPage() {
             letterSpacing={tabs.letterSpacing}
             iconColor={tabs.iconColor}
             iconSize={tabs.iconSize}
+            labelOffsetY={tabs.labelOffsetY}
             startOffset={tabs.leftOffset}
             className="px-0 md:px-0"
           />

@@ -322,6 +322,13 @@ export default function FinanceiroUiPanel() {
                 />
               </div>
               <div>
+                <Label htmlFor="ui-tabs-labeloffset">Espaço vertical (px)</Label>
+                <Input id="ui-tabs-labeloffset" type="number" min={0} max={24}
+                  value={tabs.labelOffsetY ?? 0}
+                  onChange={(e) => financeiroUiActions.setTabs({ labelOffsetY: Math.max(0, Number(e.target.value || 0)) })}
+                />
+              </div>
+              <div>
                 <Label htmlFor="ui-tabs-iconcolor">Cor do ícone</Label>
                 <Input id="ui-tabs-iconcolor" type="color" value={tabs.iconColor ?? '#6b7280'}
                   onChange={(e) => financeiroUiActions.setTabs({ iconColor: e.target.value })}

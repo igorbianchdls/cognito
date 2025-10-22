@@ -29,6 +29,7 @@ export type TabsState = {
   iconColor?: string
   iconSize?: number
   leftOffset?: number
+  labelOffsetY?: number
 }
 
 export type TabelaUIState = {
@@ -113,6 +114,7 @@ const DEFAULT_TABS: TabsState = {
   iconColor: '#6b7280',
   iconSize: 16,
   leftOffset: 0,
+  labelOffsetY: 0,
 }
 
 const DEFAULT_TABELA_UI: TabelaUIState = {

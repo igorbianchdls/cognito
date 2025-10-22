@@ -27,9 +27,10 @@ interface OpcoesTabsProps {
   iconColor?: string
   iconSize?: number
   startOffset?: number
+  labelOffsetY?: number
 }
 
-export default function OpcoesTabs({ options, value, onValueChange, className, fontFamily, fontSize, fontWeight, color, letterSpacing, iconColor, iconSize, startOffset = 0 }: OpcoesTabsProps) {
+export default function OpcoesTabs({ options, value, onValueChange, className, fontFamily, fontSize, fontWeight, color, letterSpacing, iconColor, iconSize, startOffset = 0, labelOffsetY = 0 }: OpcoesTabsProps) {
   const renderIcon = (node?: React.ReactNode) => {
     if (!node) return null
     if (React.isValidElement(node)) {
@@ -65,6 +66,7 @@ export default function OpcoesTabs({ options, value, onValueChange, className, f
                   fontWeight: fontWeight && fontWeight !== '500' ? (fontWeight as React.CSSProperties['fontWeight']) : undefined,
                   color: color || undefined,
                   letterSpacing: typeof letterSpacing === 'number' ? `${letterSpacing}px` : undefined,
+                  paddingBottom: labelOffsetY,
                 }}
               >
                 {opt.icon ? <span className="inline-flex items-center">{renderIcon(opt.icon)}</span> : null}
