@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useMemo } from 'react'
 import { useStore } from '@nanostores/react'
 import type { ColumnDef } from '@tanstack/react-table'
 
@@ -11,7 +11,6 @@ import TituloModulo from '@/components/modulos/TituloModulo'
 import OpcoesTabs from '@/components/modulos/OpcoesTabs'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import FinanceiroUiPanel from '@/components/modulos/FinanceiroUiPanel'
-import FinanceiroToolbar from '@/components/modulos/FinanceiroToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 
 type Row = TableData
@@ -21,17 +20,6 @@ export default function ModulosFinanceiroPage() {
   const tabs = useStore($tabs)
   const tabelaUI = useStore($tabelaUI)
   const layout = useStore($layout)
-  const tableApiRef = useRef<null | {
-    previousPage: () => void
-    nextPage: () => void
-    gotoPage: (n: number) => void
-    getPageIndex: () => number
-    getPageCount: () => number
-    getPageSize: () => number
-    getTotalRows: () => number
-    setGlobalFilter?: (value: string) => void
-  }>(null)
-  const [pageInfo, setPageInfo] = useState({ pageIndex: 0, pageSize: tabelaUI.pageSize, totalRows: 0, pageCount: 0 })
 
   const fontVar = (name?: string) => {
     if (!name) return undefined
@@ -135,20 +123,7 @@ export default function ModulosFinanceiroPage() {
             letterSpacing={tabs.letterSpacing}
           />
         </div>
-        {/* Toolbar abaixo das tabs */}
-        <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
-          <FinanceiroToolbar
-            searchPlaceholder="Search Transactions"
-            dateRangePlaceholder="Date Range"
-            actionLabel="Sync (10)"
-            from={pageInfo.totalRows === 0 ? 0 : pageInfo.pageIndex * pageInfo.pageSize + 1}
-            to={pageInfo.totalRows === 0 ? 0 : Math.min((pageInfo.pageIndex + 1) * pageInfo.pageSize, pageInfo.totalRows)}
-            total={pageInfo.totalRows}
-            onPrev={() => tableApiRef.current?.previousPage()}
-            onNext={() => tableApiRef.current?.nextPage()}
-            onSearchChange={(q) => tableApiRef.current?.setGlobalFilter?.(q)}
-          />
-        </div>
+        
         <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
           <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
             <DataTable
@@ -156,7 +131,7 @@ export default function ModulosFinanceiroPage() {
               data={data}
               enableSearch={tabelaUI.enableSearch}
               showColumnToggle={tabelaUI.enableColumnToggle}
-              showPagination={false}
+              showPagination={tabelaUI.showPagination}
               pageSize={tabelaUI.pageSize}
               headerBackground={tabelaUI.headerBg}
               headerTextColor={tabelaUI.headerText}
@@ -174,8 +149,6 @@ export default function ModulosFinanceiroPage() {
               borderColor={tabelaUI.borderColor}
               borderWidth={tabelaUI.borderWidth}
               selectionColumnWidth={tabelaUI.selectionColumnWidth}
-              onTableReady={(api) => { tableApiRef.current = api }}
-              onPaginationChange={(info) => setPageInfo(info)}
               enableRowSelection={tabelaUI.enableRowSelection}
               selectionMode={tabelaUI.selectionMode}
               defaultSortColumn={tabelaUI.defaultSortColumn}
