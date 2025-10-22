@@ -321,6 +321,26 @@ export default function FinanceiroUiPanel() {
                   onChange={(e) => financeiroUiActions.setTabs({ letterSpacing: Number(e.target.value || 0) })}
                 />
               </div>
+              <div>
+                <Label htmlFor="ui-tabs-iconcolor">Cor do ícone</Label>
+                <Input id="ui-tabs-iconcolor" type="color" value={tabs.iconColor ?? '#6b7280'}
+                  onChange={(e) => financeiroUiActions.setTabs({ iconColor: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-tabs-iconsize">Tamanho do ícone (px)</Label>
+                <Input id="ui-tabs-iconsize" type="number" min={10} max={24}
+                  value={tabs.iconSize ?? 16}
+                  onChange={(e) => financeiroUiActions.setTabs({ iconSize: Math.max(10, Number(e.target.value || 16)) })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-tabs-leftoffset">Margem esquerda do primeiro (px)</Label>
+                <Input id="ui-tabs-leftoffset" type="number" min={0} max={64}
+                  value={tabs.leftOffset ?? 0}
+                  onChange={(e) => financeiroUiActions.setTabs({ leftOffset: Math.max(0, Number(e.target.value || 0)) })}
+                />
+              </div>
             </div>
           </CollapsibleContent>
         </Collapsible>

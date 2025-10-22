@@ -143,6 +143,9 @@ export default function ModulosFinanceiroPage() {
             fontWeight={tabs.fontWeight}
             color={tabs.color}
             letterSpacing={tabs.letterSpacing}
+            iconColor={tabs.iconColor}
+            iconSize={tabs.iconSize}
+            startOffset={tabs.leftOffset}
             className="px-0 md:px-0"
           />
         </div>

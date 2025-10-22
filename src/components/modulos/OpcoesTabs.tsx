@@ -23,13 +23,32 @@ interface OpcoesTabsProps {
   fontWeight?: string
   color?: string
   letterSpacing?: number
+  // Icons and spacing
+  iconColor?: string
+  iconSize?: number
+  startOffset?: number
 }
 
-export default function OpcoesTabs({ options, value, onValueChange, className, fontFamily, fontSize, fontWeight, color, letterSpacing }: OpcoesTabsProps) {
+export default function OpcoesTabs({ options, value, onValueChange, className, fontFamily, fontSize, fontWeight, color, letterSpacing, iconColor, iconSize, startOffset = 0 }: OpcoesTabsProps) {
+  const renderIcon = (node?: React.ReactNode) => {
+    if (!node) return null
+    if (React.isValidElement(node)) {
+      const prevStyle = (node.props as any)?.style || {}
+      return React.cloneElement(node as React.ReactElement, {
+        style: {
+          ...prevStyle,
+          color: iconColor || prevStyle.color,
+          width: iconSize ? `${iconSize}px` : prevStyle.width,
+          height: iconSize ? `${iconSize}px` : prevStyle.height,
+        },
+      })
+    }
+    return <span style={{ color: iconColor }}>{node as React.ReactNode}</span>
+  }
   return (
     <div className={`w-full ${className ?? ""}`}>
       <Tabs value={value} onValueChange={onValueChange} className="w-full">
-        <TabsList className="w-full" variant="underline">
+        <TabsList className="w-full" variant="underline" style={{ paddingLeft: startOffset }}>
           {options.map((opt) => (
             <TabsTrigger
               key={opt.value}
@@ -47,10 +66,10 @@ export default function OpcoesTabs({ options, value, onValueChange, className, f
                   letterSpacing: typeof letterSpacing === 'number' ? `${letterSpacing}px` : undefined,
                 }}
               >
-                {opt.icon ? <span className="inline-flex items-center">{opt.icon}</span> : null}
+                {opt.icon ? <span className="inline-flex items-center">{renderIcon(opt.icon)}</span> : null}
                 <span>{opt.label}</span>
-                <span className="inline-flex items-center ml-1 text-gray-400">
-                  {opt.rightIcon ? opt.rightIcon : <Dot className="h-3 w-3" />}
+                <span className="inline-flex items-center ml-1" style={{ color: iconColor }}>
+                  {opt.rightIcon ? renderIcon(opt.rightIcon) : <Dot style={{ width: (iconSize ? iconSize - 4 : 12), height: (iconSize ? iconSize - 4 : 12) }} />}
                 </span>
               </span>
             </TabsTrigger>
