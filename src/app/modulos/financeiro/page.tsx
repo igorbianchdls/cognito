@@ -321,7 +321,7 @@ export default function ModulosFinanceiroPage() {
           data: Array.from({ length: 4 }).map((_, i) => ({ colA: i, colB: i, colC: i, colD: i })),
         }
     }
-  }, [tabs.selected])
+  }, [tabs.selected, catalogUI])
 
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
