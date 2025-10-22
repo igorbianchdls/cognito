@@ -124,7 +124,7 @@ export default function ModulosFinanceiroPage() {
           />
         </div>
         <div className="flex-1 min-h-0 overflow-auto px-4 md:px-6" style={{ marginBottom: layout.mbTable }}>
-          <div className="rounded-md bg-background">
+          <div className="border rounded-md bg-background">
             <DataTable
               columns={columns}
               data={data}
