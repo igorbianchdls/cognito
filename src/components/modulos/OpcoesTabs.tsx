@@ -24,13 +24,13 @@ interface OpcoesTabsProps {
   color?: string
   letterSpacing?: number
   // Icons and spacing
-  iconColor?: string
   iconSize?: number
   startOffset?: number
   labelOffsetY?: number
+  activeColor?: string
 }
 
-export default function OpcoesTabs({ options, value, onValueChange, className, fontFamily, fontSize, fontWeight, color, letterSpacing, iconColor, iconSize, startOffset = 0, labelOffsetY = 0 }: OpcoesTabsProps) {
+export default function OpcoesTabs({ options, value, onValueChange, className, fontFamily, fontSize, fontWeight, color, letterSpacing, iconSize, startOffset = 0, labelOffsetY = 0, activeColor }: OpcoesTabsProps) {
   const renderIcon = (node?: React.ReactNode) => {
     if (!node) return null
     if (React.isValidElement(node)) {
@@ -39,13 +39,12 @@ export default function OpcoesTabs({ options, value, onValueChange, className, f
       return React.cloneElement(element, {
         style: {
           ...prevStyle,
-          color: iconColor || prevStyle.color,
           width: iconSize ? `${iconSize}px` : prevStyle.width,
           height: iconSize ? `${iconSize}px` : prevStyle.height,
         },
       })
     }
-    return <span style={{ color: iconColor }}>{node as React.ReactNode}</span>
+    return <span>{node as React.ReactNode}</span>
   }
   return (
     <div className={`w-full ${className ?? ""}`}>
@@ -57,6 +56,8 @@ export default function OpcoesTabs({ options, value, onValueChange, className, f
               value={opt.value}
               className=""
               variant="underline"
+              activeColor={activeColor}
+              inactiveColor={color}
             >
               <span
                 className="flex items-center gap-2"
@@ -64,14 +65,13 @@ export default function OpcoesTabs({ options, value, onValueChange, className, f
                   fontFamily: fontFamily && fontFamily !== 'inherit' ? fontFamily : undefined,
                   fontSize: fontSize ? `${fontSize}px` : undefined,
                   fontWeight: fontWeight && fontWeight !== '500' ? (fontWeight as React.CSSProperties['fontWeight']) : undefined,
-                  color: color || undefined,
                   letterSpacing: typeof letterSpacing === 'number' ? `${letterSpacing}px` : undefined,
                   paddingBottom: labelOffsetY,
                 }}
               >
                 {opt.icon ? <span className="inline-flex items-center">{renderIcon(opt.icon)}</span> : null}
                 <span>{opt.label}</span>
-                <span className="inline-flex items-center ml-1" style={{ color: iconColor }}>
+                <span className="inline-flex items-center ml-1">
                   {opt.rightIcon ? renderIcon(opt.rightIcon) : <Dot style={{ width: (iconSize ? iconSize - 4 : 12), height: (iconSize ? iconSize - 4 : 12) }} />}
                 </span>
               </span>

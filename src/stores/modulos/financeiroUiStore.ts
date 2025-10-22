@@ -26,10 +26,10 @@ export type TabsState = {
   color?: string
   letterSpacing?: number
   // Icons and spacing
-  iconColor?: string
   iconSize?: number
   leftOffset?: number
   labelOffsetY?: number
+  activeColor?: string
 }
 
 export type TabelaUIState = {
@@ -111,10 +111,10 @@ const DEFAULT_TABS: TabsState = {
   fontWeight: '500',
   color: '#111827',
   letterSpacing: 0,
-  iconColor: '#6b7280',
   iconSize: 16,
   leftOffset: 0,
   labelOffsetY: 0,
+  activeColor: '#111827',
 }
 
 const DEFAULT_TABELA_UI: TabelaUIState = {

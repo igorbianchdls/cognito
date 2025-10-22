@@ -143,10 +143,10 @@ export default function ModulosFinanceiroPage() {
             fontWeight={tabs.fontWeight}
             color={tabs.color}
             letterSpacing={tabs.letterSpacing}
-            iconColor={tabs.iconColor}
             iconSize={tabs.iconSize}
             labelOffsetY={tabs.labelOffsetY}
             startOffset={tabs.leftOffset}
+            activeColor={tabs.activeColor}
             className="px-0 md:px-0"
           />
         </div>
