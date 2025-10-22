@@ -64,6 +64,7 @@ export type LayoutState = {
   mbTitle: number
   mbTabs: number
   mbTable: number
+  contentBg?: string
 }
 
 export type ToolbarUIState = {
@@ -167,6 +168,7 @@ export const DEFAULT_LAYOUT: LayoutState = {
   mbTitle: 16,
   mbTabs: 16,
   mbTable: 24,
+  contentBg: '#f9fafb',
 }
 export const $layout = atom<LayoutState>({ ...DEFAULT_LAYOUT })
 

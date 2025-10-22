@@ -592,6 +592,15 @@ export default function FinanceiroUiPanel() {
                   onChange={(e) => financeiroUiActions.setLayout({ mbTable: Math.max(0, Number(e.target.value || 0)) })}
                 />
               </div>
+              <div>
+                <Label htmlFor="ui-contentbg">Cor de fundo (abaixo das tabs)</Label>
+                <Input
+                  id="ui-contentbg"
+                  type="color"
+                  value={layout.contentBg ?? '#f9fafb'}
+                  onChange={(e) => financeiroUiActions.setLayout({ contentBg: e.target.value })}
+                />
+              </div>
             </div>
           </CollapsibleContent>
         </Collapsible>

@@ -149,60 +149,63 @@ export default function ModulosFinanceiroPage() {
             className="px-0 md:px-0"
           />
         </div>
-        {/* Toolbar direita (paginador + botão) */}
-        <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
-          <FinanceiroToolbar
-            from={data.length === 0 ? 0 : 1}
-            to={Math.min(tabelaUI.pageSize, data.length)}
-            total={data.length}
-            fontFamily={fontVar(toolbarUI.fontFamily)}
-            fontSize={toolbarUI.fontSize}
-            fontWeight={toolbarUI.fontWeight}
-            fontColor={toolbarUI.fontColor}
-            letterSpacing={toolbarUI.letterSpacing}
-            borderBottomWidth={toolbarUI.borderBottomWidth}
-            borderBottomColor={toolbarUI.borderBottomColor}
-            borderDistanceTop={toolbarUI.borderDistanceTop}
-            underlineColor={toolbarUI.underlineColor}
-            underlineWidth={toolbarUI.underlineWidth}
-            underlineOffsetTop={toolbarUI.underlineOffsetTop}
-            iconGap={toolbarUI.iconGap}
-            iconColor={toolbarUI.iconColor}
-            iconSize={toolbarUI.iconSize}
-            searchWidth={toolbarUI.searchWidth}
-            dateRangeWidth={toolbarUI.dateRangeWidth}
-          />
-        </div>
-        <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
-          <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
-            <DataTable
-              columns={columns}
-              data={data}
-              enableSearch={tabelaUI.enableSearch}
-              showColumnToggle={tabelaUI.enableColumnToggle}
-              showPagination={tabelaUI.showPagination}
-              pageSize={tabelaUI.pageSize}
-              headerBackground={tabelaUI.headerBg}
-              headerTextColor={tabelaUI.headerText}
-              cellTextColor={tabelaUI.cellText}
-              headerFontSize={tabelaUI.headerFontSize}
-              headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
-              headerFontWeight={tabelaUI.headerFontWeight}
-              headerLetterSpacing={tabelaUI.headerLetterSpacing}
-              cellFontSize={tabelaUI.cellFontSize}
-              cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
-              cellFontWeight={tabelaUI.cellFontWeight}
-              cellLetterSpacing={tabelaUI.cellLetterSpacing}
-              enableZebraStripes={tabelaUI.enableZebraStripes}
-              rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
-              borderColor={tabelaUI.borderColor}
-              borderWidth={tabelaUI.borderWidth}
-              selectionColumnWidth={tabelaUI.selectionColumnWidth}
-              enableRowSelection={tabelaUI.enableRowSelection}
-              selectionMode={tabelaUI.selectionMode}
-              defaultSortColumn={tabelaUI.defaultSortColumn}
-              defaultSortDirection={tabelaUI.defaultSortDirection}
+        {/* Conteúdo abaixo das tabs com cor de fundo */}
+        <div style={{ background: layout.contentBg }}>
+          {/* Toolbar direita (paginador + botão) */}
+          <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
+            <FinanceiroToolbar
+              from={data.length === 0 ? 0 : 1}
+              to={Math.min(tabelaUI.pageSize, data.length)}
+              total={data.length}
+              fontFamily={fontVar(toolbarUI.fontFamily)}
+              fontSize={toolbarUI.fontSize}
+              fontWeight={toolbarUI.fontWeight}
+              fontColor={toolbarUI.fontColor}
+              letterSpacing={toolbarUI.letterSpacing}
+              borderBottomWidth={toolbarUI.borderBottomWidth}
+              borderBottomColor={toolbarUI.borderBottomColor}
+              borderDistanceTop={toolbarUI.borderDistanceTop}
+              underlineColor={toolbarUI.underlineColor}
+              underlineWidth={toolbarUI.underlineWidth}
+              underlineOffsetTop={toolbarUI.underlineOffsetTop}
+              iconGap={toolbarUI.iconGap}
+              iconColor={toolbarUI.iconColor}
+              iconSize={toolbarUI.iconSize}
+              searchWidth={toolbarUI.searchWidth}
+              dateRangeWidth={toolbarUI.dateRangeWidth}
             />
+          </div>
+          <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
+            <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
+              <DataTable
+                columns={columns}
+                data={data}
+                enableSearch={tabelaUI.enableSearch}
+                showColumnToggle={tabelaUI.enableColumnToggle}
+                showPagination={tabelaUI.showPagination}
+                pageSize={tabelaUI.pageSize}
+                headerBackground={tabelaUI.headerBg}
+                headerTextColor={tabelaUI.headerText}
+                cellTextColor={tabelaUI.cellText}
+                headerFontSize={tabelaUI.headerFontSize}
+                headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
+                headerFontWeight={tabelaUI.headerFontWeight}
+                headerLetterSpacing={tabelaUI.headerLetterSpacing}
+                cellFontSize={tabelaUI.cellFontSize}
+                cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
+                cellFontWeight={tabelaUI.cellFontWeight}
+                cellLetterSpacing={tabelaUI.cellLetterSpacing}
+                enableZebraStripes={tabelaUI.enableZebraStripes}
+                rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
+                borderColor={tabelaUI.borderColor}
+                borderWidth={tabelaUI.borderWidth}
+                selectionColumnWidth={tabelaUI.selectionColumnWidth}
+                enableRowSelection={tabelaUI.enableRowSelection}
+                selectionMode={tabelaUI.selectionMode}
+                defaultSortColumn={tabelaUI.defaultSortColumn}
+                defaultSortDirection={tabelaUI.defaultSortDirection}
+              />
+            </div>
           </div>
         </div>
         <FinanceiroUiPanel />
