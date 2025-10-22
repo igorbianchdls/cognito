@@ -27,7 +27,7 @@ interface OpcoesTabsProps {
 
 export default function OpcoesTabs({ options, value, onValueChange, className, fontFamily, fontSize, fontWeight, color, letterSpacing }: OpcoesTabsProps) {
   return (
-    <div className={`w-full px-4 md:px-6 ${className ?? ""}`}>
+    <div className={`w-full ${className ?? ""}`}>
       <Tabs value={value} onValueChange={onValueChange} className="w-full">
         <TabsList className="w-full" variant="underline">
           {options.map((opt) => (
