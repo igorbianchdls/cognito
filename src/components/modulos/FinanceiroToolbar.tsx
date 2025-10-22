@@ -29,6 +29,11 @@ type FinanceiroToolbarProps = {
   borderDistanceTop?: number
   underlineColor?: string
   underlineWidth?: number
+  underlineOffsetTop?: number
+  iconGap?: number
+  iconColor?: string
+  iconSize?: number
+  searchWidth?: number
 }
 
 export default function FinanceiroToolbar({
@@ -52,6 +57,11 @@ export default function FinanceiroToolbar({
   borderDistanceTop,
   underlineColor,
   underlineWidth,
+  underlineOffsetTop,
+  iconGap,
+  iconColor,
+  iconSize,
+  searchWidth,
 }: FinanceiroToolbarProps) {
   return (
     <div
@@ -72,17 +82,18 @@ export default function FinanceiroToolbar({
         {/* Left group */}
         <div className="flex items-center gap-6 min-w-0">
           {/* Search underlined */}
-          <div className="relative min-w-[200px] w-[240px]">
+          <div className="relative min-w-[160px] w-[240px]" style={{ width: searchWidth ? `${searchWidth}px` : undefined }}>
             <Input
               placeholder={searchPlaceholder}
-              className="h-8 rounded-none border-0 border-b bg-transparent px-0 focus-visible:ring-0 text-sm"
+              className="h-8 rounded-none border-0 border-b bg-transparent px-0 text-sm shadow-none focus-visible:ring-0 focus-visible:border-transparent"
               style={{
                 borderBottomColor: underlineColor || undefined,
                 borderBottomWidth: typeof underlineWidth === 'number' ? `${underlineWidth}px` : undefined,
                 borderBottomStyle: underlineWidth ? 'solid' : undefined,
+                marginTop: typeof underlineOffsetTop === 'number' ? `${underlineOffsetTop}px` : undefined,
               }}
             />
-            <Search className="absolute right-0 top-1.5 h-4 w-4" />
+            <Search className="absolute right-0 top-1.5" style={{ color: iconColor || undefined, width: iconSize ? `${iconSize}px` : undefined, height: iconSize ? `${iconSize}px` : undefined }} />
           </div>
 
           {/* Date Range underlined */}
@@ -93,10 +104,11 @@ export default function FinanceiroToolbar({
               borderBottomColor: underlineColor || undefined,
               borderBottomWidth: typeof underlineWidth === 'number' ? `${underlineWidth}px` : undefined,
               borderBottomStyle: underlineWidth ? 'solid' : undefined,
+              marginTop: typeof underlineOffsetTop === 'number' ? `${underlineOffsetTop}px` : undefined,
             }}
           >
             <span>{dateRangePlaceholder}</span>
-            <Calendar className="h-4 w-4" />
+            <Calendar className="" style={{ color: iconColor || undefined, width: iconSize ? `${iconSize}px` : undefined, height: iconSize ? `${iconSize}px` : undefined, marginLeft: typeof iconGap === 'number' ? `${iconGap}px` : undefined }} />
           </button>
         </div>
 

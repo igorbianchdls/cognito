@@ -73,6 +73,11 @@ export type ToolbarUIState = {
   borderDistanceTop?: number
   underlineColor?: string
   underlineWidth?: number
+  underlineOffsetTop?: number
+  iconGap?: number
+  iconColor?: string
+  iconSize?: number
+  searchWidth?: number
 }
 
 const DEFAULT_TITULO: TituloState = {
@@ -142,6 +147,11 @@ export const DEFAULT_TOOLBAR_UI: ToolbarUIState = {
   borderDistanceTop: 8,
   underlineColor: '#d1d5db',
   underlineWidth: 1,
+  underlineOffsetTop: 0,
+  iconGap: 8,
+  iconColor: '#9ca3af',
+  iconSize: 16,
+  searchWidth: 240,
 }
 export const $toolbarUI = atom<ToolbarUIState>({ ...DEFAULT_TOOLBAR_UI })
 export const DEFAULT_LAYOUT: LayoutState = {

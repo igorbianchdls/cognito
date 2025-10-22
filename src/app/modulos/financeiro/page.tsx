@@ -141,6 +141,11 @@ export default function ModulosFinanceiroPage() {
             borderDistanceTop={toolbarUI.borderDistanceTop}
             underlineColor={toolbarUI.underlineColor}
             underlineWidth={toolbarUI.underlineWidth}
+            underlineOffsetTop={toolbarUI.underlineOffsetTop}
+            iconGap={toolbarUI.iconGap}
+            iconColor={toolbarUI.iconColor}
+            iconSize={toolbarUI.iconSize}
+            searchWidth={toolbarUI.searchWidth}
           />
         </div>
         <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>

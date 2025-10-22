@@ -127,6 +127,40 @@ export default function FinanceiroUiPanel() {
                   onChange={(e) => financeiroUiActions.setToolbarUI({ underlineWidth: Math.max(0, Number(e.target.value || 0)) })}
                 />
               </div>
+              <div>
+                <Label htmlFor="ui-toolbar-uoffset">Distância do sublinhado ao topo (px)</Label>
+                <Input id="ui-toolbar-uoffset" type="number" min={0} max={24}
+                  value={toolbar.underlineOffsetTop ?? 0}
+                  onChange={(e) => financeiroUiActions.setToolbarUI({ underlineOffsetTop: Math.max(0, Number(e.target.value || 0)) })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-toolbar-icongap">Distância título → ícone (px)</Label>
+                <Input id="ui-toolbar-icongap" type="number" min={0} max={24}
+                  value={toolbar.iconGap ?? 8}
+                  onChange={(e) => financeiroUiActions.setToolbarUI({ iconGap: Math.max(0, Number(e.target.value || 0)) })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-toolbar-iconcolor">Cor do ícone</Label>
+                <Input id="ui-toolbar-iconcolor" type="color" value={toolbar.iconColor ?? '#9ca3af'}
+                  onChange={(e) => financeiroUiActions.setToolbarUI({ iconColor: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-toolbar-iconsize">Tamanho do ícone (px)</Label>
+                <Input id="ui-toolbar-iconsize" type="number" min={10} max={32}
+                  value={toolbar.iconSize ?? 16}
+                  onChange={(e) => financeiroUiActions.setToolbarUI({ iconSize: Math.max(10, Number(e.target.value || 16)) })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-toolbar-searchw">Largura do campo de busca (px)</Label>
+                <Input id="ui-toolbar-searchw" type="number" min={120} max={480}
+                  value={toolbar.searchWidth ?? 240}
+                  onChange={(e) => financeiroUiActions.setToolbarUI({ searchWidth: Math.max(120, Number(e.target.value || 240)) })}
+                />
+              </div>
             </div>
           </CollapsibleContent>
         </Collapsible>
