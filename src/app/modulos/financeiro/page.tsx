@@ -79,22 +79,56 @@ export default function ModulosFinanceiroPage() {
       default:
         return {
           columns: [
-            { accessorKey: 'indicador', header: 'Indicador' },
-            { accessorKey: 'valor', header: 'Valor' },
+            {
+              accessorKey: 'col1',
+              header: '',
+              cell: () => (
+                <div className="flex items-center">
+                  <ContaAzulIcon className="h-10 w-10 mr-3" />
+                  <div>
+                    <div
+                      style={{
+                        fontFamily: fontVar(titulo.titleFontFamily),
+                        fontSize: titulo.titleFontSize || 18,
+                        fontWeight: (titulo.titleFontWeight as React.CSSProperties['fontWeight']) || '600',
+                        color: titulo.titleColor || undefined,
+                        letterSpacing: typeof titulo.titleLetterSpacing === 'number' ? `${titulo.titleLetterSpacing}px` : undefined,
+                      }}
+                    >
+                      {titulo.title}
+                    </div>
+                    {titulo.subtitle ? (
+                      <div className="text-sm text-muted-foreground">{titulo.subtitle}</div>
+                    ) : null}
+                  </div>
+                </div>
+              ),
+            },
+            {
+              accessorKey: 'col2',
+              header: '',
+              cell: () => (
+                <div>
+                  <div
+                    style={{
+                      fontFamily: fontVar(titulo.titleFontFamily),
+                      fontSize: titulo.titleFontSize || 18,
+                      fontWeight: (titulo.titleFontWeight as React.CSSProperties['fontWeight']) || '600',
+                      color: titulo.titleColor || undefined,
+                      letterSpacing: typeof titulo.titleLetterSpacing === 'number' ? `${titulo.titleLetterSpacing}px` : undefined,
+                    }}
+                  >
+                    {titulo.title}
+                  </div>
+                  {titulo.subtitle ? (
+                    <div className="text-sm text-muted-foreground">{titulo.subtitle}</div>
+                  ) : null}
+                </div>
+              ),
+            },
           ],
           data: [
-            { indicador: 'Saldo total', valor: 16068.02 },
-            { indicador: 'A pagar (30d)', valor: 1550.4 },
-            { indicador: 'A receber (30d)', valor: 1019.0 },
-            { indicador: 'Caixa disponível', valor: 12450.0 },
-            { indicador: 'Disponível em D+1', valor: 735.5 },
-            { indicador: 'Limite de crédito', valor: 25000.0 },
-            { indicador: 'Utilizado do limite', valor: 8200.0 },
-            { indicador: 'Fluxo estimado (7d)', valor: 1450.75 },
-            { indicador: 'Fluxo estimado (30d)', valor: 5340.2 },
-            { indicador: 'Inadimplência (90d)', valor: 280.0 },
-            { indicador: 'Boletos a compensar', valor: 320.0 },
-            { indicador: 'Tarifas bancárias (mês)', valor: 95.8 },
+            { col1: '', col2: '' },
           ],
         }
     }
@@ -154,59 +188,6 @@ export default function ModulosFinanceiroPage() {
         </div>
         {/* Conteúdo abaixo das tabs com cor de fundo */}
         <div style={{ background: layout.contentBg, paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
-          {/* Seção de teste: linha com 2 colunas, título/subtítulo verticais */}
-          {tabs.selected === 'visao' && (
-            <div className="px-4 md:px-6" style={{ marginBottom: 12 }}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Coluna 1: imagem à esquerda, título/subtítulo empilhados */}
-                <div
-                  className="flex items-center p-3 rounded-md border bg-background"
-                  style={{ borderColor: tabelaUI.borderColor }}
-                >
-                  <ContaAzulIcon className="h-10 w-10 mr-3" />
-                  <div>
-                    <div
-                      style={{
-                        fontFamily: fontVar(titulo.titleFontFamily),
-                        fontSize: (titulo.titleFontSize || 18),
-                        fontWeight: (titulo.titleFontWeight as React.CSSProperties['fontWeight']) || '600',
-                        color: titulo.titleColor || undefined,
-                        letterSpacing: typeof titulo.titleLetterSpacing === 'number' ? `${titulo.titleLetterSpacing}px` : undefined,
-                      }}
-                    >
-                      {titulo.title}
-                    </div>
-                    {titulo.subtitle ? (
-                      <div className="text-sm text-muted-foreground">{titulo.subtitle}</div>
-                    ) : null}
-                  </div>
-                </div>
-
-                {/* Coluna 2: título/subtítulo empilhados (sem imagem) */}
-                <div
-                  className="flex items-center p-3 rounded-md border bg-background"
-                  style={{ borderColor: tabelaUI.borderColor }}
-                >
-                  <div>
-                    <div
-                      style={{
-                        fontFamily: fontVar(titulo.titleFontFamily),
-                        fontSize: (titulo.titleFontSize || 18),
-                        fontWeight: (titulo.titleFontWeight as React.CSSProperties['fontWeight']) || '600',
-                        color: titulo.titleColor || undefined,
-                        letterSpacing: typeof titulo.titleLetterSpacing === 'number' ? `${titulo.titleLetterSpacing}px` : undefined,
-                      }}
-                    >
-                      {titulo.title}
-                    </div>
-                    {titulo.subtitle ? (
-                      <div className="text-sm text-muted-foreground">{titulo.subtitle}</div>
-                    ) : null}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
           {/* Toolbar direita (paginador + botão) */}
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
             <DataToolbar
