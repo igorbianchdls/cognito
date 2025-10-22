@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useEffect } from 'react'
 import { useStore } from '@nanostores/react'
 import type { ColumnDef } from '@tanstack/react-table'
 
@@ -11,25 +11,9 @@ import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav from '@/components/modulos/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
-import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, $catalogUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { LayoutDashboard, Banknote, CreditCard, ArrowDownCircle } from 'lucide-react'
-import OmieIcon from '@/components/icons/OmieIcon'
-import BlingIcon from '@/components/icons/BlingIcon'
-import TinyIcon from '@/components/icons/TinyIcon'
-import TotvsIcon from '@/components/icons/TotvsIcon'
-import RdStationIcon from '@/components/icons/RdStationIcon'
-import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
-import MetaIcon from '@/components/icons/MetaIcon'
-import GoogleAnalyticsIcon from '@/components/icons/GoogleAnalyticsIcon'
-import PipedriveIcon from '@/components/icons/PipedriveIcon'
-import SalesforceIcon from '@/components/icons/SalesforceIcon'
-import HubspotIcon from '@/components/icons/HubspotIcon'
-import ContaAzulIcon from '@/components/icons/ContaAzulIcon'
-import MercadoLivreIcon from '@/components/icons/MercadoLivreIcon'
-import ShopeeIcon from '@/components/icons/ShopeeIcon'
-import MagaluIcon from '@/components/icons/MagaluIcon'
-import AmazonIcon from '@/components/icons/AmazonIcon'
+import { Banknote, CreditCard, ArrowDownCircle, ArrowUpCircle, List } from 'lucide-react'
 
 type Row = TableData
 
@@ -39,7 +23,19 @@ export default function ModulosFinanceiroPage() {
   const tabelaUI = useStore($tabelaUI)
   const layout = useStore($layout)
   const toolbarUI = useStore($toolbarUI)
-  const catalogUI = useStore($catalogUI)
+
+  useEffect(() => {
+    financeiroUiActions.setTabs({
+      options: [
+        { value: 'contas-a-pagar', label: 'Contas a Pagar' },
+        { value: 'contas-a-receber', label: 'Contas a Receber' },
+        { value: 'pagamentos-efetuados', label: 'Pagamentos Efetuados' },
+        { value: 'pagamentos-recebidos', label: 'Pagamentos Recebidos' },
+        { value: 'movimentos', label: 'Movimentos' },
+      ],
+      selected: 'contas-a-pagar',
+    })
+  }, [])
 
   const fontVar = (name?: string) => {
     if (!name) return undefined
@@ -50,20 +46,8 @@ export default function ModulosFinanceiroPage() {
 
   const { columns, data } = useMemo((): { columns: ColumnDef<Row>[]; data: Row[] } => {
     switch (tabs.selected) {
-      case 'contas':
-        return {
-          columns: [
-            { accessorKey: 'banco', header: 'Banco' },
-            { accessorKey: 'agencia', header: 'Agência' },
-            { accessorKey: 'conta', header: 'Conta' },
-            { accessorKey: 'saldo', header: 'Saldo' },
-          ],
-          data: [
-            { banco: 'Banco A', agencia: '0001', conta: '12345-6', saldo: 15234.9 },
-            { banco: 'Banco B', agencia: '0002', conta: '98765-4', saldo: 834.12 },
-          ],
-        }
-      case 'pagamentos':
+      case 'contas-a-pagar':
+      default:
         return {
           columns: [
             { accessorKey: 'fornecedor', header: 'Fornecedor' },
@@ -77,263 +61,78 @@ export default function ModulosFinanceiroPage() {
             { fornecedor: 'Supply Co', documento: 'NF 456', vencimento: '2025-11-05', valor: 349.9, status: 'Pago' },
           ],
         }
-      case 'recebimentos':
+      case 'contas-a-receber':
         return {
           columns: [
             { accessorKey: 'cliente', header: 'Cliente' },
-            { accessorKey: 'pedido', header: 'Pedido' },
-            { accessorKey: 'data', header: 'Data' },
+            { accessorKey: 'documento', header: 'Documento' },
+            { accessorKey: 'vencimento', header: 'Vencimento' },
             { accessorKey: 'valor', header: 'Valor' },
             { accessorKey: 'status', header: 'Status' },
           ],
           data: [
-            { cliente: 'Cliente X', pedido: 'PO-1001', data: '2025-10-20', valor: 899.0, status: 'Recebido' },
-            { cliente: 'Cliente Y', pedido: 'PO-1002', data: '2025-10-21', valor: 120.0, status: 'Em aberto' },
+            { cliente: 'Cliente X', documento: 'FAT 1001', vencimento: '2025-10-20', valor: 899.0, status: 'Em aberto' },
+            { cliente: 'Cliente Y', documento: 'FAT 1002', vencimento: '2025-10-21', valor: 120.0, status: 'Recebido' },
           ],
         }
-      case 'visao':
-      default:
-        // Catálogos (4 itens por coluna)
-        const colA = [
-          { Icon: OmieIcon, name: 'Omie', category: 'Assinatura' },
-          { Icon: BlingIcon, name: 'Bling', category: 'Assinatura' },
-          { Icon: TinyIcon, name: 'Tiny', category: 'Assinatura' },
-          { Icon: TotvsIcon, name: 'Totvs', category: 'Licenças' },
-        ]
-        const colB = [
-          { Icon: RdStationIcon, name: 'RD Station', category: 'Assinatura' },
-          { Icon: GoogleAdsIcon, name: 'Google Ads', category: 'Mídia Paga - Pesquisa' },
-          { Icon: MetaIcon, name: 'Meta Ads', category: 'Mídia Paga - Social' },
-          { Icon: GoogleAnalyticsIcon, name: 'Google Analytics', category: 'Analytics' },
-        ]
-        const colC = [
-          { Icon: PipedriveIcon, name: 'Pipedrive', category: 'Assinatura' },
-          { Icon: SalesforceIcon, name: 'Salesforce', category: 'Licenças' },
-          { Icon: HubspotIcon, name: 'HubSpot', category: 'Assinatura' },
-          { Icon: ContaAzulIcon, name: 'ContaAzul', category: 'Assinatura' },
-        ]
-        const colD = [
-          { Icon: MercadoLivreIcon, name: 'Mercado Livre', category: 'Taxas de Venda' },
-          { Icon: ShopeeIcon, name: 'Shopee', category: 'Taxas de Venda' },
-          { Icon: MagaluIcon, name: 'Magalu', category: 'Taxas de Venda' },
-          { Icon: AmazonIcon, name: 'Amazon', category: 'Taxas de Venda' },
-        ]
-
+      case 'pagamentos-efetuados':
         return {
           columns: [
-            {
-              accessorKey: 'colA',
-              header: 'Omie',
-              cell: ({ row }) => {
-                const item = colA[row.index]
-                const Icon = item.Icon
-                const iconSize = catalogUI.iconSize ?? 40
-                const gap = catalogUI.iconTextGap ?? 12
-                return (
-                  <div className="flex items-center">
-                    <div
-                      className="flex items-center justify-center mr-3"
-                      style={{
-                        width: iconSize,
-                        height: iconSize,
-                        borderRadius: (catalogUI.iconBorderRadius ?? 8),
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <Icon className="w-full h-full" />
-                    </div>
-                    <div style={{ marginLeft: Math.max(0, gap - 12) }}>
-                      <div
-                        style={{
-                          fontFamily: catalogUI.itemTitleFontFamily && catalogUI.itemTitleFontFamily !== 'inherit' ? fontVar(catalogUI.itemTitleFontFamily) : undefined,
-                          fontSize: (catalogUI.itemTitleFontSize ?? 15),
-                          fontWeight: (catalogUI.itemTitleFontWeight as React.CSSProperties['fontWeight']) ?? '600',
-                          color: catalogUI.itemTitleColor ?? '#111827',
-                          letterSpacing: typeof catalogUI.itemTitleLetterSpacing === 'number' ? `${catalogUI.itemTitleLetterSpacing}px` : undefined,
-                        }}
-                      >
-                        {item.name}
-                      </div>
-                      <div
-                        style={{
-                          fontFamily: catalogUI.itemSubtitleFontFamily && catalogUI.itemSubtitleFontFamily !== 'inherit' ? fontVar(catalogUI.itemSubtitleFontFamily) : undefined,
-                          fontSize: (catalogUI.itemSubtitleFontSize ?? 12),
-                          fontWeight: (catalogUI.itemSubtitleFontWeight as React.CSSProperties['fontWeight']) ?? '400',
-                          color: catalogUI.itemSubtitleColor ?? '#6b7280',
-                          letterSpacing: typeof catalogUI.itemSubtitleLetterSpacing === 'number' ? `${catalogUI.itemSubtitleLetterSpacing}px` : undefined,
-                        }}
-                      >
-                        {item.category}
-                      </div>
-                    </div>
-                  </div>
-                )
-              },
-            },
-            {
-              accessorKey: 'colB',
-              header: 'RD Station',
-              cell: ({ row }) => {
-                const item = colB[row.index]
-                const Icon = item.Icon
-                const iconSize = catalogUI.iconSize ?? 40
-                const gap = catalogUI.iconTextGap ?? 12
-                return (
-                  <div className="flex items-center">
-                    <div
-                      className="flex items-center justify-center mr-3"
-                      style={{
-                        width: iconSize,
-                        height: iconSize,
-                        borderRadius: (catalogUI.iconBorderRadius ?? 8),
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <Icon className="w-full h-full" />
-                    </div>
-                    <div style={{ marginLeft: Math.max(0, gap - 12) }}>
-                      <div
-                        style={{
-                          fontFamily: catalogUI.itemTitleFontFamily && catalogUI.itemTitleFontFamily !== 'inherit' ? fontVar(catalogUI.itemTitleFontFamily) : undefined,
-                          fontSize: (catalogUI.itemTitleFontSize ?? 15),
-                          fontWeight: (catalogUI.itemTitleFontWeight as React.CSSProperties['fontWeight']) ?? '600',
-                          color: catalogUI.itemTitleColor ?? '#111827',
-                          letterSpacing: typeof catalogUI.itemTitleLetterSpacing === 'number' ? `${catalogUI.itemTitleLetterSpacing}px` : undefined,
-                        }}
-                      >
-                        {item.name}
-                      </div>
-                      <div
-                        style={{
-                          fontFamily: catalogUI.itemSubtitleFontFamily && catalogUI.itemSubtitleFontFamily !== 'inherit' ? fontVar(catalogUI.itemSubtitleFontFamily) : undefined,
-                          fontSize: (catalogUI.itemSubtitleFontSize ?? 12),
-                          fontWeight: (catalogUI.itemSubtitleFontWeight as React.CSSProperties['fontWeight']) ?? '400',
-                          color: catalogUI.itemSubtitleColor ?? '#6b7280',
-                          letterSpacing: typeof catalogUI.itemSubtitleLetterSpacing === 'number' ? `${catalogUI.itemSubtitleLetterSpacing}px` : undefined,
-                        }}
-                      >
-                        {item.category}
-                      </div>
-                    </div>
-                  </div>
-                )
-              },
-            },
-            {
-              accessorKey: 'colC',
-              header: 'Pipedrive',
-              cell: ({ row }) => {
-                const item = colC[row.index]
-                const Icon = item.Icon
-                const iconSize = catalogUI.iconSize ?? 40
-                const gap = catalogUI.iconTextGap ?? 12
-                return (
-                  <div className="flex items-center">
-                    <div
-                      className="flex items-center justify-center mr-3"
-                      style={{
-                        width: iconSize,
-                        height: iconSize,
-                        borderRadius: (catalogUI.iconBorderRadius ?? 8),
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <Icon className="w-full h-full" />
-                    </div>
-                    <div style={{ marginLeft: Math.max(0, gap - 12) }}>
-                      <div
-                        style={{
-                          fontFamily: catalogUI.itemTitleFontFamily && catalogUI.itemTitleFontFamily !== 'inherit' ? fontVar(catalogUI.itemTitleFontFamily) : undefined,
-                          fontSize: (catalogUI.itemTitleFontSize ?? 15),
-                          fontWeight: (catalogUI.itemTitleFontWeight as React.CSSProperties['fontWeight']) ?? '600',
-                          color: catalogUI.itemTitleColor ?? '#111827',
-                          letterSpacing: typeof catalogUI.itemTitleLetterSpacing === 'number' ? `${catalogUI.itemTitleLetterSpacing}px` : undefined,
-                        }}
-                      >
-                        {item.name}
-                      </div>
-                      <div
-                        style={{
-                          fontFamily: catalogUI.itemSubtitleFontFamily && catalogUI.itemSubtitleFontFamily !== 'inherit' ? fontVar(catalogUI.itemSubtitleFontFamily) : undefined,
-                          fontSize: (catalogUI.itemSubtitleFontSize ?? 12),
-                          fontWeight: (catalogUI.itemSubtitleFontWeight as React.CSSProperties['fontWeight']) ?? '400',
-                          color: catalogUI.itemSubtitleColor ?? '#6b7280',
-                          letterSpacing: typeof catalogUI.itemSubtitleLetterSpacing === 'number' ? `${catalogUI.itemSubtitleLetterSpacing}px` : undefined,
-                        }}
-                      >
-                        {item.category}
-                      </div>
-                    </div>
-                  </div>
-                )
-              },
-            },
-            {
-              accessorKey: 'colD',
-              header: 'Mercado Livre',
-              cell: ({ row }) => {
-                const item = colD[row.index]
-                const Icon = item.Icon
-                const iconSize = catalogUI.iconSize ?? 40
-                const gap = catalogUI.iconTextGap ?? 12
-                return (
-                  <div className="flex items-center">
-                    <div
-                      className="flex items-center justify-center mr-3"
-                      style={{
-                        width: iconSize,
-                        height: iconSize,
-                        borderRadius: (catalogUI.iconBorderRadius ?? 8),
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <Icon className="w-full h-full" />
-                    </div>
-                    <div style={{ marginLeft: Math.max(0, gap - 12) }}>
-                      <div
-                        style={{
-                          fontFamily: catalogUI.itemTitleFontFamily && catalogUI.itemTitleFontFamily !== 'inherit' ? fontVar(catalogUI.itemTitleFontFamily) : undefined,
-                          fontSize: (catalogUI.itemTitleFontSize ?? 15),
-                          fontWeight: (catalogUI.itemTitleFontWeight as React.CSSProperties['fontWeight']) ?? '600',
-                          color: catalogUI.itemTitleColor ?? '#111827',
-                          letterSpacing: typeof catalogUI.itemTitleLetterSpacing === 'number' ? `${catalogUI.itemTitleLetterSpacing}px` : undefined,
-                        }}
-                      >
-                        {item.name}
-                      </div>
-                      <div
-                        style={{
-                          fontFamily: catalogUI.itemSubtitleFontFamily && catalogUI.itemSubtitleFontFamily !== 'inherit' ? fontVar(catalogUI.itemSubtitleFontFamily) : undefined,
-                          fontSize: (catalogUI.itemSubtitleFontSize ?? 12),
-                          fontWeight: (catalogUI.itemSubtitleFontWeight as React.CSSProperties['fontWeight']) ?? '400',
-                          color: catalogUI.itemSubtitleColor ?? '#6b7280',
-                          letterSpacing: typeof catalogUI.itemSubtitleLetterSpacing === 'number' ? `${catalogUI.itemSubtitleLetterSpacing}px` : undefined,
-                        }}
-                      >
-                        {item.category}
-                      </div>
-                    </div>
-                  </div>
-                )
-              },
-            },
+            { accessorKey: 'fornecedor', header: 'Fornecedor' },
+            { accessorKey: 'documento', header: 'Documento' },
+            { accessorKey: 'pago_em', header: 'Pago em' },
+            { accessorKey: 'valor', header: 'Valor' },
+            { accessorKey: 'metodo', header: 'Método' },
           ],
-          data: Array.from({ length: 4 }).map((_, i) => ({ colA: i, colB: i, colC: i, colD: i })),
+          data: [
+            { fornecedor: 'ACME Ltda', documento: 'NF 789', pago_em: '2025-10-10', valor: 890.0, metodo: 'PIX' },
+            { fornecedor: 'Supply Co', documento: 'NF 012', pago_em: '2025-10-12', valor: 230.0, metodo: 'Boleto' },
+          ],
+        }
+      case 'pagamentos-recebidos':
+        return {
+          columns: [
+            { accessorKey: 'cliente', header: 'Cliente' },
+            { accessorKey: 'documento', header: 'Documento' },
+            { accessorKey: 'recebido_em', header: 'Recebido em' },
+            { accessorKey: 'valor', header: 'Valor' },
+            { accessorKey: 'metodo', header: 'Método' },
+          ],
+          data: [
+            { cliente: 'Cliente X', documento: 'FAT 2001', recebido_em: '2025-10-11', valor: 450.0, metodo: 'Cartão' },
+            { cliente: 'Cliente Y', documento: 'FAT 2002', recebido_em: '2025-10-13', valor: 320.0, metodo: 'PIX' },
+          ],
+        }
+      case 'movimentos':
+        return {
+          columns: [
+            { accessorKey: 'data', header: 'Data' },
+            { accessorKey: 'tipo', header: 'Tipo' },
+            { accessorKey: 'categoria', header: 'Categoria' },
+            { accessorKey: 'descricao', header: 'Descrição' },
+            { accessorKey: 'valor', header: 'Valor' },
+          ],
+          data: [
+            { data: '2025-10-10', tipo: 'Saída', categoria: 'Fornecedor', descricao: 'NF 789', valor: -890.0 },
+            { data: '2025-10-11', tipo: 'Entrada', categoria: 'Recebimento', descricao: 'FAT 2001', valor: 450.0 },
+          ],
         }
     }
-  }, [tabs.selected, catalogUI])
+  }, [tabs.selected])
 
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
       switch (v) {
-        case 'visao':
-          return <LayoutDashboard className="h-4 w-4" />
-        case 'contas':
-          return <Banknote className="h-4 w-4" />
-        case 'pagamentos':
+        case 'contas-a-pagar':
           return <CreditCard className="h-4 w-4" />
-        case 'recebimentos':
+        case 'contas-a-receber':
           return <ArrowDownCircle className="h-4 w-4" />
+        case 'pagamentos-efetuados':
+          return <ArrowUpCircle className="h-4 w-4" />
+        case 'pagamentos-recebidos':
+          return <ArrowDownCircle className="h-4 w-4" />
+        case 'movimentos':
+          return <List className="h-4 w-4" />
         default:
           return null
       }
