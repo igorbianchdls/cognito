@@ -303,7 +303,7 @@ export default function UiConfigPanel() {
               </div>
               <div>
                 <Label htmlFor="ui-tabs-tracking">Espaçamento</Label>
-                <Input id="ui-tabs-tracking" type="number" step={0.5} min={-5} max={20}
+                <Input id="ui-tabs-tracking" type="number" step={0.01} min={-0.05} max={0.05}
                   value={tabs.letterSpacing ?? 0}
                   onChange={(e) => financeiroUiActions.setTabs({ letterSpacing: Number(e.target.value || 0) })}
                 />
