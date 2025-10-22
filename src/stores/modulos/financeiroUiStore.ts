@@ -175,7 +175,7 @@ export const DEFAULT_LAYOUT: LayoutState = {
   mbTitle: 16,
   mbTabs: 8,
   mbTable: 24,
-  contentBg: '#f9fafb',
+  contentBg: 'rgb(253, 253, 253)',
   contentTopGap: 8,
 }
 export const $layout = atom<LayoutState>({ ...DEFAULT_LAYOUT })
