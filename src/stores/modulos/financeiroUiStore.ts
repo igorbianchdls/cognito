@@ -109,7 +109,7 @@ const DEFAULT_TABS: TabsState = {
   ],
   selected: 'visao',
   fontFamily: 'Geist',
-  fontSize: 14,
+  fontSize: 15,
   fontWeight: '400',
   color: 'rgb(128, 128, 128)',
   letterSpacing: 0,
