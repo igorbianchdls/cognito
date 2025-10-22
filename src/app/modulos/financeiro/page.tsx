@@ -85,13 +85,24 @@ export default function ModulosFinanceiroPage() {
       <SidebarShadcn />
       <SidebarInset className="min-h-screen flex flex-col overflow-y-auto">
         <div style={{ marginBottom: layout.mbTitle }}>
-          <TituloModulo title={titulo.title} subtitle={titulo.subtitle} />
+          <TituloModulo
+            title={titulo.title}
+            subtitle={titulo.subtitle}
+            titleFontFamily={titulo.titleFontFamily}
+            titleFontSize={titulo.titleFontSize}
+            titleFontWeight={titulo.titleFontWeight}
+            titleColor={titulo.titleColor}
+          />
         </div>
         <div style={{ marginBottom: layout.mbTabs }}>
           <OpcoesTabs
             options={tabs.options}
             value={tabs.selected}
             onValueChange={(v) => financeiroUiActions.setTabs({ selected: v })}
+            fontFamily={tabs.fontFamily}
+            fontSize={tabs.fontSize}
+            fontWeight={tabs.fontWeight}
+            color={tabs.color}
           />
         </div>
         <div className="flex-1 min-h-0 overflow-auto px-4 md:px-6" style={{ marginBottom: layout.mbTable }}>
@@ -107,7 +118,11 @@ export default function ModulosFinanceiroPage() {
               headerTextColor={tabelaUI.headerText}
               cellTextColor={tabelaUI.cellText}
               headerFontSize={tabelaUI.headerFontSize}
+              headerFontFamily={tabelaUI.headerFontFamily}
+              headerFontWeight={tabelaUI.headerFontWeight}
               cellFontSize={tabelaUI.cellFontSize}
+              cellFontFamily={tabelaUI.cellFontFamily}
+              cellFontWeight={tabelaUI.cellFontWeight}
               enableRowSelection={tabelaUI.enableRowSelection}
               selectionMode={tabelaUI.selectionMode}
               defaultSortColumn={tabelaUI.defaultSortColumn}

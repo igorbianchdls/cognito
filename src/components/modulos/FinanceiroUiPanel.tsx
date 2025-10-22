@@ -39,6 +39,41 @@ export default function FinanceiroUiPanel() {
               <Input id="ui-subtitle" value={titulo.subtitle ?? ''} onChange={(e) => financeiroUiActions.setTitulo({ subtitle: e.target.value })} />
             </div>
           </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div>
+              <Label htmlFor="ui-title-font">Fonte</Label>
+              <Input id="ui-title-font" placeholder="inherit, Inter, etc" value={titulo.titleFontFamily ?? ''}
+                onChange={(e) => financeiroUiActions.setTitulo({ titleFontFamily: e.target.value || 'inherit' })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="ui-title-size">Tamanho</Label>
+              <Input id="ui-title-size" type="number" min={10} max={48}
+                value={titulo.titleFontSize ?? 24}
+                onChange={(e) => financeiroUiActions.setTitulo({ titleFontSize: Number(e.target.value || 24) })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="ui-title-weight">Peso</Label>
+              <Select value={(titulo.titleFontWeight ?? '600').toString()} onValueChange={(v) => financeiroUiActions.setTitulo({ titleFontWeight: v })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="400">Normal (400)</SelectItem>
+                  <SelectItem value="500">Médio (500)</SelectItem>
+                  <SelectItem value="600">Semibold (600)</SelectItem>
+                  <SelectItem value="700">Bold (700)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="ui-title-color">Cor</Label>
+              <Input id="ui-title-color" type="color" value={titulo.titleColor ?? '#111827'}
+                onChange={(e) => financeiroUiActions.setTitulo({ titleColor: e.target.value })}
+              />
+            </div>
+          </div>
         </div>
 
         <Separator />
@@ -59,6 +94,41 @@ export default function FinanceiroUiPanel() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div>
+              <Label htmlFor="ui-tabs-font">Fonte</Label>
+              <Input id="ui-tabs-font" placeholder="inherit, Inter, etc" value={tabs.fontFamily ?? ''}
+                onChange={(e) => financeiroUiActions.setTabs({ fontFamily: e.target.value || 'inherit' })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="ui-tabs-size">Tamanho</Label>
+              <Input id="ui-tabs-size" type="number" min={10} max={24}
+                value={tabs.fontSize ?? 14}
+                onChange={(e) => financeiroUiActions.setTabs({ fontSize: Number(e.target.value || 14) })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="ui-tabs-weight">Peso</Label>
+              <Select value={(tabs.fontWeight ?? '500').toString()} onValueChange={(v) => financeiroUiActions.setTabs({ fontWeight: v })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="400">Normal (400)</SelectItem>
+                  <SelectItem value="500">Médio (500)</SelectItem>
+                  <SelectItem value="600">Semibold (600)</SelectItem>
+                  <SelectItem value="700">Bold (700)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="ui-tabs-color">Cor</Label>
+              <Input id="ui-tabs-color" type="color" value={tabs.color ?? '#111827'}
+                onChange={(e) => financeiroUiActions.setTabs({ color: e.target.value })}
+              />
             </div>
           </div>
         </div>
@@ -128,15 +198,24 @@ export default function FinanceiroUiPanel() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <Label htmlFor="ui-headerbg">Header bg</Label>
-              <Input id="ui-headerbg" value={tabela.headerBg} onChange={(e) => financeiroUiActions.setTabelaUI({ headerBg: e.target.value })} />
+              <Input id="ui-headerbg" type="color" value={tabela.headerBg}
+                onChange={(e) => financeiroUiActions.setTabelaUI({ headerBg: e.target.value })} />
             </div>
             <div>
               <Label htmlFor="ui-headertext">Header text</Label>
-              <Input id="ui-headertext" value={tabela.headerText} onChange={(e) => financeiroUiActions.setTabelaUI({ headerText: e.target.value })} />
+              <Input id="ui-headertext" type="color" value={tabela.headerText}
+                onChange={(e) => financeiroUiActions.setTabelaUI({ headerText: e.target.value })} />
             </div>
             <div>
               <Label htmlFor="ui-celltext">Cell text</Label>
-              <Input id="ui-celltext" value={tabela.cellText} onChange={(e) => financeiroUiActions.setTabelaUI({ cellText: e.target.value })} />
+              <Input id="ui-celltext" type="color" value={tabela.cellText}
+                onChange={(e) => financeiroUiActions.setTabelaUI({ cellText: e.target.value })} />
+            </div>
+            <div>
+              <Label htmlFor="ui-header-family">Header font family</Label>
+              <Input id="ui-header-family" placeholder="inherit" value={tabela.headerFontFamily ?? ''}
+                onChange={(e) => financeiroUiActions.setTabelaUI({ headerFontFamily: e.target.value || 'inherit' })}
+              />
             </div>
             <div>
               <Label htmlFor="ui-headerfs">Header font size</Label>
@@ -146,11 +225,45 @@ export default function FinanceiroUiPanel() {
               />
             </div>
             <div>
+              <Label htmlFor="ui-header-weight">Header font weight</Label>
+              <Select value={(tabela.headerFontWeight ?? '600').toString()} onValueChange={(v) => financeiroUiActions.setTabelaUI({ headerFontWeight: v })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="400">Normal (400)</SelectItem>
+                  <SelectItem value="500">Médio (500)</SelectItem>
+                  <SelectItem value="600">Semibold (600)</SelectItem>
+                  <SelectItem value="700">Bold (700)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="ui-cell-family">Cell font family</Label>
+              <Input id="ui-cell-family" placeholder="inherit" value={tabela.cellFontFamily ?? ''}
+                onChange={(e) => financeiroUiActions.setTabelaUI({ cellFontFamily: e.target.value || 'inherit' })}
+              />
+            </div>
+            <div>
               <Label htmlFor="ui-cellfs">Cell font size</Label>
               <Input id="ui-cellfs" type="number" min={10} max={24}
                 value={tabela.cellFontSize}
                 onChange={(e) => financeiroUiActions.setTabelaUI({ cellFontSize: Number(e.target.value || 13) })}
               />
+            </div>
+            <div>
+              <Label htmlFor="ui-cell-weight">Cell font weight</Label>
+              <Select value={(tabela.cellFontWeight ?? '400').toString()} onValueChange={(v) => financeiroUiActions.setTabelaUI({ cellFontWeight: v })}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="400">Normal (400)</SelectItem>
+                  <SelectItem value="500">Médio (500)</SelectItem>
+                  <SelectItem value="600">Semibold (600)</SelectItem>
+                  <SelectItem value="700">Bold (700)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </div>

@@ -3,6 +3,11 @@ import { atom } from 'nanostores'
 export type TituloState = {
   title: string
   subtitle?: string
+  // Typography
+  titleFontFamily?: string
+  titleFontSize?: number
+  titleFontWeight?: string
+  titleColor?: string
 }
 
 export type TabsOption = {
@@ -13,6 +18,11 @@ export type TabsOption = {
 export type TabsState = {
   options: TabsOption[]
   selected: string
+  // Typography for options
+  fontFamily?: string
+  fontSize?: number
+  fontWeight?: string
+  color?: string
 }
 
 export type TabelaUIState = {
@@ -28,6 +38,10 @@ export type TabelaUIState = {
   cellText: string
   headerFontSize: number
   cellFontSize: number
+  headerFontFamily?: string
+  headerFontWeight?: string
+  cellFontFamily?: string
+  cellFontWeight?: string
   defaultSortColumn?: string
   defaultSortDirection?: 'asc' | 'desc'
 }
@@ -41,6 +55,10 @@ export type LayoutState = {
 const DEFAULT_TITULO: TituloState = {
   title: 'Financeiro',
   subtitle: 'Selecione uma opção para visualizar os dados',
+  titleFontFamily: 'inherit',
+  titleFontSize: 24,
+  titleFontWeight: '600',
+  titleColor: '#111827',
 }
 
 const DEFAULT_TABS: TabsState = {
@@ -51,6 +69,10 @@ const DEFAULT_TABS: TabsState = {
     { value: 'recebimentos', label: 'Recebimentos' },
   ],
   selected: 'visao',
+  fontFamily: 'inherit',
+  fontSize: 14,
+  fontWeight: '500',
+  color: '#111827',
 }
 
 const DEFAULT_TABELA_UI: TabelaUIState = {
@@ -66,6 +88,10 @@ const DEFAULT_TABELA_UI: TabelaUIState = {
   cellText: '#1f2937',
   headerFontSize: 13,
   cellFontSize: 13,
+  headerFontFamily: 'inherit',
+  headerFontWeight: '600',
+  cellFontFamily: 'inherit',
+  cellFontWeight: '400',
   defaultSortColumn: undefined,
   defaultSortDirection: 'asc',
 }
