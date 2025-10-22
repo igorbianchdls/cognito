@@ -204,60 +204,60 @@ export default function FinanceiroUiPanel() {
                 </div>
                 <Switch checked={tabela.enableSearch} onCheckedChange={(v) => financeiroUiActions.setTabelaUI({ enableSearch: v })} />
               </div>
-            <div className="flex items-center justify-between gap-4 border rounded-md p-3">
-              <div>
-                <Label>Paginação</Label>
-                <div className="text-xs text-muted-foreground">Exibir paginação</div>
+              <div className="flex items-center justify-between gap-4 border rounded-md p-3">
+                <div>
+                  <Label>Paginação</Label>
+                  <div className="text-xs text-muted-foreground">Exibir paginação</div>
+                </div>
+                <Switch checked={tabela.showPagination} onCheckedChange={(v) => financeiroUiActions.setTabelaUI({ showPagination: v })} />
               </div>
-              <Switch checked={tabela.showPagination} onCheckedChange={(v) => financeiroUiActions.setTabelaUI({ showPagination: v })} />
-            </div>
-            <div className="flex items-center justify-between gap-4 border rounded-md p-3">
-              <div>
-                <Label>Colunas</Label>
-                <div className="text-xs text-muted-foreground">Alternar visibilidade</div>
+              <div className="flex items-center justify-between gap-4 border rounded-md p-3">
+                <div>
+                  <Label>Colunas</Label>
+                  <div className="text-xs text-muted-foreground">Alternar visibilidade</div>
+                </div>
+                <Switch checked={tabela.enableColumnToggle} onCheckedChange={(v) => financeiroUiActions.setTabelaUI({ enableColumnToggle: v })} />
               </div>
-              <Switch checked={tabela.enableColumnToggle} onCheckedChange={(v) => financeiroUiActions.setTabelaUI({ enableColumnToggle: v })} />
-            </div>
-            <div className="flex items-center justify-between gap-4 border rounded-md p-3">
-              <div>
-                <Label>Seleção</Label>
-                <div className="text-xs text-muted-foreground">Permitir seleção de linhas</div>
+              <div className="flex items-center justify-between gap-4 border rounded-md p-3">
+                <div>
+                  <Label>Seleção</Label>
+                  <div className="text-xs text-muted-foreground">Permitir seleção de linhas</div>
+                </div>
+                <Switch checked={tabela.enableRowSelection} onCheckedChange={(v) => financeiroUiActions.setTabelaUI({ enableRowSelection: v })} />
               </div>
-              <Switch checked={tabela.enableRowSelection} onCheckedChange={(v) => financeiroUiActions.setTabelaUI({ enableRowSelection: v })} />
-            </div>
-            <div>
-              <Label>Modo de seleção</Label>
-              <Select value={tabela.selectionMode} onValueChange={(v) => financeiroUiActions.setTabelaUI({ selectionMode: v as 'single' | 'multiple' })}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="single">Single</SelectItem>
-                  <SelectItem value="multiple">Multiple</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="ui-pagesize">Page size</Label>
-              <Input id="ui-pagesize" type="number" min={1} max={200}
-                value={tabela.pageSize}
-                onChange={(e) => financeiroUiActions.setTabelaUI({ pageSize: Math.max(1, Number(e.target.value || 1)) })}
-              />
-            </div>
-            <div className="flex items-center justify-between gap-4 border rounded-md p-3">
               <div>
-                <Label>Cabeçalho fixo</Label>
-                <div className="text-xs text-muted-foreground">Torna o header sticky</div>
+                <Label>Modo de seleção</Label>
+                <Select value={tabela.selectionMode} onValueChange={(v) => financeiroUiActions.setTabelaUI({ selectionMode: v as 'single' | 'multiple' })}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="single">Single</SelectItem>
+                    <SelectItem value="multiple">Multiple</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <Switch checked={tabela.stickyHeader} onCheckedChange={(v) => financeiroUiActions.setTabelaUI({ stickyHeader: v })} />
-            </div>
-            <div className="flex items-center justify-between gap-4 border rounded-md p-3">
               <div>
-                <Label>Linhas alternadas</Label>
-                <div className="text-xs text-muted-foreground">Zebrado nas linhas</div>
+                <Label htmlFor="ui-pagesize">Page size</Label>
+                <Input id="ui-pagesize" type="number" min={1} max={200}
+                  value={tabela.pageSize}
+                  onChange={(e) => financeiroUiActions.setTabelaUI({ pageSize: Math.max(1, Number(e.target.value || 1)) })}
+                />
               </div>
-              <Switch checked={tabela.enableZebraStripes} onCheckedChange={(v) => financeiroUiActions.setTabelaUI({ enableZebraStripes: v })} />
-            </div>
+              <div className="flex items-center justify-between gap-4 border rounded-md p-3">
+                <div>
+                  <Label>Cabeçalho fixo</Label>
+                  <div className="text-xs text-muted-foreground">Torna o header sticky</div>
+                </div>
+                <Switch checked={tabela.stickyHeader} onCheckedChange={(v) => financeiroUiActions.setTabelaUI({ stickyHeader: v })} />
+              </div>
+              <div className="flex items-center justify-between gap-4 border rounded-md p-3">
+                <div>
+                  <Label>Linhas alternadas</Label>
+                  <div className="text-xs text-muted-foreground">Zebrado nas linhas</div>
+                </div>
+                <Switch checked={tabela.enableZebraStripes} onCheckedChange={(v) => financeiroUiActions.setTabelaUI({ enableZebraStripes: v })} />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -266,114 +266,115 @@ export default function FinanceiroUiPanel() {
                 <Input id="ui-headerbg" type="color" value={tabela.headerBg}
                   onChange={(e) => financeiroUiActions.setTabelaUI({ headerBg: e.target.value })} />
               </div>
-            <div>
-              <Label htmlFor="ui-headertext">Header text</Label>
-              <Input id="ui-headertext" type="color" value={tabela.headerText}
-                onChange={(e) => financeiroUiActions.setTabelaUI({ headerText: e.target.value })} />
-            </div>
-            <div>
-              <Label htmlFor="ui-celltext">Cell text</Label>
-              <Input id="ui-celltext" type="color" value={tabela.cellText}
-                onChange={(e) => financeiroUiActions.setTabelaUI({ cellText: e.target.value })} />
-            </div>
-            <div>
-              <Label htmlFor="ui-row-alt">Row alternada bg</Label>
-              <Input id="ui-row-alt" type="color" value={tabela.rowAlternateBgColor ?? '#fafafa'}
-                onChange={(e) => financeiroUiActions.setTabelaUI({ rowAlternateBgColor: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label>Header font family</Label>
-              <Select value={(tabela.headerFontFamily ?? 'Geist')} onValueChange={(v) => financeiroUiActions.setTabelaUI({ headerFontFamily: v })}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Geist">Geist</SelectItem>
-                  <SelectItem value="Inter">Inter</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="ui-headerfs">Header font size</Label>
-              <Input id="ui-headerfs" type="number" min={10} max={24}
-                value={tabela.headerFontSize}
-                onChange={(e) => financeiroUiActions.setTabelaUI({ headerFontSize: Number(e.target.value || 13) })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="ui-header-weight">Header font weight</Label>
-              <Select value={(tabela.headerFontWeight ?? '600').toString()} onValueChange={(v) => financeiroUiActions.setTabelaUI({ headerFontWeight: v })}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="400">Normal (400)</SelectItem>
-                  <SelectItem value="500">Médio (500)</SelectItem>
-                  <SelectItem value="600">Semibold (600)</SelectItem>
-                  <SelectItem value="700">Bold (700)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="ui-bordercolor">Border color</Label>
-              <Input id="ui-bordercolor" type="color" value={tabela.borderColor ?? '#e5e7eb'}
-                onChange={(e) => financeiroUiActions.setTabelaUI({ borderColor: e.target.value })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="ui-header-tracking">Header letter spacing</Label>
-              <Input id="ui-header-tracking" type="number" step={0.5} min={-5} max={20}
-                value={tabela.headerLetterSpacing ?? 0}
-                onChange={(e) => financeiroUiActions.setTabelaUI({ headerLetterSpacing: Number(e.target.value || 0) })}
-              />
-            </div>
-            <div>
-              <Label>Cell font family</Label>
-              <Select value={(tabela.cellFontFamily ?? 'Geist')} onValueChange={(v) => financeiroUiActions.setTabelaUI({ cellFontFamily: v })}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Geist">Geist</SelectItem>
-                  <SelectItem value="Inter">Inter</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="ui-cellfs">Cell font size</Label>
-              <Input id="ui-cellfs" type="number" min={10} max={24}
-                value={tabela.cellFontSize}
-                onChange={(e) => financeiroUiActions.setTabelaUI({ cellFontSize: Number(e.target.value || 13) })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="ui-cell-weight">Cell font weight</Label>
-              <Select value={(tabela.cellFontWeight ?? '400').toString()} onValueChange={(v) => financeiroUiActions.setTabelaUI({ cellFontWeight: v })}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="400">Normal (400)</SelectItem>
-                  <SelectItem value="500">Médio (500)</SelectItem>
-                  <SelectItem value="600">Semibold (600)</SelectItem>
-                  <SelectItem value="700">Bold (700)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="ui-borderwidth">Border width</Label>
-              <Input id="ui-borderwidth" type="number" min={0} max={8}
-                value={tabela.borderWidth ?? 1}
-                onChange={(e) => financeiroUiActions.setTabelaUI({ borderWidth: Math.max(0, Number(e.target.value || 0)) })}
-              />
-            </div>
-            <div>
-              <Label htmlFor="ui-cell-tracking">Cell letter spacing</Label>
-              <Input id="ui-cell-tracking" type="number" step={0.5} min={-5} max={20}
-                value={tabela.cellLetterSpacing ?? 0}
-                onChange={(e) => financeiroUiActions.setTabelaUI({ cellLetterSpacing: Number(e.target.value || 0) })}
-              />
+              <div>
+                <Label htmlFor="ui-headertext">Header text</Label>
+                <Input id="ui-headertext" type="color" value={tabela.headerText}
+                  onChange={(e) => financeiroUiActions.setTabelaUI({ headerText: e.target.value })} />
+              </div>
+              <div>
+                <Label htmlFor="ui-celltext">Cell text</Label>
+                <Input id="ui-celltext" type="color" value={tabela.cellText}
+                  onChange={(e) => financeiroUiActions.setTabelaUI({ cellText: e.target.value })} />
+              </div>
+              <div>
+                <Label htmlFor="ui-row-alt">Row alternada bg</Label>
+                <Input id="ui-row-alt" type="color" value={tabela.rowAlternateBgColor ?? '#fafafa'}
+                  onChange={(e) => financeiroUiActions.setTabelaUI({ rowAlternateBgColor: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Header font family</Label>
+                <Select value={(tabela.headerFontFamily ?? 'Geist')} onValueChange={(v) => financeiroUiActions.setTabelaUI({ headerFontFamily: v })}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Geist">Geist</SelectItem>
+                    <SelectItem value="Inter">Inter</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="ui-headerfs">Header font size</Label>
+                <Input id="ui-headerfs" type="number" min={10} max={24}
+                  value={tabela.headerFontSize}
+                  onChange={(e) => financeiroUiActions.setTabelaUI({ headerFontSize: Number(e.target.value || 13) })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-header-weight">Header font weight</Label>
+                <Select value={(tabela.headerFontWeight ?? '600').toString()} onValueChange={(v) => financeiroUiActions.setTabelaUI({ headerFontWeight: v })}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="400">Normal (400)</SelectItem>
+                    <SelectItem value="500">Médio (500)</SelectItem>
+                    <SelectItem value="600">Semibold (600)</SelectItem>
+                    <SelectItem value="700">Bold (700)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="ui-bordercolor">Border color</Label>
+                <Input id="ui-bordercolor" type="color" value={tabela.borderColor ?? '#e5e7eb'}
+                  onChange={(e) => financeiroUiActions.setTabelaUI({ borderColor: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-header-tracking">Header letter spacing</Label>
+                <Input id="ui-header-tracking" type="number" step={0.5} min={-5} max={20}
+                  value={tabela.headerLetterSpacing ?? 0}
+                  onChange={(e) => financeiroUiActions.setTabelaUI({ headerLetterSpacing: Number(e.target.value || 0) })}
+                />
+              </div>
+              <div>
+                <Label>Cell font family</Label>
+                <Select value={(tabela.cellFontFamily ?? 'Geist')} onValueChange={(v) => financeiroUiActions.setTabelaUI({ cellFontFamily: v })}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Geist">Geist</SelectItem>
+                    <SelectItem value="Inter">Inter</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="ui-cellfs">Cell font size</Label>
+                <Input id="ui-cellfs" type="number" min={10} max={24}
+                  value={tabela.cellFontSize}
+                  onChange={(e) => financeiroUiActions.setTabelaUI({ cellFontSize: Number(e.target.value || 13) })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-cell-weight">Cell font weight</Label>
+                <Select value={(tabela.cellFontWeight ?? '400').toString()} onValueChange={(v) => financeiroUiActions.setTabelaUI({ cellFontWeight: v })}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="400">Normal (400)</SelectItem>
+                    <SelectItem value="500">Médio (500)</SelectItem>
+                    <SelectItem value="600">Semibold (600)</SelectItem>
+                    <SelectItem value="700">Bold (700)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="ui-borderwidth">Border width</Label>
+                <Input id="ui-borderwidth" type="number" min={0} max={8}
+                  value={tabela.borderWidth ?? 1}
+                  onChange={(e) => financeiroUiActions.setTabelaUI({ borderWidth: Math.max(0, Number(e.target.value || 0)) })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-cell-tracking">Cell letter spacing</Label>
+                <Input id="ui-cell-tracking" type="number" step={0.5} min={-5} max={20}
+                  value={tabela.cellLetterSpacing ?? 0}
+                  onChange={(e) => financeiroUiActions.setTabelaUI({ cellLetterSpacing: Number(e.target.value || 0) })}
+                />
+              </div>
             </div>
           </CollapsibleContent>
         </Collapsible>
