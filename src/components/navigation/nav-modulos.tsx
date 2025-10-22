@@ -1,7 +1,7 @@
 "use client"
 
 import { usePathname, useRouter } from "next/navigation"
-import { DollarSign, ShoppingCart, Users, Package, ShoppingBag, Wrench, Megaphone } from "lucide-react"
+import { DollarSign, ShoppingCart, Users, Package, ShoppingBag, Wrench, Megaphone, Briefcase } from "lucide-react"
 
 import {
   SidebarGroup,
@@ -87,6 +87,16 @@ export function NavModulos() {
           >
             <Megaphone />
             <span>Marketing</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            tooltip="Recursos Humanos"
+            onClick={() => router.push("/modulos/recursos-humanos")}
+            isActive={pathname.startsWith("/modulos/recursos-humanos")}
+          >
+            <Briefcase />
+            <span>Recursos Humanos</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
