@@ -121,6 +121,18 @@ interface DataTableProps<TData extends TableData> {
   onRowDelete?: (rowIndex: number) => void
   onRowDuplicate?: (rowIndex: number) => void
   onDataChange?: (data: TData[]) => void
+  // Expose table API for external toolbars
+  onTableReady?: (api: {
+    previousPage: () => void
+    nextPage: () => void
+    gotoPage: (n: number) => void
+    getPageIndex: () => number
+    getPageCount: () => number
+    getPageSize: () => number
+    getTotalRows: () => number
+    setGlobalFilter?: (value: string) => void
+  }) => void
+  onPaginationChange?: (info: { pageIndex: number; pageSize: number; totalRows: number; pageCount: number }) => void
 }
 
 export function DataTable<TData extends TableData>({
@@ -179,6 +191,8 @@ export function DataTable<TData extends TableData>({
   onRowDelete,
   onRowDuplicate,
   onDataChange,
+  onTableReady,
+  onPaginationChange,
 }: DataTableProps<TData>) {
   const [sorting, setSorting] = React.useState<SortingState>(
     defaultSortColumn ? [{ id: defaultSortColumn, desc: defaultSortDirection === 'desc' }] : []
@@ -388,6 +402,30 @@ export function DataTable<TData extends TableData>({
   })
 
   const globalFilter = table.getState().globalFilter
+  // Notify table API to parent
+  React.useEffect(() => {
+    if (onTableReady) {
+      onTableReady({
+        previousPage: () => table.previousPage(),
+        nextPage: () => table.nextPage(),
+        gotoPage: (n: number) => table.setPageIndex(n),
+        getPageIndex: () => table.getState().pagination.pageIndex,
+        getPageCount: () => table.getPageCount(),
+        getPageSize: () => table.getState().pagination.pageSize,
+        getTotalRows: () => table.getFilteredRowModel().rows.length,
+        setGlobalFilter: (value: string) => table.setGlobalFilter(value),
+      })
+    }
+  }, [onTableReady, table])
+
+  // Emit pagination changes
+  const pageIndex = table.getState().pagination.pageIndex
+  const pageSizeState = table.getState().pagination.pageSize
+  const totalRows = table.getFilteredRowModel().rows.length
+  const pageCount = table.getPageCount()
+  React.useEffect(() => {
+    onPaginationChange?.({ pageIndex, pageSize: pageSizeState, totalRows, pageCount })
+  }, [onPaginationChange, pageIndex, pageSizeState, totalRows, pageCount])
   
   // Handle keyboard events for editing
   const handleKeyDown = React.useCallback((e: React.KeyboardEvent) => {
