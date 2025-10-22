@@ -24,7 +24,7 @@ export default function TituloModulo({ title, subtitle, actions, className, titl
             style={{
               fontFamily: titleFontFamily && titleFontFamily !== 'inherit' ? titleFontFamily : undefined,
               fontSize: titleFontSize ? `${titleFontSize}px` : undefined,
-              fontWeight: titleFontWeight && titleFontWeight !== '600' ? titleFontWeight as any : undefined,
+              fontWeight: titleFontWeight && titleFontWeight !== '600' ? (titleFontWeight as React.CSSProperties['fontWeight']) : undefined,
               color: titleColor || undefined,
             }}
           >

@@ -35,7 +35,7 @@ export default function OpcoesTabs({ options, value, onValueChange, className, f
               style={{
                 fontFamily: fontFamily && fontFamily !== 'inherit' ? fontFamily : undefined,
                 fontSize: fontSize ? `${fontSize}px` : undefined,
-                fontWeight: fontWeight && fontWeight !== '500' ? fontWeight as any : undefined,
+                fontWeight: fontWeight && fontWeight !== '500' ? (fontWeight as React.CSSProperties['fontWeight']) : undefined,
                 color: color || undefined,
               }}
             >
