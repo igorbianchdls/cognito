@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useRef, useState } from 'react'
+import { useMemo } from 'react'
 import { useStore } from '@nanostores/react'
 import type { ColumnDef } from '@tanstack/react-table'
 
@@ -21,17 +21,6 @@ export default function ModulosFinanceiroPage() {
   const tabs = useStore($tabs)
   const tabelaUI = useStore($tabelaUI)
   const layout = useStore($layout)
-  const tableApiRef = useRef<null | {
-    previousPage: () => void
-    nextPage: () => void
-    gotoPage: (n: number) => void
-    getPageIndex: () => number
-    getPageCount: () => number
-    getPageSize: () => number
-    getTotalRows: () => number
-    setGlobalFilter?: (value: string) => void
-  }>(null)
-  const [pageInfo, setPageInfo] = useState({ pageIndex: 0, pageSize: tabelaUI.pageSize, totalRows: 0, pageCount: 0 })
 
   const fontVar = (name?: string) => {
     if (!name) return undefined
@@ -138,11 +127,9 @@ export default function ModulosFinanceiroPage() {
         {/* Toolbar direita (paginador + botão) */}
         <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
           <FinanceiroToolbar
-            from={pageInfo.totalRows === 0 ? 0 : pageInfo.pageIndex * pageInfo.pageSize + 1}
-            to={pageInfo.totalRows === 0 ? 0 : Math.min((pageInfo.pageIndex + 1) * pageInfo.pageSize, pageInfo.totalRows)}
-            total={pageInfo.totalRows}
-            onPrev={() => tableApiRef.current?.previousPage()}
-            onNext={() => tableApiRef.current?.nextPage()}
+            from={data.length === 0 ? 0 : 1}
+            to={Math.min(tabelaUI.pageSize, data.length)}
+            total={data.length}
           />
         </div>
         <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
@@ -170,8 +157,6 @@ export default function ModulosFinanceiroPage() {
               borderColor={tabelaUI.borderColor}
               borderWidth={tabelaUI.borderWidth}
               selectionColumnWidth={tabelaUI.selectionColumnWidth}
-              onTableReady={(api) => { tableApiRef.current = api }}
-              onPaginationChange={(info) => setPageInfo(info)}
               enableRowSelection={tabelaUI.enableRowSelection}
               selectionMode={tabelaUI.selectionMode}
               defaultSortColumn={tabelaUI.defaultSortColumn}
