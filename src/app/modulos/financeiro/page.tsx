@@ -11,7 +11,7 @@ import TituloModulo from '@/components/modulos/TituloModulo'
 import OpcoesTabs from '@/components/modulos/OpcoesTabs'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import FinanceiroUiPanel from '@/components/modulos/FinanceiroUiPanel'
-import { $titulo, $tabs, $tabelaUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
+import { $titulo, $tabs, $tabelaUI, $layout, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 
 type Row = TableData
 
@@ -19,6 +19,7 @@ export default function ModulosFinanceiroPage() {
   const titulo = useStore($titulo)
   const tabs = useStore($tabs)
   const tabelaUI = useStore($tabelaUI)
+  const layout = useStore($layout)
 
   const { columns, data } = useMemo((): { columns: ColumnDef<Row>[]; data: Row[] } => {
     switch (tabs.selected) {
@@ -83,13 +84,17 @@ export default function ModulosFinanceiroPage() {
     <SidebarProvider>
       <SidebarShadcn />
       <SidebarInset className="h-screen flex flex-col overflow-hidden">
-        <TituloModulo title={titulo.title} subtitle={titulo.subtitle} />
-        <OpcoesTabs
-          options={tabs.options}
-          value={tabs.selected}
-          onValueChange={(v) => financeiroUiActions.setTabs({ selected: v })}
-        />
-        <div className="flex-1 min-h-0 overflow-hidden px-4 md:px-6">
+        <div style={{ marginBottom: layout.mbTitle }}>
+          <TituloModulo title={titulo.title} subtitle={titulo.subtitle} />
+        </div>
+        <div style={{ marginBottom: layout.mbTabs }}>
+          <OpcoesTabs
+            options={tabs.options}
+            value={tabs.selected}
+            onValueChange={(v) => financeiroUiActions.setTabs({ selected: v })}
+          />
+        </div>
+        <div className="flex-1 min-h-0 overflow-hidden px-4 md:px-6" style={{ marginBottom: layout.mbTable }}>
           <div className="border rounded-md bg-background">
             <DataTable
               columns={columns}

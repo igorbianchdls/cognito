@@ -32,6 +32,12 @@ export type TabelaUIState = {
   defaultSortDirection?: 'asc' | 'desc'
 }
 
+export type LayoutState = {
+  mbTitle: number
+  mbTabs: number
+  mbTable: number
+}
+
 const DEFAULT_TITULO: TituloState = {
   title: 'Financeiro',
   subtitle: 'Selecione uma opção para visualizar os dados',
@@ -67,6 +73,12 @@ const DEFAULT_TABELA_UI: TabelaUIState = {
 export const $titulo = atom<TituloState>({ ...DEFAULT_TITULO })
 export const $tabs = atom<TabsState>({ ...DEFAULT_TABS })
 export const $tabelaUI = atom<TabelaUIState>({ ...DEFAULT_TABELA_UI })
+export const DEFAULT_LAYOUT: LayoutState = {
+  mbTitle: 16,
+  mbTabs: 16,
+  mbTable: 24,
+}
+export const $layout = atom<LayoutState>({ ...DEFAULT_LAYOUT })
 
 export const financeiroUiActions = {
   setTitulo: (partial: Partial<TituloState>) => {
@@ -78,10 +90,13 @@ export const financeiroUiActions = {
   setTabelaUI: (partial: Partial<TabelaUIState>) => {
     $tabelaUI.set({ ...$tabelaUI.get(), ...partial })
   },
+  setLayout: (partial: Partial<LayoutState>) => {
+    $layout.set({ ...$layout.get(), ...partial })
+  },
   resetAll: () => {
     $titulo.set({ ...DEFAULT_TITULO })
     $tabs.set({ ...DEFAULT_TABS })
     $tabelaUI.set({ ...DEFAULT_TABELA_UI })
+    $layout.set({ ...DEFAULT_LAYOUT })
   },
 }
-

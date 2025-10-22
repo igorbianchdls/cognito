@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useStore } from "@nanostores/react"
-import { $titulo, $tabs, $tabelaUI, financeiroUiActions } from "@/stores/modulos/financeiroUiStore"
+import { $titulo, $tabs, $tabelaUI, $layout, financeiroUiActions } from "@/stores/modulos/financeiroUiStore"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -14,6 +14,7 @@ export default function FinanceiroUiPanel() {
   const titulo = useStore($titulo)
   const tabs = useStore($tabs)
   const tabela = useStore($tabelaUI)
+  const layout = useStore($layout)
 
   return (
     <div className="w-full px-4 pb-6 md:px-6">
@@ -153,8 +154,46 @@ export default function FinanceiroUiPanel() {
             </div>
           </div>
         </div>
+
+        <Separator />
+
+        {/* Layout */}
+        <div className="grid gap-3">
+          <span className="text-xs font-medium text-muted-foreground">Layout (margens em px)</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <Label htmlFor="ui-mbtitle">Margem inferior do título</Label>
+              <Input
+                id="ui-mbtitle"
+                type="number"
+                min={0}
+                value={layout.mbTitle}
+                onChange={(e) => financeiroUiActions.setLayout({ mbTitle: Math.max(0, Number(e.target.value || 0)) })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="ui-mbtabs">Margem inferior das opções</Label>
+              <Input
+                id="ui-mbtabs"
+                type="number"
+                min={0}
+                value={layout.mbTabs}
+                onChange={(e) => financeiroUiActions.setLayout({ mbTabs: Math.max(0, Number(e.target.value || 0)) })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="ui-mbtable">Margem inferior da tabela</Label>
+              <Input
+                id="ui-mbtable"
+                type="number"
+                min={0}
+                value={layout.mbTable}
+                onChange={(e) => financeiroUiActions.setLayout({ mbTable: Math.max(0, Number(e.target.value || 0)) })}
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
-
