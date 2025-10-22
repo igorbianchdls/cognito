@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search } from "lucide-react"
+import CadastroFormSheet from "@/components/modulos/CadastroFormSheet"
 
 type DataToolbarProps = {
   className?: string
@@ -48,7 +49,7 @@ export default function DataToolbar({
   total = 0,
   onPrev,
   onNext,
-  actionLabel = "Sync (10)",
+  actionLabel = "Cadastrar",
   onAction,
   fontFamily,
   fontSize,
@@ -136,13 +137,7 @@ export default function DataToolbar({
           </Button>
         </div>
 
-        <Button
-          onClick={onAction}
-          className="ml-3 h-8 rounded bg-yellow-200 px-3 text-gray-900 hover:bg-yellow-300"
-          variant="secondary"
-        >
-          {actionLabel}
-        </Button>
+        <CadastroFormSheet triggerLabel={actionLabel} />
         </div>
       </div>
     </div>
