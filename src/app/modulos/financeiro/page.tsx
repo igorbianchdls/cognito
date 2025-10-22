@@ -82,6 +82,15 @@ export default function ModulosFinanceiroPage() {
             { indicador: 'Saldo total', valor: 16068.02 },
             { indicador: 'A pagar (30d)', valor: 1550.4 },
             { indicador: 'A receber (30d)', valor: 1019.0 },
+            { indicador: 'Caixa disponível', valor: 12450.0 },
+            { indicador: 'Disponível em D+1', valor: 735.5 },
+            { indicador: 'Limite de crédito', valor: 25000.0 },
+            { indicador: 'Utilizado do limite', valor: 8200.0 },
+            { indicador: 'Fluxo estimado (7d)', valor: 1450.75 },
+            { indicador: 'Fluxo estimado (30d)', valor: 5340.2 },
+            { indicador: 'Inadimplência (90d)', valor: 280.0 },
+            { indicador: 'Boletos a compensar', valor: 320.0 },
+            { indicador: 'Tarifas bancárias (mês)', valor: 95.8 },
           ],
         }
     }
@@ -115,7 +124,7 @@ export default function ModulosFinanceiroPage() {
           />
         </div>
         <div className="flex-1 min-h-0 overflow-auto px-4 md:px-6" style={{ marginBottom: layout.mbTable }}>
-          <div className="border rounded-md bg-background">
+          <div className="rounded-md bg-background">
             <DataTable
               columns={columns}
               data={data}
