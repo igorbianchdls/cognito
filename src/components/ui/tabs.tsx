@@ -69,7 +69,7 @@ export function TabsTrigger({ value, children, disabled = false, className = '',
         type="button"
         onClick={() => !disabled && context.onValueChange(value)}
         disabled={disabled}
-        className={`inline-flex items-center justify-center whitespace-nowrap px-3 py-2 text-sm font-medium border-b-2 border-transparent transition-colors rounded-none ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
+        className={`inline-flex items-center justify-center whitespace-nowrap px-3 py-0 text-sm font-medium border-b-2 border-transparent transition-colors rounded-none ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${
           isActive ? 'border-gray-900 text-gray-900' : 'text-gray-500 hover:text-gray-900'
         } ${className}`}
       >

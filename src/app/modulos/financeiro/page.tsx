@@ -150,7 +150,7 @@ export default function ModulosFinanceiroPage() {
           />
         </div>
         {/* Conteúdo abaixo das tabs com cor de fundo */}
-        <div style={{ background: layout.contentBg }}>
+        <div style={{ background: layout.contentBg, paddingTop: layout.contentTopGap }}>
           {/* Toolbar direita (paginador + botão) */}
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
             <FinanceiroToolbar

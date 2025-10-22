@@ -601,6 +601,16 @@ export default function FinanceiroUiPanel() {
                   onChange={(e) => financeiroUiActions.setLayout({ contentBg: e.target.value })}
                 />
               </div>
+              <div>
+                <Label htmlFor="ui-contentgap">Espaço acima do conteúdo (px)</Label>
+                <Input
+                  id="ui-contentgap"
+                  type="number"
+                  min={0}
+                  value={layout.contentTopGap ?? 8}
+                  onChange={(e) => financeiroUiActions.setLayout({ contentTopGap: Math.max(0, Number(e.target.value || 0)) })}
+                />
+              </div>
             </div>
           </CollapsibleContent>
         </Collapsible>
