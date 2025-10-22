@@ -18,6 +18,17 @@ type FinanceiroToolbarProps = {
   onNext?: () => void
   actionLabel?: string
   onAction?: () => void
+  // Styling
+  fontFamily?: string
+  fontSize?: number
+  fontWeight?: string
+  fontColor?: string
+  letterSpacing?: number
+  borderBottomWidth?: number
+  borderBottomColor?: string
+  borderDistanceTop?: number
+  underlineColor?: string
+  underlineWidth?: number
 }
 
 export default function FinanceiroToolbar({
@@ -31,9 +42,32 @@ export default function FinanceiroToolbar({
   onNext,
   actionLabel = "Sync (10)",
   onAction,
+  fontFamily,
+  fontSize,
+  fontWeight,
+  fontColor,
+  letterSpacing,
+  borderBottomWidth,
+  borderBottomColor,
+  borderDistanceTop,
+  underlineColor,
+  underlineWidth,
 }: FinanceiroToolbarProps) {
   return (
-    <div className={`w-full ${className ?? ""}`}>
+    <div
+      className={`w-full ${className ?? ""}`}
+      style={{
+        fontFamily: fontFamily && fontFamily !== 'inherit' ? fontFamily : undefined,
+        fontSize: fontSize ? `${fontSize}px` : undefined,
+        fontWeight: fontWeight ? (fontWeight as React.CSSProperties['fontWeight']) : undefined,
+        color: fontColor || undefined,
+        letterSpacing: typeof letterSpacing === 'number' ? `${letterSpacing}px` : undefined,
+        borderBottomWidth: borderBottomWidth ? `${borderBottomWidth}px` : undefined,
+        borderBottomStyle: borderBottomWidth ? 'solid' : undefined,
+        borderBottomColor: borderBottomColor || undefined,
+        paddingBottom: typeof borderDistanceTop === 'number' ? `${borderDistanceTop}px` : undefined,
+      }}
+    >
       <div className="flex items-center justify-between gap-3">
         {/* Left group */}
         <div className="flex items-center gap-6 min-w-0">
@@ -41,24 +75,34 @@ export default function FinanceiroToolbar({
           <div className="relative min-w-[200px] w-[240px]">
             <Input
               placeholder={searchPlaceholder}
-              className="h-8 rounded-none border-0 border-b border-gray-300 bg-transparent px-0 focus-visible:ring-0 focus-visible:border-gray-500 text-sm"
+              className="h-8 rounded-none border-0 border-b bg-transparent px-0 focus-visible:ring-0 text-sm"
+              style={{
+                borderBottomColor: underlineColor || undefined,
+                borderBottomWidth: typeof underlineWidth === 'number' ? `${underlineWidth}px` : undefined,
+                borderBottomStyle: underlineWidth ? 'solid' : undefined,
+              }}
             />
-            <Search className="absolute right-0 top-1.5 h-4 w-4 text-gray-400" />
+            <Search className="absolute right-0 top-1.5 h-4 w-4" />
           </div>
 
           {/* Date Range underlined */}
           <button
             type="button"
-            className="h-8 inline-flex items-center gap-2 border-0 border-b border-gray-300 px-0 text-sm text-gray-700 hover:border-gray-500"
+            className="h-8 inline-flex items-center gap-2 border-0 border-b px-0 text-sm"
+            style={{
+              borderBottomColor: underlineColor || undefined,
+              borderBottomWidth: typeof underlineWidth === 'number' ? `${underlineWidth}px` : undefined,
+              borderBottomStyle: underlineWidth ? 'solid' : undefined,
+            }}
           >
-            <span className="text-gray-500">{dateRangePlaceholder}</span>
-            <Calendar className="h-4 w-4 text-gray-400" />
+            <span>{dateRangePlaceholder}</span>
+            <Calendar className="h-4 w-4" />
           </button>
         </div>
 
         {/* Right group */}
         <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1 text-sm text-gray-600">
+        <div className="flex items-center gap-1 text-sm">
           <Button
             variant="outline"
             size="sm"
@@ -67,7 +111,7 @@ export default function FinanceiroToolbar({
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <div className="mx-1 min-w-[96px] text-center">
+          <div className="mx-1 min-w-[96px] text-center text-sm">
             {from}–{to} of {total}
           </div>
           <Button

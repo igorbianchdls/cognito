@@ -62,6 +62,19 @@ export type LayoutState = {
   mbTable: number
 }
 
+export type ToolbarUIState = {
+  fontFamily?: string
+  fontSize?: number
+  fontWeight?: string
+  fontColor?: string
+  letterSpacing?: number
+  borderBottomWidth?: number
+  borderBottomColor?: string
+  borderDistanceTop?: number
+  underlineColor?: string
+  underlineWidth?: number
+}
+
 const DEFAULT_TITULO: TituloState = {
   title: 'Financeiro',
   subtitle: 'Selecione uma opção para visualizar os dados',
@@ -118,6 +131,19 @@ const DEFAULT_TABELA_UI: TabelaUIState = {
 export const $titulo = atom<TituloState>({ ...DEFAULT_TITULO })
 export const $tabs = atom<TabsState>({ ...DEFAULT_TABS })
 export const $tabelaUI = atom<TabelaUIState>({ ...DEFAULT_TABELA_UI })
+export const DEFAULT_TOOLBAR_UI: ToolbarUIState = {
+  fontFamily: 'Geist',
+  fontSize: 14,
+  fontWeight: '500',
+  fontColor: '#6b7280',
+  letterSpacing: 0,
+  borderBottomWidth: 1,
+  borderBottomColor: '#e5e7eb',
+  borderDistanceTop: 8,
+  underlineColor: '#d1d5db',
+  underlineWidth: 1,
+}
+export const $toolbarUI = atom<ToolbarUIState>({ ...DEFAULT_TOOLBAR_UI })
 export const DEFAULT_LAYOUT: LayoutState = {
   mbTitle: 16,
   mbTabs: 16,
@@ -135,6 +161,9 @@ export const financeiroUiActions = {
   setTabelaUI: (partial: Partial<TabelaUIState>) => {
     $tabelaUI.set({ ...$tabelaUI.get(), ...partial })
   },
+  setToolbarUI: (partial: Partial<ToolbarUIState>) => {
+    $toolbarUI.set({ ...$toolbarUI.get(), ...partial })
+  },
   setLayout: (partial: Partial<LayoutState>) => {
     $layout.set({ ...$layout.get(), ...partial })
   },
@@ -142,6 +171,7 @@ export const financeiroUiActions = {
     $titulo.set({ ...DEFAULT_TITULO })
     $tabs.set({ ...DEFAULT_TABS })
     $tabelaUI.set({ ...DEFAULT_TABELA_UI })
+    $toolbarUI.set({ ...DEFAULT_TOOLBAR_UI })
     $layout.set({ ...DEFAULT_LAYOUT })
   },
 }

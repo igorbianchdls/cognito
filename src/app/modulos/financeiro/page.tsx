@@ -12,7 +12,7 @@ import OpcoesTabs from '@/components/modulos/OpcoesTabs'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import FinanceiroUiPanel from '@/components/modulos/FinanceiroUiPanel'
 import FinanceiroToolbar from '@/components/modulos/FinanceiroToolbar'
-import { $titulo, $tabs, $tabelaUI, $layout, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 
 type Row = TableData
 
@@ -21,6 +21,7 @@ export default function ModulosFinanceiroPage() {
   const tabs = useStore($tabs)
   const tabelaUI = useStore($tabelaUI)
   const layout = useStore($layout)
+  const toolbarUI = useStore($toolbarUI)
 
   const fontVar = (name?: string) => {
     if (!name) return undefined
@@ -130,6 +131,16 @@ export default function ModulosFinanceiroPage() {
             from={data.length === 0 ? 0 : 1}
             to={Math.min(tabelaUI.pageSize, data.length)}
             total={data.length}
+            fontFamily={fontVar(toolbarUI.fontFamily)}
+            fontSize={toolbarUI.fontSize}
+            fontWeight={toolbarUI.fontWeight}
+            fontColor={toolbarUI.fontColor}
+            letterSpacing={toolbarUI.letterSpacing}
+            borderBottomWidth={toolbarUI.borderBottomWidth}
+            borderBottomColor={toolbarUI.borderBottomColor}
+            borderDistanceTop={toolbarUI.borderDistanceTop}
+            underlineColor={toolbarUI.underlineColor}
+            underlineWidth={toolbarUI.underlineWidth}
           />
         </div>
         <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>

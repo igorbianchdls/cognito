@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useStore } from "@nanostores/react"
-import { $titulo, $tabs, $tabelaUI, $layout, financeiroUiActions } from "@/stores/modulos/financeiroUiStore"
+import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from "@/stores/modulos/financeiroUiStore"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -17,10 +17,12 @@ export default function FinanceiroUiPanel() {
   const tabs = useStore($tabs)
   const tabela = useStore($tabelaUI)
   const layout = useStore($layout)
+  const toolbar = useStore($toolbarUI)
   const [openTitle, setOpenTitle] = React.useState(false)
   const [openTabs, setOpenTabs] = React.useState(false)
   const [openTable, setOpenTable] = React.useState(false)
   const [openLayout, setOpenLayout] = React.useState(false)
+  const [openToolbar, setOpenToolbar] = React.useState(false)
 
   return (
     <div className="w-full px-4 pb-6 md:px-6">
@@ -29,6 +31,105 @@ export default function FinanceiroUiPanel() {
           <h2 className="text-sm font-semibold">Configurações de UI</h2>
           <Button variant="secondary" size="sm" onClick={() => financeiroUiActions.resetAll()}>Reset</Button>
         </div>
+
+        <Separator />
+
+        {/* Toolbar */}
+        <Collapsible open={openToolbar} onOpenChange={setOpenToolbar}>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">Toolbar</span>
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-7 px-2">
+                <ChevronDown className={`h-4 w-4 transition-transform ${openToolbar ? 'rotate-180' : ''}`} />
+              </Button>
+            </CollapsibleTrigger>
+          </div>
+          <CollapsibleContent className="mt-3 space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div>
+                <Label>Fonte</Label>
+                <Select value={(toolbar.fontFamily ?? 'Geist')} onValueChange={(v) => financeiroUiActions.setToolbarUI({ fontFamily: v })}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Geist">Geist</SelectItem>
+                    <SelectItem value="Inter">Inter</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="ui-toolbar-size">Tamanho</Label>
+                <Input id="ui-toolbar-size" type="number" min={10} max={24}
+                  value={toolbar.fontSize ?? 14}
+                  onChange={(e) => financeiroUiActions.setToolbarUI({ fontSize: Number(e.target.value || 14) })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-toolbar-weight">Peso</Label>
+                <Select value={(toolbar.fontWeight ?? '500').toString()} onValueChange={(v) => financeiroUiActions.setToolbarUI({ fontWeight: v })}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="400">Normal (400)</SelectItem>
+                    <SelectItem value="500">Médio (500)</SelectItem>
+                    <SelectItem value="600">Semibold (600)</SelectItem>
+                    <SelectItem value="700">Bold (700)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="ui-toolbar-color">Cor</Label>
+                <Input id="ui-toolbar-color" type="color" value={toolbar.fontColor ?? '#6b7280'}
+                  onChange={(e) => financeiroUiActions.setToolbarUI({ fontColor: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-toolbar-tracking">Espaçamento</Label>
+                <Input id="ui-toolbar-tracking" type="number" step={0.5} min={-5} max={20}
+                  value={toolbar.letterSpacing ?? 0}
+                  onChange={(e) => financeiroUiActions.setToolbarUI({ letterSpacing: Number(e.target.value || 0) })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div>
+                <Label htmlFor="ui-toolbar-bb">Largura borda inferior (px)</Label>
+                <Input id="ui-toolbar-bb" type="number" min={0} max={8}
+                  value={toolbar.borderBottomWidth ?? 1}
+                  onChange={(e) => financeiroUiActions.setToolbarUI({ borderBottomWidth: Math.max(0, Number(e.target.value || 0)) })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-toolbar-bc">Cor borda inferior</Label>
+                <Input id="ui-toolbar-bc" type="color" value={toolbar.borderBottomColor ?? '#e5e7eb'}
+                  onChange={(e) => financeiroUiActions.setToolbarUI({ borderBottomColor: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-toolbar-dist">Distância para parte superior (px)</Label>
+                <Input id="ui-toolbar-dist" type="number" min={0} max={48}
+                  value={toolbar.borderDistanceTop ?? 8}
+                  onChange={(e) => financeiroUiActions.setToolbarUI({ borderDistanceTop: Math.max(0, Number(e.target.value || 0)) })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-toolbar-ucolor">Cor sublinhado (Search/Date)</Label>
+                <Input id="ui-toolbar-ucolor" type="color" value={toolbar.underlineColor ?? '#d1d5db'}
+                  onChange={(e) => financeiroUiActions.setToolbarUI({ underlineColor: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-toolbar-uwidth">Espessura sublinhado (px)</Label>
+                <Input id="ui-toolbar-uwidth" type="number" min={0} max={4}
+                  value={toolbar.underlineWidth ?? 1}
+                  onChange={(e) => financeiroUiActions.setToolbarUI({ underlineWidth: Math.max(0, Number(e.target.value || 0)) })}
+                />
+              </div>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
 
         <Separator />
 
