@@ -51,6 +51,7 @@ export type TabelaUIState = {
   rowAlternateBgColor?: string
   borderColor?: string
   borderWidth?: number
+  selectionColumnWidth?: number
   defaultSortColumn?: string
   defaultSortDirection?: 'asc' | 'desc'
 }
@@ -109,6 +110,7 @@ const DEFAULT_TABELA_UI: TabelaUIState = {
   rowAlternateBgColor: '#fafafa',
   borderColor: '#e5e7eb',
   borderWidth: 1,
+  selectionColumnWidth: 48,
   defaultSortColumn: undefined,
   defaultSortDirection: 'asc',
 }

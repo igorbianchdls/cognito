@@ -244,18 +244,25 @@ export default function FinanceiroUiPanel() {
                   onChange={(e) => financeiroUiActions.setTabelaUI({ pageSize: Math.max(1, Number(e.target.value || 1)) })}
                 />
               </div>
-              <div className="flex items-center justify-between gap-4 border rounded-md p-3">
-                <div>
-                  <Label>Cabeçalho fixo</Label>
-                  <div className="text-xs text-muted-foreground">Torna o header sticky</div>
-                </div>
-                <Switch checked={tabela.stickyHeader} onCheckedChange={(v) => financeiroUiActions.setTabelaUI({ stickyHeader: v })} />
+            <div className="flex items-center justify-between gap-4 border rounded-md p-3">
+              <div>
+                <Label>Cabeçalho fixo</Label>
+                <div className="text-xs text-muted-foreground">Torna o header sticky</div>
               </div>
-              <div className="flex items-center justify-between gap-4 border rounded-md p-3">
-                <div>
-                  <Label>Linhas alternadas</Label>
-                  <div className="text-xs text-muted-foreground">Zebrado nas linhas</div>
-                </div>
+              <Switch checked={tabela.stickyHeader} onCheckedChange={(v) => financeiroUiActions.setTabelaUI({ stickyHeader: v })} />
+            </div>
+            <div>
+              <Label htmlFor="ui-select-col-width">Largura coluna seleção (px)</Label>
+              <Input id="ui-select-col-width" type="number" min={28} max={120}
+                value={tabela.selectionColumnWidth ?? 48}
+                onChange={(e) => financeiroUiActions.setTabelaUI({ selectionColumnWidth: Math.max(28, Number(e.target.value || 48)) })}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-4 border rounded-md p-3">
+              <div>
+                <Label>Linhas alternadas</Label>
+                <div className="text-xs text-muted-foreground">Zebrado nas linhas</div>
+              </div>
                 <Switch checked={tabela.enableZebraStripes} onCheckedChange={(v) => financeiroUiActions.setTabelaUI({ enableZebraStripes: v })} />
               </div>
             </div>
@@ -316,7 +323,7 @@ export default function FinanceiroUiPanel() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="ui-bordercolor">Border color</Label>
+              <Label htmlFor="ui-bordercolor">Cor das bordas/linhas</Label>
                 <Input id="ui-bordercolor" type="color" value={tabela.borderColor ?? '#e5e7eb'}
                   onChange={(e) => financeiroUiActions.setTabelaUI({ borderColor: e.target.value })}
                 />

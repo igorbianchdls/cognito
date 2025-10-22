@@ -78,6 +78,8 @@ interface DataTableProps<TData extends TableData> {
   // Zebra rows
   enableZebraStripes?: boolean
   rowAlternateBgColor?: string
+  // Selection column
+  selectionColumnWidth?: number
   // Search & filtering props
   enableSearch?: boolean
   enableFiltering?: boolean
@@ -149,6 +151,7 @@ export function DataTable<TData extends TableData>({
   cellLetterSpacing,
   enableZebraStripes = false,
   rowAlternateBgColor = '#fafafa',
+  selectionColumnWidth = 48,
   // Search & filtering props with defaults
   enableSearch = true,
   // Row selection props with defaults
@@ -337,7 +340,7 @@ export function DataTable<TData extends TableData>({
     let cols = [...columns]
     
     if (enableRowSelection) {
-      cols = [createSelectionColumn<TData>(), ...cols]
+      cols = [createSelectionColumn<TData>({ width: selectionColumnWidth }), ...cols]
     }
     
     if (editableMode && (editableRowActions?.allowDelete || editableRowActions?.allowDuplicate)) {
@@ -427,7 +430,7 @@ export function DataTable<TData extends TableData>({
                         key={header.id}
                         style={{ 
                           color: headerTextColor,
-                          padding: `${padding}px`,
+                          padding: header.column.id === 'select' ? '4px' : `${padding}px`,
                           width: header.getSize(),
                           position: 'relative',
                           fontSize: `${headerFontSize}px`,
@@ -435,6 +438,7 @@ export function DataTable<TData extends TableData>({
                           fontWeight: headerFontWeight !== 'normal' ? headerFontWeight : undefined,
                           borderColor,
                           letterSpacing: typeof headerLetterSpacing === 'number' ? `${headerLetterSpacing}px` : undefined,
+                          textAlign: header.column.id === 'select' ? 'center' as const : undefined,
                         }}
                       >
                         {header.isPlaceholder
@@ -522,7 +526,7 @@ export function DataTable<TData extends TableData>({
                             hasError && showValidationErrors && "border-red-300"
                           )}
                           style={{ 
-                            padding: `${padding}px`,
+                            padding: columnKey === 'select' ? '4px' : `${padding}px`,
                             borderColor,
                             fontSize: `${cellFontSize || fontSize}px`,
                             fontFamily: cellFontFamily !== 'inherit' ? cellFontFamily : undefined,
@@ -531,6 +535,7 @@ export function DataTable<TData extends TableData>({
                             backgroundColor,
                             position: 'relative',
                             letterSpacing: typeof cellLetterSpacing === 'number' ? `${cellLetterSpacing}px` : undefined,
+                            textAlign: columnKey === 'select' ? 'center' as const : undefined,
                           }}
                           onClick={(e) => {
                             if (editTrigger === 'click' && !isEditing) {
@@ -674,25 +679,34 @@ export function DataTable<TData extends TableData>({
 
 
 // Helper function to create selection column
-export function createSelectionColumn<TData>(): ColumnDef<TData> {
+export function createSelectionColumn<TData>(options?: { width?: number }): ColumnDef<TData> {
+  const width = options?.width ?? 48
   return {
     id: "select",
+    size: width,
+    minSize: width,
+    maxSize: width,
+    enableResizing: false,
     header: ({ table }) => (
-      <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
-        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-        aria-label="Selecionar todos"
-      />
+      <div className="flex items-center justify-center">
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Selecionar todos"
+        />
+      </div>
     ),
     cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Selecionar linha"
-      />
+      <div className="flex items-center justify-center">
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Selecionar linha"
+        />
+      </div>
     ),
     enableSorting: false,
     enableHiding: false,
