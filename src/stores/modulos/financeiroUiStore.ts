@@ -78,6 +78,7 @@ export type ToolbarUIState = {
   iconColor?: string
   iconSize?: number
   searchWidth?: number
+  dateRangeWidth?: number
 }
 
 const DEFAULT_TITULO: TituloState = {
@@ -152,6 +153,7 @@ export const DEFAULT_TOOLBAR_UI: ToolbarUIState = {
   iconColor: '#9ca3af',
   iconSize: 16,
   searchWidth: 240,
+  dateRangeWidth: 160,
 }
 export const $toolbarUI = atom<ToolbarUIState>({ ...DEFAULT_TOOLBAR_UI })
 export const DEFAULT_LAYOUT: LayoutState = {

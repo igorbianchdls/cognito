@@ -146,6 +146,7 @@ export default function ModulosFinanceiroPage() {
             iconColor={toolbarUI.iconColor}
             iconSize={toolbarUI.iconSize}
             searchWidth={toolbarUI.searchWidth}
+            dateRangeWidth={toolbarUI.dateRangeWidth}
           />
         </div>
         <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>

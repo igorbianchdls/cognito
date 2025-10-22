@@ -161,6 +161,13 @@ export default function FinanceiroUiPanel() {
                   onChange={(e) => financeiroUiActions.setToolbarUI({ searchWidth: Math.max(120, Number(e.target.value || 240)) })}
                 />
               </div>
+              <div>
+                <Label htmlFor="ui-toolbar-daterangew">Largura do Date Range (px)</Label>
+                <Input id="ui-toolbar-daterangew" type="number" min={120} max={480}
+                  value={toolbar.dateRangeWidth ?? 160}
+                  onChange={(e) => financeiroUiActions.setToolbarUI({ dateRangeWidth: Math.max(120, Number(e.target.value || 160)) })}
+                />
+              </div>
             </div>
           </CollapsibleContent>
         </Collapsible>

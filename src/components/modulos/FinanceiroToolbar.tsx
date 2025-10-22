@@ -34,6 +34,7 @@ type FinanceiroToolbarProps = {
   iconColor?: string
   iconSize?: number
   searchWidth?: number
+  dateRangeWidth?: number
 }
 
 export default function FinanceiroToolbar({
@@ -62,6 +63,7 @@ export default function FinanceiroToolbar({
   iconColor,
   iconSize,
   searchWidth,
+  dateRangeWidth,
 }: FinanceiroToolbarProps) {
   return (
     <div
@@ -105,6 +107,7 @@ export default function FinanceiroToolbar({
               borderBottomWidth: typeof underlineWidth === 'number' ? `${underlineWidth}px` : undefined,
               borderBottomStyle: underlineWidth ? 'solid' : undefined,
               paddingBottom: typeof underlineOffsetTop === 'number' ? `${underlineOffsetTop}px` : undefined,
+              width: dateRangeWidth ? `${dateRangeWidth}px` : undefined,
             }}
           >
             <span>{dateRangePlaceholder}</span>
