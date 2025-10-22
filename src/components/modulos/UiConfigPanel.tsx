@@ -45,8 +45,8 @@ export default function UiConfigPanel() {
             </CollapsibleTrigger>
           </div>
           <CollapsibleContent className="mt-3 space-y-3">
-            {/* Mantido igual à versão anterior */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <h4 className="text-xs font-semibold">Tipografia</h4>
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
               <div>
                 <Label>Fonte</Label>
                 <Select value={(toolbar.fontFamily ?? 'Geist')} onValueChange={(v) => financeiroUiActions.setToolbarUI({ fontFamily: v })}>
@@ -94,7 +94,72 @@ export default function UiConfigPanel() {
                 />
               </div>
             </div>
-            {/* Demais campos omitidos por brevidade: iguais ao painel anterior */}
+
+            <h4 className="text-xs font-semibold mt-4">Borda Inferior</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <Label htmlFor="ui-toolbar-border-width">Largura da Borda (px)</Label>
+                <Input id="ui-toolbar-border-width" type="number" min={0} max={10}
+                  value={toolbar.borderBottomWidth ?? 1}
+                  onChange={(e) => financeiroUiActions.setToolbarUI({ borderBottomWidth: Number(e.target.value || 0) })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-toolbar-border-color">Cor da Borda</Label>
+                <Input id="ui-toolbar-border-color" type="color" value={toolbar.borderBottomColor ?? '#e5e7eb'}
+                  onChange={(e) => financeiroUiActions.setToolbarUI({ borderBottomColor: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-toolbar-border-distance">Distância até Borda (px)</Label>
+                <Input id="ui-toolbar-border-distance" type="number" min={0} max={50}
+                  value={toolbar.borderDistanceTop ?? 8}
+                  onChange={(e) => financeiroUiActions.setToolbarUI({ borderDistanceTop: Number(e.target.value || 8) })}
+                />
+              </div>
+            </div>
+
+            <h4 className="text-xs font-semibold mt-4">Ícones</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <Label htmlFor="ui-toolbar-icon-color">Cor dos Ícones</Label>
+                <Input id="ui-toolbar-icon-color" type="color" value={toolbar.iconColor ?? '#9ca3af'}
+                  onChange={(e) => financeiroUiActions.setToolbarUI({ iconColor: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-toolbar-icon-size">Tamanho dos Ícones (px)</Label>
+                <Input id="ui-toolbar-icon-size" type="number" min={12} max={32}
+                  value={toolbar.iconSize ?? 16}
+                  onChange={(e) => financeiroUiActions.setToolbarUI({ iconSize: Number(e.target.value || 16) })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-toolbar-icon-gap">Gap entre Ícones (px)</Label>
+                <Input id="ui-toolbar-icon-gap" type="number" min={0} max={20}
+                  value={toolbar.iconGap ?? 8}
+                  onChange={(e) => financeiroUiActions.setToolbarUI({ iconGap: Number(e.target.value || 8) })}
+                />
+              </div>
+            </div>
+
+            <h4 className="text-xs font-semibold mt-4">Popovers</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="ui-toolbar-search-width">Largura Busca (px)</Label>
+                <Input id="ui-toolbar-search-width" type="number" min={150} max={400}
+                  value={toolbar.searchWidth ?? 240}
+                  onChange={(e) => financeiroUiActions.setToolbarUI({ searchWidth: Number(e.target.value || 240) })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="ui-toolbar-daterange-width">Largura Date Range (px)</Label>
+                <Input id="ui-toolbar-daterange-width" type="number" min={100} max={300}
+                  value={toolbar.dateRangeWidth ?? 160}
+                  onChange={(e) => financeiroUiActions.setToolbarUI({ dateRangeWidth: Number(e.target.value || 160) })}
+                />
+              </div>
+            </div>
           </CollapsibleContent>
         </Collapsible>
 
