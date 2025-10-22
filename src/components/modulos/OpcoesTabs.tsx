@@ -32,14 +32,16 @@ export default function OpcoesTabs({ options, value, onValueChange, className, f
               key={opt.value}
               value={opt.value}
               className="data-[state=active]:font-semibold"
-              style={{
-                fontFamily: fontFamily && fontFamily !== 'inherit' ? fontFamily : undefined,
-                fontSize: fontSize ? `${fontSize}px` : undefined,
-                fontWeight: fontWeight && fontWeight !== '500' ? (fontWeight as React.CSSProperties['fontWeight']) : undefined,
-                color: color || undefined,
-              }}
             >
-              <span className="flex items-center gap-2">
+              <span
+                className="flex items-center gap-2"
+                style={{
+                  fontFamily: fontFamily && fontFamily !== 'inherit' ? fontFamily : undefined,
+                  fontSize: fontSize ? `${fontSize}px` : undefined,
+                  fontWeight: fontWeight && fontWeight !== '500' ? (fontWeight as React.CSSProperties['fontWeight']) : undefined,
+                  color: color || undefined,
+                }}
+              >
                 {opt.icon ? <span className="inline-flex items-center">{opt.icon}</span> : null}
                 <span>{opt.label}</span>
                 {opt.badge ? <span className="text-xs text-muted-foreground">{opt.badge}</span> : null}
