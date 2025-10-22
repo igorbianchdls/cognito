@@ -85,15 +85,15 @@ export default function FinanceiroToolbar({
           <div className="relative min-w-[160px] w-[240px]" style={{ width: searchWidth ? `${searchWidth}px` : undefined }}>
             <Input
               placeholder={searchPlaceholder}
-              className="h-8 rounded-none border-0 border-b bg-transparent px-0 text-sm shadow-none focus-visible:ring-0 focus-visible:border-transparent"
+              className="h-8 rounded-none border-0 border-b bg-transparent px-0 py-0 text-sm shadow-none focus-visible:ring-0 focus-visible:border-transparent"
               style={{
                 borderBottomColor: underlineColor || undefined,
                 borderBottomWidth: typeof underlineWidth === 'number' ? `${underlineWidth}px` : undefined,
                 borderBottomStyle: underlineWidth ? 'solid' : undefined,
-                marginTop: typeof underlineOffsetTop === 'number' ? `${underlineOffsetTop}px` : undefined,
+                paddingBottom: typeof underlineOffsetTop === 'number' ? `${underlineOffsetTop}px` : undefined,
               }}
             />
-            <Search className="absolute right-0 top-1.5" style={{ color: iconColor || undefined, width: iconSize ? `${iconSize}px` : undefined, height: iconSize ? `${iconSize}px` : undefined }} />
+            <Search className="absolute right-0 top-1/2 -translate-y-1/2" style={{ color: iconColor || undefined, width: iconSize ? `${iconSize}px` : undefined, height: iconSize ? `${iconSize}px` : undefined }} />
           </div>
 
           {/* Date Range underlined */}
@@ -104,7 +104,7 @@ export default function FinanceiroToolbar({
               borderBottomColor: underlineColor || undefined,
               borderBottomWidth: typeof underlineWidth === 'number' ? `${underlineWidth}px` : undefined,
               borderBottomStyle: underlineWidth ? 'solid' : undefined,
-              marginTop: typeof underlineOffsetTop === 'number' ? `${underlineOffsetTop}px` : undefined,
+              paddingBottom: typeof underlineOffsetTop === 'number' ? `${underlineOffsetTop}px` : undefined,
             }}
           >
             <span>{dateRangePlaceholder}</span>
