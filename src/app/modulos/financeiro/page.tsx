@@ -15,6 +15,9 @@ import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } f
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { LayoutDashboard, Banknote, CreditCard, ArrowDownCircle } from 'lucide-react'
 import ContaAzulIcon from '@/components/icons/ContaAzulIcon'
+import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon'
+import MetaIcon from '@/components/icons/MetaIcon'
+import ShopifyIcon from '@/components/icons/ShopifyIcon'
 
 type Row = TableData
 
@@ -80,55 +83,60 @@ export default function ModulosFinanceiroPage() {
         return {
           columns: [
             {
-              accessorKey: 'col1',
-              header: '',
+              accessorKey: 'contaazul',
+              header: 'ContaAzul',
               cell: () => (
                 <div className="flex items-center">
                   <ContaAzulIcon className="h-10 w-10 mr-3" />
                   <div>
-                    <div
-                      style={{
-                        fontFamily: fontVar(titulo.titleFontFamily),
-                        fontSize: titulo.titleFontSize || 18,
-                        fontWeight: (titulo.titleFontWeight as React.CSSProperties['fontWeight']) || '600',
-                        color: titulo.titleColor || undefined,
-                        letterSpacing: typeof titulo.titleLetterSpacing === 'number' ? `${titulo.titleLetterSpacing}px` : undefined,
-                      }}
-                    >
-                      {titulo.title}
-                    </div>
-                    {titulo.subtitle ? (
-                      <div className="text-sm text-muted-foreground">{titulo.subtitle}</div>
-                    ) : null}
+                    <div className="font-semibold">ContaAzul</div>
+                    <div className="text-sm text-muted-foreground">ERP Financeiro</div>
                   </div>
                 </div>
               ),
             },
             {
-              accessorKey: 'col2',
-              header: '',
+              accessorKey: 'googleads',
+              header: 'Google Ads',
               cell: () => (
-                <div>
-                  <div
-                    style={{
-                      fontFamily: fontVar(titulo.titleFontFamily),
-                      fontSize: titulo.titleFontSize || 18,
-                      fontWeight: (titulo.titleFontWeight as React.CSSProperties['fontWeight']) || '600',
-                      color: titulo.titleColor || undefined,
-                      letterSpacing: typeof titulo.titleLetterSpacing === 'number' ? `${titulo.titleLetterSpacing}px` : undefined,
-                    }}
-                  >
-                    {titulo.title}
+                <div className="flex items-center">
+                  <GoogleAdsIcon className="h-10 w-10 mr-3" />
+                  <div>
+                    <div className="font-semibold">Google Ads</div>
+                    <div className="text-sm text-muted-foreground">Tráfego Pago - Pesquisa</div>
                   </div>
-                  {titulo.subtitle ? (
-                    <div className="text-sm text-muted-foreground">{titulo.subtitle}</div>
-                  ) : null}
+                </div>
+              ),
+            },
+            {
+              accessorKey: 'meta',
+              header: 'Meta Ads',
+              cell: () => (
+                <div className="flex items-center">
+                  <MetaIcon className="h-10 w-10 mr-3" />
+                  <div>
+                    <div className="font-semibold">Meta Ads</div>
+                    <div className="text-sm text-muted-foreground">Tráfego Pago - Social</div>
+                  </div>
+                </div>
+              ),
+            },
+            {
+              accessorKey: 'shopify',
+              header: 'Shopify',
+              cell: () => (
+                <div className="flex items-center">
+                  <ShopifyIcon className="h-10 w-10 mr-3" />
+                  <div>
+                    <div className="font-semibold">Shopify</div>
+                    <div className="text-sm text-muted-foreground">Plataforma E-commerce</div>
+                  </div>
                 </div>
               ),
             },
           ],
           data: [
-            { col1: '', col2: '' },
+            { contaazul: '', googleads: '', meta: '', shopify: '' },
           ],
         }
     }
