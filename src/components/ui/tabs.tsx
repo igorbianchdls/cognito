@@ -26,22 +26,22 @@ export function Tabs({ value, onValueChange, children, className = '' }: TabsPro
   )
 }
 
-interface TabsListProps {
+interface TabsListProps extends React.HTMLAttributes<HTMLDivElement> {
   children: ReactNode
   className?: string
   variant?: 'default' | 'underline'
 }
 
-export function TabsList({ children, className = '', variant = 'default' }: TabsListProps) {
+export function TabsList({ children, className = '', variant = 'default', style, ...rest }: TabsListProps) {
   if (variant === 'underline') {
     return (
-      <div className={`flex h-10 items-end justify-start gap-2 overflow-x-auto border-b border-gray-200 ${className}`}>
+      <div className={`flex h-10 items-end justify-start gap-2 overflow-x-auto border-b border-gray-200 ${className}`} style={style} {...rest}>
         {children}
       </div>
     )
   }
   return (
-    <div className={`inline-flex h-10 items-center justify-center rounded-md bg-gray-100 p-1 text-gray-500 ${className}`}>
+    <div className={`inline-flex h-10 items-center justify-center rounded-md bg-gray-100 p-1 text-gray-500 ${className}`} style={style} {...rest}>
       {children}
     </div>
   )
