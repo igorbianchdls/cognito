@@ -158,10 +158,6 @@ export const getContasAPagar = tool({
     limit: z.number().default(20).describe('Número máximo de resultados'),
     status: z.enum(['pendente', 'pago', 'vencido', 'cancelado']).optional()
       .describe('Filtrar por status do pagamento'),
-    fornecedor_id: z.string().optional()
-      .describe('Filtrar por ID do fornecedor'),
-    categoria_id: z.string().optional()
-      .describe('Filtrar por ID da categoria'),
     vence_em_dias: z.number().optional()
       .describe('Contas que vencem nos próximos X dias'),
     venceu_ha_dias: z.number().optional()
@@ -170,6 +166,10 @@ export const getContasAPagar = tool({
       .describe('Data inicial de vencimento (formato YYYY-MM-DD)'),
     data_vencimento_ate: z.string().optional()
       .describe('Data final de vencimento (formato YYYY-MM-DD)'),
+    data_emissao_de: z.string().optional()
+      .describe('Data inicial de emissão (formato YYYY-MM-DD)'),
+    data_emissao_ate: z.string().optional()
+      .describe('Data final de emissão (formato YYYY-MM-DD)'),
     valor_minimo: z.number().optional()
       .describe('Valor mínimo em reais'),
     valor_maximo: z.number().optional()
@@ -179,12 +179,12 @@ export const getContasAPagar = tool({
   execute: async ({
     limit = 20,
     status,
-    fornecedor_id,
-    categoria_id,
     vence_em_dias,
     venceu_ha_dias,
     data_vencimento_de,
     data_vencimento_ate,
+    data_emissao_de,
+    data_emissao_ate,
     valor_minimo,
     valor_maximo,
   }) => {
@@ -199,42 +199,44 @@ export const getContasAPagar = tool({
         index += 1;
       };
 
-      if (status) push('cp.status =', mapStatusToEnum(status));
-      if (fornecedor_id) push('cp.fornecedor_id =', fornecedor_id);
-      if (categoria_id) push('cp.categoria_id =', categoria_id);
-      if (valor_minimo !== undefined) push('cp.valor >=', valor_minimo);
-      if (valor_maximo !== undefined) push('cp.valor <=', valor_maximo);
+      if (status) push('cap.status =', mapStatusToEnum(status));
+      if (valor_minimo !== undefined) push('cap.valor_total >=', valor_minimo);
+      if (valor_maximo !== undefined) push('cap.valor_total <=', valor_maximo);
 
       if (vence_em_dias !== undefined) {
-        conditions.push(`cp.data_vencimento BETWEEN CURRENT_DATE AND CURRENT_DATE + ($${index}::int) * INTERVAL '1 day'`);
+        conditions.push(`cap.data_vencimento BETWEEN CURRENT_DATE AND CURRENT_DATE + ($${index}::int) * INTERVAL '1 day'`);
         params.push(vence_em_dias);
         index += 1;
       }
 
       if (venceu_ha_dias !== undefined) {
-        conditions.push(`cp.data_vencimento BETWEEN CURRENT_DATE - ($${index}::int) * INTERVAL '1 day' AND CURRENT_DATE - INTERVAL '1 day'`);
+        conditions.push(`cap.data_vencimento BETWEEN CURRENT_DATE - ($${index}::int) * INTERVAL '1 day' AND CURRENT_DATE - INTERVAL '1 day'`);
         params.push(venceu_ha_dias);
         index += 1;
       }
 
-      if (data_vencimento_de) push('cp.data_vencimento >=', data_vencimento_de);
-      if (data_vencimento_ate) push('cp.data_vencimento <=', data_vencimento_ate);
+      if (data_vencimento_de) push('cap.data_vencimento >=', data_vencimento_de);
+      if (data_vencimento_ate) push('cap.data_vencimento <=', data_vencimento_ate);
+
+      if (data_emissao_de) push('cap.data_emissao >=', data_emissao_de);
+      if (data_emissao_ate) push('cap.data_emissao <=', data_emissao_ate);
 
       const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
       const listSql = `
         SELECT
-          cp.id,
-          cp.descricao,
-          cp.valor,
-          cp.data_vencimento,
-          cp.data_pagamento,
-          cp.status,
-          f.nome_razao_social AS nome_fornecedor
-        FROM gestaofinanceira.contas_a_pagar AS cp
-        LEFT JOIN entidades.fornecedores AS f ON cp.fornecedor_id = f.id
+          cap.id,
+          cap.descricao,
+          cap.valor_total,
+          cap.data_emissao,
+          cap.data_vencimento,
+          cap.data_pagamento,
+          cap.status,
+          cap.tipo_titulo,
+          cap.criado_em
+        FROM financeiro.contas_a_pagar AS cap
         ${whereClause}
-        ORDER BY cp.data_vencimento DESC
+        ORDER BY cap.data_vencimento DESC
         LIMIT $${index}
       `.trim();
 
@@ -242,10 +244,9 @@ export const getContasAPagar = tool({
 
       const totalsSql = `
         SELECT
-          SUM(cp.valor) AS total_valor,
+          SUM(cap.valor_total) AS total_valor,
           COUNT(*) AS total_registros
-        FROM gestaofinanceira.contas_a_pagar AS cp
-        LEFT JOIN entidades.fornecedores AS f ON cp.fornecedor_id = f.id
+        FROM financeiro.contas_a_pagar AS cap
         ${whereClause}
       `.trim();
 
