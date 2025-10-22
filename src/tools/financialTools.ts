@@ -150,6 +150,135 @@ export const getContasAReceber = tool({
   }
 });
 
+export const getPagamentosRecebidos = tool({
+  description: 'Busca pagamentos já recebidos (contas a receber pagas) com filtros avançados',
+  inputSchema: z.object({
+    limit: z.number().default(20).describe('Número máximo de resultados'),
+    cliente_id: z.string().optional()
+      .describe('Filtrar por ID do cliente'),
+    vence_em_dias: z.number().optional()
+      .describe('Contas que vencem nos próximos X dias'),
+    venceu_ha_dias: z.number().optional()
+      .describe('Contas vencidas nos últimos X dias'),
+    data_vencimento_de: z.string().optional()
+      .describe('Data inicial de vencimento (formato YYYY-MM-DD)'),
+    data_vencimento_ate: z.string().optional()
+      .describe('Data final de vencimento (formato YYYY-MM-DD)'),
+    valor_minimo: z.number().optional()
+      .describe('Valor mínimo em reais'),
+    valor_maximo: z.number().optional()
+      .describe('Valor máximo em reais'),
+    data_emissao_de: z.string().optional()
+      .describe('Data inicial de emissão (formato YYYY-MM-DD)'),
+    data_emissao_ate: z.string().optional()
+      .describe('Data final de emissão (formato YYYY-MM-DD)'),
+  }),
+
+  execute: async ({
+    limit = 20,
+    cliente_id,
+    vence_em_dias,
+    venceu_ha_dias,
+    data_vencimento_de,
+    data_vencimento_ate,
+    valor_minimo,
+    valor_maximo,
+    data_emissao_de,
+    data_emissao_ate,
+  }) => {
+    try {
+      const conditions: string[] = ['car.status = \'Pago\''];
+      const params: unknown[] = [];
+      let index = 1;
+
+      const push = (clause: string, value: unknown) => {
+        conditions.push(`${clause} $${index}`);
+        params.push(value);
+        index += 1;
+      };
+
+      if (cliente_id) push('car.cliente_id =', cliente_id);
+      if (valor_minimo !== undefined) push('car.valor_total >=', valor_minimo);
+      if (valor_maximo !== undefined) push('car.valor_total <=', valor_maximo);
+
+      if (vence_em_dias !== undefined) {
+        conditions.push(`car.data_vencimento BETWEEN CURRENT_DATE AND CURRENT_DATE + ($${index}::int) * INTERVAL '1 day'`);
+        params.push(vence_em_dias);
+        index += 1;
+      }
+
+      if (venceu_ha_dias !== undefined) {
+        conditions.push(`car.data_vencimento BETWEEN CURRENT_DATE - ($${index}::int) * INTERVAL '1 day' AND CURRENT_DATE - INTERVAL '1 day'`);
+        params.push(venceu_ha_dias);
+        index += 1;
+      }
+
+      if (data_vencimento_de) push('car.data_vencimento >=', data_vencimento_de);
+      if (data_vencimento_ate) push('car.data_vencimento <=', data_vencimento_ate);
+
+      if (data_emissao_de) push('car.data_emissao >=', data_emissao_de);
+      if (data_emissao_ate) push('car.data_emissao <=', data_emissao_ate);
+
+      const whereClause = `WHERE ${conditions.join(' AND ')}`;
+
+      const listSql = `
+        SELECT
+          car.id,
+          c.nome_cliente AS cliente,
+          car.descricao,
+          car.valor_total,
+          car.data_emissao,
+          car.data_vencimento,
+          car.data_recebimento,
+          car.status,
+          car.criado_em
+        FROM financeiro.contas_a_receber AS car
+        LEFT JOIN financeiro.clientes AS c ON c.id = car.cliente_id
+        ${whereClause}
+        ORDER BY car.data_recebimento DESC
+        LIMIT $${index}
+      `.trim();
+
+      const paramsWithLimit = [...params, limit];
+
+      const totalsSql = `
+        SELECT
+          SUM(car.valor_total) AS total_valor,
+          COUNT(*) AS total_registros
+        FROM financeiro.contas_a_receber AS car
+        LEFT JOIN financeiro.clientes AS c ON c.id = car.cliente_id
+        ${whereClause}
+      `.trim();
+
+      const rowsRaw = await runQuery<Record<string, unknown>>(listSql, paramsWithLimit);
+      const [totals] = await runQuery<{
+        total_valor: number | null;
+        total_registros: number | null;
+      }>(totalsSql, params);
+
+      const totalValor = Number(totals?.total_valor ?? 0);
+      const count = rowsRaw.length;
+
+      return {
+        success: true,
+        count,
+        total_valor: totalValor,
+        rows: rowsRaw,
+        message: `Encontrados ${count} pagamentos recebidos (Total: ${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
+        sql_query: `${listSql}\n\n-- Totais\n${totalsSql}`,
+        sql_params: formatSqlParams(paramsWithLimit),
+      };
+    } catch (error) {
+      console.error('ERRO getPagamentosRecebidos:', error);
+      return {
+        success: false,
+        rows: [],
+        message: `Erro ao buscar pagamentos recebidos: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      };
+    }
+  }
+});
+
 export const getContasAPagar = tool({
   description: 'Busca contas a pagar (fornecedores, despesas) com filtros avançados',
   inputSchema: z.object({
@@ -279,6 +408,136 @@ export const getContasAPagar = tool({
         success: false,
         rows: [],
         message: `Erro ao buscar contas a pagar: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      };
+    }
+  }
+});
+
+export const getPagamentosEfetuados = tool({
+  description: 'Busca pagamentos já efetuados (contas a pagar pagas) com filtros avançados',
+  inputSchema: z.object({
+    limit: z.number().default(20).describe('Número máximo de resultados'),
+    fornecedor_id: z.string().optional()
+      .describe('Filtrar por ID do fornecedor'),
+    vence_em_dias: z.number().optional()
+      .describe('Contas que vencem nos próximos X dias'),
+    venceu_ha_dias: z.number().optional()
+      .describe('Contas vencidas nos últimos X dias'),
+    data_vencimento_de: z.string().optional()
+      .describe('Data inicial de vencimento (formato YYYY-MM-DD)'),
+    data_vencimento_ate: z.string().optional()
+      .describe('Data final de vencimento (formato YYYY-MM-DD)'),
+    data_emissao_de: z.string().optional()
+      .describe('Data inicial de emissão (formato YYYY-MM-DD)'),
+    data_emissao_ate: z.string().optional()
+      .describe('Data final de emissão (formato YYYY-MM-DD)'),
+    valor_minimo: z.number().optional()
+      .describe('Valor mínimo em reais'),
+    valor_maximo: z.number().optional()
+      .describe('Valor máximo em reais'),
+  }),
+
+  execute: async ({
+    limit = 20,
+    fornecedor_id,
+    vence_em_dias,
+    venceu_ha_dias,
+    data_vencimento_de,
+    data_vencimento_ate,
+    data_emissao_de,
+    data_emissao_ate,
+    valor_minimo,
+    valor_maximo,
+  }) => {
+    try {
+      const conditions: string[] = ['cap.status = \'Pago\''];
+      const params: unknown[] = [];
+      let index = 1;
+
+      const push = (clause: string, value: unknown) => {
+        conditions.push(`${clause} $${index}`);
+        params.push(value);
+        index += 1;
+      };
+
+      if (fornecedor_id) push('cap.fornecedor_id =', fornecedor_id);
+      if (valor_minimo !== undefined) push('cap.valor_total >=', valor_minimo);
+      if (valor_maximo !== undefined) push('cap.valor_total <=', valor_maximo);
+
+      if (vence_em_dias !== undefined) {
+        conditions.push(`cap.data_vencimento BETWEEN CURRENT_DATE AND CURRENT_DATE + ($${index}::int) * INTERVAL '1 day'`);
+        params.push(vence_em_dias);
+        index += 1;
+      }
+
+      if (venceu_ha_dias !== undefined) {
+        conditions.push(`cap.data_vencimento BETWEEN CURRENT_DATE - ($${index}::int) * INTERVAL '1 day' AND CURRENT_DATE - INTERVAL '1 day'`);
+        params.push(venceu_ha_dias);
+        index += 1;
+      }
+
+      if (data_vencimento_de) push('cap.data_vencimento >=', data_vencimento_de);
+      if (data_vencimento_ate) push('cap.data_vencimento <=', data_vencimento_ate);
+
+      if (data_emissao_de) push('cap.data_emissao >=', data_emissao_de);
+      if (data_emissao_ate) push('cap.data_emissao <=', data_emissao_ate);
+
+      const whereClause = `WHERE ${conditions.join(' AND ')}`;
+
+      const listSql = `
+        SELECT
+          cap.id,
+          f.nome_fornecedor AS fornecedor,
+          cap.descricao,
+          cap.valor_total,
+          cap.data_emissao,
+          cap.data_vencimento,
+          cap.data_pagamento,
+          cap.status,
+          cap.tipo_titulo,
+          cap.criado_em
+        FROM financeiro.contas_a_pagar AS cap
+        LEFT JOIN financeiro.fornecedores AS f ON f.id = cap.fornecedor_id
+        ${whereClause}
+        ORDER BY cap.data_pagamento DESC
+        LIMIT $${index}
+      `.trim();
+
+      const paramsWithLimit = [...params, limit];
+
+      const totalsSql = `
+        SELECT
+          SUM(cap.valor_total) AS total_valor,
+          COUNT(*) AS total_registros
+        FROM financeiro.contas_a_pagar AS cap
+        LEFT JOIN financeiro.fornecedores AS f ON f.id = cap.fornecedor_id
+        ${whereClause}
+      `.trim();
+
+      const rowsRaw = await runQuery<Record<string, unknown>>(listSql, paramsWithLimit);
+      const [totals] = await runQuery<{
+        total_valor: number | null;
+        total_registros: number | null;
+      }>(totalsSql, params);
+
+      const totalValor = Number(totals?.total_valor ?? 0);
+      const count = rowsRaw.length;
+
+      return {
+        success: true,
+        count,
+        total_valor: totalValor,
+        rows: rowsRaw,
+        message: `Encontrados ${count} pagamentos efetuados (Total: ${totalValor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
+        sql_query: `${listSql}\n\n-- Totais\n${totalsSql}`,
+        sql_params: formatSqlParams(paramsWithLimit),
+      };
+    } catch (error) {
+      console.error('ERRO getPagamentosEfetuados:', error);
+      return {
+        success: false,
+        rows: [],
+        message: `Erro ao buscar pagamentos efetuados: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
       };
     }
   }

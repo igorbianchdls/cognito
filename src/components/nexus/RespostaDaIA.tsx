@@ -53,6 +53,8 @@ import FluxoCaixaResult, { type FluxoCaixaRow } from '../tools/FluxoCaixaResult'
 import GenericResultTable from '../tools/GenericResultTable';
 import ContasAReceberResult from '../tools/ContasAReceberResult';
 import ContasAPagarResult, { type ContaPagarRow } from '../tools/ContasAPagarResult';
+import PagamentosRecebidosResult from '../tools/PagamentosRecebidosResult';
+import PagamentosEfetuadosResult from '../tools/PagamentosEfetuadosResult';
 import MovimentosResult, { type GetMovimentosOutput } from '../tools/MovimentosResult';
 import MovimentosPorCentroCustoResult, { type GetMovimentosPorCentroCustoOutput } from '../tools/MovimentosPorCentroCustoResult';
 import TransacoesExtratoResult, { type GetTransacoesExtratoOutput } from '../tools/TransacoesExtratoResult';
@@ -609,6 +611,40 @@ type GetContasAReceberToolOutput = {
   count: number;
   total_valor: number;
   rows: ContaReceberRow[] | Array<Record<string, unknown>>;
+  message: string;
+  sql_query?: string;
+  error?: string;
+};
+
+type GetPagamentosRecebidosToolInput = {
+  limit?: number;
+  cliente_id?: string;
+  valor_minimo?: number;
+  valor_maximo?: number;
+};
+
+type GetPagamentosRecebidosToolOutput = {
+  success: boolean;
+  count: number;
+  total_valor: number;
+  rows: Array<Record<string, unknown>>;
+  message: string;
+  sql_query?: string;
+  error?: string;
+};
+
+type GetPagamentosEfetuadosToolInput = {
+  limit?: number;
+  fornecedor_id?: string;
+  valor_minimo?: number;
+  valor_maximo?: number;
+};
+
+type GetPagamentosEfetuadosToolOutput = {
+  success: boolean;
+  count: number;
+  total_valor: number;
+  rows: Array<Record<string, unknown>>;
   message: string;
   sql_query?: string;
   error?: string;
@@ -2602,6 +2638,10 @@ type NexusToolUIPart = ToolUIPart<{
     input: GetContasAReceberToolInput;
     output: GetContasAReceberToolOutput;
   };
+  getPagamentosRecebidos: {
+    input: GetPagamentosRecebidosToolInput;
+    output: GetPagamentosRecebidosToolOutput;
+  };
   getReceipts: {
     input: GetReceiptsToolInput;
     output: GetReceiptsToolOutput;
@@ -2617,6 +2657,10 @@ type NexusToolUIPart = ToolUIPart<{
   getContasAPagar: {
     input: GetContasAPagarToolInput;
     output: GetContasAPagarToolOutput;
+  };
+  getPagamentosEfetuados: {
+    input: GetPagamentosEfetuadosToolInput;
+    output: GetPagamentosEfetuadosToolOutput;
   };
   getFinancialData: {
     input: GetFinancialDataToolInput;
@@ -4084,6 +4128,36 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               {contasAReceberTool.state === 'output-available' && (
                 <ContasAReceberResult
                   result={contasAReceberTool.output as GetContasAReceberToolOutput}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getPagamentosRecebidos') {
+          const pagamentosRecebidosTool = part as NexusToolUIPart;
+          const callId = pagamentosRecebidosTool.toolCallId;
+          const shouldBeOpen = pagamentosRecebidosTool.state === 'output-available' || pagamentosRecebidosTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getPagamentosRecebidos" state={pagamentosRecebidosTool.state} />
+                <ToolContent>
+                  {pagamentosRecebidosTool.input && (
+                    <ToolInput input={pagamentosRecebidosTool.input} />
+                  )}
+                  {pagamentosRecebidosTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={pagamentosRecebidosTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {pagamentosRecebidosTool.state === 'output-available' && (
+                <PagamentosRecebidosResult
+                  result={pagamentosRecebidosTool.output as GetPagamentosRecebidosToolOutput}
                 />
               )}
             </div>
@@ -6292,6 +6366,36 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               {contasAPagarTool.state === 'output-available' && (
                 <ContasAPagarResult
                   result={contasAPagarTool.output as GetContasAPagarToolOutput}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-getPagamentosEfetuados') {
+          const pagamentosEfetuadosTool = part as NexusToolUIPart;
+          const callId = pagamentosEfetuadosTool.toolCallId;
+          const shouldBeOpen = pagamentosEfetuadosTool.state === 'output-available' || pagamentosEfetuadosTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-getPagamentosEfetuados" state={pagamentosEfetuadosTool.state} />
+                <ToolContent>
+                  {pagamentosEfetuadosTool.input && (
+                    <ToolInput input={pagamentosEfetuadosTool.input} />
+                  )}
+                  {pagamentosEfetuadosTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={pagamentosEfetuadosTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {pagamentosEfetuadosTool.state === 'output-available' && (
+                <PagamentosEfetuadosResult
+                  result={pagamentosEfetuadosTool.output as GetPagamentosEfetuadosToolOutput}
                 />
               )}
             </div>

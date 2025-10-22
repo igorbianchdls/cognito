@@ -3,6 +3,8 @@ import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import {
   getContasAReceber,
   getContasAPagar,
+  getPagamentosRecebidos,
+  getPagamentosEfetuados,
   calcularFluxoCaixa,
   getMovimentos,
   getTransacoesExtrato,
@@ -584,6 +586,8 @@ Seja sempre profissional, orientado a dados e ofereça insights acionáveis. Pri
       tools: {
         getContasAReceber,
         getContasAPagar,
+        getPagamentosRecebidos,
+        getPagamentosEfetuados,
         calcularFluxoCaixa,
         getMovimentos,
         getTransacoesExtrato,
