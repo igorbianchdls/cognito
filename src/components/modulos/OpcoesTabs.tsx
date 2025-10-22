@@ -33,8 +33,9 @@ export default function OpcoesTabs({ options, value, onValueChange, className, f
   const renderIcon = (node?: React.ReactNode) => {
     if (!node) return null
     if (React.isValidElement(node)) {
-      const prevStyle = (node.props as any)?.style || {}
-      return React.cloneElement(node as React.ReactElement, {
+      const element = node as React.ReactElement<{ style?: React.CSSProperties }>
+      const prevStyle: React.CSSProperties = element.props?.style || {}
+      return React.cloneElement(element, {
         style: {
           ...prevStyle,
           color: iconColor || prevStyle.color,
