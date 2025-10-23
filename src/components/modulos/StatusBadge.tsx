@@ -2,7 +2,7 @@ import React from 'react'
 
 type StatusBadgeProps = {
   value?: unknown
-  type: 'status' | 'prioridade' | 'departamento' | 'condicao_pagamento'
+  type: 'status' | 'prioridade' | 'departamento' | 'condicao_pagamento' | 'estagio'
 }
 
 export default function StatusBadge({ value, type }: StatusBadgeProps) {
@@ -67,6 +67,25 @@ export default function StatusBadge({ value, type }: StatusBadgeProps) {
     } else if (dias > 0) {
       bgColor = '#fee2e2'
       textColor = '#dc2626'
+    }
+  } else if (type === 'estagio') {
+    // Progressive colors based on sales funnel stage
+    if (valueStr.includes('fechado') || valueStr.includes('ganho') || valueStr.includes('ganha')) {
+      bgColor = '#dcfce7'
+      textColor = '#16a34a'
+    } else if (valueStr.includes('proposta') || valueStr.includes('enviada') || valueStr.includes('apresentação') || valueStr.includes('apresentacao')) {
+      bgColor = '#dbeafe'
+      textColor = '#2563eb'
+    } else if (valueStr.includes('negociação') || valueStr.includes('negociacao')) {
+      bgColor = '#fef3c7'
+      textColor = '#ca8a04'
+    } else if (valueStr.includes('perdido') || valueStr.includes('perdida')) {
+      bgColor = '#fee2e2'
+      textColor = '#dc2626'
+    } else {
+      // inicial, qualificação, prospecção, etc (gray)
+      bgColor = '#f3f4f6'
+      textColor = '#6b7280'
     }
   }
 
