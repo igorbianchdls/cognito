@@ -102,9 +102,12 @@ export async function GET(req: NextRequest) {
 
     if (view === 'contas-a-pagar' || view === 'pagamentos-efetuados') {
       baseSql = `FROM financeiro.contas_a_pagar cap
-                 LEFT JOIN financeiro.fornecedores f ON f.id = cap.fornecedor_id`;
+                 LEFT JOIN financeiro.fornecedores f ON f.id = cap.fornecedor_id
+                 LEFT JOIN financeiro.categorias_fornecedor cat ON cat.id = f.categoria_id`;
       selectSql = `SELECT cap.id,
                           f.nome_fornecedor AS fornecedor,
+                          f.imagem_url AS fornecedor_imagem_url,
+                          cat.nome AS fornecedor_categoria,
                           cap.descricao,
                           cap.valor_total,
                           cap.data_emissao,
