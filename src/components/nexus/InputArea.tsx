@@ -29,13 +29,6 @@ import {
 import { FormEvent, useState } from 'react';
 import type { ChatStatus } from 'ai';
 import AgentDropdown from './AgentDropdown';
-import MetaIcon from '@/components/icons/MetaIcon';
-import AmazonIcon from '@/components/icons/AmazonIcon';
-import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon';
-import GoogleAnalyticsIcon from '@/components/icons/GoogleAnalyticsIcon';
-import ShopifyIcon from '@/components/icons/ShopifyIcon';
-import ShopeeIcon from '@/components/icons/ShopeeIcon';
-import ContaAzulIcon from '@/components/icons/ContaAzulIcon';
 
 interface InputAreaProps {
   input: string;
@@ -46,25 +39,15 @@ interface InputAreaProps {
   onAgentChange: (agent: string) => void;
 }
 
-// Mapeamento de ícones das integrações
+// Mapeamento de ícones dos agentes
 const iconMap: Record<string, React.ComponentType<{ className?: string }> | null> = {
-  'claudeAgent': null,
-  'metaAnalyst': MetaIcon,
-  'metaCampaignAnalyst': MetaIcon,
-  'amazonAdsAnalyst': AmazonIcon,
-  'googleAnalyticsAnalyst': GoogleAnalyticsIcon,
-  'googleCampaignAnalyst': GoogleAdsIcon,
-  'shopifyAnalyst': ShopifyIcon,
-  'shopeeAnalyst': ShopeeIcon,
-  'contaAzulAnalyst': ContaAzulIcon,
-  'keywordAnalyst': null,
   'analistaDados': null,
+  'claudeAgent': null,
   'salesAgent': TrendingUp,
   'contasAReceberAgent': ArrowDownLeft,
   'receiptsAgent': Receipt,
   'nfeAgent': FileText,
   'inventoryAgent': Package,
-  'ecommerceSalesAgent': TrendingUp,
   'ecommerceSalesAgentV2': TrendingUp,
   'webAnalyticsAgent': Activity,
   'logisticsAgent': Package,
@@ -76,32 +59,21 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
 };
 
 const models = [
-  { id: 'claudeAgent', name: 'Claude Agent', icon: iconMap['claudeAgent'] },
-  { id: 'metaAnalyst', name: 'MetaAnalyst', icon: iconMap['metaAnalyst'] },
-  { id: 'amazonAdsAnalyst', name: 'AmazonAdsAnalyst', icon: iconMap['amazonAdsAnalyst'] },
-  { id: 'googleAnalyticsAnalyst', name: 'GoogleAnalyticsAnalyst', icon: iconMap['googleAnalyticsAnalyst'] },
-  { id: 'shopifyAnalyst', name: 'ShopifyAnalyst', icon: iconMap['shopifyAnalyst'] },
-  { id: 'contaAzulAnalyst', name: 'ContaAzulAnalyst', icon: iconMap['contaAzulAnalyst'] },
-  { id: 'shopeeAnalyst', name: 'ShopeeAnalyst', icon: iconMap['shopeeAnalyst'] },
-  { id: 'keywordAnalyst', name: 'KeywordAnalyst', icon: iconMap['keywordAnalyst'] },
-  { id: 'googleCampaignAnalyst', name: 'GoogleCampaignAnalyst', icon: iconMap['googleCampaignAnalyst'] },
-  { id: 'metaCampaignAnalyst', name: 'MetaCampaignAnalyst', icon: iconMap['metaCampaignAnalyst'] },
   { id: 'analistaDados', name: 'Analista de Dados', icon: iconMap['analistaDados'] },
-  { id: 'salesAgent', name: 'SalesAgent', icon: iconMap['salesAgent'] },
-  { id: 'contasAReceberAgent', name: 'Contas a Pagar e Receber', icon: iconMap['contasAReceberAgent'] },
-  { id: 'receiptsAgent', name: 'Receipts Agent', icon: iconMap['receiptsAgent'] },
-  { id: 'nfeAgent', name: 'Invoice Agent', icon: iconMap['nfeAgent'] },
-  { id: 'inventoryAgent', name: 'Inventory Agent', icon: iconMap['inventoryAgent'] },
-  // Removido antigo para evitar confusão com o novo agente V2
-  // { id: 'ecommerceSalesAgent', name: 'E-commerce Sales Agent', icon: iconMap['ecommerceSalesAgent'] },
-  { id: 'ecommerceSalesAgentV2', name: 'Agente de Vendas E-commerce', icon: iconMap['ecommerceSalesAgentV2'] },
-  { id: 'webAnalyticsAgent', name: 'Web Analytics Agent', icon: iconMap['webAnalyticsAgent'] },
-  { id: 'logisticsAgent', name: 'Logistics Agent', icon: iconMap['logisticsAgent'] },
-  { id: 'paidTrafficAgent', name: 'Paid Traffic Agent', icon: iconMap['paidTrafficAgent'] },
-  { id: 'organicMarketingAgent', name: 'Organic Marketing Agent', icon: iconMap['organicMarketingAgent'] },
+  { id: 'claudeAgent', name: 'Claude Simple', icon: iconMap['claudeAgent'] },
+  { id: 'ecommerceSalesAgentV2', name: 'E-commerce Sales', icon: iconMap['ecommerceSalesAgentV2'] },
+  { id: 'salesAgent', name: 'Sales Agent', icon: iconMap['salesAgent'] },
+  { id: 'contasAReceberAgent', name: 'Contas a Receber', icon: iconMap['contasAReceberAgent'] },
+  { id: 'receiptsAgent', name: 'Receipts', icon: iconMap['receiptsAgent'] },
+  { id: 'nfeAgent', name: 'Notas Fiscais', icon: iconMap['nfeAgent'] },
+  { id: 'inventoryAgent', name: 'Inventory', icon: iconMap['inventoryAgent'] },
+  { id: 'logisticsAgent', name: 'Logistics', icon: iconMap['logisticsAgent'] },
+  { id: 'funcionariosAgent', name: 'Funcionários', icon: iconMap['funcionariosAgent'] },
+  { id: 'paidTrafficAgent', name: 'Tráfego Pago', icon: iconMap['paidTrafficAgent'] },
+  { id: 'organicMarketingAgent', name: 'Marketing Orgânico', icon: iconMap['organicMarketingAgent'] },
+  { id: 'webAnalyticsAgent', name: 'Web Analytics', icon: iconMap['webAnalyticsAgent'] },
   { id: 'gestorDeComprasAgent', name: 'Gestor de Compras', icon: iconMap['gestorDeComprasAgent'] },
   { id: 'gestorDeProjetosAgent', name: 'Gestor de Projetos', icon: iconMap['gestorDeProjetosAgent'] },
-  { id: 'funcionariosAgent', name: 'Funcionários Agent', icon: iconMap['funcionariosAgent'] },
 ];
 
 export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange }: InputAreaProps) {
@@ -157,35 +129,21 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
             // Mapear ID do agente para nome legível
             const getAgentName = (id: string) => {
               switch (id) {
-                case 'claudeAgent': return 'Claude Agent';
-                case 'metaAnalyst': return 'MetaAnalyst';
-                case 'amazonAdsAnalyst': return 'AmazonAdsAnalyst';
-                case 'googleAnalyticsAnalyst': return 'GoogleAnalyticsAnalyst';
-                case 'shopifyAnalyst': return 'ShopifyAnalyst';
-                case 'contaAzulAnalyst': return 'ContaAzulAnalyst';
-                case 'shopeeAnalyst': return 'ShopeeAnalyst';
-                case 'keywordAnalyst': return 'KeywordAnalyst';
-                case 'googleCampaignAnalyst': return 'GoogleCampaignAnalyst';
-                case 'metaCampaignAnalyst': return 'MetaCampaignAnalyst';
-                case 'inventoryAnalyst': return 'InventoryAnalyst';
-                case 'cashFlowAnalyst': return 'CashFlowAnalyst';
-                case 'pnlAnalyst': return 'P&LAnalyst';
-                case 'budgetPlanningAnalyst': return 'BudgetPlanningAnalyst';
                 case 'analistaDados': return 'Analista de Dados';
-                case 'salesAgent': return 'SalesAgent';
+                case 'claudeAgent': return 'Claude Simple';
+                case 'salesAgent': return 'Sales Agent';
                 case 'contasAReceberAgent': return 'Contas a Receber';
-                case 'receiptsAgent': return 'Receipts Agent';
-                case 'nfeAgent': return 'Invoice Agent';
-                case 'inventoryAgent': return 'Inventory Agent';
-                case 'ecommerceSalesAgent': return 'E-commerce Sales Agent';
-                case 'ecommerceSalesAgentV2': return 'Agente de Vendas E-commerce';
-                case 'webAnalyticsAgent': return 'Web Analytics Agent';
-                case 'logisticsAgent': return 'Logistics Agent';
-                case 'paidTrafficAgent': return 'Paid Traffic Agent';
-                case 'organicMarketingAgent': return 'Organic Marketing Agent';
+                case 'receiptsAgent': return 'Receipts';
+                case 'nfeAgent': return 'Notas Fiscais';
+                case 'inventoryAgent': return 'Inventory';
+                case 'ecommerceSalesAgentV2': return 'E-commerce Sales';
+                case 'webAnalyticsAgent': return 'Web Analytics';
+                case 'logisticsAgent': return 'Logistics';
+                case 'paidTrafficAgent': return 'Tráfego Pago';
+                case 'organicMarketingAgent': return 'Marketing Orgânico';
                 case 'gestorDeComprasAgent': return 'Gestor de Compras';
                 case 'gestorDeProjetosAgent': return 'Gestor de Projetos';
-                case 'funcionariosAgent': return 'Funcionários Agent';
+                case 'funcionariosAgent': return 'Funcionários';
                 default: return id;
               }
             };
