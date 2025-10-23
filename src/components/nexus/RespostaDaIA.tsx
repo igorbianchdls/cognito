@@ -77,6 +77,13 @@ import RecebimentosCompraResult from '../tools/compras/RecebimentosCompraResult'
 import SolicitacoesCompraResult from '../tools/compras/SolicitacoesCompraResult';
 import CotacoesCompraResult from '../tools/compras/CotacoesCompraResult';
 import KpisComprasResult from '../tools/compras/KpisComprasResult';
+import PedidosVendasResult from '../tools/vendas-b2b/PedidosVendasResult';
+import ClientesVendasResult from '../tools/vendas-b2b/ClientesVendasResult';
+import TerritoriosVendasResult from '../tools/vendas-b2b/TerritoriosVendasResult';
+import EquipesVendasResult from '../tools/vendas-b2b/EquipesVendasResult';
+import CanaisVendasResult from '../tools/vendas-b2b/CanaisVendasResult';
+import KpisVendasResult from '../tools/vendas-b2b/KpisVendasResult';
+import { TrendingUp } from 'lucide-react'
 import InventoryDataTable from '../tools/InventoryDataTable';
 import TopProdutosReceitaLiquidaTable, { type TopProdutosRow } from '../tools/TopProdutosReceitaLiquidaTable';
 import DesempenhoVendasMensalResult, { type DesempenhoVendasMensalRow } from '../tools/ecommerce/DesempenhoVendasMensalResult';
@@ -4876,7 +4883,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && (
-                <PedidosCompraResult
+                <PedidosVendasResult
                   success={(tool.output as RowsToolOutput).success}
                   message={(tool.output as RowsToolOutput).message}
                   rows={(tool.output as RowsToolOutput).rows}
@@ -4977,6 +4984,156 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {tool.state === 'output-available' && (
                 <KpisComprasResult
+                  success={(tool.output as any).success}
+                  message={(tool.output as any).message}
+                  kpis={(tool.output as any).kpis}
+                  sql_query={(tool.output as any).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        // Gestor de Vendas B2B — tabelas e KPIs
+        if (part.type === 'tool-listarPedidosVendas') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <PedidosCompraResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-listarClientesVendas') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <ClientesVendasResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-listarTerritoriosVendas') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <TerritoriosVendasResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-listarEquipesVendas') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <EquipesVendasResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-listarCanaisVendas') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <CanaisVendasResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-kpisVendas') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <KpisVendasResult
                   success={(tool.output as any).success}
                   message={(tool.output as any).message}
                   kpis={(tool.output as any).kpis}

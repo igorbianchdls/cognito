@@ -140,6 +140,13 @@ export const ToolHeader = ({
           'tool-listarSolicitacoesCompra': 'Solicitações de Compra',
           'tool-listarCotacoesCompra': 'Cotações de Compra',
           'tool-kpisCompras': 'KPIs de Compras',
+          // Vendas B2B
+          'tool-listarPedidosVendas': 'Pedidos de Vendas',
+          'tool-listarClientesVendas': 'Clientes',
+          'tool-listarTerritoriosVendas': 'Territórios',
+          'tool-listarEquipesVendas': 'Equipes',
+          'tool-listarCanaisVendas': 'Canais',
+          'tool-kpisVendas': 'KPIs de Vendas',
         };
         return labels[type] ?? type.replace('tool-', '');
       })()}</span>

@@ -56,6 +56,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
   'gestorDeComprasAgent': Package,
   'gestorDeProjetosAgent': Wrench,
   'gestorDeServicosAgent': Wrench,
+  'gestorDeVendasB2BAgent': TrendingUp,
   'funcionariosAgent': Users,
 };
 
@@ -76,6 +77,7 @@ const models = [
   { id: 'gestorDeComprasAgent', name: 'Gestor de Compras', icon: iconMap['gestorDeComprasAgent'] },
   { id: 'gestorDeProjetosAgent', name: 'Gestor de Projetos', icon: iconMap['gestorDeProjetosAgent'] },
   { id: 'gestorDeServicosAgent', name: 'Gestor de Serviços', icon: iconMap['gestorDeServicosAgent'] },
+  { id: 'gestorDeVendasB2BAgent', name: 'Gestor de Vendas B2B', icon: iconMap['gestorDeVendasB2BAgent'] },
 ];
 
 export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange }: InputAreaProps) {
@@ -146,6 +148,7 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
                 case 'gestorDeComprasAgent': return 'Gestor de Compras';
                 case 'gestorDeProjetosAgent': return 'Gestor de Projetos';
                 case 'gestorDeServicosAgent': return 'Gestor de Serviços';
+                case 'gestorDeVendasB2BAgent': return 'Gestor de Vendas B2B';
                 case 'funcionariosAgent': return 'Funcionários';
                 default: return id;
               }

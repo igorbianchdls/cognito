@@ -60,6 +60,7 @@ export default function Page() {
       case 'gestorDeProjetosAgent': return '/api/claudeAgents/gestor-de-projetos';
       case 'gestorDeServicosAgent': return '/api/claudeAgents/gestor-de-servicos';
       case 'funcionariosAgent': return '/api/claudeAgents/funcionarios';
+      case 'gestorDeVendasB2BAgent': return '/api/claudeAgents/gestor-de-vendas-b2b';
       default: return '/api/agents/analista-dados';
     }
   };
