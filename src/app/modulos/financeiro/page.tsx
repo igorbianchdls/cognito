@@ -64,6 +64,39 @@ export default function ModulosFinanceiroPage() {
     return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
   }
 
+  const renderStatusBadge = (status?: unknown) => {
+    const statusStr = String(status || '').toLowerCase()
+
+    let bgColor = '#f3f4f6'
+    let textColor = '#6b7280'
+
+    if (statusStr === 'pago' || statusStr === 'recebido') {
+      bgColor = '#dcfce7'
+      textColor = '#16a34a'
+    } else if (statusStr === 'pendente' || statusStr === 'em aberto') {
+      bgColor = '#fef3c7'
+      textColor = '#ca8a04'
+    } else if (statusStr === 'vencido' || statusStr === 'atrasado') {
+      bgColor = '#fee2e2'
+      textColor = '#dc2626'
+    }
+
+    return (
+      <span style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        padding: '4px 12px',
+        borderRadius: 9999,
+        fontSize: 12,
+        fontWeight: 500,
+        backgroundColor: bgColor,
+        color: textColor
+      }}>
+        {status}
+      </span>
+    )
+  }
+
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
       case 'contas-a-receber':
@@ -99,7 +132,7 @@ export default function ModulosFinanceiroPage() {
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'data_vencimento', header: 'Vencimento', cell: ({ row }) => formatDate(row.original['data_vencimento']) },
           { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },
-          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => renderStatusBadge(row.original['status']) },
         ]
       case 'pagamentos-efetuados':
         return [
@@ -169,7 +202,7 @@ export default function ModulosFinanceiroPage() {
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'data_recebimento', header: 'Recebido em', cell: ({ row }) => formatDate(row.original['data_recebimento']) },
           { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },
-          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => renderStatusBadge(row.original['status']) },
         ]
       case 'movimentos':
         return [
@@ -213,7 +246,7 @@ export default function ModulosFinanceiroPage() {
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'data_vencimento', header: 'Vencimento', cell: ({ row }) => formatDate(row.original['data_vencimento']) },
           { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },
-          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => renderStatusBadge(row.original['status']) },
         ]
     }
   }, [tabs.selected])
