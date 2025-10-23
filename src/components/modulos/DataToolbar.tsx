@@ -7,6 +7,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search } from "lucide-react"
 import type { DateRange } from 'react-day-picker'
+
+type PartialDateRange = { from?: Date; to?: Date }
 import CadastroFormSheet from "@/components/modulos/CadastroFormSheet"
 
 type DataToolbarProps = {
@@ -15,8 +17,8 @@ type DataToolbarProps = {
   searchPlaceholder?: string
   dateRangePlaceholder?: string
   // Date range state
-  dateRange?: DateRange
-  onDateRangeChange?: (range: DateRange | undefined) => void
+  dateRange?: PartialDateRange
+  onDateRangeChange?: (range: PartialDateRange | undefined) => void
   // Right side only
   from?: number
   to?: number
@@ -128,9 +130,9 @@ export default function DataToolbar({
                 mode="range"
                 numberOfMonths={2}
                 buttonVariant="ghost"
-                selected={dateRange}
+                selected={(dateRange && dateRange.from) ? ({ from: dateRange.from, to: dateRange.to } as DateRange) : undefined}
                 onSelect={(range?: DateRange) => {
-                  onDateRangeChange?.(range)
+                  onDateRangeChange?.(range ? { from: range.from, to: range.to } : undefined)
                 }}
               />
             </PopoverContent>

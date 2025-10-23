@@ -25,7 +25,7 @@ export default function ModulosFinanceiroPage() {
   const toolbarUI = useStore($toolbarUI)
 
   // Filtro de datas (range)
-  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({})
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>(undefined)
 
   useEffect(() => {
     financeiroUiActions.setTabs({
@@ -122,14 +122,14 @@ export default function ModulosFinanceiroPage() {
       try {
         const params = new URLSearchParams()
         params.set('view', tabs.selected)
-        if (dateRange.from) {
+        if (dateRange?.from) {
           const d = new Date(dateRange.from)
           const yyyy = d.getFullYear()
           const mm = String(d.getMonth() + 1).padStart(2, '0')
           const dd = String(d.getDate()).padStart(2, '0')
           params.set('de', `${yyyy}-${mm}-${dd}`)
         }
-        if (dateRange.to) {
+        if (dateRange?.to) {
           const d = new Date(dateRange.to)
           const yyyy = d.getFullYear()
           const mm = String(d.getMonth() + 1).padStart(2, '0')
@@ -153,7 +153,7 @@ export default function ModulosFinanceiroPage() {
     }
     load()
     return () => controller.abort()
-  }, [tabs.selected, dateRange.from, dateRange.to])
+  }, [tabs.selected, dateRange?.from, dateRange?.to])
 
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
