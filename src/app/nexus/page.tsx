@@ -61,6 +61,7 @@ export default function Page() {
       case 'gestorDeServicosAgent': return '/api/claudeAgents/gestor-de-servicos';
       case 'funcionariosAgent': return '/api/claudeAgents/funcionarios';
       case 'gestorDeVendasB2BAgent': return '/api/claudeAgents/gestor-de-vendas-b2b';
+      case 'automationAgent': return '/api/claudeAgents/automation';
       default: return '/api/agents/analista-dados';
     }
   };
@@ -125,6 +126,8 @@ export default function Page() {
   ];
 
   const [input, setInput] = useState('');
+  const [pendingFileDataUrl, setPendingFileDataUrl] = useState<string | null>(null);
+  const [pendingFileMime, setPendingFileMime] = useState<string | null>(null);
   
   // COMENTADO TEMPORARIAMENTE - localStorage
   /*
@@ -179,9 +182,21 @@ export default function Page() {
       };
       setAllMessages(prev => [...prev, userMessage]);
       
-      // Send complete data to AI (messageForAI contains full data when needed)
-      sendMessage({ text: messageForAI });
+      // Send to AI with optional file attachment
+      if (pendingFileDataUrl && pendingFileMime) {
+        sendMessage({
+          role: 'user',
+          parts: [
+            { type: 'text' as const, text: messageForAI },
+            { type: 'file' as const, mediaType: pendingFileMime, url: pendingFileDataUrl },
+          ],
+        });
+      } else {
+        sendMessage({ text: messageForAI });
+      }
       setInput('');
+      setPendingFileDataUrl(null);
+      setPendingFileMime(null);
       
       // Clear pending data after sending
       if (pendingAnalysisData) {
@@ -345,6 +360,10 @@ export default function Page() {
                     status={status}
                     selectedAgent={selectedAgent}
                     onAgentChange={setCurrentAgent}
+                    onFileSelected={(dataUrl: string, mime: string) => {
+                      setPendingFileDataUrl(dataUrl);
+                      setPendingFileMime(mime);
+                    }}
                   />
                 </div>
               </div>
@@ -415,6 +434,10 @@ export default function Page() {
                       status={status}
                       selectedAgent={selectedAgent}
                       onAgentChange={setCurrentAgent}
+                      onFileSelected={(dataUrl: string, mime: string) => {
+                        setPendingFileDataUrl(dataUrl);
+                        setPendingFileMime(mime);
+                      }}
                     />
                   </div>
                 </div>

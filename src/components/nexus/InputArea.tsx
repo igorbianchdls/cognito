@@ -37,6 +37,7 @@ interface InputAreaProps {
   status: string;
   selectedAgent: string;
   onAgentChange: (agent: string) => void;
+  onFileSelected?: (dataUrl: string, mime: string) => void;
 }
 
 // Mapeamento de ícones dos agentes
@@ -78,9 +79,10 @@ const models = [
   { id: 'gestorDeProjetosAgent', name: 'Gestor de Projetos', icon: iconMap['gestorDeProjetosAgent'] },
   { id: 'gestorDeServicosAgent', name: 'Gestor de Serviços', icon: iconMap['gestorDeServicosAgent'] },
   { id: 'gestorDeVendasB2BAgent', name: 'Gestor de Vendas B2B', icon: iconMap['gestorDeVendasB2BAgent'] },
+  { id: 'automationAgent', name: 'Automações', icon: Wrench },
 ];
 
-export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange }: InputAreaProps) {
+export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange, onFileSelected }: InputAreaProps) {
   // Estado para controlar a exibição do dropdown de agentes quando "/" é digitado
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
   // Armazena a posição exata onde o "/" foi digitado no texto
@@ -93,14 +95,23 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
     const file = event.target.files?.[0];
     if (!file) return;
 
+    const allowed = ['application/pdf', 'image/png', 'image/jpeg', 'image/webp'];
+    if (!allowed.includes(file.type)) {
+      alert('Envie um PDF ou imagem (PNG/JPG/WebP)');
+      event.target.value = '';
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
-      const content = e.target?.result as string;
-      const fileInfo = `[Documento: ${file.name}]\n${content}`;
-      setInput(input + (input ? '\n\n' : '') + fileInfo);
+      const dataUrl = e.target?.result as string;
+      // Atualiza o input com referência leve ao arquivo
+      setInput((prev) => (prev ? prev + '\n\n' : '') + `[Documento anexado: ${file.name}]`);
+      // Notifica o pai para anexar como file part no envio
+      onFileSelected?.(dataUrl, file.type);
     };
-    reader.readAsText(file);
-    
+    reader.readAsDataURL(file);
+
     // Reset input file
     event.target.value = '';
   };
@@ -150,6 +161,7 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
                 case 'gestorDeServicosAgent': return 'Gestor de Serviços';
                 case 'gestorDeVendasB2BAgent': return 'Gestor de Vendas B2B';
                 case 'funcionariosAgent': return 'Funcionários';
+                case 'automationAgent': return 'Automações';
                 default: return id;
               }
             };
@@ -184,7 +196,7 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
           <input
             id="file-upload"
             type="file"
-            accept=".pdf,.doc,.docx,.txt"
+            accept=".pdf,image/png,image/jpeg,image/webp"
             className="hidden"
             onChange={handleFileUpload}
           />

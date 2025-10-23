@@ -61,6 +61,7 @@ import TransacoesExtratoResult, { type GetTransacoesExtratoOutput } from '../too
 import SaldoBancarioResult, { type ObterSaldoBancarioOutput } from '../tools/SaldoBancarioResult';
 import DespesasCentroCustoResult, { type ObterDespesasPorCentroCustoOutput } from '../tools/DespesasCentroCustoResult';
 import InadimplenciaResult, { type AnalisarInadimplenciaOutput } from '../tools/InadimplenciaResult';
+import AutomationResultCard from './tools/AutomationResultCard';
 import { BarChart3, DollarSign, LineChart, TrendingUp, AlertTriangle } from 'lucide-react';
 import AnaliseDeCampanhas from '../tools/paid-traffic/analiseDeCampanhas';
 import OrganicMarketingDataTable from '../tools/OrganicMarketingDataTable';
@@ -6874,6 +6875,39 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   message={(analyticsTool.output as GetAnalyticsDataToolOutput).message}
                   error={(analyticsTool.output as GetAnalyticsDataToolOutput).error}
                   sql_query={(analyticsTool.output as GetAnalyticsDataToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-automationSummary') {
+          const autoTool = part as NexusToolUIPart;
+          const callId = autoTool.toolCallId;
+          const shouldBeOpen = autoTool.state === 'output-available' || autoTool.state === 'output-error';
+
+          return (
+            <div key={callId}>
+              <Tool defaultOpen={shouldBeOpen}>
+                <ToolHeader type="tool-automationSummary" state={autoTool.state} />
+                <ToolContent>
+                  {autoTool.input && (
+                    <ToolInput input={autoTool.input} />
+                  )}
+                  {autoTool.state === 'output-error' && (
+                    <ToolOutput
+                      output={null}
+                      errorText={autoTool.errorText}
+                    />
+                  )}
+                </ToolContent>
+              </Tool>
+              {autoTool.state === 'output-available' && (
+                <AutomationResultCard
+                  ocr={(autoTool.output as any)?.ocr}
+                  fornecedor={(autoTool.output as any)?.fornecedor}
+                  contaAPagar={(autoTool.output as any)?.contaAPagar}
+                  warnings={(autoTool.output as any)?.warnings}
                 />
               )}
             </div>

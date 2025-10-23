@@ -11,6 +11,7 @@ interface ChatContainerProps {
   status: string;
   selectedAgent: string;
   onAgentChange: (agent: string) => void;
+  onFileSelected?: (dataUrl: string, mime: string) => void;
 }
 
 export default function ChatContainer({ 
@@ -20,7 +21,8 @@ export default function ChatContainer({
   onSubmit, 
   status,
   selectedAgent,
-  onAgentChange
+  onAgentChange,
+  onFileSelected
 }: ChatContainerProps) {
   console.log('📦 [ChatContainer] Props recebidas:', { 
     messagesCount: messages.length 
@@ -45,6 +47,7 @@ export default function ChatContainer({
             status={status}
             selectedAgent={selectedAgent}
             onAgentChange={onAgentChange}
+            onFileSelected={onFileSelected}
           />
         </div>
       </div>
@@ -65,6 +68,7 @@ export default function ChatContainer({
           status={status}
           selectedAgent={selectedAgent}
           onAgentChange={onAgentChange}
+          onFileSelected={onFileSelected}
         />
       </div>
     </div>
