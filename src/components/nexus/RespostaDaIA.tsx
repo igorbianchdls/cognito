@@ -65,6 +65,12 @@ import { BarChart3, DollarSign, LineChart, TrendingUp, AlertTriangle } from 'luc
 import AnaliseDeCampanhas from '../tools/paid-traffic/analiseDeCampanhas';
 import OrganicMarketingDataTable from '../tools/OrganicMarketingDataTable';
 import PaidTrafficDataTable from '../tools/PaidTrafficDataTable';
+import OrdensDeServicoResult from '../tools/servicos/OrdensDeServicoResult';
+import TecnicosResult from '../tools/servicos/TecnicosResult';
+import AgendamentosResult from '../tools/servicos/AgendamentosResult';
+import CatalogoServicosResult from '../tools/servicos/CatalogoServicosResult';
+import HistoricoClienteResult from '../tools/servicos/HistoricoClienteResult';
+import IndicadoresServicosResult from '../tools/servicos/IndicadoresServicosResult';
 import InventoryDataTable from '../tools/InventoryDataTable';
 import TopProdutosReceitaLiquidaTable, { type TopProdutosRow } from '../tools/TopProdutosReceitaLiquidaTable';
 import DesempenhoVendasMensalResult, { type DesempenhoVendasMensalRow } from '../tools/ecommerce/DesempenhoVendasMensalResult';
@@ -4794,6 +4800,156 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   message={(paidTrafficTool.output as GetPaidTrafficDataToolOutput).message}
                   error={(paidTrafficTool.output as GetPaidTrafficDataToolOutput).error}
                   sql_query={(paidTrafficTool.output as GetPaidTrafficDataToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        // Gestor de Serviços — tabelas
+        if (part.type === 'tool-listarOrdensDeServico') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <OrdensDeServicoResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-listarTecnicos') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <TecnicosResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-listarAgendamentos') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <AgendamentosResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-listarCatalogoDeServicos') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <CatalogoServicosResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-historicoDeServicosDoCliente') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <HistoricoClienteResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-indicadoresDeServicos') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <IndicadoresServicosResult
+                  success={(tool.output as any).success}
+                  message={(tool.output as any).message}
+                  kpis={(tool.output as any).kpis}
+                  sql_query={(tool.output as any).sql_query}
                 />
               )}
             </div>

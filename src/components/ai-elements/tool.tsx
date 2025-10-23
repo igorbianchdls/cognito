@@ -126,6 +126,13 @@ export const ToolHeader = ({
           'tool-situacaoOperacionalContas': 'Situação operacional — pagar x receber',
           'tool-alertaAumentoAnormalDespesas': 'Alerta de aumento de despesas',
           'tool-atrasosInadimplencia': 'Atrasos e inadimplência',
+          // Serviços
+          'tool-listarOrdensDeServico': 'Ordens de Serviço',
+          'tool-listarTecnicos': 'Técnicos',
+          'tool-listarAgendamentos': 'Agendamentos',
+          'tool-listarCatalogoDeServicos': 'Catálogo de Serviços',
+          'tool-historicoDeServicosDoCliente': 'Histórico do Cliente',
+          'tool-indicadoresDeServicos': 'Indicadores de Serviços',
         };
         return labels[type] ?? type.replace('tool-', '');
       })()}</span>
