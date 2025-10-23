@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import type { ColumnDef } from '@tanstack/react-table'
 
@@ -13,7 +13,7 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { ShoppingCart, Users, UserCircle, Map, Users2, LayoutGrid } from 'lucide-react'
+import { ShoppingCart, Users, Map, Users2, LayoutGrid } from 'lucide-react'
 
 type Row = TableData
 
@@ -33,7 +33,6 @@ export default function ModulosVendasPage() {
       options: [
         { value: 'pedidos', label: 'Pedidos' },
         { value: 'clientes', label: 'Clientes' },
-        { value: 'vendedores', label: 'Vendedores' },
         { value: 'territorios', label: 'Territórios' },
         { value: 'equipes', label: 'Equipes' },
         { value: 'canais', label: 'Canais' },
@@ -49,95 +48,127 @@ export default function ModulosVendasPage() {
     return name
   }
 
-  const { columns, data } = useMemo((): { columns: ColumnDef<Row>[]; data: Row[] } => {
+  const [data, setData] = useState<Row[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>()
+
+  const formatDate = (value?: unknown) => {
+    if (!value) return ''
+    try {
+      const d = new Date(String(value))
+      if (isNaN(d.getTime())) return String(value)
+      return d.toLocaleDateString('pt-BR')
+    } catch {
+      return String(value)
+    }
+  }
+
+  const formatBRL = (value?: unknown) => {
+    const n = Number(value ?? 0)
+    if (isNaN(n)) return String(value ?? '')
+    return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  }
+
+  const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
+      case 'clientes':
+        return [
+          { accessorKey: 'cliente', header: 'Cliente' },
+          { accessorKey: 'nome_fantasia_ou_razao', header: 'Nome Fantasia/Razão' },
+          { accessorKey: 'cpf_cnpj', header: 'CPF/CNPJ' },
+          { accessorKey: 'email', header: 'Email' },
+          { accessorKey: 'telefone', header: 'Telefone' },
+          { accessorKey: 'vendedor_responsavel', header: 'Vendedor Responsável' },
+          { accessorKey: 'territorio', header: 'Território' },
+          { accessorKey: 'canal_origem', header: 'Canal de Origem' },
+          { accessorKey: 'categoria_cliente', header: 'Categoria' },
+          { accessorKey: 'status_cliente', header: 'Status' },
+          { accessorKey: 'cliente_desde', header: 'Cliente Desde', cell: ({ row }) => formatDate(row.original['cliente_desde']) },
+          { accessorKey: 'data_ultima_compra', header: 'Última Compra', cell: ({ row }) => formatDate(row.original['data_ultima_compra']) },
+          { accessorKey: 'faturamento_estimado_anual', header: 'Faturamento Estimado', cell: ({ row }) => formatBRL(row.original['faturamento_estimado_anual']) },
+          { accessorKey: 'frequencia_pedidos_mensal', header: 'Frequência Mensal (pedidos)' },
+          { accessorKey: 'ativo', header: 'Ativo' },
+        ]
+      case 'territorios':
+        return [
+          { accessorKey: 'territorio', header: 'Território' },
+          { accessorKey: 'qtd_clientes', header: 'Qtd Clientes' },
+          { accessorKey: 'qtd_vendedores', header: 'Qtd Vendedores' },
+          { accessorKey: 'created_at', header: 'Criado em', cell: ({ row }) => formatDate(row.original['created_at']) },
+        ]
+      case 'equipes':
+        return [
+          { accessorKey: 'equipe', header: 'Equipe' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'qtd_vendedores', header: 'Qtd Vendedores' },
+          { accessorKey: 'territorios_atendidos', header: 'Territórios Atendidos' },
+          { accessorKey: 'ativo', header: 'Ativa' },
+          { accessorKey: 'created_at', header: 'Criada em', cell: ({ row }) => formatDate(row.original['created_at']) },
+        ]
+      case 'canais':
+        return [
+          { accessorKey: 'canal_venda', header: 'Canal' },
+          { accessorKey: 'qtd_pedidos', header: 'Pedidos' },
+          { accessorKey: 'total_vendido', header: 'Receita', cell: ({ row }) => formatBRL(row.original['total_vendido']) },
+          { accessorKey: 'primeira_venda', header: 'Primeira Venda', cell: ({ row }) => formatDate(row.original['primeira_venda']) },
+          { accessorKey: 'ultima_venda', header: 'Última Venda', cell: ({ row }) => formatDate(row.original['ultima_venda']) },
+        ]
       case 'pedidos':
       default:
-        return {
-          columns: [
-            { accessorKey: 'numero', header: 'Pedido' },
-            { accessorKey: 'cliente', header: 'Cliente' },
-            { accessorKey: 'data', header: 'Data' },
-            { accessorKey: 'valor', header: 'Valor' },
-            { accessorKey: 'status', header: 'Status' },
-          ],
-          data: [
-            { numero: 'PO-2001', cliente: 'ACME', data: '2025-10-20', valor: 1290.0, status: 'Faturado' },
-            { numero: 'PO-2002', cliente: 'Beta Ltda', data: '2025-10-21', valor: 520.5, status: 'Em aberto' },
-          ],
-        }
-      case 'clientes':
-        return {
-          columns: [
-            { accessorKey: 'nome', header: 'Nome' },
-            { accessorKey: 'email', header: 'Email' },
-            { accessorKey: 'telefone', header: 'Telefone' },
-            { accessorKey: 'segmento', header: 'Segmento' },
-            { accessorKey: 'status', header: 'Status' },
-          ],
-          data: [
-            { nome: 'João Silva', email: 'joao@exemplo.com', telefone: '(11) 99999-0000', segmento: 'B2C', status: 'Ativo' },
-            { nome: 'Maria Souza', email: 'maria@exemplo.com', telefone: '(21) 98888-1111', segmento: 'B2B', status: 'Inativo' },
-          ],
-        }
-      case 'vendedores':
-        return {
-          columns: [
-            { accessorKey: 'nome', header: 'Nome' },
-            { accessorKey: 'matricula', header: 'Matrícula' },
-            { accessorKey: 'regional', header: 'Regional' },
-            { accessorKey: 'meta', header: 'Meta (R$)' },
-            { accessorKey: 'vendas', header: 'Vendas (R$)' },
-          ],
-          data: [
-            { nome: 'Carlos Lima', matricula: 'V001', regional: 'Sudeste', meta: 50000, vendas: 43210 },
-            { nome: 'Ana Pereira', matricula: 'V002', regional: 'Sul', meta: 40000, vendas: 38900 },
-          ],
-        }
-      case 'territorios':
-        return {
-          columns: [
-            { accessorKey: 'territorio', header: 'Território' },
-            { accessorKey: 'regional', header: 'Regional' },
-            { accessorKey: 'responsavel', header: 'Responsável' },
-            { accessorKey: 'clientes', header: 'Clientes' },
-            { accessorKey: 'vendas', header: 'Vendas (R$)' },
-          ],
-          data: [
-            { territorio: 'SP Capital', regional: 'Sudeste', responsavel: 'Carlos Lima', clientes: 120, vendas: 210000 },
-            { territorio: 'PR Norte', regional: 'Sul', responsavel: 'Ana Pereira', clientes: 80, vendas: 145000 },
-          ],
-        }
-      case 'equipes':
-        return {
-          columns: [
-            { accessorKey: 'equipe', header: 'Equipe' },
-            { accessorKey: 'lider', header: 'Líder' },
-            { accessorKey: 'membros', header: 'Membros' },
-            { accessorKey: 'meta', header: 'Meta (R$)' },
-            { accessorKey: 'vendas', header: 'Vendas (R$)' },
-          ],
-          data: [
-            { equipe: 'Alpha', lider: 'Carlos Lima', membros: 5, meta: 200000, vendas: 178000 },
-            { equipe: 'Beta', lider: 'Ana Pereira', membros: 4, meta: 160000, vendas: 152000 },
-          ],
-        }
-      case 'canais':
-        return {
-          columns: [
-            { accessorKey: 'canal', header: 'Canal' },
-            { accessorKey: 'tipo', header: 'Tipo' },
-            { accessorKey: 'status', header: 'Status' },
-            { accessorKey: 'pedidos', header: 'Pedidos (30d)' },
-            { accessorKey: 'receita', header: 'Receita (R$ 30d)' },
-          ],
-          data: [
-            { canal: 'E-commerce', tipo: 'Online', status: 'Ativo', pedidos: 320, receita: 125000 },
-            { canal: 'Loja Física', tipo: 'Offline', status: 'Ativo', pedidos: 210, receita: 98000 },
-          ],
-        }
+        return [
+          { accessorKey: 'numero_pedido', header: 'Número do Pedido' },
+          { accessorKey: 'cliente', header: 'Cliente' },
+          { accessorKey: 'canal_venda', header: 'Canal de Venda' },
+          { accessorKey: 'vendedor', header: 'Vendedor' },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'data_pedido', header: 'Data do Pedido', cell: ({ row }) => formatDate(row.original['data_pedido']) },
+          { accessorKey: 'valor_produtos', header: 'Valor Produtos', cell: ({ row }) => formatBRL(row.original['valor_produtos']) },
+          { accessorKey: 'valor_frete', header: 'Frete', cell: ({ row }) => formatBRL(row.original['valor_frete']) },
+          { accessorKey: 'valor_desconto', header: 'Desconto', cell: ({ row }) => formatBRL(row.original['valor_desconto']) },
+          { accessorKey: 'valor_total_pedido', header: 'Total Pedido', cell: ({ row }) => formatBRL(row.original['valor_total_pedido']) },
+          { accessorKey: 'cidade_uf', header: 'Cidade/UF' },
+          { accessorKey: 'created_at', header: 'Criado em', cell: ({ row }) => formatDate(row.original['created_at']) },
+        ]
     }
   }, [tabs.selected])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const load = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const params = new URLSearchParams()
+        params.set('view', tabs.selected)
+        if (tabs.selected === 'pedidos') {
+          if (dateRange?.from) {
+            const d = dateRange.from
+            params.set('de', `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+          }
+          if (dateRange?.to) {
+            const d = dateRange.to
+            params.set('ate', `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+          }
+        }
+        const url = `/api/modulos/vendas?${params.toString()}`
+        const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const json = await res.json()
+        const rows = (json?.rows || []) as Row[]
+        setData(Array.isArray(rows) ? rows : [])
+      } catch (e) {
+        if (!(e instanceof DOMException && e.name === 'AbortError')) {
+          setError(e instanceof Error ? e.message : 'Falha ao carregar dados')
+          setData([])
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    load()
+    return () => controller.abort()
+  }, [tabs.selected, dateRange?.from, dateRange?.to])
 
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
@@ -146,8 +177,6 @@ export default function ModulosVendasPage() {
           return <ShoppingCart className="h-4 w-4" />
         case 'clientes':
           return <Users className="h-4 w-4" />
-        case 'vendedores':
-          return <UserCircle className="h-4 w-4" />
         case 'territorios':
           return <Map className="h-4 w-4" />
         case 'equipes':
@@ -201,6 +230,8 @@ export default function ModulosVendasPage() {
               from={data.length === 0 ? 0 : 1}
               to={Math.min(tabelaUI.pageSize, data.length)}
               total={data.length}
+              dateRange={tabs.selected === 'pedidos' ? dateRange : undefined}
+              onDateRangeChange={tabs.selected === 'pedidos' ? setDateRange : undefined}
               fontFamily={fontVar(toolbarUI.fontFamily)}
               fontSize={toolbarUI.fontSize}
               fontWeight={toolbarUI.fontWeight}
@@ -221,34 +252,40 @@ export default function ModulosVendasPage() {
           </div>
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
             <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
-              <DataTable
-                columns={columns}
-                data={data}
-                enableSearch={tabelaUI.enableSearch}
-                showColumnToggle={tabelaUI.enableColumnToggle}
-                showPagination={tabelaUI.showPagination}
-                pageSize={tabelaUI.pageSize}
-                headerBackground={tabelaUI.headerBg}
-                headerTextColor={tabelaUI.headerText}
-                cellTextColor={tabelaUI.cellText}
-                headerFontSize={tabelaUI.headerFontSize}
-                headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
-                headerFontWeight={tabelaUI.headerFontWeight}
-                headerLetterSpacing={tabelaUI.headerLetterSpacing}
-                cellFontSize={tabelaUI.cellFontSize}
-                cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
-                cellFontWeight={tabelaUI.cellFontWeight}
-                cellLetterSpacing={tabelaUI.cellLetterSpacing}
-                enableZebraStripes={tabelaUI.enableZebraStripes}
-                rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
-                borderColor={tabelaUI.borderColor}
-                borderWidth={tabelaUI.borderWidth}
-                selectionColumnWidth={tabelaUI.selectionColumnWidth}
-                enableRowSelection={tabelaUI.enableRowSelection}
-                selectionMode={tabelaUI.selectionMode}
-                defaultSortColumn={tabelaUI.defaultSortColumn}
-                defaultSortDirection={tabelaUI.defaultSortDirection}
-              />
+              {isLoading ? (
+                <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
+              ) : error ? (
+                <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
+              ) : (
+                <DataTable
+                  columns={columns}
+                  data={data}
+                  enableSearch={tabelaUI.enableSearch}
+                  showColumnToggle={tabelaUI.enableColumnToggle}
+                  showPagination={tabelaUI.showPagination}
+                  pageSize={tabelaUI.pageSize}
+                  headerBackground={tabelaUI.headerBg}
+                  headerTextColor={tabelaUI.headerText}
+                  cellTextColor={tabelaUI.cellText}
+                  headerFontSize={tabelaUI.headerFontSize}
+                  headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
+                  headerFontWeight={tabelaUI.headerFontWeight}
+                  headerLetterSpacing={tabelaUI.headerLetterSpacing}
+                  cellFontSize={tabelaUI.cellFontSize}
+                  cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
+                  cellFontWeight={tabelaUI.cellFontWeight}
+                  cellLetterSpacing={tabelaUI.cellLetterSpacing}
+                  enableZebraStripes={tabelaUI.enableZebraStripes}
+                  rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
+                  borderColor={tabelaUI.borderColor}
+                  borderWidth={tabelaUI.borderWidth}
+                  selectionColumnWidth={tabelaUI.selectionColumnWidth}
+                  enableRowSelection={tabelaUI.enableRowSelection}
+                  selectionMode={tabelaUI.selectionMode}
+                  defaultSortColumn={tabelaUI.defaultSortColumn}
+                  defaultSortDirection={tabelaUI.defaultSortDirection}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -256,3 +293,4 @@ export default function ModulosVendasPage() {
     </SidebarProvider>
   )
 }
+
