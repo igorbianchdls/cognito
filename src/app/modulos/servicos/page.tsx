@@ -110,6 +110,8 @@ export default function ModulosServicosPage() {
           {
             accessorKey: 'tecnico',
             header: 'Técnico',
+            size: 250,
+            minSize: 200,
             cell: ({ row }) => {
               const nome = row.original['tecnico'] || 'Sem nome'
               const subtitulo = row.original['cargo'] || 'Sem cargo'
@@ -147,6 +149,8 @@ export default function ModulosServicosPage() {
           {
             accessorKey: 'cliente',
             header: 'Cliente',
+            size: 250,
+            minSize: 200,
             cell: ({ row }) => {
               const nome = row.original['cliente'] || 'Sem nome'
               const subtitulo = row.original['segmento'] || 'Sem segmento'
@@ -196,6 +200,8 @@ export default function ModulosServicosPage() {
           {
             accessorKey: 'cliente',
             header: 'Cliente',
+            size: 250,
+            minSize: 200,
             cell: ({ row }) => {
               const nome = row.original['cliente'] || 'Sem nome'
               const subtitulo = row.original['segmento'] || 'Sem segmento'
@@ -220,6 +226,8 @@ export default function ModulosServicosPage() {
           {
             accessorKey: 'tecnico_responsavel',
             header: 'Técnico Responsável',
+            size: 250,
+            minSize: 200,
             cell: ({ row }) => {
               const nome = row.original['tecnico_responsavel'] || 'Sem nome'
               const subtitulo = row.original['cargo_tecnico'] || 'Sem cargo'

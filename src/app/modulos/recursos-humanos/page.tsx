@@ -134,6 +134,8 @@ export default function ModulosRecursosHumanosPage() {
           {
             accessorKey: 'funcionario',
             header: 'Funcionário',
+            size: 250,
+            minSize: 200,
             cell: ({ row }) => {
               const nome = row.original['funcionario'] || 'Sem nome'
               const cargo = row.original['cargo'] || 'Sem cargo'
