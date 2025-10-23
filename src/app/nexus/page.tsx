@@ -44,15 +44,6 @@ export default function Page() {
   const getApiUrl = (agent: string) => {
     switch (agent) {
       case 'claudeAgent': return '/api/claudeAgents/simple';
-      case 'shopifyAnalyst': return '/api/agents/shopify-analyst';
-      case 'metaAnalyst': return '/api/agents/meta-analyst';
-      case 'googleAnalyticsAnalyst': return '/api/agents/google-analytics-analyst';
-      case 'amazonAdsAnalyst': return '/api/agents/amazon-ads-analyst';
-      case 'contaAzulAnalyst': return '/api/agents/conta-azul-analyst';
-      case 'shopeeAnalyst': return '/api/agents/shopee-analyst';
-      case 'keywordAnalyst': return '/api/agents/keyword-analyst';
-      case 'googleCampaignAnalyst': return '/api/agents/google-campaign-analyst';
-      case 'metaCampaignAnalyst': return '/api/agents/meta-campaign-analyst';
       case 'analistaDados': return '/api/agents/analista-dados';
       case 'salesAgent': return '/api/claudeAgents/sales';
       case 'contasAReceberAgent': return '/api/claudeAgents/contas-a-receber';
@@ -68,7 +59,7 @@ export default function Page() {
       case 'gestorDeComprasAgent': return '/api/claudeAgents/gestor-de-compras';
       case 'gestorDeProjetosAgent': return '/api/claudeAgents/gestor-de-projetos';
       case 'funcionariosAgent': return '/api/claudeAgents/funcionarios';
-      default: return '/api/agents/shopify-analyst';
+      default: return '/api/agents/analista-dados';
     }
   };
 
