@@ -11,6 +11,7 @@ import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav from '@/components/modulos/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
+import StatusBadge from '@/components/modulos/StatusBadge'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { Users, Briefcase, Building, CalendarDays } from 'lucide-react'
@@ -158,11 +159,19 @@ export default function ModulosRecursosHumanosPage() {
             }
           },
           { accessorKey: 'cargo', header: 'Cargo' },
-          { accessorKey: 'departamento', header: 'Departamento' },
+          {
+            accessorKey: 'departamento',
+            header: 'Departamento',
+            cell: ({ row }) => <StatusBadge value={row.original['departamento']} type="departamento" />
+          },
           { accessorKey: 'gestor_direto', header: 'Gestor Direto' },
           { accessorKey: 'email_corporativo', header: 'E-mail Corporativo' },
           { accessorKey: 'telefone', header: 'Telefone' },
-          { accessorKey: 'status', header: 'Status' },
+          {
+            accessorKey: 'status',
+            header: 'Status',
+            cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" />
+          },
           { accessorKey: 'data_nascimento', header: 'Data de Nascimento', cell: ({ row }) => formatDate(row.original['data_nascimento']) },
           { accessorKey: 'data_criacao', header: 'Data de Criação', cell: ({ row }) => formatDate(row.original['data_criacao']) },
         ]

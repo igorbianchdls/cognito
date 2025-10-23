@@ -2,7 +2,7 @@ import React from 'react'
 
 type StatusBadgeProps = {
   value?: unknown
-  type: 'status' | 'prioridade'
+  type: 'status' | 'prioridade' | 'departamento'
 }
 
 export default function StatusBadge({ value, type }: StatusBadgeProps) {
@@ -12,13 +12,16 @@ export default function StatusBadge({ value, type }: StatusBadgeProps) {
   let textColor = '#6b7280'
 
   if (type === 'status') {
-    if (valueStr === 'pago' || valueStr === 'recebido') {
+    if (valueStr === 'pago' || valueStr === 'recebido' || valueStr === 'concluída' || valueStr === 'concluida' || valueStr === 'ativo') {
       bgColor = '#dcfce7'
       textColor = '#16a34a'
-    } else if (valueStr === 'pendente' || valueStr === 'em aberto') {
+    } else if (valueStr === 'aberta' || valueStr === 'em aberto') {
+      bgColor = '#dbeafe'
+      textColor = '#2563eb'
+    } else if (valueStr === 'pendente') {
       bgColor = '#fef3c7'
       textColor = '#ca8a04'
-    } else if (valueStr === 'vencido' || valueStr === 'atrasado') {
+    } else if (valueStr === 'vencido' || valueStr === 'atrasado' || valueStr === 'inativo') {
       bgColor = '#fee2e2'
       textColor = '#dc2626'
     }
@@ -32,6 +35,20 @@ export default function StatusBadge({ value, type }: StatusBadgeProps) {
     } else if (valueStr === 'baixa') {
       bgColor = '#dcfce7'
       textColor = '#16a34a'
+    }
+  } else if (type === 'departamento') {
+    if (valueStr === 'comercial') {
+      bgColor = '#dbeafe'
+      textColor = '#2563eb'
+    } else if (valueStr === 'logística' || valueStr === 'logistica') {
+      bgColor = '#e9d5ff'
+      textColor = '#7c3aed'
+    } else if (valueStr === 'financeiro') {
+      bgColor = '#dcfce7'
+      textColor = '#16a34a'
+    } else if (valueStr === 'diretoria') {
+      bgColor = '#fef3c7'
+      textColor = '#ca8a04'
     }
   }
 
