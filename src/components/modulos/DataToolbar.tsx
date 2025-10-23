@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search } from "lucide-react"
+import type { DateRange } from 'react-day-picker'
 import CadastroFormSheet from "@/components/modulos/CadastroFormSheet"
 
 type DataToolbarProps = {
@@ -14,8 +15,8 @@ type DataToolbarProps = {
   searchPlaceholder?: string
   dateRangePlaceholder?: string
   // Date range state
-  dateRange?: { from?: Date; to?: Date }
-  onDateRangeChange?: (range: { from?: Date; to?: Date }) => void
+  dateRange?: DateRange
+  onDateRangeChange?: (range: DateRange | undefined) => void
   // Right side only
   from?: number
   to?: number
@@ -23,7 +24,6 @@ type DataToolbarProps = {
   onPrev?: () => void
   onNext?: () => void
   actionLabel?: string
-  onAction?: () => void
   // Styling
   fontFamily?: string
   fontSize?: number
@@ -55,7 +55,6 @@ export default function DataToolbar({
   onPrev,
   onNext,
   actionLabel = "Cadastrar",
-  onAction,
   fontFamily,
   fontSize,
   fontWeight,
@@ -129,13 +128,9 @@ export default function DataToolbar({
                 mode="range"
                 numberOfMonths={2}
                 buttonVariant="ghost"
-                selected={dateRange as any}
-                onSelect={(range: any) => {
-                  const next = {
-                    from: range?.from ? new Date(range.from) : undefined,
-                    to: range?.to ? new Date(range.to) : undefined,
-                  } as { from?: Date; to?: Date }
-                  onDateRangeChange?.(next)
+                selected={dateRange}
+                onSelect={(range?: DateRange) => {
+                  onDateRangeChange?.(range)
                 }}
               />
             </PopoverContent>
@@ -169,6 +164,16 @@ export default function DataToolbar({
         <CadastroFormSheet triggerLabel={actionLabel} />
         </div>
       </div>
+      {typeof underlineWidth === 'number' && underlineWidth > 0 && (
+        <div
+          style={{
+            marginTop: typeof underlineOffsetTop === 'number' ? `${underlineOffsetTop}px` : undefined,
+            height: `${underlineWidth}px`,
+            backgroundColor: underlineColor || '#e5e7eb',
+            width: '100%'
+          }}
+        />
+      )}
     </div>
   )
 }

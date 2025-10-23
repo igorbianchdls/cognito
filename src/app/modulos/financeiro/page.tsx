@@ -13,7 +13,7 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { Banknote, CreditCard, ArrowDownCircle, ArrowUpCircle, List } from 'lucide-react'
+import { CreditCard, ArrowDownCircle, ArrowUpCircle, List } from 'lucide-react'
 
 type Row = TableData
 
