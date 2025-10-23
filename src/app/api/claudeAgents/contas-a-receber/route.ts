@@ -11,7 +11,7 @@ import {
   obterSaldoBancario,
   obterDespesasPorCentroCusto,
   analisarInadimplencia,
-  analisarMovimentosPorCentroCusto
+  analisarDespesasPorCategoria
 } from '@/tools/financialTools';
 import { createDashboardTool } from '@/tools/apps/createDashboardTool';
 
@@ -594,7 +594,7 @@ Seja sempre profissional, orientado a dados e ofereça insights acionáveis. Pri
         obterSaldoBancario,
         obterDespesasPorCentroCusto,
         analisarInadimplencia,
-        analisarMovimentosPorCentroCusto,
+        analisarDespesasPorCategoria,
         createDashboardTool,
       }
     });
