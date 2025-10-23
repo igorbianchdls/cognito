@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { BarChart3, Award } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
@@ -42,7 +42,10 @@ export default function DesempenhoPorCanalResult({
   fontes,
   sql_query,
 }: TrafficSourcesResultProps) {
-  const data = fontes ?? [];
+  const [rowsState, setRowsState] = useState< TrafficSourceRow[] >(fontes ?? []);
+  const [sqlQuery, setSqlQuery] = useState<string | undefined>(sql_query);
+  useEffect(() => { setRowsState(fontes ?? []); setSqlQuery(sql_query); }, [fontes, sql_query]);
+  const data = rowsState ?? [];
 
   const metaInfo = [
     periodo_dias ? `${periodo_dias} dias analisados` : null,
@@ -131,7 +134,7 @@ export default function DesempenhoPorCanalResult({
       count={data.length}
       iconColor="text-indigo-600"
       exportFileName="desempenho_por_canal"
-      sqlQuery={sql_query}
+      sqlQuery={sqlQuery}
       chartRenderer={() => {
         if (!data.length) return null;
         const sample = data[0] as Record<string, unknown>;
@@ -164,6 +167,35 @@ export default function DesempenhoPorCanalResult({
             }}
           />
         );
+      }}
+      
+      headerDateFilter
+      onHeaderDateRangeChange={async ({ from, to, preset }) => {
+        try {
+          let qs = '';
+          if (preset === '7d') qs = '?days=7';
+          else if (preset === '30d') qs = '?days=30';
+          else if (preset === 'this-month') {
+            const today = new Date();
+            const start = new Date(today.getFullYear(), today.getMonth(), 1);
+            const days = Math.max(1, Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+            qs = `?days=${days}`;
+          } else if (preset !== 'all' && from && to) {
+            const p = new URLSearchParams();
+            p.set('data_de', from);
+            p.set('data_ate', to);
+            qs = `?${p.toString()}`;
+          }
+          const res = await fetch(`/api/tools/web-analytics/por-canal${qs}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          if (json?.success && Array.isArray(json.fontes)) {
+            setRowsState(json.fontes as TrafficSourceRow[]);
+            setSqlQuery(json.sql_query);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar desempenho por canal por período:', e);
+        }
       }}
     />
   );

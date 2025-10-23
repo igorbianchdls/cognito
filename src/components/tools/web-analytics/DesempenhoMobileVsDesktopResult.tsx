@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { MonitorSmartphone } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
@@ -33,7 +33,10 @@ export default function DesempenhoMobileVsDesktopResult({
   rows,
   sql_query,
 }: DevicePerformanceResultProps) {
-  const data = rows ?? [];
+  const [rowsState, setRowsState] = useState<DevicePerformanceRow[]>(rows ?? []);
+  const [sqlQuery, setSqlQuery] = useState<string | undefined>(sql_query);
+  useEffect(() => { setRowsState(rows ?? []); setSqlQuery(sql_query); }, [rows, sql_query]);
+  const data = rowsState ?? [];
 
   const meta = periodo_dias ? `${periodo_dias} dias analisados` : undefined;
 
@@ -96,7 +99,7 @@ export default function DesempenhoMobileVsDesktopResult({
       count={data.length}
       iconColor="text-cyan-600"
       exportFileName="device_performance"
-      sqlQuery={sql_query}
+      sqlQuery={sqlQuery}
       chartRenderer={() => {
         if (!data.length) return null;
         const sample = data[0] as Record<string, unknown>;
@@ -126,6 +129,25 @@ export default function DesempenhoMobileVsDesktopResult({
             }}
           />
         );
+      }}
+      headerDateFilter
+      onHeaderDateRangeChange={async ({ from, to, preset }) => {
+        try {
+          const params = new URLSearchParams();
+          if (preset !== 'all') {
+            if (from) params.set('data_de', from);
+            if (to) params.set('data_ate', to);
+          }
+          const res = await fetch(`/api/tools/web-analytics/mobile-vs-desktop?${params.toString()}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          if (json?.success && Array.isArray(json.rows)) {
+            setRowsState(json.rows as DevicePerformanceRow[]);
+            setSqlQuery(json.sql_query);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar Mobile vs Desktop por período:', e);
+        }
       }}
     />
   );

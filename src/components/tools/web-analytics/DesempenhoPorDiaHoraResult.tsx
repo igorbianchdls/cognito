@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { ChartSwitcher } from '@/components/charts/ChartSwitcher';
@@ -17,7 +17,10 @@ interface Props {
 }
 
 export default function DesempenhoPorDiaHoraResult({ success, message, rows = [], count, sql_query }: Props) {
-  const data = useMemo(() => rows as Row[], [rows]);
+  const [rowsState, setRowsState] = useState(rows);
+  const [sqlQuery, setSqlQuery] = useState<string | undefined>(sql_query);
+  useEffect(() => { setRowsState(rows); setSqlQuery(sql_query); }, [rows, sql_query]);
+  const data = useMemo(() => rowsState as Row[], [rowsState]);
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
     if (!data.length) return [{ accessorKey: 'info', header: 'Info' } as ColumnDef<Row>];
@@ -55,9 +58,27 @@ export default function DesempenhoPorDiaHoraResult({ success, message, rows = []
       success={success}
       count={typeof count === 'number' ? count : data.length}
       exportFileName="desempenho_por_dia_hora"
-      sqlQuery={sql_query}
+      sqlQuery={sqlQuery}
       chartRenderer={chartRenderer}
+      headerDateFilter
+      onHeaderDateRangeChange={async ({ from, to, preset }) => {
+        try {
+          const params = new URLSearchParams();
+          if (preset !== 'all') {
+            if (from) params.set('data_de', from);
+            if (to) params.set('data_ate', to);
+          }
+          const res = await fetch(`/api/tools/web-analytics/por-dia-hora?${params.toString()}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          if (json?.success && Array.isArray(json.rows)) {
+            setRowsState(json.rows as Array<Record<string, unknown>>);
+            setSqlQuery(json.sql_query);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar desempenho por dia/hora por período:', e);
+        }
+      }}
     />
   );
 }
-

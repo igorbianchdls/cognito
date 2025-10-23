@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { TrendingUp, Gauge } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
@@ -52,7 +52,9 @@ export default function DesempenhoGeralDoSiteResult({
   rows,
   sql_query,
 }: TrafficOverviewResultProps) {
-  const data = rows ?? [];
+  const [tableRows, setTableRows] = useState<TrafficOverviewRow[]>(rows ?? []);
+  const [sqlQuery, setSqlQuery] = useState<string | undefined>(sql_query);
+  useEffect(() => { setTableRows(rows ?? []); setSqlQuery(sql_query); }, [rows, sql_query]);
 
   const summary = metricas
     ? [
@@ -153,18 +155,18 @@ export default function DesempenhoGeralDoSiteResult({
       )}
 
       <ArtifactDataTable
-        data={data}
+        data={tableRows}
         columns={columns}
         title="Desempenho geral do site"
         icon={TrendingUp}
         message={summary ? `${message} • ${summary}` : message}
         success={success}
-        count={data.length}
+        count={tableRows.length}
         iconColor="text-blue-600"
         exportFileName="desempenho_geral_site"
-        sqlQuery={sql_query}
+        sqlQuery={sqlQuery}
         chartRenderer={() => {
-          if (!data.length) return null;
+          if (!tableRows.length) return null;
           const xKey = 'data';
           // Métricas conhecidas do dataset desta tela
           const valueKeys = [
@@ -183,7 +185,7 @@ export default function DesempenhoGeralDoSiteResult({
           };
           return (
             <ChartSwitcher
-              rows={data as Array<Record<string, unknown>>}
+              rows={tableRows as Array<Record<string, unknown>>}
               options={{
                 xKey,
                 valueKeys,
@@ -195,6 +197,34 @@ export default function DesempenhoGeralDoSiteResult({
               }}
             />
           );
+        }}
+        headerDateFilter
+        onHeaderDateRangeChange={async ({ from, to, preset }) => {
+          try {
+            let qs = '';
+            if (preset === '7d') qs = '?days=7';
+            else if (preset === '30d') qs = '?days=30';
+            else if (preset === 'this-month') {
+              const today = new Date();
+              const start = new Date(today.getFullYear(), today.getMonth(), 1);
+              const days = Math.max(1, Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+              qs = `?days=${days}`;
+            } else if (preset !== 'all' && from && to) {
+              const p = new URLSearchParams();
+              p.set('data_de', from);
+              p.set('data_ate', to);
+              qs = `?${p.toString()}`;
+            }
+            const res = await fetch(`/api/tools/web-analytics/overview${qs}`, { cache: 'no-store' });
+            if (!res.ok) return;
+            const json = await res.json();
+            if (json?.success && Array.isArray(json.rows)) {
+              setTableRows(json.rows as TrafficOverviewRow[]);
+              setSqlQuery(json.sql_query);
+            }
+          } catch (e) {
+            console.error('Erro ao buscar visão geral de tráfego por período:', e);
+          }
         }}
       />
     </div>

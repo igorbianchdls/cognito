@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Target } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
@@ -38,7 +38,10 @@ export default function EtapasDoFunilGeralResult({
   rows,
   sql_query,
 }: ConversionFunnelResultProps) {
-  const data = rows ?? steps ?? [];
+  const [rowsState, setRowsState] = useState<ConversionFunnelRow[]>(rows ?? steps ?? []);
+  const [sqlQuery, setSqlQuery] = useState<string | undefined>(sql_query);
+  useEffect(() => { setRowsState(rows ?? steps ?? []); setSqlQuery(sql_query); }, [rows, steps, sql_query]);
+  const data = rowsState ?? [];
 
   const meta = [
     total_steps ? `${total_steps} etapas` : null,
@@ -112,7 +115,7 @@ export default function EtapasDoFunilGeralResult({
       count={data.length}
       iconColor="text-fuchsia-600"
       exportFileName="conversion_funnel"
-      sqlQuery={sql_query}
+      sqlQuery={sqlQuery}
       chartRenderer={() => {
         // Transforma linha agregada em série por etapa
         const single = (data && data.length === 1) ? (data[0] as Record<string, unknown>) : null;
@@ -138,6 +141,25 @@ export default function EtapasDoFunilGeralResult({
             }}
           />
         );
+      }}
+      headerDateFilter
+      onHeaderDateRangeChange={async ({ from, to, preset }) => {
+        try {
+          const params = new URLSearchParams();
+          if (preset !== 'all') {
+            if (from) params.set('data_de', from);
+            if (to) params.set('data_ate', to);
+          }
+          const res = await fetch(`/api/tools/web-analytics/funil-geral?${params.toString()}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          if (json?.success && json?.rows) {
+            setRowsState(json.rows as ConversionFunnelRow[]);
+            setSqlQuery(json.sql_query);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar funil geral por período:', e);
+        }
       }}
     />
   );

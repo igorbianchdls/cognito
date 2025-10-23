@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Bookmark } from 'lucide-react';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
@@ -33,7 +33,10 @@ export default function ContribuicaoPorPaginaResult({
   rows,
   sql_query,
 }: TopLandingPagesResultProps) {
-  const data = rows ?? [];
+  const [rowsState, setRowsState] = useState<LandingPageRow[]>(rows ?? []);
+  const [sqlQuery, setSqlQuery] = useState<string | undefined>(sql_query);
+  useEffect(() => { setRowsState(rows ?? []); setSqlQuery(sql_query); }, [rows, sql_query]);
+  const data = rowsState ?? [];
 
   const meta = [
     periodo_dias ? `${periodo_dias} dias` : null,
@@ -101,7 +104,7 @@ export default function ContribuicaoPorPaginaResult({
       count={data.length}
       iconColor="text-amber-600"
       exportFileName="contribuicao_por_pagina"
-      sqlQuery={sql_query}
+      sqlQuery={sqlQuery}
       chartRenderer={() => {
         if (!data.length) return null;
         const sample = data[0] as Record<string, unknown>;
@@ -129,6 +132,26 @@ export default function ContribuicaoPorPaginaResult({
             }}
           />
         );
+      }}
+      headerDateFilter
+      onHeaderDateRangeChange={async ({ from, to, preset }) => {
+        try {
+          const params = new URLSearchParams();
+          if (preset !== 'all') {
+            if (from) params.set('data_de', from);
+            if (to) params.set('data_ate', to);
+          }
+          params.set('limit', String(total_paginas ?? 20));
+          const res = await fetch(`/api/tools/web-analytics/contribuicao-por-pagina?${params.toString()}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          if (json?.success && Array.isArray(json.rows)) {
+            setRowsState(json.rows as LandingPageRow[]);
+            setSqlQuery(json.sql_query);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar contribuição por página por período:', e);
+        }
       }}
     />
   );
