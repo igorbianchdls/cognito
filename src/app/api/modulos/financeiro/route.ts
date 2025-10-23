@@ -102,19 +102,29 @@ export async function GET(req: NextRequest) {
 
     if (view === 'contas-a-pagar' || view === 'pagamentos-efetuados') {
       baseSql = `FROM financeiro.contas_a_pagar cap
-                 LEFT JOIN financeiro.fornecedores f ON f.id = cap.fornecedor_id
-                 LEFT JOIN financeiro.categorias_fornecedor cat ON cat.id = f.categoria_id`;
-      selectSql = `SELECT cap.id,
+                 LEFT JOIN financeiro.contas_a_pagar_linhas capl ON cap.id = capl.conta_pagar_id
+                 LEFT JOIN financeiro.fornecedores f ON cap.fornecedor_id = f.id
+                 LEFT JOIN financeiro.categorias cat ON cap.categoria_id = cat.id
+                 LEFT JOIN financeiro.centros_custo cc ON cap.centro_custo_id = cc.id
+                 LEFT JOIN financeiro.contas c ON cap.conta_id = c.id`;
+      selectSql = `SELECT cap.id AS conta_id,
+                          cap.descricao,
                           f.nome_fornecedor AS fornecedor,
                           f.imagem_url AS fornecedor_imagem_url,
                           cat.nome AS fornecedor_categoria,
-                          cap.descricao,
+                          cc.nome AS centro_custo,
+                          c.nome_conta AS conta_bancaria,
+                          cap.tipo_titulo,
                           cap.valor_total,
                           cap.data_emissao,
                           cap.data_vencimento,
                           cap.data_pagamento,
                           cap.status,
-                          cap.tipo_titulo`;
+                          capl.numero_parcela,
+                          capl.valor_parcela,
+                          capl.data_vencimento AS parcela_vencimento,
+                          capl.data_pagamento AS parcela_pagamento,
+                          capl.status AS parcela_status`;
       // Filtro principal por data: vencimento para contas; pagamento para pagos
       whereDateCol = view === 'pagamentos-efetuados' ? 'cap.data_pagamento' : 'cap.data_vencimento';
       if (view === 'pagamentos-efetuados') {
