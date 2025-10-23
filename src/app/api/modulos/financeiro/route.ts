@@ -112,7 +112,8 @@ export async function GET(req: NextRequest) {
                           cap.data_pagamento,
                           cap.status,
                           cap.tipo_titulo`;
-      whereDateCol = 'cap.data_vencimento';
+      // Filtro principal por data: vencimento para contas; pagamento para pagos
+      whereDateCol = view === 'pagamentos-efetuados' ? 'cap.data_pagamento' : 'cap.data_vencimento';
       if (view === 'pagamentos-efetuados') {
         conditions.push(`LOWER(cap.status) = 'pago'`);
       }
@@ -131,7 +132,8 @@ export async function GET(req: NextRequest) {
                           car.data_vencimento,
                           car.data_recebimento,
                           car.status`;
-      whereDateCol = 'car.data_vencimento';
+      // Filtro principal por data: vencimento para contas; recebimento para recebidos
+      whereDateCol = view === 'pagamentos-recebidos' ? 'car.data_recebimento' : 'car.data_vencimento';
       if (view === 'pagamentos-recebidos') {
         conditions.push(`LOWER(car.status) = 'pago'`);
       }
@@ -201,4 +203,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-

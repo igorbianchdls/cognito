@@ -24,6 +24,9 @@ export default function ModulosFinanceiroPage() {
   const layout = useStore($layout)
   const toolbarUI = useStore($toolbarUI)
 
+  // Filtro de datas (range)
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({})
+
   useEffect(() => {
     financeiroUiActions.setTabs({
       options: [
@@ -44,37 +47,54 @@ export default function ModulosFinanceiroPage() {
     return name
   }
 
+  const formatDate = (value?: unknown) => {
+    if (!value) return ''
+    try {
+      const d = new Date(String(value))
+      if (isNaN(d.getTime())) return String(value)
+      return d.toLocaleDateString('pt-BR')
+    } catch {
+      return String(value)
+    }
+  }
+
+  const formatBRL = (value?: unknown) => {
+    const n = Number(value ?? 0)
+    if (isNaN(n)) return String(value ?? '')
+    return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  }
+
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
       case 'contas-a-receber':
         return [
           { accessorKey: 'cliente', header: 'Cliente' },
           { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'data_vencimento', header: 'Vencimento' },
-          { accessorKey: 'valor_total', header: 'Valor' },
+          { accessorKey: 'data_vencimento', header: 'Vencimento', cell: ({ row }) => formatDate(row.original['data_vencimento']) },
+          { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },
           { accessorKey: 'status', header: 'Status' },
         ]
       case 'pagamentos-efetuados':
         return [
           { accessorKey: 'fornecedor', header: 'Fornecedor' },
           { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'data_pagamento', header: 'Pago em' },
-          { accessorKey: 'valor_total', header: 'Valor' },
+          { accessorKey: 'data_pagamento', header: 'Pago em', cell: ({ row }) => formatDate(row.original['data_pagamento']) },
+          { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },
           { accessorKey: 'tipo_titulo', header: 'Tipo' },
         ]
       case 'pagamentos-recebidos':
         return [
           { accessorKey: 'cliente', header: 'Cliente' },
           { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'data_recebimento', header: 'Recebido em' },
-          { accessorKey: 'valor_total', header: 'Valor' },
+          { accessorKey: 'data_recebimento', header: 'Recebido em', cell: ({ row }) => formatDate(row.original['data_recebimento']) },
+          { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },
           { accessorKey: 'status', header: 'Status' },
         ]
       case 'movimentos':
         return [
-          { accessorKey: 'data', header: 'Data' },
+          { accessorKey: 'data', header: 'Data', cell: ({ row }) => formatDate(row.original['data']) },
           { accessorKey: 'tipo', header: 'Tipo' },
-          { accessorKey: 'valor', header: 'Valor' },
+          { accessorKey: 'valor', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor']) },
           { accessorKey: 'categoria_nome', header: 'Categoria' },
           { accessorKey: 'conta_nome', header: 'Conta' },
         ]
@@ -83,8 +103,8 @@ export default function ModulosFinanceiroPage() {
         return [
           { accessorKey: 'fornecedor', header: 'Fornecedor' },
           { accessorKey: 'descricao', header: 'Descrição' },
-          { accessorKey: 'data_vencimento', header: 'Vencimento' },
-          { accessorKey: 'valor_total', header: 'Valor' },
+          { accessorKey: 'data_vencimento', header: 'Vencimento', cell: ({ row }) => formatDate(row.original['data_vencimento']) },
+          { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },
           { accessorKey: 'status', header: 'Status' },
         ]
     }
@@ -100,7 +120,23 @@ export default function ModulosFinanceiroPage() {
       setIsLoading(true)
       setError(null)
       try {
-        const url = `/api/modulos/financeiro?view=${encodeURIComponent(tabs.selected)}`
+        const params = new URLSearchParams()
+        params.set('view', tabs.selected)
+        if (dateRange.from) {
+          const d = new Date(dateRange.from)
+          const yyyy = d.getFullYear()
+          const mm = String(d.getMonth() + 1).padStart(2, '0')
+          const dd = String(d.getDate()).padStart(2, '0')
+          params.set('de', `${yyyy}-${mm}-${dd}`)
+        }
+        if (dateRange.to) {
+          const d = new Date(dateRange.to)
+          const yyyy = d.getFullYear()
+          const mm = String(d.getMonth() + 1).padStart(2, '0')
+          const dd = String(d.getDate()).padStart(2, '0')
+          params.set('ate', `${yyyy}-${mm}-${dd}`)
+        }
+        const url = `/api/modulos/financeiro?${params.toString()}`
         const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
         if (!res.ok) throw new Error(`HTTP ${res.status}`)
         const json = await res.json()
@@ -117,7 +153,7 @@ export default function ModulosFinanceiroPage() {
     }
     load()
     return () => controller.abort()
-  }, [tabs.selected])
+  }, [tabs.selected, dateRange.from, dateRange.to])
 
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
@@ -181,6 +217,8 @@ export default function ModulosFinanceiroPage() {
               from={data.length === 0 ? 0 : 1}
               to={Math.min(tabelaUI.pageSize, data.length)}
               total={data.length}
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
               fontFamily={fontVar(toolbarUI.fontFamily)}
               fontSize={toolbarUI.fontSize}
               fontWeight={toolbarUI.fontWeight}

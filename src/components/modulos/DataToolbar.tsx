@@ -13,6 +13,9 @@ type DataToolbarProps = {
   // Left side (no integration)
   searchPlaceholder?: string
   dateRangePlaceholder?: string
+  // Date range state
+  dateRange?: { from?: Date; to?: Date }
+  onDateRangeChange?: (range: { from?: Date; to?: Date }) => void
   // Right side only
   from?: number
   to?: number
@@ -44,6 +47,8 @@ export default function DataToolbar({
   className,
   searchPlaceholder = "Search",
   dateRangePlaceholder = "Date Range",
+  dateRange,
+  onDateRangeChange,
   from = 0,
   to = 0,
   total = 0,
@@ -68,6 +73,18 @@ export default function DataToolbar({
   searchWidth,
   dateRangeWidth,
 }: DataToolbarProps) {
+  const fmt = (d?: Date) =>
+    d ? d.toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : ''
+
+  const periodLabel = (() => {
+    const from = dateRange?.from
+    const to = dateRange?.to
+    if (from && to) return `${fmt(from)} – ${fmt(to)}`
+    if (from && !to) return `De ${fmt(from)}`
+    if (!from && to) return `Até ${fmt(to)}`
+    return dateRangePlaceholder || 'Período'
+  })()
+
   return (
     <div
       className={`w-full ${className ?? ""}`}
@@ -103,12 +120,24 @@ export default function DataToolbar({
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" className="h-8 px-3 gap-2">
-                <span style={{ color: fontColor || undefined }}>{dateRangePlaceholder}</span>
+                <span style={{ color: fontColor || undefined }}>{periodLabel}</span>
                 <CalendarIcon style={{ color: iconColor || undefined, width: iconSize ? `${iconSize}px` : undefined, height: iconSize ? `${iconSize}px` : undefined, marginLeft: typeof iconGap === 'number' ? `${iconGap}px` : undefined }} />
               </Button>
             </PopoverTrigger>
             <PopoverContent align="start" sideOffset={6} className="p-2" style={{ width: dateRangeWidth ? `${dateRangeWidth}px` : undefined }}>
-              <Calendar mode="range" numberOfMonths={2} buttonVariant="ghost" />
+              <Calendar
+                mode="range"
+                numberOfMonths={2}
+                buttonVariant="ghost"
+                selected={dateRange as any}
+                onSelect={(range: any) => {
+                  const next = {
+                    from: range?.from ? new Date(range.from) : undefined,
+                    to: range?.to ? new Date(range.to) : undefined,
+                  } as { from?: Date; to?: Date }
+                  onDateRangeChange?.(next)
+                }}
+              />
             </PopoverContent>
           </Popover>
         </div>
@@ -143,4 +172,3 @@ export default function DataToolbar({
     </div>
   )
 }
-
