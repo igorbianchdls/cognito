@@ -63,6 +63,9 @@ import DespesasCentroCustoResult, { type ObterDespesasPorCentroCustoOutput } fro
 import InadimplenciaResult, { type AnalisarInadimplenciaOutput } from '../tools/InadimplenciaResult';
 import AutomationResultCard from './tools/AutomationResultCard';
 import type { AutomationSummaryOutput } from '@/tools/automationTools';
+import OportunidadesResult from './tools/crm/OportunidadesResult';
+import AtividadesResult from './tools/crm/AtividadesResult';
+import type { GetCrmOportunidadesOutput, GetCrmAtividadesOutput } from '@/tools/crmTools';
 import { BarChart3, DollarSign, LineChart, TrendingUp, AlertTriangle } from 'lucide-react';
 import AnaliseDeCampanhas from '../tools/paid-traffic/analiseDeCampanhas';
 import OrganicMarketingDataTable from '../tools/OrganicMarketingDataTable';
@@ -6877,6 +6880,46 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   error={(analyticsTool.output as GetAnalyticsDataToolOutput).error}
                   sql_query={(analyticsTool.output as GetAnalyticsDataToolOutput).sql_query}
                 />
+              )}
+            </div>
+          );
+        }
+
+        // CRM: Oportunidades
+        if (part.type === 'tool-getCrmOportunidades') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type="tool-getCrmOportunidades" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <OportunidadesResult result={tool.output as GetCrmOportunidadesOutput} />
+              )}
+            </div>
+          );
+        }
+
+        // CRM: Atividades
+        if (part.type === 'tool-getCrmAtividades') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type="tool-getCrmAtividades" state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <AtividadesResult result={tool.output as GetCrmAtividadesOutput} />
               )}
             </div>
           );

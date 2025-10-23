@@ -59,6 +59,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
   'gestorDeServicosAgent': Wrench,
   'gestorDeVendasB2BAgent': TrendingUp,
   'funcionariosAgent': Users,
+  'crmAgent': Users,
 };
 
 const models = [
@@ -79,6 +80,7 @@ const models = [
   { id: 'gestorDeProjetosAgent', name: 'Gestor de Projetos', icon: iconMap['gestorDeProjetosAgent'] },
   { id: 'gestorDeServicosAgent', name: 'Gestor de Serviços', icon: iconMap['gestorDeServicosAgent'] },
   { id: 'gestorDeVendasB2BAgent', name: 'Gestor de Vendas B2B', icon: iconMap['gestorDeVendasB2BAgent'] },
+  { id: 'crmAgent', name: 'CRM', icon: iconMap['crmAgent'] },
   { id: 'automationAgent', name: 'Automações', icon: Wrench },
 ];
 
@@ -161,6 +163,7 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
                 case 'gestorDeServicosAgent': return 'Gestor de Serviços';
                 case 'gestorDeVendasB2BAgent': return 'Gestor de Vendas B2B';
                 case 'funcionariosAgent': return 'Funcionários';
+                case 'crmAgent': return 'CRM';
                 case 'automationAgent': return 'Automações';
                 default: return id;
               }
