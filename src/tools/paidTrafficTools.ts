@@ -56,19 +56,19 @@ const buildSelectQuery = (
   };
 
   if (filters.plataforma && columns.includes('plataforma')) {
-    clauses.push(`plataforma = ${addParam(filters.plataforma)}`);
+    clauses.push(`LOWER(plataforma) = LOWER(${addParam(filters.plataforma)})`);
   }
 
   if (filters.status && columns.includes('status')) {
-    clauses.push(`status = ${addParam(filters.status)}`);
+    clauses.push(`LOWER(status) = LOWER(${addParam(filters.status)})`);
   }
 
   if (filters.criativo_status && columns.includes('criativo_status')) {
-    clauses.push(`criativo_status = ${addParam(filters.criativo_status)}`);
+    clauses.push(`LOWER(criativo_status) = LOWER(${addParam(filters.criativo_status)})`);
   }
 
   if (filters.objetivo && columns.includes('objetivo')) {
-    clauses.push(`objetivo = ${addParam(filters.objetivo)}`);
+    clauses.push(`LOWER(objetivo) = LOWER(${addParam(filters.objetivo)})`);
   }
 
   if (options.dateColumn?.from && filters.data_de) {
@@ -394,7 +394,7 @@ LIMIT $3;
 
       if (!rows.length) {
         return {
-          success: false,
+          success: true,
           message: 'Nenhuma métrica encontrada no período',
           periodo_dias: date_range_days,
           plataforma: plataforma ?? 'Todas',
@@ -490,7 +490,7 @@ FROM ${ADS_SCHEMA}.metricas_anuncios m
 JOIN ${ADS_SCHEMA}.anuncios_publicados ap ON m.anuncio_publicado_id = ap.id
 JOIN ${ADS_SCHEMA}.contas_ads ca ON ap.conta_ads_id = ca.id
 WHERE m.data BETWEEN $1::date AND $2::date
-  AND ($3::text IS NULL OR ca.plataforma = $3)
+  AND ($3::text IS NULL OR LOWER(ca.plataforma) = LOWER($3))
 GROUP BY ca.plataforma
 ORDER BY total_gasto DESC;
     `.trim();
@@ -515,8 +515,10 @@ ORDER BY total_gasto DESC;
 
       if (!rows || rows.length === 0) {
         return {
-          success: false,
+          success: true,
           message: 'Nenhuma métrica encontrada',
+          plataformas: [],
+          total_plataformas: 0,
           sql_query: sqlQuery,
           sql_params: formatSqlParams(params),
         };
@@ -582,7 +584,7 @@ JOIN ${ADS_SCHEMA}.anuncios_publicados ap ON m.anuncio_publicado_id = ap.id
 JOIN ${ADS_SCHEMA}.contas_ads ca ON ap.conta_ads_id = ca.id
 
 WHERE m.data BETWEEN $1::date AND $2::date
-  AND ($3::text IS NULL OR ca.plataforma = $3)
+  AND ($3::text IS NULL OR LOWER(ca.plataforma) = LOWER($3))
 
 GROUP BY ap.titulo, ca.plataforma
 ORDER BY roas DESC
@@ -867,7 +869,7 @@ LIMIT $4;`.trim();
 
       if (!row) {
         return {
-          success: false,
+          success: true,
           message: 'Nenhuma métrica encontrada',
           periodo_dias: date_range_days,
           plataforma: plataforma ?? 'Todas',
@@ -963,7 +965,7 @@ JOIN ${ADS_SCHEMA}.campanhas c ON ga.campanha_id = c.id
 JOIN ${ADS_SCHEMA}.contas_ads ca ON ap.conta_ads_id = ca.id
 
 WHERE m.data BETWEEN $1::date AND $2::date
-  AND ($3::text IS NULL OR ca.plataforma = $3)
+  AND ($3::text IS NULL OR LOWER(ca.plataforma) = LOWER($3))
 GROUP BY c.nome, ca.plataforma
 ORDER BY total_gasto DESC;`.trim();
 
