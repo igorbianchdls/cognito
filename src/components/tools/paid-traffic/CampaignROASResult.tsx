@@ -139,15 +139,6 @@ const parseNumericValue = (value: unknown): number => {
   return 0;
 };
 
-// helper para puxar métricas extras se existirem
-const campaignaExtra = (c: Record<string, unknown>) => ({
-  cpc: (c as Record<string, unknown>).cpc as string | undefined,
-  cpm: (c as Record<string, unknown>).cpm as string | undefined,
-  taxa_conversao: (c as Record<string, unknown>).taxa_conversao as string | undefined,
-  ticket_medio: (c as Record<string, unknown>).ticket_medio as string | undefined,
-  lucro: (c as Record<string, unknown>).lucro as string | undefined,
-});
-
 export default function CampaignROASResult({
   success,
   message,
@@ -206,7 +197,8 @@ export default function CampaignROASResult({
       minSize: 200,
       cell: ({ row }) => {
         const campanha = row.original.campanha;
-        const plataforma = (row.original as any).plataforma || 'Campanha de anúncios';
+        const rowData = row.original as Record<string, unknown>;
+        const plataforma = rowData.plataforma || 'Campanha de anúncios';
         return <EntityDisplay name={campanha} subtitle={String(plataforma)} />;
       },
     },
