@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import EntityDisplay from '@/components/modulos/EntityDisplay';
 import { ChartSwitcher } from '@/components/charts/ChartSwitcher';
 import { Layers } from 'lucide-react';
 
@@ -103,11 +104,12 @@ export default function AdsPlatformsResult({
     {
       accessorKey: 'plataforma',
       header: 'Plataforma',
-      cell: ({ row }) => (
-        <span className="font-medium text-gray-900">
-          {row.getValue('plataforma')}
-        </span>
-      ),
+      size: 250,
+      minSize: 200,
+      cell: ({ row }) => {
+        const plataforma = row.getValue('plataforma') as string;
+        return <EntityDisplay name={plataforma} subtitle="Plataforma de anúncios" />;
+      },
     },
     {
       accessorKey: 'total_impressoes',

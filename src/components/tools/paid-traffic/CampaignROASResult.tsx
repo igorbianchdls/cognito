@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import EntityDisplay from '@/components/modulos/EntityDisplay';
+import StatusBadge from '@/components/modulos/StatusBadge';
 import { BarChart } from '@/components/charts/BarChart';
 import { LineChart } from '@/components/charts/LineChart';
 import { AreaChart } from '@/components/charts/AreaChart';
@@ -109,16 +111,6 @@ const METRIC_OPTIONS = [
 type MetricOption = (typeof METRIC_OPTIONS)[number];
 type MetricKey = MetricOption['value'];
 
-const getClassificationBadgeClasses = (classification: string) => {
-  const value = classification.toLowerCase();
-
-  if (value === 'excelente') return 'border-green-300 bg-green-50 text-green-700';
-  if (value === 'bom') return 'border-blue-300 bg-blue-50 text-blue-700';
-  if (value === 'regular') return 'border-yellow-300 bg-yellow-50 text-yellow-700';
-
-  return 'border-slate-300 bg-slate-100 text-slate-700';
-};
-
 const parseNumericValue = (value: unknown): number => {
   if (typeof value === 'number' && Number.isFinite(value)) {
     return value;
@@ -210,7 +202,13 @@ export default function CampaignROASResult({
     {
       accessorKey: 'campanha',
       header: 'Campanha',
-      cell: ({ row }) => <span className="font-medium">{row.original.campanha}</span>,
+      size: 250,
+      minSize: 200,
+      cell: ({ row }) => {
+        const campanha = row.original.campanha;
+        const plataforma = (row.original as any).plataforma || 'Campanha de anúncios';
+        return <EntityDisplay name={campanha} subtitle={String(plataforma)} />;
+      },
     },
     {
       accessorKey: 'gasto',
@@ -255,15 +253,7 @@ export default function CampaignROASResult({
     {
       accessorKey: 'classificacao',
       header: 'Classificação',
-      cell: ({ row }) => (
-        <span
-          className={`rounded-full border px-2 py-1 text-xs font-medium ${getClassificationBadgeClasses(
-            row.original.classificacao
-          )}`}
-        >
-          {row.original.classificacao}
-        </span>
-      ),
+      cell: ({ row }) => <StatusBadge value={row.original.classificacao} type="classificacao" />,
       enableSorting: false,
     },
   ], []);
