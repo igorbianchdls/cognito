@@ -68,7 +68,34 @@ export default function ModulosFinanceiroPage() {
     switch (tabs.selected) {
       case 'contas-a-receber':
         return [
-          { accessorKey: 'cliente', header: 'Cliente' },
+          {
+            accessorKey: 'cliente',
+            header: 'Cliente',
+            cell: ({ row }) => {
+              const nome = row.original['cliente'] || 'Sem nome'
+              const categoria = row.original['cliente_categoria'] || 'Sem categoria'
+              const imagemUrl = row.original['cliente_imagem_url']
+
+              return (
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center mr-3"
+                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: '#f3f4f6' }}>
+                    {imagemUrl ? (
+                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
+                    ) : (
+                      <div style={{ fontSize: 18, fontWeight: 600, color: '#9ca3af' }}>
+                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
+                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(categoria)}</div>
+                  </div>
+                </div>
+              )
+            }
+          },
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'data_vencimento', header: 'Vencimento', cell: ({ row }) => formatDate(row.original['data_vencimento']) },
           { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },
@@ -111,7 +138,34 @@ export default function ModulosFinanceiroPage() {
         ]
       case 'pagamentos-recebidos':
         return [
-          { accessorKey: 'cliente', header: 'Cliente' },
+          {
+            accessorKey: 'cliente',
+            header: 'Cliente',
+            cell: ({ row }) => {
+              const nome = row.original['cliente'] || 'Sem nome'
+              const categoria = row.original['cliente_categoria'] || 'Sem categoria'
+              const imagemUrl = row.original['cliente_imagem_url']
+
+              return (
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center mr-3"
+                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: '#f3f4f6' }}>
+                    {imagemUrl ? (
+                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
+                    ) : (
+                      <div style={{ fontSize: 18, fontWeight: 600, color: '#9ca3af' }}>
+                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
+                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(categoria)}</div>
+                  </div>
+                </div>
+              )
+            }
+          },
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'data_recebimento', header: 'Recebido em', cell: ({ row }) => formatDate(row.original['data_recebimento']) },
           { accessorKey: 'valor_total', header: 'Valor', cell: ({ row }) => formatBRL(row.original['valor_total']) },

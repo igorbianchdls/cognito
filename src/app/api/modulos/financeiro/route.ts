@@ -136,15 +136,29 @@ export async function GET(req: NextRequest) {
       if (valor_max !== undefined) push('cap.valor_total <=', valor_max);
     } else if (view === 'contas-a-receber' || view === 'pagamentos-recebidos') {
       baseSql = `FROM financeiro.contas_a_receber car
-                 LEFT JOIN financeiro.clientes c ON c.id = car.cliente_id`;
-      selectSql = `SELECT car.id,
-                          c.nome_cliente AS cliente,
+                 LEFT JOIN financeiro.contas_a_receber_linhas carl ON car.id = carl.conta_receber_id
+                 LEFT JOIN financeiro.clientes cli ON car.cliente_id = cli.id
+                 LEFT JOIN financeiro.categorias cat ON car.categoria_id = cat.id
+                 LEFT JOIN financeiro.centros_custo cc ON car.centro_custo_id = cc.id
+                 LEFT JOIN financeiro.contas c ON car.conta_id = c.id`;
+      selectSql = `SELECT car.id AS conta_id,
                           car.descricao,
+                          cli.nome_cliente AS cliente,
+                          cli.imagem_url AS cliente_imagem_url,
+                          cat.nome AS cliente_categoria,
+                          cc.nome AS centro_custo,
+                          c.nome_conta AS conta_bancaria,
+                          car.tipo_titulo,
                           car.valor_total,
                           car.data_emissao,
                           car.data_vencimento,
                           car.data_recebimento,
-                          car.status`;
+                          car.status,
+                          carl.numero_parcela,
+                          carl.valor_parcela,
+                          carl.data_vencimento AS parcela_vencimento,
+                          carl.data_recebimento AS parcela_recebimento,
+                          carl.status AS parcela_status`;
       // Filtro principal por data: vencimento para contas; recebimento para recebidos
       whereDateCol = view === 'pagamentos-recebidos' ? 'car.data_recebimento' : 'car.data_vencimento';
       if (view === 'pagamentos-recebidos') {
