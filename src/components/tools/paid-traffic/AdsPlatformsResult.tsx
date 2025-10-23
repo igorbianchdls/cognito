@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { ChartSwitcher } from '@/components/charts/ChartSwitcher';
@@ -78,9 +78,12 @@ export default function AdsPlatformsResult({
   sql_query,
   plataformas = []
 }: AdsPlatformsResultProps) {
-  
+  const [rowsState, setRowsState] = useState(plataformas);
+  const [sqlQuery, setSqlQuery] = useState<string | undefined>(sql_query);
+  useEffect(() => { setRowsState(plataformas); setSqlQuery(sql_query); }, [plataformas, sql_query]);
+
   const data: PlatformRow[] = useMemo(() => {
-    return plataformas.map(platform => ({
+    return rowsState.map(platform => ({
       plataforma: platform.plataforma || 'N/A',
       total_impressoes: Number(platform.total_impressoes) || 0,
       total_cliques: Number(platform.total_cliques) || 0,
@@ -93,7 +96,7 @@ export default function AdsPlatformsResult({
       roas: Number(platform.roas) || 0,
       lucro: Number(platform.lucro) || 0,
     }));
-  }, [plataformas]);
+  }, [rowsState]);
 
   // Table columns definition
   const columns: ColumnDef<PlatformRow>[] = useMemo(() => [
@@ -267,8 +270,28 @@ export default function AdsPlatformsResult({
       count={data.length}
       exportFileName="plataformas-ads"
       pageSize={Math.min(10, Math.max(data.length, 5))}
-      sqlQuery={sql_query}
+      sqlQuery={sqlQuery}
       chartRenderer={chartRenderer}
+      headerDateFilter
+      onHeaderDateRangeChange={async ({ from, to, preset }) => {
+        try {
+          const params = new URLSearchParams();
+          if (preset !== 'all') {
+            if (from) params.set('data_de', from);
+            if (to) params.set('data_ate', to);
+          }
+          const qs = params.toString();
+          const res = await fetch(`/api/tools/paid-traffic/compare-platforms${qs ? `?${qs}` : ''}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          if (json?.success && Array.isArray(json.plataformas)) {
+            setRowsState(json.plataformas);
+            setSqlQuery(json.sql_query);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar comparação de plataformas por período:', e);
+        }
+      }}
     />
   );
 }

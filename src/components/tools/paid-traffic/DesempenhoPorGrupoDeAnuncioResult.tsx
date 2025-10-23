@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { BarChart3 } from 'lucide-react';
@@ -17,7 +17,10 @@ interface Props {
 type Row = Record<string, unknown> & { grupo?: string; plataforma?: string };
 
 export default function DesempenhoPorGrupoDeAnuncioResult({ success, message, rows = [], count, sql_query }: Props) {
-  const data: Row[] = useMemo(() => rows as Row[], [rows]);
+  const [rowsState, setRowsState] = useState(rows);
+  const [sqlQuery, setSqlQuery] = useState<string | undefined>(sql_query);
+  useEffect(() => { setRowsState(rows); setSqlQuery(sql_query); }, [rows, sql_query]);
+  const data: Row[] = useMemo(() => rowsState as Row[], [rowsState]);
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
     if (!data.length) return [ { accessorKey: 'info', header: 'Info' } as ColumnDef<Row> ];
@@ -63,8 +66,28 @@ export default function DesempenhoPorGrupoDeAnuncioResult({ success, message, ro
       count={typeof count === 'number' ? count : data.length}
       exportFileName="desempenho-grupos-anuncio"
       pageSize={Math.min(10, Math.max(data.length, 5))}
-      sqlQuery={sql_query}
+      sqlQuery={sqlQuery}
       chartRenderer={chartRenderer}
+      headerDateFilter
+      onHeaderDateRangeChange={async ({ from, to, preset }) => {
+        try {
+          const params = new URLSearchParams();
+          if (preset !== 'all') {
+            if (from) params.set('data_de', from);
+            if (to) params.set('data_ate', to);
+          }
+          const qs = params.toString();
+          const res = await fetch(`/api/tools/paid-traffic/grupo-anuncio${qs ? `?${qs}` : ''}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          if (json?.success && Array.isArray(json.rows)) {
+            setRowsState(json.rows);
+            setSqlQuery(json.sql_query);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar desempenho por grupo de anúncio por período:', e);
+        }
+      }}
     />
   );
 }

@@ -4,7 +4,6 @@ import {
   getPaidTrafficData,
   compareAdsPlatforms,
   analyzeCreativePerformance,
-  identifyTopAds,
   analiseDeCampanhas,
   desempenhoPorGrupoDeAnuncio,
   desempenhoPorDiaDaSemana
@@ -466,7 +465,6 @@ Seja sempre orientado a dados, priorize maximização de ROAS e otimização con
         getPaidTrafficData,
         compareAdsPlatforms,
         analyzeCreativePerformance,
-        identifyTopAds,
         analiseDeCampanhas,
         desempenhoPorGrupoDeAnuncio,
         desempenhoPorDiaDaSemana,

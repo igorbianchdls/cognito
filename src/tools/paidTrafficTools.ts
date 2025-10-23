@@ -609,7 +609,8 @@ LIMIT $4;`.trim();
   }
 });
 
-export const identifyTopAds = tool({
+/* REMOVED: identifyTopAds (deprecated) */
+/* export const identifyTopAds = tool({
   description: 'Identifica melhores anúncios por ROAS, conversões e CTR',
   inputSchema: z.object({
     date_range_days: z.number().default(30).describe('Período de análise em dias'),
@@ -736,7 +737,7 @@ export const identifyTopAds = tool({
       };
     }
   }
-});
+}); */
 
 /* REMOVED: analyzeSpendingTrends (deprecated) */
 /* export const analyzeSpendingTrends = tool({

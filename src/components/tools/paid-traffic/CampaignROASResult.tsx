@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { BarChart } from '@/components/charts/BarChart';
@@ -167,11 +167,13 @@ export default function CampaignROASResult({
 }: CampaignROASResultProps) {
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>('roas');
   const [chartType, setChartType] = useState<'bar' | 'line' | 'area' | 'pie'>('bar');
+  const [rowsState, setRowsState] = useState(campanhas ?? []);
+  useEffect(() => { setRowsState(campanhas ?? []); }, [campanhas]);
 
   const tableData: CampaignRow[] = useMemo(() => {
-    if (!campanhas || campanhas.length === 0) return [];
+    if (!rowsState || rowsState.length === 0) return [];
 
-    return campanhas.map((campanha, idx) => ({
+    return rowsState.map((campanha, idx) => ({
       rank: idx + 1,
       campanha: campanha.campanha_id ?? `Campanha ${idx + 1}`,
       gasto: campanha.gasto,
@@ -184,7 +186,7 @@ export default function CampaignROASResult({
       ...(campaignaExtra(campanha)),
       classificacao: campanha.classificacao || 'Não classificada',
     }));
-  }, [campanhas]);
+  }, [rowsState]);
 
   // helper para puxar métricas extras se existirem
   const campaignaExtra = (c: Record<string, unknown>) => ({
@@ -438,6 +440,36 @@ export default function CampaignROASResult({
       exportFileName="paid-traffic-campaigns"
       pageSize={Math.min(10, Math.max(tableData.length, 5))}
       chartRenderer={chartRenderer}
+      headerDateFilter
+      onHeaderDateRangeChange={async ({ from, to, preset }) => {
+        try {
+          let days: number | undefined;
+          if (preset === '7d') days = 7;
+          if (preset === '30d') days = 30;
+          if (preset === 'this-month') {
+            const today = new Date();
+            const start = new Date(today.getFullYear(), today.getMonth(), 1);
+            days = Math.max(1, Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+          }
+          let qs = '';
+          if (days) {
+            qs = `?days=${days}`;
+          } else if (preset !== 'all' && from && to) {
+            const p = new URLSearchParams();
+            p.set('data_de', from);
+            p.set('data_ate', to);
+            qs = `?${p.toString()}`;
+          }
+          const res = await fetch(`/api/tools/paid-traffic/campaign-roas${qs}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          if (json?.success && Array.isArray(json.campanhas)) {
+            setRowsState(json.campanhas);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar ROAS por campanha:', e);
+        }
+      }}
     />
   );
 }

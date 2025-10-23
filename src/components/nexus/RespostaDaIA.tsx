@@ -132,7 +132,6 @@ import DesempenhoPorGrupoDeAnuncioResult from '../tools/paid-traffic/DesempenhoP
 import DesempenhoPorDiaDaSemanaResult from '../tools/paid-traffic/DesempenhoPorDiaDaSemanaResult';
 import DeteccaoAnomaliasROASResult from '../tools/paid-traffic/DeteccaoAnomaliasROASResult';
 import DeteccaoAnomaliasTaxaConversaoResult from '../tools/paid-traffic/DeteccaoAnomaliasTaxaConversaoResult';
-import TopAdsResult from '../tools/paid-traffic/TopAdsResult';
 import AdPerformanceForecastResult from '../tools/paid-traffic/AdPerformanceForecastResult';
 
 interface ReasoningPart {
@@ -1515,27 +1514,7 @@ type AnalyzeCreativePerformanceToolOutput = {
   };
 };
 
-type IdentifyTopAdsToolOutput = {
-  success: boolean;
-  message: string;
-  periodo_dias?: number;
-  plataforma?: string;
-  total_analisados?: number;
-  top_anuncios?: Array<{
-    anuncio_id: string;
-    titulo: string;
-    plataforma: string;
-    gasto: string;
-    receita: string;
-    conversoes: number;
-    roas: string;
-    ctr: string;
-    custo_por_conversao: string;
-    classificacao: string;
-  }>;
-  sql_query?: string;
-  sql_params?: string;
-};
+// Type removed for deprecated tool: IdentifyTopAdsToolOutput
 
 // Types removed for deprecated tools: AnalyzeSpendingTrendsToolOutput, CalculateCostMetricsToolOutput
 
@@ -6061,30 +6040,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
-        if (part.type === 'tool-identifyTopAds') {
-          const tool = part as NexusToolUIPart;
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-identifyTopAds" state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && tool.output && (
-                <TopAdsResult
-                  success={(tool.output as IdentifyTopAdsToolOutput).success}
-                  message={(tool.output as IdentifyTopAdsToolOutput).message}
-                  periodo_dias={(tool.output as IdentifyTopAdsToolOutput).periodo_dias}
-                  plataforma={(tool.output as IdentifyTopAdsToolOutput).plataforma}
-                  total_analisados={(tool.output as IdentifyTopAdsToolOutput).total_analisados}
-                  top_anuncios={(tool.output as IdentifyTopAdsToolOutput).top_anuncios}
-                />
-              )}
-            </div>
-          );
-        }
+        
 
         
 
