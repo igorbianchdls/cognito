@@ -62,6 +62,7 @@ import SaldoBancarioResult, { type ObterSaldoBancarioOutput } from '../tools/Sal
 import DespesasCentroCustoResult, { type ObterDespesasPorCentroCustoOutput } from '../tools/DespesasCentroCustoResult';
 import InadimplenciaResult, { type AnalisarInadimplenciaOutput } from '../tools/InadimplenciaResult';
 import AutomationResultCard from './tools/AutomationResultCard';
+import type { AutomationSummaryOutput } from '@/tools/automationTools';
 import { BarChart3, DollarSign, LineChart, TrendingUp, AlertTriangle } from 'lucide-react';
 import AnaliseDeCampanhas from '../tools/paid-traffic/analiseDeCampanhas';
 import OrganicMarketingDataTable from '../tools/OrganicMarketingDataTable';
@@ -6902,14 +6903,17 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   )}
                 </ToolContent>
               </Tool>
-              {autoTool.state === 'output-available' && (
-                <AutomationResultCard
-                  ocr={(autoTool.output as any)?.ocr}
-                  fornecedor={(autoTool.output as any)?.fornecedor}
-                  contaAPagar={(autoTool.output as any)?.contaAPagar}
-                  warnings={(autoTool.output as any)?.warnings}
-                />
-              )}
+              {autoTool.state === 'output-available' && (() => {
+                const output = autoTool.output as AutomationSummaryOutput | undefined;
+                return (
+                  <AutomationResultCard
+                    ocr={output?.ocr}
+                    fornecedor={output?.fornecedor}
+                    contaAPagar={output?.contaAPagar}
+                    warnings={output?.warnings}
+                  />
+                );
+              })()}
             </div>
           );
         }

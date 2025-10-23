@@ -1,19 +1,8 @@
 import { anthropic } from '@ai-sdk/anthropic'
-import { convertToModelMessages, streamText, UIMessage, generateObject } from 'ai'
-import { z } from 'zod'
+import { convertToModelMessages, streamText, UIMessage } from 'ai'
 import { findFornecedor, createFornecedor, createContaAPagar, automationSummary } from '@/tools/automationTools'
 
 export const maxDuration = 300
-
-// Schema do OCR da fatura
-const faturaOcrSchema = z.object({
-  fornecedor_nome: z.string().optional(),
-  fornecedor_cnpj: z.string().optional(),
-  numero_documento: z.string().optional(),
-  data_emissao: z.string().optional(),
-  data_vencimento: z.string().optional(),
-  valor_total: z.number().optional(),
-})
 
 export async function POST(req: Request) {
   console.log('⚙️ AUTOMATION AGENT: Request recebido!')
@@ -21,10 +10,6 @@ export async function POST(req: Request) {
   console.log('⚙️ AUTOMATION AGENT: Messages:', messages?.length)
 
   try {
-    // Tenta localizar um "file part" (PDF/Imagem) nos messages para OCR
-    const lastUserMsg = [...(messages || [])].reverse().find((m) => m.role === 'user')
-    const filePart = lastUserMsg?.parts?.find((p: any) => p.type === 'file' && (p.mediaType?.includes('pdf') || p.mediaType?.startsWith('image/')))
-
     const result = streamText({
       model: anthropic('claude-sonnet-4-20250514'),
       providerOptions: {
@@ -60,4 +45,3 @@ Se faltar arquivo, solicite ao usuário anexar um PDF ou imagem da fatura.`,
     throw error
   }
 }
-
