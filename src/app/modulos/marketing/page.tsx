@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import type { ColumnDef } from '@tanstack/react-table'
 
@@ -13,7 +13,7 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { LayoutDashboard, Megaphone } from 'lucide-react'
+import { Megaphone, FileText, BarChart3 } from 'lucide-react'
 
 type Row = TableData
 
@@ -31,10 +31,11 @@ export default function ModulosMarketingPage() {
     })
     financeiroUiActions.setTabs({
       options: [
-        { value: 'visao', label: 'Visão geral' },
-        { value: 'campanhas', label: 'Campanhas' },
+        { value: 'contas', label: 'Contas' },
+        { value: 'publicacoes', label: 'Publicações' },
+        { value: 'metricas', label: 'Métricas' },
       ],
-      selected: 'visao',
+      selected: 'contas',
     })
   }, [])
 
@@ -45,44 +46,106 @@ export default function ModulosMarketingPage() {
     return name
   }
 
-  const { columns, data } = useMemo((): { columns: ColumnDef<Row>[]; data: Row[] } => {
+  const [data, setData] = useState<Row[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>()
+
+  const formatDate = (value?: unknown) => {
+    if (!value) return ''
+    try {
+      const d = new Date(String(value))
+      if (isNaN(d.getTime())) return String(value)
+      return d.toLocaleDateString('pt-BR')
+    } catch {
+      return String(value)
+    }
+  }
+
+  const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
-      case 'campanhas':
-        return {
-          columns: [
-            { accessorKey: 'campanha', header: 'Campanha' },
-            { accessorKey: 'canal', header: 'Canal' },
-            { accessorKey: 'orcamento', header: 'Orçamento' },
-            { accessorKey: 'status', header: 'Status' },
-          ],
-          data: [
-            { campanha: 'Q4 Awareness', canal: 'Meta Ads', orcamento: 15000, status: 'Ativa' },
-            { campanha: 'Promoção Black', canal: 'Google Ads', orcamento: 25000, status: 'Planejada' },
-          ],
-        }
-      case 'visao':
+      case 'contas':
+        return [
+          { accessorKey: 'conta', header: 'Conta' },
+          { accessorKey: 'plataforma', header: 'Plataforma' },
+          { accessorKey: 'seguidores', header: 'Seguidores' },
+          { accessorKey: 'seguindo', header: 'Seguindo' },
+          { accessorKey: 'total_publicacoes', header: 'Total de Publicações' },
+          { accessorKey: 'taxa_engajamento', header: 'Engajamento (%)' },
+          { accessorKey: 'registrado_em', header: 'Registrado em', cell: ({ row }) => formatDate(row.original['registrado_em']) },
+        ]
+      case 'publicacoes':
+        return [
+          { accessorKey: 'conta', header: 'Conta' },
+          { accessorKey: 'titulo', header: 'Título' },
+          { accessorKey: 'tipo', header: 'Tipo de Post' },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'legenda', header: 'Legenda' },
+          { accessorKey: 'hashtags', header: 'Hashtags' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
+        ]
+      case 'metricas':
       default:
-        return {
-          columns: [
-            { accessorKey: 'indicador', header: 'Indicador' },
-            { accessorKey: 'valor', header: 'Valor' },
-          ],
-          data: [
-            { indicador: 'Leads (30d)', valor: 1240 },
-            { indicador: 'CPL (R$)', valor: 18.5 },
-            { indicador: 'ROI (30d)', valor: 3.4 },
-          ],
-        }
+        return [
+          { accessorKey: 'conta', header: 'Conta' },
+          { accessorKey: 'titulo', header: 'Título' },
+          { accessorKey: 'tipo', header: 'Tipo' },
+          { accessorKey: 'curtidas', header: 'Curtidas' },
+          { accessorKey: 'comentarios', header: 'Comentários' },
+          { accessorKey: 'compartilhamentos', header: 'Compartilhamentos' },
+          { accessorKey: 'visualizacoes', header: 'Visualizações' },
+          { accessorKey: 'impressoes', header: 'Impressões' },
+          { accessorKey: 'taxa_engajamento', header: 'Taxa de Engajamento (%)' },
+          { accessorKey: 'ultimo_registro', header: 'Último Registro', cell: ({ row }) => formatDate(row.original['ultimo_registro']) },
+        ]
     }
   }, [tabs.selected])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const load = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const params = new URLSearchParams()
+        params.set('view', tabs.selected)
+        if (dateRange?.from) {
+          const d = dateRange.from
+          params.set('de', `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+        }
+        if (dateRange?.to) {
+          const d = dateRange.to
+          params.set('ate', `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+        }
+        const url = `/api/modulos/marketing?${params.toString()}`
+        const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const json = await res.json()
+        const rows = (json?.rows || []) as Row[]
+        setData(Array.isArray(rows) ? rows : [])
+      } catch (e) {
+        if (!(e instanceof DOMException && e.name === 'AbortError')) {
+          setError(e instanceof Error ? e.message : 'Falha ao carregar dados')
+          setData([])
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    load()
+    return () => controller.abort()
+  }, [tabs.selected, dateRange?.from, dateRange?.to])
 
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
       switch (v) {
-        case 'visao':
-          return <LayoutDashboard className="h-4 w-4" />
-        case 'campanhas':
+        case 'contas':
           return <Megaphone className="h-4 w-4" />
+        case 'publicacoes':
+          return <FileText className="h-4 w-4" />
+        case 'metricas':
+          return <BarChart3 className="h-4 w-4" />
         default:
           return null
       }
@@ -150,34 +213,40 @@ export default function ModulosMarketingPage() {
           </div>
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
             <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
-              <DataTable
-                columns={columns}
-                data={data}
-                enableSearch={tabelaUI.enableSearch}
-                showColumnToggle={tabelaUI.enableColumnToggle}
-                showPagination={tabelaUI.showPagination}
-                pageSize={tabelaUI.pageSize}
-                headerBackground={tabelaUI.headerBg}
-                headerTextColor={tabelaUI.headerText}
-                cellTextColor={tabelaUI.cellText}
-                headerFontSize={tabelaUI.headerFontSize}
-                headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
-                headerFontWeight={tabelaUI.headerFontWeight}
-                headerLetterSpacing={tabelaUI.headerLetterSpacing}
-                cellFontSize={tabelaUI.cellFontSize}
-                cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
-                cellFontWeight={tabelaUI.cellFontWeight}
-                cellLetterSpacing={tabelaUI.cellLetterSpacing}
-                enableZebraStripes={tabelaUI.enableZebraStripes}
-                rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
-                borderColor={tabelaUI.borderColor}
-                borderWidth={tabelaUI.borderWidth}
-                selectionColumnWidth={tabelaUI.selectionColumnWidth}
-                enableRowSelection={tabelaUI.enableRowSelection}
-                selectionMode={tabelaUI.selectionMode}
-                defaultSortColumn={tabelaUI.defaultSortColumn}
-                defaultSortDirection={tabelaUI.defaultSortDirection}
-              />
+              {isLoading ? (
+                <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
+              ) : error ? (
+                <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
+              ) : (
+                <DataTable
+                  columns={columns}
+                  data={data}
+                  enableSearch={tabelaUI.enableSearch}
+                  showColumnToggle={tabelaUI.enableColumnToggle}
+                  showPagination={tabelaUI.showPagination}
+                  pageSize={tabelaUI.pageSize}
+                  headerBackground={tabelaUI.headerBg}
+                  headerTextColor={tabelaUI.headerText}
+                  cellTextColor={tabelaUI.cellText}
+                  headerFontSize={tabelaUI.headerFontSize}
+                  headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
+                  headerFontWeight={tabelaUI.headerFontWeight}
+                  headerLetterSpacing={tabelaUI.headerLetterSpacing}
+                  cellFontSize={tabelaUI.cellFontSize}
+                  cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
+                  cellFontWeight={tabelaUI.cellFontWeight}
+                  cellLetterSpacing={tabelaUI.cellLetterSpacing}
+                  enableZebraStripes={tabelaUI.enableZebraStripes}
+                  rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
+                  borderColor={tabelaUI.borderColor}
+                  borderWidth={tabelaUI.borderWidth}
+                  selectionColumnWidth={tabelaUI.selectionColumnWidth}
+                  enableRowSelection={tabelaUI.enableRowSelection}
+                  selectionMode={tabelaUI.selectionMode}
+                  defaultSortColumn={tabelaUI.defaultSortColumn}
+                  defaultSortDirection={tabelaUI.defaultSortDirection}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -185,4 +254,3 @@ export default function ModulosMarketingPage() {
     </SidebarProvider>
   )
 }
-
