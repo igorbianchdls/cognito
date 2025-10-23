@@ -73,10 +73,9 @@ KPIs por período: os_abertas, os_em_andamento, os_concluidas, backlog, tma_dias
       },
     })
 
-    return result.toAIStreamResponse()
+    return result.toUIMessageStreamResponse()
   } catch (error) {
     console.error('🛠️ GESTOR DE SERVIÇOS AGENT: Erro ao processar request:', error)
     throw error
   }
 }
-
