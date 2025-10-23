@@ -2,6 +2,9 @@ import { z } from 'zod';
 import { tool } from 'ai';
 import { runQuery } from '@/lib/postgres';
 
+// Schema para Marketing Orgânico (padrão: marketing)
+const ORG_SCHEMA = process.env.ORG_SCHEMA || 'marketing';
+
 type OrganicMetricRow = {
   plataforma: string | null;
   contas_vinculadas: number | string | null;
@@ -28,9 +31,9 @@ WITH metricas AS (
     COALESCE(m.salvamentos, 0) AS salvamentos,
     COALESCE(m.visualizacoes, 0) AS visualizacoes,
     COALESCE(m.alcance, 0) AS alcance
-  FROM marketing_organico.metricas_publicacoes m
-  JOIN marketing_organico.publicacoes p ON p.id = m.publicacao_id
-  JOIN marketing_organico.contas_sociais cs ON cs.id = p.conta_social_id
+  FROM ${ORG_SCHEMA}.metricas_publicacoes m
+  JOIN ${ORG_SCHEMA}.publicacoes p ON p.id = m.publicacao_id
+  JOIN ${ORG_SCHEMA}.contas_sociais cs ON cs.id = p.conta_social_id
   WHERE m.registrado_em >= CURRENT_DATE - ($1::int - 1) * INTERVAL '1 day'
 )
 SELECT
@@ -88,8 +91,8 @@ async function buildPlatformMetricsResponse(
 
   if (!rows.length) {
     return {
-      success: false,
-      message: `⚠️ Nenhum registro encontrado para ${label.toLowerCase()}`,
+      success: true,
+      message: `Nenhum registro encontrado para ${label.toLowerCase()}`,
       periodo_dias: rangeDays,
       data: [],
       sql_query: sql,
@@ -143,17 +146,17 @@ const buildSelectQuery = (
 
   const plataformaColumn = options.filterColumns?.plataforma ?? (columns.includes('plataforma') ? 'plataforma' : undefined);
   if (filters.plataforma && plataformaColumn) {
-    clauses.push(`${plataformaColumn} = ${addParam(filters.plataforma)}`);
+    clauses.push(`LOWER(${plataformaColumn}) = LOWER(${addParam(filters.plataforma)})`);
   }
 
   const statusColumn = options.filterColumns?.status ?? (columns.includes('status') ? 'status' : undefined);
   if (filters.status && statusColumn) {
-    clauses.push(`${statusColumn} = ${addParam(filters.status)}`);
+    clauses.push(`LOWER(${statusColumn}) = LOWER(${addParam(filters.status)})`);
   }
 
   const tipoPostColumn = options.filterColumns?.tipo_post ?? (columns.includes('tipo_post') ? 'tipo_post' : undefined);
   if (filters.tipo_post && tipoPostColumn) {
-    clauses.push(`${tipoPostColumn} = ${addParam(filters.tipo_post)}`);
+    clauses.push(`LOWER(${tipoPostColumn}) = LOWER(${addParam(filters.tipo_post)})`);
   }
 
   if (options.dateColumn?.from && filters.data_de) {
@@ -189,7 +192,7 @@ const buildSelectQuery = (
 const organicQueryBuilders: Record<'contas_sociais' | 'publicacoes' | 'metricas_publicacoes' | 'resumos_conta', QueryBuilder> = {
   contas_sociais: (filters) =>
     buildSelectQuery(
-      'marketing_organico.contas_sociais cs',
+      `${ORG_SCHEMA}.contas_sociais cs`,
       ['cs.id', 'cs.plataforma', 'cs.nome_conta', 'cs.conectado_em'],
       filters,
       {
@@ -203,7 +206,7 @@ const organicQueryBuilders: Record<'contas_sociais' | 'publicacoes' | 'metricas_
     ),
   publicacoes: (filters) =>
     buildSelectQuery(
-      'marketing_organico.publicacoes p',
+      `${ORG_SCHEMA}.publicacoes p`,
       [
         'p.id',
         'p.conta_social_id',
@@ -218,7 +221,7 @@ const organicQueryBuilders: Record<'contas_sociais' | 'publicacoes' | 'metricas_
       ],
       filters,
       {
-        joins: 'JOIN marketing_organico.contas_sociais cs ON cs.id = p.conta_social_id',
+        joins: `JOIN ${ORG_SCHEMA}.contas_sociais cs ON cs.id = p.conta_social_id`,
         orderBy: 'p.publicado_em',
         dateColumn: { from: 'p.publicado_em' },
         filterColumns: {
@@ -230,7 +233,7 @@ const organicQueryBuilders: Record<'contas_sociais' | 'publicacoes' | 'metricas_
     ),
   metricas_publicacoes: (filters) =>
     buildSelectQuery(
-      'marketing_organico.metricas_publicacoes m',
+      `${ORG_SCHEMA}.metricas_publicacoes m`,
       [
         'm.id',
         'm.publicacao_id',
@@ -249,8 +252,8 @@ const organicQueryBuilders: Record<'contas_sociais' | 'publicacoes' | 'metricas_
       filters,
       {
         joins:
-          'JOIN marketing_organico.publicacoes p ON p.id = m.publicacao_id\n' +
-          'JOIN marketing_organico.contas_sociais cs ON cs.id = p.conta_social_id',
+          `JOIN ${ORG_SCHEMA}.publicacoes p ON p.id = m.publicacao_id\n` +
+          `JOIN ${ORG_SCHEMA}.contas_sociais cs ON cs.id = p.conta_social_id`,
         orderBy: 'm.registrado_em',
         dateColumn: { from: 'm.registrado_em' },
         additional: ({ clauses, addParam }) => {
@@ -270,7 +273,7 @@ const organicQueryBuilders: Record<'contas_sociais' | 'publicacoes' | 'metricas_
     ),
   resumos_conta: (filters) =>
     buildSelectQuery(
-      'marketing_organico.resumos_conta rc',
+      `${ORG_SCHEMA}.resumos_conta rc`,
       [
         'rc.id',
         'rc.conta_social_id',
@@ -285,7 +288,7 @@ const organicQueryBuilders: Record<'contas_sociais' | 'publicacoes' | 'metricas_
       ],
       filters,
       {
-        joins: 'JOIN marketing_organico.contas_sociais cs ON cs.id = rc.conta_social_id',
+        joins: `JOIN ${ORG_SCHEMA}.contas_sociais cs ON cs.id = rc.conta_social_id`,
         orderBy: 'rc.registrado_em',
         dateColumn: { from: 'rc.registrado_em' },
         additional: ({ clauses, addParam }) => {
@@ -405,9 +408,9 @@ SELECT
   ROUND(AVG(mp.comentarios), 2) AS media_comentarios_post,
   ROUND(AVG(mp.visualizacoes), 2) AS media_views_post
 
-FROM marketing_organico.metricas_publicacoes mp
-JOIN marketing_organico.publicacoes p ON mp.publicacao_id = p.id
-JOIN marketing_organico.contas_sociais cs ON p.conta_social_id = cs.id
+FROM ${ORG_SCHEMA}.metricas_publicacoes mp
+JOIN ${ORG_SCHEMA}.publicacoes p ON mp.publicacao_id = p.id
+JOIN ${ORG_SCHEMA}.contas_sociais cs ON p.conta_social_id = cs.id
 WHERE mp.registrado_em >= $1::date AND mp.registrado_em < ($2::date + INTERVAL '1 day')
 GROUP BY cs.nome_conta, cs.plataforma
 ORDER BY taxa_engajamento_total DESC`;
@@ -465,9 +468,9 @@ SELECT
   ROUND(AVG(mp.comentarios), 2) AS media_comentarios,
   ROUND(AVG(mp.compartilhamentos), 2) AS media_compartilhamentos,
   ROUND(AVG(mp.visualizacoes), 2) AS media_visualizacoes
-FROM marketing_organico.metricas_publicacoes mp
-JOIN marketing_organico.publicacoes p ON mp.publicacao_id = p.id
-JOIN marketing_organico.contas_sociais cs ON p.conta_social_id = cs.id
+FROM ${ORG_SCHEMA}.metricas_publicacoes mp
+JOIN ${ORG_SCHEMA}.publicacoes p ON mp.publicacao_id = p.id
+JOIN ${ORG_SCHEMA}.contas_sociais cs ON p.conta_social_id = cs.id
 WHERE mp.registrado_em >= $1::date AND mp.registrado_em < ($2::date + INTERVAL '1 day')
 GROUP BY cs.plataforma
 ORDER BY taxa_engajamento_total DESC`;
@@ -514,9 +517,9 @@ SELECT
   ROUND(SUM(mp.curtidas + mp.comentarios + mp.compartilhamentos)::numeric / NULLIF(SUM(mp.impressoes), 0) * 100, 2) AS engajamento_pct,
   ROUND(SUM(mp.compartilhamentos)::numeric / NULLIF(SUM(mp.visualizacoes), 0) * 100, 2) AS taxa_compart_view,
   ROUND(SUM(mp.comentarios)::numeric / NULLIF(SUM(mp.curtidas), 0) * 100, 2) AS taxa_conversa_like
-FROM marketing_organico.metricas_publicacoes mp
-JOIN marketing_organico.publicacoes p ON mp.publicacao_id = p.id
-JOIN marketing_organico.contas_sociais cs ON p.conta_social_id = cs.id
+FROM ${ORG_SCHEMA}.metricas_publicacoes mp
+JOIN ${ORG_SCHEMA}.publicacoes p ON mp.publicacao_id = p.id
+JOIN ${ORG_SCHEMA}.contas_sociais cs ON p.conta_social_id = cs.id
 WHERE mp.registrado_em >= $1::date AND mp.registrado_em < ($2::date + INTERVAL '1 day')
 GROUP BY cs.plataforma, p.tipo_post
 ORDER BY engajamento_pct DESC`;
@@ -567,9 +570,9 @@ SELECT
   ROUND(SUM(mp.curtidas + mp.comentarios + mp.compartilhamentos)::numeric / NULLIF(SUM(mp.impressoes), 0) * 100, 2) AS engajamento_pct,
   ROUND(SUM(mp.compartilhamentos)::numeric / NULLIF(SUM(mp.visualizacoes), 0) * 100, 2) AS taxa_viralizacao,
   ROUND(SUM(mp.comentarios)::numeric / NULLIF(SUM(mp.curtidas), 0) * 100, 2) AS taxa_conversa
-FROM marketing_organico.metricas_publicacoes mp
-JOIN marketing_organico.publicacoes p ON mp.publicacao_id = p.id
-JOIN marketing_organico.contas_sociais cs ON p.conta_social_id = cs.id
+FROM ${ORG_SCHEMA}.metricas_publicacoes mp
+JOIN ${ORG_SCHEMA}.publicacoes p ON mp.publicacao_id = p.id
+JOIN ${ORG_SCHEMA}.contas_sociais cs ON p.conta_social_id = cs.id
 WHERE mp.registrado_em >= $1::date AND mp.registrado_em < ($2::date + INTERVAL '1 day')
 GROUP BY cs.plataforma, p.titulo, p.tipo_post
 ORDER BY engajamento_pct DESC
@@ -612,9 +615,9 @@ SELECT
   TO_CHAR(mp.registrado_em, 'Day') AS dia_semana,
   DATE_PART('hour', mp.registrado_em) AS hora,
   ROUND(SUM(mp.curtidas + mp.comentarios + mp.compartilhamentos)::numeric / NULLIF(SUM(mp.impressoes), 0) * 100, 2) AS engajamento_pct
-FROM marketing_organico.metricas_publicacoes mp
-JOIN marketing_organico.publicacoes p ON mp.publicacao_id = p.id
-JOIN marketing_organico.contas_sociais cs ON p.conta_social_id = cs.id
+FROM ${ORG_SCHEMA}.metricas_publicacoes mp
+JOIN ${ORG_SCHEMA}.publicacoes p ON mp.publicacao_id = p.id
+JOIN ${ORG_SCHEMA}.contas_sociais cs ON p.conta_social_id = cs.id
 WHERE mp.registrado_em >= $1::date AND mp.registrado_em < ($2::date + INTERVAL '1 day')
 GROUP BY cs.plataforma, dia_semana, hora
 ORDER BY cs.plataforma, dia_semana, hora`;
