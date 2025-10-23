@@ -1,6 +1,15 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import { getFuncionariosData } from '@/tools/funcionariosTools';
+import {
+  listarFuncionariosRH,
+  listarDepartamentosRH,
+  listarCargosRH,
+  listarTiposAusenciaRH,
+  listarContratosRH,
+  listarHistoricoSalarialRH,
+  indicadoresRH,
+} from '@/tools/funcionariosV2Tools'
 
 export const maxDuration = 300;
 
@@ -378,7 +387,16 @@ Seja sempre orientado a dados, focado em retenção de talentos e otimização d
       messages: convertToModelMessages(messages),
 
       tools: {
-        getFuncionariosData
+        // Legado (Supabase JS)
+        getFuncionariosData,
+        // Novas tools (Postgres/SQL) alinhadas à rota de RH
+        listarFuncionariosRH,
+        listarDepartamentosRH,
+        listarCargosRH,
+        listarTiposAusenciaRH,
+        listarContratosRH,
+        listarHistoricoSalarialRH,
+        indicadoresRH,
       }
     });
 

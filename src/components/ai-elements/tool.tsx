@@ -147,6 +147,14 @@ export const ToolHeader = ({
           'tool-listarEquipesVendas': 'Equipes',
           'tool-listarCanaisVendas': 'Canais',
           'tool-kpisVendas': 'KPIs de Vendas',
+          // Funcionários (RH)
+          'tool-listarFuncionariosRH': 'Funcionários',
+          'tool-listarDepartamentosRH': 'Departamentos',
+          'tool-listarCargosRH': 'Cargos',
+          'tool-listarTiposAusenciaRH': 'Tipos de Ausência',
+          'tool-listarContratosRH': 'Contratos',
+          'tool-listarHistoricoSalarialRH': 'Histórico Salarial',
+          'tool-indicadoresRH': 'Indicadores de RH',
         };
         return labels[type] ?? type.replace('tool-', '');
       })()}</span>
