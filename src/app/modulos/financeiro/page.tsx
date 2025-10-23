@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useEffect } from 'react'
+import { useMemo, useEffect, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import type { ColumnDef } from '@tanstack/react-table'
 
@@ -44,80 +44,79 @@ export default function ModulosFinanceiroPage() {
     return name
   }
 
-  const { columns, data } = useMemo((): { columns: ColumnDef<Row>[]; data: Row[] } => {
+  const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
+      case 'contas-a-receber':
+        return [
+          { accessorKey: 'cliente', header: 'Cliente' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'data_vencimento', header: 'Vencimento' },
+          { accessorKey: 'valor_total', header: 'Valor' },
+          { accessorKey: 'status', header: 'Status' },
+        ]
+      case 'pagamentos-efetuados':
+        return [
+          { accessorKey: 'fornecedor', header: 'Fornecedor' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'data_pagamento', header: 'Pago em' },
+          { accessorKey: 'valor_total', header: 'Valor' },
+          { accessorKey: 'tipo_titulo', header: 'Tipo' },
+        ]
+      case 'pagamentos-recebidos':
+        return [
+          { accessorKey: 'cliente', header: 'Cliente' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'data_recebimento', header: 'Recebido em' },
+          { accessorKey: 'valor_total', header: 'Valor' },
+          { accessorKey: 'status', header: 'Status' },
+        ]
+      case 'movimentos':
+        return [
+          { accessorKey: 'data', header: 'Data' },
+          { accessorKey: 'tipo', header: 'Tipo' },
+          { accessorKey: 'valor', header: 'Valor' },
+          { accessorKey: 'categoria_nome', header: 'Categoria' },
+          { accessorKey: 'conta_nome', header: 'Conta' },
+        ]
       case 'contas-a-pagar':
       default:
-        return {
-          columns: [
-            { accessorKey: 'fornecedor', header: 'Fornecedor' },
-            { accessorKey: 'documento', header: 'Documento' },
-            { accessorKey: 'vencimento', header: 'Vencimento' },
-            { accessorKey: 'valor', header: 'Valor' },
-            { accessorKey: 'status', header: 'Status' },
-          ],
-          data: [
-            { fornecedor: 'ACME Ltda', documento: 'NF 123', vencimento: '2025-10-30', valor: 1200.5, status: 'Pendente' },
-            { fornecedor: 'Supply Co', documento: 'NF 456', vencimento: '2025-11-05', valor: 349.9, status: 'Pago' },
-          ],
-        }
-      case 'contas-a-receber':
-        return {
-          columns: [
-            { accessorKey: 'cliente', header: 'Cliente' },
-            { accessorKey: 'documento', header: 'Documento' },
-            { accessorKey: 'vencimento', header: 'Vencimento' },
-            { accessorKey: 'valor', header: 'Valor' },
-            { accessorKey: 'status', header: 'Status' },
-          ],
-          data: [
-            { cliente: 'Cliente X', documento: 'FAT 1001', vencimento: '2025-10-20', valor: 899.0, status: 'Em aberto' },
-            { cliente: 'Cliente Y', documento: 'FAT 1002', vencimento: '2025-10-21', valor: 120.0, status: 'Recebido' },
-          ],
-        }
-      case 'pagamentos-efetuados':
-        return {
-          columns: [
-            { accessorKey: 'fornecedor', header: 'Fornecedor' },
-            { accessorKey: 'documento', header: 'Documento' },
-            { accessorKey: 'pago_em', header: 'Pago em' },
-            { accessorKey: 'valor', header: 'Valor' },
-            { accessorKey: 'metodo', header: 'Método' },
-          ],
-          data: [
-            { fornecedor: 'ACME Ltda', documento: 'NF 789', pago_em: '2025-10-10', valor: 890.0, metodo: 'PIX' },
-            { fornecedor: 'Supply Co', documento: 'NF 012', pago_em: '2025-10-12', valor: 230.0, metodo: 'Boleto' },
-          ],
-        }
-      case 'pagamentos-recebidos':
-        return {
-          columns: [
-            { accessorKey: 'cliente', header: 'Cliente' },
-            { accessorKey: 'documento', header: 'Documento' },
-            { accessorKey: 'recebido_em', header: 'Recebido em' },
-            { accessorKey: 'valor', header: 'Valor' },
-            { accessorKey: 'metodo', header: 'Método' },
-          ],
-          data: [
-            { cliente: 'Cliente X', documento: 'FAT 2001', recebido_em: '2025-10-11', valor: 450.0, metodo: 'Cartão' },
-            { cliente: 'Cliente Y', documento: 'FAT 2002', recebido_em: '2025-10-13', valor: 320.0, metodo: 'PIX' },
-          ],
-        }
-      case 'movimentos':
-        return {
-          columns: [
-            { accessorKey: 'data', header: 'Data' },
-            { accessorKey: 'tipo', header: 'Tipo' },
-            { accessorKey: 'categoria', header: 'Categoria' },
-            { accessorKey: 'descricao', header: 'Descrição' },
-            { accessorKey: 'valor', header: 'Valor' },
-          ],
-          data: [
-            { data: '2025-10-10', tipo: 'Saída', categoria: 'Fornecedor', descricao: 'NF 789', valor: -890.0 },
-            { data: '2025-10-11', tipo: 'Entrada', categoria: 'Recebimento', descricao: 'FAT 2001', valor: 450.0 },
-          ],
-        }
+        return [
+          { accessorKey: 'fornecedor', header: 'Fornecedor' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'data_vencimento', header: 'Vencimento' },
+          { accessorKey: 'valor_total', header: 'Valor' },
+          { accessorKey: 'status', header: 'Status' },
+        ]
     }
+  }, [tabs.selected])
+
+  const [data, setData] = useState<Row[]>([])
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const load = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const url = `/api/modulos/financeiro?view=${encodeURIComponent(tabs.selected)}`
+        const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const json = await res.json()
+        const rows = (json?.rows || []) as Row[]
+        setData(Array.isArray(rows) ? rows : [])
+      } catch (e) {
+        if (!(e instanceof DOMException && e.name === 'AbortError')) {
+          setError(e instanceof Error ? e.message : 'Falha ao carregar dados')
+          setData([])
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    load()
+    return () => controller.abort()
   }, [tabs.selected])
 
   const tabOptions: Opcao[] = useMemo(() => {
@@ -202,34 +201,40 @@ export default function ModulosFinanceiroPage() {
           </div>
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
             <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
-              <DataTable
-                columns={columns}
-                data={data}
-                enableSearch={tabelaUI.enableSearch}
-                showColumnToggle={tabelaUI.enableColumnToggle}
-                showPagination={tabelaUI.showPagination}
-                pageSize={tabelaUI.pageSize}
-                headerBackground={tabelaUI.headerBg}
-                headerTextColor={tabelaUI.headerText}
-                cellTextColor={tabelaUI.cellText}
-                headerFontSize={tabelaUI.headerFontSize}
-                headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
-                headerFontWeight={tabelaUI.headerFontWeight}
-                headerLetterSpacing={tabelaUI.headerLetterSpacing}
-                cellFontSize={tabelaUI.cellFontSize}
-                cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
-                cellFontWeight={tabelaUI.cellFontWeight}
-                cellLetterSpacing={tabelaUI.cellLetterSpacing}
-                enableZebraStripes={tabelaUI.enableZebraStripes}
-                rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
-                borderColor={tabelaUI.borderColor}
-                borderWidth={tabelaUI.borderWidth}
-                selectionColumnWidth={tabelaUI.selectionColumnWidth}
-                enableRowSelection={tabelaUI.enableRowSelection}
-                selectionMode={tabelaUI.selectionMode}
-                defaultSortColumn={tabelaUI.defaultSortColumn}
-                defaultSortDirection={tabelaUI.defaultSortDirection}
-              />
+              {isLoading ? (
+                <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
+              ) : error ? (
+                <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
+              ) : (
+                <DataTable
+                  columns={columns}
+                  data={data}
+                  enableSearch={tabelaUI.enableSearch}
+                  showColumnToggle={tabelaUI.enableColumnToggle}
+                  showPagination={tabelaUI.showPagination}
+                  pageSize={tabelaUI.pageSize}
+                  headerBackground={tabelaUI.headerBg}
+                  headerTextColor={tabelaUI.headerText}
+                  cellTextColor={tabelaUI.cellText}
+                  headerFontSize={tabelaUI.headerFontSize}
+                  headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
+                  headerFontWeight={tabelaUI.headerFontWeight}
+                  headerLetterSpacing={tabelaUI.headerLetterSpacing}
+                  cellFontSize={tabelaUI.cellFontSize}
+                  cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
+                  cellFontWeight={tabelaUI.cellFontWeight}
+                  cellLetterSpacing={tabelaUI.cellLetterSpacing}
+                  enableZebraStripes={tabelaUI.enableZebraStripes}
+                  rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
+                  borderColor={tabelaUI.borderColor}
+                  borderWidth={tabelaUI.borderWidth}
+                  selectionColumnWidth={tabelaUI.selectionColumnWidth}
+                  enableRowSelection={tabelaUI.enableRowSelection}
+                  selectionMode={tabelaUI.selectionMode}
+                  defaultSortColumn={tabelaUI.defaultSortColumn}
+                  defaultSortDirection={tabelaUI.defaultSortDirection}
+                />
+              )}
             </div>
           </div>
         </div>
