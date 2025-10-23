@@ -133,6 +133,13 @@ export const ToolHeader = ({
           'tool-listarCatalogoDeServicos': 'Catálogo de Serviços',
           'tool-historicoDeServicosDoCliente': 'Histórico do Cliente',
           'tool-indicadoresDeServicos': 'Indicadores de Serviços',
+          // Compras
+          'tool-listarFornecedoresCompra': 'Fornecedores',
+          'tool-listarPedidosCompra': 'Pedidos de Compra',
+          'tool-listarRecebimentosCompra': 'Recebimentos',
+          'tool-listarSolicitacoesCompra': 'Solicitações de Compra',
+          'tool-listarCotacoesCompra': 'Cotações de Compra',
+          'tool-kpisCompras': 'KPIs de Compras',
         };
         return labels[type] ?? type.replace('tool-', '');
       })()}</span>

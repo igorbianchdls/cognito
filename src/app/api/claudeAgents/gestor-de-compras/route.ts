@@ -1,6 +1,14 @@
 import { anthropic } from '@ai-sdk/anthropic';
 import { convertToModelMessages, streamText, UIMessage } from 'ai';
 import { getComprasData } from '@/tools/comprasTools';
+import {
+  listarFornecedoresCompra,
+  listarPedidosCompra,
+  listarRecebimentosCompra,
+  listarSolicitacoesCompra,
+  listarCotacoesCompra,
+  kpisCompras,
+} from '@/tools/comprasV2Tools'
 
 export const maxDuration = 300;
 
@@ -37,10 +45,28 @@ Auxiliar gestores de compras, profissionais de procurement e supply chain a:
 - Avaliar conformidade contratual e compliance
 - Analisar spend por fornecedor e categoria
 
-# 🛠️ Sua Ferramenta Principal
+# 🛠️ Ferramentas (schema: compras)
 
-## 📊 getComprasData - Busca dados de gestão de compras
-Busca dados de fornecedores, pedidos de compra e itens do Supabase
+## 📦 listarFornecedoresCompra
+Lista fornecedores do schema compras (nome fantasia, razão, CNPJ, cidade/UF, contato, status, cadastrado em). Filtros: status, ativo, país, q, período (criado_em).
+
+## 🧾 listarPedidosCompra
+Lista pedidos de compra com fornecedor, condição de pagamento, data, status e valor total. Filtros: fornecedor, status, condição, valor_min/max, q, período (data_pedido).
+
+## 📥 listarRecebimentosCompra
+Lista recebimentos com pedido, fornecedor, data, nota fiscal e status. Filtros: pedido, fornecedor, status, nota, q, período (data_recebimento).
+
+## 📝 listarSolicitacoesCompra
+Lista solicitações de compra com contagem de itens. Filtros: status, q, período (data_solicitacao).
+
+## 💬 listarCotacoesCompra
+Lista cotações com fornecedor, datas, status e valor cotado. Filtros: fornecedor, status, q, período (data_envio).
+
+## 📈 kpisCompras
+KPIs do período: total_pedidos, valor_total_pedidos, total_recebimentos, total_cotacoes, valor_cotacoes, total_solicitacoes.
+
+## (Compat) getComprasData
+Consulta genérica (Supabase) para compatibilidade, utilize as tools acima quando possível.
 
 ### Tabelas Disponíveis:
 
@@ -295,7 +321,13 @@ Seja sempre orientado a dados, priorize redução de custos sem comprometer qual
       messages: convertToModelMessages(messages),
 
       tools: {
-        getComprasData
+        getComprasData,
+        listarFornecedoresCompra,
+        listarPedidosCompra,
+        listarRecebimentosCompra,
+        listarSolicitacoesCompra,
+        listarCotacoesCompra,
+        kpisCompras,
       }
     });
 
