@@ -2,7 +2,7 @@ import React from 'react'
 
 type StatusBadgeProps = {
   value?: unknown
-  type: 'status' | 'prioridade' | 'departamento'
+  type: 'status' | 'prioridade' | 'departamento' | 'condicao_pagamento'
 }
 
 export default function StatusBadge({ value, type }: StatusBadgeProps) {
@@ -12,13 +12,13 @@ export default function StatusBadge({ value, type }: StatusBadgeProps) {
   let textColor = '#6b7280'
 
   if (type === 'status') {
-    if (valueStr === 'pago' || valueStr === 'recebido' || valueStr === 'concluída' || valueStr === 'concluida' || valueStr === 'ativo') {
+    if (valueStr === 'pago' || valueStr === 'recebido' || valueStr === 'concluída' || valueStr === 'concluida' || valueStr === 'concluído' || valueStr === 'concluido' || valueStr === 'ativo') {
       bgColor = '#dcfce7'
       textColor = '#16a34a'
     } else if (valueStr === 'aberta' || valueStr === 'em aberto') {
       bgColor = '#dbeafe'
       textColor = '#2563eb'
-    } else if (valueStr === 'pendente') {
+    } else if (valueStr === 'pendente' || valueStr === 'parcial') {
       bgColor = '#fef3c7'
       textColor = '#ca8a04'
     } else if (valueStr === 'vencido' || valueStr === 'atrasado' || valueStr === 'inativo') {
@@ -49,6 +49,24 @@ export default function StatusBadge({ value, type }: StatusBadgeProps) {
     } else if (valueStr === 'diretoria') {
       bgColor = '#fef3c7'
       textColor = '#ca8a04'
+    }
+  } else if (type === 'condicao_pagamento') {
+    // Extract number of days from string (e.g., "60 dias" -> 60)
+    const match = valueStr.match(/(\d+)/)
+    const dias = match ? parseInt(match[1], 10) : 0
+
+    if (valueStr.includes('vista') || valueStr.includes('à vista')) {
+      bgColor = '#f3f4f6'
+      textColor = '#6b7280'
+    } else if (dias >= 60) {
+      bgColor = '#dcfce7'
+      textColor = '#16a34a'
+    } else if (dias >= 30) {
+      bgColor = '#fef3c7'
+      textColor = '#ca8a04'
+    } else if (dias > 0) {
+      bgColor = '#fee2e2'
+      textColor = '#dc2626'
     }
   }
 

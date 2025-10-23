@@ -164,7 +164,32 @@ export default function ModulosRecursosHumanosPage() {
             header: 'Departamento',
             cell: ({ row }) => <StatusBadge value={row.original['departamento']} type="departamento" />
           },
-          { accessorKey: 'gestor_direto', header: 'Gestor Direto' },
+          {
+            accessorKey: 'gestor_direto',
+            header: 'Gestor Direto',
+            size: 250,
+            minSize: 200,
+            cell: ({ row }) => {
+              const nome = row.original['gestor_direto'] || 'Sem gestor'
+              const subtitulo = row.original['cargo_gestor'] || 'Sem cargo'
+              const colors = getColorFromName(String(nome))
+
+              return (
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center mr-3"
+                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: colors.bg }}>
+                    <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
+                      {String(nome)?.charAt(0)?.toUpperCase() || '?'}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
+                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(subtitulo)}</div>
+                  </div>
+                </div>
+              )
+            }
+          },
           { accessorKey: 'email_corporativo', header: 'E-mail Corporativo' },
           { accessorKey: 'telefone', header: 'Telefone' },
           {
