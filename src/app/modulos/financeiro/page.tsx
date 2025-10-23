@@ -292,7 +292,7 @@ export default function ModulosFinanceiroPage() {
   } | null>(null)
   const [pagination, setPagination] = useState<{ pageIndex: number; pageSize: number; totalRows: number; pageCount: number }>({
     pageIndex: 0,
-    pageSize: tabelaUI.pageSize,
+    pageSize: 10,
     totalRows: 0,
     pageCount: 0,
   })
