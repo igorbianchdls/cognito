@@ -709,112 +709,68 @@ export const calcularFluxoCaixa = tool({
 // MOVIMENTOS FINANCEIROS
 // ============================================================================
 
-export const getMovimentos = tool({
-  description: 'Consulta movimentos financeiros efetivados (entradas/saídas) com filtros opcionais.',
+export const analisarReceitasPorCentroCusto = tool({
+  description: 'Analisa receitas agrupadas por centro de lucro com totais e período de receitas',
   inputSchema: z.object({
-    limit: z.number().default(50).describe('Número máximo de resultados'),
-    conta_id: z.string().optional().describe('Filtrar por ID da conta bancária'),
-    data_inicial: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
-    data_final: z.string().optional().describe('Data final (YYYY-MM-DD)'),
-    categoria_id: z.string().optional().describe('Filtrar por categoria'),
-    valor_minimo: z.number().optional().describe('Valor mínimo'),
-    valor_maximo: z.number().optional().describe('Valor máximo'),
+    limit: z.number().default(100).describe('Número máximo de centros de lucro'),
   }),
   execute: async ({
     limit,
-    conta_id,
-    data_inicial,
-    data_final,
-    categoria_id,
-    valor_minimo,
-    valor_maximo,
   }) => {
     try {
-      const conditions: string[] = [];
-      const params: unknown[] = [];
-      let paramIndex = 1;
+      const params: unknown[] = [limit];
 
-      const pushCondition = (clause: string, value: unknown) => {
-        conditions.push(`${clause} $${paramIndex}`);
-        params.push(value);
-        paramIndex += 1;
-      };
-
-      if (conta_id) pushCondition('conta_id =', conta_id);
-      if (data_inicial) pushCondition('data >=', data_inicial);
-      // Use exclusive upper bound for data_final (como no exemplo fornecido)
-      if (data_final) pushCondition('data <', data_final);
-      if (categoria_id) pushCondition('categoria_id =', categoria_id);
-      if (valor_minimo !== undefined) pushCondition('valor >=', valor_minimo);
-      if (valor_maximo !== undefined) pushCondition('valor <=', valor_maximo);
-
-      const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-      const whereClauseList = conditions.length
-        ? `WHERE ${conditions.map(c => c.replace(/^(\w+)/, 'm.$1')).join(' AND ')}`
-        : '';
-
-      const listSql = `
+      const sql = `
         SELECT
-          m.data,
-          c.nome                               AS conta,
-          cat.nome                             AS categoria,
-          cc.nome                              AS centro_custo,
-          m.valor,
-          COALESCE(ap.descricao, ar.descricao) AS origem_titulo,
-          CASE WHEN m.valor > 0 THEN 'entrada' ELSE 'saída' END AS tipo
-        FROM gestaofinanceira.movimentos m
-        JOIN gestaofinanceira.contas         c   ON c.id  = m.conta_id
-        JOIN gestaofinanceira.categorias     cat ON cat.id = m.categoria_id
-        LEFT JOIN gestaofinanceira.centros_custo    cc ON cc.id = m.centro_custo_id
-        LEFT JOIN gestaofinanceira.contas_a_pagar   ap ON ap.id = m.conta_a_pagar_id
-        LEFT JOIN gestaofinanceira.contas_a_receber ar ON ar.id = m.conta_a_receber_id
-        ${whereClauseList}
-        ORDER BY m.data, m.id
-        LIMIT $${paramIndex}
+          cl.nome AS centro_lucro,
+          SUM(car.valor_total) AS total_receitas,
+          COUNT(car.id) AS qtd_titulos,
+          MIN(car.data_vencimento) AS primeira_receita,
+          MAX(car.data_vencimento) AS ultima_receita
+        FROM financeiro.contas_a_receber car
+        LEFT JOIN financeiro.centros_lucro cl ON cl.id = car.centro_lucro_id
+        WHERE car.status IN ('pago', 'parcial')
+        GROUP BY cl.nome
+        ORDER BY total_receitas DESC
+        LIMIT $1
       `.trim();
 
-      const listParams = [...params, limit ?? 50];
+      const rows = await runQuery<Record<string, unknown>>(sql, params);
 
-      const rows = await runQuery<Record<string, unknown>>(listSql, listParams);
-
-      const aggSql = `
+      const totalSql = `
         SELECT
-          SUM(CASE WHEN valor > 0 THEN valor ELSE 0 END) AS total_entradas,
-          SUM(CASE WHEN valor < 0 THEN ABS(valor) ELSE 0 END) AS total_saidas,
-          COUNT(*) AS total_movimentos
-        FROM gestaofinanceira.movimentos
-        ${whereClause}
+          SUM(valor_total) AS total_geral,
+          COUNT(*) AS total_titulos
+        FROM financeiro.contas_a_receber
+        WHERE status IN ('pago', 'parcial')
       `.trim();
 
-      const [agg] = await runQuery<{
-        total_entradas: number | null;
-        total_saidas: number | null;
-        total_movimentos: number | null;
-      }>(aggSql, params);
+      const [totals] = await runQuery<{
+        total_geral: number | null;
+        total_titulos: number | null;
+      }>(totalSql, []);
 
-      const totalEntradas = Number(agg?.total_entradas ?? 0);
-      const totalSaidas = Number(agg?.total_saidas ?? 0);
-      const saldoLiquido = totalEntradas - totalSaidas;
+      const totalGeral = Number(totals?.total_geral ?? 0);
 
       return {
         success: true,
         rows,
+        count: rows.length,
         totals: {
-          total_entradas: totalEntradas,
-          total_saidas: totalSaidas,
-          saldo_liquido: saldoLiquido,
-          total_movimentos: Number(agg?.total_movimentos ?? rows.length),
+          total_geral: totalGeral,
+          total_titulos: Number(totals?.total_titulos ?? 0),
         },
-        message: `Movimentos encontrados: ${rows.length} (Entradas: ${totalEntradas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} | Saídas: ${totalSaidas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
-        sql_query: `${listSql}\n\n-- Totais\n${aggSql}`,
-        sql_params: formatSqlParams(listParams),
+        message: `${rows.length} centros de lucro encontrados (Total: ${totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`,
+        sql_query: `${sql}\n\n-- Totais\n${totalSql}`,
+        sql_params: formatSqlParams(params),
       };
     } catch (error) {
-      console.error('ERRO getMovimentos:', error);
+      console.error('ERRO analisarReceitasPorCentroCusto:', error);
       return {
         success: false,
-        message: `Erro ao buscar movimentos: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+        message: `Erro ao analisar receitas por centro de lucro: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
         rows: [],
+        count: 0,
       };
     }
   },
