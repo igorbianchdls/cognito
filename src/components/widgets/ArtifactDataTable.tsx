@@ -210,7 +210,7 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
       <ArtifactHeader>
         <div>
           <div className="flex items-center gap-2">
-            <Icon className={`h-5 w-5 ${iconColor}`} />
+            <Icon className="h-5 w-5 text-gray-500" />
             <ArtifactTitle>{title}</ArtifactTitle>
           </div>
           <ArtifactDescription className="mt-1">
@@ -359,7 +359,7 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
           <>
             <div className="border-b">
               <Table>
-                <TableHeader>
+                <TableHeader className="bg-gray-50">
                   {reactTable.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
                       {headerGroup.headers.map((header) => (
