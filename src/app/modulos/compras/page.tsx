@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import type { ColumnDef } from '@tanstack/react-table'
 
@@ -13,7 +13,7 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { LayoutDashboard, ShoppingBag } from 'lucide-react'
+import { ShoppingBag, Building2, PackageCheck, FilePlus2, FileSpreadsheet } from 'lucide-react'
 
 type Row = TableData
 
@@ -31,10 +31,13 @@ export default function ModulosComprasPage() {
     })
     financeiroUiActions.setTabs({
       options: [
-        { value: 'visao', label: 'Visão geral' },
+        { value: 'fornecedores', label: 'Fornecedores' },
         { value: 'pedidos', label: 'Pedidos' },
+        { value: 'recebimentos', label: 'Recebimentos' },
+        { value: 'solicitacoes-compra', label: 'Solicitações' },
+        { value: 'cotacoes-compra', label: 'Cotações' },
       ],
-      selected: 'visao',
+      selected: 'pedidos',
     })
   }, [])
 
@@ -45,45 +48,129 @@ export default function ModulosComprasPage() {
     return name
   }
 
-  const { columns, data } = useMemo((): { columns: ColumnDef<Row>[]; data: Row[] } => {
+  const [data, setData] = useState<Row[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>()
+
+  const formatDate = (value?: unknown) => {
+    if (!value) return ''
+    try {
+      const d = new Date(String(value))
+      if (isNaN(d.getTime())) return String(value)
+      return d.toLocaleDateString('pt-BR')
+    } catch {
+      return String(value)
+    }
+  }
+
+  const formatBRL = (value?: unknown) => {
+    const n = Number(value ?? 0)
+    if (isNaN(n)) return String(value ?? '')
+    return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  }
+
+  const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
+      case 'fornecedores':
+        return [
+          { accessorKey: 'nome_fantasia', header: 'Nome Fantasia' },
+          { accessorKey: 'razao_social', header: 'Razão Social' },
+          { accessorKey: 'cnpj', header: 'CNPJ' },
+          { accessorKey: 'cidade_uf', header: 'Cidade/UF' },
+          { accessorKey: 'telefone', header: 'Telefone' },
+          { accessorKey: 'email', header: 'Email' },
+          { accessorKey: 'pais', header: 'País' },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'cadastrado_em', header: 'Cadastrado em', cell: ({ row }) => formatDate(row.original['cadastrado_em']) },
+        ]
+      case 'recebimentos':
+        return [
+          { accessorKey: 'pedido', header: 'Pedido' },
+          { accessorKey: 'fornecedor', header: 'Fornecedor' },
+          { accessorKey: 'data_recebimento', header: 'Data', cell: ({ row }) => formatDate(row.original['data_recebimento']) },
+          { accessorKey: 'nota_fiscal', header: 'Nota Fiscal' },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'observacoes', header: 'Observações' },
+        ]
+      case 'solicitacoes-compra':
+        return [
+          { accessorKey: 'data_solicitacao', header: 'Data Solicitação', cell: ({ row }) => formatDate(row.original['data_solicitacao']) },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'itens_solicitados', header: 'Itens Solicitados' },
+          { accessorKey: 'observacoes', header: 'Observações' },
+        ]
+      case 'cotacoes-compra':
+        return [
+          { accessorKey: 'fornecedor', header: 'Fornecedor' },
+          { accessorKey: 'data_envio', header: 'Data Envio', cell: ({ row }) => formatDate(row.original['data_envio']) },
+          { accessorKey: 'data_retorno', header: 'Data Retorno', cell: ({ row }) => formatDate(row.original['data_retorno']) },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'valor_cotado', header: 'Valor Cotado', cell: ({ row }) => formatBRL(row.original['valor_cotado']) },
+          { accessorKey: 'observacoes', header: 'Observações' },
+        ]
       case 'pedidos':
-        return {
-          columns: [
-            { accessorKey: 'numero', header: 'Pedido' },
-            { accessorKey: 'fornecedor', header: 'Fornecedor' },
-            { accessorKey: 'data', header: 'Data' },
-            { accessorKey: 'valor', header: 'Valor' },
-            { accessorKey: 'status', header: 'Status' },
-          ],
-          data: [
-            { numero: 'PC-3001', fornecedor: 'Supply Co', data: '2025-10-18', valor: 2190.0, status: 'Aprovado' },
-            { numero: 'PC-3002', fornecedor: 'ACME', data: '2025-10-20', valor: 820.75, status: 'Em análise' },
-          ],
-        }
-      case 'visao':
       default:
-        return {
-          columns: [
-            { accessorKey: 'indicador', header: 'Indicador' },
-            { accessorKey: 'valor', header: 'Valor' },
-          ],
-          data: [
-            { indicador: 'Gasto (30d)', valor: 18940.4 },
-            { indicador: 'Pedidos (30d)', valor: 45 },
-            { indicador: 'Prazo médio (dias)', valor: 12.5 },
-          ],
-        }
+        return [
+          { accessorKey: 'numero_pedido', header: 'Número Pedido' },
+          { accessorKey: 'fornecedor', header: 'Fornecedor' },
+          { accessorKey: 'condicao_pagamento', header: 'Condição de Pagamento' },
+          { accessorKey: 'data_pedido', header: 'Data Pedido', cell: ({ row }) => formatDate(row.original['data_pedido']) },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'valor_total', header: 'Valor Total (R$)', cell: ({ row }) => formatBRL(row.original['valor_total']) },
+          { accessorKey: 'observacoes', header: 'Observações' },
+        ]
     }
   }, [tabs.selected])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const load = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const params = new URLSearchParams()
+        params.set('view', tabs.selected)
+        if (dateRange?.from) {
+          const d = dateRange.from
+          params.set('de', `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+        }
+        if (dateRange?.to) {
+          const d = dateRange.to
+          params.set('ate', `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+        }
+        const url = `/api/modulos/compras?${params.toString()}`
+        const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const json = await res.json()
+        const rows = (json?.rows || []) as Row[]
+        setData(Array.isArray(rows) ? rows : [])
+      } catch (e) {
+        if (!(e instanceof DOMException && e.name === 'AbortError')) {
+          setError(e instanceof Error ? e.message : 'Falha ao carregar dados')
+          setData([])
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    load()
+    return () => controller.abort()
+  }, [tabs.selected, dateRange?.from, dateRange?.to])
 
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
       switch (v) {
-        case 'visao':
-          return <LayoutDashboard className="h-4 w-4" />
+        case 'fornecedores':
+          return <Building2 className="h-4 w-4" />
         case 'pedidos':
           return <ShoppingBag className="h-4 w-4" />
+        case 'recebimentos':
+          return <PackageCheck className="h-4 w-4" />
+        case 'solicitacoes-compra':
+          return <FilePlus2 className="h-4 w-4" />
+        case 'cotacoes-compra':
+          return <FileSpreadsheet className="h-4 w-4" />
         default:
           return null
       }
@@ -131,6 +218,8 @@ export default function ModulosComprasPage() {
               from={data.length === 0 ? 0 : 1}
               to={Math.min(tabelaUI.pageSize, data.length)}
               total={data.length}
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
               fontFamily={fontVar(toolbarUI.fontFamily)}
               fontSize={toolbarUI.fontSize}
               fontWeight={toolbarUI.fontWeight}
@@ -151,34 +240,40 @@ export default function ModulosComprasPage() {
           </div>
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
             <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
-              <DataTable
-                columns={columns}
-                data={data}
-                enableSearch={tabelaUI.enableSearch}
-                showColumnToggle={tabelaUI.enableColumnToggle}
-                showPagination={tabelaUI.showPagination}
-                pageSize={tabelaUI.pageSize}
-                headerBackground={tabelaUI.headerBg}
-                headerTextColor={tabelaUI.headerText}
-                cellTextColor={tabelaUI.cellText}
-                headerFontSize={tabelaUI.headerFontSize}
-                headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
-                headerFontWeight={tabelaUI.headerFontWeight}
-                headerLetterSpacing={tabelaUI.headerLetterSpacing}
-                cellFontSize={tabelaUI.cellFontSize}
-                cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
-                cellFontWeight={tabelaUI.cellFontWeight}
-                cellLetterSpacing={tabelaUI.cellLetterSpacing}
-                enableZebraStripes={tabelaUI.enableZebraStripes}
-                rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
-                borderColor={tabelaUI.borderColor}
-                borderWidth={tabelaUI.borderWidth}
-                selectionColumnWidth={tabelaUI.selectionColumnWidth}
-                enableRowSelection={tabelaUI.enableRowSelection}
-                selectionMode={tabelaUI.selectionMode}
-                defaultSortColumn={tabelaUI.defaultSortColumn}
-                defaultSortDirection={tabelaUI.defaultSortDirection}
-              />
+              {isLoading ? (
+                <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
+              ) : error ? (
+                <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
+              ) : (
+                <DataTable
+                  columns={columns}
+                  data={data}
+                  enableSearch={tabelaUI.enableSearch}
+                  showColumnToggle={tabelaUI.enableColumnToggle}
+                  showPagination={tabelaUI.showPagination}
+                  pageSize={tabelaUI.pageSize}
+                  headerBackground={tabelaUI.headerBg}
+                  headerTextColor={tabelaUI.headerText}
+                  cellTextColor={tabelaUI.cellText}
+                  headerFontSize={tabelaUI.headerFontSize}
+                  headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
+                  headerFontWeight={tabelaUI.headerFontWeight}
+                  headerLetterSpacing={tabelaUI.headerLetterSpacing}
+                  cellFontSize={tabelaUI.cellFontSize}
+                  cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
+                  cellFontWeight={tabelaUI.cellFontWeight}
+                  cellLetterSpacing={tabelaUI.cellLetterSpacing}
+                  enableZebraStripes={tabelaUI.enableZebraStripes}
+                  rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
+                  borderColor={tabelaUI.borderColor}
+                  borderWidth={tabelaUI.borderWidth}
+                  selectionColumnWidth={tabelaUI.selectionColumnWidth}
+                  enableRowSelection={tabelaUI.enableRowSelection}
+                  selectionMode={tabelaUI.selectionMode}
+                  defaultSortColumn={tabelaUI.defaultSortColumn}
+                  defaultSortDirection={tabelaUI.defaultSortDirection}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -186,4 +281,3 @@ export default function ModulosComprasPage() {
     </SidebarProvider>
   )
 }
-
