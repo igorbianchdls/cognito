@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import type { ColumnDef } from '@tanstack/react-table'
 
@@ -13,7 +13,7 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { Users, Briefcase, Building } from 'lucide-react'
+import { Users, Briefcase, Building, CalendarDays } from 'lucide-react'
 
 type Row = TableData
 
@@ -34,6 +34,7 @@ export default function ModulosRecursosHumanosPage() {
         { value: 'funcionarios', label: 'Funcionários' },
         { value: 'cargos', label: 'Cargos' },
         { value: 'departamentos', label: 'Departamentos' },
+        { value: 'tipos-ausencia', label: 'Tipos de Ausência' },
       ],
       selected: 'funcionarios',
     })
@@ -46,51 +47,98 @@ export default function ModulosRecursosHumanosPage() {
     return name
   }
 
-  const { columns, data } = useMemo((): { columns: ColumnDef<Row>[]; data: Row[] } => {
+  const [data, setData] = useState<Row[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>()
+
+  const formatDate = (value?: unknown) => {
+    if (!value) return ''
+    try {
+      const d = new Date(String(value))
+      if (isNaN(d.getTime())) return String(value)
+      return d.toLocaleDateString('pt-BR')
+    } catch {
+      return String(value)
+    }
+  }
+
+  const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
+      case 'cargos':
+        return [
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'cargo', header: 'Cargo' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'qtd_funcionarios', header: 'Qtd Funcionários' },
+        ]
+      case 'departamentos':
+        return [
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'departamento', header: 'Departamento' },
+          { accessorKey: 'departamento_pai', header: 'Departamento Pai' },
+          { accessorKey: 'gestor', header: 'Gestor' },
+          { accessorKey: 'qtd_funcionarios', header: 'Qtd Funcionários' },
+        ]
+      case 'tipos-ausencia':
+        return [
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'tipo_de_ausencia', header: 'Tipo de Ausência' },
+          { accessorKey: 'desconta_saldo_ferias', header: 'Desconta do Saldo de Férias' },
+        ]
       case 'funcionarios':
       default:
-        return {
-          columns: [
-            { accessorKey: 'nome', header: 'Nome' },
-            { accessorKey: 'cargo', header: 'Cargo' },
-            { accessorKey: 'departamento', header: 'Departamento' },
-            { accessorKey: 'admissao', header: 'Admissão' },
-            { accessorKey: 'status', header: 'Status' },
-          ],
-          data: [
-            { nome: 'Ana Lima', cargo: 'Analista RH', departamento: 'RH', admissao: '2023-04-15', status: 'Ativo' },
-            { nome: 'Carlos Souza', cargo: 'Dev Frontend', departamento: 'Tecnologia', admissao: '2024-02-10', status: 'Ativo' },
-          ],
-        }
-      case 'cargos':
-        return {
-          columns: [
-            { accessorKey: 'cargo', header: 'Cargo' },
-            { accessorKey: 'nivel', header: 'Nível' },
-            { accessorKey: 'salario_base', header: 'Salário Base (R$)' },
-            { accessorKey: 'departamento', header: 'Departamento' },
-          ],
-          data: [
-            { cargo: 'Analista RH', nivel: 'Pleno', salario_base: 6000, departamento: 'RH' },
-            { cargo: 'Dev Frontend', nivel: 'Sênior', salario_base: 12000, departamento: 'Tecnologia' },
-          ],
-        }
-      case 'departamentos':
-        return {
-          columns: [
-            { accessorKey: 'departamento', header: 'Departamento' },
-            { accessorKey: 'gestor', header: 'Gestor' },
-            { accessorKey: 'colaboradores', header: 'Colaboradores' },
-            { accessorKey: 'orcamento', header: 'Orçamento (R$)' },
-          ],
-          data: [
-            { departamento: 'RH', gestor: 'Mariana Freitas', colaboradores: 6, orcamento: 300000 },
-            { departamento: 'Tecnologia', gestor: 'Paulo Nogueira', colaboradores: 18, orcamento: 1500000 },
-          ],
-        }
+        return [
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'funcionario', header: 'Funcionário' },
+          { accessorKey: 'cargo', header: 'Cargo' },
+          { accessorKey: 'departamento', header: 'Departamento' },
+          { accessorKey: 'gestor_direto', header: 'Gestor Direto' },
+          { accessorKey: 'email_corporativo', header: 'E-mail Corporativo' },
+          { accessorKey: 'telefone', header: 'Telefone' },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'data_nascimento', header: 'Data de Nascimento', cell: ({ row }) => formatDate(row.original['data_nascimento']) },
+          { accessorKey: 'data_criacao', header: 'Data de Criação', cell: ({ row }) => formatDate(row.original['data_criacao']) },
+        ]
     }
   }, [tabs.selected])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const load = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const params = new URLSearchParams()
+        params.set('view', tabs.selected)
+        if (tabs.selected === 'funcionarios') {
+          if (dateRange?.from) {
+            const d = dateRange.from
+            params.set('de', `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+          }
+          if (dateRange?.to) {
+            const d = dateRange.to
+            params.set('ate', `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+          }
+        }
+        const url = `/api/modulos/rh?${params.toString()}`
+        const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const json = await res.json()
+        const rows = (json?.rows || []) as Row[]
+        setData(Array.isArray(rows) ? rows : [])
+      } catch (e) {
+        if (!(e instanceof DOMException && e.name === 'AbortError')) {
+          setError(e instanceof Error ? e.message : 'Falha ao carregar dados')
+          setData([])
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    load()
+    return () => controller.abort()
+  }, [tabs.selected, dateRange?.from, dateRange?.to])
 
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
@@ -101,6 +149,8 @@ export default function ModulosRecursosHumanosPage() {
           return <Briefcase className="h-4 w-4" />
         case 'departamentos':
           return <Building className="h-4 w-4" />
+        case 'tipos-ausencia':
+          return <CalendarDays className="h-4 w-4" />
         default:
           return null
       }
@@ -148,6 +198,8 @@ export default function ModulosRecursosHumanosPage() {
               from={data.length === 0 ? 0 : 1}
               to={Math.min(tabelaUI.pageSize, data.length)}
               total={data.length}
+              dateRange={tabs.selected === 'funcionarios' ? dateRange : undefined}
+              onDateRangeChange={tabs.selected === 'funcionarios' ? setDateRange : undefined}
               fontFamily={fontVar(toolbarUI.fontFamily)}
               fontSize={toolbarUI.fontSize}
               fontWeight={toolbarUI.fontWeight}
@@ -168,34 +220,40 @@ export default function ModulosRecursosHumanosPage() {
           </div>
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
             <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
-              <DataTable
-                columns={columns}
-                data={data}
-                enableSearch={tabelaUI.enableSearch}
-                showColumnToggle={tabelaUI.enableColumnToggle}
-                showPagination={tabelaUI.showPagination}
-                pageSize={tabelaUI.pageSize}
-                headerBackground={tabelaUI.headerBg}
-                headerTextColor={tabelaUI.headerText}
-                cellTextColor={tabelaUI.cellText}
-                headerFontSize={tabelaUI.headerFontSize}
-                headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
-                headerFontWeight={tabelaUI.headerFontWeight}
-                headerLetterSpacing={tabelaUI.headerLetterSpacing}
-                cellFontSize={tabelaUI.cellFontSize}
-                cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
-                cellFontWeight={tabelaUI.cellFontWeight}
-                cellLetterSpacing={tabelaUI.cellLetterSpacing}
-                enableZebraStripes={tabelaUI.enableZebraStripes}
-                rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
-                borderColor={tabelaUI.borderColor}
-                borderWidth={tabelaUI.borderWidth}
-                selectionColumnWidth={tabelaUI.selectionColumnWidth}
-                enableRowSelection={tabelaUI.enableRowSelection}
-                selectionMode={tabelaUI.selectionMode}
-                defaultSortColumn={tabelaUI.defaultSortColumn}
-                defaultSortDirection={tabelaUI.defaultSortDirection}
-              />
+              {isLoading ? (
+                <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
+              ) : error ? (
+                <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
+              ) : (
+                <DataTable
+                  columns={columns}
+                  data={data}
+                  enableSearch={tabelaUI.enableSearch}
+                  showColumnToggle={tabelaUI.enableColumnToggle}
+                  showPagination={tabelaUI.showPagination}
+                  pageSize={tabelaUI.pageSize}
+                  headerBackground={tabelaUI.headerBg}
+                  headerTextColor={tabelaUI.headerText}
+                  cellTextColor={tabelaUI.cellText}
+                  headerFontSize={tabelaUI.headerFontSize}
+                  headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
+                  headerFontWeight={tabelaUI.headerFontWeight}
+                  headerLetterSpacing={tabelaUI.headerLetterSpacing}
+                  cellFontSize={tabelaUI.cellFontSize}
+                  cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
+                  cellFontWeight={tabelaUI.cellFontWeight}
+                  cellLetterSpacing={tabelaUI.cellLetterSpacing}
+                  enableZebraStripes={tabelaUI.enableZebraStripes}
+                  rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
+                  borderColor={tabelaUI.borderColor}
+                  borderWidth={tabelaUI.borderWidth}
+                  selectionColumnWidth={tabelaUI.selectionColumnWidth}
+                  enableRowSelection={tabelaUI.enableRowSelection}
+                  selectionMode={tabelaUI.selectionMode}
+                  defaultSortColumn={tabelaUI.defaultSortColumn}
+                  defaultSortDirection={tabelaUI.defaultSortDirection}
+                />
+              )}
             </div>
           </div>
         </div>
