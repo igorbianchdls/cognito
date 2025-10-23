@@ -106,7 +106,7 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
     reader.onload = (e) => {
       const dataUrl = e.target?.result as string;
       // Atualiza o input com referência leve ao arquivo
-      setInput((prev) => (prev ? prev + '\n\n' : '') + `[Documento anexado: ${file.name}]`);
+      setInput((input ? input + '\n\n' : '') + `[Documento anexado: ${file.name}]`);
       // Notifica o pai para anexar como file part no envio
       onFileSelected?.(dataUrl, file.type);
     };
