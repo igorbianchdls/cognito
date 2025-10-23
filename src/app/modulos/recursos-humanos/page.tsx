@@ -65,6 +65,27 @@ export default function ModulosRecursosHumanosPage() {
     }
   }
 
+  const getColorFromName = (name: string) => {
+    let hash = 0
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash)
+    }
+
+    const colors = [
+      { bg: '#DBEAFE', text: '#1E40AF' },
+      { bg: '#DCFCE7', text: '#15803D' },
+      { bg: '#FEF3C7', text: '#B45309' },
+      { bg: '#FCE7F3', text: '#BE185D' },
+      { bg: '#E0E7FF', text: '#4338CA' },
+      { bg: '#FED7AA', text: '#C2410C' },
+      { bg: '#E9D5FF', text: '#7C3AED' },
+      { bg: '#D1FAE5', text: '#047857' },
+    ]
+
+    const index = Math.abs(hash) % colors.length
+    return colors[index]
+  }
+
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
       case 'contratos':
@@ -110,7 +131,30 @@ export default function ModulosRecursosHumanosPage() {
       default:
         return [
           { accessorKey: 'id', header: 'ID' },
-          { accessorKey: 'funcionario', header: 'Funcionário' },
+          {
+            accessorKey: 'funcionario',
+            header: 'Funcionário',
+            cell: ({ row }) => {
+              const nome = row.original['funcionario'] || 'Sem nome'
+              const cargo = row.original['cargo'] || 'Sem cargo'
+              const colors = getColorFromName(String(nome))
+
+              return (
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center mr-3"
+                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: colors.bg }}>
+                    <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
+                      {String(nome)?.charAt(0)?.toUpperCase() || '?'}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
+                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(cargo)}</div>
+                  </div>
+                </div>
+              )
+            }
+          },
           { accessorKey: 'cargo', header: 'Cargo' },
           { accessorKey: 'departamento', header: 'Departamento' },
           { accessorKey: 'gestor_direto', header: 'Gestor Direto' },
