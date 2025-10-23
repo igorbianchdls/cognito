@@ -31,9 +31,7 @@ export default function AtividadesResult({ result }: { result: GetCrmAtividadesO
       exportFileName="atividades"
       sqlQuery={result.sql_query}
       pageSize={10}
-      enableAutoChart={true}
-      chartOptions={{ xKey: 'status', yKey: undefined, disableSwitcherUI: false }}
+      enableAutoChart={false}
     />
   )
 }
-

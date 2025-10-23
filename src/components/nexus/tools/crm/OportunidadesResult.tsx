@@ -43,8 +43,7 @@ export default function OportunidadesResult({ result }: { result: GetCrmOportuni
       sqlQuery={result.sql_query}
       pageSize={10}
       enableAutoChart={true}
-      chartOptions={{ xKey: 'estagio', yKey: 'valor' }}
+      chartOptions={{ xKey: 'estagio', valueKeys: ['valor'] }}
     />
   )
 }
-
