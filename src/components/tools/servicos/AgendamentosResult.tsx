@@ -1,6 +1,8 @@
 'use client'
 
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable'
+import EntityDisplay from '@/components/modulos/EntityDisplay'
+import StatusBadge from '@/components/modulos/StatusBadge'
 import { ColumnDef } from '@tanstack/react-table'
 import { Calendar } from 'lucide-react'
 import { useMemo } from 'react'
@@ -26,7 +28,17 @@ interface Props {
 export default function AgendamentosResult({ success, message, rows = [], count, sql_query }: Props) {
   const columns: ColumnDef<Row>[] = useMemo(() => [
     { accessorKey: 'numero_os', header: 'Nº OS' },
-    { accessorKey: 'tecnico', header: 'Técnico' },
+    {
+      accessorKey: 'tecnico',
+      header: 'Técnico',
+      size: 250,
+      minSize: 200,
+      cell: ({ row }) => {
+        const tecnico = row.original.tecnico || 'Sem técnico';
+        const especialidade = row.original.tecnico_especialidade || row.original.especialidade || 'Sem especialidade';
+        return <EntityDisplay name={String(tecnico)} subtitle={String(especialidade)} />;
+      }
+    },
     { accessorKey: 'data_agendada', header: 'Agendado', cell: ({ row }) => {
       const d = row.original.data_agendada as string | undefined
       return d ? new Date(d).toLocaleString('pt-BR') : '-'
@@ -39,7 +51,11 @@ export default function AgendamentosResult({ success, message, rows = [], count,
       const d = row.original.data_fim as string | undefined
       return d ? new Date(d).toLocaleString('pt-BR') : '-'
     } },
-    { accessorKey: 'status', header: 'Status' },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge value={row.original.status} type="status" />
+    },
     { accessorKey: 'observacoes', header: 'Observações' },
   ], [])
 

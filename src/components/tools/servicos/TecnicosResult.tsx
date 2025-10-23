@@ -1,7 +1,8 @@
 'use client'
 
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable'
-import { Badge } from '@/components/ui/badge'
+import EntityDisplay from '@/components/modulos/EntityDisplay'
+import StatusBadge from '@/components/modulos/StatusBadge'
 import { ColumnDef } from '@tanstack/react-table'
 import { Users } from 'lucide-react'
 import { useMemo } from 'react'
@@ -27,17 +28,27 @@ interface Props {
 
 export default function TecnicosResult({ success, message, rows = [], count, sql_query }: Props) {
   const columns: ColumnDef<Row>[] = useMemo(() => [
-    { accessorKey: 'nome', header: 'Técnico' },
+    {
+      accessorKey: 'nome',
+      header: 'Técnico',
+      size: 250,
+      minSize: 200,
+      cell: ({ row }) => {
+        const nome = row.original.nome || 'Sem nome';
+        const subtitle = row.original.especialidade || row.original.cargo || 'Sem especialidade';
+        return <EntityDisplay name={String(nome)} subtitle={String(subtitle)} />;
+      }
+    },
     { accessorKey: 'cargo', header: 'Cargo' },
-    { accessorKey: 'especialidade', header: 'Especialidade' },
     { accessorKey: 'custo_hora', header: 'Custo/Hora', cell: ({ row }) => {
       const v = row.original.custo_hora as number | undefined
       return typeof v === 'number' ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'
     } },
-    { accessorKey: 'status', header: 'Status', cell: ({ row }) => {
-      const s = row.original.status as string | undefined
-      return s ? <Badge variant="outline">{s}</Badge> : '-'
-    } },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge value={row.original.status} type="status" />
+    },
     { accessorKey: 'admissao', header: 'Admissão', cell: ({ row }) => {
       const d = row.original.admissao as string | undefined
       return d ? new Date(d).toLocaleDateString('pt-BR') : '-'

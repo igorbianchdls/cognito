@@ -1,6 +1,8 @@
 'use client'
 
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable'
+import EntityDisplay from '@/components/modulos/EntityDisplay'
+import StatusBadge from '@/components/modulos/StatusBadge'
 import { ColumnDef } from '@tanstack/react-table'
 import { Users2 } from 'lucide-react'
 import { useMemo } from 'react'
@@ -25,14 +27,38 @@ interface Props { success: boolean; message: string; rows?: Row[]; count?: numbe
 
 export default function ClientesVendasResult({ success, message, rows = [], count, sql_query }: Props) {
   const columns: ColumnDef<Row>[] = useMemo(() => [
-    { accessorKey: 'cliente', header: 'Cliente' },
-    { accessorKey: 'nome_fantasia_ou_razao', header: 'Nome Fantasia/Razão' },
+    {
+      accessorKey: 'cliente',
+      header: 'Cliente',
+      size: 250,
+      minSize: 200,
+      cell: ({ row }) => {
+        const cliente = row.original.cliente || 'Sem nome';
+        const nomeFantasia = row.original.nome_fantasia_ou_razao || 'Sem nome fantasia';
+        return <EntityDisplay name={String(cliente)} subtitle={String(nomeFantasia)} />;
+      }
+    },
     { accessorKey: 'cpf_cnpj', header: 'CPF/CNPJ' },
     { accessorKey: 'email', header: 'Email' },
     { accessorKey: 'telefone', header: 'Telefone' },
-    { accessorKey: 'vendedor_responsavel', header: 'Vendedor Responsável' },
+    {
+      accessorKey: 'vendedor_responsavel',
+      header: 'Vendedor Responsável',
+      size: 200,
+      minSize: 150,
+      cell: ({ row }) => {
+        const vendedor = row.original.vendedor_responsavel;
+        if (!vendedor) return '-';
+        const equipe = row.original.vendedor_equipe || 'Vendedor';
+        return <EntityDisplay name={String(vendedor)} subtitle={String(equipe)} />;
+      }
+    },
     { accessorKey: 'territorio', header: 'Território' },
-    { accessorKey: 'status_cliente', header: 'Status' },
+    {
+      accessorKey: 'status_cliente',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge value={row.original.status_cliente} type="status" />
+    },
     { accessorKey: 'cliente_desde', header: 'Cliente Desde', cell: ({ row }) => {
       const d = row.original.cliente_desde as string | undefined
       return d ? new Date(d).toLocaleDateString('pt-BR') : '-'
@@ -46,7 +72,15 @@ export default function ClientesVendasResult({ success, message, rows = [], coun
       return typeof v === 'number' ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'
     } },
     { accessorKey: 'frequencia_pedidos_mensal', header: 'Freq. Mensal' },
-    { accessorKey: 'ativo', header: 'Ativo' },
+    {
+      accessorKey: 'ativo',
+      header: 'Ativo',
+      cell: ({ row }) => {
+        const ativo = row.original.ativo;
+        const value = ativo === true || ativo === 'true' || ativo === 'sim' ? 'Ativo' : 'Inativo';
+        return <StatusBadge value={value} type="status" />;
+      }
+    },
   ], [])
 
   return (

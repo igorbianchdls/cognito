@@ -1,10 +1,11 @@
 'use client'
 
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable'
+import EntityDisplay from '@/components/modulos/EntityDisplay'
+import StatusBadge from '@/components/modulos/StatusBadge'
 import { ColumnDef } from '@tanstack/react-table'
 import { Users } from 'lucide-react'
 import { useMemo } from 'react'
-import { Badge } from '@/components/ui/badge'
 
 type Row = Record<string, unknown> & {
   funcionario?: string
@@ -20,25 +21,38 @@ type Row = Record<string, unknown> & {
 
 interface Props { success: boolean; message: string; rows?: Row[]; count?: number; sql_query?: string }
 
-const statusColor = (s?: string) => {
-  const v = (s || '').toLowerCase()
-  if (v.includes('ativo')) return 'bg-green-100 text-green-800 border-green-300'
-  if (v.includes('inativo')) return 'bg-gray-100 text-gray-800 border-gray-300'
-  return 'bg-blue-100 text-blue-800 border-blue-300'
-}
-
 export default function FuncionariosResult({ success, message, rows = [], count, sql_query }: Props) {
   const columns: ColumnDef<Row>[] = useMemo(() => [
-    { accessorKey: 'funcionario', header: 'Funcionário' },
-    { accessorKey: 'cargo', header: 'Cargo' },
+    {
+      accessorKey: 'funcionario',
+      header: 'Funcionário',
+      size: 250,
+      minSize: 200,
+      cell: ({ row }) => {
+        const funcionario = row.original.funcionario || 'Sem nome';
+        const subtitle = row.original.cargo || row.original.departamento || 'Sem cargo';
+        return <EntityDisplay name={String(funcionario)} subtitle={String(subtitle)} />;
+      }
+    },
     { accessorKey: 'departamento', header: 'Departamento' },
-    { accessorKey: 'gestor_direto', header: 'Gestor Direto' },
+    {
+      accessorKey: 'gestor_direto',
+      header: 'Gestor Direto',
+      size: 200,
+      minSize: 150,
+      cell: ({ row }) => {
+        const gestor = row.original.gestor_direto;
+        if (!gestor) return '-';
+        return <EntityDisplay name={String(gestor)} subtitle="Gestor" />;
+      }
+    },
     { accessorKey: 'email_corporativo', header: 'Email' },
     { accessorKey: 'telefone', header: 'Telefone' },
-    { accessorKey: 'status', header: 'Status', cell: ({ row }) => {
-      const s = row.original.status as string | undefined
-      return s ? <Badge className={statusColor(s)}>{s}</Badge> : '-'
-    } },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge value={row.original.status} type="status" />
+    },
     { accessorKey: 'data_nascimento', header: 'Nascimento', cell: ({ row }) => {
       const d = row.original.data_nascimento as string | undefined
       return d ? new Date(d).toLocaleDateString('pt-BR') : '-'

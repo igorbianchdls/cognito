@@ -1,10 +1,11 @@
 'use client'
 
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable'
+import EntityDisplay from '@/components/modulos/EntityDisplay'
+import StatusBadge from '@/components/modulos/StatusBadge'
 import { ColumnDef } from '@tanstack/react-table'
 import { ShoppingCart } from 'lucide-react'
 import { useMemo } from 'react'
-import { Badge } from '@/components/ui/badge'
 
 type Row = Record<string, unknown> & {
   numero_pedido?: string
@@ -23,24 +24,38 @@ type Row = Record<string, unknown> & {
 
 interface Props { success: boolean; message: string; rows?: Row[]; count?: number; sql_query?: string }
 
-const statusColor = (s?: string) => {
-  const v = (s || '').toLowerCase();
-  if (v.includes('complet') || v.includes('pago')) return 'bg-green-100 text-green-800 border-green-300'
-  if (v.includes('cancel')) return 'bg-red-100 text-red-800 border-red-300'
-  if (v.includes('pend') || v.includes('em')) return 'bg-blue-100 text-blue-800 border-blue-300'
-  return 'bg-gray-100 text-gray-800 border-gray-300'
-}
-
 export default function PedidosVendasResult({ success, message, rows = [], count, sql_query }: Props) {
   const columns: ColumnDef<Row>[] = useMemo(() => [
     { accessorKey: 'numero_pedido', header: 'Número' },
-    { accessorKey: 'cliente', header: 'Cliente' },
+    {
+      accessorKey: 'cliente',
+      header: 'Cliente',
+      size: 250,
+      minSize: 200,
+      cell: ({ row }) => {
+        const cliente = row.original.cliente || 'Sem cliente';
+        const cidade = row.original.cidade_uf || 'Sem localização';
+        return <EntityDisplay name={String(cliente)} subtitle={String(cidade)} />;
+      }
+    },
     { accessorKey: 'canal_venda', header: 'Canal' },
-    { accessorKey: 'vendedor', header: 'Vendedor' },
-    { accessorKey: 'status', header: 'Status', cell: ({ row }) => {
-      const s = row.original.status as string | undefined
-      return s ? <Badge className={statusColor(s)}>{s}</Badge> : '-'
-    } },
+    {
+      accessorKey: 'vendedor',
+      header: 'Vendedor',
+      size: 200,
+      minSize: 150,
+      cell: ({ row }) => {
+        const vendedor = row.original.vendedor;
+        if (!vendedor) return '-';
+        const equipe = row.original.vendedor_equipe || row.original.equipe || 'Vendedor';
+        return <EntityDisplay name={String(vendedor)} subtitle={String(equipe)} />;
+      }
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge value={row.original.status} type="status" />
+    },
     { accessorKey: 'data_pedido', header: 'Data', cell: ({ row }) => {
       const d = row.original.data_pedido as string | undefined
       return d ? new Date(d).toLocaleDateString('pt-BR') : '-'

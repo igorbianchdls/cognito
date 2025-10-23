@@ -1,6 +1,7 @@
 'use client'
 
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable'
+import StatusBadge from '@/components/modulos/StatusBadge'
 import { ColumnDef } from '@tanstack/react-table'
 import { User } from 'lucide-react'
 import { useMemo } from 'react'
@@ -25,8 +26,16 @@ interface Props {
 export default function HistoricoClienteResult({ success, message, rows = [], count, sql_query }: Props) {
   const columns: ColumnDef<Row>[] = useMemo(() => [
     { accessorKey: 'numero_os', header: 'Nº OS' },
-    { accessorKey: 'status', header: 'Status' },
-    { accessorKey: 'prioridade', header: 'Prioridade' },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge value={row.original.status} type="status" />
+    },
+    {
+      accessorKey: 'prioridade',
+      header: 'Prioridade',
+      cell: ({ row }) => <StatusBadge value={row.original.prioridade} type="prioridade" />
+    },
     { accessorKey: 'data_abertura', header: 'Abertura', cell: ({ row }) => {
       const d = row.original.data_abertura as string | undefined
       return d ? new Date(d).toLocaleString('pt-BR') : '-'

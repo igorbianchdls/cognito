@@ -1,7 +1,8 @@
 'use client'
 
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable'
-import { Badge } from '@/components/ui/badge'
+import EntityDisplay from '@/components/modulos/EntityDisplay'
+import StatusBadge from '@/components/modulos/StatusBadge'
 import { ColumnDef } from '@tanstack/react-table'
 import { Wrench } from 'lucide-react'
 import { useMemo } from 'react'
@@ -28,29 +29,41 @@ interface Props {
   sql_query?: string
 }
 
-const statusColor = (s?: string) => {
-  const v = (s || '').toLowerCase()
-  if (v === 'concluida') return 'bg-green-100 text-green-800 border-green-300'
-  if (v === 'cancelada') return 'bg-red-100 text-red-800 border-red-300'
-  if (v === 'em_andamento') return 'bg-blue-100 text-blue-800 border-blue-300'
-  if (v === 'aguardando_pecas') return 'bg-amber-100 text-amber-800 border-amber-300'
-  if (v === 'aberta') return 'bg-yellow-100 text-yellow-800 border-yellow-300'
-  return 'bg-gray-100 text-gray-800 border-gray-300'
-}
-
 export default function OrdensDeServicoResult({ success, message, rows = [], count, sql_query }: Props) {
   const columns: ColumnDef<Row>[] = useMemo(() => [
     { accessorKey: 'numero_os', header: 'Nº OS' },
-    { accessorKey: 'cliente', header: 'Cliente' },
-    { accessorKey: 'tecnico_responsavel', header: 'Técnico' },
-    { accessorKey: 'status', header: 'Status', cell: ({ row }) => {
-      const s = row.original.status as string | undefined
-      return s ? <Badge className={statusColor(s)}>{s}</Badge> : '-'
-    } },
-    { accessorKey: 'prioridade', header: 'Prioridade', cell: ({ row }) => {
-      const p = row.original.prioridade as string | undefined
-      return p ? <Badge variant="outline">{p}</Badge> : '-'
-    } },
+    {
+      accessorKey: 'cliente',
+      header: 'Cliente',
+      size: 250,
+      minSize: 200,
+      cell: ({ row }) => {
+        const cliente = row.original.cliente || 'Sem cliente';
+        const segmento = row.original.cliente_segmento || row.original.segmento || 'Sem segmento';
+        return <EntityDisplay name={String(cliente)} subtitle={String(segmento)} />;
+      }
+    },
+    {
+      accessorKey: 'tecnico_responsavel',
+      header: 'Técnico',
+      size: 250,
+      minSize: 200,
+      cell: ({ row }) => {
+        const tecnico = row.original.tecnico_responsavel || 'Sem técnico';
+        const especialidade = row.original.tecnico_especialidade || row.original.especialidade || 'Sem especialidade';
+        return <EntityDisplay name={String(tecnico)} subtitle={String(especialidade)} />;
+      }
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge value={row.original.status} type="status" />
+    },
+    {
+      accessorKey: 'prioridade',
+      header: 'Prioridade',
+      cell: ({ row }) => <StatusBadge value={row.original.prioridade} type="prioridade" />
+    },
     { accessorKey: 'data_abertura', header: 'Abertura', cell: ({ row }) => {
       const d = row.original.data_abertura as string | undefined
       return d ? new Date(d).toLocaleString('pt-BR') : '-'

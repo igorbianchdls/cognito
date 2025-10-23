@@ -1,6 +1,8 @@
 'use client'
 
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable'
+import EntityDisplay from '@/components/modulos/EntityDisplay'
+import StatusBadge from '@/components/modulos/StatusBadge'
 import { ColumnDef } from '@tanstack/react-table'
 import { Building2 } from 'lucide-react'
 import { useMemo } from 'react'
@@ -21,14 +23,26 @@ interface Props { success: boolean; message: string; rows?: Row[]; count?: numbe
 
 export default function FornecedoresCompraResult({ success, message, rows = [], count, sql_query }: Props) {
   const columns: ColumnDef<Row>[] = useMemo(() => [
-    { accessorKey: 'nome_fantasia', header: 'Nome Fantasia' },
-    { accessorKey: 'razao_social', header: 'Razão Social' },
+    {
+      accessorKey: 'nome_fantasia',
+      header: 'Fornecedor',
+      size: 250,
+      minSize: 200,
+      cell: ({ row }) => {
+        const nome = row.original.nome_fantasia || row.original.razao_social || 'Sem nome';
+        const subtitle = row.original.cidade_uf || row.original.razao_social || 'Sem localização';
+        return <EntityDisplay name={String(nome)} subtitle={String(subtitle)} />;
+      }
+    },
     { accessorKey: 'cnpj', header: 'CNPJ' },
-    { accessorKey: 'cidade_uf', header: 'Cidade/UF' },
     { accessorKey: 'telefone', header: 'Telefone' },
     { accessorKey: 'email', header: 'Email' },
     { accessorKey: 'pais', header: 'País' },
-    { accessorKey: 'status', header: 'Status' },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge value={row.original.status} type="status" />
+    },
     { accessorKey: 'cadastrado_em', header: 'Cadastrado em', cell: ({ row }) => {
       const d = row.original.cadastrado_em as string | undefined
       return d ? new Date(d).toLocaleDateString('pt-BR') : '-'

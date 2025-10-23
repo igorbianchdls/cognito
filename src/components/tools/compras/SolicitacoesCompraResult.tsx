@@ -1,6 +1,7 @@
 'use client'
 
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable'
+import StatusBadge from '@/components/modulos/StatusBadge'
 import { ColumnDef } from '@tanstack/react-table'
 import { FilePlus2 } from 'lucide-react'
 import { useMemo } from 'react'
@@ -20,7 +21,11 @@ export default function SolicitacoesCompraResult({ success, message, rows = [], 
       const d = row.original.data_solicitacao as string | undefined
       return d ? new Date(d).toLocaleDateString('pt-BR') : '-'
     } },
-    { accessorKey: 'status', header: 'Status' },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge value={row.original.status} type="status" />
+    },
     { accessorKey: 'itens_solicitados', header: 'Itens Solicitados' },
     { accessorKey: 'observacoes', header: 'Observações' },
   ], [])

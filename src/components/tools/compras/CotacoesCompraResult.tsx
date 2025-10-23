@@ -1,6 +1,8 @@
 'use client'
 
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable'
+import EntityDisplay from '@/components/modulos/EntityDisplay'
+import StatusBadge from '@/components/modulos/StatusBadge'
 import { ColumnDef } from '@tanstack/react-table'
 import { FileSpreadsheet } from 'lucide-react'
 import { useMemo } from 'react'
@@ -18,7 +20,17 @@ interface Props { success: boolean; message: string; rows?: Row[]; count?: numbe
 
 export default function CotacoesCompraResult({ success, message, rows = [], count, sql_query }: Props) {
   const columns: ColumnDef<Row>[] = useMemo(() => [
-    { accessorKey: 'fornecedor', header: 'Fornecedor' },
+    {
+      accessorKey: 'fornecedor',
+      header: 'Fornecedor',
+      size: 250,
+      minSize: 200,
+      cell: ({ row }) => {
+        const fornecedor = row.original.fornecedor || 'Sem fornecedor';
+        const categoria = row.original.fornecedor_categoria || row.original.categoria || 'Sem categoria';
+        return <EntityDisplay name={String(fornecedor)} subtitle={String(categoria)} />;
+      }
+    },
     { accessorKey: 'data_envio', header: 'Envio', cell: ({ row }) => {
       const d = row.original.data_envio as string | undefined
       return d ? new Date(d).toLocaleDateString('pt-BR') : '-'
@@ -27,7 +39,11 @@ export default function CotacoesCompraResult({ success, message, rows = [], coun
       const d = row.original.data_retorno as string | undefined
       return d ? new Date(d).toLocaleDateString('pt-BR') : '-'
     } },
-    { accessorKey: 'status', header: 'Status' },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => <StatusBadge value={row.original.status} type="status" />
+    },
     { accessorKey: 'valor_cotado', header: 'Valor Cotado', cell: ({ row }) => {
       const v = row.original.valor_cotado as number | undefined
       return typeof v === 'number' ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'
