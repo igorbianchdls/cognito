@@ -71,6 +71,13 @@ import AgendamentosResult from '../tools/servicos/AgendamentosResult';
 import CatalogoServicosResult from '../tools/servicos/CatalogoServicosResult';
 import HistoricoClienteResult from '../tools/servicos/HistoricoClienteResult';
 import IndicadoresServicosResult from '../tools/servicos/IndicadoresServicosResult';
+import AlmoxarifadosEstoqueResult from '../tools/estoque/AlmoxarifadosEstoqueResult';
+import EstoqueAtualResult from '../tools/estoque/EstoqueAtualResult';
+import MovimentacoesEstoqueResult from '../tools/estoque/MovimentacoesEstoqueResult';
+import TransferenciasEstoqueResult from '../tools/estoque/TransferenciasEstoqueResult';
+import InventariosEstoqueResult from '../tools/estoque/InventariosEstoqueResult';
+import CustosEstoqueResult from '../tools/estoque/CustosEstoqueResult';
+import TiposMovimentacaoResult from '../tools/estoque/TiposMovimentacaoResult';
 import FuncionariosResult from '../tools/funcionarios/FuncionariosResult';
 import DepartamentosResult from '../tools/funcionarios/DepartamentosResult';
 import CargosResult from '../tools/funcionarios/CargosResult';
@@ -7364,6 +7371,182 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                   title="Giro de Estoque"
                   icon={TrendingUp}
                   iconColor="text-emerald-600"
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        // Estoque (schema estoque) — Leitura
+        if (part.type === 'tool-listarAlmoxarifadosEstoque') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <AlmoxarifadosEstoqueResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-listarEstoqueAtual') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <EstoqueAtualResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-listarMovimentacoesEstoque') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <MovimentacoesEstoqueResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-listarTransferenciasEstoque') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <TransferenciasEstoqueResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-listarInventariosEstoque') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <InventariosEstoqueResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-listarCustosEstoque') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <CustosEstoqueResult
+                  success={(tool.output as RowsToolOutput).success}
+                  message={(tool.output as RowsToolOutput).message}
+                  rows={(tool.output as RowsToolOutput).rows}
+                  count={(tool.output as RowsToolOutput).count}
+                  sql_query={(tool.output as RowsToolOutput).sql_query}
+                />
+              )}
+            </div>
+          );
+        }
+
+        if (part.type === 'tool-listarTiposMovimentacao') {
+          const tool = part as NexusToolUIPart;
+          const open = tool.state === 'output-available' || tool.state === 'output-error';
+          return (
+            <div key={tool.toolCallId}>
+              <Tool defaultOpen={open}>
+                <ToolHeader type={part.type} state={tool.state} />
+                <ToolContent>
+                  {tool.input && <ToolInput input={tool.input} />}
+                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
+                </ToolContent>
+              </Tool>
+              {tool.state === 'output-available' && (
+                <TiposMovimentacaoResult
                   success={(tool.output as RowsToolOutput).success}
                   message={(tool.output as RowsToolOutput).message}
                   rows={(tool.output as RowsToolOutput).rows}

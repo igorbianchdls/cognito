@@ -9,6 +9,15 @@ import {
   desempenhoPorDepositoExpedicoes,
   analiseGiroEstoque
 } from '@/tools/inventoryTools';
+import {
+  listarAlmoxarifadosEstoque,
+  listarEstoqueAtual,
+  listarMovimentacoesEstoque,
+  listarTransferenciasEstoque,
+  listarInventariosEstoque,
+  listarCustosEstoque,
+  listarTiposMovimentacao,
+} from '@/tools/estoqueTools'
 
 export const maxDuration = 300;
 
@@ -263,7 +272,15 @@ Seja sempre orientado a dados, priorize eficiência operacional e saúde finance
         analiseDOS,
         abcResumoGerencial,
         desempenhoPorDepositoExpedicoes,
-        analiseGiroEstoque
+        analiseGiroEstoque,
+        // Leitura — Estoque (schema estoque)
+        listarAlmoxarifadosEstoque,
+        listarEstoqueAtual,
+        listarMovimentacoesEstoque,
+        listarTransferenciasEstoque,
+        listarInventariosEstoque,
+        listarCustosEstoque,
+        listarTiposMovimentacao,
       }
     });
 

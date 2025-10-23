@@ -155,6 +155,14 @@ export const ToolHeader = ({
           'tool-listarContratosRH': 'Contratos',
           'tool-listarHistoricoSalarialRH': 'Histórico Salarial',
           'tool-indicadoresRH': 'Indicadores de RH',
+          // Estoque (schema estoque)
+          'tool-listarAlmoxarifadosEstoque': 'Almoxarifados',
+          'tool-listarEstoqueAtual': 'Estoque Atual',
+          'tool-listarMovimentacoesEstoque': 'Movimentações de Estoque',
+          'tool-listarTransferenciasEstoque': 'Transferências de Estoque',
+          'tool-listarInventariosEstoque': 'Inventários de Estoque',
+          'tool-listarCustosEstoque': 'Custos de Estoque',
+          'tool-listarTiposMovimentacao': 'Tipos de Movimentação',
         };
         return labels[type] ?? type.replace('tool-', '');
       })()}</span>
