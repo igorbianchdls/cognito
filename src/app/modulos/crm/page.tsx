@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import type { ColumnDef } from '@tanstack/react-table'
 
@@ -13,7 +13,7 @@ import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
-import { Target, Megaphone, User, UserPlus, ListChecks, Building } from 'lucide-react'
+import { Briefcase, UserPlus, Building2, UserCircle2, CalendarClock, Megaphone } from 'lucide-react'
 
 type Row = TableData
 
@@ -25,18 +25,15 @@ export default function ModulosCrmPage() {
   const toolbarUI = useStore($toolbarUI)
 
   useEffect(() => {
-    financeiroUiActions.setTitulo({
-      title: 'CRM',
-      subtitle: 'Selecione uma opção para visualizar os dados',
-    })
+    financeiroUiActions.setTitulo({ title: 'CRM', subtitle: 'Relacione-se com clientes, leads e oportunidades' })
     financeiroUiActions.setTabs({
       options: [
         { value: 'oportunidades', label: 'Oportunidades' },
-        { value: 'campanhas', label: 'Campanhas' },
-        { value: 'contatos', label: 'Contatos' },
         { value: 'leads', label: 'Leads' },
-        { value: 'atividades', label: 'Atividades' },
         { value: 'contas', label: 'Contas' },
+        { value: 'contatos', label: 'Contatos' },
+        { value: 'atividades', label: 'Atividades' },
+        { value: 'campanhas', label: 'Campanhas' },
       ],
       selected: 'oportunidades',
     })
@@ -49,112 +46,155 @@ export default function ModulosCrmPage() {
     return name
   }
 
-  const { columns, data } = useMemo((): { columns: ColumnDef<Row>[]; data: Row[] } => {
+  const [data, setData] = useState<Row[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>()
+
+  const formatDate = (value?: unknown, withTime?: boolean) => {
+    if (!value) return ''
+    try {
+      const d = new Date(String(value))
+      if (isNaN(d.getTime())) return String(value)
+      return d.toLocaleString('pt-BR', withTime ? { dateStyle: 'short', timeStyle: 'short' } : { dateStyle: 'short' })
+    } catch {
+      return String(value)
+    }
+  }
+
+  const formatBRL = (value?: unknown) => {
+    const n = Number(value ?? 0)
+    if (isNaN(n)) return String(value ?? '')
+    return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  }
+
+  const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
+      case 'leads':
+        return [
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'lead', header: 'Lead' },
+          { accessorKey: 'empresa', header: 'Empresa' },
+          { accessorKey: 'email', header: 'Email' },
+          { accessorKey: 'telefone', header: 'Telefone' },
+          { accessorKey: 'origem', header: 'Origem' },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'responsavel', header: 'Responsável' },
+        ]
+      case 'contas':
+        return [
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'conta', header: 'Conta' },
+          { accessorKey: 'setor', header: 'Setor' },
+          { accessorKey: 'site', header: 'Site' },
+          { accessorKey: 'telefone', header: 'Telefone' },
+          { accessorKey: 'endereco_cobranca', header: 'Endereço de Cobrança' },
+          { accessorKey: 'responsavel', header: 'Responsável' },
+        ]
+      case 'contatos':
+        return [
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'contato', header: 'Contato' },
+          { accessorKey: 'cargo', header: 'Cargo' },
+          { accessorKey: 'email', header: 'Email' },
+          { accessorKey: 'telefone', header: 'Telefone' },
+          { accessorKey: 'conta', header: 'Conta' },
+          { accessorKey: 'responsavel', header: 'Responsável' },
+        ]
+      case 'atividades':
+        return [
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'assunto', header: 'Assunto' },
+          { accessorKey: 'tipo', header: 'Tipo' },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'data_vencimento', header: 'Data Vencimento', cell: ({ row }) => formatDate(row.original['data_vencimento'], true) },
+          { accessorKey: 'conta', header: 'Conta' },
+          { accessorKey: 'contato', header: 'Contato' },
+          { accessorKey: 'lead', header: 'Lead' },
+          { accessorKey: 'oportunidade', header: 'Oportunidade' },
+          { accessorKey: 'responsavel', header: 'Responsável' },
+          { accessorKey: 'anotacoes', header: 'Anotações' },
+        ]
+      case 'campanhas':
+        return [
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'campanha', header: 'Campanha' },
+          { accessorKey: 'tipo', header: 'Tipo' },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'inicio', header: 'Início', cell: ({ row }) => formatDate(row.original['inicio']) },
+          { accessorKey: 'fim', header: 'Fim', cell: ({ row }) => formatDate(row.original['fim']) },
+          { accessorKey: 'responsavel', header: 'Responsável' },
+          { accessorKey: 'total_membros', header: 'Total Membros' },
+        ]
       case 'oportunidades':
       default:
-        return {
-          columns: [
-            { accessorKey: 'titulo', header: 'Título' },
-            { accessorKey: 'conta', header: 'Conta' },
-            { accessorKey: 'valor', header: 'Valor (R$)' },
-            { accessorKey: 'fase', header: 'Fase' },
-            { accessorKey: 'fechamento', header: 'Fechamento Previsto' },
-          ],
-          data: [
-            { titulo: 'Upgrade plano Enterprise', conta: 'ACME', valor: 85000, fase: 'Proposta', fechamento: '2025-11-10' },
-            { titulo: 'Implantação CRM', conta: 'Beta Ltda', valor: 32000, fase: 'Qualificação', fechamento: '2025-11-22' },
-          ],
-        }
-      case 'campanhas':
-        return {
-          columns: [
-            { accessorKey: 'nome', header: 'Nome' },
-            { accessorKey: 'canal', header: 'Canal' },
-            { accessorKey: 'inicio', header: 'Início' },
-            { accessorKey: 'fim', header: 'Fim' },
-            { accessorKey: 'status', header: 'Status' },
-            { accessorKey: 'orcamento', header: 'Orçamento (R$)' },
-          ],
-          data: [
-            { nome: 'Q4 Leads B2B', canal: 'Email', inicio: '2025-10-01', fim: '2025-12-31', status: 'Ativa', orcamento: 15000 },
-            { nome: 'Webinar CRM', canal: 'Social', inicio: '2025-11-05', fim: '2025-11-10', status: 'Planejada', orcamento: 3000 },
-          ],
-        }
-      case 'contatos':
-        return {
-          columns: [
-            { accessorKey: 'nome', header: 'Nome' },
-            { accessorKey: 'email', header: 'Email' },
-            { accessorKey: 'telefone', header: 'Telefone' },
-            { accessorKey: 'conta', header: 'Conta' },
-            { accessorKey: 'status', header: 'Status' },
-          ],
-          data: [
-            { nome: 'Paulo Nogueira', email: 'paulo@acme.com', telefone: '(11) 99999-0001', conta: 'ACME', status: 'Ativo' },
-            { nome: 'Renata Lima', email: 'renata@beta.com', telefone: '(21) 98888-2222', conta: 'Beta Ltda', status: 'Ativo' },
-          ],
-        }
-      case 'leads':
-        return {
-          columns: [
-            { accessorKey: 'nome', header: 'Nome' },
-            { accessorKey: 'email', header: 'Email' },
-            { accessorKey: 'origem', header: 'Origem' },
-            { accessorKey: 'status', header: 'Status' },
-            { accessorKey: 'score', header: 'Score' },
-          ],
-          data: [
-            { nome: 'João Silva', email: 'joao@exemplo.com', origem: 'Landing', status: 'Novo', score: 62 },
-            { nome: 'Maria Souza', email: 'maria@exemplo.com', origem: 'Indicação', status: 'Em qualificação', score: 75 },
-          ],
-        }
-      case 'atividades':
-        return {
-          columns: [
-            { accessorKey: 'tipo', header: 'Tipo' },
-            { accessorKey: 'assunto', header: 'Assunto' },
-            { accessorKey: 'responsavel', header: 'Responsável' },
-            { accessorKey: 'data', header: 'Data' },
-            { accessorKey: 'status', header: 'Status' },
-          ],
-          data: [
-            { tipo: 'Ligação', assunto: 'Follow-up proposta', responsavel: 'Ana', data: '2025-10-23', status: 'Concluída' },
-            { tipo: 'Reunião', assunto: 'Descoberta', responsavel: 'Carlos', data: '2025-10-24', status: 'Pendente' },
-          ],
-        }
-      case 'contas':
-        return {
-          columns: [
-            { accessorKey: 'conta', header: 'Conta' },
-            { accessorKey: 'segmento', header: 'Segmento' },
-            { accessorKey: 'cidade', header: 'Cidade' },
-            { accessorKey: 'pipeline', header: 'Pipeline (R$)' },
-            { accessorKey: 'status', header: 'Status' },
-          ],
-          data: [
-            { conta: 'ACME', segmento: 'Software', cidade: 'São Paulo', pipeline: 220000, status: 'Ativa' },
-            { conta: 'Beta Ltda', segmento: 'Serviços', cidade: 'Curitiba', pipeline: 95000, status: 'Ativa' },
-          ],
-        }
+        return [
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'oportunidade', header: 'Oportunidade' },
+          { accessorKey: 'conta', header: 'Conta' },
+          { accessorKey: 'responsavel', header: 'Responsável' },
+          { accessorKey: 'estagio', header: 'Estágio' },
+          { accessorKey: 'valor', header: 'Valor (R$)', cell: ({ row }) => formatBRL(row.original['valor']) },
+          { accessorKey: 'probabilidade', header: '% Probabilidade' },
+          { accessorKey: 'data_fechamento', header: 'Data Fechamento', cell: ({ row }) => formatDate(row.original['data_fechamento']) },
+          { accessorKey: 'prioridade', header: 'Prioridade' },
+        ]
     }
   }, [tabs.selected])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const load = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const params = new URLSearchParams()
+        params.set('view', tabs.selected)
+        // Date range em Oportunidades (data_fechamento), Atividades (data_vencimento), Campanhas (inicio)
+        if (['oportunidades', 'atividades', 'campanhas'].includes(tabs.selected)) {
+          if (dateRange?.from) {
+            const d = dateRange.from
+            params.set('de', `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+          }
+          if (dateRange?.to) {
+            const d = dateRange.to
+            params.set('ate', `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+          }
+        }
+        const url = `/api/modulos/crm?${params.toString()}`
+        const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const json = await res.json()
+        const rows = (json?.rows || []) as Row[]
+        setData(Array.isArray(rows) ? rows : [])
+      } catch (e) {
+        if (!(e instanceof DOMException && e.name === 'AbortError')) {
+          setError(e instanceof Error ? e.message : 'Falha ao carregar dados')
+          setData([])
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    load()
+    return () => controller.abort()
+  }, [tabs.selected, dateRange?.from, dateRange?.to])
 
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
       switch (v) {
         case 'oportunidades':
-          return <Target className="h-4 w-4" />
-        case 'campanhas':
-          return <Megaphone className="h-4 w-4" />
-        case 'contatos':
-          return <User className="h-4 w-4" />
+          return <Briefcase className="h-4 w-4" />
         case 'leads':
           return <UserPlus className="h-4 w-4" />
-        case 'atividades':
-          return <ListChecks className="h-4 w-4" />
         case 'contas':
-          return <Building className="h-4 w-4" />
+          return <Building2 className="h-4 w-4" />
+        case 'contatos':
+          return <UserCircle2 className="h-4 w-4" />
+        case 'atividades':
+          return <CalendarClock className="h-4 w-4" />
+        case 'campanhas':
+          return <Megaphone className="h-4 w-4" />
         default:
           return null
       }
@@ -202,6 +242,8 @@ export default function ModulosCrmPage() {
               from={data.length === 0 ? 0 : 1}
               to={Math.min(tabelaUI.pageSize, data.length)}
               total={data.length}
+              dateRange={['oportunidades', 'atividades', 'campanhas'].includes(tabs.selected) ? dateRange : undefined}
+              onDateRangeChange={['oportunidades', 'atividades', 'campanhas'].includes(tabs.selected) ? setDateRange : undefined}
               fontFamily={fontVar(toolbarUI.fontFamily)}
               fontSize={toolbarUI.fontSize}
               fontWeight={toolbarUI.fontWeight}
@@ -222,34 +264,40 @@ export default function ModulosCrmPage() {
           </div>
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
             <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
-              <DataTable
-                columns={columns}
-                data={data}
-                enableSearch={tabelaUI.enableSearch}
-                showColumnToggle={tabelaUI.enableColumnToggle}
-                showPagination={tabelaUI.showPagination}
-                pageSize={tabelaUI.pageSize}
-                headerBackground={tabelaUI.headerBg}
-                headerTextColor={tabelaUI.headerText}
-                cellTextColor={tabelaUI.cellText}
-                headerFontSize={tabelaUI.headerFontSize}
-                headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
-                headerFontWeight={tabelaUI.headerFontWeight}
-                headerLetterSpacing={tabelaUI.headerLetterSpacing}
-                cellFontSize={tabelaUI.cellFontSize}
-                cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
-                cellFontWeight={tabelaUI.cellFontWeight}
-                cellLetterSpacing={tabelaUI.cellLetterSpacing}
-                enableZebraStripes={tabelaUI.enableZebraStripes}
-                rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
-                borderColor={tabelaUI.borderColor}
-                borderWidth={tabelaUI.borderWidth}
-                selectionColumnWidth={tabelaUI.selectionColumnWidth}
-                enableRowSelection={tabelaUI.enableRowSelection}
-                selectionMode={tabelaUI.selectionMode}
-                defaultSortColumn={tabelaUI.defaultSortColumn}
-                defaultSortDirection={tabelaUI.defaultSortDirection}
-              />
+              {isLoading ? (
+                <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
+              ) : error ? (
+                <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
+              ) : (
+                <DataTable
+                  columns={columns}
+                  data={data}
+                  enableSearch={tabelaUI.enableSearch}
+                  showColumnToggle={tabelaUI.enableColumnToggle}
+                  showPagination={tabelaUI.showPagination}
+                  pageSize={tabelaUI.pageSize}
+                  headerBackground={tabelaUI.headerBg}
+                  headerTextColor={tabelaUI.headerText}
+                  cellTextColor={tabelaUI.cellText}
+                  headerFontSize={tabelaUI.headerFontSize}
+                  headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
+                  headerFontWeight={tabelaUI.headerFontWeight}
+                  headerLetterSpacing={tabelaUI.headerLetterSpacing}
+                  cellFontSize={tabelaUI.cellFontSize}
+                  cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
+                  cellFontWeight={tabelaUI.cellFontWeight}
+                  cellLetterSpacing={tabelaUI.cellLetterSpacing}
+                  enableZebraStripes={tabelaUI.enableZebraStripes}
+                  rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
+                  borderColor={tabelaUI.borderColor}
+                  borderWidth={tabelaUI.borderWidth}
+                  selectionColumnWidth={tabelaUI.selectionColumnWidth}
+                  enableRowSelection={tabelaUI.enableRowSelection}
+                  selectionMode={tabelaUI.selectionMode}
+                  defaultSortColumn={tabelaUI.defaultSortColumn}
+                  defaultSortDirection={tabelaUI.defaultSortDirection}
+                />
+              )}
             </div>
           </div>
         </div>
@@ -257,3 +305,4 @@ export default function ModulosCrmPage() {
     </SidebarProvider>
   )
 }
+
