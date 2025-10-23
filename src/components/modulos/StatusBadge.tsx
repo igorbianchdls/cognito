@@ -12,16 +12,16 @@ export default function StatusBadge({ value, type }: StatusBadgeProps) {
   let textColor = '#6b7280'
 
   if (type === 'status') {
-    if (valueStr === 'pago' || valueStr === 'recebido' || valueStr === 'concluída' || valueStr === 'concluida' || valueStr === 'concluído' || valueStr === 'concluido' || valueStr === 'ativo') {
+    if (valueStr === 'pago' || valueStr === 'recebido' || valueStr === 'concluída' || valueStr === 'concluida' || valueStr === 'concluído' || valueStr === 'concluido' || valueStr === 'ativo' || valueStr === 'entregue') {
       bgColor = '#dcfce7'
       textColor = '#16a34a'
-    } else if (valueStr === 'aberta' || valueStr === 'em aberto') {
+    } else if (valueStr === 'aberta' || valueStr === 'em aberto' || valueStr === 'faturado') {
       bgColor = '#dbeafe'
       textColor = '#2563eb'
     } else if (valueStr === 'pendente' || valueStr === 'parcial') {
       bgColor = '#fef3c7'
       textColor = '#ca8a04'
-    } else if (valueStr === 'vencido' || valueStr === 'atrasado' || valueStr === 'inativo') {
+    } else if (valueStr === 'vencido' || valueStr === 'atrasado' || valueStr === 'inativo' || valueStr === 'cancelado') {
       bgColor = '#fee2e2'
       textColor = '#dc2626'
     }
