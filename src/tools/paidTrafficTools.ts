@@ -738,7 +738,8 @@ export const identifyTopAds = tool({
   }
 });
 
-export const analyzeSpendingTrends = tool({
+/* REMOVED: analyzeSpendingTrends (deprecated) */
+/* export const analyzeSpendingTrends = tool({
   description: 'Analisa tendências de gasto: diário, semanal, anomalias',
   inputSchema: z.object({
     date_range_days: z.number().default(30).describe('Período de análise em dias'),
@@ -829,9 +830,10 @@ export const analyzeSpendingTrends = tool({
       };
     }
   }
-});
+}); */
 
-export const calculateCostMetrics = tool({
+/* REMOVED: calculateCostMetrics (deprecated) */
+/* export const calculateCostMetrics = tool({
   description: 'Calcula métricas de custo: CPM, CPC, CPL, CPA',
   inputSchema: z.object({
     date_range_days: z.number().default(30).describe('Período de análise em dias'),
@@ -918,7 +920,7 @@ export const calculateCostMetrics = tool({
       };
     }
   }
-});
+}); */
 
 // Nova tool separada: analiseDeCampanhas (campanha/plataforma) com métricas derivadas
 export const analiseDeCampanhas = tool({

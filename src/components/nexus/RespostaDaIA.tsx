@@ -133,8 +133,6 @@ import DesempenhoPorDiaDaSemanaResult from '../tools/paid-traffic/DesempenhoPorD
 import DeteccaoAnomaliasROASResult from '../tools/paid-traffic/DeteccaoAnomaliasROASResult';
 import DeteccaoAnomaliasTaxaConversaoResult from '../tools/paid-traffic/DeteccaoAnomaliasTaxaConversaoResult';
 import TopAdsResult from '../tools/paid-traffic/TopAdsResult';
-import SpendingTrendsResult from '../tools/paid-traffic/SpendingTrendsResult';
-import CostMetricsResult from '../tools/paid-traffic/CostMetricsResult';
 import AdPerformanceForecastResult from '../tools/paid-traffic/AdPerformanceForecastResult';
 
 interface ReasoningPart {
@@ -1539,45 +1537,7 @@ type IdentifyTopAdsToolOutput = {
   sql_params?: string;
 };
 
-type AnalyzeSpendingTrendsToolOutput = {
-  success: boolean;
-  message: string;
-  periodo_dias?: number;
-  plataforma?: string;
-  estatisticas?: {
-    gasto_medio_dia: string;
-    gasto_maximo: string;
-    gasto_minimo: string;
-    tendencia: string;
-  };
-  gastos_diarios?: Array<{
-    data: string;
-    gasto: string;
-    receita: string;
-  }>;
-  sql_query?: string;
-  sql_params?: string;
-};
-
-type CalculateCostMetricsToolOutput = {
-  success: boolean;
-  message: string;
-  periodo_dias?: number;
-  plataforma?: string;
-  metricas?: {
-    total_gasto: string;
-    total_impressoes: number;
-    total_cliques: number;
-    total_conversoes: number;
-    cpm: string;
-    cpc: string;
-    cpa: string;
-    ctr: string;
-    classificacao_eficiencia: string;
-  };
-  sql_query?: string;
-  sql_params?: string;
-};
+// Types removed for deprecated tools: AnalyzeSpendingTrendsToolOutput, CalculateCostMetricsToolOutput
 
 type ForecastAdPerformanceToolOutput = {
   success: boolean;
@@ -6126,54 +6086,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
           );
         }
 
-        if (part.type === 'tool-analyzeSpendingTrends') {
-          const tool = part as NexusToolUIPart;
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-analyzeSpendingTrends" state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && tool.output && (
-                <SpendingTrendsResult
-                  success={(tool.output as AnalyzeSpendingTrendsToolOutput).success}
-                  message={(tool.output as AnalyzeSpendingTrendsToolOutput).message}
-                  periodo_dias={(tool.output as AnalyzeSpendingTrendsToolOutput).periodo_dias}
-                  plataforma={(tool.output as AnalyzeSpendingTrendsToolOutput).plataforma}
-                  estatisticas={(tool.output as AnalyzeSpendingTrendsToolOutput).estatisticas}
-                  gastos_diarios={(tool.output as AnalyzeSpendingTrendsToolOutput).gastos_diarios}
-                />
-              )}
-            </div>
-          );
-        }
-
-        if (part.type === 'tool-calculateCostMetrics') {
-          const tool = part as NexusToolUIPart;
-          return (
-            <div key={tool.toolCallId}>
-              <Tool defaultOpen={tool.state === 'output-available' || tool.state === 'output-error'}>
-                <ToolHeader type="tool-calculateCostMetrics" state={tool.state} />
-                <ToolContent>
-                  {tool.input && <ToolInput input={tool.input} />}
-                  {tool.state === 'output-error' && <ToolOutput output={null} errorText={tool.errorText} />}
-                </ToolContent>
-              </Tool>
-              {tool.state === 'output-available' && tool.output && (
-                <CostMetricsResult
-                  success={(tool.output as CalculateCostMetricsToolOutput).success}
-                  message={(tool.output as CalculateCostMetricsToolOutput).message}
-                  periodo_dias={(tool.output as CalculateCostMetricsToolOutput).periodo_dias}
-                  plataforma={(tool.output as CalculateCostMetricsToolOutput).plataforma}
-                  metricas={(tool.output as CalculateCostMetricsToolOutput).metricas}
-                />
-              )}
-            </div>
-          );
-        }
+        
 
         if (part.type === 'tool-forecastAdPerformance') {
           const tool = part as NexusToolUIPart;

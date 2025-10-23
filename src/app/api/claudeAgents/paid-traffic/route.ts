@@ -5,8 +5,6 @@ import {
   compareAdsPlatforms,
   analyzeCreativePerformance,
   identifyTopAds,
-  analyzeSpendingTrends,
-  calculateCostMetrics,
   analiseDeCampanhas,
   desempenhoPorGrupoDeAnuncio,
   desempenhoPorDiaDaSemana
@@ -469,8 +467,6 @@ Seja sempre orientado a dados, priorize maximização de ROAS e otimização con
         compareAdsPlatforms,
         analyzeCreativePerformance,
         identifyTopAds,
-        analyzeSpendingTrends,
-        calculateCostMetrics,
         analiseDeCampanhas,
         desempenhoPorGrupoDeAnuncio,
         desempenhoPorDiaDaSemana,
