@@ -83,7 +83,6 @@ import TerritoriosVendasResult from '../tools/vendas-b2b/TerritoriosVendasResult
 import EquipesVendasResult from '../tools/vendas-b2b/EquipesVendasResult';
 import CanaisVendasResult from '../tools/vendas-b2b/CanaisVendasResult';
 import KpisVendasResult from '../tools/vendas-b2b/KpisVendasResult';
-import { TrendingUp } from 'lucide-react'
 import InventoryDataTable from '../tools/InventoryDataTable';
 import TopProdutosReceitaLiquidaTable, { type TopProdutosRow } from '../tools/TopProdutosReceitaLiquidaTable';
 import DesempenhoVendasMensalResult, { type DesempenhoVendasMensalRow } from '../tools/ecommerce/DesempenhoVendasMensalResult';
