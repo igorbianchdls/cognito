@@ -11,6 +11,7 @@ import PageHeader from '@/components/modulos/PageHeader'
 import TabsNav from '@/components/modulos/TabsNav'
 import DataTable, { type TableData } from '@/components/widgets/Table'
 import DataToolbar from '@/components/modulos/DataToolbar'
+import StatusBadge from '@/components/modulos/StatusBadge'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { Wrench, Calendar, User, Users, List } from 'lucide-react'
@@ -249,8 +250,16 @@ export default function ModulosServicosPage() {
               )
             }
           },
-          { accessorKey: 'status', header: 'Status' },
-          { accessorKey: 'prioridade', header: 'Prioridade' },
+          {
+            accessorKey: 'status',
+            header: 'Status',
+            cell: ({ row }) => <StatusBadge value={row.original['status']} type="status" />
+          },
+          {
+            accessorKey: 'prioridade',
+            header: 'Prioridade',
+            cell: ({ row }) => <StatusBadge value={row.original['prioridade']} type="prioridade" />
+          },
           { accessorKey: 'descricao_problema', header: 'Descrição do Problema' },
           { accessorKey: 'data_abertura', header: 'Abertura', cell: ({ row }) => formatDate(row.original['data_abertura']) },
           { accessorKey: 'data_prevista', header: 'Previsão', cell: ({ row }) => formatDate(row.original['data_prevista']) },
