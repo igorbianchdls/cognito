@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { Layers } from 'lucide-react';
@@ -33,6 +33,15 @@ export type ObterDespesasPorCentroCustoOutput = {
 };
 
 export default function DespesasCentroCustoResult({ result }: { result: ObterDespesasPorCentroCustoOutput }) {
+  const [tableRows, setTableRows] = useState<DespesaCentroCustoRow[]>(result.rows || []);
+  const [count, setCount] = useState<number>(result.count || (result.rows?.length ?? 0));
+  const [sqlQuery, setSqlQuery] = useState<string | undefined>(result.sql_query);
+
+  useEffect(() => {
+    setTableRows(result.rows || []);
+    setCount(result.count || (result.rows?.length ?? 0));
+    setSqlQuery(result.sql_query);
+  }, [result]);
   const columns: ColumnDef<DespesaCentroCustoRow>[] = useMemo(() => [
     {
       accessorKey: 'centro_custo',
@@ -118,18 +127,48 @@ export default function DespesasCentroCustoResult({ result }: { result: ObterDes
 
   return (
     <ArtifactDataTable
-      data={result.rows}
+      data={tableRows}
       columns={columns}
       title="Despesas por Centro de Custo"
       icon={Layers}
       iconColor="text-orange-600"
       message={result.message}
       success={result.success}
-      count={result.count}
+      count={count}
       error={result.error}
       exportFileName="despesas_centro_custo"
-      sqlQuery={result.sql_query}
+      sqlQuery={sqlQuery}
       chartRenderer={chartRenderer}
+      headerDateFilter
+      onHeaderDateRangeChange={async ({ from, to, preset }) => {
+        try {
+          const params = new URLSearchParams();
+          // Para este endpoint, ambos são obrigatórios
+          if (from) params.set('data_inicial', from);
+          if (to) params.set('data_final', to);
+
+          // Quando preset = 'all', não aplicamos filtro (evita 400); aqui podemos usar um range amplo
+          if (preset === 'all' && !from && !to) {
+            const today = new Date();
+            const toISO = (d: Date) => d.toISOString().slice(0, 10);
+            const fromAuto = new Date(today);
+            fromAuto.setFullYear(today.getFullYear() - 10);
+            params.set('data_inicial', toISO(fromAuto));
+            params.set('data_final', toISO(today));
+          }
+
+          const res = await fetch(`/api/tools/financeiro/despesas-centro-custo?${params.toString()}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          if (json?.success && Array.isArray(json.rows)) {
+            setTableRows(json.rows as DespesaCentroCustoRow[]);
+            setCount(json.rows.length);
+            setSqlQuery(json.sql_query);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar Despesas por Centro de Custo por período:', e);
+        }
+      }}
     />
   );
 }

@@ -1354,3 +1354,192 @@ export const analisarDespesasPorCategoria = tool({
     }
   },
 });
+
+// ============================================================================
+// MOVIMENTOS POR CENTRO DE CUSTO (por período)
+// ============================================================================
+
+export const analisarMovimentosPorCentroCusto = tool({
+  description: 'Analisa movimentos efetivados agrupados por centro de custo e categoria no período informado',
+  inputSchema: z.object({
+    data_inicial: z.string().describe('Data inicial (YYYY-MM-DD)'),
+    data_final: z.string().describe('Data final exclusiva (YYYY-MM-DD)'),
+    limit: z.number().default(100).describe('Número máximo de linhas agregadas'),
+  }),
+  execute: async ({ data_inicial, data_final, limit }) => {
+    try {
+      const sql = `
+        WITH base AS (
+          SELECT
+            COALESCE(cc.nome, '— sem CC —') AS centro_custo,
+            COALESCE(cat.nome, 'Sem categoria') AS categoria,
+            'Receita' AS tipo_categoria,
+            SUM(m.valor) AS total
+          FROM gestaofinanceira.movimentos m
+          LEFT JOIN gestaofinanceira.centros_custo cc ON cc.id = m.centro_custo_id
+          LEFT JOIN gestaofinanceira.categorias cat ON cat.id = m.categoria_id
+          WHERE m.data >= $1::date AND m.data < $2::date
+            AND m.valor > 0
+          GROUP BY COALESCE(cc.nome, '— sem CC —'), COALESCE(cat.nome, 'Sem categoria')
+          UNION ALL
+          SELECT
+            COALESCE(cc.nome, '— sem CC —') AS centro_custo,
+            COALESCE(cat.nome, 'Sem categoria') AS categoria,
+            'Despesa' AS tipo_categoria,
+            SUM(ABS(m.valor)) AS total
+          FROM gestaofinanceira.movimentos m
+          LEFT JOIN gestaofinanceira.centros_custo cc ON cc.id = m.centro_custo_id
+          LEFT JOIN gestaofinanceira.categorias cat ON cat.id = m.categoria_id
+          WHERE m.data >= $1::date AND m.data < $2::date
+            AND m.valor < 0
+          GROUP BY COALESCE(cc.nome, '— sem CC —'), COALESCE(cat.nome, 'Sem categoria')
+        )
+        SELECT * FROM base
+        ORDER BY total DESC
+        LIMIT $3::int
+      `.trim();
+
+      const rows = await runQuery<{
+        centro_custo: string;
+        categoria: string;
+        tipo_categoria: 'Receita' | 'Despesa';
+        total: number;
+      }>(sql, [data_inicial, data_final, limit]);
+
+      // Totais consolidados
+      const totalEntradas = rows
+        .filter(r => r.tipo_categoria === 'Receita')
+        .reduce((s, r) => s + Number(r.total || 0), 0);
+      const totalSaidas = rows
+        .filter(r => r.tipo_categoria === 'Despesa')
+        .reduce((s, r) => s + Number(r.total || 0), 0);
+
+      return {
+        success: true,
+        rows,
+        count: rows.length,
+        totals: {
+          total_entradas: totalEntradas,
+          total_saidas: totalSaidas,
+          saldo_liquido: totalEntradas - totalSaidas,
+          total_linhas: rows.length,
+        },
+        periodo: { data_inicial, data_final },
+        message: `${rows.length} agrupamentos por CC e categoria (${data_inicial} a ${data_final})`,
+        sql_query: sql,
+        sql_params: formatSqlParams([data_inicial, data_final, limit]),
+      };
+    } catch (error) {
+      console.error('ERRO analisarMovimentosPorCentroCusto:', error);
+      return {
+        success: false,
+        rows: [],
+        count: 0,
+        message: `Erro ao analisar movimentos por centro de custo: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      };
+    }
+  },
+});
+
+// ============================================================================
+// LISTAR MOVIMENTOS (por período)
+// ============================================================================
+
+export const getMovimentos = tool({
+  description: 'Busca movimentos financeiros efetivados (entradas/saídas) com filtros por período, conta, categoria e valor',
+  inputSchema: z.object({
+    limit: z.number().default(50).describe('Número máximo de resultados'),
+    conta_id: z.string().optional().describe('Filtrar por conta'),
+    tipo: z.enum(['entrada', 'saída']).optional().describe('Tipo de movimento'),
+    data_inicial: z.string().optional().describe('Data inicial (YYYY-MM-DD)'),
+    data_final: z.string().optional().describe('Data final (YYYY-MM-DD)'),
+    categoria_id: z.string().optional().describe('Filtrar por categoria'),
+    valor_minimo: z.number().optional().describe('Valor mínimo'),
+    valor_maximo: z.number().optional().describe('Valor máximo'),
+  }),
+  execute: async ({
+    limit = 50,
+    conta_id,
+    tipo,
+    data_inicial,
+    data_final,
+    categoria_id,
+    valor_minimo,
+    valor_maximo,
+  }) => {
+    try {
+      const conditions: string[] = [];
+      const params: unknown[] = [];
+      let idx = 1;
+
+      const push = (clause: string, val: unknown) => {
+        conditions.push(`${clause} $${idx}`);
+        params.push(val);
+        idx += 1;
+      };
+
+      if (conta_id) push('m.conta_id =', conta_id);
+      if (categoria_id) push('m.categoria_id =', categoria_id);
+      if (data_inicial) push('m.data >=', data_inicial);
+      if (data_final) push('m.data <=', data_final);
+      if (valor_minimo !== undefined) push('m.valor >=', valor_minimo);
+      if (valor_maximo !== undefined) push('m.valor <=', valor_maximo);
+      if (tipo) {
+        if (tipo === 'entrada') conditions.push('m.valor > 0');
+        if (tipo === 'saída') conditions.push('m.valor < 0');
+      }
+
+      const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+
+      const sql = `
+        SELECT
+          m.id,
+          m.data,
+          CASE WHEN m.valor > 0 THEN 'entrada' ELSE 'saída' END AS tipo,
+          m.valor,
+          m.categoria_id,
+          m.conta_id,
+          m.centro_custo_id
+        FROM gestaofinanceira.movimentos m
+        ${whereClause}
+        ORDER BY m.data DESC
+        LIMIT $${idx}::int
+      `.trim();
+
+      const rows = await runQuery<{
+        id: string;
+        data: string;
+        tipo: 'entrada' | 'saída';
+        valor: number;
+        categoria_id?: string | null;
+        conta_id?: string | null;
+        centro_custo_id?: string | null;
+      }>(sql, [...params, limit]);
+
+      // Totais simples
+      const totalEntradas = rows.reduce((s, r) => s + (r.valor > 0 ? r.valor : 0), 0);
+      const totalSaidas = rows.reduce((s, r) => s + (r.valor < 0 ? Math.abs(r.valor) : 0), 0);
+
+      return {
+        success: true,
+        rows,
+        totals: {
+          total_entradas: totalEntradas,
+          total_saidas: totalSaidas,
+          saldo_liquido: totalEntradas - totalSaidas,
+          total_movimentos: rows.length,
+        },
+        message: `${rows.length} movimentos encontrados`,
+        sql_query: sql,
+        sql_params: formatSqlParams([...params, limit]),
+      };
+    } catch (error) {
+      console.error('ERRO getMovimentos:', error);
+      return {
+        success: false,
+        rows: [],
+        message: `Erro ao buscar movimentos: ${error instanceof Error ? error.message : 'Erro desconhecido'}`,
+      };
+    }
+  },
+});

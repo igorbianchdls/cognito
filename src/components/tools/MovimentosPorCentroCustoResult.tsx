@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { BarChart3 } from 'lucide-react';
@@ -32,6 +32,15 @@ export type GetMovimentosPorCentroCustoOutput = {
 };
 
 export default function MovimentosPorCentroCustoResult({ result }: { result: GetMovimentosPorCentroCustoOutput }) {
+  const [tableRows, setTableRows] = useState<MovimentoCentroCustoRow[]>(result.rows || []);
+  const [count, setCount] = useState<number>(result.count || (result.rows?.length ?? 0));
+  const [sqlQuery, setSqlQuery] = useState<string | undefined>(result.sql_query);
+
+  useEffect(() => {
+    setTableRows(result.rows || []);
+    setCount(result.count || (result.rows?.length ?? 0));
+    setSqlQuery(result.sql_query);
+  }, [result]);
   const columns: ColumnDef<MovimentoCentroCustoRow>[] = useMemo(() => [
     {
       accessorKey: 'centro_custo',
@@ -131,18 +140,45 @@ export default function MovimentosPorCentroCustoResult({ result }: { result: Get
 
   return (
     <ArtifactDataTable
-      data={result.rows}
+      data={tableRows}
       columns={columns}
       title="Movimentos por Centro de Custo"
       icon={BarChart3}
       iconColor="text-purple-600"
       message={result.message}
       success={result.success}
-      count={result.rows.length}
+      count={count}
       error={result.error}
       exportFileName="movimentos_por_centro_custo"
-      sqlQuery={result.sql_query}
+      sqlQuery={sqlQuery}
       chartRenderer={chartRenderer}
+      headerDateFilter
+      onHeaderDateRangeChange={async ({ from, to, preset }) => {
+        try {
+          const params = new URLSearchParams();
+          if (preset === 'all' && !from && !to) {
+            const today = new Date();
+            const toISO = (d: Date) => d.toISOString().slice(0, 10);
+            const fromAuto = new Date(today);
+            fromAuto.setFullYear(today.getFullYear() - 10);
+            params.set('data_inicial', toISO(fromAuto));
+            params.set('data_final', toISO(today));
+          } else {
+            if (from) params.set('data_inicial', from);
+            if (to) params.set('data_final', to);
+          }
+          const res = await fetch(`/api/tools/financeiro/movimentos-por-centro-custo?${params.toString()}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          if (json?.success && Array.isArray(json.rows)) {
+            setTableRows(json.rows as MovimentoCentroCustoRow[]);
+            setCount(json.rows.length);
+            setSqlQuery(json.sql_query);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar Movimentos por Centro de Custo por período:', e);
+        }
+      }}
     />
   );
 }

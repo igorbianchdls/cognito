@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { FileText } from 'lucide-react';
@@ -27,6 +27,15 @@ export type GetTransacoesExtratoOutput = {
 };
 
 export default function TransacoesExtratoResult({ result }: { result: GetTransacoesExtratoOutput }) {
+  const [tableRows, setTableRows] = useState<TransacaoExtratoRow[]>(result.rows || []);
+  const [count, setCount] = useState<number>(result.count || (result.rows?.length ?? 0));
+  const [sqlQuery, setSqlQuery] = useState<string | undefined>(result.sql_query);
+
+  useEffect(() => {
+    setTableRows(result.rows || []);
+    setCount(result.count || (result.rows?.length ?? 0));
+    setSqlQuery(result.sql_query);
+  }, [result]);
   const columns: ColumnDef<TransacaoExtratoRow>[] = useMemo(() => [
     {
       accessorKey: 'data',
@@ -141,18 +150,36 @@ export default function TransacoesExtratoResult({ result }: { result: GetTransac
 
   return (
     <ArtifactDataTable
-      data={result.rows}
+      data={tableRows}
       columns={columns}
       title="Transações e Extrato"
       icon={FileText}
       iconColor="text-purple-600"
       message={result.message}
       success={result.success}
-      count={result.count}
+      count={count}
       error={result.error}
       exportFileName="transacoes_extrato"
-      sqlQuery={result.sql_query}
+      sqlQuery={sqlQuery}
       chartRenderer={chartRenderer}
+      headerDateFilter
+      onHeaderDateRangeChange={async ({ from, to }) => {
+        try {
+          const params = new URLSearchParams();
+          if (from) params.set('data_inicial', from);
+          if (to) params.set('data_final', to);
+          const res = await fetch(`/api/tools/financeiro/transacoes-extrato?${params.toString()}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          if (json?.success && Array.isArray(json.rows)) {
+            setTableRows(json.rows as TransacaoExtratoRow[]);
+            setCount(json.rows.length);
+            setSqlQuery(json.sql_query);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar Transações/Extrato por período:', e);
+        }
+      }}
     />
   );
 }
