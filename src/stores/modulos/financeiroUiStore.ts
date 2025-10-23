@@ -181,7 +181,7 @@ export const DEFAULT_TOOLBAR_UI: ToolbarUIState = {
   borderBottomColor: '#e5e7eb',
   borderDistanceTop: 8,
   underlineColor: '#d1d5db',
-  underlineWidth: 1,
+  underlineWidth: 0,
   underlineOffsetTop: 0,
   iconGap: 8,
   iconColor: '#9ca3af',

@@ -178,7 +178,7 @@ export default function ModulosFinanceiroPage() {
   return (
     <SidebarProvider>
       <SidebarShadcn />
-      <SidebarInset className="min-h-screen flex flex-col overflow-y-auto">
+      <SidebarInset className="min-h-screen flex flex-col overflow-y-auto" style={{ background: layout.contentBg }}>
         <div style={{ marginBottom: layout.mbTitle }}>
           <PageHeader
             title={titulo.title}
@@ -209,8 +209,8 @@ export default function ModulosFinanceiroPage() {
             className="px-0 md:px-0"
           />
         </div>
-        {/* Conteúdo abaixo das tabs com cor de fundo */}
-        <div style={{ background: layout.contentBg, paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
+        {/* Conteúdo abaixo das tabs */}
+        <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
           {/* Toolbar direita (paginador + botão) */}
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
             <DataToolbar
