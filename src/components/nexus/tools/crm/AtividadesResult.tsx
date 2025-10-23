@@ -34,7 +34,8 @@ export default function AtividadesResult({ result }: { result: GetCrmAtividadesO
       cell: ({ row }) => {
         const conta = row.original.conta;
         if (!conta) return '-';
-        const segmento = (row.original as any).segmento_conta || 'Conta';
+        const rowData = row.original as Record<string, unknown>;
+        const segmento = rowData.segmento_conta || 'Conta';
         return <EntityDisplay name={String(conta)} subtitle={String(segmento)} />;
       }
     },
@@ -46,7 +47,8 @@ export default function AtividadesResult({ result }: { result: GetCrmAtividadesO
       cell: ({ row }) => {
         const contato = row.original.contato;
         if (!contato) return '-';
-        const cargo = (row.original as any).cargo_contato || (row.original as any).email_contato || 'Contato';
+        const rowData = row.original as Record<string, unknown>;
+        const cargo = rowData.cargo_contato || rowData.email_contato || 'Contato';
         return <EntityDisplay name={String(contato)} subtitle={String(cargo)} />;
       }
     },
@@ -60,7 +62,8 @@ export default function AtividadesResult({ result }: { result: GetCrmAtividadesO
       cell: ({ row }) => {
         const responsavel = row.original.responsavel;
         if (!responsavel) return '-';
-        const departamento = (row.original as any).departamento_responsavel || 'Responsável';
+        const rowData = row.original as Record<string, unknown>;
+        const departamento = rowData.departamento_responsavel || 'Responsável';
         return <EntityDisplay name={String(responsavel)} subtitle={String(departamento)} />;
       }
     },

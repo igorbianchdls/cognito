@@ -27,7 +27,8 @@ export default function OportunidadesResult({ result }: { result: GetCrmOportuni
       minSize: 200,
       cell: ({ row }) => {
         const conta = row.original.conta || 'Sem conta';
-        const segmento = (row.original as any).segmento_conta || (row.original as any).segmento || 'Sem segmento';
+        const rowData = row.original as Record<string, unknown>;
+        const segmento = rowData.segmento_conta || rowData.segmento || 'Sem segmento';
         return <EntityDisplay name={String(conta)} subtitle={String(segmento)} />;
       }
     },
@@ -39,7 +40,8 @@ export default function OportunidadesResult({ result }: { result: GetCrmOportuni
       cell: ({ row }) => {
         const responsavel = row.original.responsavel;
         if (!responsavel) return '-';
-        const cargo = (row.original as any).cargo_responsavel || 'Responsável';
+        const rowData = row.original as Record<string, unknown>;
+        const cargo = rowData.cargo_responsavel || 'Responsável';
         return <EntityDisplay name={String(responsavel)} subtitle={String(cargo)} />;
       }
     },
