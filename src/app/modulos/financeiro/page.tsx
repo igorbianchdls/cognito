@@ -179,35 +179,37 @@ export default function ModulosFinanceiroPage() {
     <SidebarProvider>
       <SidebarShadcn />
       <SidebarInset className="min-h-screen flex flex-col overflow-y-auto" style={{ background: layout.contentBg }}>
-        <div style={{ marginBottom: layout.mbTitle }}>
-          <PageHeader
-            title={titulo.title}
-            subtitle={titulo.subtitle}
-            titleFontFamily={fontVar(titulo.titleFontFamily)}
-            titleFontSize={titulo.titleFontSize}
-            titleFontWeight={titulo.titleFontWeight}
-            titleColor={titulo.titleColor}
-            titleLetterSpacing={titulo.titleLetterSpacing}
-          />
-        </div>
-        <div style={{ marginBottom: 0 }}>
-          <TabsNav
-            options={tabOptions}
-            value={tabs.selected}
-            onValueChange={(v) => financeiroUiActions.setTabs({ selected: v })}
-            fontFamily={fontVar(tabs.fontFamily)}
-            fontSize={tabs.fontSize}
-            fontWeight={tabs.fontWeight}
-            color={tabs.color}
-            letterSpacing={tabs.letterSpacing}
-            iconSize={tabs.iconSize}
-            labelOffsetY={tabs.labelOffsetY}
-            startOffset={tabs.leftOffset}
-            activeColor={tabs.activeColor}
-            activeFontWeight={tabs.activeFontWeight}
-            activeBorderColor={tabs.activeBorderColor}
-            className="px-0 md:px-0"
-          />
+        <div style={{ background: 'white' }}>
+          <div style={{ marginBottom: layout.mbTitle }}>
+            <PageHeader
+              title={titulo.title}
+              subtitle={titulo.subtitle}
+              titleFontFamily={fontVar(titulo.titleFontFamily)}
+              titleFontSize={titulo.titleFontSize}
+              titleFontWeight={titulo.titleFontWeight}
+              titleColor={titulo.titleColor}
+              titleLetterSpacing={titulo.titleLetterSpacing}
+            />
+          </div>
+          <div style={{ marginBottom: 0 }}>
+            <TabsNav
+              options={tabOptions}
+              value={tabs.selected}
+              onValueChange={(v) => financeiroUiActions.setTabs({ selected: v })}
+              fontFamily={fontVar(tabs.fontFamily)}
+              fontSize={tabs.fontSize}
+              fontWeight={tabs.fontWeight}
+              color={tabs.color}
+              letterSpacing={tabs.letterSpacing}
+              iconSize={tabs.iconSize}
+              labelOffsetY={tabs.labelOffsetY}
+              startOffset={tabs.leftOffset}
+              activeColor={tabs.activeColor}
+              activeFontWeight={tabs.activeFontWeight}
+              activeBorderColor={tabs.activeBorderColor}
+              className="px-0 md:px-0"
+            />
+          </div>
         </div>
         {/* Conteúdo abaixo das tabs */}
         <div style={{ paddingTop: (layout.contentTopGap || 0) + (layout.mbTabs || 0) }}>
