@@ -22,10 +22,11 @@ import {
   Table as TableIcon,
   Code,
   BarChart3,
+  Calendar as CalendarIcon,
   type LucideIcon
 } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ChartSwitcher, type ChartSwitcherOptions } from '@/components/charts/ChartSwitcher';
 import {
   ColumnDef,
@@ -219,71 +220,64 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
 
       <ArtifactActions>
         {headerDateFilter && onHeaderDateRangeChange && (
-          <div className="flex items-center gap-2 mr-2">
-            <Select
-              value={hdrPreset}
-              onValueChange={async (v) => {
-                setHdrPreset(v);
-                const today = new Date();
-                const toISO = (d: Date) => d.toISOString().slice(0, 10);
-                const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-                if (onHeaderDateRangeChange) {
-                  if (v === 'all') {
-                    await onHeaderDateRangeChange({ preset: 'all' });
-                  } else if (v === '7d') {
+          <Popover>
+            <PopoverTrigger asChild>
+              <ArtifactAction
+                icon={CalendarIcon}
+                tooltip="Período"
+                variant="ghost"
+                size="icon"
+                className="text-slate-500 hover:text-slate-900 hover:bg-slate-100/70"
+              />
+            </PopoverTrigger>
+            <PopoverContent align="end" sideOffset={8} className="w-72 p-3">
+              <div className="space-y-3">
+                <div className="text-xs font-medium text-slate-500">Períodos rápidos</div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" size="sm" onClick={async () => {
+                    setHdrPreset('7d');
+                    const today = new Date();
+                    const toISO = (d: Date) => d.toISOString().slice(0, 10);
                     const from = new Date(today);
                     from.setDate(today.getDate() - 6);
                     await onHeaderDateRangeChange({ from: toISO(from), to: toISO(today), preset: '7d' });
-                  } else if (v === '30d') {
+                  }}>Últimos 7 dias</Button>
+                  <Button variant="outline" size="sm" onClick={async () => {
+                    setHdrPreset('30d');
+                    const today = new Date();
+                    const toISO = (d: Date) => d.toISOString().slice(0, 10);
                     const from = new Date(today);
                     from.setDate(today.getDate() - 29);
                     await onHeaderDateRangeChange({ from: toISO(from), to: toISO(today), preset: '30d' });
-                  } else if (v === 'this-month') {
+                  }}>Últimos 30 dias</Button>
+                  <Button variant="outline" size="sm" onClick={async () => {
+                    setHdrPreset('this-month');
+                    const today = new Date();
+                    const toISO = (d: Date) => d.toISOString().slice(0, 10);
+                    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
                     await onHeaderDateRangeChange({ from: toISO(startOfMonth), to: toISO(today), preset: 'this-month' });
-                  }
-                }
-              }}
-            >
-              <SelectTrigger size="sm" className="min-w-[150px]">
-                <SelectValue placeholder="Período" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7d">Últimos 7 dias</SelectItem>
-                <SelectItem value="30d">Últimos 30 dias</SelectItem>
-                <SelectItem value="this-month">Este mês</SelectItem>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="custom">Personalizado…</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {hdrPreset === 'custom' && (
-              <div className="flex items-center gap-2">
-                <input
-                  type="date"
-                  value={hdrFrom}
-                  onChange={(e) => setHdrFrom(e.target.value)}
-                  className="h-8 rounded border border-slate-300 px-2 text-sm"
-                />
-                <span className="text-sm text-slate-500">até</span>
-                <input
-                  type="date"
-                  value={hdrTo}
-                  onChange={(e) => setHdrTo(e.target.value)}
-                  className="h-8 rounded border border-slate-300 px-2 text-sm"
-                />
-                <button
-                  className="h-8 rounded bg-slate-900 px-3 text-sm text-white hover:bg-slate-800"
-                  onClick={async () => {
-                    if (onHeaderDateRangeChange) {
-                      await onHeaderDateRangeChange({ from: hdrFrom || undefined, to: hdrTo || undefined, preset: 'custom' });
-                    }
-                  }}
-                >
-                  Aplicar
-                </button>
+                  }}>Este mês</Button>
+                  <Button variant="outline" size="sm" onClick={async () => {
+                    setHdrPreset('all');
+                    await onHeaderDateRangeChange({ preset: 'all' });
+                  }}>Todos</Button>
+                </div>
+                <div className="h-px bg-slate-200" />
+                <div className="text-xs font-medium text-slate-500">Personalizado</div>
+                <div className="flex items-center gap-2">
+                  <input type="date" value={hdrFrom} onChange={(e) => setHdrFrom(e.target.value)} className="h-8 rounded border border-slate-300 px-2 text-sm flex-1" />
+                  <span className="text-sm text-slate-500">até</span>
+                  <input type="date" value={hdrTo} onChange={(e) => setHdrTo(e.target.value)} className="h-8 rounded border border-slate-300 px-2 text-sm flex-1" />
+                </div>
+                <div className="flex justify-end">
+                  <Button size="sm" onClick={async () => {
+                    setHdrPreset('custom');
+                    await onHeaderDateRangeChange({ from: hdrFrom || undefined, to: hdrTo || undefined, preset: 'custom' });
+                  }}>Aplicar</Button>
+                </div>
               </div>
-            )}
-          </div>
+            </PopoverContent>
+          </Popover>
         )}
         {hasAlternativeView && (
           <ArtifactAction
