@@ -245,7 +245,7 @@ export default function CampaignROASResult({
     {
       accessorKey: 'classificacao',
       header: 'Classificação',
-      cell: ({ row }) => <StatusBadge value={row.original.classificacao} type="classificacao" />,
+      cell: ({ row }) => <StatusBadge value={row.original.classificacao} type="status" />,
       enableSorting: false,
     },
   ], []);
