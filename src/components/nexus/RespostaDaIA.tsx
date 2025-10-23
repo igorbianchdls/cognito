@@ -86,7 +86,6 @@ import KpisVendasResult from '../tools/vendas-b2b/KpisVendasResult';
 import InventoryDataTable from '../tools/InventoryDataTable';
 import TopProdutosReceitaLiquidaTable, { type TopProdutosRow } from '../tools/TopProdutosReceitaLiquidaTable';
 import DesempenhoVendasMensalResult, { type DesempenhoVendasMensalRow } from '../tools/ecommerce/DesempenhoVendasMensalResult';
-import AnaliseDesempenhoCanalResult, { type AnaliseDesempenhoCanalRow } from '../tools/ecommerce/AnaliseDesempenhoCanalResult';
 import AnalisePerformanceCategoriaResult, { type AnalisePerformanceCategoriaRow } from '../tools/ecommerce/AnalisePerformanceCategoriaResult';
 import DesempenhoCanalVendaResult, { type DesempenhoCanalVendaRow } from '../tools/ecommerce/DesempenhoCanalVendaResult';
 import LTVClienteResult, { type LTVClienteRow } from '../tools/ecommerce/LTVClienteResult';
@@ -110,8 +109,6 @@ import CalculateMetricsResult from '../tools/inventory/CalculateMetricsResult';
 import TrendsAnalysisResult from '../tools/inventory/TrendsAnalysisResult';
 import RestockForecastResult from '../tools/inventory/RestockForecastResult';
 import SlowMovingItemsResult from '../tools/inventory/SlowMovingItemsResult';
-import ChannelComparisonResult from '../tools/inventory/ChannelComparisonResult';
-import ABCAnalysisResult from '../tools/inventory/ABCAnalysisResult';
 import AnomaliesResult from '../tools/inventory/AnomaliesResult';
 import DeliveryPerformanceResult from '../tools/logistics/DeliveryPerformanceResult';
 import CarrierBenchmarkResult from '../tools/logistics/CarrierBenchmarkResult';
@@ -794,17 +791,7 @@ type GetFinancialDataToolOutput = {
   sql_params?: string;
 };
 
-type GetOrganicMarketingDataToolInput = {
-  table: 'contas_sociais' | 'publicacoes' | 'metricas_publicacoes' | 'resumos_conta';
-  limit?: number;
-  plataforma?: string;
-  status?: string;
-  tipo_post?: string;
-  data_de?: string;
-  data_ate?: string;
-  engajamento_minimo?: number;
-  curtidas_minimo?: number;
-};
+ 
 
 type GetOrganicMarketingDataToolOutput = {
   success: boolean;
@@ -4882,7 +4869,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && (
-                <PedidosVendasResult
+                <PedidosCompraResult
                   success={(tool.output as RowsToolOutput).success}
                   message={(tool.output as RowsToolOutput).message}
                   rows={(tool.output as RowsToolOutput).rows}
@@ -4983,10 +4970,10 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {tool.state === 'output-available' && (
                 <KpisComprasResult
-                  success={(tool.output as any).success}
-                  message={(tool.output as any).message}
-                  kpis={(tool.output as any).kpis}
-                  sql_query={(tool.output as any).sql_query}
+                  success={(tool.output as ServicosKpiToolOutput).success}
+                  message={(tool.output as ServicosKpiToolOutput).message}
+                  kpis={(tool.output as ServicosKpiToolOutput).kpis}
+                  sql_query={(tool.output as ServicosKpiToolOutput).sql_query}
                 />
               )}
             </div>
@@ -5007,7 +4994,7 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
                 </ToolContent>
               </Tool>
               {tool.state === 'output-available' && (
-                <PedidosCompraResult
+                <PedidosVendasResult
                   success={(tool.output as RowsToolOutput).success}
                   message={(tool.output as RowsToolOutput).message}
                   rows={(tool.output as RowsToolOutput).rows}
@@ -5133,10 +5120,10 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {tool.state === 'output-available' && (
                 <KpisVendasResult
-                  success={(tool.output as any).success}
-                  message={(tool.output as any).message}
-                  kpis={(tool.output as any).kpis}
-                  sql_query={(tool.output as any).sql_query}
+                  success={(tool.output as ServicosKpiToolOutput).success}
+                  message={(tool.output as ServicosKpiToolOutput).message}
+                  kpis={(tool.output as ServicosKpiToolOutput).kpis}
+                  sql_query={(tool.output as ServicosKpiToolOutput).sql_query}
                 />
               )}
             </div>
