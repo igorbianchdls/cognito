@@ -55,6 +55,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }> | null
   'organicMarketingAgent': Activity,
   'gestorDeComprasAgent': Package,
   'gestorDeProjetosAgent': Wrench,
+  'gestorDeServicosAgent': Wrench,
   'funcionariosAgent': Users,
 };
 
@@ -74,6 +75,7 @@ const models = [
   { id: 'webAnalyticsAgent', name: 'Web Analytics', icon: iconMap['webAnalyticsAgent'] },
   { id: 'gestorDeComprasAgent', name: 'Gestor de Compras', icon: iconMap['gestorDeComprasAgent'] },
   { id: 'gestorDeProjetosAgent', name: 'Gestor de Projetos', icon: iconMap['gestorDeProjetosAgent'] },
+  { id: 'gestorDeServicosAgent', name: 'Gestor de Serviços', icon: iconMap['gestorDeServicosAgent'] },
 ];
 
 export default function InputArea({ input, setInput, onSubmit, status, selectedAgent, onAgentChange }: InputAreaProps) {
@@ -143,6 +145,7 @@ export default function InputArea({ input, setInput, onSubmit, status, selectedA
                 case 'organicMarketingAgent': return 'Marketing Orgânico';
                 case 'gestorDeComprasAgent': return 'Gestor de Compras';
                 case 'gestorDeProjetosAgent': return 'Gestor de Projetos';
+                case 'gestorDeServicosAgent': return 'Gestor de Serviços';
                 case 'funcionariosAgent': return 'Funcionários';
                 default: return id;
               }
