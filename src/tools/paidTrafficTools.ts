@@ -2,6 +2,9 @@ import { z } from 'zod';
 import { tool } from 'ai';
 import { runQuery } from '@/lib/postgres';
 
+// Schema para dados de tráfego pago (padrão: marketing)
+const ADS_SCHEMA = process.env.ADS_SCHEMA || 'marketing';
+
 const formatSqlParams = (params: unknown[]) => (params.length ? JSON.stringify(params) : '[]');
 
 type PaidTrafficTable =
@@ -88,7 +91,7 @@ const buildSelectQuery = (
 
   const sql = `
     SELECT ${columns.join(', ')}
-    FROM trafego_pago.${table}
+    FROM ${ADS_SCHEMA}.${table}
     ${whereClause}
     ORDER BY ${orderBy} ${orderDirection}
     LIMIT ${limitPlaceholder}
@@ -345,8 +348,8 @@ WITH metricas AS (
     SUM(ma.conversao) AS conversoes_total,
     SUM(ma.impressao) AS impressoes_total,
     SUM(ma.cliques) AS cliques_total
-  FROM trafego_pago.metricas_anuncios ma
-  LEFT JOIN trafego_pago.campanhas c ON c.id = ma.campanha_id
+  FROM ${ADS_SCHEMA}.metricas_anuncios ma
+  LEFT JOIN ${ADS_SCHEMA}.campanhas c ON c.id = ma.campanha_id
   WHERE ma.data >= current_date - ($1::int - 1) * INTERVAL '1 day'
     AND ($2::text IS NULL OR ma.plataforma = $2)
   GROUP BY ma.campanha_id, c.nome, c.status, c.objetivo
@@ -483,9 +486,9 @@ SELECT
   ROUND(SUM(m.receita)::numeric / NULLIF(SUM(m.gasto), 0), 2) AS roas,                  -- retorno sobre gasto
   ROUND(SUM(m.receita)::numeric - SUM(m.gasto), 2) AS lucro                             -- lucro bruto (opcional)
   
-FROM trafego_pago.metricas_anuncios m
-JOIN trafego_pago.anuncios_publicados ap ON m.anuncio_publicado_id = ap.id
-JOIN trafego_pago.contas_ads ca ON ap.conta_ads_id = ca.id
+FROM ${ADS_SCHEMA}.metricas_anuncios m
+JOIN ${ADS_SCHEMA}.anuncios_publicados ap ON m.anuncio_publicado_id = ap.id
+JOIN ${ADS_SCHEMA}.contas_ads ca ON ap.conta_ads_id = ca.id
 WHERE m.data BETWEEN $1::date AND $2::date
   AND ($3::text IS NULL OR ca.plataforma = $3)
 GROUP BY ca.plataforma
@@ -574,9 +577,9 @@ SELECT
   ROUND(AVG(m.frequencia), 2) AS frequencia_media,
   COALESCE(SUM(m.likes) + SUM(m.comentarios) + SUM(m.compartilhamentos) + SUM(m.salvos), 0) AS engajamento_total
 
-FROM trafego_pago.metricas_anuncios m
-JOIN trafego_pago.anuncios_publicados ap ON m.anuncio_publicado_id = ap.id
-JOIN trafego_pago.contas_ads ca ON ap.conta_ads_id = ca.id
+FROM ${ADS_SCHEMA}.metricas_anuncios m
+JOIN ${ADS_SCHEMA}.anuncios_publicados ap ON m.anuncio_publicado_id = ap.id
+JOIN ${ADS_SCHEMA}.contas_ads ca ON ap.conta_ads_id = ca.id
 
 WHERE m.data BETWEEN $1::date AND $2::date
   AND ($3::text IS NULL OR ca.plataforma = $3)
@@ -629,9 +632,9 @@ LIMIT $4;`.trim();
           SUM(ma.conversao) AS conversoes_total,
           SUM(ma.impressao) AS impressoes_total,
           SUM(ma.cliques) AS cliques_total
-        FROM trafego_pago.metricas_anuncios ma
-        LEFT JOIN trafego_pago.anuncios_publicados ap ON ap.id = ma.anuncio_publicado_id
-        LEFT JOIN trafego_pago.contas_ads ca ON ap.conta_ads_id = ca.id
+        FROM ${ADS_SCHEMA}.metricas_anuncios ma
+        LEFT JOIN ${ADS_SCHEMA}.anuncios_publicados ap ON ap.id = ma.anuncio_publicado_id
+        LEFT JOIN ${ADS_SCHEMA}.contas_ads ca ON ap.conta_ads_id = ca.id
         WHERE ma.data >= current_date - ($1::int - 1) * INTERVAL '1 day'
           AND ma.conversao >= 1
           AND ($2::text IS NULL OR ca.plataforma = $2)
@@ -752,7 +755,7 @@ LIMIT $4;`.trim();
         data::date AS dia,
         SUM(gasto) AS gasto_total,
         SUM(receita) AS receita_total
-      FROM trafego_pago.metricas_anuncios
+      FROM ${ADS_SCHEMA}.metricas_anuncios
       WHERE data >= current_date - ($1::int - 1) * INTERVAL '1 day'
         AND ($2::text IS NULL OR plataforma = $2)
       GROUP BY dia
@@ -847,7 +850,7 @@ LIMIT $4;`.trim();
         SUM(impressao) AS total_impressoes,
         SUM(cliques) AS total_cliques,
         SUM(conversao) AS total_conversoes
-      FROM trafego_pago.metricas_anuncios
+      FROM ${ADS_SCHEMA}.metricas_anuncios
       WHERE data >= current_date - ($1::int - 1) * INTERVAL '1 day'
         AND ($2::text IS NULL OR plataforma = $2)
     `.trim();
@@ -953,11 +956,11 @@ SELECT
   ROUND(AVG(m.frequencia), 2) AS frequencia_media,
   COALESCE(SUM(m.likes) + SUM(m.comentarios) + SUM(m.compartilhamentos) + SUM(m.salvos), 0) AS engajamento_total
 
-FROM trafego_pago.metricas_anuncios m
-JOIN trafego_pago.anuncios_publicados ap ON m.anuncio_publicado_id = ap.id
-JOIN trafego_pago.grupos_de_anuncios ga ON ap.grupo_id = ga.id
-JOIN trafego_pago.campanhas c ON ga.campanha_id = c.id
-JOIN trafego_pago.contas_ads ca ON ap.conta_ads_id = ca.id
+FROM ${ADS_SCHEMA}.metricas_anuncios m
+JOIN ${ADS_SCHEMA}.anuncios_publicados ap ON m.anuncio_publicado_id = ap.id
+JOIN ${ADS_SCHEMA}.grupos_de_anuncios ga ON ap.grupo_id = ga.id
+JOIN ${ADS_SCHEMA}.campanhas c ON ga.campanha_id = c.id
+JOIN ${ADS_SCHEMA}.contas_ads ca ON ap.conta_ads_id = ca.id
 
 WHERE m.data BETWEEN $1::date AND $2::date
   AND ($3::text IS NULL OR ca.plataforma = $3)
@@ -1021,11 +1024,11 @@ SELECT
   ROUND(AVG(m.frequencia), 2) AS frequencia_media,
   COALESCE(SUM(m.likes) + SUM(m.comentarios) + SUM(m.compartilhamentos) + SUM(m.salvos), 0) AS engajamento_total
 
-FROM trafego_pago.metricas_anuncios m
-JOIN trafego_pago.anuncios_publicados ap ON m.anuncio_publicado_id = ap.id
-JOIN trafego_pago.grupos_de_anuncios ga ON ap.grupo_id = ga.id
-JOIN trafego_pago.campanhas c ON ga.campanha_id = c.id
-JOIN trafego_pago.contas_ads ca ON ap.conta_ads_id = ca.id
+FROM ${ADS_SCHEMA}.metricas_anuncios m
+JOIN ${ADS_SCHEMA}.anuncios_publicados ap ON m.anuncio_publicado_id = ap.id
+JOIN ${ADS_SCHEMA}.grupos_de_anuncios ga ON ap.grupo_id = ga.id
+JOIN ${ADS_SCHEMA}.campanhas c ON ga.campanha_id = c.id
+JOIN ${ADS_SCHEMA}.contas_ads ca ON ap.conta_ads_id = ca.id
 
 WHERE m.data BETWEEN $1::date AND $2::date
   AND ($3::text IS NULL OR ca.plataforma = $3)
@@ -1063,9 +1066,9 @@ SELECT
   ROUND(SUM(m.receita) / NULLIF(SUM(m.gasto), 0), 2) AS roas,
   ROUND(SUM(m.gasto)::numeric / NULLIF(SUM(m.conversao), 0), 2) AS cpa,
   ROUND(SUM(m.conversao)::numeric / NULLIF(SUM(m.cliques), 0) * 100, 2) AS taxa_conversao
-FROM trafego_pago.metricas_anuncios m
-JOIN trafego_pago.anuncios_publicados ap ON m.anuncio_publicado_id = ap.id
-JOIN trafego_pago.contas_ads ca ON ap.conta_ads_id = ca.id
+FROM ${ADS_SCHEMA}.metricas_anuncios m
+JOIN ${ADS_SCHEMA}.anuncios_publicados ap ON m.anuncio_publicado_id = ap.id
+JOIN ${ADS_SCHEMA}.contas_ads ca ON ap.conta_ads_id = ca.id
 WHERE m.data BETWEEN $1::date AND $2::date
   AND ($3::text IS NULL OR ca.plataforma = $3)
 GROUP BY ca.plataforma, dia_semana
