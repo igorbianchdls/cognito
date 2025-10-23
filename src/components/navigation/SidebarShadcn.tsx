@@ -5,12 +5,10 @@ import { usePathname } from "next/navigation"
 import {
   MessageSquare,
   LayoutGrid,
-  Users,
   Sheet,
   Database,
   GalleryVerticalEnd,
   Plug,
-  MessagesSquare,
   FileText,
 } from "lucide-react"
 
@@ -71,19 +69,9 @@ const navigationData = {
       icon: FileText,
     },
     {
-      title: "Multi Agentes",
-      url: "/multiagentes",
-      icon: MessagesSquare,
-    },
-    {
       title: "Integrações",
       url: "/integracoes",
       icon: Plug,
-    },
-    {
-      title: "Organograma",
-      url: "/orgchart",
-      icon: Users,
     },
     {
       title: "Planilhas",
