@@ -1,16 +1,48 @@
 import { useMemo } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable'
+import EntityDisplay from '@/components/modulos/EntityDisplay'
+import StatusBadge from '@/components/modulos/StatusBadge'
 import { Briefcase } from 'lucide-react'
 import type { CrmOportunidadeRow, GetCrmOportunidadesOutput } from '@/tools/crmTools'
-import StatusBadge from '@/components/modulos/StatusBadge'
 
 export default function OportunidadesResult({ result }: { result: GetCrmOportunidadesOutput }) {
   const columns: ColumnDef<CrmOportunidadeRow>[] = useMemo(() => [
     { accessorKey: 'id', header: 'ID' },
-    { accessorKey: 'oportunidade', header: 'Oportunidade' },
-    { accessorKey: 'conta', header: 'Conta' },
-    { accessorKey: 'responsavel', header: 'Responsável' },
+    {
+      accessorKey: 'oportunidade',
+      header: 'Oportunidade',
+      size: 250,
+      minSize: 200,
+      cell: ({ row }) => {
+        const oportunidade = row.original.oportunidade || 'Sem nome';
+        const id = row.original.id ? `ID: ${row.original.id}` : 'Oportunidade';
+        return <EntityDisplay name={String(oportunidade)} subtitle={String(id)} />;
+      }
+    },
+    {
+      accessorKey: 'conta',
+      header: 'Conta',
+      size: 250,
+      minSize: 200,
+      cell: ({ row }) => {
+        const conta = row.original.conta || 'Sem conta';
+        const segmento = (row.original as any).segmento_conta || (row.original as any).segmento || 'Sem segmento';
+        return <EntityDisplay name={String(conta)} subtitle={String(segmento)} />;
+      }
+    },
+    {
+      accessorKey: 'responsavel',
+      header: 'Responsável',
+      size: 200,
+      minSize: 150,
+      cell: ({ row }) => {
+        const responsavel = row.original.responsavel;
+        if (!responsavel) return '-';
+        const cargo = (row.original as any).cargo_responsavel || 'Responsável';
+        return <EntityDisplay name={String(responsavel)} subtitle={String(cargo)} />;
+      }
+    },
     {
       accessorKey: 'estagio', header: 'Estágio',
       cell: ({ row }) => <StatusBadge value={row.original.estagio} type="estagio" />
