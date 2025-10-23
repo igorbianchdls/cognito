@@ -28,9 +28,8 @@ WITH metricas AS (
     COALESCE(m.curtidas, 0) AS curtidas,
     COALESCE(m.comentarios, 0) AS comentarios,
     COALESCE(m.compartilhamentos, 0) AS compartilhamentos,
-    COALESCE(m.salvamentos, 0) AS salvamentos,
     COALESCE(m.visualizacoes, 0) AS visualizacoes,
-    COALESCE(m.alcance, 0) AS alcance
+    COALESCE(m.impressoes, 0) AS impressoes
   FROM ${ORG_SCHEMA}.metricas_publicacoes m
   JOIN ${ORG_SCHEMA}.publicacoes p ON p.id = m.publicacao_id
   JOIN ${ORG_SCHEMA}.contas_sociais cs ON cs.id = p.conta_social_id
@@ -40,12 +39,12 @@ SELECT
   plataforma,
   COUNT(DISTINCT conta_social_id) AS contas_vinculadas,
   COUNT(DISTINCT publicacao_id) AS campanhas_vinculadas,
-  SUM(alcance) AS gasto_total,
-  SUM(visualizacoes) AS receita_total,
-  SUM(curtidas) AS conversoes_total,
-  CASE WHEN SUM(alcance) > 0 THEN SUM(visualizacoes)::numeric / SUM(alcance) ELSE 0 END AS roas,
-  CASE WHEN SUM(visualizacoes) > 0 THEN (SUM(curtidas)::numeric / SUM(visualizacoes)) * 100 ELSE 0 END AS taxa_conversao_percent,
-  CASE WHEN SUM(alcance) > 0 THEN (SUM(comentarios + compartilhamentos + salvamentos)::numeric / SUM(alcance)) * 100 ELSE 0 END AS ctr_percent
+  SUM(impressoes) AS total_impressoes,
+  SUM(visualizacoes) AS total_visualizacoes,
+  SUM(curtidas) AS total_curtidas,
+  ROUND(SUM(visualizacoes)::numeric / NULLIF(SUM(impressoes), 0) * 100, 2) AS taxa_view,
+  ROUND(SUM(curtidas + comentarios + compartilhamentos)::numeric / NULLIF(SUM(impressoes), 0) * 100, 2) AS taxa_engajamento_total,
+  ROUND(AVG((curtidas + comentarios + compartilhamentos)::numeric / NULLIF(impressoes, 0)) * 100, 2) AS engajamento_medio_post
 FROM metricas
 GROUP BY plataforma
 `;
@@ -213,11 +212,13 @@ const organicQueryBuilders: Record<'contas_sociais' | 'publicacoes' | 'metricas_
         'cs.nome_conta AS nome_conta',
         'cs.plataforma AS plataforma',
         'p.titulo',
-        'p.hook',
+        "ARRAY_TO_STRING(p.hashtags, ', ') AS hashtags",
+        'p.legenda',
         'p.tipo_post',
         'p.status',
         'p.publicado_em',
         'p.criado_em',
+        'p.atualizado_em',
       ],
       filters,
       {
@@ -282,7 +283,6 @@ const organicQueryBuilders: Record<'contas_sociais' | 'publicacoes' | 'metricas_
         'rc.seguidores',
         'rc.seguindo',
         'rc.total_publicacoes',
-        'rc.alcance_total',
         'rc.taxa_engajamento',
         'rc.registrado_em',
       ],
