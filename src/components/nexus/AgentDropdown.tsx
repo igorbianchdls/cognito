@@ -24,6 +24,7 @@ const agents = [
   { id: 'webAnalyticsAgent', name: 'Web Analytics', icon: 'W', color: 'text-blue-500' },
   { id: 'gestorDeComprasAgent', name: 'Gestor de Compras', icon: 'C', color: 'text-amber-600' },
   { id: 'gestorDeProjetosAgent', name: 'Gestor de Projetos', icon: 'P', color: 'text-violet-600' },
+  { id: 'gestorDeServicosAgent', name: 'Gestor de Serviços', icon: 'S', color: 'text-teal-600' },
 ];
 
 // Dropdown elegante que aparece quando o usuário digita "/" no input

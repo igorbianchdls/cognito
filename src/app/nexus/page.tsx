@@ -58,6 +58,7 @@ export default function Page() {
       case 'organicMarketingAgent': return '/api/claudeAgents/organic-marketing';
       case 'gestorDeComprasAgent': return '/api/claudeAgents/gestor-de-compras';
       case 'gestorDeProjetosAgent': return '/api/claudeAgents/gestor-de-projetos';
+      case 'gestorDeServicosAgent': return '/api/claudeAgents/gestor-de-servicos';
       case 'funcionariosAgent': return '/api/claudeAgents/funcionarios';
       default: return '/api/agents/analista-dados';
     }
