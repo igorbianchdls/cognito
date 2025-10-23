@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
 import type { ColumnDef } from '@tanstack/react-table'
 
@@ -48,80 +48,135 @@ export default function ModulosServicosPage() {
     return name
   }
 
-  const { columns, data } = useMemo((): { columns: ColumnDef<Row>[]; data: Row[] } => {
+  const [data, setData] = useState<Row[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>()
+
+  const formatDate = (value?: unknown, withTime?: boolean) => {
+    if (!value) return ''
+    try {
+      const d = new Date(String(value))
+      if (isNaN(d.getTime())) return String(value)
+      return d.toLocaleString('pt-BR', withTime ? { dateStyle: 'short', timeStyle: 'short' } : { dateStyle: 'short' })
+    } catch {
+      return String(value)
+    }
+  }
+
+  const formatBRL = (value?: unknown) => {
+    const n = Number(value ?? 0)
+    if (isNaN(n)) return String(value ?? '')
+    return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+  }
+
+  const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
+      case 'agendamentos':
+        return [
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'numero_os', header: 'Nº OS' },
+          { accessorKey: 'tecnico', header: 'Técnico' },
+          { accessorKey: 'data_agendada', header: 'Data Agendada', cell: ({ row }) => formatDate(row.original['data_agendada'], true) },
+          { accessorKey: 'data_inicio', header: 'Início', cell: ({ row }) => formatDate(row.original['data_inicio'], true) },
+          { accessorKey: 'data_fim', header: 'Fim', cell: ({ row }) => formatDate(row.original['data_fim'], true) },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'observacoes', header: 'Observações' },
+        ]
+      case 'tecnicos':
+        return [
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'tecnico', header: 'Técnico' },
+          { accessorKey: 'cargo', header: 'Cargo' },
+          { accessorKey: 'especialidade', header: 'Especialidade' },
+          { accessorKey: 'custo_hora', header: 'Custo/Hora (R$)', cell: ({ row }) => formatBRL(row.original['custo_hora']) },
+          { accessorKey: 'telefone', header: 'Telefone' },
+          { accessorKey: 'email', header: 'Email' },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'ordens_servico', header: 'Ordens de Serviço' },
+          { accessorKey: 'horas_trabalhadas', header: 'Horas Trabalhadas' },
+          { accessorKey: 'admissao', header: 'Admissão', cell: ({ row }) => formatDate(row.original['admissao']) },
+        ]
+      case 'clientes':
+        return [
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'cliente', header: 'Cliente' },
+          { accessorKey: 'segmento', header: 'Segmento' },
+          { accessorKey: 'telefone', header: 'Telefone' },
+          { accessorKey: 'email', header: 'Email' },
+          { accessorKey: 'cidade_uf', header: 'Cidade/UF' },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'total_ordens', header: 'Total de Ordens' },
+          { accessorKey: 'ultima_os', header: 'Última OS', cell: ({ row }) => formatDate(row.original['ultima_os']) },
+        ]
+      case 'servicos':
+        return [
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'servico', header: 'Serviço' },
+          { accessorKey: 'descricao', header: 'Descrição' },
+          { accessorKey: 'categoria', header: 'Categoria' },
+          { accessorKey: 'unidade_medida', header: 'Unidade de Medida' },
+          { accessorKey: 'preco_base', header: 'Preço Base (R$)', cell: ({ row }) => formatBRL(row.original['preco_base']) },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
+        ]
       case 'ordens-servico':
       default:
-        return {
-          columns: [
-            { accessorKey: 'os', header: 'OS' },
-            { accessorKey: 'cliente', header: 'Cliente' },
-            { accessorKey: 'data', header: 'Data' },
-            { accessorKey: 'tecnico', header: 'Técnico' },
-            { accessorKey: 'status', header: 'Status' },
-          ],
-          data: [
-            { os: 'OS-5001', cliente: 'Cliente X', data: '2025-10-19', tecnico: 'João', status: 'Em execução' },
-            { os: 'OS-5002', cliente: 'Cliente Y', data: '2025-10-22', tecnico: 'Maria', status: 'Concluída' },
-          ],
-        }
-      case 'agendamentos':
-        return {
-          columns: [
-            { accessorKey: 'id', header: 'ID' },
-            { accessorKey: 'data_hora', header: 'Data/Hora' },
-            { accessorKey: 'cliente', header: 'Cliente' },
-            { accessorKey: 'tecnico', header: 'Técnico' },
-            { accessorKey: 'status', header: 'Status' },
-          ],
-          data: [
-            { id: 'AG-1001', data_hora: '2025-10-25 14:00', cliente: 'Cliente X', tecnico: 'João', status: 'Confirmado' },
-            { id: 'AG-1002', data_hora: '2025-10-26 09:30', cliente: 'Cliente Z', tecnico: 'Pedro', status: 'Pendente' },
-          ],
-        }
-      case 'tecnicos':
-        return {
-          columns: [
-            { accessorKey: 'nome', header: 'Nome' },
-            { accessorKey: 'especialidade', header: 'Especialidade' },
-            { accessorKey: 'regional', header: 'Regional' },
-            { accessorKey: 'os_abertas', header: 'OS Abertas' },
-            { accessorKey: 'avaliacao', header: 'Avaliação' },
-          ],
-          data: [
-            { nome: 'João', especialidade: 'Elétrica', regional: 'Sudeste', os_abertas: 3, avaliacao: 4.7 },
-            { nome: 'Maria', especialidade: 'Hidráulica', regional: 'Sul', os_abertas: 1, avaliacao: 4.9 },
-          ],
-        }
-      case 'clientes':
-        return {
-          columns: [
-            { accessorKey: 'nome', header: 'Nome' },
-            { accessorKey: 'telefone', header: 'Telefone' },
-            { accessorKey: 'cidade', header: 'Cidade' },
-            { accessorKey: 'os_abertas', header: 'OS Abertas' },
-            { accessorKey: 'ultima_os', header: 'Última OS' },
-          ],
-          data: [
-            { nome: 'Cliente X', telefone: '(11) 99999-0000', cidade: 'São Paulo', os_abertas: 1, ultima_os: '2025-10-19' },
-            { nome: 'Cliente Y', telefone: '(21) 98888-1111', cidade: 'Rio de Janeiro', os_abertas: 0, ultima_os: '2025-09-28' },
-          ],
-        }
-      case 'servicos':
-        return {
-          columns: [
-            { accessorKey: 'codigo', header: 'Código' },
-            { accessorKey: 'descricao', header: 'Descrição' },
-            { accessorKey: 'categoria', header: 'Categoria' },
-            { accessorKey: 'preco_base', header: 'Preço Base (R$)' },
-          ],
-          data: [
-            { codigo: 'SRV-001', descricao: 'Instalação elétrica', categoria: 'Elétrica', preco_base: 350 },
-            { codigo: 'SRV-002', descricao: 'Troca de registro', categoria: 'Hidráulica', preco_base: 180 },
-          ],
-        }
+        return [
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'numero_os', header: 'Nº OS' },
+          { accessorKey: 'cliente', header: 'Cliente' },
+          { accessorKey: 'tecnico_responsavel', header: 'Técnico Responsável' },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'prioridade', header: 'Prioridade' },
+          { accessorKey: 'descricao_problema', header: 'Descrição do Problema' },
+          { accessorKey: 'data_abertura', header: 'Abertura', cell: ({ row }) => formatDate(row.original['data_abertura']) },
+          { accessorKey: 'data_prevista', header: 'Previsão', cell: ({ row }) => formatDate(row.original['data_prevista']) },
+          { accessorKey: 'data_conclusao', header: 'Conclusão', cell: ({ row }) => formatDate(row.original['data_conclusao']) },
+          { accessorKey: 'valor_estimado', header: 'Valor Estimado (R$)', cell: ({ row }) => formatBRL(row.original['valor_estimado']) },
+          { accessorKey: 'valor_final', header: 'Valor Final (R$)', cell: ({ row }) => formatBRL(row.original['valor_final']) },
+          { accessorKey: 'observacoes', header: 'Observações' },
+        ]
     }
   }, [tabs.selected])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const load = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const params = new URLSearchParams()
+        params.set('view', tabs.selected)
+        if (['ordens-servico', 'agendamentos', 'servicos'].includes(tabs.selected)) {
+          if (dateRange?.from) {
+            const d = dateRange.from
+            params.set('de', `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+          }
+          if (dateRange?.to) {
+            const d = dateRange.to
+            params.set('ate', `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+          }
+        }
+        const url = `/api/modulos/servicos?${params.toString()}`
+        const res = await fetch(url, { cache: 'no-store', signal: controller.signal })
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const json = await res.json()
+        const rows = (json?.rows || []) as Row[]
+        setData(Array.isArray(rows) ? rows : [])
+      } catch (e) {
+        if (!(e instanceof DOMException && e.name === 'AbortError')) {
+          setError(e instanceof Error ? e.message : 'Falha ao carregar dados')
+          setData([])
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    load()
+    return () => controller.abort()
+  }, [tabs.selected, dateRange?.from, dateRange?.to])
 
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
@@ -183,6 +238,8 @@ export default function ModulosServicosPage() {
               from={data.length === 0 ? 0 : 1}
               to={Math.min(tabelaUI.pageSize, data.length)}
               total={data.length}
+              dateRange={['ordens-servico', 'agendamentos', 'servicos'].includes(tabs.selected) ? dateRange : undefined}
+              onDateRangeChange={['ordens-servico', 'agendamentos', 'servicos'].includes(tabs.selected) ? setDateRange : undefined}
               fontFamily={fontVar(toolbarUI.fontFamily)}
               fontSize={toolbarUI.fontSize}
               fontWeight={toolbarUI.fontWeight}
@@ -203,34 +260,40 @@ export default function ModulosServicosPage() {
           </div>
           <div className="flex-1 min-h-0 overflow-auto" style={{ marginBottom: layout.mbTable }}>
             <div className="border-y bg-background" style={{ borderColor: tabelaUI.borderColor }}>
-              <DataTable
-                columns={columns}
-                data={data}
-                enableSearch={tabelaUI.enableSearch}
-                showColumnToggle={tabelaUI.enableColumnToggle}
-                showPagination={tabelaUI.showPagination}
-                pageSize={tabelaUI.pageSize}
-                headerBackground={tabelaUI.headerBg}
-                headerTextColor={tabelaUI.headerText}
-                cellTextColor={tabelaUI.cellText}
-                headerFontSize={tabelaUI.headerFontSize}
-                headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
-                headerFontWeight={tabelaUI.headerFontWeight}
-                headerLetterSpacing={tabelaUI.headerLetterSpacing}
-                cellFontSize={tabelaUI.cellFontSize}
-                cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
-                cellFontWeight={tabelaUI.cellFontWeight}
-                cellLetterSpacing={tabelaUI.cellLetterSpacing}
-                enableZebraStripes={tabelaUI.enableZebraStripes}
-                rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
-                borderColor={tabelaUI.borderColor}
-                borderWidth={tabelaUI.borderWidth}
-                selectionColumnWidth={tabelaUI.selectionColumnWidth}
-                enableRowSelection={tabelaUI.enableRowSelection}
-                selectionMode={tabelaUI.selectionMode}
-                defaultSortColumn={tabelaUI.defaultSortColumn}
-                defaultSortDirection={tabelaUI.defaultSortDirection}
-              />
+              {isLoading ? (
+                <div className="p-6 text-sm text-gray-500">Carregando dados…</div>
+              ) : error ? (
+                <div className="p-6 text-sm text-red-600">Erro ao carregar: {error}</div>
+              ) : (
+                <DataTable
+                  columns={columns}
+                  data={data}
+                  enableSearch={tabelaUI.enableSearch}
+                  showColumnToggle={tabelaUI.enableColumnToggle}
+                  showPagination={tabelaUI.showPagination}
+                  pageSize={tabelaUI.pageSize}
+                  headerBackground={tabelaUI.headerBg}
+                  headerTextColor={tabelaUI.headerText}
+                  cellTextColor={tabelaUI.cellText}
+                  headerFontSize={tabelaUI.headerFontSize}
+                  headerFontFamily={fontVar(tabelaUI.headerFontFamily)}
+                  headerFontWeight={tabelaUI.headerFontWeight}
+                  headerLetterSpacing={tabelaUI.headerLetterSpacing}
+                  cellFontSize={tabelaUI.cellFontSize}
+                  cellFontFamily={fontVar(tabelaUI.cellFontFamily)}
+                  cellFontWeight={tabelaUI.cellFontWeight}
+                  cellLetterSpacing={tabelaUI.cellLetterSpacing}
+                  enableZebraStripes={tabelaUI.enableZebraStripes}
+                  rowAlternateBgColor={tabelaUI.rowAlternateBgColor}
+                  borderColor={tabelaUI.borderColor}
+                  borderWidth={tabelaUI.borderWidth}
+                  selectionColumnWidth={tabelaUI.selectionColumnWidth}
+                  enableRowSelection={tabelaUI.enableRowSelection}
+                  selectionMode={tabelaUI.selectionMode}
+                  defaultSortColumn={tabelaUI.defaultSortColumn}
+                  defaultSortDirection={tabelaUI.defaultSortDirection}
+                />
+              )}
             </div>
           </div>
         </div>
