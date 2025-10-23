@@ -25,6 +25,7 @@ import {
   type LucideIcon
 } from 'lucide-react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ChartSwitcher, type ChartSwitcherOptions } from '@/components/charts/ChartSwitcher';
 import {
   ColumnDef,
@@ -70,6 +71,10 @@ interface ArtifactDataTableProps<TData extends Record<string, unknown>> {
     // Permite ocultar o switcher para casos específicos
     disableSwitcherUI?: boolean;
   };
+
+  // Filtro de período no header (refetch externo)
+  headerDateFilter?: boolean;
+  onHeaderDateRangeChange?: (range: { from?: string; to?: string; preset?: string }) => void | Promise<void>;
 }
 
 export default function ArtifactDataTable<TData extends Record<string, unknown>>({
@@ -88,10 +93,17 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
   chartRenderer,
   enableAutoChart = true,
   chartOptions,
+  headerDateFilter,
+  onHeaderDateRangeChange,
 }: ArtifactDataTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [copied, setCopied] = useState(false);
   const [viewMode, setViewMode] = useState<'table' | 'sql' | 'chart'>('table');
+
+  // Header date range state (independente do ChartSwitcher)
+  const [hdrPreset, setHdrPreset] = useState<string>('');
+  const [hdrFrom, setHdrFrom] = useState<string>('');
+  const [hdrTo, setHdrTo] = useState<string>('');
 
   useEffect(() => {
     if (!sqlQuery && viewMode === 'sql') {
@@ -205,12 +217,79 @@ export default function ArtifactDataTable<TData extends Record<string, unknown>>
           </ArtifactDescription>
         </div>
 
-        <ArtifactActions>
-          {hasAlternativeView && (
-            <ArtifactAction
-              icon={TableIcon}
-              tooltip="Ver tabela"
-              variant="ghost"
+      <ArtifactActions>
+        {headerDateFilter && onHeaderDateRangeChange && (
+          <div className="flex items-center gap-2 mr-2">
+            <Select
+              value={hdrPreset}
+              onValueChange={async (v) => {
+                setHdrPreset(v);
+                const today = new Date();
+                const toISO = (d: Date) => d.toISOString().slice(0, 10);
+                const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                if (onHeaderDateRangeChange) {
+                  if (v === 'all') {
+                    await onHeaderDateRangeChange({ preset: 'all' });
+                  } else if (v === '7d') {
+                    const from = new Date(today);
+                    from.setDate(today.getDate() - 6);
+                    await onHeaderDateRangeChange({ from: toISO(from), to: toISO(today), preset: '7d' });
+                  } else if (v === '30d') {
+                    const from = new Date(today);
+                    from.setDate(today.getDate() - 29);
+                    await onHeaderDateRangeChange({ from: toISO(from), to: toISO(today), preset: '30d' });
+                  } else if (v === 'this-month') {
+                    await onHeaderDateRangeChange({ from: toISO(startOfMonth), to: toISO(today), preset: 'this-month' });
+                  }
+                }
+              }}
+            >
+              <SelectTrigger size="sm" className="min-w-[150px]">
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7d">Últimos 7 dias</SelectItem>
+                <SelectItem value="30d">Últimos 30 dias</SelectItem>
+                <SelectItem value="this-month">Este mês</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="custom">Personalizado…</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {hdrPreset === 'custom' && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={hdrFrom}
+                  onChange={(e) => setHdrFrom(e.target.value)}
+                  className="h-8 rounded border border-slate-300 px-2 text-sm"
+                />
+                <span className="text-sm text-slate-500">até</span>
+                <input
+                  type="date"
+                  value={hdrTo}
+                  onChange={(e) => setHdrTo(e.target.value)}
+                  className="h-8 rounded border border-slate-300 px-2 text-sm"
+                />
+                <button
+                  className="h-8 rounded bg-slate-900 px-3 text-sm text-white hover:bg-slate-800"
+                  onClick={async () => {
+                    if (onHeaderDateRangeChange) {
+                      await onHeaderDateRangeChange({ from: hdrFrom || undefined, to: hdrTo || undefined, preset: 'custom' });
+                    }
+                  }}
+                >
+                  Aplicar
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+        {hasAlternativeView && (
+          <ArtifactAction
+            icon={TableIcon}
+            tooltip="Ver tabela"
+            variant="ghost"
               size="icon"
               className={cn(
                 'text-slate-500 hover:text-slate-900 hover:bg-slate-100/70',

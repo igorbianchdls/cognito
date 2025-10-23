@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
 import { Receipt } from 'lucide-react';
@@ -31,6 +31,15 @@ type GetContasAPagarOutput = {
 };
 
 export default function ContasAPagarResult({ result }: { result: GetContasAPagarOutput }) {
+  const [tableRows, setTableRows] = useState<ContaPagarRow[]>(result.rows || []);
+  const [count, setCount] = useState<number>(result.count || (result.rows?.length ?? 0));
+  const [sqlQuery, setSqlQuery] = useState<string | undefined>(result.sql_query);
+
+  useEffect(() => {
+    setTableRows(result.rows || []);
+    setCount(result.count || (result.rows?.length ?? 0));
+    setSqlQuery(result.sql_query);
+  }, [result]);
   const columns: ColumnDef<ContaPagarRow>[] = useMemo(() => [
     {
       accessorKey: 'fornecedor',
@@ -161,18 +170,36 @@ export default function ContasAPagarResult({ result }: { result: GetContasAPagar
 
   return (
     <ArtifactDataTable
-      data={result.rows}
+      data={tableRows}
       columns={columns}
       title="Contas a Pagar"
       icon={Receipt}
       iconColor="text-red-600"
       message={result.message}
       success={result.success}
-      count={result.count}
+      count={count}
       error={result.error}
       exportFileName="contas_a_pagar"
-      sqlQuery={result.sql_query}
+      sqlQuery={sqlQuery}
       chartRenderer={chartRenderer}
+      headerDateFilter
+      onHeaderDateRangeChange={async ({ from, to }) => {
+        try {
+          const params = new URLSearchParams();
+          if (from) params.set('data_vencimento_de', from);
+          if (to) params.set('data_vencimento_ate', to);
+          const res = await fetch(`/api/tools/financeiro/contas-a-pagar?${params.toString()}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          if (json?.success && Array.isArray(json.rows)) {
+            setTableRows(json.rows as ContaPagarRow[]);
+            setCount(json.rows.length);
+            setSqlQuery(json.sql_query);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar Contas a Pagar por período:', e);
+        }
+      }}
     />
   );
 }
