@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import EntityDisplay from '@/components/modulos/EntityDisplay';
+import StatusBadge from '@/components/modulos/StatusBadge';
 import { CheckCircle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -34,9 +36,12 @@ export default function PagamentosRecebidosResult({ result }: { result: GetPagam
     {
       accessorKey: 'cliente',
       header: 'Cliente',
+      size: 250,
+      minSize: 200,
       cell: ({ row }) => {
         const cliente = row.original.cliente_nome || row.original.cliente || row.original.cliente_id || 'Sem cliente';
-        return <div className="font-medium">{cliente}</div>;
+        const segmento = row.original.cliente_segmento || row.original.segmento || 'Sem segmento';
+        return <EntityDisplay name={String(cliente)} subtitle={String(segmento)} />;
       },
     },
     {
@@ -80,14 +85,7 @@ export default function PagamentosRecebidosResult({ result }: { result: GetPagam
     {
       accessorKey: 'status',
       header: 'Status',
-      cell: ({ row }) => {
-        const status = row.original.status || 'pago';
-        return (
-          <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            {status}
-          </span>
-        );
-      },
+      cell: ({ row }) => <StatusBadge value={row.original.status} type="status" />,
     },
   ], []);
 

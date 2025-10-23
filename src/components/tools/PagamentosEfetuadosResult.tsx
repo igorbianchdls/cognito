@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import EntityDisplay from '@/components/modulos/EntityDisplay';
+import StatusBadge from '@/components/modulos/StatusBadge';
 import { CheckCircle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -35,9 +37,12 @@ export default function PagamentosEfetuadosResult({ result }: { result: GetPagam
     {
       accessorKey: 'fornecedor',
       header: 'Fornecedor',
+      size: 250,
+      minSize: 200,
       cell: ({ row }) => {
         const fornecedor = row.original.fornecedor_nome || row.original.fornecedor || row.original.fornecedor_id || 'Sem fornecedor';
-        return <div className="font-medium">{fornecedor}</div>;
+        const categoria = row.original.fornecedor_categoria || row.original.categoria || 'Sem categoria';
+        return <EntityDisplay name={String(fornecedor)} subtitle={String(categoria)} />;
       },
     },
     {
@@ -81,14 +86,7 @@ export default function PagamentosEfetuadosResult({ result }: { result: GetPagam
     {
       accessorKey: 'status',
       header: 'Status',
-      cell: ({ row }) => {
-        const status = row.original.status || 'pago';
-        return (
-          <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-            {status}
-          </span>
-        );
-      },
+      cell: ({ row }) => <StatusBadge value={row.original.status} type="status" />,
     },
   ], []);
 

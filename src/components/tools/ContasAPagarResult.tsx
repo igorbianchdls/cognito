@@ -1,6 +1,8 @@
 import { useMemo, useState, useEffect } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import ArtifactDataTable from '@/components/widgets/ArtifactDataTable';
+import EntityDisplay from '@/components/modulos/EntityDisplay';
+import StatusBadge from '@/components/modulos/StatusBadge';
 import { Receipt } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -44,9 +46,12 @@ export default function ContasAPagarResult({ result }: { result: GetContasAPagar
     {
       accessorKey: 'fornecedor',
       header: 'Fornecedor',
+      size: 250,
+      minSize: 200,
       cell: ({ row }) => {
         const fornecedor = row.original.fornecedor_nome || row.original.fornecedor || row.original.fornecedor_id || 'Sem fornecedor';
-        return <div className="font-medium">{fornecedor}</div>;
+        const categoria = row.original.fornecedor_categoria || row.original.categoria || 'Sem categoria';
+        return <EntityDisplay name={String(fornecedor)} subtitle={String(categoria)} />;
       },
     },
     {
@@ -105,20 +110,7 @@ export default function ContasAPagarResult({ result }: { result: GetContasAPagar
     {
       accessorKey: 'status',
       header: 'Status',
-      cell: ({ row }) => {
-        const status = row.original.status || 'pendente';
-        const colors: Record<string, string> = {
-          pago: 'bg-green-100 text-green-800',
-          pendente: 'bg-yellow-100 text-yellow-800',
-          vencido: 'bg-red-100 text-red-800',
-          cancelado: 'bg-gray-100 text-gray-800',
-        };
-        return (
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${colors[status] || colors.pendente}`}>
-            {status}
-          </span>
-        );
-      },
+      cell: ({ row }) => <StatusBadge value={row.original.status} type="status" />,
     },
   ], []);
 
