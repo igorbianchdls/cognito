@@ -92,7 +92,7 @@ export default function ModulosFinanceiroPage() {
         backgroundColor: bgColor,
         color: textColor
       }}>
-        {status}
+        {String(status)}
       </span>
     )
   }
