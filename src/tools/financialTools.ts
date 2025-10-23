@@ -1246,7 +1246,7 @@ export const obterDespesasPorCentroCusto = tool({
   description: 'Analisa despesas agrupadas por centro de custo com totais e percentuais',
   inputSchema: z.object({
     data_inicial: z.string().describe('Data inicial (YYYY-MM-DD)'),
-    data_final: z.string().describe('Data final exclusiva (YYYY-MM-DD)'),
+    data_final: z.string().describe('Data final (YYYY-MM-DD)'),
     limit: z.number().default(20).describe('Número máximo de centros de custo'),
   }),
   execute: async ({
@@ -1260,25 +1260,26 @@ export const obterDespesasPorCentroCusto = tool({
       const sql = `
         SELECT
           cc.id AS centro_custo_id,
-          cc.nome AS centro_custo_nome,
+          cc.nome AS centro_custo,
           cc.codigo,
-          COUNT(cp.id) AS quantidade_despesas,
-          SUM(cp.valor) AS total_despesas,
+          COUNT(cap.id) AS qtd_titulos,
+          SUM(cap.valor_total) AS total_despesas,
           ROUND(
-            (SUM(cp.valor) * 100.0 / NULLIF(
-              (SELECT SUM(valor) FROM gestaofinanceira.contas_a_pagar
-               WHERE data_vencimento >= $1 AND data_vencimento < $2),
+            (SUM(cap.valor_total) * 100.0 / NULLIF(
+              (SELECT SUM(valor_total) FROM financeiro.contas_a_pagar
+               WHERE data_vencimento >= $1 AND data_vencimento <= $2
+               AND status IN ('pago', 'parcial')),
               0
             )),
             2
           ) AS percentual
-        FROM gestaofinanceira.centros_custo cc
-        LEFT JOIN gestaofinanceira.contas_a_pagar cp
-          ON cp.centro_custo_id = cc.id
-          AND cp.data_vencimento >= $1 AND cp.data_vencimento < $2
-        WHERE cc.ativo = TRUE
+        FROM financeiro.centros_custo cc
+        LEFT JOIN financeiro.contas_a_pagar cap
+          ON cap.centro_custo_id = cc.id
+          AND cap.data_vencimento >= $1 AND cap.data_vencimento <= $2
+          AND cap.status IN ('pago', 'parcial')
         GROUP BY cc.id, cc.nome, cc.codigo
-        HAVING SUM(cp.valor) > 0
+        HAVING SUM(cap.valor_total) > 0
         ORDER BY total_despesas DESC
         LIMIT $3
       `.trim();
@@ -1287,10 +1288,11 @@ export const obterDespesasPorCentroCusto = tool({
 
       const totalSql = `
         SELECT
-          SUM(valor) AS total_geral,
+          SUM(valor_total) AS total_geral,
           COUNT(*) AS total_despesas
-        FROM gestaofinanceira.contas_a_pagar
-        WHERE data_vencimento >= $1 AND data_vencimento < $2
+        FROM financeiro.contas_a_pagar
+        WHERE data_vencimento >= $1 AND data_vencimento <= $2
+        AND status IN ('pago', 'parcial')
       `.trim();
 
       const [totals] = await runQuery<{
