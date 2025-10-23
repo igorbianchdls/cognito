@@ -829,6 +829,7 @@ type GetOrganicMarketingDataToolOutput = {
   sql_params?: string;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type GetPaidTrafficDataToolInput = {
   table: 'contas_ads' | 'campanhas' | 'grupos_de_anuncios' | 'anuncios_criacao' | 'anuncios_colaboradores' | 'anuncios_publicados' | 'metricas_anuncios' | 'resumos_campanhas';
   limit?: number;
@@ -900,6 +901,7 @@ type GetPaidTrafficDataToolOutput = {
   sql_params?: string;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type GetInventoryDataToolInput = {
   table: 'centros_distribuicao' | 'estoque_canal' | 'integracoes_canais' | 'movimentacoes_estoque' | 'precos_canais';
   limit?: number;
@@ -946,6 +948,7 @@ type GetInventoryDataToolOutput = {
   error?: string;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type GetEcommerceSalesDataToolInput = {
   table: 'channels' | 'coupons' | 'customers' | 'loyalty_points' | 'loyalty_rewards' | 'order_items' | 'orders' | 'payments' | 'products' | 'returns';
   limit?: number;
@@ -1075,6 +1078,7 @@ type GetChannelAnalysisToolInput = {
 
 type GetChannelAnalysisToolOutput = EcommerceGenericToolOutput;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type GetLogisticsDataToolInput = {
   table: 'envios' | 'eventos_rastreio' | 'logistica_reversa' | 'pacotes' | 'transportadoras';
   limit?: number;
@@ -1285,12 +1289,26 @@ type RowsToolOutput = {
   sql_params?: string;
 };
 
+type ServicosKpiToolOutput = {
+  success: boolean;
+  message: string;
+  kpis?: Record<string, number | string | null | undefined>;
+  sql_query?: string;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type AnalyzeContentPerformanceToolOutput = OrganicGenericToolOutput;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type ComparePlatformPerformanceToolOutput = OrganicGenericToolOutput;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type AnalyzeAudienceGrowthToolOutput = OrganicGenericToolOutput;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type IdentifyTopContentToolOutput = OrganicGenericToolOutput;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type AnalyzeContentMixToolOutput = OrganicGenericToolOutput;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type ForecastEngagementToolOutput = OrganicGenericToolOutput;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type CalculateContentROIToolOutput = OrganicGenericToolOutput;
 
 type AnalyzeTrafficOverviewToolOutput = {
@@ -1506,6 +1524,7 @@ type CompareAdsPlatformsToolOutput = {
   }>;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type AnalyzeCreativePerformanceToolOutput = {
   success: boolean;
   message: string;
@@ -1607,6 +1626,7 @@ type GetFuncionariosDataToolOutput = {
   error?: string;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type GetComprasDataToolInput = {
   table: 'fornecedores' | 'pedidos_compra' | 'pedido_compra_itens';
   limit?: number;
@@ -1655,6 +1675,7 @@ type GetComprasDataToolOutput = {
   error?: string;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type GetProjetosDataToolInput = {
   table: 'projects' | 'status_types' | 'tasks';
   limit?: number;
@@ -1693,6 +1714,7 @@ type GetProjetosDataToolOutput = {
   error?: string;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type GetAnalyticsDataToolInput = {
   table: 'agregado_diario_por_fonte' | 'agregado_diario_por_pagina' | 'consentimentos_visitante' | 'eventos' | 'itens_transacao' | 'metas' | 'propriedades_analytics' | 'propriedades_visitante' | 'sessoes' | 'transacoes_analytics' | 'visitantes';
   limit?: number;
@@ -1784,6 +1806,7 @@ type GetContasAPagarToolOutput = {
   error?: string;
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   type AnalyzeAdPerformanceToolOutput = {
     success: boolean;
     message: string;
@@ -1885,8 +1908,10 @@ type ForecastRestockNeedsToolOutput = InventoryGenericToolOutput;
 
 type IdentifySlowMovingItemsToolOutput = InventoryGenericToolOutput;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type CompareChannelPerformanceToolOutput = InventoryGenericToolOutput;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 type GenerateABCAnalysisToolOutput = InventoryGenericToolOutput;
 
 type DetectAnomaliesToolOutput = InventoryGenericToolOutput;
@@ -4946,10 +4971,10 @@ export default function RespostaDaIA({ message, selectedAgent }: RespostaDaIAPro
               </Tool>
               {tool.state === 'output-available' && (
                 <IndicadoresServicosResult
-                  success={(tool.output as any).success}
-                  message={(tool.output as any).message}
-                  kpis={(tool.output as any).kpis}
-                  sql_query={(tool.output as any).sql_query}
+                  success={(tool.output as ServicosKpiToolOutput).success}
+                  message={(tool.output as ServicosKpiToolOutput).message}
+                  kpis={(tool.output as ServicosKpiToolOutput).kpis}
+                  sql_query={(tool.output as ServicosKpiToolOutput).sql_query}
                 />
               )}
             </div>
