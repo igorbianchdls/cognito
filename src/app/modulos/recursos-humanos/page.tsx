@@ -35,6 +35,8 @@ export default function ModulosRecursosHumanosPage() {
         { value: 'cargos', label: 'Cargos' },
         { value: 'departamentos', label: 'Departamentos' },
         { value: 'tipos-ausencia', label: 'Tipos de Ausência' },
+        { value: 'contratos', label: 'Contratos' },
+        { value: 'historico-salarial', label: 'Histórico Salarial' },
       ],
       selected: 'funcionarios',
     })
@@ -65,6 +67,24 @@ export default function ModulosRecursosHumanosPage() {
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
+      case 'contratos':
+        return [
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'funcionario', header: 'Funcionário' },
+          { accessorKey: 'tipo_de_contrato', header: 'Tipo de Contrato' },
+          { accessorKey: 'admissao', header: 'Admissão', cell: ({ row }) => formatDate(row.original['admissao']) },
+          { accessorKey: 'demissao', header: 'Demissão', cell: ({ row }) => formatDate(row.original['demissao']) },
+          { accessorKey: 'status', header: 'Status' },
+        ]
+      case 'historico-salarial':
+        return [
+          { accessorKey: 'id', header: 'ID' },
+          { accessorKey: 'funcionario', header: 'Funcionário' },
+          { accessorKey: 'salario_base', header: 'Salário Base (R$)' },
+          { accessorKey: 'tipo_de_pagamento', header: 'Tipo de Pagamento' },
+          { accessorKey: 'inicio_vigencia', header: 'Início Vigência', cell: ({ row }) => formatDate(row.original['inicio_vigencia']) },
+          { accessorKey: 'fim_vigencia', header: 'Fim Vigência', cell: ({ row }) => formatDate(row.original['fim_vigencia']) },
+        ]
       case 'cargos':
         return [
           { accessorKey: 'id', header: 'ID' },
@@ -111,7 +131,7 @@ export default function ModulosRecursosHumanosPage() {
       try {
         const params = new URLSearchParams()
         params.set('view', tabs.selected)
-        if (tabs.selected === 'funcionarios') {
+        if (['funcionarios', 'contratos', 'historico-salarial'].includes(tabs.selected)) {
           if (dateRange?.from) {
             const d = dateRange.from
             params.set('de', `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
@@ -198,8 +218,8 @@ export default function ModulosRecursosHumanosPage() {
               from={data.length === 0 ? 0 : 1}
               to={Math.min(tabelaUI.pageSize, data.length)}
               total={data.length}
-              dateRange={tabs.selected === 'funcionarios' ? dateRange : undefined}
-              onDateRangeChange={tabs.selected === 'funcionarios' ? setDateRange : undefined}
+              dateRange={['funcionarios', 'contratos', 'historico-salarial'].includes(tabs.selected) ? dateRange : undefined}
+              onDateRangeChange={['funcionarios', 'contratos', 'historico-salarial'].includes(tabs.selected) ? setDateRange : undefined}
               fontFamily={fontVar(toolbarUI.fontFamily)}
               fontSize={toolbarUI.fontSize}
               fontWeight={toolbarUI.fontWeight}

@@ -36,6 +36,22 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     tipo_de_ausencia: 'ta.nome',
     desconta_saldo_ferias: 'ta.descontadosaldodeferias',
   },
+  contratos: {
+    id: 'ct.contratoid',
+    funcionario: 'f.nomecompleto',
+    tipo_de_contrato: 'ct.tipodecontrato',
+    admissao: 'ct.dataadmissao',
+    demissao: 'ct.datademissao',
+    status: 'ct.status',
+  },
+  'historico-salarial': {
+    id: 'hs.historicosalarialid',
+    funcionario: 'f.nomecompleto',
+    salario_base: 'hs.salariobase',
+    tipo_de_pagamento: 'hs.tipodepagamento',
+    inicio_vigencia: 'hs.datainiciovigencia',
+    fim_vigencia: 'hs.datafimvigencia',
+  },
 };
 
 const parseNumber = (v: string | null, fb?: number) => (v ? Number(v) : fb);
@@ -90,10 +106,10 @@ export async function GET(req: NextRequest) {
                           f.status,
                           f.datanascimento AS data_nascimento,
                           f.datadecriacao AS data_criacao`;
-      baseSql = `FROM rh.funcionarios f
-                 LEFT JOIN rh.cargos c ON f.cargoid = c.cargoid
-                 LEFT JOIN rh.departamentos d ON f.departamentoid = d.departamentoid
-                 LEFT JOIN rh.funcionarios g ON f.gestordiretoid = g.funcionarioid`;
+      baseSql = `FROM recursoshumanos.funcionarios f
+                 LEFT JOIN recursoshumanos.cargos c ON f.cargoid = c.cargoid
+                 LEFT JOIN recursoshumanos.departamentos d ON f.departamentoid = d.departamentoid
+                 LEFT JOIN recursoshumanos.funcionarios g ON f.gestordiretoid = g.funcionarioid`;
       whereDateCol = 'f.datadecriacao';
       if (status) push('LOWER(f.status) =', status.toLowerCase());
       if (cargo_id) push('f.cargoid =', cargo_id);
@@ -110,10 +126,10 @@ export async function GET(req: NextRequest) {
                           dp.nome AS departamento_pai,
                           g.nomecompleto AS gestor,
                           COUNT(f.funcionarioid) AS qtd_funcionarios`;
-      baseSql = `FROM rh.departamentos d
-                 LEFT JOIN rh.departamentos dp ON d.departamentopaiid = dp.departamentoid
-                 LEFT JOIN rh.funcionarios g ON d.gestorid = g.funcionarioid
-                 LEFT JOIN rh.funcionarios f ON f.departamentoid = d.departamentoid`;
+      baseSql = `FROM recursoshumanos.departamentos d
+                 LEFT JOIN recursoshumanos.departamentos dp ON d.departamentopaiid = dp.departamentoid
+                 LEFT JOIN recursoshumanos.funcionarios g ON d.gestorid = g.funcionarioid
+                 LEFT JOIN recursoshumanos.funcionarios f ON f.departamentoid = d.departamentoid`;
       groupBy = 'GROUP BY d.departamentoid, d.nome, dp.nome, g.nomecompleto';
       if (q) {
         conditions.push(`(d.nome ILIKE '%' || $${i} || '%')`);
@@ -125,8 +141,8 @@ export async function GET(req: NextRequest) {
                           c.nome AS cargo,
                           c.descricao,
                           COUNT(f.funcionarioid) AS qtd_funcionarios`;
-      baseSql = `FROM rh.cargos c
-                 LEFT JOIN rh.funcionarios f ON f.cargoid = c.cargoid`;
+      baseSql = `FROM recursoshumanos.cargos c
+                 LEFT JOIN recursoshumanos.funcionarios f ON f.cargoid = c.cargoid`;
       groupBy = 'GROUP BY c.cargoid, c.nome, c.descricao';
       if (q) {
         conditions.push(`(c.nome ILIKE '%' || $${i} || '%' OR c.descricao ILIKE '%' || $${i} || '%')`);
@@ -137,9 +153,41 @@ export async function GET(req: NextRequest) {
       selectSql = `SELECT ta.tipoausenciaid AS id,
                           ta.nome AS tipo_de_ausencia,
                           CASE WHEN ta.descontadosaldodeferias THEN 'Sim' ELSE 'Não' END AS desconta_saldo_ferias`;
-      baseSql = `FROM rh.tiposdeausencia ta`;
+      baseSql = `FROM recursoshumanos.tiposdeausencia ta`;
       if (q) {
         conditions.push(`(ta.nome ILIKE '%' || $${i} || '%')`);
+        params.push(q);
+        i += 1;
+      }
+    } else if (view === 'contratos') {
+      selectSql = `SELECT ct.contratoid AS id,
+                          f.nomecompleto AS funcionario,
+                          ct.tipodecontrato AS tipo_de_contrato,
+                          ct.dataadmissao AS admissao,
+                          ct.datademissao AS demissao,
+                          ct.status`;
+      baseSql = `FROM recursoshumanos.contratos ct
+                 LEFT JOIN recursoshumanos.funcionarios f ON ct.funcionarioid = f.funcionarioid`;
+      whereDateCol = 'ct.dataadmissao';
+      if (status) push('LOWER(ct.status) =', status.toLowerCase());
+      if (q) {
+        conditions.push(`(f.nomecompleto ILIKE '%' || $${i} || '%' OR ct.tipodecontrato ILIKE '%' || $${i} || '%')`);
+        params.push(q);
+        i += 1;
+      }
+    } else if (view === 'historico-salarial') {
+      selectSql = `SELECT hs.historicosalarialid AS id,
+                          f.nomecompleto AS funcionario,
+                          hs.salariobase AS salario_base,
+                          hs.tipodepagamento AS tipo_de_pagamento,
+                          hs.datainiciovigencia AS inicio_vigencia,
+                          hs.datafimvigencia AS fim_vigencia`;
+      baseSql = `FROM recursoshumanos.historicosalarial hs
+                 LEFT JOIN recursoshumanos.contratos ct ON hs.contratoid = ct.contratoid
+                 LEFT JOIN recursoshumanos.funcionarios f ON ct.funcionarioid = f.funcionarioid`;
+      whereDateCol = 'hs.datainiciovigencia';
+      if (q) {
+        conditions.push(`(f.nomecompleto ILIKE '%' || $${i} || '%')`);
         params.push(q);
         i += 1;
       }
@@ -159,6 +207,8 @@ export async function GET(req: NextRequest) {
       else if (view === 'departamentos') orderClause = 'ORDER BY d.nome ASC';
       else if (view === 'cargos') orderClause = 'ORDER BY c.nome ASC';
       else if (view === 'tipos-ausencia') orderClause = 'ORDER BY ta.nome ASC';
+      else if (view === 'contratos') orderClause = 'ORDER BY ct.dataadmissao DESC';
+      else if (view === 'historico-salarial') orderClause = 'ORDER BY hs.datainiciovigencia DESC';
     }
 
     const paginate = !(view === 'departamentos' || view === 'cargos');
@@ -199,4 +249,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-
