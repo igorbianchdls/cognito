@@ -18,7 +18,7 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
   },
   'contas-a-receber': {
     id: 'car.id',
-    cliente: 'c.nome_cliente',
+    cliente: 'cli.nome_cliente',
     data_emissao: 'car.data_emissao',
     data_vencimento: 'car.data_vencimento',
     data_recebimento: 'car.data_recebimento',
@@ -36,7 +36,7 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
   },
   'pagamentos-recebidos': {
     id: 'car.id',
-    cliente: 'c.nome_cliente',
+    cliente: 'cli.nome_cliente',
     data_emissao: 'car.data_emissao',
     data_vencimento: 'car.data_vencimento',
     data_recebimento: 'car.data_recebimento',
