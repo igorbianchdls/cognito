@@ -70,6 +70,27 @@ export default function ModulosServicosPage() {
     return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
   }
 
+  const getColorFromName = (name: string) => {
+    let hash = 0
+    for (let i = 0; i < name.length; i++) {
+      hash = name.charCodeAt(i) + ((hash << 5) - hash)
+    }
+
+    const colors = [
+      { bg: '#DBEAFE', text: '#1E40AF' },
+      { bg: '#DCFCE7', text: '#15803D' },
+      { bg: '#FEF3C7', text: '#B45309' },
+      { bg: '#FCE7F3', text: '#BE185D' },
+      { bg: '#E0E7FF', text: '#4338CA' },
+      { bg: '#FED7AA', text: '#C2410C' },
+      { bg: '#E9D5FF', text: '#7C3AED' },
+      { bg: '#D1FAE5', text: '#047857' },
+    ]
+
+    const index = Math.abs(hash) % colors.length
+    return colors[index]
+  }
+
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
       case 'agendamentos':
@@ -86,7 +107,30 @@ export default function ModulosServicosPage() {
       case 'tecnicos':
         return [
           { accessorKey: 'id', header: 'ID' },
-          { accessorKey: 'tecnico', header: 'Técnico' },
+          {
+            accessorKey: 'tecnico',
+            header: 'Técnico',
+            cell: ({ row }) => {
+              const nome = row.original['tecnico'] || 'Sem nome'
+              const subtitulo = row.original['cargo'] || 'Sem cargo'
+              const colors = getColorFromName(String(nome))
+
+              return (
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center mr-3"
+                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: colors.bg }}>
+                    <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
+                      {String(nome)?.charAt(0)?.toUpperCase() || '?'}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
+                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(subtitulo)}</div>
+                  </div>
+                </div>
+              )
+            }
+          },
           { accessorKey: 'cargo', header: 'Cargo' },
           { accessorKey: 'especialidade', header: 'Especialidade' },
           { accessorKey: 'custo_hora', header: 'Custo/Hora (R$)', cell: ({ row }) => formatBRL(row.original['custo_hora']) },
@@ -100,7 +144,30 @@ export default function ModulosServicosPage() {
       case 'clientes':
         return [
           { accessorKey: 'id', header: 'ID' },
-          { accessorKey: 'cliente', header: 'Cliente' },
+          {
+            accessorKey: 'cliente',
+            header: 'Cliente',
+            cell: ({ row }) => {
+              const nome = row.original['cliente'] || 'Sem nome'
+              const subtitulo = row.original['segmento'] || 'Sem segmento'
+              const colors = getColorFromName(String(nome))
+
+              return (
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center mr-3"
+                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: colors.bg }}>
+                    <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
+                      {String(nome)?.charAt(0)?.toUpperCase() || '?'}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
+                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(subtitulo)}</div>
+                  </div>
+                </div>
+              )
+            }
+          },
           { accessorKey: 'segmento', header: 'Segmento' },
           { accessorKey: 'telefone', header: 'Telefone' },
           { accessorKey: 'email', header: 'Email' },
@@ -126,8 +193,54 @@ export default function ModulosServicosPage() {
         return [
           { accessorKey: 'id', header: 'ID' },
           { accessorKey: 'numero_os', header: 'Nº OS' },
-          { accessorKey: 'cliente', header: 'Cliente' },
-          { accessorKey: 'tecnico_responsavel', header: 'Técnico Responsável' },
+          {
+            accessorKey: 'cliente',
+            header: 'Cliente',
+            cell: ({ row }) => {
+              const nome = row.original['cliente'] || 'Sem nome'
+              const subtitulo = row.original['segmento'] || 'Sem segmento'
+              const colors = getColorFromName(String(nome))
+
+              return (
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center mr-3"
+                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: colors.bg }}>
+                    <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
+                      {String(nome)?.charAt(0)?.toUpperCase() || '?'}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
+                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(subtitulo)}</div>
+                  </div>
+                </div>
+              )
+            }
+          },
+          {
+            accessorKey: 'tecnico_responsavel',
+            header: 'Técnico Responsável',
+            cell: ({ row }) => {
+              const nome = row.original['tecnico_responsavel'] || 'Sem nome'
+              const subtitulo = row.original['cargo_tecnico'] || 'Sem cargo'
+              const colors = getColorFromName(String(nome))
+
+              return (
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center mr-3"
+                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: colors.bg }}>
+                    <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
+                      {String(nome)?.charAt(0)?.toUpperCase() || '?'}
+                    </div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
+                    <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(subtitulo)}</div>
+                  </div>
+                </div>
+              )
+            }
+          },
           { accessorKey: 'status', header: 'Status' },
           { accessorKey: 'prioridade', header: 'Prioridade' },
           { accessorKey: 'descricao_problema', header: 'Descrição do Problema' },
