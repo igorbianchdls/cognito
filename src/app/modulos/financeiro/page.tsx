@@ -279,23 +279,6 @@ export default function ModulosFinanceiroPage() {
   const [data, setData] = useState<Row[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
-  // API da tabela e estado de paginação para controlar via Toolbar
-  const [tableApi, setTableApi] = useState<{
-    previousPage: () => void
-    nextPage: () => void
-    gotoPage: (n: number) => void
-    getPageIndex: () => number
-    getPageCount: () => number
-    getPageSize: () => number
-    getTotalRows: () => number
-    setGlobalFilter?: (value: string) => void
-  } | null>(null)
-  const [pagination, setPagination] = useState<{ pageIndex: number; pageSize: number; totalRows: number; pageCount: number }>({
-    pageIndex: 0,
-    pageSize: 10,
-    totalRows: 0,
-    pageCount: 0,
-  })
 
   useEffect(() => {
     const controller = new AbortController()
@@ -399,11 +382,9 @@ export default function ModulosFinanceiroPage() {
           {/* Toolbar direita (paginador + botão) */}
           <div className="px-4 md:px-6" style={{ marginBottom: 8 }}>
             <DataToolbar
-              from={pagination.totalRows ? pagination.pageIndex * pagination.pageSize + 1 : 0}
-              to={Math.min((pagination.pageIndex + 1) * pagination.pageSize, pagination.totalRows)}
-              total={pagination.totalRows}
-              onPrev={() => tableApi?.previousPage()}
-              onNext={() => tableApi?.nextPage()}
+              from={data.length === 0 ? 0 : 1}
+              to={Math.min(tabelaUI.pageSize, data.length)}
+              total={data.length}
               dateRange={dateRange}
               onDateRangeChange={setDateRange}
               fontFamily={fontVar(toolbarUI.fontFamily)}
@@ -436,7 +417,7 @@ export default function ModulosFinanceiroPage() {
                   data={data}
                   enableSearch={tabelaUI.enableSearch}
                   showColumnToggle={tabelaUI.enableColumnToggle}
-                  showPagination={false}
+                  showPagination={tabelaUI.showPagination}
                   pageSize={tabelaUI.pageSize}
                   headerBackground={tabelaUI.headerBg}
                   headerTextColor={tabelaUI.headerText}
@@ -458,8 +439,6 @@ export default function ModulosFinanceiroPage() {
                   selectionMode={tabelaUI.selectionMode}
                   defaultSortColumn={tabelaUI.defaultSortColumn}
                   defaultSortDirection={tabelaUI.defaultSortDirection}
-                  onTableReady={(api) => setTableApi(api)}
-                  onPaginationChange={(info) => setPagination(info)}
                 />
               )}
             </div>
