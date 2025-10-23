@@ -31,6 +31,16 @@ export function NavModulos() {
         </SidebarMenuItem>
         <SidebarMenuItem>
           <SidebarMenuButton
+            tooltip="Tráfego Pago"
+            onClick={() => router.push("/modulos/trafego-pago")}
+            isActive={pathname.startsWith("/modulos/trafego-pago")}
+          >
+            <Megaphone />
+            <span>Tráfego Pago</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuButton
             tooltip="Vendas"
             onClick={() => router.push("/modulos/vendas")}
             isActive={pathname.startsWith("/modulos/vendas")}
