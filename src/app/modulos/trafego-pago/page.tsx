@@ -31,7 +31,10 @@ export default function ModulosTrafegoPagoPage() {
     })
     financeiroUiActions.setTabs({
       options: [
+        { value: 'contas-ads', label: 'Contas de Anúncio' },
         { value: 'campanhas', label: 'Campanhas' },
+        { value: 'grupos-anuncio', label: 'Grupos de Anúncio' },
+        { value: 'anuncios', label: 'Anúncios' },
       ],
       selected: 'campanhas',
     })
@@ -67,16 +70,68 @@ export default function ModulosTrafegoPagoPage() {
   }
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
-    return [
-      { accessorKey: 'conta', header: 'Conta Ads' },
-      { accessorKey: 'plataforma', header: 'Plataforma' },
-      { accessorKey: 'nome', header: 'Campanha' },
-      { accessorKey: 'objetivo', header: 'Objetivo' },
-      { accessorKey: 'status', header: 'Status' },
-      { accessorKey: 'inicio', header: 'Início', cell: ({ row }) => formatDate(row.original['inicio']) },
-      { accessorKey: 'fim', header: 'Fim', cell: ({ row }) => formatDate(row.original['fim']) },
-      { accessorKey: 'orcamento_total', header: 'Orçamento', cell: ({ row }) => formatBRL(row.original['orcamento_total']) },
-    ]
+    switch (tabs.selected) {
+      case 'contas-ads':
+        return [
+          { accessorKey: 'conta', header: 'Conta de Anúncios' },
+          { accessorKey: 'plataforma', header: 'Plataforma' },
+          { accessorKey: 'conectado_em', header: 'Conectado em', cell: ({ row }) => formatDate(row.original['conectado_em']) },
+          { accessorKey: 'gasto_total', header: 'Gasto Total (R$)', cell: ({ row }) => formatBRL(row.original['gasto_total']) },
+          { accessorKey: 'impressoes', header: 'Impressões' },
+          { accessorKey: 'cliques', header: 'Cliques' },
+          { accessorKey: 'ctr_medio', header: 'CTR Médio (%)' },
+          { accessorKey: 'cpc_medio', header: 'CPC Médio (R$)' },
+          { accessorKey: 'roas_medio', header: 'ROAS Médio' },
+        ]
+      case 'grupos-anuncio':
+        return [
+          { accessorKey: 'grupo', header: 'Grupo de Anúncios' },
+          { accessorKey: 'campanha', header: 'Campanha' },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'orcamento_diario', header: 'Orçamento Diário (R$)', cell: ({ row }) => formatBRL(row.original['orcamento_diario']) },
+          { accessorKey: 'gasto_total', header: 'Gasto Total (R$)', cell: ({ row }) => formatBRL(row.original['gasto_total']) },
+          { accessorKey: 'impressoes', header: 'Impressões' },
+          { accessorKey: 'cliques', header: 'Cliques' },
+          { accessorKey: 'ctr', header: 'CTR (%)' },
+          { accessorKey: 'cpc', header: 'CPC (R$)' },
+          { accessorKey: 'roas', header: 'ROAS' },
+        ]
+      case 'anuncios':
+        return [
+          { accessorKey: 'titulo', header: 'Título do Anúncio' },
+          { accessorKey: 'plataforma', header: 'Plataforma' },
+          { accessorKey: 'campanha', header: 'Campanha' },
+          { accessorKey: 'grupo', header: 'Grupo de Anúncios' },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'publicado_em', header: 'Publicado em', cell: ({ row }) => formatDate(row.original['publicado_em']) },
+          { accessorKey: 'gasto', header: 'Gasto (R$)', cell: ({ row }) => formatBRL(row.original['gasto']) },
+          { accessorKey: 'impressoes', header: 'Impressões' },
+          { accessorKey: 'cliques', header: 'Cliques' },
+          { accessorKey: 'ctr', header: 'CTR (%)' },
+          { accessorKey: 'cpc', header: 'CPC (R$)' },
+          { accessorKey: 'conversoes', header: 'Conversões' },
+          { accessorKey: 'cpa', header: 'CPA (R$)' },
+          { accessorKey: 'roas', header: 'ROAS' },
+        ]
+      case 'campanhas':
+      default:
+        return [
+          { accessorKey: 'campanha', header: 'Campanha' },
+          { accessorKey: 'objetivo', header: 'Objetivo' },
+          { accessorKey: 'status', header: 'Status' },
+          { accessorKey: 'conta', header: 'Conta de Anúncios' },
+          { accessorKey: 'orcamento_total', header: 'Orçamento Total (R$)', cell: ({ row }) => formatBRL(row.original['orcamento_total']) },
+          { accessorKey: 'inicio', header: 'Início', cell: ({ row }) => formatDate(row.original['inicio']) },
+          { accessorKey: 'fim', header: 'Fim', cell: ({ row }) => formatDate(row.original['fim']) },
+          { accessorKey: 'gasto_total', header: 'Gasto Total (R$)', cell: ({ row }) => formatBRL(row.original['gasto_total']) },
+          { accessorKey: 'impressoes', header: 'Impressões' },
+          { accessorKey: 'cliques', header: 'Cliques' },
+          { accessorKey: 'conversoes', header: 'Conversões' },
+          { accessorKey: 'ctr', header: 'CTR (%)' },
+          { accessorKey: 'cpc', header: 'CPC (R$)' },
+          { accessorKey: 'roas', header: 'ROAS' },
+        ]
+    }
   }, [tabs.selected])
 
   useEffect(() => {
@@ -229,4 +284,3 @@ export default function ModulosTrafegoPagoPage() {
     </SidebarProvider>
   )
 }
-

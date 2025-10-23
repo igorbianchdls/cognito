@@ -1,12 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search } from 'lucide-react';
-import MetaIcon from '@/components/icons/MetaIcon';
-import AmazonIcon from '@/components/icons/AmazonIcon';
-import GoogleAdsIcon from '@/components/icons/GoogleAdsIcon';
-import GoogleAnalyticsIcon from '@/components/icons/GoogleAnalyticsIcon';
-import ShopifyIcon from '@/components/icons/ShopifyIcon';
-import ShopeeIcon from '@/components/icons/ShopeeIcon';
-import ContaAzulIcon from '@/components/icons/ContaAzulIcon';
 
 interface AgentDropdownProps {
   currentAgent: string;
@@ -14,38 +7,23 @@ interface AgentDropdownProps {
   onClose: () => void;
 }
 
-// Mapeamento de ícones das integrações
-const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  'metaAnalyst': MetaIcon,
-  'metaCampaignAnalyst': MetaIcon,
-  'amazonAdsAnalyst': AmazonIcon,
-  'googleAnalyticsAnalyst': GoogleAnalyticsIcon,
-  'googleCampaignAnalyst': GoogleAdsIcon,
-  'shopifyAnalyst': ShopifyIcon,
-  'shopeeAnalyst': ShopeeIcon,
-  'contaAzulAnalyst': ContaAzulIcon,
-};
-
 // Lista de agentes disponíveis com suas informações visuais
 const agents = [
-  { id: 'ecommerceSalesAgentV2', name: 'Agente de Vendas E-commerce', icon: 'E', color: 'text-emerald-600' },
-  { id: 'metaAnalyst', name: 'MetaAnalyst', icon: 'M', color: 'text-purple-600' },
-  { id: 'amazonAdsAnalyst', name: 'AmazonAdsAnalyst', icon: 'A', color: 'text-orange-600' },
-  { id: 'googleAnalyticsAnalyst', name: 'GoogleAnalyticsAnalyst', icon: 'G', color: 'text-blue-500' },
-  { id: 'shopifyAnalyst', name: 'ShopifyAnalyst', icon: 'S', color: 'text-green-500' },
-  { id: 'contaAzulAnalyst', name: 'ContaAzulAnalyst', icon: 'C', color: 'text-indigo-600' },
-  { id: 'shopeeAnalyst', name: 'ShopeeAnalyst', icon: 'H', color: 'text-red-600' },
-  { id: 'keywordAnalyst', name: 'KeywordAnalyst', icon: 'K', color: 'text-yellow-600' },
-  { id: 'googleCampaignAnalyst', name: 'GoogleCampaignAnalyst', icon: 'Y', color: 'text-blue-700' },
-  { id: 'metaCampaignAnalyst', name: 'MetaCampaignAnalyst', icon: 'B', color: 'text-blue-800' },
-  { id: 'salesAgent', name: 'SalesAgent', icon: 'V', color: 'text-indigo-600' },
-  { id: 'contasAReceberAgent', name: 'Contas a Receber', icon: 'C', color: 'text-teal-600' },
-  { id: 'receiptsAgent', name: 'Receipts Agent', icon: 'R', color: 'text-orange-600' },
-  { id: 'nfeAgent', name: 'Invoice Agent', icon: 'N', color: 'text-emerald-600' },
-  { id: 'inventoryAgent', name: 'Inventory Agent', icon: 'I', color: 'text-blue-600' },
-  { id: 'funcionariosAgent', name: 'Funcionários Agent', icon: 'F', color: 'text-purple-600' },
-  { id: 'paidTrafficAgent', name: 'Paid Traffic', icon: 'P', color: 'text-indigo-600' },
-  { id: 'organicMarketingAgent', name: 'Organic Marketing', icon: 'O', color: 'text-pink-600' },
+  { id: 'analistaDados', name: 'Analista de Dados', icon: 'D', color: 'text-blue-600' },
+  { id: 'claudeAgent', name: 'Claude Simple', icon: 'C', color: 'text-purple-600' },
+  { id: 'ecommerceSalesAgentV2', name: 'E-commerce Sales', icon: 'E', color: 'text-emerald-600' },
+  { id: 'salesAgent', name: 'Sales Agent', icon: 'S', color: 'text-indigo-600' },
+  { id: 'contasAReceberAgent', name: 'Contas a Receber', icon: 'R', color: 'text-teal-600' },
+  { id: 'receiptsAgent', name: 'Receipts', icon: 'R', color: 'text-orange-600' },
+  { id: 'nfeAgent', name: 'Notas Fiscais', icon: 'N', color: 'text-emerald-600' },
+  { id: 'inventoryAgent', name: 'Inventory', icon: 'I', color: 'text-blue-600' },
+  { id: 'logisticsAgent', name: 'Logistics', icon: 'L', color: 'text-cyan-600' },
+  { id: 'funcionariosAgent', name: 'Funcionários', icon: 'F', color: 'text-purple-600' },
+  { id: 'paidTrafficAgent', name: 'Tráfego Pago', icon: 'P', color: 'text-indigo-600' },
+  { id: 'organicMarketingAgent', name: 'Marketing Orgânico', icon: 'O', color: 'text-pink-600' },
+  { id: 'webAnalyticsAgent', name: 'Web Analytics', icon: 'W', color: 'text-blue-500' },
+  { id: 'gestorDeComprasAgent', name: 'Gestor de Compras', icon: 'C', color: 'text-amber-600' },
+  { id: 'gestorDeProjetosAgent', name: 'Gestor de Projetos', icon: 'P', color: 'text-violet-600' },
 ];
 
 // Dropdown elegante que aparece quando o usuário digita "/" no input
@@ -132,13 +110,9 @@ export default function AgentDropdown({ currentAgent, onAgentSelect, onClose }: 
                   : 'text-gray-700 hover:bg-gray-50/50'
               }`}
             >
-              {/* Avatar circular com ícone da integração ou inicial do agente */}
+              {/* Avatar circular com inicial do agente */}
               <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-sm font-medium">
-                {iconMap[agent.id] ? (
-                  React.createElement(iconMap[agent.id], { className: "w-5 h-5" })
-                ) : (
-                  <span className={agent.color}>{agent.icon}</span>
-                )}
+                <span className={agent.color}>{agent.icon}</span>
               </div>
               <span>{agent.name}</span>
             </div>

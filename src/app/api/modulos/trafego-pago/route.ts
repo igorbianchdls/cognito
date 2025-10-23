@@ -6,16 +6,64 @@ export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
 const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
-  campanhas: {
-    id: 'c.id',
+  'contas-ads': {
+    id: 'ca.id',
     conta: 'ca.nome_conta',
     plataforma: 'ca.plataforma',
-    nome: 'c.nome',
+    conectado_em: 'ca.conectado_em',
+    gasto_total: 'gasto_total',
+    impressoes: 'impressoes',
+    cliques: 'cliques',
+    ctr_medio: 'ctr_medio',
+    cpc_medio: 'cpc_medio',
+    roas_medio: 'roas_medio',
+  },
+  campanhas: {
+    id: 'c.id',
+    campanha: 'c.nome',
     objetivo: 'c.objetivo',
-    orcamento_total: 'c.orcamento_total',
     status: 'c.status',
+    conta: 'ca.nome_conta',
+    orcamento_total: 'c.orcamento_total',
     inicio: 'c.inicio',
     fim: 'c.fim',
+    gasto_total: 'gasto_total',
+    impressoes: 'impressoes',
+    cliques: 'cliques',
+    conversoes: 'conversoes',
+    ctr: 'ctr',
+    cpc: 'cpc',
+    roas: 'roas',
+  },
+  'grupos-anuncio': {
+    id: 'g.id',
+    grupo: 'g.nome',
+    campanha: 'c.nome',
+    status: 'g.status',
+    orcamento_diario: 'g.orcamento_diario',
+    gasto_total: 'gasto_total',
+    impressoes: 'impressoes',
+    cliques: 'cliques',
+    ctr: 'ctr',
+    cpc: 'cpc',
+    roas: 'roas',
+  },
+  anuncios: {
+    id: 'a.id',
+    titulo: 'a.titulo',
+    plataforma: 'a.plataforma',
+    campanha: 'c.nome',
+    grupo: 'g.nome',
+    status: 'a.status',
+    publicado_em: 'a.publicado_em',
+    gasto: 'gasto',
+    impressoes: 'impressoes',
+    cliques: 'cliques',
+    ctr: 'ctr',
+    cpc: 'cpc',
+    conversoes: 'conversoes',
+    cpa: 'cpa',
+    roas: 'roas',
   },
 };
 
@@ -33,6 +81,8 @@ export async function GET(req: NextRequest) {
 
     const plataforma = searchParams.get('plataforma') || undefined;
     const conta_ads_id = searchParams.get('conta_ads_id') || undefined;
+    const campanha_id = searchParams.get('campanha_id') || undefined;
+    const grupo_id = searchParams.get('grupo_id') || undefined;
     const status = searchParams.get('status') || undefined;
     const objetivo = searchParams.get('objetivo') || undefined;
     const valor_min = parseNumber(searchParams.get('valor_min'));
@@ -60,28 +110,115 @@ export async function GET(req: NextRequest) {
     let selectSql = '';
     let baseSql = '';
     let whereDateCol = '';
+    let groupBy = '';
 
-    if (view === 'campanhas') {
-      selectSql = `SELECT c.id AS id,
+    if (view === 'contas-ads') {
+      selectSql = `SELECT ca.id AS id,
                           ca.nome_conta AS conta,
                           ca.plataforma AS plataforma,
-                          c.nome AS nome,
+                          ca.conectado_em AS conectado_em,
+                          ROUND(COALESCE(SUM(m.gasto), 0)::numeric, 2) AS gasto_total,
+                          COALESCE(SUM(m.impressoes), 0) AS impressoes,
+                          COALESCE(SUM(m.cliques), 0) AS cliques,
+                          ROUND(COALESCE(AVG(m.ctr), 0)::numeric, 2) AS ctr_medio,
+                          ROUND(COALESCE(AVG(m.cpc), 0)::numeric, 2) AS cpc_medio,
+                          ROUND(COALESCE(AVG(m.roas), 0)::numeric, 2) AS roas_medio`;
+      baseSql = `FROM marketing.contas_ads ca
+                 LEFT JOIN marketing.metricas_anuncios m ON m.conta_ads_id = ca.id`;
+      whereDateCol = 'm.data';
+      groupBy = 'GROUP BY ca.id, ca.nome_conta, ca.plataforma, ca.conectado_em';
+      if (plataforma) push('LOWER(ca.plataforma) =', plataforma.toLowerCase());
+      if (conta_ads_id) push('ca.id =', conta_ads_id);
+      if (q) {
+        conditions.push(`(ca.nome_conta ILIKE '%' || $${i} || '%' OR ca.plataforma ILIKE '%' || $${i} || '%')`);
+        params.push(q);
+        i += 1;
+      }
+    } else if (view === 'campanhas') {
+      selectSql = `SELECT c.id AS id,
+                          c.nome AS campanha,
                           c.objetivo AS objetivo,
-                          c.orcamento_total AS orcamento_total,
                           c.status AS status,
+                          ca.nome_conta AS conta,
+                          c.orcamento_total AS orcamento_total,
                           c.inicio AS inicio,
-                          c.fim AS fim`;
-      baseSql = `FROM trafego_pago.campanhas c
-                 LEFT JOIN trafego_pago.contas_ads ca ON c.conta_ads_id = ca.id`;
-      whereDateCol = 'c.inicio';
+                          c.fim AS fim,
+                          ROUND(COALESCE(SUM(m.gasto), 0)::numeric, 2) AS gasto_total,
+                          COALESCE(SUM(m.impressao), 0) AS impressoes,
+                          COALESCE(SUM(m.cliques), 0) AS cliques,
+                          COALESCE(SUM(m.conversao), 0) AS conversoes,
+                          ROUND(COALESCE(AVG(m.ctr), 0)::numeric, 2) AS ctr,
+                          ROUND(COALESCE(AVG(m.cpc), 0)::numeric, 2) AS cpc,
+                          ROUND(COALESCE(AVG(m.roas), 0)::numeric, 2) AS roas`;
+      baseSql = `FROM marketing.campanhas c
+                 LEFT JOIN marketing.contas_ads ca ON c.conta_ads_id = ca.id
+                 LEFT JOIN marketing.grupos_de_anuncios g ON g.campanha_id = c.id
+                 LEFT JOIN marketing.anuncios_publicados a ON a.grupo_id = g.id
+                 LEFT JOIN marketing.metricas_anuncios m ON m.anuncio_publicado_id = a.id`;
+      whereDateCol = 'm.data';
+      groupBy = 'GROUP BY c.id, c.nome, c.objetivo, c.status, c.orcamento_total, c.inicio, c.fim, ca.nome_conta';
       if (plataforma) push('LOWER(ca.plataforma) =', plataforma.toLowerCase());
       if (conta_ads_id) push('c.conta_ads_id =', conta_ads_id);
       if (status) push('LOWER(c.status) =', status.toLowerCase());
       if (objetivo) push('LOWER(c.objetivo) =', objetivo.toLowerCase());
-      if (valor_min !== undefined) push('c.orcamento_total >=', valor_min);
-      if (valor_max !== undefined) push('c.orcamento_total <=', valor_max);
       if (q) {
-        conditions.push(`(c.nome ILIKE '%' || $${i} || '%' OR COALESCE(c.objetivo,'') ILIKE '%' || $${i} || '%')`);
+        conditions.push(`(c.nome ILIKE '%' || $${i} || '%' OR ca.nome_conta ILIKE '%' || $${i} || '%')`);
+        params.push(q);
+        i += 1;
+      }
+    } else if (view === 'grupos-anuncio') {
+      selectSql = `SELECT g.id AS id,
+                          g.nome AS grupo,
+                          c.nome AS campanha,
+                          g.status AS status,
+                          g.orcamento_diario AS orcamento_diario,
+                          ROUND(COALESCE(SUM(m.gasto), 0)::numeric, 2) AS gasto_total,
+                          COALESCE(SUM(m.impressao), 0) AS impressoes,
+                          COALESCE(SUM(m.cliques), 0) AS cliques,
+                          ROUND(COALESCE(AVG(m.ctr), 0)::numeric, 2) AS ctr,
+                          ROUND(COALESCE(AVG(m.cpc), 0)::numeric, 2) AS cpc,
+                          ROUND(COALESCE(AVG(m.roas), 0)::numeric, 2) AS roas`;
+      baseSql = `FROM marketing.grupos_de_anuncios g
+                 LEFT JOIN marketing.campanhas c ON g.campanha_id = c.id
+                 LEFT JOIN marketing.anuncios_publicados a ON a.grupo_id = g.id
+                 LEFT JOIN marketing.metricas_anuncios m ON m.anuncio_publicado_id = a.id`;
+      whereDateCol = 'm.data';
+      groupBy = 'GROUP BY g.id, g.nome, c.nome, g.status, g.orcamento_diario';
+      if (campanha_id) push('g.campanha_id =', campanha_id);
+      if (status) push('LOWER(g.status) =', status.toLowerCase());
+      if (q) {
+        conditions.push(`(g.nome ILIKE '%' || $${i} || '%' OR c.nome ILIKE '%' || $${i} || '%')`);
+        params.push(q);
+        i += 1;
+      }
+    } else if (view === 'anuncios') {
+      selectSql = `SELECT a.id AS id,
+                          a.titulo AS titulo,
+                          a.plataforma AS plataforma,
+                          c.nome AS campanha,
+                          g.nome AS grupo,
+                          a.status AS status,
+                          a.publicado_em AS publicado_em,
+                          ROUND(COALESCE(SUM(m.gasto), 0)::numeric, 2) AS gasto,
+                          COALESCE(SUM(m.impressao), 0) AS impressoes,
+                          COALESCE(SUM(m.cliques), 0) AS cliques,
+                          ROUND(COALESCE(AVG(m.ctr), 0)::numeric, 2) AS ctr,
+                          ROUND(COALESCE(AVG(m.cpc), 0)::numeric, 2) AS cpc,
+                          COALESCE(SUM(m.conversao), 0) AS conversoes,
+                          ROUND(COALESCE(AVG(m.cpa), 0)::numeric, 2) AS cpa,
+                          ROUND(COALESCE(AVG(m.roas), 0)::numeric, 2) AS roas`;
+      baseSql = `FROM marketing.anuncios_publicados a
+                 LEFT JOIN marketing.grupos_de_anuncios g ON a.grupo_id = g.id
+                 LEFT JOIN marketing.campanhas c ON g.campanha_id = c.id
+                 LEFT JOIN marketing.metricas_anuncios m ON m.anuncio_publicado_id = a.id`;
+      whereDateCol = 'm.data';
+      groupBy = 'GROUP BY a.id, a.titulo, a.plataforma, c.nome, g.nome, a.status, a.publicado_em';
+      if (plataforma) push('LOWER(a.plataforma) =', plataforma.toLowerCase());
+      if (grupo_id) push('a.grupo_id =', grupo_id);
+      if (campanha_id) push('g.campanha_id =', campanha_id);
+      if (status) push('LOWER(a.status) =', status.toLowerCase());
+      if (q) {
+        conditions.push(`(a.titulo ILIKE '%' || $${i} || '%' OR c.nome ILIKE '%' || $${i} || '%' OR g.nome ILIKE '%' || $${i} || '%')`);
         params.push(q);
         i += 1;
       }
@@ -95,21 +232,32 @@ export async function GET(req: NextRequest) {
     const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
     let orderClause = '';
     if (orderBy) orderClause = `ORDER BY ${orderBy} ${orderDir}`;
-    else orderClause = `ORDER BY ${whereDateCol} DESC`;
+    else {
+      if (view === 'contas-ads') orderClause = 'ORDER BY gasto_total DESC NULLS LAST';
+      else if (view === 'campanhas') orderClause = 'ORDER BY gasto_total DESC NULLS LAST';
+      else if (view === 'grupos-anuncio') orderClause = 'ORDER BY gasto_total DESC NULLS LAST';
+      else if (view === 'anuncios') orderClause = 'ORDER BY gasto DESC NULLS LAST';
+    }
 
-    const limitOffset = `LIMIT $${i}::int OFFSET $${i + 1}::int`;
-    const paramsWithPage = [...params, pageSize, offset];
+    const paginate = !(groupBy && groupBy.length);
+    const limitOffset = paginate ? `LIMIT $${i}::int OFFSET $${i + 1}::int` : '';
+    const paramsWithPage = paginate ? [...params, pageSize, offset] : params;
 
     const listSql = `${selectSql}
                      ${baseSql}
                      ${whereClause}
+                     ${groupBy}
                      ${orderClause}
                      ${limitOffset}`.replace(/\s+$/m, '').trim();
 
     const rows = await runQuery<Record<string, unknown>>(listSql, paramsWithPage);
-    const totalSql = `SELECT COUNT(*)::int AS total ${baseSql} ${whereClause}`;
-    const totalRows = await runQuery<{ total: number }>(totalSql, params);
-    const total = totalRows[0]?.total ?? 0;
+
+    let total = rows.length;
+    if (!groupBy) {
+      const totalSql = `SELECT COUNT(*)::int AS total ${baseSql} ${whereClause}`;
+      const totalRows = await runQuery<{ total: number }>(totalSql, params);
+      total = totalRows[0]?.total ?? 0;
+    }
 
     return Response.json({
       success: true,
@@ -129,4 +277,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-
