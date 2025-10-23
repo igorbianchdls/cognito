@@ -101,26 +101,36 @@ export const createContaAPagar = tool({
   }
 })
 
-export const automationSummary = tool({
-  description: 'Exibe resumo de automação executada (UI)',
-  inputSchema: z.object({
-    ocr: z.object({
-      fornecedor_nome: z.string().optional(),
-      fornecedor_cnpj: z.string().optional(),
-      numero_documento: z.string().optional(),
-      data_emissao: z.string().optional(),
-      data_vencimento: z.string().optional(),
-      valor_total: z.number().optional(),
-    }).optional(),
-    fornecedor: z.object({ found: z.boolean(), id: z.string().optional(), nome: z.string().optional(), cnpj: z.string().optional() }).optional(),
-    contaAPagar: z.object({ id: z.string().optional(), descricao: z.string().optional(), data_vencimento: z.string().optional(), valor: z.number().optional() }).optional(),
-    warnings: z.array(z.string()).optional()
-  }),
-  execute: async (payload) => {
-    // Apenas devolve o payload para renderização na UI
-    return { success: true, ...payload }
-  }
+export const automationSummarySchema = z.object({
+  ocr: z.object({
+    fornecedor_nome: z.string().optional(),
+    fornecedor_cnpj: z.string().optional(),
+    numero_documento: z.string().optional(),
+    data_emissao: z.string().optional(),
+    data_vencimento: z.string().optional(),
+    valor_total: z.number().optional(),
+  }).optional(),
+  fornecedor: z.object({
+    found: z.boolean(),
+    id: z.string().optional(),
+    nome: z.string().optional(),
+    cnpj: z.string().optional(),
+  }).optional(),
+  contaAPagar: z.object({
+    id: z.string().optional(),
+    descricao: z.string().optional(),
+    data_vencimento: z.string().optional(),
+    valor: z.number().optional(),
+  }).optional(),
+  warnings: z.array(z.string()).optional(),
 })
 
-export type AutomationSummaryOutput = z.infer<typeof automationSummary.__internal.inputSchema>
+export const automationSummary = tool({
+  description: 'Exibe resumo de automação executada (UI)',
+  inputSchema: automationSummarySchema,
+  execute: async (payload) => {
+    return { success: true, ...payload }
+  },
+})
 
+export type AutomationSummaryOutput = z.infer<typeof automationSummarySchema>
