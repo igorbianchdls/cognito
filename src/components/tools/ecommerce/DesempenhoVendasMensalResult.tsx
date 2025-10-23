@@ -28,6 +28,7 @@ const formatCurrency = (value: number) =>
 export default function DesempenhoVendasMensalResult({ success, message, rows, data, sql_query }: Props) {
   const initialRows = rows ?? data ?? [];
   const [tableRows, setTableRows] = useState<DesempenhoVendasMensalRow[]>(initialRows);
+  const [sqlQuery, setSqlQuery] = useState<string | undefined>(sql_query);
 
   useEffect(() => {
     setTableRows(initialRows);
@@ -54,7 +55,7 @@ export default function DesempenhoVendasMensalResult({ success, message, rows, d
       success={success}
       count={tableRows.length}
       exportFileName="desempenho_vendas_mensal"
-      sqlQuery={sql_query}
+      sqlQuery={sqlQuery}
       enableAutoChart={true}
       chartOptions={{
         xKey: 'mes',
@@ -68,22 +69,26 @@ export default function DesempenhoVendasMensalResult({ success, message, rows, d
         initialChartType: 'bar',
         title: 'Desempenho de Vendas Mensal (O Pulso do Negócio)',
         xLegend: 'Mês',
-        showDateFilter: true,
-        onDateRangeChange: async ({ from, to }) => {
-          try {
-            const params = new URLSearchParams();
+      }}
+      headerDateFilter
+      onHeaderDateRangeChange={async ({ from, to, preset }) => {
+        try {
+          const params = new URLSearchParams();
+          if (preset !== 'all') {
             if (from) params.set('data_de', from);
             if (to) params.set('data_ate', to);
-            const res = await fetch(`/api/tools/ecommerce/desempenho-mensal?${params.toString()}`, { cache: 'no-store' });
-            if (!res.ok) return;
-            const json = await res.json();
-            if (json?.success && Array.isArray(json.rows)) {
-              setTableRows(json.rows as DesempenhoVendasMensalRow[]);
-            }
-          } catch (e) {
-            console.error('Erro ao buscar Desempenho Mensal por período:', e);
           }
-        },
+          const qs = params.toString();
+          const res = await fetch(`/api/tools/ecommerce/desempenho-mensal${qs ? `?${qs}` : ''}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          if (json?.success && Array.isArray(json.rows)) {
+            setTableRows(json.rows as DesempenhoVendasMensalRow[]);
+            setSqlQuery(json.sql_query);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar Desempenho Mensal por período:', e);
+        }
       }}
     />
   );

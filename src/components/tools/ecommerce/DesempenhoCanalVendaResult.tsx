@@ -28,7 +28,8 @@ const currency = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', c
 export default function DesempenhoCanalVendaResult({ success, message, rows, data, sql_query }: Props) {
   const initialRows = rows ?? data ?? [];
   const [tableRows, setTableRows] = useState<DesempenhoCanalVendaRow[]>(initialRows);
-  useEffect(() => { setTableRows(initialRows); }, [rows, data]);
+  const [sqlQuery, setSqlQuery] = useState<string | undefined>(sql_query);
+  useEffect(() => { setTableRows(initialRows); setSqlQuery(sql_query); }, [rows, data, sql_query]);
 
   const columns: ColumnDef<DesempenhoCanalVendaRow>[] = useMemo(() => [
     { accessorKey: 'canal', header: 'Canal' },
@@ -54,7 +55,7 @@ export default function DesempenhoCanalVendaResult({ success, message, rows, dat
       success={success}
       count={tableRows.length}
       exportFileName="desempenho_canal_venda"
-      sqlQuery={sql_query}
+      sqlQuery={sqlQuery}
       enableAutoChart={true}
       chartOptions={{
         xKey: 'canal',
@@ -67,19 +68,25 @@ export default function DesempenhoCanalVendaResult({ success, message, rows, dat
         initialChartType: 'bar',
         title: 'Desempenho por Canal de Venda',
         xLegend: 'Canal',
-        showDateFilter: true,
-        onDateRangeChange: async ({ from, to }) => {
-          try {
-            const params = new URLSearchParams();
+      }}
+      headerDateFilter
+      onHeaderDateRangeChange={async ({ from, to, preset }) => {
+        try {
+          const params = new URLSearchParams();
+          if (preset !== 'all') {
             if (from) params.set('data_de', from);
             if (to) params.set('data_ate', to);
-            const res = await fetch(`/api/tools/ecommerce/desempenho-canal?${params.toString()}`, { cache: 'no-store' });
-            if (!res.ok) return;
-            const json = await res.json();
-            if (json?.success && Array.isArray(json.rows)) setTableRows(json.rows as DesempenhoCanalVendaRow[]);
-          } catch (e) {
-            console.error('Erro ao buscar Desempenho por Canal por período:', e);
           }
+          const qs = params.toString();
+          const res = await fetch(`/api/tools/ecommerce/desempenho-canal${qs ? `?${qs}` : ''}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          if (json?.success && Array.isArray(json.rows)) {
+            setTableRows(json.rows as DesempenhoCanalVendaRow[]);
+            setSqlQuery(json.sql_query);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar Desempenho por Canal por período:', e);
         }
       }}
     />

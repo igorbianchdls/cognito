@@ -24,7 +24,8 @@ const currency = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', c
 export default function CestaComprasResult({ success, message, rows, data, sql_query }: Props) {
   const initialRows = rows ?? data ?? [];
   const [tableRows, setTableRows] = useState<CestaComprasRow[]>(initialRows);
-  useEffect(() => { setTableRows(initialRows); }, [rows, data]);
+  const [sqlQuery, setSqlQuery] = useState<string | undefined>(sql_query);
+  useEffect(() => { setTableRows(initialRows); setSqlQuery(sql_query); }, [rows, data, sql_query]);
 
   const columns: ColumnDef<CestaComprasRow>[] = useMemo(() => [
     { accessorKey: 'produto_A', header: 'Produto A' },
@@ -43,7 +44,7 @@ export default function CestaComprasResult({ success, message, rows, data, sql_q
       success={success}
       count={tableRows.length}
       exportFileName="cesta_compras"
-      sqlQuery={sql_query}
+      sqlQuery={sqlQuery}
       enableAutoChart={true}
       chartOptions={{
         xKey: 'par',
@@ -58,19 +59,25 @@ export default function CestaComprasResult({ success, message, rows, data, sql_q
           ...r,
           par: `${r.produto_A} × ${r.produto_B}`,
         })) as unknown as CestaComprasRow[],
-        showDateFilter: true,
-        onDateRangeChange: async ({ from, to }) => {
-          try {
-            const params = new URLSearchParams();
+      }}
+      headerDateFilter
+      onHeaderDateRangeChange={async ({ from, to, preset }) => {
+        try {
+          const params = new URLSearchParams();
+          if (preset !== 'all') {
             if (from) params.set('data_de', from);
             if (to) params.set('data_ate', to);
-            const res = await fetch(`/api/tools/ecommerce/cesta-compras?${params.toString()}`, { cache: 'no-store' });
-            if (!res.ok) return;
-            const json = await res.json();
-            if (json?.success && Array.isArray(json.rows)) setTableRows(json.rows as CestaComprasRow[]);
-          } catch (e) {
-            console.error('Erro ao buscar Cesta de Compras por período:', e);
           }
+          const qs = params.toString();
+          const res = await fetch(`/api/tools/ecommerce/cesta-compras${qs ? `?${qs}` : ''}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          if (json?.success && Array.isArray(json.rows)) {
+            setTableRows(json.rows as CestaComprasRow[]);
+            setSqlQuery(json.sql_query);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar Cesta de Compras por período:', e);
         }
       }}
     />

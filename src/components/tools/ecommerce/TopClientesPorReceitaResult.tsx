@@ -27,7 +27,8 @@ const currency = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', c
 export default function TopClientesPorReceitaResult({ success, message, rows, data, sql_query }: Props) {
   const initialRows = rows ?? data ?? [];
   const [tableRows, setTableRows] = useState<TopClienteRow[]>(initialRows);
-  useEffect(() => { setTableRows(initialRows); }, [rows, data]);
+  const [sqlQuery, setSqlQuery] = useState<string | undefined>(sql_query);
+  useEffect(() => { setTableRows(initialRows); setSqlQuery(sql_query); }, [rows, data, sql_query]);
 
   const columns: ColumnDef<TopClienteRow>[] = useMemo(() => [
     { accessorKey: 'cliente_id', header: 'Cliente ID' },
@@ -50,7 +51,7 @@ export default function TopClientesPorReceitaResult({ success, message, rows, da
       success={success}
       count={tableRows.length}
       exportFileName="top_clientes_receita"
-      sqlQuery={sql_query}
+      sqlQuery={sqlQuery}
       enableAutoChart={true}
       chartOptions={{
         xKey: 'nome_cliente',
@@ -62,20 +63,26 @@ export default function TopClientesPorReceitaResult({ success, message, rows, da
         },
         title: 'Receita por Cliente',
         xLegend: 'Cliente',
-        showDateFilter: true,
-        onDateRangeChange: async ({ from, to }) => {
-          try {
-            const params = new URLSearchParams();
+      }}
+      headerDateFilter
+      onHeaderDateRangeChange={async ({ from, to, preset }) => {
+        try {
+          const params = new URLSearchParams();
+          if (preset !== 'all') {
             if (from) params.set('data_de', from);
             if (to) params.set('data_ate', to);
-            params.set('limit', '50');
-            const res = await fetch(`/api/tools/ecommerce/top-clientes?${params.toString()}`, { cache: 'no-store' });
-            if (!res.ok) return;
-            const json = await res.json();
-            if (json?.success && Array.isArray(json.rows)) setTableRows(json.rows as TopClienteRow[]);
-          } catch (e) {
-            console.error('Erro ao buscar Top Clientes por período:', e);
           }
+          params.set('limit', '50');
+          const qs = params.toString();
+          const res = await fetch(`/api/tools/ecommerce/top-clientes${qs ? `?${qs}` : ''}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          if (json?.success && Array.isArray(json.rows)) {
+            setTableRows(json.rows as TopClienteRow[]);
+            setSqlQuery(json.sql_query);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar Top Clientes por período:', e);
         }
       }}
     />

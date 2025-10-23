@@ -26,7 +26,8 @@ const currency = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', c
 export default function VendasPorEstadoResult({ success, message, rows, data, sql_query }: Props) {
   const initialRows = rows ?? data ?? [];
   const [tableRows, setTableRows] = useState<VendasPorEstadoRow[]>(initialRows);
-  useEffect(() => { setTableRows(initialRows); }, [rows, data]);
+  const [sqlQuery, setSqlQuery] = useState<string | undefined>(sql_query);
+  useEffect(() => { setTableRows(initialRows); setSqlQuery(sql_query); }, [rows, data, sql_query]);
 
   const columns: ColumnDef<VendasPorEstadoRow>[] = useMemo(() => [
     { accessorKey: 'estado', header: 'Estado' },
@@ -48,7 +49,7 @@ export default function VendasPorEstadoResult({ success, message, rows, data, sq
       success={success}
       count={tableRows.length}
       exportFileName="vendas_por_estado"
-      sqlQuery={sql_query}
+      sqlQuery={sqlQuery}
       enableAutoChart={true}
       chartOptions={{
         xKey: 'estado',
@@ -61,19 +62,25 @@ export default function VendasPorEstadoResult({ success, message, rows, data, sq
         initialChartType: 'bar',
         title: 'Vendas por Estado',
         xLegend: 'Estado',
-        showDateFilter: true,
-        onDateRangeChange: async ({ from, to }) => {
-          try {
-            const params = new URLSearchParams();
+      }}
+      headerDateFilter
+      onHeaderDateRangeChange={async ({ from, to, preset }) => {
+        try {
+          const params = new URLSearchParams();
+          if (preset !== 'all') {
             if (from) params.set('data_de', from);
             if (to) params.set('data_ate', to);
-            const res = await fetch(`/api/tools/ecommerce/vendas-por-estado?${params.toString()}`, { cache: 'no-store' });
-            if (!res.ok) return;
-            const json = await res.json();
-            if (json?.success && Array.isArray(json.rows)) setTableRows(json.rows as VendasPorEstadoRow[]);
-          } catch (e) {
-            console.error('Erro ao buscar Vendas por Estado por período:', e);
           }
+          const qs = params.toString();
+          const res = await fetch(`/api/tools/ecommerce/vendas-por-estado${qs ? `?${qs}` : ''}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          if (json?.success && Array.isArray(json.rows)) {
+            setTableRows(json.rows as VendasPorEstadoRow[]);
+            setSqlQuery(json.sql_query);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar Vendas por Estado por período:', e);
         }
       }}
     />

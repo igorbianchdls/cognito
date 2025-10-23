@@ -25,7 +25,8 @@ const currency = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', c
 export default function ClientesNovosRecorrentesResult({ success, message, rows, data, sql_query }: Props) {
   const initialRows = rows ?? data ?? [];
   const [tableRows, setTableRows] = useState<ClientesNovosRecorrentesRow[]>(initialRows);
-  useEffect(() => { setTableRows(initialRows); }, [rows, data]);
+  const [sqlQuery, setSqlQuery] = useState<string | undefined>(sql_query);
+  useEffect(() => { setTableRows(initialRows); setSqlQuery(sql_query); }, [rows, data, sql_query]);
 
   const columns: ColumnDef<ClientesNovosRecorrentesRow>[] = useMemo(() => [
     { accessorKey: 'tipo_de_cliente', header: 'Tipo de Cliente' },
@@ -47,7 +48,7 @@ export default function ClientesNovosRecorrentesResult({ success, message, rows,
       success={success}
       count={tableRows.length}
       exportFileName="clientes_novos_recorrentes"
-      sqlQuery={sql_query}
+      sqlQuery={sqlQuery}
       enableAutoChart={true}
       chartOptions={{
         xKey: 'tipo_de_cliente',
@@ -60,19 +61,25 @@ export default function ClientesNovosRecorrentesResult({ success, message, rows,
         initialChartType: 'bar',
         title: 'Clientes Novos vs. Recorrentes',
         xLegend: 'Tipo de Cliente',
-        showDateFilter: true,
-        onDateRangeChange: async ({ from, to }) => {
-          try {
-            const params = new URLSearchParams();
+      }}
+      headerDateFilter
+      onHeaderDateRangeChange={async ({ from, to, preset }) => {
+        try {
+          const params = new URLSearchParams();
+          if (preset !== 'all') {
             if (from) params.set('data_de', from);
             if (to) params.set('data_ate', to);
-            const res = await fetch(`/api/tools/ecommerce/clientes-novos-recorrentes?${params.toString()}`, { cache: 'no-store' });
-            if (!res.ok) return;
-            const json = await res.json();
-            if (json?.success && Array.isArray(json.rows)) setTableRows(json.rows as ClientesNovosRecorrentesRow[]);
-          } catch (e) {
-            console.error('Erro ao buscar Clientes Novos vs Recorrentes por período:', e);
           }
+          const qs = params.toString();
+          const res = await fetch(`/api/tools/ecommerce/clientes-novos-recorrentes${qs ? `?${qs}` : ''}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          if (json?.success && Array.isArray(json.rows)) {
+            setTableRows(json.rows as ClientesNovosRecorrentesRow[]);
+            setSqlQuery(json.sql_query);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar Clientes Novos vs Recorrentes por período:', e);
         }
       }}
     />

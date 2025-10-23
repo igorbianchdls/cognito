@@ -30,7 +30,8 @@ const formatDate = (d: string) => new Date(d).toLocaleDateString('pt-BR');
 export default function LTVClienteResult({ success, message, rows, data, sql_query }: Props) {
   const initialRows = rows ?? data ?? [];
   const [tableRows, setTableRows] = useState<LTVClienteRow[]>(initialRows);
-  useEffect(() => { setTableRows(initialRows); }, [rows, data]);
+  const [sqlQuery, setSqlQuery] = useState<string | undefined>(sql_query);
+  useEffect(() => { setTableRows(initialRows); setSqlQuery(sql_query); }, [rows, data, sql_query]);
 
   const columns: ColumnDef<LTVClienteRow>[] = useMemo(() => [
     { accessorKey: 'nome', header: 'Nome' },
@@ -55,7 +56,7 @@ export default function LTVClienteResult({ success, message, rows, data, sql_que
       success={success}
       count={tableRows.length}
       exportFileName="analise_ltv_cliente"
-      sqlQuery={sql_query}
+      sqlQuery={sqlQuery}
       enableAutoChart={true}
       chartOptions={{
         xKey: 'nome',
@@ -68,19 +69,25 @@ export default function LTVClienteResult({ success, message, rows, data, sql_que
         initialChartType: 'bar',
         title: 'LTV por Cliente',
         xLegend: 'Cliente',
-        showDateFilter: true,
-        onDateRangeChange: async ({ from, to }) => {
-          try {
-            const params = new URLSearchParams();
+      }}
+      headerDateFilter
+      onHeaderDateRangeChange={async ({ from, to, preset }) => {
+        try {
+          const params = new URLSearchParams();
+          if (preset !== 'all') {
             if (from) params.set('data_de', from);
             if (to) params.set('data_ate', to);
-            const res = await fetch(`/api/tools/ecommerce/ltv-cliente?${params.toString()}`, { cache: 'no-store' });
-            if (!res.ok) return;
-            const json = await res.json();
-            if (json?.success && Array.isArray(json.rows)) setTableRows(json.rows as LTVClienteRow[]);
-          } catch (e) {
-            console.error('Erro ao buscar LTV por período:', e);
           }
+          const qs = params.toString();
+          const res = await fetch(`/api/tools/ecommerce/ltv-cliente${qs ? `?${qs}` : ''}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          if (json?.success && Array.isArray(json.rows)) {
+            setTableRows(json.rows as LTVClienteRow[]);
+            setSqlQuery(json.sql_query);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar LTV por período:', e);
         }
       }}
     />

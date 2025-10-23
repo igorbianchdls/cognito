@@ -25,7 +25,8 @@ const currency = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', c
 export default function PerformanceLancamentoResult({ success, message, rows, data, sql_query }: Props) {
   const initialRows = rows ?? data ?? [];
   const [tableRows, setTableRows] = useState<PerformanceLancamentoRow[]>(initialRows);
-  useEffect(() => { setTableRows(initialRows); }, [rows, data]);
+  const [sqlQuery, setSqlQuery] = useState<string | undefined>(sql_query);
+  useEffect(() => { setTableRows(initialRows); setSqlQuery(sql_query); }, [rows, data, sql_query]);
 
   const columns: ColumnDef<PerformanceLancamentoRow>[] = useMemo(() => [
     { accessorKey: 'tipo_colecao', header: 'Tipo de Coleção' },
@@ -46,7 +47,7 @@ export default function PerformanceLancamentoResult({ success, message, rows, da
       success={success}
       count={tableRows.length}
       exportFileName="performance_lancamento_colecao"
-      sqlQuery={sql_query}
+      sqlQuery={sqlQuery}
       enableAutoChart={true}
       chartOptions={{
         xKey: 'tipo_colecao',
@@ -58,20 +59,26 @@ export default function PerformanceLancamentoResult({ success, message, rows, da
         initialChartType: 'bar',
         title: 'Performance de Lançamento',
         xLegend: 'Tipo de Coleção',
-        showDateFilter: true,
-        onDateRangeChange: async ({ from, to }) => {
-          try {
-            const params = new URLSearchParams();
+      }}
+      headerDateFilter
+      onHeaderDateRangeChange={async ({ from, to, preset }) => {
+        try {
+          const params = new URLSearchParams();
+          if (preset !== 'all') {
             if (from) params.set('data_de', from);
             if (to) params.set('data_ate', to);
-            params.set('id_limite_colecao', '24');
-            const res = await fetch(`/api/tools/ecommerce/performance-lancamento?${params.toString()}`, { cache: 'no-store' });
-            if (!res.ok) return;
-            const json = await res.json();
-            if (json?.success && Array.isArray(json.rows)) setTableRows(json.rows as PerformanceLancamentoRow[]);
-          } catch (e) {
-            console.error('Erro ao buscar Performance de Lançamento por período:', e);
           }
+          params.set('id_limite_colecao', '24');
+          const qs = params.toString();
+          const res = await fetch(`/api/tools/ecommerce/performance-lancamento${qs ? `?${qs}` : ''}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          if (json?.success && Array.isArray(json.rows)) {
+            setTableRows(json.rows as PerformanceLancamentoRow[]);
+            setSqlQuery(json.sql_query);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar Performance de Lançamento por período:', e);
         }
       }}
     />

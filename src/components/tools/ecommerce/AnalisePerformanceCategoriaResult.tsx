@@ -28,7 +28,8 @@ const currency = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', c
 export default function AnalisePerformanceCategoriaResult({ success, message, rows, data, sql_query }: Props) {
   const initialRows = rows ?? data ?? [];
   const [tableRows, setTableRows] = useState<AnalisePerformanceCategoriaRow[]>(initialRows);
-  useEffect(() => { setTableRows(initialRows); }, [rows, data]);
+  const [sqlQuery, setSqlQuery] = useState<string | undefined>(sql_query);
+  useEffect(() => { setTableRows(initialRows); setSqlQuery(sql_query); }, [rows, data, sql_query]);
 
   const columns: ColumnDef<AnalisePerformanceCategoriaRow>[] = useMemo(() => [
     { accessorKey: 'categoria', header: 'Categoria' },
@@ -52,7 +53,7 @@ export default function AnalisePerformanceCategoriaResult({ success, message, ro
       success={success}
       count={tableRows.length}
       exportFileName="analise_performance_categoria"
-      sqlQuery={sql_query}
+      sqlQuery={sqlQuery}
       enableAutoChart={false}
       chartRenderer={(rows) => {
         const metrics = (rows ?? []).map((r) => ({
@@ -75,23 +76,29 @@ export default function AnalisePerformanceCategoriaResult({ success, message, ro
               initialChartType: 'bar',
               title: 'Performance por Categoria',
               xLegend: 'Categoria',
-              showDateFilter: true,
-              onDateRangeChange: async ({ from, to }) => {
-                try {
-                  const params = new URLSearchParams();
-                  if (from) params.set('data_de', from);
-                  if (to) params.set('data_ate', to);
-                  const res = await fetch(`/api/tools/ecommerce/categorias?${params.toString()}`, { cache: 'no-store' });
-                  if (!res.ok) return;
-                  const json = await res.json();
-                  if (json?.success && Array.isArray(json.rows)) setTableRows(json.rows as AnalisePerformanceCategoriaRow[]);
-                } catch (e) {
-                  console.error('Erro ao buscar Categorias por período:', e);
-                }
-              }
             }}
           />
         );
+      }}
+      headerDateFilter
+      onHeaderDateRangeChange={async ({ from, to, preset }) => {
+        try {
+          const params = new URLSearchParams();
+          if (preset !== 'all') {
+            if (from) params.set('data_de', from);
+            if (to) params.set('data_ate', to);
+          }
+          const qs = params.toString();
+          const res = await fetch(`/api/tools/ecommerce/categorias${qs ? `?${qs}` : ''}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const json = await res.json();
+          if (json?.success && Array.isArray(json.rows)) {
+            setTableRows(json.rows as AnalisePerformanceCategoriaRow[]);
+            setSqlQuery(json.sql_query);
+          }
+        } catch (e) {
+          console.error('Erro ao buscar Categorias por período:', e);
+        }
       }}
     />
   );
