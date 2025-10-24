@@ -94,8 +94,13 @@ export async function GET(req: NextRequest) {
     if (view === 'pedidos') {
       selectSql = `SELECT p.id,
                           p.numero_pedido,
+                          p.cliente_id AS cliente_id,
                           c.nome AS cliente,
+                          c.segmento AS segmento_cliente,
+                          c.imagem_url AS cliente_imagem_url,
+                          p.canal_venda_id AS canal_id,
                           cv.nome AS canal_venda,
+                          cv.imagem_url AS canal_imagem_url,
                           v.nome AS vendedor,
                           p.status,
                           p.data_pedido,

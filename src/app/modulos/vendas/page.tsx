@@ -53,6 +53,38 @@ export default function ModulosVendasPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>()
+  const [reloadKey, setReloadKey] = useState(0)
+
+  // Editor de itens vinculados do pedido (cliente/canal)
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [editorTipo, setEditorTipo] = useState<'cliente' | 'canal'>('cliente')
+  const [editorId, setEditorId] = useState<string | number | null>(null)
+  const [editorPrefill, setEditorPrefill] = useState<{ nome?: string; imagem_url?: string; segmento?: string } | undefined>(undefined)
+
+  const openEditorCliente = (row: Row) => {
+    const id = row['cliente_id'] as string | number | undefined
+    if (!id) return
+    setEditorTipo('cliente')
+    setEditorId(id)
+    setEditorPrefill({
+      nome: row['cliente'] ? String(row['cliente']) : undefined,
+      imagem_url: row['cliente_imagem_url'] ? String(row['cliente_imagem_url']) : undefined,
+      segmento: row['segmento_cliente'] ? String(row['segmento_cliente']) : undefined,
+    })
+    setEditorOpen(true)
+  }
+
+  const openEditorCanal = (row: Row) => {
+    const id = row['canal_id'] as string | number | undefined
+    if (!id) return
+    setEditorTipo('canal')
+    setEditorId(id)
+    setEditorPrefill({
+      nome: row['canal_venda'] ? String(row['canal_venda']) : undefined,
+      imagem_url: row['canal_imagem_url'] ? String(row['canal_imagem_url']) : undefined,
+    })
+    setEditorOpen(true)
+  }
 
   const formatDate = (value?: unknown) => {
     if (!value) return ''
@@ -148,18 +180,33 @@ export default function ModulosVendasPage() {
             cell: ({ row }) => {
               const nome = row.original['cliente'] || 'Sem cliente'
               const subtitulo = row.original['segmento_cliente'] || 'Sem segmento'
+              const imagemUrl = row.original['cliente_imagem_url']
               const colors = getColorFromName(String(nome))
 
               return (
                 <div className="flex items-center">
-                  <div className="flex items-center justify-center mr-3"
-                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: colors.bg }}>
-                    <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                      {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                    </div>
+                  <div
+                    className="flex items-center justify-center mr-3 cursor-pointer"
+                    role="button"
+                    onClick={() => openEditorCliente(row.original)}
+                    style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}>
+                    {imagemUrl ? (
+                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
+                    ) : (
+                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
+                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                    )}
                   </div>
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
+                    <button
+                      type="button"
+                      onClick={() => openEditorCliente(row.original)}
+                      className="text-left"
+                      style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
+                    >
+                      {String(nome)}
+                    </button>
                     <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(subtitulo)}</div>
                   </div>
                 </div>
@@ -173,17 +220,32 @@ export default function ModulosVendasPage() {
             minSize: 150,
             cell: ({ row }) => {
               const nome = row.original['canal_venda'] || 'Sem canal'
+              const imagemUrl = row.original['canal_imagem_url']
               const colors = getColorFromName(String(nome))
 
               return (
                 <div className="flex items-center">
-                  <div className="flex items-center justify-center mr-3"
-                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: colors.bg }}>
-                    <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                      {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                    </div>
+                  <div
+                    className="flex items-center justify-center mr-3 cursor-pointer"
+                    role="button"
+                    onClick={() => openEditorCanal(row.original)}
+                    style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}>
+                    {imagemUrl ? (
+                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
+                    ) : (
+                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
+                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                    )}
                   </div>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
+                  <button
+                    type="button"
+                    onClick={() => openEditorCanal(row.original)}
+                    className="text-left"
+                    style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
+                  >
+                    {String(nome)}
+                  </button>
                 </div>
               )
             }
@@ -240,7 +302,7 @@ export default function ModulosVendasPage() {
     }
     load()
     return () => controller.abort()
-  }, [tabs.selected, dateRange?.from, dateRange?.to])
+  }, [tabs.selected, dateRange?.from, dateRange?.to, reloadKey])
 
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
@@ -364,7 +426,14 @@ export default function ModulosVendasPage() {
           </div>
         </div>
       </SidebarInset>
+      <PedidosLinkedEditorSheet
+        open={editorOpen}
+        onOpenChange={setEditorOpen}
+        tipo={editorTipo}
+        id={editorId}
+        prefill={editorPrefill}
+        onSaved={() => setReloadKey((k) => k + 1)}
+      />
     </SidebarProvider>
   )
 }
-
