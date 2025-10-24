@@ -1,12 +1,9 @@
-import { NextRequest } from 'next/server'
 import { runQuery } from '@/lib/postgres'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-type Params = { params: { id: string } }
-
-export async function GET(_req: NextRequest, { params }: Params) {
+export async function GET(_req: Request, { params }: { params: { id: string } }) {
   try {
     const id = params.id
     if (!id) return Response.json({ success: false, message: 'ID é obrigatório' }, { status: 400 })
@@ -39,7 +36,7 @@ const FORNECEDOR_WHITELIST = new Set([
   'telefone',
 ])
 
-export async function PATCH(req: NextRequest, { params }: Params) {
+export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   try {
     const id = params.id
     if (!id) return Response.json({ success: false, message: 'ID é obrigatório' }, { status: 400 })
@@ -76,4 +73,3 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     return Response.json({ success: false, message: 'Erro interno' }, { status: 500 })
   }
 }
-

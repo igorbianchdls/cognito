@@ -1,10 +1,7 @@
-import { NextRequest } from 'next/server'
 import { runQuery } from '@/lib/postgres'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
-
-type Params = { params: { id: string } }
 
 const CONTAS_APAGAR_WHITELIST = new Set([
   'descricao',
@@ -19,7 +16,7 @@ const CONTAS_APAGAR_WHITELIST = new Set([
   'centro_custo_id',
 ])
 
-export async function PATCH(req: NextRequest, { params }: Params) {
+export async function PATCH(req: Request, { params }: { params: { id: string } }) {
   try {
     const id = params.id
     if (!id) return Response.json({ success: false, message: 'ID é obrigatório' }, { status: 400 })
@@ -57,4 +54,3 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     return Response.json({ success: false, message: 'Erro interno' }, { status: 500 })
   }
 }
-
