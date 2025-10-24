@@ -120,28 +120,33 @@ export default function FornecedorEditorSheet({ open, onOpenChange, conta, forne
     setContaForm((prev) => ({ ...prev, [k]: v }))
   }
 
-  const getFornecedorPatch = (): Record<string, unknown> | null => {
-    const changes: Record<string, unknown> = {}
-    for (const key of ['nome_fornecedor', 'imagem_url'] as const) {
-      const before = (initialFornecedorRef.current as any)[key]
-      const now = (fornecedor as any)[key]
+  type FornecedorKeys = 'nome_fornecedor' | 'imagem_url'
+  const getFornecedorPatch = (): Partial<Pick<FornecedorPrefill, FornecedorKeys>> | null => {
+    const changes: Partial<Pick<FornecedorPrefill, FornecedorKeys>> = {}
+    const keys: FornecedorKeys[] = ['nome_fornecedor', 'imagem_url']
+    for (const key of keys) {
+      const before = initialFornecedorRef.current[key] ?? ''
+      const now = fornecedor[key] ?? ''
       if (now !== before) changes[key] = now
     }
     return Object.keys(changes).length ? changes : null
   }
 
-  const getContaPatch = (): Record<string, unknown> | null => {
-    const changes: Record<string, unknown> = {}
-    const keys: (keyof Conta)[] = ['descricao', 'data_vencimento', 'valor_total', 'status', 'tipo_titulo']
+  type ContaPatchKeys = 'descricao' | 'data_vencimento' | 'valor_total' | 'status' | 'tipo_titulo'
+  const getContaPatch = (): Partial<Pick<Conta, ContaPatchKeys>> | null => {
+    const changes: Partial<Pick<Conta, ContaPatchKeys>> = {}
+    const keys: ContaPatchKeys[] = ['descricao', 'data_vencimento', 'valor_total', 'status', 'tipo_titulo']
     for (const key of keys) {
-      const before = (initialContaRef.current as any)[key]
-      const now = (contaForm as any)[key]
+      const before = (initialContaRef.current as Conta)[key]
+      const now = (contaForm as Conta)[key]
       if (key === 'valor_total') {
         const n = typeof now === 'string' ? (now.trim() === '' ? '' : Number(now)) : now
         const nb = typeof before === 'string' ? (before.trim() === '' ? '' : Number(before)) : before
-        if (n !== nb) changes[key] = n
+        if (n !== nb) changes[key] = n as number | string
       } else if (now !== before) {
-        changes[key] = now
+        if (typeof now !== 'undefined') {
+          changes[key] = now as string
+        }
       }
     }
     return Object.keys(changes).length ? changes : null
@@ -246,4 +251,3 @@ export default function FornecedorEditorSheet({ open, onOpenChange, conta, forne
     </Sheet>
   )
 }
-
