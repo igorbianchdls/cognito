@@ -15,6 +15,7 @@ import StatusBadge from '@/components/modulos/StatusBadge'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { Users, Briefcase, Building, CalendarDays } from 'lucide-react'
+import FuncionarioEditorSheet from '@/components/modulos/rh/FuncionarioEditorSheet'
 
 type Row = TableData
 
@@ -54,6 +55,18 @@ export default function ModulosRecursosHumanosPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>()
+  const [reloadKey, setReloadKey] = useState(0)
+
+  // Editor
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [selectedFuncionarioId, setSelectedFuncionarioId] = useState<string | null>(null)
+  const [funcionarioPrefill, setFuncionarioPrefill] = useState<{
+    nome_completo?: string
+    email_corporativo?: string
+    telefone?: string
+    status?: string
+    data_nascimento?: string
+  } | undefined>(undefined)
 
   const formatDate = (value?: unknown) => {
     if (!value) return ''
@@ -85,6 +98,20 @@ export default function ModulosRecursosHumanosPage() {
 
     const index = Math.abs(hash) % colors.length
     return colors[index]
+  }
+
+  const openEditor = (row: Row) => {
+    const id = row['id']
+    if (!id) return
+    setSelectedFuncionarioId(String(id))
+    setFuncionarioPrefill({
+      nome_completo: row['funcionario'] ? String(row['funcionario']) : undefined,
+      email_corporativo: row['email_corporativo'] ? String(row['email_corporativo']) : undefined,
+      telefone: row['telefone'] ? String(row['telefone']) : undefined,
+      status: row['status'] ? String(row['status']) : undefined,
+      data_nascimento: row['data_nascimento'] ? String(row['data_nascimento']) : undefined,
+    })
+    setEditorOpen(true)
   }
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
@@ -144,14 +171,25 @@ export default function ModulosRecursosHumanosPage() {
 
               return (
                 <div className="flex items-center">
-                  <div className="flex items-center justify-center mr-3"
-                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: colors.bg }}>
+                  <div
+                    className="flex items-center justify-center mr-3 cursor-pointer"
+                    role="button"
+                    onClick={() => openEditor(row.original)}
+                    style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: colors.bg }}
+                  >
                     <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
                       {String(nome)?.charAt(0)?.toUpperCase() || '?'}
                     </div>
                   </div>
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
+                    <button
+                      type="button"
+                      onClick={() => openEditor(row.original)}
+                      className="text-left"
+                      style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
+                    >
+                      {String(nome)}
+                    </button>
                     <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(cargo)}</div>
                   </div>
                 </div>
@@ -238,7 +276,7 @@ export default function ModulosRecursosHumanosPage() {
     }
     load()
     return () => controller.abort()
-  }, [tabs.selected, dateRange?.from, dateRange?.to])
+  }, [tabs.selected, dateRange?.from, dateRange?.to, reloadKey])
 
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
@@ -360,6 +398,13 @@ export default function ModulosRecursosHumanosPage() {
           </div>
         </div>
       </SidebarInset>
+      <FuncionarioEditorSheet
+        open={editorOpen}
+        onOpenChange={setEditorOpen}
+        funcionarioId={selectedFuncionarioId}
+        funcionarioPrefill={funcionarioPrefill}
+        onSaved={() => setReloadKey((k) => k + 1)}
+      />
     </SidebarProvider>
   )
 }
