@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable @next/next/no-img-element */
 
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
@@ -15,6 +16,7 @@ import StatusBadge from '@/components/modulos/StatusBadge'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { ShoppingCart, Users, Map, Users2, LayoutGrid } from 'lucide-react'
+import PedidosLinkedEditorSheet from '@/components/modulos/vendas/PedidosLinkedEditorSheet'
 
 type Row = TableData
 
