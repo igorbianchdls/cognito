@@ -14,6 +14,7 @@ import DataToolbar from '@/components/modulos/DataToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { CreditCard, ArrowDownCircle, ArrowUpCircle, List } from 'lucide-react'
+import FornecedorEditorSheet from '@/components/modulos/financeiro/FornecedorEditorSheet'
 
 type Row = TableData
 
@@ -144,7 +145,14 @@ export default function ModulosFinanceiroPage() {
                     )}
                   </div>
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
+                    <button
+                      type="button"
+                      onClick={() => openEditor(row.original)}
+                      className="text-left"
+                      style={{ fontSize: 15, fontWeight: 600, color: '#111827', textDecoration: 'underline' }}
+                    >
+                      {String(nome)}
+                    </button>
                     <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(categoria)}</div>
                   </div>
                 </div>
@@ -180,7 +188,14 @@ export default function ModulosFinanceiroPage() {
                     )}
                   </div>
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
+                    <button
+                      type="button"
+                      onClick={() => openEditor(row.original)}
+                      className="text-left"
+                      style={{ fontSize: 15, fontWeight: 600, color: '#111827', textDecoration: 'underline' }}
+                    >
+                      {String(nome)}
+                    </button>
                     <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(categoria)}</div>
                   </div>
                 </div>
@@ -279,6 +294,20 @@ export default function ModulosFinanceiroPage() {
   const [data, setData] = useState<Row[]>([])
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
+  const [reloadKey, setReloadKey] = useState<number>(0)
+
+  // Editor (fornecedor + conta)
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [selectedConta, setSelectedConta] = useState<{
+    id: string
+    descricao?: string
+    data_vencimento?: string
+    valor_total?: number | string
+    status?: string
+    tipo_titulo?: string
+  } | null>(null)
+  const [selectedFornecedorId, setSelectedFornecedorId] = useState<string | null>(null)
+  const [fornecedorPrefill, setFornecedorPrefill] = useState<{ nome_fornecedor?: string; imagem_url?: string } | undefined>(undefined)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -319,7 +348,27 @@ export default function ModulosFinanceiroPage() {
     }
     load()
     return () => controller.abort()
-  }, [tabs.selected, dateRange?.from, dateRange?.to])
+  }, [tabs.selected, dateRange?.from, dateRange?.to, reloadKey])
+
+  const openEditor = (row: Row) => {
+    const fornecedorId = row['fornecedor_id']
+    const contaId = row['conta_id']
+    if (!fornecedorId || !contaId) return
+    setSelectedFornecedorId(String(fornecedorId))
+    setSelectedConta({
+      id: String(contaId),
+      descricao: String(row['descricao'] ?? ''),
+      data_vencimento: String(row['data_vencimento'] ?? ''),
+      valor_total: (row['valor_total'] as number) ?? '',
+      status: String(row['status'] ?? ''),
+      tipo_titulo: row['tipo_titulo'] ? String(row['tipo_titulo']) : undefined,
+    })
+    setFornecedorPrefill({
+      nome_fornecedor: row['fornecedor'] ? String(row['fornecedor']) : undefined,
+      imagem_url: row['fornecedor_imagem_url'] ? String(row['fornecedor_imagem_url']) : undefined,
+    })
+    setEditorOpen(true)
+  }
 
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
@@ -445,6 +494,14 @@ export default function ModulosFinanceiroPage() {
           </div>
         </div>
       </SidebarInset>
+      <FornecedorEditorSheet
+        open={editorOpen}
+        onOpenChange={setEditorOpen}
+        conta={selectedConta}
+        fornecedorId={selectedFornecedorId}
+        fornecedorPrefill={fornecedorPrefill}
+        onSaved={() => setReloadKey((k) => k + 1)}
+      />
     </SidebarProvider>
   )
 }

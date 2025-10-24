@@ -108,6 +108,7 @@ export async function GET(req: NextRequest) {
                  LEFT JOIN financeiro.centros_custo cc ON cap.centro_custo_id = cc.id
                  LEFT JOIN financeiro.contas c ON cap.conta_id = c.id`;
       selectSql = `SELECT cap.id AS conta_id,
+                          cap.fornecedor_id AS fornecedor_id,
                           cap.descricao,
                           f.nome_fornecedor AS fornecedor,
                           f.imagem_url AS fornecedor_imagem_url,
