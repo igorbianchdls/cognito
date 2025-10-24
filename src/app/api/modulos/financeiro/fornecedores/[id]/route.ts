@@ -3,9 +3,11 @@ import { runQuery } from '@/lib/postgres'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-export async function GET(_req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request) {
   try {
-    const id = params.id
+    const url = new URL(req.url)
+    const parts = url.pathname.split('/').filter(Boolean)
+    const id = parts[parts.length - 1]
     if (!id) return Response.json({ success: false, message: 'ID é obrigatório' }, { status: 400 })
 
     const sql = `
@@ -36,9 +38,11 @@ const FORNECEDOR_WHITELIST = new Set([
   'telefone',
 ])
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request) {
   try {
-    const id = params.id
+    const url = new URL(req.url)
+    const parts = url.pathname.split('/').filter(Boolean)
+    const id = parts[parts.length - 1]
     if (!id) return Response.json({ success: false, message: 'ID é obrigatório' }, { status: 400 })
 
     const body = await req.json() as Record<string, unknown>

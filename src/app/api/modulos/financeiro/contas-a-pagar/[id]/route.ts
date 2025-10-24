@@ -16,9 +16,11 @@ const CONTAS_APAGAR_WHITELIST = new Set([
   'centro_custo_id',
 ])
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request) {
   try {
-    const id = params.id
+    const url = new URL(req.url)
+    const parts = url.pathname.split('/').filter(Boolean)
+    const id = parts[parts.length - 1]
     if (!id) return Response.json({ success: false, message: 'ID é obrigatório' }, { status: 400 })
 
     const body = await req.json() as Record<string, unknown>
