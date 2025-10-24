@@ -13,6 +13,7 @@ export async function GET(req: Request) {
     const sql = `
       SELECT f.funcionarioid AS id,
              f.nomecompleto   AS nome_completo,
+             f.imagem_url     AS imagem_url,
              f.emailcorporativo AS email_corporativo,
              f.telefonecorporativo AS telefone,
              f.status,
@@ -36,6 +37,7 @@ export async function GET(req: Request) {
 
 const FUNC_WHITELIST = new Set([
   'nomecompleto',
+  'imagem_url',
   'emailcorporativo',
   'telefonecorporativo',
   'status',
@@ -80,4 +82,3 @@ export async function PATCH(req: Request) {
     return Response.json({ success: false, message: 'Erro interno' }, { status: 500 })
   }
 }
-

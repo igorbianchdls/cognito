@@ -62,6 +62,7 @@ export default function ModulosRecursosHumanosPage() {
   const [selectedFuncionarioId, setSelectedFuncionarioId] = useState<string | null>(null)
   const [funcionarioPrefill, setFuncionarioPrefill] = useState<{
     nome_completo?: string
+    imagem_url?: string
     email_corporativo?: string
     telefone?: string
     status?: string
@@ -106,6 +107,7 @@ export default function ModulosRecursosHumanosPage() {
     setSelectedFuncionarioId(String(id))
     setFuncionarioPrefill({
       nome_completo: row['funcionario'] ? String(row['funcionario']) : undefined,
+      imagem_url: row['funcionario_imagem_url'] ? String(row['funcionario_imagem_url']) : undefined,
       email_corporativo: row['email_corporativo'] ? String(row['email_corporativo']) : undefined,
       telefone: row['telefone'] ? String(row['telefone']) : undefined,
       status: row['status'] ? String(row['status']) : undefined,
@@ -167,6 +169,7 @@ export default function ModulosRecursosHumanosPage() {
             cell: ({ row }) => {
               const nome = row.original['funcionario'] || 'Sem nome'
               const cargo = row.original['cargo'] || 'Sem cargo'
+              const imagemUrl = row.original['funcionario_imagem_url']
               const colors = getColorFromName(String(nome))
 
               return (
@@ -175,11 +178,15 @@ export default function ModulosRecursosHumanosPage() {
                     className="flex items-center justify-center mr-3 cursor-pointer"
                     role="button"
                     onClick={() => openEditor(row.original)}
-                    style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: colors.bg }}
+                    style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}
                   >
-                    <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                      {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                    </div>
+                    {imagemUrl ? (
+                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
+                    ) : (
+                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
+                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <button

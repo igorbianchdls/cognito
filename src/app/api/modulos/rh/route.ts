@@ -98,6 +98,7 @@ export async function GET(req: NextRequest) {
     if (view === 'funcionarios') {
       selectSql = `SELECT f.funcionarioid AS id,
                           f.nomecompleto AS funcionario,
+                          f.imagem_url AS funcionario_imagem_url,
                           c.nome AS cargo,
                           d.nome AS departamento,
                           g.nomecompleto AS gestor_direto,

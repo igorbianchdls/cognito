@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 
 type FuncionarioForm = {
   nome_completo?: string
+  imagem_url?: string
   email_corporativo?: string
   telefone?: string
   status?: string
@@ -36,6 +37,7 @@ export default function FuncionarioEditorSheet({ open, onOpenChange, funcionario
       if (!open) return
       const base: FuncionarioForm = {
         nome_completo: funcionarioPrefill?.nome_completo ?? '',
+        imagem_url: funcionarioPrefill?.imagem_url ?? '',
         email_corporativo: funcionarioPrefill?.email_corporativo ?? '',
         telefone: funcionarioPrefill?.telefone ?? '',
         status: funcionarioPrefill?.status ?? '',
@@ -50,6 +52,7 @@ export default function FuncionarioEditorSheet({ open, onOpenChange, funcionario
             if (d) {
               const next: FuncionarioForm = {
                 nome_completo: String(d['nome_completo'] ?? base.nome_completo ?? ''),
+                imagem_url: String(d['imagem_url'] ?? base.imagem_url ?? ''),
                 email_corporativo: String(d['email_corporativo'] ?? base.email_corporativo ?? ''),
                 telefone: String(d['telefone'] ?? base.telefone ?? ''),
                 status: String(d['status'] ?? base.status ?? ''),
@@ -74,13 +77,14 @@ export default function FuncionarioEditorSheet({ open, onOpenChange, funcionario
 
   const getPatch = (): Record<string, unknown> | null => {
     const changes: Record<string, unknown> = {}
-    const keys: (keyof FuncionarioForm)[] = ['nome_completo', 'email_corporativo', 'telefone', 'status', 'data_nascimento']
+    const keys: (keyof FuncionarioForm)[] = ['nome_completo', 'imagem_url', 'email_corporativo', 'telefone', 'status', 'data_nascimento']
     for (const key of keys) {
       const before = initialRef.current[key] ?? ''
       const now = form[key] ?? ''
       if (now !== before) {
         // Map to DB keys
         if (key === 'nome_completo') changes['nomecompleto'] = now
+        else if (key === 'imagem_url') changes['imagem_url'] = now
         else if (key === 'email_corporativo') changes['emailcorporativo'] = now
         else if (key === 'telefone') changes['telefonecorporativo'] = now
         else if (key === 'data_nascimento') changes['datanascimento'] = now
@@ -131,6 +135,10 @@ export default function FuncionarioEditorSheet({ open, onOpenChange, funcionario
             <Input id="nome_completo" value={form.nome_completo ?? ''} onChange={(e) => onChange('nome_completo', e.target.value)} />
           </div>
           <div className="grid gap-2">
+            <Label htmlFor="imagem_url">Link da Imagem (https)</Label>
+            <Input id="imagem_url" value={form.imagem_url ?? ''} onChange={(e) => onChange('imagem_url', e.target.value)} placeholder="https://exemplo.com/foto.jpg" />
+          </div>
+          <div className="grid gap-2">
             <Label htmlFor="email_corporativo">E-mail Corporativo</Label>
             <Input id="email_corporativo" type="email" value={form.email_corporativo ?? ''} onChange={(e) => onChange('email_corporativo', e.target.value)} />
           </div>
@@ -158,4 +166,3 @@ export default function FuncionarioEditorSheet({ open, onOpenChange, funcionario
     </Sheet>
   )
 }
-
