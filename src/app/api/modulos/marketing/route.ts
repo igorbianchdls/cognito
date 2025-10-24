@@ -82,6 +82,7 @@ export async function GET(req: NextRequest) {
       selectSql = `SELECT cs.id AS id,
                           cs.nome_conta AS conta,
                           cs.plataforma AS plataforma,
+                          cs.imagem_url AS plataforma_imagem_url,
                           rc.seguidores AS seguidores,
                           rc.seguindo AS seguindo,
                           rc.total_publicacoes AS total_publicacoes,
@@ -201,4 +202,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-

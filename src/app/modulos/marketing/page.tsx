@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable @next/next/no-img-element */
 
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
@@ -14,6 +15,7 @@ import DataToolbar from '@/components/modulos/DataToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { Megaphone, FileText, BarChart3 } from 'lucide-react'
+import PlataformaEditorSheet from '@/components/modulos/marketing/PlataformaEditorSheet'
 
 type Row = TableData
 
@@ -50,6 +52,23 @@ export default function ModulosMarketingPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>()
+  const [reloadKey, setReloadKey] = useState(0)
+
+  // Editor de plataforma (contas)
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [editorContaId, setEditorContaId] = useState<string | number | null>(null)
+  const [editorPrefill, setEditorPrefill] = useState<{ plataforma?: string; imagem_url?: string } | undefined>(undefined)
+
+  const openPlataformaEditor = (row: Row) => {
+    const id = row['id'] as string | number | undefined
+    if (!id) return
+    setEditorContaId(id)
+    setEditorPrefill({
+      plataforma: row['plataforma'] ? String(row['plataforma']) : undefined,
+      imagem_url: row['plataforma_imagem_url'] ? String(row['plataforma_imagem_url']) : undefined,
+    })
+    setEditorOpen(true)
+  }
 
   const formatDate = (value?: unknown) => {
     if (!value) return ''
@@ -92,19 +111,32 @@ export default function ModulosMarketingPage() {
             header: 'Plataforma',
             cell: ({ row }) => {
               const nome = row.original['plataforma'] || 'Sem nome'
+              const imagemUrl = row.original['plataforma_imagem_url']
               const colors = getColorFromName(String(nome))
 
               return (
                 <div className="flex items-center">
-                  <div className="flex items-center justify-center mr-3"
-                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: colors.bg }}>
-                    <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                      {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                    </div>
+                  <div
+                    className="flex items-center justify-center mr-3 cursor-pointer"
+                    role="button"
+                    onClick={() => openPlataformaEditor(row.original)}
+                    style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}>
+                    {imagemUrl ? (
+                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
+                    ) : (
+                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
+                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                    )}
                   </div>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>
+                  <button
+                    type="button"
+                    onClick={() => openPlataformaEditor(row.original)}
+                    className="text-left"
+                    style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
+                  >
                     {String(nome)}
-                  </div>
+                  </button>
                 </div>
               )
             }
@@ -177,7 +209,7 @@ export default function ModulosMarketingPage() {
     }
     load()
     return () => controller.abort()
-  }, [tabs.selected, dateRange?.from, dateRange?.to])
+  }, [tabs.selected, dateRange?.from, dateRange?.to, reloadKey])
 
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
@@ -295,6 +327,13 @@ export default function ModulosMarketingPage() {
           </div>
         </div>
       </SidebarInset>
+      <PlataformaEditorSheet
+        open={editorOpen}
+        onOpenChange={setEditorOpen}
+        contaId={editorContaId}
+        prefill={editorPrefill}
+        onSaved={() => setReloadKey((k) => k + 1)}
+      />
     </SidebarProvider>
   )
 }
