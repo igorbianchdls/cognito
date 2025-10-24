@@ -417,8 +417,8 @@ export default function ModulosFinanceiroPage() {
   const openEditor = (row: Row) => {
     const fornecedorId = row['fornecedor_id']
     const contaId = row['conta_id']
-    if (!fornecedorId || !contaId) return
-    setSelectedFornecedorId(String(fornecedorId))
+    if (!contaId) return
+    setSelectedFornecedorId(fornecedorId ? String(fornecedorId) : null)
     setSelectedConta({
       id: String(contaId),
       descricao: String(row['descricao'] ?? ''),

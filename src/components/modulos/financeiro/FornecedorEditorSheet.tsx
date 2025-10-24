@@ -40,7 +40,7 @@ export default function FornecedorEditorSheet({ open, onOpenChange, conta, forne
   const initialContaRef = useRef<Conta>({ id: '' })
 
   const canSave = useMemo(() => {
-    return !loading && fornecedorId && conta?.id
+    return !loading && (!!conta?.id || !!fornecedorId)
   }, [loading, fornecedorId, conta?.id])
 
   // Load fornecedor and prefill forms when opened
@@ -153,12 +153,11 @@ export default function FornecedorEditorSheet({ open, onOpenChange, conta, forne
   }
 
   const save = async () => {
-    if (!fornecedorId || !conta?.id) return
     setLoading(true)
     setError(null)
     try {
       const fornecedorPatch = getFornecedorPatch()
-      if (fornecedorPatch && Object.keys(fornecedorPatch).length) {
+      if (fornecedorId && fornecedorPatch && Object.keys(fornecedorPatch).length) {
         const res = await fetch(`/api/modulos/financeiro/fornecedores/${fornecedorId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -168,7 +167,7 @@ export default function FornecedorEditorSheet({ open, onOpenChange, conta, forne
       }
 
       const contaPatch = getContaPatch()
-      if (contaPatch && Object.keys(contaPatch).length) {
+      if (conta?.id && contaPatch && Object.keys(contaPatch).length) {
         const res = await fetch(`/api/modulos/financeiro/contas-a-pagar/${conta.id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
