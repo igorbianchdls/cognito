@@ -153,7 +153,7 @@ export default function ModulosFinanceiroPage() {
                       type="button"
                       onClick={() => openEditor(row.original)}
                       className="text-left"
-                      style={{ fontSize: 15, fontWeight: 600, color: '#111827', textDecoration: 'underline' }}
+                      style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
                     >
                       {String(nome)}
                     </button>
@@ -215,7 +215,7 @@ export default function ModulosFinanceiroPage() {
                       type="button"
                       onClick={() => openEditor(row.original)}
                       className="text-left"
-                      style={{ fontSize: 15, fontWeight: 600, color: '#111827', textDecoration: 'underline' }}
+                      style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
                     >
                       {String(nome)}
                     </button>
@@ -258,8 +258,12 @@ export default function ModulosFinanceiroPage() {
 
               return (
                 <div className="flex items-center">
-                  <div className="flex items-center justify-center mr-3"
-                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}>
+                  <div
+                    className="flex items-center justify-center mr-3 cursor-pointer"
+                    role="button"
+                    onClick={() => openEditor(row.original)}
+                    style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}
+                  >
                     {imagemUrl ? (
                       <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
                     ) : (
@@ -269,12 +273,34 @@ export default function ModulosFinanceiroPage() {
                     )}
                   </div>
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
+                    <button
+                      type="button"
+                      onClick={() => openEditor(row.original)}
+                      className="text-left"
+                      style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
+                    >
+                      {String(nome)}
+                    </button>
                     <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(categoria)}</div>
                   </div>
                 </div>
               )
             }
+          },
+          {
+            id: 'acoes',
+            header: 'Ações',
+            cell: ({ row }) => (
+              <button
+                type="button"
+                onClick={() => openEditor(row.original)}
+                className="text-blue-600 hover:underline"
+                style={{ fontSize: 13 }}
+              >
+                Editar
+              </button>
+            ),
+            enableSorting: false,
           },
           { accessorKey: 'descricao', header: 'Descrição' },
           { accessorKey: 'data_recebimento', header: 'Recebido em', cell: ({ row }) => formatDate(row.original['data_recebimento']) },
