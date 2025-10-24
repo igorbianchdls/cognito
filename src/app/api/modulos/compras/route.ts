@@ -127,7 +127,10 @@ export async function GET(req: NextRequest) {
     } else if (view === 'pedidos') {
       selectSql = `SELECT p.id AS id,
                           p.numero_pedido AS numero_pedido,
+                          p.fornecedor_id AS fornecedor_id,
                           f.nome_fantasia AS fornecedor,
+                          f.imagem_url AS fornecedor_imagem_url,
+                          f.categoria AS categoria_fornecedor,
                           cp.descricao AS condicao_pagamento,
                           p.data_pedido AS data_pedido,
                           p.status AS status,
@@ -266,4 +269,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-

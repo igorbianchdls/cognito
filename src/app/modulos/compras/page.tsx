@@ -1,4 +1,5 @@
 'use client'
+/* eslint-disable @next/next/no-img-element */
 
 import { useEffect, useMemo, useState } from 'react'
 import { useStore } from '@nanostores/react'
@@ -15,6 +16,7 @@ import StatusBadge from '@/components/modulos/StatusBadge'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { ShoppingBag, Building2, PackageCheck, FilePlus2, FileSpreadsheet } from 'lucide-react'
+import FornecedorComprasEditorSheet from '@/components/modulos/compras/FornecedorComprasEditorSheet'
 
 type Row = TableData
 
@@ -53,6 +55,24 @@ export default function ModulosComprasPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>()
+  const [reloadKey, setReloadKey] = useState(0)
+
+  // Editor fornecedor (pedidos)
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [editorFornecedorId, setEditorFornecedorId] = useState<string | number | null>(null)
+  const [editorPrefill, setEditorPrefill] = useState<{ nome_fantasia?: string; imagem_url?: string; categoria?: string } | undefined>(undefined)
+
+  const openFornecedorEditor = (row: Row) => {
+    const id = row['fornecedor_id'] as string | number | undefined
+    if (!id) return
+    setEditorFornecedorId(id)
+    setEditorPrefill({
+      nome_fantasia: row['fornecedor'] ? String(row['fornecedor']) : undefined,
+      imagem_url: row['fornecedor_imagem_url'] ? String(row['fornecedor_imagem_url']) : undefined,
+      categoria: row['categoria_fornecedor'] ? String(row['categoria_fornecedor']) : undefined,
+    })
+    setEditorOpen(true)
+  }
 
   const formatDate = (value?: unknown) => {
     if (!value) return ''
@@ -143,18 +163,33 @@ export default function ModulosComprasPage() {
             cell: ({ row }) => {
               const nome = row.original['fornecedor'] || 'Sem fornecedor'
               const subtitulo = row.original['categoria_fornecedor'] || 'Sem categoria'
+              const imagemUrl = row.original['fornecedor_imagem_url']
               const colors = getColorFromName(String(nome))
 
               return (
                 <div className="flex items-center">
-                  <div className="flex items-center justify-center mr-3"
-                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: colors.bg }}>
-                    <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                      {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                    </div>
+                  <div
+                    className="flex items-center justify-center mr-3 cursor-pointer"
+                    role="button"
+                    onClick={() => openFornecedorEditor(row.original)}
+                    style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}>
+                    {imagemUrl ? (
+                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
+                    ) : (
+                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
+                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                    )}
                   </div>
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
+                    <button
+                      type="button"
+                      onClick={() => openFornecedorEditor(row.original)}
+                      className="text-left"
+                      style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
+                    >
+                      {String(nome)}
+                    </button>
                     <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(subtitulo)}</div>
                   </div>
                 </div>
@@ -211,7 +246,7 @@ export default function ModulosComprasPage() {
     }
     load()
     return () => controller.abort()
-  }, [tabs.selected, dateRange?.from, dateRange?.to])
+  }, [tabs.selected, dateRange?.from, dateRange?.to, reloadKey])
 
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
@@ -335,6 +370,13 @@ export default function ModulosComprasPage() {
           </div>
         </div>
       </SidebarInset>
+      <FornecedorComprasEditorSheet
+        open={editorOpen}
+        onOpenChange={setEditorOpen}
+        fornecedorId={editorFornecedorId}
+        prefill={editorPrefill}
+        onSaved={() => setReloadKey((k) => k + 1)}
+      />
     </SidebarProvider>
   )
 }
