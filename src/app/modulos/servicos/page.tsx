@@ -15,6 +15,7 @@ import StatusBadge from '@/components/modulos/StatusBadge'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { Wrench, Calendar, User, Users, List } from 'lucide-react'
+import ImagemEditorSheet from '@/components/modulos/servicos/ImagemEditorSheet'
 
 type Row = TableData
 
@@ -53,6 +54,25 @@ export default function ModulosServicosPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date } | undefined>()
+  const [reloadKey, setReloadKey] = useState(0)
+
+  // Editor de imagem
+  const [imgEditorOpen, setImgEditorOpen] = useState(false)
+  const [imgEditorTipo, setImgEditorTipo] = useState<'cliente' | 'tecnico'>('cliente')
+  const [imgEditorId, setImgEditorId] = useState<string | number | null>(null)
+  const [imgEditorPrefill, setImgEditorPrefill] = useState<{ nome?: string; imagem_url?: string } | undefined>(undefined)
+
+  const openImagemEditor = (
+    tipo: 'cliente' | 'tecnico',
+    id: string | number | undefined,
+    prefill: { nome?: string; imagem_url?: string }
+  ) => {
+    if (!id) return
+    setImgEditorTipo(tipo)
+    setImgEditorId(id)
+    setImgEditorPrefill(prefill)
+    setImgEditorOpen(true)
+  }
 
   const formatDate = (value?: unknown, withTime?: boolean) => {
     if (!value) return ''
@@ -116,18 +136,33 @@ export default function ModulosServicosPage() {
             cell: ({ row }) => {
               const nome = row.original['tecnico'] || 'Sem nome'
               const subtitulo = row.original['cargo'] || 'Sem cargo'
+              const imagemUrl = row.original['tecnico_imagem_url']
               const colors = getColorFromName(String(nome))
 
               return (
                 <div className="flex items-center">
-                  <div className="flex items-center justify-center mr-3"
-                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: colors.bg }}>
-                    <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                      {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                    </div>
+                  <div
+                       className="flex items-center justify-center mr-3 cursor-pointer"
+                       role="button"
+                       onClick={() => openImagemEditor('tecnico', row.original['id'] as string | number, { nome: String(nome), imagem_url: imagemUrl ? String(imagemUrl) : undefined })}
+                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}>
+                    {imagemUrl ? (
+                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
+                    ) : (
+                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
+                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                    )}
                   </div>
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
+                    <button
+                      type="button"
+                      onClick={() => openImagemEditor('tecnico', row.original['id'] as string | number, { nome: String(nome), imagem_url: imagemUrl ? String(imagemUrl) : undefined })}
+                      className="text-left"
+                      style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
+                    >
+                      {String(nome)}
+                    </button>
                     <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(subtitulo)}</div>
                   </div>
                 </div>
@@ -155,18 +190,33 @@ export default function ModulosServicosPage() {
             cell: ({ row }) => {
               const nome = row.original['cliente'] || 'Sem nome'
               const subtitulo = row.original['segmento'] || 'Sem segmento'
+              const imagemUrl = row.original['cliente_imagem_url']
               const colors = getColorFromName(String(nome))
 
               return (
                 <div className="flex items-center">
-                  <div className="flex items-center justify-center mr-3"
-                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: colors.bg }}>
-                    <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                      {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                    </div>
+                  <div
+                       className="flex items-center justify-center mr-3 cursor-pointer"
+                       role="button"
+                       onClick={() => openImagemEditor('cliente', row.original['id'] as string | number, { nome: String(nome), imagem_url: imagemUrl ? String(imagemUrl) : undefined })}
+                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}>
+                    {imagemUrl ? (
+                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
+                    ) : (
+                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
+                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                    )}
                   </div>
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
+                    <button
+                      type="button"
+                      onClick={() => openImagemEditor('cliente', row.original['id'] as string | number, { nome: String(nome), imagem_url: imagemUrl ? String(imagemUrl) : undefined })}
+                      className="text-left"
+                      style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
+                    >
+                      {String(nome)}
+                    </button>
                     <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(subtitulo)}</div>
                   </div>
                 </div>
@@ -206,18 +256,34 @@ export default function ModulosServicosPage() {
             cell: ({ row }) => {
               const nome = row.original['cliente'] || 'Sem nome'
               const subtitulo = row.original['segmento'] || 'Sem segmento'
+              const imagemUrl = row.original['cliente_imagem_url']
+              const clienteId = row.original['cliente_id'] as string | number | undefined
               const colors = getColorFromName(String(nome))
 
               return (
                 <div className="flex items-center">
-                  <div className="flex items-center justify-center mr-3"
-                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: colors.bg }}>
-                    <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                      {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                    </div>
+                  <div
+                       className="flex items-center justify-center mr-3 cursor-pointer"
+                       role="button"
+                       onClick={() => openImagemEditor('cliente', clienteId, { nome: String(nome), imagem_url: imagemUrl ? String(imagemUrl) : undefined })}
+                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}>
+                    {imagemUrl ? (
+                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
+                    ) : (
+                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
+                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                    )}
                   </div>
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
+                    <button
+                      type="button"
+                      onClick={() => openImagemEditor('cliente', clienteId, { nome: String(nome), imagem_url: imagemUrl ? String(imagemUrl) : undefined })}
+                      className="text-left"
+                      style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
+                    >
+                      {String(nome)}
+                    </button>
                     <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(subtitulo)}</div>
                   </div>
                 </div>
@@ -232,18 +298,34 @@ export default function ModulosServicosPage() {
             cell: ({ row }) => {
               const nome = row.original['tecnico_responsavel'] || 'Sem nome'
               const subtitulo = row.original['cargo_tecnico'] || 'Sem cargo'
+              const imagemUrl = row.original['tecnico_imagem_url']
+              const tecnicoId = row.original['tecnico_id'] as string | number | undefined
               const colors = getColorFromName(String(nome))
 
               return (
                 <div className="flex items-center">
-                  <div className="flex items-center justify-center mr-3"
-                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: colors.bg }}>
-                    <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
-                      {String(nome)?.charAt(0)?.toUpperCase() || '?'}
-                    </div>
+                  <div
+                       className="flex items-center justify-center mr-3 cursor-pointer"
+                       role="button"
+                       onClick={() => openImagemEditor('tecnico', tecnicoId, { nome: String(nome), imagem_url: imagemUrl ? String(imagemUrl) : undefined })}
+                       style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}>
+                    {imagemUrl ? (
+                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
+                    ) : (
+                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
+                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                    )}
                   </div>
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
+                    <button
+                      type="button"
+                      onClick={() => openImagemEditor('tecnico', tecnicoId, { nome: String(nome), imagem_url: imagemUrl ? String(imagemUrl) : undefined })}
+                      className="text-left"
+                      style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
+                    >
+                      {String(nome)}
+                    </button>
                     <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(subtitulo)}</div>
                   </div>
                 </div>
@@ -306,7 +388,7 @@ export default function ModulosServicosPage() {
     }
     load()
     return () => controller.abort()
-  }, [tabs.selected, dateRange?.from, dateRange?.to])
+  }, [tabs.selected, dateRange?.from, dateRange?.to, reloadKey])
 
   const tabOptions: Opcao[] = useMemo(() => {
     const iconFor = (v: string) => {
@@ -430,6 +512,14 @@ export default function ModulosServicosPage() {
           </div>
         </div>
       </SidebarInset>
+      <ImagemEditorSheet
+        open={imgEditorOpen}
+        onOpenChange={setImgEditorOpen}
+        tipo={imgEditorTipo}
+        id={imgEditorId}
+        prefill={imgEditorPrefill}
+        onSaved={() => setReloadKey((k) => k + 1)}
+      />
     </SidebarProvider>
   )
 }

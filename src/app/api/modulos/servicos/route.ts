@@ -104,8 +104,12 @@ export async function GET(req: NextRequest) {
     if (view === 'ordens-servico') {
       selectSql = `SELECT os.id AS id,
                           os.numero_os,
+                          os.cliente_id AS cliente_id,
                           c.nome_fantasia AS cliente,
+                          c.imagem_url AS cliente_imagem_url,
+                          os.tecnico_responsavel_id AS tecnico_id,
                           t.nome AS tecnico_responsavel,
+                          t.imagem_url AS tecnico_imagem_url,
                           os.status,
                           os.prioridade,
                           os.descricao_problema,
@@ -133,6 +137,7 @@ export async function GET(req: NextRequest) {
     } else if (view === 'tecnicos') {
       selectSql = `SELECT tec.id AS id,
                           tec.nome AS tecnico,
+                          tec.imagem_url AS tecnico_imagem_url,
                           tec.cargo,
                           tec.especialidade,
                           tec.custo_hora,
@@ -146,7 +151,7 @@ export async function GET(req: NextRequest) {
                  LEFT JOIN servicos.ordens_servico os ON os.tecnico_responsavel_id = tec.id
                  LEFT JOIN servicos.horas_trabalhadas ht ON ht.tecnico_id = tec.id`;
       whereDateCol = 'tec.data_admissao';
-      groupBy = 'GROUP BY tec.id, tec.nome, tec.cargo, tec.especialidade, tec.custo_hora, tec.telefone, tec.email, tec.status, tec.data_admissao';
+      groupBy = 'GROUP BY tec.id, tec.nome, tec.imagem_url, tec.cargo, tec.especialidade, tec.custo_hora, tec.telefone, tec.email, tec.status, tec.data_admissao';
       if (status) push('LOWER(tec.status) =', status.toLowerCase());
       if (q) {
         conditions.push(`(tec.nome ILIKE '%' || $${i} || '%' OR tec.especialidade ILIKE '%' || $${i} || '%')`);
@@ -156,6 +161,7 @@ export async function GET(req: NextRequest) {
     } else if (view === 'clientes') {
       selectSql = `SELECT c.id AS id,
                           c.nome_fantasia AS cliente,
+                          c.imagem_url AS cliente_imagem_url,
                           c.segmento,
                           c.telefone,
                           c.email,
@@ -166,7 +172,7 @@ export async function GET(req: NextRequest) {
       baseSql = `FROM servicos.clientes c
                  LEFT JOIN servicos.ordens_servico os ON os.cliente_id = c.id`;
       whereDateCol = 'os.data_abertura';
-      groupBy = 'GROUP BY c.id, c.nome_fantasia, c.segmento, c.telefone, c.email, c.cidade, c.estado, c.status';
+      groupBy = 'GROUP BY c.id, c.nome_fantasia, c.imagem_url, c.segmento, c.telefone, c.email, c.cidade, c.estado, c.status';
       if (status) push('LOWER(c.status) =', status.toLowerCase());
       if (q) {
         conditions.push(`(c.nome_fantasia ILIKE '%' || $${i} || '%' OR c.email ILIKE '%' || $${i} || '%' OR c.telefone ILIKE '%' || $${i} || '%')`);
@@ -271,4 +277,3 @@ export async function GET(req: NextRequest) {
     );
   }
 }
-
