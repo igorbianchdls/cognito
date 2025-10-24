@@ -69,6 +69,15 @@ export default function ModulosTrafegoPagoPage() {
     return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
   }
 
+  const getPlatformAsset = (p?: string): { src: string; title: string } => {
+    const name = String(p || '').toLowerCase()
+    if (name.includes('google')) return { src: '/logos/google-ads.svg', title: 'Google Ads' }
+    if (name.includes('meta') || name.includes('facebook')) return { src: '/logos/meta-ads.svg', title: 'Meta Ads' }
+    if (name.includes('tiktok')) return { src: '/logos/tiktok-ads.svg', title: 'TikTok Ads' }
+    if (name.includes('linkedin')) return { src: '/logos/linkedin-ads.svg', title: 'LinkedIn Ads' }
+    return { src: '/logos/ads.svg', title: p || 'Plataforma' }
+  }
+
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
       case 'contas-ads':
@@ -120,6 +129,24 @@ export default function ModulosTrafegoPagoPage() {
           { accessorKey: 'objetivo', header: 'Objetivo' },
           { accessorKey: 'status', header: 'Status' },
           { accessorKey: 'conta', header: 'Conta de Anúncios' },
+          {
+            accessorKey: 'plataforma',
+            header: 'Plataforma',
+            size: 220,
+            minSize: 180,
+            cell: ({ row }) => {
+              const plat = row.original['plataforma'] || '—'
+              const asset = getPlatformAsset(String(plat))
+              return (
+                <div className="flex items-center">
+                  <div className="mr-3" style={{ width: 28, height: 28, borderRadius: 6, overflow: 'hidden', background: '#f3f4f6' }}>
+                    <img src={asset.src} alt={asset.title} className="w-full h-full object-contain p-1" />
+                  </div>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: '#111827' }}>{asset.title}</div>
+                </div>
+              )
+            }
+          },
           { accessorKey: 'orcamento_total', header: 'Orçamento Total (R$)', cell: ({ row }) => formatBRL(row.original['orcamento_total']) },
           { accessorKey: 'inicio', header: 'Início', cell: ({ row }) => formatDate(row.original['inicio']) },
           { accessorKey: 'fim', header: 'Fim', cell: ({ row }) => formatDate(row.original['fim']) },

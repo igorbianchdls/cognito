@@ -24,6 +24,7 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     objetivo: 'c.objetivo',
     status: 'c.status',
     conta: 'ca.nome_conta',
+    plataforma: 'ca.plataforma',
     orcamento_total: 'c.orcamento_total',
     inicio: 'c.inicio',
     fim: 'c.fim',
@@ -140,6 +141,7 @@ export async function GET(req: NextRequest) {
                           c.objetivo AS objetivo,
                           c.status AS status,
                           ca.nome_conta AS conta,
+                          ca.plataforma AS plataforma,
                           c.orcamento_total AS orcamento_total,
                           c.inicio AS inicio,
                           c.fim AS fim,
@@ -156,7 +158,7 @@ export async function GET(req: NextRequest) {
                  LEFT JOIN marketing.anuncios_publicados a ON a.grupo_id = g.id
                  LEFT JOIN marketing.metricas_anuncios m ON m.anuncio_publicado_id = a.id`;
       whereDateCol = 'm.data';
-      groupBy = 'GROUP BY c.id, c.nome, c.objetivo, c.status, c.orcamento_total, c.inicio, c.fim, ca.nome_conta';
+      groupBy = 'GROUP BY c.id, c.nome, c.objetivo, c.status, c.orcamento_total, c.inicio, c.fim, ca.nome_conta, ca.plataforma';
       if (plataforma) push('LOWER(ca.plataforma) =', plataforma.toLowerCase());
       if (conta_ads_id) push('c.conta_ads_id =', conta_ads_id);
       if (status) push('LOWER(c.status) =', status.toLowerCase());
