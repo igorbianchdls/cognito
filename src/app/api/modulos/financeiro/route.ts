@@ -139,7 +139,6 @@ export async function GET(req: NextRequest) {
                           cat.nome AS cliente_categoria,
                           cf.nome_conta AS conta_bancaria,
                           cf.nome_conta AS conta_financeira,
-                          car.tipo_titulo,
                           car.valor_total,
                           car.data_emissao,
                           car.data_vencimento,
