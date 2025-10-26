@@ -12,7 +12,7 @@ const CONTAS_APAGAR_WHITELIST = new Set([
   'status',
   'tipo_titulo',
   'categoria_id',
-  'conta_id',
+  'conta_financeira_id',
   'centro_custo_id',
 ])
 

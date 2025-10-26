@@ -5,7 +5,7 @@ import { runQuery } from '@/lib/postgres'
 const fmt = (params: unknown[]) => (params.length ? JSON.stringify(params) : '[]')
 
 export const findFornecedor = tool({
-  description: 'Busca fornecedor por CNPJ ou nome (schema financeiro)',
+  description: 'Busca fornecedor por CNPJ ou nome (schema entidades)',
   inputSchema: z.object({
     cnpj: z.string().optional().describe('CNPJ numérico, com ou sem pontuação'),
     nome: z.string().optional().describe('Nome do fornecedor (parcial ou completo)')
@@ -22,7 +22,7 @@ export const findFornecedor = tool({
         i += 1
       }
       if (nome) {
-        conditions.push(`LOWER(f.nome_fornecedor) LIKE LOWER($${i})`)
+        conditions.push(`LOWER(f.nome) LIKE LOWER($${i})`)
         params.push(`%${nome}%`)
         i += 1
       }
@@ -33,10 +33,10 @@ export const findFornecedor = tool({
 
       const where = `WHERE ${conditions.join(' AND ')}`
       const sql = `
-        SELECT f.id, f.nome_fornecedor AS nome, f.cnpj, f.email, f.telefone
-        FROM financeiro.fornecedores f
+        SELECT f.id, f.nome AS nome, f.cnpj, f.email, f.telefone
+        FROM entidades.fornecedores f
         ${where}
-        ORDER BY f.nome_fornecedor ASC
+        ORDER BY f.nome ASC
         LIMIT 5
       `.trim()
 

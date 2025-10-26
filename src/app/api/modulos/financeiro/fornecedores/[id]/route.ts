@@ -11,8 +11,14 @@ export async function GET(req: Request) {
     if (!id) return Response.json({ success: false, message: 'ID é obrigatório' }, { status: 400 })
 
     const sql = `
-      SELECT id, nome_fornecedor, imagem_url, cnpj, email, telefone
-      FROM financeiro.fornecedores
+      SELECT
+        id,
+        nome AS nome_fornecedor,
+        NULL::text AS imagem_url,
+        cnpj,
+        email,
+        telefone
+      FROM entidades.fornecedores
       WHERE id = $1
       LIMIT 1
     `
@@ -62,13 +68,19 @@ export async function PATCH(req: Request) {
     const sets: string[] = []
     const paramsArr: unknown[] = []
     for (const [key, value] of entries) {
-      sets.push(`${key} = $${idx}`)
+      // Map front-end keys to DB columns
+      const column = key === 'nome_fornecedor' ? 'nome' : key
+      if (column === 'imagem_url') continue // not stored in entidades.fornecedores
+      sets.push(`${column} = $${idx}`)
       paramsArr.push(value)
       idx += 1
     }
+    if (sets.length === 0) {
+      return Response.json({ success: false, message: 'Nenhum campo válido para atualizar' }, { status: 400 })
+    }
     paramsArr.push(id)
 
-    const sql = `UPDATE financeiro.fornecedores SET ${sets.join(', ')} WHERE id = $${idx} RETURNING id`
+    const sql = `UPDATE entidades.fornecedores SET ${sets.join(', ')} WHERE id = $${idx} RETURNING id`
     await runQuery(sql, paramsArr)
 
     return Response.json({ success: true })

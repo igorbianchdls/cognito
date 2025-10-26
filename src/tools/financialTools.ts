@@ -95,7 +95,7 @@ export const getContasAReceber = tool({
       const listSql = `
         SELECT
           car.id,
-          c.nome_cliente AS cliente,
+          cli.nome AS cliente,
           car.descricao,
           car.valor_total,
           car.data_emissao,
@@ -104,9 +104,9 @@ export const getContasAReceber = tool({
           car.status,
           car.criado_em
         FROM financeiro.contas_a_receber AS car
-        LEFT JOIN financeiro.clientes AS c ON c.id = car.cliente_id
+        LEFT JOIN entidades.clientes AS cli ON cli.id = car.cliente_id
         ${whereClause}
-        ORDER BY car.data_vencimento DESC
+        ORDER BY car.data_vencimento ASC
         LIMIT $${index}
       `.trim();
 
@@ -117,7 +117,7 @@ export const getContasAReceber = tool({
           SUM(car.valor_total) AS total_valor,
           COUNT(*) AS total_registros
         FROM financeiro.contas_a_receber AS car
-        LEFT JOIN financeiro.clientes AS c ON c.id = car.cliente_id
+        LEFT JOIN entidades.clientes AS cli ON cli.id = car.cliente_id
         ${whereClause}
       `.trim();
 
@@ -187,7 +187,7 @@ export const getPagamentosRecebidos = tool({
     data_emissao_ate,
   }) => {
     try {
-      const conditions: string[] = ['car.status = \'pago\''];
+      const conditions: string[] = ["LOWER(car.status) = 'pago'"];
       const params: unknown[] = [];
       let index = 1;
 
@@ -224,7 +224,7 @@ export const getPagamentosRecebidos = tool({
       const listSql = `
         SELECT
           car.id,
-          cli.nome_cliente AS cliente,
+          cli.nome AS cliente,
           car.descricao,
           car.valor_total,
           car.data_emissao,
@@ -233,9 +233,9 @@ export const getPagamentosRecebidos = tool({
           car.status,
           car.criado_em
         FROM financeiro.contas_a_receber AS car
-        LEFT JOIN financeiro.clientes AS cli ON cli.id = car.cliente_id
+        LEFT JOIN entidades.clientes AS cli ON cli.id = car.cliente_id
         ${whereClause}
-        ORDER BY car.data_vencimento
+        ORDER BY car.data_recebimento DESC
         LIMIT $${index}
       `.trim();
 
@@ -246,7 +246,7 @@ export const getPagamentosRecebidos = tool({
           SUM(car.valor_total) AS total_valor,
           COUNT(*) AS total_registros
         FROM financeiro.contas_a_receber AS car
-        LEFT JOIN financeiro.clientes AS cli ON cli.id = car.cliente_id
+        LEFT JOIN entidades.clientes AS cli ON cli.id = car.cliente_id
         ${whereClause}
       `.trim();
 
@@ -357,7 +357,7 @@ export const getContasAPagar = tool({
       const listSql = `
         SELECT
           cap.id,
-          f.nome_fornecedor AS fornecedor,
+          f.nome AS fornecedor,
           cap.descricao,
           cap.valor_total,
           cap.data_emissao,
@@ -367,9 +367,9 @@ export const getContasAPagar = tool({
           cap.tipo_titulo,
           cap.criado_em
         FROM financeiro.contas_a_pagar AS cap
-        LEFT JOIN financeiro.fornecedores AS f ON f.id = cap.fornecedor_id
+        LEFT JOIN entidades.fornecedores AS f ON f.id = cap.fornecedor_id
         ${whereClause}
-        ORDER BY cap.data_vencimento DESC
+        ORDER BY cap.data_vencimento ASC
         LIMIT $${index}
       `.trim();
 
@@ -380,7 +380,7 @@ export const getContasAPagar = tool({
           SUM(cap.valor_total) AS total_valor,
           COUNT(*) AS total_registros
         FROM financeiro.contas_a_pagar AS cap
-        LEFT JOIN financeiro.fornecedores AS f ON f.id = cap.fornecedor_id
+        LEFT JOIN entidades.fornecedores AS f ON f.id = cap.fornecedor_id
         ${whereClause}
       `.trim();
 
@@ -450,7 +450,7 @@ export const getPagamentosEfetuados = tool({
     valor_maximo,
   }) => {
     try {
-      const conditions: string[] = ['cap.status = \'pago\''];
+      const conditions: string[] = ["LOWER(cap.status) = 'pago'"];
       const params: unknown[] = [];
       let index = 1;
 
@@ -487,7 +487,7 @@ export const getPagamentosEfetuados = tool({
       const listSql = `
         SELECT
           cap.id,
-          f.nome_fornecedor AS fornecedor,
+          f.nome AS fornecedor,
           cap.descricao,
           cap.valor_total,
           cap.data_emissao,
@@ -496,9 +496,9 @@ export const getPagamentosEfetuados = tool({
           cap.status,
           cap.criado_em
         FROM financeiro.contas_a_pagar AS cap
-        LEFT JOIN financeiro.fornecedores AS f ON f.id = cap.fornecedor_id
+        LEFT JOIN entidades.fornecedores AS f ON f.id = cap.fornecedor_id
         ${whereClause}
-        ORDER BY cap.data_vencimento
+        ORDER BY cap.data_pagamento DESC
         LIMIT $${index}
       `.trim();
 
@@ -509,7 +509,7 @@ export const getPagamentosEfetuados = tool({
           SUM(cap.valor_total) AS total_valor,
           COUNT(*) AS total_registros
         FROM financeiro.contas_a_pagar AS cap
-        LEFT JOIN financeiro.fornecedores AS f ON f.id = cap.fornecedor_id
+        LEFT JOIN entidades.fornecedores AS f ON f.id = cap.fornecedor_id
         ${whereClause}
       `.trim();
 
