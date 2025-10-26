@@ -49,7 +49,7 @@ export const findFornecedor = tool({
 })
 
 export const createFornecedor = tool({
-  description: 'Cria fornecedor (schema gestaofinanceira)',
+  description: 'Cria fornecedor (schema entidades)',
   inputSchema: z.object({
     nome: z.string().min(2),
     cnpj: z.string().optional(),
@@ -59,9 +59,9 @@ export const createFornecedor = tool({
   execute: async ({ nome, cnpj, email, telefone }) => {
     try {
       const insertSql = `
-        INSERT INTO gestaofinanceira.fornecedores (nome_fornecedor, cnpj, email, telefone)
+        INSERT INTO entidades.fornecedores (nome, cnpj, email, telefone)
         VALUES ($1, $2, $3, $4)
-        RETURNING id, nome_fornecedor AS nome, cnpj, email, telefone
+        RETURNING id, nome, cnpj, email, telefone
       `.trim()
       const params = [nome, cnpj ?? null, email ?? null, telefone ?? null]
       const [row] = await runQuery<{ id: string; nome: string; cnpj: string | null; email: string | null; telefone: string | null }>(insertSql, params)
@@ -73,28 +73,75 @@ export const createFornecedor = tool({
 })
 
 export const createContaAPagar = tool({
-  description: 'Cria conta a pagar (schema gestaofinanceira)',
+  description: 'Cria conta a pagar (schema financeiro)',
   inputSchema: z.object({
     fornecedor_id: z.string(),
     descricao: z.string(),
-    valor: z.number().positive(),
+    valor_total: z.number().positive(),
     data_emissao: z.string().describe('YYYY-MM-DD'),
     data_vencimento: z.string().describe('YYYY-MM-DD'),
+    status: z.enum(['Pendente', 'Pago', 'Cancelado']).default('Pendente'),
     numero_documento: z.string().optional(),
     categoria_id: z.string().optional(),
-    status: z.enum(['Pendente', 'Pago', 'Cancelado']).default('Pendente')
+    conta_financeira_id: z.string().optional(),
+    centro_custo_id: z.string().optional(),
+    tipo_titulo: z.string().optional(),
   }),
-  execute: async ({ fornecedor_id, descricao, valor, data_emissao, data_vencimento, numero_documento, categoria_id, status }) => {
+  execute: async (payload) => {
     try {
+      const {
+        fornecedor_id,
+        descricao,
+        valor_total,
+        data_emissao,
+        data_vencimento,
+        status,
+        numero_documento,
+        categoria_id,
+        conta_financeira_id,
+        centro_custo_id,
+        tipo_titulo,
+      } = payload
+
+      const columns: string[] = [
+        'fornecedor_id',
+        'descricao',
+        'valor_total',
+        'data_emissao',
+        'data_vencimento',
+        'status',
+      ]
+      const values: unknown[] = [
+        fornecedor_id,
+        descricao,
+        valor_total,
+        data_emissao,
+        data_vencimento,
+        status,
+      ]
+
+      const addOpt = (col: string, v: unknown) => {
+        if (typeof v !== 'undefined') {
+          columns.push(col)
+          values.push(v)
+        }
+      }
+
+      addOpt('numero_documento', numero_documento ?? null)
+      addOpt('categoria_id', categoria_id ?? null)
+      addOpt('conta_financeira_id', conta_financeira_id ?? null)
+      addOpt('centro_custo_id', centro_custo_id ?? null)
+      addOpt('tipo_titulo', tipo_titulo ?? null)
+
+      const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ')
       const insertSql = `
-        INSERT INTO gestaofinanceira.contas_a_pagar
-          (fornecedor_id, descricao, valor, data_emissao, data_vencimento, status, numero_documento, categoria_id)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        RETURNING id, fornecedor_id, descricao, valor, data_emissao, data_vencimento, status, numero_documento, categoria_id
+        INSERT INTO financeiro.contas_a_pagar (${columns.join(', ')})
+        VALUES (${placeholders})
+        RETURNING id, fornecedor_id, descricao, valor_total, data_emissao, data_vencimento, status,
+                  numero_documento, categoria_id, conta_financeira_id, centro_custo_id, tipo_titulo
       `.trim()
-      const params = [fornecedor_id, descricao, valor, data_emissao, data_vencimento, status, numero_documento ?? null, categoria_id ?? null]
-      const [row] = await runQuery(insertSql, params)
-      return { success: true, message: 'Conta a pagar criada com sucesso', conta: row, sql_query: insertSql, sql_params: fmt(params) }
+      const [row] = await runQuery<Record<string, unknown>>(insertSql, values)
+      return { success: true, message: 'Conta a pagar criada com sucesso', conta: row, sql_query: insertSql, sql_params: fmt(values) }
     } catch (error) {
       return { success: false, message: `Erro ao criar conta a pagar: ${error instanceof Error ? error.message : String(error)}` }
     }

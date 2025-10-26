@@ -104,15 +104,14 @@ export async function GET(req: NextRequest) {
       baseSql = `FROM financeiro.contas_a_pagar cap
                  LEFT JOIN entidades.fornecedores f ON cap.fornecedor_id = f.id
                  LEFT JOIN financeiro.categorias_financeiras cat ON cap.categoria_id = cat.id
-                 LEFT JOIN financeiro.centros_custo cc ON cap.centro_custo_id = cc.id
                  LEFT JOIN financeiro.contas_financeiras cf ON cap.conta_financeira_id = cf.id`;
       selectSql = `SELECT cap.id AS conta_id,
                           cap.fornecedor_id AS fornecedor_id,
                           cap.descricao,
                           f.nome AS fornecedor,
                           cat.nome AS fornecedor_categoria,
-                          cc.nome AS centro_custo,
                           cf.nome_conta AS conta_bancaria,
+                          cf.nome_conta AS conta_financeira,
                           cap.tipo_titulo,
                           cap.valor_total,
                           cap.data_emissao,
@@ -128,19 +127,18 @@ export async function GET(req: NextRequest) {
       if (status) push('LOWER(cap.status) =', status.toLowerCase());
       if (valor_min !== undefined) push('cap.valor_total >=', valor_min);
       if (valor_max !== undefined) push('cap.valor_total <=', valor_max);
-  } else if (view === 'contas-a-receber' || view === 'pagamentos-recebidos') {
+    } else if (view === 'contas-a-receber' || view === 'pagamentos-recebidos') {
       baseSql = `FROM financeiro.contas_a_receber car
                  LEFT JOIN entidades.clientes cli ON car.cliente_id = cli.id
                  LEFT JOIN financeiro.categorias_financeiras cat ON car.categoria_receita_id = cat.id
-                 LEFT JOIN financeiro.centros_custo cc ON car.centro_custo_id = cc.id
                  LEFT JOIN financeiro.contas_financeiras cf ON car.conta_financeira_id = cf.id`;
       selectSql = `SELECT car.id AS conta_id,
                           car.descricao,
                           cli.nome AS cliente,
                           NULL::text AS cliente_imagem_url,
                           cat.nome AS cliente_categoria,
-                          cc.nome AS centro_custo,
                           cf.nome_conta AS conta_bancaria,
+                          cf.nome_conta AS conta_financeira,
                           car.tipo_titulo,
                           car.valor_total,
                           car.data_emissao,
