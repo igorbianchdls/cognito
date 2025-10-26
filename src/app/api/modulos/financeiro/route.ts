@@ -40,6 +40,24 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     valor_total: 'pr.valor_total',
     status: 'pr.status',
   },
+  'extrato': {
+    extrato_id: 'eb.id',
+    data_extrato: 'eb.data_extrato',
+    banco: 'b.nome_banco',
+    conta_financeira: 'cf.nome_conta',
+    tipo_conta: 'cf.tipo_conta',
+    saldo_inicial: 'eb.saldo_inicial',
+    total_creditos: 'eb.total_creditos',
+    total_debitos: 'eb.total_debitos',
+    saldo_final: 'eb.saldo_final',
+    status: 'eb.status',
+    transacao_id: 't.id',
+    data_transacao: 't.data_transacao',
+    tipo_transacao: 't.tipo',
+    valor_transacao: 't.valor',
+    origem_transacao: 't.origem',
+    transacao_conciliada: 't.conciliado',
+  },
   movimentos: {
     id: 'm.id',
     data: 'm.data',
@@ -194,6 +212,29 @@ export async function GET(req: NextRequest) {
       if (status) push('LOWER(car.status) =', status.toLowerCase());
       if (valor_min !== undefined) push('car.valor_total >=', valor_min);
       if (valor_max !== undefined) push('car.valor_total <=', valor_max);
+    } else if (view === 'extrato') {
+      baseSql = `FROM financeiro.extratos_bancarios eb
+                 LEFT JOIN financeiro.extrato_transacoes t ON t.extrato_id = eb.id
+                 LEFT JOIN financeiro.contas_financeiras cf ON cf.id = eb.conta_financeira_id
+                 LEFT JOIN financeiro.bancos b ON b.id = eb.conta_id`;
+      selectSql = `SELECT eb.id AS extrato_id,
+                          eb.data_extrato,
+                          b.nome_banco AS banco,
+                          cf.nome_conta AS conta_financeira,
+                          cf.tipo_conta,
+                          eb.saldo_inicial,
+                          eb.total_creditos,
+                          eb.total_debitos,
+                          eb.saldo_final,
+                          eb.status,
+                          t.id AS transacao_id,
+                          t.data_transacao,
+                          t.tipo AS tipo_transacao,
+                          t.descricao AS descricao_transacao,
+                          t.valor AS valor_transacao,
+                          t.origem AS origem_transacao,
+                          t.conciliado AS transacao_conciliada`;
+      whereDateCol = 'eb.data_extrato';
     } else if (view === 'movimentos') {
       baseSql = `FROM gestaofinanceira.movimentos m
                  LEFT JOIN gestaofinanceira.categorias cat ON cat.id = m.categoria_id
@@ -226,7 +267,11 @@ export async function GET(req: NextRequest) {
       ? `ORDER BY ${orderBy} ${orderDir}`
       : (view === 'contas-a-pagar'
           ? 'ORDER BY cap.data_vencimento ASC'
-          : (view === 'contas-a-receber' ? 'ORDER BY car.data_vencimento ASC' : `ORDER BY ${whereDateCol} DESC`));
+          : (view === 'contas-a-receber'
+              ? 'ORDER BY car.data_vencimento ASC'
+              : (view === 'extrato'
+                  ? 'ORDER BY eb.id ASC, t.data_transacao ASC'
+                  : `ORDER BY ${whereDateCol} DESC`)));
     const limitOffsetClause = `LIMIT $${idx}::int OFFSET $${idx + 1}::int`;
     const paramsWithPage = [...params, pageSize, offset];
 

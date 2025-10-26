@@ -35,6 +35,7 @@ export default function ModulosFinanceiroPage() {
         { value: 'contas-a-receber', label: 'Contas a Receber' },
         { value: 'pagamentos-efetuados', label: 'Pagamentos Efetuados' },
         { value: 'pagamentos-recebidos', label: 'Pagamentos Recebidos' },
+        { value: 'extrato', label: 'Extrato' },
         { value: 'movimentos', label: 'Movimentos' },
       ],
       selected: 'contas-a-pagar',
@@ -121,6 +122,26 @@ export default function ModulosFinanceiroPage() {
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
+      case 'extrato':
+        return [
+          { accessorKey: 'extrato_id', header: 'Extrato' },
+          { accessorKey: 'data_extrato', header: 'Data Extrato', cell: ({ row }) => formatDate(row.original['data_extrato']) },
+          { accessorKey: 'banco', header: 'Banco' },
+          { accessorKey: 'conta_financeira', header: 'Conta' },
+          { accessorKey: 'tipo_conta', header: 'Tipo Conta' },
+          { accessorKey: 'saldo_inicial', header: 'Saldo Inicial', cell: ({ row }) => formatBRL(row.original['saldo_inicial']) },
+          { accessorKey: 'total_creditos', header: 'Créditos', cell: ({ row }) => formatBRL(row.original['total_creditos']) },
+          { accessorKey: 'total_debitos', header: 'Débitos', cell: ({ row }) => formatBRL(row.original['total_debitos']) },
+          { accessorKey: 'saldo_final', header: 'Saldo Final', cell: ({ row }) => formatBRL(row.original['saldo_final']) },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => renderStatusBadge(row.original['status']) },
+          { accessorKey: 'transacao_id', header: 'Transação' },
+          { accessorKey: 'data_transacao', header: 'Data Transação', cell: ({ row }) => formatDate(row.original['data_transacao']) },
+          { accessorKey: 'tipo_transacao', header: 'Tipo Transação' },
+          { accessorKey: 'descricao_transacao', header: 'Descrição Transação' },
+          { accessorKey: 'valor_transacao', header: 'Valor Transação', cell: ({ row }) => formatBRL(row.original['valor_transacao']) },
+          { accessorKey: 'origem_transacao', header: 'Origem' },
+          { accessorKey: 'transacao_conciliada', header: 'Conciliada' },
+        ]
       case 'contas-a-receber':
         return [
           {
@@ -389,6 +410,8 @@ export default function ModulosFinanceiroPage() {
           return <ArrowUpCircle className="h-4 w-4" />
         case 'pagamentos-recebidos':
           return <ArrowDownCircle className="h-4 w-4" />
+        case 'extrato':
+          return <List className="h-4 w-4" />
         case 'movimentos':
           return <List className="h-4 w-4" />
         default:
