@@ -26,22 +26,19 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     status: 'car.status',
   },
   'pagamentos-efetuados': {
-    id: 'cap.id',
+    id: 'pe.id',
     fornecedor: 'f.nome',
-    data_emissao: 'cap.data_emissao',
-    data_vencimento: 'cap.data_vencimento',
-    data_pagamento: 'cap.data_pagamento',
-    valor_total: 'cap.valor_total',
-    status: 'cap.status',
+    data_pagamento: 'pe.data_pagamento',
+    valor_total: 'pe.valor_total',
+    status: 'pe.status',
   },
   'pagamentos-recebidos': {
-    id: 'car.id',
+    id: 'pr.id',
     cliente: 'cli.nome',
-    data_emissao: 'car.data_emissao',
-    data_vencimento: 'car.data_vencimento',
-    data_recebimento: 'car.data_recebimento',
-    valor_total: 'car.valor_total',
-    status: 'car.status',
+    data_pagamento: 'pr.data_pagamento',
+    data_recebimento: 'pr.data_pagamento',
+    valor_total: 'pr.valor_total',
+    status: 'pr.status',
   },
   movimentos: {
     id: 'm.id',
@@ -100,7 +97,7 @@ export async function GET(req: NextRequest) {
     let totalSql = '';
     let selectSql = '';
 
-    if (view === 'contas-a-pagar' || view === 'pagamentos-efetuados') {
+    if (view === 'contas-a-pagar') {
       baseSql = `FROM financeiro.contas_a_pagar cap
                  LEFT JOIN entidades.fornecedores f ON cap.fornecedor_id = f.id
                  LEFT JOIN financeiro.categorias_financeiras cat ON cap.categoria_id = cat.id
@@ -118,16 +115,63 @@ export async function GET(req: NextRequest) {
                           cap.data_vencimento,
                           cap.data_pagamento,
                           cap.status`;
-      // Filtro principal por data: vencimento para contas; pagamento para pagos
-      whereDateCol = view === 'pagamentos-efetuados' ? 'cap.data_pagamento' : 'cap.data_vencimento';
-      if (view === 'pagamentos-efetuados') {
-        conditions.push(`LOWER(cap.status) = 'pago'`);
-      }
+      // Filtro principal por data: vencimento para contas
+      whereDateCol = 'cap.data_vencimento';
       if (fornecedor_id) push('cap.fornecedor_id =', fornecedor_id);
       if (status) push('LOWER(cap.status) =', status.toLowerCase());
       if (valor_min !== undefined) push('cap.valor_total >=', valor_min);
       if (valor_max !== undefined) push('cap.valor_total <=', valor_max);
-    } else if (view === 'contas-a-receber' || view === 'pagamentos-recebidos') {
+    } else if (view === 'pagamentos-efetuados') {
+      baseSql = `FROM financeiro.pagamentos_efetuados pe
+                 LEFT JOIN entidades.fornecedores f ON f.id = pe.fornecedor_id
+                 LEFT JOIN financeiro.contas_financeiras cf ON cf.id = pe.conta_financeira_id
+                 LEFT JOIN financeiro.pagamentos_efetuados_linhas pel ON pel.pagamento_id = pe.id
+                 LEFT JOIN financeiro.contas_a_pagar cap ON cap.id = pel.conta_pagar_id
+                 LEFT JOIN financeiro.categorias_financeiras cat ON cat.id = cap.categoria_id`;
+      selectSql = `SELECT pe.id AS pagamento_id,
+                          pe.fornecedor_id AS fornecedor_id,
+                          cap.id AS conta_id,
+                          f.nome AS fornecedor,
+                          cat.nome AS fornecedor_categoria,
+                          cf.nome_conta AS conta_bancaria,
+                          cf.nome_conta AS conta_financeira,
+                          cap.descricao AS descricao,
+                          pe.valor_total AS valor_total,
+                          pe.data_pagamento,
+                          pe.tipo_pagamento AS tipo_titulo,
+                          pe.status`;
+      whereDateCol = 'pe.data_pagamento';
+      if (fornecedor_id) push('pe.fornecedor_id =', fornecedor_id);
+      if (status) push('LOWER(pe.status) =', status.toLowerCase());
+      if (valor_min !== undefined) push('pe.valor_total >=', valor_min);
+      if (valor_max !== undefined) push('pe.valor_total <=', valor_max);
+    } else if (view === 'pagamentos-recebidos') {
+      baseSql = `FROM financeiro.pagamentos_recebidos pr
+                 LEFT JOIN entidades.clientes cli ON cli.id = pr.cliente_id
+                 LEFT JOIN financeiro.contas_financeiras cf ON cf.id = pr.conta_financeira_id
+                 LEFT JOIN financeiro.pagamentos_recebidos_linhas prl ON prl.pagamento_id = pr.id
+                 LEFT JOIN financeiro.contas_a_receber car ON car.id = prl.conta_receber_id
+                 LEFT JOIN financeiro.categorias_financeiras cat ON cat.id = car.categoria_receita_id`;
+      selectSql = `SELECT pr.id AS pagamento_id,
+                          pr.cliente_id AS cliente_id,
+                          car.id AS conta_id,
+                          cli.nome AS cliente,
+                          NULL::text AS cliente_imagem_url,
+                          cat.nome AS cliente_categoria,
+                          cf.nome_conta AS conta_bancaria,
+                          cf.nome_conta AS conta_financeira,
+                          car.descricao AS descricao,
+                          pr.valor_total AS valor_total,
+                          pr.data_pagamento AS data_recebimento,
+                          car.data_vencimento,
+                          pr.tipo_pagamento AS tipo_titulo,
+                          pr.status`;
+      whereDateCol = 'pr.data_pagamento';
+      if (cliente_id) push('pr.cliente_id =', cliente_id);
+      if (status) push('LOWER(pr.status) =', status.toLowerCase());
+      if (valor_min !== undefined) push('pr.valor_total >=', valor_min);
+      if (valor_max !== undefined) push('pr.valor_total <=', valor_max);
+    } else if (view === 'contas-a-receber') {
       baseSql = `FROM financeiro.contas_a_receber car
                  LEFT JOIN entidades.clientes cli ON car.cliente_id = cli.id
                  LEFT JOIN financeiro.categorias_financeiras cat ON car.categoria_receita_id = cat.id
@@ -144,11 +188,8 @@ export async function GET(req: NextRequest) {
                           car.data_vencimento,
                           car.data_recebimento,
                           car.status`;
-      // Filtro principal por data: vencimento para contas; recebimento para recebidos
-      whereDateCol = view === 'pagamentos-recebidos' ? 'car.data_recebimento' : 'car.data_vencimento';
-      if (view === 'pagamentos-recebidos') {
-        conditions.push(`LOWER(car.status) = 'pago'`);
-      }
+      // Filtro principal por data: vencimento para contas
+      whereDateCol = 'car.data_vencimento';
       if (cliente_id) push('car.cliente_id =', cliente_id);
       if (status) push('LOWER(car.status) =', status.toLowerCase());
       if (valor_min !== undefined) push('car.valor_total >=', valor_min);
