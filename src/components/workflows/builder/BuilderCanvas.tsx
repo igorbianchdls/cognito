@@ -19,6 +19,7 @@ export default function BuilderCanvas() {
     { id: 's3', type: 'action', text: 'Add a new record' },
     { id: 's4', type: 'branch' },
   ])
+  const [selectedId, setSelectedId] = useState<string | null>(null)
 
   const handleInsert = (index: number, type: InsertType) => {
     const id = `s${Date.now()}`
@@ -35,12 +36,51 @@ export default function BuilderCanvas() {
   }
 
   const renderStep = (step: Step, index: number) => {
-    if (step.type === 'trigger') return <TriggerNode key={step.id} index={index + 1} />
-    if (step.type === 'action') return <ActionNode key={step.id} index={index + 1} text={step.text} />
-    if (step.type === 'branch') return <BranchNode key={step.id} index={index + 1} />
+    const commonProps = {
+      key: step.id,
+      index: index + 1,
+      selected: selectedId === step.id,
+      onSelect: () => setSelectedId(step.id),
+      onDelete: () => removeStep(step.id, index),
+    }
+    if (step.type === 'trigger') return <TriggerNode {...commonProps} />
+    if (step.type === 'action') return <ActionNode {...commonProps} text={step.text} />
+    if (step.type === 'branch') return <BranchNode {...commonProps} />
     return (
       <div key={step.id} className="text-sm text-gray-500">Unsupported step</div>
     )
+  }
+
+  const removeStep = (id: string, index: number) => {
+    const step = steps.find(s => s.id === id)
+    if (!step) return
+    if (index === 0 && step.type === 'trigger') {
+      const ok = window.confirm('Remover o Trigger inicial? Sem um trigger o fluxo não inicia.')
+      if (!ok) return
+    }
+    setSteps(prev => prev.filter(s => s.id !== id))
+    setSelectedId(prev => (prev === id ? null : prev))
+  }
+
+  // Delete by keyboard
+  // Avoid when input is focused
+  if (typeof window !== 'undefined') {
+    const w = window as Window & { __wf_keydown_attached__?: boolean }
+    if (!w.__wf_keydown_attached__) {
+      w.addEventListener('keydown', (e) => {
+        const active = document.activeElement as HTMLElement | null
+        const isEditable = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)
+        if (isEditable) return
+        if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
+          const idx = steps.findIndex(s => s.id === selectedId)
+          if (idx >= 0) {
+            e.preventDefault()
+            removeStep(selectedId, idx)
+          }
+        }
+      })
+      w.__wf_keydown_attached__ = true
+    }
   }
 
   return (
@@ -65,4 +105,3 @@ export default function BuilderCanvas() {
     </div>
   )
 }
-
