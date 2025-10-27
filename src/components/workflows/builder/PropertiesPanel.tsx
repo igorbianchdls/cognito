@@ -1,8 +1,6 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
 import type { Step } from "@/app/workflows/builder/types"
 import TriggerForm from "./forms/TriggerForm"
@@ -39,10 +37,9 @@ export default function PropertiesPanel({ step, onChange, onDelete }: { step: St
         )}
 
         {step.type !== 'trigger' && step.type !== 'action' && (
-          <div className="text-sm text-muted-foreground">Formulário para "{step.type}" ainda não implementado. Em breve.</div>
+          <div className="text-sm text-muted-foreground">Formulário para {step.type} ainda não implementado. Em breve.</div>
         )}
       </div>
     </div>
   )
 }
-
