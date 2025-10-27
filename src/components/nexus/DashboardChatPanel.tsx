@@ -53,6 +53,12 @@ export default function DashboardChatPanel() {
   const availableFonts = FontManager.getAvailableFonts();
   const availableFontSizes = FontManager.getAvailableFontSizes();
 
+  // Header tooltip without nested template literals
+  const headerVariantLabel = headerUi.variant === 'auto'
+    ? 'Auto (' + (selectedTheme === 'light' ? 'light' : 'dark') + ')'
+    : headerUi.variant;
+  const headerTooltip = 'Header: ' + headerVariantLabel;
+
   // Initialize store on mount
   useEffect(() => {
     visualBuilderActions.initialize();
@@ -434,6 +440,37 @@ export default function DashboardChatPanel() {
                   )}
                 </DropdownMenuItem>
               ))}
+          </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Header Style Selector */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div>
+                <ArtifactAction
+                  icon={Layout}
+                  tooltip={headerTooltip}
+                  variant="ghost"
+                />
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
+                Header Style
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => headerUiActions.setVariant('auto')} className="flex items-center justify-between py-2">
+                <span>Auto</span>
+                {headerUi.variant === 'auto' && <Check className="w-4 h-4 text-blue-600" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => headerUiActions.setVariant('light')} className="flex items-center justify-between py-2">
+                <span>Light</span>
+                {headerUi.variant === 'light' && <Check className="w-4 h-4 text-blue-600" />}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => headerUiActions.setVariant('dark')} className="flex items-center justify-between py-2">
+                <span>Dark</span>
+                {headerUi.variant === 'dark' && <Check className="w-4 h-4 text-blue-600" />}
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -578,33 +615,3 @@ export default function DashboardChatPanel() {
     </Artifact>
   );
 }
-          {/* Header Style Selector */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <div>
-                <ArtifactAction
-                  icon={Layout}
-                  tooltip={`Header: ${headerUi.variant === 'auto' ? `Auto (${selectedTheme === 'light' ? 'light' : 'dark'})` : headerUi.variant}`}
-                  variant="ghost"
-                />
-              </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
-                Header Style
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => headerUiActions.setVariant('auto')} className="flex items-center justify-between py-2">
-                <span>Auto</span>
-                {headerUi.variant === 'auto' && <Check className="w-4 h-4 text-blue-600" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => headerUiActions.setVariant('light')} className="flex items-center justify-between py-2">
-                <span>Light</span>
-                {headerUi.variant === 'light' && <Check className="w-4 h-4 text-blue-600" />}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => headerUiActions.setVariant('dark')} className="flex items-center justify-between py-2">
-                <span>Dark</span>
-                {headerUi.variant === 'dark' && <Check className="w-4 h-4 text-blue-600" />}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
