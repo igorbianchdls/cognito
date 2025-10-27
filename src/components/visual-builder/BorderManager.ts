@@ -116,14 +116,35 @@ export class BorderManager {
     const accent = tokens?.borders.accentColor ?? '#bbb';
 
     const keys: BorderPresetKey[] = ['none', 'subtle-rounded', 'strong-rounded', 'square', 'pill', 'corners-accent'];
+
+    // Fallback values when tokens are not available
+    const fallbackWidth: Record<BorderPresetKey, number> = {
+      none: 0,
+      'subtle-rounded': 1,
+      'strong-rounded': 2,
+      square: 1,
+      pill: 2,
+      'corners-accent': 1,
+    };
+    const fallbackRadius: Record<BorderPresetKey, number> = {
+      none: 0,
+      'subtle-rounded': 8,
+      'strong-rounded': 12,
+      square: 0,
+      pill: 9999,
+      'corners-accent': 8,
+    };
+
     return keys.map((key) => {
-      const style = this.getBorderStyle(key, tokens || ({} as DesignTokens));
+      const width = tokens ? this.getBorderStyle(key, tokens).width : fallbackWidth[key];
+      const radius = tokens ? this.getBorderStyle(key, tokens).radius : fallbackRadius[key];
+
       const previewStyle: React.CSSProperties = {
         width: 24,
         height: 24,
         borderStyle: 'solid',
-        borderWidth: style.width,
-        borderRadius: style.radius,
+        borderWidth: width,
+        borderRadius: radius,
         borderColor: color,
         position: 'relative',
         boxSizing: 'border-box',
@@ -131,8 +152,7 @@ export class BorderManager {
       };
 
       // Add small corner accent indicators for presets that use accent
-      if (key !== 'none' && style.accentColor && style.accentColor !== 'transparent') {
-        // We cannot render pseudo elements here; preview kept minimal
+      if (key !== 'none') {
         previewStyle.boxShadow = `inset 0 0 0 1px ${accent}`;
       }
 
@@ -176,4 +196,3 @@ export class BorderManager {
     return 'subtle-rounded';
   }
 }
-
