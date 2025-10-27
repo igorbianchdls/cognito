@@ -15,6 +15,8 @@ import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } f
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { CreditCard, ArrowDownCircle, ArrowUpCircle, List } from 'lucide-react'
 import FornecedorEditorSheet from '@/components/modulos/financeiro/FornecedorEditorSheet'
+import ClienteEditorSheet from '@/components/modulos/financeiro/ClienteEditorSheet'
+import BancoEditorSheet from '@/components/modulos/financeiro/BancoEditorSheet'
 
 type Row = TableData
 
@@ -141,8 +143,29 @@ export default function ModulosFinanceiroPage() {
         ]
       case 'bancos':
         return [
-          { accessorKey: 'banco_id', header: 'Banco ID' },
-          { accessorKey: 'nome_banco', header: 'Nome' },
+          {
+            accessorKey: 'nome_banco',
+            header: 'Banco',
+            cell: ({ row }) => {
+              const nome = row.original['nome_banco'] || 'Sem nome'
+              const imagemUrl = row.original['banco_imagem_url'] || row.original['imagem_url']
+              const colors = getColorFromName(String(nome))
+              return (
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center mr-3 cursor-pointer" role="button" onClick={() => openBancoEditor(row.original)} style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}>
+                    {imagemUrl ? (
+                      <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
+                    ) : (
+                      <div style={{ fontSize: 18, fontWeight: 600, color: colors.text }}>
+                        {String(nome)?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                    )}
+                  </div>
+                  <button type="button" onClick={() => openBancoEditor(row.original)} className="text-left" style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</button>
+                </div>
+              )
+            }
+          },
           { accessorKey: 'numero_banco', header: 'Número' },
           { accessorKey: 'agencia', header: 'Agência' },
           { accessorKey: 'endereco', header: 'Endereço' },
@@ -197,7 +220,7 @@ export default function ModulosFinanceiroPage() {
 
               return (
                 <div className="flex items-center">
-                  <div className="flex items-center justify-center mr-3"
+                  <div className="flex items-center justify-center mr-3 cursor-pointer" role="button" onClick={() => openClienteEditor(row.original)}
                        style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}>
                     {imagemUrl ? (
                       <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
@@ -208,7 +231,7 @@ export default function ModulosFinanceiroPage() {
                     )}
                   </div>
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
+                    <button type="button" onClick={() => openClienteEditor(row.original)} className="text-left" style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</button>
                     <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(categoria)}</div>
                   </div>
                 </div>
@@ -280,7 +303,7 @@ export default function ModulosFinanceiroPage() {
 
               return (
                 <div className="flex items-center">
-                  <div className="flex items-center justify-center mr-3"
+                  <div className="flex items-center justify-center mr-3 cursor-pointer" role="button" onClick={() => openClienteEditor(row.original)}
                        style={{ width: 40, height: 40, borderRadius: 8, overflow: 'hidden', backgroundColor: imagemUrl ? 'transparent' : colors.bg }}>
                     {imagemUrl ? (
                       <img src={String(imagemUrl)} alt={String(nome)} className="w-full h-full object-cover" />
@@ -291,7 +314,7 @@ export default function ModulosFinanceiroPage() {
                     )}
                   </div>
                   <div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</div>
+                    <button type="button" onClick={() => openClienteEditor(row.original)} className="text-left" style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>{String(nome)}</button>
                     <div style={{ fontSize: 12, fontWeight: 400, color: '#6b7280' }}>{String(categoria)}</div>
                   </div>
                 </div>
@@ -380,6 +403,16 @@ export default function ModulosFinanceiroPage() {
   const [selectedFornecedorId, setSelectedFornecedorId] = useState<string | null>(null)
   const [fornecedorPrefill, setFornecedorPrefill] = useState<{ nome_fornecedor?: string; imagem_url?: string } | undefined>(undefined)
 
+  // Editor Cliente
+  const [clienteEditorOpen, setClienteEditorOpen] = useState(false)
+  const [selectedClienteId, setSelectedClienteId] = useState<string | number | null>(null)
+  const [clientePrefill, setClientePrefill] = useState<{ nome_cliente?: string; imagem_url?: string } | undefined>(undefined)
+
+  // Editor Banco
+  const [bancoEditorOpen, setBancoEditorOpen] = useState(false)
+  const [selectedBancoId, setSelectedBancoId] = useState<string | number | null>(null)
+  const [bancoPrefill, setBancoPrefill] = useState<{ nome_banco?: string; imagem_url?: string } | undefined>(undefined)
+
   useEffect(() => {
     const controller = new AbortController()
     const load = async () => {
@@ -439,6 +472,28 @@ export default function ModulosFinanceiroPage() {
       imagem_url: row['fornecedor_imagem_url'] ? String(row['fornecedor_imagem_url']) : undefined,
     })
     setEditorOpen(true)
+  }
+
+  const openClienteEditor = (row: Row) => {
+    const clienteId = row['cliente_id']
+    if (!clienteId) return
+    setSelectedClienteId(String(clienteId))
+    setClientePrefill({
+      nome_cliente: row['cliente'] ? String(row['cliente']) : undefined,
+      imagem_url: row['cliente_imagem_url'] ? String(row['cliente_imagem_url']) : undefined,
+    })
+    setClienteEditorOpen(true)
+  }
+
+  const openBancoEditor = (row: Row) => {
+    const bancoId = row['banco_id']
+    if (!bancoId) return
+    setSelectedBancoId(String(bancoId))
+    setBancoPrefill({
+      nome_banco: row['nome_banco'] ? String(row['nome_banco']) : undefined,
+      imagem_url: row['banco_imagem_url'] ? String(row['banco_imagem_url']) : undefined,
+    })
+    setBancoEditorOpen(true)
   }
 
   const tabOptions: Opcao[] = useMemo(() => {
@@ -577,6 +632,20 @@ export default function ModulosFinanceiroPage() {
         conta={selectedConta}
         fornecedorId={selectedFornecedorId}
         fornecedorPrefill={fornecedorPrefill}
+        onSaved={() => setReloadKey((k) => k + 1)}
+      />
+      <ClienteEditorSheet
+        open={clienteEditorOpen}
+        onOpenChange={setClienteEditorOpen}
+        clienteId={selectedClienteId}
+        prefill={clientePrefill}
+        onSaved={() => setReloadKey((k) => k + 1)}
+      />
+      <BancoEditorSheet
+        open={bancoEditorOpen}
+        onOpenChange={setBancoEditorOpen}
+        bancoId={selectedBancoId}
+        prefill={bancoPrefill}
         onSaved={() => setReloadKey((k) => k + 1)}
       />
     </SidebarProvider>

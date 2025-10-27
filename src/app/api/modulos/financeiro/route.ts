@@ -161,6 +161,7 @@ export async function GET(req: NextRequest) {
                           cap.fornecedor_id AS fornecedor_id,
                           cap.descricao,
                           f.nome AS fornecedor,
+                          f.imagem_url AS fornecedor_imagem_url,
                           cat.nome AS fornecedor_categoria,
                           cf.nome_conta AS conta_bancaria,
                           cf.nome_conta AS conta_financeira,
@@ -187,6 +188,7 @@ export async function GET(req: NextRequest) {
                           pe.fornecedor_id AS fornecedor_id,
                           cap.id AS conta_id,
                           f.nome AS fornecedor,
+                          f.imagem_url AS fornecedor_imagem_url,
                           cat.nome AS fornecedor_categoria,
                           cf.nome_conta AS conta_bancaria,
                           cf.nome_conta AS conta_financeira,
@@ -211,7 +213,7 @@ export async function GET(req: NextRequest) {
                           pr.cliente_id AS cliente_id,
                           car.id AS conta_id,
                           cli.nome AS cliente,
-                          NULL::text AS cliente_imagem_url,
+                          cli.imagem_url AS cliente_imagem_url,
                           cat.nome AS cliente_categoria,
                           cf.nome_conta AS conta_bancaria,
                           cf.nome_conta AS conta_financeira,
@@ -232,9 +234,10 @@ export async function GET(req: NextRequest) {
                  LEFT JOIN financeiro.categorias_financeiras cat ON car.categoria_receita_id = cat.id
                  LEFT JOIN financeiro.contas_financeiras cf ON car.conta_financeira_id = cf.id`;
       selectSql = `SELECT car.id AS conta_id,
+                          car.cliente_id AS cliente_id,
                           car.descricao,
                           cli.nome AS cliente,
-                          NULL::text AS cliente_imagem_url,
+                          cli.imagem_url AS cliente_imagem_url,
                           cat.nome AS cliente_categoria,
                           cf.nome_conta AS conta_bancaria,
                           cf.nome_conta AS conta_financeira,
@@ -296,6 +299,7 @@ export async function GET(req: NextRequest) {
                           b.numero_banco,
                           b.agencia,
                           b.endereco,
+                          b.imagem_url,
                           b.criado_em,
                           b.atualizado_em`;
       whereDateCol = 'b.criado_em';

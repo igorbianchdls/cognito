@@ -11,37 +11,31 @@ export async function GET(req: Request) {
     if (!id) return Response.json({ success: false, message: 'ID é obrigatório' }, { status: 400 })
 
     const sql = `
-      SELECT
-        id,
-        nome AS nome_fornecedor,
-        imagem_url,
-        cnpj,
-        email,
-        telefone
-      FROM entidades.fornecedores
+      SELECT id, nome_banco, imagem_url, numero_banco, agencia, endereco, criado_em, atualizado_em
+      FROM financeiro.bancos
       WHERE id = $1
       LIMIT 1
     `
     const rows = await runQuery<Record<string, unknown>>(sql, [id])
-    const fornecedor = rows[0] || null
+    const banco = rows[0] || null
 
-    if (!fornecedor) {
-      return Response.json({ success: false, message: 'Fornecedor não encontrado' }, { status: 404 })
+    if (!banco) {
+      return Response.json({ success: false, message: 'Banco não encontrado' }, { status: 404 })
     }
 
-    return Response.json({ success: true, data: fornecedor })
+    return Response.json({ success: true, data: banco })
   } catch (error) {
-    console.error('GET /api/modulos/financeiro/fornecedores/[id] error:', error)
+    console.error('GET /api/modulos/financeiro/bancos/[id] error:', error)
     return Response.json({ success: false, message: 'Erro interno' }, { status: 500 })
   }
 }
 
-const FORNECEDOR_WHITELIST = new Set([
-  'nome_fornecedor',
+const BANCO_WHITELIST = new Set([
+  'nome_banco',
   'imagem_url',
-  'cnpj',
-  'email',
-  'telefone',
+  'numero_banco',
+  'agencia',
+  'endereco',
 ])
 
 export async function PATCH(req: Request) {
@@ -52,13 +46,12 @@ export async function PATCH(req: Request) {
     if (!id) return Response.json({ success: false, message: 'ID é obrigatório' }, { status: 400 })
 
     const body = await req.json() as Record<string, unknown>
-    const entries = Object.entries(body).filter(([k, v]) => FORNECEDOR_WHITELIST.has(k) && v !== undefined)
+    const entries = Object.entries(body).filter(([k, v]) => BANCO_WHITELIST.has(k) && v !== undefined)
 
     if (entries.length === 0) {
       return Response.json({ success: false, message: 'Nenhum campo válido para atualizar' }, { status: 400 })
     }
 
-    // Validações simples
     const imagemUrl = body['imagem_url'] as string | undefined
     if (imagemUrl && !(imagemUrl.startsWith('http://') || imagemUrl.startsWith('https://'))) {
       return Response.json({ success: false, message: 'imagem_url deve ser um link http/https' }, { status: 400 })
@@ -68,23 +61,20 @@ export async function PATCH(req: Request) {
     const sets: string[] = []
     const paramsArr: unknown[] = []
     for (const [key, value] of entries) {
-      // Map front-end keys to DB columns
-      const column = key === 'nome_fornecedor' ? 'nome' : key
+      const column = key
       sets.push(`${column} = $${idx}`)
       paramsArr.push(value)
       idx += 1
     }
-    if (sets.length === 0) {
-      return Response.json({ success: false, message: 'Nenhum campo válido para atualizar' }, { status: 400 })
-    }
     paramsArr.push(id)
 
-    const sql = `UPDATE entidades.fornecedores SET ${sets.join(', ')} WHERE id = $${idx} RETURNING id`
+    const sql = `UPDATE financeiro.bancos SET ${sets.join(', ')} WHERE id = $${idx} RETURNING id`
     await runQuery(sql, paramsArr)
 
     return Response.json({ success: true })
   } catch (error) {
-    console.error('PATCH /api/modulos/financeiro/fornecedores/[id] error:', error)
+    console.error('PATCH /api/modulos/financeiro/bancos/[id] error:', error)
     return Response.json({ success: false, message: 'Erro interno' }, { status: 500 })
   }
 }
+
