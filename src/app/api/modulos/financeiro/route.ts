@@ -260,6 +260,7 @@ export async function GET(req: NextRequest) {
       selectSql = `SELECT eb.id AS extrato_id,
                           eb.data_extrato,
                           b.nome_banco AS banco,
+                          b.imagem_url AS banco_imagem_url,
                           cf.nome_conta AS conta_financeira,
                           cf.tipo_conta,
                           eb.saldo_inicial,

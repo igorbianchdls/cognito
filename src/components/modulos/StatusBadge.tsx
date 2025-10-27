@@ -2,7 +2,15 @@ import React from 'react'
 
 type StatusBadgeProps = {
   value?: unknown
-  type: 'status' | 'prioridade' | 'departamento' | 'condicao_pagamento' | 'estagio'
+  type:
+    | 'status'
+    | 'prioridade'
+    | 'departamento'
+    | 'condicao_pagamento'
+    | 'estagio'
+    | 'fin_tipo_conta'
+    | 'fin_transacao'
+    | 'bool'
 }
 
 export default function StatusBadge({ value, type }: StatusBadgeProps) {
@@ -84,6 +92,46 @@ export default function StatusBadge({ value, type }: StatusBadgeProps) {
       textColor = '#dc2626'
     } else {
       // inicial, qualificação, prospecção, etc (gray)
+      bgColor = '#f3f4f6'
+      textColor = '#6b7280'
+    }
+  }
+
+  // Finanças: tipo de conta (corrente/poupança)
+  if (type === 'fin_tipo_conta') {
+    if (valueStr.includes('corr')) {
+      bgColor = '#dbeafe'
+      textColor = '#2563eb'
+    } else if (valueStr.includes('poup')) {
+      bgColor = '#ede9fe'
+      textColor = '#7c3aed'
+    } else {
+      bgColor = '#f3f4f6'
+      textColor = '#6b7280'
+    }
+  }
+
+  // Finanças: tipo de transação (crédito/débito)
+  if (type === 'fin_transacao') {
+    if (valueStr.includes('cred')) {
+      bgColor = '#d1fae5'
+      textColor = '#047857'
+    } else if (valueStr.includes('deb')) {
+      bgColor = '#fee2e2'
+      textColor = '#dc2626'
+    } else {
+      bgColor = '#f3f4f6'
+      textColor = '#6b7280'
+    }
+  }
+
+  // Booleano: Sim/Não
+  if (type === 'bool') {
+    const truthy = valueStr === 'true' || valueStr === 't' || valueStr === '1' || valueStr === 'sim' || valueStr === 'yes'
+    if (truthy) {
+      bgColor = '#d1fae5'
+      textColor = '#047857'
+    } else {
       bgColor = '#f3f4f6'
       textColor = '#6b7280'
     }

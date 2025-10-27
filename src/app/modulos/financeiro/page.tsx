@@ -14,6 +14,8 @@ import DataToolbar from '@/components/modulos/DataToolbar'
 import { $titulo, $tabs, $tabelaUI, $layout, $toolbarUI, financeiroUiActions } from '@/stores/modulos/financeiroUiStore'
 import type { Opcao } from '@/components/modulos/TabsNav'
 import { CreditCard, ArrowDownCircle, ArrowUpCircle, List } from 'lucide-react'
+import EntityDisplay from '@/components/modulos/EntityDisplay'
+import StatusBadge from '@/components/modulos/StatusBadge'
 import FornecedorEditorSheet from '@/components/modulos/financeiro/FornecedorEditorSheet'
 import ClienteEditorSheet from '@/components/modulos/financeiro/ClienteEditorSheet'
 import BancoEditorSheet from '@/components/modulos/financeiro/BancoEditorSheet'
@@ -191,9 +193,25 @@ export default function ModulosFinanceiroPage() {
         return [
           { accessorKey: 'extrato_id', header: 'Extrato' },
           { accessorKey: 'data_extrato', header: 'Data Extrato', cell: ({ row }) => formatDate(row.original['data_extrato']) },
-          { accessorKey: 'banco', header: 'Banco' },
+          {
+            accessorKey: 'banco',
+            header: 'Banco',
+            cell: ({ row }) => {
+              const nome = row.original['banco'] || 'Sem nome'
+              const imagemUrl = row.original['banco_imagem_url']
+              return (
+                <button type="button" onClick={() => openBancoEditor(row.original)} className="text-left">
+                  <EntityDisplay name={String(nome)} imageUrl={imagemUrl ? String(imagemUrl) : undefined} />
+                </button>
+              )
+            }
+          },
           { accessorKey: 'conta_financeira', header: 'Conta' },
-          { accessorKey: 'tipo_conta', header: 'Tipo Conta' },
+          {
+            accessorKey: 'tipo_conta',
+            header: 'Tipo Conta',
+            cell: ({ row }) => <StatusBadge value={row.original['tipo_conta']} type="fin_tipo_conta" />
+          },
           { accessorKey: 'saldo_inicial', header: 'Saldo Inicial', cell: ({ row }) => formatBRL(row.original['saldo_inicial']) },
           { accessorKey: 'total_creditos', header: 'Créditos', cell: ({ row }) => formatBRL(row.original['total_creditos']) },
           { accessorKey: 'total_debitos', header: 'Débitos', cell: ({ row }) => formatBRL(row.original['total_debitos']) },
@@ -201,11 +219,19 @@ export default function ModulosFinanceiroPage() {
           { accessorKey: 'status', header: 'Status', cell: ({ row }) => renderStatusBadge(row.original['status']) },
           { accessorKey: 'transacao_id', header: 'Transação' },
           { accessorKey: 'data_transacao', header: 'Data Transação', cell: ({ row }) => formatDate(row.original['data_transacao']) },
-          { accessorKey: 'tipo_transacao', header: 'Tipo Transação' },
+          {
+            accessorKey: 'tipo_transacao',
+            header: 'Tipo Transação',
+            cell: ({ row }) => <StatusBadge value={row.original['tipo_transacao']} type="fin_transacao" />
+          },
           { accessorKey: 'descricao_transacao', header: 'Descrição Transação' },
           { accessorKey: 'valor_transacao', header: 'Valor Transação', cell: ({ row }) => formatBRL(row.original['valor_transacao']) },
           { accessorKey: 'origem_transacao', header: 'Origem' },
-          { accessorKey: 'transacao_conciliada', header: 'Conciliada' },
+          {
+            accessorKey: 'transacao_conciliada',
+            header: 'Conciliada',
+            cell: ({ row }) => <StatusBadge value={row.original['transacao_conciliada']} type="bool" />
+          },
         ]
       case 'contas-a-receber':
         return [
