@@ -1,13 +1,13 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { DndContext, closestCenter, DragEndEvent, UniqueIdentifier } from '@dnd-kit/core';
+import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import WidgetRenderer from './WidgetRenderer';
 import WidgetEditorModal from './WidgetEditorModal';
 import DashboardInCanvasHeader from './DashboardInCanvasHeader';
-import type { Widget, GridConfig, LayoutRow, WidgetSpan } from './ConfigParser';
+import type { Widget, GridConfig, LayoutRow } from './ConfigParser';
 import type { GlobalFilters, DateRangeFilter } from '@/stores/visualBuilderStore';
 
 interface ResponsiveGridCanvasProps {
@@ -20,7 +20,7 @@ interface ResponsiveGridCanvasProps {
   headerSubtitle?: string;
   onFilterChange?: (filters: GlobalFilters) => void;
   isFilterLoading?: boolean;
-  themeName?: string;
+  themeName?: import('./ThemeManager').ThemeName;
 }
 
 // Draggable Widget Component
@@ -376,7 +376,7 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
           onFilterChange={(dateRange: DateRangeFilter) => onFilterChange?.({ dateRange })}
           isLoading={!!isFilterLoading}
           containerPadding={gridConfig.padding ?? 16}
-          themeName={themeName as any}
+          themeName={themeName}
         />
         {/* Empty State */}
         {widgets.length === 0 && (

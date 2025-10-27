@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useStore } from '@nanostores/react';
 import Link from 'next/link';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import GridCanvas from '@/components/visual-builder/GridCanvas';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
+import { ThemeManager, type ThemeName } from '@/components/visual-builder/ThemeManager';
 import type { Widget, GlobalFilters } from '@/stores/visualBuilderStore';
 
 export default function VisualBuilderPage() {
@@ -14,12 +15,12 @@ export default function VisualBuilderPage() {
   const [activeTab, setActiveTab] = useState<'editor' | 'dashboard' | 'responsive'>('editor');
   const [viewportMode, setViewportMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [isFilterLoading, setIsFilterLoading] = useState(false);
-  const currentThemeName = useMemo(() => {
+  const currentThemeName: ThemeName = useMemo<ThemeName>(() => {
     try {
       const cfg = JSON.parse(visualBuilderState.code);
-      if (cfg && typeof cfg.theme === 'string') return cfg.theme as any;
+      if (cfg && typeof cfg.theme === 'string' && ThemeManager.isValidTheme(cfg.theme)) return cfg.theme;
     } catch {}
-    return 'dark' as any;
+    return 'dark';
   }, [visualBuilderState.code]);
 
   // Initialize store on mount

@@ -6,6 +6,7 @@ import WidgetRenderer from './WidgetRenderer';
 import DashboardInCanvasHeader from './DashboardInCanvasHeader';
 import type { Widget, GridConfig } from './ConfigParser';
 import type { GlobalFilters, DateRangeFilter } from '@/stores/visualBuilderStore';
+import type { ThemeName } from './ThemeManager';
 
 const ResponsiveGridLayout = Responsive;
 
@@ -43,7 +44,7 @@ interface GridCanvasProps {
   headerSubtitle?: string;
   onFilterChange?: (filters: GlobalFilters) => void;
   isFilterLoading?: boolean;
-  themeName?: string;
+  themeName?: ThemeName;
 }
 
 export default function GridCanvas({ widgets, gridConfig, globalFilters, onLayoutChange, headerTitle, headerSubtitle, onFilterChange, isFilterLoading, themeName }: GridCanvasProps) {
@@ -87,10 +88,9 @@ export default function GridCanvas({ widgets, gridConfig, globalFilters, onLayou
     const result = hex.replace('#', '').match(/.{2}/g);
     return result ? result.map(h => parseInt(h, 16)).join(', ') : '0, 0, 0';
   }
-  const { width: containerWidth, height: containerHeight } = useContainerDimensions(containerRef);
+  const { width: containerWidth } = useContainerDimensions(containerRef);
 
   // Fixed grid dimensions
-  const GRID_WIDTH = 1600;
   const GRID_HEIGHT = 800;
 
   // Use fixed values from config
@@ -98,10 +98,7 @@ export default function GridCanvas({ widgets, gridConfig, globalFilters, onLayou
   const dynamicRowHeight = gridConfig.rowHeight;
 
   // Grid config with fixed dimensions
-  const fixedGridConfig = {
-    ...gridConfig,
-    containerHeight: configHeight
-  };
+  // no-op: reserved for future use (containerHeight)
 
   // Generate layout for react-grid-layout
   const layout = widgets.map(widget => ({
@@ -145,7 +142,7 @@ export default function GridCanvas({ widgets, gridConfig, globalFilters, onLayou
       onFilterChange={(dateRange: DateRangeFilter) => onFilterChange?.({ dateRange })}
       isLoading={!!isFilterLoading}
       containerPadding={gridConfig.padding ?? 16}
-      themeName={themeName as any}
+      themeName={themeName}
     />
   );
 
