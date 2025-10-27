@@ -4,7 +4,7 @@ import { CheckCircle2, Webhook } from "lucide-react"
 import NodeCard from "./NodeCard"
 import NodeActions from "../NodeActions"
 
-export default function TriggerNode({ index, selected, onSelect, onDelete }: { index: number; selected?: boolean; onSelect?: () => void; onDelete?: () => void }) {
+export default function TriggerNode({ index, selected, onSelect, onDelete, text }: { index: number; selected?: boolean; onSelect?: () => void; onDelete?: () => void; text?: string }) {
   return (
     <NodeCard selected={selected} onClick={onSelect}>
       <div className="flex items-start gap-3">
@@ -13,7 +13,7 @@ export default function TriggerNode({ index, selected, onSelect, onDelete }: { i
         </div>
         <div>
           <div className="text-xs text-gray-500">{index}. Trigger</div>
-          <div className="text-sm font-medium">New website form submission</div>
+          <div className="text-sm font-medium">{text || 'New website form submission'}</div>
         </div>
       </div>
       <div className="text-green-600 flex items-center gap-1">

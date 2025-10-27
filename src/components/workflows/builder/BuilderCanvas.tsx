@@ -1,25 +1,32 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import InsertButton, { type InsertType } from "./InsertButton"
 import TriggerNode from "./nodes/TriggerNode"
 import ActionNode from "./nodes/ActionNode"
 import BranchNode from "./nodes/BranchNode"
+import type { Step } from "@/app/workflows/builder/types"
 
-type Step = {
-  id: string
-  type: 'trigger' | 'action' | 'branch' | 'delay'
-  text?: string
+type Props = {
+  steps?: Step[]
+  setSteps?: (s: Step[]) => void
+  selectedId?: string | null
+  setSelectedId?: (id: string | null) => void
 }
 
-export default function BuilderCanvas() {
-  const [steps, setSteps] = useState<Step[]>([
+export default function BuilderCanvas(props: Props = {}) {
+  const [internalSteps, internalSetSteps] = useState<Step[]>([
     { id: 's1', type: 'trigger', text: 'New website form submission' },
     { id: 's2', type: 'action', text: 'Add a new app to your Zap' },
     { id: 's3', type: 'action', text: 'Add a new record' },
     { id: 's4', type: 'branch' },
   ])
-  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [internalSelectedId, internalSetSelectedId] = useState<string | null>(null)
+
+  const steps = props.steps ?? internalSteps
+  const setSteps = props.setSteps ?? internalSetSteps
+  const selectedId = props.selectedId ?? internalSelectedId
+  const setSelectedId = props.setSelectedId ?? internalSetSelectedId
 
   const handleInsert = (index: number, type: InsertType) => {
     const id = `s${Date.now()}`
@@ -43,7 +50,7 @@ export default function BuilderCanvas() {
       onSelect: () => setSelectedId(step.id),
       onDelete: () => removeStep(step.id, index),
     }
-    if (step.type === 'trigger') return <TriggerNode {...commonProps} />
+    if (step.type === 'trigger') return <TriggerNode {...commonProps} text={step.text} />
     if (step.type === 'action') return <ActionNode {...commonProps} text={step.text} />
     if (step.type === 'branch') return <BranchNode {...commonProps} />
     return (
