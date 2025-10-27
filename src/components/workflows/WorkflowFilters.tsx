@@ -27,7 +27,7 @@ export function WorkflowFilters({ value, onChange, onCreate }: {
         </div>
         <Select
           value={value.status}
-          onValueChange={(v: any) => onChange({ ...value, status: v })}
+          onValueChange={(v) => onChange({ ...value, status: v as FiltersState['status'] })}
         >
           <SelectTrigger className="w-40">
             <SelectValue placeholder="Status" />
@@ -41,7 +41,7 @@ export function WorkflowFilters({ value, onChange, onCreate }: {
         </Select>
         <Select
           value={value.sort}
-          onValueChange={(v: any) => onChange({ ...value, sort: v })}
+          onValueChange={(v) => onChange({ ...value, sort: v as FiltersState['sort'] })}
         >
           <SelectTrigger className="w-44">
             <SelectValue placeholder="Ordenar por" />
@@ -62,4 +62,3 @@ export function WorkflowFilters({ value, onChange, onCreate }: {
 }
 
 export default WorkflowFilters
-
