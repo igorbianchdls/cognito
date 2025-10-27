@@ -103,7 +103,10 @@ export default function DashboardInCanvasHeader({
         marginRight: -containerPadding,
       }}
     >
-      <div className="flex items-center justify-between py-4">
+      <div
+        className="flex items-center justify-between py-4"
+        style={{ paddingLeft: containerPadding, paddingRight: containerPadding }}
+      >
         <div className="min-w-0">
           <h2 className="text-base sm:text-lg font-semibold text-gray-900 truncate">{title}</h2>
           {subtitle && (
