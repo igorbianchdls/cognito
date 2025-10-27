@@ -138,7 +138,7 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single KPI widget
    */
-  private static applyThemeToKPI(widget: Widget, tokens: DesignTokens, themeName: ThemeName): Widget {
+  private static applyThemeToKPI(widget: Widget, tokens: DesignTokens, _themeName: ThemeName): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.kpiConfig) {
@@ -214,7 +214,7 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single Bar Chart widget
    */
-  private static applyThemeToBarChart(widget: Widget, tokens: DesignTokens, themeName: ThemeName): Widget {
+  private static applyThemeToBarChart(widget: Widget, tokens: DesignTokens, _themeName: ThemeName): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.barConfig) {
@@ -303,7 +303,7 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single Line Chart widget
    */
-  private static applyThemeToLineChart(widget: Widget, tokens: DesignTokens, themeName: ThemeName): Widget {
+  private static applyThemeToLineChart(widget: Widget, tokens: DesignTokens, _themeName: ThemeName): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.lineConfig) {
@@ -393,7 +393,7 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single Pie Chart widget
    */
-  private static applyThemeToPieChart(widget: Widget, tokens: DesignTokens, themeName: ThemeName): Widget {
+  private static applyThemeToPieChart(widget: Widget, tokens: DesignTokens, _themeName: ThemeName): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.pieConfig) {
@@ -487,7 +487,7 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single Area Chart widget
    */
-  private static applyThemeToAreaChart(widget: Widget, tokens: DesignTokens, themeName: ThemeName): Widget {
+  private static applyThemeToAreaChart(widget: Widget, tokens: DesignTokens, _themeName: ThemeName): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.areaConfig) {
@@ -578,7 +578,7 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single Insights widget
    */
-  private static applyThemeToInsights(widget: Widget, tokens: DesignTokens, themeName: ThemeName): Widget {
+  private static applyThemeToInsights(widget: Widget, tokens: DesignTokens, _themeName: ThemeName): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.insightsConfig) {
@@ -621,7 +621,7 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single Alerts widget
    */
-  private static applyThemeToAlerts(widget: Widget, tokens: DesignTokens, themeName: ThemeName): Widget {
+  private static applyThemeToAlerts(widget: Widget, tokens: DesignTokens, _themeName: ThemeName): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.alertsConfig) {
@@ -664,7 +664,7 @@ export class ThemeManager {
   /**
    * Applies design tokens to a single Recommendations widget
    */
-  private static applyThemeToRecommendations(widget: Widget, tokens: DesignTokens, themeName: ThemeName): Widget {
+  private static applyThemeToRecommendations(widget: Widget, tokens: DesignTokens, _themeName: ThemeName): Widget {
     const clonedWidget = { ...widget };
 
     if (!clonedWidget.recommendationsConfig) {
@@ -758,75 +758,64 @@ export class ThemeManager {
     switch (widget.type) {
       case 'kpi':
         themed = this.applyThemeToKPI(widget, tokens, themeName);
-        // Apply border via BorderManager
-        if (!themed.kpiConfig) themed.kpiConfig = {} as any;
+        // Apply border via BorderManager (kpiConfig ensured by applyThemeToKPI)
         Object.assign(
-          themed.kpiConfig,
+          themed.kpiConfig!,
           BorderManager.getKPICardBorderStyle(effectiveBorderPreset, tokens)
         );
         return themed;
       case 'bar': {
         themed = this.applyThemeToBarChart(widget, tokens, themeName);
-        if (!themed.barConfig) themed.barConfig = {} as any;
-        if (!themed.barConfig.styling) themed.barConfig.styling = {} as any;
+        // barConfig.styling ensured by applyThemeToBarChart
         Object.assign(
-          themed.barConfig.styling,
+          themed.barConfig!.styling!,
           BorderManager.getContainerBorderStyle(effectiveBorderPreset, tokens)
         );
         return themed;
       }
       case 'line': {
         themed = this.applyThemeToLineChart(widget, tokens, themeName);
-        if (!themed.lineConfig) themed.lineConfig = {} as any;
-        if (!themed.lineConfig.styling) themed.lineConfig.styling = {} as any;
         Object.assign(
-          themed.lineConfig.styling,
+          themed.lineConfig!.styling!,
           BorderManager.getContainerBorderStyle(effectiveBorderPreset, tokens)
         );
         return themed;
       }
       case 'pie': {
         themed = this.applyThemeToPieChart(widget, tokens, themeName);
-        if (!themed.pieConfig) themed.pieConfig = {} as any;
-        if (!themed.pieConfig.styling) themed.pieConfig.styling = {} as any;
         Object.assign(
-          themed.pieConfig.styling,
+          themed.pieConfig!.styling!,
           BorderManager.getContainerBorderStyle(effectiveBorderPreset, tokens)
         );
         return themed;
       }
       case 'area': {
         themed = this.applyThemeToAreaChart(widget, tokens, themeName);
-        if (!themed.areaConfig) themed.areaConfig = {} as any;
-        if (!themed.areaConfig.styling) themed.areaConfig.styling = {} as any;
         Object.assign(
-          themed.areaConfig.styling,
+          themed.areaConfig!.styling!,
           BorderManager.getContainerBorderStyle(effectiveBorderPreset, tokens)
         );
         return themed;
       }
       case 'insights': {
         themed = this.applyThemeToInsights(widget, tokens, themeName);
-        if (!themed.insightsConfig) themed.insightsConfig = {} as any;
         const b = BorderManager.getBorderStyle(effectiveBorderPreset, tokens);
-        themed.insightsConfig.borderColor = b.color;
-        themed.insightsConfig.borderAccentColor = b.accentColor;
+        themed.insightsConfig!.borderColor = b.color;
+        themed.insightsConfig!.borderAccentColor = b.accentColor;
         return themed;
       }
       case 'alerts': {
         themed = this.applyThemeToAlerts(widget, tokens, themeName);
-        if (!themed.alertsConfig) themed.alertsConfig = {} as any;
         const b = BorderManager.getBorderStyle(effectiveBorderPreset, tokens);
-        themed.alertsConfig.borderColor = b.color;
-        themed.alertsConfig.borderAccentColor = b.accentColor;
+        themed.alertsConfig!.borderColor = b.color;
+        themed.alertsConfig!.borderAccentColor = b.accentColor;
         return themed;
       }
       case 'recommendations': {
         themed = this.applyThemeToRecommendations(widget, tokens, themeName);
-        if (!themed.recommendationsConfig) themed.recommendationsConfig = {} as any;
         const b = BorderManager.getBorderStyle(effectiveBorderPreset, tokens);
-        themed.recommendationsConfig.borderColor = b.color;
-        themed.recommendationsConfig.borderAccentColor = b.accentColor;
+        themed.recommendationsConfig!.borderColor = b.color;
+        themed.recommendationsConfig!.borderAccentColor = b.accentColor;
         return themed;
       }
       default:
