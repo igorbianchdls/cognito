@@ -144,7 +144,6 @@ export default function GridCanvas({ widgets, gridConfig, globalFilters, onLayou
 
   return (
     <div ref={containerRef} className="w-full h-full">
-      {headerNode}
       {/* Grid container */}
       <div
         className="relative overflow-hidden"
@@ -156,6 +155,7 @@ export default function GridCanvas({ widgets, gridConfig, globalFilters, onLayou
           border: `${containerStyles.borderWidth} solid ${containerStyles.borderColor}`
         }}
       >
+        {headerNode}
         {/* Empty State */}
         {widgets.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center">

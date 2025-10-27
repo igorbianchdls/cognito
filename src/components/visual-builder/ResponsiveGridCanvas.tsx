@@ -359,18 +359,18 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
 
   return (
     <div ref={containerRef} className="w-full h-full">
-      <DashboardInCanvasHeader
-        title={headerTitle || 'Dashboard'}
-        subtitle={headerSubtitle}
-        currentFilter={globalFilters?.dateRange || { type: 'last_30_days' }}
-        onFilterChange={(dateRange: DateRangeFilter) => onFilterChange?.({ dateRange })}
-        isLoading={!!isFilterLoading}
-      />
       {/* Grid container */}
       <div
         className="relative overflow-hidden"
         style={getDeviceStyles()}
       >
+        <DashboardInCanvasHeader
+          title={headerTitle || 'Dashboard'}
+          subtitle={headerSubtitle}
+          currentFilter={globalFilters?.dateRange || { type: 'last_30_days' }}
+          onFilterChange={(dateRange: DateRangeFilter) => onFilterChange?.({ dateRange })}
+          isLoading={!!isFilterLoading}
+        />
         {/* Empty State */}
         {widgets.length === 0 && (
           <div className="absolute inset-0 flex items-center justify-center">
