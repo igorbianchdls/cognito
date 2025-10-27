@@ -96,7 +96,13 @@ export default function DashboardInCanvasHeader({
   }, [currentFilter]);
 
   return (
-    <div className="sticky top-0 z-20 bg-white border-b border-gray-200">
+    <div
+      className="sticky top-0 z-20 bg-white border-b border-gray-200"
+      style={{
+        marginLeft: -containerPadding,
+        marginRight: -containerPadding,
+      }}
+    >
       <div className="flex items-center justify-between py-4">
         <div className="min-w-0">
           <h2 className="text-base sm:text-lg font-semibold text-gray-900 truncate">{title}</h2>
