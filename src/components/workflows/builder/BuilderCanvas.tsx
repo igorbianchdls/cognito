@@ -12,6 +12,8 @@ type Props = {
   setSteps?: Dispatch<SetStateAction<Step[]>>
   selectedId?: string | null
   setSelectedId?: Dispatch<SetStateAction<string | null>>
+  onNodeSelect?: (id: string) => void
+  onBackgroundClick?: () => void
 }
 
 export default function BuilderCanvas(props: Props = {}) {
@@ -47,7 +49,10 @@ export default function BuilderCanvas(props: Props = {}) {
       key: step.id,
       index: index + 1,
       selected: selectedId === step.id,
-      onSelect: () => setSelectedId(step.id),
+      onSelect: () => {
+        setSelectedId(step.id)
+        props.onNodeSelect?.(step.id)
+      },
       onDelete: () => removeStep(step.id, index),
     }
     if (step.type === 'trigger') return <TriggerNode {...commonProps} text={step.text} />
@@ -91,7 +96,7 @@ export default function BuilderCanvas(props: Props = {}) {
   }
 
   return (
-    <div className="min-h-[calc(100vh-56px)] w-full flex justify-center py-10">
+    <div className="min-h-[calc(100vh-56px)] w-full flex justify-center py-10 bg-dots" onClick={() => props.onBackgroundClick?.()}>
       <div className="w-full max-w-3xl px-4">
         {/* sequência vertical */}
         {steps.map((step, i) => (

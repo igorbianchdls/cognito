@@ -8,4 +8,3 @@ export interface Step {
   text?: string
   config?: BaseConfig
 }
-

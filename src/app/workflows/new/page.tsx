@@ -18,6 +18,8 @@ export default function NewWorkflowPage() {
     { id: 's4', type: 'branch' },
   ])
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [isPanelOpen, setIsPanelOpen] = useState(false)
+  const [autoOpen, setAutoOpen] = useState(true)
   const selectedStep = useMemo(() => steps.find(s => s.id === selectedId) || null, [steps, selectedId])
 
   const updateStep = (id: string, patch: Partial<Step>) => {
@@ -29,29 +31,80 @@ export default function NewWorkflowPage() {
     setSelectedId(prev => (prev === id ? null : prev))
   }
 
+  // Atalhos: P para alternar painel; Esc para fechar
+  if (typeof window !== 'undefined') {
+    const w = window as Window & { __wf_panel_keys__?: boolean }
+    if (!w.__wf_panel_keys__) {
+      w.addEventListener('keydown', (e) => {
+        if (e.key.toLowerCase() === 'p') {
+          e.preventDefault()
+          setIsPanelOpen((v) => !v)
+        }
+        if (e.key === 'Escape') {
+          setIsPanelOpen(false)
+        }
+      })
+      w.__wf_panel_keys__ = true
+    }
+  }
+
   return (
     <SidebarProvider defaultOpen={false}>
       <SidebarShadcn />
       <SidebarInset className="h-screen flex flex-col bg-white">
-        <BuilderHeader name={name} onRename={setName} />
+        <BuilderHeader
+          name={name}
+          onRename={setName}
+          isPanelOpen={isPanelOpen}
+          onTogglePanel={() => setIsPanelOpen(v => !v)}
+          autoOpen={autoOpen}
+          onToggleAutoOpen={() => setAutoOpen(v => !v)}
+        />
         <div className="flex-1 overflow-hidden">
-          <PanelGroup direction="horizontal">
-            <Panel minSize={40} defaultSize={66}>
-              <div className="h-full overflow-auto">
-                <BuilderCanvas steps={steps} setSteps={setSteps} selectedId={selectedId} setSelectedId={setSelectedId} />
-              </div>
-            </Panel>
-            <PanelResizeHandle className="w-1 bg-gray-200 hover:bg-gray-300 cursor-col-resize" />
-            <Panel minSize={24} defaultSize={34}>
-              <div className="h-full overflow-auto border-l">
-                <PropertiesPanel
-                  step={selectedStep}
-                  onChange={(patch) => selectedStep && updateStep(selectedStep.id, patch)}
-                  onDelete={() => selectedStep && removeStep(selectedStep.id)}
-                />
-              </div>
-            </Panel>
-          </PanelGroup>
+          {isPanelOpen && selectedStep ? (
+            <PanelGroup direction="horizontal">
+              <Panel minSize={40} defaultSize={66}>
+                <div className="h-full overflow-auto">
+                  <BuilderCanvas
+                    steps={steps}
+                    setSteps={setSteps}
+                    selectedId={selectedId}
+                    setSelectedId={setSelectedId}
+                    onNodeSelect={(id) => {
+                      setSelectedId(id)
+                      if (autoOpen) setIsPanelOpen(true)
+                    }}
+                    onBackgroundClick={() => setSelectedId(null)}
+                  />
+                </div>
+              </Panel>
+              <PanelResizeHandle className="w-1 bg-gray-200 hover:bg-gray-300 cursor-col-resize" />
+              <Panel minSize={24} defaultSize={34}>
+                <div className="h-full overflow-auto border-l bg-white">
+                  <PropertiesPanel
+                    step={selectedStep}
+                    onChange={(patch) => selectedStep && updateStep(selectedStep.id, patch)}
+                    onDelete={() => selectedStep && removeStep(selectedStep.id)}
+                    onClose={() => setIsPanelOpen(false)}
+                  />
+                </div>
+              </Panel>
+            </PanelGroup>
+          ) : (
+            <div className="h-full overflow-auto">
+              <BuilderCanvas
+                steps={steps}
+                setSteps={setSteps}
+                selectedId={selectedId}
+                setSelectedId={setSelectedId}
+                onNodeSelect={(id) => {
+                  setSelectedId(id)
+                  if (autoOpen) setIsPanelOpen(true)
+                }}
+                onBackgroundClick={() => setSelectedId(null)}
+              />
+            </div>
+          )}
         </div>
       </SidebarInset>
     </SidebarProvider>

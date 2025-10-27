@@ -6,7 +6,7 @@ import type { Step } from "@/app/workflows/builder/types"
 import TriggerForm from "./forms/TriggerForm"
 import ActionForm from "./forms/ActionForm"
 
-export default function PropertiesPanel({ step, onChange, onDelete }: { step: Step | null; onChange: (patch: Partial<Step>) => void; onDelete: () => void }) {
+export default function PropertiesPanel({ step, onChange, onDelete, onClose }: { step: Step | null; onChange: (patch: Partial<Step>) => void; onDelete: () => void; onClose?: () => void }) {
   if (!step) {
     return (
       <div className="p-6">
@@ -25,6 +25,7 @@ export default function PropertiesPanel({ step, onChange, onDelete }: { step: St
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={onDelete}>Remover</Button>
+          <Button variant="ghost" size="sm" onClick={onClose}>Fechar</Button>
         </div>
       </div>
       <Separator />

@@ -9,7 +9,7 @@ export default function NodeCard({
   variant = 'solid',
   selected,
   onClick,
-}: React.PropsWithChildren<{ className?: string; variant?: 'solid' | 'outline' | 'dashed'; selected?: boolean; onClick?: () => void }>) {
+}: React.PropsWithChildren<{ className?: string; variant?: 'solid' | 'outline' | 'dashed'; selected?: boolean; onClick?: (e?: React.MouseEvent) => void }>) {
   const borderStyle = variant === 'dashed' ? 'border-dashed' : 'border'
   const ringStyle = selected ? 'ring-2 ring-purple-300' : variant === 'solid' ? 'ring-1 ring-purple-200' : ''
   return (
@@ -21,7 +21,10 @@ export default function NodeCard({
         ringStyle,
         className
       )}
-      onClick={onClick}
+      onClick={(e) => {
+        e.stopPropagation()
+        onClick?.(e)
+      }}
     >
       {children}
     </div>

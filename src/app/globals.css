@@ -298,3 +298,9 @@ body:has([data-page="nexus"]) {
   }
 }
 
+/* Dotted background for builder canvas */
+.bg-dots {
+  background-color: #F9FAFB;
+  background-image: radial-gradient(#E5E7EB 1px, transparent 1px);
+  background-size: 16px 16px;
+}
