@@ -1,7 +1,7 @@
 "use client"
 
 import { usePathname, useRouter } from "next/navigation"
-import { DollarSign, ShoppingCart, Users, Package, ShoppingBag, Wrench, Megaphone, Briefcase } from "lucide-react"
+import { DollarSign, ShoppingCart, Users, Package, ShoppingBag, Wrench, Megaphone, Briefcase, BookOpen, FileText } from "lucide-react"
 
 import {
   SidebarGroup,
@@ -27,6 +27,26 @@ export function NavModulos() {
           >
             <DollarSign />
             <span>Financeiro</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            tooltip="Contabilidade"
+            onClick={() => router.push("/modulos/contabilidade")}
+            isActive={pathname.startsWith("/modulos/contabilidade")}
+          >
+            <BookOpen />
+            <span>Contabilidade</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            tooltip="Documentos"
+            onClick={() => router.push("/modulos/documentos")}
+            isActive={pathname.startsWith("/modulos/documentos")}
+          >
+            <FileText />
+            <span>Documentos</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
         <SidebarMenuItem>
