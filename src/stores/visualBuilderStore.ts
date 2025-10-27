@@ -28,6 +28,8 @@ interface VisualBuilderState {
   parseErrors: ParseResult['errors']
   isValid: boolean
   globalFilters: GlobalFilters
+  dashboardTitle?: string
+  dashboardSubtitle?: string
 }
 
 const initialCode = `{
@@ -267,6 +269,8 @@ const initialState: VisualBuilderState = {
   code: initialCode,
   parseErrors: initialParseResult.errors,
   isValid: initialParseResult.isValid,
+  dashboardTitle: initialParseResult.dashboardTitle,
+  dashboardSubtitle: initialParseResult.dashboardSubtitle,
   globalFilters: {
     dateRange: {
       type: 'last_30_days'
@@ -327,10 +331,14 @@ export const visualBuilderActions = {
     // Extrair tema e config do código atual para preservá-los
     let currentTheme = null
     let currentConfig = null
+    let dashboardTitle: string | undefined
+    let dashboardSubtitle: string | undefined
     try {
       const parsedCode = JSON.parse(currentState.code)
       currentTheme = parsedCode.theme
       currentConfig = parsedCode.config
+      dashboardTitle = parsedCode.dashboardTitle
+      dashboardSubtitle = parsedCode.dashboardSubtitle
     } catch (error) {
       console.warn('Erro ao extrair tema/config do código atual:', error)
       currentConfig = currentState.gridConfig // fallback
@@ -339,6 +347,8 @@ export const visualBuilderActions = {
     const newCode = JSON.stringify({
       ...(currentTheme && { theme: currentTheme }),
       config: currentConfig,
+      ...(dashboardTitle ? { dashboardTitle } : {}),
+      ...(dashboardSubtitle ? { dashboardSubtitle } : {}),
       widgets
     }, null, 2)
 
@@ -364,6 +374,8 @@ export const visualBuilderActions = {
       code,
       parseErrors: parseResult.errors,
       isValid: parseResult.isValid,
+      dashboardTitle: parseResult.dashboardTitle,
+      dashboardSubtitle: parseResult.dashboardSubtitle,
       globalFilters: currentState.globalFilters // Preservar filtros existentes
     })
   },
@@ -386,6 +398,8 @@ export const visualBuilderActions = {
       code: initialCode,
       parseErrors: parseResult.errors,
       isValid: parseResult.isValid,
+      dashboardTitle: parseResult.dashboardTitle,
+      dashboardSubtitle: parseResult.dashboardSubtitle,
       globalFilters: {
         dateRange: {
           type: 'last_30_days'

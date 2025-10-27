@@ -188,6 +188,8 @@ export interface ParseResult {
   gridConfig: GridConfig;
   errors: ParseError[];
   isValid: boolean;
+  dashboardTitle?: string;
+  dashboardSubtitle?: string;
 }
 
 export class ConfigParser {
@@ -226,7 +228,7 @@ export class ConfigParser {
       // Step 1: Parse JSON (same as chart stores)
       const config = JSON.parse(jsonString);
 
-      // Step 2: Extract widgets, grid config, theme, custom font, custom font size, custom background, corporate color, and layout columns
+      // Step 2: Extract widgets, grid config, theme, custom font, custom font size, custom background, corporate color, layout columns and dashboard metadata
       const widgets = (config.widgets || []) as Widget[];
       const rawGridConfig = config.config || {};
       const theme = config.theme as ThemeName;
@@ -238,6 +240,8 @@ export class ConfigParser {
       const customBorderAccentColor = config.customBorderAccentColor as string;
       const corporateColor = config.corporateColor as string;
       const layoutRows = (config.layoutRows || rawGridConfig.layoutRows) as Record<string, LayoutRow> | undefined;
+      const dashboardTitle = typeof config.dashboardTitle === 'string' ? config.dashboardTitle : undefined;
+      const dashboardSubtitle = typeof config.dashboardSubtitle === 'string' ? config.dashboardSubtitle : undefined;
 
       // Step 3: Process grid config with defaults
       const gridConfig: GridConfig = {
@@ -286,7 +290,9 @@ export class ConfigParser {
         widgets: themedWidgets,
         gridConfig: themedGridConfig,
         errors: [],
-        isValid: true
+        isValid: true,
+        dashboardTitle,
+        dashboardSubtitle
       };
     } catch (error) {
       return {

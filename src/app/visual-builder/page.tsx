@@ -6,7 +6,6 @@ import Link from 'next/link';
 import MonacoEditor from '@/components/visual-builder/MonacoEditor';
 import GridCanvas from '@/components/visual-builder/GridCanvas';
 import ResponsiveGridCanvas from '@/components/visual-builder/ResponsiveGridCanvas';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { $visualBuilderState, visualBuilderActions } from '@/stores/visualBuilderStore';
 import type { Widget, GlobalFilters } from '@/stores/visualBuilderStore';
 
@@ -130,19 +129,16 @@ export default function VisualBuilderPage() {
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && (
           <div className="h-full bg-gray-50 flex flex-col">
-            <DashboardHeader
-              title="Live Dashboard"
-              subtitle="Real-time visualization with Supabase data"
-              currentFilter={visualBuilderState.globalFilters.dateRange}
-              onFilterChange={(dateRange) => handleFilterChange({ dateRange })}
-              isLoading={isFilterLoading}
-            />
             <div className="flex-1 p-6 overflow-auto">
               <GridCanvas
                 widgets={visualBuilderState.widgets}
                 gridConfig={visualBuilderState.gridConfig}
                 globalFilters={visualBuilderState.globalFilters}
                 onLayoutChange={handleLayoutChange}
+                headerTitle={visualBuilderState.dashboardTitle || 'Live Dashboard'}
+                headerSubtitle={visualBuilderState.dashboardSubtitle || 'Real-time visualization with Supabase data'}
+                onFilterChange={handleFilterChange}
+                isFilterLoading={isFilterLoading}
               />
             </div>
           </div>
@@ -209,6 +205,10 @@ export default function VisualBuilderPage() {
                 globalFilters={visualBuilderState.globalFilters}
                 viewportMode={viewportMode}
                 onLayoutChange={handleLayoutChange}
+                headerTitle={visualBuilderState.dashboardTitle || 'Responsive Dashboard'}
+                headerSubtitle={visualBuilderState.dashboardSubtitle || 'Preview different device layouts'}
+                onFilterChange={handleFilterChange}
+                isFilterLoading={isFilterLoading}
               />
             </div>
           </div>

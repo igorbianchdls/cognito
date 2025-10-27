@@ -3,8 +3,9 @@
 import { useRef, useState, useEffect } from 'react';
 import { Responsive } from 'react-grid-layout';
 import WidgetRenderer from './WidgetRenderer';
+import DashboardInCanvasHeader from './DashboardInCanvasHeader';
 import type { Widget, GridConfig } from './ConfigParser';
-import type { GlobalFilters } from '@/stores/visualBuilderStore';
+import type { GlobalFilters, DateRangeFilter } from '@/stores/visualBuilderStore';
 
 const ResponsiveGridLayout = Responsive;
 
@@ -38,9 +39,13 @@ interface GridCanvasProps {
   gridConfig: GridConfig;
   globalFilters?: GlobalFilters;
   onLayoutChange?: (widgets: Widget[]) => void;
+  headerTitle?: string;
+  headerSubtitle?: string;
+  onFilterChange?: (filters: GlobalFilters) => void;
+  isFilterLoading?: boolean;
 }
 
-export default function GridCanvas({ widgets, gridConfig, globalFilters, onLayoutChange }: GridCanvasProps) {
+export default function GridCanvas({ widgets, gridConfig, globalFilters, onLayoutChange, headerTitle, headerSubtitle, onFilterChange, isFilterLoading }: GridCanvasProps) {
   // Extract theme colors from gridConfig
   const backgroundColor = gridConfig.backgroundColor || '#ffffff';
   const borderColor = gridConfig.borderColor || '#e5e7eb';
@@ -127,8 +132,19 @@ export default function GridCanvas({ widgets, gridConfig, globalFilters, onLayou
     onLayoutChange(updatedWidgets);
   };
 
+  const headerNode = (
+    <DashboardInCanvasHeader
+      title={headerTitle || 'Dashboard'}
+      subtitle={headerSubtitle}
+      currentFilter={globalFilters?.dateRange || { type: 'last_30_days' }}
+      onFilterChange={(dateRange: DateRangeFilter) => onFilterChange?.({ dateRange })}
+      isLoading={!!isFilterLoading}
+    />
+  );
+
   return (
     <div ref={containerRef} className="w-full h-full">
+      {headerNode}
       {/* Grid container */}
       <div
         className="relative overflow-hidden"

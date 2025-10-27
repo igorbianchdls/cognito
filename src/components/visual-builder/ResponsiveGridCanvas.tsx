@@ -6,8 +6,9 @@ import { SortableContext, useSortable, horizontalListSortingStrategy } from '@dn
 import { CSS } from '@dnd-kit/utilities';
 import WidgetRenderer from './WidgetRenderer';
 import WidgetEditorModal from './WidgetEditorModal';
+import DashboardInCanvasHeader from './DashboardInCanvasHeader';
 import type { Widget, GridConfig, LayoutRow, WidgetSpan } from './ConfigParser';
-import type { GlobalFilters } from '@/stores/visualBuilderStore';
+import type { GlobalFilters, DateRangeFilter } from '@/stores/visualBuilderStore';
 
 interface ResponsiveGridCanvasProps {
   widgets: Widget[];
@@ -15,6 +16,10 @@ interface ResponsiveGridCanvasProps {
   globalFilters?: GlobalFilters;
   viewportMode?: 'desktop' | 'tablet' | 'mobile';
   onLayoutChange?: (widgets: Widget[]) => void;
+  headerTitle?: string;
+  headerSubtitle?: string;
+  onFilterChange?: (filters: GlobalFilters) => void;
+  isFilterLoading?: boolean;
 }
 
 // Draggable Widget Component
@@ -89,7 +94,7 @@ function DraggableWidget({ widget, spanClasses, spanValue, minHeight, globalFilt
   );
 }
 
-export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode = 'desktop', onLayoutChange }: ResponsiveGridCanvasProps) {
+export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilters, viewportMode = 'desktop', onLayoutChange, headerTitle, headerSubtitle, onFilterChange, isFilterLoading }: ResponsiveGridCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [editingWidget, setEditingWidget] = useState<Widget | null>(null);
 
@@ -354,6 +359,13 @@ export default function ResponsiveGridCanvas({ widgets, gridConfig, globalFilter
 
   return (
     <div ref={containerRef} className="w-full h-full">
+      <DashboardInCanvasHeader
+        title={headerTitle || 'Dashboard'}
+        subtitle={headerSubtitle}
+        currentFilter={globalFilters?.dateRange || { type: 'last_30_days' }}
+        onFilterChange={(dateRange: DateRangeFilter) => onFilterChange?.({ dateRange })}
+        isLoading={!!isFilterLoading}
+      />
       {/* Grid container */}
       <div
         className="relative overflow-hidden"
