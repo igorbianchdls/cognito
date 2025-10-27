@@ -36,6 +36,8 @@ export default function ModulosFinanceiroPage() {
         { value: 'pagamentos-efetuados', label: 'Pagamentos Efetuados' },
         { value: 'pagamentos-recebidos', label: 'Pagamentos Recebidos' },
         { value: 'extrato', label: 'Extrato' },
+        { value: 'conciliacao', label: 'Conciliação' },
+        { value: 'bancos', label: 'Bancos' },
         { value: 'movimentos', label: 'Movimentos' },
       ],
       selected: 'contas-a-pagar',
@@ -122,6 +124,46 @@ export default function ModulosFinanceiroPage() {
 
   const columns: ColumnDef<Row>[] = useMemo(() => {
     switch (tabs.selected) {
+      case 'contas':
+        return [
+          { accessorKey: 'conta_id', header: 'Conta ID' },
+          { accessorKey: 'nome_conta', header: 'Nome' },
+          { accessorKey: 'tipo_conta', header: 'Tipo' },
+          { accessorKey: 'agencia', header: 'Agência' },
+          { accessorKey: 'numero_conta', header: 'Número Conta' },
+          { accessorKey: 'pix_chave', header: 'Pix' },
+          { accessorKey: 'saldo_inicial', header: 'Saldo Inicial', cell: ({ row }) => formatBRL(row.original['saldo_inicial']) },
+          { accessorKey: 'saldo_atual', header: 'Saldo Atual', cell: ({ row }) => formatBRL(row.original['saldo_atual']) },
+          { accessorKey: 'data_abertura', header: 'Abertura', cell: ({ row }) => formatDate(row.original['data_abertura']) },
+          { accessorKey: 'ativo', header: 'Ativa' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
+        ]
+      case 'bancos':
+        return [
+          { accessorKey: 'banco_id', header: 'Banco ID' },
+          { accessorKey: 'nome_banco', header: 'Nome' },
+          { accessorKey: 'numero_banco', header: 'Número' },
+          { accessorKey: 'agencia', header: 'Agência' },
+          { accessorKey: 'endereco', header: 'Endereço' },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+          { accessorKey: 'atualizado_em', header: 'Atualizado em', cell: ({ row }) => formatDate(row.original['atualizado_em']) },
+        ]
+      case 'conciliacao':
+        return [
+          { accessorKey: 'conciliacao_id', header: 'Conciliação' },
+          { accessorKey: 'periodo_inicio', header: 'Início', cell: ({ row }) => formatDate(row.original['periodo_inicio']) },
+          { accessorKey: 'periodo_fim', header: 'Fim', cell: ({ row }) => formatDate(row.original['periodo_fim']) },
+          { accessorKey: 'banco', header: 'Banco' },
+          { accessorKey: 'conta_financeira', header: 'Conta' },
+          { accessorKey: 'tipo_conta', header: 'Tipo Conta' },
+          { accessorKey: 'saldo_inicial', header: 'Saldo Inicial', cell: ({ row }) => formatBRL(row.original['saldo_inicial']) },
+          { accessorKey: 'saldo_extrato', header: 'Saldo Extrato', cell: ({ row }) => formatBRL(row.original['saldo_extrato']) },
+          { accessorKey: 'saldo_sistema', header: 'Saldo Sistema', cell: ({ row }) => formatBRL(row.original['saldo_sistema']) },
+          { accessorKey: 'diferenca', header: 'Diferença', cell: ({ row }) => formatBRL(row.original['diferenca']) },
+          { accessorKey: 'status', header: 'Status', cell: ({ row }) => renderStatusBadge(row.original['status']) },
+          { accessorKey: 'criado_em', header: 'Criado em', cell: ({ row }) => formatDate(row.original['criado_em']) },
+        ]
       case 'extrato':
         return [
           { accessorKey: 'extrato_id', header: 'Extrato' },
@@ -411,6 +453,10 @@ export default function ModulosFinanceiroPage() {
         case 'pagamentos-recebidos':
           return <ArrowDownCircle className="h-4 w-4" />
         case 'extrato':
+          return <List className="h-4 w-4" />
+        case 'conciliacao':
+          return <List className="h-4 w-4" />
+        case 'bancos':
           return <List className="h-4 w-4" />
         case 'movimentos':
           return <List className="h-4 w-4" />

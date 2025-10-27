@@ -40,6 +40,20 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     valor_total: 'pr.valor_total',
     status: 'pr.status',
   },
+  conciliacao: {
+    conciliacao_id: 'cb.id',
+    periodo_inicio: 'cb.periodo_inicio',
+    periodo_fim: 'cb.periodo_fim',
+    banco: 'b.nome_banco',
+    conta_financeira: 'cf.nome_conta',
+    tipo_conta: 'cf.tipo_conta',
+    saldo_inicial: 'cb.saldo_inicial',
+    saldo_extrato: 'cb.saldo_extrato',
+    saldo_sistema: 'cb.saldo_sistema',
+    diferenca: 'cb.diferenca',
+    status: 'cb.status',
+    criado_em: 'cb.criado_em',
+  },
   'extrato': {
     extrato_id: 'eb.id',
     data_extrato: 'eb.data_extrato',
@@ -57,6 +71,29 @@ const ORDER_BY_WHITELIST: Record<string, Record<string, string>> = {
     valor_transacao: 't.valor',
     origem_transacao: 't.origem',
     transacao_conciliada: 't.conciliado',
+  },
+  bancos: {
+    banco_id: 'b.id',
+    nome_banco: 'b.nome_banco',
+    numero_banco: 'b.numero_banco',
+    agencia: 'b.agencia',
+    endereco: 'b.endereco',
+    criado_em: 'b.criado_em',
+    atualizado_em: 'b.atualizado_em',
+  },
+  contas: {
+    conta_id: 'cf.id',
+    nome_conta: 'cf.nome_conta',
+    tipo_conta: 'cf.tipo_conta',
+    agencia: 'cf.agencia',
+    numero_conta: 'cf.numero_conta',
+    pix_chave: 'cf.pix_chave',
+    saldo_inicial: 'cf.saldo_inicial',
+    saldo_atual: 'cf.saldo_atual',
+    data_abertura: 'cf.data_abertura',
+    ativo: 'cf.ativo',
+    criado_em: 'cf.criado_em',
+    atualizado_em: 'cf.atualizado_em',
   },
   movimentos: {
     id: 'm.id',
@@ -235,6 +272,48 @@ export async function GET(req: NextRequest) {
                           t.origem AS origem_transacao,
                           t.conciliado AS transacao_conciliada`;
       whereDateCol = 'eb.data_extrato';
+    } else if (view === 'conciliacao') {
+      baseSql = `FROM financeiro.conciliacao_bancaria cb
+                 LEFT JOIN financeiro.contas_financeiras cf ON cf.id = cb.conta_id
+                 LEFT JOIN financeiro.bancos b ON b.id = cf.banco_id`;
+      selectSql = `SELECT cb.id AS conciliacao_id,
+                          cb.periodo_inicio,
+                          cb.periodo_fim,
+                          b.nome_banco AS banco,
+                          cf.nome_conta AS conta_financeira,
+                          cf.tipo_conta,
+                          cb.saldo_inicial,
+                          cb.saldo_extrato,
+                          cb.saldo_sistema,
+                          cb.diferenca,
+                          cb.status,
+                          cb.criado_em`;
+      whereDateCol = 'cb.periodo_fim';
+    } else if (view === 'bancos') {
+      baseSql = `FROM financeiro.bancos b`;
+      selectSql = `SELECT b.id AS banco_id,
+                          b.nome_banco,
+                          b.numero_banco,
+                          b.agencia,
+                          b.endereco,
+                          b.criado_em,
+                          b.atualizado_em`;
+      whereDateCol = 'b.criado_em';
+    } else if (view === 'contas') {
+      baseSql = `FROM financeiro.contas_financeiras cf`;
+      selectSql = `SELECT cf.id AS conta_id,
+                          cf.nome_conta,
+                          cf.tipo_conta,
+                          cf.agencia,
+                          cf.numero_conta,
+                          cf.pix_chave,
+                          cf.saldo_inicial,
+                          cf.saldo_atual,
+                          cf.data_abertura,
+                          cf.ativo,
+                          cf.criado_em,
+                          cf.atualizado_em`;
+      whereDateCol = 'cf.criado_em';
     } else if (view === 'movimentos') {
       baseSql = `FROM gestaofinanceira.movimentos m
                  LEFT JOIN gestaofinanceira.categorias cat ON cat.id = m.categoria_id
@@ -271,7 +350,13 @@ export async function GET(req: NextRequest) {
               ? 'ORDER BY car.data_vencimento ASC'
               : (view === 'extrato'
                   ? 'ORDER BY eb.id ASC, t.data_transacao ASC'
-                  : `ORDER BY ${whereDateCol} DESC`)));
+                  : (view === 'conciliacao'
+                      ? 'ORDER BY cb.periodo_fim DESC'
+                      : (view === 'bancos'
+                          ? 'ORDER BY b.id ASC'
+                          : (view === 'contas'
+                              ? 'ORDER BY cf.id ASC'
+                              : `ORDER BY ${whereDateCol} DESC`))))))
     const limitOffsetClause = `LIMIT $${idx}::int OFFSET $${idx + 1}::int`;
     const paramsWithPage = [...params, pageSize, offset];
 
