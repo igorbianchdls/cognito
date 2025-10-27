@@ -100,10 +100,10 @@ export default function BuilderCanvas(props: Props = {}) {
       <div className="w-full max-w-3xl px-4">
         {/* sequência vertical */}
         {steps.map((step, i) => (
-          <div key={step.id} className="w-full flex flex-col items-stretch">
+          <div key={step.id} className="w-full flex flex-col items-center">
             {i === 0 ? (
               <div className="flex flex-col items-center">
-                <div className="w-0.5 bg-purple-300/80" style={{ height: 12 }} />
+                <div className="w-0.5 bg-gray-300/80" style={{ height: 12 }} />
               </div>
             ) : null}
             {renderStep(step, i)}

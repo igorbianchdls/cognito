@@ -32,18 +32,14 @@ export default function BranchNode({ index, selected, onSelect, onDelete }: { in
         <div className="h-6" />
         <div className="grid grid-cols-2 gap-6">
           <div className="flex justify-start">
-            <div className="w-[360px]">
-              <NodeCard variant="dashed" className="opacity-70">
-                <div className="text-sm text-gray-500">Adicionar passo no Path A…</div>
-              </NodeCard>
-            </div>
+            <NodeCard variant="dashed" className="opacity-70">
+              <div className="text-sm text-gray-500">Adicionar passo no Path A…</div>
+            </NodeCard>
           </div>
           <div className="flex justify-end">
-            <div className="w-[360px]">
-              <NodeCard variant="dashed" className="opacity-70">
-                <div className="text-sm text-gray-500">Adicionar passo no Path B…</div>
-              </NodeCard>
-            </div>
+            <NodeCard variant="dashed" className="opacity-70">
+              <div className="text-sm text-gray-500">Adicionar passo no Path B…</div>
+            </NodeCard>
           </div>
         </div>
       </div>
