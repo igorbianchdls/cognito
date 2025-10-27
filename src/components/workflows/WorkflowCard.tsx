@@ -71,20 +71,16 @@ export function WorkflowCard({ workflow, onOpen, onDuplicate, onRename, onDelete
   return (
     <Card className="group relative flex flex-col gap-3 p-5 rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md hover:border-gray-300 transition-colors">
       <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <CategoryIconBadge {...categoryVisuals(workflow.category)} ariaLabel={workflow.category || 'categoria'} />
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-semibold line-clamp-2 break-words" title={workflow.name}>
-                {workflow.name}
-              </h3>
-            </div>
-            {workflow.description && (
-              <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                {workflow.description}
-              </p>
-            )}
-          </div>
+        <div className="min-w-0">
+          <CategoryIconBadge {...categoryVisuals(workflow.category)} ariaLabel={workflow.category || 'categoria'} className="mb-2" />
+          <h3 className="text-base font-semibold line-clamp-2 break-words" title={workflow.name}>
+            {workflow.name}
+          </h3>
+          {workflow.description && (
+            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+              {workflow.description}
+            </p>
+          )}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
