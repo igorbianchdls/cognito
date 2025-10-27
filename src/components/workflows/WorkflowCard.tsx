@@ -116,7 +116,7 @@ function getWorkflowVisuals(w: WorkflowSummary) {
 
 export function WorkflowCard({ workflow, onOpen, onDuplicate, onRename, onDelete }: Props) {
   return (
-    <Card className="group relative flex flex-col gap-3 p-5 rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md hover:border-gray-300 transition-colors">
+    <Card className="group relative flex flex-col gap-3 p-5 rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-md hover:border-gray-300 transition-colors">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <CategoryIconBadge {...getWorkflowVisuals(workflow)} ariaLabel={workflow.category || 'categoria'} className="mb-2" />
