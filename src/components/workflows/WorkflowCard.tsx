@@ -10,7 +10,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import type { WorkflowSummary } from "@/app/workflows/types"
+import type { WorkflowSummary, WorkflowCategory } from "@/app/workflows/types"
+import CategoryIconBadge from "@/components/workflows/CategoryIconBadge"
+import { Banknote, ShoppingCart, Megaphone, Wrench, Users, Headphones, MoreHorizontal, Heart } from "lucide-react"
 
 type Props = {
   workflow: WorkflowSummary
@@ -44,26 +46,50 @@ function StatusBadge({ status }: { status: WorkflowSummary["status"] }) {
   return <Badge className={cn("border", styles)}>{label}</Badge>
 }
 
+function categoryVisuals(category?: WorkflowCategory) {
+  switch (category) {
+    case 'financeiro':
+      return { tone: 'green' as const, icon: <Banknote /> }
+    case 'vendas':
+      return { tone: 'amber' as const, icon: <ShoppingCart /> }
+    case 'marketing':
+      return { tone: 'violet' as const, icon: <Megaphone /> }
+    case 'operacoes':
+      return { tone: 'slate' as const, icon: <Wrench /> }
+    case 'crm':
+      return { tone: 'blue' as const, icon: <Users /> }
+    case 'suporte':
+      return { tone: 'indigo' as const, icon: <Headphones /> }
+    case 'outros':
+      return { tone: 'gray' as const, icon: <MoreHorizontal /> }
+    default:
+      return { tone: 'lime' as const, icon: <Heart /> }
+  }
+}
+
 export function WorkflowCard({ workflow, onOpen, onDuplicate, onRename, onDelete }: Props) {
   return (
-    <Card className="group relative flex flex-col gap-3 p-4 hover:shadow-md transition-shadow">
+    <Card className="group relative flex flex-col gap-3 p-5 rounded-2xl border border-gray-200 bg-white shadow-sm hover:shadow-md hover:border-gray-300 transition-colors">
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className="text-base font-semibold truncate max-w-[240px]" title={workflow.name}>
-              {workflow.name}
-            </h3>
-            <StatusBadge status={workflow.status} />
+        <div className="flex items-center gap-3">
+          <CategoryIconBadge {...categoryVisuals(workflow.category)} ariaLabel={workflow.category || 'categoria'} />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-semibold truncate max-w-[240px]" title={workflow.name}>
+                {workflow.name}
+              </h3>
+              <StatusBadge status={workflow.status} />
+            </div>
+            {workflow.description && (
+              <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                {workflow.description}
+              </p>
+            )}
           </div>
-          {workflow.description && (
-            <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-              {workflow.description}
-            </p>
-          )}
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label="Mais ações">
+            <Button variant="ghost" size="icon" aria-label="Mais ações" className="text-gray-500 hover:text-gray-700">
               ⋯
             </Button>
           </DropdownMenuTrigger>
