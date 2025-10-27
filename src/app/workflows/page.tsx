@@ -68,7 +68,7 @@ export default function WorkflowsPage() {
 
         {/* Content */}
         <div className="flex-1 bg-[#FBFBFB]">
-          <div className="mx-auto max-w-6xl px-6 md:px-10 py-6 pt-6">
+          <div className="mx-auto max-w-7xl px-6 md:px-10 py-6 pt-6">
             <WorkflowFilters value={filters} onChange={setFilters} onCreate={handleCreate} />
 
             <div className="mt-6">
