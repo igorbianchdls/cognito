@@ -38,15 +38,15 @@ export default function WorkflowsPage() {
               <Button>Novo workflow</Button>
             </Link>
           )}
-          className="pb-2"
+          className="px-6 md:px-10 pb-2"
         />
-        <div className="px-4 md:px-6">
+        <div className="px-6 md:px-10">
           <WorkflowTabs value={activeCategory} onChange={setActiveCategory} />
         </div>
 
         {/* Content */}
-        <div className="flex-1">
-          <div className="mx-auto max-w-6xl px-6 py-6">
+        <div className="flex-1 bg-[#FBFBFB]">
+          <div className="mx-auto max-w-6xl px-6 md:px-10 py-6 pt-6">
             <WorkflowFilters value={filters} onChange={setFilters} onCreate={handleCreate} />
 
             <div className="mt-6">

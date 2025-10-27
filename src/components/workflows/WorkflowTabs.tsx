@@ -28,9 +28,9 @@ export function WorkflowTabs({
   return (
     <div className="w-full">
       <Tabs value={value} onValueChange={(v) => onChange(v as WorkflowTabsValue)} className="w-full">
-        <TabsList className="w-full" variant="underline">
+        <TabsList className="w-full h-12 gap-3" variant="underline">
           {options.map((opt) => (
-            <TabsTrigger key={opt.value} value={opt.value} variant="underline">
+            <TabsTrigger key={opt.value} value={opt.value} variant="underline" className="pb-2 px-2 md:px-3">
               <span className="flex items-center gap-2">
                 {opt.icon}
                 <span>{opt.label}</span>
@@ -44,4 +44,3 @@ export function WorkflowTabs({
 }
 
 export default WorkflowTabs
-
