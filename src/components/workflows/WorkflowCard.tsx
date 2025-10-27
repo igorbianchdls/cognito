@@ -78,7 +78,6 @@ export function WorkflowCard({ workflow, onOpen, onDuplicate, onRename, onDelete
               <h3 className="text-base font-semibold truncate max-w-[240px]" title={workflow.name}>
                 {workflow.name}
               </h3>
-              <StatusBadge status={workflow.status} />
             </div>
             {workflow.description && (
               <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
@@ -106,11 +105,8 @@ export function WorkflowCard({ workflow, onOpen, onDuplicate, onRename, onDelete
 
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <div className="flex items-center gap-2 truncate">
-          {workflow.tags?.slice(0, 3).map((t) => (
-            <span key={t} className="rounded-md bg-accent px-1.5 py-0.5">
-              #{t}
-            </span>
-          ))}
+          {/* Status badge movido para a linha inferior (substitui hashtags) */}
+          <StatusBadge status={workflow.status} />
         </div>
         <span>{formatDateRelative(workflow.updatedAt)}</span>
       </div>
