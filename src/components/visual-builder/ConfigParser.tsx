@@ -205,7 +205,9 @@ export class ConfigParser {
     customFont?: string,
     corporateColor?: string,
     customFontSize?: string,
-    customBorder?: string
+    customBorder?: string,
+    customBorderColor?: string,
+    customBorderAccentColor?: string
   ): Widget[] {
     return ThemeManager.applyThemeToWidgets(
       widgets,
@@ -213,7 +215,9 @@ export class ConfigParser {
       customFont,
       corporateColor,
       customFontSize,
-      customBorder
+      customBorder,
+      customBorderColor,
+      customBorderAccentColor
     );
   }
 
@@ -230,6 +234,8 @@ export class ConfigParser {
       const customFontSize = config.customFontSize as string;
       const customBackground = config.customBackground as string;
       const customBorder = config.customBorder as string;
+      const customBorderColor = config.customBorderColor as string;
+      const customBorderAccentColor = config.customBorderAccentColor as string;
       const corporateColor = config.corporateColor as string;
       const layoutRows = (config.layoutRows || rawGridConfig.layoutRows) as Record<string, LayoutRow> | undefined;
 
@@ -268,12 +274,12 @@ export class ConfigParser {
 
       // Step 5: Apply theme to widgets and grid if theme is specified and valid
       const themedWidgets = (theme && ThemeManager.isValidTheme(theme))
-        ? this.applyThemeToWidgets(validWidgets, theme, customFont, corporateColor, customFontSize, customBorder)
+        ? this.applyThemeToWidgets(validWidgets, theme, customFont, corporateColor, customFontSize, customBorder, customBorderColor, customBorderAccentColor)
         : validWidgets;
 
       // Step 6: Apply theme to grid (now handles custom background internally)
       const themedGridConfig = (theme && ThemeManager.isValidTheme(theme))
-        ? ThemeManager.applyThemeToGrid(gridConfig, theme, corporateColor, customBackground, customBorder)
+        ? ThemeManager.applyThemeToGrid(gridConfig, theme, corporateColor, customBackground, customBorder, customBorderColor, customBorderAccentColor)
         : gridConfig;
 
       return {

@@ -713,7 +713,9 @@ export class ThemeManager {
     customFont?: string,
     corporateColorKey?: string,
     customFontSize?: string,
-    borderPresetKey?: string
+    borderPresetKey?: string,
+    customBorderColor?: string,
+    customBorderAccentColor?: string
   ): Widget {
     if (!this.isValidTheme(themeName)) {
       console.warn(`Invalid theme: ${themeName}. Skipping theme application.`);
@@ -763,6 +765,8 @@ export class ThemeManager {
           themed.kpiConfig!,
           BorderManager.getKPICardBorderStyle(effectiveBorderPreset, tokens)
         );
+        if (customBorderColor) themed.kpiConfig!.kpiContainerBorderColor = customBorderColor;
+        if (customBorderAccentColor) themed.kpiConfig!.kpiContainerBorderAccentColor = customBorderAccentColor;
         return themed;
       case 'bar': {
         themed = this.applyThemeToBarChart(widget, tokens, themeName);
@@ -771,6 +775,8 @@ export class ThemeManager {
           themed.barConfig!.styling!,
           BorderManager.getContainerBorderStyle(effectiveBorderPreset, tokens)
         );
+        if (customBorderColor) themed.barConfig!.styling!.containerBorderColor = customBorderColor;
+        if (customBorderAccentColor) themed.barConfig!.styling!.containerBorderAccentColor = customBorderAccentColor;
         return themed;
       }
       case 'line': {
@@ -779,6 +785,8 @@ export class ThemeManager {
           themed.lineConfig!.styling!,
           BorderManager.getContainerBorderStyle(effectiveBorderPreset, tokens)
         );
+        if (customBorderColor) themed.lineConfig!.styling!.containerBorderColor = customBorderColor;
+        if (customBorderAccentColor) themed.lineConfig!.styling!.containerBorderAccentColor = customBorderAccentColor;
         return themed;
       }
       case 'pie': {
@@ -787,6 +795,8 @@ export class ThemeManager {
           themed.pieConfig!.styling!,
           BorderManager.getContainerBorderStyle(effectiveBorderPreset, tokens)
         );
+        if (customBorderColor) themed.pieConfig!.styling!.containerBorderColor = customBorderColor;
+        if (customBorderAccentColor) themed.pieConfig!.styling!.containerBorderAccentColor = customBorderAccentColor;
         return themed;
       }
       case 'area': {
@@ -795,27 +805,29 @@ export class ThemeManager {
           themed.areaConfig!.styling!,
           BorderManager.getContainerBorderStyle(effectiveBorderPreset, tokens)
         );
+        if (customBorderColor) themed.areaConfig!.styling!.containerBorderColor = customBorderColor;
+        if (customBorderAccentColor) themed.areaConfig!.styling!.containerBorderAccentColor = customBorderAccentColor;
         return themed;
       }
       case 'insights': {
         themed = this.applyThemeToInsights(widget, tokens, themeName);
         const b = BorderManager.getBorderStyle(effectiveBorderPreset, tokens);
-        themed.insightsConfig!.borderColor = b.color;
-        themed.insightsConfig!.borderAccentColor = b.accentColor;
+        themed.insightsConfig!.borderColor = customBorderColor || b.color;
+        themed.insightsConfig!.borderAccentColor = customBorderAccentColor || b.accentColor;
         return themed;
       }
       case 'alerts': {
         themed = this.applyThemeToAlerts(widget, tokens, themeName);
         const b = BorderManager.getBorderStyle(effectiveBorderPreset, tokens);
-        themed.alertsConfig!.borderColor = b.color;
-        themed.alertsConfig!.borderAccentColor = b.accentColor;
+        themed.alertsConfig!.borderColor = customBorderColor || b.color;
+        themed.alertsConfig!.borderAccentColor = customBorderAccentColor || b.accentColor;
         return themed;
       }
       case 'recommendations': {
         themed = this.applyThemeToRecommendations(widget, tokens, themeName);
         const b = BorderManager.getBorderStyle(effectiveBorderPreset, tokens);
-        themed.recommendationsConfig!.borderColor = b.color;
-        themed.recommendationsConfig!.borderAccentColor = b.accentColor;
+        themed.recommendationsConfig!.borderColor = customBorderColor || b.color;
+        themed.recommendationsConfig!.borderAccentColor = customBorderAccentColor || b.accentColor;
         return themed;
       }
       default:
@@ -833,7 +845,9 @@ export class ThemeManager {
     customFont?: string,
     corporateColorKey?: string,
     customFontSize?: string,
-    borderPresetKey?: string
+    borderPresetKey?: string,
+    customBorderColor?: string,
+    customBorderAccentColor?: string
   ): Widget[] {
     return widgets.map(widget => this.applyThemeToWidget(
       widget,
@@ -841,7 +855,9 @@ export class ThemeManager {
       customFont,
       corporateColorKey,
       customFontSize,
-      borderPresetKey
+      borderPresetKey,
+      customBorderColor,
+      customBorderAccentColor
     ));
   }
 
@@ -853,7 +869,9 @@ export class ThemeManager {
     themeName: ThemeName,
     corporateColorKey?: string,
     customBackground?: string,
-    borderPresetKey?: string
+    borderPresetKey?: string,
+    customBorderColor?: string,
+    customBorderAccentColor?: string
   ): GridConfig {
     if (!this.isValidTheme(themeName)) {
       console.warn(`Invalid theme: ${themeName}. Skipping grid theme application.`);
@@ -885,7 +903,7 @@ export class ThemeManager {
       ...backgroundStyle,
 
       // Border from BorderManager preset
-      borderColor: gridBorder.borderColor,
+      borderColor: customBorderColor || gridBorder.borderColor,
       borderWidth: gridBorder.borderWidth,
       borderRadius: gridBorder.borderRadius,
 

@@ -25,6 +25,12 @@ export interface BorderPreview {
   previewStyle: React.CSSProperties;
 }
 
+export interface BorderColorPreview {
+  key: string;
+  name: string;
+  color: string;
+}
+
 // Human-friendly metadata for presets
 const BORDER_PRESETS_META: Record<BorderPresetKey, { name: string; description: string }> = {
   none: { name: 'None', description: 'No border, flat look' },
@@ -194,5 +200,35 @@ export class BorderManager {
    */
   static getDefaultPreset(): BorderPresetKey {
     return 'subtle-rounded';
+  }
+
+  /**
+   * Suggests a set of border colors for UI selection
+   */
+  static getAvailableBorderColors(tokens?: DesignTokens): BorderColorPreview[] {
+    const themeBorder = tokens?.borders.color ?? '#d1d5db';
+    const themeAccent = tokens?.borders.accentColor ?? '#bbb';
+    const primary = tokens?.colors.primary ?? '#3b82f6';
+    const secondary = tokens?.colors.secondary ?? '#64748b';
+    const surface = tokens?.colors.surface ?? '#ffffff';
+
+    const basic: BorderColorPreview[] = [
+      { key: 'theme-border', name: 'Theme Border', color: themeBorder },
+      { key: 'theme-accent', name: 'Theme Accent', color: themeAccent },
+      { key: 'primary', name: 'Primary', color: primary },
+      { key: 'secondary', name: 'Secondary', color: secondary },
+      { key: 'surface', name: 'Surface', color: surface },
+    ];
+
+    // Neutral palette additions
+    const neutrals: BorderColorPreview[] = [
+      { key: 'black', name: 'Black', color: '#000000' },
+      { key: 'white', name: 'White', color: '#ffffff' },
+      { key: 'gray-200', name: 'Gray 200', color: '#e5e7eb' },
+      { key: 'gray-400', name: 'Gray 400', color: '#9ca3af' },
+      { key: 'blue-300', name: 'Blue 300', color: '#93c5fd' },
+    ];
+
+    return [...basic, ...neutrals];
   }
 }

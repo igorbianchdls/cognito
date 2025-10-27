@@ -28,7 +28,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { FileText, BarChart3, Palette, Check, Type, Square, Paintbrush, Monitor, Tablet, Smartphone, ChevronDown } from 'lucide-react';
+import { FileText, BarChart3, Palette, Check, Type, Square, SquareDashed, Paintbrush, Monitor, Tablet, Smartphone, ChevronDown } from 'lucide-react';
 
 export default function DashboardChatPanel() {
   const [activeTab, setActiveTab] = useState<'editor' | 'dashboard'>('editor');
@@ -39,6 +39,7 @@ export default function DashboardChatPanel() {
   const [selectedFontSize, setSelectedFontSize] = useState<FontSizeKey>('lg');
   const [selectedBackground, setSelectedBackground] = useState<BackgroundPresetKey>('white');
   const [selectedBorder, setSelectedBorder] = useState<BorderPresetKey>('subtle-rounded');
+  const [selectedBorderColor, setSelectedBorderColor] = useState<string>('');
   const [selectedCorporateColor, setSelectedCorporateColor] = useState<ColorPresetKey>('corporate');
   const visualBuilderState = useStore($visualBuilderState);
 
@@ -46,6 +47,9 @@ export default function DashboardChatPanel() {
   const availableBackgrounds = BackgroundManager.getAvailableBackgrounds();
   // Available borders (no tokens here; rely on preview labels/colors)
   const availableBorders = BorderManager.getAvailableBorders();
+  // Available border colors (based on current theme tokens)
+  const themePreview = ThemeManager.getThemePreview(selectedTheme);
+  const availableBorderColors = BorderManager.getAvailableBorderColors(themePreview.tokens);
 
   // Available corporate color palettes
   const availableColorPalettes = ColorManager.getAvailableColorPalettes();
@@ -86,6 +90,20 @@ export default function DashboardChatPanel() {
       // Invalid JSON, keep current border
     }
   }, [visualBuilderState.code]);
+
+  // Detect current custom border color from code and initialize based on theme
+  useEffect(() => {
+    try {
+      const config = JSON.parse(visualBuilderState.code);
+      if (config.customBorderColor && typeof config.customBorderColor === 'string') {
+        setSelectedBorderColor(config.customBorderColor);
+      } else {
+        setSelectedBorderColor(themePreview.tokens.borders.color);
+      }
+    } catch (error) {
+      // Invalid JSON, keep current border color
+    }
+  }, [visualBuilderState.code, themePreview.tokens.borders.color]);
 
   // Detect current font from code and initialize based on theme
   useEffect(() => {
@@ -256,6 +274,21 @@ export default function DashboardChatPanel() {
       console.log('🎨 Border preset changed to:', borderKey);
     } catch (error) {
       console.error('Error applying border preset:', error);
+    }
+  };
+
+  const handleBorderColorChange = (hexColor: string) => {
+    try {
+      const config = JSON.parse(visualBuilderState.code);
+      const updatedConfig = {
+        ...config,
+        customBorderColor: hexColor
+      };
+      visualBuilderActions.updateCode(JSON.stringify(updatedConfig, null, 2));
+      setSelectedBorderColor(hexColor);
+      console.log('🎨 Border color changed to:', hexColor);
+    } catch (error) {
+      console.error('Error applying border color:', error);
     }
   };
 
@@ -513,7 +546,7 @@ export default function DashboardChatPanel() {
             <DropdownMenuTrigger asChild>
               <div>
                 <ArtifactAction
-                  icon={Square}
+                  icon={SquareDashed}
                   tooltip={`Border: ${availableBorders.find(b => b.key === selectedBorder)?.name || 'Unknown'}`}
                   variant="ghost"
                 />
@@ -544,6 +577,49 @@ export default function DashboardChatPanel() {
                     </div>
                   </div>
                   {selectedBorder === border.key && (
+                    <Check className="w-4 h-4 text-blue-600" />
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Border Color Selector */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <div>
+                <ArtifactAction
+                  icon={Palette}
+                  tooltip={`Border Color`}
+                  variant="ghost"
+                />
+              </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              <div className="px-2 py-1.5 text-sm font-medium text-muted-foreground">
+                Select Border Color
+              </div>
+              <DropdownMenuSeparator />
+
+              {availableBorderColors.map((opt) => (
+                <DropdownMenuItem
+                  key={opt.key}
+                  onClick={() => handleBorderColorChange(opt.color)}
+                  className="flex items-center justify-between py-2"
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-4 h-4 rounded-full border border-gray-200"
+                      style={{ backgroundColor: opt.color }}
+                    />
+                    <div>
+                      <div className="font-medium text-sm">{opt.name}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {opt.color}
+                      </div>
+                    </div>
+                  </div>
+                  {selectedBorderColor.toLowerCase() === opt.color.toLowerCase() && (
                     <Check className="w-4 h-4 text-blue-600" />
                   )}
                 </DropdownMenuItem>
